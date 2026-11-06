@@ -16,11 +16,11 @@
       render: () => `
         <img class="hero-icon" src="assets/icon-512.png" alt="">
         <h1 class="hero-wm"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode"></h1>
-        <p class="lead">Let's set up this computer in about a minute. These choices stay on this device. There's no account to create, and you can change any of them later in Settings.</p>
+        <p class="lead">The multiplayer vibecoding platform. Let's set up this device in about a minute. These choices stay on this device. There's no account to create, and you can change any of them later in Settings.</p>
         <div class="perks">
-          <div class="perk"><svg class="i"><use href="#i-users"/></svg><b>Code with friends</b>One invite link, live sessions, shared Claude.</div>
-          <div class="perk"><svg class="i"><use href="#i-brain"/></svg><b>Local brain</b>Summaries and memory run on your machine.</div>
-          <div class="perk"><svg class="i"><use href="#i-vote"/></svg><b>One vision</b>Proposals and a board keep everyone aligned.</div>
+          <div class="perk"><svg class="i"><use href="#i-users"/></svg><b>Cooperative workspaces</b>Docs, tasks and one shared vision.</div>
+          <div class="perk"><svg class="i"><use href="#i-mic"/></svg><b>The Campfire Huddle</b>Voice, screen share and live chat.</div>
+          <div class="perk"><svg class="i" style="color:var(--accent)"><use href="#i-net"/></svg><b>Local Brain AI</b>Offline AI plus your Claude Code.</div>
         </div>`,
     },
     {

@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node server/index.js",
     "live": "node scripts/live.js",
-    "test": "python3 app/test/ui_smoke.py && python3 app/test/e2e_tribe.py && python3 app/test/e2e_huddle.py",
+    "test": "python3 app/test/ui_smoke.py && python3 app/test/e2e_tribe.py && python3 app/test/e2e_huddle.py && python3 app/test/e2e_mobile.py",
     "screenshots": "python3 app/test/ui_smoke.py --shots && python3 app/test/e2e_tribe.py --shots"
   }
 }

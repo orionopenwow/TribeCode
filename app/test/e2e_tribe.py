@@ -52,7 +52,7 @@ def wait_text(page, sel, text, timeout=8000):
 
 def watch(page, who):
     page.on("pageerror", lambda e: errors.append(f"{who} pageerror: {e}"))
-    page.on("console", lambda m: m.type == "error" and "11434" not in m.text and "api.github.com" not in m.text and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_FAILED" not in m.text and errors.append(f"{who} console: {m.text}"))
+    page.on("console", lambda m: m.type == "error" and "11434" not in m.text and "api.github.com" not in m.text and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_FAILED" not in m.text and "ERR_NAME_NOT_RESOLVED" not in m.text and errors.append(f"{who} console: {m.text}"))
 
 
 def main():
@@ -79,7 +79,7 @@ def main():
         assert api("/join", "POST", {"code": "nope", "name": "x"})[0] == 410
 
         with sync_playwright() as p:
-            b = p.chromium.launch(executable_path="/usr/bin/google-chrome")
+            b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1600, "height": 1000}).new_page(); watch(host, "host")
             # host: first-run setup -> becomes host
             host.goto(BASE)
@@ -143,8 +143,8 @@ def main():
             host.click('[data-add="backlog"]'); host.fill(".quick-add", "Campfire save points"); host.press(".quick-add", "Enter")
             friend.wait_for_function("document.querySelector('[data-col=\"backlog\"]').innerText.includes('Campfire save points')", timeout=5000)
             host.keyboard.press("Escape")
-            host.select_option('[data-col="doing"] .task select', label="Maya")
-            friend.wait_for_function("document.querySelector('[data-col=\"doing\"] select').selectedOptions[0].text === 'Maya'", timeout=5000)
+            host.select_option('[data-col="doing"] .task select[data-assign]', label="Maya")
+            friend.wait_for_function("document.querySelector('[data-col=\"doing\"] select[data-assign]').selectedOptions[0].text === 'Maya'", timeout=5000)
             # presence shows where people are
             host.wait_for_function("document.querySelector('#room-list').innerText.includes('Tasks')", timeout=5000)
             shot(host, "tasks-live")

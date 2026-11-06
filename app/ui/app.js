@@ -89,9 +89,13 @@
   const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs' };
   function show(view) {
     if (!VIEWS[view]) return;
+    document.body.classList.remove('mobile-chat', 'drawer-open');
     Object.keys(VIEWS).forEach(v => $('#view-' + v).classList.toggle('hidden', v !== view));
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === view));
-    document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view && !b.textContent.includes('Milestones')));
+    const isPhone = () => matchMedia('(max-width: 820px)').matches;
+  $('#menu-btn').addEventListener('click', () => document.body.classList.toggle('drawer-open'));
+  document.addEventListener('click', e => { if (document.body.classList.contains('drawer-open') && !e.target.closest('.side') && !e.target.closest('#menu-btn')) document.body.classList.remove('drawer-open'); });
+  document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view && !b.textContent.includes('Milestones')));
     document.querySelector('.titlebar .faint').textContent = '/ ' + VIEWS[view];
     if (view === 'tasks') window.TribeTasks.load();
     if (view === 'board') window.TribeBoard.load();
@@ -102,10 +106,13 @@
   }
   document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
     if (VIEWS[b.dataset.nav]) show(b.dataset.nav);
-    else if (b.dataset.nav === 'chat') $('#chat-input').focus();
+    else if (b.dataset.nav === 'chat') { if (isPhone()) { document.body.classList.add('mobile-chat'); document.querySelectorAll('[data-nav]').forEach(x => x.classList.toggle('on', x === b)); $('#chat-list').scrollTop = 1e9; } else $('#chat-input').focus(); }
     else if (b.dataset.nav === 'brain') { show('home'); document.querySelector('#standup-card').scrollIntoView({ block: 'center' }); }
   }));
 
+  const isPhone = () => matchMedia('(max-width: 820px)').matches;
+  $('#menu-btn').addEventListener('click', () => document.body.classList.toggle('drawer-open'));
+  document.addEventListener('click', e => { if (document.body.classList.contains('drawer-open') && !e.target.closest('.side') && !e.target.closest('#menu-btn')) document.body.classList.remove('drawer-open'); });
   document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
     if (VIEWS[b.dataset.go]) show(b.dataset.go);
   }));
@@ -245,13 +252,21 @@
           <select id="inv-uses" title="How many people can use it"><option value="5">5 people</option><option value="1">1 person</option><option value="20">20 people</option></select>
           <select id="inv-role" title="Builders can edit; spectators can only watch"><option value="builder">Builder</option><option value="spectator">Spectator</option></select></div>
         <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
-        <p class="faint" style="font-size:12px">Friends on another network can join through Tailscale or a tunnel to this computer.</p>
+        <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p><b>On a phone?</b> Point the camera at this code to join. On iPhone, tap Share → <b>Add to Home Screen</b> afterwards to get the app.<br><span class="faint" id="inv-net"></span></p></div>
         <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
       const make = async () => {
         $('#inv-copy').disabled = true; $('#inv-link').textContent = 'Creating link…';
         try {
           const { invite } = await C.api('/invites', { method: 'POST', body: { hours: +$('#inv-hours').value, maxUses: +$('#inv-uses').value, role: $('#inv-role').value } });
-          $('#inv-link').textContent = `${C.base()}/join/${invite.code}`; $('#inv-copy').disabled = false;
+          // localhost links only work on this computer: share the network address instead
+          let base = C.base(), note = '';
+          if (/\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base)) {
+            try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; if (pick) { base = pick.url; note = pick.kind === 'tailscale' ? 'Tailscale address: works from anywhere your friend is signed in to Tailscale.' : 'Wi-Fi address: your friend needs to be on the same network (or use Tailscale).'; } }
+            catch {}
+          }
+          const link = `${base}/join/${invite.code}`;
+          $('#inv-link').textContent = link; $('#inv-copy').disabled = false;
+          $('#inv-qr').innerHTML = window.TribeQR.svg(link); $('#inv-net').textContent = note;
           S.set({ checklist: { invite: true } }); refresh();
         } catch (e) { $('#inv-link').textContent = 'Could not create invite: ' + e.message; }
       };
@@ -368,6 +383,17 @@
     async announce(msg) { C.announce(msg); },
   };
 
+  // iPhone/iPad Safari: offer "Add to Home Screen" so it opens like an app
+  function iosHint() {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!ios || navigator.standalone || localStorage.getItem('tribecode.iosHint') || !S.get().onboarded) return;
+    const d = document.createElement('div'); d.className = 'ios-hint';
+    d.innerHTML = `<img src="assets/apple-touch-icon.png" alt=""><div><b>Get the TribeCode app</b><br>Tap <b>Share</b> <span aria-hidden="true">⬆︎</span> then <b>Add to Home Screen</b>. It opens full screen, like a real app.</div><button aria-label="Dismiss">✕</button>`;
+    d.querySelector('button').onclick = () => { d.remove(); try { localStorage.setItem('tribecode.iosHint', '1'); } catch {} };
+    document.body.appendChild(d);
+  }
+  if ('serviceWorker' in navigator && window.isSecureContext && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+
   // boot
   if (params.has('reset')) {
     S.reset();
@@ -380,5 +406,6 @@
   if (window.TribeHost.isDesktop && S.get().hosting) hostHere({ quiet: true }); else C.connect();
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
+  setTimeout(iosHint, 1500);
   Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

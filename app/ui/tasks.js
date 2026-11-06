@@ -60,7 +60,7 @@
         ${list.map(t => `<div class="task" draggable="true" data-id="${esc(t.id)}">
             <button class="del" data-del title="Delete"><svg class="i" style="width:13px;height:13px"><use href="#i-x"/></svg></button>
             <div class="t" data-title>${esc(t.title)}</div>
-            <div class="meta">${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}${memberOptions(t.assignee)}</div>
+            <div class="meta">${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}<select class="mv" data-move title="Move to">${COLS.map(([k, l]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${l}</option>`).join('')}</select>${memberOptions(t.assignee)}</div>
           </div>`).join('')}
       </div>`;
     }).join('');
@@ -94,6 +94,8 @@
       title.addEventListener('blur', commit);
       title.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } if (e.key === 'Escape') { const t = tasks.find(x => x.id === id); title.textContent = t ? t.title : ''; title.blur(); } });
       el.querySelector('[data-del]').addEventListener('click', () => remove(id));
+      const mv = el.querySelector('[data-move]'); mv.addEventListener('change', () => patch(id, { status: mv.value, order: Date.now() }));
+      mv.addEventListener('pointerdown', e => e.stopPropagation());
       const sel = el.querySelector('[data-assign]'); if (sel) sel.addEventListener('change', () => patch(id, { assignee: sel.value || null }));
     });
     document.querySelectorAll('.col').forEach(col => {

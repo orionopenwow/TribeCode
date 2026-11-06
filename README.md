@@ -5,7 +5,9 @@
   <img src="assets/brand/logo-wordmark.png" width="380" alt="TribeCode">
 </picture>
 
-### Code with friends. One link to join, one shared brain, one vision.
+### The Multiplayer Vibecoding Platform
+
+Collaborate, write, and vibe in real time with your digital tribe.
 
 TribeCode is a lightweight, self-hosted clubhouse for building software together with your friends **and** your Claude Code agents: chat, docs, tasks, proposals and live sessions in one glassy desktop app.
 
@@ -25,6 +27,17 @@ TribeCode is a lightweight, self-hosted clubhouse for building software together
 <p align="center">
   <img src="docs/screenshots/docs-dark.png" alt="TribeCode docs workspace, dark mode" width="100%">
 </p>
+
+## 🔥 Four pillars
+
+| | |
+| --- | --- |
+| **1. Cooperative Workspaces** | Brainstorm, build and ship together: shared docs, tasks, an approval board and one VISION.md. |
+| **2. The Campfire Huddle** | Voice-connected hubs for live multiplayer coding, discussion and status updates. |
+| **3. Local Brain AI** | Offline AI on your machine plus Claude Code online: drop files, get summaries, check work against the vision. |
+| **4. Active Huddle Chat** | A live feed that brings coding and chat together on one screen. |
+
+*Build your tribe. Vibe & code.*
 
 ## ✨ Why TribeCode
 
@@ -74,6 +87,12 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
     <td width="50%"><img src="docs/screenshots/update-handoff.png" alt="Restart to update pill with save and hand-off"><br><sub><b>Restart to update:</b> new versions download in the background. When it suits you, save your work, hand off running agents and claims, and restart, or snooze it.</sub></td>
   </tr>
 </table>
+
+### On your phone
+
+<p align="center"><img src="docs/screenshots/phone-home.png" width="30%" alt="Phone home"> <img src="docs/screenshots/phone-chat.png" width="30%" alt="Phone chat"> <img src="docs/screenshots/phone-tasks.png" width="30%" alt="Phone tasks"></p>
+
+Friends can join from an iPhone or Android phone: scan the **QR code** in the invite window, pick a name, then **Add to Home Screen** for a full-screen app. Same UI, laid out for a phone. See [docs/MOBILE.md](docs/MOBILE.md) for reaching your PC from anywhere, and the plan for a native iOS app via TestFlight.
 
 ### Voice huddles
 
@@ -163,7 +182,8 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 - [x] **Sprint 7: Packaging.** Server bundled as a sidecar in the desktop app, one-click hosting, `tribecode://` invite links, single-instance app, in-app join from any link
 - [x] **Sprint 8: Claude Code relay.** MCP endpoint (`/mcp`), agents with presence, soft file claims with hand-off, follow a teammate
 - [x] **Sprint 9: Voice.** Peer-to-peer huddles with mute, speaking indicators and screen share; live-test launcher; new logo
-- [ ] **Next:** live co-editing (Yjs), Google Drive import, PDF/Office conversion
+- [x] **Sprint 10: Phones + brand.** Installable web app (iPhone/Android) with phone layout, invite QR codes with network/Tailscale addresses, exact wordmark, bundled fonts
+- [ ] **Next:** native iOS app via Tauri + TestFlight (needs a Mac), live co-editing (Yjs), Google Drive import, PDF/Office conversion
 - [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit

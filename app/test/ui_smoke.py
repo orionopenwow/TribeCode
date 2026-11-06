@@ -30,7 +30,7 @@ def main():
         # ---- first run ----
         page.goto(UI + "?reset=1&demo=1")
         page.wait_for_selector("#onboard:not(.hidden)")
-        assert page.locator("#ob-body img.brand-wm").count() == 1 and "set up this computer" in page.inner_text("#ob-body")
+        assert page.locator("#ob-body img.brand-wm").count() == 1 and "set up this device" in page.inner_text("#ob-body")
         shot(page, "setup-1-welcome")
         page.click("#ob-next")
         assert page.is_disabled("#ob-next"), "name required"
