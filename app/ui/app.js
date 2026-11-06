@@ -125,7 +125,7 @@
     $('#room-list').innerHTML = shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(m => `
       <div class="person ${m.online ? 'on' : ''} ${m.role === 'agent' ? 'agent' : ''}" data-follow="${esc(m.id)}" title="${m.online && m.id !== meId && m.role !== 'agent' ? 'Click to follow ' + esc(m.name) : ''}">
       <div class="avatar" style="background:${m.role === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.role === 'agent' ? '🤖' : esc(initials(m.name))}<span class="st"></span></div>
-      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}</span><div class="what">${m.online ? (m.role === 'agent' ? 'agent · ' : 'online · ') + esc(m.where || 'Home') : m.role === 'agent' ? 'agent · idle' : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
+      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}${(C.state().huddle || []).some(h => h.id === m.id) ? ' <span title="In the huddle">🎙️</span>' : ''}</span><div class="what">${m.online ? (m.role === 'agent' ? 'agent · ' : 'online · ') + esc(m.where || 'Home') : m.role === 'agent' ? 'agent · idle' : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
     $('#room-list').querySelectorAll('[data-follow]').forEach(el => el.onclick = () => follow(el.dataset.follow));
     $('#room-hint').classList.toggle('hidden', list.length > 1);
     $('#room-hint').textContent = 'Invite friends to see them here.';
@@ -380,5 +380,5 @@
   if (window.TribeHost.isDesktop && S.get().hosting) hostHere({ quiet: true }); else C.connect();
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
-  Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite, connectClaude });
+  Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

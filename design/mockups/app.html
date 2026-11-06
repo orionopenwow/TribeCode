@@ -7,7 +7,7 @@
 <style>
   :root {
     --font: 'Inter', system-ui, sans-serif;
-    --accent: #7C5CFF; --accent-2: #3DD6D0; --ember: #FF6F8E; --amber: #FFB86B;
+    --accent: #EE6F22; --accent-2: #3DD6D0; --ember: #FF6F8E; --amber: #FFB86B;
     --radius: 14px;
   }
   .dark {
@@ -17,7 +17,7 @@
             linear-gradient(160deg, #15171D 0%, #0B0C10 45%, #050608 100%);
     --win: rgba(17,19,24,0.94); --glass: #15181F; --glass-2: #1C2029;
     --stroke: rgba(255,255,255,0.08); --edge: rgba(255,255,255,0.14); --text: #F5F6F8; --muted: #B9BDC9; --faint: #7F8494;
-    --chip: rgba(124,92,255,0.22); --shadow: 0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.6);
+    --chip: rgba(238,111,34,0.22); --shadow: 0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,0,0,0.6);
     --card-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.35);
     --grain: 0.11;
   }
@@ -28,7 +28,7 @@
             linear-gradient(160deg, #F1F2F5 0%, #E4E6EB 55%, #D6D9E0 100%);
     --win: rgba(250,250,252,0.96); --glass: #F3F4F7; --glass-2: #FFFFFF;
     --stroke: rgba(20,24,40,0.09); --edge: rgba(20,24,40,0.14); --text: #14161D; --muted: #4B5060; --faint: #868B9A;
-    --chip: rgba(124,92,255,0.12); --shadow: 0 40px 100px rgba(20,24,40,0.22), 0 0 0 1px rgba(20,24,40,0.06);
+    --chip: rgba(238,111,34,0.12); --shadow: 0 40px 100px rgba(20,24,40,0.22), 0 0 0 1px rgba(20,24,40,0.06);
     --card-shadow: 0 1px 2px rgba(20,24,40,0.06), 0 6px 18px rgba(20,24,40,0.06);
     --grain: 0.05;
   }
@@ -83,7 +83,7 @@
   .doc h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; margin: 6px 0 10px; display: flex; align-items: center; gap: 12px; }
   .props { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; font-size: 13px; color: var(--muted); margin-bottom: 22px; }
   .props span:nth-child(odd) { color: var(--faint); }
-  .tldr { border-radius: var(--radius); padding: 14px 16px; background: linear-gradient(135deg, rgba(124,92,255,0.14), rgba(61,214,208,0.10)); border: 1px solid var(--stroke); font-size: 13.5px; line-height: 1.55; margin-bottom: 22px; }
+  .tldr { border-radius: var(--radius); padding: 14px 16px; background: linear-gradient(135deg, rgba(238,111,34,0.14), rgba(61,214,208,0.10)); border: 1px solid var(--stroke); font-size: 13.5px; line-height: 1.55; margin-bottom: 22px; }
   .tldr .lbl { font-size: 11.5px; font-weight: 600; color: var(--accent); display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
   .block { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 1.65; margin: 6px 0; position: relative; }
   .block .h { color: var(--faint); opacity: 0; width: 18px; } .block.hover .h { opacity: 1; }
@@ -139,7 +139,7 @@
   .field { text-align: left; font-size: 12px; color: var(--faint); margin-bottom: 6px; }
   .input { height: 46px; border-radius: 13px; border: 1px solid var(--stroke); background: var(--glass-2); display: flex; align-items: center; padding: 0 14px; font-size: 15px; margin-bottom: 16px; text-align: left; }
   .swatches { display: flex; gap: 10px; margin-bottom: 26px; } .swatches i { width: 30px; height: 30px; border-radius: 50%; display: block; } .swatches i.on { outline: 2.5px solid var(--text); outline-offset: 3px; }
-  .big { height: 50px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), #5B8CFF); color: #fff; font-weight: 650; font-size: 15.5px; display: grid; place-items: center; }
+  .big { height: 50px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), #F59A3E); color: #fff; font-weight: 650; font-size: 15.5px; display: grid; place-items: center; }
   .fine { font-size: 12px; color: var(--faint); margin-top: 16px; }
   .code { font-family: 'DejaVu Sans Mono', monospace; letter-spacing: .08em; }
   .hidden { display: none !important; }
@@ -271,10 +271,10 @@
         <div class="task"><div class="t">Campfire save points</div><div class="meta"><span class="chip teal">task/campfire</span><span>2 behind main</span><div class="av" style="background:#3DD6D0;color:#08202A">MA</div></div></div></div>
       <div class="col"><h5><span class="dot" style="background:var(--amber)"></span>Review <span class="n">2</span></h5>
         <div class="task drag"><div class="t">Day / night cycle</div><div class="meta"><span class="chip amber">PR #18</span><span>+214 −37</span><div class="av" style="background:#FF6F8E">JL</div></div></div>
-        <div class="task"><div class="t">Shared inventory sync</div><div class="meta"><span class="chip teal">checks pass</span><div class="av" style="background:#7C5CFF">OR</div></div></div></div>
+        <div class="task"><div class="t">Shared inventory sync</div><div class="meta"><span class="chip teal">checks pass</span><div class="av" style="background:#EE6F22">OR</div></div></div></div>
       <div class="col"><h5><span class="dot" style="background:var(--accent-2)"></span>Done <span class="n">11</span></h5>
         <div class="task"><div class="t">Forest biome tiles</div><div class="meta"><span class="chip teal">v0.3.0</span><div class="av" style="background:#3DD6D0;color:#08202A">MA</div></div></div>
-        <div class="task"><div class="t">Invite flow</div><div class="meta"><span class="chip teal">v0.2.0</span><div class="av" style="background:#7C5CFF">OR</div></div></div></div>
+        <div class="task"><div class="t">Invite flow</div><div class="meta"><span class="chip teal">v0.2.0</span><div class="av" style="background:#EE6F22">OR</div></div></div></div>
     </div>
   </main>
 
@@ -298,7 +298,7 @@
       </div>
       <div>
         <div class="radar"><h3>Drift radar</h3><div class="sub">How far each copy is from <b>main</b> and the approved plan</div>
-          <div class="drow"><div class="av" style="background:#7C5CFF">OR</div><div><div class="dbar"><i style="width:6%;background:#3DD6D0"></i></div></div><span style="color:var(--muted)">in sync</span></div>
+          <div class="drow"><div class="av" style="background:#EE6F22">OR</div><div><div class="dbar"><i style="width:6%;background:#3DD6D0"></i></div></div><span style="color:var(--muted)">in sync</span></div>
           <div class="drow"><div class="av" style="background:#3DD6D0;color:#08202A">MA</div><div><div class="dbar"><i style="width:22%;background:#3DD6D0"></i></div></div><span style="color:var(--muted)">2 behind</span></div>
           <div class="drow"><div class="av" style="background:#FF6F8E">JL</div><div><div class="dbar"><i style="width:48%;background:#FFB86B"></i></div></div><span style="color:#D98A2B">9 behind</span></div>
           <div class="drow"><div class="av" style="background:#5B8CFF">SK</div><div><div class="dbar"><i style="width:81%;background:#FF6F8E"></i></div></div><span style="color:var(--ember)">off-plan files</span></div>
@@ -318,7 +318,7 @@
       <div class="person"><div class="av" style="background:#3DD6D0;color:#08202A">MA<span class="st" style="background:#3DD6D0"></span></div><div>Maya<div class="what">editing Game design doc</div></div></div>
       <div class="person"><div class="av" style="background:#FF6F8E">JL<span class="st" style="background:#3DD6D0"></span></div><div>Jay<div class="what">in huddle · reviewing PR #18</div></div></div>
       <div class="person"><div class="av" style="background:#5B8CFF">SK<span class="st" style="background:#FFB86B"></span></div><div>Sam<div class="what">focus mode until 5 pm</div></div></div>
-      <div class="person"><div class="av" style="background:linear-gradient(135deg,#FF6F8E,#7C5CFF)">🤖<span class="st" style="background:#3DD6D0"></span></div><div>Claude · Orion's<div class="what">running task/fishing</div></div></div>
+      <div class="person"><div class="av" style="background:linear-gradient(135deg,#FF6F8E,#EE6F22)">🤖<span class="st" style="background:#3DD6D0"></span></div><div>Claude · Orion's<div class="what">running task/fishing</div></div></div>
     </div>
     <h6>Chat · #pixel-quest</h6>
     <div>
@@ -336,10 +336,10 @@
     <img src="../../assets/brand/icon-512.png" alt="">
     <h1>Join Campfire Crew</h1>
     <p class="lead">Orion invited you to code with the tribe.<br>No email, no password. Pick a name and you're in.</p>
-    <div class="faces"><div class="av" style="background:#7C5CFF">OR</div><div class="av" style="background:#3DD6D0;color:#08202A">MA</div><div class="av" style="background:#FF6F8E">JL</div><div class="av" style="background:#5B8CFF">SK</div></div>
+    <div class="faces"><div class="av" style="background:#EE6F22">OR</div><div class="av" style="background:#3DD6D0;color:#08202A">MA</div><div class="av" style="background:#FF6F8E">JL</div><div class="av" style="background:#5B8CFF">SK</div></div>
     <div class="field">Display name</div><div class="input">Riley</div>
     <div class="field">Your color</div>
-    <div class="swatches"><i style="background:#7C5CFF"></i><i class="on" style="background:#FFB86B"></i><i style="background:#3DD6D0"></i><i style="background:#FF6F8E"></i><i style="background:#5B8CFF"></i><i style="background:#9AE66E"></i></div>
+    <div class="swatches"><i style="background:#EE6F22"></i><i class="on" style="background:#FFB86B"></i><i style="background:#3DD6D0"></i><i style="background:#FF6F8E"></i><i style="background:#5B8CFF"></i><i style="background:#9AE66E"></i></div>
     <div class="big">Join the tribe</div>
     <div class="fine">Invite <span class="code">tribe.link/k7Qx2</span> · expires in 24 h · role: Builder</div>
   </div>

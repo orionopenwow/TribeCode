@@ -2,7 +2,7 @@
 (function () {
   const $ = s => document.querySelector(s);
   const S = window.TribeStore;
-  const COLORS = ['#7C5CFF', '#FFB86B', '#3DD6D0', '#FF6F8E', '#5B8CFF', '#9AE66E', '#E7E9EE'];
+  const COLORS = ['#EE6F22', '#7C5CFF', '#FFB86B', '#3DD6D0', '#FF6F8E', '#5B8CFF', '#9AE66E', '#E7E9EE'];
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');

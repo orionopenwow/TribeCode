@@ -2,15 +2,12 @@
 
 <p align="center"><img src="../assets/brand/icon-512.png" width="128" alt="TribeCode icon"></p>
 
-## The mark: "Campfire Brackets"
+## The mark
 
-A flame sits between code brackets `< >`, with three teal embers underneath.
+A solid orange flame between two white code brackets `< >`, on a deep navy rounded square. Flat, geometric, no gradients, so it stays sharp from a 16 px taskbar icon up to a store listing.
 
-- **The fire** is where a tribe gathers. It's warm and casual, the opposite of an enterprise dashboard.
+- **The fire** is the campfire the tribe gathers around: warm and casual, not an enterprise dashboard.
 - **The brackets** say *code* at a glance.
-- **The three embers** are the friends (and agents) around the fire.
-
-The app icon places the mark on a deep indigo rounded square (corner radius ≈ 22.6% of the size) with a faint warm glow and a 1 px glass edge. It reads clearly at 16 px in the taskbar and stands out among the many blue developer icons.
 
 ## Files
 
@@ -26,14 +23,15 @@ The app icon places the mark on a deep indigo rounded square (corner radius ≈ 
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Dusk | `#7C5CFF` | Primary accent, "Tribe" in the wordmark, buttons |
+| Ember | `#EE6F22` | The flame. Primary accent, "Code" in the wordmark, buttons, selection |
+| Navy | `#171B26` | Icon background, "Tribe" in the light wordmark |
 | Lagoon | `#3DD6D0` | Success, in sync, embers, presence |
-| Ember | `#FF6F8E` | Alerts, drift, unread dots |
+| Rose | `#FF6F8E` | Alerts, drift, unread dots |
 | Amber | `#FFB86B` | Review, warnings, flame tip |
 | Graphite | `#15171D` → `#0B0C10` → `#050608` | Dark background: near-black gradient with a fine grain texture and faint ember/teal glows in opposite corners |
 | Paper | `#F1F2F5` → `#D6D9E0` | Light background: cool grey gradient with the same grain |
 
-Flame gradient: `#FFC27A` → `#FF6F8E` → `#7C5CFF` (top to bottom).
+The flame is one flat color; never add a gradient to it.
 
 ## Type
 
@@ -44,7 +42,7 @@ Flame gradient: `#FFC27A` → `#FF6F8E` → `#7C5CFF` (top to bottom).
 ## UI rules
 
 - Surfaces are near-solid (window ~94% opaque, cards fully opaque `#15181F` / `#1C2029`) so content stands out; the glass effect is limited to a light blur and 1 px edge highlights.
-- Cards get a crisp 1 px edge (`rgba(255,255,255,0.14)`) and a soft drop shadow. Purple is for actions only, never for large areas.
+- Cards get a crisp 1 px edge (`rgba(255,255,255,0.14)`) and a soft drop shadow. Orange is for actions only, never for large areas.
 - Radii: 9–14 px controls and cards, 22 px windows, 26 px dialogs.
 - Icons: Lucide-style 1.6 px line icons. Fill only status dots and avatars.
 - Color carries meaning: teal = good/in sync, amber = review/behind, ember = drift/alert, violet = action.
@@ -52,6 +50,6 @@ Flame gradient: `#FFC27A` → `#FF6F8E` → `#7C5CFF` (top to bottom).
 
 ## Don'ts
 
-- Don't recolor the flame a single flat color, and don't drop the embers from the app icon.
+- Don't recolor the flame or add gradients; keep the brackets white on navy.
 - Don't put the icon on a busy photo; use the Graphite or Paper backgrounds.
 - Don't stretch the wordmark or set "TribeCode" in all caps.

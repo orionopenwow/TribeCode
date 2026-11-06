@@ -77,6 +77,12 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
   </tr>
 </table>
 
+### Voice huddles
+
+<p align="center"><img src="docs/screenshots/huddle.png" alt="Voice huddle with screen share" width="100%"></p>
+
+Click **Start a huddle** in the sidebar (or <kbd>Ctrl Shift M</kbd>). Audio goes peer to peer over WebRTC, with screen sharing and speaking indicators. No extra server, and it's built for groups of up to about 6. Browsers only allow the microphone on `localhost`, `https://` or the desktop app.
+
 ### Bring your Claude Code
 
 Click **Connect your Claude Code** in the room panel and run the one-line command it gives you:
@@ -109,6 +115,8 @@ Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in
 </table>
 
 ## 🚀 Run it
+
+**Fastest (Windows):** download [`TribeCode-Live-Test.bat`](TribeCode-Live-Test.bat), double-click it. It installs nothing but checks for Node and Git, gets the code, starts a tribe and opens it in your browser. It also pulls new commits every 20 seconds and reloads, so you can watch the app change as it's built. macOS/Linux: `tribecode-live-test.command`.
 
 ```bash
 # Host a tribe (Node 20+, zero dependencies)
@@ -156,7 +164,8 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 - [x] **Sprint 6: Alignment + QoL.** Drift radar, self-sorting/self-healing bug inbox with crash capture, `Ctrl+K` command palette
 - [x] **Sprint 7: Packaging.** Server bundled as a sidecar in the desktop app, one-click hosting, `tribecode://` invite links, single-instance app, in-app join from any link
 - [x] **Sprint 8: Claude Code relay.** MCP endpoint (`/mcp`), agents with presence, soft file claims with hand-off, follow a teammate
-- [ ] **Next:** voice huddles (LiveKit), live co-editing (Yjs), Google Drive import, PDF/Office conversion
+- [x] **Sprint 9: Voice.** Peer-to-peer huddles with mute, speaking indicators and screen share; live-test launcher; new logo
+- [ ] **Next:** live co-editing (Yjs), Google Drive import, PDF/Office conversion
 - [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit

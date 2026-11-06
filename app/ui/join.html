@@ -41,7 +41,7 @@
 (function () {
   const $ = s => document.querySelector(s);
   const code = location.pathname.split('/').filter(Boolean)[1] || new URLSearchParams(location.search).get('code');
-  const COLORS = ['#7C5CFF', '#FFB86B', '#3DD6D0', '#FF6F8E', '#5B8CFF', '#9AE66E'];
+  const COLORS = ['#EE6F22', '#7C5CFF', '#FFB86B', '#3DD6D0', '#FF6F8E', '#5B8CFF', '#9AE66E'];
   const ink = c => (['#FFB86B', '#3DD6D0', '#9AE66E'].includes(c) ? '#0B0C10' : '#fff');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let color = COLORS[Math.floor(Math.random() * COLORS.length)];

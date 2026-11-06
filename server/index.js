@@ -53,7 +53,7 @@ function readBody(req, limit = 256 * 1024) {
   });
 }
 function str(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
-const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#7C5CFF');
+const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#EE6F22');
 const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 function authed(req) {
   const h = req.headers.authorization || '';
@@ -97,6 +97,12 @@ function touchAgent(me, tool) {
 }
 setInterval(() => { for (const [k, a] of agentSeen) if (Date.now() - a.at > AGENT_IDLE && !a.off) { a.off = true; pushPresence(); } }, 30_000).unref();
 const pushPresence = () => broadcast({ type: 'presence', members: presence() });
+
+// ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
+const huddle = new Map(); // memberId -> { muted, sharing, joined }
+const huddleState = () => [...huddle].map(([mid, h]) => ({ id: mid, muted: h.muted, sharing: h.sharing, joined: h.joined }));
+const pushHuddle = () => broadcast({ type: 'huddle', members: huddleState() });
+function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.sockets) s.send(msg); }
 
 // ---------- chat ----------
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
@@ -346,17 +352,39 @@ server.on('upgrade', (req, sock) => {
   const s = ws.accept(req, sock); if (!s) return;
   const o = online.get(me.id) || { sockets: new Set(), where: 'Home', since: new Date().toISOString() };
   o.sockets.add(s); online.set(me.id, o);
-  s.send({ type: 'hello', member: publicMember(me), tribe, members: presence(), version: VERSION });
+  s.send({ type: 'hello', member: publicMember(me), tribe, members: presence(), version: VERSION, huddle: huddleState() });
   pushPresence();
   s.on('message', msg => {
     if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
     if (msg.type === 'announce' && typeof msg.text === 'string') postChat('general', me.id, msg.text.slice(0, 400));
+    if (msg.type === 'huddle-join' && me.role !== 'agent') {
+      const first = huddle.size === 0;
+      huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
+      pushHuddle(); if (first) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
+    }
+    if (msg.type === 'huddle-leave' && huddle.has(me.id)) { huddle.delete(me.id); pushHuddle(); }
+    if (msg.type === 'huddle-state' && huddle.has(me.id)) { const h = huddle.get(me.id); h.muted = !!msg.muted; h.sharing = !!msg.sharing; pushHuddle(); }
+    if (msg.type === 'rtc' && typeof msg.to === 'string' && huddle.has(me.id) && huddle.has(msg.to)) {
+      const target = huddle.get(msg.to).socket;   // signal only the socket that is in the huddle
+      if (target && target.open) target.send({ type: 'rtc', from: me.id, data: msg.data });
+    }
   });
-  s.on('close', () => { o.sockets.delete(s); if (!o.sockets.size) online.delete(me.id); pushPresence(); });
+  s.on('close', () => {
+    o.sockets.delete(s); if (!o.sockets.size) online.delete(me.id);
+    const h = huddle.get(me.id); if (h && h.socket === s) { huddle.delete(me.id); pushHuddle(); }
+    pushPresence();
+  });
 });
 
 function start() {
+  // --dev (used by scripts/live.js): open tabs reload when UI files change.
+  if (args.dev) {
+    let t; try {
+      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => broadcast({ type: 'dev-reload' }), 300); });
+      console.log('  Live:     UI changes reload open tabs');
+    } catch (e) { console.log('  Live:     file watching unavailable (' + e.message + ')'); }
+  }
   // When launched by the desktop app, exit if the app goes away.
   if (args['exit-with-parent']) { const parent = process.ppid; setInterval(() => { if (process.ppid !== parent) process.exit(0); }, 2000).unref(); }
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });

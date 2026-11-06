@@ -12,6 +12,8 @@
       { kind: 'Action', label: 'New doc', keys: 'page write note', run: () => { A.show('docs'); window.TribeDocs.create(); } },
       { kind: 'Action', label: 'New proposal', keys: 'vote board idea', run: () => { A.show('board'); setTimeout(() => document.querySelector('#prop-new').click(), 50); } },
       { kind: 'Action', label: 'Invite friends', keys: 'link join share', run: () => A.openInvite() },
+      { kind: 'Action', label: 'Join / start huddle', keys: 'voice call talk mic audio', hint: 'Ctrl Shift M', run: () => window.TribeHuddle.join() },
+      { kind: 'Action', label: 'Share my screen', keys: 'present screenshare', run: () => window.TribeHuddle.share() },
       { kind: 'Action', label: 'Connect Claude Code', keys: 'agent mcp ai claude', run: () => A.connectClaude() },
       { kind: 'Action', label: 'Report a bug', keys: 'issue problem crash', hint: 'Ctrl Shift B', run: () => window.TribeBugs.capture() },
       { kind: 'Action', label: "Write today's standup", keys: 'brain recap summary', run: () => { A.show('home'); document.querySelector('#standup-go').click(); } },

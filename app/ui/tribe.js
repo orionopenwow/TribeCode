@@ -33,7 +33,7 @@
     sock.onopen = () => { retry = 0; setStatus('online'); sendActivity(); };
     sock.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
-      if (m.type === 'hello') { state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
+      if (m.type === 'hello') { state.huddle = m.huddle || []; emit('huddle', state.huddle); state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
       if (m.type === 'presence') { state.members = m.members; emit('presence', state.members); }
       if (m.type === 'chat') emit('chat', m);
       if (m.type === 'task') emit('task', m.task);
@@ -42,6 +42,13 @@
       if (m.type === 'milestones') emit('milestones', m.milestones);
       if (m.type === 'doc') emit('doc', m.doc);
       if (m.type === 'bug') emit('bug', m.bug);
+      if (m.type === 'dev-reload') {
+        const busy = (window.TribeDocs && window.TribeDocs.isDirty()) || (window.TribeHuddle && window.TribeHuddle.inCall());
+        if (busy) window.TribeApp && window.TribeApp.toast('A new version is ready. It loads when you finish what you are doing.');
+        else setTimeout(() => location.reload(), 300);
+      }
+      if (m.type === 'huddle') { state.huddle = m.members; emit('huddle', m.members); }
+      if (m.type === 'rtc') emit('rtc', m);
       if (m.type === 'claims') { state.claims = m.claims; emit('claims', m.claims); }
       if (m.type === 'doc-summary') emit('doc-summary', m);
       if (m.type === 'doc-removed') emit('doc-removed', m.slug);
@@ -78,6 +85,7 @@
     state: () => state,
     connected: () => state.status === 'online',
     hasToken: () => !!token(),
+    send(obj) { if (sock && sock.readyState === 1) { sock.send(JSON.stringify(obj)); return true; } return false; },
     announce(text) { if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'announce', text })); },
     async probe() { try { return await api('/health'); } catch { return null; } },
   };

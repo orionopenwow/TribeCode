@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased: Sprints 2–8
+## Unreleased: Sprints 2–9
+
+- New logo: orange flame between white brackets on navy; app accent color is now the flame orange
+- Voice huddles: peer-to-peer WebRTC audio (signaling over the tribe socket), mute, speaking rings, screen share with perfect negotiation, 🎙️ badges in the room, Ctrl+Shift+M
+- `TribeCode-Live-Test.bat` / `tribecode-live-test.command` / `npm run live`: checks Node + Git, gets the code, starts a tribe, opens the browser, pulls new commits every 20 s and reloads open tabs
+- One-command release setup: `node scripts/setup-release.js`; CI builds installers even before the signing key exists
+- Fix: joining a huddle immediately left it again
 
 - Claude Code relay: MCP endpoint at `/mcp` (Streamable HTTP, JSON responses) with 14 tribe tools; "Connect your Claude Code" makes a per-member agent key and the one-line `claude mcp add` command
 - Agents are members with role `agent`: they show in the room while active ("using claim file"), can't vote or invite, and their proposals start with zero votes

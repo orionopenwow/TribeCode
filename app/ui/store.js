@@ -5,7 +5,7 @@
   const DEFAULTS = {
     onboarded: false,
     name: '',
-    color: '#7C5CFF',
+    color: '#EE6F22',
     theme: 'dark',            // dark | light | system
     density: 'comfortable',   // comfortable | compact
     folder: '',
