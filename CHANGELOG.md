@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased: Sprints 2–6
+## Unreleased: Sprints 2–7
+
+- Desktop hosting: server bundled into one file (`scripts/bundle-server.js`) and built as a standalone Node SEA sidecar per platform (`scripts/build-sidecar.js`, run in CI); "Host a tribe on this computer" starts it, makes you host and resumes on next launch; server exits with the app
+- `tribecode://join?server=…&code=…` deep links, single-instance app (second launch focuses the window and forwards the link), "Open it there" on the join page
+- In-app join from any pasted invite link, with a tribe-switch warning
+- Server: `--ui` and `--exit-with-parent` flags, clear message when the port is busy
+- CI: separate Apple Silicon and Intel macOS builds (each with its own sidecar)
 
 - Drift radar (`--repo`): every branch vs main with behind/ahead, files changed, linked task, and a watch/drifting level; periodic `git fetch`
 - Bug inbox: Ctrl+Shift+B capture with recent logs + view + version; automatic crash reports (rate-limited); triage by local brain or rules; duplicates merge with a seen-count; bug → task, and the bug resolves itself when the task is done (reopens if the task does)

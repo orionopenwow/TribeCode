@@ -22,7 +22,7 @@ TribeCode is a lightweight, self-hosted clubhouse for building software together
 
 ---
 
-> **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`), a shared drag-and-drop Tasks board, the approval board (proposals, votes, VISION.md, milestones tagged in git), shared Docs with a Notion-style editor, and the local brain (doc TL;DRs, daily standups, vision checks on proposals). Also working: the drift radar, a self-sorting, self-healing bug inbox, and the `Ctrl+K` command palette. What's left is mostly packaging from [`design/mockups/app.html`](design/mockups/app.html) and are coming next (see [Roadmap](#-roadmap)).
+> **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`), a shared drag-and-drop Tasks board, the approval board (proposals, votes, VISION.md, milestones tagged in git), shared Docs with a Notion-style editor, and the local brain (doc TL;DRs, daily standups, vision checks on proposals). Also working: the drift radar, a self-sorting, self-healing bug inbox, and the `Ctrl+K` command palette. The desktop app hosts the tribe itself and handles `tribecode://` invite links (built by CI, not yet run on real hardware) from [`design/mockups/app.html`](design/mockups/app.html) and are coming next (see [Roadmap](#-roadmap)).
 
 <p align="center">
   <img src="docs/screenshots/docs-dark.png" alt="TribeCode docs workspace, dark mode" width="100%">
@@ -109,9 +109,11 @@ open app/ui/index.html            # ?reset=1 replays first-run setup, ?demo=1 ad
 
 # Desktop app (needs Node 22 + Rust: https://tauri.app/start/prerequisites/)
 cd app && npm install
-npm run dev                       # live desktop window
+npm run dev                       # builds the server sidecar, opens a live desktop window
 npm run build                     # Windows .exe/.msi, macOS .dmg, Linux AppImage in app/src-tauri/target/release/bundle/
 ```
+
+**Hosting from the desktop app:** click **Invite friends → Host a tribe on this computer**. The app starts the bundled tribe server (a standalone binary built from `server/` with Node SEA, so nobody needs Node installed), makes you the host, and keeps hosting whenever the app is open. Friends who click an invite link can join in the browser or hit **Open it there** to join inside their desktop app (`tribecode://` links).
 
 **Shipping updates:** `./scripts/milestone.sh v0.2.0 "What changed"` bumps the app version, tags and pushes. [`.github/workflows/release.yml`](.github/workflows/release.yml) then builds installers for all three platforms and publishes a GitHub Release with `latest.json`, and every running copy shows **Restart to update** within 30 minutes. One-time setup: run `npx tauri signer generate`, add the private key as the `TAURI_SIGNING_PRIVATE_KEY` repo secret, and paste the public key into `app/src-tauri/tauri.conf.json`.
 
@@ -138,7 +140,8 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 - [x] **Sprint 4: Approval board.** Proposals + majority voting, VISION.md, approval → milestone + tasks + decision log, host releases tag the project repo
 - [x] **Sprint 5: Docs + local brain.** Markdown docs with slash menu, autosave, conflicts, import; Ollama-powered TL;DRs, standups and vision checks
 - [x] **Sprint 6: Alignment + QoL.** Drift radar, self-sorting/self-healing bug inbox with crash capture, `Ctrl+K` command palette
-- [ ] **Next:** `tribecode://` invite deep links, server bundled inside the desktop app
+- [x] **Sprint 7: Packaging.** Server bundled as a sidecar in the desktop app, one-click hosting, `tribecode://` invite links, single-instance app, in-app join from any link
+- [ ] **Next:** voice huddles (LiveKit), live co-editing (Yjs), Google Drive import, PDF/Office conversion
 - [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit
