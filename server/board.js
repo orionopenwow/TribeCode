@@ -6,7 +6,7 @@ const path = require('node:path');
 
 const VOTES = ['yes', 'no'];
 
-module.exports = function board({ store, id, slug, str, getMembers, broadcast, postChat, createTask, repo }) {
+module.exports = function board({ store, id, slug, str, getMembers, broadcast, postChat, createTask, repo, brain, readVision }) {
   const file = p => `proposals/${p.id}.md`;
   const load = pid => { const r = store.readMd(`proposals/${pid}.md`); return r && { ...r.meta, body: r.body }; };
   const all = () => store.listMd('proposals').map(f => { const r = store.readMd(f); return r && { ...r.meta, body: r.body }; })
@@ -101,6 +101,11 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
         const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, status: 'open', by: me.id, created: now,
           votes: { [me.id]: 'yes' }, body: str(body.body, 20000) });
         postChat('general', 'tribecode', `New proposal from ${me.name}: **${title}**. Vote on the Board.`);
+        if (brain) brain.visionCheck({ vision: readVision(), title, body: p.body }).then(v => {
+          if (!v) return; const fresh = load(p.id); if (!fresh) return;
+          fresh.vision = v; save(fresh);
+          if (!v.fits) postChat('general', 'tribecode', `Heads up: **${title}** may conflict with VISION.md. ${v.note}`);
+        }).catch(() => {});
         return send(res, 200, { proposal: { ...resolve(p, me), tally: tally(p) } });
       }
       const p = b && load(b); if (!p) return fail(res, 404, 'proposal not found');

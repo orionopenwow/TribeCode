@@ -11,6 +11,8 @@ const { URL } = require('node:url');
 const ws = require('./ws');
 const { Store, id, code, hash, slug } = require('./store');
 const makeBoard = require('./board');
+const makeDocs = require('./docs');
+const makeBrain = require('./brain');
 
 const VERSION = require('../app/package.json').version;
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -112,8 +114,25 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
   return saveTask(t);
 }
 
-// ---------- board ----------
-const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: REPO });
+// ---------- brain, board, docs ----------
+const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
+brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via Ollama` : `  Brain:    off (${st.error})`));
+const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
+const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: REPO, brain, readVision });
+const docs = makeDocs({ store, slug, str, broadcast, brain, postChat });
+
+async function standup() {
+  const since = Date.now() - 24 * 3600_000;
+  const who = id => (id === 'tribecode' ? 'TribeCode' : (members.find(x => x.id === id) || {}).name || 'someone');
+  const chat = store.readJSONL('chat/general.jsonl', 400).filter(x => Date.parse(x.at) > since && x.by !== 'tribecode').map(x => ({ who: who(x.by), text: x.text }));
+  const tasks = loadTasks().map(t => ({ title: t.title, status: t.status, assignee: t.assignee ? who(t.assignee) : '' }));
+  const text = await brain.standup({ chat, tasks, members });
+  if (!text) return null;
+  const day = new Date().toISOString().slice(0, 10);
+  store.writeMd(`brain/standup-${day}.md`, { date: day, model: brain.status().model }, text);
+  postChat('general', 'tribecode', `**Standup for ${day}**\n${text}`);
+  return text;
+}
 
 // ---------- routes ----------
 async function api(req, res, url) {
@@ -204,6 +223,17 @@ async function api(req, res, url) {
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
   }
 
+  if (a === 'brain') {
+    if (m === 'GET') return send(res, 200, { brain: await brain.refresh() });
+    if (m === 'POST' && b === 'standup') {
+      const text = await standup().catch(e => { console.error(e); return null; });
+      return text ? send(res, 200, { text }) : fail(res, 503, brain.status().error || 'local brain is off');
+    }
+  }
+  if (a === 'docs') {
+    const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
+    if (handled !== null) return;
+  }
   if (['proposals', 'milestones', 'vision'].includes(a)) {
     const handled = await board.route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;

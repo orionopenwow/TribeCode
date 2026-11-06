@@ -48,8 +48,9 @@
       const w = n => `${(n / Math.max(1, t.voters)) * 100}%`;
       const long = (p.body || '').split('\n').length > 7;
       return `<div class="prop" data-pid="${esc(p.id)}">
-        <div class="top">${chipFor(p)}${p.tasks && p.tasks.length ? `<span class="chip">${p.tasks.length} tasks</span>` : ''}</div>
+        <div class="top">${chipFor(p)}${p.vision ? `<span class="chip ${p.vision.fits ? 'teal' : 'ember'}" title="${esc(p.vision.note || '')}">${p.vision.fits ? 'Fits VISION.md' : 'Off-vision · flagged by brain'}</span>` : ''}${p.tasks && p.tasks.length ? `<span class="chip">${p.tasks.length} tasks</span>` : ''}</div>
         <h3>${esc(p.title)}</h3><div class="by">${esc(nameOf(p.by))} · ${ago(p.created)}</div>
+        ${p.vision && !p.vision.fits && p.vision.note ? `<div class="vnote">🧭 ${esc(p.vision.note)}</div>` : ''}
         ${p.body ? `<div class="body ${open.has(p.id) ? 'open' : ''}">${mdLite(p.body)}</div>${long ? `<button class="more" data-more>${open.has(p.id) ? 'Show less' : 'Show more'}</button>` : ''}` : ''}
         <div class="votes"><div class="vbar"><i style="width:${w(t.yes)};background:var(--accent-2)"></i><i style="width:${w(t.no)};background:var(--ember)"></i></div>
           <span>${t.yes} yes · ${t.no} no · ${t.pending} pending</span>

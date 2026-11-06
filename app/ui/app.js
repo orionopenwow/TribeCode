@@ -6,7 +6,8 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
-  const drops = [];          // files dropped this session (unsaved until saveAll)
+  const drops = [];
+  let serverBrain = null;     // brain status reported by the tribe host          // files dropped this session (unsaved until saveAll)
   const mq = matchMedia('(prefers-color-scheme: light)');
 
   // Optional demo room so the hand-off flow has someone to hand off to (?demo=1)
@@ -42,7 +43,7 @@
     for (const id of ['#me-avatar', '#room-me']) { const a = $(id); if (!a) continue; a.textContent = initials(st.name); a.style.background = st.color; a.style.color = ink(st.color); }
     if ($('#room-name')) $('#room-name').textContent = st.name || 'You';
     $('#folder-label').textContent = st.folder || 'Not set';
-    $('#brain-label').textContent = st.brain.enabled ? `${st.brain.model} · local` : 'brain off';
+    $('#brain-label').textContent = serverBrain && serverBrain.online ? `${serverBrain.model} · host` : st.brain.enabled ? `${st.brain.model} · local` : 'brain off';
 
     const done = CHECKS.filter(c => st.checklist[c.key]).length;
     $('#check-count').textContent = `${done} of ${CHECKS.length}`;
@@ -70,18 +71,22 @@
     const files = [...e.dataTransfer.files];
     const url = e.dataTransfer.getData('text/uri-list');
     if (url) files.push({ name: url, size: 0 });
-    if (!files.length) return;
-    files.forEach(f => drops.push({ name: f.name, size: f.size, saved: false }));
+    const real = [...e.dataTransfer.files];
+    if (url && !real.length) {
+      window.TribeDocs.create(url.replace(/^https?:\/\//, '').slice(0, 60), `Link: ${url}\n\n> Google Docs import arrives with the Drive connector. Paste the text below for now.\n`, url).then(() => show('docs'));
+      S.set({ checklist: { drop: true } }); refresh(); return;
+    }
+    if (!real.length) return;
+    real.forEach(f => drops.push({ name: f.name, size: f.size, saved: true }));
     renderDrops();
-    S.set({ checklist: { drop: true } }); refresh();
-    toast(`${files.length} item${files.length > 1 ? 's' : ''} queued for conversion to Markdown.`);
+    window.TribeDocs.importFiles(real).then(() => show('docs'));
   });
   function renderDrops() {
     $('#drops').innerHTML = drops.slice(-4).map(d => `<div><svg class="i" style="width:15px;height:15px;color:var(--accent-2)"><use href="#i-doc"/></svg><span>${esc(d.name)}</span><span class="faint" style="margin-left:auto">${d.saved ? 'saved' : 'queued'}</span></div>`).join('');
   }
 
   // nav + views
-  const VIEWS = { home: 'Home', tasks: 'Tasks', board: 'Board' };
+  const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board' };
   function show(view) {
     if (!VIEWS[view]) return;
     Object.keys(VIEWS).forEach(v => $('#view-' + v).classList.toggle('hidden', v !== view));
@@ -90,13 +95,14 @@
     document.querySelector('.titlebar .faint').textContent = '/ ' + VIEWS[view];
     if (view === 'tasks') window.TribeTasks.load();
     if (view === 'board') window.TribeBoard.load();
+    if (view === 'docs') window.TribeDocs.load();
     window.TribeClient.sendActivity(VIEWS[view]);
     try { sessionStorage.setItem('tribecode.view', view); } catch {}
   }
   document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
     if (VIEWS[b.dataset.nav]) show(b.dataset.nav);
     else if (b.dataset.nav === 'chat') $('#chat-input').focus();
-    else toast(`${b.title} is coming in a later sprint. Home, Tasks and the Board work now.`);
+    else toast(`${b.title} is coming in a later sprint. Home, Docs, Tasks and the Board work now.`);
   }));
 
   document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
@@ -107,7 +113,7 @@
   const C = window.TribeClient;
   const nameOf = id => { if (id === 'tribecode') return 'TribeCode'; const m = (C.state().members || []).find(x => x.id === id); return m ? m.name : 'someone'; };
   const colorOf = id => { const m = (C.state().members || []).find(x => x.id === id); return m ? m.color : '#3DD6D0'; };
-  const md = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const md = t => window.TribeMD.inline(t).replace(/\n/g, '<br>');
   function renderRoom(list) {
     const st = S.get();
     if (!C.hasToken() || !list || !list.length) return;
@@ -131,7 +137,24 @@
       $('#chat-list').scrollTop = 1e9;
     } catch {}
   }
+  async function refreshBrain() {
+    if (!C.connected()) return;
+    try {
+      const { brain } = await C.api('/brain');
+      serverBrain = brain; refresh();
+      $('#brain-status').title = brain.online ? 'Local brain running on the tribe host' : brain.error;
+    } catch {}
+  }
+  $('#standup-go').addEventListener('click', async () => {
+    const b = $('#standup-go'), out = $('#standup-text');
+    if (!C.connected()) { toast('Standups use the host\'s local brain. Start or join a tribe first.'); return; }
+    b.disabled = true; b.textContent = 'Writing…'; out.innerHTML = '';
+    try { const { text } = await C.api('/brain/standup', { method: 'POST' }); out.innerHTML = window.TribeMD.render(text); b.textContent = 'Rewrite standup'; }
+    catch (e) { out.innerHTML = `<p class="faint">${esc(e.status === 503 ? 'The local brain is off on the host. Install Ollama and run: ollama pull qwen3' : e.message)}</p>`; b.textContent = "Write today's standup"; }
+    b.disabled = false;
+  });
   C.on('presence', renderRoom);
+  C.on('hello', refreshBrain);
   C.on('hello', () => { loadChat(); refresh(); });
   C.on('chat', ({ channel, message }) => {
     if (channel !== 'general') return;
@@ -211,11 +234,12 @@
     session: () => {
       const me = C.state().me;
       const live = (C.state().members || []).filter(m => m.online && (!me || m.id !== me.id)).map(m => ({ id: m.id, name: m.name }));
-      return { openDocs: Math.max(1, drops.length), unsaved: drops.filter(d => !d.saved).length + (demo.peers.length ? 2 : 0),
+      return { openDocs: Math.max(1, drops.length), unsaved: drops.filter(d => !d.saved).length + (window.TribeDocs && window.TribeDocs.isDirty() ? 1 : 0) + (demo.peers.length ? 2 : 0),
         peers: live.length ? live : demo.peers, agentRuns: demo.agentRuns, claims: demo.claims };
     },
     async afterSetup() { const st = S.get(); if ((await C.ensureMember({ name: st.name, color: st.color })) === 'host') toast("You're the host of this tribe. Invite friends from the sidebar."); },
     async saveAll() {
+      if (window.TribeDocs && window.TribeDocs.isDirty()) await window.TribeDocs.saveNow();
       drops.forEach(d => { d.saved = true; });
       try { localStorage.setItem('tribecode.drafts', JSON.stringify(drops)); } catch {}
       renderDrops();

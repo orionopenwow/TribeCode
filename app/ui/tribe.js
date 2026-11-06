@@ -40,6 +40,9 @@
       if (m.type === 'task-removed') emit('task-removed', m.id);
       if (m.type === 'proposal') emit('proposal', m.proposal);
       if (m.type === 'milestones') emit('milestones', m.milestones);
+      if (m.type === 'doc') emit('doc', m.doc);
+      if (m.type === 'doc-summary') emit('doc-summary', m);
+      if (m.type === 'doc-removed') emit('doc-removed', m.slug);
     };
     sock.onclose = () => {
       setStatus(token() ? 'reconnecting' : 'offline');

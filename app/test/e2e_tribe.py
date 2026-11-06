@@ -45,7 +45,9 @@ def main():
     repo = tempfile.mkdtemp(prefix="proj-")
     g = lambda *a: subprocess.run(["git", "-C", repo, *a], check=True, capture_output=True, text=True).stdout
     g("init", "-q"); g("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init")
-    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--repo", repo],
+    mock = subprocess.Popen(["node", str(ROOT / "app" / "test" / "mock_ollama.js"), "11555"], stdout=subprocess.DEVNULL)
+    time.sleep(0.3)
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--repo", repo, "--ollama", "http://localhost:11555"],
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         for _ in range(50):
@@ -163,6 +165,65 @@ def main():
             assert len(list(Path(tmp, "tasks").glob("*.md"))) == 4, "2 tasks created from the proposal checklist"
             assert list(Path(tmp, "decisions").glob("*campfire-save-points.md"))
 
+            # ---- vision check by the brain ----
+            host.click("#prop-new"); host.fill("#np-title", "Add a battle royale mode"); host.fill("#np-body", "Make it competitive PvP."); host.click("#np-go")
+            wait_text(friend, "#prop-list", "Off-vision")
+            wait_text(friend, "#chat-list", "may conflict with VISION.md")
+
+            # ---- docs ----
+            wait_text(host, "#brain-label", "qwen3:8b")
+            host.click('[data-nav="docs"]')
+            host.wait_for_selector("#doc-first")
+            host.click("#doc-first")
+            host.wait_for_selector("#doc-title")
+            host.fill("#doc-title", "Game design doc")
+            host.click("#doc-body")
+            host.keyboard.type("## Core loop\nExplore by day, build camp at night. Every friend lights a campfire on the shared map.\n/to")
+            host.wait_for_selector("#doc-slash:not(.hidden)")
+            host.keyboard.press("Enter")
+            host.keyboard.type("Forest biome")
+            host.keyboard.press("Enter")
+            host.keyboard.type("Shared inventory")
+            assert "- [ ] Forest biome\n- [ ] Shared inventory" in host.input_value("#doc-body"), host.input_value("#doc-body")
+            wait_text(host, "#doc-status", "Saved")
+            friend.click('[data-nav="docs"]')
+            wait_text(friend, "#doc-list", "Game design doc")
+            friend.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Game design doc'", timeout=8000)
+            # live update reaches an idle reader
+            host.click("#doc-body"); host.keyboard.press("Control+End"); host.keyboard.type("\n\nCombat rework parked until the vote.")
+            friend.wait_for_function("document.querySelector('#doc-body').value.includes('Combat rework')", timeout=8000)
+            # brain TL;DR
+            friend.click("#doc-sum")
+            wait_text(friend, "#doc-tldr", "Co-op pixel game design")
+            assert "<think>" not in friend.inner_text("#doc-tldr")
+            # read mode renders a real checklist; ticking it saves
+            friend.click('[data-mode="read"]')
+            friend.wait_for_selector("#doc-read input[type=checkbox]")
+            friend.locator("#doc-read input[type=checkbox]").first.check()
+            wait_text(friend, "#doc-status", "Saved")
+            shot(friend, "docs-live")
+            friend.click('[data-mode="write"]')
+            # conflict: friend has unsaved text while host saves first
+            tok = host.evaluate("TribeStore.get().server.token")
+            slug = friend.evaluate("document.querySelector('.doc-item.on').dataset.slug")
+            friend.click("#doc-body"); friend.keyboard.press("Control+End"); friend.keyboard.type(" Maya was here.")
+            st, d = api("/docs/" + slug, token=tok)
+            st, d = api("/docs/" + slug, "PUT", {"title": d["doc"]["title"], "body": d["doc"]["body"] + "\nHost edit.", "baseVersion": d["doc"]["version"]}, token=tok)
+            assert st == 200, d
+            friend.wait_for_selector("#doc-banner:not(.hidden)", timeout=8000)
+            friend.click("#cf-mine")
+            wait_text(friend, "#doc-status", "Saved")
+            assert "Maya was here." in Path(tmp, "docs", slug + ".md").read_text()
+            # import a file
+            friend.evaluate("TribeDocs.importFiles([new File(['# Notes from the jam\\n\\nIdeas: fishing, music.'], 'jam-notes.md', {type: 'text/markdown'})])")
+            wait_text(friend, "#doc-list", "jam-notes")
+            assert Path(tmp, "docs", "jam-notes.md").exists()
+
+            # ---- standup ----
+            host.click('[data-nav="home"]'); host.click("#standup-go")
+            wait_text(host, "#standup-text", "Maya: asked for controller support")
+            assert list(Path(tmp, "brain").glob("standup-*.md"))
+
             # update hand-off picks real online peers
             host.goto(BASE + "/?simulateUpdate=9.9.9")
             host.wait_for_function("document.querySelector('#update-pill-label').innerText.startsWith('Restart')", timeout=8000)
@@ -170,7 +231,7 @@ def main():
             assert "1 friend online" in host.inner_text("#update-pop")
             b.close()
     finally:
-        srv.terminate()
+        srv.terminate(); mock.terminate()
     if errors:
         print("\n".join(errors)); sys.exit(1)
     print("E2E tribe test passed")

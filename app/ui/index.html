@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="updater.css">
 <link rel="stylesheet" href="live.css">
+<link rel="stylesheet" href="docs.css">
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -82,6 +83,12 @@
           <div class="progress"><i id="check-bar" style="width:0%"></i></div>
           <div id="checklist"></div>
         </section>
+        <section class="card" id="standup-card">
+          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-brain"/></svg>Daily standup</h3>
+          <div class="lead">Your local brain reads the last day of chat and the task board and writes a short recap for everyone. Zero Claude tokens.</div>
+          <div class="standup" id="standup-text"></div>
+          <button class="btn" id="standup-go">Write today's standup</button>
+        </section>
         <section class="card" id="tour-drop">
           <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-upload"/></svg>Drop zone</h3>
           <div class="lead">Drop any file: docs, PDFs, slides, images. It's converted to Markdown and summarized by your local brain.</div>
@@ -94,6 +101,16 @@
       <div class="view-head"><h1>Tasks</h1><span class="faint" id="tasks-sub"></span>
         <button class="btn primary" id="task-new" style="margin-left:auto"><svg class="i" style="width:15px;height:15px"><use href="#i-check"/></svg>New task</button></div>
       <div class="board" id="board"></div>
+     </section>
+     <section id="view-docs" class="hidden">
+      <div class="docs-grid">
+        <aside class="doc-side" id="doc-list-wrap">
+          <div class="doc-side-head"><input class="doc-search" id="doc-search" placeholder="Search docs" autocomplete="off"><button class="btn primary" id="doc-new" title="New doc">+</button></div>
+          <div id="doc-list"></div>
+          <div class="doc-drop-hint">Drop files here to import</div>
+        </aside>
+        <div class="doc-pane" id="doc-pane"></div>
+      </div>
      </section>
      <section id="view-board" class="hidden">
       <div class="view-head"><h1>Approval board</h1>
@@ -152,7 +169,9 @@
 <script src="onboarding.js"></script>
 <script src="tour.js"></script>
 <script src="updater.js"></script>
+<script src="md.js"></script>
 <script src="tasks.js"></script>
+<script src="docs.js"></script>
 <script src="board.js"></script>
 <script src="app.js"></script>
 </body>

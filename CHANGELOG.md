@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased: Sprints 2, 3 and 4
+## Unreleased: Sprints 2–5
+
+- Docs: Markdown pages in `docs/`, Notion-style `/` menu (headings, to-dos, lists, quote, code, divider, table, date, summarize), list continuation, Ctrl+B/I/S, Write/Read modes with clickable checklists
+- Docs autosave with versioning; live updates for idle readers; conflict banner (use theirs / copy mine / keep mine); drop files to import; works offline on one device
+- Local brain via Ollama (`--ollama`, `--model`, prefers Qwen): doc TL;DRs saved as `*.summary.md`, daily standup written to `brain/` and posted to chat, vision check on every new proposal
+- Home drop zone imports files into Docs; title bar shows the host's brain model
 
 - Tribe server (`npm start`): zero-dependency Node, serves the UI, hand-rolled WebSocket for presence + chat
 - Invite links with expiry, max uses and builder/spectator roles; join page that carries name + color into setup
