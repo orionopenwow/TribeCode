@@ -25,6 +25,21 @@ def api(path, method="GET", body=None, token=None):
         return e.code, json.loads(e.read() or b"{}")
 
 
+def mcp(token, method, params=None, id_=1):
+    body = {"jsonrpc": "2.0", "method": method, **({"params": params} if params is not None else {}), **({"id": id_} if id_ is not None else {})}
+    req = urllib.request.Request(BASE + "/mcp", method="POST", data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream", "Authorization": "Bearer " + token})
+    with urllib.request.urlopen(req) as r:
+        raw = r.read()
+        return r.status, (json.loads(raw) if raw else None)
+
+
+def call(token, tool, args=None):
+    st, d = mcp(token, "tools/call", {"name": tool, "arguments": args or {}})
+    r = d["result"]
+    return r.get("isError", False), r["content"][0]["text"]
+
+
 def shot(page, name):
     if take:
         page.wait_for_timeout(450)
@@ -268,6 +283,48 @@ def main():
             host.click('[data-bf="resolved"]')
             wait_text(host, "#bug-list", "resolved")
 
+            # ---- Claude Code joins over MCP ----
+            host.click("#cc-connect")
+            wait_text(host, "#invite-body", "claude mcp add --transport http tribecode")
+            cmd = host.inner_text("#cc-cmd")
+            atok = cmd.split("Bearer ")[1].rstrip('"')
+            assert f"{BASE}/mcp" in cmd
+            host.click("[data-close]")
+            st, d = mcp(atok, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "test", "version": "1"}})
+            assert d["result"]["serverInfo"]["name"] == "tribecode" and d["result"]["protocolVersion"] == "2025-06-18"
+            assert mcp(atok, "notifications/initialized", id_=None)[0] == 202
+            names = [t["name"] for t in mcp(atok, "tools/list")[1]["result"]["tools"]]
+            assert {"tribe_overview", "claim_file", "write_doc", "update_task", "propose"} <= set(names), names
+            e, t = call(atok, "tribe_overview"); assert not e and "Campfire Crew" in t and "Never competitive" in t
+            wait_text(host, "#room-list", "Claude · Orion")
+            e, t = call(atok, "claim_file", {"path": "src/world/", "note": "refactoring saves"}); assert not e, t
+            wait_text(friend, "#claims-list", "src/world/")
+            st, d = api("/claims", "POST", {"path": "src/world/campfire.ts"}, token=friend.evaluate("TribeStore.get().server.token"))
+            assert st == 409 and "Claude" in d["error"], d
+            e, t = call(atok, "create_task", {"title": "Write save-file migration", "status": "doing"}); assert not e
+            tid = t.split()[1].rstrip(":")
+            e, t = call(atok, "update_task", {"id": tid, "take": True, "note": "Started on the schema"}); assert not e
+            e, t = call(atok, "write_doc", {"name": "Agent notes", "body": "# Agent notes\n\nSaves live in src/world."}); assert not e, t
+            e, t = call(atok, "write_doc", {"name": "Agent notes", "body": "overwrite"}); assert e and "base_version" in t
+            e, t = call(atok, "read_doc", {"name": "agent-notes"}); assert "version 1" in t
+            e, t = call(atok, "write_doc", {"name": "agent-notes", "body": "# Agent notes\n\nv2", "base_version": 1}); assert not e and "version 2" in t
+            e, t = call(atok, "post_chat", {"text": "Taking the save-file migration, claimed src/world/"}); assert not e
+            wait_text(friend, "#chat-list", "Taking the save-file migration")
+            e, t = call(atok, "propose", {"title": "Split world saves per player", "body": "## Tasks\n- [ ] Per-player save"}); assert not e
+            assert api("/proposals", token=atok)[1]["proposals"][0]["tally"]["yes"] == 0, "agents don't vote"
+            pid = api("/proposals", token=atok)[1]["proposals"][0]["id"]
+            assert api(f"/proposals/{pid}/vote", "POST", {"vote": "yes"}, token=atok)[0] == 403
+            assert api("/invites", "POST", {}, token=atok)[0] == 403
+            e, t = call(atok, "release_file", {"path": "src/world/"}); assert not e
+            wait_text(host, "#room-list", "using release file")
+            shot(host, "agents-live")
+
+            # ---- follow mode ----
+            host_id = host.evaluate("TribeClient.state().me.id")
+            friend.click(f'[data-follow="{host_id}"]')
+            friend.wait_for_selector("#view-bugs:not(.hidden)", timeout=5000)
+            wait_text(friend, ".toast", "Following Orion")
+
             # ---- in-app join (desktop-style UI, not served by the tribe) ----
             tok = host.evaluate("TribeStore.get().server.token")
             st, d = api("/invites", "POST", {"hours": 1, "maxUses": 1}, token=tok)
@@ -285,7 +342,8 @@ def main():
             jay.click("#jn-go")
             wait_text(jay, "#sync-status", "connected")
             wait_text(host, "#room-list", "Jay")
-            wait_text(jay, "#room-count", "3 online")
+            wait_text(jay, "#room-list", "Claude · Orion")
+            wait_text(jay, "#room-count", "4 online")
             # single-use invite is now spent
             assert api(f"/invites/{d['invite']['code']}")[0] == 410
             jay.close()
@@ -300,8 +358,20 @@ def main():
             # update hand-off picks real online peers
             host.goto(BASE + "/?simulateUpdate=9.9.9")
             host.wait_for_function("document.querySelector('#update-pill-label').innerText.startsWith('Restart')", timeout=8000)
+            api("/claims", "POST", {"path": "src/ui/hud.ts", "note": "HUD polish"}, token=tok)
+            host.wait_for_function("(TribeClient.state().claims || []).length > 0", timeout=5000)
             host.click("#update-pill")
             assert "1 friend online" in host.inner_text("#update-pop")
+            assert "src/ui/hud.ts" in host.inner_text("#update-pop")
+            host.select_option(".handoff-to >> nth=-1", label="Maya")
+            host.click("#up-go")
+            maya_id = friend.evaluate("TribeClient.state().me.id")
+            for _ in range(40):
+                cl = api("/claims", token=tok)[1]["claims"]
+                if any(c["path"] == "src/ui/hud.ts" and c["by"] == maya_id for c in cl): break
+                time.sleep(0.2)
+            else:
+                raise AssertionError("claim was not handed off: %r" % cl)
             b.close()
     finally:
         srv.terminate(); mock.terminate()

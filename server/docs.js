@@ -81,5 +81,21 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
     return null;
   }
 
-  return { route, list, read };
+  // Used by agents (MCP): find by name or title, create or update with optimistic concurrency.
+  function find(name) {
+    const n = String(name || '').trim(); if (!n) return null;
+    if (okSlug(n)) { const d = read(n); if (d) return d; }
+    const hit = list().find(d => d.title.toLowerCase() === n.toLowerCase()) || list().find(d => d.slug === slug(n));
+    return hit ? read(hit.slug) : null;
+  }
+  function upsert({ name, body, baseVersion, by }) {
+    const d = find(name), now = new Date().toISOString();
+    if (!d) return { doc: write({ slug: uniqueSlug(name), title: str(name, 120) || 'Untitled', by, created: now, updated: now, updatedBy: by, version: 1, body: String(body || '').slice(0, 400_000) }) };
+    if (baseVersion === undefined || baseVersion === null) return { conflict: `"${d.title}" already exists (version ${d.version}); pass base_version to edit it` };
+    if (Number(baseVersion) !== Number(d.version)) return { conflict: `"${d.title}" changed since you read it (now version ${d.version})` };
+    d.body = String(body || '').slice(0, 400_000); d.version = Number(d.version) + 1; d.updated = now; d.updatedBy = by;
+    return { doc: write(d) };
+  }
+
+  return { route, list, read, find, upsert };
 };

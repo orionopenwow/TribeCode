@@ -77,6 +77,18 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
   </tr>
 </table>
 
+### Bring your Claude Code
+
+Click **Connect your Claude Code** in the room panel and run the one-line command it gives you:
+
+```bash
+claude mcp add --transport http tribecode http://HOST:4747/mcp --header "Authorization: Bearer <your agent key>"
+```
+
+Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in the room while it works and gets 14 tools: `tribe_overview`, `list_tasks`, `create_task`, `update_task`, `list_docs`, `read_doc`, `write_doc` (with version checks, so it never overwrites a teammate), `post_chat`, `read_chat`, `claim_file`, `release_file`, `list_claims`, `read_vision`, `propose`. Agents respect file claims and VISION.md, but they can't vote or invite people. That stays with the humans.
+
+<p align="center"><img src="docs/screenshots/agents-live.png" alt="Claude agent in the room" width="100%"></p>
+
 ### Live tribe (working today)
 
 <table>
@@ -141,6 +153,7 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 - [x] **Sprint 5: Docs + local brain.** Markdown docs with slash menu, autosave, conflicts, import; Ollama-powered TL;DRs, standups and vision checks
 - [x] **Sprint 6: Alignment + QoL.** Drift radar, self-sorting/self-healing bug inbox with crash capture, `Ctrl+K` command palette
 - [x] **Sprint 7: Packaging.** Server bundled as a sidecar in the desktop app, one-click hosting, `tribecode://` invite links, single-instance app, in-app join from any link
+- [x] **Sprint 8: Claude Code relay.** MCP endpoint (`/mcp`), agents with presence, soft file claims with hand-off, follow a teammate
 - [ ] **Next:** voice huddles (LiveKit), live co-editing (Yjs), Google Drive import, PDF/Office conversion
 - [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims

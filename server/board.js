@@ -22,7 +22,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
   }
 
   function tally(p) {
-    const members = getMembers().filter(m => m.role !== 'spectator');
+    const members = getMembers().filter(m => m.role !== 'spectator' && m.role !== 'agent');
     const voters = members.length || 1;
     const yes = Object.values(p.votes || {}).filter(v => v === 'yes').length;
     const no = Object.values(p.votes || {}).filter(v => v === 'no').length;
@@ -97,19 +97,12 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
       if (m === 'POST' && !b) {
         const body = await readBody(req); const title = str(body.title, 160);
         if (!title) return fail(res, 400, 'title required');
-        const now = new Date().toISOString();
-        const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, status: 'open', by: me.id, created: now,
-          votes: { [me.id]: 'yes' }, body: str(body.body, 20000) });
-        postChat('general', 'tribecode', `New proposal from ${me.name}: **${title}**. Vote on the Board.`);
-        if (brain) brain.visionCheck({ vision: readVision(), title, body: p.body }).then(v => {
-          if (!v) return; const fresh = load(p.id); if (!fresh) return;
-          fresh.vision = v; save(fresh);
-          if (!v.fits) postChat('general', 'tribecode', `Heads up: **${title}** may conflict with VISION.md. ${v.note}`);
-        }).catch(() => {});
-        return send(res, 200, { proposal: { ...resolve(p, me), tally: tally(p) } });
+        const p = propose(title, body.body, me);
+        return send(res, 200, { proposal: { ...p, tally: tally(p) } });
       }
       const p = b && load(b); if (!p) return fail(res, 404, 'proposal not found');
       if (m === 'POST' && c === 'vote') {
+        if (me.role === 'agent') return fail(res, 403, 'agents cannot vote; their humans do');
         if (p.status !== 'open') return fail(res, 409, 'voting is closed');
         const body = await readBody(req);
         if (body.vote === 'clear') delete p.votes[me.id];
@@ -127,5 +120,21 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     return null; // not handled
   }
 
-  return { route, tally };
+  function propose(title, text, me) {
+    title = str(title, 160) || 'Untitled proposal';
+    const now = new Date().toISOString();
+    // An agent's proposal starts with no votes: only humans vote.
+    const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, status: 'open', by: me.id, created: now,
+      votes: me.role === 'agent' ? {} : { [me.id]: 'yes' }, body: str(text, 20000) });
+    postChat('general', 'tribecode', `New proposal from ${me.name}: **${title}**. Vote on the Board.`);
+    if (brain) brain.visionCheck({ vision: readVision(), title, body: p.body }).then(v => {
+      if (!v) return; const fresh = load(p.id); if (!fresh) return;
+      fresh.vision = v; save(fresh);
+      if (!v.fits) postChat('general', 'tribecode', `Heads up: **${title}** may conflict with VISION.md. ${v.note}`);
+    }).catch(() => {});
+    return resolve(p, me);
+  }
+  const open = () => all().filter(p => p.status === 'open');
+
+  return { route, tally, propose, open };
 };

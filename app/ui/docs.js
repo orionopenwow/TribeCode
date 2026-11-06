@@ -14,6 +14,8 @@
   let list = [], cur = null, dirty = false, saving = false, saveTimer = null, mode = 'write', filter = '', slash = null, loaded = false;
 
   const remote = () => C.connected();
+  const onScreen = () => { const v = document.querySelector('#view-docs'); return v && !v.classList.contains('hidden'); };
+  const activity = () => { if (onScreen()) window.TribeClient.sendActivity(cur ? `Docs · ${cur.title}` : 'Docs'); };
   const nameOf = id => { const m = (C.state().members || []).find(x => x.id === id); return m ? m.name : id === (C.state().me || {}).id ? 'you' : 'someone'; };
   const ago = iso => { if (!iso) return ''; const s = (Date.now() - Date.parse(iso)) / 1000; return s < 45 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : new Date(iso).toLocaleDateString(); };
   const local = {
@@ -52,7 +54,7 @@
     if (dirty) await save();
     try { cur = await fetchDoc(slug); } catch (e) { cur = null; }
     dirty = false; hideBanner(); renderList(); renderEditor();
-    window.TribeClient.sendActivity(cur ? `Docs · ${cur.title}` : 'Docs');
+    activity();
   }
 
   function queueSave() { dirty = true; setStatus('Editing…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 900); }
@@ -70,7 +72,7 @@
         if (r.status === 409) { showConflict(d.doc); setStatus('Not saved: someone else edited this'); return; }
         if (!r.ok) throw new Error(d.error || r.statusText);
         cur = { ...cur, ...d.doc }; dirty = false; setStatus(`Saved · v${cur.version}`);
-        window.TribeClient.sendActivity(`Docs · ${cur.title}`);
+        activity();
       } else {
         const all = local.all(); const i = all.findIndex(x => x.slug === cur.slug);
         cur = { ...cur, title, body, version: (cur.version || 1) + 1, updated: new Date().toISOString() };

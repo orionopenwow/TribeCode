@@ -120,17 +120,60 @@
     if (!C.hasToken() || !list || !list.length) return;
     const on = list.filter(m => m.online).length;
     $('#room-count').textContent = `· ${on} online`;
-    $('#room-list').innerHTML = list.slice().sort((a, b) => b.online - a.online).map(m => `
-      <div class="person ${m.online ? 'on' : ''}"><div class="avatar" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(initials(m.name))}<span class="st"></span></div>
-      <div><span>${esc(m.name)}${C.state().me && C.state().me.id === m.id ? ' <span class="faint">(you)</span>' : ''}</span><div class="what">${m.online ? 'online · ' + esc(m.where || 'Home') : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
+    const meId = (C.state().me || {}).id;
+    const shown = list.filter(m => m.role !== 'agent' || m.online || m.owner === meId);
+    $('#room-list').innerHTML = shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(m => `
+      <div class="person ${m.online ? 'on' : ''} ${m.role === 'agent' ? 'agent' : ''}" data-follow="${esc(m.id)}" title="${m.online && m.id !== meId && m.role !== 'agent' ? 'Click to follow ' + esc(m.name) : ''}">
+      <div class="avatar" style="background:${m.role === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.role === 'agent' ? '🤖' : esc(initials(m.name))}<span class="st"></span></div>
+      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}</span><div class="what">${m.online ? (m.role === 'agent' ? 'agent · ' : 'online · ') + esc(m.where || 'Home') : m.role === 'agent' ? 'agent · idle' : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
+    $('#room-list').querySelectorAll('[data-follow]').forEach(el => el.onclick = () => follow(el.dataset.follow));
     $('#room-hint').classList.toggle('hidden', list.length > 1);
     $('#room-hint').textContent = 'Invite friends to see them here.';
   }
+  function follow(mid) {
+    const m = (C.state().members || []).find(x => x.id === mid);
+    if (!m || !m.online || m.role === 'agent' || m.id === (C.state().me || {}).id) return;
+    const w = m.where || 'Home', view = Object.keys(VIEWS).find(k => w.startsWith(VIEWS[k])) || 'home';
+    show(view);
+    const doc = w.match(/^Docs · (.+)$/);
+    if (doc) C.api('/docs').then(({ docs }) => { const d = docs.find(x => x.title === doc[1]); if (d) window.TribeDocs.open(d.slug); }).catch(() => {});
+    toast(`Following ${m.name} to ${w}`);
+  }
+  function renderClaims(list) {
+    const meId = (C.state().me || {}).id;
+    $('#claims-box').classList.toggle('hidden', !list || !list.length);
+    $('#claims-list').innerHTML = (list || []).map(c => `<div class="claim"><svg class="i" style="width:14px;height:14px;color:var(--amber)"><use href="#i-folder"/></svg>
+      <code title="${esc(c.note || '')}">${esc(c.path)}</code><span class="faint">${esc(c.name)}</span>${c.by === meId ? `<button class="linkish" data-unclaim="${esc(c.id)}">release</button>` : ''}</div>`).join('');
+    $('#claims-list').querySelectorAll('[data-unclaim]').forEach(b => b.onclick = () => C.api('/claims/' + b.dataset.unclaim, { method: 'DELETE' }).catch(e => toast(e.message)));
+  }
+  async function connectClaude() {
+    if (!C.connected()) return openInvite();
+    const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
+    body.innerHTML = '<h2>Connect your Claude Code</h2><p class="lead">Creating a key…</p>';
+    try {
+      const r = await C.api('/agents', { method: 'POST' });
+      body.innerHTML = `<h2>Connect your Claude Code</h2>
+        <p class="lead">Run this once in a terminal. Your Claude Code joins the tribe as <b>${esc(r.agent.name)}</b>: it sees the board, docs, chat and VISION.md, claims files before editing, and shows up in the room while it works.</p>
+        <div class="linkbox"><code id="cc-cmd" title="${esc(r.command)}">${esc(r.command)}</code><button class="btn primary" id="cc-copy">Copy</button></div>
+        <p class="faint" style="font-size:12px;line-height:1.5">${r.tools.length} tools: ${r.tools.map(esc).join(', ')}. Making a new key replaces the old one. Agents can't vote or invite people.</p>
+        <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
+      $('#cc-copy').onclick = async () => { try { await navigator.clipboard.writeText(r.command); toast('Command copied. Paste it in your terminal.'); } catch { getSelection().selectAllChildren($('#cc-cmd')); } };
+    } catch (e) { body.innerHTML = `<h2>Couldn't create a key</h2><p class="lead">${esc(e.message)}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; }
+    body.querySelector('[data-close]').onclick = closeInvite;
+  }
+  $('#cc-connect').addEventListener('click', () => connectClaude());
+  C.on('claims', renderClaims);
+  C.on('hello', () => C.api('/claims').then(r => { C.state().claims = r.claims; renderClaims(r.claims); }).catch(() => {}));
+
   function chatHtml(m) {
     const sys = m.by === 'tribecode', when = new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     return `<div class="msg ${sys ? 'sys' : ''}"><div class="avatar" style="background:${sys ? 'var(--surface-3)' : esc(colorOf(m.by))};color:${sys ? 'var(--accent-2)' : ink(colorOf(m.by))}">${sys ? '🔥' : esc(initials(nameOf(m.by)))}</div>
       <div><b>${esc(nameOf(m.by))}</b><time>${when}</time><p>${md(m.text)}</p></div></div>`;
   }
+  // Chat sticks to the newest message unless you've scrolled up to read history.
+  let readingHistory = false;
+  $('#chat-list').addEventListener('scroll', () => { const l = $('#chat-list'); readingHistory = l.scrollTop + l.clientHeight < l.scrollHeight - 60; }, { passive: true });
+  new ResizeObserver(() => { if (!readingHistory) $('#chat-list').scrollTop = 1e9; }).observe($('#chat-list'));
   async function loadChat() {
     try {
       const { messages } = await C.api('/chat/general?limit=100');
@@ -160,8 +203,8 @@
   C.on('chat', ({ channel, message }) => {
     if (channel !== 'general') return;
     const list = $('#chat-list'); if (list.querySelector('.empty-room')) list.innerHTML = '';
-    const stick = list.scrollTop + list.clientHeight >= list.scrollHeight - 30;
-    list.insertAdjacentHTML('beforeend', chatHtml(message)); if (stick) list.scrollTop = 1e9;
+    list.insertAdjacentHTML('beforeend', chatHtml(message));
+    if (!readingHistory) list.scrollTop = 1e9;
   });
   C.on('status', s => {
     const label = { online: 'connected', connecting: 'connecting…', reconnecting: 'reconnecting…', offline: 'local only' }[s.status];
@@ -305,9 +348,10 @@
     applyTheme, refresh, toast,
     session: () => {
       const me = C.state().me;
-      const live = (C.state().members || []).filter(m => m.online && (!me || m.id !== me.id)).map(m => ({ id: m.id, name: m.name }));
+      const live = (C.state().members || []).filter(m => m.online && m.role !== 'agent' && (!me || m.id !== me.id)).map(m => ({ id: m.id, name: m.name }));
       return { openDocs: Math.max(1, drops.length), unsaved: drops.filter(d => !d.saved).length + (window.TribeDocs && window.TribeDocs.isDirty() ? 1 : 0) + (demo.peers.length ? 2 : 0),
-        peers: live.length ? live : demo.peers, agentRuns: demo.agentRuns, claims: demo.claims };
+        peers: live.length ? live : demo.peers, agentRuns: demo.agentRuns,
+        claims: C.connected() ? (C.state().claims || []).filter(c => me && c.by === me.id).map(c => ({ id: c.id, path: c.path })) : demo.claims };
     },
     async afterSetup() { const st = S.get(); if ((await C.ensureMember({ name: st.name, color: st.color })) === 'host') toast("You're the host of this tribe. Invite friends from the sidebar."); },
     async saveAll() {
@@ -317,7 +361,10 @@
       renderDrops();
       await new Promise(r => setTimeout(r, 500));
     },
-    async handOff(id, to) { await new Promise(r => setTimeout(r, 450)); console.info('handoff', id, '→', to); },
+    async handOff(id, to) {
+      if (C.connected() && String(id).startsWith('c-') && to !== 'pause') { try { await C.api('/claims/' + id, { method: 'PATCH', body: { to } }); } catch (e) { toast(e.message); } return; }
+      await new Promise(r => setTimeout(r, 300));
+    },
     async announce(msg) { C.announce(msg); },
   };
 
@@ -333,5 +380,5 @@
   if (window.TribeHost.isDesktop && S.get().hosting) hostHere({ quiet: true }); else C.connect();
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
-  Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite });
+  Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite, connectClaude });
 })();

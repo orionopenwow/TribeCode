@@ -15,6 +15,8 @@ const makeDocs = require('./docs');
 const makeBrain = require('./brain');
 const makeBugs = require('./bugs');
 const makeDrift = require('./drift');
+const makeClaims = require('./claims');
+const makeMcp = require('./mcp');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -38,7 +40,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
   res.end(isObj ? JSON.stringify(body) : body);
 }
 const fail = (res, status, error) => send(res, status, { error });
@@ -78,9 +80,22 @@ function limited(req, max = 20, windowMs = 60_000) {
 // ---------- realtime ----------
 const online = new Map(); // memberId -> { sockets:Set, where, since }
 function broadcast(msg, except) { for (const [, o] of online) for (const s of o.sockets) if (s !== except) s.send(msg); }
+const agentSeen = new Map(); // agent id -> { at, where }
+const AGENT_IDLE = 3 * 60_000;
 function presence() {
-  return members.map(m => { const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null }; });
+  return members.map(m => {
+    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null }; }
+    const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null };
+  });
 }
+function touchAgent(me, tool) {
+  if (me.role !== 'agent') return;
+  const prev = agentSeen.get(me.id), where = `using ${tool.replace(/_/g, ' ')}`;
+  const changed = !prev || Date.now() - prev.at > AGENT_IDLE || prev.where !== where;
+  agentSeen.set(me.id, { at: Date.now(), where });
+  if (changed) pushPresence();
+}
+setInterval(() => { for (const [k, a] of agentSeen) if (Date.now() - a.at > AGENT_IDLE && !a.off) { a.off = true; pushPresence(); } }, 30_000).unref();
 const pushPresence = () => broadcast({ type: 'presence', members: presence() });
 
 // ---------- chat ----------
@@ -128,6 +143,29 @@ const board = makeBoard({ store, id, slug, str, getMembers: () => members, broad
 const docs = makeDocs({ store, slug, str, broadcast, brain, postChat });
 const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid) });
 const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
+const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
+const claims = makeClaims({ store, id, broadcast, nameOf });
+const mcp = makeMcp({
+  VERSION, tribe, presence, touchAgent, readVision,
+  tasks: {
+    all: () => loadTasks().map(t => ({ ...t, assigneeName: t.assignee ? nameOf(t.assignee) : null })),
+    create: ({ title, body, status, by }) => createTask({ title, body, status, by, source: 'agent' }),
+    update(tid, a, me) {
+      const t = loadTasks().find(x => x.id === tid); if (!t) return null;
+      if (a.status && STATUSES.includes(a.status)) t.status = a.status;
+      if (a.title) t.title = str(a.title, 200);
+      if (a.take) t.assignee = me.id;
+      if (a.note) t.body = `${t.body ? t.body + '\n\n' : ''}**${me.name}** · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}: ${str(a.note, 2000)}`;
+      t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
+    },
+  },
+  docs, claims,
+  chat: {
+    post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
+  },
+  board,
+});
 
 async function standup() {
   const since = Date.now() - 24 * 3600_000;
@@ -192,6 +230,7 @@ async function api(req, res, url) {
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presence() });
 
   if (a === 'invites' && !b && m === 'POST') {
+    if (me.role === 'agent') return fail(res, 403, 'agents cannot invite people');
     const body = await readBody(req);
     const hours = Math.min(Math.max(Number(body.hours) || 24, 1), 24 * 30);
     const inv = { code: code(5), by: me.id, role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Math.min(Math.max(Number(body.maxUses) || 5, 1), 100),
@@ -242,6 +281,23 @@ async function api(req, res, url) {
     const handled = await bugs.route(req, res, { m, b, c, me, readBody, send, fail });
     if (handled !== null) return;
   }
+  if (a === 'agents' && m === 'POST') {
+    if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
+    const name = `Claude · ${me.name}`.slice(0, 32);
+    let ag = members.find(x => x.role === 'agent' && x.owner === me.id);
+    const token = id(32);
+    if (ag) { ag.tokenHash = hash(token); saveMembers(); }
+    else { ag = { id: 'agent-' + slug(me.name).slice(0, 10) + '-' + id(4), name, color: '#3DD6D0', role: 'agent', owner: me.id, joined: new Date().toISOString(), tokenHash: hash(token) }; members.push(ag); saveMembers(); pushPresence(); }
+    const base = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`;
+    return send(res, 200, { agent: publicMember(ag), token, url: `${base}/mcp`, command: `claude mcp add --transport http tribecode ${base}/mcp --header "Authorization: Bearer ${token}"`, tools: mcp.tools });
+  }
+  if (a === 'claims') {
+    if (m === 'GET') return send(res, 200, { claims: claims.list() });
+    if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
+    if (m === 'POST') { const body = await readBody(req); const r = claims.claim(body.path, body.note, me); return r.conflict ? send(res, 409, { error: `claimed by ${r.conflict.name}`, claim: r.conflict }) : send(res, 200, r); }
+    if (m === 'DELETE' && b) return claims.releaseId(b, me) ? send(res, 200, { ok: true }) : fail(res, 404, 'not your claim');
+    if (m === 'PATCH' && b) { const body = await readBody(req); if (!members.some(x => x.id === body.to)) return fail(res, 400, 'unknown member'); const c = claims.handOff(b, body.to, me); return c ? send(res, 200, { claim: c }) : fail(res, 404, 'not your claim'); }
+  }
   if (a === 'drift' && m === 'GET') return send(res, 200, await drift.radar());
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
@@ -272,6 +328,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (req.method === 'OPTIONS') return send(res, 204, '');
   try {
+    if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (req.method === 'GET') return serveStatic(req, res, url);
     fail(res, 405, 'method not allowed');
