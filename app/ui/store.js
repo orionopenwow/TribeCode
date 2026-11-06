@@ -15,6 +15,7 @@
     checklist: { setup: false, tour: false, drop: false, brain: false, invite: false },
     update: { snoozedVersion: '', snoozeUntil: 0 },
     server: { url: '', token: '' },
+    hosting: false,
   };
 
   function merge(base, extra) {

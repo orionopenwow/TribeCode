@@ -16,12 +16,12 @@ const makeBrain = require('./brain');
 const makeBugs = require('./bugs');
 const makeDrift = require('./drift');
 
-const VERSION = require('../app/package.json').version;
+const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
 const PORT = Number(args.port || process.env.TRIBE_PORT || 4747);
 const HOST = args.host || process.env.TRIBE_HOST || '0.0.0.0';
 const DIR = args.dir || process.env.TRIBE_DIR || path.join(os.homedir(), 'TribeCode');
-const UI = path.resolve(__dirname, '..', 'app', 'ui');
+const UI = path.resolve(args.ui || process.env.TRIBE_UI || path.join(__dirname, '..', 'app', 'ui'));
 const STATUSES = ['backlog', 'doing', 'review', 'done'];
 const REPO = args.repo ? path.resolve(args.repo) : (process.env.TRIBE_REPO || null);
 
@@ -299,7 +299,10 @@ server.on('upgrade', (req, sock) => {
   s.on('close', () => { o.sockets.delete(s); if (!o.sockets.size) online.delete(me.id); pushPresence(); });
 });
 
-if (require.main === module) {
+function start() {
+  // When launched by the desktop app, exit if the app goes away.
+  if (args['exit-with-parent']) { const parent = process.ppid; setInterval(() => { if (process.ppid !== parent) process.exit(0); }, 2000).unref(); }
+  server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });
   server.listen(PORT, HOST, () => {
     const lan = Object.values(os.networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal);
     console.log(`\n  🔥 TribeCode server v${VERSION}  ·  tribe "${tribe.name}"`);
@@ -309,5 +312,6 @@ if (require.main === module) {
     console.log('');
   });
 }
+if (require.main === module) start();
 
-module.exports = { server, store };
+module.exports = { server, store, start };

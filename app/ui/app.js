@@ -183,14 +183,19 @@
     const body = $('#invite-body');
     $('#invite-modal').classList.remove('hidden');
     if (!C.connected()) {
+      const desktop = window.TribeHost.isDesktop;
       body.innerHTML = `<h2>Start or join a tribe</h2>
-        <p class="lead">Invites come from a tribe server. Any member can host one on their computer.</p>
-        <ol class="steps-host"><li>On the host computer run <span class="code" style="display:inline-block;padding:3px 8px">node server/index.js</span></li>
-        <li>Open <b>http://localhost:4747</b> there. You'll be the host.</li><li>Click <b>Invite friends</b> to get a link.</li></ol>
-        <div class="field" style="margin-top:16px"><label for="join-link">Got a link from a friend?</label>
-          <div class="folder"><input class="input" id="join-link" placeholder="http://192.168.1.20:4747/join/k7Qx2"><button class="btn primary" id="join-go">Join</button></div></div>
+        <p class="lead">A tribe lives on one member's computer, the host. Everyone else joins with an invite link.</p>
+        ${desktop ? `<button class="btn primary" id="host-here" style="width:100%;height:44px;margin-bottom:6px">Host a tribe on this computer</button>
+          <p class="faint" style="font-size:12px;margin-bottom:16px">Files are stored in ${esc(S.get().folder || '~/TribeCode')}. TribeCode keeps hosting while the app is open.</p>`
+        : `<ol class="steps-host"><li>On the host computer run <span class="code" style="display:inline-block;padding:3px 8px">npm start</span> (or use the desktop app)</li>
+          <li>Open <b>http://localhost:4747</b> there. You'll be the host.</li><li>Click <b>Invite friends</b> to get a link.</li></ol>`}
+        <div class="field" style="margin-top:6px"><label for="join-link">Got an invite link from a friend?</label>
+          <div class="folder"><input class="input" id="join-link" placeholder="http://192.168.1.20:4747/join/k7Qx2"><button class="btn ${desktop ? '' : 'primary'}" id="join-go">Join</button></div></div>
         <div class="modal-foot"><button class="btn" data-close>Close</button></div>`;
-      $('#join-go').onclick = () => { const v = $('#join-link').value.trim(); if (/^https?:\/\/.+\/join\/[A-Za-z0-9]+/.test(v)) location.href = v; else toast('Paste the full invite link, e.g. http://host:4747/join/abc12'); };
+      $('#join-go').onclick = () => joinLink($('#join-link').value);
+      $('#join-link').onkeydown = e => { if (e.key === 'Enter') joinLink($('#join-link').value); };
+      if (desktop) $('#host-here').onclick = hostHere;
     } else {
       body.innerHTML = `<h2>Invite friends</h2><p class="lead">Anyone with this link can join <b>${esc((C.state().tribe || {}).name || 'your tribe')}</b>. They pick a name and they're in.</p>
         <div class="opts"><select id="inv-hours" title="Link expires after"><option value="24">24 hours</option><option value="168">7 days</option><option value="1">1 hour</option></select>
@@ -214,6 +219,73 @@
     body.querySelectorAll('[data-close]').forEach(b => b.onclick = closeInvite);
   }
   const closeInvite = () => $('#invite-modal').classList.add('hidden');
+
+  // ---- join from a link (pasted, or a tribecode:// deep link) without leaving the app ----
+  function parseInvite(raw) {
+    const v = String(raw || '').trim();
+    let m = v.match(/^(https?:\/\/[^/\s]+)\/join\/([A-Za-z0-9]{3,16})\/?$/);
+    if (m) return { server: m[1], code: m[2] };
+    try {
+      const u = new URL(v);
+      if (u.protocol === 'tribecode:') {
+        const code = u.searchParams.get('code') || u.pathname.replace(/^\/+/, '').split('/').pop();
+        const server = u.searchParams.get('server');
+        if (server && /^https?:\/\//.test(server) && /^[A-Za-z0-9]{3,16}$/.test(code)) return { server: server.replace(/\/$/, ''), code };
+      }
+    } catch {}
+    return null;
+  }
+  async function joinLink(raw) {
+    const inv = parseInvite(raw);
+    if (!inv) return toast('Paste the full invite link, e.g. http://host:4747/join/abc12');
+    if (location.protocol.startsWith('http') && inv.server !== location.origin) { location.href = `${inv.server}/join/${inv.code}`; return; }
+    const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
+    body.innerHTML = '<h2>Checking invite…</h2>';
+    let info;
+    try { const r = await fetch(`${inv.server}/api/invites/${inv.code}`); info = await r.json(); if (!r.ok) throw new Error(info.error); }
+    catch (e) { body.innerHTML = `<h2>This invite doesn't work</h2><p class="lead">${esc(e.message === 'invite expired' ? 'It has expired. Ask your friend for a fresh link.' : "Couldn't reach the tribe. Check the link, and that you're on the same network or Tailscale.")}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; return; }
+    const st = S.get(), current = C.state().tribe;
+    body.innerHTML = `<h2>Join ${esc(info.tribe)}</h2><p class="lead">${esc(info.invitedBy)} invited you${info.role === 'spectator' ? ' to watch' : ''}. No account needed.</p>
+      ${current && current.name !== info.tribe ? `<p class="faint" style="font-size:12.5px;margin-bottom:12px">You'll switch from ${esc(current.name)}. You can rejoin it later with its link.</p>` : ''}
+      <div class="field"><label for="jn-name">Your name</label><input class="input" id="jn-name" maxlength="32" value="${esc(st.name || '')}"></div>
+      <div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="jn-go">Join the tribe</button></div>`;
+    body.querySelector('[data-close]').onclick = closeInvite;
+    $('#jn-name').focus();
+    $('#jn-go').onclick = async () => {
+      const name = $('#jn-name').value.trim(); if (!name) return $('#jn-name').focus();
+      $('#jn-go').disabled = true;
+      try {
+        const r = await fetch(`${inv.server}/api/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: inv.code, name, color: st.color }) });
+        const d = await r.json(); if (!r.ok) throw new Error(d.error);
+        S.set({ name, server: { url: inv.server, token: d.token }, hosting: false });
+        closeInvite(); C.connect(); refresh(); toast(`Welcome to ${info.tribe}!`);
+      } catch (e) { toast(e.message); $('#jn-go').disabled = false; }
+    };
+  }
+
+  // ---- desktop: host the tribe server on this computer (bundled sidecar) ----
+  async function hostHere({ quiet = false } = {}) {
+    const st = S.get(), inv = window.__TAURI__ && window.__TAURI__.core;
+    if (!inv) return;
+    const btn = $('#host-here'); if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
+    try {
+      const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: `${(st.name || 'My').split(' ')[0]}'s Tribe` });
+      for (let i = 0; i < 40; i++) { try { const r = await fetch(url + '/api/health'); if (r.ok) break; } catch {} await new Promise(r => setTimeout(r, 250)); }
+      const keep = st.server && st.server.url === url ? st.server.token : '';
+      S.set({ server: { url, token: keep }, hosting: true });
+      const role = await C.ensureMember({ name: st.name, color: st.color });
+      C.connect(); refresh();
+      if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
+    } catch (e) { toast(String(e)); if (btn) { btn.disabled = false; btn.textContent = 'Host a tribe on this computer'; } }
+  }
+
+  // tribecode:// links: on launch and while running (single-instance forwards them here)
+  (async () => {
+    const dl = window.__TAURI__ && window.__TAURI__.deepLink;
+    if (!dl) return;
+    try { const urls = await dl.getCurrent(); if (urls && urls[0]) joinLink(urls[0]); } catch {}
+    try { await dl.onOpenUrl(urls => urls && urls[0] && joinLink(urls[0])); } catch {}
+  })();
   $('#invite-modal').addEventListener('click', e => { if (e.target.id === 'invite-modal') closeInvite(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvite(); });
   $('#settings-btn').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
@@ -258,8 +330,8 @@
   refresh();
   if (!S.get().onboarded) window.TribeOnboarding.open();
   else C.ensureMember({ name: S.get().name, color: S.get().color });
-  C.connect();
+  if (window.TribeHost.isDesktop && S.get().hosting) hostHere({ quiet: true }); else C.connect();
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
-  Object.assign(window.TribeApp, { show, openInvite });
+  Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite });
 })();

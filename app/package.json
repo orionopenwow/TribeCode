@@ -6,10 +6,11 @@
   "license": "MIT",
   "scripts": {
     "tauri": "tauri",
-    "dev": "tauri dev",
-    "build": "tauri build",
+    "dev": "node ../scripts/build-sidecar.js && tauri dev",
+    "build": "node ../scripts/build-sidecar.js && tauri build",
     "icons": "tauri icon ../assets/brand/icon-512.png",
-    "test:ui": "python3 test/ui_smoke.py"
+    "test:ui": "python3 test/ui_smoke.py",
+    "sidecar": "node ../scripts/build-sidecar.js"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

@@ -10,3 +10,4 @@ __pycache__/
 app/src-tauri/target/
 app/src-tauri/gen/
 app/node_modules/
+dist/

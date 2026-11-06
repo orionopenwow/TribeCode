@@ -268,6 +268,35 @@ def main():
             host.click('[data-bf="resolved"]')
             wait_text(host, "#bug-list", "resolved")
 
+            # ---- in-app join (desktop-style UI, not served by the tribe) ----
+            tok = host.evaluate("TribeStore.get().server.token")
+            st, d = api("/invites", "POST", {"hours": 1, "maxUses": 1}, token=tok)
+            link = f"{BASE}/join/{d['invite']['code']}"
+            jay = b.new_context(viewport={"width": 1600, "height": 1000}).new_page(); watch(jay, "jay")
+            jay.goto((ROOT / "app" / "ui" / "index.html").as_uri() + "?reset=1")
+            jay.wait_for_selector("#onboard:not(.hidden)")
+            jay.click("#ob-next"); jay.fill("#ob-name", "Jay"); jay.click("#ob-skip")
+            parsed = jay.evaluate("TribeApp.parseInvite('tribecode://join?server=' + encodeURIComponent('http://10.0.0.5:4747') + '&code=ab12C')")
+            assert parsed == {"server": "http://10.0.0.5:4747", "code": "ab12C"}, parsed
+            jay.click("#tour-invite")
+            jay.fill("#join-link", link); jay.click("#join-go")
+            wait_text(jay, "#invite-body", "Join Campfire Crew")
+            assert jay.input_value("#jn-name") == "Jay"
+            jay.click("#jn-go")
+            wait_text(jay, "#sync-status", "connected")
+            wait_text(host, "#room-list", "Jay")
+            wait_text(jay, "#room-count", "3 online")
+            # single-use invite is now spent
+            assert api(f"/invites/{d['invite']['code']}")[0] == 410
+            jay.close()
+            # the join page offers the desktop app
+            friend2 = b.new_context().new_page()
+            st, d2 = api("/invites", "POST", {}, token=tok)
+            friend2.goto(f"{BASE}/join/{d2['invite']['code']}")
+            friend2.wait_for_selector("#open-app:not(.hidden)")
+            assert friend2.get_attribute("#open-app", "href").startswith("tribecode://join?server=")
+            friend2.close()
+
             # update hand-off picks real online peers
             host.goto(BASE + "/?simulateUpdate=9.9.9")
             host.wait_for_function("document.querySelector('#update-pill-label').innerText.startsWith('Restart')", timeout=8000)

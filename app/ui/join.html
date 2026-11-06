@@ -33,6 +33,7 @@
     <button class="btn primary big" id="go" type="submit">Join the tribe</button>
   </form>
   <div class="err" id="err"></div>
+  <a class="btn ghost hidden" id="open-app" style="margin-top:6px">Have the desktop app? Open it there</a>
   <div class="fine" id="fine"></div>
 </div></div>
 <script src="/store.js"></script>
@@ -64,6 +65,7 @@
       const hrs = Math.max(1, Math.round((Date.parse(d.expires) - Date.now()) / 3600000));
       $('#fine').innerHTML = `Invite <span style="font-family:var(--mono)">${esc(code)}</span> · expires in ${hrs} h · role: ${esc(d.role)}`;
       $('#form').classList.remove('hidden'); swatches();
+      const oa = $('#open-app'); oa.href = `tribecode://join?server=${encodeURIComponent(location.origin)}&code=${encodeURIComponent(code)}`; oa.classList.remove('hidden');
       $('#name').value = st.name || ''; $('#name').focus();
     } catch (e) {
       $('#title').textContent = 'This invite has expired';

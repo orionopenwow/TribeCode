@@ -24,7 +24,11 @@ jobs:
           - platform: windows-latest
             args: ''
           - platform: macos-latest
-            args: '--target universal-apple-darwin'
+            args: '--target aarch64-apple-darwin'
+            triple: aarch64-apple-darwin
+          - platform: macos-13
+            args: '--target x86_64-apple-darwin'
+            triple: x86_64-apple-darwin
           - platform: ubuntu-22.04
             args: ''
     runs-on: ${{ matrix.platform }}
@@ -43,11 +47,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.triple || '' }}
 
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: app/src-tauri -> target
+
+      - name: Build the tribe server sidecar (standalone, no Node needed by users)
+        shell: bash
+        run: node scripts/build-sidecar.js ${{ matrix.triple || '' }}
 
       - name: Install Tauri CLI
         working-directory: app
