@@ -30,7 +30,7 @@ console.log(`\n  TribeCode release setup for ${repo} · ${tag}\n`);
 const keyDir = path.join(os.homedir(), '.tauri'); fs.mkdirSync(keyDir, { recursive: true });
 const keyFile = path.join(keyDir, 'tribecode-updater.key');
 if (!fs.existsSync(keyFile)) {
-  const r = spawnSync('npx', ['--yes', '@tauri-apps/cli@2', 'signer', 'generate', '--ci', '-p', '', '-w', keyFile], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' });
+  const r = spawnSync('npx', ['--yes', '@tauri-apps/cli@2', 'signer', 'generate', '--ci', '-w', keyFile], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' });
   if (r.status !== 0 || !fs.existsSync(keyFile)) die('Could not generate the signing key.');
   ok(`Created signing key at ${keyFile} (keep it safe; it signs every update)`);
 } else ok(`Using existing signing key at ${keyFile}`);
@@ -39,7 +39,6 @@ const pub = fs.readFileSync(keyFile + '.pub', 'utf8').trim();
 // 2. Secrets + variable on GitHub
 const setSecret = (name, value) => { const r = spawnSync('gh', ['secret', 'set', name, '--repo', repo], { input: value, encoding: 'utf8', shell: process.platform === 'win32' }); if (r.status !== 0) die(`Could not set secret ${name}: ${r.stderr}`); };
 setSecret('TAURI_SIGNING_PRIVATE_KEY', fs.readFileSync(keyFile, 'utf8').trim());
-setSecret('TAURI_SIGNING_PRIVATE_KEY_PASSWORD', ' ');
 ok('Saved the private key as GitHub secrets');
 const v = spawnSync('gh', ['variable', 'set', 'TAURI_UPDATER_PUBKEY', '--repo', repo, '--body', pub], { encoding: 'utf8', shell: process.platform === 'win32' });
 if (v.status !== 0) die('Could not set variable TAURI_UPDATER_PUBKEY: ' + v.stderr);
