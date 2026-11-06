@@ -1,10 +1,9 @@
 # Builds the desktop app and publishes a GitHub Release whenever a version tag is pushed.
 # The release includes latest.json, which the in-app updater polls to show "Restart to update".
 #
-# One-time setup (repo Settings -> Secrets and variables -> Actions):
-#   TAURI_SIGNING_PRIVATE_KEY           output of `npx tauri signer generate`
-#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  the password you chose (may be empty)
-# and paste the matching public key into app/src-tauri/tauri.conf.json -> plugins.updater.pubkey
+# One-time setup: run `node scripts/setup-release.js` on your computer. It creates the signing key,
+# stores TAURI_SIGNING_PRIVATE_KEY (+ _PASSWORD) as secrets and TAURI_UPDATER_PUBKEY as a variable,
+# then tags and pushes so this workflow runs. Without the key, installers still build (no auto-update).
 name: Release
 
 on:
@@ -69,6 +68,18 @@ jobs:
             node -e "const f='app/src-tauri/tauri.conf.json';const c=require('./'+f);c.version='$V';require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
           fi
 
+      - name: Updater signing (skipped until the key is set up)
+        shell: bash
+        env:
+          PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+          HAS_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+        run: |
+          node -e "
+            const f='app/src-tauri/tauri.conf.json', c=require('./'+f);
+            if (process.env.PUBKEY && process.env.HAS_KEY === 'true') { c.plugins.updater.pubkey = process.env.PUBKEY; console.log('updater signing on'); }
+            else { c.bundle.createUpdaterArtifacts = false; console.log('No signing key yet: building installers without auto-update files. Run node scripts/setup-release.js'); }
+            require('fs').writeFileSync(f, JSON.stringify(c, null, 2));"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,5 +92,5 @@ jobs:
           releaseBody: 'See CHANGELOG.md for what changed. Already installed? TribeCode will show a "Restart to update" pill.'
           releaseDraft: false
           prerelease: false
-          includeUpdaterJson: true
+          includeUpdaterJson: ${{ vars.TAURI_UPDATER_PUBKEY != '' }}
           args: ${{ matrix.args }}

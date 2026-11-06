@@ -127,7 +127,9 @@ npm run build                     # Windows .exe/.msi, macOS .dmg, Linux AppImag
 
 **Hosting from the desktop app:** click **Invite friends → Host a tribe on this computer**. The app starts the bundled tribe server (a standalone binary built from `server/` with Node SEA, so nobody needs Node installed), makes you the host, and keeps hosting whenever the app is open. Friends who click an invite link can join in the browser or hit **Open it there** to join inside their desktop app (`tribecode://` links).
 
-**Shipping updates:** `./scripts/milestone.sh v0.2.0 "What changed"` bumps the app version, tags and pushes. [`.github/workflows/release.yml`](.github/workflows/release.yml) then builds installers for all three platforms and publishes a GitHub Release with `latest.json`, and every running copy shows **Restart to update** within 30 minutes. One-time setup: run `npx tauri signer generate`, add the private key as the `TAURI_SIGNING_PRIVATE_KEY` repo secret, and paste the public key into `app/src-tauri/tauri.conf.json`.
+**First release (one command):** `node scripts/setup-release.js`. It needs git and the [GitHub CLI](https://cli.github.com) (`gh auth login`). It creates the update-signing key, saves it to the repo's secrets, and tags `v0.1.0`; GitHub Actions then builds the Windows, macOS and Linux installers into a Release.
+
+**Shipping updates:** `./scripts/milestone.sh v0.2.0 "What changed"` bumps the app version, tags and pushes. [`.github/workflows/release.yml`](.github/workflows/release.yml) builds installers for all three platforms and publishes a GitHub Release with `latest.json`, and every running copy shows **Restart to update** within 30 minutes.
 
 ## ⚙️ How it works
 
