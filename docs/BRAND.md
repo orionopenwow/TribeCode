@@ -30,8 +30,8 @@ The app icon places the mark on a deep indigo rounded square (corner radius ≈ 
 | Lagoon | `#3DD6D0` | Success, in sync, embers, presence |
 | Ember | `#FF6F8E` | Alerts, drift, unread dots |
 | Amber | `#FFB86B` | Review, warnings, flame tip |
-| Night | `#120F26` → `#0A1424` | Dark background gradient |
-| Mist | `#EDE9FF` → `#E2F4F6` | Light background gradient |
+| Graphite | `#15171D` → `#0B0C10` → `#050608` | Dark background: near-black gradient with a fine grain texture and faint ember/teal glows in opposite corners |
+| Paper | `#F1F2F5` → `#D6D9E0` | Light background: cool grey gradient with the same grain |
 
 Flame gradient: `#FFC27A` → `#FF6F8E` → `#7C5CFF` (top to bottom).
 
@@ -43,14 +43,15 @@ Flame gradient: `#FFC27A` → `#FF6F8E` → `#7C5CFF` (top to bottom).
 
 ## UI rules
 
-- Glass panels: 55–85% opacity fill, 30 px backdrop blur, 1 px translucent border.
+- Surfaces are near-solid (window ~94% opaque, cards fully opaque `#15181F` / `#1C2029`) so content stands out; the glass effect is limited to a light blur and 1 px edge highlights.
+- Cards get a crisp 1 px edge (`rgba(255,255,255,0.14)`) and a soft drop shadow. Purple is for actions only, never for large areas.
 - Radii: 9–14 px controls and cards, 22 px windows, 26 px dialogs.
 - Icons: Lucide-style 1.6 px line icons. Fill only status dots and avatars.
 - Color carries meaning: teal = good/in sync, amber = review/behind, ember = drift/alert, violet = action.
-- Dark mode is the default; light mode uses the same layout and tokens on the Mist gradient.
+- Dark mode is the default; light mode uses the same layout and tokens on the Paper background.
 
 ## Don'ts
 
 - Don't recolor the flame a single flat color, and don't drop the embers from the app icon.
-- Don't put the icon on a busy photo; use the Night or Mist gradients.
+- Don't put the icon on a busy photo; use the Graphite or Paper backgrounds.
 - Don't stretch the wordmark or set "TribeCode" in all caps.
