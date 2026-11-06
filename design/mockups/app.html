@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TribeCode UI mockup</title>
+<!-- Design mockup only. Open with ?view=docs|tasks|board|join&theme=dark|light -->
+<style>
+  :root {
+    --font: 'Inter', system-ui, sans-serif;
+    --accent: #7C5CFF; --accent-2: #3DD6D0; --ember: #FF6F8E; --amber: #FFB86B;
+    --radius: 14px;
+  }
+  .dark {
+    --bg-1: #120F26; --bg-2: #0A1424;
+    --glass: rgba(255,255,255,0.055); --glass-2: rgba(255,255,255,0.085);
+    --stroke: rgba(255,255,255,0.10); --text: #EEEBFF; --muted: #9A96B8; --faint: #6A6688;
+    --chip: rgba(124,92,255,0.18); --shadow: 0 30px 80px rgba(0,0,0,0.55);
+  }
+  .light {
+    --bg-1: #EDE9FF; --bg-2: #E2F4F6;
+    --glass: rgba(255,255,255,0.62); --glass-2: rgba(255,255,255,0.85);
+    --stroke: rgba(40,30,90,0.10); --text: #1C1838; --muted: #5F5A7E; --faint: #9792B2;
+    --chip: rgba(124,92,255,0.12); --shadow: 0 30px 80px rgba(60,40,140,0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); width: 1600px; height: 1000px; overflow: hidden; color: var(--text);
+    background: radial-gradient(1200px 700px at 15% 10%, rgba(124,92,255,0.35), transparent 60%),
+                radial-gradient(900px 600px at 90% 90%, rgba(61,214,208,0.25), transparent 60%),
+                radial-gradient(700px 500px at 75% 15%, rgba(255,111,142,0.18), transparent 60%),
+                linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    display: flex; align-items: center; justify-content: center; }
+  .window { width: 1520px; height: 920px; border-radius: 22px; background: var(--glass); border: 1px solid var(--stroke);
+    backdrop-filter: blur(30px); box-shadow: var(--shadow); display: grid;
+    grid-template-columns: 64px 248px 1fr 300px; grid-template-rows: 44px 1fr; overflow: hidden; }
+  .titlebar { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--stroke); font-size: 13px; color: var(--muted); }
+  .titlebar .dots { display: flex; gap: 8px; } .titlebar .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--stroke); display: block; }
+  .titlebar .search { margin: 0 auto; width: 420px; height: 28px; border-radius: 9px; background: var(--glass-2); border: 1px solid var(--stroke);
+    display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 12.5px; color: var(--faint); }
+  .kbd { margin-left: auto; font-size: 11px; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--stroke); color: var(--muted); }
+  .sync { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .rail { border-right: 1px solid var(--stroke); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; }
+  .rail .logo { width: 36px; height: 36px; border-radius: 10px; margin-bottom: 10px; }
+  .rail a { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--muted); position: relative; }
+  .rail a.on { background: var(--chip); color: var(--accent); }
+  .rail a .badge { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--ember); }
+  .rail .spacer { flex: 1; }
+  .rail .me { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #fff; }
+  .side { border-right: 1px solid var(--stroke); padding: 16px 12px; font-size: 13.5px; overflow: hidden; }
+  .side h6 { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 18px 8px 8px; }
+  .side h6:first-child { margin-top: 2px; }
+  .side .item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 9px; color: var(--muted); }
+  .side .item.on { background: var(--glass-2); color: var(--text); font-weight: 500; }
+  .side .item .n { margin-left: auto; font-size: 11.5px; color: var(--faint); }
+  .side .item.sub { padding-left: 30px; }
+  .emoji { width: 18px; text-align: center; }
+  .main { padding: 28px 40px; overflow: hidden; }
+  .crumbs { font-size: 12.5px; color: var(--faint); display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
+  .panel { border-left: 1px solid var(--stroke); padding: 16px; display: flex; flex-direction: column; gap: 14px; font-size: 13px; overflow: hidden; }
+  .panel h6 { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+  .card { background: var(--glass-2); border: 1px solid var(--stroke); border-radius: var(--radius); padding: 12px 14px; }
+  .person { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; color: #fff; position: relative; flex: none; }
+  .av .st { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--bg-1); }
+  .person .what { font-size: 11.5px; color: var(--faint); }
+  .msg { display: flex; gap: 10px; margin-bottom: 12px; } .msg b { font-weight: 600; font-size: 12.5px; } .msg p { color: var(--muted); font-size: 12.5px; line-height: 1.45; margin-top: 2px; }
+  .compose { margin-top: auto; height: 40px; border-radius: 12px; border: 1px solid var(--stroke); background: var(--glass-2); display: flex; align-items: center; padding: 0 12px; color: var(--faint); font-size: 12.5px; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: var(--chip); color: var(--accent); font-weight: 500; }
+  .chip.teal { background: rgba(61,214,208,0.16); color: #22B5AF; } .chip.ember { background: rgba(255,111,142,0.16); color: var(--ember); } .chip.amber { background: rgba(255,184,107,0.18); color: #D98A2B; }
+  /* docs */
+  .doc h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; margin: 6px 0 10px; display: flex; align-items: center; gap: 12px; }
+  .props { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+  .props span:nth-child(odd) { color: var(--faint); }
+  .tldr { border-radius: var(--radius); padding: 14px 16px; background: linear-gradient(135deg, rgba(124,92,255,0.14), rgba(61,214,208,0.10)); border: 1px solid var(--stroke); font-size: 13.5px; line-height: 1.55; margin-bottom: 22px; }
+  .tldr .lbl { font-size: 11.5px; font-weight: 600; color: var(--accent); display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+  .block { display: flex; gap: 8px; align-items: flex-start; font-size: 15px; line-height: 1.65; margin: 6px 0; position: relative; }
+  .block .h { color: var(--faint); opacity: 0; width: 18px; } .block.hover .h { opacity: 1; }
+  .block h2 { font-size: 21px; font-weight: 650; margin-top: 12px; }
+  .todo { display: flex; gap: 10px; align-items: center; font-size: 15px; margin: 6px 0 6px 26px; }
+  .box { width: 17px; height: 17px; border-radius: 5px; border: 1.6px solid var(--faint); flex: none; } .box.done { background: var(--accent); border-color: var(--accent); }
+  .todo.done span { color: var(--faint); text-decoration: line-through; }
+  .cursor { position: absolute; left: 412px; top: 2px; width: 2px; height: 24px; background: var(--accent-2); }
+  .cursor::after { content: 'Maya'; position: absolute; top: -18px; left: 0; font-size: 10.5px; background: var(--accent-2); color: #08202A; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+  .slash { position: absolute; left: 26px; top: 34px; width: 280px; background: var(--glass-2); backdrop-filter: blur(20px); border: 1px solid var(--stroke); border-radius: 12px; padding: 6px; box-shadow: var(--shadow); z-index: 3; }
+  .slash div { display: flex; gap: 10px; align-items: center; padding: 7px 8px; border-radius: 8px; font-size: 13px; color: var(--muted); }
+  .slash div.on { background: var(--chip); color: var(--text); }
+  table.db { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 0 26px; width: calc(100% - 26px); }
+  table.db th { text-align: left; font-weight: 500; color: var(--faint); padding: 7px 10px; border-bottom: 1px solid var(--stroke); }
+  table.db td { padding: 8px 10px; border-bottom: 1px solid var(--stroke); color: var(--muted); }
+  table.db td:first-child { color: var(--text); }
+  /* tasks */
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .head h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .tabs { display: flex; gap: 4px; margin-left: 18px; } .tabs span { font-size: 13px; padding: 6px 12px; border-radius: 9px; color: var(--muted); } .tabs span.on { background: var(--glass-2); color: var(--text); border: 1px solid var(--stroke); }
+  .btn { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 10px; }
+  .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .col { background: var(--glass); border: 1px solid var(--stroke); border-radius: 16px; padding: 12px; min-height: 700px; }
+  .col h5 { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; } .col h5 .n { color: var(--faint); font-weight: 400; }
+  .task { background: var(--glass-2); border: 1px solid var(--stroke); border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 13.5px; }
+  .task .t { font-weight: 550; line-height: 1.4; margin-bottom: 10px; } .task .meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11.5px; color: var(--faint); }
+  .task .meta .av { width: 22px; height: 22px; font-size: 10px; margin-left: auto; }
+  .task.drag { transform: rotate(-2.5deg) translate(30px, -6px); box-shadow: var(--shadow); border-color: var(--accent); }
+  .drop { border: 1.5px dashed var(--accent); border-radius: 12px; height: 74px; display: grid; place-items: center; font-size: 12px; color: var(--accent); margin-bottom: 10px; background: var(--chip); }
+  .agentbar { height: 4px; border-radius: 4px; background: var(--stroke); margin-top: 10px; overflow: hidden; } .agentbar i { display: block; height: 100%; width: 62%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  /* board */
+  .grid2 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; }
+  .prop { background: var(--glass-2); border: 1px solid var(--stroke); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; }
+  .prop .top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; } .prop h3 { font-size: 16px; font-weight: 650; }
+  .prop p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+  .votes { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); }
+  .bar { flex: 1; height: 8px; border-radius: 8px; background: var(--stroke); overflow: hidden; display: flex; } .bar i { display: block; height: 100%; }
+  .vbtn { padding: 6px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--stroke); }
+  .vbtn.yes { background: rgba(61,214,208,0.16); color: #22B5AF; border-color: transparent; }
+  .radar { background: var(--glass-2); border: 1px solid var(--stroke); border-radius: 16px; padding: 16px 18px; }
+  .radar h3 { font-size: 15px; font-weight: 650; margin-bottom: 4px; } .radar .sub { font-size: 12.5px; color: var(--faint); margin-bottom: 8px; }
+  .drow { display: grid; grid-template-columns: 34px 1fr 120px; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--stroke); font-size: 13px; }
+  .drow:last-child { border-bottom: 0; }
+  .dbar { height: 8px; border-radius: 8px; background: var(--stroke); position: relative; } .dbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px; }
+  .mile { display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 13px; border-bottom: 1px solid var(--stroke); } .mile:last-child { border: 0; }
+  .mile code { font-family: 'DejaVu Sans Mono', monospace; font-size: 12px; color: var(--accent); background: var(--chip); padding: 2px 7px; border-radius: 6px; }
+  /* join */
+  .join { width: 1600px; height: 1000px; display: grid; place-items: center; }
+  .joincard { width: 460px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--stroke); border-radius: 26px; padding: 40px; box-shadow: var(--shadow); text-align: center; }
+  .joincard img { width: 84px; height: 84px; border-radius: 22px; margin-bottom: 18px; }
+  .joincard h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; } .joincard .lead { color: var(--muted); font-size: 14.5px; margin-bottom: 24px; line-height: 1.5; }
+  .faces { display: flex; justify-content: center; margin-bottom: 26px; } .faces .av { width: 38px; height: 38px; margin-left: -8px; border: 2.5px solid var(--bg-1); font-size: 13px; }
+  .field { text-align: left; font-size: 12px; color: var(--faint); margin-bottom: 6px; }
+  .input { height: 46px; border-radius: 13px; border: 1px solid var(--stroke); background: var(--glass-2); display: flex; align-items: center; padding: 0 14px; font-size: 15px; margin-bottom: 16px; text-align: left; }
+  .swatches { display: flex; gap: 10px; margin-bottom: 26px; } .swatches i { width: 30px; height: 30px; border-radius: 50%; display: block; } .swatches i.on { outline: 2.5px solid var(--text); outline-offset: 3px; }
+  .big { height: 50px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), #5B8CFF); color: #fff; font-weight: 650; font-size: 15.5px; display: grid; place-items: center; }
+  .fine { font-size: 12px; color: var(--faint); margin-top: 16px; }
+  .code { font-family: 'DejaVu Sans Mono', monospace; letter-spacing: .08em; }
+  .hidden { display: none !important; }
+  .watermark { position: fixed; right: 22px; bottom: 14px; font-size: 11px; color: var(--faint); letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<svg style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-vote" viewBox="0 0 24 24"><path d="M4 21h16M6 21V10l6-6 6 6v11"/><path d="m9 14 2 2 4-4"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 7V4M9 4l1.5 3M15 4l-1.5 3M3 12h4M17 12h4M4 18l3-2M20 18l-3-2"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a2 2 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="9" r="2.5"/><path d="M6 8.5v7M18 11.5c0 4-6 3-11 5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+  <symbol id="i-h" viewBox="0 0 24 24"><path d="M5 5v14M14 5v14M5 12h9M18 10l2-1v10"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+</svg>
+
+<div id="app" class="window">
+  <div class="titlebar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <span style="font-weight:600;color:var(--text)">Campfire Crew</span><span>/ Pixel Quest</span>
+    <div class="search"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></div>
+    <span class="sync"><span class="dot" style="background:#3DD6D0"></span>main · in sync</span>
+    <span class="sync"><svg class="i" style="width:15px;height:15px"><use href="#i-brain"/></svg>Qwen 3 · local</span>
+  </div>
+  <nav class="rail">
+    <img class="logo" src="../../assets/brand/icon-512.png" alt="">
+    <a data-v="home"><svg class="i"><use href="#i-home"/></svg></a>
+    <a data-v="docs"><svg class="i"><use href="#i-doc"/></svg></a>
+    <a data-v="tasks"><svg class="i"><use href="#i-check"/></svg></a>
+    <a data-v="board"><svg class="i"><use href="#i-vote"/></svg><span class="badge"></span></a>
+    <a data-v="bugs"><svg class="i"><use href="#i-bug"/></svg></a>
+    <a data-v="brain"><svg class="i"><use href="#i-brain"/></svg></a>
+    <a data-v="chat"><svg class="i"><use href="#i-chat"/></svg><span class="badge"></span></a>
+    <div class="spacer"></div>
+    <a><svg class="i"><use href="#i-gear"/></svg></a>
+    <div class="me">OR</div>
+  </nav>
+  <aside class="side">
+    <h6>Projects</h6>
+    <div class="item on"><span class="emoji">🎮</span>Pixel Quest<span class="n">main</span></div>
+    <div class="item sub"><svg class="i" style="width:15px;height:15px"><use href="#i-doc"/></svg>Game design doc</div>
+    <div class="item sub"><svg class="i" style="width:15px;height:15px"><use href="#i-doc"/></svg>Sprint notes</div>
+    <div class="item sub"><svg class="i" style="width:15px;height:15px"><use href="#i-doc"/></svg>VISION.md</div>
+    <div class="item"><span class="emoji">🤖</span>Discord bot<span class="n">3</span></div>
+    <div class="item"><span class="emoji">🌐</span>Portfolio site</div>
+    <h6>Workspace</h6>
+    <div class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-check"/></svg>My tasks<span class="n">7</span></div>
+    <div class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-vote"/></svg>Proposals<span class="n">2 open</span></div>
+    <div class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-bug"/></svg>Bug inbox<span class="n">4</span></div>
+    <div class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-git"/></svg>Milestones</div>
+    <h6>Huddles</h6>
+    <div class="item"><svg class="i" style="width:16px;height:16px;color:#3DD6D0"><use href="#i-mic"/></svg>Build night<span class="n">3 live</span></div>
+    <div class="item" style="margin-top:14px;color:var(--accent)"><svg class="i" style="width:16px;height:16px"><use href="#i-link"/></svg>Invite friends</div>
+  </aside>
+
+  <!-- DOCS VIEW -->
+  <main class="main doc" id="v-docs">
+    <div class="crumbs">Pixel Quest <span>›</span> Docs <span>›</span> Game design doc</div>
+    <h1>🗺️ Game design doc</h1>
+    <div class="props">
+      <span>Owner</span><span>Maya · Orion</span>
+      <span>Status</span><span><span class="chip teal">Approved · v0.3</span></span>
+      <span>Source</span><span>Imported from Google Docs · synced 2 min ago</span>
+    </div>
+    <div class="tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · summarized locally, 0 tokens</div>
+      A cozy co-op pixel adventure for 2–4 friends. v0.3 adds the forest biome and shared inventory. Combat rework is parked until the proposal vote.</div>
+    <div class="block"><span class="h"><svg class="i" style="width:16px;height:16px"><use href="#i-grip"/></svg></span><h2>Core loop</h2></div>
+    <div class="block"><span class="h"><svg class="i" style="width:16px;height:16px"><use href="#i-grip"/></svg></span><p>Explore by day, build camp at night. Every friend's campfire lights up a new part of the shared map.<span class="cursor"></span></p></div>
+    <div class="block hover"><span class="h"><svg class="i" style="width:16px;height:16px"><use href="#i-grip"/></svg></span><p style="color:var(--faint)">/ta</p>
+      <div class="slash">
+        <div class="on"><svg class="i"><use href="#i-table"/></svg>Table database</div>
+        <div><svg class="i"><use href="#i-check"/></svg>Task from text</div>
+        <div><svg class="i"><use href="#i-h"/></svg>Heading</div>
+        <div><svg class="i"><use href="#i-list"/></svg>Bulleted list</div>
+        <div><svg class="i"><use href="#i-spark"/></svg>Ask the brain</div>
+      </div>
+    </div>
+    <div style="height:196px"></div>
+    <div class="block"><span class="h"><svg class="i" style="width:16px;height:16px"><use href="#i-grip"/></svg></span><h2>This milestone</h2></div>
+    <div class="todo done"><span class="box done"></span><span>Forest biome tiles</span></div>
+    <div class="todo done"><span class="box done"></span><span>Shared inventory sync</span></div>
+    <div class="todo"><span class="box"></span><span>Campfire save points</span></div>
+    <table class="db">
+      <tr><th>Feature</th><th>Owner</th><th>Status</th><th>Branch</th></tr>
+      <tr><td>Day / night cycle</td><td>Jay</td><td><span class="chip amber">In review</span></td><td>task/day-night</td></tr>
+      <tr><td>Fishing mini-game</td><td>Claude (Orion's)</td><td><span class="chip">Agent running</span></td><td>task/fishing</td></tr>
+    </table>
+  </main>
+
+  <!-- TASKS VIEW -->
+  <main class="main hidden" id="v-tasks">
+    <div class="head"><h1>Tasks</h1>
+      <div class="tabs"><span class="on">Board</span><span>List</span><span>Timeline</span><span>Mine</span></div>
+      <span class="btn"><svg class="i" style="width:15px;height:15px"><use href="#i-plus"/></svg>New task</span></div>
+    <div class="cols">
+      <div class="col"><h5><span class="dot" style="background:var(--faint)"></span>Backlog <span class="n">3</span></h5>
+        <div class="task"><div class="t">Sound effects pack for forest</div><div class="meta"><span class="chip amber">audio</span><div class="av" style="background:#FF6F8E">JL</div></div></div>
+        <div class="task"><div class="t">Controller support</div><div class="meta"><span class="chip">from chat</span><div class="av" style="background:#5B8CFF">SK</div></div></div>
+        <div class="task"><div class="t">Steam page copy</div><div class="meta"><span class="chip teal">docs</span></div></div></div>
+      <div class="col"><h5><span class="dot" style="background:var(--accent)"></span>In progress <span class="n">2</span></h5>
+        <div class="task"><div class="t">Fishing mini-game</div><div class="meta"><span class="chip">🤖 Claude agent</span><span>12.4k / 40k tokens</span></div><div class="agentbar"><i></i></div></div>
+        <div class="drop">Drop here to start</div>
+        <div class="task"><div class="t">Campfire save points</div><div class="meta"><span class="chip teal">task/campfire</span><span>2 behind main</span><div class="av" style="background:#3DD6D0;color:#08202A">MA</div></div></div></div>
+      <div class="col"><h5><span class="dot" style="background:var(--amber)"></span>Review <span class="n">2</span></h5>
+        <div class="task drag"><div class="t">Day / night cycle</div><div class="meta"><span class="chip amber">PR #18</span><span>+214 −37</span><div class="av" style="background:#FF6F8E">JL</div></div></div>
+        <div class="task"><div class="t">Shared inventory sync</div><div class="meta"><span class="chip teal">checks pass</span><div class="av" style="background:#7C5CFF">OR</div></div></div></div>
+      <div class="col"><h5><span class="dot" style="background:var(--accent-2)"></span>Done <span class="n">11</span></h5>
+        <div class="task"><div class="t">Forest biome tiles</div><div class="meta"><span class="chip teal">v0.3.0</span><div class="av" style="background:#3DD6D0;color:#08202A">MA</div></div></div>
+        <div class="task"><div class="t">Invite flow</div><div class="meta"><span class="chip teal">v0.2.0</span><div class="av" style="background:#7C5CFF">OR</div></div></div></div>
+    </div>
+  </main>
+
+  <!-- BOARD VIEW -->
+  <main class="main hidden" id="v-board">
+    <div class="head"><h1>Approval board</h1><div class="tabs"><span class="on">Open</span><span>Approved</span><span>Parked</span></div>
+      <span class="btn"><svg class="i" style="width:15px;height:15px"><use href="#i-plus"/></svg>New proposal</span></div>
+    <div class="grid2">
+      <div>
+        <div class="prop"><div class="top"><span class="chip amber">Voting · 2 days left</span><span class="chip teal">Fits VISION.md</span></div>
+          <h3>Rework combat into turn-based duels</h3>
+          <p>Swap real-time combat for short turn-based duels so friends on slow connections can play together. Adds ~3 weeks; touches 14 files.</p>
+          <div class="votes"><div class="bar"><i style="width:50%;background:#3DD6D0"></i><i style="width:25%;background:#FF6F8E"></i></div>3 yes · 1 no · 1 pending<span class="vbtn yes">Approve</span><span class="vbtn">Discuss</span></div></div>
+        <div class="prop"><div class="top"><span class="chip ember">Off-vision · flagged by brain</span></div>
+          <h3>Add a battle-royale mode</h3>
+          <p>Conflicts with VISION.md: "cozy co-op, never competitive". The brain suggests reframing it as a co-op horde night.</p>
+          <div class="votes"><div class="bar"><i style="width:20%;background:#3DD6D0"></i><i style="width:40%;background:#FF6F8E"></i></div>1 yes · 2 no · 2 pending<span class="vbtn">Discuss</span></div></div>
+        <div class="prop"><div class="top"><span class="chip teal">Approved → milestone v0.4</span></div>
+          <h3>Campfire save points</h3>
+          <p>Save the shared world at any lit campfire. 4 tasks created, branch task/campfire.</p></div>
+      </div>
+      <div>
+        <div class="radar"><h3>Drift radar</h3><div class="sub">How far each copy is from <b>main</b> and the approved plan</div>
+          <div class="drow"><div class="av" style="background:#7C5CFF">OR</div><div><div class="dbar"><i style="width:6%;background:#3DD6D0"></i></div></div><span style="color:var(--muted)">in sync</span></div>
+          <div class="drow"><div class="av" style="background:#3DD6D0;color:#08202A">MA</div><div><div class="dbar"><i style="width:22%;background:#3DD6D0"></i></div></div><span style="color:var(--muted)">2 behind</span></div>
+          <div class="drow"><div class="av" style="background:#FF6F8E">JL</div><div><div class="dbar"><i style="width:48%;background:#FFB86B"></i></div></div><span style="color:#D98A2B">9 behind</span></div>
+          <div class="drow"><div class="av" style="background:#5B8CFF">SK</div><div><div class="dbar"><i style="width:81%;background:#FF6F8E"></i></div></div><span style="color:var(--ember)">off-plan files</span></div>
+        </div>
+        <div class="radar" style="margin-top:16px"><h3>Milestones → GitHub</h3><div class="sub">Auto-tagged and pushed when the board approves</div>
+          <div class="mile"><code>v0.3.0</code>Forest biome + shared inventory<span class="chip teal" style="margin-left:auto">pushed</span></div>
+          <div class="mile"><code>v0.2.0</code>Invite flow, lobby<span class="chip teal" style="margin-left:auto">pushed</span></div>
+          <div class="mile"><code>v0.4.0</code>Campfire save points<span class="chip amber" style="margin-left:auto">4 tasks left</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="panel">
+    <h6>In the room · 4</h6>
+    <div class="card">
+      <div class="person"><div class="av" style="background:#3DD6D0;color:#08202A">MA<span class="st" style="background:#3DD6D0"></span></div><div>Maya<div class="what">editing Game design doc</div></div></div>
+      <div class="person"><div class="av" style="background:#FF6F8E">JL<span class="st" style="background:#3DD6D0"></span></div><div>Jay<div class="what">in huddle · reviewing PR #18</div></div></div>
+      <div class="person"><div class="av" style="background:#5B8CFF">SK<span class="st" style="background:#FFB86B"></span></div><div>Sam<div class="what">focus mode until 5 pm</div></div></div>
+      <div class="person"><div class="av" style="background:linear-gradient(135deg,#FF6F8E,#7C5CFF)">🤖<span class="st" style="background:#3DD6D0"></span></div><div>Claude · Orion's<div class="what">running task/fishing</div></div></div>
+    </div>
+    <h6>Chat · #pixel-quest</h6>
+    <div>
+      <div class="msg"><div class="av" style="background:#FF6F8E">JL</div><div><b>Jay</b><p>day/night PR is up, someone try it at dusk 🌅</p></div></div>
+      <div class="msg"><div class="av" style="background:#3DD6D0;color:#08202A">MA</div><div><b>Maya</b><p>someone should add controller support at some point</p></div></div>
+      <div class="msg"><div class="av" style="background:var(--chip);color:var(--accent)"><svg class="i" style="width:14px;height:14px"><use href="#i-brain"/></svg></div><div><b>Brain</b><p>Made that a task: <span class="chip">Controller support</span></p></div></div>
+    </div>
+    <div class="compose">Message the tribe… <span class="kbd">/task</span></div>
+  </aside>
+</div>
+
+<!-- JOIN VIEW -->
+<div class="join hidden" id="v-join">
+  <div class="joincard">
+    <img src="../../assets/brand/icon-512.png" alt="">
+    <h1>Join Campfire Crew</h1>
+    <p class="lead">Orion invited you to code with the tribe.<br>No email, no password. Pick a name and you're in.</p>
+    <div class="faces"><div class="av" style="background:#7C5CFF">OR</div><div class="av" style="background:#3DD6D0;color:#08202A">MA</div><div class="av" style="background:#FF6F8E">JL</div><div class="av" style="background:#5B8CFF">SK</div></div>
+    <div class="field">Display name</div><div class="input">Riley</div>
+    <div class="field">Your color</div>
+    <div class="swatches"><i style="background:#7C5CFF"></i><i class="on" style="background:#FFB86B"></i><i style="background:#3DD6D0"></i><i style="background:#FF6F8E"></i><i style="background:#5B8CFF"></i><i style="background:#9AE66E"></i></div>
+    <div class="big">Join the tribe</div>
+    <div class="fine">Invite <span class="code">tribe.link/k7Qx2</span> · expires in 24 h · role: Builder</div>
+  </div>
+</div>
+<div class="watermark">DESIGN MOCKUP</div>
+
+<script>
+  const q = new URLSearchParams(location.search);
+  const view = q.get('view') || 'docs', theme = q.get('theme') || 'dark';
+  document.body.className = theme;
+  if (view === 'join') { document.getElementById('app').classList.add('hidden'); document.getElementById('v-join').classList.remove('hidden'); }
+  else {
+    ['docs','tasks','board'].forEach(v => document.getElementById('v-' + v).classList.toggle('hidden', v !== view));
+    document.querySelectorAll('.rail a').forEach(a => a.classList.toggle('on', a.dataset.v === view));
+  }
+</script>
+</body>
+</html>

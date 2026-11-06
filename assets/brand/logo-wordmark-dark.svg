@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <title>TribeCode</title>
+  <defs>
+    <linearGradient id="flameW" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFC27A"/>
+      <stop offset="0.55" stop-color="#FF6F8E"/>
+      <stop offset="1" stop-color="#7C5CFF"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(20 22) scale(0.3125)">
+    <g fill="none" stroke="#7C5CFF" stroke-width="40" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M176 172 L96 256 L176 340"/>
+      <path d="M336 172 L416 256 L336 340"/>
+    </g>
+    <path d="M256 128 C304 192 326 238 314 290 C305 330 282 356 256 356 C230 356 207 330 198 290 C186 238 208 192 256 128 Z" fill="url(#flameW)"/>
+    <g fill="#3DD6D0"><circle cx="216" cy="404" r="12"/><circle cx="256" cy="412" r="12"/><circle cx="296" cy="404" r="12"/></g>
+  </g>
+  <text x="200" y="128" font-family="Inter Display, Inter, sans-serif" font-size="92" letter-spacing="-2" fill="#C9C5E0"><tspan font-weight="700" fill="#FFFFFF">Tribe</tspan><tspan font-weight="400">Code</tspan></text>
+</svg>
