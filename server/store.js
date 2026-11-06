@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 class Store {
   constructor(root) {
     this.root = path.resolve(root);
-    for (const d of ['', 'chat', 'tasks', 'docs', 'proposals', 'decisions', 'brain', '.tribe']) fs.mkdirSync(path.join(this.root, d), { recursive: true });
+    for (const d of ['', 'chat', 'tasks', 'docs', 'proposals', 'decisions', 'brain', 'bugs', '.tribe']) fs.mkdirSync(path.join(this.root, d), { recursive: true });
     this._seedReadme();
   }
 
@@ -53,7 +53,7 @@ class Store {
 
   _seedReadme() {
     const f = this.p('README.md');
-    if (!fs.existsSync(f)) fs.writeFileSync(f, '# Tribe folder\n\nManaged by TribeCode. Everything here is plain Markdown/JSON, so it is safe to commit to git.\n\n- `chat/` one JSONL file per channel\n- `tasks/` one Markdown file per task\n- `docs/` shared pages\n- `proposals/` proposals and votes\n- `decisions/` decision log\n- `brain/` local brain notes\n- `.tribe/` members and invites (keep private: do not commit)\n');
+    if (!fs.existsSync(f)) fs.writeFileSync(f, '# Tribe folder\n\nManaged by TribeCode. Everything here is plain Markdown/JSON, so it is safe to commit to git.\n\n- `chat/` one JSONL file per channel\n- `tasks/` one Markdown file per task\n- `docs/` shared pages\n- `proposals/` proposals and votes\n- `decisions/` decision log\n- `brain/` local brain notes\n- `bugs/` bug inbox (self-sorted)\n- `.tribe/` members and invites (keep private: do not commit)\n');
     const gi = this.p('.gitignore');
     if (!fs.existsSync(gi)) fs.writeFileSync(gi, '.tribe/\n');
   }

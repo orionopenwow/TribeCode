@@ -86,7 +86,7 @@
   }
 
   // nav + views
-  const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board' };
+  const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs' };
   function show(view) {
     if (!VIEWS[view]) return;
     Object.keys(VIEWS).forEach(v => $('#view-' + v).classList.toggle('hidden', v !== view));
@@ -96,17 +96,18 @@
     if (view === 'tasks') window.TribeTasks.load();
     if (view === 'board') window.TribeBoard.load();
     if (view === 'docs') window.TribeDocs.load();
+    if (view === 'bugs') window.TribeBugs.load();
     window.TribeClient.sendActivity(VIEWS[view]);
     try { sessionStorage.setItem('tribecode.view', view); } catch {}
   }
   document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
     if (VIEWS[b.dataset.nav]) show(b.dataset.nav);
     else if (b.dataset.nav === 'chat') $('#chat-input').focus();
-    else toast(`${b.title} is coming in a later sprint. Home, Docs, Tasks and the Board work now.`);
+    else if (b.dataset.nav === 'brain') { show('home'); document.querySelector('#standup-card').scrollIntoView({ block: 'center' }); }
   }));
 
   document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
-    if (VIEWS[b.dataset.go]) show(b.dataset.go); else toast('The bug inbox is coming in a later sprint.');
+    if (VIEWS[b.dataset.go]) show(b.dataset.go);
   }));
 
   // ---- live room + chat ----
@@ -218,14 +219,13 @@
   $('#settings-btn').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
   $('#help-btn').addEventListener('click', () => window.TribeTour.start());
   $('#tour-invite').addEventListener('click', () => openInvite());
-  $('#tour-search').addEventListener('click', () => toast('Command palette is coming in the next build.'));
+  $('#tour-search').addEventListener('click', () => window.TribePalette.open());
   $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
       const next = document.body.classList.contains('dark') ? 'light' : 'dark';
       S.set({ theme: next }); refresh(); e.preventDefault();
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#tour-search').click(); }
   });
 
   // hooks for the updater's save + hand-off flow

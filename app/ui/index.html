@@ -112,6 +112,12 @@
         <div class="doc-pane" id="doc-pane"></div>
       </div>
      </section>
+     <section id="view-bugs" class="hidden">
+      <div class="view-head"><h1>Bug inbox</h1><span class="faint" id="bugs-sub"></span>
+        <div class="tabs"><button class="on" data-bf="open">Open</button><button data-bf="resolved">Resolved</button></div>
+        <button class="btn primary" id="bug-new" style="margin-left:auto">Report a bug <span class="kbd" style="margin-left:4px">Ctrl Shift B</span></button></div>
+      <div id="bug-list" class="bug-list"></div>
+     </section>
      <section id="view-board" class="hidden">
       <div class="view-head"><h1>Approval board</h1>
         <div class="tabs" id="prop-tabs"><button class="on" data-pt="open">Open</button><button data-pt="approved">Approved</button><button data-pt="parked">Parked</button></div>
@@ -120,6 +126,7 @@
         <div id="prop-list"></div>
         <div>
           <section class="card" id="vision-card"><h3>VISION.md</h3><div class="lead">What we're building, in a few lines. Proposals are checked against it.</div><div class="vision" id="vision-text"></div></section>
+          <section class="card" style="margin-top:16px" id="radar-card"><h3>Drift radar</h3><div class="lead" id="radar-lead">How far each branch is from the main line, and whether it's tied to a task.</div><div id="radar-list"></div></section>
           <section class="card" style="margin-top:16px"><h3>Milestones</h3><div class="lead" id="ms-lead">Approved proposals become milestones.</div><div id="ms-list"></div></section>
         </div>
       </div>
@@ -139,6 +146,9 @@
   </div>
 </div>
 
+
+<!-- ============ Command palette ============ -->
+<div class="modal palette hidden" id="palette"><div class="pal-card"><div class="pal-in"><svg class="i"><use href="#i-search"/></svg><input id="pal-input" placeholder="Type a command, doc, task or person…" autocomplete="off"><span class="kbd">Esc</span></div><div id="pal-list"></div></div></div>
 
 <!-- ============ Invite modal ============ -->
 <div class="modal hidden" id="invite-modal" role="dialog" aria-label="Invite friends"><div class="modal-card" id="invite-body"></div></div>
@@ -173,6 +183,8 @@
 <script src="tasks.js"></script>
 <script src="docs.js"></script>
 <script src="board.js"></script>
+<script src="bugs.js"></script>
+<script src="palette.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

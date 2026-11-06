@@ -44,7 +44,11 @@ def main():
     tmp = tempfile.mkdtemp(prefix="tribe-")
     repo = tempfile.mkdtemp(prefix="proj-")
     g = lambda *a: subprocess.run(["git", "-C", repo, *a], check=True, capture_output=True, text=True).stdout
-    g("init", "-q"); g("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init")
+    g("init", "-q", "-b", "main"); gc = lambda *a: g("-c", "user.email=t@t", "-c", "user.name=Maya", *a)
+    gc("commit", "-q", "--allow-empty", "-m", "init")
+    g("branch", "maya/campfire-save-points")
+    for i in range(6): gc("commit", "-q", "--allow-empty", "-m", f"main {i}")
+    g("checkout", "-q", "-b", "rogue-experiment"); Path(repo, "x.txt").write_text("x"); g("add", "."); gc("commit", "-q", "-m", "experiment"); g("checkout", "-q", "main")
     mock = subprocess.Popen(["node", str(ROOT / "app" / "test" / "mock_ollama.js"), "11555"], stdout=subprocess.DEVNULL)
     time.sleep(0.3)
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--repo", repo, "--ollama", "http://localhost:11555"],
@@ -223,6 +227,46 @@ def main():
             host.click('[data-nav="home"]'); host.click("#standup-go")
             wait_text(host, "#standup-text", "Maya: asked for controller support")
             assert list(Path(tmp, "brain").glob("standup-*.md"))
+
+            # ---- drift radar ----
+            host.click('[data-nav="board"]')
+            wait_text(host, "#radar-list", "maya/campfire-save-points")
+            wait_text(host, "#radar-list", "6 behind")
+            wait_text(host, "#radar-list", "no task")
+            shot(host, "board-radar")
+
+            # ---- command palette ----
+            host.keyboard.press("Control+k")
+            host.wait_for_selector("#palette:not(.hidden)")
+            host.keyboard.type("game des")
+            wait_text(host, "#pal-list", "Game design doc")
+            host.keyboard.press("Enter")
+            host.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Game design doc'", timeout=8000)
+            host.keyboard.press("Control+k"); host.keyboard.type("bug inb"); host.keyboard.press("Enter")
+            host.wait_for_selector("#view-bugs:not(.hidden)")
+
+            # ---- bug inbox: capture, triage, dedupe, self-heal ----
+            host.keyboard.press("Control+Shift+B")
+            host.fill("#bug-title", "Chat stops syncing after reconnect")
+            host.fill("#bug-details", "Wifi dropped, chat never came back.")
+            host.click("#bug-go")
+            wait_text(host, "#bug-list", "Chat stops syncing after reconnect")
+            wait_text(host, "#bug-list", "sync")
+            friend.keyboard.press("Control+Shift+B")
+            friend.fill("#bug-title", "chat stops syncing after a reconnect")
+            friend.click("#bug-go")
+            wait_text(friend, ".toast", "Merged with an existing report")
+            wait_text(host, "#bug-list", "seen 2×")
+            shot(host, "bugs-live")
+            host.click(".bug [data-mk]")
+            wait_text(host, "#bug-list", "resolves when it's done")
+            tok = host.evaluate("TribeStore.get().server.token")
+            st, d = api("/tasks", token=tok)
+            fix = [t for t in d["tasks"] if t["title"].startswith("Fix: Chat stops")][0]
+            assert api("/tasks/" + fix["id"], "PATCH", {"status": "done"}, token=tok)[0] == 200
+            wait_text(friend, "#chat-list", "Bug resolved by finishing its task")
+            host.click('[data-bf="resolved"]')
+            wait_text(host, "#bug-list", "resolved")
 
             # update hand-off picks real online peers
             host.goto(BASE + "/?simulateUpdate=9.9.9")

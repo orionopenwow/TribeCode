@@ -37,6 +37,7 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
   return {
     status: () => status,
     refresh,
+    generate,
     async summarize(title, text) {
       if (!text || text.trim().length < 80) return null;
       return generate(`Document: "${title}"\n\n${clip(text, 12000)}\n\nWrite a TL;DR of this document in at most 3 short lines. Plain text, no preamble.`,

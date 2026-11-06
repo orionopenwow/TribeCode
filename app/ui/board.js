@@ -24,8 +24,23 @@
       const [p, ms, v] = await Promise.all([C.api('/proposals'), C.api('/milestones'), C.api('/vision')]);
       proposals = p.proposals; milestones = ms.milestones; loaded = true;
       $('#ms-lead').textContent = ms.repo ? `Approved proposals become milestones. Releasing tags the project repo (next: ${ms.next}).` : `Approved proposals become milestones (next: ${ms.next}). Start the server with --repo to tag releases in git.`;
-      renderVision(v.text); render();
+      renderVision(v.text); render(); loadRadar();
     } catch (e) { window.TribeApp.toast('Could not load the board: ' + e.message); }
+  }
+
+  async function loadRadar() {
+    try {
+      const r = await C.api('/drift');
+      if (!r.enabled) { $('#radar-lead').textContent = r.reason; $('#radar-list').innerHTML = ''; return; }
+      $('#radar-lead').textContent = `Branches compared with ${r.main}. Behind = commits on ${r.main} they don't have yet.`;
+      const max = Math.max(10, ...r.branches.map(b => b.behind));
+      const color = { ok: 'var(--accent-2)', watch: 'var(--amber)', drifting: 'var(--ember)' };
+      $('#radar-list').innerHTML = r.branches.length ? r.branches.map(b => `<div class="drow" title="${esc(b.sample.join(', '))}">
+          <div class="dname"><b>${esc(b.branch)}</b><span>${esc(b.author || '')} · ${b.days === 0 ? 'today' : b.days + ' d ago'}${b.task ? ' · ' + esc(b.task.title) : ' · <span style="color:var(--amber)">no task</span>'}</span></div>
+          <div class="dbar"><i style="width:${Math.max(4, (b.behind / max) * 100)}%;background:${color[b.level]}"></i></div>
+          <span class="dlab" style="color:${color[b.level]}">${b.behind ? b.behind + ' behind' : 'in sync'}${b.ahead ? ' · ' + b.ahead + ' ahead' : ''}</span></div>`).join('')
+        : '<div class="faint" style="font-size:13px">Only the main branch exists. Everyone is in sync.</div>';
+    } catch { $('#radar-list').innerHTML = ''; }
   }
 
   function renderOffline() {

@@ -41,6 +41,7 @@
       if (m.type === 'proposal') emit('proposal', m.proposal);
       if (m.type === 'milestones') emit('milestones', m.milestones);
       if (m.type === 'doc') emit('doc', m.doc);
+      if (m.type === 'bug') emit('bug', m.bug);
       if (m.type === 'doc-summary') emit('doc-summary', m);
       if (m.type === 'doc-removed') emit('doc-removed', m.slug);
     };

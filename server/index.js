@@ -13,6 +13,8 @@ const { Store, id, code, hash, slug } = require('./store');
 const makeBoard = require('./board');
 const makeDocs = require('./docs');
 const makeBrain = require('./brain');
+const makeBugs = require('./bugs');
+const makeDrift = require('./drift');
 
 const VERSION = require('../app/package.json').version;
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -106,7 +108,11 @@ function loadTasks() {
   return store.listMd('tasks').map(f => { const r = store.readMd(f); return r && { ...r.meta, body: r.body }; }).filter(t => t && t.id)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.created).localeCompare(String(b.created)));
 }
-function saveTask(t) { const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t }); return t; }
+function saveTask(t) {
+  const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t });
+  bugs.onTask(t);
+  return t;
+}
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source }) {
   const now = new Date().toISOString();
   const t = { id: `t-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title: str(title, 200) || 'Untitled task', status: STATUSES.includes(status) ? status : 'backlog',
@@ -120,6 +126,8 @@ brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via 
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
 const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: REPO, brain, readVision });
 const docs = makeDocs({ store, slug, str, broadcast, brain, postChat });
+const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid) });
+const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
 
 async function standup() {
   const since = Date.now() - 24 * 3600_000;
@@ -230,6 +238,11 @@ async function api(req, res, url) {
       return text ? send(res, 200, { text }) : fail(res, 503, brain.status().error || 'local brain is off');
     }
   }
+  if (a === 'bugs') {
+    const handled = await bugs.route(req, res, { m, b, c, me, readBody, send, fail });
+    if (handled !== null) return;
+  }
+  if (a === 'drift' && m === 'GET') return send(res, 200, await drift.radar());
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
     if (handled !== null) return;

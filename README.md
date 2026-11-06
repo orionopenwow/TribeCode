@@ -22,7 +22,7 @@ TribeCode is a lightweight, self-hosted clubhouse for building software together
 
 ---
 
-> **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`), a shared drag-and-drop Tasks board, the approval board (proposals, votes, VISION.md, milestones tagged in git), shared Docs with a Notion-style editor, and the local brain (doc TL;DRs, daily standups, vision checks on proposals). The drift radar is still a **UI mockup** from [`design/mockups/app.html`](design/mockups/app.html) and are coming next (see [Roadmap](#-roadmap)).
+> **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`), a shared drag-and-drop Tasks board, the approval board (proposals, votes, VISION.md, milestones tagged in git), shared Docs with a Notion-style editor, and the local brain (doc TL;DRs, daily standups, vision checks on proposals). Also working: the drift radar, a self-sorting, self-healing bug inbox, and the `Ctrl+K` command palette. What's left is mostly packaging from [`design/mockups/app.html`](design/mockups/app.html) and are coming next (see [Roadmap](#-roadmap)).
 
 <p align="center">
   <img src="docs/screenshots/docs-dark.png" alt="TribeCode docs workspace, dark mode" width="100%">
@@ -88,6 +88,10 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
     <td colspan="2"><img src="docs/screenshots/docs-live.png" alt="Docs with TL;DR"><br><sub><b>Docs:</b> Markdown pages with a <code>/</code> block menu, autosave, live updates, conflict handling, file import, and a TL;DR written by the host's local Qwen model.</sub></td>
   </tr>
   <tr>
+    <td width="50%"><img src="docs/screenshots/board-radar.png" alt="Drift radar"><br><sub><b>Drift radar + vision check:</b> every branch compared with main, flagged when it falls behind or isn't tied to a task. The local brain flags proposals that conflict with VISION.md.</sub></td>
+    <td width="50%"><img src="docs/screenshots/bugs-live.png" alt="Bug inbox"><br><sub><b>Bug inbox:</b> <kbd>Ctrl Shift B</kbd> from anywhere. Reports are triaged automatically, duplicates merge, crashes report themselves, and a bug resolves itself when its task is done.</sub></td>
+  </tr>
+  <tr>
     <td colspan="2"><img src="docs/screenshots/board-live.png" alt="Approval board"><br><sub><b>Approval board:</b> propose a change, the tribe votes (majority wins). Approval creates a milestone, turns the checklist into tasks and logs a decision. The host releases a milestone and it's tagged in your project repo and pushed to GitHub.</sub></td>
   </tr>
 </table>
@@ -133,7 +137,8 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 - [x] **Sprint 3: Tasks.** Shared drag-and-drop board, quick add, inline rename, assign, offline local mode
 - [x] **Sprint 4: Approval board.** Proposals + majority voting, VISION.md, approval → milestone + tasks + decision log, host releases tag the project repo
 - [x] **Sprint 5: Docs + local brain.** Markdown docs with slash menu, autosave, conflicts, import; Ollama-powered TL;DRs, standups and vision checks
-- [ ] **Next:** drift radar, command palette, `tribecode://` invite deep links, server bundled inside the desktop app
+- [x] **Sprint 6: Alignment + QoL.** Drift radar, self-sorting/self-healing bug inbox with crash capture, `Ctrl+K` command palette
+- [ ] **Next:** `tribecode://` invite deep links, server bundled inside the desktop app
 - [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit
