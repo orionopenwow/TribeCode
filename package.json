@@ -1,0 +1,13 @@
+{
+  "name": "tribecode",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Code with friends. One link to join, one shared brain, one vision.",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "python3 app/test/ui_smoke.py && python3 app/test/e2e_tribe.py",
+    "screenshots": "python3 app/test/ui_smoke.py --shots && python3 app/test/e2e_tribe.py --shots"
+  }
+}

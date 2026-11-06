@@ -7,6 +7,7 @@
 <link rel="icon" href="assets/icon-512.png">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="updater.css">
+<link rel="stylesheet" href="live.css">
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -52,6 +53,7 @@
       <button class="nav" data-nav="brain" title="Brain"><svg class="i"><use href="#i-brain"/></svg></button>
       <button class="nav" data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
       <div class="spacer"></div>
+      <button class="nav help" id="help-btn" title="Take the tour">?</button>
       <button class="nav" id="settings-btn" title="Settings · replay setup"><svg class="i"><use href="#i-gear"/></svg></button>
       <div class="avatar" id="me-avatar" title="You">?</div>
     </nav>
@@ -70,6 +72,7 @@
     </aside>
 
     <main class="main" id="main">
+     <section id="view-home">
       <div class="hello" id="hello">Welcome</div>
       <div class="sub">Your tribe's home base. Start here, then invite your friends.</div>
       <div class="home-grid">
@@ -86,21 +89,30 @@
           <div class="drops" id="drops"></div>
         </section>
       </div>
+     </section>
+     <section id="view-tasks" class="hidden">
+      <div class="view-head"><h1>Tasks</h1><span class="faint" id="tasks-sub"></span>
+        <button class="btn primary" id="task-new" style="margin-left:auto"><svg class="i" style="width:15px;height:15px"><use href="#i-check"/></svg>New task</button></div>
+      <div class="board" id="board"></div>
+     </section>
     </main>
 
     <aside class="panel" id="tour-room">
-      <h6>In the room</h6>
-      <div class="card">
+      <h6>In the room <span id="room-count"></span></h6>
+      <div class="card" id="room-list">
         <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
       </div>
-      <div class="empty-room">Friends you invite show up here, along with what they're working on and whose Claude is running.</div>
-      <h6 style="margin-top:6px">Chat</h6>
-      <div class="empty-room">No messages yet. Type <span class="kbd">/task</span> in chat to turn any message into a task.</div>
+      <div class="empty-room" id="room-hint">Friends you invite show up here, along with what they're working on and whose Claude is running.</div>
+      <h6 style="margin-top:6px">Chat · #general</h6>
+      <div class="chat" id="chat-list"><div class="empty-room">Start a tribe server to chat. Type <span class="kbd">/task</span> to turn a message into a task, <span class="kbd">/decide</span> to log a decision.</div></div>
+      <form class="compose" id="chat-form"><input id="chat-input" placeholder="Message the tribe…" autocomplete="off" maxlength="4000"><span class="kbd">/task</span></form>
     </aside>
   </div>
 </div>
 
-<button class="help-btn" id="help-btn" title="Take the tour">?</button>
+
+<!-- ============ Invite modal ============ -->
+<div class="modal hidden" id="invite-modal" role="dialog" aria-label="Invite friends"><div class="modal-card" id="invite-body"></div></div>
 
 <!-- ============ Update popover ============ -->
 <div class="update-pop hidden" id="update-pop" role="dialog" aria-label="Update available"></div>
@@ -124,9 +136,11 @@
 <div class="tour hidden" id="tour"><div class="spot" id="tour-spot"></div><div class="tip" id="tour-tip" role="dialog"></div></div>
 
 <script src="store.js"></script>
+<script src="tribe.js"></script>
 <script src="onboarding.js"></script>
 <script src="tour.js"></script>
 <script src="updater.js"></script>
+<script src="tasks.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

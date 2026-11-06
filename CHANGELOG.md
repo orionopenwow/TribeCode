@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased: Sprints 2 and 3
+
+- Tribe server (`npm start`): zero-dependency Node, serves the UI, hand-rolled WebSocket for presence + chat
+- Invite links with expiry, max uses and builder/spectator roles; join page that carries name + color into setup
+- Host bootstrap from the host machine only; per-member tokens stored hashed; per-IP rate limits on public endpoints
+- Chat with `/task` (creates a task) and `/decide` (writes to `decisions/`)
+- Tasks board: drag between columns and reorder, quick add, double-click rename, assign, delete; live sync; works offline on one device
+- Everything stored in the tribe folder as Markdown (tasks, decisions) and JSONL (chat)
+- Room panel shows who's online and which view they're in; update hand-off uses real online teammates
+- Fixes: invite modal crash after the room list rendered; help button no longer covers the chat box
+- Tests: `npm test` runs the UI smoke test and a two-person end-to-end test against the real server
+
 ## v0.1.0: Desktop shell (2026-11-06)
 
 - First-run setup for personal preferences (name, color, theme, density, folder, local brain, startup), with no account needed

@@ -213,6 +213,7 @@
     window.TribeHost.setAutostart(draft.startup.launchAtLogin);
     $('#onboard').classList.add('hidden');
     window.TribeApp.refresh();
+    if (window.TribeApp.afterSetup) window.TribeApp.afterSetup();
     if (!skipped) setTimeout(() => window.TribeTour.start(), 350);
   }
 

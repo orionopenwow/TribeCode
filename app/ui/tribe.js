@@ -1,0 +1,77 @@
+// Connection to the tribe server: REST + WebSocket with auto-reconnect.
+(function () {
+  const S = window.TribeStore;
+  const listeners = {};
+  let sock = null, retry = 0, state = { status: 'offline', members: [], me: null, tribe: null };
+
+  const emit = (t, d) => (listeners[t] || []).forEach(fn => { try { fn(d); } catch (e) { console.error(e); } });
+
+  function base() {
+    if (location.protocol === 'http:' || location.protocol === 'https:') return location.origin;
+    return (S.get().server && S.get().server.url) || 'http://localhost:4747';
+  }
+  const token = () => (S.get().server && S.get().server.token) || '';
+
+  async function api(path, { method = 'GET', body } = {}) {
+    const res = await fetch(base() + '/api' + path, {
+      method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status });
+    return data;
+  }
+
+  function setStatus(s) { state.status = s; emit('status', state); }
+
+  function connect() {
+    if (!token()) { setStatus('offline'); return; }
+    try { if (sock) sock.close(); } catch {}
+    setStatus('connecting');
+    const url = base().replace(/^http/, 'ws') + '/ws?token=' + encodeURIComponent(token());
+    sock = new WebSocket(url);
+    sock.onopen = () => { retry = 0; setStatus('online'); sendActivity(); };
+    sock.onmessage = e => {
+      let m; try { m = JSON.parse(e.data); } catch { return; }
+      if (m.type === 'hello') { state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
+      if (m.type === 'presence') { state.members = m.members; emit('presence', state.members); }
+      if (m.type === 'chat') emit('chat', m);
+      if (m.type === 'task') emit('task', m.task);
+      if (m.type === 'task-removed') emit('task-removed', m.id);
+    };
+    sock.onclose = () => {
+      setStatus(token() ? 'reconnecting' : 'offline');
+      if (!token()) return;
+      const wait = Math.min(15000, 500 * 2 ** retry++);
+      setTimeout(connect, wait);
+    };
+  }
+
+  let where = 'Home';
+  function sendActivity(w) { if (w) where = w; if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'activity', where })); }
+
+  // Called after first-run setup on the host machine (UI served by the server, no token yet).
+  async function ensureMember({ name, color }) {
+    if (token()) return true;
+    try {
+      const h = await api('/health');
+      if (h.members === 0) {
+        const r = await api('/bootstrap', { method: 'POST', body: { name, color } });
+        S.set({ server: { url: base(), token: r.token } });
+        connect();
+        return true;
+      }
+    } catch { /* no server reachable: local-only mode */ }
+    return false;
+  }
+
+  window.TribeClient = {
+    api, connect, ensureMember, base, sendActivity,
+    on(t, fn) { (listeners[t] = listeners[t] || []).push(fn); },
+    state: () => state,
+    connected: () => state.status === 'online',
+    hasToken: () => !!token(),
+    announce(text) { if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'announce', text })); },
+    async probe() { try { return await api('/health'); } catch { return null; } },
+  };
+})();

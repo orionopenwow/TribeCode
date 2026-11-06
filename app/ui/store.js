@@ -14,6 +14,7 @@
     tour: { done: false, step: 0 },
     checklist: { setup: false, tour: false, drop: false, brain: false, invite: false },
     update: { snoozedVersion: '', snoozeUntil: 0 },
+    server: { url: '', token: '' },
   };
 
   function merge(base, extra) {

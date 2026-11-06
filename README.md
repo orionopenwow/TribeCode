@@ -22,7 +22,7 @@ TribeCode is a lightweight, self-hosted clubhouse for building software together
 
 ---
 
-> **Status:** early build. The desktop shell, first-run setup, built-in tour and auto-updater are working code in [`app/`](app/). Docs, Tasks and the approval board are still **UI mockups** from [`design/mockups/app.html`](design/mockups/app.html) and are being built sprint by sprint (see [Roadmap](#-roadmap)).
+> **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`) and a shared drag-and-drop Tasks board. Docs and the approval board are still **UI mockups** from [`design/mockups/app.html`](design/mockups/app.html) and are coming sprint by sprint (see [Roadmap](#-roadmap)).
 
 <p align="center">
   <img src="docs/screenshots/docs-dark.png" alt="TribeCode docs workspace, dark mode" width="100%">
@@ -77,9 +77,22 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
   </tr>
 </table>
 
+### Live tribe (working today)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/tasks-live.png" alt="Live tasks board with chat and presence"><br><sub><b>Tasks + chat + presence:</b> drag cards between columns and every friend sees it instantly. <code>/task</code> in chat makes a card.</sub></td>
+    <td width="50%"><img src="docs/screenshots/invite-modal.png" alt="Invite link modal"><br><sub><b>Invite links:</b> pick how long it lasts, how many people, and builder or spectator. Copy, send, done.</sub></td>
+  </tr>
+</table>
+
 ## 🚀 Run it
 
 ```bash
+# Host a tribe (Node 20+, zero dependencies)
+npm start                         # or: node server/index.js --port 4747 --dir ~/TribeCode --name "Campfire Crew"
+# open http://localhost:4747, finish setup (you become the host), click "Invite friends"
+
 # Try the UI in a browser (no install needed)
 open app/ui/index.html            # ?reset=1 replays first-run setup, ?demo=1 adds demo teammates,
                                   # ?simulateUpdate=0.2.0 shows the update pill
@@ -110,7 +123,9 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 
 - [x] **Phase 0: Design.** Feature spec, brand kit, UI mockups, MIT license (`v0.0.1`)
 - [x] **Sprint 1: Desktop shell.** First-run setup, 60-second tour, getting-started checklist, auto-update with save and hand-off, Tauri wrapper, release CI (`v0.1.0`)
-- [ ] **Phase 1: Foundation.** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
+- [x] **Sprint 2: Tribe server.** Zero-dependency Node server, invite links + join page, presence, chat with `/task` and `/decide`, Markdown/JSONL storage
+- [x] **Sprint 3: Tasks.** Shared drag-and-drop board, quick add, inline rename, assign, offline local mode
+- [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit
 - [ ] **Phase 4: Grow.** Brain review queue, shared skill shelf, remote hosting, bug capture hotkey

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join a tribe · TribeCode</title>
+<link rel="icon" href="/assets/icon-512.png">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .join { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  .jc { width: 460px; max-width: 100%; background: var(--win); border: 1px solid var(--edge); border-radius: 26px; box-shadow: var(--shadow); padding: 40px; text-align: center; }
+  .jc img { width: 84px; height: 84px; border-radius: 22px; margin-bottom: 18px; }
+  .jc h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .jc .lead { color: var(--muted); font-size: 14.5px; margin-bottom: 22px; line-height: 1.5; }
+  .faces { display: flex; justify-content: center; margin-bottom: 24px; min-height: 38px; }
+  .faces .avatar { width: 38px; height: 38px; margin-left: -8px; border: 2.5px solid var(--surface); font-size: 13px; }
+  .jc .field { text-align: left; }
+  .jc .swatches { margin-bottom: 24px; }
+  .big { width: 100%; height: 50px; border-radius: 14px; font-size: 15.5px; }
+  .fine { font-size: 12px; color: var(--faint); margin-top: 16px; }
+  .err { color: var(--ember); font-size: 13.5px; margin-top: 12px; min-height: 18px; }
+</style>
+</head>
+<body class="dark">
+<div class="join"><div class="jc" id="card">
+  <img src="/assets/icon-512.png" alt="">
+  <h1 id="title">Joining…</h1>
+  <p class="lead" id="lead">Checking your invite.</p>
+  <div class="faces" id="faces"></div>
+  <form id="form" class="hidden">
+    <div class="field"><label for="name">Display name</label><input class="input" id="name" maxlength="32" placeholder="e.g. Riley" autocomplete="off" required></div>
+    <div class="field"><label>Your color</label><div class="swatches" id="swatches"></div></div>
+    <button class="btn primary big" id="go" type="submit">Join the tribe</button>
+  </form>
+  <div class="err" id="err"></div>
+  <div class="fine" id="fine"></div>
+</div></div>
+<script src="/store.js"></script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const code = location.pathname.split('/').filter(Boolean)[1] || new URLSearchParams(location.search).get('code');
+  const COLORS = ['#7C5CFF', '#FFB86B', '#3DD6D0', '#FF6F8E', '#5B8CFF', '#9AE66E'];
+  const ink = c => (['#FFB86B', '#3DD6D0', '#9AE66E'].includes(c) ? '#0B0C10' : '#fff');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  const st = window.TribeStore.get();
+  document.body.className = st.theme === 'light' ? 'light' : 'dark';
+
+  function swatches() {
+    $('#swatches').innerHTML = COLORS.map(c => `<button type="button" class="swatch ${c === color ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
+    document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; swatches(); });
+  }
+
+  async function load() {
+    if (st.server && st.server.token && st.server.url === location.origin) { location.replace('/'); return; }
+    try {
+      const r = await fetch('/api/invites/' + encodeURIComponent(code || ''));
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      $('#title').textContent = `Join ${d.tribe}`;
+      $('#lead').innerHTML = `${esc(d.invitedBy)} invited you to code with the tribe.<br>No email, no password. Pick a name and you're in.`;
+      $('#faces').innerHTML = d.members.map(m => `<div class="avatar" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(m.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase())}</div>`).join('');
+      const hrs = Math.max(1, Math.round((Date.parse(d.expires) - Date.now()) / 3600000));
+      $('#fine').innerHTML = `Invite <span style="font-family:var(--mono)">${esc(code)}</span> · expires in ${hrs} h · role: ${esc(d.role)}`;
+      $('#form').classList.remove('hidden'); swatches();
+      $('#name').value = st.name || ''; $('#name').focus();
+    } catch (e) {
+      $('#title').textContent = 'This invite has expired';
+      $('#lead').textContent = 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
+    }
+  }
+
+  $('#form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('#name').value.trim(); if (!name) return;
+    $('#go').disabled = true; $('#go').textContent = 'Joining…'; $('#err').textContent = '';
+    try {
+      const r = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, name, color }) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error);
+      // Personal preferences still come from first-run setup; name + color are pre-filled.
+      window.TribeStore.set({ name, color, server: { url: location.origin, token: d.token } });
+      location.replace('/');
+    } catch (err) {
+      $('#err').textContent = err.message || 'Could not join'; $('#go').disabled = false; $('#go').textContent = 'Join the tribe';
+    }
+  });
+  load();
+})();
+</script>
+</body>
+</html>

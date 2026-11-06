@@ -9,7 +9,7 @@
     { el: '#tour-drop', title: 'Drop anything in', body: 'Files, slides, PDFs and Google Doc links become Markdown in your folder, with a short TL;DR written by your local brain.', place: 'left' },
     { el: '#tour-room', title: 'See who\'s here', body: 'Friends, what they\'re editing, and whose Claude agent is running. Click a person to follow along.', place: 'left' },
     { el: '#tour-invite', title: 'Bring your friends', body: 'Make a short invite link. Friends pick a name and they\'re in. No email or password needed.', place: 'right' },
-    { el: '#help-btn', title: 'That\'s it!', body: 'Replay this tour any time from this button. Work through the Getting started list on Home to finish setting up.', place: 'above' },
+    { el: '#help-btn', title: 'That\'s it!', body: 'Replay this tour any time from this button. Work through the Getting started list on Home to finish setting up.', place: 'right' },
   ];
   let i = 0, active = false;
 
