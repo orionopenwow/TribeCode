@@ -13,6 +13,15 @@ if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
   echo "Tag $VERSION already exists" >&2; exit 1
 fi
 
+# Keep the desktop app version in step with the milestone tag (the updater compares these).
+SEMVER="${VERSION#v}"
+if [[ "$SEMVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  [ -f app/src-tauri/tauri.conf.json ] && sed -i.bak -E "0,/\"version\": \"[^\"]+\"/s//\"version\": \"$SEMVER\"/" app/src-tauri/tauri.conf.json
+  [ -f app/src-tauri/Cargo.toml ] && sed -i.bak -E "0,/^version = \"[^\"]+\"/s//version = \"$SEMVER\"/" app/src-tauri/Cargo.toml
+  [ -f app/package.json ] && sed -i.bak -E "0,/\"version\": \"[^\"]+\"/s//\"version\": \"$SEMVER\"/" app/package.json
+  rm -f app/src-tauri/tauri.conf.json.bak app/src-tauri/Cargo.toml.bak app/package.json.bak
+fi
+
 # Changes since the previous tag become the changelog entry.
 PREV="$(git describe --tags --abbrev=0 2>/dev/null || true)"
 if [ -n "$PREV" ]; then RANGE="$PREV..HEAD"; else RANGE="HEAD"; fi
@@ -32,4 +41,4 @@ git tag -a "$VERSION" -m "$TITLE"
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 git push origin "$BRANCH"
 git push origin "$VERSION"
-echo "Milestone $VERSION pushed."
+echo "Milestone $VERSION pushed. GitHub Actions is now building installers; running apps will show \"Restart to update\" once the release is published."

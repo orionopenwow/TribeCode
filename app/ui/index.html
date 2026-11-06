@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TribeCode</title>
+<link rel="icon" href="assets/icon-512.png">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="updater.css">
+</head>
+<body class="dark">
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-tick" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-vote" viewBox="0 0 24 24"><path d="M4 21h16M6 21V10l6-6 6 6v11"/><path d="m9 14 2 2 4-4"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 7V4M9 4l1.5 3M15 4l-1.5 3M3 12h4M17 12h4M4 18l3-2M20 18l-3-2"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a2 2 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="9" r="2.5"/><path d="M6 8.5v7M18 11.5c0 4-6 3-11 5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+</svg>
+
+<!-- ============ App shell ============ -->
+<div class="shell" id="shell">
+  <div class="window">
+    <header class="titlebar">
+      <span class="ws" id="ws-name">My Tribe</span><span class="faint">/ Home</span>
+      <button class="search" id="tour-search" title="Command palette"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></button>
+      <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
+      <span class="status" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
+      <span class="status" id="brain-status"><svg class="i" style="width:15px;height:15px"><use href="#i-brain"/></svg><span id="brain-label">brain off</span></span>
+    </header>
+
+    <nav class="rail" id="tour-rail" aria-label="Main">
+      <img class="logo" src="assets/icon-512.png" alt="TribeCode">
+      <button class="nav on" data-nav="home" title="Home"><svg class="i"><use href="#i-home"/></svg></button>
+      <button class="nav" data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg></button>
+      <button class="nav" data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg></button>
+      <button class="nav" data-nav="board" title="Approval board"><svg class="i"><use href="#i-vote"/></svg></button>
+      <button class="nav" data-nav="bugs" title="Bug inbox"><svg class="i"><use href="#i-bug"/></svg></button>
+      <button class="nav" data-nav="brain" title="Brain"><svg class="i"><use href="#i-brain"/></svg></button>
+      <button class="nav" data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
+      <div class="spacer"></div>
+      <button class="nav" id="settings-btn" title="Settings · replay setup"><svg class="i"><use href="#i-gear"/></svg></button>
+      <div class="avatar" id="me-avatar" title="You">?</div>
+    </nav>
+
+    <aside class="side" id="tour-side">
+      <h6>Projects</h6>
+      <button class="item on"><span>🏕️</span>Welcome project<span class="n">main</span></button>
+      <h6>Workspace</h6>
+      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-check"/></svg>My tasks<span class="n">0</span></button>
+      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-vote"/></svg>Proposals</button>
+      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-bug"/></svg>Bug inbox</button>
+      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-git"/></svg>Milestones</button>
+      <h6>Local folder</h6>
+      <button class="item" id="folder-item" title="Workspace folder"><svg class="i" style="width:16px;height:16px"><use href="#i-folder"/></svg><span id="folder-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></button>
+      <button class="item invite" id="tour-invite"><svg class="i" style="width:16px;height:16px"><use href="#i-link"/></svg>Invite friends</button>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="hello" id="hello">Welcome</div>
+      <div class="sub">Your tribe's home base. Start here, then invite your friends.</div>
+      <div class="home-grid">
+        <section class="card" id="tour-checklist">
+          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-zap"/></svg>Getting started</h3>
+          <div class="lead"><span id="check-count">0 of 5</span> done</div>
+          <div class="progress"><i id="check-bar" style="width:0%"></i></div>
+          <div id="checklist"></div>
+        </section>
+        <section class="card" id="tour-drop">
+          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-upload"/></svg>Drop zone</h3>
+          <div class="lead">Drop any file: docs, PDFs, slides, images. It's converted to Markdown and summarized by your local brain.</div>
+          <div class="dropzone" id="dropzone"><svg class="i"><use href="#i-upload"/></svg><div>Drag files here</div><div class="faint" style="font-size:12px;margin-top:4px">or paste a Google Doc link</div></div>
+          <div class="drops" id="drops"></div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="panel" id="tour-room">
+      <h6>In the room</h6>
+      <div class="card">
+        <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
+      </div>
+      <div class="empty-room">Friends you invite show up here, along with what they're working on and whose Claude is running.</div>
+      <h6 style="margin-top:6px">Chat</h6>
+      <div class="empty-room">No messages yet. Type <span class="kbd">/task</span> in chat to turn any message into a task.</div>
+    </aside>
+  </div>
+</div>
+
+<button class="help-btn" id="help-btn" title="Take the tour">?</button>
+
+<!-- ============ Update popover ============ -->
+<div class="update-pop hidden" id="update-pop" role="dialog" aria-label="Update available"></div>
+
+<!-- ============ First-run setup ============ -->
+<div class="onboard hidden" id="onboard">
+  <div class="ob-card">
+    <div class="ob-top"><img src="assets/icon-512.png" alt=""><span class="brand">TribeCode</span><div class="ob-steps" id="ob-steps"></div></div>
+    <div class="ob-body" id="ob-body"></div>
+    <div class="ob-foot">
+      <button class="btn ghost" id="ob-back">Back</button>
+      <span class="hint" id="ob-hint"></span>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="ob-skip">Skip setup</button>
+      <button class="btn primary" id="ob-next">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Tour ============ -->
+<div class="tour hidden" id="tour"><div class="spot" id="tour-spot"></div><div class="tip" id="tour-tip" role="dialog"></div></div>
+
+<script src="store.js"></script>
+<script src="onboarding.js"></script>
+<script src="tour.js"></script>
+<script src="updater.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

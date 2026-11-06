@@ -1,0 +1,77 @@
+# Builds the desktop app and publishes a GitHub Release whenever a version tag is pushed.
+# The release includes latest.json, which the in-app updater polls to show "Restart to update".
+#
+# One-time setup (repo Settings -> Secrets and variables -> Actions):
+#   TAURI_SIGNING_PRIVATE_KEY           output of `npx tauri signer generate`
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  the password you chose (may be empty)
+# and paste the matching public key into app/src-tauri/tauri.conf.json -> plugins.updater.pubkey
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ''
+          - platform: macos-latest
+            args: '--target universal-apple-darwin'
+          - platform: ubuntu-22.04
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+
+      - name: Install Tauri CLI
+        working-directory: app
+        run: npm install
+
+      - name: Sync app version with the tag
+        shell: bash
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          if [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            node -e "const f='app/src-tauri/tauri.conf.json';const c=require('./'+f);c.version='$V';require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
+          fi
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: app
+          tagName: ${{ github.ref_name }}
+          releaseName: 'TribeCode ${{ github.ref_name }}'
+          releaseBody: 'See CHANGELOG.md for what changed. Already installed? TribeCode will show a "Restart to update" pill.'
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}

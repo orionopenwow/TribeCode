@@ -22,7 +22,7 @@ TribeCode is a lightweight, self-hosted clubhouse for building software together
 
 ---
 
-> **Status:** TribeCode is in the design phase (milestone `v0.0.1`). The screenshots below are rendered **UI mockups** from [`design/mockups/app.html`](design/mockups/app.html), not a running build yet.
+> **Status:** early build. The desktop shell, first-run setup, built-in tour and auto-updater are working code in [`app/`](app/). Docs, Tasks and the approval board are still **UI mockups** from [`design/mockups/app.html`](design/mockups/app.html) and are being built sprint by sprint (see [Roadmap](#-roadmap)).
 
 <p align="center">
   <img src="docs/screenshots/docs-dark.png" alt="TribeCode docs workspace, dark mode" width="100%">
@@ -64,6 +64,34 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
   </tr>
 </table>
 
+### First launch and updates (working today)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/setup-2-profile.png" alt="First-run setup: name and color"><br><sub><b>First-run setup:</b> name, color, theme, folder, local brain and startup preferences. No account needed; everything stays on your machine.</sub></td>
+    <td width="50%"><img src="docs/screenshots/tour.png" alt="Built-in spotlight tour"><br><sub><b>60-second tour:</b> a spotlight walkthrough of the app. Replay it any time with the <b>?</b> button.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/setup-3-brain.png" alt="Local brain detection"><br><sub><b>Local brain:</b> detects Ollama and your Qwen models automatically, or shows the one command to install it.</sub></td>
+    <td width="50%"><img src="docs/screenshots/update-handoff.png" alt="Restart to update pill with save and hand-off"><br><sub><b>Restart to update:</b> new versions download in the background. When it suits you, save your work, hand off running agents and claims, and restart, or snooze it.</sub></td>
+  </tr>
+</table>
+
+## 🚀 Run it
+
+```bash
+# Try the UI in a browser (no install needed)
+open app/ui/index.html            # ?reset=1 replays first-run setup, ?demo=1 adds demo teammates,
+                                  # ?simulateUpdate=0.2.0 shows the update pill
+
+# Desktop app (needs Node 22 + Rust: https://tauri.app/start/prerequisites/)
+cd app && npm install
+npm run dev                       # live desktop window
+npm run build                     # Windows .exe/.msi, macOS .dmg, Linux AppImage in app/src-tauri/target/release/bundle/
+```
+
+**Shipping updates:** `./scripts/milestone.sh v0.2.0 "What changed"` bumps the app version, tags and pushes. [`.github/workflows/release.yml`](.github/workflows/release.yml) then builds installers for all three platforms and publishes a GitHub Release with `latest.json`, and every running copy shows **Restart to update** within 30 minutes. One-time setup: run `npx tauri signer generate`, add the private key as the `TAURI_SIGNING_PRIVATE_KEY` repo secret, and paste the public key into `app/src-tauri/tauri.conf.json`.
+
 ## ⚙️ How it works
 
 ```
@@ -81,6 +109,7 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 ## 🗺️ Roadmap
 
 - [x] **Phase 0: Design.** Feature spec, brand kit, UI mockups, MIT license (`v0.0.1`)
+- [x] **Sprint 1: Desktop shell.** First-run setup, 60-second tour, getting-started checklist, auto-update with save and hand-off, Tauri wrapper, release CI (`v0.1.0`)
 - [ ] **Phase 1: Foundation.** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit

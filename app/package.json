@@ -1,0 +1,17 @@
+{
+  "name": "tribecode-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TribeCode desktop app (Tauri wrapper around app/ui)",
+  "license": "MIT",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icons": "tauri icon ../assets/brand/icon-512.png",
+    "test:ui": "python3 test/ui_smoke.py"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
