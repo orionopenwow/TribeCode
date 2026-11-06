@@ -7,7 +7,7 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-PORT = 4793
+PORT = 4793 + int(__import__('os').environ.get('TRIBE_PORT_OFFSET', '0'))  # offset lets parallel runs coexist
 BASE = f"http://localhost:{PORT}"
 take = "--shots" in sys.argv
 errors = []

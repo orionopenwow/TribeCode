@@ -8,7 +8,8 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-PORT = 4799
+MOCK = 11555 + int(__import__('os').environ.get('TRIBE_PORT_OFFSET', '0'))
+PORT = 4799 + int(__import__('os').environ.get('TRIBE_PORT_OFFSET', '0'))  # offset lets parallel runs coexist
 BASE = f"http://localhost:{PORT}"
 take = "--shots" in sys.argv
 errors = []
@@ -64,9 +65,9 @@ def main():
     g("branch", "maya/campfire-save-points")
     for i in range(6): gc("commit", "-q", "--allow-empty", "-m", f"main {i}")
     g("checkout", "-q", "-b", "rogue-experiment"); Path(repo, "x.txt").write_text("x"); g("add", "."); gc("commit", "-q", "-m", "experiment"); g("checkout", "-q", "main")
-    mock = subprocess.Popen(["node", str(ROOT / "app" / "test" / "mock_ollama.js"), "11555"], stdout=subprocess.DEVNULL)
+    mock = subprocess.Popen(["node", str(ROOT / "app" / "test" / "mock_ollama.js"), str(MOCK)], stdout=subprocess.DEVNULL)
     time.sleep(0.3)
-    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--repo", repo, "--ollama", "http://localhost:11555"],
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--repo", repo, "--ollama", f"http://localhost:{MOCK}"],
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         for _ in range(50):

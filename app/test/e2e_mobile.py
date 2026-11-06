@@ -6,7 +6,7 @@ import cv2
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-PORT = 4794
+PORT = 4794 + int(__import__('os').environ.get('TRIBE_PORT_OFFSET', '0'))  # offset lets parallel runs coexist
 BASE = f"http://localhost:{PORT}"
 SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv
