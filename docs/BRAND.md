@@ -35,7 +35,8 @@ The flame is one flat color; never add a gradient to it.
 
 ## Type
 
-- **Inter Display** for headings and the wordmark ("**Tribe**" bold + "Code" regular, −2% tracking).
+- **Wordmark:** "Tribe" over "Code", stacked, both in a heavy geometric sans (Inter Display ExtraBold). "Tribe" is white on dark or navy on light; "Code" is always the flame orange. `assets/brand/logo-wordmark*.svg`/`.png` pair it with the icon; `logo-text.svg` is the text alone.
+- Inter is bundled with the app (`app/ui/assets/fonts`, SIL OFL), so every computer and phone renders the same.
 - **Inter** for UI text, 13–15 px.
 - A monospace (JetBrains Mono or system mono) for branches, tags and code.
 
@@ -52,4 +53,4 @@ The flame is one flat color; never add a gradient to it.
 
 - Don't recolor the flame or add gradients; keep the brackets white on navy.
 - Don't put the icon on a busy photo; use the Graphite or Paper backgrounds.
-- Don't stretch the wordmark or set "TribeCode" in all caps.
+- Don't stretch the wordmark, set it in all caps, or color "Code" anything but the flame orange.

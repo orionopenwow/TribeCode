@@ -15,7 +15,7 @@
       id: 'welcome', cta: 'Get started',
       render: () => `
         <img class="hero-icon" src="assets/icon-512.png" alt="">
-        <h1>Welcome to TribeCode</h1>
+        <h1 class="wordmark stack" style="font-size:46px;margin-bottom:14px"><span>Tribe</span><span class="c">Code</span></h1>
         <p class="lead">Let's set up this computer in about a minute. These choices stay on this device. There's no account to create, and you can change any of them later in Settings.</p>
         <div class="perks">
           <div class="perk"><svg class="i"><use href="#i-users"/></svg><b>Code with friends</b>One invite link, live sessions, shared Claude.</div>

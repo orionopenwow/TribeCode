@@ -1,8 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 220" width="520" height="220">
   <title>TribeCode</title>
-  <g transform="translate(14 18) scale(0.36) translate(-46 -100)">
-    <g fill="#171B26"><polygon points="158,160 60,272 158,384 158,330 106,272 158,214"/><polygon points="378,160 476,272 378,384 378,330 430,272 378,214"/></g>
+  <g transform="translate(6 10) scale(0.4) translate(-28 -30)">
+    <rect x="28" y="30" width="492" height="492" rx="112" fill="#171B26"/>
+    <g fill="#FFFFFF"><polygon points="158,160 60,272 158,384 158,330 106,272 158,214"/><polygon points="378,160 476,272 378,384 378,330 430,272 378,214"/></g>
     <polygon fill="#EE6F22" points="268,110 302,182 303,250 342,218 366,290 352,358 268,410 186,360 172,290 203,203 226,240 226,182"/>
   </g>
-  <text x="200" y="128" font-family="Inter Display, Inter, sans-serif" font-size="92" letter-spacing="-2" fill="#5B6072"><tspan font-weight="700" fill="#171B26">Tribe</tspan><tspan font-weight="400" fill="#EE6F22">Code</tspan></text>
+  <g font-family="Inter Display, Inter, sans-serif" font-weight="800" font-size="92" letter-spacing="-1">
+    <text x="232" y="98" fill="#171B26">Tribe</text>
+    <text x="232" y="190" fill="#EE6F22">Code</text>
+  </g>
 </svg>

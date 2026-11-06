@@ -1,0 +1,9 @@
+/* Inter (SIL Open Font License, see assets/fonts/LICENSE-Inter.txt), bundled so every device looks the same */
+@font-face { font-family: 'Inter'; font-weight: 400; font-display: swap; src: url('assets/fonts/Inter-Regular.otf') format('opentype'); }
+@font-face { font-family: 'Inter'; font-weight: 500; font-display: swap; src: url('assets/fonts/Inter-Medium.otf') format('opentype'); }
+@font-face { font-family: 'Inter'; font-weight: 600; font-display: swap; src: url('assets/fonts/Inter-SemiBold.otf') format('opentype'); }
+@font-face { font-family: 'Inter'; font-weight: 700; font-display: swap; src: url('assets/fonts/Inter-Bold.otf') format('opentype'); }
+@font-face { font-family: 'Inter Display'; font-weight: 800; font-display: swap; src: url('assets/fonts/InterDisplay-ExtraBold.otf') format('opentype'); }
+.wordmark { font-family: 'Inter Display', 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: .95; }
+.wordmark .c { color: var(--accent); }
+.wordmark.stack span { display: block; }

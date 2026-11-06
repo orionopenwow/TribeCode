@@ -30,7 +30,7 @@ def main():
         # ---- first run ----
         page.goto(UI + "?reset=1&demo=1")
         page.wait_for_selector("#onboard:not(.hidden)")
-        assert "Welcome to TribeCode" in page.inner_text("#ob-body")
+        assert "Tribe" in page.inner_text("#ob-body") and "Code to the" not in page.inner_text("#ob-body")
         shot(page, "setup-1-welcome")
         page.click("#ob-next")
         assert page.is_disabled("#ob-next"), "name required"
