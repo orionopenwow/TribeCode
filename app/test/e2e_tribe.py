@@ -222,9 +222,19 @@ def main():
             wait_text(friend, "#doc-status", "Saved")
             shot(friend, "docs-live")
             friend.click('[data-mode="write"]')
-            # conflict: friend has unsaved text while host saves first
             tok = host.evaluate("TribeStore.get().server.token")
             slug = friend.evaluate("document.querySelector('.doc-item.on').dataset.slug")
+            # live co-editing: an API write while the friend types merges in (no conflict banner)
+            assert friend.evaluate("TribeDocs.live()")
+            friend.click("#doc-body"); friend.keyboard.press("Control+End"); friend.keyboard.type(" Typed live.")
+            st, d = api("/docs/" + slug, token=tok)
+            st, d = api("/docs/" + slug, "PUT", {"title": d["doc"]["title"], "body": "Host prepends.\n" + d["doc"]["body"], "baseVersion": d["doc"]["version"]}, token=tok)
+            assert st == 200 and "Host prepends." in d["doc"]["body"], d  # the friend's last keystrokes may still be in flight; convergence is checked next
+            friend.wait_for_function("document.querySelector('#doc-body').value.startsWith('Host prepends.') && document.querySelector('#doc-body').value.includes('Typed live.')", timeout=8000)
+            assert friend.is_hidden("#doc-banner")
+            # fallback without a live session (e.g. an old server): the conflict banner still protects unsaved text
+            friend.evaluate("TribeDocs.setLive(false)")
+            assert not friend.evaluate("TribeDocs.live()")
             friend.click("#doc-body"); friend.keyboard.press("Control+End"); friend.keyboard.type(" Maya was here.")
             st, d = api("/docs/" + slug, token=tok)
             st, d = api("/docs/" + slug, "PUT", {"title": d["doc"]["title"], "body": d["doc"]["body"] + "\nHost edit.", "baseVersion": d["doc"]["version"]}, token=tok)
@@ -233,6 +243,10 @@ def main():
             friend.click("#cf-mine")
             wait_text(friend, "#doc-status", "Saved")
             assert "Maya was here." in Path(tmp, "docs", slug + ".md").read_text()
+            # "Keep mine" reached the host's live editor too
+            host.wait_for_function("document.querySelector('#doc-body').value.includes('Maya was here.')", timeout=8000)
+            friend.evaluate("TribeDocs.setLive(true)")
+            assert friend.evaluate("TribeDocs.live()")
             # import a file
             friend.evaluate("TribeDocs.importFiles([new File(['# Notes from the jam\\n\\nIdeas: fishing, music.'], 'jam-notes.md', {type: 'text/markdown'})])")
             wait_text(friend, "#doc-list", "jam-notes")

@@ -1,0 +1,16 @@
+/* TribeCode design tokens: see docs/DESIGN-SYSTEM.md. Flat matte, 1px borders, no glows, no blur. */
+:root {
+  --canvas: #12151A;   /* Obsidian Slate */
+  --surface: #1B2028;  /* Charcoal Card */
+  --surface-2: #222833;
+  --border: #2A313C;   /* Muted Steel */
+  --brand: #F26B1D;    /* Ember Orange */
+  --live: #38C6B1;     /* Signal Teal */
+  --peer: #6C7CFF;     /* Huddle Indigo */
+  --white: #F8FAFC;    /* Stark White */
+  --body: #94A3B8;     /* Cool Slate */
+  --online: #3BD16F;
+  --alert: #FF6F8E;
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  --r-ctl: 8px; --r-card: 12px; --r-panel: 16px;
+}

@@ -2,6 +2,7 @@
 // and local-brain TL;DRs written next to each doc as <slug>.summary.md.
 'use strict';
 const fs = require('node:fs');
+const makeLive = require('./live');
 
 module.exports = function docs({ store, slug, str, broadcast, brain, postChat }) {
   const rel = s => `docs/${s}.md`;
@@ -13,6 +14,11 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
     const r = store.readMd(rel(s)); if (!r) return null;
     let summary = ''; try { summary = fs.readFileSync(store.p(sumRel(s)), 'utf8').trim(); } catch {}
     return { slug: s, ...r.meta, body: r.body, summary };
+  }
+  // Like read(), but first writes pending live edits so the text and version agree (what API readers want).
+  function readFresh(s) {
+    const l = live.flush(s), d = read(s);
+    return d && l ? { ...d, body: l.body } : d;
   }
   function list() {
     return store.listMd('docs').map(f => f.replace(/^docs[\\/]/, '').replace(/\.md$/, '')).map(read).filter(Boolean)
@@ -46,7 +52,7 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
   async function route(req, res, { m, b, c, me, readBody, send, fail }) {
     if (m === 'GET' && !b) return send(res, 200, { docs: list() });
     if (b && !okSlug(b)) return fail(res, 400, 'bad doc name');
-    if (m === 'GET') { const d = read(b); return d ? send(res, 200, { doc: d }) : fail(res, 404, 'doc not found'); }
+    if (m === 'GET') { const d = readFresh(b); return d ? send(res, 200, { doc: d }) : fail(res, 404, 'doc not found'); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
 
     if (m === 'POST' && !b) {
@@ -66,6 +72,10 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
     const d = read(b); if (!d) return fail(res, 404, 'doc not found');
     if (m === 'PUT') {
       const body = await readBody(req, 1024 * 1024);
+      // People are co-editing this doc live: merge the write into the session instead of overwriting.
+      const merged = live.external(b, { body: typeof body.body === 'string' ? body.body : undefined, title: body.title !== undefined ? str(body.title, 120) || undefined : undefined,
+        baseVersion: body.baseVersion, force: !!body.force, by: me.id });
+      if (merged) return merged.conflict ? send(res, 409, { error: 'conflict', doc: readFresh(b) }) : send(res, 200, { doc: merged.doc });
       if (!body.force && Number(body.baseVersion) !== Number(d.version))
         return send(res, 409, { error: 'conflict', doc: d });
       if (body.title !== undefined) d.title = str(body.title, 120) || d.title;
@@ -74,6 +84,7 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
       return send(res, 200, { doc: write(d) });
     }
     if (m === 'DELETE') {
+      live.drop(b);
       store.remove(rel(b)); store.remove(sumRel(b));
       broadcast({ type: 'doc-removed', slug: b });
       return send(res, 200, { ok: true });
@@ -84,18 +95,21 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
   // Used by agents (MCP): find by name or title, create or update with optimistic concurrency.
   function find(name) {
     const n = String(name || '').trim(); if (!n) return null;
-    if (okSlug(n)) { const d = read(n); if (d) return d; }
+    if (okSlug(n)) { const d = readFresh(n); if (d) return d; }
     const hit = list().find(d => d.title.toLowerCase() === n.toLowerCase()) || list().find(d => d.slug === slug(n));
-    return hit ? read(hit.slug) : null;
+    return hit ? readFresh(hit.slug) : null;
   }
   function upsert({ name, body, baseVersion, by }) {
     const d = find(name), now = new Date().toISOString();
     if (!d) return { doc: write({ slug: uniqueSlug(name), title: str(name, 120) || 'Untitled', by, created: now, updated: now, updatedBy: by, version: 1, body: String(body || '').slice(0, 400_000) }) };
     if (baseVersion === undefined || baseVersion === null) return { conflict: `"${d.title}" already exists (version ${d.version}); pass base_version to edit it` };
+    const merged = live.external(d.slug, { body: String(body || ''), baseVersion, by });
+    if (merged) return merged.conflict ? { conflict: `"${d.title}" changed since you read it (now version ${readFresh(d.slug).version})` } : { doc: merged.doc };
     if (Number(baseVersion) !== Number(d.version)) return { conflict: `"${d.title}" changed since you read it (now version ${d.version})` };
     d.body = String(body || '').slice(0, 400_000); d.version = Number(d.version) + 1; d.updated = now; d.updatedBy = by;
     return { doc: write(d) };
   }
 
-  return { route, list, read, find, upsert };
+  const live = makeLive({ read, write, str });
+  return { route, list, read, find, upsert, live };
 };

@@ -5,7 +5,7 @@
   const params = new URLSearchParams(location.search);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
-  const ink = c => (['#FFB86B', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
+  const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
   const drops = [];
   let serverBrain = null;     // brain status reported by the tribe host          // files dropped this session (unsaved until saveAll)
   const mq = matchMedia('(prefers-color-scheme: light)');
@@ -120,7 +120,7 @@
   // ---- live room + chat ----
   const C = window.TribeClient;
   const nameOf = id => { if (id === 'tribecode') return 'TribeCode'; const m = (C.state().members || []).find(x => x.id === id); return m ? m.name : 'someone'; };
-  const colorOf = id => { const m = (C.state().members || []).find(x => x.id === id); return m ? m.color : '#3DD6D0'; };
+  const colorOf = id => { const m = (C.state().members || []).find(x => x.id === id); return m ? m.color : '#6C7CFF'; };
   const md = t => window.TribeMD.inline(t).replace(/\n/g, '<br>');
   function renderRoom(list) {
     const st = S.get();

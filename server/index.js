@@ -63,7 +63,7 @@ function readBody(req, limit = 256 * 1024) {
   });
 }
 function str(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
-const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#EE6F22');
+const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#F26B1D');
 const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 function authed(req) {
   const h = req.headers.authorization || '';
@@ -303,7 +303,7 @@ async function api(req, res, url) {
     let ag = members.find(x => x.role === 'agent' && x.owner === me.id);
     const token = id(32);
     if (ag) { ag.tokenHash = hash(token); saveMembers(); }
-    else { ag = { id: 'agent-' + slug(me.name).slice(0, 10) + '-' + id(4), name, color: '#3DD6D0', role: 'agent', owner: me.id, joined: new Date().toISOString(), tokenHash: hash(token) }; members.push(ag); saveMembers(); pushPresence(); }
+    else { ag = { id: 'agent-' + slug(me.name).slice(0, 10) + '-' + id(4), name, color: '#38C6B1', role: 'agent', owner: me.id, joined: new Date().toISOString(), tokenHash: hash(token) }; members.push(ag); saveMembers(); pushPresence(); }
     const base = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`;
     return send(res, 200, { agent: publicMember(ag), token, url: `${base}/mcp`, command: `claude mcp add --transport http tribecode ${base}/mcp --header "Authorization: Bearer ${token}"`, tools: mcp.tools });
   }
@@ -367,6 +367,7 @@ server.on('upgrade', (req, sock) => {
   s.on('message', msg => {
     if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
+    if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
     if (msg.type === 'announce' && typeof msg.text === 'string') postChat('general', me.id, msg.text.slice(0, 400));
     if (msg.type === 'huddle-join' && me.role !== 'agent') {
       const first = huddle.size === 0;
@@ -382,6 +383,7 @@ server.on('upgrade', (req, sock) => {
   });
   s.on('close', () => {
     o.sockets.delete(s); if (!o.sockets.size) online.delete(me.id);
+    docs.live.leaveAll(s);
     const h = huddle.get(me.id); if (h && h.socket === s) { huddle.delete(me.id); pushHuddle(); }
     pushPresence();
   });
@@ -397,6 +399,8 @@ function start() {
   }
   // When launched by the desktop app, exit if the app goes away.
   if (args['exit-with-parent']) { const parent = process.ppid; setInterval(() => { if (process.ppid !== parent) process.exit(0); }, 2000).unref(); }
+  // Write live doc edits that are still inside the debounce window before exiting.
+  for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { docs.live.persistAll(); } catch (e) { console.error(e); } process.exit(0); });
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });
   server.listen(PORT, HOST, () => {
     const lan = Object.values(os.networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal);

@@ -52,6 +52,7 @@
       if (m.type === 'claims') { state.claims = m.claims; emit('claims', m.claims); }
       if (m.type === 'doc-summary') emit('doc-summary', m);
       if (m.type === 'doc-removed') emit('doc-removed', m.slug);
+      if (['doc-state', 'doc-op', 'doc-ack', 'doc-cursor', 'doc-peers', 'doc-title', 'doc-error'].includes(m.type)) emit(m.type, m);
     };
     sock.onclose = () => {
       setStatus(token() ? 'reconnecting' : 'offline');

@@ -1,5 +1,6 @@
-// Docs: shared Markdown pages with a Notion-style slash menu, autosave, preview,
-// conflict handling, file import, and local-brain TL;DRs. Works offline on one device.
+// Docs: shared Markdown pages with a Notion-style slash menu, live co-editing (coedit.js), autosave,
+// preview, conflict handling, file import, and local-brain TL;DRs. Works offline on one device.
+// While a live session is open the body syncs as OT ops; the 900 ms PUT autosave is the fallback.
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient, MD = window.TribeMD;
@@ -12,6 +13,8 @@
     ['table', 'Table', '| Column | Column |\n| --- | --- |\n|  |  |\n'], ['date', 'Today\'s date', null], ['brain', 'Summarize with local brain', null],
   ];
   let list = [], cur = null, dirty = false, saving = false, saveTimer = null, mode = 'write', filter = '', slash = null, loaded = false;
+  let sess = null, liveOn = true, openSeq = 0, peersNow = [], readTimer = null;
+  const inLive = () => !!(sess && !sess.closed && cur && sess.slug === cur.slug);
 
   const remote = () => C.connected();
   const onScreen = () => { const v = document.querySelector('#view-docs'); return v && !v.classList.contains('hidden'); };
@@ -51,10 +54,75 @@
   }
 
   async function open(slug) {
+    const my = ++openSeq;
     if (dirty) await save();
-    try { cur = await fetchDoc(slug); } catch (e) { cur = null; }
+    if (sess && sess.slug !== slug) { sess.leave(); sess = null; peersNow = []; }
+    let fresh = null; try { fresh = await fetchDoc(slug); } catch (e) { fresh = null; }
+    if (my !== openSeq) return;
+    // Reconnecting to the doc we are already in: keep the editor (and the caret) as it is.
+    const keep = !!(fresh && sess && sess.slug === slug && cur && cur.slug === slug && $('#doc-body'));
+    const prevBody = cur && cur.slug === slug ? cur.body : null;
+    cur = fresh;
+    if (cur && remote() && liveOn) {
+      if (!sess) sess = window.TribeCoedit.open(slug, liveHooks());
+      const ok = await sess.join();
+      if (my !== openSeq) return;
+      if (ok && cur) cur.body = sess.text();
+      else if (sess) { sess.leave(); sess = null; peersNow = []; }
+    } else if (sess) { sess.leave(); sess = null; peersNow = []; }
+    if (keep && inLive()) { if (prevBody !== null) cur.body = sess.text(); renderList(); renderPeers(); activity(); return; }
     dirty = false; hideBanner(); renderList(); renderEditor();
     activity();
+  }
+
+  // ---------- live co-editing glue ----------
+  function liveHooks() {
+    return {
+      onDom() { const ta = $('#doc-body'); if (ta) autosize(ta); },
+      onChange(text, isRemote) { if (!cur) return; cur.body = text; if (isRemote && mode === 'read') { clearTimeout(readTimer); readTimer = setTimeout(() => { if (mode === 'read' && $('#doc-read')) renderRead(); }, 150); } },
+      onStatus(st) {
+        if (!inLive()) return;
+        setStatus(st === 'offline' ? 'Offline · your edits sync when you reconnect' : st === 'syncing' ? 'Syncing…' : `Live · synced${cur && cur.version ? ` · v${cur.version}` : ''}`);
+      },
+      onTitle(title, by) {
+        if (!cur || !title) return; cur.title = title;
+        const el = $('#doc-title'); if (el && document.activeElement !== el && el.value !== title) el.value = title;
+        const li = list.find(x => x.slug === cur.slug); if (li && li.title !== title) { li.title = title; renderList(); }
+      },
+      onVersion(v) { if (cur && v) cur.version = v; },
+      onPeers(peers) { peersNow = peers; renderPeers(); },
+      onExternal(by) { if (by && by === (C.state().me || {}).id) return; window.TribeApp.toast(`${nameOf(by)} changed this doc outside the editor. Merged in.`); },
+      onToast(t) { window.TribeApp.toast(t); },
+      onGone() { if (sess) { sess.leave(); sess = null; peersNow = []; renderPeers(); } },
+      // The server lost the history needed to merge our unsent edits (e.g. it restarted): fall back to the banner.
+      onConflict(mine, st) {
+        sess = null; peersNow = [];
+        const theirs = { ...cur, body: st.text, title: st.title || cur.title, version: st.version, updatedBy: null };
+        cur = { ...cur, body: mine, version: st.version }; dirty = true;
+        renderEditor(); showConflict(theirs); setStatus('Not saved: the live session was reset');
+      },
+    };
+  }
+  function renderPeers() {
+    const el = $('#doc-peers'); if (!el) return;
+    if (!inLive() || !peersNow.length) { el.innerHTML = ''; el.classList.add('hidden'); return; }
+    const fg = c => { const n = parseInt(String(c || '#888888').slice(1), 16); return ((n >> 16 & 255) * 0.299 + (n >> 8 & 255) * 0.587 + (n & 255) * 0.114) > 150 ? '#12151A' : '#FFFFFF'; };
+    el.classList.remove('hidden');
+    el.innerHTML = `<span class="co-avs">${peersNow.slice(0, 5).map(p => `<span class="co-av" title="${esc(p.name)}" style="background:${esc(p.color)};color:${fg(p.color)}">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span>`).join('')}</span>` +
+      `<span class="co-who">Editing now: ${peersNow.map(p => esc(p.name)).join(', ')}</span>`;
+  }
+  // Something changed the body (typing, slash menu, list continuation, checkbox): sync it.
+  function changed() { if (inLive()) sess.localChange(); else queueSave(); }
+  function titleChanged() {
+    if (!inLive()) return queueSave();
+    const t = $('#doc-title').value.trim() || 'Untitled'; cur.title = t;
+    if (!window.TribeCoedit.sendTitle(cur.slug, t)) queueSave();   // not connected right now: PUT the title
+    const li = list.find(x => x.slug === cur.slug); if (li) { li.title = t; renderList(); }
+  }
+  async function setLive(on) {
+    liveOn = !!on;
+    if (!liveOn && sess) { sess.leave(); sess = null; peersNow = []; }
+    if (cur) await open(cur.slug);
   }
 
   function queueSave() { dirty = true; setStatus('Editing…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 900); }
@@ -63,15 +131,17 @@
     clearTimeout(saveTimer);
     if (!cur || !dirty || saving) return;
     saving = true; setStatus('Saving…');
-    const title = $('#doc-title').value.trim() || 'Untitled', body = $('#doc-body').value;
+    const title = $('#doc-title').value.trim() || 'Untitled', body = $('#doc-body').value, liveBody = inLive();
     try {
       if (remote()) {
+        // In a live session the body travels as ops; only the title goes through PUT (and wins).
+        const payload = liveBody ? { title, baseVersion: cur.version, force: true } : { title, body, baseVersion: cur.version, force };
         const r = await fetch(C.base() + '/api/docs/' + cur.slug, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (window.TribeStore.get().server || {}).token },
-          body: JSON.stringify({ title, body, baseVersion: cur.version, force }) });
+          body: JSON.stringify(payload) });
         const d = await r.json();
         if (r.status === 409) { showConflict(d.doc); setStatus('Not saved: someone else edited this'); return; }
         if (!r.ok) throw new Error(d.error || r.statusText);
-        cur = { ...cur, ...d.doc }; dirty = false; setStatus(`Saved · v${cur.version}`);
+        cur = { ...cur, ...d.doc }; if (liveBody && sess) cur.body = sess.text(); dirty = false; setStatus(`Saved · v${cur.version}`);
         activity();
       } else {
         const all = local.all(); const i = all.findIndex(x => x.slug === cur.slug);
@@ -87,6 +157,7 @@
   async function remove() {
     if (!cur) return;
     const title = cur.title, slug = cur.slug;
+    if (sess) { sess.leave(); sess = null; peersNow = []; }
     if (remote()) { try { await C.api('/docs/' + slug, { method: 'DELETE' }); } catch (e) { return window.TribeApp.toast(e.message); } }
     else local.save(local.all().filter(d => d.slug !== slug));
     cur = null; dirty = false; await load();
@@ -150,25 +221,28 @@
       <div class="doc-toolbar">
         <div class="seg"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}">Read</button></div>
         <span class="faint" id="doc-status">${cur.updated ? `Saved · ${ago(cur.updated)}${cur.updatedBy ? ' by ' + esc(nameOf(cur.updatedBy)) : ''}` : ''}</span>
+        <span class="doc-peers hidden" id="doc-peers" aria-live="polite"></span>
         <button class="btn ghost" id="doc-del" title="Delete doc" style="margin-left:auto"><svg class="i"><use href="#i-x"/></svg>Delete</button>
       </div>
       <input class="doc-title" id="doc-title" value="${esc(cur.title)}" maxlength="120" placeholder="Untitled">
       <div class="doc-meta">${cur.source ? `Imported from ${esc(cur.source)} · ` : ''}${(cur.body || '').split(/\s+/).filter(Boolean).length} words · <span class="faint">${remote() ? 'shared with your tribe' : 'saved on this device'}</span></div>
       <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · local brain, 0 tokens</div><div id="doc-tldr-text"></div></div>
-      <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" placeholder="Start writing, or type / for blocks…">${esc(cur.body || '')}</textarea></div>
+      <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" placeholder="Start writing, or type / for blocks…">${esc(inLive() ? sess.text() : cur.body || '')}</textarea></div>
       <article class="md ${mode === 'read' ? '' : 'hidden'}" id="doc-read"></article>
       <div class="slash hidden" id="doc-slash" role="listbox"></div>`;
     renderTldr();
     const ta = $('#doc-body'), title = $('#doc-title');
-    autosize(ta);
-    title.oninput = queueSave;
+    if (inLive()) sess.attach(ta);
+    autosize(ta); renderPeers();
+    title.oninput = titleChanged;
     title.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } };
-    ta.oninput = () => { autosize(ta); queueSave(); checkSlash(); };
+    ta.oninput = () => { autosize(ta); changed(); checkSlash(); };
     ta.onkeydown = onKey;
     ta.onblur = () => setTimeout(hideSlash, 150);
     ta.ondragover = e => e.preventDefault();
     ta.ondrop = async e => { if (e.dataTransfer.files.length) { e.preventDefault(); importFiles([...e.dataTransfer.files]); } };
     pane.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { mode = b.dataset.mode; renderEditor(); });
+    if (inLive()) sess.status();
     $('#doc-del').onclick = () => { if (confirmDelete()) remove(); };
     if (mode === 'read') renderRead();
   }
@@ -184,7 +258,7 @@
     el.querySelectorAll('input[type=checkbox][data-line]').forEach(cb => cb.onchange = () => {
       const lines = (cur.body || '').split('\n'), n = +cb.dataset.line;
       lines[n] = lines[n].replace(/\[( |x|X)\]/, cb.checked ? '[x]' : '[ ]');
-      cur.body = lines.join('\n'); $('#doc-body').value = cur.body; queueSave(); renderRead();
+      cur.body = lines.join('\n'); $('#doc-body').value = cur.body; changed(); renderRead();
     });
   }
 
@@ -213,10 +287,10 @@
     const ta = $('#doc-body'), [key, , insert] = slash.items[slash.sel], end = ta.selectionStart;
     let text = insert;
     if (key === 'date') text = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    if (key === 'brain') { ta.setRangeText('', slash.start, end, 'end'); hideSlash(); queueSave(); summarize(); return; }
+    if (key === 'brain') { ta.setRangeText('', slash.start, end, 'end'); hideSlash(); changed(); summarize(); return; }
     ta.setRangeText(text, slash.start, end, 'end');
     if (key === 'code') ta.selectionStart = ta.selectionEnd = slash.start + 4;
-    hideSlash(); autosize(ta); queueSave(); ta.focus();
+    hideSlash(); autosize(ta); changed(); ta.focus();
   }
   function caretXY(ta, pos) {
     const m = document.createElement('div'), cs = getComputedStyle(ta);
@@ -237,7 +311,7 @@
       if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); return applySlash(); }
       if (e.key === 'Escape') { e.preventDefault(); return hideSlash(); }
     }
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (inLive()) window.TribeCoedit.flush(cur.slug); else save(); return; }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'i')) { e.preventDefault(); wrap(ta, e.key === 'b' ? '**' : '*'); return; }
     if (e.key === 'Enter' && !e.shiftKey) {             // continue lists like Notion
       const pos = ta.selectionStart, lineStart = ta.value.lastIndexOf('\n', pos - 1) + 1, line = ta.value.slice(lineStart, pos);
@@ -246,14 +320,14 @@
         e.preventDefault();
         if (line.trim() === m[2].trim()) { ta.setRangeText('', lineStart, pos, 'end'); }   // empty item ends the list
         else { let next = m[2].replace(/\[[xX]\]/, '[ ]'); if (m[3]) next = `${+m[3] + 1}. `; ta.setRangeText('\n' + m[1] + next, pos, ta.selectionEnd, 'end'); }
-        autosize(ta); queueSave();
+        autosize(ta); changed();
       }
     }
-    if (e.key === 'Tab' && !slash) { e.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); queueSave(); }
+    if (e.key === 'Tab' && !slash) { e.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); changed(); }
   }
   function wrap(ta, mark) {
     const a = ta.selectionStart, b = ta.selectionEnd, sel = ta.value.slice(a, b) || 'text';
-    ta.setRangeText(mark + sel + mark, a, b, 'select'); ta.selectionStart = a + mark.length; ta.selectionEnd = a + mark.length + sel.length; queueSave();
+    ta.setRangeText(mark + sel + mark, a, b, 'select'); ta.selectionStart = a + mark.length; ta.selectionEnd = a + mark.length + sel.length; changed();
   }
 
   // ---------- conflicts + live updates ----------
@@ -262,9 +336,9 @@
     b.classList.remove('hidden');
     b.innerHTML = `<b>${esc(nameOf(theirs.updatedBy))} edited this doc while you were typing.</b> <span class="faint">Their version is v${theirs.version}.</span>
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" id="cf-theirs">Use theirs</button><button class="btn" id="cf-copy">Copy mine</button><button class="btn primary" id="cf-mine">Keep mine</button></span>`;
-    $('#cf-theirs').onclick = () => { cur = theirs; dirty = false; hideBanner(); renderEditor(); };
+    $('#cf-theirs').onclick = () => { cur = theirs; dirty = false; hideBanner(); renderEditor(); if (liveOn && remote()) open(cur.slug); };
     $('#cf-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#doc-body').value); window.TribeApp.toast('Your text is on the clipboard'); } catch {} };
-    $('#cf-mine').onclick = () => { cur.version = theirs.version; hideBanner(); dirty = true; save({ force: true }); };
+    $('#cf-mine').onclick = async () => { cur.version = theirs.version; hideBanner(); dirty = true; await save({ force: true }); if (!dirty && liveOn && remote()) open(cur.slug); };
   }
   function hideBanner() { const b = $('#doc-banner'); if (b) b.classList.add('hidden'); }
 
@@ -272,6 +346,12 @@
     if (!loaded) return;
     const i = list.findIndex(x => x.slug === d.slug); if (i >= 0) list[i] = { ...list[i], ...d }; else list.unshift(d);
     list.sort((a, b) => String(b.updated).localeCompare(String(a.updated))); renderList();
+    // Live session: the text already arrived as ops; this is just the file being written.
+    if (cur && cur.slug === d.slug && inLive()) {
+      if (d.version >= (cur.version || 0)) { cur.version = d.version; cur.updated = d.updated; cur.updatedBy = d.updatedBy; }
+      if (!sess.pending() && !dirty) setStatus(`Saved · v${d.version}${sess.joined ? ' · live' : ''}`);
+      return;
+    }
     if (cur && cur.slug === d.slug && d.version > cur.version && d.updatedBy !== (C.state().me || {}).id) {
       if (dirty) fetchDoc(d.slug).then(showConflict);
       else fetchDoc(d.slug).then(fresh => { const ta = $('#doc-body'), pos = ta ? ta.selectionStart : 0, focused = document.activeElement === ta;
@@ -280,9 +360,9 @@
     }
   });
   C.on('doc-summary', ({ slug, summary }) => { if (cur && cur.slug === slug) { cur.summary = summary; renderTldr(); } });
-  C.on('doc-removed', slug => { list = list.filter(d => d.slug !== slug); renderList(); if (cur && cur.slug === slug) { cur = null; renderEditor(); window.TribeApp.toast('This doc was deleted by a teammate'); } });
+  C.on('doc-removed', slug => { list = list.filter(d => d.slug !== slug); renderList(); if (cur && cur.slug === slug) { if (sess) { sess.leave(); sess = null; peersNow = []; } cur = null; renderEditor(); window.TribeApp.toast('This doc was deleted by a teammate'); } });
   C.on('status', s => { if (s.status === 'online' && loaded) load(); });
-  addEventListener('beforeunload', e => { if (dirty) { save(); e.preventDefault(); e.returnValue = ''; } });
+  addEventListener('beforeunload', e => { if (dirty || (sess && sess.pending())) { if (dirty) save(); e.preventDefault(); e.returnValue = ''; } });
 
   document.addEventListener('input', e => { if (e.target.id === 'doc-search') { filter = e.target.value; renderList(); } });
   document.addEventListener('click', e => { if (e.target.closest('#doc-new')) create(); });
@@ -290,5 +370,5 @@
   document.addEventListener('dragleave', e => { if (e.target.closest && e.target.closest('#doc-list-wrap') && !e.target.closest('#doc-list-wrap').contains(e.relatedTarget)) $('#doc-list-wrap').classList.remove('over'); });
   document.addEventListener('drop', e => { const w = e.target.closest && e.target.closest('#doc-list-wrap'); if (w) { e.preventDefault(); w.classList.remove('over'); importFiles([...e.dataTransfer.files]); } });
 
-  window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty };
+  window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined };
 })();

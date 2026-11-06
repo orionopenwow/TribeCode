@@ -10,7 +10,7 @@
 
   const meId = () => (C.state().me || {}).id;
   const nameOf = id => ((C.state().members || []).find(m => m.id === id) || {}).name || 'someone';
-  const colorOf = id => ((C.state().members || []).find(m => m.id === id) || {}).color || '#EE6F22';
+  const colorOf = id => ((C.state().members || []).find(m => m.id === id) || {}).color || '#6C7CFF';
   const initials = n => n.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   // ---------- speaking detection ----------

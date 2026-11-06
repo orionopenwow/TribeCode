@@ -37,12 +37,12 @@ function wordmark({ tribe, code }) {
 }
 
 const ICON = `<rect x="28" y="30" width="492" height="492" rx="112" fill="#171B26"/>
-  <g fill="#FFFFFF"><polygon points="158,160 60,272 158,384 158,330 106,272 158,214"/><polygon points="378,160 476,272 378,384 378,330 430,272 378,214"/></g>
-  <polygon fill="#EE6F22" points="268,110 302,182 303,250 342,218 366,290 352,358 268,410 186,360 172,290 203,203 226,240 226,182"/>`;
+  <g fill="#F8FAFC"><polygon points="158,160 60,272 158,384 158,330 106,272 158,214"/><polygon points="378,160 476,272 378,384 378,330 430,272 378,214"/></g>
+  <polygon fill="#F26B1D" points="268,110 302,182 303,250 342,218 366,290 352,358 268,410 186,360 172,290 203,203 226,240 226,182"/>`;
 
 function write(file, svg) { fs.writeFileSync(path.join(root, file), svg + '\n'); console.log('wrote', file); }
-const ORANGE = '#EE6F22';
-for (const [suffix, tribe] of [['', '#171B26'], ['-dark', '#FFFFFF']]) {
+const ORANGE = '#F26B1D';
+for (const [suffix, tribe] of [['', '#171B26'], ['-dark', '#F8FAFC']]) {
   const wm = wordmark({ tribe, code: ORANGE });
   // text only
   write(`assets/brand/logo-text${suffix}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 ${wm.width + 12} 112" width="${Math.round((wm.width + 12) * 0.6)}" height="${Math.round(112 * 0.6)}"><title>TribeCode</title>${wm.body}</svg>`);
@@ -54,5 +54,5 @@ for (const [suffix, tribe] of [['', '#171B26'], ['-dark', '#FFFFFF']]) {
 }
 // for the app UI (always on dark/glass surfaces it inherits currentColor for "Tribe")
 const ui = wordmark({ tribe: 'currentColor', code: ORANGE });
-write('app/ui/assets/wordmark.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 ${ui.width + 12} 112"><title>TribeCode</title>${ui.body.replace(/currentColor/g, '#FFFFFF')}</svg>`);
-write('app/ui/assets/wordmark-light.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 ${ui.width + 12} 112"><title>TribeCode</title>${ui.body.replace(/currentColor/g, '#14161D')}</svg>`);
+write('app/ui/assets/wordmark.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 ${ui.width + 12} 112"><title>TribeCode</title>${ui.body.replace(/currentColor/g, '#F8FAFC')}</svg>`);
+write('app/ui/assets/wordmark-light.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 ${ui.width + 12} 112"><title>TribeCode</title>${ui.body.replace(/currentColor/g, '#12151A')}</svg>`);

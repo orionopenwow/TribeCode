@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Docs · TribeCode</title>
+<meta name="description" content="Get started with TribeCode: host a tribe, invite friends, connect Claude Code and join from a phone.">
+<meta name="theme-color" content="#12151A">
+<link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<meta property="og:title" content="Docs · TribeCode">
+<meta property="og:image" content="https://tribecode.app/assets/og-image.jpg">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .doc { max-width: 760px; padding: 72px 24px 40px; margin: 0 auto; }
+  .doc h1 { font-size: clamp(36px, 5vw, 52px); margin-bottom: 16px; }
+  .doc h2 { font-size: 26px; margin: 56px 0 14px; letter-spacing: -0.02em; }
+  .doc p, .doc li { font-size: 16.5px; }
+  .doc ol { padding-left: 22px; display: grid; gap: 8px; }
+  .doc pre { margin: 16px 0; padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; font: 13.5px/1.7 var(--mono); color: var(--white); }
+  .doc pre code { background: none; border: 0; padding: 0; }
+  .note { margin-top: 28px; padding: 16px 18px; border: 1px dashed var(--border-strong); border-radius: 14px; font-size: 15px; }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav__inner wrap">
+    <a class="nav__logo" href="index.html" aria-label="TribeCode home"><img src="assets/brand/logo-wordmark-dark.svg" alt="TribeCode" width="168" height="26"></a>
+    <div class="nav__actions">
+      <a class="btn btn--secondary btn--sm" href="index.html">Home</a>
+      <a class="btn btn--primary btn--sm" href="https://github.com/orionopenwow/TribeCode/releases">Download App</a>
+    </div>
+  </div>
+</header>
+<main class="doc">
+  <p class="eyebrow mono">// docs · quick start</p>
+  <h1>Start a Campfire Huddle</h1>
+  <p class="lede">TribeCode is early. This page covers the basics; the full, current docs live in the <a class="ember" href="https://github.com/orionopenwow/TribeCode#readme">README on GitHub</a>.</p>
+
+  <h2>1. Host a tribe</h2>
+  <ol>
+    <li>Install the desktop app from <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases">GitHub Releases</a> (Windows, macOS, Linux).</li>
+    <li>Finish first-run setup: name, color, folder and (optionally) a local brain.</li>
+    <li>Click <b>Invite friends → Host a tribe on this computer</b>. You become the host.</li>
+  </ol>
+  <p style="margin-top:14px">Prefer the terminal? With Node 20+:</p>
+  <pre><code>npm start
+# or: node server/index.js --port 4747 --dir ~/TribeCode --name "Campfire Crew"
+# then open http://localhost:4747</code></pre>
+
+  <h2>2. Invite friends</h2>
+  <p>Click <b>Invite friends</b>, pick how long the link lasts, how many people, and builder or spectator. Send the link or show the QR code. No accounts.</p>
+
+  <h2>3. Connect your Claude Code</h2>
+  <p>Click <b>Connect your Claude Code</b> in the room panel and run the command it shows:</p>
+  <pre><code>claude mcp add --transport http tribecode http://HOST:4747/mcp --header "Authorization: Bearer &lt;key&gt;"</code></pre>
+
+  <h2>4. Join from a phone</h2>
+  <p>Scan the invite QR code, pick a name, then use <b>Share → Add to Home Screen</b>. Outside your Wi-Fi, install Tailscale on both devices. Voice on a phone needs HTTPS (<code>tailscale serve 4747</code>).</p>
+
+  <p class="note">This is a stub. Found something wrong? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
+</main>
+<footer class="footer"><p class="wrap footer__legal mono">© 2026 orionopenwow and TribeCode contributors · MIT License</p></footer>
+</body>
+</html>

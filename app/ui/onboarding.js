@@ -2,10 +2,10 @@
 (function () {
   const $ = s => document.querySelector(s);
   const S = window.TribeStore;
-  const COLORS = ['#EE6F22', '#7C5CFF', '#FFB86B', '#3DD6D0', '#FF6F8E', '#5B8CFF', '#9AE66E', '#E7E9EE'];
+  const COLORS = ['#F26B1D', '#7C5CFF', '#FFB86B', '#38C6B1', '#FF6F8E', '#5B8CFF', '#9AE66E', '#E7E9EE'];
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
-  const ink = c => (['#FFB86B', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
+  const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
 
   // Working copy; written to the store only when the user finishes (or skips).
   let draft, step = 0, brainProbe = { state: 'idle', models: [] };
@@ -58,9 +58,9 @@
         <h1>Pick your look</h1>
         <p class="lead">Applied right away. Switch any time with <span class="kbd">Ctrl Shift L</span>.</p>
         <div class="choices">
-          ${opt('dark', 'Graphite', 'Dark, high contrast', thumb('#0B0C10', '#1C2029', '#242935'))}
-          ${opt('light', 'Paper', 'Light, cool grey', thumb('#E4E6EB', '#FFFFFF', '#F3F4F7'))}
-          ${opt('system', 'Match system', 'Follows your OS', thumb('linear-gradient(90deg,#0B0C10 50%,#E4E6EB 50%)', '#7F8494', '#B9BDC9'))}
+          ${opt('dark', 'Graphite', 'Dark, high contrast', thumb('#12151A', '#1B2028', '#222833'))}
+          ${opt('light', 'Paper', 'Light, cool grey', thumb('#F4F5F7', '#FFFFFF', '#DADFE6'))}
+          ${opt('system', 'Match system', 'Follows your OS', thumb('linear-gradient(90deg,#12151A 50%,#F4F5F7 50%)', '#64748B', '#94A3B8'))}
         </div>
         <div class="field" style="margin-top:22px"><label>Density</label>
           <div class="toggles">

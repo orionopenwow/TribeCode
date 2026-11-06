@@ -1,11 +1,11 @@
 /* Phones and small tablets: bottom tab bar, slide-out sidebar, chat as its own tab. */
 .menu-btn { display: none; }
 .mv { display: none; }
-.ios-hint { position: fixed; left: 12px; right: 12px; bottom: calc(74px + env(safe-area-inset-bottom)); z-index: 26; background: var(--surface-2); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--shadow); padding: 14px 16px; font-size: 14px; line-height: 1.45; display: flex; gap: 12px; align-items: flex-start; }
-.ios-hint img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.ios-hint { position: fixed; left: 12px; right: 12px; bottom: calc(74px + env(safe-area-inset-bottom)); z-index: 26; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: none; padding: 14px 16px; font-size: 14px; line-height: 1.45; display: flex; gap: 12px; align-items: flex-start; }
+.ios-hint img { width: 40px; height: 40px; border-radius: 0; flex: none; }
 .ios-hint button { margin-left: auto; color: var(--faint); font-size: 18px; }
-.qr-wrap { display: flex; gap: 16px; align-items: center; margin: 4px 0 14px; padding: 12px; background: var(--surface); border: 1px solid var(--edge); border-radius: 14px; }
-.qr-wrap .qr { width: 132px; height: 132px; flex: none; border-radius: 10px; overflow: hidden; background: #fff; }
+.qr-wrap { display: flex; gap: 16px; align-items: center; margin: 4px 0 14px; padding: 12px; background: var(--canvas); border: 1px solid var(--edge); border-radius: var(--r); }
+.qr-wrap .qr { width: 132px; height: 132px; flex: none; border-radius: var(--r-sm); overflow: hidden; background: #fff; }
 .qr-wrap .qr svg { width: 100%; height: 100%; display: block; }
 .qr-wrap p { font-size: 13px; color: var(--muted); line-height: 1.5; }
 .qr-wrap b { color: var(--text); }
@@ -18,31 +18,33 @@
   .shell { padding: 0; height: 100dvh; }
   .window { border-radius: 0; border: 0; grid-template-columns: 1fr; grid-template-rows: calc(48px + env(safe-area-inset-top)) 1fr; height: 100dvh; }
   .titlebar { padding: env(safe-area-inset-top) 10px 0 6px; gap: 8px; }
-  .menu-btn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; color: var(--muted); }
+  .menu-btn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--r-sm); color: var(--muted); }
   .titlebar .faint, #brain-status, .update-pill #update-pill-label { display: none; }
-  .search { width: 40px; margin-left: auto; margin-right: 0; padding: 0; justify-content: center; font-size: 0; }
+  .search { width: 36px; height: 32px; margin-left: auto; margin-right: 0; padding: 0; justify-content: center; font-size: 0; background: none; border-color: transparent; color: var(--muted); }
   .search .kbd { display: none; }
-  .titlebar .status.pill { padding: 3px 9px; font-size: 11.5px; }
+  .titlebar .status.pill { padding: 3px 9px; font-size: 10.5px; }
   .update-pill { padding: 0 9px; }
 
   /* bottom tab bar (the rail) */
   .rail { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; flex-direction: row; justify-content: space-around; align-items: center;
     height: calc(64px + env(safe-area-inset-bottom)); padding: 0 6px env(safe-area-inset-bottom); border-right: 0; border-top: 1px solid var(--stroke);
-    background: rgba(11,12,16,0.94); backdrop-filter: blur(18px); }
-  body.light .rail { background: rgba(250,250,252,0.95); }
+    background: var(--surface); }
   .rail .logo, .rail .spacer, .rail .avatar, .rail #help-btn, .rail [data-nav="bugs"], .rail [data-nav="brain"] { display: none; }
   .rail .nav { width: 52px; height: 46px; }
-  .rail .nav.on::before { left: 14px; right: 14px; top: auto; bottom: -6px; width: auto; height: 3px; }
+  .rail .nav.on { background: none; box-shadow: none; color: var(--text); }
+  .rail .nav.on::before { left: 14px; right: 14px; top: -9px; bottom: auto; width: auto; height: 2px; border-radius: 0 0 2px 2px; }
 
   /* sidebar becomes a drawer */
-  .side { position: fixed; z-index: 30; top: 0; bottom: 0; left: 0; width: min(86vw, 320px); background: var(--win); transform: translateX(-102%); transition: transform .22s ease;
-    padding-top: calc(16px + env(safe-area-inset-top)); box-shadow: var(--shadow); border-right: 1px solid var(--edge); }
+  .side { position: fixed; z-index: 30; top: 0; bottom: 0; left: 0; width: min(86vw, 320px); background: var(--canvas); transform: translateX(-102%); transition: transform .22s var(--ease);
+    padding-top: calc(16px + env(safe-area-inset-top)); box-shadow: none; border-right: 1px solid var(--edge); }
   body.drawer-open .side { transform: none; }
   body.drawer-open::after { content: ''; position: fixed; inset: 0; z-index: 29; background: var(--scrim); }
 
   /* main area and chat tab share the screen */
-  .main { padding: 16px 14px calc(84px + env(safe-area-inset-bottom)); grid-column: 1; grid-row: 2; }
-  .panel { display: none; grid-column: 1; grid-row: 2; border-left: 0; padding: 14px 14px calc(76px + env(safe-area-inset-bottom)); }
+  .main { padding: 18px 14px calc(84px + env(safe-area-inset-bottom)); grid-column: 1; grid-row: 2; }
+  .panel { display: none; grid-column: 1; grid-row: 2; border-left: 0; padding: 14px 14px calc(76px + env(safe-area-inset-bottom)); background: var(--canvas); }
+  .panel .card { background: var(--surface); }
+  .person .avatar .st { border-color: var(--surface); }
   body.mobile-chat .panel { display: flex; }
   body.mobile-chat .main { display: none; }
   .chat { min-height: 0; }
@@ -58,9 +60,9 @@
   .view-head > .btn.primary, .view-head > #bug-new { margin-left: 0; }
 
   .modal { place-items: end center; }
-  .modal-card { width: 100%; max-width: none; border-radius: 20px 20px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); max-height: 92dvh; overflow: auto; }
+  .modal-card { width: 100%; max-width: none; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); max-height: 92dvh; overflow: auto; }
   .opts { flex-wrap: wrap; } .opts select { flex: 1 1 40%; }
-  .ob-card { padding: 24px 20px 20px; border-radius: 22px; }
+  .ob-card { padding: 24px 20px 20px; border-radius: var(--r-lg); }
   .perks, .choices { grid-template-columns: 1fr; }
   .ob-body { min-height: 0; }
   .update-pop { left: 12px !important; right: 12px; width: auto; }

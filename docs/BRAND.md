@@ -21,17 +21,18 @@ A solid orange flame between two white code brackets `< >`, on a deep navy round
 
 ## Color
 
+The full system (style rules, tokens, component pairings) is in **[DESIGN-SYSTEM.md](DESIGN-SYSTEM.md)**: "Warm Hearth in a Dark Terminal".
+
 | Token | Hex | Use |
 | --- | --- | --- |
-| Ember | `#EE6F22` | The flame. Primary accent, "Code" in the wordmark, buttons, selection |
-| Navy | `#171B26` | Icon background, "Tribe" in the light wordmark |
-| Lagoon | `#3DD6D0` | Success, in sync, embers, presence |
-| Rose | `#FF6F8E` | Alerts, drift, unread dots |
-| Amber | `#FFB86B` | Review, warnings, flame tip |
-| Graphite | `#15171D` → `#0B0C10` → `#050608` | Dark background: near-black gradient with a fine grain texture and faint ember/teal glows in opposite corners |
-| Paper | `#F1F2F5` → `#D6D9E0` | Light background: cool grey gradient with the same grain |
-
-The flame is one flat color; never add a gradient to it.
+| Obsidian Slate | `#12151A` | Canvas |
+| Charcoal Card | `#1B2028` | Cards, sidebars, code panes |
+| Muted Steel | `#2A313C` | 1px borders |
+| Ember Orange | `#F26B1D` | The flame, primary CTAs, "Code", active links |
+| Signal Teal | `#38C6B1` | Live state: connected, progress, brain nodes, mic rings |
+| Huddle Indigo | `#6C7CFF` | Secondary peers and presence |
+| Stark White | `#F8FAFC` | Brackets, headlines |
+| Cool Slate | `#94A3B8` | Body copy |
 
 ## Type
 
@@ -42,12 +43,7 @@ The flame is one flat color; never add a gradient to it.
 
 ## UI rules
 
-- Surfaces are near-solid (window ~94% opaque, cards fully opaque `#15181F` / `#1C2029`) so content stands out; the glass effect is limited to a light blur and 1 px edge highlights.
-- Cards get a crisp 1 px edge (`rgba(255,255,255,0.14)`) and a soft drop shadow. Orange is for actions only, never for large areas.
-- Radii: 9–14 px controls and cards, 22 px windows, 26 px dialogs.
-- Icons: Lucide-style 1.6 px line icons. Fill only status dots and avatars.
-- Color carries meaning: teal = good/in sync, amber = review/behind, ember = drift/alert, violet = action.
-- Dark mode is the default; light mode uses the same layout and tokens on the Paper background.
+Flat matte surfaces, depth through luminance steps and 1px borders only. No glows, blur, glass or gradients. Strict two-color pairing per component. Details in [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).
 
 ## Don'ts
 

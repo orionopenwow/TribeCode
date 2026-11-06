@@ -1,7 +1,7 @@
 // Offline shell for the installed app. API, MCP and WebSocket traffic always goes to the network.
-const CACHE = 'tribecode-shell-v1';
-const SHELL = ['./', 'index.html', 'join.html', 'fonts.css', 'styles.css', 'updater.css', 'live.css', 'docs.css', 'mobile.css', 'store.js', 'tribe.js', 'onboarding.js', 'tour.js',
-  'updater.js', 'md.js', 'tasks.js', 'docs.js', 'board.js', 'bugs.js', 'palette.js', 'huddle.js', 'qr.js', 'app.js', 'assets/icon-512.png', 'assets/wordmark.svg', 'manifest.webmanifest'];
+const CACHE = 'tribecode-shell-v2';
+const SHELL = ['./', 'index.html', 'join.html', 'tokens.css', 'fonts.css', 'styles.css', 'updater.css', 'live.css', 'docs.css', 'mobile.css', 'coedit.css', 'store.js', 'tribe.js', 'onboarding.js', 'tour.js',
+  'updater.js', 'md.js', 'tasks.js', 'ot.js', 'coedit.js', 'docs.js', 'board.js', 'bugs.js', 'palette.js', 'huddle.js', 'qr.js', 'app.js', 'assets/icon-512.png', 'assets/wordmark.svg', 'manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {
