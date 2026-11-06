@@ -31,6 +31,8 @@
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4"/></symbol>
+  <symbol id="i-net" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M12 9V4M12 15v5M9.4 10.5 5 8M14.6 13.5 19 16M9.4 13.5 5 16M14.6 10.5 19 8"/><circle cx="12" cy="3" r="1.4"/><circle cx="12" cy="21" r="1.4"/><circle cx="4" cy="7.4" r="1.4"/><circle cx="20" cy="16.6" r="1.4"/><circle cx="4" cy="16.6" r="1.4"/><circle cx="20" cy="7.4" r="1.4"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 2c.6 4.6 2.4 7.3 7 8.5-4.6 1.2-6.4 3.9-7 8.5-.6-4.6-2.4-7.3-7-8.5 4.6-1.2 6.4-3.9 7-8.5z" fill="currentColor" stroke="none"/><path d="M19.5 2.5v3M18 4h3" /></symbol>
   <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
 </svg>
@@ -42,8 +44,8 @@
       <span class="ws" id="ws-name">My Tribe</span><span class="faint">/ Home</span>
       <button class="search" id="tour-search" title="Command palette"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></button>
       <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
-      <span class="status" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
-      <span class="status" id="brain-status"><svg class="i" style="width:15px;height:15px"><use href="#i-brain"/></svg><span id="brain-label">brain off</span></span>
+      <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
+      <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
     </header>
 
     <nav class="rail" id="tour-rail" aria-label="Main">
@@ -73,7 +75,7 @@
       <div id="huddle-box" class="huddle-box"></div>
       <h6>Local folder</h6>
       <button class="item" id="folder-item" title="Workspace folder"><svg class="i" style="width:16px;height:16px"><use href="#i-folder"/></svg><span id="folder-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></button>
-      <button class="item invite" id="tour-invite"><svg class="i" style="width:16px;height:16px"><use href="#i-link"/></svg>Invite friends</button>
+      <button class="invite-pill" id="tour-invite"><span>+</span>Invite friends</button>
     </aside>
 
     <main class="main" id="main">
@@ -88,7 +90,7 @@
           <div id="checklist"></div>
         </section>
         <section class="card" id="standup-card">
-          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-brain"/></svg>Daily standup</h3>
+          <h3><svg class="i" style="color:var(--accent)"><use href="#i-net"/></svg>Daily standup</h3>
           <div class="lead">Your local brain reads the last day of chat and the task board and writes a short recap for everyone. Zero Claude tokens.</div>
           <div class="standup" id="standup-text"></div>
           <button class="btn" id="standup-go">Write today's standup</button>
@@ -142,7 +144,7 @@
       <div class="card" id="room-list">
         <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
       </div>
-      <button class="linkish cc-link" id="cc-connect"><svg class="i" style="width:15px;height:15px"><use href="#i-zap"/></svg>Connect your Claude Code</button>
+      <button class="cc-link" id="cc-connect"><svg class="i" style="width:16px;height:16px;color:var(--accent)"><use href="#i-sparkle"/></svg>Connect your Claude Code</button>
       <div id="claims-box" class="hidden"><h6 style="margin-bottom:8px">Claimed files</h6><div id="claims-list"></div></div>
       <div class="empty-room" id="room-hint">Friends you invite show up here, along with what they're working on and whose Claude is running.</div>
       <h6 style="margin-top:6px">Chat · #general</h6>
