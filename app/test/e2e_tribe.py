@@ -42,7 +42,10 @@ def watch(page, who):
 
 def main():
     tmp = tempfile.mkdtemp(prefix="tribe-")
-    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew"],
+    repo = tempfile.mkdtemp(prefix="proj-")
+    g = lambda *a: subprocess.run(["git", "-C", repo, *a], check=True, capture_output=True, text=True).stdout
+    g("init", "-q"); g("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init")
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--repo", repo],
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         for _ in range(50):
@@ -130,6 +133,35 @@ def main():
             assert len(md) == 2, md
             assert any('status: "doing"' in f.read_text() for f in md), [f.read_text() for f in md]
             assert Path(tmp, "chat", "general.jsonl").exists()
+
+            # ---- approval board ----
+            host.click('[data-nav="board"]'); friend.click('[data-nav="board"]')
+            wait_text(host, "#prop-list", "No open proposals")
+            host.dblclick("#vision-text"); host.keyboard.type("Cozy co-op pixel adventure. Never competitive."); host.click("#view-board h1")
+            wait_text(host, ".toast", "VISION.md saved")
+            assert "Never competitive" in Path(tmp, "VISION.md").read_text()
+            host.click("#prop-new")
+            host.fill("#np-title", "Campfire save points")
+            host.fill("#np-body", "## Plan\nSave the world at any lit campfire.\n\n## Tasks\n- [ ] Save format\n- [ ] Campfire UI\n")
+            host.click("#np-go")
+            wait_text(friend, "#prop-list", "Campfire save points")
+            wait_text(friend, "#prop-list", "1 yes")
+            assert "You're the host" not in (friend.inner_text(".toast") if friend.locator(".toast").count() else ""), "friend must not be told they're host"
+            assert friend.inner_text("#ws-name") == "Campfire Crew"
+            shot(friend, "board-live")
+            friend.click('.prop [data-vote="yes"]')
+            wait_text(host, "#ms-list", "v0.1.0")
+            wait_text(host, "#chat-list", "Approved: Campfire save points")
+            host.click('[data-pt="approved"]')
+            wait_text(host, "#prop-list", "Approved → v0.1.0")
+            assert friend.locator("[data-release]").count() == 0, "only host can release"
+            host.click('[data-release="v0.1.0"]')
+            wait_text(host, "#ms-list", "released")
+            assert "v0.1.0" in g("tag"), "milestone tagged in project repo"
+            st, d = api("/tasks", token=None)
+            assert st == 401
+            assert len(list(Path(tmp, "tasks").glob("*.md"))) == 4, "2 tasks created from the proposal checklist"
+            assert list(Path(tmp, "decisions").glob("*campfire-save-points.md"))
 
             # update hand-off picks real online peers
             host.goto(BASE + "/?simulateUpdate=9.9.9")

@@ -60,12 +60,12 @@
 
     <aside class="side" id="tour-side">
       <h6>Projects</h6>
-      <button class="item on"><span>🏕️</span>Welcome project<span class="n">main</span></button>
+      <button class="item" data-go="home"><span>🏕️</span>Welcome project<span class="n">main</span></button>
       <h6>Workspace</h6>
-      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-check"/></svg>My tasks<span class="n">0</span></button>
-      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-vote"/></svg>Proposals</button>
-      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-bug"/></svg>Bug inbox</button>
-      <button class="item"><svg class="i" style="width:16px;height:16px"><use href="#i-git"/></svg>Milestones</button>
+      <button class="item" data-go="tasks"><svg class="i" style="width:16px;height:16px"><use href="#i-check"/></svg>Tasks</button>
+      <button class="item" data-go="board"><svg class="i" style="width:16px;height:16px"><use href="#i-vote"/></svg>Proposals</button>
+      <button class="item" data-go="bugs"><svg class="i" style="width:16px;height:16px"><use href="#i-bug"/></svg>Bug inbox</button>
+      <button class="item" data-go="board"><svg class="i" style="width:16px;height:16px"><use href="#i-git"/></svg>Milestones</button>
       <h6>Local folder</h6>
       <button class="item" id="folder-item" title="Workspace folder"><svg class="i" style="width:16px;height:16px"><use href="#i-folder"/></svg><span id="folder-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></button>
       <button class="item invite" id="tour-invite"><svg class="i" style="width:16px;height:16px"><use href="#i-link"/></svg>Invite friends</button>
@@ -94,6 +94,18 @@
       <div class="view-head"><h1>Tasks</h1><span class="faint" id="tasks-sub"></span>
         <button class="btn primary" id="task-new" style="margin-left:auto"><svg class="i" style="width:15px;height:15px"><use href="#i-check"/></svg>New task</button></div>
       <div class="board" id="board"></div>
+     </section>
+     <section id="view-board" class="hidden">
+      <div class="view-head"><h1>Approval board</h1>
+        <div class="tabs" id="prop-tabs"><button class="on" data-pt="open">Open</button><button data-pt="approved">Approved</button><button data-pt="parked">Parked</button></div>
+        <button class="btn primary" id="prop-new" style="margin-left:auto">New proposal</button></div>
+      <div class="board-grid">
+        <div id="prop-list"></div>
+        <div>
+          <section class="card" id="vision-card"><h3>VISION.md</h3><div class="lead">What we're building, in a few lines. Proposals are checked against it.</div><div class="vision" id="vision-text"></div></section>
+          <section class="card" style="margin-top:16px"><h3>Milestones</h3><div class="lead" id="ms-lead">Approved proposals become milestones.</div><div id="ms-list"></div></section>
+        </div>
+      </div>
      </section>
     </main>
 
@@ -141,6 +153,7 @@
 <script src="tour.js"></script>
 <script src="updater.js"></script>
 <script src="tasks.js"></script>
+<script src="board.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

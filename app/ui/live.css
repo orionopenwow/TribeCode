@@ -53,3 +53,33 @@
 .opts select { min-width: 0; }
 .chip { white-space: nowrap; }
 .rail .nav.help { font-weight: 700; font-size: 15px; }
+
+/* approval board */
+.tabs { display: flex; gap: 4px; margin-left: 14px; align-self: center; }
+.tabs button { font-size: 13px; padding: 6px 12px; border-radius: 9px; color: var(--muted); }
+.tabs button.on { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--edge); }
+.board-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.prop { background: var(--surface-2); border: 1px solid var(--edge); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; box-shadow: var(--card-shadow); }
+.prop .top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.prop h3 { font-size: 16px; font-weight: 650; margin-bottom: 4px; }
+.prop .by { font-size: 12px; color: var(--faint); }
+.prop .body { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 10px 0 12px; white-space: pre-wrap; max-height: 9.5em; overflow: hidden; position: relative; }
+.prop .body.open { max-height: none; }
+.prop .more { font-size: 12px; color: var(--accent); margin: -6px 0 10px; }
+.votes { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+.vbar { flex: 1; min-width: 120px; height: 8px; border-radius: 8px; background: var(--surface-3); overflow: hidden; display: flex; }
+.vbar i { display: block; height: 100%; transition: width .3s; }
+.vbtn { padding: 6px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--edge); background: var(--surface); }
+.vbtn.yes.on { background: rgba(61,214,208,0.18); color: #22B5AF; border-color: transparent; }
+.vbtn.no.on { background: rgba(255,111,142,0.16); color: var(--ember); border-color: transparent; }
+.chip.amber { background: rgba(255,184,107,0.18); color: #D98A2B; } .chip.ember { background: rgba(255,111,142,0.16); color: var(--ember); }
+.vision { font-size: 13.5px; line-height: 1.55; color: var(--muted); white-space: pre-wrap; outline: none; border-radius: 8px; min-height: 60px; }
+.vision[contenteditable="true"] { background: var(--surface); box-shadow: 0 0 0 2px var(--accent); padding: 8px; color: var(--text); }
+.mile { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 13px; border-top: 1px solid var(--stroke); }
+.mile:first-child { border-top: 0; }
+.mile code { font-family: var(--mono); font-size: 12px; color: var(--accent); background: var(--chip); padding: 2px 7px; border-radius: 6px; flex: none; }
+.mile .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mile .btn { height: 28px; padding: 0 10px; font-size: 12px; }
+.prop-empty { color: var(--faint); font-size: 14px; padding: 30px; text-align: center; border: 1.5px dashed var(--edge); border-radius: 16px; }
+textarea.input { height: 220px; padding: 12px 14px; font-family: var(--mono); font-size: 13px; line-height: 1.5; resize: vertical; }
+.prop .body b.h { color: var(--text); font-weight: 600; }

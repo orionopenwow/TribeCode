@@ -38,6 +38,8 @@
       if (m.type === 'chat') emit('chat', m);
       if (m.type === 'task') emit('task', m.task);
       if (m.type === 'task-removed') emit('task-removed', m.id);
+      if (m.type === 'proposal') emit('proposal', m.proposal);
+      if (m.type === 'milestones') emit('milestones', m.milestones);
     };
     sock.onclose = () => {
       setStatus(token() ? 'reconnecting' : 'offline');
@@ -52,14 +54,14 @@
 
   // Called after first-run setup on the host machine (UI served by the server, no token yet).
   async function ensureMember({ name, color }) {
-    if (token()) return true;
+    if (token()) return 'member';
     try {
       const h = await api('/health');
       if (h.members === 0) {
         const r = await api('/bootstrap', { method: 'POST', body: { name, color } });
         S.set({ server: { url: base(), token: r.token } });
         connect();
-        return true;
+        return 'host';
       }
     } catch { /* no server reachable: local-only mode */ }
     return false;

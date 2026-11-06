@@ -37,7 +37,8 @@
     document.body.classList.toggle('compact', st.density === 'compact');
     const first = (st.name || '').split(' ')[0];
     $('#hello').textContent = first ? `Welcome, ${first}` : 'Welcome';
-    $('#ws-name').textContent = first ? `${first}'s Tribe` : 'My Tribe';
+    const tribeName = window.TribeClient && window.TribeClient.state().tribe && window.TribeClient.state().tribe.name;
+    $('#ws-name').textContent = tribeName || (first ? `${first}'s Tribe` : 'My Tribe');
     for (const id of ['#me-avatar', '#room-me']) { const a = $(id); if (!a) continue; a.textContent = initials(st.name); a.style.background = st.color; a.style.color = ink(st.color); }
     if ($('#room-name')) $('#room-name').textContent = st.name || 'You';
     $('#folder-label').textContent = st.folder || 'Not set';
@@ -80,20 +81,26 @@
   }
 
   // nav + views
-  const VIEWS = { home: 'Home', tasks: 'Tasks' };
+  const VIEWS = { home: 'Home', tasks: 'Tasks', board: 'Board' };
   function show(view) {
     if (!VIEWS[view]) return;
     Object.keys(VIEWS).forEach(v => $('#view-' + v).classList.toggle('hidden', v !== view));
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === view));
+    document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view && !b.textContent.includes('Milestones')));
     document.querySelector('.titlebar .faint').textContent = '/ ' + VIEWS[view];
     if (view === 'tasks') window.TribeTasks.load();
+    if (view === 'board') window.TribeBoard.load();
     window.TribeClient.sendActivity(VIEWS[view]);
     try { sessionStorage.setItem('tribecode.view', view); } catch {}
   }
   document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
     if (VIEWS[b.dataset.nav]) show(b.dataset.nav);
     else if (b.dataset.nav === 'chat') $('#chat-input').focus();
-    else toast(`${b.title} is coming in a later sprint. Home and Tasks work now.`);
+    else toast(`${b.title} is coming in a later sprint. Home, Tasks and the Board work now.`);
+  }));
+
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+    if (VIEWS[b.dataset.go]) show(b.dataset.go); else toast('The bug inbox is coming in a later sprint.');
   }));
 
   // ---- live room + chat ----
@@ -207,7 +214,7 @@
       return { openDocs: Math.max(1, drops.length), unsaved: drops.filter(d => !d.saved).length + (demo.peers.length ? 2 : 0),
         peers: live.length ? live : demo.peers, agentRuns: demo.agentRuns, claims: demo.claims };
     },
-    async afterSetup() { const st = S.get(); if (await C.ensureMember({ name: st.name, color: st.color })) toast("You're the host of this tribe. Invite friends from the sidebar."); },
+    async afterSetup() { const st = S.get(); if ((await C.ensureMember({ name: st.name, color: st.color })) === 'host') toast("You're the host of this tribe. Invite friends from the sidebar."); },
     async saveAll() {
       drops.forEach(d => { d.saved = true; });
       try { localStorage.setItem('tribecode.drafts', JSON.stringify(drops)); } catch {}

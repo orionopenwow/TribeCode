@@ -10,6 +10,7 @@ const os = require('node:os');
 const { URL } = require('node:url');
 const ws = require('./ws');
 const { Store, id, code, hash, slug } = require('./store');
+const makeBoard = require('./board');
 
 const VERSION = require('../app/package.json').version;
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -18,6 +19,7 @@ const HOST = args.host || process.env.TRIBE_HOST || '0.0.0.0';
 const DIR = args.dir || process.env.TRIBE_DIR || path.join(os.homedir(), 'TribeCode');
 const UI = path.resolve(__dirname, '..', 'app', 'ui');
 const STATUSES = ['backlog', 'doing', 'review', 'done'];
+const REPO = args.repo ? path.resolve(args.repo) : (process.env.TRIBE_REPO || null);
 
 const store = new Store(DIR);
 const tribe = store.readJSON('.tribe/tribe.json', null) || (() => { const t = { name: args.name || 'My Tribe', created: new Date().toISOString() }; store.writeJSON('.tribe/tribe.json', t); return t; })();
@@ -32,7 +34,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS', ...headers });
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
   res.end(isObj ? JSON.stringify(body) : body);
 }
 const fail = (res, status, error) => send(res, status, { error });
@@ -44,7 +46,7 @@ function readBody(req, limit = 256 * 1024) {
     req.on('error', reject);
   });
 }
-const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+function str(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
 const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#7C5CFF');
 const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 function authed(req) {
@@ -110,10 +112,13 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
   return saveTask(t);
 }
 
+// ---------- board ----------
+const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: REPO });
+
 // ---------- routes ----------
 async function api(req, res, url) {
   const parts = url.pathname.split('/').filter(Boolean).slice(1); // after /api
-  const [a, b] = parts; const m = req.method;
+  const [a, b, c] = parts; const m = req.method;
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
@@ -197,6 +202,11 @@ async function api(req, res, url) {
       return send(res, 200, { task: saveTask(t) });
     }
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
+  }
+
+  if (['proposals', 'milestones', 'vision'].includes(a)) {
+    const handled = await board.route(req, res, { m, a, b, c, me, readBody, send, fail });
+    if (handled !== null) return;
   }
 
   return fail(res, 404, 'not found');
