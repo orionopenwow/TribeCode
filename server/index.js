@@ -36,6 +36,16 @@ const saveInvites = () => store.writeJSON('.tribe/invites.json', invites);
 const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined });
 
 // ---------- helpers ----------
+// Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
+function lanUrls() {
+  const out = [];
+  for (const [name, addrs] of Object.entries(os.networkInterfaces())) for (const a of addrs || []) {
+    if (a.family !== 'IPv4' || a.internal) continue;
+    const ts = /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(a.address) || /tailscale/i.test(name);
+    out.push({ url: `http://${a.address}:${PORT}`, kind: ts ? 'tailscale' : 'lan', name });
+  }
+  return out.sort((x, y) => (y.kind === 'tailscale') - (x.kind === 'tailscale'));
+}
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json' };
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
@@ -193,7 +203,7 @@ async function api(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length });
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: lanUrls() });
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');

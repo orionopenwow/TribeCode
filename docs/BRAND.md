@@ -35,8 +35,8 @@ The flame is one flat color; never add a gradient to it.
 
 ## Type
 
-- **Wordmark:** "Tribe" over "Code", stacked, both in a heavy geometric sans (Inter Display ExtraBold). "Tribe" is white on dark or navy on light; "Code" is always the flame orange. `assets/brand/logo-wordmark*.svg`/`.png` pair it with the icon; `logo-text.svg` is the text alone.
-- Inter is bundled with the app (`app/ui/assets/fonts`, SIL OFL), so every computer and phone renders the same.
+- **Wordmark:** "TribeCode" on one line in squared, geometric heavy letters. "Tribe" is white on dark (navy on light); "Code" is always the flame orange. The letters are drawn as vector shapes by `scripts/wordmark.js`, so no font is needed: `assets/brand/logo-wordmark*.svg`/`.png` (icon + text) and `logo-text*.svg`/`.png` (text only).
+- Interface text is Inter, bundled with the app (`app/ui/assets/fonts`, SIL OFL), so every computer and phone renders the same.
 - **Inter** for UI text, 13–15 px.
 - A monospace (JetBrains Mono or system mono) for branches, tags and code.
 

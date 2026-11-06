@@ -1,10 +1,8 @@
 <div align="center">
 
-<img src="assets/brand/icon-512.png" width="112" alt="TribeCode icon">
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-wordmark-dark.png">
-  <img src="assets/brand/logo-wordmark.png" width="360" alt="TribeCode">
+  <img src="assets/brand/logo-wordmark.png" width="380" alt="TribeCode">
 </picture>
 
 ### Code with friends. One link to join, one shared brain, one vision.
