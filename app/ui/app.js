@@ -86,7 +86,7 @@
   }
 
   // nav + views
-  const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs' };
+  const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', calendar: 'Calendar', visuals: 'Visuals' };
   function show(view) {
     if (!VIEWS[view]) return;
     document.body.classList.remove('mobile-chat', 'drawer-open');
@@ -101,6 +101,8 @@
     if (view === 'board') window.TribeBoard.load();
     if (view === 'docs') window.TribeDocs.load();
     if (view === 'bugs') window.TribeBugs.load();
+    if (view === 'calendar') window.TribePlan.show();
+    if (view === 'visuals') window.TribeVisuals.show();
     window.TribeClient.sendActivity(VIEWS[view]);
     try { sessionStorage.setItem('tribecode.view', view); } catch {}
   }

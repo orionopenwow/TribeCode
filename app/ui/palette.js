@@ -4,6 +4,7 @@
   const C = window.TribeClient;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let items = [], shown = [], sel = 0, docsCache = [];
+  const providers = [];   // TribePalette.register(q => [items]): features add commands (and query-aware ones)
 
   function actions() {
     const A = window.TribeApp, S = window.TribeStore;
@@ -48,7 +49,8 @@
 
   function draw() {
     const q = $('#pal-input').value.trim().toLowerCase();
-    shown = items.map(it => [score(q, it), it]).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, it]) => it);
+    const extra = providers.flatMap(f => { try { return f(q) || []; } catch (e) { console.error(e); return []; } });
+    shown = [...items, ...extra].map(it => [it.score !== undefined ? it.score : score(q, it), it]).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, it]) => it);
     sel = Math.min(sel, Math.max(0, shown.length - 1));
     $('#pal-list').innerHTML = shown.length ? shown.map((it, i) => `<button class="pal-item ${i === sel ? 'on' : ''}" data-i="${i}"><span class="k">${it.kind}</span><span class="l">${esc(it.label)}</span>${it.hint ? `<span class="h">${esc(it.hint)}</span>` : ''}</button>`).join('')
       : '<div class="faint" style="padding:14px;font-size:13px">No matches</div>';
@@ -72,5 +74,5 @@
   });
   document.addEventListener('input', e => { if (e.target.id === 'pal-input') { sel = 0; draw(); } });
   document.addEventListener('click', e => { if (e.target.id === 'palette') close(); });
-  window.TribePalette = { open, close };
+  window.TribePalette = { open, close, register: fn => providers.push(fn) };
 })();

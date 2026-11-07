@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const makeLive = require('./live');
 
-module.exports = function docs({ store, slug, str, broadcast, brain, postChat }) {
+module.exports = function docs({ store, slug, str, broadcast, brain, postChat, onWrite }) {
   const rel = s => `docs/${s}.md`;
   const sumRel = s => `docs/${s}.summary.md`;
   const okSlug = s => /^[a-z0-9][a-z0-9-]{0,63}$/.test(s);
@@ -27,7 +27,9 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
   }
   function write(d) {
     const { body = '', summary, words, ...meta } = d;
+    const prev = onWrite ? read(d.slug) : null;
     store.writeMd(rel(d.slug), meta, body);
+    if (onWrite) try { onWrite({ ...d, body }, prev); } catch (e) { console.error(e); }   // history, mentions (docsx.js)
     broadcast({ type: 'doc', doc: { slug: d.slug, title: d.title, version: d.version, updated: d.updated, updatedBy: d.updatedBy } });
     scheduleSummary(d.slug);
     return read(d.slug);
@@ -111,5 +113,5 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat })
   }
 
   const live = makeLive({ read, write, str });
-  return { route, list, read, find, upsert, live };
+  return { route, list, read, find, upsert, live, save: write };
 };

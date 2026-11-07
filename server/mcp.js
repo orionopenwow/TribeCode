@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision }) {
+module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, extraTools }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -67,6 +67,8 @@ module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, doc
     },
   };
 
+  Object.assign(TOOLS, extraTools || {});   // feature modules add tools (e.g. visuals.js: add_visual)
+
   async function handle(msg, me) {
     const { id, method, params = {} } = msg;
     const reply = result => ({ jsonrpc: '2.0', id, result });
@@ -88,7 +90,7 @@ module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, doc
   async function route(req, res, { me, readBody, send }) {
     if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }); return res.end(); }
     if (!me) return send(res, 401, { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Missing or invalid TribeCode token' } });
-    const body = await readBody(req, 1024 * 1024);
+    const body = await readBody(req, 16 * 1024 * 1024);   // screenshots (add_visual) can be large
     const batch = Array.isArray(body) ? body : [body];
     const out = (await Promise.all(batch.map(m => handle(m, me)))).filter(Boolean);
     if (!out.length) { res.writeHead(202, { 'Access-Control-Allow-Origin': '*' }); return res.end(); }

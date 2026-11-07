@@ -60,7 +60,7 @@
         ${list.map(t => `<div class="task" draggable="true" data-id="${esc(t.id)}">
             <button class="del" data-del title="Delete"><svg class="i" style="width:13px;height:13px"><use href="#i-x"/></svg></button>
             <div class="t" data-title>${esc(t.title)}</div>
-            <div class="meta">${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}<select class="mv" data-move title="Move to">${COLS.map(([k, l]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${l}</option>`).join('')}</select>${memberOptions(t.assignee)}</div>
+            <div class="meta">${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}${window.TribePlan ? window.TribePlan.dueChip(t) : ''}<select class="mv" data-move title="Move to">${COLS.map(([k, l]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${l}</option>`).join('')}</select>${memberOptions(t.assignee)}</div>
           </div>`).join('')}
       </div>`;
     }).join('');
@@ -128,5 +128,5 @@
   C.on('presence', () => { if (loaded) render(); });
   document.addEventListener('click', e => { if (e.target.closest('#task-new')) quickAdd('backlog'); });
 
-  window.TribeTasks = { load, render, create, all: () => tasks };
+  window.TribeTasks = { load, render, create, patch, all: () => tasks };
 })();
