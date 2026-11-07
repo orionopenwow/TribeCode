@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/oauth.css">
 <style>
   /* Phone-first join page. Flat matte: luminance steps and 1px borders only. */
   html, body { min-height: 100%; }
@@ -72,6 +73,7 @@
     <p class="lead" id="lead"><span class="skeleton" style="display:block;width:90%"></span><span class="skeleton" style="display:block;width:60%"></span></p>
     <div class="faces" id="faces"></div>
     <form id="form" class="hidden" autocomplete="off">
+      <div id="oa-box" hidden></div><div class="oa-or hidden" id="oa-or">or pick a name</div><!-- Sign in with Discord/GitHub/Google (oauth.js) -->
       <div class="field"><label for="name">Your name</label><input class="input" id="name" maxlength="32" placeholder="e.g. Riley" autocomplete="nickname" autocapitalize="words" enterkeyhint="go" required></div>
       <div class="field"><label>Your color</label><div class="swatches" id="swatches"></div></div>
       <div class="me"><div class="avatar" id="me-av">?</div><div><b id="me-name">Your name</b><small>This is how the tribe sees you</small></div></div>
@@ -79,11 +81,13 @@
     </form>
     <div class="err" id="err"></div>
     <a class="alt hidden" id="open-app">Have the desktop app? Open it there</a>
+    <a class="alt hidden" id="oa-signin" href="/signin.html">Already in this tribe? Sign in</a>
   </div>
   <div class="fine" id="fine"></div>
 </div></div>
 <script src="/inapp.js"></script>
 <script src="/store.js"></script>
+<script src="/oauth.js"></script>
 <script>
 (function () {
   const $ = s => document.querySelector(s);
@@ -108,7 +112,24 @@
     document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; swatches(); me(); });
   }
 
-  async function load() {
+  // ---- Sign in with Discord/GitHub/Google (oauth.js): back from the provider, or offer the buttons ----
+  const OA = window.TribeOAuth;
+  async function oauthBack() {
+    $('#eyebrow').innerHTML = '<span class="dot"></span>Signing you in'; $('#title').textContent = 'One moment…'; $('#lead').textContent = '';
+    const d = await OA.finish();
+    if (d && !d.error) { joined(d.member.name || 'friend'); return OA.enter(d); }
+    await load(true);
+    $('#err').textContent = (d && d.error) || 'Sign-in failed';
+  }
+  async function oauthButtons() {
+    const list = await OA.providers();
+    const draw = () => OA.buttons($('#oa-box'), list, 'Continue with', p => OA.begin(p, 'join', code).catch(e => { $('#err').textContent = e.message; draw(); }));
+    draw();
+    $('#oa-or').classList.toggle('hidden', !list.length); $('#oa-signin').classList.toggle('hidden', !list.length);
+  }
+
+  async function load(skipLanding) {
+    if (!skipLanding && OA.landed()) return oauthBack();
     if (st.server && st.server.token && st.server.url === location.origin) return joinAsMember();
     try {
       const r = await fetch('/api/invites/' + encodeURIComponent(code || ''));
@@ -122,7 +143,7 @@
         + (d.members.length ? `<span class="more">${d.members.length === 1 ? esc(d.members[0].name) + ' is' : d.members.length + ' people are'} here</span>` : '');
       const hrs = Math.max(1, Math.round((Date.parse(d.expires) - Date.now()) / 3600000));
       $('#fine').innerHTML = `<span>Invite ${esc(code)}</span><span>expires in ${hrs > 48 ? Math.round(hrs / 24) + ' days' : hrs + ' h'}</span><span>${esc(d.role)}</span>`;
-      $('#form').classList.remove('hidden'); swatches();
+      $('#form').classList.remove('hidden'); swatches(); oauthButtons();
       if (!mobile) { const oa = $('#open-app'); oa.href = `tribecode://join?server=${encodeURIComponent(location.origin)}&code=${encodeURIComponent(code)}`; oa.classList.remove('hidden'); }
       $('#name').value = st.name || ''; me();
       $('#name').addEventListener('input', me);

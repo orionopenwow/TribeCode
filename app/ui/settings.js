@@ -69,6 +69,7 @@
       ${desk ? row('Open at login', `<button class="toggle set-toggle" role="switch" id="set-login" aria-label="Open at login" aria-checked="${!!st.startup.launchAtLogin}"><span class="switch"></span></button>`) : ''}
       ${C() && C().connected() ? row('Friends can ask my Claude', `<select class="input set-select" id="set-askai" aria-label="Friends can ask my Claude"><option value="ask">Ask me each time</option><option value="always">Always</option><option value="never">Never</option></select>`, 'When a friend without Claude Code types @ai, your Claude can answer. It uses your subscription, so you decide.') : ''}
       ${C() && C().connected() && window.TribeGitHub ? row('GitHub', '<div id="set-github"></div>', 'Sign in once and everything pushes on its own.') : row('GitHub', '<span class="faint">Start your tribe first (Home › Create your first project), then sign in here.</span>', 'Sign in once and everything pushes on its own.')}
+      ${C() && C().connected() ? row('Sign-in', '<div id="set-oauth"></div>', 'Discord, GitHub or Google: join with one tap, sign back in on a new device.') : ''}
       ${row('Crash reports', `<button class="toggle set-toggle" role="switch" id="set-crash" aria-label="Send crash reports" aria-checked="${st.crashReports !== false}"><span class="switch"></span></button>`, 'When something breaks, send the error and recent logs to the bug inbox. Repeats are filed once.')}
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
       <div class="set-links"><button class="linkish" id="set-tour">Take a quick tour</button><button class="linkish" id="set-join">Join another tribe with a link</button></div>`;
@@ -83,6 +84,7 @@
     const ai = $('#set-askai');
     if (ai) { C().api('/ask/policy').then(r => { ai.value = r.policy; }).catch(() => {}); ai.onchange = () => C().api('/ask/policy', { method: 'PUT', body: { policy: ai.value } }).then(() => toast('Saved')).catch(e => toast(e.message)); }
     const gh = $('#set-github'); if (gh) window.TribeGitHub.mount(gh);   // GitHub sign-in (app/ui/github.js)
+    const oa = $('#set-oauth'); if (oa && window.TribeOAuth) window.TribeOAuth.mount(oa);   // Sign in with Discord/GitHub/Google (app/ui/oauth.js)
     const cr = $('#set-crash'); if (cr) cr.onclick = () => { S.set({ crashReports: S.get().crashReports === false }); draw(); };
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
     $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };
