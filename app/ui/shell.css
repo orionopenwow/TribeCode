@@ -455,3 +455,20 @@ body.global .window .rail .logo-btn { background: var(--raised); }
 .nest-enter.below { margin-top: 14px; }
 .nest-chan .pj-face.xs { flex: none; }
 .nest-chan .nest-unread { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--text); }
+
+/* One source of truth for where you are: the rail (which project) and the breadcrumb (which page).
+   The sidebar is just the project's tools: no header card, pinned links as plain rows, no status. */
+@media (min-width: 821px) {
+  .nest-head { display: none !important; }
+  .nest .nest-core { margin-top: 6px; }
+  #nest-pinned { margin: 0; padding: 0; border: 0; background: none; }
+  #nest-pinned.empty { display: none; }
+  #nest-pinned h6 { display: none; }
+}
+.pin-row .pin-tag { margin-left: auto; display: inline-flex; color: var(--faint); opacity: .8; }
+.pin-row .pin-tag svg.i { width: 12px; height: 12px; }
+.pin-row code { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-left: 4px; }
+/* Hosting status: small, at the bottom of the left rail */
+.rail .rail-status { display: flex; flex-direction: column; align-items: center; gap: 1px; margin-top: auto; padding: 6px 2px 10px; width: 100%; text-align: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.35; color: var(--faint); }
+.rail .rail-status > span { display: block; max-width: 56px; white-space: normal; }
+.rail .rail-status .pp-sep { display: none; }

@@ -37,6 +37,7 @@
   let counts = {};   // badges: bugs, requests, reviews, handoffs
   let lastDest = '';
   const DEST = [
+    { key: 'home', label: 'Overview', icon: 'i-home', group: 'core', keys: 'home overview project dashboard living update', run: () => App().show('home') },
     { key: 'chat', label: 'Chat & Streams', icon: 'i-chat', group: 'core', keys: 'messages general talk channels streams dm', run: () => { if (window.TribeDM && window.TribeDM.current && window.TribeDM.current() !== 'general' && window.TribeDM.back) window.TribeDM.back(); App().show('chat'); } },
     { key: 'docs', label: 'Docs & Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
     { key: 'ws-tasks', label: 'Tasks & Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
@@ -70,7 +71,6 @@
     { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
     { key: 'panel', label: 'Toggle right panel', icon: 'i-list', kind: 'Action', keys: 'right panel in the room sidebar show hide preview', run: () => setPanel(!document.body.classList.contains('panel-off')) },
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
-    { key: 'home', label: 'Project home', icon: 'i-home', keys: 'home overview', run: () => App().show('home') },
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
@@ -129,7 +129,8 @@
   function markActive() {
     if (drawnGlobal !== isGlobal() || document.body.classList.contains('global') !== isGlobal()) { drawGroups(); globalHead(); }
     const cur = document.body.classList.contains('ws-open') ? '' : current(), w = wsOf(cur);
-    const lit = w ? WS[w].row : cur;   // inside a workspace its row is the lit one
+    const own = cur && document.querySelector(`.side .nest-row[data-pnav="${cur}"]:not(.hidden)`);   // a page with its own row (Overview, a pinned Repo) lights that row
+    const lit = own ? cur : w ? WS[w].row : cur;   // inside a workspace its row is the lit one
     document.querySelectorAll('.side [data-pnav], #tabbar [data-pnav]').forEach(b => { const on = b.dataset.pnav === lit; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     drawTabs(cur);
   }
@@ -432,7 +433,10 @@
   // ---------- Pinned: the repo, pinned docs (docsx.js fills #side-pins-list), pinned chat messages ----------
   function pinned(p) {
     const repo = $('#pin-repo');
-    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="pin-repo-card" data-nav="repo" title="Open the repo"><span class="pr-ico">${ico('i-git')}</span><span class="pr-t"><span class="eyebrow">Repo</span><b>${esc(p.name)}</b><code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span></button>` : '';
+    // Pinned links sit in the tool list as plain rows (no separate card): the repo, and Preview app when there's a repo.
+    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="nest-row pin-row" data-nav="repo" data-pnav="repo" title="The project's repo: branch, commits, autopilot">${ico('i-git')}<span>Repo <code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span><span class="pin-tag" title="Pinned">${ico('i-pin', 12)}</span></button>${window.TribePreview ? `<button class="nest-row pin-row" id="pin-preview" title="Run the app and see it here">${ico('i-play')}<span>Preview app</span><span class="pin-tag" title="Pinned">${ico('i-pin', 12)}</span></button>` : ''}` : '';
+    const pv = $('#pin-preview'); if (pv) pv.onclick = () => window.TribePreview.open ? window.TribePreview.open() : null;
+    setTimeout(markActive, 0);   // re-drawn rows keep the lit state
     if (p && p.hasRepo && repoBranch[p.id] === undefined) { repoBranch[p.id] = ''; C.api(`/projects/${encodeURIComponent(p.id)}/workspace`).then(w => { const b = w.branch && w.branch.exists ? w.branch.branch : (w.repo ? (w.repo.remote ? w.repo.remote.replace(/^https?:\/\/(www\.)?/, '').replace(/\.git$/, '') : 'local repo') : ''); repoBranch[p.id] = b; const el = $('#pin-repo-branch'); if (el) el.textContent = b; }).catch(() => {}); }
     const chats = $('#pin-chats'), strip = $('#pin-strip'), m = strip && !strip.classList.contains('hidden') && /(\d+) pinned/.exec(strip.textContent);
     if (chats) chats.innerHTML = m ? `<button class="nest-row small" id="pin-chat-open">${ico('i-pin')}<span>${m[1]} pinned in chat</span></button>` : '';

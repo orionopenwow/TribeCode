@@ -350,9 +350,9 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.keyboard.press("Escape")
         # home = project overview, chat has a docked composer mount
         host.click(".nest-row[data-nav='chat']"); host.wait_for_selector("#view-chat:not(.hidden) #composer-mount #chat-form")
-        host.click("#nest-title"); host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
+        host.click("#nest-overview"); host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
         host.wait_for_selector("#pj-hero")
-        host.wait_for_selector("#nest-pinned .pin-repo-card")
+        host.wait_for_selector("#nest-pinned .pin-row[data-nav='repo']")
         shot(host, "shell-desktop")
         # right panel collapses and comes back
         assert host.locator("#panel-toggle").is_hidden(), "the reopen tab only shows while the panel is hidden"
