@@ -41,4 +41,27 @@ Light mode mirrors the same rules: paper canvas `#F4F5F7`, white cards, `#DADFE6
 - **Motion:** short and functional (120–220 ms ease-out), opacity/translate only. Respect `prefers-reduced-motion`. A speaking indicator is a solid teal ring, not a halo.
 - **Icons:** 1.6px line icons (Lucide style); only status dots, avatars and the flame are filled.
 
+## 4. Section clarity
+
+Every screen reads top to bottom as a few clear sections, not a wall of cards.
+
+- **Each section gets a mono eyebrow and a clear title.** The eyebrow (`.eyebrow`: monospace, 10.5px, uppercase, `.08em` tracking, faint) says what kind of thing it is ("Needs you", "Living notes", "Suggested"); the title (`.sec-head h2`: Inter Display, bold) says what it is ("1 approval", "The project journal", "Up next"). Never repeat the same word in both, or in the screen's header.
+- **One hero card per screen.** Only the single most important thing gets the raised surface (`#1E242D`), the 1px border and the 3px Ember edge (`.hero-card`): the approvals that need you on Updates, the pinned repo on Docs, today's focus on Home. Everything else is a plain surface card or a list.
+- **Long text gets a reading layout.** Line-height 1.6, about 65 characters per line (`max-width: 65ch`), its own calm space. Docs, journals, approval details and standups use it.
+- **Spacing: generous on desktop, tight on phones.** Sections sit 40px apart on desktop and 26–28px on phones; phones drop page headers and repeated labels so content starts near the top.
+- **Docs:** the pinned repo is the hero, with the living notes journal (decisions, voice notes, approvals, files) right under it, then files, then screenshots.
+
+## 5. Flare
+
+The UI stays calm and bare, but each screen's **one hero area may carry real imagery** to give it life and identity: README art, screenshots of the running app, game sprites, avatars.
+
+- **Always real content, never decoration.** The picture comes from the project itself. The pinned repo hero (`app/ui/repohero.js`, `server/thumb.js`) uses, in order: the first real image in the repo's README (badges skipped; a GitHub remote without one uses GitHub's own card for the repo), else the latest screenshot of the app, else a flat tile with the repo's initials on the project color.
+- **Only the hero.** One image area per screen, filling the top of the hero card (`object-fit: cover`, about 16:9 on desktop and 2:1 on phones). Lists and cards stay text.
+- **Still flat.** No glows, gradients, vignettes or blur on or around the image. A 1px border separates it from the rest of the card.
+- **Text never sits on the picture.** Titles, branch and status sit on a solid raised band under the image (or a solid chip over it, like "From the README"), never on a scrim.
+
+## 6. Phones
+
+See [MOBILE.md](MOBILE.md#the-phone-layout) for the phone layout (rack, panel, composer, sheets). The same tokens and rules apply; motion is the 120–220 ms set above, and everything stops under `prefers-reduced-motion`.
+
 Tokens live in [`app/ui/tokens.css`](../app/ui/tokens.css) (app) and at the top of `site/styles.css` (website).

@@ -24,6 +24,20 @@ No App Store needed. Your friend's phone gets the same TribeCode, laid out for a
 - **Anywhere else:** install [Tailscale](https://tailscale.com) on the PC and the phone (free for personal use), sign both in, and TribeCode automatically puts the Tailscale address in the invite.
 - **Voice huddles on a phone** need HTTPS (browsers block the mic on plain `http://` addresses). Run `tailscale serve 4747` on the PC once and share the `https://…ts.net` address it prints. Everything, including voice, then works on the phone.
 
+## The phone layout
+
+Below 820px wide the same app switches to a phone layout (`app/ui/mobile2.js` + `mobile2.css`, ported from the demo's phone screens). Desktop is untouched.
+
+- **No header outside Chat.** A bare project line (the project's circle and name) sits at the top. Tap it, or **swipe from the left edge**, for the Discord-style panel: the project circles in a column on the left, the section list (New, Search, Chat, Docs & files, Updates, Tasks, Huddle, More, Pinned, Recents) beside it. Swipe back to close.
+- **The rack** at the bottom: your avatar (your profile) · Chat · Docs · Updates · Tasks · the orange action (New task on Tasks, New doc on Docs, the New menu elsewhere). Badges show unread chat and things waiting on you.
+- **In Chat** the composer owns the bottom, so the rack's icons move into a compact top bar, with **Talk to…** on the right: my Claude (your Claude Code's private chat), Qwen brain (`@brain` in #general), my desktop (hand a change to a computer that can push), #agents, #general and direct messages (friends first).
+- **The composer:** `+` (photo, file, task, and Start a vote when votes are available) · the message · the mic, which turns into the orange send arrow as you type. One tap on the mic records a voice note: pause/resume, stop to preview and play it back, delete, or send.
+- **Updates:** approvals that need you come first as the hero, each with an optional comment and big Approve / Deny buttons, then what happened, then what was decided.
+- **Docs:** the pinned repo hero (with its picture: README art, the latest screenshot, or a tile), the living notes journal, files, then screenshots.
+- **Tasks and Home:** a short **Suggested** list from today's plan (or open tasks nobody has) with Take it / Give to Claude, and a "Suggest a task" box.
+- **Profiles:** tap your avatar, a person in Talk to…, or an avatar in chat. Add friend (kept on this phone), Network (their agents, projects and people), Message, Ask their Claude (in #agents).
+- **Links opened inside Messenger, Instagram, Facebook, TikTok and similar apps** show a banner on the join pages: on Android it opens Chrome directly; on iPhone it copies the link and says to tap ••• → Open in Safari (those in-app browsers can't add TribeCode to the Home Screen or keep you signed in).
+
 ## Next: native iOS app (App Store / TestFlight)
 
 TribeCode's desktop app is built with Tauri 2, which also builds iOS apps from the same code. Steps once a Mac is available:

@@ -209,7 +209,8 @@ body.panel-off .panel { display: none; }
   .shell { z-index: auto; }
   .shell .window, body.panel-off .shell .window { grid-template-columns: 1fr; grid-template-rows: calc(52px + env(safe-area-inset-top)) minmax(0, 1fr); }
   .window > .rail { display: none; }
-  .window > .titlebar { grid-column: 1; padding: env(safe-area-inset-top) 8px 0 4px; gap: 6px; }
+  .window > .titlebar { grid-column: 1; padding: env(safe-area-inset-top) 8px 0 4px; gap: 6px; min-width: 0; overflow: hidden; }   /* a long name or a badge never widens the page */
+  .window > .main { min-width: 0; }
   .window > .main { grid-column: 1; padding: 18px 14px calc(84px + env(safe-area-inset-bottom)); }
   .window > .panel { display: none; }
   .crumbs .crumb.ws, .crumbs .sep, .crumbs .crumb-sec { display: none; }
