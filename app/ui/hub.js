@@ -73,6 +73,8 @@
     })();
     return loading;
   }
+  addEventListener('tribe-host-error', () => { if (document.body.dataset.view === 'hub') render(); });
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#hub-host-retry') && App().hostHere) { e.target.disabled = true; e.target.textContent = 'Starting…'; App().hostHere(); } });
   C.on('ws', m => { if (m && (m.type === 'hub' || m.type === 'dashboard') && (!data || m.rev !== data.rev)) load(true); });
   C.on('hello', () => { load(true); scratch.sync(); setTimeout(fromHash, 30); });
   C.on('status', () => { if (document.body.dataset.view === 'hub') render(); panel(); });
@@ -142,8 +144,10 @@
           : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.'))
         + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.');
     const links = on ? `<div class="gs-links">${lp || p1 ? '<button class="linkish" id="hub-new">New project</button><span aria-hidden="true">·</span>' : ''}<button class="linkish" id="hub-join">Paste invite link</button></div>` : '';
+    const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
+        <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span></div>
-      <div class="gs-grid">${tiles}</div>${links}</section>`;
+      ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;
   }
 
   // ---------- the hero: Suggestions | Ask | Join or start ----------

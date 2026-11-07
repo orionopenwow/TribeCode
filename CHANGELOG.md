@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.2
+
+- The desktop app no longer sits quietly on "Not in a tribe yet" when its tribe server fails to start: Home says so, shows the reason, and has Try again
+- Settings shows the GitHub row before your tribe is running, with what to do first
+- **Phones**: unchanged (this is about the desktop host)
+
 ## v0.7.1
 
 - **Office (optional, in Your agents)**: [Open Space](https://github.com/Fantomiald/open-space) by Fantomiald, a pixel-art office where several Claude Code sessions work side by side. Install, Start and open, Stop, all from TribeCode. It runs on the host computer on port 4850 with every project repo on its desks, opens in your browser with its pairing link, and installs from a commit we read through without running install scripts (docs/OPEN-SPACE.md)
