@@ -34,6 +34,8 @@ const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
 const makeCoord = require('./coord');
 const makeAgentNet = require('./agentnet');
+const makeWorkshop = require('./workshop');
+const makeWorkshopMcp = require('./mcp-workshop');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -117,7 +119,7 @@ const online = new Map(); // memberId -> { sockets:Set, where, since, project }
 // Project rooms: data events reach only sockets that are in the event's project (and can see it); other
 // sockets of the same person get a tiny 'project-pulse' so the sidebar badges stay live. Project chat
 // channels are delivered as `general`, which is what the chat UI shows for the current project.
-const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello']);
+const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello', 'workshop']);
 const SOFT = new Set(['approval', 'claims']);   // everyone who can see the project, whatever room they are in
 const PULSE = new Set(['chat', 'task', 'proposal', 'change', 'approval', 'doc', 'bug']);
 const memberById = mid => members.find(x => x.id === mid);
@@ -272,6 +274,8 @@ const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, i
   broadcast, postChat, nameOf, str });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
+// The Workshop (server/workshop.js): a tribe-wide library apart from projects, plus the community shelf.
+const workshop = makeWorkshop({ store: baseStore, P, approvals, getMembers: () => members, nameOf, postChat, broadcast, slug, id, hasToken: W.hasToken, readSecret: W.readSecret });
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
 const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
@@ -303,7 +307,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...makeWorkshopMcp(workshop, { current: () => P.current() }) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
@@ -527,6 +531,7 @@ async function apiInProject(req, res, url) {
     if (handled !== null) return;
   }
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
