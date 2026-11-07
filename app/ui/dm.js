@@ -72,7 +72,7 @@
     const ch = channelWith(id), since = lastRead[ch] || '';
     view = ch; withId = id;
     document.body.classList.add('dm-open');
-    if (matchMedia('(max-width: 820px)').matches) document.body.classList.add('mobile-chat');
+    if (window.TribeApp && window.TribeApp.view && window.TribeApp.view() !== 'chat') window.TribeApp.show('chat');
     const list = dmList(); $('#chat-list').classList.add('hidden'); list.classList.remove('hidden');
     list.innerHTML = '<div class="empty-room">Loading…</div>';
     $('#chat-input').placeholder = m.role === 'agent' ? 'Message your Claude…' : `Message ${m.name}…`;

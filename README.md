@@ -53,6 +53,7 @@ Multiplayer Claude Code tools already let people share a terminal session. Tribe
 
 | Area | Highlights |
 | --- | --- |
+| **Project rooms** | Discord-style project circles, each its own room: people, chat, docs, tasks, requests, calendar, repo · drop a repo or folder (or paste a GitHub URL) to start one · project-only invites · “Give me a branch” worktrees with commits attributed to each member · see **[docs/PROJECTS.md](docs/PROJECTS.md)** |
 | **Sessions** | Live lobby + follow mode · shared Claude Code relay over MCP · soft file claims · one-click voice huddles · spectator links |
 | **Alignment** | Proposals + approval board · drift radar · vision check · milestone auto-commit to GitHub · session snapshots · merge helper |
 | **Tasks** | Chat-to-task · auto standup · task ↔ branch link · assign tasks to Claude agents with a token cap · token budget meter |
@@ -103,14 +104,15 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
 
 ### First launch and updates (working today)
 
+No setup wizard. The desktop app hosts on its own, names you after your computer's user, keeps files in `~/TribeCode`, picks a color, and drops you into your first project with one dismissible line: *Hi Orion, you're hosting. Invite a friend →*. Name, color, theme, folder, local brain and open-at-login live on one calm **Settings** page. The tour is optional (**?** → Take a quick tour).
+
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/setup-2-profile.png" alt="First-run setup: name and color"><br><sub><b>First-run setup:</b> name, color, theme, folder, local brain and startup preferences. No account needed; everything stays on your machine.</sub></td>
-    <td width="50%"><img src="docs/screenshots/tour.png" alt="Built-in spotlight tour"><br><sub><b>60-second tour:</b> a spotlight walkthrough of the app. Replay it any time with the <b>?</b> button.</sub></td>
+    <td width="50%"><img src="docs/screenshots/first-launch.png" alt="First launch: straight into the first project"><br><sub><b>First launch:</b> zero steps. You're hosting and inside your first project.</sub></td>
+    <td width="50%"><img src="docs/screenshots/settings.png" alt="Settings"><br><sub><b>Settings:</b> one page. Joining a friend's tribe is <b>+ → Join with a link</b>.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/setup-3-brain.png" alt="Local brain detection"><br><sub><b>Local brain:</b> detects Ollama and your Qwen models automatically, or shows the one command to install it.</sub></td>
-    <td width="50%"><img src="docs/screenshots/update-handoff.png" alt="Restart to update pill with save and hand-off"><br><sub><b>Restart to update:</b> new versions download in the background. When it suits you, save your work, hand off running agents and claims, and restart, or snooze it.</sub></td>
+    <td colspan="2"><img src="docs/screenshots/update-handoff.png" alt="Restart to update pill with save and hand-off"><br><sub><b>Restart to update:</b> new versions download in the background. When it suits you, save your work, hand off running agents and claims, and restart, or snooze it.</sub></td>
   </tr>
 </table>
 
@@ -134,9 +136,27 @@ Click **Connect your Claude Code** in the room panel and run the one-line comman
 claude mcp add --transport http tribecode http://HOST:4747/mcp --header "Authorization: Bearer <your agent key>"
 ```
 
-Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in the room while it works and gets 14 tools: `tribe_overview`, `list_tasks`, `create_task`, `update_task`, `list_docs`, `read_doc`, `write_doc` (with version checks, so it never overwrites a teammate), `post_chat`, `read_chat`, `claim_file`, `release_file`, `list_claims`, `read_vision`, `propose`. Agents respect file claims and VISION.md, but they can't vote or invite people. That stays with the humans.
+Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in the room while it works and gets tools for the board, docs, chat, file claims, VISION.md and proposals, plus coordination: `my_lane` (its tasks, files, lanes, hand-offs and any pause/stop request), `suggest_task`, `handoff`, `request_review`. The team's Claudes also talk to each other in a per-project **#agents** channel (`agents_read`, `agents_post`, `message_agent`), hand work to the best agent with `delegate` (answered with `accept_delegation`/`decline_delegation`; cross-owner delegation of medium or high risk waits for the other owner's one-tap approval) and suggest work to humans with `recommend`. Agent posts are rate-limited, a thread stops after a few agent-only hops until a human speaks, and agents can never approve anything, nor vote or invite people. That stays with the humans.
 
 <p align="center"><img src="docs/screenshots/agents-live.png" alt="Claude agent in the room" width="100%"></p>
+
+### Project rooms and the shell
+
+<p align="center"><img src="docs/screenshots/shell-desktop.png" alt="Circle rail of projects, the project's calm sidebar, the overview with today's focus, and the In the room panel" width="100%"></p>
+
+Each project is a circle on the far left (emoji, initials or a picture; an orange bar marks where you are, Discord-style unread and count badges). Next to it, the project's sidebar: **New**, **Search**, **Chat**, **Docs & files**, **Updates**, **Tasks**, **Huddle**, and **More ⋯** with the full feature set, then **Pinned** (the repo, pinned docs and chats) and **Recents**. The top bar reads *Tribe / Project ▾ / Section ▾*. The right panel shows who is in the room and turns into a preview when you open a doc, screenshot, bug or approval. **+** starts a project from a dropped folder or repo, a pasted GitHub URL, or just a name. On phones the circles become a strip in the drawer.
+
+<table><tr>
+<td width="50%"><img src="docs/screenshots/shell-more-menu.png" alt="More menu"><br><sub><b>More ⋯:</b> bugs, board, milestones, calendar, repo, visuals, and coordination.</sub></td>
+<td width="50%"><img src="docs/screenshots/shell-new-project.png" alt="New project dialog"><br><sub><b>New project:</b> drop a folder or repo, paste a GitHub URL, or type a name.</sub></td>
+</tr></table>
+
+### Many humans, many agents
+
+<table><tr>
+<td width="50%"><img src="docs/screenshots/coord-agents.png" alt="Agents panel"><br><sub><b>Coordinate:</b> every agent with its owner, task, branch, files, tokens and Pause/Stop; what the agents say to each other; who delegated what. Plus an ownership map with overlap warnings and hand-off, a conflict radar ("ask both to sync"), a hand-off queue, a one-tap review queue and a daily plan.</sub></td>
+<td width="50%"><img src="docs/screenshots/bugs-board.png" alt="Bug board"><br><sub><b>Bugs:</b> New, Confirmed, In progress, Fixed. Repro steps, screenshots, severity and assignee filters, and a ⋯ menu: assign to me, give to agent, convert to task, mark duplicate, close, copy as Markdown for Claude.</sub></td>
+</tr></table>
 
 ### Live tribe (working today)
 

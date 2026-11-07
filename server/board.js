@@ -62,6 +62,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     return p;
   }
 
+  const repoPath = () => (typeof repo === 'function' ? repo() : repo);   // the current project's repo (server/projects.js)
   const git = (args, cwd) => new Promise((res, rej) => execFile('git', args, { cwd, timeout: 60_000 }, (e, out, err) => (e ? rej(new Error((err || e.message).trim())) : res(out.trim()))));
 
   async function release(version, me) {
@@ -69,10 +70,11 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     if (!m) throw Object.assign(new Error('milestone not found'), { status: 404 });
     if (m.status === 'released') throw Object.assign(new Error('already released'), { status: 409 });
     const out = { tagged: false, pushed: false, note: '' };
-    if (repo && fs.existsSync(path.join(repo, '.git'))) {
-      await git(['tag', '-a', version, '-m', `${version}: ${m.title}`], repo);
+    const rp = repoPath();
+    if (rp && fs.existsSync(path.join(rp, '.git'))) {
+      await git(['tag', '-a', version, '-m', `${version}: ${m.title}`], rp);
       out.tagged = true;
-      try { await git(['push', 'origin', version], repo); out.pushed = true; }
+      try { await git(['push', 'origin', version], rp); out.pushed = true; }
       catch (e) { out.note = 'Tagged locally; push failed: ' + e.message.split('\n')[0]; }
     } else out.note = 'No project repo configured (start the server with --repo <path>), so the milestone was recorded without a git tag.';
     m.status = 'released'; m.released = new Date().toISOString(); m.releasedBy = me.id; m.git = out;
@@ -92,7 +94,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
       }
     }
     if (a === 'milestones') {
-      if (m === 'GET' && !b) return send(res, 200, { milestones: milestones(), next: nextVersion(), repo: !!repo });
+      if (m === 'GET' && !b) return send(res, 200, { milestones: milestones(), next: nextVersion(), repo: !!repoPath() });
       if (m === 'POST' && b && c === 'release') {
         if (me.role !== 'host') return fail(res, 403, 'only the host can release milestones');
         return send(res, 200, await release(b, me));

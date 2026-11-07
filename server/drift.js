@@ -32,7 +32,7 @@ module.exports = function drift({ repo, getTasks, members }) {
       const member = members().find(m => m.name.toLowerCase() === String(r.author).toLowerCase() || short.toLowerCase().startsWith(m.name.toLowerCase() + '/'));
       const days = Math.floor((Date.now() - Date.parse(r.date)) / 86400_000);
       const level = behind > 20 || (!task && ahead > 0 && files.length > 10) ? 'drifting' : behind > 5 || !task ? 'watch' : 'ok';
-      rows.push({ branch: short, author: r.author, member: member ? member.id : null, behind, ahead, files: files.length, sample: files.slice(0, 5), lastCommit: r.date, days, task: task ? { id: task.id, title: task.title, status: task.status } : null, level });
+      rows.push({ branch: short, author: r.author, member: member ? member.id : null, behind, ahead, files: files.length, sample: files.slice(0, 5), allFiles: files.slice(0, 500), lastCommit: r.date, days, task: task ? { id: task.id, title: task.title, status: task.status } : null, level });
     }
     const order = { drifting: 0, watch: 1, ok: 2 };
     rows.sort((a, b) => order[a.level] - order[b.level] || b.behind - a.behind);

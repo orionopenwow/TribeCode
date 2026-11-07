@@ -27,6 +27,12 @@ class Ntfy(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
 
 
+
+def chat(page):
+    """Chat is its own view in the shell: open it before typing or clicking in it."""
+    page.evaluate("TribeApp.view() !== 'chat' && TribeApp.show('chat')")
+    return page
+
 def api(path, method="GET", body=None, token=None, raw=False):
     req = urllib.request.Request(BASE + path, method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})})
@@ -106,7 +112,7 @@ def main():
             to_maya = lambda: [x for x in pushes if x["path"] == "/" + topic]
 
             # 3. host @mentions Maya → exactly one push with the right title
-            hp.fill("#chat-input", "@Maya can you look at the save system?"); hp.press("#chat-input", "Enter")
+            chat(hp).fill("#chat-input", "@Maya can you look at the save system?"); chat(hp).press("#chat-input", "Enter")
             wait(lambda: to_maya(), what="mention push")
             time.sleep(1.0)
             assert len(to_maya()) == 1, to_maya()
@@ -184,7 +190,7 @@ def main():
             fwd = next(x for x in raw if "forwarded by Orion" in x["text"])
             assert fwd["text"].startswith("> 🔔 **Approval:") and f"[open](#notif:{nid})" in fwd["text"], fwd["text"]
             hp.click("#nf-close")
-            hp.click(f"#chat-list a[href='#notif:{nid}']")
+            chat(hp).click(f"#chat-list a[href='#notif:{nid}']")
             hp.wait_for_selector(f"#nf-panel:not(.hidden) .nf-item[data-id='{nid}']")
             # Maya (another member) can open the forwarded item too
             assert api(f"/api/notify/items/{nid}", token=maya)[0] == 200

@@ -4,7 +4,7 @@
   const listeners = {};
   let sock = null, retry = 0, state = { status: 'offline', members: [], me: null, tribe: null };
 
-  const emit = (t, d) => (listeners[t] || []).forEach(fn => { try { fn(d); } catch (e) { console.error(e); } });
+  const emit = (t, d) => [...(listeners[t] || [])].forEach(fn => { try { fn(d); } catch (e) { console.error(e); } });
 
   function base() {
     if (location.protocol === 'http:' || location.protocol === 'https:') return location.origin;
@@ -12,9 +12,13 @@
   }
   const token = () => (S.get().server && S.get().server.token) || '';
 
-  async function api(path, { method = 'GET', body } = {}) {
+  // Project rooms: every call says which project it is about (the server scopes tasks, docs, chat… to it).
+  const projKey = () => 'tribecode.project:' + base();
+  const project = () => state.project || null;
+  async function api(path, { method = 'GET', body, project: pj } = {}) {
+    const pid = pj || project();
     const res = await fetch(base() + '/api' + path, {
-      method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}) },
+      method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}), ...(pid ? { 'X-Project': pid } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));
@@ -28,12 +32,16 @@
     if (!token()) { setStatus('offline'); return; }
     try { if (sock) sock.close(); } catch {}
     setStatus('connecting');
-    const url = base().replace(/^http/, 'ws') + '/ws?token=' + encodeURIComponent(token());
+    let want = ''; try { want = localStorage.getItem(projKey()) || ''; } catch {}
+    const url = base().replace(/^http/, 'ws') + '/ws?token=' + encodeURIComponent(token()) + (want ? '&project=' + encodeURIComponent(want) : '');
     sock = new WebSocket(url);
     sock.onopen = () => { retry = 0; setStatus('online'); sendActivity(); };
     sock.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
       emit('ws', m);   // every message, for feature modules (captions, typing, DMs…)
+      if (m.type === 'hello') { setProject(m.project, m.projects); }
+      if (m.type === 'project-switched') { setProject(m.project); emit('project', state.project); }
+      if (m.type === 'projects' || m.type === 'project-pulse') emit(m.type, m);
       if (m.type === 'hello') { state.huddle = m.huddle || []; emit('huddle', state.huddle); state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
       if (m.type === 'presence') { state.members = m.members; emit('presence', state.members); }
       if (m.type === 'chat') emit('chat', m);
@@ -65,6 +73,24 @@
     };
   }
 
+  function setProject(pid, list) {
+    if (list) state.projects = list;
+    state.project = pid || null;
+    try { if (pid) localStorage.setItem(projKey(), pid); } catch {}
+  }
+  // Switch rooms: the server moves this socket, then everything reloads for the new project.
+  function switchProject(pid) {
+    if (!pid || pid === state.project) return Promise.resolve(false);
+    if (!(sock && sock.readyState === 1)) { setProject(pid); emit('project', pid); return Promise.resolve(true); }
+    return new Promise(resolve => {
+      const list = (listeners.project = listeners.project || []);
+      const done = p => { if (p !== pid) return; list.splice(list.indexOf(done), 1); resolve(true); };
+      list.unshift(done);   // resolve before the UI reloads, so callers can follow up with show()
+      sock.send(JSON.stringify({ type: 'project', id: pid }));
+      setTimeout(() => { const i = list.indexOf(done); if (i >= 0) { list.splice(i, 1); resolve(false); } }, 4000);
+    });
+  }
+
   let where = 'Home';
   function sendActivity(w) { if (w) where = w; if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'activity', where })); }
 
@@ -84,7 +110,7 @@
   }
 
   window.TribeClient = {
-    api, connect, ensureMember, base, sendActivity,
+    api, connect, ensureMember, base, sendActivity, switchProject, project,
     on(t, fn) { (listeners[t] = listeners[t] || []).push(fn); },
     state: () => state,
     connected: () => state.status === 'online',

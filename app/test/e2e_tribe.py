@@ -15,6 +15,17 @@ take = "--shots" in sys.argv
 errors = []
 
 
+
+
+def chat(page):
+    """Chat is its own view in the shell: open it before typing or clicking in it."""
+    page.evaluate("TribeApp.view() !== 'chat' && TribeApp.show('chat')")
+    return page
+
+def named(page, name):
+    """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
+    page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+
 def api(path, method="GET", body=None, token=None):
     req = urllib.request.Request(BASE + "/api" + path, method=method,
                                  data=json.dumps(body).encode() if body is not None else None,
@@ -83,10 +94,8 @@ def main():
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1600, "height": 1000}).new_page(); watch(host, "host")
             # host: first-run setup -> becomes host
+            named(host, "Orion")
             host.goto(BASE + "/?skipIntro=1")  # the first-visit intro is covered by e2e_friend.py
-            host.wait_for_selector("#onboard:not(.hidden)")
-            host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-next")
-            host.click("#ob-skip")
             try:
                 host.wait_for_function("document.querySelector('#sync-status').innerText.includes('connected')", timeout=5000)
             except Exception:
@@ -113,10 +122,7 @@ def main():
             friend.fill("#name", "Maya")
             shot(friend, "join-live")
             friend.click("#go")
-            friend.wait_for_selector("#onboard:not(.hidden)")
-            friend.click("#ob-next")
-            assert friend.input_value("#ob-name") == "Maya", "name carried over from join"
-            friend.click("#ob-skip")
+            friend.wait_for_function("!!document.querySelector('#sync-status')", timeout=15000)
             friend.wait_for_function("document.querySelector('#sync-status').innerText.includes('connected')", timeout=5000)
 
             # presence on host
@@ -127,15 +133,15 @@ def main():
                 print("ROOM", repr(host.inner_text("#room-count")), repr(host.inner_text("#room-list")), host.evaluate("JSON.stringify(TribeClient.state().members)")); raise
 
             # chat both ways + /task
-            friend.fill("#chat-input", "hey! someone should add controller support")
-            friend.press("#chat-input", "Enter")
+            chat(friend).fill("#chat-input", "hey! someone should add controller support")
+            chat(friend).press("#chat-input", "Enter")
             host.wait_for_function("document.querySelector('#chat-list').innerText.includes('controller support')", timeout=5000)
-            host.fill("#chat-input", "/task Controller support")
-            host.press("#chat-input", "Enter")
+            chat(host).fill("#chat-input", "/task Controller support")
+            chat(host).press("#chat-input", "Enter")
             friend.wait_for_function("document.querySelector('#chat-list').innerText.includes('Made that a task')", timeout=5000)
 
             # tasks board: friend sees the task, drags it to In progress; host sees the move live
-            host.click('[data-nav="tasks"]'); friend.click('[data-nav="tasks"]')
+            host.click('[data-nav="tasks"]:visible'); friend.click('[data-nav="tasks"]:visible')
             friend.wait_for_selector('[data-col="backlog"] .task')
             friend.drag_and_drop('[data-col="backlog"] .task', '[data-col="doing"]')
             host.wait_for_selector('[data-col="doing"] .task', timeout=5000)
@@ -157,7 +163,7 @@ def main():
             assert Path(tmp, "chat", "general.jsonl").exists()
 
             # ---- approval board ----
-            host.click('[data-nav="board"]'); friend.click('[data-nav="board"]')
+            host.evaluate("TribeApp.show('board')"); friend.evaluate("TribeApp.show('board')")
             wait_text(host, "#prop-list", "No open proposals")
             host.dblclick("#vision-text"); host.keyboard.type("Cozy co-op pixel adventure. Never competitive."); host.click("#view-board h1")
             wait_text(host, ".toast", "VISION.md saved")
@@ -192,7 +198,7 @@ def main():
 
             # ---- docs ----
             wait_text(host, "#brain-label", "qwen3:8b")
-            host.click('[data-nav="docs"]')
+            host.click('[data-nav="docs"]:visible')
             host.wait_for_selector("#doc-first")
             host.click("#doc-first")
             host.wait_for_selector("#doc-title")
@@ -206,7 +212,7 @@ def main():
             host.keyboard.type("Shared inventory")
             assert "- [ ] Forest biome\n- [ ] Shared inventory" in host.input_value("#doc-body"), host.input_value("#doc-body")
             wait_text(host, "#doc-status", "Saved")
-            friend.click('[data-nav="docs"]')
+            friend.click('[data-nav="docs"]:visible')
             wait_text(friend, "#doc-list", "Game design doc")
             friend.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Game design doc'", timeout=8000)
             # live update reaches an idle reader
@@ -254,12 +260,12 @@ def main():
             assert Path(tmp, "docs", "jam-notes.md").exists()
 
             # ---- standup ----
-            host.click('[data-nav="home"]'); host.click("#standup-go")
+            host.click('[data-nav="home"]:visible'); host.click("#standup-go")
             wait_text(host, "#standup-text", "Maya: asked for controller support")
             assert list(Path(tmp, "brain").glob("standup-*.md"))
 
             # ---- drift radar ----
-            host.click('[data-nav="board"]')
+            host.evaluate("TribeApp.show('board')")
             wait_text(host, "#radar-list", "maya/campfire-save-points")
             wait_text(host, "#radar-list", "6 behind")
             wait_text(host, "#radar-list", "no task")
@@ -311,7 +317,7 @@ def main():
             names = [t["name"] for t in mcp(atok, "tools/list")[1]["result"]["tools"]]
             assert {"tribe_overview", "claim_file", "write_doc", "update_task", "propose"} <= set(names), names
             e, t = call(atok, "tribe_overview"); assert not e and "Campfire Crew" in t and "Never competitive" in t
-            wait_text(host, "#room-list", "Claude · Orion")
+            wait_text(host, "#tour-room", "Claude · Orion")
             e, t = call(atok, "claim_file", {"path": "src/world/", "note": "refactoring saves"}); assert not e, t
             wait_text(friend, "#claims-list", "src/world/")
             st, d = api("/claims", "POST", {"path": "src/world/campfire.ts"}, token=friend.evaluate("TribeStore.get().server.token"))
@@ -331,13 +337,13 @@ def main():
             assert api(f"/proposals/{pid}/vote", "POST", {"vote": "yes"}, token=atok)[0] == 403
             assert api("/invites", "POST", {}, token=atok)[0] == 403
             e, t = call(atok, "release_file", {"path": "src/world/"}); assert not e
-            wait_text(host, "#room-list", "using release file")
+            wait_text(host, "#room-agents", "using release file")
             shot(host, "agents-live")
 
             # ---- follow mode ----
             host_id = host.evaluate("TribeClient.state().me.id")
             friend.click(f'[data-follow="{host_id}"]')
-            friend.click("#dm-menu [data-act='follow']")   # clicking a person offers Message / Follow
+            chat(friend).click("#dm-menu [data-act='follow']")   # clicking a person offers Message / Follow
             friend.wait_for_selector("#view-bugs:not(.hidden)", timeout=5000)
             wait_text(friend, ".toast", "Following Orion")
 
@@ -347,8 +353,7 @@ def main():
             link = f"{BASE}/join/{d['invite']['code']}"
             jay = b.new_context(viewport={"width": 1600, "height": 1000}).new_page(); watch(jay, "jay")
             jay.goto((ROOT / "app" / "ui" / "index.html").as_uri() + "?reset=1")
-            jay.wait_for_selector("#onboard:not(.hidden)")
-            jay.click("#ob-next"); jay.fill("#ob-name", "Jay"); jay.click("#ob-skip")
+            jay.evaluate("TribeStore.set({name: 'Jay'}); TribeApp.refresh()")
             parsed = jay.evaluate("TribeApp.parseInvite('tribecode://join?server=' + encodeURIComponent('http://10.0.0.5:4747') + '&code=ab12C')")
             assert parsed == {"server": "http://10.0.0.5:4747", "code": "ab12C"}, parsed
             jay.click("#tour-invite")
@@ -358,7 +363,7 @@ def main():
             jay.click("#jn-go")
             wait_text(jay, "#sync-status", "connected")
             wait_text(host, "#room-list", "Jay")
-            wait_text(jay, "#room-list", "Claude · Orion")
+            wait_text(jay, "#tour-room", "Claude · Orion")
             wait_text(jay, "#room-count", "4 online")
             # single-use invite is now spent
             assert api(f"/invites/{d['invite']['code']}")[0] == 410

@@ -46,7 +46,7 @@ async def open_as(browser, name, token):
 
 
 async def open_doc(page, title):
-    await page.click('[data-nav="docs"]')
+    await page.click('[data-nav="docs"]:visible')
     await page.wait_for_function("([t]) => document.querySelector('#doc-title') && document.querySelector('#doc-title').value === t", arg=[title], timeout=10000)
     await page.wait_for_function("TribeDocs.live()", timeout=10000)
 

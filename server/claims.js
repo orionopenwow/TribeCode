@@ -1,6 +1,6 @@
 // Soft file claims: "I'm editing this" markers that people and agents respect. Expire after 4 h idle.
 'use strict';
-module.exports = function claims({ store, id, broadcast, nameOf }) {
+module.exports = function claims({ store, id, broadcast, nameOf, project = () => null }) {
   const TTL = 4 * 3600_000;
   const norm = p => String(p || '').trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/{2,}/g, '/').slice(0, 300);
   const overlaps = (a, b) => a === b || (b.endsWith('/') && a.startsWith(b)) || (a.endsWith('/') && b.startsWith(a));
@@ -15,7 +15,7 @@ module.exports = function claims({ store, id, broadcast, nameOf }) {
       if (other) return { conflict: other };
       let c = list.find(x => x.by === me.id && x.path === path);
       if (c) { c.at = new Date().toISOString(); c.note = note || c.note; }
-      else { c = { id: 'c-' + id(6).toLowerCase(), path, by: me.id, note: String(note || '').slice(0, 140), at: new Date().toISOString() }; list.push(c); }
+      else { c = { id: 'c-' + id(6).toLowerCase(), path, by: me.id, note: String(note || '').slice(0, 140), at: new Date().toISOString(), ...(project() ? { project: project() } : {}) }; list.push(c); }
       save(); return { claim: { ...c, name: nameOf(c.by) } };
     },
     release(path, me) { const n = list.length; path = norm(path); list = list.filter(c => !(c.path === path && (c.by === me.id || me.role === 'host'))); if (list.length !== n) { save(); return true; } return false; },

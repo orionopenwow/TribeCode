@@ -9,7 +9,7 @@
 const RISKS = ['low', 'medium', 'high'];
 const REMIND_H = Number(process.env.TRIBE_APPROVAL_REMIND_HOURS) || 4;   // re-notify once after this; escalate to the host after twice this
 
-module.exports = function approvals({ store, id, str, bus, getMembers, postChat, broadcast, hub, now = () => Date.now(), remindHours = REMIND_H, tick = true }) {
+module.exports = function approvals({ store, id, str, bus, getMembers, postChat, broadcast, hub, project = () => undefined, canSee = () => true, now = () => Date.now(), remindHours = REMIND_H, tick = true }) {
   let list = store.readJSON('.tribe/approvals.json', []);
   let rules = store.readJSON('.tribe/approval-rules.json', []);   // { id, owner, agent, kind, created }
   const save = () => { list = list.slice(-500); store.writeJSON('.tribe/approvals.json', list); };
@@ -26,13 +26,14 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     body: `${a.risk[0].toUpperCase() + a.risk.slice(1)} risk${a.details ? ' · ' + a.details.slice(0, 280) : ''}`, view: 'inbox', ref: a.id, approval: a.id,
     actions: [{ id: 'approve', label: 'Approve' }, { id: 'deny', label: 'Deny' }] });
 
-  function create({ title, details, risk, kind }, me) {
+  function create({ title, details, risk, kind, to: askTo }, me) {
     title = str(title, 160) || 'Untitled request';
     risk = RISKS.includes(risk) ? risk : 'medium';
     const owner = me.role === 'agent' && me.owner && member(me.owner) ? me.owner : null;
-    let to = risk === 'high' || !owner ? humans().map(m => m.id).filter(x => x !== me.id) : [owner];
+    let to = risk === 'high' || !owner ? humans().filter(m => canSee(m, project())).map(m => m.id).filter(x => x !== me.id) : [owner];   // only people in the project
+    if (Array.isArray(askTo)) { const ok = askTo.filter(x => humans().some(m => m.id === x) && x !== me.id); if (ok.length) to = ok; }   // e.g. the receiving owner of a cross-owner delegation
     if (!to.length) to = hosts();
-    const a = { id: `ap-${now().toString(36)}-${id(4).toLowerCase()}`, title, details: str(details, 4000), risk, kind: kindOf(kind, title), by: me.id, to, status: 'pending', created: new Date(now()).toISOString(), questions: [] };
+    const a = { id: `ap-${now().toString(36)}-${id(4).toLowerCase()}`, title, details: str(details, 4000), risk, kind: kindOf(kind, title), by: me.id, to, status: 'pending', created: new Date(now()).toISOString(), questions: [], project: project() || undefined };
     // "Always allow this for my agent": low risk only, never high or medium.
     const rule = owner && risk === 'low' && rules.find(r => r.agent === me.id && r.owner === owner && r.kind === a.kind);
     if (rule) {
@@ -50,6 +51,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
   function decide(aid, decision, who, note, { always = false } = {}) {
     const a = get(aid);
     if (!a) fail(404, 'approval not found');
+    if (who.role === 'agent') fail(403, 'agents never decide approvals, not even each other\'s');
     if (!['approve', 'deny'].includes(decision)) fail(400, 'decision must be approve or deny');
     if (!a.to.includes(who.id) && who.role !== 'host') fail(403, 'this request was not addressed to you');
     if (a.status !== 'pending') fail(409, `already ${a.status}`);
@@ -133,5 +135,5 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     return null;
   }
 
-  return { create, decide, question, bulk, sweep, get: aid => view(get(aid)), rules: () => rules, route, RISKS };
+  return { create, list: () => list.map(view), decide, question, bulk, sweep, get: aid => view(get(aid)), rules: () => rules, route, RISKS };
 };

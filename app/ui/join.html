@@ -116,7 +116,7 @@
       document.title = `Join ${d.tribe} · TribeCode`;
       $('#eyebrow').innerHTML = `<span class="dot"></span>${d.role === 'spectator' ? "You're invited to watch" : "You're invited"}`;
       $('#title').textContent = `Join ${d.tribe}`;
-      $('#lead').innerHTML = `${esc(d.invitedBy)} invited you to code with the tribe. No email, no password: pick a name and you're in.`;
+      $('#lead').innerHTML = d.project ? `${esc(d.invitedBy)} invited you to <b>${esc(d.project.emoji)} ${esc(d.project.name)}</b> in ${esc(d.tribe)}. No email, no password: pick a name and you're in.` : `${esc(d.invitedBy)} invited you to code with the tribe. No email, no password: pick a name and you're in.`;
       $('#faces').innerHTML = d.members.map(m => `<div class="avatar" title="${esc(m.name)}" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(initials(m.name))}</div>`).join('')
         + (d.members.length ? `<span class="more">${d.members.length === 1 ? esc(d.members[0].name) + ' is' : d.members.length + ' people are'} here</span>` : '');
       const hrs = Math.max(1, Math.round((Date.parse(d.expires) - Date.now()) / 3600000));

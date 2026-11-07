@@ -13,6 +13,11 @@ take = "--shots" in sys.argv
 errors = []
 
 
+
+def named(page, name):
+    """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
+    page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+
 def shot(page, name):
     if take:
         page.wait_for_timeout(450)  # let entry animations finish
@@ -27,52 +32,38 @@ def main():
         page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
         page.on("console", lambda m: m.type == "error" and "Failed to fetch" not in m.text and "ERR_" not in m.text and errors.append(f"console: {m.text}"))
 
-        # ---- first run ----
+        # ---- first run: zero steps. No wizard; name, color and folder fill themselves in ----
         page.goto(UI + "?reset=1&demo=1")
-        page.wait_for_selector("#onboard:not(.hidden)")
-        assert page.locator("#ob-body img.brand-wm").count() == 1 and "set up this device" in page.inner_text("#ob-body")
-        shot(page, "setup-1-welcome")
-        page.click("#ob-next")
-        assert page.is_disabled("#ob-next"), "name required"
-        page.fill("#ob-name", "Riley Park")
-        page.click('[data-color="#FFB86B"]')
-        assert page.inner_text("#ob-av") == "RP"
-        shot(page, "setup-2-profile")
-        page.keyboard.press("Enter")
-        page.click('[data-theme="dark"]')
-        page.click("#ob-next")
-        assert page.input_value("#ob-folder"), "default folder"
-        page.fill("#ob-folder", "C:\\Users\\riley\\TribeCode")
-        page.click("#ob-next")
-        page.wait_for_function("!document.querySelector('#ob-body').innerText.includes('Looking for Ollama')", timeout=5000)
-        shot(page, "setup-3-brain")
-        page.click("#ob-next")
-        page.click('[data-key="launchAtLogin"]')
-        assert page.get_attribute('[data-key="launchAtLogin"]', "aria-checked") == "true"
-        page.click("#ob-next")
-        assert "Riley" in page.inner_text("#ob-body")
-        shot(page, "setup-4-ready")
-        page.click("#ob-next")
+        page.wait_for_function("TribeStore.get().onboarded === true")
+        st = page.evaluate("TribeStore.get()")
+        assert st["name"] and st["color"], st
+        page.wait_for_selector("#tour-rail .logo", state="visible")
 
-        # ---- tour ----
+        # ---- Settings: one calm page ----
+        page.click("#settings-btn")
+        page.wait_for_selector("#settings-modal:not(.hidden) #set-name")
+        page.fill("#set-name", "Riley Park"); page.press("#set-name", "Tab")
+        page.click('#settings-body [data-color="#FFB86B"]')
+        page.click('#settings-body [data-theme="dark"]')
+        page.wait_for_function("!document.querySelector('#settings-body').innerText.includes('Looking')", timeout=5000)
+        shot(page, "settings")
+        assert page.inner_text("#me-avatar") == "RP"
+        assert page.evaluate("TribeStore.get().color") == "#FFB86B"
+
+        # ---- the tour is optional, from Settings ----
+        page.click("#set-tour")
         page.wait_for_selector("#tour:not(.hidden)")
         page.wait_for_timeout(500)
-        assert "STEP 1 OF 7" in page.inner_text("#tour-tip")
-        page.keyboard.press("ArrowRight"); page.keyboard.press("ArrowRight"); page.keyboard.press("ArrowRight")
-        page.wait_for_timeout(500)
+        assert "STEP 1 OF" in page.inner_text("#tour-tip")
         shot(page, "tour")
-        for _ in range(3):
+        for _ in range(8):
             page.keyboard.press("ArrowRight")
         page.wait_for_timeout(200)
-        page.click("#tour-tip .btn.primary")  # Finish
+        if page.is_visible("#tour"): page.click("#tour-tip .btn.primary")  # Finish
         assert page.is_hidden("#tour")
 
-        # ---- home state persisted ----
-        assert page.inner_text("#hello") == "Welcome, Riley"
-        assert page.inner_text("#check-count").startswith("2 of 5")
         page.reload()
         page.wait_for_timeout(300)
-        assert page.is_hidden("#onboard"), "onboarding should not reappear"
         assert page.inner_text("#me-avatar") == "RP"
 
         # ---- theme toggle ----

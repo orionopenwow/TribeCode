@@ -42,6 +42,12 @@ FAKE_SPEECH = """(() => {
 })();"""
 
 
+
+def chat(page):
+    """Chat is its own view in the shell: open it before typing or clicking in it."""
+    page.evaluate("TribeApp.view() !== 'chat' && TribeApp.show('chat')")
+    return page
+
 def api(path, method="GET", body=None, token=None):
     req = urllib.request.Request(BASE + "/api" + path, method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})})
@@ -133,7 +139,7 @@ def main():
 
             # ---- 1. dictation into chat ----
             assert orion.evaluate("TribeSpeech.supported()")
-            orion.click("#chat-form [data-dictate]")
+            chat(orion).click("#chat-form [data-dictate]")
             orion.wait_for_function("__fakeSpeech.active()")
             wait_text(orion, "#voice-pill", "dictating")
             assert orion.evaluate("__fakeSpeech.say('hello from my voice')") == 1
@@ -144,7 +150,7 @@ def main():
             orion.wait_for_function("document.querySelector('#chat-input').value === 'Hello from my voice over a campfire'")
             orion.keyboard.press("Control+Shift+D")                     # toggles dictation off
             orion.wait_for_function("!__fakeSpeech.active() && document.querySelector('#voice-pill').classList.contains('hidden')")
-            orion.focus("#chat-input"); orion.keyboard.press("Enter")
+            chat(orion).focus("#chat-input"); orion.keyboard.press("Enter")
             wait_text(maya, "#chat-list", "Hello from my voice over a campfire")
 
             # dictation into a doc goes through live co-editing
@@ -164,9 +170,9 @@ def main():
             # ---- 5. direct messages ----
             dm = "dm-" + "-".join(sorted([ids["Orion"], ids["Maya"]]))
             orion.click(f"#room-list .person[data-follow='{ids['Maya']}']")
-            orion.click("#dm-menu [data-act='message']")
+            chat(orion).click("#dm-menu [data-act='message']")
             wait_text(orion, "#chat-head", "Maya")
-            orion.fill("#chat-input", "secret plan: surprise party for Jay")
+            chat(orion).fill("#chat-input", "secret plan: surprise party for Jay")
             orion.keyboard.press("Enter")
             wait_text(orion, "#dm-list", "surprise party")
             maya.wait_for_function(f"document.querySelector(\"#room-list .person[data-follow='{ids['Orion']}'] .dm-badge\")?.textContent === '1'")
@@ -183,18 +189,18 @@ def main():
             maya.wait_for_function(f"!document.querySelector(\"#room-list .person[data-follow='{ids['Orion']}'] .dm-badge\")")
 
             # ---- 6. typing indicator (DM, then #general) ----
-            maya.click("#chat-input"); maya.keyboard.type("on it", delay=30)
+            chat(maya).click("#chat-input"); maya.keyboard.type("on it", delay=30)
             wait_text(orion, "#typing-line", "Maya is typing")
             maya.keyboard.press("Enter")
             wait_text(orion, "#dm-list", "on it")
             orion.wait_for_function("document.querySelector('#typing-line').classList.contains('hidden')")
             shot(orion, "dm-thread")
             assert "Maya is typing" not in jay.text_content("body")
-            maya.click("#dm-back")
-            jay.click("#chat-input"); jay.keyboard.type("anyone up for", delay=30)
+            chat(maya).click("#dm-back")
+            chat(jay).click("#chat-input"); jay.keyboard.type("anyone up for", delay=30)
             wait_text(maya, "#typing-line", "Jay is typing")
-            jay.fill("#chat-input", "")
-            orion.click("#dm-back")
+            chat(jay).fill("#chat-input", "")
+            chat(orion).click("#dm-back")
 
             # ---- 2. huddle captions ----
             orion.click("#h-join")
@@ -296,12 +302,12 @@ def main():
             general = lambda tok=orion_tok: api("/chat/general?limit=500", token=tok)[1]["messages"]
             msg_id = lambda text: next(m["id"] for m in reversed(general()) if text in (m.get("text") or ""))
             def menu(page, mid, act):
-                page.hover(f".chat:not(.hidden) .msg[data-id='{mid}']")
+                chat(page).hover(f".chat:not(.hidden) .msg[data-id='{mid}']")
                 page.click(f".chat:not(.hidden) .msg[data-id='{mid}'] .msg-more")
                 page.click(f"#msg-menu [data-act='{act}']")
 
             # voice note: hold the composer mic; the transcript comes from the same speech pipeline
-            box = orion.locator("#chat-form [data-dictate]").bounding_box()
+            box = chat(orion).locator("#chat-form [data-dictate]").bounding_box()
             orion.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2); orion.mouse.down()
             orion.wait_for_selector("#chat-form .rec-bar")
             orion.wait_for_function("__fakeSpeech.active()")
@@ -329,7 +335,7 @@ def main():
             hello = msg_id("Hello from my voice")
             menu(maya, hello, "reply")
             wait_text(maya, "#reply-bar", "Replying to Orion")
-            maya.fill("#chat-input", "count me in"); maya.keyboard.press("Enter")
+            chat(maya).fill("#chat-input", "count me in"); maya.keyboard.press("Enter")
             wait_text(orion, "#chat-list .msg .quote", "Hello from my voice")
             reply_id = msg_id("count me in")
             assert next(m for m in general() if m["id"] == reply_id)["replyTo"]["id"] == hello
@@ -345,7 +351,7 @@ def main():
             menu(orion, reply_id, "pin")
             wait_text(jay, "#pin-strip", "1 pinned")
             wait_text(jay, "#pin-strip", "count me in")
-            menu(jay, hello, "reply"); jay.click("#reply-bar button")   # cancel a reply
+            menu(jay, hello, "reply"); chat(jay).click("#reply-bar button")   # cancel a reply
             jay.wait_for_selector("#reply-bar.hidden", state="attached")
             jay.hover(f"#chat-list .msg[data-id='{hello}']"); jay.click(f"#chat-list .msg[data-id='{hello}'] .msg-more")
             jay.click("#msg-menu [data-emoji='🔥']")
@@ -364,14 +370,14 @@ def main():
             assert next(m for m in general() if m["id"] == hello)["text"] == ""
 
             # paste an image
-            maya.click("#chat-input")
+            chat(maya).click("#chat-input")
             maya.evaluate("""() => { const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGPMeP/8PwMDAwMTAwMDAA+YAzG2ByhBAAAAAElFTkSuQmCC';
               const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); const dt = new DataTransfer(); dt.items.add(new File([bytes], 'shot.png', { type: 'image/png' }));
               document.querySelector('#chat-input').dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }""")
             orion.wait_for_function("[...document.querySelectorAll('#chat-list .thumb img')].some(i => i.complete && i.naturalWidth === 2)", timeout=10000)
 
             # @brain answers in the channel with the mock Ollama
-            jay.fill("#chat-input", "@brain who is building the save point?"); jay.keyboard.press("Enter")
+            chat(jay).fill("#chat-input", "@brain who is building the save point?"); jay.keyboard.press("Enter")
             wait_text(orion, "#chat-list", "Maya is building the campfire save point.", timeout=15000)
             wait_text(orion, "#chat-list .msg.brain", "Local Brain")
 
@@ -383,7 +389,7 @@ def main():
             assert orion.evaluate("document.querySelector('#dm-menu [data-dm]').dataset.dm") == agent   # agent first
             orion.click(f"#dm-menu [data-dm='{agent}']")
             wait_text(orion, "#chat-head", "Claude · Orion")
-            orion.fill("#chat-input", "please run the save tests"); orion.keyboard.press("Enter")
+            chat(orion).fill("#chat-input", "please run the save tests"); orion.keyboard.press("Enter")
             wait_text(orion, "#dm-list .rcpt", "delivered")
             achan = "dm-" + "-".join(sorted([ids["Orion"], agent]))
             assert api(f"/chat/{achan}", token=maya_tok)[0] == 403
@@ -398,7 +404,7 @@ def main():
             mcp_call(atok, "tools/call", {"name": "reply", "arguments": {"text": "All 42 save tests pass."}})
             wait_text(orion, "#dm-list", "All 42 save tests pass.")
             shot(orion, "agent-channel")
-            orion.click("#dm-back")
+            chat(orion).click("#dm-back")
 
             # unread divider + jump to latest
             mark = msg_id("@brain who is building")
