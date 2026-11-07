@@ -1,5 +1,15 @@
 # TribeCode on phones
 
+## One click: invite a friend
+
+Double-click **`TribeCode-Invite-Friend.bat`** (Windows) or **`tribecode-invite-friend.command`** (Mac), or run `npm run invite`. It:
+
+1. starts TribeCode if it isn't running (and makes you the host on first run),
+2. turns on a public https address with Tailscale Funnel or cloudflared when either is installed,
+3. creates an invite (3 people, 48 hours), copies the link, and opens a page with a big QR code.
+
+Your friend scans or taps the link, types a name, taps **Join**, then **Share → Add to Home Screen**. That's it.
+
 ## Today: the installable web app (iPhone, iPad, Android)
 
 No App Store needed. Your friend's phone gets the same TribeCode, laid out for a phone: bottom tab bar, chat tab, swipeable task board, tap-to-move tasks.

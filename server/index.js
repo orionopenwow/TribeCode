@@ -76,7 +76,9 @@ function readBody(req, limit = 256 * 1024) {
 }
 function str(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
 const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#F26B1D');
-const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+// Local means this machine, not traffic that a tunnel (Tailscale Funnel, cloudflared, a reverse proxy) relays from localhost.
+const PROXY_HEADERS = ['x-forwarded-for', 'x-forwarded-host', 'x-real-ip', 'forwarded', 'tailscale-funnel-request', 'cf-connecting-ip', 'cf-ray'];
+const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress) && !PROXY_HEADERS.some(h => req.headers[h] !== undefined);
 function authed(req) {
   const h = req.headers.authorization || '';
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
@@ -239,6 +241,26 @@ async function api(req, res, url) {
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
   if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()] });
+
+  // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
+  // optionally turns on the public https address, and returns a fresh join link.
+  if (a === 'host' && b === 'quick-invite' && m === 'POST') {
+    if (!isLocal(req)) return fail(res, 403, 'only from the host machine');
+    const body = await readBody(req);
+    let host = members.find(x => x.role === 'host'), hostOpen = null;
+    if (!host) {
+      host = newMember({ name: str(body.name, 32) || 'Host', role: 'host' }).member;
+      postChat('general', 'tribecode', `${host.name} started the tribe 🔥`);
+      hostOpen = `http://localhost:${PORT}/m/${devices.create(host, req, 'This computer').key}/`;
+    }
+    let shared = null;
+    if (body.share) { try { shared = await share.start(''); } catch (e) { shared = { status: 'error', message: e.message }; } }
+    const inv = { code: code(5), by: host.id, role: 'builder', maxUses: 3, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + 48 * 3600_000).toISOString() };
+    invites.push(inv); saveInvites();
+    const base = (share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
+    return send(res, 200, { join: `${base}/join/${inv.code}`, public: !!share.publicUrl(), shareMessage: shared && shared.status !== 'on' ? (shared.message || '') : '',
+      hostOpen, host: host.name, tribe: tribe.name, expires: inv.expires });
+  }
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
