@@ -31,6 +31,7 @@
   // ---------- icons (1.6px line, Lucide style) ----------
   const SYM = {
     'm2-up': '<path d="M12 19V5M5 12l7-7 7 7"/>',
+    'm2-clip': '<path d="M21 11.5 12.6 19.9a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/>',
     'm2-trash': '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
     'm2-pause': '<rect x="6.5" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/>',
     'm2-play': '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>',
@@ -276,7 +277,7 @@
   function composer() {
     const mount = $('#composer-mount'), form = $('#chat-form'); if (!mount || !form || $('#m2-plus')) return;
     mount.classList.add('m2-composer');
-    form.insertAdjacentHTML('beforebegin', `<button type="button" class="m2-cbtn m2-only" id="m2-plus" aria-label="Add" aria-haspopup="dialog">${ic('plus', 22)}</button>`);
+    form.insertAdjacentHTML('beforebegin', `<button type="button" class="m2-cbtn m2-only" id="m2-plus" aria-label="Attach" aria-haspopup="dialog">${ic('clip', 21)}</button>`);
     form.insertAdjacentHTML('afterend', `<button type="button" class="m2-cbtn m2-only" id="m2-mic" aria-label="Record a voice note">${ic('mic', 21)}</button>
       <button type="button" class="m2-cbtn m2-send m2-only" id="m2-send" aria-label="Send">${ic('up', 21)}</button>
       <div class="m2-rec m2-only" id="m2-rec" aria-live="polite" hidden>

@@ -213,3 +213,6 @@ body.light .mt .tk.read { color: var(--live-ink); }
 }
 @media (hover: none) { .msg.dx .msg-more { display: none; } }
 @media (prefers-reduced-motion: reduce) { .msg.dx.liked .mb { animation: none; } }
+
+/* same size for every icon inside the composer pill */
+.compose .mic-btn svg, .compose [data-dictate] svg { width: 21px !important; height: 21px !important; }

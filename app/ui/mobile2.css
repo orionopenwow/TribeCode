@@ -293,3 +293,13 @@
 
 /* host uptime + commits today (people.js statusLine), under Invite friends */
 #nest-status { margin: 8px 2px 0; text-align: center; }
+
+/* Composer: one pill, the paperclip and mic/send live inside it */
+@media (max-width: 820px) {
+  .composer-dock.m2-composer:not(.rec) { gap: 0; align-items: center; margin-top: 8px; padding: 3px; background: var(--surface); border: 1px solid var(--edge); border-radius: 26px; }
+  .composer-dock.m2-composer:not(.rec) #chat-form { height: 42px; padding: 0 6px; background: transparent; border: 0; }
+  .composer-dock.m2-composer:not(.rec) .m2-cbtn { width: 40px; height: 40px; background: none; border-color: transparent; color: var(--muted); }
+  .composer-dock.m2-composer:not(.rec) .m2-send { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #m2-plus.open svg { transform: none; }
+  #m2-plus.open { background: var(--surface-2); color: var(--text); }
+}
