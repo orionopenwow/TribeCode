@@ -269,6 +269,8 @@ const share = makeShare({ port: PORT });
 const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m => console.log(m) });
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js): one hub
 // per project, each bound to its project's repo and files (--repo is the first project's repo).
+// GitHub sign-in (server/github-auth.js): device flow / gh CLI / token; pushAuth() gives the autopilot the host's login.
+const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
 const hubs = new Map();
 function hubFor(pid) {
   const p = P.get(pid) || P.get(P.defaultId());
@@ -279,7 +281,7 @@ function hubFor(pid) {
     const h = require('./repo')({ repo: p.repo, store: P.scopedStore(() => p.id), str, broadcast: m => broadcast({ ...m, project: p.id }), postChat: inP(postChat),
       createTask: inP(o => createTask(o)), loadTasks: inP(() => loadTasks()), saveTask: inP(t => saveTask(t)), getMembers: () => members, nameOf, drift, board,
       presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims,
-      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []) });
+      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []), pushAuth: () => githubAuth.pushAuth() });
     return Object.assign(h, { drift });
   });
   hubs.set(p.id, hub);
@@ -308,6 +310,9 @@ const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () 
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
 const preview = makePreview({ P, store: baseStore, getMembers: () => members, broadcast, share, lanUrls, port: PORT, log: m => console.error('  ' + m) });   // app preview (server/preview.js)   // the pinned repo's thumbnail: README image → screenshot → tile
+// Home Screen app links (server/applink.js) and Desktop folders: export, live copy, shortcut (server/export.js).
+const applink = require('./applink')({ P, store: baseStore, getMembers: () => members, preview, shareBase: () => share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || null, log: m => console.error('  ' + m) });
+const exporter = require('./export')({ P, W, store: baseStore, applink, isLocal, port: PORT, getMembers: () => members, log: m => console.log('  ' + m) });
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
@@ -415,7 +420,7 @@ async function api(req, res, url) {
   let pid = P.defaultId();
   if (who) {
     pid = P.pick(who, wanted || null, (online.get(who.id) || {}).project || who.project);
-    if (!pid && /^\/api\/(hub|scratch|projects|me)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
+    if (!pid && /^\/api\/(hub|scratch|projects|me|github)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
   return P.inProject(pid, () => apiInProject(req, res, url));
@@ -704,6 +709,7 @@ async function apiInProject(req, res, url) {
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
+  if (a === 'applink' || a === 'export' || a === 'shortcut' || a === 'github') { const h = await (a === 'applink' ? applink : a === 'github' ? githubAuth : exporter).route(req, res, ctx()); if (h !== null) return; }   // Home Screen app links, Desktop folders, GitHub sign-in
   if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
@@ -722,6 +728,7 @@ async function apiInProject(req, res, url) {
 }
 
 function serveStatic(req, res, url) {
+  if (applink.serve(req, res, url)) return;   // /app/<key>/: a project's app for the Home Screen (server/applink.js)
   if (devices.serveApp(req, res, url, UI)) return;
   let rel; try { rel = decodeURIComponent(url.pathname); } catch { return fail(res, 400, 'bad path'); }
   if (rel === '/' ) rel = '/index.html';

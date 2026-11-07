@@ -26,6 +26,7 @@
     shot: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
     play: '<path d="M8 5v14l11-7z"/>',
+    home: '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 8v6M9 11h6"/>',
   };
   const lsGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
@@ -56,6 +57,7 @@
         <button class="pvw-btn" data-act="tab" title="Open in a new browser tab" aria-label="Open in a new browser tab">${ico(I.tab)}</button>
         <button class="pvw-btn" data-act="share" title="Copy a link friends can open on their phone" aria-label="Copy share link">${ico(I.link)}</button>
         <button class="pvw-btn" data-act="shot" title="Screenshot to Visuals" aria-label="Screenshot to Visuals">${ico(I.shot)}</button>
+        <button class="pvw-btn" data-act="home" title="${isPhone() ? 'Add to Home Screen' : 'Desktop shortcut / Home Screen'}" aria-label="Add to Home Screen">${ico(I.home)}</button>
         <button class="pvw-btn hidden" data-act="gear" title="How the preview runs (host)" aria-label="Preview settings">${ico(I.gear)}</button>
       </div>
       <form class="pvw-set hidden" id="pvw-set"></form>
@@ -63,7 +65,8 @@
     el.addEventListener('click', e => {
       const d = e.target.closest('[data-dev]'); if (d) return setDevice(d.dataset.dev);
       const a = e.target.closest('[data-act]'); if (!a) return;
-      ({ reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); } })[a.dataset.act]?.();
+      ({ reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
+        home: () => window.TribeFolders && window.TribeFolders.home() })[a.dataset.act]?.();   // Home Screen / desktop shortcut (app/ui/folders.js)
     });
     return el;
   }

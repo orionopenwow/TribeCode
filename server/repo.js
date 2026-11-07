@@ -27,7 +27,8 @@ const POLL_MS = Number(process.env.TRIBE_REPO_POLL_MS) || 20_000;
 const FETCH_MS = Number(process.env.TRIBE_REPO_FETCH_MS) || 120_000;
 const COMMIT_EVERY_MS = Number(process.env.TRIBE_CONTEXT_COMMIT_MS) || 15 * 60_000;
 
-module.exports = function repoHub({ repo, store, str, broadcast, postChat, createTask, loadTasks, saveTask, getMembers, nameOf, drift, board, presence, readVision, tribe, claims, onHead = null, contextExtra = null }) {
+module.exports = function repoHub({ repo, store, str, broadcast, postChat, createTask, loadTasks, saveTask, getMembers, nameOf, drift, board, presence, readVision, tribe, claims, onHead = null, contextExtra = null, pushAuth = null }) {
+  const auth = () => { try { return (pushAuth && pushAuth()) || { args: [], env: {} }; } catch { return { args: [], env: {} }; } };   // the host's GitHub sign-in (server/github-auth.js), else git's own credentials
   let lastHead = null;   // onHead (server/flow.js): new commits on the checked-out branch become a gist
   const enabled = () => !!repo && fs.existsSync(path.join(repo, '.git'));
   const G = gitutil(repo);
@@ -157,7 +158,7 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
           if (!(await G.gitTry(['diff', '--cached', '--quiet', '--', ...paths])).code) return { skipped: true };
           await G.git([...(await G.identity()), 'commit', '--quiet', '-m', 'TribeCode: update tribe context', '--', ...paths]);
           if (!st.upstream) return { pushed: false };
-          const p = await G.gitTry(['push', '--quiet', 'origin', st.main], repo, { timeout: 60_000 });
+          const pa = auth(); const p = await G.gitTry([...pa.args, 'push', '--quiet', 'origin', st.main], repo, { timeout: 60_000, env: pa.env });
           return { pushed: p.code === 0, err: p.err };
         }).catch(e => ({ error: e.message }));
         if (r.error) log('commit-failed', `Autopilot could not commit the tribe context: ${r.error.split('\n')[0]}`);
@@ -272,7 +273,7 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
   // ---------- context file + integrator ----------
   const context = makeContext({ store, repo: () => (enabled() ? repo : null), settings: () => settings, tribe, readVision, presence, loadTasks, nameOf, board, claims,
     changes: () => listChanges(), repoStatus: () => status, broadcast, file: CONTEXT_FILE, extra: contextExtra });
-  const integrator = makeIntegrator({ repo, enabled, G, store, settings: () => settings, board, nameOf, getMembers, listChanges, loadTasks, drift, log, postChat, poll,
+  const integrator = makeIntegrator({ repo, enabled, G, store, pushAuth: auth, settings: () => settings, board, nameOf, getMembers, listChanges, loadTasks, drift, log, postChat, poll,
     markPush: () => { settings.lastPush = new Date().toISOString(); saveSettings(); } });
 
   // ---------- HTTP ----------
