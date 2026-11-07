@@ -1,0 +1,1325 @@
+{
+ "generated": "2026-11-07T08:28:43Z",
+ "version": "0.5.0",
+ "quick": false,
+ "app_root": "/home/claude/tc/.claude/worktrees/agent-ad91101e594bac0a5",
+ "seconds": 976,
+ "stats": {
+  "clicks": 254,
+  "dead": 0,
+  "destinations": 78,
+  "contexts": [
+   "desktop",
+   "phone",
+   "desktop-app",
+   "not-connected"
+  ],
+  "skipped_destructive": 4,
+  "inputs": 47
+ },
+ "summary": {
+  "critical": 0,
+  "high": 1,
+  "medium": 3,
+  "low": 31
+ },
+ "findings": [
+  {
+   "id": "a640343adb",
+   "kind": "journey",
+   "severity": "high",
+   "title": "Journey fails: Preview the app",
+   "detail": "no visible affordance for: Preview app",
+   "selector": "",
+   "label": "preview",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "journey"
+   ],
+   "steps": [
+    "start: project home",
+    "Docs & Files"
+   ],
+   "count": 1,
+   "screenshot": "docs/screenshots/explore/a640343adb.jpg"
+  },
+  {
+   "id": "0236ba9d01",
+   "kind": "contrast",
+   "severity": "medium",
+   "title": "Text contrast too low",
+   "detail": "2.50:1 (#FDE4D6 on #F26B1D, 12px) needs 4.5:1",
+   "selector": "#FDE4D6 on #F26B1D",
+   "label": "",
+   "contexts": [
+    "desktop",
+    "phone",
+    "desktop-app",
+    "not-connected"
+   ],
+   "views": [
+    "Home",
+    "hub",
+    "chat"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Home (Ctrl K / nest)"
+   ],
+   "count": 5,
+   "screenshot": null,
+   "example": "#hub-new small"
+  },
+  {
+   "id": "71a55fa96b",
+   "kind": "contrast",
+   "severity": "medium",
+   "title": "Text contrast too low",
+   "detail": "1.83:1 (#3BD16F on #F4F5F7, 11.5px) needs 4.5:1",
+   "selector": "#3BD16F on #F4F5F7",
+   "label": "",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Invite friends",
+    "Scratchpad",
+    "Project home",
+    "Project settings",
+    "Profile menu",
+    "Inbox (bell)",
+    "Command palette"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Invite friends (Ctrl K / nest)"
+   ],
+   "count": 21,
+   "screenshot": null,
+   "example": "#room-list span.ok"
+  },
+  {
+   "id": "a426a3b54c",
+   "kind": "request",
+   "severity": "medium",
+   "title": "GET /api/docs/:id/backlinks → 404",
+   "detail": "GET /api/docs/level-design-notes/backlinks answered 404",
+   "selector": "",
+   "label": "",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Command palette"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Command palette",
+    "click \"ACTION New doc\" (#pal-list button.pal-item)"
+   ],
+   "count": 2,
+   "screenshot": null
+  },
+  {
+   "id": "d4675b835a",
+   "kind": "contrast",
+   "severity": "low",
+   "title": "Text contrast too low",
+   "detail": "3.05:1 (#FFFFFF on #F26B1D, 13.5px) needs 4.5:1",
+   "selector": "#FFFFFF on #F26B1D",
+   "label": "",
+   "contexts": [
+    "desktop",
+    "phone",
+    "desktop-app",
+    "not-connected"
+   ],
+   "views": [
+    "Docs & Files",
+    "Tasks & Board",
+    "Task board",
+    "Bugs",
+    "Proposals & board",
+    "Calendar",
+    "Repo",
+    "Visuals & screenshots",
+    "Requests",
+    "Your agents",
+    "Ownership map",
+    "Conflict radar",
+    "Hand-offs",
+    "Reviews",
+    "Daily plan",
+    "Secretary",
+    "Home",
+    "Agent fleet",
+    "Settings",
+    "Invite friends",
+    "Scratchpad",
+    "Project home",
+    "Project settings",
+    "Profile menu",
+    "Inbox (bell)",
+    "Command palette",
+    "Workspace switcher",
+    "Agent detail (right panel)",
+    "App preview",
+    "Workshop",
+    "hub",
+    "chat",
+    "docs",
+    "tasks",
+    "board",
+    "bugs",
+    "repo",
+    "calendar",
+    "visuals",
+    "coord"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Docs & Files (Ctrl K / nest)"
+   ],
+   "count": 75,
+   "screenshot": null,
+   "example": "button#doc-first"
+  },
+  {
+   "id": "216619c934",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#pj-overview div.pj-none",
+   "label": "Nothing scheduled.",
+   "contexts": [
+    "desktop",
+    "phone",
+    "desktop-app"
+   ],
+   "views": [
+    "Settings",
+    "Invite friends",
+    "Scratchpad",
+    "Project home",
+    "Project settings",
+    "Profile menu",
+    "Inbox (bell)",
+    "Command palette",
+    "Workspace switcher",
+    "Agent detail (right panel)",
+    "App preview"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Settings (Ctrl K / nest)"
+   ],
+   "count": 18,
+   "screenshot": null
+  },
+  {
+   "id": "7146aafd73",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#coord-body span.faint",
+   "label": "none",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "Agents Hub",
+    "Agents"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agents Hub (Ctrl K / nest)"
+   ],
+   "count": 6,
+   "screenshot": null
+  },
+  {
+   "id": "186020c54d",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#coord-body span.faint",
+   "label": "none claimed",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "Agents Hub",
+    "Agents"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agents Hub (Ctrl K / nest)"
+   ],
+   "count": 4,
+   "screenshot": null
+  },
+  {
+   "id": "5f0367975a",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#hub-repos span.faint",
+   "label": "No repo yet",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "All repos"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to All repos (Ctrl K / nest)"
+   ],
+   "count": 4,
+   "screenshot": null
+  },
+  {
+   "id": "e75e72f45a",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#ms-list div.faint",
+   "label": "No milestones yet.",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "Proposals & board",
+    "Milestones"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Proposals & board (Ctrl K / nest)"
+   ],
+   "count": 3,
+   "screenshot": null
+  },
+  {
+   "id": "6efbaabd75",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#cr-list div.empty",
+   "label": "No change requests. On a phone? Tap Send to a desktop to hand a change to someon",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "Repo"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Repo (Ctrl K / nest)"
+   ],
+   "count": 2,
+   "screenshot": null
+  },
+  {
+   "id": "59ef9df8e8",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "Nothing waiting for review.",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 2,
+   "screenshot": null
+  },
+  {
+   "id": "bf8b08b575",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.275 (sources: div#home-start, section#m2-sugg-home)",
+   "selector": "Profile menu",
+   "label": "",
+   "contexts": [
+    "phone",
+    "desktop-app"
+   ],
+   "views": [
+    "Profile menu"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Profile menu"
+   ],
+   "count": 2,
+   "screenshot": null
+  },
+  {
+   "id": "708be5f8f0",
+   "kind": "contrast",
+   "severity": "low",
+   "title": "Text contrast too low",
+   "detail": "3.55:1 (#FFFFFF on #E2601A, 13.5px) needs 4.5:1",
+   "selector": "#FFFFFF on #E2601A",
+   "label": "",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Milestones",
+    "Repo",
+    "Visuals & screenshots"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Milestones (Ctrl K / nest)"
+   ],
+   "count": 3,
+   "screenshot": null,
+   "example": "button#prop-new"
+  },
+  {
+   "id": "66c85566ba",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#pj-ws div.pj-none",
+   "label": "No repo yet. Start a project from a folder or a GitHub URL with + in the sidebar",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)",
+    "App preview"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 2,
+   "screenshot": null
+  },
+  {
+   "id": "e76b0d1d98",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#prop-list div.prop-empty",
+   "label": "Nothing here yet.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Milestones"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Milestones (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "7c0a7e07f3",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#view-agents-hub span.faint",
+   "label": "Not connected yet",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent fleet"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent fleet (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "661ffc9b0f",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "Nothing handed to or from it.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "c740a9bdfd",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "The radar needs a git repo.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "a69c950b3b",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "Nothing yet.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "ee9d24d9c5",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#pj-requests div.pj-none",
+   "label": "No “needs a desktop” requests.",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Requests"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Requests (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "41c5370090",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#coord-body div.coord-empty",
+   "label": "Nothing to review Agents call request_review when a branch is ready; tasks moved",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Reviews"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Reviews (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "db1783b1ee",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#view-updates p.m2-empty",
+   "label": "Nothing waiting on you. When a Claude needs a human, it lands here.",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Updates"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Updates (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "6d174e4087",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "No overlap with other branches.",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "8e49a5a351",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#prop-list div.prop-empty",
+   "label": "The approval board is shared, so it needs a tribe. Click Invite friends to start",
+   "contexts": [
+    "not-connected"
+   ],
+   "views": [
+    "board"
+   ],
+   "steps": [
+    "open the app with no tribe yet",
+    "go to board"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "9d3d84b0bf",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.275 (sources: div#home-start, section#m2-sugg-home)",
+   "selector": "Project home",
+   "label": "",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Project home"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Project home (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "c1483a761c",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.275 (sources: div#home-start, section#m2-sugg-home)",
+   "selector": "Project settings",
+   "label": "",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Project settings"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Project settings (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "1e05b980cd",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.275 (sources: div#home-start, section#m2-sugg-home)",
+   "selector": "Inbox (bell)",
+   "label": "",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Inbox (bell)"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Inbox (bell)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "f7aa14dd3d",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.275 (sources: div#home-start, section#m2-sugg-home)",
+   "selector": "Command palette",
+   "label": "",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Command palette"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Command palette"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "66cc502e37",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
+   "selector": "Chat & Streams",
+   "label": "",
+   "contexts": [
+    "desktop-app"
+   ],
+   "views": [
+    "Chat & Streams"
+   ],
+   "steps": [
+    "open the desktop app",
+    "go to Chat & Streams"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "246c2c670e",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
+   "selector": "Docs & Files",
+   "label": "",
+   "contexts": [
+    "desktop-app"
+   ],
+   "views": [
+    "Docs & Files"
+   ],
+   "steps": [
+    "open the desktop app",
+    "go to Docs & Files"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "e9d05e5a32",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
+   "selector": "Tasks & Board",
+   "label": "",
+   "contexts": [
+    "desktop-app"
+   ],
+   "views": [
+    "Tasks & Board"
+   ],
+   "steps": [
+    "open the desktop app",
+    "go to Tasks & Board"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "aa18a0a4a1",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
+   "selector": "Home",
+   "label": "",
+   "contexts": [
+    "desktop-app"
+   ],
+   "views": [
+    "Home"
+   ],
+   "steps": [
+    "open the desktop app",
+    "go to Home"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "2ffa4c269b",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
+   "selector": "Settings",
+   "label": "",
+   "contexts": [
+    "desktop-app"
+   ],
+   "views": [
+    "Settings"
+   ],
+   "steps": [
+    "open the desktop app",
+    "go to Settings"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "bb94cef7c1",
+   "kind": "request",
+   "severity": "low",
+   "title": "POST /api/agents/channel → 400",
+   "detail": "POST /api/agents/channel answered 400",
+   "selector": "",
+   "label": "",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agents"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agents",
+    "type \"Explorer check: lava tiles feel good\" into input#talk-input",
+    "press Enter"
+   ],
+   "count": 1,
+   "screenshot": null
+  }
+ ],
+ "journeys": [
+  {
+   "id": "collab",
+   "title": "Two humans + two Claudes: lanes, conflicts, hand-off",
+   "kind": "core",
+   "context": "desktop+phone+api",
+   "pass": true,
+   "clicks": 2,
+   "ms": 4174,
+   "notes": [],
+   "checks": [
+    {
+     "name": "Orion's Claude claims src/player.js",
+     "ok": true
+    },
+    {
+     "name": "Maya's Claude gets a clear refusal",
+     "ok": true
+    },
+    {
+     "name": "the refusal names who holds it",
+     "ok": true
+    },
+    {
+     "name": "conflict radar flags the two branches",
+     "ok": true
+    },
+    {
+     "name": "hand-off accepted",
+     "ok": true
+    },
+    {
+     "name": "Maya's Claude hears about the hand-off",
+     "ok": true
+    },
+    {
+     "name": "after the hand-off Maya's Claude can claim the file",
+     "ok": true
+    },
+    {
+     "name": "the host sees src/world.js on the Conflicts tab",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "connect",
+   "title": "Connect Claude Code: generator → working agent",
+   "kind": "core",
+   "context": "desktop+phone+api",
+   "pass": true,
+   "clicks": 2,
+   "ms": 4136,
+   "notes": [
+    "already connected: 'New command' is one extra deliberate tap",
+    "no 'Anywhere' command until a public link (Funnel/cloudflared) is on"
+   ],
+   "checks": [
+    {
+     "name": "a visible 'Connect Claude' affordance",
+     "ok": true
+    },
+    {
+     "name": "opening the generator keeps a working Claude connected",
+     "ok": true
+    },
+    {
+     "name": "the generator shows a `claude mcp add` command",
+     "ok": true
+    },
+    {
+     "name": "the command carries an MCP URL and a key",
+     "ok": true
+    },
+    {
+     "name": "a 'This computer' command exists",
+     "ok": true
+    },
+    {
+     "name": "the agent can initialize",
+     "ok": true
+    },
+    {
+     "name": "the agent posts a gist",
+     "ok": true
+    },
+    {
+     "name": "the agent reads the chat",
+     "ok": true
+    },
+    {
+     "name": "the agent appears in the room",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "autopilot",
+   "title": "Repo autopilot: create → commit → push to GitHub → gist → plan",
+   "kind": "core",
+   "context": "desktop+phone+api",
+   "pass": true,
+   "clicks": 0,
+   "ms": 722,
+   "notes": [],
+   "checks": [
+    {
+     "name": "one-click create answers",
+     "ok": true
+    },
+    {
+     "name": "a GitHub repo was created and pushed",
+     "ok": true
+    },
+    {
+     "name": "Start the flow makes a living plan",
+     "ok": true
+    },
+    {
+     "name": "Give me a branch",
+     "ok": true
+    },
+    {
+     "name": "the branch has a worktree",
+     "ok": true
+    },
+    {
+     "name": "Commit my changes",
+     "ok": true
+    },
+    {
+     "name": "Push my branch",
+     "ok": true
+    },
+    {
+     "name": "the commit reached GitHub with the person's identity",
+     "ok": true
+    },
+    {
+     "name": "the commit shows as a gist",
+     "ok": true
+    },
+    {
+     "name": "PLAN.md is in the repo",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "chat",
+   "title": "Chat fidelity: live, in order, every kind, survives a restart",
+   "kind": "core",
+   "context": "desktop+phone+api",
+   "pass": true,
+   "clicks": 1,
+   "ms": 8611,
+   "notes": [],
+   "checks": [
+    {
+     "name": "Maya sends from the phone composer",
+     "ok": true
+    },
+    {
+     "name": "everything arrives live on the desktop",
+     "ok": true
+    },
+    {
+     "name": "in order on the desktop",
+     "ok": true
+    },
+    {
+     "name": "everything arrives live on the phone",
+     "ok": true
+    },
+    {
+     "name": "in order on the phone",
+     "ok": true
+    },
+    {
+     "name": "the image renders as an image",
+     "ok": true
+    },
+    {
+     "name": "the reaction shows",
+     "ok": true
+    },
+    {
+     "name": "everything persists across a server restart",
+     "ok": true
+    },
+    {
+     "name": "the reply keeps its quote",
+     "ok": true
+    },
+    {
+     "name": "the vote keeps its options",
+     "ok": true
+    },
+    {
+     "name": "the host sees it all after a reload",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "notify",
+   "title": "Notifications: mention, approval, vote nudge, quiet hours, phone parity",
+   "kind": "core",
+   "context": "desktop+phone+api",
+   "pass": true,
+   "clicks": 2,
+   "ms": 6750,
+   "notes": [],
+   "checks": [
+    {
+     "name": "@mention lands in Orion's inbox",
+     "ok": true
+    },
+    {
+     "name": "the agent asks for approval",
+     "ok": true
+    },
+    {
+     "name": "the approval request reaches its owner",
+     "ok": true
+    },
+    {
+     "name": "vote nudge accepted",
+     "ok": true
+    },
+    {
+     "name": "'waiting on your vote' reaches Maya",
+     "ok": true
+    },
+    {
+     "name": "in quiet hours the inbox still gets it",
+     "ok": true
+    },
+    {
+     "name": "in quiet hours nothing is pushed",
+     "ok": true
+    },
+    {
+     "name": "outside quiet hours the pocket gets a push",
+     "ok": true
+    },
+    {
+     "name": "desktop bell count matches the inbox (3)",
+     "ok": true
+    },
+    {
+     "name": "desktop shows a visible unread badge",
+     "ok": true
+    },
+    {
+     "name": "desktop inbox opens with the mention",
+     "ok": true
+    },
+    {
+     "name": "phone bell count matches the inbox (3)",
+     "ok": true
+    },
+    {
+     "name": "phone shows a visible unread badge",
+     "ok": true
+    },
+    {
+     "name": "phone inbox opens with the mention",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "invite",
+   "title": "Invite a friend and get a link",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 1125,
+   "notes": [],
+   "steps": [
+    "Invite friends"
+   ]
+  },
+  {
+   "id": "propose",
+   "title": "Propose a feature and get it on the Board",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 3,
+   "max_clicks": 4,
+   "ms": 2257,
+   "notes": [],
+   "steps": [
+    "composer +",
+    "Propose to the tribe",
+    "type 'Explorer: a photo mode'",
+    "send proposal"
+   ]
+  },
+  {
+   "id": "connect-claude",
+   "title": "Connect Claude Code",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 3,
+   "ms": 1440,
+   "notes": [],
+   "steps": [
+    "Connect Claude",
+    "New command"
+   ]
+  },
+  {
+   "id": "preview",
+   "title": "Preview the app",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": false,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 1028,
+   "notes": [
+    "no visible affordance for: Preview app"
+   ],
+   "steps": [
+    "Docs & Files"
+   ]
+  },
+  {
+   "id": "bugs",
+   "title": "Find the bug inbox",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1482,
+   "notes": [],
+   "steps": [
+    "Tasks & Board",
+    "Bugs"
+   ]
+  },
+  {
+   "id": "capture",
+   "title": "Turn on capture to notes",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1413,
+   "notes": [],
+   "steps": [
+    "profile",
+    "Capture to notes"
+   ]
+  },
+  {
+   "id": "home-to-project",
+   "title": "Start at Home and open a project",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 1066,
+   "notes": [],
+   "steps": [
+    "Pixel Quest"
+   ]
+  },
+  {
+   "id": "invite",
+   "title": "Invite a friend and get a link",
+   "kind": "intuitive",
+   "context": "phone",
+   "pass": true,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 1016,
+   "notes": [],
+   "steps": [
+    "Invite friends"
+   ]
+  },
+  {
+   "id": "connect-claude",
+   "title": "Connect Claude Code",
+   "kind": "intuitive",
+   "context": "phone",
+   "pass": true,
+   "clicks": 3,
+   "max_clicks": 3,
+   "ms": 1849,
+   "notes": [
+    "already connected: 'New command' is one deliberate extra tap"
+   ],
+   "steps": [
+    "You (profile)",
+    "Connect your Claude Code",
+    "New command"
+   ]
+  },
+  {
+   "id": "bugs",
+   "title": "Find the bug inbox",
+   "kind": "intuitive",
+   "context": "phone",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1488,
+   "notes": [],
+   "steps": [
+    "Tasks (rack)",
+    "Bugs"
+   ]
+  }
+ ],
+ "suggestions": [
+  {
+   "key": "contrast",
+   "idea": "Lift faint text to 4.5:1 (the user wants white, not grey)",
+   "why": "4 color pair(s) under WCAG AA in the dark theme",
+   "in_features_next": true
+  },
+  {
+   "key": "preview-desktop",
+   "idea": "A visible 'Preview app' button on desktop",
+   "why": "the Preview journey found no button outside Ctrl K",
+   "in_features_next": true
+  },
+  {
+   "key": "anywhere",
+   "idea": "Turn on the public link from the Connect Claude card when 'Anywhere' is missing",
+   "why": "the generator has no 'Anywhere' command until a tunnel runs",
+   "in_features_next": true
+  },
+  {
+   "key": "empty",
+   "idea": "Empty states with one obvious action ('Nothing here' → 'Add the first …')",
+   "why": "18 empty state(s) with no button nearby",
+   "in_features_next": true
+  },
+  {
+   "key": "health",
+   "idea": "A host health page: disk, JSONL sizes, backups, tunnel, version, errors in the last hour (now fed by /api/insights)",
+   "why": "the self-heal and insights work makes the data available",
+   "in_features_next": true
+  },
+  {
+   "key": "explorer-nightly",
+   "idea": "Nightly explorer run posts its delta (fixed / new) as a gist in #agents",
+   "why": "the explorer writes findings.json; the Insights panel reads it",
+   "in_features_next": true
+  },
+  {
+   "key": "slash",
+   "idea": "Slash-command autocomplete in the composer (/task, /vote, /decide, @brain)",
+   "why": "commands exist but the explorer found no visible hint for them",
+   "in_features_next": true
+  },
+  {
+   "key": "permalink",
+   "idea": "Message permalinks: copy link → jumps and highlights",
+   "why": "pointing a friend or an agent at one message takes a screenshot today",
+   "in_features_next": true
+  }
+ ],
+ "note": "phone journeys re-run after dismissing the iOS \"Add to Home Screen\" hint first (it covered the profile sheet)"
+}

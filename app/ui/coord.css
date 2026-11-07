@@ -11,6 +11,7 @@
 .coord-lead code, .coord-body code { font-family: var(--mono); font-size: 12px; color: var(--peer-ink); }
 .coord-empty { display: flex; flex-direction: column; gap: 4px; padding: 36px 20px; text-align: center; border: 1px dashed var(--edge); border-radius: var(--r); color: var(--muted); font-size: 13px; }
 .coord-empty b { color: var(--text); font-size: 14.5px; }
+.coord-empty-acts { display: flex; justify-content: center; margin-top: 12px; }
 .coord-h { font-family: var(--font); font-size: 12px; font-weight: 500; color: var(--faint); margin: 22px 0 10px; text-transform: none; letter-spacing: 0; }
 .coord-form { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
 .coord-form.col { flex-direction: column; align-items: stretch; margin: 12px 0 18px; }

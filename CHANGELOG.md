@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.0
+
+Home, and an app that checks itself.
+- **Home is your command center**: the app opens at Home. Suggestions, Ask (your Claude or the local model), Join or start, a Get started checklist, a scratchpad with "Refine with AI", recent activity across your projects, and a right panel with Share my hub link, Invite friends and AI Insights
+- **The rail +** opens one window: Start a new tribe (top) or Paste invite link (bottom)
+- **AI Insights**: your own next steps plus what the host notices (Explorer findings, disk and log sizes, no GitHub token, local model down, no backup in 7 days, a newer release) and the Secretary's ideas. Members only see their projects
+- **Self-heal**: if the app doesn't start within a few seconds it clears stale caches and reloads once, then shows a calm "Something went wrong" card that can send a report. Pages know their server version and offer "Reload to use it" after an update. Crash reports can be turned off in Settings
+- **The Explorer** (npm run explore): a bot that clicks through the whole app on desktop, phone, the desktop app and with no tribe, checks contrast, overflow, dead buttons and console errors, and runs journeys for the core promises: working together without collisions, Connect Claude Code, autopilot to GitHub, chat fidelity and notifications. A quick run is part of npm test
+- **Milestone reports** (npm run milestone-report): before/after screenshots against the last release, findings fixed and new, journey scores. First report: docs/milestones/2026-11-07-explorer.md (20 findings fixed, journeys 8/12 → 11/12)
+- **Desktop Docs** shows the pinned repo hero again, with a visible Preview app button
+- Fixes found by the Explorer: opening Connect Claude Code no longer cuts off a Claude that's already working; chat no longer reloads as plain lines without images or voice notes; phone Settings fits the screen; the phone Updates badge counts the inbox; Approve/Deny on board tasks in Reviews works; switching projects no longer asks for the old project's doc; a refused file claim tells the agent what to do next; brighter text where it was below AA contrast
+
 ## v0.5.0
 
 A calmer, faster workspace.

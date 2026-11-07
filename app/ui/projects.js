@@ -273,27 +273,51 @@
       : c.kind === 'path' ? (host && onHostMachine() ? 'Opens that folder on this computer as the project\'s repo.' : 'Folder paths only work on the host computer.')
       : c.kind === 'name' ? (window.TribeFlow ? 'One click: the room, an invite link and a repo with a starter. The chat opens with a Getting started card.' : 'Starts an empty project. You can attach a repo later.') : '';
   }
+  // The rail "+": two choices, stacked. Top: start a new tribe (one click, name prefilled). Bottom: paste an invite link.
   function openNew() {
-    if (!C.connected()) return window.TribeHost.isDesktop ? App().openInvite() : window.TribeSettings.joinPrompt();
     dropped = null;
     modal().classList.remove('hidden');
-    const host = isHost();
-    // One click (app/ui/flow.js): the name is filled in, so Create alone makes the room, link, repo and opens the chat.
+    const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop;
     const suggested = window.TribeFlow ? window.TribeFlow.suggestName() : '';
-    body().innerHTML = `<span class="eyebrow">New project</span><h2 style="margin-top:4px">Name it and go</h2>
-      <div class="field"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Project name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Project name'}" autocomplete="off" maxlength="400" value="${esc(suggested)}"></div>
-      <div class="np-hint faint" id="np-hint"></div>
-      ${host ? `<div class="dropzone pj-dropzone np-drop-alt" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 18)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:2px">or <span class="linkish">choose one</span> to bring existing code</div></div>
-        <div class="np-status" id="np-status"></div>` : ''}
-      <div class="modal-foot"><button class="btn ghost" id="np-join">Join with a link</button><span style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" id="np-create">Create</button></div>`;
-    $('#np-join').onclick = () => window.TribeSettings.joinPrompt();
+    const top = on
+      ? `<div class="np-card np-new">
+          <span class="eyebrow">Start a new tribe</span>
+          <h3>Name it and go</h3>
+          <p class="faint">A room, an invite link, chat and a repo, in one click.</p>
+          <div class="np-row"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Tribe name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Tribe name'}" autocomplete="off" maxlength="400" value="${esc(suggested)}"><button class="btn primary" id="np-create">Create</button></div>
+          <div class="np-hint faint" id="np-hint"></div>
+          ${host ? `<button class="linkish np-more" id="np-more">Bring existing code: a folder or repo</button>
+            <div class="dropzone pj-dropzone np-drop-alt hidden" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 18)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:2px">or <span class="linkish">choose one</span></div></div>
+            <div class="np-status" id="np-status"></div>` : ''}
+        </div>`
+      : `<div class="np-card np-new">
+          <span class="eyebrow">Start a new tribe</span>
+          <h3>${desk ? 'Host it on this computer' : 'Host it with the desktop app'}</h3>
+          <p class="faint">${desk ? 'Your computer runs the tribe; friends join with a link.' : 'TribeCode runs on one friend\'s computer. Get the app to start a tribe.'}</p>
+          <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start hosting</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
+        </div>`;
+    body().innerHTML = `<div class="np-stack">${top}
+        <div class="np-card np-join">
+          <span class="eyebrow">Join a friend</span>
+          <h3>Paste invite link</h3>
+          <div class="np-row"><input class="input" id="np-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false" aria-label="Invite link"><button class="btn" id="np-join-go">Join</button></div>
+        </div>
+      </div>
+      <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Cancel</button></div>`;
     body().querySelector('[data-close]').onclick = close;
+    const join = () => { const v = $('#np-link').value.trim(); if (v) window.TribeApp.joinLink(v); };
+    $('#np-join-go').onclick = join; $('#np-link').onkeydown = e => { if (e.key === 'Enter') join(); };
+    const hostBtn = $('#np-host'); if (hostBtn) hostBtn.onclick = () => { close(); App().openInvite(); };
     const inp = $('#np-input');
-    inp.oninput = () => { inp.dataset.touched = '1'; hint(); };
-    inp.onkeydown = e => { if (e.key === 'Enter') $('#np-create').click(); };
-    $('#np-create').onclick = () => go().catch(() => {});
-    const dz = $('#np-drop'); if (dz) wireDrop(dz);
-    hint(); inp.focus(); inp.select();
+    if (inp) {
+      inp.oninput = () => { inp.dataset.touched = '1'; hint(); };
+      inp.onkeydown = e => { if (e.key === 'Enter') $('#np-create').click(); };
+      $('#np-create').onclick = () => go().catch(() => {});
+      const more = $('#np-more'), dz = $('#np-drop');
+      if (more && dz) more.onclick = () => { dz.classList.remove('hidden'); more.classList.add('hidden'); };
+      if (dz) wireDrop(dz);
+      hint(); inp.focus(); inp.select();
+    } else $('#np-link').focus();
   }
   async function go() {
     const c = classify($('#np-input').value), host = isHost();

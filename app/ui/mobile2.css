@@ -177,6 +177,7 @@
   .m2-pf-st { font-size: 14.5px; color: var(--text); }
   .m2-pf-agent { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 10px; border-radius: 12px; border: 1px solid transparent; background: var(--live-tint); color: var(--text); text-align: left; }
   .m2-pf-agent > span:not(.m2-av) { flex: 1; min-width: 0; line-height: 1.3; }
+  .m2-pf-more { display: block; margin: 6px 0 0 4px; padding: 6px 6px; min-height: 32px; font-size: 13px; font-weight: 600; color: var(--live-ink, #38C6B1); background: none; border: 0; }
   .m2-pf-agent b { display: block; font-size: 14.5px; font-weight: 600; } .m2-pf-agent small { font-size: 12.5px; color: var(--muted); }
   .m2-pf-agent svg { color: var(--faint); }
   .m2-pf-activity { margin-top: 10px; background: var(--surface-2); border-color: var(--edge); }

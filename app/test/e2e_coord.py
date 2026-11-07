@@ -345,7 +345,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.click("#preview-close"); host.wait_for_selector("#tour-room:not(.previewing)")
         # + opens one simple dialog
         host.click("#pj-plus"); host.wait_for_selector("#np-input")
-        wait_text(host, "#invite-body", "Drop a folder or repo")
+        wait_text(host, ".np-stack", "Name it and go"); wait_text(host, ".np-stack", "Paste invite link")
         shot(host, "shell-new-project")
         host.keyboard.press("Escape")
         # home = project overview, chat has a docked composer mount

@@ -4,7 +4,7 @@
 .person .avatar { width: 28px; height: 28px; font-size: 11px; position: relative; }
 .person .avatar .st { position: absolute; right: -2px; bottom: -2px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--canvas); background: var(--online); }
 .person:not(.on) .avatar .st { background: var(--faint); }
-.person:not(.on) { opacity: .55; }
+.person:not(.on) .avatar { opacity: .55; }   /* only the avatar dims: the name and status stay readable (4.5:1) */
 .person .what .ok { color: var(--online); }
 .chat { flex: 1; min-height: 120px; overflow: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 2px; }
 .msg { display: flex; gap: 9px; font-size: 13px; }

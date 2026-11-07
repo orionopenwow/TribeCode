@@ -246,6 +246,11 @@ def main():
             host = ctx.new_page(); watch(host, "host")
             host.goto(BASE + "/?skipIntro=1")
             host.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % hp, timeout=15000)
+            # desktop Docs: the pinned repo hero at the top of the doc list carries a visible "Preview app" button
+            host.evaluate("TribeApp.show('docs')")
+            host.wait_for_selector("#doc-repo-hero .rhx-pv", state="visible", timeout=10000)
+            shot(host, "desktop-docs-hero")
+            host.evaluate("TribeApp.show('home')")
             # Ctrl K → Preview app
             host.keyboard.press("Control+k"); host.fill("#pal-input", "preview app"); host.wait_for_timeout(200)
             wait_text(host, "#pal-list", "Preview app"); host.keyboard.press("Enter")

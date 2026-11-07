@@ -171,7 +171,7 @@ def main():
             assert sh("git", "-C", sketches, "log", "-1", "--format=%an").strip() == "Orion"
 
             # ---- browser upload of a folder (the drop zone's code path) + the 25 MB cap
-            host.click("#pj-plus"); host.wait_for_selector("#np-drop")
+            host.click("#pj-plus"); host.click("#np-more"); host.wait_for_selector("#np-drop")
             # a synthetic drop of a single file explains that a folder is needed
             host.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'one.txt')); const dz = document.querySelector('#np-drop');
                 dz.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }""")
@@ -190,7 +190,7 @@ def main():
             assert st == 200 and not Path(tmp, "workspaces", "escape.txt").exists() and r["uploaded"]["skipped"] == 1, r
 
             # ---- a dropped folder whose .git/config has a remote: offer "Clone it into TribeCode"
-            host.click("#pj-plus"); host.wait_for_selector("#np-drop")
+            host.click("#pj-plus"); host.click("#np-more"); host.wait_for_selector("#np-drop")
             host.evaluate("""(url) => window.TribeProjects.analyze('quest-engine', [
                 { path: '.git/config', gitConfig: true, file: new File(['[core]\\n\\tbare = false\\n[remote "origin"]\\n\\turl = ' + url + '\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n'], 'config') },
                 { path: 'engine.js', file: new File(['export const tick = 1\\n'], 'engine.js') }])""", bare)

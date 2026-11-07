@@ -216,7 +216,7 @@ body.panel-off .panel { display: none; }
 
 /* project + app settings */
 .ps-row { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
-.set-card { width: 560px; padding: 0; }
+.set-card { width: min(560px, calc(100vw - 32px)); padding: 0; }
 .set-head { display: flex; align-items: center; padding: 16px 16px 12px 22px; border-bottom: 1px solid var(--edge); }
 .set-head h2 { font-size: 17px; margin: 0; flex: 1; }
 .set-row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--stroke); }
@@ -230,6 +230,10 @@ body.panel-off .panel { display: none; }
 .set-brain code { font-family: var(--mono); font-size: 12px; }
 .set-toggle { border: 0; padding: 0; width: auto; }
 .set-seg { display: inline-flex; }
+@media (max-width: 820px) {   /* phones: Settings was 560px wide in a 390px screen (Done and the hints were cut off) */
+  .set-card { width: 100%; }
+  .set-row { grid-template-columns: 1fr; gap: 8px; padding: 12px 18px; }
+}
 .set-links { display: flex; gap: 18px; padding: 14px 22px 18px; font-size: 13px; }
 .host-err { white-space: pre-wrap; font: 12px/1.5 var(--mono); color: var(--body); background: var(--canvas); border: 1px solid var(--border); border-radius: 10px; padding: 10px; max-height: 160px; overflow: auto; margin: 0 0 10px; }
 #invite-body .pj-dropzone { padding: 34px 20px; }
@@ -422,3 +426,19 @@ body.ws-tabbed #coord-tabs, body.ws-tabbed #view-coord > #coord-root > .view-hea
   .view-tabs { margin: 0 -14px 18px; padding: 0 14px; gap: 6px; }
   .wt { height: 40px; padding: 0 11px; font-size: 14.5px; }
 }
+
+/* Home (no tribe/project selected): your space, not a room */
+body.global #room-list, body.global #room-hint, body.global .room-head h6, body.global #room-scratch, body.global #claims-box { display: none; }
+body.global .room-head { justify-content: flex-end; margin-bottom: -30px; position: relative; z-index: 2; pointer-events: none; }
+body.global .room-head .panel-x { pointer-events: auto; }
+/* Home's own panel blocks (hub.js homePanel): you, Connect your Claude Code, Share / Invite, AI Insights, then agents
+   and helpers. They exist only on Home. */
+body:not(.global) #home-me, body:not(.global) #home-share, body:not(.global) #home-insights { display: none; }
+body.global .room-pane > .room-head { order: 0; }
+body.global #home-me { order: 1; }
+body.global #cc-connect { order: 2; }
+body.global #home-share { order: 3; }
+body.global #home-insights { order: 4; }
+body.global #room-agents { order: 5; margin-top: 4px; }
+body.global #room-helpers { order: 6; }
+.np-hint { font-size: 12.5px; line-height: 1.5; margin-top: 8px; }
