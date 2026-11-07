@@ -224,10 +224,12 @@
     const p = PJ() && PJ().cur && PJ().cur();
     const f = $('#m2-face'), n = $('#m2-pjn'), s = $('#m2-pjs'); if (!f) return;
     const sw = $('#pj-switch'); document.body.classList.toggle('m2-has-switch', !!(sw && !sw.classList.contains('hidden')));
-    f.innerHTML = p && PJ().face ? PJ().face(p, 'sm') : '';
-    n.textContent = p ? p.name : ((C.state().tribe || {}).name || 'TribeCode');
+    // The fire logo opens the projects panel (like the desktop rail); the name says where you are.
+    if (!f.firstChild) f.innerHTML = '<img class="m2-logo" src="assets/icon-512.png" alt="">';
+    const home = document.body.classList.contains('global');
+    n.textContent = home ? 'Home' : p ? p.name : 'TribeCode';
     const here = p && PJ().here ? PJ().here(p.id).length : 0;
-    s.textContent = C.connected() ? (here ? `${here} here` : 'just you') : 'offline';
+    s.textContent = home ? (C.connected() ? 'your projects' : 'not in a tribe yet') : C.connected() ? (here ? `${here} here` : 'just you') : 'offline';
   }
   function talkLabel() {
     const l = $('#m2-talk-l'); if (!l) return;
@@ -810,6 +812,7 @@
     watch('nest-name', paintProject); watch('nest-sub', paintProject); watch('pj-switch', paintProject);
     const head = $('#chat-head') || $('.chat-title'); if (head) new MutationObserver(talkLabel).observe(head, { childList: true, subtree: true });
     C.on('presence', () => { paintProject(); paintMe(); });
+    let wasHome = null; new MutationObserver(() => { const h = document.body.classList.contains('global'); if (h !== wasHome) { wasHome = h; paintProject(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // Home ⇄ project
     C.on('project', () => { hub = { repo: null, notes: null, shots: null, more: false, at: 0 }; sugg = { items: null, at: 0 }; paintProject(); if (phone() && cur === 'docs') docsHub(true); });
     cur = (App() && App().view && App().view()) || 'home';
     onShow(cur); syncBadges();

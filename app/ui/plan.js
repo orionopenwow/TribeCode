@@ -333,7 +333,7 @@
 
   // ================= task due chips =================
   function dueChip(t) {
-    if (!t.due) return `<button class="due-chip none" data-due="${esc(t.id)}" title="Set a due date"><svg class="i"><use href="#i-cal"/></svg>due</button>`;
+    if (!t.due) return `<button class="due-chip none" data-due="${esc(t.id)}" title="Set a due date"><svg class="i"><use href="#i-calendar"/></svg>due</button>`;
     const d = fromYmd(t.due), cls = dueClass(t);
     return `<button class="due-chip ${cls}" data-due="${esc(t.id)}" title="${cls === 'overdue' ? 'Overdue · ' : ''}Due ${d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}"><svg class="i"><use href="#i-cal"/></svg>${esc(relDay(d))}</button>`;
   }

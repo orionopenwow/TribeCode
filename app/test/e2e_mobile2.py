@@ -111,7 +111,7 @@ def main():
             assert phone.locator("#crumb-section").is_hidden() and phone.locator("#ws-name").is_hidden() and phone.locator("#sync-status").is_hidden(), "no header outside Chat"
             assert phone.locator(".titlebar").bounding_box()["height"] <= 60
             phone.wait_for_function("document.querySelector('#pj-switch').textContent.includes(TribeProjects.cur().name)")
-            assert phone.locator("#pj-switch").is_visible() and phone.locator("#m2-face .pj-face").is_visible()
+            assert phone.locator("#pj-switch").is_visible() and phone.locator("#m2-face .m2-logo").is_visible()   # the fire logo opens the projects panel
             no_overflow(phone, "home")
 
             # ---- Discord-mobile panel: swipe from the left edge opens circles + sections, swipe back closes

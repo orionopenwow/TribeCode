@@ -40,7 +40,7 @@ def main():
         page.wait_for_selector("#tour-rail .logo", state="visible")
 
         # ---- Settings: one calm page ----
-        page.click("#nest-settings")   # Settings: the bottom row of the sidebar
+        page.evaluate("TribeSettings.open()")   # Settings: the profile menu (and the sidebar inside a project)
         page.wait_for_selector("#settings-modal:not(.hidden) #set-name")
         page.fill("#set-name", "Riley Park"); page.press("#set-name", "Tab")
         page.click('#settings-body [data-color="#FFB86B"]')
