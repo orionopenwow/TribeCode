@@ -1,4 +1,6 @@
 // Ctrl+K command palette: jump to views, docs, tasks and people, or run any action.
+// Destinations (every nest row) come from shell.js's registry, once each; other modules' "Go to" rows that
+// name the same place (e.g. plan.js's Calendar, visuals.js's Visuals) are dropped in favour of it.
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient;
@@ -12,20 +14,15 @@
       { kind: 'Action', label: 'New task', keys: 'add todo create', run: () => { A.show('tasks'); setTimeout(() => document.querySelector('#task-new').click(), 50); } },
       { kind: 'Action', label: 'New doc', keys: 'page write note', run: () => { A.show('docs'); window.TribeDocs.create(); } },
       { kind: 'Action', label: 'New proposal', keys: 'vote board idea', run: () => { A.show('board'); setTimeout(() => document.querySelector('#prop-new').click(), 50); } },
-      { kind: 'Action', label: 'Invite friends', keys: 'link join share', run: () => A.openInvite() },
-      { kind: 'Action', label: 'Join / start huddle', keys: 'voice call talk mic audio', hint: 'Ctrl Shift M', run: () => window.TribeHuddle.join() },
       { kind: 'Action', label: 'Share my screen', keys: 'present screenshare', run: () => window.TribeHuddle.share() },
-      { kind: 'Action', label: 'Capture to notes (on / off)', keys: 'voice speech transcribe dictate record notes', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
       { kind: 'Action', label: 'Dictate into chat', keys: 'voice speech mic talk type', hint: 'Ctrl Shift D', run: () => window.TribeSpeech && window.TribeSpeech.dictate(document.querySelector('#chat-input')) },
       { kind: 'Action', label: 'Connect Claude Code', keys: 'agent mcp ai claude', run: () => A.connectClaude() },
       { kind: 'Action', label: 'Report a bug', keys: 'issue problem crash', hint: 'Ctrl Shift B', run: () => window.TribeBugs.capture() },
       { kind: 'Action', label: "Write today's standup", keys: 'brain recap summary', run: () => { A.show('home'); document.querySelector('#standup-go').click(); } },
       { kind: 'Action', label: 'Toggle dark / light', keys: 'theme mode', hint: 'Ctrl Shift L', run: () => { S.set({ theme: document.body.classList.contains('dark') ? 'light' : 'dark' }); A.refresh(); } },
       { kind: 'Action', label: 'Take the tour', keys: 'help tutorial', run: () => window.TribeTour.start() },
-      { kind: 'Action', label: 'Settings · replay setup', keys: 'preferences profile name color folder', run: () => window.TribeOnboarding.open({ fromSettings: true }) },
       { kind: 'Action', label: 'Check for updates', keys: 'version upgrade', run: () => window.TribeUpdater.check({ manual: true }) },
       ...(window.TribePaletteActions || []).flatMap(f => { try { return f() || []; } catch { return []; } }),   // feature modules add commands here
-      ...['home', 'docs', 'tasks', 'board', 'bugs'].map(v => ({ kind: 'Go to', label: { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Approval board', bugs: 'Bug inbox' }[v], keys: v, run: () => A.show(v) })),
     ];
   }
 
@@ -51,10 +48,12 @@
     return i === q.length ? 20 - hay.length / 100 : -1;
   }
 
+  const norm = l => String(l || '').toLowerCase().split(/ & | · /)[0].trim();   // "Visuals & screenshots" ~ "Visuals"
   function draw() {
     const q = $('#pal-input').value.trim().toLowerCase();
     const extra = providers.flatMap(f => { try { return f(q) || []; } catch (e) { console.error(e); return []; } });
-    shown = [...items, ...extra].map(it => [it.score !== undefined ? it.score : score(q, it), it]).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, it]) => it);
+    const dests = new Set([...items, ...extra].filter(it => it.dest).map(it => norm(it.label)));
+    shown = [...items, ...extra].filter(it => it.dest || it.kind !== 'Go to' || !dests.has(norm(it.label))).map(it => [it.score !== undefined ? it.score : score(q, it), it]).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, it]) => it);
     sel = Math.min(sel, Math.max(0, shown.length - 1));
     $('#pal-list').innerHTML = shown.length ? shown.map((it, i) => `<button class="pal-item ${i === sel ? 'on' : ''}" data-i="${i}"><span class="k">${it.kind}</span><span class="l">${esc(it.label)}</span>${it.hint ? `<span class="h">${esc(it.hint)}</span>` : ''}</button>`).join('')
       : '<div class="faint" style="padding:14px;font-size:13px">No matches</div>';

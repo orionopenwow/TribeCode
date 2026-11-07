@@ -14,7 +14,7 @@ body.panel-off .panel { display: none; }
 .window > .panel { grid-column: 4; grid-row: 2; }
 .tabbar { display: none; }
 
-/* ---------- far-left rail: logo, project circles, +, help/settings/you ---------- */
+/* ---------- far-left rail: logo, project circles, +, Workshop ---------- */
 .window .rail { position: static; background: var(--rail); border-right: 1px solid var(--edge); padding: 2px 0 14px; gap: 10px; align-items: center; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
 .window .rail .logo-btn { width: 64px; height: 64px; flex: 0 0 64px; border-radius: 16px; display: grid; place-items: center; margin-bottom: 4px; }
 .window .rail .logo-btn:hover { background: var(--hover); }
@@ -33,9 +33,6 @@ body.panel-off .panel { display: none; }
 .window .rail .spacer { flex: 1; min-height: 8px; }
 .window .rail .nav { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--faint); }
 .window .rail .nav:hover { background: var(--hover); color: var(--text); }
-.window .rail .nav.help { font-weight: 600; font-size: 15px; }
-.window .rail .me-btn { width: 36px; height: 36px; font-size: 13px; cursor: pointer; }
-.window .rail .me-btn:hover { box-shadow: 0 0 0 2px var(--edge-pop); }
 
 /* ---------- top bar: crumbs | thick search | bell, status, window buttons (whole bar drags) ---------- */
 .window .titlebar { padding: 0 16px 0 20px; background: var(--nest); border-bottom: 1px solid var(--edge); gap: 14px; -webkit-app-region: drag; }
@@ -72,7 +69,7 @@ body.panel-off .panel { display: none; }
 .nest-face .pj-face.emo { font-size: 17px; }
 .nest-group { display: flex; flex-direction: column; gap: 2px; padding: 4px 0 10px; }
 .nest-group + .nest-group { border-top: 1px solid var(--stroke); padding-top: 10px; }
-.nest-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 38px; padding: 0 10px; border-radius: 9px; font-size: 14px; color: var(--muted); text-align: left; transition: background .12s var(--ease), color .12s var(--ease); }
+.nest-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 14px; color: var(--muted); text-align: left; transition: background .12s var(--ease), color .12s var(--ease); }
 .nest-row:hover { background: var(--hover); color: var(--text); }
 .nest-row.on { background: var(--sel); color: var(--text); font-weight: 500; }
 .nest-row svg.i { width: 18px; height: 18px; color: var(--faint); flex: none; }
@@ -88,10 +85,43 @@ body.panel-off .panel { display: none; }
 .nest-row.static:hover svg.i { color: var(--faint); }
 .nest-row.small { min-height: 32px; font-size: 13px; gap: 10px; }
 .nest-row.small svg.i { width: 15px; height: 15px; }
-#nest-more[aria-expanded="true"] { background: var(--sel); color: var(--text); }
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); flex: none; }
-.nest-huddle .huddle-sub { margin: -8px 0 0 40px; font-size: 12px; color: var(--live-ink); }
-.nest-huddle .huddle-box { padding: 0 0 2px 30px; }
+/* header: project (home) + a quiet switcher chevron */
+.nest-head { display: flex; align-items: center; gap: 2px; }
+.nest-head .nest-title { flex: 1; min-width: 0; }
+.nest-switch { width: 30px; height: 30px; flex: none; border-radius: 8px; display: grid; place-items: center; color: var(--faint); }
+.nest-switch:hover, .nest-switch[aria-expanded="true"] { background: var(--hover); color: var(--text); }
+.nest-switch svg.i { width: 16px; height: 16px; }
+/* Huddle · Live, inline */
+.nest-live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--live-ink); flex: none; }
+.nest-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); }
+.nest-live.hidden { display: none; }
+.nest-huddle .huddle-sub { margin: -4px 0 4px 40px; font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nest-huddle .huddle-box #h-join, .nest-huddle:not(.in-call) .huddle-box .hrow { display: none; }   /* the Huddle row itself starts or joins */
+/* Capture to notes: a core row with its toggle on the right */
+.nest-core .capture-box { margin: 0; }
+.nest-core #capture-toggle { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 14px; color: var(--muted); font-weight: 400; box-shadow: none; background: none; }
+.nest-core #capture-toggle:hover { background: var(--hover); color: var(--text); }
+.nest-core #capture-toggle.on { color: var(--text); }
+.nest-core #capture-toggle svg.i { width: 18px !important; height: 18px !important; color: var(--faint); flex: none; }
+.nest-core #capture-toggle:hover svg.i, .nest-core #capture-toggle.on svg.i { color: var(--text); }
+.nest-core .cap-note { margin: 0 0 6px 40px; font-size: 12px; }
+/* the two collapsible groups */
+.nest-fold { border-top: 1px solid var(--stroke); padding: 8px 0 6px; }
+.nest-fold-head { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 10px; border-radius: 8px; text-align: left; font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.nest-fold-head:hover { color: var(--text); background: var(--hover); }
+.nest-fold-head > span:first-child { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nest-fold-head svg.i { width: 14px; height: 14px; color: var(--faint); transition: transform .15s var(--ease); }
+.nest-fold:not(.open) .nest-fold-head svg.i { transform: rotate(-90deg); }
+.nest-fold-head .n { font-family: var(--mono); font-size: 11px; letter-spacing: 0; }
+.nest-fold-head .n:empty { display: none; }
+.nest-fold-head .n.hot { color: #fff; background: var(--accent); border-radius: 9px; padding: 0 6px; line-height: 18px; }
+.nest-fold:not(.open).has-on .nest-fold-head { color: var(--text); }
+.nest-fold-body { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+.nest-fold:not(.open) .nest-fold-body { display: none; }
+.nest-fold-body .nest-row.hidden { display: none; }
+.window .nest-core .nest-huddle { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.nest-huddle .huddle-box { padding: 0 0 0 30px; }
+.nest-huddle .huddle-box:empty, .nest-huddle:not(.in-call) .huddle-box { padding: 0; }
 .nest-huddle .huddle-box > .item { display: flex; align-items: center; gap: 6px; width: auto; padding: 2px 10px; margin-top: -8px; font-size: 12px; color: var(--faint); border-radius: 6px; }
 .nest-huddle .huddle-box > .item svg { display: none; }
 .nest-huddle .huddle-box > .item::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); }
@@ -104,7 +134,8 @@ body.panel-off .panel { display: none; }
 #side-pins-list .item { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 10px; border-radius: 9px; font-size: 13px; color: var(--muted); width: 100%; text-align: left; }
 #side-pins-list .item:hover { background: var(--hover); color: var(--text); }
 #side-pins-list .item svg { color: var(--faint); }
-.nest-foot { padding: 10px 12px 14px; border-top: 1px solid var(--stroke); }
+.nest-foot { padding: 8px 10px 14px; border-top: 1px solid var(--stroke); display: flex; flex-direction: column; gap: 8px; }
+.nest-foot #nest-settings { min-height: 36px; }
 .nest-foot .invite-pill { width: 100%; justify-content: center; margin: 0; height: 40px; border-radius: 10px; background: none; border: 1px solid var(--edge); color: var(--text); font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
 .nest-foot .invite-pill span { color: var(--accent); font-size: 17px; }
 .nest-foot .invite-pill:hover { background: var(--hover); border-color: var(--edge-pop); }
@@ -241,7 +272,6 @@ body.panel-off .panel { display: none; }
 }
 
 #claims-box h6 { font-family: var(--font); font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--faint); }
-.nest-huddle .capture-row, .nest-huddle #capture-toggle { font-size: 12.5px; }
 
 /* ---------- section clarity (design principle, docs/DESIGN-SYSTEM.md) ---------- */
 /* Each section: a small mono eyebrow, then a clear title. Sections sit 40px apart (28px on phones).
