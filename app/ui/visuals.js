@@ -171,7 +171,7 @@
   }
 
   // ---------- wiring ----------
-  C.on('*', m => {
+  C.on('ws', m => {
     if (m.type !== 'visual' && m.type !== 'visual-removed') return;
     const v = $('#view-visuals'); if (v && !v.classList.contains('hidden')) loadScreens();
   });

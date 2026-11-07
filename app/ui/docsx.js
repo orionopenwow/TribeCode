@@ -537,7 +537,7 @@
   F.restorer('doc', slug => docWin(slug));
 
   // ================= live updates =================
-  C.on('*', m => {
+  C.on('ws', m => {
     docListeners.forEach(fn => fn(m));
     if (m.type === 'doc-comments') {
       if (m.slug === threadsFor) { threads = m.threads; refreshComments(); }

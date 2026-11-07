@@ -42,6 +42,11 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
   }
 
   function approve(p, by) {
+    if (p.kind === 'integration') {   // a merge sign-off, not a feature: no milestone, no tasks
+      p.status = 'approved'; p.closed = new Date().toISOString(); save(p);
+      postChat('general', 'tribecode', `Approved: **${p.title}**. The integrator can merge now.`);
+      return p;
+    }
     const version = nextVersion();
     p.status = 'approved'; p.closed = new Date().toISOString(); p.milestone = version;
     // Checklist lines in the proposal become tasks.
@@ -122,16 +127,16 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     return null; // not handled
   }
 
-  function propose(title, text, me) {
+  function propose(title, text, me, opts = {}) {
     title = str(title, 160) || 'Untitled proposal';
     const now = new Date().toISOString();
     // An agent's proposal starts with no votes: only humans vote.
-    const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, status: 'open', by: me.id, created: now,
+    const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, kind: opts.kind || 'feature', status: 'open', by: me.id, created: now,
       votes: me.role === 'agent' ? {} : { [me.id]: 'yes' }, body: str(text, 20000) });
     postChat('general', 'tribecode', `New proposal from ${me.name}: **${title}**. Vote on the Board.`);
     bus.notify({ type: 'proposal', priority: 'normal', to: getMembers().filter(x => x.role !== 'agent' && x.role !== 'spectator' && x.id !== me.id && x.id !== me.owner).map(x => x.id),
       from: me.id, title: `New proposal from ${me.name}`, body: title, view: 'board', ref: p.id });
-    if (brain) brain.visionCheck({ vision: readVision(), title, body: p.body }).then(v => {
+    if (brain && p.kind !== 'integration') brain.visionCheck({ vision: readVision(), title, body: p.body }).then(v => {
       if (!v) return; const fresh = load(p.id); if (!fresh) return;
       fresh.vision = v; save(fresh);
       if (!v.fits) postChat('general', 'tribecode', `Heads up: **${title}** may conflict with VISION.md. ${v.note}`);

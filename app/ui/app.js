@@ -177,7 +177,8 @@
 
   function chatHtml(m) {
     const sys = m.by === 'tribecode', when = new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    return `<div class="msg ${sys ? 'sys' : ''}"><div class="avatar" style="background:${sys ? 'var(--surface-3)' : esc(colorOf(m.by))};color:${sys ? 'var(--accent-2)' : ink(colorOf(m.by))}">${sys ? '🔥' : esc(initials(nameOf(m.by)))}</div>
+    if (window.TribeChatX) window.TribeChatX.seen(m, 'general');   // chatx.js upgrades it (replies, reactions, voice notes…)
+    return `<div class="msg ${sys ? 'sys' : ''}" data-id="${esc(m.id || '')}"><div class="avatar" style="background:${sys ? 'var(--surface-3)' : esc(colorOf(m.by))};color:${sys ? 'var(--accent-2)' : ink(colorOf(m.by))}">${sys ? '🔥' : esc(initials(nameOf(m.by)))}</div>
       <div><b>${esc(nameOf(m.by))}</b><time>${when}</time><p>${md(m.text)}</p></div></div>`;
   }
   // Chat sticks to the newest message unless you've scrolled up to read history.
