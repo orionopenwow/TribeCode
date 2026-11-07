@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Lantern Run</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b0d14; overflow: hidden; touch-action: none; }
+    body { display: grid; place-items: center; font: 14px/1.4 ui-monospace, Consolas, monospace; color: #e8e2cf; }
+    #game { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+    #file-note { display: none; max-width: 520px; padding: 24px; border: 1px solid #2a313c; border-radius: 12px; background: #141822; }
+    #file-note code { color: #ffcf6b; }
+    .touch { position: fixed; bottom: 18px; display: none; gap: 12px; }
+    .touch.left { left: 18px; } .touch.right { right: 18px; }
+    .touch button { width: 64px; height: 64px; border-radius: 50%; border: 1px solid #3a4150; background: #141822; color: #e8e2cf; font-size: 22px; }
+    .touch button:active { background: #232a38; }
+    body.has-touch .touch { display: flex; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="320" height="180" aria-label="Lantern Run"></canvas>
+  <div id="file-note">
+    <p><b>Lantern Run</b> uses ES modules, which browsers will not load from a double-clicked file.</p>
+    <p>Run <code>node serve.js</code> in this folder and open <code>http://localhost:8080</code>,
+    or use any static server (<code>python -m http.server</code>), or the app preview in TribeCode.</p>
+  </div>
+  <div class="touch left"><button data-key="left" aria-label="Left">&#9664;</button><button data-key="right" aria-label="Right">&#9654;</button></div>
+  <div class="touch right"><button data-key="jump" aria-label="Jump">&#9650;</button></div>
+  <script>
+    if (location.protocol === 'file:') { document.getElementById('game').style.display = 'none'; document.getElementById('file-note').style.display = 'block'; }
+  </script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -341,5 +341,5 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
   }
   context.start();
 
-  return { route, mcp, status: () => status, poll, context, integrator, listChanges, createChange, claimChange, applyChange, finishChange, settings: () => publicSettings(), log };
+  return { route, mcp, status: () => status, poll, context, integrator, listChanges, createChange, claimChange, applyChange, finishChange, settings: () => publicSettings(), updateSettings, log };
 };

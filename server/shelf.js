@@ -93,5 +93,5 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { route, view, catalog: () => catalog };
+  return { route, view, add, catalog: () => catalog };
 };
