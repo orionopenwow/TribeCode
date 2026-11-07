@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tavern 3D · The Crooked Kettle</title>
+  <link rel="icon" href="data:,">
+  <!-- three.js from a pinned CDN version: no install, no build step. -->
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+  </script>
+  <link rel="stylesheet" href="src/ui/ui.css">
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="labels"></div>
+  <div id="crosshair"></div>
+  <div id="prompt" hidden></div>
+
+  <div id="start" class="card">
+    <div class="eyebrow">Tavern 3D · test bed</div>
+    <h1>The Crooked Kettle</h1>
+    <p>A small tavern on a rainy night. The patrons are bots: they wander, sit, chat, and take simple orders.</p>
+    <p class="keys"><b>Click</b> to look around · <b>WASD</b> move · <b>Shift</b> walk faster · <b>E</b> talk · <b>Tab</b> patrons · <b>Esc</b> free the mouse</p>
+    <button id="enter">Enter the tavern</button>
+    <p id="load-note" class="dim">Loading three.js…</p>
+  </div>
+
+  <button id="roster-toggle" class="chip">Patrons <span class="dim">Tab</span></button>
+  <aside id="roster" hidden>
+    <div class="eyebrow">Patrons · bots</div>
+    <h2>Who's in tonight</h2>
+    <div id="roster-list"></div>
+  </aside>
+
+  <script>
+    if (location.protocol === 'file:') document.getElementById('load-note').textContent = 'Browsers will not load modules from a double-clicked file. Run "node serve.js" here and open http://localhost:8081.';
+    // If three.js can't load (offline, CDN blocked), say so instead of a blank page.
+    window.addEventListener('error', e => { if (/three|import/i.test(String(e.message))) document.getElementById('load-note').textContent = 'Could not load three.js from the CDN: check the internet connection.'; });
+  </script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

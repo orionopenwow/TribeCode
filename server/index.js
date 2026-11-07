@@ -470,6 +470,8 @@ async function apiInProject(req, res, url) {
       hostOpen, host: host.name, tribe: tribe.name, expires: inv.expires });
   }
 
+  if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
+
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
     if (!isLocal(req)) return fail(res, 403, 'bootstrap only from the host machine');

@@ -305,6 +305,21 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     st.notes.push(note); save(st); push(st);
     return { note, flow: view(st) };
   }
+  // A project the host brought in from a folder (it already has its repo) joins the flow with the given roles,
+  // the host leading it. Used by the demo tribe (server/demo.js); a project already in the flow is left as it is.
+  function adopt(pid, { roles } = {}, me) {
+    if (!human(me)) throw err(403, 'a person sets up the flow');
+    const p = P.get(pid); if (!p) throw err(404, 'project not found');
+    let st = load(pid); if (st) return view(st);
+    st = { project: pid, status: 'kickoff', by: me.id, created: now(), roles: cleanRoles(roles, []), notes: [], plan: null, changes: [], log: [],
+      steps: { room: { s: 'ok' }, link: { s: 'ok' }, repo: { s: p.repo && W.isRepo(p.repo) ? 'ok' : 'todo' }, github: { s: 'todo' } } };
+    if (!st.roles.length) st.roles = DEFAULT_ROLES();
+    st.roles[0].members.push(me.id);
+    const inv = makeInvite({ by: me.id, project: pid });
+    st.invite = { code: inv.code, ...linkFor(inv.code), expires: inv.expires };
+    save(st); makeFolders(st); syncLanes(st, me); push(st);
+    return view(st);
+  }
   function must(pid) { const st = load(pid); if (!st) throw err(404, 'this project has no flow yet'); return st; }
 
   // ---------- plan ----------
@@ -348,13 +363,14 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
       return ms.length ? ms : null;
     } catch { return null; }
   }
-  async function start(pid, me) {
+  // preset: a ready-made plan ([{ title, items: ['[Role] task', …] }]) instead of the brain/rules (the demo tribe, server/demo.js).
+  async function start(pid, me, preset) {
     const st = must(pid); if (!human(me)) throw err(403, 'a person starts the flow');
     if (st.status === 'running' && st.plan) return view(st);
     const notes = st.notes.filter(n => n.kind === 'text' && n.doc).map(n => { const d = P.inProject(pid, () => docs.read ? docs.read(n.doc) : docs.find(n.doc)); return d && d.body ? `# ${d.title}\n${d.body}` : ''; }).join('\n\n');
     let vision = ''; try { vision = fs.readFileSync(P.scopedStore(() => pid).p('VISION.md'), 'utf8'); } catch {}
     const source = notes.trim() || vision.split('\n').filter(l => !/Replace these lines|^- (One sentence pitch|Who it is for|The first version)/.test(l)).join('\n');
-    let raw = await brainPlan(st, source), by = 'brain';
+    let raw = Array.isArray(preset) && preset.length ? preset : await brainPlan(st, source), by = raw === preset ? 'starter' : 'brain';
     if (!raw || !raw.length) { raw = rulePlan(st, source); by = 'rules'; }
     if (!raw.length) raw = [{ title: 'First version', items: [] }];
     let n = 0;
@@ -624,7 +640,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     return null;
   }
 
-  return { route, create, start, setRoles, claim, addNote, assess, decide, onTask, onGist, onHead, onCommit, contextLines, roleOf, folderOwner: (pid, f) => { const st = load(pid); return st ? folderOwner(st, f) : null; },
+  return { route, create, adopt, github, start, setRoles, claim, addNote, assess, decide, onTask, onGist, onHead, onCommit, contextLines, roleOf, folderOwner: (pid, f) => { const st = load(pid); return st ? folderOwner(st, f) : null; },
     view: pid => view(load(pid)), load, gists, planMd, PALETTE, GLYPHS };
 };
 module.exports.writeStarter = writeStarter;
