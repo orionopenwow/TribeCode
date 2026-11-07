@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/oauth.css">
+<link rel="stylesheet" href="/themes.css">
 <style>
   /* Phone-first join page. Flat matte: luminance steps and 1px borders only. */
   html, body { min-height: 100%; }
@@ -88,6 +89,7 @@
 <script src="/inapp.js"></script>
 <script src="/store.js"></script>
 <script src="/oauth.js"></script>
+<script src="/themes.js"></script>
 <script>
 (function () {
   const $ = s => document.querySelector(s);
@@ -100,7 +102,7 @@
   const mobile = /iPhone|iPad|iPod|Android/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const st = window.TribeStore.get();
   let color = st.color && COLORS.includes(st.color) ? st.color : COLORS[Math.floor(Math.random() * COLORS.length)];
-  document.body.className = st.theme === 'light' ? 'light' : 'dark';
+  window.TribeThemes.apply(st);   // your theme (Settings › Theme), also on this page
 
   function me() {
     const n = $('#name').value.trim();

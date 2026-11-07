@@ -384,13 +384,12 @@ def main():
             host.keyboard.press("Control+k"); host.fill("#pal-input", "toggle right panel"); host.keyboard.press("Enter")
             host.wait_for_function("!document.body.classList.contains('panel-off')")
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
-            host.click("#update-btn"); host.wait_for_selector("#update-pop:not(.hidden)")
+            host.click("#update-btn", button="right"); host.wait_for_selector("#update-pop:not(.hidden)")   # left click restarts at once
             assert "v0.9.0 is ready" in host.inner_text("#update-pop")
             shot(host, "hub-update")
             host.click("[data-u='close']"); host.wait_for_selector("#update-pop.hidden", state="attached")
             host.click("#pf-btn"); host.wait_for_selector("#pf-menu [data-act='restart']")
-            wait_text(host, "#pf-menu", "Update ready · v0.9.0")
-            host.click("#pf-menu [data-act='restart']"); host.wait_for_selector("#update-pop:not(.hidden)")
+            wait_text(host, "#pf-menu", "Update ready · v0.9.0")   # its Restart restarts at once (app/test/e2e_updater.py)
             host.keyboard.press("Escape")
 
             # ---------------- Zed (scoped): only Sketches in the UI ----------------

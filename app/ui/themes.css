@@ -1,0 +1,118 @@
+/* Editor-style themes (Settings › Theme). Each one is only custom-property overrides on top of its base mode:
+   app/ui/themes.js puts body.dark or body.light (the base: styles.css, shell.css, bubbles.css) plus
+   data-theme="<id>" on <body>. "dark" (TribeCode Dark, the default) and "light" need no overrides.
+   Flat matte like the rest (docs/DESIGN-SYSTEM.md): luminance steps and 1px borders, no glows, blur or gradients.
+   Ember (#F26B1D) stays the action color everywhere. Body text is ≥ 4.5:1 on every surface: run
+   `node scripts/theme-contrast.js` after changing a value. The palettes are our own, loosely inspired by
+   well-known editor color families; they are not the official themes.
+   `html body[…]` (0,1,2) outranks `body.dark` / `body.light` (0,1,1) whatever the load order. */
+
+/* ---------- Midnight: deeper blue-black ---------- */
+html body[data-theme="midnight"] {
+  --canvas: #0B0E14; --page: #0B0E14; --win: #11151D; --surface: #11151D; --surface-2: #171C26; --surface-3: #1F2531;
+  --stroke: #19202B; --edge: #222A37; --border: #222A37; --edge-pop: #313B4C;
+  --text: #F1F5F9; --muted: #CBD5E1; --faint: #9AA7BA;
+  --raised: #151A23; --rail: #07090D; --nest: #0B0E14; --main: #0E1219; --right: #0B0E14; --hover: #161B25; --sel: #1D2430;
+  --bubble-other: #161B25; --bubble-other-edge: #252D3B; --bubble-other-text: #E7EBF2; --bubble-other-meta: #8E9BB0;
+  --bubble-mine: #33200F; --bubble-mine-edge: #552F14; --bubble-mine-chip: #44291A; --day-pill: #11151D;
+  --white: #F1F5F9; --body: #9AA7BA; --scrim: rgba(3,5,8,0.78);
+}
+
+/* ---------- Nordic: cool arctic greys and frost blue ---------- */
+html body[data-theme="nordic"] {
+  --canvas: #2A2F3A; --page: #2A2F3A; --win: #323845; --surface: #323845; --surface-2: #3A4151; --surface-3: #424A5C;
+  --stroke: #3A4150; --edge: #4A5368; --border: #4A5368; --edge-pop: #5D6881;
+  --text: #ECEFF4; --muted: #DCE1EA; --faint: #B9C1CF;
+  --accent-2: #88C0D0; --live: #88C0D0; --peer: #81A1C1; --live-ink: #8FCADA; --peer-ink: #A3BEDB; --ember-ink: #FF8FA6; --accent-ink: #FF8A4A; --on-live: #10262C;
+  --live-tint: rgba(136,192,208,0.16); --peer-tint: rgba(129,161,193,0.18);
+  --raised: #373E4C; --rail: #252A33; --nest: #2A2F3A; --main: #2E3440; --right: #2A2F3A; --hover: #373E4C; --sel: #414A5B;
+  --bubble-other: #3A4151; --bubble-other-edge: #4A5368; --bubble-other-text: #ECEFF4; --bubble-other-meta: #BAC2D0;
+  --bubble-mine: #4A3428; --bubble-mine-edge: #6A4630; --bubble-mine-text: #F6EEE9; --bubble-mine-meta: #E0BCA4; --bubble-mine-chip: #5A3F30; --day-pill: #323845;
+  --white: #ECEFF4; --body: #B9C1CF; --scrim: rgba(20,23,29,0.72);
+}
+
+/* ---------- Nightshade: soft violet night ---------- */
+html body[data-theme="nightshade"] {
+  --canvas: #21222C; --page: #21222C; --win: #2A2C39; --surface: #2A2C39; --surface-2: #323444; --surface-3: #3B3E50;
+  --stroke: #333546; --edge: #44475A; --border: #44475A; --edge-pop: #585C75;
+  --text: #F8F8F2; --muted: #E2E2EC; --faint: #B8BBD0;
+  --accent-2: #7FE3F2; --live: #7FE3F2; --peer: #BD93F9; --live-ink: #8BE9FD; --peer-ink: #C8A6FA; --on-live: #0E2A30;
+  --live-tint: rgba(127,227,242,0.14); --peer-tint: rgba(189,147,249,0.16);
+  --raised: #2F3140; --rail: #1B1C24; --nest: #21222C; --main: #282A36; --right: #21222C; --hover: #313343; --sel: #3A3D50;
+  --bubble-other: #323444; --bubble-other-edge: #44475A; --bubble-other-text: #F8F8F2; --bubble-other-meta: #B8BBD0;
+  --bubble-mine: #43291F; --bubble-mine-edge: #64391F; --bubble-mine-text: #F8F0EA; --bubble-mine-meta: #DDB59C; --bubble-mine-chip: #533325; --day-pill: #2A2C39;
+  --white: #F8F8F2; --body: #B8BBD0; --scrim: rgba(14,14,20,0.74);
+}
+
+/* ---------- Solar Dark: deep sea teal with warm cream text ---------- */
+html body[data-theme="solar-dark"] {
+  --canvas: #00232B; --page: #00232B; --win: #032F39; --surface: #032F39; --surface-2: #083A45; --surface-3: #0F4450;
+  --stroke: #0A3944; --edge: #164C58; --border: #164C58; --edge-pop: #25606D;
+  --text: #FDF6E3; --muted: #E8E2CF; --faint: #A9BCBD;
+  --accent-2: #2AA198; --live: #2AA198; --peer: #6C71C4; --live-ink: #3FC4B9; --peer-ink: #9DA1EC; --amber-ink: #E1B341; --on-live: #002B36;
+  --live-tint: rgba(42,161,152,0.18); --peer-tint: rgba(108,113,196,0.20);
+  --raised: #063440; --rail: #001C23; --nest: #00232B; --main: #002B36; --right: #00232B; --hover: #07343F; --sel: #0D3F4B;
+  --bubble-other: #083A45; --bubble-other-edge: #164C58; --bubble-other-text: #FDF6E3; --bubble-other-meta: #A9BCBD;
+  --bubble-mine: #3A2A12; --bubble-mine-edge: #5B3A16; --bubble-mine-text: #FBF1E2; --bubble-mine-meta: #D9B892; --bubble-mine-chip: #4A3418; --day-pill: #032F39;
+  --white: #FDF6E3; --body: #A9BCBD; --scrim: rgba(0,16,20,0.74);
+}
+
+/* ---------- Solar Light: warm paper ---------- */
+html body[data-theme="solar-light"] {
+  --canvas: #EEE8D5; --page: #EEE8D5; --win: #FDF6E3; --surface: #FDF6E3; --surface-2: #F4EDD9; --surface-3: #E9E2CC;
+  --stroke: #E4DCC5; --edge: #D8CFB5; --border: #D8CFB5; --edge-pop: #C3B996;
+  --text: #073642; --muted: #33525A; --faint: #4F6267;
+  --accent-ink: #9C3F0A; --live-ink: #0F6A62; --peer-ink: #474DA6; --amber-ink: #7A5600; --ember-ink: #AE2741;
+  --accent-2: #2AA198; --live: #2AA198; --peer: #6C71C4;
+  --raised: #FFFAEC; --rail: #E6DFC8; --nest: #EEE8D5; --main: #FDF6E3; --right: #EEE8D5; --hover: #E8E1CB; --sel: #DFD7BE;
+  --bubble-other: #FFFAEC; --bubble-other-edge: #D8CFB5; --bubble-other-text: #073642; --bubble-other-meta: #56686C;
+  --bubble-mine: #F8DFC4; --bubble-mine-edge: #EBC29C; --bubble-mine-text: #2A1608; --bubble-mine-meta: #7E4F2E; --bubble-mine-chip: #F2CFAE; --day-pill: #FDF6E3;
+  --white: #073642; --body: #4F6267; --scrim: rgba(7,54,66,0.35);
+}
+
+/* ---------- Campfire: retro warm browns (fits the fire logo) ---------- */
+html body[data-theme="campfire"] {
+  --canvas: #1D2021; --page: #1D2021; --win: #282828; --surface: #282828; --surface-2: #32302F; --surface-3: #3C3836;
+  --stroke: #34312F; --edge: #45403D; --border: #45403D; --edge-pop: #5C544E;
+  --text: #FBF1C7; --muted: #EBDBB2; --faint: #C2B396;
+  --accent-2: #8EC07C; --live: #8EC07C; --peer: #83A598; --live-ink: #9BCB89; --peer-ink: #93B5A8; --amber-ink: #FABD2F; --on-live: #18240F;
+  --live-tint: rgba(142,192,124,0.16); --peer-tint: rgba(131,165,152,0.18);
+  --raised: #2E2C2B; --rail: #171A1A; --nest: #1D2021; --main: #232526; --right: #1D2021; --hover: #302E2D; --sel: #3A3634;
+  --bubble-other: #32302F; --bubble-other-edge: #45403D; --bubble-other-text: #FBF1C7; --bubble-other-meta: #C2B396;
+  --bubble-mine: #45291A; --bubble-mine-edge: #683A1E; --bubble-mine-text: #FBF0E4; --bubble-mine-meta: #E0B694; --bubble-mine-chip: #553322; --day-pill: #282828;
+  --white: #FBF1C7; --body: #C2B396; --scrim: rgba(12,13,13,0.76);
+}
+
+/* ---------- High contrast: pure black, white text, bright edges ---------- */
+html body[data-theme="contrast"] {
+  --canvas: #000000; --page: #000000; --win: #0A0A0A; --surface: #0A0A0A; --surface-2: #141414; --surface-3: #1F1F1F;
+  --stroke: #5C5C5C; --edge: #8C8C8C; --border: #8C8C8C; --edge-pop: #D0D0D0;
+  --text: #FFFFFF; --muted: #F2F2F2; --faint: #D6D6D6;
+  --accent-ink: #FF9152; --live-ink: #5EE6D2; --peer-ink: #A9B3FF; --amber-ink: #FFC98C; --ember-ink: #FF8FA8;
+  --raised: #0F0F0F; --rail: #000000; --nest: #000000; --main: #000000; --right: #000000; --hover: #1C1C1C; --sel: #2A2A2A;
+  --bubble-other: #141414; --bubble-other-edge: #8C8C8C; --bubble-other-text: #FFFFFF; --bubble-other-meta: #D6D6D6;
+  --bubble-mine: #3A1A06; --bubble-mine-edge: #F26B1D; --bubble-mine-text: #FFFFFF; --bubble-mine-meta: #FFD2B8; --bubble-mine-chip: #4D2410; --day-pill: #0A0A0A;
+  --white: #FFFFFF; --body: #D6D6D6; --scrim: rgba(0,0,0,0.82);
+}
+html body[data-theme="contrast"] :focus-visible { outline-width: 3px; }
+
+/* ---------- Settings › Theme: swatch chips ---------- */
+.th-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.th-chip { display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: var(--r-sm, 8px); border: 1px solid var(--edge); background: var(--surface-2); text-align: left; min-width: 0; }
+.th-chip:hover { border-color: var(--edge-pop); }
+.th-chip.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.th-chip:disabled { opacity: .45; cursor: default; }
+.th-sw { display: grid; grid-template-columns: 1fr 1fr; height: 30px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(127,127,127,.35); position: relative; }
+.th-sw i { display: block; }
+.th-sw b { position: absolute; right: 5px; bottom: 5px; width: 10px; height: 10px; border-radius: 50%; }
+.th-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.th-name small { display: block; font: 500 9.5px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.th-sys { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12.5px; color: var(--muted); width: 100%; }
+.set-row.set-theme { align-items: start; }
+.set-row.set-theme .set-c { min-width: 0; }
+@media (max-width: 520px) {
+  .th-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .th-chip { padding: 5px; }
+  .th-sw { height: 24px; }
+  .th-name { font-size: 11px; }
+}
