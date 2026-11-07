@@ -41,6 +41,7 @@ const makeWorkshop = require('./workshop');
 const makeWorkshopMcp = require('./mcp-workshop');
 const makeSecretary = require('./secretary');
 const makeAgentsHub = require('./agentshub');
+const makePreview = require('./preview');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -296,7 +297,8 @@ const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, c
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
-const thumb = require('./thumb')({ P, visuals });   // the pinned repo's thumbnail: README image → screenshot → tile
+const thumb = require('./thumb')({ P, visuals });
+const preview = makePreview({ P, store: baseStore, getMembers: () => members, broadcast, share, lanUrls, port: PORT, log: m => console.error('  ' + m) });   // app preview (server/preview.js)   // the pinned repo's thumbnail: README image → screenshot → tile
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
@@ -358,7 +360,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
@@ -623,6 +625,7 @@ async function apiInProject(req, res, url) {
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
   if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
@@ -660,6 +663,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
+    if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
     if (req.method === 'GET') return serveStatic(req, res, url);
     fail(res, 405, 'method not allowed');
   } catch (e) {
@@ -670,6 +674,7 @@ const server = http.createServer(async (req, res) => {
 
 server.on('upgrade', (req, sock) => {
   const url = new URL(req.url, 'http://x');
+  if (preview.upgrade(req, sock, url)) return;   // dev-server HMR sockets under /preview/
   if (url.pathname !== '/ws') return sock.destroy();
   const me = authed(req);
   if (!me) { sock.write('HTTP/1.1 401 Unauthorized\r\n\r\n'); return sock.destroy(); }
