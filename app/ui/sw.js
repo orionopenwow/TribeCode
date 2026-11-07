@@ -1,10 +1,14 @@
 // Offline shell for the installed app. API, MCP and WebSocket traffic always goes to the network.
-const CACHE = 'tribecode-shell-v9';
+const CACHE = 'tribecode-shell-v10';
 const SHELL = ['./', 'index.html', 'join.html', 'tokens.css', 'fonts.css', 'styles.css', 'updater.css', 'live.css', 'docs.css', 'mobile.css', 'coedit.css', 'web.css', 'repo.css', 'notify.css', 'go.html', 'demo.html', 'demo.webmanifest', 'voice.css', 'plan.css', 'projects.css', 'shell.css', 'coord.css',
   'store.js', 'tribe.js', 'settings.js', 'tour.js', 'updater.js', 'md.js', 'tasks.js', 'ot.js', 'coedit.js', 'docs.js', 'board.js', 'bugs.js', 'palette.js', 'huddle.js', 'qr.js',
   'web.js', 'repo.js', 'notify.js', 'speech.js', 'captions.js', 'capture.js', 'dm.js', 'chatx.js', 'float.js', 'plan.js', 'docsx.js', 'visuals.js', 'app.js', 'projects.js', 'shell.js', 'coord.js', 'assets/icon-512.png', 'assets/wordmark.svg', 'manifest.webmanifest',
   'assets/illustrations/cooperative.svg', 'assets/illustrations/campfire.svg', 'assets/illustrations/brain.svg', 'assets/illustrations/chat.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
+if (/(^|\.)tauri\.localhost$/.test(self.location.hostname) || self.location.protocol === 'tauri:') {   // never inside the desktop app
+  self.addEventListener('install', () => self.skipWaiting());
+  self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))).then(() => self.registration.unregister())));
+}
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);

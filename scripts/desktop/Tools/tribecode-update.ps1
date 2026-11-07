@@ -31,6 +31,15 @@ if ($Clean) {
   }
 }
 
+# The desktop app's built-in browser cached old pages in a service worker (fixed in the app from v0.4.1).
+# Clear those caches while TribeCode is closed. Settings and sign-in (Local Storage) are kept.
+function Clear-WebCache {
+  if (Get-Process -Name tribecode -ErrorAction SilentlyContinue) { return }
+  $prof = Join-Path $env:LOCALAPPDATA 'dev.tribecode.desktop\EBWebView\Default'
+  foreach ($d in 'Service Worker','Cache','Code Cache','GPUCache') { $p = Join-Path $prof $d; if (Test-Path $p) { Remove-Item $p -Recurse -Force -ErrorAction SilentlyContinue } }
+}
+if ($Clean) { Clear-WebCache }
+
 # ---------- update ----------
 $installed = if (Test-Path $exe) { Ver ((Get-Item $exe).VersionInfo.ProductVersion) } else { [version]'0.0' }
 $rel = $null
@@ -48,6 +57,7 @@ if ($rel) {
     Invoke-WebRequest -UseBasicParsing -Headers @{ 'User-Agent' = 'TribeCode-updater' } $asset.browser_download_url -OutFile $setup
     Start-Process -FilePath $setup -ArgumentList '/S' -Wait
     Remove-Item $setup -Force -ErrorAction SilentlyContinue
+    Clear-WebCache
     Say "Done: TribeCode $($rel.tag_name)."
   } elseif ($asset) { Say "TribeCode $installed is the latest." }
 }
