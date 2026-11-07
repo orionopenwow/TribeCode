@@ -34,6 +34,7 @@ const plain = s => String(s || '').replace(/\*\*|__|`|^>\s?/gm, '').replace(/\[(
 const t = v => { const x = Date.parse(v); return Number.isFinite(x) ? x : 0; };
 const iso = v => new Date(v).toISOString();
 const DAY = 86400_000;
+const INSIGHTS = fs.existsSync(require('node:path').join(__dirname, 'insights.js'));
 const ASK_MAX = Number(process.env.TRIBE_ASK_MAX) || 6, ASK_WINDOW = 60_000;
 
 module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, docs, approvals, flow: flowIn, secretary, workshop, pocket, sendTo, isOnline, nameOf, str, slug,
@@ -390,6 +391,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
       ideas: ideasFor(me, visible),
       prefs: prefsOf(me),
       notesApi: !!notesHook,
+      insightsApi: INSIGHTS,   // server/insights.js is on this host: Home asks GET /api/insights (else it falls back, without a 404)
     };
     const sig = crypto.createHash('sha1').update(JSON.stringify([data.hero.map(x => x.id + x.sub), data.waiting, data.feed.map(x => x.id), data.notes.map(x => x.id + x.at), data.suggestions.map(x => x.id), data.status, data.projects.map(p => p.here + p.name + p.color), data.people.map(p => p.id + p.online), data.fleet.agents.map(a => a.id + a.online + a.doing + a.context + a.tokens), data.fleet.models.online + data.fleet.models.model, data.fleet.loops.map(l => l.id + l.state + l.last), data.ideas.map(i => i.id)])).digest('base64url').slice(0, 12);
     return { ...data, rev: sig, at: new Date().toISOString() };

@@ -378,6 +378,7 @@
     if (!connected()) { insights.items = null; insights.src = ''; return drawInsights(); }
     if (insights.loading || (!force && insights.src && Date.now() - insights.at < 60_000)) return drawInsights();
     insights.loading = true;
+    if (!data || !data.insightsApi) { insights.items = null; insights.src = data ? 'fallback' : ''; insights.loading = false; return drawInsights(); }   // no server/insights.js on this host
     try { const r = await C.api('/insights'); insights.items = Array.isArray(r) ? r : (r.items || r.insights || []); insights.src = 'api'; }
     catch { insights.items = null; insights.src = 'fallback'; }   // not built on this host (404) or failed: fall back
     insights.at = Date.now(); insights.loading = false; drawInsights();

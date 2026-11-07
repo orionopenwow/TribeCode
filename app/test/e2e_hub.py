@@ -255,6 +255,11 @@ def main():
             host.wait_for_selector("#home-insights.closed"); host.click("#home-ins-toggle"); host.wait_for_selector("#home-ai-cards", state="visible")
             fake = {"items": [{"id": "i1", "kind": "optimization", "title": "Cache the repo status", "body": "git status runs on every request; cache it for 5 s.", "source": "Explorer", "at": "2026-11-07T08:00:00Z", "action": {"label": "Open docs", "view": "docs", "project": lan}},
                               {"id": "i2", "kind": "health", "title": "All checks green", "body": "15 pages explored, no errors.", "source": "Self-heal"}]}
+            assert ok(api("/hub", token=orion)).get("insightsApi") in (False, True)
+            def with_insights(route):   # pretend server/insights.js is on this host
+                r = route.fetch(); d = r.json(); d["insightsApi"] = True
+                route.fulfill(response=r, body=json.dumps(d))
+            host.route(lambda u: u.endswith("/api/hub"), with_insights)
             host.route("**/api/insights", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(fake)))
             host.reload(); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             wait_text(host, "#home-ai-cards", "Cache the repo status")
@@ -264,7 +269,7 @@ def main():
             host.click("#home-ai-cards .ai-card.k-optimization [data-ai-card-go]")
             host.wait_for_selector("#view-docs:not(.hidden)")
             host.wait_for_function("lan => TribeClient.project() === lan", arg=lan, timeout=8000)
-            host.unroute("**/api/insights")
+            host.unroute("**/api/insights"); host.unroute_all()
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             # live: a new doc in Lantern shows up without a reload
             ok(api("/docs", "POST", {"title": "Glow shader notes", "body": "Bloom off, flat rings."}, token=orion, project=lan))
