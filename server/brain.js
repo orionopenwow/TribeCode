@@ -3,6 +3,7 @@
 
 module.exports = function brain({ host = 'http://localhost:11434', model = '' } = {}) {
   let status = { online: false, model: '', checked: 0, error: '' };
+  let installed = [];   // model names from the last /api/tags
 
   async function call(path, body, timeoutMs = 60_000) {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
@@ -17,18 +18,20 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
   async function refresh() {
     try {
       const { models = [] } = await call('/api/tags', null, 2500);
-      const names = models.map(m => m.name);
+      const names = models.map(m => m.name); installed = names;
       const pick = model && names.includes(model) ? model : names.find(n => /qwen/i.test(n)) || names[0] || '';
       status = { online: !!pick, model: pick, checked: Date.now(), error: pick ? '' : 'no models installed (try: ollama pull qwen3)' };
-    } catch (e) { status = { online: false, model: '', checked: Date.now(), error: 'Ollama not reachable at ' + host }; }
+    } catch (e) { installed = []; status = { online: false, model: '', checked: Date.now(), error: 'Ollama not reachable at ' + host }; }
     return status;
   }
 
-  async function generate(prompt, { system, maxTokens = 300 } = {}) {
+  // `model` (optional): an installed model to use instead of the default (the Secretary's pick).
+  async function generate(prompt, { system, maxTokens = 300, model: use = '', timeoutMs } = {}) {
     if (!status.online || Date.now() - status.checked > 60_000) await refresh();
     if (!status.online) return null;
-    const r = await call('/api/generate', { model: status.model, prompt, system, stream: false, think: false,
-      options: { temperature: 0.2, num_predict: maxTokens } });
+    const pick = use && installed.includes(use) ? use : status.model;
+    const r = await call('/api/generate', { model: pick, prompt, system, stream: false, think: false,
+      options: { temperature: 0.2, num_predict: maxTokens } }, timeoutMs);
     return String(r.response || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   }
 
@@ -37,6 +40,8 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
   return {
     status: () => status,
     refresh,
+    models: () => installed.slice(),   // installed Ollama models (agents hub, the Secretary's model picker)
+    host,
     generate,
     async summarize(title, text) {
       if (!text || text.trim().length < 80) return null;

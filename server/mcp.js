@@ -77,6 +77,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     },
     ...extraTools,   // e.g. check_messages / reply (chatx.js)
     ...require('./mcp-people').tools({ text, err, S, str }),   // share_prompt, report_context (server/mcp-people.js)
+    ...require('./mcp-secretary').tools({ text, err, S, str }),   // secretary_inbox, secretary_file, secretary_ask (server/mcp-secretary.js)
   };
   if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
   if (coordTools) Object.assign(TOOLS, coordTools({ text, err, S, str }));   // my_lane, suggest_task, handoff, request_review (server/coord.js)
