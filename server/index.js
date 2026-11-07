@@ -364,6 +364,7 @@ flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus
   rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
 dashboard.setFlow(flow);
+const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str });   // per-project Website (server/showcase.js)
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -544,6 +545,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'agents' && b === 'bridge.js') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // the stdio bridge (plain code, no secrets)
   if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
+  if (a === 'projects' && c === 'website') { const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 

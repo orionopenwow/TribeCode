@@ -155,7 +155,7 @@ def main():
             host.mouse.move(720, 600); shot(host, "nav-tabs-bugs")
             # remembered: away and back lands on Bugs
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
-            assert host.locator("#view-tabs").is_hidden()
+            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Docs", "Website"], tabs(host)   # Docs & Files: Docs · Website
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-bugs:not(.hidden)")
             # Requests shows up as a tab only while something waits
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project=pid); assert st == 200, r

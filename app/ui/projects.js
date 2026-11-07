@@ -151,7 +151,7 @@
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${esc(p.name)}</h1>
           <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? 'Add a one-line bio: what is this?' : ''}</button>
-          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}</span></div>
+          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
       ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? '<span class="pl-by">local model</span>' : ''}</div>
           <p class="pl-sum">${esc(L.summary)}</p>
@@ -183,6 +183,7 @@
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
     toolbox(p);
+    if (window.TribeWebsite) window.TribeWebsite.overviewLink(p);   // "· Website" once the page exists (app/ui/website.js)
   }
   // Toolbox: a few checked tools, libraries and Claude skills that fit this project (server/shelf.js). Tucked in: only picks, one row.
   const KIND_L = { skill: 'Claude skill', library: 'Library', tool: 'Tool', mcp: 'Agent tool' };
