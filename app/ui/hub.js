@@ -1,11 +1,15 @@
-// The Global Hub (#/hub): what the main screen shows with no project selected, and the start screen.
-//   One hero: Quick launch (New project · Paste invite link · Resume last session · a big search that opens Ctrl K).
-//   Then: Global stream (newest first, across every project you can see, live via the `hub` socket event),
-//   Agents & models (your agents, local models, background loops), Your notes, Suggestions for you.
+// Home (#/hub): your command center, shown with no tribe/project selected and on every launch.
+//   Header "Your command center" · the hero: Suggestions (rolling, dismissible, Resume) | Ask (to your own Claude
+//   Code's private chat when connected, else the local model via POST /api/hub/ask; the answer shows inline with
+//   "Open in chat") | Join with a link / New project · Get started (five steps with progress, "Refine with AI" asks
+//   the local model for a first project from your notes, "Get started with your agent"; dismissible, remembered) ·
+//   Scratchpad (Refine with AI: POST /api/scratch/refine, then Replace / Keep) | Recent activity (the global stream,
+//   condensed) · Agents & models. Reference: design/inspiration/home-ref.png, translated to the flat palette.
 //   Sub-pages from the sidebar's Global group: All repos (#/hub/repos), Global docs (#/hub/docs).
-// Also owns the right panel's helpers (Secretary, local model, autopilot listed as present entities) and the
-// private global scratchpad (server/scratch.js; localStorage until you are in a tribe).
-// Not connected yet: quick launch, the local scratchpad, "Start hosting on this computer" / "Join with a link".
+// Also owns the right panel's Home mode (you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
+// from GET /api/insights with a fallback to suggestions + the Secretary's inspirations), the helpers (Secretary, local
+// model, autopilot listed as present entities) and the private global scratchpad (server/scratch.js; localStorage
+// until you are in a tribe).
 // Public: window.TribeHub = { open(mode), mode(), last(), remember(), scratch, refresh, data }.
 (function () {
   const $ = s => document.querySelector(s);
@@ -76,11 +80,27 @@
   setInterval(() => { if (!document.hidden && connected()) load(true); }, 90_000);
 
   // ---------- render ----------
-  const sec = (eyebrow, title, inner, extra = '') => `<section class="sec hub-sec" ${extra}><div class="sec-head"><span class="eyebrow">${esc(eyebrow)}</span><h2>${title}</h2></div>${inner}</section>`;
+  // Home is the command center (reference: design/inspiration/home-ref.png, translated to the flat palette):
+  //   header · the hero (Suggestions | Ask | Join or start) · Get started (dismissible) · Scratchpad | Recent activity ·
+  //   Agents & models. The right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends,
+  //   AI Insights (GET /api/insights, else the hub's suggestions + the Secretary's inspirations). Phones: one column.
+  const sec = (eyebrow, title, inner, extra = '', aside = '') => `<section class="sec hub-sec" ${extra}><div class="sec-head ${aside ? 'hs-row' : ''}"><div><span class="eyebrow">${esc(eyebrow)}</span><h2>${title}</h2></div>${aside}</div>${inner}</section>`;
+  const SEND = '<svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
+  const aiTag = (label = 'AI') => `<span class="ai-tag">${ico('i-sparkle', 11)}${esc(label)}</span>`;
+  const myAgent = () => { const id = me().id; return id ? (C.state().members || []).find(m => m.role === 'agent' && m.owner === id) || null : null; };
+  const memberOf = id => (C.state().members || []).find(m => m.id === id) || null;
   function greeting() {
     const h = new Date().getHours(), part = h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
     const name = (me().name || (window.TribeStore && window.TribeStore.get().name) || '').split(' ')[0];
     return `${part}${name && name !== 'Me' ? `, ${esc(name)}` : ''}`;
+  }
+  // Re-rendering keeps whatever you were typing in (the Ask box, the scratchpad) focused.
+  function keepFocus(fn) {
+    const a = document.activeElement, id = a && a.id && section() && section().contains(a) ? a.id : null;
+    const sel = id && 'selectionStart' in a ? [a.selectionStart, a.selectionEnd] : null;
+    fn();
+    if (!id) return; const b = document.getElementById(id); if (!b) return;
+    b.focus({ preventScroll: true }); if (sel) try { b.setSelectionRange(sel[0], sel[1]); } catch {}
   }
   function render() {
     const el = section(); if (!el) return;
@@ -88,61 +108,252 @@
     if (mode === 'docs') return renderDocs(el);
     const on = connected(), tribe = (C.state().tribe || {}).name;
     const pj = projects(), live = (data && data.status) || {};
-    const sub = on ? [tribe, `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
-      : C.hasToken() ? 'Reconnecting to your tribe…' : 'Not in a tribe yet. Everything below works on this device.';
-    el.innerHTML = `<div class="hub">
-      <header class="hub-head"><span class="eyebrow">Your home</span><h1>${greeting()}</h1><p class="faint">${esc(sub)}</p></header>
-      ${launch(on)}
-      ${on ? stream() : offline()}
-      ${on ? fleetSec() : ''}
-      <div class="hub-two">${notesSec(on)}${on ? suggestSec() : ''}</div>
-    </div>`;
-    bind(el);
+    const sub = on ? [greeting(), tribe, `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
+      : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
+    keepFocus(() => {
+      el.innerHTML = `<div class="hub hub-home">
+        <header class="hub-head"><span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
+        ${hero(on)}
+        ${startCard(on)}
+        <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
+        ${on ? fleetSec() : ''}
+        ${isPhone() ? sec('AI insights', 'Worth a look', `<div class="ai-cards" id="hub-ins-phone">${insightCards()}</div>`, 'id="hub-insights"') : ''}
+      </div>`;
+      bind(el);
+    });
   }
 
-  function launch(on) {
-    const l = on ? last() : null, lp = l && projOf(l.project);
-    const resumeCard = lp
-      ? `<button class="hub-tile" id="hub-resume" data-hl="resume"><span class="ht-face">${PJ().face(lp, 'sm')}</span><span class="ht-t"><span class="eyebrow">Resume</span><b>${esc(lp.name)} · ${esc(l.label)}</b><small>${esc(ago(l.at))}</small></span>${ico('i-chev', 16)}</button>`
-      : `<button class="hub-tile" id="hub-resume" data-hl="resume" ${on && pj1() ? '' : 'disabled'}><span class="ht-ico">${ico('i-refresh', 18)}</span><span class="ht-t"><span class="eyebrow">Resume</span><b>${on && pj1() ? `Open ${esc(pj1().name)}` : 'Your last session'}</b><small>${on ? 'Shows up once you work in a project' : 'Join or host a tribe first'}</small></span></button>`;
-    return `<section class="hero-card hub-launch" id="hub-launch"><span class="eyebrow">Quick launch</span><h2>${on ? 'Jump back in, or start something new' : 'Start a tribe, or join one'}</h2>
-      <button class="hub-search" id="hub-search" type="button" aria-label="Search or jump to anything (Ctrl K)">${ico('i-search', 18)}<input id="hub-q" placeholder="Search or jump to anything…" autocomplete="off" tabindex="-1" aria-hidden="true"><span class="kbd">Ctrl K</span></button>
-      <div class="hub-grid">
-        <button class="hub-tile primary" id="hub-new" data-hl="new"><span class="ht-ico">${ico('i-plus', 20)}</span><span class="ht-t"><b>New project</b><small>${on ? 'A room, a link and a repo in one click' : 'Hosts a tribe on this computer first'}</small></span></button>
-        <button class="hub-tile" id="hub-join" data-hl="join"><span class="ht-ico">${ico('i-link', 18)}</span><span class="ht-t"><span class="eyebrow">Invite</span><b>Paste invite link</b><small>Join a friend's tribe or project</small></span></button>
-        ${resumeCard}
-      </div></section>`;
+  // ---------- the hero: Suggestions | Ask | Join or start ----------
+  function hero(on) {
+    return `<section class="hero-card hub-hero" id="hub-hero">
+      <div class="hh-top"><span class="eyebrow">Direct access</span><h2>Ask, pick up where you left off, or bring a friend</h2></div>
+      <div class="hh-grid">${sugPanel(on)}${askPanel(on)}${joinPanel(on)}</div></section>`;
   }
   const pj1 = () => projects()[0] || null;
-
-  function offline() {
-    const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
-    return sec('This computer', 'Two ways in', `<div class="hub-cards">
-        <div class="card hub-way"><h3>${ico('i-zap', 16)}Start hosting on this computer</h3><p class="faint">${desk ? 'Your tribe runs here. Friends join with one link, from a phone or a computer.' : 'Hosting runs in the desktop app (or <code>npm start</code>). Everything stays on the host\'s computer.'}</p>
-          <button class="btn ${desk ? 'primary' : ''}" id="hub-host">${desk ? 'Start hosting' : 'Get the desktop app'}</button></div>
-        <div class="card hub-way"><h3>${ico('i-link', 16)}Join with a link</h3><p class="faint">A friend sent you a link like <code>…/join/k7Qx2</code>. Paste it and pick a name. No account needed.</p>
-          <button class="btn" id="hub-join2">Join with a link</button></div></div>`);
+  let sugOpen = false;
+  function sugItems() {
+    const need = [...((data && data.hero) || []), ...((data && data.more) || [])].slice(0, 4).map(x => ({ ...x, need: true }));
+    return [...need, ...((data && data.suggestions) || [])];
+  }
+  function sugPanel(on) {
+    const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
+    const resume = lp ? `<button class="hs-li hs-resume" id="hub-resume"><span class="hs-face">${PJ().face(lp, 'sm')}</span><span class="hs-tx"><b>Resume ${esc(lp.name)} · ${esc(l.label)}</b><small>${esc(ago(l.at))}</small></span>${ico('i-chev', 14)}</button>`
+      : p1 ? `<button class="hs-li hs-resume" id="hub-resume"><span class="hs-face">${PJ().face(p1, 'sm')}</span><span class="hs-tx"><b>Open ${esc(p1.name)}</b><small>Your last session shows up here</small></span>${ico('i-chev', 14)}</button>` : '';
+    let rows = '';
+    if (!on) rows = [
+      `<div class="hs-li static"><span class="hs-dot"></span><span class="hs-tx"><b>${window.TribeHost && window.TribeHost.isDesktop ? 'Host a tribe on this computer' : 'Join a friend\'s tribe'}</b><small>Projects, chat and your agents live in a tribe</small></span></div>`,
+      `<div class="hs-li static"><span class="hs-dot"></span><span class="hs-tx"><b>Jot your first idea</b><small>The scratchpad below keeps it on this device</small></span></div>`].join('');
+    else {
+      const all = sugItems(), shown = sugOpen ? all.slice(0, 8) : all.slice(0, (lp || p1 ? 2 : 3) - (isPhone() ? 1 : 0));
+      rows = shown.map(x => { const btn = x.need ? `<button class="btn ${x.kind === 'approval' ? 'primary' : ''}" data-sug-go="${esc(x.id)}">${x.kind === 'approval' ? 'Review' : x.kind === 'vote' ? 'Vote' : 'Open'}</button>` : x.action ? `<button class="btn" data-sug-go="${esc(x.id)}">${esc(x.action.label)}</button>` : '';
+        return `<div class="hs-li ${x.need ? 'need' : ''}" data-sug="${esc(x.id)}"><span class="hs-dot"></span><span class="hs-tx"><b>${esc(x.title)}</b><small>${x.project ? `${esc((projOf(x.project) || {}).name || '')} · ` : ''}${esc(x.why || x.sub || '')}</small>${btn ? `<span class="hs-a">${btn}</span>` : ''}</span>
+        <button class="hs-x" data-sug-x="${esc(x.id)}" title="Not now" aria-label="Dismiss">${ico('i-x', 13)}</button></div>`; }).join('')
+        + (all.length > shown.length || (sugOpen && all.length > 2) ? `<button class="linkish hs-more" id="hub-sug-more">${sugOpen ? 'Show fewer' : `${all.length - shown.length} more`}</button>` : '')
+        + (!all.length && !resume ? '<p class="hs-empty">Nothing waiting on you. Suggestions roll in as your projects move.</p>' : '');
+    }
+    const n = on ? sugItems().filter(x => x.need).length : 0;
+    return `<div class="hh-panel hh-sug" id="hub-suggest"><div class="hh-head"><span class="eyebrow">Suggestions</span>${n ? `<span class="hh-n">${n} waiting</span>` : ''}</div>
+      <div class="hs-list">${resume}${rows}</div></div>`;
   }
 
-  // Global stream: newest first, items grouped under a project chip (consecutive items of one project share it).
+  // Ask: your own Claude Code's private chat when it is connected (and picked), else the local model (POST /api/hub/ask).
+  const ask = { to: lsGet('tribecode.home.askTo', 'claude'), draft: '', q: '', answer: '', status: '', via: '', model: '', error: '', channel: '', agent: null, sentAt: 0, offerConnect: false };
+  const askTarget = () => (ask.to === 'claude' && myAgent() ? 'claude' : 'brain');
+  function askPanel(on) {
+    const ag = myAgent(), tgt = askTarget();
+    const to = ag ? `<div class="ask-to" role="group" aria-label="Ask who"><button type="button" data-ask-to="claude" class="${tgt === 'claude' ? 'on' : ''}" aria-pressed="${tgt === 'claude'}">${esc(ag.name || 'Your Claude')}</button><button type="button" data-ask-to="brain" class="${tgt === 'brain' ? 'on' : ''}" aria-pressed="${tgt === 'brain'}">Local model</button></div>`
+      : `<span class="ask-who">${on ? 'Local model' : 'Not connected'}</span>`;
+    const ph = !on ? 'Host or join a tribe, then ask your agent or local model…' : tgt === 'claude' ? `Ask ${ag.name || 'your Claude'} anything, or give it a task…` : 'Ask your hub anything: what changed, what is next…';
+    return `<div class="hh-panel hh-ask" id="hub-ask"><div class="hh-head"><span class="eyebrow">Ask</span>${to}</div>
+      <form class="ask-box" id="hub-ask-form" autocomplete="off"><textarea id="hub-ask-in" rows="3" placeholder="${esc(ph)}" aria-label="Ask">${esc(ask.draft)}</textarea>
+        <div class="ask-row"><span class="ask-hint">${on ? 'Enter to send · Shift Enter for a new line' : 'Answers come from the tribe\'s host'}</span><button class="ask-send" id="hub-ask-send" type="submit" aria-label="Send" title="Send">${SEND}</button></div></form>
+      <div class="ask-out" id="hub-answer" aria-live="polite">${answerHtml()}</div></div>`;
+  }
+  function answerHtml() {
+    if (ask.error) return `<div class="ask-ans err"><p>${esc(ask.error)}</p>${ask.offerConnect ? '<div class="aa-acts"><button class="btn" id="hub-ask-cc">Connect your Claude Code</button></div>' : ''}</div>`;
+    if (!ask.status) return '';
+    const who = ask.via === 'claude' ? esc((ask.agent && ask.agent.name) || 'Your Claude') : `Local model${ask.model ? ` · ${esc(ask.model)}` : ''}`;
+    const body = ask.status === 'thinking' || ask.status === 'sending' ? '<p class="aa-wait">Thinking…</p>'
+      : ask.status === 'sent' ? `<p class="aa-wait">Sent to ${who}'s private chat. Its reply shows up here and in the chat.</p>`
+      : `<div class="aa-text">${esc(ask.answer)}</div>`;
+    return `<div class="ask-ans"><div class="aa-head">${aiTag(ask.via === 'claude' ? 'Agent' : 'AI')}<b>${who}</b><span class="aa-q" title="${esc(ask.q)}">${esc(ask.q)}</span></div>${body}
+      <div class="aa-acts"><button class="btn" id="hub-ask-open">Open in chat</button><button class="btn ghost" id="hub-ask-clear">Clear</button></div></div>`;
+  }
+  function drawAnswer() { const o = $('#hub-answer'); if (o) { o.innerHTML = answerHtml(); bindAnswer(o); } }
+  function bindAnswer(root) {
+    const on = (sel, fn) => { const b = root.querySelector(sel); if (b) b.onclick = fn; };
+    on('#hub-ask-open', openAnswer); on('#hub-ask-cc', () => App().connectClaude());
+    on('#hub-ask-clear', () => { Object.assign(ask, { q: '', answer: '', status: '', error: '', via: '', offerConnect: false }); drawAnswer(); });
+  }
+  async function sendAsk() {
+    const inp = $('#hub-ask-in'), text = (inp ? inp.value : ask.draft).trim();
+    if (!text) { if (inp) inp.focus(); return; }
+    if (!connected()) { Object.assign(ask, { error: 'Asking needs a tribe: the local model and your agents run on the host. Host one on this computer or join a friend with a link.', status: '' }); return drawAnswer(); }
+    const tgt = askTarget(), ag = myAgent();
+    Object.assign(ask, { q: text, answer: '', error: '', via: tgt, model: '', offerConnect: false, status: tgt === 'claude' ? 'sending' : 'thinking', agent: ag, draft: '' });
+    if (inp) inp.value = '';
+    drawAnswer();
+    if (tgt === 'claude') {
+      const ch = window.TribeDM && window.TribeDM.channelWith ? window.TribeDM.channelWith(ag.id) : 'dm-' + [me().id, ag.id].sort().join('-');
+      try { ask.sentAt = Date.now(); ask.channel = ch; await C.api('/chat/' + encodeURIComponent(ch), { method: 'POST', body: { text } }); if (ask.status === 'sending') ask.status = 'sent'; }
+      catch (e) { Object.assign(ask, { status: '', error: e.message }); }
+      return drawAnswer();
+    }
+    try { const r = await C.api('/hub/ask', { method: 'POST', body: { prompt: text } }); Object.assign(ask, { status: 'done', answer: r.answer, model: r.model || '' }); }
+    catch (e) { Object.assign(ask, { status: '', error: e.message, offerConnect: !ag }); }
+    drawAnswer();
+  }
+  // Your agent's reply in its private chat lands under the box too.
+  C.on('chat', ({ channel, message }) => {
+    if (!ask.channel || channel !== ask.channel || !message || !ask.agent || message.by !== ask.agent.id || ask.via !== 'claude') return;
+    if (Date.parse(message.at) < ask.sentAt - 2000) return;
+    Object.assign(ask, { status: 'done', answer: message.text || '' }); drawAnswer();
+  });
+  function openAnswer() {
+    if (ask.via === 'claude' && ask.agent && window.TribeDM) return window.TribeDM.open(ask.agent.id);
+    if (!connected()) return;
+    const q = ask.q;
+    App().show('chat');
+    setTimeout(() => { const i = $('#chat-input'); if (i) { i.value = '@brain ' + q; i.focus(); i.dispatchEvent(new Event('input', { bubbles: true })); } }, 80);
+  }
+
+  function joinPanel(on) {
+    const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
+    return `<div class="hh-panel hh-join" id="hub-joinpanel"><div class="hh-head"><span class="eyebrow">Join or start</span></div>
+      <h3>${ico('i-link', 16)}Join with a link</h3>
+      <p>A friend sent a link like <code>…/join/k7Qx2</code>? Paste it and pick a name. No account needed.</p>
+      <div class="hj-acts"><button class="btn" id="hub-join">Paste invite link</button>
+        ${on ? '<button class="btn primary" id="hub-new">' + ico('i-plus', 15) + 'New project</button>' : desk ? '<button class="btn primary" id="hub-host">Start hosting</button>' : '<button class="btn" id="hub-host">Get the desktop app</button>'}</div>
+      ${on ? '' : `<p class="hj-note">${desk ? 'Hosting runs your tribe on this computer; friends join with one link.' : 'Hosting runs in the desktop app (or <code>npm start</code>).'}</p>`}</div>`;
+  }
+
+  // ---------- Get started: five steps, two ways in (dismissible, remembered) ----------
+  const SKEY = 'tribecode.home.startDismissed';
+  const start = { status: '', text: '', error: '' };
+  function steps(on) {
+    const meId = me().id, list = projects(), f = (data && data.fleet) || {};
+    const pv = (f.loops || []).find(l => l.id === 'preview');
+    return [
+      { id: 'tribe', label: 'Start or join a tribe', done: on },
+      { id: 'claude', label: 'Connect your Claude Code', done: on && (!!myAgent() || (f.agents || []).length > 0) },
+      { id: 'project', label: 'Create a project', done: on && list.some(p => !p.default || p.hasRepo) },
+      { id: 'invite', label: 'Invite a friend', done: on && (C.state().members || []).some(m => m.role !== 'agent' && m.id !== meId) },
+      { id: 'preview', label: 'Preview your app', done: on && (!!(pv && pv.on) || !!lsGet('tribecode.home.previewed')) },
+    ];
+  }
+  function startCard(on) {
+    if (lsGet(SKEY)) return '';
+    const st = steps(on), done = st.filter(s => s.done).length, pct = Math.round(done / st.length * 100);
+    const out = start.error ? `<div class="hst-out err">${esc(start.error)}</div>`
+      : start.status === 'thinking' ? '<div class="hst-out"><p class="aa-wait">The local model is reading your notes…</p></div>'
+      : start.text ? `<div class="hst-out" id="hub-start-out"><div class="aa-head">${aiTag()}<b>A first project from your notes</b></div><div class="aa-text">${esc(start.text)}</div>
+          <div class="aa-acts"><button class="btn primary" id="hub-start-new">Start this project</button><button class="btn" id="hub-start-save">Save to scratchpad</button><button class="btn ghost" id="hub-start-clear">Clear</button></div></div>` : '';
+    return sec('Two ways in', 'Get started', `<div class="hub-start" id="hub-start">
+        <button class="hst-x" id="hub-start-x" title="Dismiss" aria-label="Dismiss Get started">${ico('i-x', 15)}</button>
+        <div class="hst-main">
+          <p class="hst-lead">Let the local model shape a first project from your notes, or hand it straight to your Claude Code.</p>
+          <div class="hst-acts"><button class="btn ai" id="hub-start-ai">${ico('i-sparkle', 14)}Refine with AI</button><button class="btn ember-o" id="hub-start-agent">${ico('i-zap', 14)}Get started with your agent</button></div>
+          <div class="hst-prog"><div class="hst-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${st.length}" aria-valuenow="${done}" aria-label="Get started progress"><i style="width:${pct}%"></i></div><span class="hst-num" id="hub-start-num">${done} of ${st.length} done</span></div>
+          <ol class="hst-steps">${st.map((s, i) => `<li><button class="hst-step ${s.done ? 'done' : ''}" data-step="${s.id}" ${s.done ? 'aria-disabled="true"' : ''}><span class="hst-ck">${s.done ? ico('i-tick', 12) : i + 1}</span><span>${esc(s.label)}</span></button></li>`).join('')}</ol>
+          ${out}
+        </div>
+        <div class="hst-art" aria-hidden="true">${ART}</div>
+      </div>`, 'id="hub-start-sec"');
+  }
+  // Flat editorial illustration in the palette: a raised window, the faceted mark, a progress rail.
+  const ART = `<svg viewBox="0 0 220 150" width="220" height="150">
+    <rect x="34" y="14" width="152" height="104" rx="12" fill="#1B2028" stroke="#2A313C"/>
+    <rect x="34" y="14" width="152" height="22" rx="12" fill="#222833"/><rect x="34" y="28" width="152" height="8" fill="#222833"/>
+    <circle cx="48" cy="25" r="3" fill="#FF6F8E"/><circle cx="58" cy="25" r="3" fill="#FFB86B"/><circle cx="68" cy="25" r="3" fill="#3BD16F"/>
+    <path d="M78 54h64l-32 52z" fill="#6C7CFF"/><path d="M110 54h32l-32 52z" fill="#4F5BD5"/><path d="M96 46h40l-14 22z" fill="#F26B1D"/>
+    <rect x="48" y="96" width="30" height="6" rx="3" fill="#2A313C"/><rect x="150" y="80" width="22" height="22" rx="6" fill="#38C6B1"/><path d="M156 91l4 4 7-8" stroke="#0B1F1C" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="34" y="132" width="152" height="4" rx="2" fill="#2A313C"/><rect x="34" y="132" width="88" height="4" rx="2" fill="#6C7CFF"/><circle cx="122" cy="134" r="6" fill="#F8FAFC" stroke="#6C7CFF" stroke-width="2"/></svg>`;
+  async function startAI() {
+    if (!connected()) { Object.assign(start, { error: 'The local model runs on the tribe\'s host: host a tribe on this computer or join one first.', text: '' }); return render(); }
+    Object.assign(start, { status: 'thinking', text: '', error: '' }); render();
+    await scratch.flush();
+    try { const r = await C.api('/hub/ask', { method: 'POST', body: { kind: 'start' } }); Object.assign(start, { status: '', text: r.answer }); }
+    catch (e) { Object.assign(start, { status: '', error: e.message }); }
+    render();
+  }
+  function startAgent() {
+    if (!connected()) return window.TribeHost && window.TribeHost.isDesktop ? host() : join();
+    const ag = myAgent();
+    if (ag && window.TribeDM) return window.TribeDM.open(ag.id);
+    App().connectClaude();
+  }
+  function stepGo(id) {
+    if (id === 'tribe') return window.TribeHost && window.TribeHost.isDesktop ? host() : join();
+    if (!connected()) return toast('Start or join a tribe first.');
+    if (id === 'claude') return App().connectClaude();
+    if (id === 'project') return newProject();
+    if (id === 'invite') return App().openInvite();
+    if (id === 'preview') {
+      lsSet('tribecode.home.previewed', true);
+      const l = ((data && data.fleet && data.fleet.loops) || []).find(x => x.id === 'preview'), pid = (l && (l.projects || [])[0]) || (pj1() || {}).id;
+      return go(pid, () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('repo')));
+    }
+  }
+
+  // ---------- bottom: Scratchpad (with Refine with AI) | Recent activity ----------
+  const refine = { status: '', text: '', id: null, draft: false, error: '', model: '' };
+  function notesSec(on) {
+    const notes = (data && data.notes) || [];
+    const docs = on && notes.length ? `<div class="hub-list hub-mynotes"><span class="eyebrow">Docs you wrote</span>${notes.slice(0, 3).map(n => `<button class="hub-li" data-note="${esc(n.id)}">${ico('i-doc', 14)}<span><b>${esc(n.title)}</b><small>${chip(n.project)} ${esc(ago(n.at))}</small></span></button>`).join('')}</div>` : '';
+    const out = refine.error ? `<div class="ref-out err">${esc(refine.error)}</div>`
+      : refine.status === 'thinking' ? '<div class="ref-out"><p class="aa-wait">Cleaning up your note…</p></div>'
+      : refine.text ? `<div class="ref-out" id="hub-refine-out"><div class="aa-head">${aiTag()}<b>Cleaned up${refine.model ? ` · ${esc(refine.model)}` : ''}</b></div><div class="aa-text">${esc(refine.text)}</div>
+          <div class="aa-acts"><button class="btn primary" id="hub-refine-replace">Replace</button><button class="btn" id="hub-refine-keep">Keep original</button></div></div>` : '';
+    return sec('Your notes', 'Scratchpad', `<div class="scratch" id="hub-scratch"></div>${out}${docs}`, 'id="hub-notes"',
+      `<button class="btn ai" id="hub-refine" title="Clean up the selected note (or the newest) with the local model">${ico('i-sparkle', 14)}Refine with AI</button>`);
+  }
+  async function refineGo() {
+    if (!connected() || !C.hasToken()) { refine.error = 'Refine uses the local model on the tribe\'s host: host or join a tribe first. Your notes stay on this device until then.'; return render(); }
+    await scratch.flush();
+    const list = scratch.notes(), sel = list.find(n => n.id && n.id === scratch.selected()) || list[0];
+    const draft = ($('#hub-scratch .sc-in') || {}).value || '';
+    const body = sel && sel.id ? { id: sel.id } : draft.trim() ? { text: draft } : null;
+    if (!body) { refine.error = 'Write a note first, then Refine with AI tidies it up.'; return render(); }
+    Object.assign(refine, { status: 'thinking', text: '', error: '', id: body.id || null, draft: !body.id }); render();
+    try { const r = await C.api('/scratch/refine', { method: 'POST', body }); Object.assign(refine, { status: '', text: r.text, model: r.model || '' }); }
+    catch (e) { Object.assign(refine, { status: '', error: e.message }); }
+    render();
+  }
+  function refineApply(replace) {
+    if (replace) { if (refine.draft) scratch.setDraft(refine.text); else scratch.replace(refine.id, refine.text); toast('Replaced with the cleaned-up note'); }
+    Object.assign(refine, { status: '', text: '', error: '', id: null }); render();
+  }
+
+  // Global stream, condensed: avatar, who, what, when, and the project (or "On this device").
   const KIND = { gist: ['i-sparkle', 'Agent'], commit: ['i-git', 'Commit'], decision: ['i-vote', 'Decision'], proposal: ['i-vote', 'Proposal'], vote: ['i-vote', 'Vote'], doc: ['i-doc', 'Doc'], task: ['i-check', 'Task'], join: ['i-users', 'Joined'], chat: ['i-chat', 'Chat'], plan: ['i-flag', 'Plan'] };
   function chip(pid) {
     const p = projOf(pid); if (!p) return '';
     return `<span class="hub-chip" style="--pc:${esc(p.color || '#6C7CFF')}"><i></i>${esc(p.name)}</span>`;
   }
-  function stream() {
-    const feed = (data && data.feed) || [];
-    if (data && data.error) return sec('Global stream', 'Across your projects', `<div class="hub-empty">${esc(data.error)}</div>`, 'id="hub-stream"');
-    if (!data) return sec('Global stream', 'Across your projects', '<div class="hub-empty faint">Loading…</div>', 'id="hub-stream"');
-    if (!feed.length) return sec('Global stream', 'Across your projects', `<div class="hub-empty">Quiet so far. Commits, agent gists, decisions, new docs and people joining show up here as they happen.</div>`, 'id="hub-stream"');
-    let prev = null;
-    const rows = feed.slice(0, 30).map(it => {
-      const [icon, kind] = KIND[it.kind] || ['i-doc', it.kind], head = it.project !== prev; prev = it.project;
-      return `${head ? `<div class="hub-grp">${chip(it.project)}</div>` : ''}<button class="hub-item k-${esc(it.kind)} ${it.agent ? 'agent' : ''}" data-feed="${esc(it.id)}">
-        <span class="hi-ico">${ico(icon, 15)}</span><span class="hi-t"><b>${esc(it.title)}</b><small>${esc([it.sub && it.kind !== 'commit' ? it.sub : kind, it.byName].filter(Boolean).join(' · '))}${it.kind === 'commit' && it.sub ? ` · <code>${esc(it.sub)}</code>` : ''}</small></span>
-        <span class="hi-at">${esc(ago(it.at))}</span><span class="hi-go">Jump to ${ico('i-chev', 12)}</span></button>`;
-    }).join('');
-    return sec('Global stream', 'Across your projects', `<div class="hub-feed" id="hub-feed">${rows}</div>`, 'id="hub-stream"');
+  let feedOpen = false;
+  function avatar(it) {
+    const m = it.by && memberOf(it.by);
+    if (it.agent || (m && m.role === 'agent') || it.kind === 'gist') return `<span class="ha-av agent">${ico('i-sparkle', 13)}</span>`;
+    if (it.kind === 'plan' || it.by === 'tribecode') return `<span class="ha-av sys">${ico((KIND[it.kind] || ['i-flag'])[0], 13)}</span>`;
+    const name = (m && m.name) || it.byName || '?';
+    return `<span class="ha-av" style="background:${esc((m && m.color) || (it.kind === 'commit' ? '#6C7CFF' : '#2A313C'))}">${esc(name.trim().charAt(0).toUpperCase() || '?')}</span>`;
+  }
+  function activitySec(on) {
+    const head = inner => sec('Across your projects', 'Recent activity', inner, 'id="hub-stream"');
+    if (!on) {
+      const local = scratch.notes().slice(0, 4), nm = ((window.TribeStore && window.TribeStore.get().name) || 'Me');
+      return head(local.length ? `<div class="hub-act" id="hub-feed">${local.map(n => `<div class="ha-row static"><span class="ha-av" style="background:var(--accent)">${esc(nm.charAt(0).toUpperCase())}</span><span class="ha-t"><span class="ha-l1"><b>You</b><span class="ha-at">${esc(ago(n.updated || n.at))}</span></span><span class="ha-text">${esc(n.text.split('\n')[0])}</span><span class="ha-l3"><small>Scratchpad note</small><span class="ha-tag">On this device</span></span></span></div>`).join('')}</div>`
+        : '<div class="hub-empty">Quiet so far. Notes you jot show up here; once you are in a tribe, so do commits, agent gists, decisions and people joining.</div>');
+    }
+    if (data && data.error) return head(`<div class="hub-empty">${esc(data.error)}</div>`);
+    if (!data) return head('<div class="hub-empty faint">Loading…</div>');
+    const feed = data.feed || [];
+    if (!feed.length) return head('<div class="hub-empty">Quiet so far. Commits, agent gists, decisions, new docs and people joining show up here as they happen.</div>');
+    const n = feedOpen ? 30 : 6;
+    const rows = feed.slice(0, n).map(it => { const [, kind] = KIND[it.kind] || ['i-doc', it.kind], m = it.by && memberOf(it.by);
+      return `<button class="ha-row k-${esc(it.kind)}" data-feed="${esc(it.id)}">${avatar(it)}<span class="ha-t"><span class="ha-l1"><b>${esc((m && m.name) || it.byName || kind)}</b><span class="ha-at">${esc(ago(it.at))}</span></span>
+        <span class="ha-text">${esc(it.title)}</span><span class="ha-l3"><small>${esc(it.sub && it.kind !== 'commit' ? it.sub : kind)}${it.kind === 'commit' && it.sub ? ` · <code>${esc(it.sub)}</code>` : ''}</small>${chip(it.project)}</span></span></button>`; }).join('');
+    return head(`<div class="hub-act" id="hub-feed">${rows}${feed.length > 6 ? `<button class="linkish ha-more" id="hub-feed-more">${feedOpen ? 'Show fewer' : `Show ${Math.min(30, feed.length) - 6} more`}</button>` : ''}</div>`);
   }
 
   // Agents & models: one compact row each.
@@ -159,21 +370,52 @@
     return sec('Agents & models', 'What is running', `<div class="hub-fleet" id="hub-fleet"><div class="hf-group">${agents}</div><div class="hf-group">${model}${loops}</div></div>`, 'id="hub-agents"');
   }
 
-  function notesSec(on) {
-    const notes = (data && data.notes) || [];
-    const docs = on && notes.length ? `<div class="hub-list">${notes.slice(0, 5).map(n => `<button class="hub-li" data-note="${esc(n.id)}">${ico('i-doc', 14)}<span><b>${esc(n.title)}</b><small>${chip(n.project)} ${esc(ago(n.at))}</small></span></button>`).join('')}</div>` : '';
-    const showPad = !on || isPhone() || document.body.classList.contains('panel-off');
-    return sec('Your notes', on ? 'Notes and scratchpad' : 'Scratchpad', `${docs}${showPad ? '<div class="scratch" id="hub-scratch"></div>' : `<button class="hub-li" id="hub-pad">${ico('i-quill', 14)}<span><b>Scratchpad</b><small>${scratch.count() ? `${scratch.count()} note${scratch.count() === 1 ? '' : 's'} · ` : ''}in the right panel</small></span></button>`}${on && !notes.length ? '<p class="faint hub-hint">Docs you write in any project collect here.</p>' : ''}`, 'id="hub-notes"');
+  // ---------- AI Insights: GET /api/insights (server/insights.js), else suggestions + inspirations + health ----------
+  const INS = { optimization: ['i-zap', 'Optimization'], suggestion: ['i-sparkle', 'Suggestion'], issue: ['i-bug', 'Issue'], health: ['i-net', 'Health'] };
+  const insights = { items: null, src: '', at: 0, loading: false };
+  let insActs = {};
+  async function loadInsights(force) {
+    if (!connected()) { insights.items = null; insights.src = ''; return drawInsights(); }
+    if (insights.loading || (!force && insights.src && Date.now() - insights.at < 60_000)) return drawInsights();
+    insights.loading = true;
+    try { const r = await C.api('/insights'); insights.items = Array.isArray(r) ? r : (r.items || r.insights || []); insights.src = 'api'; }
+    catch { insights.items = null; insights.src = 'fallback'; }   // not built on this host (404) or failed: fall back
+    insights.at = Date.now(); insights.loading = false; drawInsights();
   }
-
-  function suggestSec() {
-    const need = [...((data && data.hero) || []), ...((data && data.more) || [])].slice(0, 4);
-    const sug = (data && data.suggestions) || [];
-    const row = (x, isNeed) => `<div class="hub-sug ${isNeed ? 'need' : ''}" data-sug="${esc(x.id)}"><div class="hs-t">${chip(x.project)}<b>${esc(x.title)}</b><small>${esc(x.why || x.sub || '')}</small></div>
-      <div class="hs-a">${isNeed ? `<button class="btn ${x.kind === 'approval' ? 'primary' : ''}" data-sug-go="${esc(x.id)}">${x.kind === 'approval' ? 'Review' : x.kind === 'vote' ? 'Vote' : 'Open'}</button>` : x.action ? `<button class="btn" data-sug-go="${esc(x.id)}">${esc(x.action.label)}</button>` : ''}
-        <button class="hs-x" data-sug-x="${esc(x.id)}" title="Not now" aria-label="Dismiss">${ico('i-x', 14)}</button></div></div>`;
-    const inner = need.length || sug.length ? `<div class="hub-sugs">${need.map(x => row(x, true)).join('')}${sug.map(x => row(x, false)).join('')}</div>` : '<div class="hub-empty">Nothing waiting on you. Suggestions roll in as your projects move.</div>';
-    return sec('For you', need.length ? `${need.length} waiting on you` : 'Suggestions', inner, 'id="hub-suggest"');
+  C.on('ws', m => { if (m && m.type === 'insights') loadInsights(true); });
+  function fallbackInsights() {
+    const out = [], f = (data && data.fleet) || {}, m = f.models || {};
+    if (!connected()) return [{ id: 'off:tribe', kind: 'suggestion', title: 'Start or join a tribe', body: 'Insights come from your projects, your agents and the local model on the tribe\'s host.', source: 'Home', run: () => stepGo('tribe'), label: window.TribeHost && window.TribeHost.isDesktop ? 'Start hosting' : 'Join' }];
+    if (data && m.online === false) out.push({ id: 'h:model', kind: 'health', title: 'The local model is off', body: `${m.error || 'Ollama is not running'}. Start it for answers on Home, note cleanup and the Secretary.`, source: 'Agents & models' });
+    if (data && !(f.agents || []).length && !myAgent()) out.push({ id: 's:cc', kind: 'suggestion', title: 'Connect your Claude Code', body: 'It shows up in the room with its task and context, and Ask on Home can go straight to it.', source: 'Home', run: () => App().connectClaude(), label: 'Connect' });
+    for (const x of sugItems()) out.push({ id: 'sug:' + x.id, kind: x.need ? 'issue' : 'suggestion', title: x.title, body: x.why || x.sub || '', source: (projOf(x.project) || {}).name || 'Your projects', run: () => sugGo(x.id), label: x.need ? (x.kind === 'approval' ? 'Review' : x.kind === 'vote' ? 'Vote' : 'Open') : x.action ? x.action.label : 'Open' });
+    for (const i of (data && data.ideas) || []) out.push({ id: i.id, kind: 'suggestion', title: i.title, body: i.body, source: 'Secretary', run: () => go(i.project, () => window.TribeSecretary && window.TribeSecretary.open()), label: 'Look' });
+    return out.slice(0, 6);
+  }
+  function insightRun(it) {
+    if (it.run) return it.run;
+    const a = it.action; if (!a) return null;
+    return () => {
+      if (a.url) return window.open(a.url, '_blank', 'noopener');
+      if (a.view) return a.project ? go(a.project, () => App().show(a.view)) : App().show(a.view);
+      if (a.ref || a.project) return jump({ project: a.project || it.project, ref: a.ref || { type: 'project' } });
+      if (a.do === 'secretary' && window.TribeSecretary) return window.TribeSecretary.open();
+      if (a.do === 'connect') return App().connectClaude();
+      if (a.dest && SH()) return SH().go(a.dest);
+    };
+  }
+  function insightCards() {
+    const list = insights.src === 'api' && insights.items && insights.items.length ? insights.items.slice(0, 8) : fallbackInsights();
+    insActs = {};
+    if (!list.length) return '<p class="ai-cards-empty">Nothing to flag right now.</p>';
+    return list.map((it, i) => { const [icon, label] = INS[it.kind] || INS.suggestion, run = insightRun(it), key = 'k' + i; if (run) insActs[key] = run;
+      return `<div class="ai-card k-${esc(it.kind || 'suggestion')}" data-ins="${esc(it.id || key)}"><div class="ai-card-k">${ico(icon, 13)}<span>${esc(label)}</span></div><b>${esc(it.title)}</b>${it.body ? `<p>${esc(it.body)}</p>` : ''}
+        <div class="ai-card-foot">${aiTag()}<span class="ai-card-src">${esc(it.source || '')}${it.at ? ` · ${esc(ago(it.at))}` : ''}</span>${run ? `<button class="btn ai-card-go" data-ai-card-go="${key}">${esc(it.label || (it.action && it.action.label) || 'Open')}</button>` : ''}</div></div>`; }).join('');
+  }
+  function bindInsights(root) { root.querySelectorAll('[data-ai-card-go]').forEach(b => b.onclick = () => { const f = insActs[b.dataset.aiCardGo]; if (f) f(); }); }
+  function drawInsights() {
+    const html = insightCards();
+    for (const id of ['#home-ai-cards', '#hub-ins-phone']) { const box = $(id); if (box) { box.innerHTML = html; bindInsights(box); } }
   }
 
   // ---------- All repos ----------
@@ -274,15 +516,32 @@
 
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
-    on('#hub-new', newProject); on('#hub-join', join); on('#hub-join2', join); on('#hub-host', host); on('#hub-resume', resume);
-    on('#hub-search', () => search()); on('#hub-cc', () => App().connectClaude());
-    on('#hub-pad', () => { if (SH() && SH().setPanel) SH().setPanel(false); const t = $('#scratch-in'); if (t) { t.focus(); t.closest('.scratch').scrollIntoView({ block: 'nearest' }); } });
+    on('#hub-new', newProject); on('#hub-join', join); on('#hub-host', host); on('#hub-resume', resume);
+    on('#hub-cc', () => App().connectClaude());
+    on('#hub-sug-more', () => { sugOpen = !sugOpen; render(); });
+    on('#hub-feed-more', () => { feedOpen = !feedOpen; render(); });
+    // Ask
+    const form = el.querySelector('#hub-ask-form'), ta = el.querySelector('#hub-ask-in');
+    if (form) form.onsubmit = e => { e.preventDefault(); sendAsk(); };
+    if (ta) { ta.oninput = () => { ask.draft = ta.value; }; ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendAsk(); } }; }
+    el.querySelectorAll('[data-ask-to]').forEach(b => b.onclick = () => { ask.to = b.dataset.askTo; lsSet('tribecode.home.askTo', ask.to); render(); const t = $('#hub-ask-in'); if (t) t.focus(); });
+    const ans = el.querySelector('#hub-answer'); if (ans) bindAnswer(ans);
+    // Get started
+    on('#hub-start-x', () => { lsSet(SKEY, true); render(); });
+    on('#hub-start-ai', startAI); on('#hub-start-agent', startAgent);
+    on('#hub-start-new', () => newProject());
+    on('#hub-start-save', () => { scratch.add(start.text); Object.assign(start, { text: '', error: '' }); render(); toast('Saved to your scratchpad'); });
+    on('#hub-start-clear', () => { Object.assign(start, { text: '', error: '', status: '' }); render(); });
+    el.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { if (!b.classList.contains('done')) stepGo(b.dataset.step); });
+    // Scratchpad + Refine with AI
+    on('#hub-refine', refineGo); on('#hub-refine-replace', () => refineApply(true)); on('#hub-refine-keep', () => refineApply(false));
     el.querySelectorAll('[data-feed]').forEach(b => b.onclick = () => { const it = ((data && data.feed) || []).find(x => x.id === b.dataset.feed); if (it) jump(it); });
     el.querySelectorAll('[data-note]').forEach(b => b.onclick = () => { const n = ((data && data.notes) || []).find(x => x.id === b.dataset.note); if (n) jump(n); });
     el.querySelectorAll('[data-sug-go]').forEach(b => b.onclick = () => sugGo(b.dataset.sugGo));
     el.querySelectorAll('[data-sug-x]').forEach(b => b.onclick = () => dismiss(b.dataset.sugX));
     el.querySelectorAll('[data-fleet]').forEach(b => b.onclick = () => fleetGo(b.dataset.fleet, b.dataset.id));
     const pad = el.querySelector('#hub-scratch'); if (pad) scratch.mount(pad);
+    const ins = el.querySelector('#hub-ins-phone'); if (ins) bindInsights(ins);
   }
   function fleetGo(kind, id) {
     if (kind === 'agent' && window.TribePeople && id) return window.TribePeople.open(id);
@@ -300,6 +559,8 @@
 
   // =====================================================================
   // Right panel: helpers as present entities (under people and agents), and the global scratchpad.
+  // On Home (body.global) it is yours: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
+  // (the room's people and the scratchpad step aside: Home shows the scratchpad itself).
   // =====================================================================
   function panel() {
     const pane = $('#room-pane'); if (!pane) return;
@@ -321,13 +582,54 @@
     let pad = $('#room-scratch');
     if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'scratch room-scratch'; const cc = $('#cc-connect'); cc.after(pad); }
     if (!pad.dataset.mounted) scratch.mount(pad);
-    pad.classList.toggle('hidden', !connected() && document.body.dataset.view === 'hub');   // offline, the hub shows the scratchpad itself
+    pad.classList.toggle('hidden', document.body.dataset.view === 'hub');   // Home shows the scratchpad itself
+    homePanel();
   }
-
+  // ---------- Home's right panel ----------
+  const IKEY = 'tribecode.home.insightsOpen';
+  function homePanel() {
+    const pane = $('#room-pane'); if (!pane) return;
+    const make = (id, cls, after) => { let e = $('#' + id); if (!e) { e = document.createElement('div'); e.id = id; e.className = cls; after.after(e); } return e; };
+    const meBox = make('home-me', 'home-me', $('.room-head', pane) || pane.firstElementChild);
+    const share = make('home-share', 'home-share', $('#cc-connect'));
+    const insBox = make('home-insights', 'home-insights', share);
+    const on = connected(), m = me();
+    let nm = m.name; if (!nm) try { nm = (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name); } catch {}
+    nm = nm || 'You';
+    meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(nm.trim().charAt(0).toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home${(C.state().tribe || {}).name ? ` · ${esc(C.state().tribe.name)}` : ''}` : 'on this device · not in a tribe yet'}</div></div></div>`;
+    const link = shareState.link;
+    share.innerHTML = `<button class="home-share-card" id="home-share-btn">${ico('i-link', 16)}<span><b>Share my hub link</b><small>${link ? `<code>${esc(link.replace(/^https?:\/\//, ''))}</code>` : on ? 'Copies a 24-hour invite to your tribe' : 'Host or join a tribe first, then one link brings friends here'}</small></span></button>
+      <button class="btn home-invite" id="home-invite">${ico('i-users', 15)}Invite friends</button>`;
+    $('#home-share-btn').onclick = shareLink;
+    $('#home-invite').onclick = () => App().openInvite();
+    const open = lsGet(IKEY, true) !== false;
+    if (!insBox.dataset.built) {
+      insBox.dataset.built = '1';
+      insBox.innerHTML = `<button class="ai-ins-head" id="home-ins-toggle" aria-expanded="${open}" aria-controls="home-ai-cards"><span>AI Insights</span>${ico('i-chev', 15)}</button><div class="ai-cards" id="home-ai-cards"></div>`;
+      $('#home-ins-toggle').onclick = () => { const o = !(lsGet(IKEY, true) !== false); lsSet(IKEY, o); insBox.classList.toggle('closed', !o); $('#home-ins-toggle').setAttribute('aria-expanded', String(o)); };
+    }
+    insBox.classList.toggle('closed', !open);
+    if (document.body.dataset.view === 'hub') loadInsights(); else drawInsights();
+  }
+  const shareState = { link: '' };
+  async function shareLink() {
+    if (!connected()) {
+      toast('Your hub link appears once you are in a tribe: host one on this computer or join a friend.');
+      return window.TribeHost && window.TribeHost.isDesktop ? host() : join();
+    }
+    try {
+      const { invite } = await C.api('/invites', { method: 'POST', body: { hours: 24, maxUses: 5, role: 'builder' } });
+      let base = C.base(), site = null;
+      try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null; if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) base = pick.url; } catch {}
+      const link = site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
+      shareState.link = link; homePanel();
+      try { await navigator.clipboard.writeText(link); toast('Hub link copied. It works for 24 hours, for up to 5 friends.'); } catch { toast('Hub link ready: copy it from the panel.'); }
+    } catch (e) { toast(e.message); }
+  }
   // ---------- the scratchpad ----------
   const scratch = (() => {
     const LOCAL = 'tribecode.scratch.local', DRAFT = 'tribecode.scratch.draft';
-    let notes = lsGet(LOCAL, []) || [], synced = false, saveT = null, mounts = new Set(), editing = null;
+    let notes = lsGet(LOCAL, []) || [], synced = false, saveT = null, mounts = new Set(), editing = null, selected = null;
     const remote = () => connected() && C.hasToken();
     async function sync() {
       if (!remote()) { notes = lsGet(LOCAL, []) || []; draw(); return; }
@@ -396,23 +698,27 @@
         const edit = () => {
           if (el.querySelector('textarea')) return;
           const n = notes.find(x => x.id === id); if (!n) return;
-          editing = id;
+          editing = id; selected = id;
           const area = document.createElement('textarea'); area.className = 'sc-edit'; area.value = n.text; area.rows = Math.min(10, Math.max(2, n.text.split('\n').length + 1));
           tx.replaceWith(area); area.focus();
           area.oninput = () => { n.text = area.value; n.updated = new Date().toISOString(); persist(); };
           area.onblur = () => { editing = null; if (!n.text.trim()) notes = notes.filter(x => x !== n); persist(true).then(draw); };
           area.onkeydown = e => { if (e.key === 'Escape' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); area.blur(); } };
         };
+        el.classList.toggle('sel', id === selected);
         tx.onclick = edit; tx.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); edit(); } };
         el.querySelectorAll('[data-sc]').forEach(b => b.onclick = e => { e.stopPropagation(); const a = b.dataset.sc; if (a === 'del') remove(id); else file(id, a, b); });
       });
     }
     function draw() {
       mounts.forEach(root => { if (!document.body.contains(root)) { mounts.delete(root); return; } const had = root.querySelector('.sc-in') === document.activeElement; root.innerHTML = html(); wire(root); if (had) { const t = root.querySelector('.sc-in'); t.focus(); t.setSelectionRange(t.value.length, t.value.length); } });
-      const pc = $('#hub-pad small'); if (pc) pc.textContent = `${notes.length ? `${notes.length} note${notes.length === 1 ? '' : 's'} · ` : ''}in the right panel`;
     }
     function mount(root) { root.dataset.mounted = '1'; mounts.add(root); root.innerHTML = html(); wire(root); const t = root.querySelector('.sc-in'); if (t && root.id === 'room-scratch') t.id = 'scratch-in'; }
-    return { sync, mount, add, count: () => notes.length, notes: () => notes.slice(), draw };
+    // Refine with AI: save pending edits first, then swap a note's text (or the draft) for the cleaned-up one.
+    const flush = () => (saveT ? persist(true) : Promise.resolve());
+    function replace(id, text) { const n = notes.find(x => x.id === id); if (!n) return; n.text = text; n.updated = new Date().toISOString(); selected = id; draw(); persist(true); }
+    function setDraft(text) { lsSet(DRAFT, text); mounts.forEach(m => { const t = m.querySelector('.sc-in'); if (t) t.value = text; }); }
+    return { sync, mount, add, count: () => notes.length, notes: () => notes.slice(), draw, flush, replace, setDraft, selected: () => selected };
   })();
 
   setTimeout(() => { panel(); scratch.sync(); fromHash(); }, 0);

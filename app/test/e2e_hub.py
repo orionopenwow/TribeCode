@@ -1,12 +1,17 @@
-"""End-to-end: the Global Hub (app/ui/hub.js, server/hub.js, server/scratch.js).
+"""End-to-end: Home, the command center (app/ui/hub.js, server/hub.js, server/scratch.js).
 
-Not connected yet: the hub (quick launch, a local scratchpad, host or join) instead of a dead "Chat lives in a tribe" box.
-Connected: the stream merges every project the member can see (scoped members only theirs, API and UI), updates live,
-Resume jumps back to the last project + view, the search opens Ctrl K, Agents & models shows an MCP agent (context %,
-tokens) and the mock Ollama model, the sidebar collapses into one Global group (All repos, Global docs, Agent fleet),
-the workspace switcher pins projects (persisted per member), the right panel lists agents and helpers, the private
-scratchpad persists and files notes (Move to project, Make a task), the update icon opens the update flow, and the
-phone layout has no horizontal overflow.
+Not connected yet: Home (the hero's three panels, Ask explains it needs a tribe, a local scratchpad with "On this
+device" activity, host or join, Get started at 0 of 5 and its dismiss is remembered) instead of a dead box.
+Connected: the hero has three panels in a row; Ask goes to your own agent's private chat (its reply shows inline) or
+to the local model (the mock's answer inline, Open in chat); POST /api/hub/ask is people-only and rate-limited; Get
+started shows progress, Refine with AI suggests a first project, dismiss persists; the scratchpad's Refine with AI ->
+Replace rewrites the note; Recent activity merges every project the member can see (scoped members only theirs, API
+and UI) and updates live; Resume jumps back to the last project + view; typing on Home opens Ctrl K; Agents & models
+shows an MCP agent (context %, tokens) and the mock Ollama model; the sidebar collapses into one Global group; the
+workspace switcher pins projects; the right panel shows you, Connect your Claude Code, Share my hub link, Invite
+friends and AI Insights (fallback cards, then /api/insights mocked with a one-tap action; collapsible, remembered);
+the private scratchpad persists and files notes; the update icon opens the update flow; the phone layout (390px) has
+no horizontal overflow.
 Usage: python app/test/e2e_hub.py [--shots]
 """
 import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
@@ -142,18 +147,30 @@ def main():
             octx.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Guest', onboarded: true}))")
             off = octx.new_page(); watch(off, "offline")
             off.goto(BASE + "/?skipIntro=1")
-            off.wait_for_selector("#view-hub:not(.hidden) #hub-launch")
-            for sel in ["#hub-new", "#hub-join", "#hub-search", "#hub-host", "#hub-join2", "#hub-scratch .sc-in", "#grp-global"]: off.wait_for_selector(sel, state="visible")
+            off.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
+            for sel in ["#hub-suggest", "#hub-ask-in", "#hub-joinpanel", "#hub-join", "#hub-host", "#hub-start", "#hub-scratch .sc-in", "#hub-stream", "#grp-global", "#home-me", "#home-share-btn", "#home-invite"]: off.wait_for_selector(sel, state="visible")
+            wait_text(off, ".hub-head h1", "Your command center")
+            wait_text(off, "#hub-start-num", "0 of 5")
+            wait_text(off, "#home-share", "Host or join a tribe first")
+            wait_text(off, "#home-ai-cards", "Start or join a tribe")
+            off.fill("#hub-ask-in", "What should I build?"); off.keyboard.press("Enter")
+            wait_text(off, "#hub-answer", "needs a tribe")
             assert off.locator(".solo-empty:visible").count() == 0
             off.evaluate("TribeApp.show('chat')")
             off.wait_for_selector("#view-hub:not(.hidden)")
             assert off.is_hidden("#view-chat"), "chat without a tribe lands on the hub"
             off.fill("#hub-scratch .sc-in", "Offline idea: lanterns that hum")
             off.click("#hub-scratch .sc-add"); wait_text(off, "#hub-scratch .sc-list", "lanterns that hum")
-            off.mouse.move(700, 880); shot(off, "hub-not-connected")
+            off.click("#hub-refine"); wait_text(off, "#hub-notes", "host or join a tribe first")
             off.reload(); off.wait_for_selector("#view-hub:not(.hidden)")
             wait_text(off, "#hub-scratch .sc-list", "lanterns that hum")
-            off.click("#hub-join2"); off.wait_for_selector("#invite-modal:not(.hidden) #join-link")
+            wait_text(off, "#hub-feed", "On this device"); wait_text(off, "#hub-feed", "lanterns that hum")
+            off.evaluate("scrollTo(0, 0)"); off.mouse.move(700, 880); shot(off, "home-desktop-not-connected")
+            # Get started: dismissed stays dismissed
+            off.click("#hub-start-x"); off.wait_for_selector("#hub-start", state="detached")
+            off.reload(); off.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
+            assert off.locator("#hub-start").count() == 0, "Get started stays dismissed"
+            off.click("#hub-join"); off.wait_for_selector("#invite-modal:not(.hidden) #join-link")
             off.keyboard.press("Escape")
             octx.close()
 
@@ -164,11 +181,18 @@ def main():
             host.goto(BASE + "/?skipIntro=1&simulateUpdate=0.9.0")
             host.wait_for_function("TribeClient.connected()")
             host.wait_for_selector("#view-home:not(.hidden)")   # connected: the project home, as before
-            host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-launch")
+            host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             assert host.evaluate("location.hash") == "#/hub"
+            # the hero: Suggestions | Ask | Join or start, side by side
+            tops = host.evaluate("['#hub-suggest', '#hub-ask', '#hub-joinpanel'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.top), Math.round(r.left), Math.round(r.width)]; })")
+            assert len({t[0] for t in tops}) == 1 and tops[0][1] < tops[1][1] < tops[2][1] and all(t[2] > 180 for t in tops), tops
+            host.wait_for_selector("#hub-joinpanel #hub-new"); host.wait_for_selector("#hub-joinpanel #hub-join")
             wait_text(host, "#crumb-label", "Home")
+            host.wait_for_selector("#hub-feed .ha-row")
+            if host.locator("#hub-feed-more").count(): host.click("#hub-feed-more")
             wait_text(host, "#hub-feed", "Light the first lantern")
             wait_text(host, "#hub-feed", "Sketch list")
+            host.wait_for_selector("#hub-feed .ha-row .ha-av")
             chips = host.evaluate("[...document.querySelectorAll('#hub-feed .hub-chip')].map(e => e.textContent.trim())")
             assert "lantern" in chips and "Sketches" in chips, chips   # a folder project is named after its folder
             # Agents & models
@@ -184,14 +208,69 @@ def main():
             # right panel: agents + helpers + scratchpad
             host.wait_for_selector("#room-agents .ra-row, #room-agents [data-agent]")
             wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Local model")
-            host.wait_for_selector("#room-scratch .sc-in")
-            host.mouse.move(700, 880); shot(host, "hub-connected")
+            host.wait_for_selector("#hub-scratch .sc-in")
+            assert host.locator("#room-scratch").is_hidden(), "Home shows the scratchpad in the page, not the panel"
+            # right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
+            wait_text(host, "#home-me", "Orion"); host.wait_for_selector("#cc-connect", state="visible")
+            order = host.evaluate("['#home-me', '#cc-connect', '#home-share', '#home-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top))")
+            assert order == sorted(order), order
+            wait_text(host, "#home-ai-cards", "Ink the moon")   # no /api/insights here: the hub's suggestions
+            host.wait_for_selector("#home-ai-cards .ai-card .ai-tag")
+            # Get started: 4 of 5 (tribe, Claude Code, a project, a friend; no preview yet)
+            wait_text(host, "#hub-start-num", "4 of 5")
+            assert host.locator(".hst-step.done").count() == 4
+            host.evaluate("scrollTo(0, 0)"); host.mouse.move(700, 880); shot(host, "home-desktop-connected")
+            host.evaluate("document.querySelector('#hub-notes').scrollIntoView({ block: 'start' })"); shot(host, "home-desktop-connected-bottom"); host.evaluate("scrollTo(0, 0); document.querySelector('#hub-hero').scrollIntoView({ block: 'end' })")
+            host.click("#hub-start-ai"); wait_text(host, "#hub-start-out", "Lantern Garden", timeout=15000)
+            host.click("#hub-start-clear"); host.wait_for_selector("#hub-start-out", state="detached")
+
+            # ---------------- Ask: your agent's private chat first, else the local model ----------------
+            host.wait_for_selector("#hub-ask [data-ask-to='claude'].on")
+            host.fill("#hub-ask-in", "What should we build next?"); host.keyboard.press("Enter")
+            wait_text(host, "#hub-answer", "Sent to")
+            ch = "dm-" + "-".join(sorted([oid, agid]))
+            dmm = ok(api(f"/chat/{ch}", token=orion))["messages"]
+            assert any(m["text"] == "What should we build next?" and m["by"] == oid for m in dmm), dmm
+            ok(api(f"/chat/{ch}", "POST", {"text": "A lantern garden: start with the map."}, token=agt), "agent replies")
+            wait_text(host, "#hub-answer", "A lantern garden")
+            host.click("#hub-ask [data-ask-to='brain']")
+            host.fill("#hub-ask-in", "Who is building the save point?"); host.click("#hub-ask-send")
+            wait_text(host, "#hub-answer", "campfire save point", timeout=15000)
+            host.wait_for_selector("#hub-ask-open")
+            shot(host, "home-ask")
+            assert api("/hub/ask", "POST", {"prompt": "hi"}, token=agt)[0] == 403, "agents cannot use Ask"
+            assert api("/hub/ask", "POST", {"prompt": ""}, token=orion)[0] == 400
+            codes = [api("/hub/ask", "POST", {"prompt": f"q{i}"}, token=zed)[0] for i in range(7)]
+            assert codes[:6] == [200] * 6 and codes[6] == 429, codes
+            host.click("#hub-ask [data-ask-to='claude']")
+
+            # ---------------- Share my hub link, Invite friends ----------------
+            host.click("#home-share-btn"); wait_text(host, "#home-share", "/join/")
+            host.click("#home-invite"); host.wait_for_selector("#invite-modal:not(.hidden) #inv-link")
+            host.click("#invite-modal [data-close]"); host.wait_for_selector("#invite-modal.hidden", state="attached")
+
+            # ---------------- AI Insights: collapsible (remembered), and fed by /api/insights when the host has it ----------------
+            host.click("#home-ins-toggle"); host.wait_for_selector("#home-ai-cards", state="hidden")
+            host.reload(); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
+            host.wait_for_selector("#home-insights.closed"); host.click("#home-ins-toggle"); host.wait_for_selector("#home-ai-cards", state="visible")
+            fake = {"items": [{"id": "i1", "kind": "optimization", "title": "Cache the repo status", "body": "git status runs on every request; cache it for 5 s.", "source": "Explorer", "at": "2026-11-07T08:00:00Z", "action": {"label": "Open docs", "view": "docs", "project": lan}},
+                              {"id": "i2", "kind": "health", "title": "All checks green", "body": "15 pages explored, no errors.", "source": "Self-heal"}]}
+            host.route("**/api/insights", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(fake)))
+            host.reload(); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
+            wait_text(host, "#home-ai-cards", "Cache the repo status")
+            host.wait_for_selector("#home-ai-cards .ai-card.k-optimization .ai-tag"); host.wait_for_selector("#home-ai-cards .ai-card.k-health")
+            assert "Ink the moon" not in host.inner_text("#home-ai-cards"), "the endpoint's items replace the fallback"
+            shot(host, "home-insights")
+            host.click("#home-ai-cards .ai-card.k-optimization [data-ai-card-go]")
+            host.wait_for_selector("#view-docs:not(.hidden)")
+            host.wait_for_function("lan => TribeClient.project() === lan", arg=lan, timeout=8000)
+            host.unroute("**/api/insights")
+            host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             # live: a new doc in Lantern shows up without a reload
             ok(api("/docs", "POST", {"title": "Glow shader notes", "body": "Bloom off, flat rings."}, token=orion, project=lan))
             wait_text(host, "#hub-feed", "Glow shader notes", timeout=12000)
-            # search opens Ctrl K, typing on the hub types into it
-            host.click("#hub-search"); host.wait_for_selector("#palette:not(.hidden)")
-            host.keyboard.press("Escape"); host.wait_for_selector("#palette.hidden", state="attached")
+            # typing on Home (outside the boxes) types into Ctrl K
+            host.click(".hub-head h1")
             host.keyboard.press("g"); host.wait_for_selector("#palette:not(.hidden)")
             assert host.input_value("#pal-input") == "g"
             host.keyboard.press("Escape")
@@ -249,36 +328,49 @@ def main():
             host.wait_for_selector("#view-home:not(.hidden)")
             host.wait_for_function("lan => TribeClient.project() === lan", arg=lan)
 
-            # ---------------- scratchpad: persists, private, Move to project, Make a task ----------------
+            # ---------------- scratchpad: Refine with AI, persists, private, Move to project, Make a task ----------------
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
-            host.fill("#room-scratch .sc-in", "Lantern flicker\nRandomize the glow a little every frame")
-            host.click("#room-scratch .sc-add"); wait_text(host, "#room-scratch .sc-list", "Lantern flicker")
-            host.fill("#room-scratch .sc-in", "Moon phases doc"); host.keyboard.press("Control+Enter")
-            wait_text(host, "#room-scratch .sc-list", "Moon phases doc")
+            host.fill("#hub-scratch .sc-in", "lantren flikr - randomise glow evry frame")
+            host.click("#hub-scratch .sc-add"); wait_text(host, "#hub-scratch .sc-list", "lantren flikr")
+            host.wait_for_function("TribeHub.scratch.notes().every(n => n.id)")
+            host.click("#hub-refine"); wait_text(host, "#hub-refine-out", "randomize the glow a little every frame", timeout=15000)
+            shot(host, "home-refine")
+            host.click("#hub-refine-replace"); host.wait_for_selector("#hub-refine-out", state="detached")
+            wait_text(host, "#hub-scratch .sc-list", "Lantern flicker: randomize the glow")
+            for _ in range(30):
+                if any(n["text"] == "Lantern flicker: randomize the glow a little every frame." for n in ok(api("/scratch", token=orion))["notes"]): break
+                time.sleep(0.2)
+            assert [n["text"] for n in ok(api("/scratch", token=orion))["notes"]] == ["Lantern flicker: randomize the glow a little every frame."]
+            host.click("#hub-scratch .sc-note [data-sc='del']"); host.wait_for_function("TribeHub.scratch.notes().length === 0")
+            assert api("/scratch/refine", "POST", {"text": "x"}, token=agt)[0] == 403
+            assert api("/scratch/refine", "POST", {"id": "n-nope1234"}, token=orion)[0] == 404
+            host.fill("#hub-scratch .sc-in", "Lantern flicker\nRandomize the glow a little every frame")
+            host.click("#hub-scratch .sc-add"); wait_text(host, "#hub-scratch .sc-list", "Lantern flicker")
+            host.fill("#hub-scratch .sc-in", "Moon phases doc"); host.keyboard.press("Control+Enter")
+            wait_text(host, "#hub-scratch .sc-list", "Moon phases doc")
             host.wait_for_function("TribeHub.scratch.notes().every(n => n.id)")
             notes = ok(api("/scratch", token=orion))["notes"]
             assert [n["text"].split("\n")[0] for n in notes] == ["Moon phases doc", "Lantern flicker"], notes
             assert ok(api("/scratch", token=zed))["notes"][0]["text"] == "Zed's secret sketch idea", "Zed's own notes, untouched"
-            host.mouse.move(700, 880); shot(host, "hub-panel")
             host.reload(); host.wait_for_selector("#view-hub:not(.hidden)")
-            wait_text(host, "#room-scratch .sc-list", "Lantern flicker")
+            wait_text(host, "#hub-scratch .sc-list", "Lantern flicker")
             # edit in place autosaves
-            host.click("#room-scratch .sc-note:has-text('Moon phases') .sc-text")
-            host.fill("#room-scratch .sc-edit", "Moon phases doc\nNew, waxing, full, waning")
-            host.click("#room-scratch .sc-head"); host.wait_for_timeout(300)
+            host.click("#hub-scratch .sc-note:has-text('Moon phases') .sc-text")
+            host.fill("#hub-scratch .sc-edit", "Moon phases doc\nNew, waxing, full, waning")
+            host.click("#hub-notes .sec-head h2"); host.wait_for_timeout(300)
             host.wait_for_function("() => true")
             for _ in range(30):
                 if "waxing" in json.dumps(ok(api("/scratch", token=orion))["notes"]): break
                 time.sleep(0.2)
             assert "waxing" in json.dumps(ok(api("/scratch", token=orion))["notes"])
             # Make a task (Lantern)
-            host.click("#room-scratch .sc-note:has-text('Lantern flicker') [data-sc='task']")
+            host.click("#hub-scratch .sc-note:has-text('Lantern flicker') [data-sc='task']")
             host.click(f".scratch-pick [data-pick='{lan}']")
             wait_text(host, ".toast", "Task added to lantern")
             tasks = ok(api("/tasks", token=orion, project=lan))["tasks"]
             assert any(t["title"] == "Lantern flicker" and "Randomize the glow" in t.get("body", "") for t in tasks), tasks
             # Move to project (Sketches) as a doc
-            host.click("#room-scratch .sc-note:has-text('Moon phases') [data-sc='move']")
+            host.click("#hub-scratch .sc-note:has-text('Moon phases') [data-sc='move']")
             host.click(f".scratch-pick [data-pick='{sk}']")
             wait_text(host, ".toast", "Filed in Sketches")
             docs = ok(api("/docs", token=orion, project=sk))["docs"]
@@ -329,10 +421,12 @@ def main():
             zp.wait_for_selector("#view-hub:not(.hidden) #hub-feed")
             wait_text(zp, "#hub-feed", "Sketch list")
             assert "lantern" not in zp.inner_text("#view-hub").lower().replace("lantern crew", ""), zp.inner_text("#view-hub")
+            wait_text(zp, "#hub-scratch .sc-list", "try to file elsewhere")
+            assert "Lantern flicker" not in zp.inner_text("#hub-scratch")
+            assert zp.locator("#hub-ask [data-ask-to]").count() == 0, "no agent of his own: Ask goes to the local model"
+            wait_text(zp, "#hub-ask", "Local model")
             zp.click("#nest-repos-all"); zp.wait_for_selector(f"#hub-repos [data-repo='{sk}']")
             assert zp.locator(f"#hub-repos [data-repo='{lan}']").count() == 0
-            wait_text(zp, "#room-scratch .sc-list", "try to file elsewhere")
-            assert "Lantern flicker" not in zp.inner_text("#room-scratch")
             zctx.close()
 
             # ---------------- phone: hub at 390px, no horizontal overflow ----------------
@@ -340,13 +434,19 @@ def main():
             signed_in(ph, orion, "Orion")
             phone = ph.new_page(); watch(phone, "phone")
             phone.goto(BASE + "/?skipIntro=1#/hub")
-            phone.wait_for_selector("#view-hub:not(.hidden) #hub-launch")
+            phone.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             wait_text(phone, "#hub-feed", "Glow shader notes")
-            phone.wait_for_selector("#hub-scratch .sc-in", state="visible")   # no right panel on phones: the scratchpad lives in the hub
+            phone.wait_for_selector("#hub-scratch .sc-in", state="visible")   # no right panel on phones: the scratchpad lives on Home
+            phone.wait_for_selector("#hub-ins-phone .ai-card")               # and so do the AI insights
+            # stacked in the mock's order: hero (suggestions, ask, join), get started, notes, activity, agents, insights
+            ys = phone.evaluate("['#hub-suggest', '#hub-ask', '#hub-joinpanel', '#hub-start-sec', '#hub-notes', '#hub-stream', '#hub-agents', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
+            assert ys == sorted(ys), ys
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
-            wide = phone.evaluate("[...document.querySelectorAll('#view-hub *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.hub-item, .hf-row, .hub-li, .sc-text')).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")
+            wide = phone.evaluate("[...document.querySelectorAll('#view-hub *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.ha-row, .hf-row, .hub-li, .sc-text, .hs-li')).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")
             assert not wide, wide
-            shot(phone, "hub-phone")
+            shot(phone, "home-phone")
+            phone.evaluate("document.querySelector('#hub-start-sec').scrollIntoView({ block: 'start' })"); shot(phone, "home-phone-2")
+            phone.evaluate("document.querySelector('#hub-stream').scrollIntoView({ block: 'start' })"); shot(phone, "home-phone-3")
             phone.click("#menu-btn"); phone.wait_for_selector("#grp-global", state="visible")
             assert phone.evaluate("(() => { const s = document.querySelector('.window > .side'); return s.scrollWidth <= s.clientWidth + 1; })()")
             b.close()

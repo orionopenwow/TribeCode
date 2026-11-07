@@ -424,6 +424,17 @@ body.ws-tabbed #coord-tabs, body.ws-tabbed #view-coord > #coord-root > .view-hea
 }
 
 /* Home (no tribe/project selected): your space, not a room */
-body.global #room-list, body.global #room-hint, body.global .room-head h6 { display: none; }
-body.global .room-head { justify-content: flex-end; }
+body.global #room-list, body.global #room-hint, body.global .room-head h6, body.global #room-scratch, body.global #claims-box { display: none; }
+body.global .room-head { justify-content: flex-end; margin-bottom: -30px; position: relative; z-index: 2; pointer-events: none; }
+body.global .room-head .panel-x { pointer-events: auto; }
+/* Home's own panel blocks (hub.js homePanel): you, Connect your Claude Code, Share / Invite, AI Insights, then agents
+   and helpers. They exist only on Home. */
+body:not(.global) #home-me, body:not(.global) #home-share, body:not(.global) #home-insights { display: none; }
+body.global .room-pane > .room-head { order: 0; }
+body.global #home-me { order: 1; }
+body.global #cc-connect { order: 2; }
+body.global #home-share { order: 3; }
+body.global #home-insights { order: 4; }
+body.global #room-agents { order: 5; margin-top: 4px; }
+body.global #room-helpers { order: 6; }
 .np-hint { font-size: 12.5px; line-height: 1.5; margin-top: 8px; }
