@@ -8,6 +8,10 @@
 //   POST /api/hub/dismiss        { id }            "not now" on a suggestion, remembered
 //   POST /api/hub/note           { project, text } quick note filed into a project (a doc in that project)
 //   POST /api/hub/seen           { project }       "I was just there" (rolling "N new since" suggestions)
+//   POST /api/hub/ask            { prompt, kind? } Home's Ask box and "Refine with AI" on Get started, answered by the
+//        local brain (brain.generate). kind: 'ask' (default) | 'start' (suggest a first project from your scratchpad
+//        and docs). People only, at most ASK_MAX per minute and one at a time per member -> { answer, model, kind }.
+//        (With your own Claude Code connected, Home sends the prompt to its private chat instead; that is a DM.)
 // /api/dashboard/... stays as an alias.
 //
 // Rolling, not polling: project snapshots (the feed of what changed) are cached per project and rebuilt only
@@ -30,6 +34,8 @@ const plain = s => String(s || '').replace(/\*\*|__|`|^>\s?/gm, '').replace(/\[(
 const t = v => { const x = Date.parse(v); return Number.isFinite(x) ? x : 0; };
 const iso = v => new Date(v).toISOString();
 const DAY = 86400_000;
+const INSIGHTS = fs.existsSync(require('node:path').join(__dirname, 'insights.js'));
+const ASK_MAX = Number(process.env.TRIBE_ASK_MAX) || 6, ASK_WINDOW = 60_000;
 
 module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, docs, approvals, flow: flowIn, secretary, workshop, pocket, sendTo, isOnline, nameOf, str, slug,
     brain = null, coord = null, people = null, hubFor = null, preview = null, agentSeen = null, idleMs = 180_000 }) {
@@ -45,6 +51,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
   const human = m => !!m && m.role !== 'agent' && m.role !== 'spectator';
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   let notesHook = null;   // server/notes.js may land later: dashboard.useNotes((pid, me) => [{ id, title, at, ref }])
+  let scratchOf = null;   // server/scratch.js: dashboard.useScratch(mid => notes) (Ask and "Refine with AI" read your own notes)
 
   // ---------- project snapshots: the feed of what changed (shared by every member who can see the project) ----------
   const snaps = new Map();      // pid -> { at, items, building }
@@ -239,6 +246,54 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
   }
   const agoText = ms => (ms < 3600_000 ? `${Math.max(1, Math.round(ms / 60_000))}m ago` : ms < DAY ? `${Math.round(ms / 3600_000)}h ago` : `${Math.round(ms / DAY)}d ago`);
 
+  // ---------- the Secretary's newest inspirations across your projects (Home's AI Insights fall back to these) ----------
+  function ideasFor(me, visible) {
+    if (!secretary || !secretary.view) return [];
+    const out = [];
+    for (const p of visible.slice(0, 12)) {
+      try { for (const i of (secretary.view(p.id, me).ideas || []).filter(x => x.status === 'new').slice(0, 2)) out.push({ id: `idea:${i.id}`, project: p.id, title: clip(i.title, 120), body: clip(plain(i.body || ''), 220), at: i.at || i.created || null }); } catch {}
+    }
+    return out.sort((a, b) => t(b.at) - t(a.at)).slice(0, 4);
+  }
+
+  // ---------- Ask (Home's prompt box) and Refine with AI (Get started): the local brain ----------
+  const asks = new Map();   // mid -> { at: [ms], busy }
+  function askGate(mid) {
+    const now = Date.now(), a = asks.get(mid) || { at: [], busy: false };
+    a.at = a.at.filter(x => now - x < ASK_WINDOW);
+    if (a.busy) throw err(429, 'Still answering your last question.');
+    if (a.at.length >= ASK_MAX) throw err(429, `Slow down: at most ${ASK_MAX} questions a minute.`);
+    a.at.push(now); a.busy = true; asks.set(mid, a);
+    return () => { a.busy = false; };
+  }
+  async function ask(me, body) {
+    const kind = body.kind === 'start' ? 'start' : 'ask';
+    const prompt = str(body.prompt, 2000);
+    if (kind === 'ask' && !prompt) throw err(400, 'ask something first');
+    if (!brain) throw err(503, 'There is no local model on this host.');
+    const done = askGate(me.id);
+    try {
+      const visible = P.visibleTo(me), v = views.get(me.id);
+      const feed = ((v && v.data && v.data.feed) || []).slice(0, 8).map(x => `- ${x.title}${x.byName ? ` (${x.byName})` : ''}`).join('\n');
+      let notes = []; try { notes = (scratchOf ? scratchOf(me.id) : []).filter(n => n.text && n.text.trim()).slice(0, 8); } catch {}
+      const noteText = notes.map(n => `- ${clip(n.text, 300)}`).join('\n');
+      const projects = visible.map(p => p.name).slice(0, 20).join(', ') || '(none yet)';
+      let docTitles = [];
+      for (const p of visible.slice(0, 8)) P.inProject(p.id, () => { try { docTitles.push(...docs.list().filter(d => d.by === me.id).slice(0, 4).map(d => d.title)); } catch {} });
+      const ctx = `Projects: ${projects}\nRecent activity:\n${feed || '(quiet)'}\nTheir scratchpad notes:\n${noteText || '(empty)'}`;
+      const answer = kind === 'start'
+        ? await brain.generate(`${ctx}\nTheir docs: ${docTitles.slice(0, 12).join(', ') || '(none)'}\n\nSuggest a first project for ${me.name} to build with friends, based on their notes. Reply with a short project name on the first line, then 3 bullets (each under 90 characters) for the first steps. Plain text, no preamble.`,
+          { system: 'You help a small group of friends pick a first software project. Ground it in their own notes; if the notes are empty, suggest something small and fun. Be concrete and brief.', maxTokens: 220, timeoutMs: 45_000 })
+        : await brain.generate(`${ctx}\n\nQuestion from ${me.name}: ${prompt}\n\nAnswer in at most 4 short sentences. Plain text.`,
+          { system: `You are the local assistant on ${me.name}'s TribeCode home: a self-hosted app where friends and their Claude Code agents build apps together. Use the context when it helps; never invent facts about their projects.`, maxTokens: 320, timeoutMs: 45_000 });
+      if (!answer) throw err(503, (brain.status().error ? `The local model is off: ${brain.status().error}.` : 'The local model is off.') + ' Start Ollama, or connect your Claude Code and ask it instead.');
+      return { answer: String(answer).slice(0, 4000), model: brain.status().model || '', kind };
+    } catch (e) {
+      if (e.status) throw e;
+      throw err(503, `The local model did not answer (${clip(e.message, 80)}).`);
+    } finally { done(); }
+  }
+
   // ---------- agents & models: your agents, local models, background loops ----------
   const human2 = m => !!m && m.role !== 'agent';
   function fleet(me) {
@@ -333,10 +388,12 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
       people: pres.filter(m => m.role !== 'agent' && m.id !== me.id).map(m => ({ id: m.id, name: m.name, color: m.color, online: !!m.online, project: m.project || null })),
       lastProject: me.project && P.canSee(me, me.project) ? me.project : (visible[0] || {}).id || null,
       fleet: fleet(me),
+      ideas: ideasFor(me, visible),
       prefs: prefsOf(me),
       notesApi: !!notesHook,
+      insightsApi: INSIGHTS,   // server/insights.js is on this host: Home asks GET /api/insights (else it falls back, without a 404)
     };
-    const sig = crypto.createHash('sha1').update(JSON.stringify([data.hero.map(x => x.id + x.sub), data.waiting, data.feed.map(x => x.id), data.notes.map(x => x.id + x.at), data.suggestions.map(x => x.id), data.status, data.projects.map(p => p.here + p.name + p.color), data.people.map(p => p.id + p.online), data.fleet.agents.map(a => a.id + a.online + a.doing + a.context + a.tokens), data.fleet.models.online + data.fleet.models.model, data.fleet.loops.map(l => l.id + l.state + l.last)])).digest('base64url').slice(0, 12);
+    const sig = crypto.createHash('sha1').update(JSON.stringify([data.hero.map(x => x.id + x.sub), data.waiting, data.feed.map(x => x.id), data.notes.map(x => x.id + x.at), data.suggestions.map(x => x.id), data.status, data.projects.map(p => p.here + p.name + p.color), data.people.map(p => p.id + p.online), data.fleet.agents.map(a => a.id + a.online + a.doing + a.context + a.tokens), data.fleet.models.online + data.fleet.models.model, data.fleet.loops.map(l => l.id + l.state + l.last), data.ideas.map(i => i.id)])).digest('base64url').slice(0, 12);
     return { ...data, rev: sig, at: new Date().toISOString() };
   }
   async function viewFor(me, { fresh = false } = {}) {
@@ -424,11 +481,12 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
         save(); const v = views.get(me.id); if (v) v.dirty = true;
         return send(res, 200, prefsOf(me));
       }
+      if (b === 'ask' && m === 'POST') return send(res, 200, await ask(me, await readBody(req, 16 * 1024)));
       if (b === 'note' && m === 'POST') return send(res, 200, fileNote(me, await readBody(req, 64 * 1024)));
       if (b === 'seen' && m === 'POST') { const body = await readBody(req, 4096); const pid = str(body.project, 60); if (!P.canSee(me, pid)) return fail(res, 403, 'you are not in that project'); seenProject(me.id, pid); return send(res, 200, { ok: true }); }
     } catch (e) { return fail(res, e.status || 500, e.status ? e.message : 'hub error'); }
     return null;
   }
 
-  return { route, onEvent, onNotify, seen: seenProject, viewFor, fleet, repos, allDocs, touch: mid => schedule(mid), setFlow: f => { flow = f; }, useNotes: fn => { notesHook = typeof fn === 'function' ? fn : null; } };
+  return { route, onEvent, onNotify, seen: seenProject, viewFor, fleet, repos, allDocs, touch: mid => schedule(mid), setFlow: f => { flow = f; }, useNotes: fn => { notesHook = typeof fn === 'function' ? fn : null; }, useScratch: fn => { scratchOf = typeof fn === 'function' ? fn : null; }, ask };
 };

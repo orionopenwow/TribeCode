@@ -88,7 +88,8 @@
   const isGlobal = () => document.body.dataset.view === 'hub';
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
   function openScratch() {
-    if (isPhone() || !C.connected()) { hubOpen('home'); setTimeout(() => { const t = $('#hub-scratch .sc-in') || $('#scratch-in'); if (t) t.focus(); }, 150); return; }
+    // Phones, no tribe yet, or already on Home: Home shows the scratchpad in its own page.
+    if (isPhone() || !C.connected() || isGlobal()) { hubOpen('home'); setTimeout(() => { const t = $('#hub-scratch .sc-in') || $('#scratch-in'); if (t) t.focus(); }, 150); return; }
     setPanel(false); closePreview();
     setTimeout(() => { const t = $('#scratch-in'); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } }, 60);
   }
