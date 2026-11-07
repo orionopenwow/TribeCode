@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.0
+
+- **Themes**: nine flat matte themes (TribeCode Dark, Light, Midnight, Nordic, Nightshade, Campfire, Solar Dark, Solar Light, High contrast) with a swatch picker and "Match system" in Settings; every theme passes 4.5:1 text contrast; Ctrl+Shift+L flips your light/dark pair
+- **Updates without the fuss**: updates download in the background (Settings switch, on by default); when it's ready, **Restart to update** saves, closes and reopens straight into the new version where you were, with no installer window. The installer and the TribeCode.bat reinstaller got the matte TribeCode look and quiet installs (docs/UPDATES.md)
+- **Viewers**: a 3D viewer for GLB/glTF models (orbit, zoom, animations, stats) and a pixel-art animation viewer for sprite sheets, Aseprite sheets and GIFs (fps, zoom, onion skin, scrubber), from Docs › Art & models and from files in chat (docs/VIEWERS.md)
+- **Phone app mode (iOS / Android)**: a per-project switch; pick Expo, Capacitor or Tauri mobile, set up a starter in the repo, install dependencies on the host, and open it on your phone with the Expo Go QR in Preview (docs/PHONE-APP-MODE.md)
+- **Chat as a list**, like a server channel: avatar, the name in its color with "Today at …", grouped lines, time in the gutter on hover; no bubbles
+- **Your bar, bottom left** (desktop): you, the inbox, Friends and Settings in a bar wedged into the corner; the Friends icon matches the bell
+- Quick start has its icons back (the project's face, a plus, a link) and a few small matte touches (hosting, Scratchpad, Recent activity)
+- **Phones**: themes, viewers (full-screen sheets), the phone-app card and the list-style chat all checked at 390px; phones keep you, the bell and Friends in the top bar
+
 ## v0.7.7
 
 - **Calls, chat and Claude Code, smoke-tested end to end** (app/test/e2e_comms_smoke.py, docs/COMMS-SMOKE.md): project chat and DMs live on desktop and phone and after a reload; three-way huddle voice connects and carries audio both ways; captions reach everyone and land in the meeting notes; Claude Code connects with the printed `claude mcp add` line, shows online, reads chat, posts, and answers @ai

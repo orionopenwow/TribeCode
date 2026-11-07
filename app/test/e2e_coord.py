@@ -302,11 +302,11 @@ def ui_host(b, host, orion, maya, pq, b1):
         wait_text(host, "#sync-status", "connected")
         host.wait_for_selector(f"#pj-rail .pj-circle.on[data-pj-open='{pq}']")
         # the shell: circles, nest, breadcrumbs, right panel
-        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", "#nest-ws-tasks", "#nest-ws-agents", "#nest-settings", "#tour-invite", "#crumbs", "#tour-search", "#tour-room"]:
+        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", "#nest-ws-tasks", "#nest-ws-agents", "#ub-gear", "#tour-invite", "#crumbs", "#tour-search", "#tour-room"]:
             host.wait_for_selector(sel, state="visible")
         wait_text(host, "#crumbs", "pixel-quest")
         # the nest: four rows; the full feature set lives in the Tasks & Board and Agents Hub tabs (e2e_nav.py covers it in depth)
-        for label in ["Chat & Streams", "Docs & Files", "Tasks & Board", "Agents Hub", "Settings"]:
+        for label in ["Chat & Streams", "Docs & Files", "Tasks & Board", "Agents Hub"]:   # Settings: the gear in the bottom-left user bar
             wait_text(host, "#tour-side", label)
         host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
         for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]: wait_text(host, "#view-tabs", label)

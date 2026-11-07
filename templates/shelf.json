@@ -284,6 +284,22 @@
       ]
     },
     {
+      "id": "capacitor",
+      "kind": "library",
+      "title": "Capacitor",
+      "summary": "Turn an existing web app into iPhone and Android apps, with native plugins for camera, files and more.",
+      "repo": "ionic-team/capacitor",
+      "url": "https://capacitorjs.com",
+      "license": "MIT",
+      "for": [
+        "app"
+      ],
+      "install": "npm i @capacitor/core @capacitor/cli",
+      "detect": [
+        "@capacitor/core"
+      ]
+    },
+    {
       "id": "zx",
       "kind": "library",
       "title": "zx",

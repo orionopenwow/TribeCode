@@ -2,12 +2,14 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-07 (v0.7.0 released from `main`: shared compute step 1, phone report; v0.6.9 host reclaim, delete projects, phone Home rack; v0.6.8: phone Home-first flow, task slates; v0.6.7 simpler rack; v0.6.6: Discord-style setup; v0.6.5 server fix + simple Home; v0.6.4: streamlined sidebar; v0.6.3: simpler navigation, living project overview; v0.6.2: phone-only friends and @ai; v0.6.1 one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
+Last updated: 2026-11-07 15:30 (v0.8.0 from `main`: themes, background updates + one-click restart, quiet installer with matte art, GLB + pixel-art viewers, phone app mode, chat as a list (not bubbles), bottom-left user bar. v0.7.7 comms smoke-tested; v0.7.6 Discord/GitHub/Google sign-in; v0.7.5 the Windows desktop app finally reaches its own server, Host switch, Friends + one-time guest passes; v0.7.4 Agent fleet on the dashboard + Open Space switch; v0.7.1 Office/Open Space, demo tribe, project websites, app links, Desktop folders, GitHub sign-in, starter shelf).
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
 
 Pillars: **one link to join · one shared brain (local Qwen + TRIBE_CONTEXT.md) · one vision (VISION.md + Board votes) · agents that coordinate without stepping on each other**.
+
+**Upgraded vision (user, 2026-11-07 14:36): become the #1 vibe coding app.** Niche first (friends building together, each with their own Claude, self-hosted, phones first-class, matte campfire flair), then better than the crowd: a Workshop of projects + featured projects; a GitHub repo scraper that turns open source into reference code, templates and Claude skills (license-checked); the best Claude skills and MCP tools; engines and apps (spawn.co as a browser game-engine reference, Phaser, three.js, Godot, Expo); iOS/Android mode; one-tap dependencies, versions, pushes and releases (no struggling with folders, uploads, pushes); GLB and pixel-art viewers; a tucked-away Guide; no feature bloat. Research + plan: docs/VISION.md and docs/RESEARCH-2026-11.md (agent writing them).
 
 Where it's heading:
 1. Polished phone app (installable PWA now, native iOS via Tauri later).
@@ -42,7 +44,7 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 Restraint: numbers only where they answer a question; few sidebar rows (4 pillars), depth lives in tabs and the right panel, not in long lists; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
-## State (v0.6.0 on `main`)
+## State (v0.8.0 on `main`)
 Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `npm run explore` (fix criticals), `npm run milestone-report` (before/after against the last release, docs/milestones/), `npm run readme-shots`, then the release.
 | Area | Status |
 |---|---|
@@ -54,6 +56,11 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 | Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
+- 2026-11-07 15:08–15:14: Quick start lost its icons → back (project face, plus, link) + small matte touches (hosting 🔥, Scratchpad 📝, Recent activity 🧭) ✅ v0.8.0. Friends icon same height as the bell ✅. You/bell/Friends/Settings in a bar wedged into the bottom-left corner like Discord's user panel ✅. Chat as a list like Discord (avatar, colored name + "Today at …", grouped lines, gutter time on hover), not bubbles ✅. "Never forget your context; always upgrade it with every version and the vision" (standing rule: update this file + the project doc at every release).
+- 2026-11-07 14:32–14:38: Server only runs when a tribe exists, you're in it and Host is on ✅ v0.7.5. Friends button + list + add friends ✅ v0.7.5. One-time guest accounts ✅ v0.7.5. Discord/GitHub/Google auth ✅ v0.7.6. Become the #1 vibe coding app: vision, deep research, Workshop/featured/repo scraper/skills/engines/spawn.co/iOS-Android/dependencies, a tucked-away Guide wiki (agent running). GLB + pixel-art viewers ✅ v0.8.0. Smoke-test huddle voice, voice-to-text notes, after-huddle summary to the repo, messages, Claude Code chatting ✅ v0.7.7. Installer/reinstaller look + background updates + instant Restart to update ✅ v0.8.0. Several themes with a picker in Settings ✅ v0.8.0.
+- 2026-11-07 14:24: Agent fleet keeps the dashboard sidebar; Open Space (pixel office) with an on/off switch there ✅ v0.7.4.
+- 2026-11-07 14:01–14:19: GitHub OAuth App steps (user registering it); desktop app "nothing goes through" → root cause: on Windows the page is http://tauri.localhost and the client used that as its server ✅ v0.7.5; swap green/red window buttons ✅ v0.7.3; polish Getting started ✅ v0.7.3; closing the app stops the server (it does).
+- 2026-11-07 earlier: Open Space inside TribeCode ✅ v0.7.1; demo tribe (2D Lantern Run + 3D Crooked Kettle) ✅; project websites ✅; Home Screen/desktop app links, Desktop folders, GitHub sign-in ✅; starter shelf + gamedev skills ✅; matte emoji ✅.
 - 2026-11-07 09:46–09:55: Phone Home rack (shows on scroll up, hides on scroll down, + to start/join) ✅ v0.6.9; plan for starting tribes on phones and sharing hosting ✅ docs/MOBILE-TRIBES.md; Create showed 'server already running with other members' ✅ host reclaim v0.6.9; smoke-test create/delete/project management live ✅ e2e_smoke_live + delete projects v0.6.9; remove Share/Invite from the Home panel ✅; logo goes Home ✅; test every phone feature with saved data, report, suggest, polish ✅ e2e_phone_features + docs/PHONE-REPORT.md v0.7.0; shared compute tucked into Helpers ✅ step 1 v0.7.0 (docs/SHARED-COMPUTE.md).
 - 2026-11-07 09:31–09:32: Phone: fire logo top left opens the projects panel; no search/docs top right; Home header + no bottom rack until in a project; Settings only where relevant; tasks as horizontal slates. ✅ v0.6.8
 - 2026-11-07 09:26: Remove the + and the profile picture from the phone's bottom rack. ✅ v0.6.7 (profile in the top bar, New task / New doc on their screens)
@@ -95,12 +102,17 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 
 ## Next up
 - The feature roadmap lives in docs/FEATURES-NEXT.md (now with Part 3 from the Explorer). Storage, backups and persistence are in docs/DATA.md.
-1. The user updates the desktop app to v0.6.0 (Restart to update or TribeCode.bat) and tries Home.
+1. The user updates to v0.8.0 and confirms on Windows: Create your first project signs in; Settings › GitHub (OAuth App client id); Agent fleet › Office switch; Restart to update reopens straight into the new version; the new installer art.
+1b. Merge the vision/guide agent (docs/VISION.md, docs/RESEARCH-2026-11.md, Guide in the profile menu + Ctrl K); then build the roadmap's Now items (Workshop + featured projects, repo scraper → reference code/skills).
 2. Set up the nightly self-upgrade task from docs/NIGHTLY-UPGRADE.md.
 3. Walk through the Pixel Quest test project with a real friend's phone; real-device checks (iPhone Safari join + Home Screen, Web Push, speech, Messenger banner, Tailscale Funnel).
 4. Security follow-ups (H5, M2–M5). Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
 
 ## Decisions
+- 2026-11-07: The Windows desktop page origin is http://tauri.localhost; TribeClient.base() must never use it as the server. WebView2 enforces Private Network Access preflights, so the server answers OPTIONS with Access-Control-Allow-Private-Network: true (app/test/e2e_friends.py models this). Newer Chromium's Local Network Access prompt would block it; disabling that check in the app window needs the user's OK (asked, pending).
+- 2026-11-07: The desktop server starts only when you have a tribe here (settings.hosting) and Host is on (not hostOff); a fresh install starts nothing.
+- 2026-11-07: Guest passes = one-use invites; the account stops working after guestHours (default 24h) and is hidden from lists. OAuth sign-back-in adds a device key instead of rotating the member key.
+- 2026-11-07: After-huddle summaries commit only the summary + mood to the repo (repos can be public); the transcript stays in Docs.
 - 2026-11-07: Open Space is integrated as an optional host-only tool (cloned at a pinned commit, `npm ci --ignore-scripts`, port 4850, opened in the host's browser because it refuses framing). Bump `REF` in server/openspace.js only after reading upstream changes.
 - 2026-11-07: The 3D demo is an original tavern (no WotLK content); only Leyline's bot design ideas (labelled bots, roles, orders, data in JSON) were reused.
 - 2026-11-07: Every version keeps the phone in step (user's rule): each change also lands in the phone layout, checked at 390px, and the CHANGELOG has a phone line.

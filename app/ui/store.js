@@ -6,7 +6,9 @@
     onboarded: false,
     name: '',
     color: '#F26B1D',
-    theme: 'dark',            // dark | light | system
+    theme: 'dark',            // a theme id from themes.js (dark = TribeCode Dark); 'system' is the old "follow the OS"
+    themeSystem: false,       // follow the OS light/dark setting with themeLight / themeDark
+    themeDark: 'dark', themeLight: 'light',
     density: 'comfortable',   // comfortable | compact
     folder: '',
     brain: { enabled: false, model: '', host: 'http://localhost:11434' },

@@ -1,0 +1,99 @@
+/* Asset viewers (app/ui/viewers.js): flat matte, 1px borders, depth from luminance steps only. The 3D stage is the
+   matte canvas color; pixel art sits on a drawn checkerboard and always scales nearest-neighbor. */
+.vw-back { position: fixed; inset: 0; z-index: 80; background: rgba(8, 10, 13, .72); display: grid; place-items: center; padding: 24px; }
+.vw { width: min(1040px, 100%); height: min(720px, 100%); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-panel, 16px); overflow: hidden; }
+.vw button { -webkit-tap-highlight-color: transparent; }
+.vw-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 12px 18px; border-bottom: 1px solid var(--edge); flex: none; }
+.vw-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); color: var(--text); flex: none; }
+.vw[data-kind="model"] .vw-ic { color: var(--live-ink, #38C6B1); }
+.vw[data-kind="sprite"] .vw-ic { color: var(--accent-ink, #F26B1D); }
+.vw-t { flex: 1; min-width: 0; line-height: 1.25; }
+.vw-t .eyebrow { display: block; margin-bottom: 2px; }
+.vw-t h2 { margin: 0; font: 700 16px/1.3 var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vw-t small { font: 11.5px var(--mono); color: var(--faint); }
+.vw-x { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); border: 1px solid transparent; flex: none; }
+.vw-x:hover { background: var(--surface-2); border-color: var(--edge); color: var(--text); }
+.vw-i { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.vw-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.vw-load, .vw-err { margin: auto; padding: 24px; color: var(--muted); text-align: center; max-width: 52ch; line-height: 1.6; }
+.vw-err h3 { color: var(--text); margin: 6px 0; font-size: 17px; }
+.vw-err p { margin: 0; overflow-wrap: anywhere; }
+
+.vw-stage { position: relative; flex: 1; min-height: 0; background: #12151A; overflow: hidden; }
+.vw-3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.vw-3d canvas:active { cursor: grabbing; }
+.vw-hint { position: absolute; left: 12px; bottom: 10px; font: 11px var(--mono); color: #94A3B8; background: #12151A; border: 1px solid #2A313C; border-radius: 999px; padding: 4px 9px; pointer-events: none; }
+.vw-info { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 10px 14px 12px 18px; border-top: 1px solid var(--edge); background: var(--raised, var(--surface-2)); flex: none; }
+.vw-stat { display: inline-flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.vw-stat small { font: 500 10px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.vw-stat b { font: 600 14px/1.3 var(--mono); color: var(--text); white-space: nowrap; }
+.vw-sp { flex: 1; }
+.vw-anim { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.vw-clipname { font: 12.5px var(--mono); color: var(--muted); max-width: 18ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vw-clip { height: 34px; min-width: 0; max-width: 200px; padding: 0 8px; font-size: 13px; }
+.vw-btn { width: 36px; height: 36px; border-radius: 9px; display: inline-grid; place-items: center; color: var(--text); background: var(--surface); border: 1px solid var(--edge); flex: none; }
+.vw-btn:hover { background: var(--surface-2); }
+.vw-btn.vw-main { background: var(--accent, #F26B1D); border-color: var(--accent, #F26B1D); color: #12151A; }
+
+/* pixel art */
+.vw-pix { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 34%); grid-template-rows: minmax(0, 1fr) auto auto; }
+.vw-pstage { grid-column: 1; grid-row: 1; display: grid; place-items: center; padding: 12px; overflow: auto; min-height: 180px; }
+.vw-px { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+.vw-pstage canvas { border: 1px solid #2A313C; max-width: none; }
+.vw-ctl { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 12px 18px; border-top: 1px solid var(--edge); }
+.vw-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.vw-wrap { flex-wrap: wrap; gap: 8px 14px; }
+.vw-scrub { flex: 1; min-width: 60px; accent-color: var(--accent, #F26B1D); height: 32px; }
+.vw-fno { font: 12.5px var(--mono); color: var(--muted); min-width: 6ch; text-align: right; }
+.vw-f { display: inline-flex; align-items: center; gap: 8px; }
+.vw-f small, .vw-dims small { font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.vw-f input { width: 120px; accent-color: var(--accent, #F26B1D); }
+.vw-f b { font: 600 13px var(--mono); color: var(--text); min-width: 2ch; }
+.vw-seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 9px; overflow: hidden; }
+.vw-seg button { min-width: 40px; height: 32px; padding: 0 10px; font: 12.5px var(--mono); color: var(--muted); background: var(--surface); }
+.vw-seg button + button { border-left: 1px solid var(--edge); }
+.vw-seg button[aria-pressed="true"] { background: var(--surface-3, #2A313C); color: var(--text); }
+.vw-tog { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--edge); background: var(--surface); color: var(--muted); font-size: 13px; }
+.vw-tog[aria-pressed="true"] { color: var(--live-ink, #38C6B1); border-color: var(--live, #38C6B1); }
+.vw-dims { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.vw-dims label { display: inline-flex; align-items: center; gap: 6px; }
+.vw-dims input { width: 62px; height: 32px; padding: 0 6px; font: 13px var(--mono); }
+.vw-dims.vw-off { opacity: .45; }
+.vw-sheet { grid-column: 2; grid-row: 1 / span 2; border-left: 1px solid var(--edge); padding: 12px; overflow: auto; background: var(--surface-2); }
+.vw-sheet canvas { max-width: 100%; height: auto; cursor: pointer; border: 1px solid var(--edge); }
+.vw-pix .vw-info { grid-column: 1 / -1; grid-row: 3; }
+
+/* phones: a full-screen sheet, touch-sized controls, the sheet image under the controls */
+@media (max-width: 820px) {
+  .vw-back { padding: 0; place-items: stretch; }
+  .vw, .vw.sheet { width: 100%; height: 100%; max-height: none; border-radius: 0; border: 0; }
+  .vw-head { padding: calc(10px + env(safe-area-inset-top, 0px)) 8px 10px 14px; }
+  .vw-x { width: 44px; height: 44px; }
+  .vw-pix { display: flex; flex-direction: column; overflow-y: auto; }
+  .vw-pstage { flex: none; height: 46vh; min-height: 200px; }
+  .vw-sheet { border-left: 0; border-top: 1px solid var(--edge); flex: none; }
+  .vw-btn { width: 44px; height: 44px; }
+  .vw-seg button, .vw-tog { height: 40px; }
+  .vw-f input { width: 96px; }
+  .vw-info { gap: 6px 14px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .vw-stat b { font-size: 13px; }
+  .vw-hint { right: 12px; text-align: center; }
+}
+
+/* the repo's assets, under the pinned repo hero */
+.vw-assets { margin: 0 0 16px; }
+.vw-assets .sec-head { margin-bottom: 4px; }
+.vw-assets .sec-head h2 { font-size: 16px; margin: 2px 0 0; }
+.vw-alead { margin: 0 0 8px; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.vw-alist { display: flex; flex-direction: column; border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.vw-arow { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 10px; min-width: 0; }
+.vw-arow + .vw-arow { border-top: 1px solid var(--edge); }
+.vw-aic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); flex: none; }
+.vw-aic.k-model { color: var(--live-ink, #38C6B1); }
+.vw-aic.k-sprite { color: var(--accent-ink, #F26B1D); }
+.vw-at { flex: 1; min-width: 0; line-height: 1.3; }
+.vw-at b { display: block; font: 600 13px var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vw-at small { display: block; font: 11px var(--mono); color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vw-amore { margin-top: 8px; font-size: 12.5px; }
+/* a chat file chip with a View button */
+.fchip-view { margin-left: 6px; vertical-align: middle; }

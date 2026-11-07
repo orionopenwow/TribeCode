@@ -1,0 +1,85 @@
+{
+ "frames": {
+  "hero 0.aseprite": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 8
+   },
+   "duration": 300
+  },
+  "hero 1.aseprite": {
+   "frame": {
+    "x": 8,
+    "y": 0,
+    "w": 8,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 8
+   },
+   "duration": 100
+  },
+  "hero 2.aseprite": {
+   "frame": {
+    "x": 16,
+    "y": 0,
+    "w": 8,
+    "h": 8
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 8
+   },
+   "sourceSize": {
+    "w": 8,
+    "h": 8
+   },
+   "duration": 200
+  }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "image": "hero.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 24,
+   "h": 8
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "blink",
+    "from": 0,
+    "to": 1,
+    "direction": "forward"
+   }
+  ]
+ }
+}

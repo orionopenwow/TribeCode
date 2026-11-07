@@ -17,12 +17,13 @@
     claims: [{ id: 'claim-1', path: 'src/world/campfire.ts' }],
   } : { peers: [], agentRuns: [], claims: [] };
 
+  // Themes live in themes.js / themes.css: a base mode (body.dark / body.light) plus data-theme on <body>.
   function applyTheme(t) {
+    if (window.TribeThemes) return window.TribeThemes.apply(typeof t === 'string' && t !== S.get().theme ? t : S.get());
     const mode = t === 'system' ? (mq.matches ? 'light' : 'dark') : t;
-    document.body.classList.toggle('dark', mode === 'dark');
+    document.body.classList.toggle('dark', mode !== 'light');
     document.body.classList.toggle('light', mode === 'light');
   }
-  mq.addEventListener('change', () => { if (S.get().theme === 'system') applyTheme('system'); });
 
   const CHECKS = [
     { key: 'setup', label: 'Set up this computer', go: 'Open', run: () => window.TribeOnboarding.open({ fromSettings: true }) },
@@ -582,8 +583,8 @@
   if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
-      const next = document.body.classList.contains('dark') ? 'light' : 'dark';
-      S.set({ theme: next }); refresh(); e.preventDefault();
+      const st = S.get(), next = document.body.classList.contains('dark') ? (st.themeLight || 'light') : (st.themeDark || 'dark');   // flips between your light and dark theme
+      S.set(window.TribeThemes ? { ...window.TribeThemes.pick(next), themeSystem: false } : { theme: next }); refresh(); e.preventDefault();
     }
   });
 
@@ -647,7 +648,7 @@
   (async () => {
     await window.TribeSettings.autoSetup(); refresh();
     // Every launch starts at your Home (the hub), apart from any tribe. Deep links (#/…) and automated tests keep their own start.
-    if ((params.has('home') || !navigator.webdriver) && !location.hash && window.TribeHub) setTimeout(() => window.TribeHub.open('home'), 0);
+    if ((params.has('home') || !navigator.webdriver) && !location.hash && !window.__tribeRestoredView && window.TribeHub) setTimeout(() => window.TribeHub.open('home'), 0);
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
     // The desktop app showing a page served by a TribeCode server (the Working version) talks to that server; it doesn't host its own.
     const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);

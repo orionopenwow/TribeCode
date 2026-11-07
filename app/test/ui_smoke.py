@@ -44,7 +44,7 @@ def main():
         page.wait_for_selector("#settings-modal:not(.hidden) #set-name")
         page.fill("#set-name", "Riley Park"); page.press("#set-name", "Tab")
         page.click('#settings-body [data-color="#FFB86B"]')
-        page.click('#settings-body [data-theme="dark"]')
+        page.click('#settings-body [data-theme-id="dark"]')   # the theme picker (themes.js)
         page.wait_for_function("!document.querySelector('#settings-body').innerText.includes('Looking')", timeout=5000)
         shot(page, "settings")
         assert page.inner_text("#room-me") == "RP"
@@ -73,10 +73,10 @@ def main():
 
         # ---- updater ----
         page.goto(UI + "?demo=1&simulateUpdate=0.2.0")
-        page.wait_for_selector("#update-btn:not(.hidden)")   # a quiet icon next to the profile (refresh glyph + Teal dot)
-        page.wait_for_function("document.querySelector('#update-btn').classList.contains('ready') && document.querySelector('#update-btn-label').textContent.startsWith('Update ready')", timeout=5000)
+        # downloads quietly in the background, then a small "Restart to update" pill next to the profile
+        page.wait_for_function("document.querySelector('#update-btn').classList.contains('ready') && document.querySelector('#update-btn-label').textContent.startsWith('Restart to update')", timeout=5000)
         shot(page, "update-pill")
-        page.click("#update-btn")
+        page.click("#update-btn", button="right")   # right-click: the details (notes, hand-off, Later)
         page.wait_for_selector("#update-pop:not(.hidden)")
         assert "v0.2.0 is ready" in page.inner_text("#update-pop")
         assert page.locator(".handoff-to").count() == 2
@@ -85,8 +85,7 @@ def main():
         page.click('[data-ms="3600000"]')
         assert page.is_hidden("#update-pop")
         assert "quiet" in page.get_attribute("#update-btn", "class")
-        page.click("#update-btn")
-        page.click("#up-go")
+        page.click("#update-btn")   # one click: save, install, reopen
         page.wait_for_function("!location.search.includes('simulateUpdate')", timeout=8000)
         page.wait_for_timeout(1000)
         assert "Updated to v0.2.0" in page.inner_text(".toast")

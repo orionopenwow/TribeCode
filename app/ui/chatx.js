@@ -145,7 +145,7 @@
       if (m.vote && window.TribeVotes) body += window.TribeVotes.card(m, ch);
       else if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}${META}</p>` : '');
       else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy">${m.text ? '' : META}</button>${m.text ? `<p>${md(m.text)}${META}</p>` : ''}`;
-      else if (m.media && m.media.kind === 'file') body += `<a class="fchip-dl" href="${esc(mediaUrl(ch, m.media.file))}" download="${esc(m.media.name || 'file')}" title="Download ${esc(m.media.name || 'file')}">${icon('i-down')}<span class="fd-t"><b>${esc(m.media.name || 'file')}</b><small>${esc(kb(m.media.size))}</small></span></a>${m.text ? `<p>${md(m.text)}${META}</p>` : META}`;
+      else if (m.media && m.media.kind === 'file') body += `<a class="fchip-dl" href="${esc(mediaUrl(ch, m.media.file))}" download="${esc(m.media.name || 'file')}" title="Download ${esc(m.media.name || 'file')}">${icon('i-down')}<span class="fd-t"><b>${esc(m.media.name || 'file')}</b><small>${esc(kb(m.media.size))}</small></span></a>${window.TribeViewers && window.TribeViewers.kindOf(m.media.name) ? `<button class="btn sm fchip-view" data-view-src="${esc(mediaUrl(ch, m.media.file))}" data-view-name="${esc(m.media.name)}" data-view-size="${Number(m.media.size) || 0}">View</button>` : ''}${m.text ? `<p>${md(m.text)}${META}</p>` : META}`;
       else body += `<p>${md(m.text || '')}${m.gist ? '' : META}</p>`;   // gists.js swaps a gist's <p> for its card, so its time sits below
       if (!m.vote) body += linkChips(m.text);
       body += reactsHtml(m);
@@ -155,10 +155,13 @@
       const parts = body.split(META);
       body = parts.length > 1 ? parts.slice(0, -1).join('') + meta + parts[parts.length - 1] : body + `<div class="mt-row">${meta}</div>`;
     }
-    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}</b>`;
+    const day = new Date(m.at), today = new Date().toDateString() === day.toDateString(), yest = new Date(Date.now() - 864e5).toDateString() === day.toDateString();
+    const stamp = `${today ? 'Today' : yest ? 'Yesterday' : day.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${when}`;
+    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}<time class="nm-t">${esc(stamp)}</time></b>`;
+    const gut = `<time class="gut-t" aria-hidden="true">${esc(when)}</time>`;   // continuation lines: the time shows in the gutter on hover
     const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo') : m.gist ? 'gist-msg' : '';
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
-    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}
+    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}${sys ? '' : gut}
       <div class="mb">${nm}${body}</div>${more}</div>`;
   }
   function rerender(id) {

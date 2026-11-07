@@ -178,7 +178,8 @@ def main():
             host.wait_for_function("document.querySelector('#wt-calendar') && document.querySelector('#wt-calendar').classList.contains('on')")
             host.goto(BASE + "/?skipIntro=1#/agents/reviews"); host.wait_for_function("window.TribeCoord && TribeCoord.tab() === 'reviews' && !document.querySelector('#view-coord').classList.contains('hidden')", timeout=10000)
             no_dupes(host)
-            for l in CORE + ["Settings", "Invite friends"]: assert l in no_dupes(host), l
+            for l in CORE + ["Invite friends"]: assert l in no_dupes(host), l
+            assert host.locator("#userbar #ub-gear").is_visible(), "Settings is the gear in the user bar"
 
             # ---- breadcrumb menu mirrors the hierarchy
             host.click("#crumb-section"); host.wait_for_selector("#section-menu")
@@ -200,7 +201,7 @@ def main():
             host.wait_for_function("TribeCoord.tab() === 'conflicts' && document.querySelector('#wt-conflicts').classList.contains('on')")
 
             # ---- bottom row: Settings and Invite work
-            host.click("#nest-settings"); host.wait_for_selector("#settings-modal:not(.hidden) #set-name")
+            host.click("#ub-gear"); host.wait_for_selector("#settings-modal:not(.hidden) #set-name")
             host.keyboard.press("Escape"); host.evaluate("TribeSettings.close()")
             host.click("#tour-invite"); host.wait_for_selector("#invite-modal:not(.hidden) #inv-link")
             host.keyboard.press("Escape")

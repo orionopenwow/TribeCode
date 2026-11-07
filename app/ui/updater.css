@@ -40,3 +40,18 @@
 .up-menu button:hover { background: var(--surface-2); }
 
 .update-pop::before { content: ''; position: absolute; top: -7px; left: var(--arrow, auto); right: auto; width: 12px; height: 12px; background: var(--surface); border-left: 1px solid var(--edge-pop); border-top: 1px solid var(--edge-pop); transform: rotate(45deg); }
+
+/* Restart to update / Update available: a small flat pill (updater.js). Ember = the action; a quiet Teal dot = available. */
+.update-btn.pill { width: auto; height: 32px; padding: 0 12px 0 10px; gap: 7px; display: inline-flex; align-items: center; border-radius: 999px;
+  border: 1px solid var(--edge); background: var(--surface-2); color: var(--text); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.update-btn.pill svg.i { width: 15px; height: 15px; }
+.update-btn.pill .ub-dot { display: none; }
+.update-btn.pill .sr { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+.update-btn.ready { border-color: var(--accent); background: var(--chip); color: var(--accent-ink); }
+.update-btn.ready:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.update-btn.ready.quiet { border-color: var(--edge); background: var(--surface-2); color: var(--muted); }
+.update-btn.available svg.i { color: var(--live-ink); }
+.update-btn.available:hover { border-color: var(--edge-pop); background: var(--hover); }
+.update-btn.restarting { cursor: progress; color: var(--muted); }
+.update-btn.restarting svg.i { animation: spin 1s linear infinite; }
+@media (max-width: 820px) { .update-btn.pill { height: 30px; padding: 0 10px 0 8px; font-size: 12px; } }

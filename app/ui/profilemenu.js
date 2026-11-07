@@ -66,7 +66,9 @@
   function open() {
     draw();
     const r = btn.getBoundingClientRect();
-    menu.style.top = `${r.bottom + 8}px`; menu.style.right = `${Math.max(8, innerWidth - r.right)}px`;
+    if (r.top > innerHeight / 2) {   // in the bottom-left user bar (desktop): open upward, from the left
+      menu.style.right = 'auto'; menu.style.left = `${Math.max(8, r.left)}px`; menu.style.top = 'auto'; menu.style.bottom = `${innerHeight - r.top + 8}px`;
+    } else { menu.style.left = 'auto'; menu.style.bottom = 'auto'; menu.style.top = `${r.bottom + 8}px`; menu.style.right = `${Math.max(8, innerWidth - r.right)}px`; }
     menu.classList.remove('hidden'); btn.setAttribute('aria-expanded', 'true');
     const first = menu.querySelector('.pf-item'); if (first) first.focus();
   }
@@ -88,7 +90,7 @@
     else if (a === 'settings') window.TribeSettings ? window.TribeSettings.open() : click('#settings-btn');
     else if (a === 'working') window.TribeUi.useUi('working');
     else if (a === 'installed') window.TribeUi.useUi('installed');
-    else if (a === 'restart') window.TribeUpdater.openPop();
+    else if (a === 'restart') window.TribeUpdater.restartNow();   // one click: save, install, reopen (updater.js)
     else if (a === 'update') { window.TribeUpdater.check(); window.TribeApp && window.TribeApp.toast('Checking for updates…'); }
   });
 

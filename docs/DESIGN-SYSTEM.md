@@ -29,6 +29,13 @@ Thermal contrast and semantic clarity: a deep, low-fatigue obsidian environment 
 
 Light mode mirrors the same rules: paper canvas `#F4F5F7`, white cards, `#DADFE6` hairlines, ink `#12151A`, the same brand/live/peer accents.
 
+**Themes** (Settings › Theme) are custom-property overrides only, never new components.
+- TribeCode Dark (the default) and Light are the base modes. The others are Midnight, Nordic, Nightshade, Campfire, Solar Dark, Solar Light and High contrast.
+- Each theme is a base mode plus `data-theme` on `<body>`. The list is in `app/ui/themes.js` and the values in `app/ui/themes.css`.
+- Ember stays the action color in every theme.
+- Body text must reach 4.5:1 on every surface. Run `node scripts/theme-contrast.js` after changing any value.
+- Use variables (`--canvas`, `--surface`, `--text`…), never hard-coded hex, so new UI follows every theme.
+
 ## 3. Rules for building
 
 - **No** `backdrop-filter`, **no** glow `box-shadow`, **no** gradient fills on surfaces or text. A flat `box-shadow: 0 0 0 1px var(--border)` hairline is fine. Popovers and modals sit on a flat scrim and get a border, not a shadow.

@@ -1,5 +1,5 @@
 /* Friends panel (friends.js): flat matte, same frame as the inbox panel. */
-.fr-btn .i { width: 18px; height: 18px; }
+.fr-btn .i { width: 17px; height: 17px; }   /* same box as the bell; the glyph fills it the same way */
 .fr-panel { display: flex; flex-direction: column; }
 .fr-head { display: flex; align-items: flex-end; justify-content: space-between; padding: 20px 20px 14px; border-bottom: 1px solid var(--edge); }
 .fr-head h2 { margin: 2px 0 0; font-size: 20px; }
