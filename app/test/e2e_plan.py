@@ -194,7 +194,7 @@ def main():
 
             # Upcoming card on Home lists the next items
             host.click('[data-nav="home"]:visible')
-            host.wait_for_selector("#upcoming-card .up-item", timeout=5000)
+            host.wait_for_selector("#upcoming-card .up-item", state="attached", timeout=5000)   # the overview shows its own Upcoming; this one stays as data
             assert "Fix controller drift" in host.inner_text("#upcoming-card"), host.inner_text("#upcoming-card")
 
             # ---------- 2. reminders ----------
