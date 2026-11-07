@@ -34,7 +34,14 @@ git checkout --quiet -B dev origin/dev
 git branch --quiet --set-upstream-to=origin/dev dev
 
 set "TRIBE_DIR=%~dp0tribe-data"
+rem Stop anything already on 4848 (an older Working window).
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr /r /c:":4848 .*LISTENING"') do taskkill /F /PID %%p >nul 2>nul
 echo.
 echo  Working TribeCode: http://localhost:4848   (test tribe: %TRIBE_DIR%)
-node scripts\live.js --port 4848
+echo  Keep this window open while you test. Close it to stop.
+rem Open it in its own app window (like the desktop app), a few seconds after the server starts.
+start "" /b cmd /c "timeout /t 4 >nul && (start msedge --app=http://localhost:4848 || start http://localhost:4848)"
+node scripts\live.js --port 4848 --no-open
+echo.
+echo  The server stopped. If there is an error above, send it to Claude.
 pause
