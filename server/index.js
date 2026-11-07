@@ -42,7 +42,8 @@ const makeWorkshopMcp = require('./mcp-workshop');
 const makeSecretary = require('./secretary');
 const makeAgentsHub = require('./agentshub');
 const makePreview = require('./preview');
-const makeDashboard = require('./dashboard');
+const makeHub = require('./hub');
+const makeScratch = require('./scratch');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -154,7 +155,7 @@ function broadcast(msg, except) {
     pid = msg.project || (msg.approval && msg.approval.project) || chPid || (ch && !chPid ? null : P.current());
     if (type === 'approval' && !msg.project && !(msg.approval && msg.approval.project)) pid = P.defaultId();
   }
-  if (dashboard) dashboard.onEvent(type, pid);   // the tribe dashboard recomputes for whoever can see pid (server/dashboard.js)
+  if (dashboard) dashboard.onEvent(type, pid);   // the Global Hub recomputes for whoever can see pid (server/hub.js)
   const asGeneral = typeof msg.channel === 'string' && pid && msg.channel === P.channelOf(pid) && msg.channel !== 'general' ? { ...msg, channel: 'general' } : msg;
   for (const [mid, o] of online) {
     const mem = memberById(mid); if (!mem) continue;
@@ -167,7 +168,7 @@ function broadcast(msg, except) {
     }
   }
 }
-let dashboard = null;   // server/dashboard.js (made below)
+let dashboard = null;   // the Global Hub, server/hub.js (made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
@@ -319,9 +320,11 @@ const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, doc
 require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
 const agentsHub = makeAgentsHub({ P, store: baseStore, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary });
-// The tribe dashboard (server/dashboard.js): what you see with no project selected. Member-scoped, rolling.
-dashboard = makeDashboard({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
-  isOnline: mid => online.has(mid), nameOf, str, slug });
+// The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
+dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
+  isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
+// The global scratchpad (server/scratch.js): private quick notes per member, filed into a project later.
+const scratch = makeScratch({ P, base: baseStore, docs, createTask: o => createTask(o), id, str });
 bus.on('notify', n => dashboard.onNotify(n));
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
@@ -403,6 +406,7 @@ async function api(req, res, url) {
   let pid = P.defaultId();
   if (who) {
     pid = P.pick(who, wanted || null, (online.get(who.id) || {}).project || who.project);
+    if (!pid && !wanted && /^\/api\/(hub|scratch)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // the hub and scratchpad need no project (never reads it)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
   return P.inProject(pid, () => apiInProject(req, res, url));
@@ -663,7 +667,8 @@ async function apiInProject(req, res, url) {
   if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
   if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }   // the Secretary (server/secretary.js)
-  if (a === 'dashboard') { const h = await dashboard.route(req, res, ctx()); if (h !== null) return; }   // the tribe dashboard (server/dashboard.js)
+  if (a === 'hub' || a === 'dashboard') { const h = await dashboard.route(req, res, ctx()); if (h !== null) return; }   // the Global Hub (server/hub.js)
+  if (a === 'scratch') { const h = await scratch.route(req, res, ctx()); if (h !== null) return; }   // private scratchpad (server/scratch.js)
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;

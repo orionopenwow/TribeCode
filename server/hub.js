@@ -1,13 +1,19 @@
-// The tribe dashboard: what you see when no project is selected (app/ui/dashboard.js).
-//   GET  /api/dashboard           member-scoped: ONLY projects the member can see (P.canSee)
-//        { hero, more, feed, notes, suggestions, status, projects, people, rev, at }
-//   POST /api/dashboard/dismiss   { id }            "not now" on a suggestion (or "done" on a hero item), remembered
-//   POST /api/dashboard/note      { project, text } quick note filed into a project (a doc in that project)
+// The Global Hub: what you see when no project is selected (app/ui/hub.js). Grew out of the tribe dashboard.
+//   GET  /api/hub                member-scoped: ONLY projects the member can see (P.visibleTo / P.canSee)
+//        { hero, more, feed, notes, suggestions, status, fleet, projects, people, prefs, rev, at }
+//   GET  /api/hub/fleet          your agents (status, task/focus, context %, tokens), local models, background loops
+//   GET  /api/hub/repos          every visible project's repo: name, branch, ahead/behind, dirty, remote, last commit
+//   GET  /api/hub/docs?q=        docs across visible projects (title/body search)
+//   PUT  /api/hub/prefs          { pins: [projectId] }  pinned projects in the workspace switcher (per member)
+//   POST /api/hub/dismiss        { id }            "not now" on a suggestion, remembered
+//   POST /api/hub/note           { project, text } quick note filed into a project (a doc in that project)
+//   POST /api/hub/seen           { project }       "I was just there" (rolling "N new since" suggestions)
+// /api/dashboard/... stays as an alias.
 //
 // Rolling, not polling: project snapshots (the feed of what changed) are cached per project and rebuilt only
 // after an event in that project (index.js calls onEvent from broadcast, and bus 'notify' marks recipients).
 // Member views are cached per member and recomputed at most every THROTTLE ms; when the result's signature
-// changes, the member's sockets get a tiny { type: 'dashboard', rev } and the page fetches the new view.
+// changes, the member's sockets get a tiny { type: 'hub', rev } and the page fetches the new view.
 'use strict';
 const fs = require('node:fs');
 const crypto = require('node:crypto');
@@ -17,7 +23,7 @@ const THROTTLE = Number(process.env.TRIBE_DASH_THROTTLE_MS) || 4000;   // at mos
 const DEBOUNCE = 700;
 const STALE_MS = 60_000;          // a GET recomputes when the cached view is older than this, even without events
 const FEED_DAYS = 14, FEED_MAX = 60, PER_PROJECT = 24;
-const WATCH = new Set(['chat', 'chat-update', 'task', 'task-removed', 'gist', 'approval', 'doc', 'doc-removed', 'flow', 'secretary', 'proposal', 'projects', 'presence', 'milestones']);
+const WATCH = new Set(['coord', 'repo', 'people', 'chat', 'chat-update', 'task', 'task-removed', 'gist', 'approval', 'doc', 'doc-removed', 'flow', 'secretary', 'proposal', 'projects', 'presence', 'milestones']);
 
 const clip = (s, n = 140) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; };
 const plain = s => String(s || '').replace(/\*\*|__|`|^>\s?/gm, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
@@ -25,12 +31,14 @@ const t = v => { const x = Date.parse(v); return Number.isFinite(x) ? x : 0; };
 const iso = v => new Date(v).toISOString();
 const DAY = 86400_000;
 
-module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTasks, docs, approvals, flow: flowIn, secretary, workshop, pocket, sendTo, isOnline, nameOf, str, slug }) {
-  let flow = flowIn || null;   // server/flow.js is made after the dashboard (setFlow)
+module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, docs, approvals, flow: flowIn, secretary, workshop, pocket, sendTo, isOnline, nameOf, str, slug,
+    brain = null, coord = null, people = null, hubFor = null, preview = null, agentSeen = null, idleMs = 180_000 }) {
+  let flow = flowIn || null;   // server/flow.js is made after the hub (setFlow)
   const FILE = '.tribe/dashboard.json';
   const db = base.readJSON(FILE, null) || {};
   db.dismissed = db.dismissed || {};   // memberId -> { id: iso }
   db.seen = db.seen || {};             // memberId -> { projectId: iso } (last time they were in the project)
+  db.prefs = db.prefs || {};           // memberId -> { pins: [projectId] }
   let saveT = null;
   const save = () => { clearTimeout(saveT); saveT = setTimeout(() => base.writeJSON(FILE, db), 300); };
   const member = mid => getMembers().find(m => m.id === mid) || null;
@@ -69,6 +77,12 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
         const title = (r.body.match(/^#\s+(.+)$/m) || [])[1] || f.replace(/^.*[\\/]/, '').replace(/\.md$/, '');
         add({ id: `decision:${f.replace(/^.*[\\/]/, '')}`, kind: 'decision', at, title: clip(plain(title), 140), by: r.meta.by || null, byName: r.meta.by ? nameOf(r.meta.by) : '', ref: { type: r.meta.vote ? 'chat' : 'decision', id: r.meta.vote || null } });
       }
+      // proposals (the Board): new ones and how they ended
+      for (const f of pstore.listMd('proposals')) {
+        const r = pstore.readMd(f); if (!r || !r.meta || !r.meta.id) continue; const x = r.meta;
+        add({ id: `proposal:${x.id}`, kind: 'proposal', at: x.closed || x.created, title: clip(plain(x.title), 140), by: x.by || null, byName: x.by ? nameOf(x.by) : '',
+          sub: x.status === 'approved' ? 'Approved' : x.status === 'parked' ? 'Parked' : 'Proposed', ref: { type: 'proposal', id: x.id } });
+      }
       // new docs (created) and edits (updated by someone)
       try {
         for (const d of docs.list().slice(0, 30)) {
@@ -84,7 +98,9 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
     const chat = base.readJSONL(`chat/${p.channel}.jsonl`, 300);
     let lines = 0;
     for (let i = chat.length - 1; i >= 0 && lines < 3; i--) {
-      const m = chat[i]; if (!m || m.deleted || m.by === 'tribecode' || m.gist || m.vote || m.voteResult || !m.text) continue;
+      const m = chat[i]; if (!m || m.deleted) continue;
+      if (m.vote && m.vote.q && t(m.at) >= since && !out.some(x => x.id === `vote:${m.id}`)) { add({ id: `vote:${m.id}`, kind: 'vote', at: m.at, title: clip(plain(m.vote.q), 140), by: m.by, byName: nameOf(m.by), sub: m.vote.status === 'open' ? 'Vote open' : 'Vote closed', ref: { type: 'chat', id: m.id } }); continue; }
+      if (m.by === 'tribecode' || m.gist || m.vote || m.voteResult || !m.text) continue;
       const who = member(m.by); if (!who || who.role === 'agent') continue;
       add({ id: `chat:${m.id}`, kind: 'chat', at: m.at, title: clip(plain(m.text), 140), by: m.by, byName: who.name, ref: { type: 'chat', id: m.id } }); lines++;
     }
@@ -96,7 +112,7 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
     if (s && !dirtyProjects.has(p.id) && Date.now() - s.at < STALE_MS) return s.items;
     if (s && s.building) return s.building;
     dirtyProjects.delete(p.id);
-    const building = buildSnap(p).catch(e => { console.error('dashboard snapshot:', e.message); return []; });
+    const building = buildSnap(p).catch(e => { console.error('hub snapshot:', e.message); return []; });
     snaps.set(p.id, { ...(s || { items: [] }), building });
     const items = await building;
     snaps.set(p.id, { at: Date.now(), items });
@@ -223,6 +239,80 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
   }
   const agoText = ms => (ms < 3600_000 ? `${Math.max(1, Math.round(ms / 60_000))}m ago` : ms < DAY ? `${Math.round(ms / 3600_000)}h ago` : `${Math.round(ms / DAY)}d ago`);
 
+  // ---------- agents & models: your agents, local models, background loops ----------
+  const human2 = m => !!m && m.role !== 'agent';
+  function fleet(me) {
+    const visible = P.visibleTo(me), vis = new Set(visible.map(p => p.id));
+    const pres = new Map(presenceFor(me).map(m => [m.id, m]));
+    const mineAll = getMembers().filter(m => m.role === 'agent' && m.tokenHash && (m.owner === me.id));
+    const agents = mineAll.map(a => {
+      const pr = pres.get(a.id) || {}, seen = agentSeen ? agentSeen.get(a.id) : null;
+      const online = !!pr.online || (!!seen && Date.now() - seen.at < idleMs);
+      const pid = [pr.project, seen && seen.project, a.project].find(x => x && vis.has(x)) || null;
+      let task = null, tokens = null, budget = null, ctx = null;
+      const look = p => P.inProject(p, () => {
+        try { const row = coord ? coord.agents(me).find(x => x.id === a.id) : null; if (row) { task = task || row.task; tokens = tokens ?? row.tokens; budget = budget ?? row.budget; } } catch {}
+        try { const c = people && people.contextOf ? people.contextOf(a.id) : null; if (c && (!ctx || String(c.at) > String(ctx.at))) ctx = c; } catch {}
+      });
+      if (pid) look(pid); else for (const p of visible.slice(0, 12)) look(p.id);
+      const proj = pid ? P.get(pid) : null;
+      return { id: a.id, name: a.name, kind: a.kind || 'claude-code', online, project: pid, projectName: proj ? proj.name : '', color: proj ? proj.color : null,
+        doing: (ctx && ctx.focus) || (task && task.title) || (online ? (pr.where || (seen && seen.where) || '') : ''),
+        task: task ? { id: task.id, title: task.title, status: task.status } : null,
+        context: ctx && Number.isFinite(ctx.usedPct) ? ctx.usedPct : null, tokens: Number.isFinite(tokens) ? tokens : null, budget: Number.isFinite(budget) ? budget : null,
+        since: pr.since || (seen ? new Date(seen.at).toISOString() : null) };
+    }).sort((x, y) => (y.online - x.online) || x.name.localeCompare(y.name));
+    const st = brain ? brain.status() : { online: false };
+    const models = { online: !!st.online, model: st.model || '', list: brain ? brain.models().slice(0, 8) : [], error: st.online ? '' : (st.error || 'Ollama is off') };
+    const sec = secretary && secretary.brief ? secretary.brief() : null;
+    const loops = [];
+    if (sec) loops.push({ id: 'secretary', name: 'Secretary', on: !!sec.enabled, state: !sec.enabled ? 'off' : sec.running ? 'thinking' : sec.quiet ? 'quiet hours' : 'on', last: sec.lastRun, model: sec.model || '' });
+    if (hubFor) {
+      const auto = visible.filter(p => p.repo).map(p => { try { const s2 = hubFor(p.id).settings(); return s2 && s2.autopilot && s2.autopilot.enabled ? p : null; } catch { return null; } }).filter(Boolean);
+      loops.push({ id: 'autopilot', name: 'Repo autopilot', on: auto.length > 0, state: auto.length ? `on in ${auto.length === 1 ? auto[0].name : auto.length + ' projects'}` : 'off', projects: auto.map(p => p.id) });
+    }
+    if (preview) {
+      const live = visible.filter(p => { try { const s3 = preview.status(p.id, me); return s3 && s3.hasRepo && s3.hasIndex; } catch { return false; } });
+      loops.push({ id: 'preview', name: 'Preview watcher', on: live.length > 0, state: live.length ? `ready in ${live.length === 1 ? live[0].name : live.length + ' projects'}` : 'nothing to preview', projects: live.map(p => p.id) });
+    }
+    return { agents, models, loops, secretary: sec };
+  }
+  async function repos(me) {
+    const out = [];
+    for (const p of P.visibleTo(me)) {
+      const row = { project: p.id, name: p.name, emoji: p.emoji || '', color: p.color, image: p.image || null, repo: null };
+      if (p.repo && hubFor) {
+        let st = null; try { st = hubFor(p.id).status(); } catch {}
+        if (st && st.enabled && !st.loading) row.repo = { name: st.name, branch: st.branch, main: st.main, ahead: st.ahead || 0, behind: st.behind || 0, dirty: st.dirtyCount || 0,
+          remote: st.remote ? (st.remote.github || st.remote.url.replace(/^https?:\/\//, '')) : null, last: (st.commits || [])[0] || null };
+        else if (st && st.loading) row.repo = { name: require('node:path').basename(p.repo), loading: true };
+        else { const c = (await commits(p))[0] || null; row.repo = { name: require('node:path').basename(p.repo), last: c ? { sha: c.sha, author: c.author, subject: c.subject, at: c.at } : null }; }
+      }
+      out.push(row);
+    }
+    return out;
+  }
+  function allDocs(me, q) {
+    const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6), out = [];
+    for (const p of P.visibleTo(me)) P.inProject(p.id, () => {
+      let list = []; try { list = docs.list(); } catch {}
+      for (const d of list) {
+        let hit = !words.length, snippet = '';
+        if (words.length) {
+          const title = String(d.title || '').toLowerCase();
+          hit = words.every(w => title.includes(w));
+          if (!hit) { try { const full = docs.read(d.slug); const body = String((full && full.body) || ''); const low = body.toLowerCase(); hit = words.every(w => low.includes(w) || title.includes(w)); if (hit) { const i = Math.max(0, low.indexOf(words[0]) - 40); snippet = clip(plain(body.slice(i, i + 160)), 120); } } catch {} }
+        }
+        if (hit) out.push({ project: p.id, projectName: p.name, color: p.color, slug: d.slug, title: d.title, at: d.updated || d.created, by: d.updatedBy || d.by, byName: nameOf(d.updatedBy || d.by), snippet });
+      }
+    });
+    return out.sort((a, b) => t(b.at) - t(a.at)).slice(0, 60);
+  }
+  function prefsOf(me) {
+    const pr = db.prefs[me.id] || {};
+    return { pins: (pr.pins || []).filter(pid => P.canSee(me, pid)) };
+  }
+
   // ---------- the member view ----------
   const views = new Map();   // mid -> { at, data, sig, dirty, timer, last }
   async function compute(me) {
@@ -242,9 +332,11 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
       projects: visible.map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', color: p.color, image: p.image || null, last: (feed.find(x => x.project === p.id) || {}).at || null, here: pres.filter(m => m.online && m.project === p.id && m.role !== 'agent').length })),
       people: pres.filter(m => m.role !== 'agent' && m.id !== me.id).map(m => ({ id: m.id, name: m.name, color: m.color, online: !!m.online, project: m.project || null })),
       lastProject: me.project && P.canSee(me, me.project) ? me.project : (visible[0] || {}).id || null,
+      fleet: fleet(me),
+      prefs: prefsOf(me),
       notesApi: !!notesHook,
     };
-    const sig = crypto.createHash('sha1').update(JSON.stringify([data.hero.map(x => x.id + x.sub), data.waiting, data.feed.map(x => x.id), data.notes.map(x => x.id + x.at), data.suggestions.map(x => x.id), data.status, data.projects.map(p => p.here + p.name + p.color), data.people.map(p => p.id + p.online)])).digest('base64url').slice(0, 12);
+    const sig = crypto.createHash('sha1').update(JSON.stringify([data.hero.map(x => x.id + x.sub), data.waiting, data.feed.map(x => x.id), data.notes.map(x => x.id + x.at), data.suggestions.map(x => x.id), data.status, data.projects.map(p => p.here + p.name + p.color), data.people.map(p => p.id + p.online), data.fleet.agents.map(a => a.id + a.online + a.doing + a.context + a.tokens), data.fleet.models.online + data.fleet.models.model, data.fleet.loops.map(l => l.id + l.state + l.last)])).digest('base64url').slice(0, 12);
     return { ...data, rev: sig, at: new Date().toISOString() };
   }
   async function viewFor(me, { fresh = false } = {}) {
@@ -267,8 +359,8 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
       try {
         const data = await compute(m);
         Object.assign(v, { at: Date.now(), data, sig: data.rev, dirty: false, last: Date.now() });
-        if (data.rev !== prev) sendTo(mid, { type: 'dashboard', rev: data.rev });
-      } catch (e) { console.error('dashboard:', e.message); }
+        if (data.rev !== prev) sendTo(mid, { type: 'hub', rev: data.rev });
+      } catch (e) { console.error('hub:', e.message); }
     }, wait);
     if (v.timer.unref) v.timer.unref();
   }
@@ -308,9 +400,9 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
     return { project: pid, doc: { slug: doc.slug, title: doc.title } };
   }
 
-  async function route(req, res, { m, b, me, readBody, send, fail }) {
+  async function route(req, res, { m, b, me, url, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
-    if (me.role === 'agent') return fail(res, 403, 'the dashboard is for people');
+    if (me.role === 'agent') return fail(res, 403, 'the hub is for people');
     try {
       if (!b && m === 'GET') return send(res, 200, await viewFor(me));
       if (b === 'dismiss' && m === 'POST') {
@@ -322,11 +414,21 @@ module.exports = function dashboard({ P, base, getMembers, presenceFor, loadTask
         save(); const v = views.get(me.id); if (v) v.dirty = true;
         return send(res, 200, { ok: true, dismissed: id });
       }
+      if (b === 'fleet' && m === 'GET') return send(res, 200, fleet(me));
+      if (b === 'repos' && m === 'GET') return send(res, 200, { repos: await repos(me) });
+      if (b === 'docs' && m === 'GET') return send(res, 200, { docs: allDocs(me, str(url.searchParams.get('q') || '', 200)) });
+      if (b === 'prefs' && m === 'GET') return send(res, 200, prefsOf(me));
+      if (b === 'prefs' && (m === 'PUT' || m === 'PATCH')) {
+        const body = await readBody(req, 8192), pr = db.prefs[me.id] = db.prefs[me.id] || {};
+        if (Array.isArray(body.pins)) pr.pins = [...new Set(body.pins.map(x => String(x).slice(0, 60)))].filter(pid => P.canSee(me, pid)).slice(0, 24);
+        save(); const v = views.get(me.id); if (v) v.dirty = true;
+        return send(res, 200, prefsOf(me));
+      }
       if (b === 'note' && m === 'POST') return send(res, 200, fileNote(me, await readBody(req, 64 * 1024)));
       if (b === 'seen' && m === 'POST') { const body = await readBody(req, 4096); const pid = str(body.project, 60); if (!P.canSee(me, pid)) return fail(res, 403, 'you are not in that project'); seenProject(me.id, pid); return send(res, 200, { ok: true }); }
-    } catch (e) { return fail(res, e.status || 500, e.status ? e.message : 'dashboard error'); }
+    } catch (e) { return fail(res, e.status || 500, e.status ? e.message : 'hub error'); }
     return null;
   }
 
-  return { route, onEvent, onNotify, seen: seenProject, viewFor, setFlow: f => { flow = f; }, useNotes: fn => { notesHook = typeof fn === 'function' ? fn : null; } };
+  return { route, onEvent, onNotify, seen: seenProject, viewFor, fleet, repos, allDocs, touch: mid => schedule(mid), setFlow: f => { flow = f; }, useNotes: fn => { notesHook = typeof fn === 'function' ? fn : null; } };
 };
