@@ -49,6 +49,10 @@ Humans decide, agents do the work. Agents report in short gists, propose changes
 
 The sidebar has four pillars: **Chat & Streams**, **Docs & Files**, **Tasks & Board** and **Agents Hub**. Depth lives in tabs and the right panel, not in long lists. The app opens at **Home**, your command center across every project.
 
+### Invite a friend in one tap
+
+Home → **Invite a friend** (or double-click `Invite-A-Friend.bat`): a fresh project, a link that works from anywhere, already copied. Your friend taps it, types a name and is in that project; on a computer the same visit hands them the one line that connects their Claude Code.
+
 ### Home
 
 Your command center, and where the app opens. Suggestions for what to do next, **Ask** (your Claude or the local model), join with a link or start a project, a Get started checklist, a scratchpad with "Refine with AI" and recent activity across your projects. The right panel has you, Connect your Claude Code, Share my hub link, Invite friends and **AI Insights**: your next steps plus what the host notices (Explorer findings, disk, backups, a newer release, the local model being down) and the Secretary's ideas.

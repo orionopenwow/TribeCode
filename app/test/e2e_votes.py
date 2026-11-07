@@ -109,6 +109,7 @@ def main():
             maya = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(maya, "maya")
             maya.goto(f"{BASE}/join/{code}")
             maya.wait_for_selector("#form:not(.hidden)")
+            maya.add_init_script("try{localStorage.removeItem('tribecode.afterJoin')}catch(e){}")   # this test is not about the after-join Claude Code sheet (e2e_instant is)
             maya.fill("#name", "Maya"); maya.click("#go")
             maya.wait_for_function("!!document.querySelector('#sync-status')", timeout=15000)
             wait_text(maya, "#sync-status", "connected")

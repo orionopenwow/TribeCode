@@ -158,3 +158,5 @@
 .np-row .input { flex: 1; min-width: 0; }
 .np-more { margin-top: 10px; font-size: 12.5px; }
 .np-card .dropzone { margin-top: 10px; }
+.np-instant { margin-top: 10px; width: 100%; justify-content: flex-start; gap: 8px; }
+.np-instant .faint { margin-left: auto; font-size: 12px; font-weight: 400; }

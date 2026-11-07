@@ -155,6 +155,7 @@ def main():
             friend = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(friend, "friend")
             friend.goto(f"{BASE}/join/{code}"); friend.wait_for_selector("#form:not(.hidden)")
             assert "Orion's Studio" in friend.inner_text("#lead")
+            friend.add_init_script("try{localStorage.removeItem('tribecode.afterJoin')}catch(e){}")   # this test is not about the after-join Claude Code sheet (e2e_instant is)
             friend.fill("#name", "Maya"); friend.click("#go")
             wait_text(friend, "#sync-status", "connected")
             ftoken = friend.evaluate("TribeStore.get().server.token")

@@ -364,3 +364,7 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .sh-switch .sw-view { min-height: 34px !important; font-size: 13px; }
 .ad-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--stroke); }
 .ad-acts .btn { height: 32px; font-size: 12.5px; }
+/* Bring a friend: one-tap instant invite */
+.hh-join .hj-instant { width: 100%; justify-content: center; margin-top: auto; min-height: 40px; }
+.hh-join .hj-instant + .hj-acts { margin-top: 10px; }
+.hh-join .hj-instant + .hj-acts .btn { flex: 1; }

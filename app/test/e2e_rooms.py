@@ -239,6 +239,7 @@ def main():
             friend = b.new_context(viewport={"width": 1500, "height": 950}).new_page(); watch(friend, "friend")
             friend.goto(link); friend.wait_for_selector("#form:not(.hidden)")
             assert "Pixel Quest" in friend.inner_text("#lead")
+            friend.add_init_script("try{localStorage.removeItem('tribecode.afterJoin')}catch(e){}")   # this test is not about the after-join Claude Code sheet (e2e_instant is)
             friend.fill("#name", "Maya"); friend.click("#go")
             wait_text(friend, "#sync-status", "connected")
             friend.wait_for_selector("#pj-rail .pj-circle")

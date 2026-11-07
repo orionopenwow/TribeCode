@@ -218,13 +218,26 @@
   }
 
   function joinPanel(on) {
-    const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
-    return `<div class="hh-panel hh-join" id="hub-joinpanel"><div class="hh-head"><span class="eyebrow">Join or start</span></div>
-      <h3>${ico('i-link', 16)}Join with a link</h3>
+    const desk = !!(window.TribeHost && window.TribeHost.isDesktop), can = on || desk;
+    // The fewest steps to a friend: one tap makes a fresh project and copies a link that works anywhere.
+    return `<div class="hh-panel hh-join" id="hub-joinpanel"><div class="hh-head"><span class="eyebrow">Bring a friend</span></div>
+      ${can ? `<h3>${ico('i-users', 16)}Invite a friend</h3>
+      <p>One tap makes a fresh project and copies a link that works anywhere. They tap it, type a name and they're in.</p>
+      <button class="btn primary hj-instant" id="hub-instant">${ico('i-link', 15)}Invite a friend</button>
+      <div class="hj-acts"><button class="btn" id="hub-join">Paste invite link</button>${on ? '<button class="btn" id="hub-new">' + ico('i-plus', 15) + 'New project</button>' : ''}</div>`
+      : `<h3>${ico('i-link', 16)}Join with a link</h3>
       <p>A friend sent a link like <code>…/join/k7Qx2</code>? Paste it and pick a name. No account needed.</p>
-      <div class="hj-acts"><button class="btn" id="hub-join">Paste invite link</button>
-        ${on ? '<button class="btn primary" id="hub-new">' + ico('i-plus', 15) + 'New project</button>' : desk ? '<button class="btn primary" id="hub-host">Start hosting</button>' : '<button class="btn" id="hub-host">Get the desktop app</button>'}</div>
-      ${on ? '' : `<p class="hj-note">${desk ? 'Hosting runs your tribe on this computer; friends join with one link.' : 'Hosting runs in the desktop app (or <code>npm start</code>).'}</p>`}</div>`;
+      <div class="hj-acts"><button class="btn primary" id="hub-join">Paste invite link</button><button class="btn" id="hub-host">Get the desktop app</button></div>
+      <p class="hj-note">Hosting runs in the desktop app (or <code>npm start</code>).</p>`}</div>`;
+  }
+  async function instant() {   // host first if needed (desktop app), then the instant invite
+    if (!connected()) {
+      if (!(window.TribeHost && window.TribeHost.isDesktop)) return join();
+      await host();
+      for (let i = 0; i < 60 && !connected(); i++) await new Promise(r => setTimeout(r, 250));
+      if (!connected()) return toast('Hosting did not start. Settings has the log.');
+    }
+    window.TribeFlow ? window.TribeFlow.instant() : App().openInvite();
   }
 
   // ---------- Get started: five steps, two ways in (dismissible, remembered) ----------
@@ -519,7 +532,7 @@
 
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
-    on('#hub-new', newProject); on('#hub-join', join); on('#hub-host', host); on('#hub-resume', resume);
+    on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-resume', resume);
     on('#hub-cc', () => App().connectClaude());
     on('#hub-sug-more', () => { sugOpen = !sugOpen; render(); });
     on('#hub-feed-more', () => { feedOpen = !feedOpen; render(); });
@@ -602,9 +615,9 @@
     meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(nm.trim().charAt(0).toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home${(C.state().tribe || {}).name ? ` · ${esc(C.state().tribe.name)}` : ''}` : 'on this device · not in a tribe yet'}</div></div></div>`;
     const link = shareState.link;
     share.innerHTML = `<button class="home-share-card" id="home-share-btn">${ico('i-link', 16)}<span><b>Share my hub link</b><small>${link ? `<code>${esc(link.replace(/^https?:\/\//, ''))}</code>` : on ? 'Copies a 24-hour invite to your tribe' : 'Host or join a tribe first, then one link brings friends here'}</small></span></button>
-      <button class="btn home-invite" id="home-invite">${ico('i-users', 15)}Invite friends</button>`;
+      <button class="btn home-invite" id="home-invite">${ico('i-users', 15)}Invite a friend</button>`;
     $('#home-share-btn').onclick = shareLink;
-    $('#home-invite').onclick = () => App().openInvite();
+    $('#home-invite').onclick = () => instant();
     const open = lsGet(IKEY, true) !== false;
     if (!insBox.dataset.built) {
       insBox.dataset.built = '1';
