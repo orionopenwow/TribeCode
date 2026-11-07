@@ -266,7 +266,7 @@
   function go(view, ref) {
     closeInbox();
     if (!view || view === 'inbox') return openInbox();
-    if (view === 'chat') { const i = $('#chat-input'); if (matchMedia('(max-width: 820px)').matches) document.body.classList.add('mobile-chat'); else if (i) i.focus(); return; }
+    if (view === 'chat') { window.TribeApp.show('chat'); return; }
     if (window.TribeApp && window.TribeApp.show) window.TribeApp.show(view);
     if (view === 'docs' && ref && window.TribeDocs && window.TribeDocs.open) window.TribeDocs.open(ref);
   }

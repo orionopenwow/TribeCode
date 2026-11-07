@@ -37,14 +37,14 @@
     applyTheme(st.theme);
     document.body.classList.toggle('compact', st.density === 'compact');
     const first = (st.name || '').split(' ')[0];
-    $('#hello').textContent = first ? `Welcome, ${first}` : 'Welcome';
     const tribeName = window.TribeClient && window.TribeClient.state().tribe && window.TribeClient.state().tribe.name;
     $('#ws-name').textContent = tribeName || (first ? `${first}'s Tribe` : 'My Tribe');
     for (const id of ['#me-avatar', '#room-me']) { const a = $(id); if (!a) continue; a.textContent = initials(st.name); a.style.background = st.color; a.style.color = ink(st.color); }
     if ($('#room-name')) $('#room-name').textContent = st.name || 'You';
-    $('#folder-label').textContent = st.folder || 'Not set';
+    if ($('#folder-label')) $('#folder-label').textContent = st.folder || 'Not set';
     $('#brain-label').textContent = serverBrain && serverBrain.online ? `${serverBrain.model} · host` : st.brain.enabled ? `${st.brain.model} · local` : 'brain off';
 
+    if (!$('#checklist')) return;
     const done = CHECKS.filter(c => st.checklist[c.key]).length;
     $('#check-count').textContent = `${done} of ${CHECKS.length}`;
     $('#check-bar').style.width = (done / CHECKS.length * 100) + '%';
@@ -85,16 +85,19 @@
     $('#drops').innerHTML = drops.slice(-4).map(d => `<div><svg class="i" style="width:15px;height:15px;color:var(--accent-2)"><use href="#i-doc"/></svg><span>${esc(d.name)}</span><span class="faint" style="margin-left:auto">${d.saved ? 'saved' : 'queued'}</span></div>`).join('');
   }
 
-  // nav + views
-  const VIEWS = { home: 'Home', overview: 'Overview', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals' };
+  // nav + views (the shell: app/ui/shell.js renders the nest, breadcrumbs and menus around these)
+  const VIEWS = { home: 'Home', chat: 'Chat', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
+  const ALIAS = { overview: 'home', inbox: 'home' };
   let current = 'home';
   function show(view) {
+    view = ALIAS[view] || view;
     if (!VIEWS[view]) return;
     document.body.classList.remove('mobile-chat', 'drawer-open');
-    Object.keys(VIEWS).forEach(v => $('#view-' + v).classList.toggle('hidden', v !== view));
+    Object.keys(VIEWS).forEach(v => { const el = $('#view-' + v); if (el) el.classList.toggle('hidden', v !== view); });
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === view));
-  document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view && !b.textContent.includes('Milestones')));
-    document.querySelector('.titlebar .faint').textContent = '/ ' + VIEWS[view];
+    document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view && !b.textContent.includes('Milestones')));
+    const crumb = $('#crumb-label'); if (crumb) crumb.textContent = VIEWS[view];
+    document.body.dataset.view = view;
     if (view === 'tasks') window.TribeTasks.load();
     if (view === 'board') window.TribeBoard.load();
     if (view === 'docs') window.TribeDocs.load();
@@ -102,20 +105,25 @@
     if (view === 'repo') window.TribeRepo.load();
     if (view === 'calendar') window.TribePlan.show();
     if (view === 'visuals') window.TribeVisuals.show();
+    if (view === 'chat') { const l = $('#chat-list'); if (l) l.scrollTop = 1e9; if (!isPhone()) setTimeout(() => { const i = $('#chat-input'); if (i && !document.activeElement.closest('.modal')) i.focus({ preventScroll: true }); }, 0); }
     current = view;
-    if (window.TribeProjects) window.TribeProjects.onShow(view);   // overview, requests, title, cascade highlight
+    if (window.TribeProjects) window.TribeProjects.onShow(view);   // overview, requests, cascade highlight
+    if (window.TribeShell) window.TribeShell.onShow(view);
+    if (window.TribeCoord && view === 'coord') window.TribeCoord.show();
     window.TribeClient.sendActivity(VIEWS[view]);
     try { sessionStorage.setItem('tribecode.view', view); } catch {}
   }
-  document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => {
-    if (VIEWS[b.dataset.nav]) show(b.dataset.nav);
-    else if (b.dataset.nav === 'chat') { if (isPhone()) { document.body.classList.add('mobile-chat'); document.querySelectorAll('[data-nav]').forEach(x => x.classList.toggle('on', x === b)); $('#chat-list').scrollTop = 1e9; } else $('#chat-input').focus(); }
-    else if (b.dataset.nav === 'brain') { show('home'); document.querySelector('#standup-card').scrollIntoView({ block: 'center' }); }
-  }));
+  // One delegated handler for every [data-nav] button (nest rows, tab bar, cards, menus).
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-nav]'); if (!b || b.disabled) return;
+    const v = ALIAS[b.dataset.nav] || b.dataset.nav;
+    if (VIEWS[v]) show(v);
+    else if (v === 'brain') { show('home'); document.querySelector('#standup-card').scrollIntoView({ block: 'center' }); }
+  });
 
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
-  $('#menu-btn').addEventListener('click', () => document.body.classList.toggle('drawer-open'));
-  document.addEventListener('click', e => { if (document.body.classList.contains('drawer-open') && !e.target.closest('.side') && !e.target.closest('#menu-btn')) document.body.classList.remove('drawer-open'); });
+  $('#menu-btn').addEventListener('click', e => { e.stopPropagation(); document.body.classList.toggle('drawer-open'); });
+  document.addEventListener('click', e => { if (document.body.classList.contains('drawer-open') && !e.target.closest('.side') && !e.target.closest('#menu-btn') && !e.target.closest('.tf-pop')) document.body.classList.remove('drawer-open'); });
   document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
     if (VIEWS[b.dataset.go]) show(b.dataset.go);
   }));
@@ -238,26 +246,23 @@
     $('#invite-modal').classList.remove('hidden');
     if (!C.connected()) {
       const desktop = window.TribeHost.isDesktop;
-      body.innerHTML = `<h2>Start or join a tribe</h2>
-        <p class="lead">A tribe lives on one member's computer, the host. Everyone else joins with an invite link.</p>
-        ${desktop && window.__hostError ? `<pre class="host-err" style="white-space:pre-wrap;font:12px/1.5 var(--mono);color:var(--body);background:var(--canvas);border:1px solid var(--border);border-radius:10px;padding:10px;max-height:160px;overflow:auto;margin:0 0 10px">${esc(window.__hostError)}</pre>` : ''}${desktop ? `<button class="btn primary" id="host-here" style="width:100%;height:44px;margin-bottom:6px">${window.__hostError ? 'Try again' : 'Host a tribe on this computer'}</button>
-          <p class="faint" style="font-size:12px;margin-bottom:16px">Files are stored in ${esc(S.get().folder || '~/TribeCode')}. TribeCode keeps hosting while the app is open.</p>`
-        : `<ol class="steps-host"><li>On the host computer run <span class="code" style="display:inline-block;padding:3px 8px">npm start</span> (or use the desktop app)</li>
-          <li>Open <b>http://localhost:4747</b> there. You'll be the host.</li><li>Click <b>Invite friends</b> to get a link.</li></ol>`}
-        <div class="field" style="margin-top:6px"><label for="join-link">Got an invite link from a friend?</label>
-          <div class="folder"><input class="input" id="join-link" placeholder="http://192.168.1.20:4747/join/k7Qx2"><button class="btn ${desktop ? '' : 'primary'}" id="join-go">Join</button></div></div>
-        <div class="modal-foot"><button class="btn" data-close>Close</button></div>`;
-      $('#join-go').onclick = () => joinLink($('#join-link').value);
-      $('#join-link').onkeydown = e => { if (e.key === 'Enter') joinLink($('#join-link').value); };
-      if (desktop) $('#host-here').onclick = hostHere;
+      body.innerHTML = desktop ? `<h2>${window.__hostError ? 'Your tribe did not start' : 'Starting your tribe…'}</h2>
+          ${window.__hostError ? `<pre class="host-err">${esc(window.__hostError)}</pre>` : ''}
+          <div class="modal-foot"><button class="btn ghost" id="join-instead">Join a friend instead</button><span style="flex:1"></span><button class="btn" data-close>Close</button><button class="btn primary" id="host-here">${window.__hostError ? 'Try again' : 'Host on this computer'}</button></div>`
+        : `<h2>Join a tribe</h2>
+          <div class="field"><label for="join-link">Invite link</label><div class="folder"><input class="input" id="join-link" placeholder="https://…/join/k7Qx2"><button class="btn primary" id="join-go">Join</button></div></div>
+          <p class="faint" style="font-size:12.5px">To host your own, open the desktop app or run <span class="code" style="display:inline;padding:2px 6px">npm start</span>.</p>
+          <div class="modal-foot"><button class="btn" data-close>Close</button></div>`;
+      if (desktop) { $('#host-here').onclick = hostHere; $('#join-instead').onclick = () => window.TribeSettings.joinPrompt(); }
+      else { $('#join-go').onclick = () => joinLink($('#join-link').value); $('#join-link').onkeydown = e => { if (e.key === 'Enter') joinLink($('#join-link').value); }; }
     } else {
-      body.innerHTML = `<h2>Invite friends</h2><p class="lead">Anyone with this link can join <b>${esc((C.state().tribe || {}).name || 'your tribe')}</b>. They pick a name and they're in.</p>
+      body.innerHTML = `<h2>Invite friends</h2>
         <div class="opts"><select id="inv-hours" title="Link expires after"><option value="24">24 hours</option><option value="168">7 days</option><option value="1">1 hour</option></select>
           <select id="inv-uses" title="How many people can use it"><option value="5">5 people</option><option value="1">1 person</option><option value="20">20 people</option></select>
           <select id="inv-role" title="Builders can edit; spectators can only watch"><option value="builder">Builder</option><option value="spectator">Spectator</option></select></div>
         ${window.TribeProjects ? window.TribeProjects.invitePicker() : ''}
         <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
-        <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p><b>On a phone?</b> Point the camera at this code to join. On iPhone, tap Share → <b>Add to Home Screen</b> afterwards to get the app.<br><span class="faint" id="inv-net"></span></p></div>
+        <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p>Scan to join from a phone.<br><span class="faint" id="inv-net"></span></p></div>
         <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
       const make = async () => {
         $('#inv-copy').disabled = true; $('#inv-link').textContent = 'Creating link…';
@@ -388,10 +393,12 @@
   $('#invite-modal').addEventListener('click', e => { if (e.target.id === 'invite-modal') closeInvite(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvite(); });
   $('#settings-btn').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
+  $('#me-avatar').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
+  $('#rail-logo').addEventListener('click', () => show('home'));
   $('#help-btn').addEventListener('click', () => window.TribeTour.start());
   $('#tour-invite').addEventListener('click', () => openInvite());
   $('#tour-search').addEventListener('click', () => window.TribePalette.open());
-  $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
+  if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
       const next = document.body.classList.contains('dark') ? 'light' : 'dark';
@@ -409,7 +416,7 @@
         peers: live.length ? live : demo.peers, agentRuns: demo.agentRuns,
         claims: C.connected() ? (C.state().claims || []).filter(c => me && c.by === me.id).map(c => ({ id: c.id, path: c.path })) : demo.claims };
     },
-    async afterSetup() { const st = S.get(); if ((await C.ensureMember({ name: st.name, color: st.color })) === 'host') toast("You're the host of this tribe. Invite friends from the sidebar."); },
+    async afterSetup() { const st = S.get(); await C.ensureMember({ name: st.name, color: st.color }); },
     async saveAll() {
       if (window.TribeDocs && window.TribeDocs.isDirty()) await window.TribeDocs.saveNow();
       drops.forEach(d => { d.saved = true; });
@@ -442,12 +449,13 @@
     history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash);
   }
   refresh();
-  if (!S.get().onboarded) window.TribeOnboarding.open();
-  else C.ensureMember({ name: S.get().name, color: S.get().color });
-  {
+  // Zero-step setup (settings.js): name, folder and color fill themselves in; the desktop app hosts on its own.
+  (async () => {
+    await window.TribeSettings.autoSetup(); refresh();
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
-    if (window.TribeHost.isDesktop && !st.hostOff && !remote) hostHere({ quiet: true }); else C.connect();
-  }
+    if (window.TribeHost.isDesktop && !st.hostOff && !remote) hostHere({ quiet: true });
+    else { await C.ensureMember({ name: st.name, color: st.color }); C.connect(); }
+  })();
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
   setTimeout(iosHint, 1500);

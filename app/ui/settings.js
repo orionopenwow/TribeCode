@@ -1,0 +1,110 @@
+// Zero-step setup + one calm Settings page (replaces the old first-run wizard).
+//  * First launch: name = the computer's user name (desktop: home folder; localhost: /api/health `user`,
+//    which the server only reveals to local requests), folder = ~/TribeCode, color picked for you.
+//    The desktop app then hosts on its own (app.js hostHere) and you land in your first project.
+//  * Settings (gear, your avatar, More → Settings → App settings): name, color, theme, folder, local
+//    brain, open at login, a quick tour, and joining another tribe with a link.
+// window.TribeOnboarding stays as a thin alias so older callers (palette, tests) keep working.
+(function () {
+  const $ = s => document.querySelector(s);
+  const S = window.TribeStore;
+  const C = () => window.TribeClient;
+  const COLORS = ['#F26B1D', '#7C5CFF', '#FFB86B', '#38C6B1', '#FF6F8E', '#5B8CFF', '#9AE66E'];
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = m => window.TribeApp && window.TribeApp.toast(m);
+  const pretty = n => String(n || '').replace(/[._-]+/g, ' ').trim().split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ').slice(0, 32);
+
+  async function defaultFolder() {
+    const home = await window.TribeHost.homeDir();
+    return home ? home.replace(/[\\/]$/, '') + (home.includes('\\') ? '\\TribeCode' : '/TribeCode') : '';
+  }
+  async function osUser() {
+    try { const h = await C().probe(); if (h && h.user) return h.user; } catch {}
+    const home = await window.TribeHost.homeDir();
+    return home ? home.replace(/[\\/]+$/, '').split(/[\\/]/).pop() : '';
+  }
+  // Fill in everything the wizard used to ask. Idempotent; never overwrites what you set.
+  async function autoSetup() {
+    const st = S.get(); if (st.onboarded) return false;
+    const name = st.name || pretty(await osUser()) || 'Me';
+    const color = st.color && st.color !== S.defaults.color ? st.color : COLORS[Math.floor(Math.random() * COLORS.length)];
+    S.set({ onboarded: true, firstRun: true, name, color, folder: st.folder || await defaultFolder(), checklist: { setup: true }, tour: { done: true } });
+    return true;
+  }
+
+  // ---------- Settings ----------
+  let probe = { state: 'idle', models: [] };
+  async function probeBrain() {
+    probe = { state: 'checking', models: [] }; draw();
+    let models = [];
+    try { const b = C().connected() ? (await C().api('/brain')).brain : null; if (b && b.online) { probe = { state: 'host', models: [b.model] }; draw(); return; } } catch {}
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 1800);
+      const r = await fetch(S.get().brain.host.replace(/\/$/, '') + '/api/tags', { signal: ctl.signal }); clearTimeout(t);
+      models = ((await r.json()).models || []).map(m => m.name);
+      probe = { state: 'found', models };
+      const st = S.get(); if (!st.brain.model) { const q = models.find(m => /qwen/i.test(m)); if (q) S.set({ brain: { model: q, enabled: true }, checklist: { brain: true } }); }
+    } catch { probe = { state: 'missing', models: [] }; }
+    draw();
+  }
+  const modal = () => $('#settings-modal');
+  function ensure() {
+    if (modal()) return;
+    document.body.insertAdjacentHTML('beforeend', '<div class="modal hidden" id="settings-modal" role="dialog" aria-label="Settings"><div class="modal-card set-card" id="settings-body"></div></div>');
+    modal().addEventListener('click', e => { if (e.target === modal()) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal().classList.contains('hidden')) close(); });
+  }
+  function close() { modal().classList.add('hidden'); window.TribeApp && window.TribeApp.refresh(); }
+  function row(label, control, hint = '') { return `<div class="set-row"><div class="set-l"><b>${label}</b>${hint ? `<small>${hint}</small>` : ''}</div><div class="set-c">${control}</div></div>`; }
+  function draw() {
+    const box = $('#settings-body'); if (!box || modal().classList.contains('hidden')) return;
+    const st = S.get(), desk = window.TribeHost.isDesktop;
+    const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
+    box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
+      ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
+      ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
+      ${row('Theme', `<div class="tabs set-seg">${[['dark', 'Dark'], ['light', 'Light'], ['system', 'System']].map(([k, l]) => `<button data-theme="${k}" class="${st.theme === k ? 'on' : ''}">${l}</button>`).join('')}</div>`)}
+      ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
+      ${row('Local brain', `<span class="set-brain">${brainTxt}</span>${probe.state === 'found' && probe.models.length ? `<select id="set-model">${['', ...probe.models].map(m => `<option value="${esc(m)}" ${(st.brain.enabled ? st.brain.model : '') === m ? 'selected' : ''}>${m ? esc(m) : 'Off'}</option>`).join('')}</select>` : ''}`, 'Writes summaries and standups on this computer.')}
+      ${desk ? row('Open at login', `<button class="toggle set-toggle" role="switch" id="set-login" aria-checked="${!!st.startup.launchAtLogin}"><span class="switch"></span></button>`) : ''}
+      <div class="set-links"><button class="linkish" id="set-tour">Take a quick tour</button><button class="linkish" id="set-join">Join another tribe with a link</button></div>`;
+    $('#set-close').onclick = close;
+    $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) S.set({ name: v }); window.TribeApp.refresh(); };
+    box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
+    box.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { S.set({ theme: b.dataset.theme }); window.TribeApp.applyTheme(b.dataset.theme); draw(); });
+    const f = $('#set-folder'); if (f) f.onchange = () => S.set({ folder: f.value.trim() });
+    const br = $('#set-browse'); if (br) br.onclick = async () => { const p = await window.TribeHost.pickFolder(); if (p) { S.set({ folder: p }); draw(); toast('Restart TribeCode to host from the new folder.'); } };
+    const md = $('#set-model'); if (md) md.onchange = () => { S.set({ brain: { model: md.value, enabled: !!md.value }, checklist: { brain: !!md.value } }); window.TribeApp.refresh(); };
+    const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
+    $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };
+    $('#set-join').onclick = () => { close(); joinPrompt(); };
+  }
+  function open() { ensure(); modal().classList.remove('hidden'); draw(); probeBrain(); const n = $('#set-name'); if (n) n.focus(); return Promise.resolve(); }
+
+  // "+ circle → Join with a link" and Settings both land here.
+  function joinPrompt() {
+    const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
+    body.innerHTML = `<h2>Join a tribe</h2><div class="field"><label for="join-link">Invite link</label><div class="folder"><input class="input" id="join-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false"><button class="btn primary" id="join-go">Join</button></div></div>
+      <div class="modal-foot"><button class="btn" data-close>Cancel</button></div>`;
+    const go = () => window.TribeApp.joinLink($('#join-link').value);
+    $('#join-go').onclick = go; $('#join-link').onkeydown = e => { if (e.key === 'Enter') go(); };
+    body.querySelector('[data-close]').onclick = () => $('#invite-modal').classList.add('hidden');
+    $('#join-link').focus();
+  }
+
+  // ---------- first-launch banner: one line, dismissible ----------
+  function banner() {
+    const st = S.get(); if (!st.firstRun || $('#hi-banner') || !C().connected()) return;
+    const me = C().state().me || {}, host = me.role === 'host', tribe = (C().state().tribe || {}).name || 'your tribe';
+    const el = document.createElement('div'); el.className = 'hi-banner'; el.id = 'hi-banner';
+    el.innerHTML = `<span>Hi ${esc((st.name || '').split(' ')[0] || 'there')}, ${host ? "you're hosting." : `welcome to ${esc(tribe)}.`}</span>${host ? '<button class="linkish" id="hi-invite">Invite a friend →</button>' : ''}<span class="spacer"></span><button class="hi-x" id="hi-x" aria-label="Dismiss">✕</button>`;
+    const main = $('#main'); main.insertBefore(el, main.firstChild);
+    const done = () => { el.remove(); S.set({ firstRun: false }); };
+    $('#hi-x').onclick = done;
+    const iv = $('#hi-invite'); if (iv) iv.onclick = () => { done(); window.TribeApp.openInvite(); };
+  }
+  C().on('hello', () => setTimeout(banner, 200));
+
+  window.TribeSettings = { open, autoSetup, joinPrompt, close: () => modal() && close() };
+  window.TribeOnboarding = { open: () => open(), goTo: () => {}, autoSetup };
+})();

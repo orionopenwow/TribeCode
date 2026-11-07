@@ -49,9 +49,10 @@
     return `<span class="pj-face ${cls} ${p.emoji ? 'emo' : ''}" style="--pc:${esc(p.color)};color:${ink(p.color)}">${esc(p.emoji || pinit(p.name))}</span>`;
   }
   const label = p => `${p.emoji ? esc(p.emoji) + ' ' : ''}${esc(p.name)}`;
+  // Discord-style: a white pill on the left edge for unread chat, a red count for things waiting on you.
   function badge(p) {
-    const k = p.counts || {}, n = (pulses[p.id] || 0) + (k.requests || 0);
-    return n ? `<span class="pj-badge" aria-label="${n} new">${n > 99 ? '99+' : n}</span>` : '';
+    const k = p.counts || {}, n = k.requests || 0;
+    return (pulses[p.id] ? '<span class="pj-unread" aria-label="unread messages"></span>' : '') + (n ? `<span class="pj-badge" aria-label="${n} waiting">${n > 99 ? '99+' : n}</span>` : '');
   }
   function circles(where) {
     const c = cur();
@@ -59,68 +60,29 @@
         ${face(p)}${p.id === c ? '' : badge(p)}${here(p.id).some(m => m.id !== me().id) ? '<span class="pj-live-dot" title="People are here"></span>' : ''}</button>`).join('') +
       (where === 'strip' && !scopedMe() ? '<button class="pj-circle pj-plus" data-pj-new title="Start a project" aria-label="Start a project">+</button>' : '');
   }
-  function item(view, text, icon, n, cls = '') {
-    return `<button class="item pj-item" data-nav="${view}">${ico(icon)}<span>${text}</span>${n ? `<span class="n pj-n ${cls}">${n}</span>` : ''}</button>`;
-  }
   function render() {
-    const nav = $('#pj-nav'); if (!nav) return;
-    const p = curP(), active = App() ? App().view() : 'home';
+    const p = curP();
     const rail = $('#pj-rail'); if (rail) rail.innerHTML = circles('rail');
     const strip = $('#pj-strip'); if (strip) strip.innerHTML = circles('strip');
     const plus = $('#pj-plus'); if (plus) plus.classList.toggle('hidden', scopedMe());
-    const homeBtn = document.querySelector('.rail [data-nav="home"]'); if (homeBtn) homeBtn.classList.toggle('hidden', scopedMe());
-    const head = $('#nest-head');
-    if (!p) { nav.innerHTML = ''; if (head) head.innerHTML = ''; return; }
-    const k = p.counts || {}, tribeName = ((C.state().tribe || {}).name) || 'Tribe';
-    if (head) head.innerHTML = `<button class="nest-title" data-nav="overview" title="${esc(p.name)} overview"><b>${esc(scopedMe() ? p.name : tribeName)}</b>${scopedMe() ? '' : `<span class="faint">/</span><span class="nest-p">${esc(p.name)}</span>`}</button>
-      <div class="nest-sub faint">${here(p.id).length} here${k.tasks ? ` · ${k.tasks} open task${k.tasks > 1 ? 's' : ''}` : ''}</div>`;
-    const inMore = ['calendar', 'repo', 'visuals', 'bugs', 'board'].concat(k.requests ? [] : ['requests']);
-    const showMore = moreOpen || inMore.includes(active);
-    const unread = Number(($('#nf-count') && !$('#nf-count').classList.contains('hidden') && $('#nf-count').textContent) || 0);
-    nav.innerHTML = `
-      ${item('docs', 'Docs', 'i-doc')}
-      <button class="item pj-item" data-pnav="chat">${ico('i-chat')}<span>Chat</span>${pulses[p.id] ? `<span class="n pj-n hot">${pulses[p.id]}</span>` : ''}</button>
-      <button class="item pj-item" data-pnav="inbox">${NOTIF}<span>Notifications</span>${unread ? `<span class="n pj-n hot">${unread}</span>` : ''}</button>
-      ${item('tasks', 'Tasks', 'i-check', k.tasks)}
-      ${k.requests ? item('requests', 'Requests', 'i-vote', k.requests, 'hot') : ''}
-      <button class="item pj-item pj-more" aria-expanded="${showMore}" id="pj-more">${CHEV}<span>More</span>${!showMore && k.bugs ? `<span class="n pj-n">${k.bugs}</span>` : ''}</button>
-      ${showMore ? `<div class="pj-more-list">
-        ${item('overview', 'Overview', 'i-zap')}${k.requests ? '' : item('requests', 'Requests', 'i-vote')}${item('calendar', 'Calendar', 'i-cal')}${item('repo', 'Repo', 'i-git')}${item('visuals', 'Visuals', 'i-sparkle')}${item('bugs', 'Bugs', 'i-bug', k.bugs)}${item('board', 'Board', 'i-list')}
-        <button class="item pj-item" data-float-more>${ico('i-more')}<span>Pop out a window</span></button>
-      </div>` : ''}`;
-    document.querySelectorAll('#pj-nav [data-nav], #nest-head [data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === active));
     const sw = $('#pj-switch');
-    if (sw) { sw.classList.toggle('hidden', !p); if (p) sw.innerHTML = `${face(p, 'sm')}<span>${esc(p.name)}</span>${CHEV}`; }
-    title(active);
+    if (sw) { sw.classList.toggle('hidden', !p); document.querySelectorAll('.pj-sep').forEach(x => x.classList.toggle('hidden', !p)); if (p) sw.innerHTML = `${face(p, 'sm')}<span>${esc(p.name)}</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`; }
+    if (window.TribeShell) window.TribeShell.render(p, { face, pulses, here });
     if ($('#pj-sheet') && !$('#pj-sheet').classList.contains('hidden')) sheet();
-  }
-  const NOTIF = '<svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';
-  function title(view) {
-    const t = document.querySelector('.titlebar .faint'), p = curP(); if (!t) return;
-    const lb = { overview: 'Overview', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals' }[view];
-    t.textContent = view === 'home' || !p || !lb ? '/ Home' : `/ ${p.name} / ${lb}`;
   }
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
     const open = e.target.closest('[data-pj-open]');
-    if (open && open.closest('#pj-rail, #pj-strip')) { const id = open.dataset.pjOpen; if (isPhone()) document.body.classList.remove('drawer-open'); if (id === cur()) App().show('overview'); else switchTo(id, App().view() === 'home' ? 'overview' : undefined); return; }
-    if (e.target.closest('#pj-plus, [data-pj-new]')) { document.body.classList.remove('drawer-open'); openNew(); return; }
-    if (!e.target.closest('#pj-nav, #nest-head')) return;
-    const go = e.target.closest('[data-nav]'), pn = e.target.closest('[data-pnav]');
-    if (go) { App().show(go.dataset.nav); return; }
-    if (pn && pn.dataset.pnav === 'inbox') { document.body.classList.remove('drawer-open'); const b = $('#nf-bell'); if (b) b.click(); return; }
-    if (pn) { if (isPhone()) { document.body.classList.remove('drawer-open'); const r = document.querySelector('.rail [data-nav="chat"]'); if (r) r.click(); } else { const i = $('#chat-input'); i && i.focus(); } return; }
-    if (e.target.closest('#pj-more')) { moreOpen = !moreOpen; try { localStorage.setItem('tribecode.pjMore', moreOpen ? '1' : '0'); } catch {} render(); const f = $('#pj-more'); f && f.focus(); }
+    if (open && open.closest('#pj-rail, #pj-strip, .tf-pop')) { const id = open.dataset.pjOpen; document.body.classList.remove('drawer-open'); if (window.TribeFloat) window.TribeFloat.closePop(); if (id === cur()) App().show('home'); else switchTo(id); return; }
+    if (e.target.closest('#pj-plus, [data-pj-new]')) { document.body.classList.remove('drawer-open'); if (window.TribeFloat) window.TribeFloat.closePop(); openNew(); return; }
   });
-  // Keyboard: arrows move through the circles and through the nest.
+  // Keyboard: arrows move through the circles.
   document.addEventListener('keydown', e => {
     if (!e.target.closest || !['ArrowDown', 'ArrowUp'].includes(e.key)) return;
-    const box = e.target.closest('#pj-nav') ? '#pj-nav button' : e.target.closest('#pj-rail') ? '#pj-rail button' : null; if (!box) return;
+    const box = e.target.closest('#pj-rail') ? '#pj-rail button' : null; if (!box) return;
     const all = [...document.querySelectorAll(box)]; const i = all.indexOf(e.target);
     const n = all[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (n) { n.focus(); e.preventDefault(); }
   });
-  // Notification count lives on the title-bar bell (notify.js); mirror it in the nest.
-  setTimeout(() => { const n = $('#nf-count'); if (n) new MutationObserver(() => render()).observe(n, { childList: true, attributes: true, characterData: true, subtree: true }); }, 0);
 
   async function switchTo(id, view) {
     if (!id) return;
@@ -136,7 +98,7 @@
     App().reloadChat();
     // Lists other views keep in memory belong to the old project: reload them so live events land in the right list.
     for (const k of ['TribeTasks', 'TribeBoard', 'TribeBugs']) { const m = window[k]; if (m && m.load && !['tasks', 'board', 'bugs'].includes(v)) try { m.load(); } catch {} }
-    App().show(v === 'home' ? 'overview' : v);
+    App().show(v);
     refresh();
     App().refreshRoom && App().refreshRoom();
   });
@@ -144,12 +106,11 @@
   C.on('projects', () => soon(50));
   C.on('project-pulse', m => { if (m.kind === 'chat') pulses[m.project] = (pulses[m.project] || 0) + 1; soon(400); });
   ['task', 'proposal', 'change', 'approval', 'bug', 'doc'].forEach(t => C.on(t, () => soon(800)));
-  C.on('presence', () => { render(); const v = App() && App().view(); if (v === 'overview') overviewSoon(); });
+  C.on('presence', () => { render(); const v = App() && App().view(); if (v === 'home') overviewSoon(); });
 
   function onShow(view) {
-    title(view);
-        render();
-    if (view === 'overview') overview();
+    render();
+    if (view === 'home') overview();
     if (view === 'requests') requests();
     if (view === 'repo') setTimeout(repoPanel, 0);
   }
@@ -169,7 +130,7 @@
   async function overview() {
     const el = $('#pj-overview'); if (!el) return;
     const p = curP();
-    if (!p) { el.innerHTML = '<div class="pj-empty">Connect to a tribe to see its projects.</div>'; return; }
+    if (!p) { el.innerHTML = ''; return; }
     let d; try { d = await C.api(`/projects/${encodeURIComponent(p.id)}/pulse`); } catch (e) { el.innerHTML = `<div class="pj-empty">${esc(e.message)}</div>`; return; }
     const who = m => `<div class="pj-person"><span class="avatar" style="background:${m.kind === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.kind === 'agent' ? '🤖' : esc(initials(m.name))}</span><span>${esc(m.name)}</span><span class="faint">${m.here ? 'here' : m.online ? 'elsewhere' : 'away'}${m.role === 'host' ? ' · host' : m.role === 'spectator' ? ' · watching' : ''}</span></div>`;
     const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
@@ -300,18 +261,17 @@
       : c.kind === 'name' ? 'Starts an empty project. You can attach a repo later.' : '';
   }
   function openNew() {
-    if (!C.connected()) return App().openInvite();
+    if (!C.connected()) return window.TribeHost.isDesktop ? App().openInvite() : window.TribeSettings.joinPrompt();
     dropped = null;
     modal().classList.remove('hidden');
     const host = isHost();
-    body().innerHTML = `<h2>Start a project</h2>
-      <p class="lead">A project is a room with its own people, chat, docs and tasks${host ? ', plus a shared git workspace' : ''}.</p>
-      ${host ? `<div class="dropzone pj-dropzone" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 22)}<div>Drop a folder or repo</div><div class="faint" style="font-size:12px;margin-top:4px">or <span class="linkish">choose one</span></div></div>
+    body().innerHTML = `<h2>New project</h2>
+      ${host ? `<div class="dropzone pj-dropzone" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 22)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:4px">or <span class="linkish">choose one</span></div></div>
         <div class="np-status" id="np-status"></div>` : ''}
-      <div class="field"><label for="np-input">${host ? 'Or type a name, GitHub URL or folder path' : 'Project name'}</label>
-        <input class="input" id="np-input" placeholder="${host ? 'Pixel Quest   or   github.com/you/game' : 'Pixel Quest'}" autocomplete="off" maxlength="400"></div>
+      <div class="field"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Project name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Project name'}" autocomplete="off" maxlength="400"></div>
       <div class="np-hint faint" id="np-hint"></div>
-      <div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="np-create">Create</button></div>`;
+      <div class="modal-foot"><button class="btn ghost" id="np-join">Join with a link</button><span style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" id="np-create">Create</button></div>`;
+    $('#np-join').onclick = () => window.TribeSettings.joinPrompt();
     body().querySelector('[data-close]').onclick = close;
     const inp = $('#np-input');
     inp.oninput = hint;
@@ -339,7 +299,7 @@
       await refresh();
       if (r.needsGit) return askGit(r.project);
       close(); toast(r.cloned ? `Cloned into ${r.project.name}` : r.uploaded ? `${r.project.name}: ${r.uploaded.written} files, committed` : `${r.project.name} is ready`);
-      await switchTo(r.project.id, 'overview');
+      await switchTo(r.project.id, 'home');
       return r;
     } catch (e) { status(`<div class="np-err">${esc(e.message)}</div>`); if (!$('#np-status')) toast(e.message); throw e; }
   }
@@ -348,8 +308,8 @@
     body().innerHTML = `<h2>${label(p)} is not a git repo yet</h2>
       <p class="lead">Make it one so everyone gets their own branch and every change is attributed. TribeCode runs <code>git init</code>, adds a .gitignore for node_modules, build folders and .env, and makes a first commit. Nothing leaves this computer.</p>
       <div class="modal-foot"><button class="btn" id="np-later">Not now</button><button class="btn primary" id="np-git">Make it a git repo</button></div>`;
-    $('#np-later').onclick = () => { close(); switchTo(p.id, 'overview'); };
-    $('#np-git').onclick = async () => { $('#np-git').disabled = true; try { await C.api(`/projects/${encodeURIComponent(p.id)}/git-init`, { method: 'POST' }); toast('It is a git repo now'); } catch (e) { toast(e.message); } close(); await refresh(); switchTo(p.id, 'overview'); };
+    $('#np-later').onclick = () => { close(); switchTo(p.id, 'home'); };
+    $('#np-git').onclick = async () => { $('#np-git').disabled = true; try { await C.api(`/projects/${encodeURIComponent(p.id)}/git-init`, { method: 'POST' }); toast('It is a git repo now'); } catch (e) { toast(e.message); } close(); await refresh(); switchTo(p.id, 'home'); };
   }
   const fromPath = path => create({ path }, 'Opening the folder…').catch(() => {});
 
@@ -455,16 +415,16 @@
     s.innerHTML = `<div class="pj-sheet-card"><div class="pj-grab"></div><h6>Projects</h6>
       ${projects.map(p => { const k = p.counts || {}, n = here(p.id).length; return `<button class="pj-sheet-row ${p.id === cur() ? 'on' : ''}" data-sheet="${esc(p.id)}">${face(p)}<span class="pj-name">${esc(p.name)}<span class="faint">${n ? `${n} here` : ''}${k.tasks ? `${n ? ' · ' : ''}${k.tasks} open tasks` : ''}</span></span>${k.requests ? `<span class="pj-n hot">${k.requests}</span>` : ''}${p.id === cur() ? ico('i-tick', 16) : ''}</button>`; }).join('')}
       <div class="pj-sheet-foot"><button class="btn" id="pj-sheet-invite">${ico('i-users', 15)}Invite</button>${scopedMe() ? '' : `<button class="btn" id="pj-sheet-new">+ New project</button>`}</div></div>`;
-    s.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => { s.classList.add('hidden'); switchTo(b.dataset.sheet, App().view() === 'home' ? 'overview' : undefined); });
+    s.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => { s.classList.add('hidden'); switchTo(b.dataset.sheet); });
     $('#pj-sheet-invite').onclick = () => { s.classList.add('hidden'); App().openInvite(); };
     const nw = $('#pj-sheet-new'); if (nw) nw.onclick = () => { s.classList.add('hidden'); openNew(); };
     return s;
   }
-  const sw = $('#pj-switch'); if (sw) sw.addEventListener('click', () => sheet().classList.remove('hidden'));
+  const sw = $('#pj-switch'); if (sw) sw.addEventListener('click', e => { if (isPhone() || !window.TribeShell) sheet().classList.remove('hidden'); else window.TribeShell.switcher(sw); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#pj-sheet')) $('#pj-sheet').classList.add('hidden'); });
 
 
   if (C.connected()) refresh();   // the socket may have said hello before this script loaded
 
-  window.TribeProjects = { refresh, list: () => projects, current: cur, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  window.TribeProjects = { refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
 })();

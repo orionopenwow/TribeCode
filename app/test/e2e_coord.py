@@ -76,7 +76,7 @@ def main():
     g("add", "."); g("commit", "-q", "-m", "init")
 
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--ollama", "http://localhost:9", "--name", "Pixel Crew"],
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env={**os.environ, "TRIBE_TEST": "1"})
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env={**os.environ, "TRIBE_TEST": "1", "TRIBE_AGENT_RATE": "16", "TRIBE_AGENT_HOPS": "4"})
     try:
         for _ in range(80):
             try:
@@ -183,6 +183,68 @@ def main():
         ok(api("/coord/plan/accept", "POST", {"all": True}, token=orion, project=pq))
         tasks = {t["title"]: t for t in ok(api("/tasks", token=orion, project=pq))["tasks"]}
         assert tasks["Title screen music"]["assignee"], tasks["Title screen music"]
+
+        # ---------------- agents talk to agents: #agents, direct notes, delegation, approvals, loops ----------------
+        for t in ["agents_read", "agents_post", "message_agent", "delegate", "accept_delegation", "decline_delegation", "recommend"]: assert t in tools, (t, tools)
+        assert "delegate" in mcp(oa, None, method="initialize")["instructions"]
+        err, txt = mcp(oa, "agents_post", {"text": "Hi all, I'm on campfire save points"}); assert not err, txt
+        err, txt = mcp(ma, "agents_read"); assert "campfire save points" in txt and "Claude · Orion" in txt, txt
+        err, txt = mcp(oa, "message_agent", {"to": "@maya's-claude", "text": "Are you touching src/ui/button.js?"}); assert not err and "Sent to Claude · Maya" in txt, txt
+        th = txt.split("thread ")[1].rstrip(").")
+        err, txt = mcp(ma, "check_messages"); assert "Are you touching src/ui/button.js?" in txt and "Claude · Orion" in txt, txt
+        err, txt = mcp(ma, "message_agent", {"to": "Claude · Orion", "text": "Yes, done in 10 min", "thread": th}); assert not err, txt
+        err, txt = mcp(oa, "check_messages"); assert "done in 10 min" in txt, txt
+        ch = ok(api("/agents/channel", token=maya, project=pq))["messages"]
+        assert any("Are you touching" in m["text"] and m.get("to") == ma_id for m in ch), ch   # owners see agent DMs
+        assert api("/agents/channel", "POST", {"text": "hello agents"}, token=maya, project=pq)[0] == 400   # humans only @mention
+        assert api("/agents/channel", "POST", {"text": "x"}, token=oa, project=pq)[0] == 403
+        r = ok(api("/agents/channel", "POST", {"text": "@orion's-claude please pause after save points"}, token=maya, project=pq))
+        assert r["mentioned"] == ["Claude · Orion"], r
+        err, txt = mcp(oa, "check_messages"); assert "please pause after save points" in txt, txt
+        # delegation, low risk across owners: delivered straight away, accepted
+        err, txt = mcp(oa, "delegate", {"to": "@maya's-claude", "title": "Polish bridge sprites", "why": "You own src/ui/"}); assert not err, txt
+        d1 = json.loads(txt); assert d1["status"] == "pending" and d1["to"] == "Claude · Maya", d1
+        err, txt = mcp(ma, "check_messages"); assert "accept_delegation id=" + d1["delegation"] in txt, txt
+        err, txt = mcp(oa, "accept_delegation", {"id": d1["delegation"]}); assert err and "not addressed to you" in txt, txt
+        err, txt = mcp(ma, "accept_delegation", {"id": d1["delegation"]}); assert not err, txt
+        tk = [t for t in ok(api("/tasks", token=orion, project=pq))["tasks"] if t["id"] == d1["task"]][0]
+        assert tk["assignee"] == ma_id and tk["status"] == "doing", tk
+        err, txt = mcp(oa, "check_messages"); assert "accepted task " + d1["task"] in txt, txt
+        # medium risk across owners: Maya approves with one tap; agents can never approve
+        err, txt = mcp(oa, "delegate", {"to": "Claude · Maya", "title": "Migrate save format", "why": "Touches your UI", "risk": "medium"})
+        d2 = json.loads(txt); assert d2["status"] == "awaiting-approval", d2
+        err, txt = mcp(ma, "accept_delegation", {"id": d2["delegation"]}); assert err and "approve" in txt, txt
+        dl = [x for x in ok(api("/coord/delegations", token=maya, project=pq))["delegations"] if x["id"] == d2["delegation"]][0]
+        aps = ok(api("/approvals", token=maya, project=pq))
+        ap = [a for a in (aps.get("approvals") or aps.get("items") or []) if a["id"] == dl["approval"]][0]
+        assert ap["to"] == [mid], ap
+        assert api(f"/approvals/{dl['approval']}/approve", "POST", {}, token=ma, project=pq)[0] == 403
+        assert api(f"/approvals/{dl['approval']}/approve", "POST", {}, token=oa, project=pq)[0] == 403
+        ok(api(f"/approvals/{dl['approval']}/approve", "POST", {}, token=maya, project=pq), "owner approves")
+        err, txt = mcp(ma, "decline_delegation", {"id": d2["delegation"], "reason": "busy with sprites"}); assert not err, txt
+        err, txt = mcp(oa, "check_messages"); assert "declined" in txt and "busy with sprites" in txt, txt
+        # no `to`: TribeCode picks the best agent
+        err, txt = mcp(oa, "delegate", {"title": "Menu hover sound", "why": "UI polish", "files": "src/ui/menu.js"}); d3 = json.loads(txt)
+        assert d3["to"] == "Claude · Maya" and "owns" in d3["picked"], d3
+        # loop protection: 4 agent hops on one thread, then a human message resets it
+        err, txt = mcp(oa, "message_agent", {"to": "Claude · Maya", "text": "ping 1"}); lt = txt.split("thread ")[1].rstrip(").")
+        hops = 1; blocked = None
+        for i in range(6):
+            err, txt = mcp(ma if i % 2 == 0 else oa, "message_agent", {"to": "Claude · Orion" if i % 2 == 0 else "Claude · Maya", "text": f"pong {i}", "thread": lt})
+            if err: blocked = txt; break
+            hops += 1
+        assert blocked and "Loop protection" in blocked and hops == 4, (hops, blocked)
+        ok(api("/agents/channel", "POST", {"text": "@agents ok, carry on", "thread": lt}, token=orion, project=pq))
+        err, txt = mcp(oa, "message_agent", {"to": "Claude · Maya", "text": "thanks", "thread": lt}); assert not err, txt
+        # recommendations reach humans
+        err, txt = mcp(ma, "recommend", {"text": "Add a settings screen for audio volume"}); assert not err and "Maya" in txt, txt
+        assert any("audio volume" in r["text"] for r in ok(api("/coord/recommendations", token=maya, project=pq))["recommendations"])
+        # rate limit
+        limited = None
+        for i in range(20):
+            err, txt = mcp(ma, "agents_post", {"text": f"burst {i}"})
+            if err: limited = txt; break
+        assert limited and "Slow down" in limited, limited
 
         # ---------------- bugs: triage, assign, give to agent, attachment, duplicate, markdown ----------------
         b1 = ok(api("/bugs", "POST", {"title": "Player falls through the bridge", "repro": "1. Walk onto the bridge\n2. Jump twice", "details": "Happens on level 2."}, token=maya, project=pq))["bug"]

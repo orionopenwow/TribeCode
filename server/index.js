@@ -33,6 +33,7 @@ const makeProjects = require('./projects');
 const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
 const makeCoord = require('./coord');
+const makeAgentNet = require('./agentnet');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -270,6 +271,7 @@ const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
+const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
 const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
@@ -301,7 +303,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => coord.mcpTools(h),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
@@ -341,7 +343,8 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()], site: site.url() });
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
+    ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
   // optionally turns on the public https address, and returns a fresh join link.
@@ -479,7 +482,8 @@ async function apiInProject(req, res, url) {
     const handled = await bugs.route(req, res, { m, b, c, parts, me, readBody, send, fail });
     if (handled !== null) return;
   }
-  if (a === 'agents' && m === 'POST') {
+  if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
     const name = `Claude · ${me.name}`.slice(0, 32);
     let ag = members.find(x => x.role === 'agent' && x.owner === me.id);

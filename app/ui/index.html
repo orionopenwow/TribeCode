@@ -26,6 +26,8 @@
 <link rel="stylesheet" href="voice.css">
 <link rel="stylesheet" href="plan.css">
 <link rel="stylesheet" href="projects.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="coord.css">
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -52,84 +54,118 @@
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 17h6"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
+  <symbol id="i-merge" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M8 5c6 0 8 3 8 7"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 11V6a1.5 1.5 0 0 1 3 0v4M10 10V4.5a1.5 1.5 0 0 1 3 0V10M13 10V5.5a1.5 1.5 0 0 1 3 0V12M16 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L4 14a1.5 1.5 0 0 1 2.5-1.6L7 13"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
 </svg>
 
 <!-- ============ App shell ============ -->
+<!-- Layout: far-left circle rail (projects) | the project's nest | main | right panel (In the room / preview).
+     app/ui/shell.js renders the nest, breadcrumbs, More menu, + New menu, Pinned, Recents and the preview panel. -->
 <div class="shell" id="shell">
   <div class="window">
+    <nav class="rail" id="tour-rail" aria-label="Projects" data-tauri-drag-region>
+      <button class="logo-btn" id="rail-logo" title="TribeCode · project home" aria-label="Project home" data-tauri-drag-region><img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region></button>
+      <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
+      <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
+      <div class="spacer" data-tauri-drag-region></div>
+      <button class="nav help" id="help-btn" title="Take the tour">?</button>
+      <button class="nav" id="settings-btn" title="Settings · replay setup"><svg class="i"><use href="#i-gear"/></svg></button>
+      <button class="avatar me-btn" id="me-avatar" title="You · settings">?</button>
+    </nav>
+
     <header class="titlebar" data-tauri-drag-region>
-      <button class="menu-btn" id="menu-btn" aria-label="Menu"><svg class="i"><use href="#i-list"/></svg></button><span class="ws" id="ws-name">My Tribe</span><button class="pj-switch hidden" id="pj-switch" aria-haspopup="dialog" title="Switch project"></button><span class="faint">/ Home</span>
+      <button class="menu-btn" id="menu-btn" aria-label="Projects and sections"><svg class="i"><use href="#i-list"/></svg></button>
+      <nav class="crumbs" id="crumbs" aria-label="Breadcrumbs" data-tauri-drag-region>
+        <button class="crumb ws" id="ws-name" title="Tribe">My Tribe</button><span class="sep">/</span>
+        <button class="crumb pj-switch hidden" id="pj-switch" aria-haspopup="menu" title="Switch project"></button><span class="sep pj-sep hidden">/</span>
+        <button class="crumb crumb-sec" id="crumb-section" aria-haspopup="menu" title="Go to a section"><span class="faint" id="crumb-label">Home</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+      </nav>
       <button class="search" id="tour-search" title="Command palette"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></button>
-      <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
-      <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
-      <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
-      <div class="win-ctl" id="win-ctl" aria-label="Window">
-        <button data-w="min" class="tl tl-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M3 6h6"/></svg></button>
-        <button data-w="max" class="tl tl-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 12 12"><path d="M4 8V4h4M8 4v4H4" /></svg></button>
-        <button data-w="close" class="tl tl-close" title="Close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/></svg></button>
+      <div class="tb-right" data-tauri-drag-region>
+        <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
+        <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
+        <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
+        <button class="tb-icon" id="panel-toggle" title="Show or hide the right panel" aria-label="Toggle the right panel" aria-pressed="true"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
+        <div class="win-ctl" id="win-ctl" aria-label="Window">
+          <button data-w="min" class="tl tl-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M3 6h6"/></svg></button>
+          <button data-w="max" class="tl tl-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 12 12"><path d="M4 8V4h4M8 4v4H4" /></svg></button>
+          <button data-w="close" class="tl tl-close" title="Close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/></svg></button>
+        </div>
       </div>
     </header>
 
-    <nav class="rail" id="tour-rail" aria-label="Main">
-      <img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region>
-      <button class="nav on" data-nav="home" title="Tribe home"><svg class="i"><use href="#i-home"/></svg></button>
-      <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
-      <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
-      <button class="nav" data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg></button>
-      <button class="nav" data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg></button>
-      <button class="nav" data-nav="board" title="Approval board"><svg class="i"><use href="#i-vote"/></svg></button>
-      <button class="nav" data-nav="bugs" title="Bug inbox"><svg class="i"><use href="#i-bug"/></svg></button>
-      <button class="nav" data-nav="calendar" title="Calendar"><svg class="i"><use href="#i-cal"/></svg></button>
-      <button class="nav" data-nav="brain" title="Brain"><svg class="i"><use href="#i-brain"/></svg></button>
-      <button class="nav" data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
-      <button class="nav" id="rail-more" title="More: Visuals, floating windows"><svg class="i"><use href="#i-more"/></svg></button>
-      <div class="spacer"></div>
-      <button class="nav help" id="help-btn" title="Take the tour">?</button>
-      <button class="nav" id="settings-btn" title="Settings · replay setup"><svg class="i"><use href="#i-gear"/></svg></button>
-      <div class="avatar" id="me-avatar" title="You">?</div>
-    </nav>
-
-    <aside class="side" id="tour-side">
+    <aside class="side" id="tour-side" aria-label="Project">
       <div class="pj-strip" id="pj-strip" aria-label="Projects"></div>
-      <div class="nest-head" id="nest-head"></div>
-      <div id="pj-nav" class="pj-nav" role="navigation" aria-label="Project"></div>
-      <div class="nest-huddle"><div class="nest-label"><svg class="i"><use href="#i-mic"/></svg>Huddle</div><div id="huddle-box" class="huddle-box"></div></div>
-      <h6 class="local-folder">Local folder</h6>
-      <button class="item local-folder" id="folder-item" title="Workspace folder"><svg class="i" style="width:16px;height:16px"><use href="#i-folder"/></svg><span id="folder-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></button>
-      <button class="invite-pill" id="tour-invite"><span>+</span>Invite friends</button>
+      <div class="nest" id="nest">
+        <div class="nest-head" id="nest-head">
+          <button class="nest-title" id="nest-title" data-nav="home" title="Project home"><span id="nest-face" class="nest-face"></span><span class="nt"><b id="nest-name">Home</b><span class="nest-sub" id="nest-sub"></span></span></button>
+        </div>
+        <div class="nest-group">
+          <button class="nest-row" id="nest-new" aria-haspopup="menu"><svg class="i"><use href="#i-plus"/></svg><span>New</span></button>
+          <button class="nest-row" id="nest-search"><svg class="i"><use href="#i-search"/></svg><span>Search</span><span class="kbd">Ctrl K</span></button>
+        </div>
+        <div class="nest-group" id="pj-nav" role="navigation" aria-label="Project sections">
+          <button class="nest-row" data-nav="chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat</span><span class="n" id="nn-chat"></span></button>
+          <button class="nest-row" data-nav="docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs &amp; files</span><span class="n" id="nn-docs"></span></button>
+          <button class="nest-row" data-pnav="inbox" id="nest-updates"><svg class="i"><use href="#i-bell"/></svg><span>Updates</span><span class="n" id="nn-updates"></span></button>
+          <button class="nest-row" data-nav="tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks</span><span class="n" id="nn-tasks"></span></button>
+          <div class="nest-huddle" id="nest-huddle">
+            <div class="nest-row static"><svg class="i"><use href="#i-mic"/></svg><span>Huddle</span><span class="live-dot hidden" id="huddle-live" title="Live now"></span></div>
+            <div class="huddle-sub hidden" id="huddle-sub"></div>
+            <div id="huddle-box" class="huddle-box"></div>
+          </div>
+          <button class="nest-row" id="nest-more" aria-haspopup="menu" aria-expanded="false"><svg class="i"><use href="#i-more"/></svg><span>More</span><span class="n" id="nn-more"></span></button>
+        </div>
+        <div class="nest-sec" id="nest-pinned">
+          <h6>Pinned</h6>
+          <div id="pin-repo"></div>
+          <div id="side-pins"><div id="side-pins-list"></div></div>
+          <div id="pin-chats"></div>
+        </div>
+        <div class="nest-sec" id="nest-recents"><h6>Recents</h6><div id="recents-list"></div></div>
+      </div>
+      <div class="nest-foot">
+        <button class="invite-pill" id="tour-invite"><span>+</span>Invite friends</button>
+        <button class="item local-folder hidden" id="folder-item" title="Workspace folder"><span id="folder-label"></span></button>
+      </div>
     </aside>
 
     <main class="main" id="main">
      <section id="view-home">
-      <div class="hello" id="hello">Welcome</div>
-      <div class="sub">Your tribe's home base. Start here, then invite your friends.</div>
+      <div id="pj-overview" class="pj-overview"></div>
+      <div class="home-start" id="home-start">
       <div class="home-grid">
-        <section class="card" id="tour-checklist">
-          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-zap"/></svg>Getting started</h3>
-          <div class="lead"><span id="check-count">0 of 5</span> done</div>
-          <div class="progress"><i id="check-bar" style="width:0%"></i></div>
-          <div id="checklist"></div>
-        </section>
         <section class="card" id="standup-card">
           <h3><svg class="i" style="color:var(--accent)"><use href="#i-net"/></svg>Daily standup</h3>
-          <div class="lead">Your local brain reads the last day of chat and the task board and writes a short recap for everyone. Zero Claude tokens.</div>
           <div class="standup" id="standup-text"></div>
           <button class="btn" id="standup-go">Write today's standup</button>
         </section>
-        <section class="card pj-drop-card" id="project-drop-card">
-          <h3><svg class="i" style="color:var(--accent)"><use href="#i-folder"/></svg>Start a project</h3>
-          <div class="lead">Drop a repo or a folder to make it a project room: its own people, chat, docs, tasks and a shared git workspace.</div>
-          <div class="dropzone pj-dropzone" id="pj-dropzone" tabindex="0" role="button" aria-label="Drop a folder or repo to start a project"><svg class="i"><use href="#i-folder"/></svg><div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:4px">or <span class="linkish">choose a folder</span>, paste a GitHub URL or a path</div></div>
-        </section>
         <section class="card" id="tour-drop">
-          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-upload"/></svg>Drop zone</h3>
-          <div class="lead">Drop any file: docs, PDFs, slides, images. It's converted to Markdown and summarized by your local brain.</div>
-          <div class="dropzone" id="dropzone"><svg class="i"><use href="#i-upload"/></svg><div>Drag files here</div><div class="faint" style="font-size:12px;margin-top:4px">or paste a Google Doc link</div></div>
+          <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-upload"/></svg>Drop files</h3>
+          <div class="dropzone" id="dropzone"><svg class="i"><use href="#i-upload"/></svg><div>Drop docs, PDFs or images</div></div>
           <div class="drops" id="drops"></div>
         </section>
       </div>
+      </div>
      </section>
-     <section id="view-overview" class="hidden"><div id="pj-overview"></div></section>
+     <section id="view-chat" class="hidden">
+      <div class="chat-col">
+        <h6 class="chat-title">Chat · #general</h6>
+        <div class="chat" id="chat-list"><div class="empty-room">Start a tribe server to chat. Type <span class="kbd">/task</span> to turn a message into a task, <span class="kbd">/decide</span> to log a decision.</div></div>
+        <!-- Composer mount: app/ui/composer.js (another branch) replaces the plain form inside it. Keep #chat-form / #chat-input working. -->
+        <div class="composer-dock" id="composer-mount">
+          <form class="compose" id="chat-form"><input id="chat-input" placeholder="Message the tribe…" autocomplete="off" maxlength="4000"><span class="kbd">/task</span></form>
+        </div>
+      </div>
+     </section>
+     <section id="view-coord" class="hidden"><div id="coord-root"></div></section>
      <section id="view-requests" class="hidden"><div id="pj-requests"></div></section>
      <section id="view-tasks" class="hidden">
       <div class="view-head"><h1>Tasks</h1><span class="faint" id="tasks-sub"></span>
@@ -167,18 +203,29 @@
      </section>
     </main>
 
-    <aside class="panel" id="tour-room">
-      <h6>In the room <span id="room-count"></span></h6>
-      <div class="card" id="room-list">
-        <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
+    <aside class="panel" id="tour-room" aria-label="Right panel">
+      <div class="room-pane" id="room-pane">
+        <h6>In the room <span id="room-count"></span></h6>
+        <div class="room-list" id="room-list">
+          <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
+        </div>
+        <div class="empty-room" id="room-hint">Friends you invite show up here, along with what they're working on and whose Claude is running.</div>
+        <div id="room-agents" class="room-agents"></div>
+        <button class="cc-link" id="cc-connect"><svg class="i" style="width:16px;height:16px;color:var(--accent)"><use href="#i-sparkle"/></svg>Connect your Claude Code</button>
+        <div id="claims-box" class="hidden"><h6 style="margin-bottom:8px">Claimed files</h6><div id="claims-list"></div></div>
       </div>
-      <button class="cc-link" id="cc-connect"><svg class="i" style="width:16px;height:16px;color:var(--accent)"><use href="#i-sparkle"/></svg>Connect your Claude Code</button>
-      <div id="claims-box" class="hidden"><h6 style="margin-bottom:8px">Claimed files</h6><div id="claims-list"></div></div>
-      <div class="empty-room" id="room-hint">Friends you invite show up here, along with what they're working on and whose Claude is running.</div>
-      <h6 style="margin-top:6px">Chat · #general</h6>
-      <div class="chat" id="chat-list"><div class="empty-room">Start a tribe server to chat. Type <span class="kbd">/task</span> to turn a message into a task, <span class="kbd">/decide</span> to log a decision.</div></div>
-      <form class="compose" id="chat-form"><input id="chat-input" placeholder="Message the tribe…" autocomplete="off" maxlength="4000"><span class="kbd">/task</span></form>
+      <div class="preview-pane" id="preview-pane" aria-live="polite">
+        <header class="preview-head" id="preview-head"><span class="pv-kind" id="preview-kind"></span><b id="preview-title"></b><span class="spacer"></span><span id="preview-actions"></span><button class="tb-icon" id="preview-close" title="Close preview" aria-label="Close preview"><svg class="i"><use href="#i-x"/></svg></button></header>
+        <div class="preview-body" id="preview-body"></div>
+      </div>
     </aside>
+    <nav class="tabbar" id="tabbar" aria-label="Sections">
+      <button data-nav="home" title="Home"><svg class="i"><use href="#i-home"/></svg><span>Home</span></button>
+      <button data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat</span></button>
+      <button data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs</span></button>
+      <button data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks</span></button>
+      <button data-tab-more title="More"><svg class="i"><use href="#i-more"/></svg><span>More</span></button>
+    </nav>
   </div>
 </div>
 
@@ -194,21 +241,6 @@
 <!-- ============ Update popover ============ -->
 <div class="update-pop hidden" id="update-pop" role="dialog" aria-label="Update available"></div>
 
-<!-- ============ First-run setup ============ -->
-<div class="onboard hidden" id="onboard">
-  <div class="ob-card">
-    <div class="ob-top"><img src="assets/icon-512.png" alt=""><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode"><div class="ob-steps" id="ob-steps"></div></div>
-    <div class="ob-body" id="ob-body"></div>
-    <div class="ob-foot">
-      <button class="btn ghost" id="ob-back">Back</button>
-      <span class="hint" id="ob-hint"></span>
-      <div class="spacer"></div>
-      <button class="btn ghost" id="ob-skip">Skip setup</button>
-      <button class="btn primary" id="ob-next">Continue</button>
-    </div>
-  </div>
-</div>
-
 <!-- ============ Tour ============ -->
 <div class="tour hidden" id="tour"><div class="spot" id="tour-spot"></div><div class="tip" id="tour-tip" role="dialog"></div></div>
 
@@ -216,7 +248,7 @@
 <script src="float.js"></script>
 <script src="store.js"></script>
 <script src="tribe.js"></script>
-<script src="onboarding.js"></script>
+<script src="settings.js"></script>
 <script src="tour.js"></script>
 <script src="updater.js"></script>
 <script src="md.js"></script>
@@ -241,5 +273,7 @@
 <script src="app.js"></script>
 <script src="notify.js"></script>
 <script src="projects.js"></script>
+<script src="shell.js"></script>
+<script src="coord.js"></script>
 </body>
 </html>
