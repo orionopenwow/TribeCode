@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.8.5
+
+- **A full check of the app**: every feature from v0.6.0 on was tried on desktop and phone, and 7 real bugs were fixed:
+  - the phone-app card blinked on every redraw, and its switch could stay greyed out
+  - phone Docs was cut off at the screen edges
+  - the hidden phone menu button still took taps in Chat
+  - Settings looked for a local model on a friend's own device
+  - Reset-Everything could delete a folder that held a tribe
+  - an unreadable members/invites file was silently replaced (it's now kept aside first)
+- **Restart loops**: 10 loops of crash and clean restarts with 1,600 checks, no data lost, sign-in and keys intact (`npm run dev:loop`; a short loop runs in `npm test`)
+- **Developer tools** (docs/DEV-TOOLS.md): `dev:test`, `dev:shots`, `dev:seed`, `dev:loop`, `dev:reset`, `dev:release`, `dev:doctor`, `dev:infographic`
+- **Infographic** (docs/infographic): how TribeCode works, from one host to friends, Claude, lanes, GitHub and releases, with how to reach your Claude from your phone in every section
+- Remembered between visits: the Agents Hub and Workshop tabs; an empty note you close doesn't linger
+- **Phones**: Docs fits the screen; Chat's top bar takes only the taps it shows
+
 ## v0.8.4
 
 - **Pictures you can frame** (like Discord): after you pick a project picture, drag it and zoom (slider, wheel or pinch), see it as the round rail bubble and the rounded square, then Apply. PNG, JPEG, WebP or GIF up to 10 MB and at least 64 px; saved as a crisp 256 px square. Works in the new-project setup and from the overview's picture
