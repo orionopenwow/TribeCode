@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.3
+
+- Home's Notes and the docs center now list your notes as soon as they sync (they used to wait for the next redraw)
+- **Phones**:
+  - An **Agents** button (robot) in both racks. On Home it opens the Agent fleet across every project; in a project, that project's Agents Hub
+  - In a project, **Updates moves to the top right**: a bell with its count beside the side-pane button (in Chat it sits right of the tabs). The rack is Home · Chat · Docs · Tasks · Agents
+
 ## v0.8.2
 
 - **Home has an identity**: a card at the top with the campfire, your greeting in your color, and three live numbers (projects, friends online, agents working)

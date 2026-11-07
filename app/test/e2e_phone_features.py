@@ -156,7 +156,7 @@ def main():
                 body = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "request_approval", "arguments": {"title": "Ask Maya: publish the level?", "risk": "high"}}}
                 req = urllib.request.Request(BASE + "/mcp", method="POST", data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + ag["token"], "X-Project": pid})
                 urllib.request.urlopen(req, timeout=20).read()
-                ph.click('#tabbar [data-m2nav="updates"]'); ph.wait_for_selector("text=Ask Maya: publish the level?", timeout=15000)
+                ph.click('#m2-bell'); ph.wait_for_selector("text=Ask Maya: publish the level?", timeout=15000)
                 btn = ph.locator(".m2-ap [data-ap='approve'], .m2-ap .approve, [data-decide='approve']").first
                 btn.click(); ph.wait_for_timeout(500)
                 if ph.locator(".m2-ap .chosen, [data-ap-send], .m2-ap-send").count():
