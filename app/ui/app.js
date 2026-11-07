@@ -570,7 +570,20 @@
     d.querySelector('button').onclick = () => { d.remove(); try { localStorage.setItem('tribecode.iosHint', '1'); } catch {} };
     document.body.appendChild(d);
   }
-  if ('serviceWorker' in navigator && window.isSecureContext && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  // The offline cache (sw.js) is for phones and browsers only. Inside the desktop app its network requests can't
+  // reach the app's bundled files, so it served old cached pages after every update (old layout + new scripts).
+  // In the app: never register it, remove any old one and its caches, and reload once so the real files load.
+  if (window.__TAURI__ && 'serviceWorker' in navigator) {
+    (async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+        if (window.caches) await Promise.all((await caches.keys()).map(k => caches.delete(k)));
+        let done = false; try { done = sessionStorage.getItem('tribecode.swCleared') === '1'; } catch {}
+        if ((regs.length || navigator.serviceWorker.controller) && !done) { try { sessionStorage.setItem('tribecode.swCleared', '1'); } catch {} location.reload(); }
+      } catch {}
+    })();
+  } else if ('serviceWorker' in navigator && window.isSecureContext && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 
   // boot
   if (params.has('reset')) {

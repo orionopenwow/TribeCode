@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.1
+
+Fixes the desktop app showing an old, half-updated layout after updates.
+- The phones-only offline cache (service worker) was also installing inside the desktop app, where it served old cached pages: the old sidebar with new chat parts. The app no longer uses it, and removes the old one and its caches on start
+- TribeCode.bat clears the app's stale page caches (your settings and sign-in are kept)
+- Browsers no longer show "Restart to update": a page already runs the server's current version
+
 ## v0.4.0
 
 The big one: everything built since v0.3.3, released together to the desktop app, the GitHub release and the website demo.

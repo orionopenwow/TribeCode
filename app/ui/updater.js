@@ -70,6 +70,7 @@
     if (sim) return fakeRelease(sim);
     if (location.protocol === 'file:') return null;   // opened as a local file: no origin for the API call
     if (navigator.webdriver) return null;             // automated test browsers: no network calls to GitHub
+    return null;   // a browser page already runs the server's current code; only the desktop app installs updates
     try {
       const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' } });
       if (!res.ok) return null;
