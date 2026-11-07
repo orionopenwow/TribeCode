@@ -28,13 +28,17 @@
 
   function setStatus(s) { state.status = s; emit('status', state); }
 
+  let retryTimer = null;
   function connect() {
+    clearTimeout(retryTimer); retryTimer = null;
+    // Replacing a socket: detach it first, or its close event would schedule yet another connect()
+    // that closes the new socket, and so on (a reconnect loop whenever connect() ran twice).
+    if (sock) { const old = sock; sock = null; old.onclose = old.onmessage = old.onopen = null; try { old.close(); } catch {} }
     if (!token()) { setStatus('offline'); return; }
-    try { if (sock) sock.close(); } catch {}
     setStatus('connecting');
     let want = ''; try { want = localStorage.getItem(projKey()) || ''; } catch {}
     const url = base().replace(/^http/, 'ws') + '/ws?token=' + encodeURIComponent(token()) + (want ? '&project=' + encodeURIComponent(want) : '');
-    sock = new WebSocket(url);
+    const me = sock = new WebSocket(url);
     sock.onopen = () => { retry = 0; setStatus('online'); sendActivity(); };
     sock.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
@@ -66,10 +70,11 @@
       if (['doc-state', 'doc-op', 'doc-ack', 'doc-cursor', 'doc-peers', 'doc-title', 'doc-error'].includes(m.type)) emit(m.type, m);
     };
     sock.onclose = () => {
+      if (sock !== me) return;   // an old socket we already replaced
       setStatus(token() ? 'reconnecting' : 'offline');
       if (!token()) return;
       const wait = Math.min(15000, 500 * 2 ** retry++);
-      setTimeout(connect, wait);
+      retryTimer = setTimeout(connect, wait);
     };
   }
 
