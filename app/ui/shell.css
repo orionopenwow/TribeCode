@@ -362,6 +362,14 @@ body.panel-off .panel { display: none; }
 /* Desktop app showing the Working version: a quiet marker so you know which code you're looking at */
 body.ui-working .tb-right #pf-btn::after { content: 'WORKING'; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font: 600 8.5px/1 var(--mono); letter-spacing: .06em; color: var(--accent-2, #38C6B1); background: var(--nest, #12151A); padding: 1px 3px; border-radius: 3px; }
 
+/* Brighter by default (user: "too grey, make them white"): sidebar rows, header text and icons, the composer */
+body.dark .nest-row { color: #EEF1F5; }
+body.dark .nest-row svg.i { color: #C9D1DC; }
+body.dark .titlebar, body.dark .crumb, body.dark .titlebar .search { color: #E6EAF0; }
+body.dark .tb-right #nf-bell, body.dark .tb-right #update-btn, body.dark .panel-x { color: #E6EAF0; }
+body.dark #chat-form input::placeholder, body.dark .compose input::placeholder, body.dark textarea::placeholder, body.dark input::placeholder { color: #A9B3C1; }
+body.dark .compose .cx-btn, body.dark .m2-cbtn { color: #D9DFE7; }
+
 /* ---------- right panel: an X in its corner hides it; a slim tab brings it back ---------- */
 .room-head { display: flex; align-items: center; gap: 8px; margin: -6px -6px 0 0; }
 .room-head h6 { flex: 1; min-width: 0; margin: 0; }
@@ -370,7 +378,7 @@ body.ui-working .tb-right #pf-btn::after { content: 'WORKING'; position: absolut
 .room-pane > .room-head + * { margin-top: -6px; }
 .panel-reopen { display: none; }
 @media (min-width: 821px) {
-  body.panel-off .panel-reopen { display: grid; place-items: center; position: absolute; z-index: 6; top: 78px; right: 0; width: 28px; height: 40px; border: 1px solid var(--edge); border-right: 0; border-radius: 9px 0 0 9px; background: var(--nest); color: var(--faint); }
+  body.panel-off .panel-reopen { display: grid; place-items: center; position: absolute; z-index: 6; top: 78px; right: 0; width: 28px; height: 40px; border: 1px solid var(--edge); border-right: 0; border-radius: 9px 0 0 9px; background: var(--nest); color: var(--muted); }
   body.panel-off .panel-reopen:hover, body.panel-off .panel-reopen:focus-visible { color: var(--text); background: var(--hover); border-color: var(--edge-pop); }
   .panel-reopen svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; }
 }
