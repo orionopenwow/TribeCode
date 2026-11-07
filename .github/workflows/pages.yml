@@ -3,7 +3,7 @@
 # server there, so the app runs solo (local Tasks and Docs) until someone opens an invite link, which
 # takes them to the host's own server. Every tribe's data stays in its host's tribe folder.
 #
-# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+# One-time setup (done): repo Settings → Pages → Source: "GitHub Actions". Friend links use go.html here.
 name: Pages
 
 on:
