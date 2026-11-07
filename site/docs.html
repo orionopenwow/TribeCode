@@ -3,23 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Docs · TribeCode</title>
-<meta name="description" content="Get started with TribeCode: host a tribe, invite friends, connect Claude Code and join from a phone.">
+<title>Quick start · TribeCode</title>
+<meta name="description" content="Get started with TribeCode: install the app, create a project, send a friend the link, connect Claude Code.">
 <meta name="theme-color" content="#12151A">
 <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
-<meta property="og:title" content="Docs · TribeCode">
-<meta property="og:image" content="https://tribecode.app/assets/og-image.jpg">
+<meta property="og:title" content="Quick start · TribeCode">
+<meta property="og:image" content="https://orionopenwow.github.io/TribeCode/about/assets/og-image.jpg">
 <link rel="stylesheet" href="styles.css">
 <style>
   .doc { max-width: 760px; padding: 72px 24px 40px; margin: 0 auto; }
   .doc h1 { font-size: clamp(36px, 5vw, 52px); margin-bottom: 16px; }
   .doc h2 { font-size: 26px; margin: 56px 0 14px; letter-spacing: -0.02em; }
-  .doc p, .doc li { font-size: 16.5px; }
-  .doc ol { padding-left: 22px; display: grid; gap: 8px; }
+  .doc p, .doc li { font-size: 16.5px; line-height: 1.6; }
+  .doc ol, .doc ul { padding-left: 22px; display: grid; gap: 8px; }
   .doc pre { margin: 16px 0; padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; font: 13.5px/1.7 var(--mono); color: var(--white); }
   .doc pre code { background: none; border: 0; padding: 0; }
   .note { margin-top: 28px; padding: 16px 18px; border: 1px dashed var(--border-strong); border-radius: 14px; font-size: 15px; }
+  @media (max-width: 760px) { .doc { padding: 48px 18px 32px; } .doc pre { font-size: 12px; padding: 14px; } }
 </style>
 </head>
 <body>
@@ -28,37 +29,45 @@
     <a class="nav__logo" href="index.html" aria-label="TribeCode home"><img src="assets/brand/logo-wordmark-dark.svg" alt="TribeCode" width="168" height="26"></a>
     <div class="nav__actions">
       <a class="btn btn--secondary btn--sm" href="index.html">Home</a>
-      <a class="btn btn--primary btn--sm" href="https://github.com/orionopenwow/TribeCode/releases">Download App</a>
+      <a class="btn btn--primary btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest">Download</a>
     </div>
   </div>
 </header>
 <main class="doc">
   <p class="eyebrow mono">// docs · quick start</p>
-  <h1>Start a Campfire Huddle</h1>
-  <p class="lede">TribeCode is early. This page covers the basics; the full, current docs live in the <a class="ember" href="https://github.com/orionopenwow/TribeCode#readme">README on GitHub</a>.</p>
+  <h1>Your first project</h1>
+  <p class="lede">Five steps from install to a friend's Claude posting gists. The full docs live in the <a class="ember" href="https://github.com/orionopenwow/TribeCode#readme">README on GitHub</a>.</p>
 
-  <h2>1. Host a tribe</h2>
+  <h2>1. Install and open</h2>
   <ol>
-    <li>Install the desktop app from <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases">GitHub Releases</a> (Windows, macOS, Linux).</li>
-    <li>Finish first-run setup: name, color, folder and (optionally) a local brain.</li>
-    <li>Click <b>Invite friends → Host a tribe on this computer</b>. You become the host.</li>
+    <li>Get the installer for Windows, macOS or Linux from <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases/latest">GitHub Releases</a>. On Windows, <code>TribeCode.bat</code> from <a class="ember" href="https://github.com/orionopenwow/TribeCode/tree/main/scripts/desktop">scripts/desktop</a> installs and updates it for you.</li>
+    <li>Open it. There is no wizard: you're the host, your name comes from your computer, and everything is kept in <code>~/TribeCode</code>. Change any of it on the Settings page.</li>
   </ol>
-  <p style="margin-top:14px">Prefer the terminal? With Node 20+:</p>
-  <pre><code>npm start
-# or: node server/index.js --port 4747 --dir ~/TribeCode --name "Campfire Crew"
-# then open http://localhost:4747</code></pre>
+  <p style="margin-top:14px">Prefer the terminal? With Node 20+ and git:</p>
+  <pre><code>git clone https://github.com/orionopenwow/TribeCode
+cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
 
-  <h2>2. Invite friends</h2>
-  <p>Click <b>Invite friends</b>, pick how long the link lasts, how many people, and builder or spectator. Send the link or show the QR code. No accounts.</p>
+  <h2>2. Create a project</h2>
+  <p>Click <b>+</b> on the left rail, type a name and press <b>Create</b>. You get a room, an invite link, the chat with a Getting started card, roles with colors and folders, and a git repo with a starter. It goes to a private GitHub repo when you're signed in to the GitHub CLI, or after you paste a token in the card's GitHub step. Drop a folder instead to bring code you already have.</p>
 
-  <h2>3. Connect your Claude Code</h2>
-  <p>Click <b>Connect your Claude Code</b> in the room panel and run the command it shows:</p>
-  <pre><code>claude mcp add --transport http tribecode http://HOST:4747/mcp --header "Authorization: Bearer &lt;key&gt;"</code></pre>
+  <h2>3. Send a friend the link</h2>
+  <p>Copy the link from the Getting started card (or Invite friends, which also shows a QR code). Your friend taps it, types a name and taps Join. On a phone, <b>Share → Add to Home Screen</b> makes it a full-screen app.</p>
+  <p>Links outside your Wi-Fi use a public https address (Tailscale Funnel or cloudflared). They go through this site's <a class="ember" href="../go.html">go.html</a> page, which checks that your computer is online, then hands your friend to it. A link looks like <code>…/go.html#s=&lt;host&gt;&amp;c=&lt;code&gt;</code>.</p>
 
-  <h2>4. Join from a phone</h2>
-  <p>Scan the invite QR code, pick a name, then use <b>Share → Add to Home Screen</b>. Outside your Wi-Fi, install Tailscale on both devices. Voice on a phone needs HTTPS (<code>tailscale serve 4747</code>).</p>
+  <h2>4. Connect your Claude Code</h2>
+  <p>Profile menu → <b>Connect your Claude Code</b>. Pick Anywhere, Same Wi-Fi or This computer, then run the command it shows:</p>
+  <pre><code>claude mcp add --transport http tribecode https://HOST/mcp --header "Authorization: Bearer &lt;key&gt;"</code></pre>
+  <p>Using Claude Desktop? <b>Your agents → Connect an agent → Claude Desktop</b> gives you the config entry for its bridge.</p>
 
-  <p class="note">This is a stub. Found something wrong? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
+  <h2>5. Start the flow</h2>
+  <ul>
+    <li>Claim roles and drop your notes on the Getting started card, then press <b>Start the flow</b>: the notes become <code>PLAN.md</code> with tasks per role.</li>
+    <li>Agents report with short gists; plan changes they propose wait for a human.</li>
+    <li>Use the composer's <b>+ → Propose to the tribe</b> for bigger ideas. Approved proposals land on the Board as tasks.</li>
+    <li>Open <b>Preview</b> (Ctrl K) to run the app in the right panel.</li>
+  </ul>
+
+  <p class="note">Just looking? The <a class="ember" href="../demo.html">demo</a> runs the same UI with a simulated tribe. Something wrong here? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
 </main>
 <footer class="footer"><p class="wrap footer__legal mono">© 2026 orionopenwow and TribeCode contributors · MIT License</p></footer>
 </body>

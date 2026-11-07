@@ -312,7 +312,6 @@ html:not(.js) .bar span { width: 60%; }
   margin: 0; width: 31%; max-width: 230px; padding: 7px; border-radius: 36px; background: #0E1115;
   border: 1px solid var(--border-strong); position: relative;
 }
-.phone::before { content: ""; position: absolute; top: 15px; left: 50%; width: 34%; height: 8px; border-radius: 6px; background: #0E1115; transform: translateX(-50%); z-index: 1; }
 .phone img { border-radius: 29px; width: 100%; }
 .phone--b { margin-top: 48px; }
 
@@ -422,13 +421,56 @@ html.js .device.reveal.is-visible { transform: rotateX(var(--rx, 0deg)) rotateY(
   .phones__frames { gap: 10px; }
   .phone { padding: 5px; border-radius: 24px; }
   .phone img { border-radius: 19px; }
-  .phone::before { top: 10px; height: 6px; }
   .phone--b { margin-top: 28px; }
   .cta__card { padding: 26px; }
   .cta__art { max-width: 260px; }
   .footer__inner { flex-direction: column; align-items: flex-start; }
   .footer__brand { flex-direction: column; align-items: flex-start; gap: 12px; }
   .footer__end { flex-wrap: wrap; }
+}
+
+/* ---------- v0.4 sections: hero pair, the flow, tiles ---------- */
+.bento--hero .device { grid-column: span 9; }
+.phone--hero { grid-column: span 3; width: auto; max-width: none; align-self: end; margin-bottom: 24px; }
+
+.flow { list-style: none; margin: 0 0 40px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); counter-reset: none; }
+.flow__step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 22px 22px 24px; }
+.flow__step:first-child { border-color: var(--border-strong); border-left: 3px solid var(--brand); }
+.flow__n { display: block; font-size: 12px; letter-spacing: .06em; color: var(--brand); margin-bottom: 12px; }
+.flow__step h3 { margin-bottom: 8px; }
+.flow__step p { font-size: 15px; line-height: 1.55; }
+.shots { display: grid; gap: var(--gap); }
+.shots--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.shots .window img { width: 100%; }
+.flow__caption { margin-top: 14px; font-size: 12px; color: var(--faint); text-align: center; }
+
+.bento--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tile { padding: 26px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.tile__i { width: 22px; height: 22px; }
+.tile p { font-size: 15px; line-height: 1.55; }
+.tile__k { font-size: 12px; letter-spacing: .06em; color: var(--brand); }
+.tile__link { margin-top: auto; padding-top: 6px; font-size: 14.5px; color: var(--brand); font-weight: 500; }
+.tile__link:hover { color: var(--white); }
+.tile .btn { margin-top: auto; }
+.tile--main { border-color: var(--border-strong); border-left: 3px solid var(--brand); }
+.tile__code { margin: 0; padding: 14px; background: var(--canvas); border: 1px solid var(--border); border-radius: var(--r-sm); font: 12.5px/1.7 var(--mono); color: var(--white); overflow-x: auto; white-space: pre; }
+.tile__code code { background: none; border: 0; padding: 0; font-size: inherit; }
+.ticks--tight { margin: 0; gap: 8px; }
+.ticks--tight li { font-size: 14px; }
+.ticks--tight code { font-size: .85em; }
+.phones__note { margin-top: 4px; font-size: 15px; line-height: 1.6; max-width: 520px; }
+
+@media (max-width: 1080px) {
+  .bento--hero .device { grid-column: span 12; }
+  .phone--hero { display: none; }
+  .flow, .shots--3, .bento--three { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px) {
+  .flow, .shots--3, .bento--three { grid-template-columns: 1fr; }
+  .shots--3 .window:not(:first-child) { display: none; }
+  .flow__caption { display: none; }
+  .flow__step { padding: 18px; }
+  .tile { padding: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

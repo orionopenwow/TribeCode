@@ -18,7 +18,10 @@ npm run live                   # auto-pull + restart + UI live reload (TribeCode
 npm run invite                 # one-click public invite + QR (TribeCode-Invite-Friend.bat)
 node scripts/start-test-project.js   # Pixel Quest test project + project invite + Claude Code command
 npm test                       # 15 suites (Python Playwright with /usr/bin/google-chrome, --no-proxy-server)
+npm run readme-shots           # docs/screenshots/readme-*.png + site/assets/shots/*.webp from a seeded throwaway tribe
 ```
+
+Every milestone: `npm run readme-shots`, refresh README.md and the Pages site (`site/`, published at `/about/`), then release.
 
 How to write tests:
 - Host pages use `/?skipIntro=1`.
