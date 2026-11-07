@@ -553,6 +553,10 @@ async function apiInProject(req, res, url) {
   if (a === 'chat' && b) {
     if (b === 'general') b = P.channelOf(P.current());   // #general is the current project's channel
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
+    // Only real conversations: a project's channel, a DM, or a project's #agents channel you can see.
+    // (Before, any name worked, so a project-only friend could read another project's chat/agents-<id>.jsonl.)
+    const agentsOf = /^agents-(.+)$/.exec(b);
+    if (!chProject && !dms.isDm(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
     if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
     if (m === 'GET') {   // ?before=<message id> pages back through history

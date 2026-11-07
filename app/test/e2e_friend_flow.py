@@ -225,6 +225,12 @@ def main():
             devices = json.loads((T / ".tribe" / "devices.json").read_text())
             assert devices and all(len(d["keyHash"]) == 64 for d in devices)
 
+            # a project-only friend can't read other conversations by name
+            first_pid = json.loads((T / ".tribe" / "projects.json").read_text())[0]["id"]
+            assert api(f"/chat/agents-{first_pid}", token=ftok)[0] == 404, "another project's #agents channel"
+            assert api("/chat/made-up-room", "POST", {"text": "x"}, token=ftok)[0] == 404, "no chat files for made-up channels"
+            assert api(f"/chat/agents-{pid}", token=ftok)[0] == 200
+
             # ---- 6. the friend's Claude Code
             ag = ok(api("/agents", "POST", {}, token=ftok), "connect claude")
             atok = ag["token"]; secrets.append(atok)
