@@ -31,9 +31,12 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 |---|---|---|
 | `feat/mobile` | Real app phone UI: rack, composer (+ menu, recorder), Docs hub, one-tap approvals, suggested tasks, Talk-to picker, profile sheet/DMs, in-app-browser escape, section clarity doc, e2e_mobile2.py | rebuilding (agent) |
 | `feat/chat-votes` | Emoji reactions on bubbles (quick-react bar, double-tap), team votes in chat, Claude can propose votes (MCP), /vote, vote → task/Board, QoL extras | building (agent) |
+| `feat/flow` | One-click Create project → hosted room → invite link → chat opens → GitHub repo created + pushed → roles, notes and files dropped → Start the flow. Agents post short gists (post_gist), not code dumps. Self-updating PLAN.md + assessment gists | building (agent) |
+| security review | Full audit of the public-facing server, then fixes + regression tests | auditing (agent) |
 | `feat/demo4` | Demo phone layout: no header, richer rack, less whitespace, reactions + vote card in demo | rebuilding (agent) |
 
 ## User requests log (newest first)
+- 2026-11-06: Security review. One-click Create project → hosting room → invite link → chat opens → repo created and pushed to GitHub → humans delegate roles, dump notes and files → flow begins → agents give gists (progress, upgrades, plans), not monolith code dumps → self-evolving plan and assessments.
 - 2026-11-06: Keep the GitHub → main → Restart-to-update loop working end to end. Keep this living context doc.
 - 2026-11-06: Stable and Working folders on the Desktop to test UI without compiling an exe. ✅
 - 2026-11-06: Always send agents to work on separate parts without interference. ✅ (process)
