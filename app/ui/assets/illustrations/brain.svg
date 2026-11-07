@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="t"><title id="t">A circuit brain connected to files, with the Claude Code sparkle</title>
+<g fill="none" stroke="#38C6B1" stroke-width="2" stroke-linecap="round" opacity=".85">
+<path d="M98 70H62l-10-12M96 110H40M98 150H62l-10 12M222 70h36l10-12M224 110h36M222 150h30"/>
+</g>
+<g stroke-linecap="round" stroke-width="3.5"><path d="M14 104h16M14 116h10" stroke="#F26B1D"/><path d="M276 104h22M276 116h14" stroke="#F26B1D"/></g>
+<!-- files -->
+<g><path d="M30 38h18l8 8v24H30z" fill="#F8FAFC"/><path d="M48 38v8h8" fill="#B9BDC9"/><path d="M35 54h14M35 60h10" stroke="#38C6B1" stroke-width="2.4" stroke-linecap="round"/></g>
+<g><path d="M30 160h18l8 8v24H30z" fill="#F8FAFC"/><path d="M48 160v8h8" fill="#B9BDC9"/><path d="M35 176h14M35 182h10" stroke="#F26B1D" stroke-width="2.4" stroke-linecap="round"/></g>
+<g><path d="M262 36h18l8 8v24h-26z" fill="#F8FAFC"/><path d="M280 36v8h8" fill="#B9BDC9"/><path d="M267 52h14M267 58h10" stroke="#38C6B1" stroke-width="2.4" stroke-linecap="round"/></g>
+<!-- brain -->
+<path d="M158 36c-14-10-40-8-48 10-18 0-28 18-20 32-14 8-14 30 0 38-8 16 2 34 20 34 6 18 32 22 48 10z" fill="#1B2028" stroke="#F26B1D" stroke-width="4" stroke-linejoin="round"/>
+<path d="M162 36c14-10 40-8 48 10 18 0 28 18 20 32 14 8 14 30 0 38 8 16-2 34-20 34-6 18-32 22-48 10z" fill="#1B2028" stroke="#F26B1D" stroke-width="4" stroke-linejoin="round"/>
+<g fill="none" stroke="#F26B1D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M144 54v20l-18 10v20M144 74h-24M126 104l-12 10M144 120v-16h-18M144 140l-20 10v12M144 120l-14 14"/>
+<path d="M176 54v20l18 10v20M176 74h24M194 104l12 10M176 120v-16h18M176 140l20 10v12M176 120l14 14"/>
+</g>
+<g fill="#1B2028" stroke="#FFB86B" stroke-width="2.4">
+<circle cx="144" cy="54" r="4"/><circle cx="120" cy="74" r="4"/><circle cx="114" cy="114" r="4"/><circle cx="126" cy="104" r="4"/><circle cx="124" cy="162" r="4"/><circle cx="130" cy="134" r="4"/>
+<circle cx="176" cy="54" r="4"/><circle cx="200" cy="74" r="4"/><circle cx="206" cy="114" r="4"/><circle cx="194" cy="104" r="4"/><circle cx="196" cy="162" r="4"/><circle cx="190" cy="134" r="4"/>
+</g>
+<!-- upload arrows -->
+<g fill="none" stroke="#38C6B1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 88v-8m-4 4l4-4 4 4M14 92h12"/><path d="M20 140v-8m-4 4l4-4 4 4M14 144h12"/></g>
+<!-- sparkle -->
+<path d="M272 148c2 12 6 16 18 18-12 2-16 6-18 18-2-12-6-16-18-18 12-2 16-6 18-18z" fill="#F26B1D"/>
+<path d="M294 136c1 5 2 6 7 7-5 1-6 2-7 7-1-5-2-6-7-7 5-1 6-2 7-7z" fill="#FFB86B"/>
+</svg>

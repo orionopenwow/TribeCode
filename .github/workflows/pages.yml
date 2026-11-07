@@ -1,0 +1,51 @@
+# Publishes the web app to GitHub Pages: app/ui is the site root (the website IS the app) and the
+# marketing site lives under /about/. Pages only hosts the app shell and downloads: there is no tribe
+# server there, so the app runs solo (local Tasks and Docs) until someone opens an invite link, which
+# takes them to the host's own server. Every tribe's data stays in its host's tribe folder.
+#
+# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['app/ui/**', 'site/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble _site
+        run: |
+          mkdir -p _site/about
+          cp -R app/ui/. _site/
+          cp -R site/. _site/about/
+          touch _site/.nojekyll
+          # GitHub Pages serves 404.html for unknown paths; send stray deep links back to the app.
+          printf '<!DOCTYPE html><meta charset="utf-8"><title>TribeCode</title><script>location.replace(location.pathname.split("/").slice(0, 2).join("/") + "/")</script>' > _site/404.html
+          ls -la _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

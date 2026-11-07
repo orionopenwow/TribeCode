@@ -33,7 +33,7 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(host, "host")
-            host.goto(BASE); host.wait_for_selector("#onboard:not(.hidden)")
+            host.goto(BASE + "/?skipIntro=1"); host.wait_for_selector("#onboard:not(.hidden)")
             host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-skip")
             wait_text(host, "#sync-status", "connected")
             host.click("#tour-invite")
@@ -54,8 +54,11 @@ def main():
             phone.fill("#name", "Maya")
             if take: phone.wait_for_timeout(300); phone.screenshot(path=str(SHOTS / "phone-join.png"))
             phone.click("#go")
-            phone.wait_for_selector("#onboard:not(.hidden)")
-            phone.click("#ob-skip")
+            # phones land on their private device link (/m/<key>/) with the Add to Home Screen sheet
+            phone.wait_for_url("**/m/*/")
+            phone.wait_for_selector("#install-sheet")
+            phone.click("#ins-later")
+            if take: phone.wait_for_timeout(400); phone.screenshot(path=str(SHOTS / "phone-home.png"))
             try:
                 wait_text(phone, "#sync-status", "connected")
             except Exception:
@@ -68,10 +71,6 @@ def main():
             phone.wait_for_function("getComputedStyle(document.querySelector('.side')).transform === 'none'")
             phone.mouse.click(370, 400)
             phone.wait_for_function("!document.body.classList.contains('drawer-open')")
-            # iOS install hint
-            phone.wait_for_selector(".ios-hint", timeout=5000)
-            if take: phone.wait_for_timeout(400); phone.screenshot(path=str(SHOTS / "phone-home.png"))
-            phone.click(".ios-hint button")
             # chat tab
             phone.click('.rail [data-nav="chat"]')
             phone.wait_for_selector(".panel", state="visible")

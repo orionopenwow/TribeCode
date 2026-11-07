@@ -83,7 +83,7 @@ def main():
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1600, "height": 1000}).new_page(); watch(host, "host")
             # host: first-run setup -> becomes host
-            host.goto(BASE)
+            host.goto(BASE + "/?skipIntro=1")  # the first-visit intro is covered by e2e_friend.py
             host.wait_for_selector("#onboard:not(.hidden)")
             host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-next")
             host.click("#ob-skip")
