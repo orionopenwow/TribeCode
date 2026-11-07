@@ -1,11 +1,11 @@
 {
- "generated": "2026-11-07T08:04:35Z",
+ "generated": "2026-11-07T08:28:43Z",
  "version": "0.5.0",
  "quick": false,
  "app_root": "/home/claude/tc/.claude/worktrees/agent-ad91101e594bac0a5",
- "seconds": 462,
+ "seconds": 976,
  "stats": {
-  "clicks": 249,
+  "clicks": 254,
   "dead": 0,
   "destinations": 78,
   "contexts": [
@@ -19,41 +19,11 @@
  },
  "summary": {
   "critical": 0,
-  "high": 3,
-  "medium": 6,
-  "low": 33
+  "high": 1,
+  "medium": 3,
+  "low": 31
  },
  "findings": [
-  {
-   "id": "5bfd253674",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Core journey: Chat fidelity: live, in order, every kind, survives a restart",
-   "detail": "the host sees it all after a reload: missing: ['Level map.pdf'] · project pixel-quest",
-   "selector": "",
-   "label": "chat",
-   "contexts": [
-    "core"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [
-    "Maya sends from the phone composer",
-    "everything arrives live on the desktop",
-    "in order on the desktop",
-    "everything arrives live on the phone",
-    "in order on the phone",
-    "the image renders as an image",
-    "the reaction shows",
-    "everything persists across a server restart",
-    "the reply keeps its quote",
-    "the vote keeps its options",
-    "the host sees it all after a reload"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
   {
    "id": "a640343adb",
    "kind": "journey",
@@ -74,27 +44,6 @@
    ],
    "count": 1,
    "screenshot": "docs/screenshots/explore/a640343adb.jpg"
-  },
-  {
-   "id": "5748fa0cfd",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Journey fails: Connect Claude Code",
-   "detail": "click failed: Locator.click: Timeout 2500ms exceeded.",
-   "selector": "",
-   "label": "connect-claude",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [
-    "start: project home",
-    "You (profile)"
-   ],
-   "count": 1,
-   "screenshot": "docs/screenshots/explore/5748fa0cfd.jpg"
   },
   {
    "id": "0236ba9d01",
@@ -122,34 +71,6 @@
    "count": 5,
    "screenshot": null,
    "example": "#hub-new small"
-  },
-  {
-   "id": "959051db19",
-   "kind": "contrast",
-   "severity": "medium",
-   "title": "Text contrast too low",
-   "detail": "2.84:1 (#8A93A3 on #F4F5F7, 10.5px) needs 4.5:1",
-   "selector": "#8A93A3 on #F4F5F7",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Invite friends",
-    "Scratchpad",
-    "Project home",
-    "Project settings",
-    "Profile menu",
-    "Inbox (bell)",
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Invite friends (Ctrl K / nest)"
-   ],
-   "count": 80,
-   "screenshot": null,
-   "example": "#nest-pinned h6"
   },
   {
    "id": "71a55fa96b",
@@ -180,34 +101,6 @@
    "example": "#room-list span.ok"
   },
   {
-   "id": "b9a0074d31",
-   "kind": "contrast",
-   "severity": "medium",
-   "title": "Text contrast too low",
-   "detail": "2.61:1 (#8A93A3 on #E9ECF0, 12px) needs 4.5:1",
-   "selector": "#8A93A3 on #E9ECF0",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Invite friends",
-    "Scratchpad",
-    "Project home",
-    "Project settings",
-    "Profile menu",
-    "Inbox (bell)",
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Invite friends (Ctrl K / nest)"
-   ],
-   "count": 7,
-   "screenshot": null,
-   "example": "span#nest-sub"
-  },
-  {
    "id": "a426a3b54c",
    "kind": "request",
    "severity": "medium",
@@ -228,28 +121,6 @@
    ],
    "count": 2,
    "screenshot": null
-  },
-  {
-   "id": "312536f439",
-   "kind": "contrast",
-   "severity": "medium",
-   "title": "Text contrast too low",
-   "detail": "2.71:1 (#8A93A3 on #EEF0F3, 10.5px) needs 4.5:1",
-   "selector": "#8A93A3 on #EEF0F3",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette"
-   ],
-   "count": 1,
-   "screenshot": null,
-   "example": "#pal-list span.k"
   },
   {
    "id": "d4675b835a",
@@ -506,57 +377,6 @@
    "screenshot": null
   },
   {
-   "id": "ab40d87acf",
-   "kind": "contrast",
-   "severity": "low",
-   "title": "Text contrast too low",
-   "detail": "3.10:1 (#8A93A3 on #FFFFFF, 14px) needs 4.5:1",
-   "selector": "#8A93A3 on #FFFFFF",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Invite friends",
-    "Scratchpad",
-    "Project home",
-    "Project settings",
-    "Profile menu",
-    "Inbox (bell)",
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Invite friends (Ctrl K / nest)"
-   ],
-   "count": 101,
-   "screenshot": null,
-   "example": "button#tour-search"
-  },
-  {
-   "id": "3ab32c9178",
-   "kind": "contrast",
-   "severity": "low",
-   "title": "Text contrast too low",
-   "detail": "4.24:1 (#C2530F on #F4F5F7, 11.5px) needs 4.5:1",
-   "selector": "#C2530F on #F4F5F7",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Inbox (bell)",
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Inbox (bell)"
-   ],
-   "count": 4,
-   "screenshot": null,
-   "example": "button#capture-retry"
-  },
-  {
    "id": "708be5f8f0",
    "kind": "contrast",
    "severity": "low",
@@ -601,28 +421,6 @@
    ],
    "count": 2,
    "screenshot": null
-  },
-  {
-   "id": "26344ddc1a",
-   "kind": "contrast",
-   "severity": "low",
-   "title": "Text contrast too low",
-   "detail": "4.19:1 (#A35F0C on #F6E9DB, 10.5px) needs 4.5:1",
-   "selector": "#A35F0C on #F6E9DB",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Inbox (bell)"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Inbox (bell)"
-   ],
-   "count": 1,
-   "screenshot": null,
-   "example": "#nf-list span.nf-risk.medium"
   },
   {
    "id": "e76b0d1d98",
@@ -856,6 +654,27 @@
    "screenshot": null
   },
   {
+   "id": "c1483a761c",
+   "kind": "layout-shift",
+   "severity": "low",
+   "title": "Layout shifts after the view opens",
+   "detail": "cumulative layout shift 0.275 (sources: div#home-start, section#m2-sugg-home)",
+   "selector": "Project settings",
+   "label": "",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Project settings"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Project settings (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
    "id": "1e05b980cd",
    "kind": "layout-shift",
    "severity": "low",
@@ -1034,7 +853,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 2,
-   "ms": 4105,
+   "ms": 4174,
    "notes": [],
    "checks": [
     {
@@ -1078,7 +897,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 2,
-   "ms": 4284,
+   "ms": 4136,
    "notes": [
     "already connected: 'New command' is one extra deliberate tap",
     "no 'Anywhere' command until a public link (Funnel/cloudflared) is on"
@@ -1129,7 +948,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 0,
-   "ms": 730,
+   "ms": 722,
    "notes": [],
    "checks": [
     {
@@ -1179,9 +998,9 @@
    "title": "Chat fidelity: live, in order, every kind, survives a restart",
    "kind": "core",
    "context": "desktop+phone+api",
-   "pass": false,
+   "pass": true,
    "clicks": 1,
-   "ms": 16284,
+   "ms": 8611,
    "notes": [],
    "checks": [
     {
@@ -1226,8 +1045,7 @@
     },
     {
      "name": "the host sees it all after a reload",
-     "ok": false,
-     "why": "missing: ['Level map.pdf'] · project pixel-quest"
+     "ok": true
     }
    ]
   },
@@ -1238,7 +1056,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 2,
-   "ms": 6746,
+   "ms": 6750,
    "notes": [],
    "checks": [
     {
@@ -1307,7 +1125,7 @@
    "pass": true,
    "clicks": 1,
    "max_clicks": 2,
-   "ms": 1019,
+   "ms": 1125,
    "notes": [],
    "steps": [
     "Invite friends"
@@ -1321,7 +1139,7 @@
    "pass": true,
    "clicks": 3,
    "max_clicks": 4,
-   "ms": 2273,
+   "ms": 2257,
    "notes": [],
    "steps": [
     "composer +",
@@ -1337,8 +1155,8 @@
    "context": "desktop",
    "pass": true,
    "clicks": 2,
-   "max_clicks": 2,
-   "ms": 1444,
+   "max_clicks": 3,
+   "ms": 1440,
    "notes": [],
    "steps": [
     "Connect Claude",
@@ -1353,7 +1171,7 @@
    "pass": false,
    "clicks": 1,
    "max_clicks": 2,
-   "ms": 995,
+   "ms": 1028,
    "notes": [
     "no visible affordance for: Preview app"
    ],
@@ -1369,7 +1187,7 @@
    "pass": true,
    "clicks": 2,
    "max_clicks": 2,
-   "ms": 1491,
+   "ms": 1482,
    "notes": [],
    "steps": [
     "Tasks & Board",
@@ -1384,7 +1202,7 @@
    "pass": true,
    "clicks": 2,
    "max_clicks": 2,
-   "ms": 1420,
+   "ms": 1413,
    "notes": [],
    "steps": [
     "profile",
@@ -1399,7 +1217,7 @@
    "pass": true,
    "clicks": 1,
    "max_clicks": 2,
-   "ms": 1043,
+   "ms": 1066,
    "notes": [],
    "steps": [
     "Pixel Quest"
@@ -1413,7 +1231,7 @@
    "pass": true,
    "clicks": 1,
    "max_clicks": 2,
-   "ms": 985,
+   "ms": 1016,
    "notes": [],
    "steps": [
     "Invite friends"
@@ -1424,15 +1242,17 @@
    "title": "Connect Claude Code",
    "kind": "intuitive",
    "context": "phone",
-   "pass": false,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 3492,
+   "pass": true,
+   "clicks": 3,
+   "max_clicks": 3,
+   "ms": 1849,
    "notes": [
-    "click failed: Locator.click: Timeout 2500ms exceeded."
+    "already connected: 'New command' is one deliberate extra tap"
    ],
    "steps": [
-    "You (profile)"
+    "You (profile)",
+    "Connect your Claude Code",
+    "New command"
    ]
   },
   {
@@ -1443,7 +1263,7 @@
    "pass": true,
    "clicks": 2,
    "max_clicks": 2,
-   "ms": 1485,
+   "ms": 1488,
    "notes": [],
    "steps": [
     "Tasks (rack)",
@@ -1455,20 +1275,26 @@
   {
    "key": "contrast",
    "idea": "Lift faint text to 4.5:1 (the user wants white, not grey)",
-   "why": "10 color pair(s) under WCAG AA in the dark theme",
-   "in_features_next": false
+   "why": "4 color pair(s) under WCAG AA in the dark theme",
+   "in_features_next": true
+  },
+  {
+   "key": "preview-desktop",
+   "idea": "A visible 'Preview app' button on desktop",
+   "why": "the Preview journey found no button outside Ctrl K",
+   "in_features_next": true
   },
   {
    "key": "anywhere",
    "idea": "Turn on the public link from the Connect Claude card when 'Anywhere' is missing",
    "why": "the generator has no 'Anywhere' command until a tunnel runs",
-   "in_features_next": false
+   "in_features_next": true
   },
   {
    "key": "empty",
    "idea": "Empty states with one obvious action ('Nothing here' → 'Add the first …')",
    "why": "18 empty state(s) with no button nearby",
-   "in_features_next": false
+   "in_features_next": true
   },
   {
    "key": "health",
@@ -1480,7 +1306,7 @@
    "key": "explorer-nightly",
    "idea": "Nightly explorer run posts its delta (fixed / new) as a gist in #agents",
    "why": "the explorer writes findings.json; the Insights panel reads it",
-   "in_features_next": false
+   "in_features_next": true
   },
   {
    "key": "slash",
@@ -1494,5 +1320,6 @@
    "why": "pointing a friend or an agent at one message takes a screenshot today",
    "in_features_next": true
   }
- ]
+ ],
+ "note": "phone journeys re-run after dismissing the iOS \"Add to Home Screen\" hint first (it covered the profile sheet)"
 }

@@ -986,7 +986,8 @@ def run_phone(browser, shots):
             for j in JOURNEYS:
                 if j["id"] not in ("invite", "bugs", "connect-claude"): continue
                 jj = dict(j); jj["steps"] = [tuple(s) for s in j.get("steps_phone", j["steps"])]
-                page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 500)
+                page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 1700)
+                page.evaluate("(() => { const b = document.querySelector('.ios-hint button'); if (b) b.click(); })()")   # a person dismisses "Add to Home Screen" first
                 run_journey(page, w, "phone", jj)
             page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 500)
         visit_all(page, w, "phone", phone=True, shots=shots)
