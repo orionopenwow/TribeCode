@@ -98,7 +98,7 @@
   }
 
   // nav + views (the shell: app/ui/shell.js renders the nest, breadcrumbs and menus around these)
-  const VIEWS = { hub: 'Hub', home: 'Home', chat: 'Chat', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
+  const VIEWS = { hub: 'Home', home: 'Overview', chat: 'Chat', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
   const ALIAS = { overview: 'home', inbox: 'home' };
   let current = 'home';
   function show(view) {
@@ -600,6 +600,8 @@
   // Zero-step setup (settings.js): name, folder and color fill themselves in; the desktop app hosts on its own.
   (async () => {
     await window.TribeSettings.autoSetup(); refresh();
+    // Every launch starts at your Home (the hub), apart from any tribe. Deep links (#/…) and automated tests keep their own start.
+    if ((params.has('home') || !navigator.webdriver) && !location.hash && window.TribeHub) setTimeout(() => window.TribeHub.open('home'), 0);
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
     // The desktop app showing a page served by a TribeCode server (the Working version) talks to that server; it doesn't host its own.
     const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);

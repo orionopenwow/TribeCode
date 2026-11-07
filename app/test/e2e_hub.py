@@ -166,7 +166,7 @@ def main():
             host.wait_for_selector("#view-home:not(.hidden)")   # connected: the project home, as before
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-launch")
             assert host.evaluate("location.hash") == "#/hub"
-            wait_text(host, "#crumb-label", "Hub")
+            wait_text(host, "#crumb-label", "Home")
             wait_text(host, "#hub-feed", "Light the first lantern")
             wait_text(host, "#hub-feed", "Sketch list")
             chips = host.evaluate("[...document.querySelectorAll('#hub-feed .hub-chip')].map(e => e.textContent.trim())")
@@ -178,7 +178,7 @@ def main():
             wait_text(host, "#hub-fleet", "Secretary")
             # the sidebar: the four rows are the Global ones, plus a way into the project
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
-            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Hub", "Global docs", "All repos", "Agent fleet"]
+            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Global docs", "All repos", "Agent fleet"]
             assert host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#nest-open", state="visible")
             # right panel: agents + helpers + scratchpad

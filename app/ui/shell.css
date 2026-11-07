@@ -422,3 +422,8 @@ body.ws-tabbed #coord-tabs, body.ws-tabbed #view-coord > #coord-root > .view-hea
   .view-tabs { margin: 0 -14px 18px; padding: 0 14px; gap: 6px; }
   .wt { height: 40px; padding: 0 11px; font-size: 14.5px; }
 }
+
+/* Home (no tribe/project selected): your space, not a room */
+body.global #room-list, body.global #room-hint, body.global .room-head h6 { display: none; }
+body.global .room-head { justify-content: flex-end; }
+.np-hint { font-size: 12.5px; line-height: 1.5; margin-top: 8px; }

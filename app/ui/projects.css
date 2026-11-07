@@ -147,3 +147,14 @@
 .pj-sheet-row svg.i { width: 16px; height: 16px; color: var(--accent); }
 .pj-sheet-foot { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--stroke); }
 .pj-sheet-foot .btn { flex: 1; }
+
+/* The rail "+" window: Start a new tribe (top) / Paste invite link (bottom) */
+.np-stack { display: flex; flex-direction: column; gap: 12px; }
+.np-card { background: var(--surface, #1B2028); border: 1px solid var(--edge, #2A313C); border-radius: 12px; padding: 16px; }
+.np-card.np-new { border-left: 3px solid var(--accent, #F26B1D); }
+.np-card h3 { margin: 4px 0 4px; font-size: 18px; color: var(--text); }
+.np-card p { margin: 0 0 12px; font-size: 13px; line-height: 1.5; }
+.np-row { display: flex; gap: 8px; align-items: center; }
+.np-row .input { flex: 1; min-width: 0; }
+.np-more { margin-top: 10px; font-size: 12.5px; }
+.np-card .dropzone { margin-top: 10px; }

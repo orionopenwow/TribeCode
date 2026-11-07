@@ -50,7 +50,7 @@
   function onShow() {   // app.js show('hub') calls this
     const want = mode === 'home' ? '#/hub' : `#/hub/${mode}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
-    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All repos' : mode === 'docs' ? 'Global docs' : 'Hub';
+    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All repos' : mode === 'docs' ? 'Global docs' : 'Home';
     render(); load(); panel();
   }
   function onHide() { setTimeout(panel, 0); if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
@@ -91,7 +91,7 @@
     const sub = on ? [tribe, `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() ? 'Reconnecting to your tribe…' : 'Not in a tribe yet. Everything below works on this device.';
     el.innerHTML = `<div class="hub">
-      <header class="hub-head"><span class="eyebrow">Global hub</span><h1>${greeting()}</h1><p class="faint">${esc(sub)}</p></header>
+      <header class="hub-head"><span class="eyebrow">Your home</span><h1>${greeting()}</h1><p class="faint">${esc(sub)}</p></header>
       ${launch(on)}
       ${on ? stream() : offline()}
       ${on ? fleetSec() : ''}

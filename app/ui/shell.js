@@ -58,7 +58,7 @@
     { key: 'reviews', label: 'Reviews', tab: 'Reviews', slug: 'reviews', icon: 'i-eye', group: 'agents', keys: 'review approve', run: () => coord('reviews') },
     { key: 'plan', label: 'Daily plan', tab: 'Daily plan', slug: 'plan', icon: 'i-sun', group: 'agents', keys: 'today standup plan', run: () => coord('plan') },
     { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
-    { key: 'hub', label: 'Global hub', icon: 'i-home', group: 'global', row: 'Hub', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
+    { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
     { key: 'docs-all', label: 'Global docs', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
     { key: 'repos-all', label: 'All repos', icon: 'i-git', group: 'global', keys: 'repositories every project code branches status', run: () => hubOpen('repos') },
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
@@ -105,6 +105,7 @@
   function drawGroups() {
     const box = $('#nest-groups'); if (!box) return;
     drawnGlobal = isGlobal();
+    document.body.classList.toggle('global', drawnGlobal);   // keep the class in step whichever path drew the rows
     box.innerHTML = drawnGlobal ? `<div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global').map(d =>
       `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.row || d.label)}</span></button>`).join('')}</div>` : '';
   }
@@ -125,7 +126,7 @@
     return v;
   }
   function markActive() {
-    if (drawnGlobal !== isGlobal()) { drawGroups(); globalHead(); }
+    if (drawnGlobal !== isGlobal() || document.body.classList.contains('global') !== isGlobal()) { drawGroups(); globalHead(); }
     const cur = document.body.classList.contains('ws-open') ? '' : current(), w = wsOf(cur);
     const lit = w ? WS[w].row : cur;   // inside a workspace its row is the lit one
     document.querySelectorAll('.side [data-pnav], #tabbar [data-pnav]').forEach(b => { const on = b.dataset.pnav === lit; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -308,7 +309,7 @@
     const rooms = rest.filter(collab), personal = rest.filter(p => !collab(p));
     const groupH = (label, items) => items.length ? `<h6>${esc(label)}</h6>${items.map(row).join('')}` : '';
     const el = pop(anchor, `<div class="sh-menu sh-projects sh-switch">
-        <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Global hub · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
+        <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Home · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
         ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Overview', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
@@ -353,10 +354,13 @@
     const title = $('#nest-title'); if (!title) return;
     const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || 'My Tribe';
     if (g) {
-      title.dataset.nav = 'hub'; title.title = 'Global hub';
-      $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face">${esc(tribe.trim().charAt(0).toUpperCase() || 'T')}</span>`;
-      $('#nest-name').textContent = tribe;
-      $('#nest-sub').textContent = on ? 'Global hub' : 'Not connected';
+      // Home is yours, apart from any tribe: your face and name, not the tribe's.
+      const me = C.state().me || {}; let nm = me.name; try { nm = nm || (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name); } catch {}
+      nm = nm || 'You';
+      title.dataset.nav = 'hub'; title.title = 'Your home';
+      $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face" style="background:${esc(me.color || 'var(--accent)')}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
+      $('#nest-name').textContent = 'Home';
+      $('#nest-sub').textContent = on ? `${nm} · ${tribe}` : `${nm} · not in a tribe yet`;
     } else {
       title.dataset.nav = 'home'; title.title = 'Project home';
       if (p) { $('#nest-face').innerHTML = h ? h.face(p, 'sm') : ''; $('#nest-name').textContent = p.name; }
