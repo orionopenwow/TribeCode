@@ -2,293 +2,1208 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#12151A">
+<meta name="color-scheme" content="dark">
 <meta name="description" content="Try TribeCode: accept an invite, join a project and say hi. A self-contained demo, nothing is sent anywhere.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TribeCode">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <title>You're invited · TribeCode demo</title>
 <link rel="icon" href="assets/icon-512.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="demo.webmanifest">
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="fonts.css">
 <style>
-  /* Self-contained demo of the friend flow: invite -> join a project -> chat. No server, no storage.
-     Flat matte per docs/DESIGN-SYSTEM.md: luminance steps and 1px borders, no glows, blur or gradients. */
-  * { box-sizing: border-box; }
-  :root { --c: #12151A; --s: #1B2028; --s2: #222833; --b: #2A313C; --o: #F26B1D; --t: #38C6B1; --i: #6C7CFF; --w: #F8FAFC; --m: #94A3B8;
-    --mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace; }
-  html, body { margin: 0; height: 100%; background: var(--c); color: var(--m); font: 15px/1.5 Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
-  button, input { font: inherit; }
-  .hidden { display: none !important; }
-  .demo-tag { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 20; font: 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
-    color: var(--m); background: var(--s); border: 1px solid var(--b); border-radius: 999px; padding: 6px 10px; white-space: nowrap; }
-  .k { font: 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--o); }
-  h1 { margin: 6px 0 8px; color: var(--w); font-size: 26px; line-height: 1.15; letter-spacing: -.015em; }
-  .btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--b); background: var(--s); color: var(--w); font-weight: 600; cursor: pointer; text-decoration: none; }
-  .btn.primary { background: var(--o); border-color: var(--o); color: #fff; }
-  .btn.block { width: 100%; }
-  .btn:disabled { opacity: .5; cursor: default; }
-  .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #12151A; font-weight: 700; font-size: 14px; flex: none; }
-  .av.sm { width: 26px; height: 26px; font-size: 12px; }
-  .av.agent { border-radius: 9px; background: var(--s2); border: 1px solid var(--t); color: var(--t); }
+/* Self-contained demo of the friend flow: invite -> join -> project room. No server, no storage, no network.
+   Flat matte per docs/DESIGN-SYSTEM.md: luminance steps and 1px borders. No blur, no gradients.
+   The only off-palette colours are Approve (#3BD16F) and Deny (#FF6F8E). */
+* { box-sizing: border-box; }
+:root { --c: #12151A; --s: #1B2028; --s2: #222833; --s3: #2A313C; --b: #2A313C; --o: #F26B1D; --t: #38C6B1; --i: #6C7CFF; --w: #F8FAFC; --m: #94A3B8;
+  --txt: #E2E8F0; --ok: #3BD16F; --no: #FF6F8E; --rail: #0F1216; --nest: #151920;
+  --tline: rgba(56,198,177,.45); --ttint: rgba(56,198,177,.08);
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  --sat: env(safe-area-inset-top); --sab: env(safe-area-inset-bottom); --sal: env(safe-area-inset-left); --sar: env(safe-area-inset-right); }
+html, body { margin: 0; background: var(--c); color: var(--m); font: 15px/1.45 Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
+html, body { overflow-x: hidden; }
+body { -webkit-tap-highlight-color: transparent; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+a { color: inherit; }
+.hidden { display: none !important; }
+.mono { font-family: var(--mono); }
+svg.i { flex: none; display: block; }
+:focus-visible { outline: 2px solid var(--o); outline-offset: 2px; }
 
-  /* ---- screen 1 + 2: invite / connecting ---- */
-  .center { min-height: 100dvh; display: grid; place-items: center; padding: 64px 18px max(24px, env(safe-area-inset-bottom)); }
-  .card { width: min(440px, 100%); background: var(--s); border: 1px solid var(--b); border-radius: 18px; padding: 24px 22px; }
-  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-  .brand img.icon { width: 36px; height: 36px; border-radius: 9px; } .brand img.wm { height: 18px; }
-  .proj { display: flex; gap: 12px; align-items: center; background: var(--c); border: 1px solid var(--b); border-radius: 14px; padding: 12px; margin: 14px 0 6px; }
-  .proj-ic { width: 44px; height: 44px; border-radius: 11px; background: var(--s2); border: 1px solid var(--b); display: grid; place-items: center; font-size: 22px; }
-  .proj b { color: var(--w); display: block; } .proj small { font-size: 13px; }
-  .stack { display: flex; margin-left: auto; } .stack .av { width: 28px; height: 28px; font-size: 12px; border: 2px solid var(--c); margin-left: -8px; }
-  .live { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 10px 0 16px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t); flex: none; }
-  label.l { display: block; font: 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 6px; }
-  input.in { width: 100%; height: 48px; border-radius: 12px; border: 1px solid var(--b); background: var(--c); color: var(--w); padding: 0 14px; font-size: 16px; outline: none; }
-  input.in:focus { border-color: var(--o); }
-  .colors { display: flex; gap: 10px; margin: 4px 0 18px; }
-  .colors button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
-  .colors button[aria-pressed="true"] { border-color: var(--w); }
-  .fine { font-size: 12px; text-align: center; margin: 12px 0 0; }
-  .steps { list-style: none; padding: 0; margin: 18px 0 0; }
-  .steps li { display: flex; gap: 10px; align-items: center; padding: 8px 0; color: var(--m); }
-  .steps li .tick { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--b); display: grid; place-items: center; font-size: 12px; flex: none; }
-  .steps li.done { color: var(--w); } .steps li.done .tick { background: var(--t); border-color: var(--t); color: #12151A; }
-  .steps li.now .tick { border-color: var(--o); }
+/* avatars */
+.av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #12151A; font-weight: 700; font-size: 13px; flex: none; line-height: 1; }
+.av.agent { border-radius: 9px; background: var(--s2); border: 1px solid var(--t); color: var(--t); }
+.pav { border-radius: 50%; overflow: hidden; flex: none; display: block; }
+.stack { display: flex; } .stack .av { border: 2px solid var(--s); margin-left: -8px; } .stack .av:first-child { margin-left: 0; }
 
-  /* ---- screen 3: project room ---- */
-  .room { height: 100dvh; display: grid; grid-template-columns: 240px 1fr 280px; grid-template-rows: 56px 1fr; }
-  .top { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--b); background: var(--c); }
-  .top img.icon { width: 28px; height: 28px; border-radius: 7px; } .top .crumb { color: var(--w); font-weight: 600; } .top .crumb span { color: var(--m); font-weight: 400; }
-  .top .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-  .pill { font: 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--b); border-radius: 999px; padding: 6px 9px; display: inline-flex; gap: 6px; align-items: center; }
-  .side { border-right: 1px solid var(--b); padding: 14px 10px; overflow: auto; }
-  .side .h { font: 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; padding: 8px 10px; }
-  .nav { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 10px; border: 1px solid transparent; background: none; color: var(--m); cursor: pointer; text-align: left; }
-  .nav.on { background: var(--s); border-color: var(--b); color: var(--w); }
-  .nav .n { margin-left: auto; font: 11px/1 var(--mono); background: var(--o); color: #fff; border-radius: 999px; padding: 3px 6px; }
-  .nav .n.t { background: var(--t); color: #12151A; }
-  .nav.proj-nav { color: var(--w); font-weight: 600; }
-  .sub { padding-left: 14px; border-left: 1px solid var(--b); margin: 2px 0 8px 18px; }
-  .sub .nav { padding: 7px 10px; }
-  .main { display: flex; flex-direction: column; min-height: 0; }
-  .pane { flex: 1; min-height: 0; overflow: auto; padding: 18px 22px; }
-  .msg { display: flex; gap: 10px; padding: 8px 0; animation: in .25s ease-out; }
-  @keyframes in { from { opacity: 0; transform: translateY(4px); } }
-  .msg .who { color: var(--w); font-weight: 600; font-size: 14px; } .msg .who time { color: var(--m); font-weight: 400; font: 11px var(--mono); margin-left: 6px; }
-  .msg .txt { color: #D5DCE6; }
-  .msg .txt code { font: 13px var(--mono); background: var(--s2); border: 1px solid var(--b); border-radius: 6px; padding: 1px 5px; }
-  .sys { font: 12px/1.4 var(--mono); color: var(--m); text-align: center; padding: 10px 0; }
-  .agent-card { margin-top: 6px; background: var(--s); border: 1px solid var(--b); border-left: 3px solid var(--t); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
-  .agent-card b { color: var(--w); } .agent-card .mono { font-family: var(--mono); font-size: 12px; }
-  .task-card { margin-top: 6px; display: inline-flex; gap: 8px; align-items: center; background: var(--s); border: 1px solid var(--b); border-radius: 10px; padding: 8px 12px; font-size: 13px; color: var(--w); }
-  .typing { font-size: 13px; padding: 4px 0 0 44px; min-height: 22px; }
-  .composer { display: flex; gap: 8px; padding: 12px 16px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--b); background: var(--c); }
-  .composer input { flex: 1; min-width: 0; height: 46px; border-radius: 12px; border: 1px solid var(--b); background: var(--s); color: var(--w); padding: 0 14px; font-size: 16px; outline: none; }
-  .composer input:focus { border-color: var(--o); }
-  .hint { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 10px; }
-  .hint button { font: 12px var(--mono); color: var(--m); background: var(--s); border: 1px solid var(--b); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
-  .people { border-left: 1px solid var(--b); padding: 14px; overflow: auto; }
-  .person { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 10px; }
-  .person b { color: var(--w); font-weight: 600; display: block; font-size: 14px; } .person small { font-size: 12px; }
-  .person .st { width: 8px; height: 8px; border-radius: 50%; background: var(--t); margin-left: auto; } .person .st.idle { background: var(--b); }
-  .box { background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 12px; margin-top: 14px; font-size: 13px; }
-  .box .k { margin-bottom: 6px; }
-  .tlist { display: grid; gap: 8px; }
-  .t { background: var(--s); border: 1px solid var(--b); border-radius: 12px; padding: 12px; color: var(--w); display: flex; gap: 10px; align-items: center; }
-  .t small { color: var(--m); margin-left: auto; font: 11px var(--mono); text-transform: uppercase; }
-  .t.new { border-color: var(--o); }
-  .doc { background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 16px 18px; color: #D5DCE6; }
-  .doc h2 { color: var(--w); margin: 0 0 6px; font-size: 20px; }
-  .end { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--s); border: 1px solid var(--b); border-left: 3px solid var(--o); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
-  .end b { color: var(--w); }
-  .tabs { display: none; }
+/* ---------- invite + connecting: bare and centered ---------- */
+.center { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: calc(var(--sat) + 28px) 20px calc(var(--sab) + 28px); }
+.lockup { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 30px; }
+.lockup img.icon { width: 60px; height: 60px; border-radius: 14px; }
+.lockup img.wm { height: 34px; width: auto; }
+.card { width: min(380px, 100%); background: var(--s); border: 1px solid var(--b); border-radius: 18px; padding: 22px 20px 20px; }
+.inv-from { font-size: 15px; color: var(--m); margin: 0 0 12px; }
+.projline { display: flex; align-items: center; gap: 12px; }
+.projline .pname { color: var(--w); font: 800 24px/1.1 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; }
+.projline .online { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 4px; }
+.projline .stack { margin-left: auto; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t); flex: none; }
+.in { width: 100%; height: 50px; border-radius: 12px; border: 1px solid var(--b); background: var(--c); color: var(--w); padding: 0 14px; font-size: 16px; outline: none; margin: 20px 0 12px; }
+.in::placeholder { color: #64748B; }
+.in:focus { border-color: var(--o); }
+.btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--b); background: var(--s2); color: var(--w); font-weight: 600; text-decoration: none; }
+.btn.primary { background: var(--o); border-color: var(--o); color: #fff; }
+.btn.block { width: 100%; }
+.btn:disabled { opacity: .45; cursor: default; }
+.demo-note { margin: 18px 0 0; font: 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--m); opacity: .55; text-align: center; }
+h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; }
+.steps { list-style: none; padding: 0; margin: 14px 0 0; }
+.steps li { display: flex; gap: 10px; align-items: center; padding: 7px 0; color: var(--m); transition: color .2s; }
+.steps .tick { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--b); display: grid; place-items: center; flex: none; color: transparent; }
+.steps li.done { color: var(--w); } .steps li.done .tick { background: var(--t); border-color: var(--t); color: #12151A; }
+.steps li.now .tick { border-color: var(--o); }
 
-  @media (max-width: 900px) {
-    .room { grid-template-columns: 1fr; grid-template-rows: 52px auto 1fr; }
-    .side, .people { display: none; }
-    .tabs { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--b); overflow-x: auto; }
-    .tabs button { flex: none; font-size: 14px; color: var(--m); background: none; border: 1px solid transparent; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
-    .tabs button.on { color: var(--w); background: var(--s); border-color: var(--b); }
-    .tabs .n { font: 11px var(--mono); color: #fff; background: var(--o); border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
-    .top .right .pill.hide-sm { display: none; }
-    .pane { padding: 14px 14px; }
-  }
+/* ---------- room ---------- */
+.room { position: fixed; left: 0; top: 0; width: 100%; height: var(--app-h, 100dvh); display: grid; grid-template-columns: 72px 260px minmax(0, 1fr); background: var(--c); overflow: hidden; }
+/* rail: Discord-style project circles */
+.rail { background: var(--rail); border-right: 1px solid var(--b); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 12px 0 calc(12px + var(--sab)); }
+.rail .logo { width: 44px; height: 44px; border-radius: 12px; display: block; }
+.rail .sep { width: 28px; height: 1px; background: var(--b); margin: 2px 0; }
+.pc { position: relative; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--b); background: var(--s); display: grid; place-items: center; color: var(--m); padding: 0; font-weight: 700; font-size: 14px; }
+.pc .pav { width: 42px; height: 42px; }
+.pc.on { border-color: var(--o); }
+.pc.on::before { content: ''; position: absolute; left: -15px; top: 8px; bottom: 8px; width: 4px; border-radius: 0 4px 4px 0; background: var(--o); }
+.pc.add { border-style: dashed; background: none; }
+.pc:hover:not(.on) { background: var(--s2); color: var(--w); }
+.rail .grow { flex: 1; }
+/* nest: calm Claude-app-style section column */
+.nest { background: var(--nest); border-right: 1px solid var(--b); display: flex; flex-direction: column; min-height: 0; padding-bottom: var(--sab); }
+.nest-h { padding: 16px 16px 12px; border-bottom: 1px solid var(--b); }
+.nest-h b { display: block; color: var(--w); font-size: 15px; }
+.nest-h small { font-size: 12px; }
+.nest-sc { flex: 1; overflow-y: auto; padding: 10px 10px 14px; }
+.nav { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 38px; padding: 0 10px; border-radius: 8px; border: 0; background: none; color: var(--m); text-align: left; font-size: 14px; }
+.nav:hover { background: var(--s); color: var(--w); }
+.nav.on { background: var(--s2); color: var(--w); }
+.nav .cnt { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--o); color: #fff; font: 600 11px/20px var(--mono); text-align: center; }
+.lbl { font: 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--m); padding: 18px 10px 8px; opacity: .8; }
+.huddle { margin: 0 2px; border: 1px solid var(--b); background: var(--s); border-radius: 12px; padding: 10px; display: flex; align-items: center; gap: 10px; }
+.huddle .stack .av { width: 26px; height: 26px; font-size: 11px; border-color: var(--s); box-shadow: 0 0 0 2px var(--t); }
+.huddle .stack .av + .av { margin-left: -4px; }
+.huddle .ht { min-width: 0; flex: 1; font-size: 13.5px; line-height: 1.3; } .huddle .ht b { color: var(--w); display: block; font-weight: 500; }
+.huddle button { border: 1px solid var(--b); background: var(--s2); color: var(--w); border-radius: 8px; min-height: 32px; padding: 0 10px; font-size: 13px; font-weight: 600; }
+.huddle button.in-call { color: var(--t); border-color: var(--tline); }
+.person { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; }
+.person .av { width: 26px; height: 26px; font-size: 11px; }
+.person .av.agent { border-radius: 7px; }
+.person .pt { min-width: 0; flex: 1; line-height: 1.25; } .person b { color: var(--w); font-weight: 500; font-size: 14px; display: block; }
+.person small { font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person .st { width: 8px; height: 8px; border-radius: 50%; background: var(--t); flex: none; } .person .st.idle { background: var(--b); }
+@media (min-width: 900px) { .nest-demo { display: none; } }
+.shade { display: none; }
+.nest-demo { padding: 10px 16px 14px; font: 10.5px/1.4 var(--mono); letter-spacing: .05em; text-transform: uppercase; opacity: .55; border-top: 1px solid var(--b); }
+
+/* main */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
+.mhead { height: 56px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--b); }
+.mhead h2 { margin: 0; color: var(--w); font-size: 16px; font-weight: 600; }
+.mhead .sub { font-size: 13px; }
+.mhead .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.mhead .stack .av { width: 26px; height: 26px; font-size: 11px; border-color: var(--c); }
+.pill { font: 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--b); border-radius: 999px; padding: 6px 9px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.pbar { display: none; }
+.views { flex: 1; min-height: 0; position: relative; }
+.view { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; display: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.view.on { display: block; }
+.wrap { max-width: 920px; margin: 0 auto; padding: 22px 24px 40px; }
+
+/* ---------- chat ---------- */
+.chat-in { max-width: 820px; margin: 0 auto; padding: 14px 18px 10px; min-height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+.sysline { display: flex; justify-content: center; margin: 12px 0; }
+.sysline span { font-size: 12px; line-height: 1.35; color: var(--m); background: var(--s); border: 1px solid var(--b); border-radius: 999px; padding: 5px 11px; text-align: center; max-width: 90%; }
+.sysline.quiet span { background: none; border-color: transparent; font: 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; opacity: .7; }
+.row { display: flex; align-items: flex-end; gap: 8px; margin-top: 2px; animation: rise .2s ease-out; }
+.row.head { margin-top: 12px; }
+.row.me { flex-direction: row-reverse; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.avc { width: 30px; flex: none; }
+.row .avc .av { width: 30px; height: 30px; font-size: 12px; visibility: hidden; }
+.row.tail .avc .av { visibility: visible; }
+.row.me .avc { display: none; }
+.col { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: min(78%, 540px); }
+.row.me .col { align-items: flex-end; }
+.row.claude .col { max-width: min(88%, 560px); }
+.nm { font-size: 12.5px; font-weight: 600; margin: 0 0 3px 12px; display: none; }
+.row.head .nm { display: block; }
+.meta { font-size: 11px; color: var(--m); margin: 3px 6px 0; display: none; white-space: nowrap; }
+.row.tail .meta { display: block; }
+.bub { background: var(--s); border: 1px solid var(--b); color: var(--txt); border-radius: 18px; padding: 8px 13px; font-size: 15.5px; line-height: 1.38; overflow-wrap: anywhere; white-space: pre-wrap; max-width: 100%; }
+.row.them:not(.head) .bub { border-top-left-radius: 6px; }
+.row.them:not(.tail) .bub { border-bottom-left-radius: 6px; }
+.row.me .bub { background: var(--o); border-color: var(--o); color: #fff; }
+.row.me:not(.head) .bub { border-top-right-radius: 6px; }
+.row.me:not(.tail) .bub { border-bottom-right-radius: 6px; }
+.row.claude .bub { border-color: var(--tline); }
+.bub code { font: 13px var(--mono); background: var(--s2); border: 1px solid var(--b); border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
+.bub b { color: var(--w); font-weight: 600; }
+.row.me .bub b { color: #fff; }
+.bub.media { padding: 0; overflow: hidden; background: var(--s2); line-height: 0; }
+.bub.media { width: fit-content; }
+.bub.media img { display: block; max-width: min(260px, 66vw); max-height: 320px; width: auto; height: auto; cursor: zoom-in; }
+.bub.media img.px { image-rendering: pixelated; width: 200px; }
+.bub.bare { background: none; border: 0; padding: 0; width: 100%; white-space: normal; }
+.bub.filechip { display: flex; align-items: center; gap: 10px; text-decoration: none; padding: 8px 12px 8px 8px; white-space: normal; min-width: 200px; }
+.filechip .fi { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--s2); color: var(--w); flex: none; }
+.row.me .filechip .fi { background: rgba(255,255,255,.18); color: #fff; }
+.filechip .fn { font-weight: 600; font-size: 14px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.filechip small { font-size: 12px; opacity: .85; }
+.bub.voice { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 7px; white-space: normal; }
+.voice .play { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--w); color: var(--o); display: grid; place-items: center; flex: none; padding: 0; }
+.row.them .voice .play { background: var(--s3); color: var(--w); }
+.wave { display: flex; align-items: center; gap: 2px; height: 28px; }
+.wave i { width: 3px; border-radius: 2px; background: rgba(255,255,255,.45); display: block; }
+.wave i.p { background: #fff; }
+.row.them .wave i { background: #4B5563; } .row.them .wave i.p { background: var(--w); }
+.voice .dur { font: 12px var(--mono); min-width: 32px; }
+/* rich cards from Claude */
+.rc { margin-top: 8px; background: var(--c); border: 1px solid var(--b); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; white-space: normal; }
+.rc-h { display: flex; align-items: center; gap: 8px; color: var(--w); flex-wrap: wrap; }
+.rc-b { margin-top: 6px; color: var(--txt); }
+.rc-f { margin-top: 6px; font-size: 12px; color: var(--m); }
+.add { color: var(--t); }
+.tag { font: 10.5px/1 var(--mono); letter-spacing: .04em; border: 1px solid var(--b); border-radius: 999px; padding: 4px 7px; color: var(--m); white-space: nowrap; }
+.tag.live { color: var(--t); border-color: var(--tline); background: var(--ttint); }
+.tag.o { color: var(--o); border-color: rgba(242,107,29,.45); }
+/* typing */
+.typing-row .bub { display: flex; gap: 4px; align-items: center; padding: 13px 14px; }
+.typing-row .bub i { width: 7px; height: 7px; border-radius: 50%; background: var(--m); display: block; animation: blink 1.2s infinite ease-in-out; }
+.typing-row .bub i:nth-child(2) { animation-delay: .15s; } .typing-row .bub i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+.typing-row .tn { font-size: 12px; margin: 0 0 3px 12px; }
+/* end card */
+.endc { display: flex; align-items: center; gap: 12px; margin: 16px auto 4px; background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 10px 10px 10px 12px; max-width: 420px; width: 100%; animation: rise .2s ease-out; }
+.endc img { width: 34px; height: 34px; border-radius: 9px; }
+.endc .et { flex: 1; min-width: 0; font-size: 13px; line-height: 1.35; } .endc .et b { color: var(--w); display: block; font-size: 14px; }
+.endc .btn { min-height: 40px; padding: 0 14px; font-size: 14px; white-space: nowrap; }
+
+/* composer: one rounded field, iMessage-style */
+.composer { flex: none; padding: 8px 12px calc(10px + var(--sab)); border-top: 1px solid var(--b); background: var(--c); }
+.composer.kb { padding-bottom: 8px; }
+.cmp { display: flex; align-items: flex-end; gap: 8px; max-width: 820px; margin: 0 auto; }
+.cbtn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: none; color: var(--m); display: grid; place-items: center; flex: none; padding: 0; }
+.cbtn:hover { color: var(--w); }
+.cbtn.plus { background: var(--s2); color: var(--w); }
+.cbtn.act.send { background: var(--o); color: #fff; }
+.field { flex: 1; min-width: 0; display: flex; background: var(--s); border: 1px solid var(--b); border-radius: 20px; }
+.field:focus-within { border-color: #3A4352; }
+.field textarea { flex: 1; min-width: 0; border: 0; outline: none; background: none; color: var(--w); font-size: 16px; line-height: 22px; padding: 8px 14px; height: 38px; max-height: 140px; resize: none; display: block; }
+.field textarea::placeholder { color: #64748B; }
+.recbar { flex: 1; min-width: 0; display: none; align-items: center; gap: 8px; }
+.composer.rec .recbar { display: flex; }
+.composer.rec .plus, .composer.rec .field { display: none; }
+.rec-pill { flex: 1; min-width: 0; height: 40px; display: flex; align-items: center; gap: 10px; background: var(--s); border: 1px solid var(--b); border-radius: 20px; padding: 0 14px; color: var(--w); }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--o); flex: none; animation: blink 1.2s infinite; }
+#rec-time { font: 14px var(--mono); min-width: 38px; }
+.rec-wave { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 2px; height: 24px; overflow: hidden; }
+.rec-wave i { width: 3px; border-radius: 2px; background: var(--t); flex: none; display: block; }
+.rec-cancel { color: var(--m); }
+
+/* ---------- docs ---------- */
+.sec-h { display: flex; align-items: center; gap: 8px; margin: 26px 0 10px; color: var(--w); font-size: 15px; font-weight: 600; }
+.sec-h:first-child { margin-top: 0; }
+.sec-h .k { font: 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--m); font-weight: 400; }
+.sec-h .r { margin-left: auto; }
+.panel { background: var(--s); border: 1px solid var(--b); border-radius: 16px; }
+.repo { padding: 14px 16px; }
+.repo-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.repo-top .rn { color: var(--w); font: 600 15px var(--mono); }
+.repo-top .r { margin-left: auto; display: flex; gap: 6px; }
+.commit { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; background: var(--c); border: 1px solid var(--b); border-radius: 12px; }
+.commit .ct { min-width: 0; flex: 1; font-size: 13.5px; line-height: 1.4; } .commit .ct b { color: var(--w); font-weight: 500; display: block; overflow-wrap: anywhere; }
+.commit .sha { font: 12px var(--mono); color: var(--m); }
+.branches { margin-top: 10px; display: grid; gap: 2px; }
+.br { display: flex; align-items: center; gap: 8px; padding: 7px 4px; font-size: 13px; min-width: 0; }
+.br .bn { font: 12.5px var(--mono); color: var(--w); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.br .who { color: var(--m); white-space: nowrap; }
+.br .tag { margin-left: auto; }
+.activity { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin-top: 10px; }
+.activity i { flex: 1; background: var(--s3); border-radius: 2px; display: block; min-height: 3px; }
+.activity i.hot { background: var(--t); }
+.act-l { display: flex; justify-content: space-between; font: 10.5px var(--mono); margin-top: 4px; opacity: .7; }
+.notes { padding: 6px 16px 10px; }
+.note { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--b); font-size: 14px; line-height: 1.4; color: var(--txt); }
+.note:last-child { border-bottom: 0; }
+.note time { font: 11px/1.9 var(--mono); color: var(--m); flex: none; width: 58px; }
+.note .nt { min-width: 0; flex: 1; overflow-wrap: anywhere; } .note b { color: var(--w); font-weight: 600; }
+.note .tr { display: block; margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--tline); color: var(--m); font-size: 13px; }
+.note.fresh { animation: fresh 1.6s ease-out; }
+@keyframes fresh { from { background: var(--s2); } }
+.notes-f { font-size: 12px; padding: 0 16px 12px; display: flex; gap: 6px; align-items: center; }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 0 12px; padding: 1px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--b); background: var(--s); color: var(--m); font-size: 13.5px; }
+.chip.on { background: var(--s3); color: var(--w); border-color: #3A4352; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.fcard { background: var(--s); border: 1px solid var(--b); border-radius: 12px; overflow: hidden; text-decoration: none; display: block; min-width: 0; text-align: left; padding: 0; }
+.fcard.fresh { border-color: rgba(242,107,29,.6); }
+.thumb { height: 96px; background: var(--s2); display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--b); position: relative; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb img.px { image-rendering: pixelated; object-fit: contain; padding: 14px; }
+.thumb .docp { width: 70%; display: grid; gap: 6px; } .thumb .docp i { display: block; height: 5px; border-radius: 3px; background: var(--s3); } .thumb .docp i:first-child { width: 60%; background: #475569; }
+.thumb .codep { font: 10px/1.5 var(--mono); color: var(--m); white-space: pre; padding: 10px; width: 100%; height: 100%; text-align: left; }
+.thumb .codep .kw { color: var(--o); } .thumb .codep .fn { color: var(--t); }
+.thumb .wave i { background: var(--t); }
+.fmeta { padding: 8px 10px; display: flex; gap: 8px; align-items: center; min-width: 0; }
+.fmeta .ft { min-width: 0; flex: 1; line-height: 1.3; }
+.fmeta b { display: block; color: var(--w); font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fmeta small { font-size: 11.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fmeta .ty { color: var(--m); }
+.flow { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; }
+.flow::-webkit-scrollbar { display: none; }
+.flow .arr { color: var(--m); flex: none; opacity: .7; }
+.scr { flex: none; width: 132px; background: var(--s); border: 1px solid var(--b); border-radius: 12px; padding: 6px; text-align: left; }
+.scr.on { border-color: var(--o); }
+.scr img { width: 100%; aspect-ratio: 16 / 10; display: block; border-radius: 7px; image-rendering: pixelated; }
+.scr b { display: block; color: var(--w); font-weight: 500; font-size: 12.5px; margin: 6px 2px 0; }
+.scr small { font: 11px var(--mono); margin: 0 2px; }
+.cmpw { margin-top: 10px; padding: 12px; }
+.cmpw-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.cmpw-h b { color: var(--w); font-weight: 600; }
+.cmpw-h .chips { margin: 0 0 0 auto; }
+.cmpw-h .chip { min-height: 32px; padding: 0 11px; font: 12px var(--mono); }
+.swipe { position: relative; aspect-ratio: 16 / 10; border-radius: 10px; overflow: hidden; border: 1px solid var(--b); touch-action: pan-y; }
+.swipe img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; pointer-events: none; }
+.swipe .after { clip-path: inset(0 0 0 var(--x, 50%)); }
+.swipe .bar { position: absolute; top: 0; bottom: 0; left: var(--x, 50%); width: 2px; margin-left: -1px; background: var(--w); pointer-events: none; }
+.swipe .knob { position: absolute; top: 50%; left: var(--x, 50%); width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; background: var(--w); color: var(--c); display: grid; place-items: center; pointer-events: none; }
+.swipe .lb { position: absolute; top: 8px; font: 10.5px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; background: var(--c); border: 1px solid var(--b); color: var(--w); border-radius: 999px; padding: 5px 8px; pointer-events: none; }
+.swipe .lb.l { left: 8px; } .swipe .lb.r { right: 8px; }
+.swipe input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; }
+
+/* ---------- updates + approvals ---------- */
+.appr { background: var(--s); border: 1px solid var(--b); border-radius: 16px; padding: 14px; white-space: normal; text-align: left; }
+.appr + .appr { margin-top: 10px; }
+.appr-top { display: flex; gap: 10px; align-items: flex-start; }
+.appr-top .av { width: 32px; height: 32px; }
+.appr-t { color: var(--w); font-size: 15px; line-height: 1.35; } .appr-t b { font-weight: 600; }
+.appr-d { font-size: 13.5px; margin-top: 3px; color: var(--m); }
+.appr-meta { font: 12px var(--mono); color: var(--m); margin: 10px 0 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.appr-note { width: 100%; display: block; margin-top: 12px; border: 1px solid var(--b); background: var(--c); border-radius: 12px; color: var(--w); font-size: 16px; line-height: 22px; padding: 10px 12px; min-height: 44px; height: 44px; max-height: 120px; resize: none; outline: none; }
+.appr-note::placeholder { color: #64748B; }
+.appr-note:focus { border-color: #3A4352; }
+.appr-btns { display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px; margin-top: 10px; }
+.appr-btns button { min-height: 48px; border-radius: 12px; border: 0; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #10141A; }
+.appr-btns .yes { background: var(--ok); }
+.appr-btns .no { background: var(--no); }
+.appr-btns button:active { transform: scale(.98); }
+.appr.done { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; min-height: 44px; animation: rise .2s ease-out; }
+.appr.done .ri { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; flex: none; color: #10141A; }
+.appr.done.ok .ri { background: var(--ok); } .appr.done.no .ri { background: var(--no); }
+.appr.done .res { min-width: 0; flex: 1; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--txt); }
+.appr.done .res b { color: var(--w); font-weight: 600; }
+.appr.done time { font: 11px var(--mono); flex: none; }
+.row .bub.bare .appr { border-color: var(--tline); }
+.empty { padding: 14px 16px; font-size: 14px; display: flex; gap: 10px; align-items: center; }
+.empty .ri { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--s2); color: var(--t); }
+.ulist { padding: 2px 0; }
+.uitem { display: flex; gap: 12px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--b); font-size: 14px; color: var(--txt); }
+.uitem:last-child { border-bottom: 0; }
+.uitem .ui { width: 32px; height: 32px; border-radius: 50%; background: var(--s2); display: grid; place-items: center; color: var(--m); flex: none; }
+.uitem .ut { flex: 1; min-width: 0; line-height: 1.35; overflow-wrap: anywhere; } .uitem b { color: var(--w); font-weight: 600; }
+.uitem time { font: 11px var(--mono); color: var(--m); flex: none; }
+.uitem.fresh { animation: fresh 1.6s ease-out; }
+
+/* ---------- tasks ---------- */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.lane-h { display: flex; align-items: center; gap: 8px; padding: 0 2px 10px; color: var(--w); font-weight: 600; font-size: 14px; }
+.lane-h .n { font: 11px var(--mono); color: var(--m); font-weight: 400; }
+.lane-h .sw { width: 8px; height: 8px; border-radius: 50%; }
+.lane { display: grid; gap: 8px; }
+.tk { background: var(--s); border: 1px solid var(--b); border-radius: 12px; padding: 12px; animation: rise .2s ease-out; }
+.tk.mine { border-color: rgba(242,107,29,.55); }
+.tk b { color: var(--w); font-weight: 600; font-size: 14.5px; display: block; line-height: 1.35; }
+.tk .why { font-size: 13px; margin-top: 6px; line-height: 1.4; display: flex; gap: 8px; align-items: flex-start; }
+.tk .why .av { width: 20px; height: 20px; font-size: 10px; margin-top: 1px; } .tk .why .av.agent { border-radius: 6px; }
+.tk .why span { min-width: 0; } .tk .why em { font-style: normal; color: var(--w); }
+.tk .tb { display: flex; gap: 8px; margin-top: 10px; }
+.tk .tb button { flex: 1; min-height: 40px; border-radius: 10px; font-weight: 600; font-size: 14px; border: 1px solid var(--b); background: var(--s2); color: var(--w); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; }
+.tk .tb .take { background: var(--o); border-color: var(--o); color: #fff; }
+.tk .tb .claude { color: var(--t); border-color: var(--tline); background: var(--ttint); }
+.tk .tb .fin { background: var(--s2); }
+.tk .ln { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; flex-wrap: wrap; }
+.tk .ln .av { width: 20px; height: 20px; font-size: 10px; } .tk .ln .av.agent { border-radius: 6px; }
+.tk.done b { color: var(--m); text-decoration: line-through; text-decoration-color: #475569; font-weight: 500; }
+.sugg { display: flex; gap: 8px; margin-bottom: 4px; }
+.sugg input { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid var(--b); background: var(--s); color: var(--w); padding: 0 12px; font-size: 16px; outline: none; }
+.sugg input::placeholder { color: #64748B; }
+.sugg input:focus { border-color: #3A4352; }
+.sugg button { width: 44px; height: 44px; border-radius: 12px; border: 0; background: var(--o); color: #fff; display: grid; place-items: center; flex: none; }
+.sugg button:disabled { background: var(--s2); color: var(--m); }
+
+/* overlays */
+.toast { position: fixed; left: 50%; bottom: calc(var(--sab) + 84px); transform: translateX(-50%); background: var(--s2); border: 1px solid var(--b); color: var(--w); border-radius: 999px; padding: 9px 14px; font-size: 13.5px; z-index: 60; animation: rise .18s ease-out; max-width: calc(100% - 32px); text-align: center; }
+.viewer { position: fixed; inset: 0; background: rgba(8,10,13,.92); z-index: 70; display: grid; place-items: center; padding: calc(var(--sat) + 20px) 16px calc(var(--sab) + 20px); }
+.viewer img { max-width: 100%; max-height: 100%; border-radius: 12px; border: 1px solid var(--b); image-rendering: auto; }
+.viewer img.px { image-rendering: pixelated; width: min(520px, 100%); }
+.scrim { position: fixed; inset: 0; background: rgba(8,10,13,.72); z-index: 40; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--s); border-top: 1px solid var(--b); border-radius: 18px 18px 0 0; padding: 10px 20px calc(var(--sab) + 18px); animation: up .22s ease-out; }
+@keyframes up { from { transform: translateY(24px); opacity: 0; } }
+.sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--b); margin: 0 auto 14px; }
+.sheet .sh-row { display: flex; gap: 12px; align-items: center; }
+.sheet .sh-row img { width: 48px; height: 48px; border-radius: 11px; }
+.sheet b.st { color: var(--w); font-size: 16px; display: block; }
+.sheet p { margin: 4px 0 0; font-size: 14.5px; line-height: 1.45; }
+.sheet .share { display: inline-grid; place-items: center; width: 24px; height: 24px; vertical-align: -6px; border: 1px solid var(--b); border-radius: 6px; background: var(--s2); color: #4DA3FF; margin: 0 2px; }
+.sheet .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.sheet .pointer { display: flex; justify-content: center; color: var(--o); margin-top: 12px; animation: nudge 1.4s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateY(5px); } }
+.tourq { position: absolute; left: 12px; right: 12px; bottom: calc(100% + 8px); max-width: 420px; margin: 0 auto; background: var(--s2); border: 1px solid var(--b); border-radius: 14px; padding: 10px 10px 10px 14px; display: flex; align-items: center; gap: 10px; z-index: 5; animation: rise .2s ease-out; }
+.tourq .tt { flex: 1; min-width: 0; color: var(--w); font-size: 14px; font-weight: 500; }
+.tourq button { min-height: 40px; border-radius: 10px; padding: 0 12px; font-weight: 600; font-size: 14px; border: 1px solid var(--b); background: var(--s); color: var(--w); }
+.tourq button.go { background: var(--o); border-color: var(--o); color: #fff; }
+.composer { position: relative; }
+.spot { position: fixed; z-index: 80; border-radius: 14px; outline: 2px solid var(--o); outline-offset: 2px; box-shadow: 0 0 0 9999px rgba(8,10,13,.74); pointer-events: none; transition: left .22s ease-out, top .22s ease-out, width .22s ease-out, height .22s ease-out; }
+.spot::after { content: ''; position: absolute; inset: -6px; border-radius: 18px; box-shadow: 0 0 0 4px rgba(242,107,29,.28), 0 0 18px 2px rgba(242,107,29,.22); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: .35; transform: scale(1); } 50% { opacity: 1; transform: scale(1.015); } }
+.tour-block { position: fixed; inset: 0; z-index: 79; }
+.tcap { position: fixed; z-index: 81; left: 12px; right: 12px; max-width: 360px; margin: 0 auto; background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 14px; animation: rise .2s ease-out; }
+.tcap .k { font: 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--o); }
+.tcap b { display: block; color: var(--w); font-size: 16px; margin: 6px 0 4px; }
+.tcap p { margin: 0; font-size: 14px; line-height: 1.45; }
+.tcap .tb { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.tcap .tb button { min-height: 40px; border-radius: 10px; padding: 0 16px; font-weight: 600; border: 1px solid var(--b); background: var(--s2); color: var(--w); }
+.tcap .tb button.go { background: var(--o); border-color: var(--o); color: #fff; }
+.tcap .tb .skip { background: none; border-color: transparent; color: var(--m); padding: 0 6px; }
+
+/* ---------- phone ---------- */
+@media (max-width: 899px) {
+  .room { grid-template-columns: minmax(0, 1fr); }
+  .mhead { display: none; }
+  .room { --nw: min(300px, calc(100vw - 72px - 60px - var(--sal))); --pw: calc(72px + var(--sal) + var(--nw)); }
+  .rail, .nest { position: fixed; top: 0; bottom: 0; z-index: 1; visibility: hidden; }
+  .room.peek .rail, .room.peek .nest { visibility: visible; }
+  .rail { left: 0; width: calc(72px + var(--sal)); padding-left: var(--sal); padding-top: calc(var(--sat) + 12px); }
+  .nest { left: calc(72px + var(--sal)); width: var(--nw); }
+  .nest-h { padding-top: calc(var(--sat) + 18px); }
+  .nest .nav { min-height: 46px; font-size: 15.5px; }
+  .main { z-index: 2; background: var(--c); transform: translate3d(calc(var(--p, 0) * var(--pw)), 0, 0); transition: transform .28s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
+  .room.dragging .main { transition: none; }
+  .room.peek .main { border-left: 1px solid var(--b); }
+  .shade { position: absolute; inset: 0; z-index: 30; background: #080A0D; opacity: calc(var(--p, 0) * .5); display: none; }
+  .room.peek .shade { display: block; }
+  .pbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 0; padding: calc(var(--sat) + 6px) calc(var(--sar) + 6px) 7px calc(var(--sal) + 6px); border-bottom: 1px solid var(--b); background: var(--c); flex: none; }
+  .pj { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 44px; border: 0; background: none; padding: 0; color: var(--w); justify-self: start; max-width: 100%; text-align: left; }
+  .pj .pav { width: 28px; height: 28px; }
+  .pj .pjt { min-width: 0; line-height: 1.2; }
+  .pj .pjn { display: block; font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; }
+  .seg { display: flex; gap: 0; }
+  .seg button { position: relative; width: 40px; height: 42px; border-radius: 12px; border: 0; background: none; color: var(--m); display: grid; place-items: center; padding: 0; }
+  .seg button.on { background: var(--s2); color: var(--w); }
+  .seg .bd { position: absolute; top: 3px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--o); color: #fff; font: 600 10px/16px var(--mono); text-align: center; box-shadow: 0 0 0 2px var(--c); }
+  .chat-in { padding: 10px 10px 8px calc(var(--sal) + 10px); }
+  .composer { padding-left: calc(var(--sal) + 8px); padding-right: calc(var(--sar) + 8px); }
+  .cmp { gap: 6px; }
+  .wrap { padding: 16px calc(var(--sar) + 14px) calc(var(--sab) + 32px) calc(var(--sal) + 14px); }
+  .board { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .thumb { height: 88px; }
+  .col { max-width: 80%; }
+  .row.claude .col { max-width: 88%; }
+}
+@media (max-width: 384px) { .pj .pjn { font-size: 12.5px; } .pj .pav { width: 26px; height: 26px; } }
+@media (max-width: 350px) { .pj .pjt { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="demo-tag">Demo · nothing is sent anywhere</div>
 
 <!-- 1. the invite -->
 <section class="center" id="s-invite">
+  <div class="lockup"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
   <div class="card">
-    <div class="brand"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
-    <div class="k">Orion invited you</div>
-    <h1>Join Pixel Quest</h1>
-    <div class="proj"><div class="proj-ic">🕹️</div><div><b>Pixel Quest</b><small>2D platformer · 3 people + 1 agent</small></div>
-      <div class="stack"><span class="av" style="background:#F26B1D">O</span><span class="av" style="background:#6C7CFF">M</span><span class="av" style="background:#E8B04A">J</span></div></div>
-    <div class="live"><span class="dot"></span>Orion's computer is online · Claude is fixing the double jump</div>
-    <label class="l" for="name">Your name</label>
-    <input class="in" id="name" autocomplete="nickname" maxlength="24" placeholder="e.g. Sam" enterkeyhint="go">
-    <label class="l">Your color</label>
-    <div class="colors" id="colors"></div>
-    <button class="btn primary block" id="join" disabled>Join project</button>
-    <p class="fine">No account, no password. Just a name.</p>
+    <p class="inv-from">Orion invited you to</p>
+    <div class="projline">
+      <span class="pav" id="inv-pav" style="width:46px;height:46px"></span>
+      <div><div class="pname">Pixel Quest</div><div class="online"><span class="dot"></span>Orion is online</div></div>
+      <div class="stack" id="inv-stack"></div>
+    </div>
+    <input class="in" id="name" autocomplete="nickname" autocapitalize="words" maxlength="24" placeholder="Your name" aria-label="Your name" enterkeyhint="go">
+    <button class="btn primary block" id="join" disabled>Join</button>
   </div>
+  <p class="demo-note">Demo · nothing is sent anywhere</p>
 </section>
 
 <!-- 2. connecting -->
 <section class="center hidden" id="s-connect">
+  <div class="lockup"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
   <div class="card">
-    <div class="brand"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
-    <div class="k">Pixel Quest</div><h1 id="hello">Welcome!</h1>
+    <h1 class="hi" id="hello">Welcome!</h1>
     <ul class="steps" id="steps">
-      <li><span class="tick">✓</span>Invite checked</li>
-      <li><span class="tick">✓</span>Connected to Orion's computer</li>
-      <li><span class="tick">✓</span>Joined Pixel Quest</li>
+      <li><span class="tick" data-i="check"></span>Invite checked</li>
+      <li><span class="tick" data-i="check"></span>Connected to Orion's computer</li>
+      <li><span class="tick" data-i="check"></span>Joined Pixel Quest</li>
     </ul>
   </div>
+  <p class="demo-note">Demo · nothing is sent anywhere</p>
 </section>
 
 <!-- 3. the project room -->
 <section class="room hidden" id="s-room">
-  <header class="top">
-    <img class="icon" src="assets/icon-512.png" alt="">
-    <div class="crumb">Pixel Quest <span id="crumb-view">/ Chat</span></div>
-    <div class="right"><span class="pill">demo</span><span class="pill hide-sm"><span class="dot"></span>live</span><span class="av sm" id="me-av">S</span></div>
-  </header>
-  <nav class="tabs" id="tabs"></nav>
-  <aside class="side">
-    <div class="h">Projects</div>
-    <button class="nav proj-nav on">🕹️ Pixel Quest</button>
-    <div class="sub" id="side-nav"></div>
-    <button class="nav">🌐 Website</button>
-    <div class="h" style="margin-top:10px">Huddle</div>
-    <button class="nav" id="huddle-btn">🎙️ Join huddle · 2 talking</button>
+  <nav class="rail" aria-label="Projects">
+    <img class="logo" src="assets/icon-512.png" alt="TribeCode">
+    <div class="sep"></div>
+    <button class="pc on" id="rail-pq" aria-label="Pixel Quest" aria-current="true"></button>
+    <button class="pc" data-toast="In the demo you're only in Pixel Quest." aria-label="Website">W</button>
+    <button class="pc add" data-toast="Start or join another project in the real app." aria-label="New project" data-i="plus"></button>
+    <div class="grow"></div>
+    <span class="av" id="rail-me"></span>
+  </nav>
+  <aside class="nest" aria-label="Pixel Quest">
+    <div class="nest-h"><b>Pixel Quest</b><small>2D platformer · Orion's computer</small></div>
+    <div class="nest-sc">
+      <div id="nest-nav"></div>
+      <div class="lbl">Huddle</div>
+      <div class="huddle"><div class="stack" id="huddle-stack"></div><div class="ht"><b>Orion and Maya talking</b></div><button id="huddle-btn">Join</button></div>
+      <div class="lbl">In the room</div>
+      <div id="people"></div>
+    </div>
+    <div class="nest-demo">Demo · nothing is sent anywhere</div>
   </aside>
   <main class="main">
-    <div class="pane" id="pane"></div>
-    <div id="chat-foot">
-      <div class="typing" id="typing"></div>
-      <div class="hint" id="hints"></div>
-      <form class="composer" id="composer"><input id="box" placeholder="Message Pixel Quest" autocomplete="off" enterkeyhint="send"><button class="btn primary" id="send">Send</button></form>
+    <header class="pbar">
+      <button class="pj" id="pj" aria-label="Pixel Quest: projects, huddle and people"><span class="pav" id="pj-pav"></span><span class="pjt"><span class="pjn">Pixel Quest</span></span></button>
+      <nav class="seg" id="seg" aria-label="Sections"></nav>
+      <span></span>
+    </header>
+    <header class="mhead"><div><h2 id="mh-title">Chat</h2></div><span class="sub" id="mh-sub"></span>
+      <div class="right"><div class="stack" id="mh-stack"></div><span class="pill">Demo · nothing is sent anywhere</span></div></header>
+    <div class="shade" id="shade"></div>
+    <div class="views">
+      <div class="view on" id="v-chat"><div class="chat-in"><div id="log" aria-live="polite"></div><div id="typing"></div></div></div>
+      <div class="view" id="v-docs"><div class="wrap">
+        <div id="d-living">
+          <div class="sec-h"><span data-i="pin"></span>Pinned repo<span class="r" id="repo-upd"></span></div>
+          <div class="panel repo" id="repo"></div>
+          <div class="sec-h"><span data-i="notebook"></span>Living notes</div>
+          <div class="panel"><div class="notes" id="notes"></div><div class="notes-f"><span class="dot"></span>The local brain writes these as things happen</div></div>
+        </div>
+        <div class="sec-h"><span data-i="folder"></span>Files <span class="k" id="f-count"></span></div>
+        <div class="chips" id="f-chips"></div>
+        <div class="fgrid" id="files"></div>
+        <div class="sec-h"><span data-i="monitor"></span>Screens <span class="k">by screen · before / after</span></div>
+        <div class="flow" id="flow"></div>
+        <div class="panel cmpw" id="cmpw"></div>
+      </div></div>
+      <div class="view" id="v-updates"><div class="wrap" style="max-width:680px">
+        <div class="sec-h">Needs you</div>
+        <div id="needs"></div>
+        <div class="sec-h">Recent</div>
+        <div class="panel ulist" id="recent"></div>
+      </div></div>
+      <div class="view" id="v-tasks"><div class="wrap" style="max-width:1100px">
+        <div class="board">
+          <div><div class="lane-h"><span class="sw" style="background:var(--o)"></span>Suggested <span class="n" id="n-s"></span></div>
+            <form class="sugg" id="sugg"><input id="sugg-in" placeholder="Suggest a task…" maxlength="80" enterkeyhint="done" autocomplete="off" aria-label="Suggest a task"><button id="sugg-go" aria-label="Add suggestion" disabled data-i="arrowup"></button></form>
+            <div class="lane" id="l-s" style="margin-top:8px"></div></div>
+          <div><div class="lane-h"><span class="sw" style="background:var(--t)"></span>In progress <span class="n" id="n-p"></span></div><div class="lane" id="l-p"></div></div>
+          <div><div class="lane-h"><span class="sw" style="background:var(--m)"></span>Done <span class="n" id="n-d"></span></div><div class="lane" id="l-d"></div></div>
+        </div>
+      </div></div>
     </div>
+    <form class="composer" id="composer" autocomplete="off">
+      <div class="cmp">
+        <button type="button" class="cbtn plus" id="attach" aria-label="Attach files or photos" data-i="plus"></button>
+        <div class="field"><textarea id="box" rows="1" placeholder="Message" enterkeyhint="send" aria-label="Message"></textarea></div>
+        <div class="recbar"><button type="button" class="cbtn rec-cancel" id="rec-cancel" aria-label="Cancel voice note" data-i="trash"></button>
+          <div class="rec-pill"><span class="rec-dot"></span><span id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div></div></div>
+        <button type="button" class="cbtn act" id="act" aria-label="Record a voice note"></button>
+      </div>
+      <input type="file" id="file" multiple hidden>
+    </form>
   </main>
-  <aside class="people">
-    <div class="k">In the room</div>
-    <div id="people"></div>
-    <div class="box"><div class="k">Live agent</div><b style="color:#F8FAFC">Claude</b> is on <span style="font-family:var(--mono);font-size:12px">feat/double-jump</span><br>Edited <span style="font-family:var(--mono);font-size:12px">player.ts</span> · tests passing</div>
-  </aside>
 </section>
 
 <script>
 (function () {
   'use strict';
-  const $ = s => document.querySelector(s);
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const COLORS = ['#38C6B1', '#6C7CFF', '#E8B04A', '#E86A9A', '#7CC46B'];
-  let me = { name: '', color: COLORS[0] }, view = 'chat', tasks = [
-    { t: 'Fix the double jump', who: 'Claude', s: 'in progress' }, { t: 'Draw the slime enemy', who: 'Maya', s: 'review' }, { t: 'Level 2 layout', who: 'Jay', s: 'todo' }];
-  const unread = { docs: 1, tasks: 0, requests: 1 };
-  const PEOPLE = () => [
-    { n: 'Orion', c: '#F26B1D', s: 'Host · in Chat', on: true }, { n: 'Maya', c: '#6C7CFF', s: 'In Docs · Level design', on: true },
-    { n: 'Jay', c: '#E8B04A', s: 'Away', on: false }, { n: 'Claude', c: '', s: "Orion's agent · coding", on: true, agent: true },
-    ...(me.name ? [{ n: me.name + ' (you)', c: me.color, s: 'Just joined', on: true }] : [])];
-  const now = () => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const fmt = d => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const ago = m => new Date(Date.now() - m * 60e3);
+  const rel = d => { const m = Math.round((Date.now() - d) / 60e3); return m < 1 ? 'now' : m < 60 ? m + 'm' : Math.round(m / 60) + 'h'; };
+  const dur = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 
-  // ---- 1. invite ----
-  const colors = $('#colors');
-  COLORS.forEach((c, i) => { const b = document.createElement('button'); b.style.background = c; b.setAttribute('aria-label', 'Color ' + (i + 1)); b.setAttribute('aria-pressed', String(i === 0));
-    b.onclick = () => { me.color = c; colors.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }; colors.appendChild(b); });
-  const name = $('#name'), join = $('#join');
-  name.oninput = () => { join.disabled = !name.value.trim(); };
-  name.onkeydown = e => { if (e.key === 'Enter' && name.value.trim()) join.click(); };
+  /* ---------- icons: Lucide-style, 1.7 stroke ---------- */
+  const P = {
+    chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    docs: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    tasks: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="m9 12 2 2 4-4"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    mic: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/>',
+    arrowup: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+    trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    play: '<path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z" fill="currentColor"/>',
+    pause: '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    branch: '<path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+    commit: '<circle cx="12" cy="12" r="3"/><path d="M3 12h6M15 12h6"/>',
+    merge: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+    pin: '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
+    notebook: '<path d="M2 6h4M2 10h4M2 14h4M2 18h4"/><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M15 2v20"/>',
+    folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+    audio: '<path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/>',
+    code: '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+    spark: '<path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z"/>',
+    headphones: '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    right: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+    swap: '<path d="m15 18 6-6-6-6"/><path d="m9 6-6 6 6 6"/>',
+    share: '<path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M8 11H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2"/>',
+    down: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+    hand: '<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>'
+  };
+  const ic = (n, s = 20) => `<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+  $$('[data-i]').forEach(e => { e.innerHTML = ic(e.dataset.i, e.classList.contains('tick') ? 13 : e.tagName === 'SPAN' ? 18 : 22) + e.innerHTML; });
+
+  /* ---------- pixel art (inline SVG data URLs) ---------- */
+  const PAL = { O: '#F26B1D', T: '#38C6B1', I: '#6C7CFF', W: '#F8FAFC', K: '#12151A', S: '#94A3B8', B: '#2A313C', C: '#1B2028', Y: '#E8B04A', D: '#222833', G: '#475569' };
+  const px = (rows, x0 = 0, y0 = 0, k = 1) => rows.map((r, y) => [...r].map((ch, x) => ch === '.' ? '' : `<rect x="${x0 + x * k}" y="${y0 + y * k}" width="${k}" height="${k}" fill="${PAL[ch]}"/>`).join('')).join('');
+  const svgURL = s => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+  const INVADER = ['..O.....O..', '...O...O...', '..OOOOOOO..', '.OO.OOO.OO.', 'OOOOOOOOOOO', 'O.OOOOOOO.O', 'O.O.....O.O', '...OO.OO...'];
+  const SLIME = ['....TTTT....', '..TTTTTTTT..', '.TTTTTTTTTT.', '.TTWWTTWWTT.', 'TTTWKTTWKTTT', 'TTTTTTTTTTTT', 'TTTTTKKTTTTT', 'TTTTTTTTTTTT', '.TTTTTTTTTT.'];
+  const SLIME1 = ['....TTTT....', '..TTTTTTTT..', '.TTTTTTTTTT.', '.TTKTTTTKTT.', 'TTTTTTTTTTTT', 'TTTTTTTTTTTT', 'TTTTTTTTTTTT', '.TTTTTTTTTT.'];
+  const HERO = ['..OOOO..', '.OOOOOO.', '.OWKOWK.', '.OOOOOO.', '..OOOO..', '.WWWWWW.', 'W.WWWW.W', '.WWWWWW.', '.II..II.', '.II..II.'];
+  const COIN = ['.YYY.', 'YYWYY', 'YYWYY', 'YYWYY', '.YYY.'];
+  const projSvg = s => `<svg viewBox="0 0 22 22" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect width="22" height="22" fill="#222833"/>${px(INVADER, 5.5, 7)}</svg>`;
+  const SLIME_IMG = svgURL(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 13" shape-rendering="crispEdges"><rect width="16" height="13" fill="#222833"/>${px(SLIME, 2, 2)}</svg>`);
+  const TILESET = svgURL(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 20" shape-rendering="crispEdges"><rect width="32" height="20" fill="#1B2028"/>${[0, 1, 2, 3].map(i => `<rect x="${2 + i * 7}" y="3" width="6" height="6" fill="${['#6C7CFF', '#2A313C', '#475569', '#38C6B1'][i]}"/><rect x="${2 + i * 7}" y="11" width="6" height="6" fill="${['#475569', '#6C7CFF', '#2A313C', '#94A3B8'][i]}"/>`).join('')}</svg>`);
+  function scene(id, v) {
+    let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" shape-rendering="crispEdges"><rect width="160" height="100" fill="#12151A"/>';
+    const txt = (x, y, t, c, sz) => `<text x="${x}" y="${y}" font-family="ui-monospace,Menlo,monospace" font-size="${sz}" font-weight="700" fill="${c}" text-anchor="middle">${t}</text>`;
+    if (id === 'title') {
+      if (v >= 2) s += [[12, 10], [40, 22], [120, 14], [146, 30], [70, 8], [100, 26]].map(([x, y]) => `<rect x="${x}" y="${y}" width="1.5" height="1.5" fill="${v >= 3 ? '#38C6B1' : '#475569'}"/>`).join('');
+      if (v >= 2) s += '<rect x="0" y="78" width="160" height="22" fill="#222833"/><rect x="0" y="70" width="40" height="8" fill="#6C7CFF"/><rect x="118" y="66" width="42" height="12" fill="#6C7CFF"/>';
+      s += v === 1 ? '<rect x="35" y="28" width="90" height="16" fill="#2A313C"/>' + txt(80, 40, 'PIXEL QUEST', '#94A3B8', 10) : txt(80, 42, 'PIXEL QUEST', '#F8FAFC', v >= 3 ? 16 : 14);
+      if (v >= 3) s += px(HERO, 36, 58, 2) + px(SLIME1, 104, 62, 1.6);
+      s += v === 1 ? '<rect x="58" y="58" width="44" height="12" fill="#1B2028" stroke="#2A313C"/>' + txt(80, 67, 'START', '#94A3B8', 7)
+        : `<rect x="54" y="52" width="52" height="13" rx="${v >= 3 ? 2 : 0}" fill="#F26B1D"/>` + txt(80, 61.5, 'PRESS START', '#FFFFFF', 6.5);
+    } else if (id === 'lvl') {
+      s += v >= 2 ? '<rect x="0" y="84" width="160" height="16" fill="#6C7CFF"/><rect x="0" y="84" width="160" height="3" fill="#38C6B1"/><rect x="50" y="60" width="30" height="6" fill="#6C7CFF"/><rect x="100" y="44" width="30" height="6" fill="#6C7CFF"/>'
+        : '<rect x="0" y="84" width="160" height="16" fill="#475569"/><rect x="50" y="60" width="30" height="6" fill="#475569"/><rect x="100" y="44" width="30" height="6" fill="#475569"/>';
+      s += v >= 2 ? px(HERO, 18, 64, 2) + px(SLIME1, 132, 76, 1) + px(COIN, 62, 50, 1.4) + px(COIN, 112, 34, 1.4) + txt(20, 10, '◆ 3', '#E8B04A', 7) : '<rect x="20" y="70" width="10" height="14" fill="#F26B1D"/>';
+    } else if (id === 'pause') {
+            if (v === 1) s += txt(80, 30, 'PAUSED', '#94A3B8', 9) + txt(80, 50, 'resume', '#94A3B8', 7) + txt(80, 62, 'options', '#94A3B8', 7) + txt(80, 74, 'quit', '#94A3B8', 7);
+      else s += '<rect x="40" y="16" width="80" height="70" rx="3" fill="#1B2028" stroke="#2A313C"/>' + txt(80, 32, 'PAUSED', '#F8FAFC', 9) + '<rect x="50" y="40" width="60" height="11" rx="2" fill="#F26B1D"/>' + txt(80, 48, 'RESUME', '#FFFFFF', 6) + '<rect x="50" y="55" width="60" height="11" rx="2" fill="#222833" stroke="#2A313C"/>' + txt(80, 63, 'OPTIONS', '#F8FAFC', 6) + '<rect x="50" y="70" width="60" height="11" rx="2" fill="#222833" stroke="#2A313C"/>' + txt(80, 78, 'QUIT', '#F8FAFC', 6);
+    } else if (id === 'select') {
+      s += txt(80, 18, v >= 2 ? 'CHOOSE A LEVEL' : 'levels', v >= 2 ? '#F8FAFC' : '#94A3B8', 8);
+      [0, 1, 2].forEach(i => { s += `<rect x="${22 + i * 42}" y="32" width="32" height="40" ${v >= 2 ? 'rx="3"' : ''} fill="${v >= 2 ? (i === 0 ? '#F26B1D' : '#1B2028') : '#2A313C'}" ${v >= 2 && i ? 'stroke="#2A313C"' : ''}/>` + txt(38 + i * 42, 56, i + 1, v >= 2 ? (i === 0 ? '#FFFFFF' : '#94A3B8') : '#94A3B8', 10); });
+    }
+    return svgURL(s + '</svg>');
+  }
+
+  /* ---------- state ---------- */
+  const PEOPLE = { Orion: '#F26B1D', Maya: '#6C7CFF', Jay: '#E8B04A' };
+  const MY_COLORS = ['#E86A9A', '#7CC46B', '#E8B04A', '#6C7CFF'];
+  const S = { view: 'chat', unread: { chat: 0, docs: 1, tasks: 1 }, started: false, firstFile: true, firstVoice: true, sent: 0, filter: 'all', screen: 'title', cmpVer: 3, cmpX: 50, huddle: false, ended: false };
+  const me = { name: '', color: MY_COLORS[0] };
+  const colorOf = w => w === 'me' ? me.color : PEOPLE[w] || '#94A3B8';
+  const nameOf = w => w === 'me' ? me.name : w;
+  function av(w, cls = '') {
+    if (w === 'Claude') return `<span class="av agent ${cls}">${ic('spark', 15)}</span>`;
+    return `<span class="av ${cls}" style="background:${colorOf(w)}">${esc(nameOf(w)[0].toUpperCase())}</span>`;
+  }
+  const NAV = [['chat', 'chat', 'Chat'], ['docs', 'docs', 'Docs & files'], ['updates', 'bell', 'Updates'], ['tasks', 'tasks', 'Tasks']];
+
+  const approvals = [
+    { id: 'merge', by: 'Claude', ask: 'wants to merge <b>feat/double-jump</b> into main', short: 'feat/double-jump', detail: 'Coyote time, and the second jump resets on landing.', meta: `${ic('branch', 14)} player.ts <span class="add">+18</span> −6 <span class="tag live">12 tests passing</span>`, state: 'pending' },
+    { id: 'dep', by: 'Claude', ask: 'wants to add <b>howler.js</b> for game audio', short: 'howler.js', detail: "A 7 kB audio library so Jay's music loops cleanly.", meta: `${ic('file', 14)} package.json · 1 new dependency`, state: 'pending' }
+  ];
+  const repo = { name: 'orion/pixel-quest', last: { sha: '9c41f7a', msg: 'Slime idle animation, 4 frames', by: 'Maya', at: ago(14) },
+    branches: [{ n: 'feat/double-jump', by: 'Claude', tag: 'tests passing', live: true }, { n: 'art/slime-boss', by: 'Maya', tag: 'WIP' }, { n: 'level-2-layout', by: 'Jay', tag: '3 commits' }],
+    activity: [2, 0, 3, 5, 1, 0, 4, 6, 2, 3, 7, 4, 5, 6], updated: false };
+  const notes = [
+    { at: ago(95), html: '<b>Decided</b>: Level 2 is the Slime Caves. Three rooms, ends with the slime boss.' },
+    { at: ago(38), html: '<b>Orion</b> put Claude on the double jump. <b>Maya</b> owns the slime art.' },
+    { at: ago(14), html: '<b>Maya</b> uploaded slime sprite v2 (idle animation).' },
+    { at: ago(4), html: '<b>Claude</b> fixed coyote time on feat/double-jump. 12 tests passing, waiting for approval.' }
+  ];
+  const files = [
+    { name: 'Level 2 – Slime Caves.md', type: 'docs', by: 'Maya', at: ago(50) },
+    { name: 'slime-idle.png', type: 'images', by: 'Maya', at: ago(14), src: SLIME_IMG, px: true },
+    { name: 'player.ts', type: 'code', by: 'Claude', at: ago(4) },
+    { name: 'level1-theme.mp3', type: 'audio', by: 'Jay', at: ago(70), wave: [3, 6, 9, 5, 12, 8, 14, 10, 6, 11, 15, 9, 5, 8, 12, 7, 4] },
+    { name: 'tileset.png', type: 'images', by: 'Jay', at: ago(120), src: TILESET, px: true },
+    { name: 'Game pitch.pdf', type: 'docs', by: 'Orion', at: ago(300) }
+  ];
+  const SCREENS = [{ id: 'title', name: 'Title screen', vers: 3, by: 'Maya' }, { id: 'select', name: 'Level select', vers: 2, by: 'Jay' }, { id: 'lvl', name: 'Level 1', vers: 2, by: 'Claude' }, { id: 'pause', name: 'Pause menu', vers: 2, by: 'Maya' }];
+  const recent = [
+    { ic: 'image', html: '<b>Maya</b> uploaded slime-idle.png', at: ago(14) },
+    { ic: 'branch', html: '<b>Claude</b> opened feat/double-jump', at: ago(25) },
+    { ic: 'check', html: '<b>Jay</b> finished “Level 1 music”', at: ago(70) },
+    { ic: 'user', html: '<b>Orion</b> invited you', at: ago(2) }
+  ];
+  let tid = 0;
+  const T = (t, who, extra) => Object.assign({ id: 't' + (++tid), t, who }, extra || {});
+  const tasks = { s: [], p: [T('Fix the double jump', 'Claude', { branch: 'feat/double-jump' }), T('Slime boss sprite', 'Maya'), T('Level 2 layout', 'Jay')], d: [T('Level 1 music', 'Jay'), T('Basic movement', 'Claude')] };
+
+  /* ---------- 1. invite ---------- */
+  $('#inv-pav').innerHTML = projSvg(46);
+  $('#inv-stack').innerHTML = ['Orion', 'Maya', 'Jay'].map(w => av(w)).join('') + av('Claude');
+  $('#inv-stack').querySelectorAll('.av').forEach(a => { a.style.width = a.style.height = '28px'; a.style.fontSize = '11px'; });
+  const nameIn = $('#name'), join = $('#join');
+  nameIn.oninput = () => { join.disabled = !nameIn.value.trim(); };
+  nameIn.onkeydown = e => { if (e.key === 'Enter' && nameIn.value.trim()) join.click(); };
   join.onclick = () => {
-    me.name = name.value.trim().slice(0, 24);
+    me.name = nameIn.value.trim().replace(/\s+/g, ' ').slice(0, 24);
+    me.color = MY_COLORS[[...me.name].reduce((a, c) => a + c.charCodeAt(0), 0) % MY_COLORS.length];
+    nameIn.blur();
     $('#s-invite').classList.add('hidden'); $('#s-connect').classList.remove('hidden');
-    $('#hello').textContent = `Welcome, ${me.name}!`;
-    const li = [...document.querySelectorAll('#steps li')];
-    li.forEach((l, i) => { l.className = i === 0 ? 'now' : ''; setTimeout(() => { l.className = 'done'; if (li[i + 1]) li[i + 1].className = 'now'; }, 450 + i * 450); });
-    setTimeout(enterRoom, 450 + li.length * 450 + 250);
+    $('#hello').textContent = `Welcome, ${me.name}`;
+    const li = $$('#steps li');
+    li.forEach((l, i) => { l.className = i === 0 ? 'now' : ''; setTimeout(() => { l.className = 'done'; if (li[i + 1]) li[i + 1].className = 'now'; }, 400 + i * 400); });
+    setTimeout(enterRoom, 400 + li.length * 400 + 250);
   };
 
-  // ---- 3. room ----
-  const log = [
-    { who: 'Orion', c: '#F26B1D', html: 'Morning tribe 🔥 Claude is on the double jump, Maya has the slime.' },
-    { who: 'Maya', c: '#6C7CFF', html: 'Slime sprite is up for review in <b>Tasks</b> 👀' },
-    { who: 'Claude', agent: true, html: 'Update from <b>feat/double-jump</b>',
-      card: '<div class="agent-card"><b>Fixed:</b> coyote time + second jump reset on landing<br><span class="mono">player.ts · +18 −6 · 12 tests passing</span><br>Needs approval to merge into <b>main</b> → Requests</div>' },
-  ];
-  function msgHtml(m) {
-    const av = m.agent ? '<span class="av agent">✦</span>' : `<span class="av" style="background:${m.c}">${esc(m.who[0])}</span>`;
-    return `<div class="msg">${av}<div><div class="who">${esc(m.who)}<time>${m.t || now()}</time></div><div class="txt">${m.html}</div>${m.card || ''}</div></div>`;
-  }
+  /* ---------- nav, badges, people ---------- */
+  function badge(k) { return k === 'updates' ? approvals.filter(a => a.state === 'pending').length : (S.unread[k] || 0); }
   function renderNav() {
-    const items = [['chat', '💬', 'Chat', 0], ['docs', '📄', 'Docs', unread.docs], ['tasks', '✅', 'Tasks', unread.tasks], ['requests', '🛎️', 'Requests', unread.requests]];
-    $('#side-nav').innerHTML = items.map(([k, ic, l, n]) => `<button class="nav ${view === k ? 'on' : ''}" data-v="${k}">${ic} ${l}${n ? `<span class="n${k === 'tasks' ? ' t' : ''}">${n}</span>` : ''}</button>`).join('') + '<button class="nav" data-v="more">⋯ More</button>';
-    $('#tabs').innerHTML = items.map(([k, ic, l, n]) => `<button class="${view === k ? 'on' : ''}" data-v="${k}">${l}${n ? `<span class="n">${n}</span>` : ''}</button>`).join('');
-    document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
+    $('#nest-nav').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="nav ${S.view === k ? 'on' : ''}" data-v="${k}">${ic(i, 18)}<span>${l}</span>${n ? `<span class="cnt">${n}</span>` : ''}</button>`; }).join('');
+    $('#seg').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="${S.view === k ? 'on' : ''}" data-v="${k}" aria-label="${l}${n ? `, ${n} new` : ''}" title="${l}">${ic(i, 22)}${n ? `<span class="bd">${n}</span>` : ''}</button>`; }).join('');
   }
   function renderPeople() {
-    $('#people').innerHTML = PEOPLE().map(p => `<div class="person">${p.agent ? '<span class="av sm agent">✦</span>' : `<span class="av sm" style="background:${p.c}">${esc(p.n[0])}</span>`}<div><b>${esc(p.n)}</b><small>${esc(p.s)}</small></div><span class="st ${p.on ? '' : 'idle'}"></span></div>`).join('');
+    const ppl = [['Orion', 'Host · in the huddle', true], ['Maya', 'In the huddle · slime art', true], ['Claude', "Orion's agent · on feat/double-jump", true], ['Jay', 'Away', false], ['me', 'You · just joined', true]];
+    $('#people').innerHTML = ppl.map(([w, s, on]) => `<div class="person">${av(w)}<div class="pt"><b>${esc(nameOf(w))}</b><small>${esc(s)}</small></div><span class="st ${on ? '' : 'idle'}"></span></div>`).join('');
+    $('#huddle-stack').innerHTML = av('Orion') + av('Maya');
+    $('#mh-stack').innerHTML = ['Orion', 'Maya', 'Claude', 'me'].map(w => av(w)).join('');
   }
+  const TITLES = { chat: ['Chat', 'Orion, Maya, Claude and you'], docs: ['Docs & files', 'Repo, living notes, files and screens'], updates: ['Updates', 'What needs you, and what happened'], tasks: ['Tasks', 'Suggested, in progress, done'] };
   function show(v) {
-    if (v === 'more') { say('sys', 'More holds Calendar, Repo, Visuals, Bugs and the Board.'); v = 'chat'; }
-    view = v; if (unread[v]) unread[v] = 0;
-    $('#crumb-view').textContent = '/ ' + v[0].toUpperCase() + v.slice(1);
-    $('#chat-foot').classList.toggle('hidden', v !== 'chat');
-    const pane = $('#pane');
-    if (v === 'chat') pane.innerHTML = log.map(m => m.sys ? `<div class="sys">${m.html}</div>` : m.end ? m.html : msgHtml(m)).join('');
-    if (v === 'tasks') pane.innerHTML = `<div class="tlist">${tasks.map(t => `<div class="t ${t.new ? 'new' : ''}">${t.s === 'done' ? '✅' : '◻️'} ${esc(t.t)}<small>${esc(t.who)} · ${esc(t.s)}</small></div>`).join('')}</div>`;
-    if (v === 'docs') pane.innerHTML = `<div class="doc"><div class="k">Doc · edited by Maya just now</div><h2>Level 2: Slime Caves</h2><p>Three rooms, a moving platform, and the slime boss. The double jump has to clear the second gap.</p><p style="margin:0"><b style="color:#F8FAFC">TL;DR</b> (local brain): short cave level that teaches the double jump, ends with the slime.</p></div>`;
-    if (v === 'requests') pane.innerHTML = `<div class="t" style="flex-wrap:wrap">✦ Claude wants to merge <b>feat/double-jump</b> into main<small>low risk</small>
-      <div style="width:100%;display:flex;gap:8px;margin-top:10px"><button class="btn primary" id="ap">Approve</button><button class="btn" id="dn">Not yet</button></div></div>`;
-    if (v === 'requests') { $('#ap').onclick = () => decide(true); $('#dn').onclick = () => decide(false); }
-    renderNav(); pane.scrollTop = pane.scrollHeight;
+    S.view = v; if (v !== 'updates') S.unread[v] = 0;
+    $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+    $('#composer').classList.toggle('hidden', v !== 'chat');
+    $('#mh-title').textContent = TITLES[v][0]; $('#mh-sub').textContent = TITLES[v][1];
+    if (v === 'docs') renderDocs(); if (v === 'updates') renderUpdates(); if (v === 'tasks') renderTasks();
+    if (v === 'chat') toBottom(true);
+    if (S.panel) S.panel(false);
+    renderNav();
   }
-  function decide(ok) {
-    unread.requests = 0;
-    log.push({ who: 'Claude', agent: true, html: ok ? `${esc(me.name)} approved. Merged <b>feat/double-jump</b> into main and pushed ✓` : `Got it, ${esc(me.name)}. I'll hold the merge.` });
-    show('chat');
+  document.addEventListener('click', e => {
+    const nv = e.target.closest('[data-v]'); if (nv) { show(nv.dataset.v); return; }
+    const tt = e.target.closest('[data-toast]'); if (tt) { toast(tt.dataset.toast); return; }
+  });
+  let toastT;
+  function toast(t) { $$('.toast').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); clearTimeout(toastT); toastT = setTimeout(() => d.remove(), 2400); }
+
+  /* ---------- chat ---------- */
+  const chatSc = $('#v-chat'), log = $('#log');
+  const nearBottom = () => chatSc.scrollHeight - chatSc.scrollTop - chatSc.clientHeight < 160;
+  function toBottom(force) { if (force || nearBottom()) requestAnimationFrame(() => { chatSc.scrollTop = chatSc.scrollHeight; }); }
+  function sys(text, quiet) { const d = document.createElement('div'); d.className = 'sysline' + (quiet ? ' quiet' : ''); d.innerHTML = `<span>${text}</span>`; log.appendChild(d); toBottom(); }
+  const voices = {};
+  let vid = 0;
+  function waveBars(levels, n = 30) {
+    const mx = Math.max(0.15, ...levels); levels = levels.map(v => v / mx);
+    const out = []; for (let i = 0; i < n; i++) { const v = levels.length ? levels[Math.floor(i * levels.length / n)] : 0.3; out.push(`<i style="height:${Math.round(4 + clamp(v, 0, 1) * 22)}px"></i>`); }
+    return out.join('');
   }
-  function say(kind, html) { log.push(kind === 'sys' ? { sys: true, html } : html); if (view === 'chat') show('chat'); }
-  function reply(who, html, delay, extra) {
-    setTimeout(() => { $('#typing').textContent = `${who} is typing…`; }, delay - 900);
-    setTimeout(() => { $('#typing').textContent = ''; const p = { Orion: '#F26B1D', Maya: '#6C7CFF', Jay: '#E8B04A' }[who];
-      log.push(Object.assign(who === 'Claude' ? { who, agent: true, html } : { who, c: p, html }, extra || {})); if (view === 'chat') show('chat'); else { unread.chat = 1; renderNav(); } }, delay);
+  function bubbleHtml(m) {
+    if (m.kind === 'image') return `<div class="bub media"><img src="${m.src}" alt="${esc(m.name || 'image')}" class="${m.px ? 'px' : ''}" data-view></div>`;
+    if (m.kind === 'file') return `<a class="bub filechip" ${m.url ? `href="${m.url}" target="_blank" rel="noopener"` : ''}><span class="fi">${ic(TYPE_IC[typeOf(m.name, m.mime)], 20)}</span><span style="min-width:0"><span class="fn">${esc(m.name)}</span><small>${esc(m.size || '')}</small></span></a>`;
+    if (m.kind === 'voice') { const id = 'v' + (++vid); voices[id] = m; return `<div class="bub voice" data-voice="${id}"><button type="button" class="play" aria-label="Play voice note">${ic('play', 16)}</button><div class="wave">${waveBars(m.levels)}</div><span class="dur">${dur(m.secs)}</span></div>`; }
+    if (m.kind === 'card') return `<div class="bub bare">${m.html}</div>`;
+    return `<div class="bub">${m.html}</div>`;
   }
-  let sent = 0;
-  function send(text) {
-    text = text.trim(); if (!text) return;
-    if (text.startsWith('/task')) {
-      const t = text.replace(/^\/task\s*/, '') || 'Something new';
-      tasks.unshift({ t, who: me.name, s: 'todo', new: true }); unread.tasks++;
-      log.push({ who: me.name, c: me.color, html: esc(text), card: `<div class="task-card">✅ New task: <b>${esc(t)}</b></div>` }); show('chat');
-      reply('Claude', `I can take <b>${esc(t)}</b> on a branch whenever you want. Say the word.`, 1600);
+  function addMsg(m) {
+    const who = m.who, at = m.at || new Date();
+    const prev = log.lastElementChild;
+    const cont = prev && prev.classList.contains('row') && prev.dataset.who === who && (at - +prev.dataset.at) < 5 * 60e3;
+    if (cont) prev.classList.remove('tail');
+    const row = document.createElement('div');
+    row.className = `row ${who === 'me' ? 'me' : 'them'}${who === 'Claude' ? ' claude' : ''} tail${cont ? '' : ' head'}`;
+    row.dataset.who = who; row.dataset.at = +at;
+    row.innerHTML = `<div class="avc">${who === 'me' ? '' : av(who)}</div><div class="col">${who === 'me' ? '' : `<div class="nm" style="color:${who === 'Claude' ? 'var(--t)' : colorOf(who)}">${esc(nameOf(who))}</div>`}${bubbleHtml(m)}<div class="meta">${fmt(at)}</div></div>`;
+    log.appendChild(row);
+    row.querySelectorAll('img').forEach(i => i.addEventListener('load', () => toBottom()));
+    toBottom(who === 'me');
+    return row;
+  }
+  function markSeen() {
+    $$('.row.me .meta').forEach(x => { x.textContent = x.textContent.replace(' · Seen', ''); });
+    const mine = $$('.row.me'); const last = mine[mine.length - 1];
+    if (last) { const mt = last.querySelector('.meta'); mt.textContent += ' · Seen'; }
+  }
+  function showTyping(who) {
+    $('#typing').innerHTML = `<div class="row them typing-row tail head"><div class="avc">${av(who)}</div><div class="col"><div class="tn">${esc(nameOf(who))} is typing</div><div class="bub"><i></i><i></i><i></i></div></div></div>`;
+    toBottom();
+  }
+  const hideTyping = () => { $('#typing').innerHTML = ''; };
+  let q = Promise.resolve();
+  function bot(who, content, o = {}) {
+    q = q.then(async () => {
+      await wait(o.pre ?? 500); markSeen(); showTyping(who);
+      const m = typeof content === 'function' ? content() : content;
+      const len = (m.html || '').replace(/<[^>]+>/g, '').length;
+      await wait(o.typing ?? clamp(650 + len * 16, 900, 2100));
+      hideTyping(); addMsg(Object.assign({ who }, m)); if (S.follow) { S.follow = false; toBottom(true); }
+      if (S.view !== 'chat') { S.unread.chat++; renderNav(); }
+    });
+    return q;
+  }
+  const later = fn => { q = q.then(fn); };
+
+  /* ---------- approvals ---------- */
+  function apprHtml(a) {
+    if (a.state === 'pending') return `<div class="appr" data-appr="${a.id}"><div class="appr-top">${av(a.by)}<div><div class="appr-t"><b>${a.by}</b> ${a.ask}</div><div class="appr-d">${a.detail}</div></div></div>
+      <div class="appr-meta">${a.meta}</div>
+      <textarea class="appr-note" rows="1" placeholder="Add a note or ask for a change…" aria-label="Note for ${a.by}" enterkeyhint="done"></textarea>
+      <div class="appr-btns"><button type="button" class="yes">${ic('check', 20)}Approve</button><button type="button" class="no">${ic('x', 20)}Deny</button></div></div>`;
+    const ok = a.state === 'approved';
+    return `<div class="appr done ${ok ? 'ok' : 'no'}" data-appr="${a.id}"><span class="ri">${ic(ok ? 'check' : 'x', 14)}</span><span class="res"><b>${ok ? 'Approved' : 'Denied'}</b> · ${esc(a.short)}${a.note ? ` · “${esc(a.note)}”` : ''}</span><time>${fmt(a.when)}</time></div>`;
+  }
+  function refreshAppr(a) { $$(`[data-appr="${a.id}"]`).forEach(el => { el.outerHTML = apprHtml(a); }); }
+  function decide(id, ok, note) {
+    const a = approvals.find(x => x.id === id); if (!a || a.state !== 'pending') return;
+    a.state = ok ? 'approved' : 'denied'; a.note = note.slice(0, 200); a.when = new Date();
+    refreshAppr(a); renderNav(); S.follow = true;
+    if (S.view === 'updates') renderUpdates();
+    const n = a.note ? ` · “${esc(a.note)}”` : '';
+    addNote(`<b>${esc(me.name)}</b> ${ok ? 'approved' : 'denied'} ${id === 'merge' ? 'merging feat/double-jump' : 'adding howler.js'}${n}`);
+    addRecent(ok ? 'check' : 'x', `<b>You</b> ${ok ? 'approved' : 'denied'} ${esc(a.short)}${n}`);
+    const N = a.note ? esc(a.note) : '';
+    if (id === 'merge' && ok) {
+      repo.last = { sha: 'e41b0c2', msg: 'Merge feat/double-jump: coyote time + double jump reset', by: 'Claude', note: `approved by ${me.name}`, at: new Date() };
+      repo.branches = repo.branches.filter(b => b.n !== 'feat/double-jump'); repo.activity[repo.activity.length - 1] += 1; repo.updated = true;
+      const t = tasks.p.find(x => x.t === 'Fix the double jump'); if (t) { tasks.p = tasks.p.filter(x => x !== t); tasks.d.unshift(t); }
+      if (S.view === 'docs') renderDocs(); if (S.view === 'tasks') renderTasks();
+      bot('Claude', { html: `Merged <b>feat/double-jump</b> into main ✓ ${N ? `You said “${N}”, so that's next. I'll put it on a new branch and ask you again.` : 'Thanks! Main is green and the repo card is updated.'}` }, { pre: 400 });
+      bot('Orion', { html: 'LETS GO 🔥 double jump is in' });
+    } else if (id === 'merge') {
+      const b = repo.branches.find(x => x.n === 'feat/double-jump'); if (b) { b.tag = 'changes requested'; b.live = false; }
+      if (S.view === 'docs') renderDocs();
+      bot('Claude', { html: `No problem, I'm holding the merge. ${N ? `“${N}”: I'll change that and ask you again.` : "Tell me what to change and I'll ask again."}` }, { pre: 400 });
+    } else if (ok) {
+      bot('Claude', { html: `Added <b>howler.js</b> ✓ ${N ? `And noted: “${N}”.` : "Jay's loop plays cleanly now."}` }, { pre: 400 });
+    } else {
+      bot('Claude', { html: `Okay, no new dependency. ${N ? `You said “${N}”, so I'll go that way.` : "I'll use the browser's own audio API instead."}` }, { pre: 400 });
+    }
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.appr .yes, .appr .no'); if (!b) return;
+    const card = b.closest('.appr'); decide(card.dataset.appr, b.classList.contains('yes'), (card.querySelector('.appr-note').value || '').trim());
+  });
+
+  /* ---------- docs: repo, living notes, files, screens ---------- */
+  function addNote(html) {
+    notes.push({ at: new Date(), html, fresh: true });
+    if (S.view === 'docs') renderNotes(); else { S.unread.docs++; renderNav(); }
+  }
+  function addRecent(i, html) { recent.unshift({ ic: i, html, at: new Date(), fresh: true }); if (S.view === 'updates') renderUpdates(); }
+  function renderRepo() {
+    const r = repo, l = r.last;
+    $('#repo-upd').innerHTML = r.updated ? '<span class="tag live">updated just now</span>' : '';
+    $('#repo').innerHTML = `<div class="repo-top">${ic('branch', 18)}<span class="rn">${r.name}</span><span class="r"><span class="tag">main</span><span class="tag live">● live</span></span></div>
+      <div class="commit">${av(l.by)}<div class="ct"><b>${esc(l.msg)}</b><span class="sha">${l.sha}</span> · ${esc(l.by)}${l.note ? ` · ${esc(l.note)}` : ''} · ${rel(l.at) === 'now' ? 'just now' : rel(l.at) + ' ago'}</div></div>
+      <div class="branches">${r.branches.map(b => `<div class="br">${ic('branch', 15)}<span class="bn">${b.n}</span><span class="who">${b.by}</span><span class="tag ${b.live ? 'live' : b.tag === 'changes requested' ? 'o' : ''}">${b.tag}</span></div>`).join('') || '<div class="br">No open branches</div>'}</div>
+      <div class="activity" aria-label="Commits over the last 14 days">${r.activity.map((v, i) => `<i class="${i === r.activity.length - 1 && r.updated ? 'hot' : ''}" style="height:${Math.round(3 + v / 8 * 23)}px"></i>`).join('')}</div>
+      <div class="act-l"><span>14 days ago</span><span>today</span></div>`;
+  }
+  function renderNotes() {
+    $('#notes').innerHTML = notes.map(n => `<div class="note ${n.fresh ? 'fresh' : ''}"><time>${fmt(n.at)}</time><div class="nt">${n.html}</div></div>`).join('');
+    notes.forEach(n => { n.fresh = false; });
+  }
+  const TYPE_IC = { docs: 'docs', images: 'image', audio: 'audio', code: 'code', other: 'file' };
+  function typeOf(name, mime) {
+    mime = mime || ''; const ext = (name.split('.').pop() || '').toLowerCase();
+    if (mime.startsWith('image/') || /^(png|jpe?g|gif|webp|heic|svg)$/.test(ext)) return 'images';
+    if (mime.startsWith('audio/') || /^(mp3|wav|m4a|ogg|webm|aac)$/.test(ext)) return 'audio';
+    if (/^(ts|js|py|json|html|css|rs|go|c|cpp|java|sh|tsx|jsx|gd|cs)$/.test(ext)) return 'code';
+    if (/^(md|txt|pdf|doc|docx|rtf|pages|key|csv)$/.test(ext) || mime.startsWith('text/') || mime === 'application/pdf') return 'docs';
+    return 'other';
+  }
+  function thumb(f) {
+    if (f.type === 'images' && f.src) return `<img src="${f.src}" alt="" class="${f.px ? 'px' : ''}">`;
+    if (f.type === 'audio') return `<div class="wave">${waveBars((f.wave || f.levels || []).map(v => v > 1 ? v / 15 : v), 22)}</div>`;
+    if (f.type === 'code') return `<div class="codep"><span class="kw">const</span> JUMPS = 2\n<span class="kw">if</span> (onGround)\n  <span class="fn">resetJumps</span>()\ncoyote = 0.1</div>`;
+    if (f.type === 'docs') return '<div class="docp"><i></i><i></i><i></i><i style="width:80%"></i></div>';
+    return `<span style="color:var(--m)">${ic('file', 28)}</span>`;
+  }
+  function renderFiles() {
+    const F = [['all', 'All'], ['docs', 'Docs'], ['images', 'Images'], ['audio', 'Audio'], ['code', 'Code']];
+    $('#f-chips').innerHTML = F.map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
+    const list = files.filter(f => S.filter === 'all' || f.type === S.filter);
+    $('#f-count').textContent = files.length;
+    $('#files').innerHTML = list.map(f => { const tag = f.url ? 'a' : 'button'; return `<${tag} class="fcard ${f.fresh ? 'fresh' : ''}" ${f.url ? `href="${f.url}" target="_blank" rel="noopener"` : 'type="button"'} ${f.type === 'images' && f.src ? `data-src="${f.src}" data-px="${f.px ? 1 : ''}"` : ''}><div class="thumb">${thumb(f)}</div><div class="fmeta"><span class="ty">${ic(TYPE_IC[f.type], 16)}</span><div class="ft"><b>${esc(f.name)}</b><small>${esc(nameOf(f.by))} · ${rel(f.at)}</small></div></div></${tag}>`; }).join('') || '<div class="empty">Nothing here yet.</div>';
+  }
+  document.addEventListener('click', e => {
+    const c = e.target.closest('[data-f]'); if (c) { S.filter = c.dataset.f; renderFiles(); return; }
+    const fc = e.target.closest('button.fcard');
+    if (fc) { if (fc.dataset.src) openViewer(fc.dataset.src, fc.dataset.px); else toast('Opens in the real app, right next to the chat.'); return; }
+    const im = e.target.closest('img[data-view]'); if (im) openViewer(im.src, im.classList.contains('px'));
+    const sc = e.target.closest('[data-scr]'); if (sc) { S.screen = sc.dataset.scr; S.cmpVer = SCREENS.find(x => x.id === S.screen).vers; S.cmpX = 50; renderShots(); return; }
+    const vb = e.target.closest('[data-ver]'); if (vb) { S.cmpVer = +vb.dataset.ver; renderShots(); }
+  });
+  function openViewer(src, pxl) { const v = document.createElement('div'); v.className = 'viewer'; v.innerHTML = `<img src="${src}" class="${pxl ? 'px' : ''}" alt="">`; v.onclick = () => v.remove(); document.body.appendChild(v); }
+  function renderShots() {
+    $('#flow').innerHTML = SCREENS.map((s, i) => `${i ? `<span class="arr">${ic('right', 16)}</span>` : ''}<button class="scr ${S.screen === s.id ? 'on' : ''}" data-scr="${s.id}"><img src="${scene(s.id, s.vers)}" alt=""><b>${s.name}</b><small>v${s.vers} · ${s.by}</small></button>`).join('');
+    const s = SCREENS.find(x => x.id === S.screen), v = S.cmpVer;
+    const vers = []; for (let i = 2; i <= s.vers; i++) vers.push(i);
+    $('#cmpw').innerHTML = `<div class="cmpw-h"><b>${s.name}</b><div class="chips">${vers.map(i => `<button class="chip ${i === v ? 'on' : ''}" data-ver="${i}">v${i - 1}→v${i}</button>`).join('')}</div></div>
+      <div class="swipe" style="--x:${S.cmpX}%"><img src="${scene(s.id, v - 1)}" alt="Before, version ${v - 1}"><img class="after" src="${scene(s.id, v)}" alt="After, version ${v}">
+      <span class="lb l">v${v - 1} before</span><span class="lb r">v${v} after</span><span class="bar"></span><span class="knob">${ic('swap', 18)}</span>
+      <input type="range" min="0" max="100" value="${S.cmpX}" aria-label="Swipe to compare before and after"></div>`;
+    const sw = $('#cmpw .swipe'), rg = sw.querySelector('input');
+    rg.oninput = () => { S.cmpX = +rg.value; sw.style.setProperty('--x', rg.value + '%'); };
+  }
+  function renderDocs() { renderRepo(); renderNotes(); renderFiles(); renderShots(); files.forEach(f => { f.fresh = false; }); }
+
+  /* ---------- updates ---------- */
+  function renderUpdates() {
+    const pend = approvals.filter(a => a.state === 'pending');
+    $('#needs').innerHTML = (pend.length ? pend.map(apprHtml).join('') : `<div class="panel empty"><span class="ri">${ic('check', 14)}</span>Nothing needs you right now.</div>`)
+      + approvals.filter(a => a.state !== 'pending').map(a => `<div style="margin-top:8px">${apprHtml(a)}</div>`).join('');
+    $('#recent').innerHTML = recent.slice(0, 6).map(r => `<div class="uitem ${r.fresh ? 'fresh' : ''}"><span class="ui">${ic(r.ic, 16)}</span><span class="ut">${r.html}</span><time>${rel(r.at)}</time></div>`).join('');
+    recent.forEach(r => { r.fresh = false; });
+  }
+
+  /* ---------- tasks ---------- */
+  function renderTasks() {
+    $('#n-s').textContent = tasks.s.length; $('#n-p').textContent = tasks.p.length; $('#n-d').textContent = tasks.d.length;
+    $('#l-s').innerHTML = tasks.s.map(t => `<div class="tk" data-t="${t.id}"><b>${esc(t.t)}</b><div class="why">${av(t.from)}<span><em>${esc(nameOf(t.from))}</em> · ${esc(t.why)}</span></div>
+      <div class="tb"><button type="button" class="take" data-take>${ic('hand', 17)}Take it</button><button type="button" class="claude" data-give>${ic('spark', 17)}Give to Claude</button></div></div>`).join('') || '<div class="panel empty">No suggestions. Add one above.</div>';
+    $('#l-p').innerHTML = tasks.p.map(t => `<div class="tk ${t.who === 'me' ? 'mine' : ''}" data-t="${t.id}"><b>${esc(t.t)}</b><div class="ln">${av(t.who)}<span>${t.who === 'me' ? 'You' : esc(t.who)}</span>${t.branch ? `<span class="tag ${t.who === 'Claude' ? 'live' : ''}">${esc(t.branch)}</span>` : ''}</div>
+      ${t.who === 'me' ? `<div class="tb"><button type="button" class="fin" data-fin>${ic('check', 17)}Done</button></div>` : ''}</div>`).join('');
+    $('#l-d').innerHTML = tasks.d.map(t => `<div class="tk done"><b>${esc(t.t)}</b><div class="ln">${av(t.who)}<span>${t.who === 'me' ? 'You' : esc(t.who)}</span></div></div>`).join('');
+  }
+  const slug = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').split('-').slice(0, 3).join('-') || 'task';
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-take],[data-give],[data-fin]'); if (!b) return;
+    const id = b.closest('[data-t]').dataset.t;
+    if (b.hasAttribute('data-fin')) {
+      const t = tasks.p.find(x => x.id === id); tasks.p = tasks.p.filter(x => x !== t); tasks.d.unshift(t); renderTasks();
+      sys(`${esc(me.name)} finished “${esc(t.t)}”`); addNote(`<b>${esc(me.name)}</b> finished “${esc(t.t)}”.`); addRecent('check', `<b>You</b> finished “${esc(t.t)}”`);
+      bot('Orion', { html: `🙌 nice one ${esc(me.name)}` }); return;
+    }
+    const t = tasks.s.find(x => x.id === id); if (!t) return;
+    tasks.s = tasks.s.filter(x => x !== t);
+    if (b.hasAttribute('data-take')) {
+      tasks.p.unshift(Object.assign(t, { who: 'me' })); renderTasks(); toast('It’s yours. It’s under In progress.');
+      sys(`${esc(me.name)} took “${esc(t.t)}”`); addNote(`<b>${esc(me.name)}</b> took “${esc(t.t)}”.`); addRecent('hand', `<b>You</b> took “${esc(t.t)}”`);
+      const r = { Maya: 'yesss thank you 🙏', Orion: 'legend 🔥', Claude: "Nice. If anything feels off, tell me and I'll file it." }[t.from];
+      if (r && t.from !== 'me') bot(t.from, { html: r });
+    } else {
+      const br = 'feat/' + slug(t.t);
+      tasks.p.unshift(Object.assign(t, { who: 'Claude', branch: br })); renderTasks(); toast('Claude has it.');
+      addNote(`<b>${esc(me.name)}</b> gave “${esc(t.t)}” to <b>Claude</b>.`); addRecent('spark', `<b>Claude</b> started “${esc(t.t)}”`);
+      repo.branches.push({ n: br, by: 'Claude', tag: 'working', live: true });
+      bot('Claude', { html: `On it. Started <b>${esc(br)}</b>. I'll post here when tests pass.` });
+      setTimeout(() => {
+        const x = tasks.p.find(y => y.id === t.id); if (!x) return;
+        tasks.p = tasks.p.filter(y => y !== x); tasks.d.unshift(x); const rb = repo.branches.find(y => y.n === br); if (rb) rb.tag = 'tests passing';
+        if (S.view === 'tasks') renderTasks(); if (S.view === 'docs') renderDocs(); else { S.unread.tasks++; renderNav(); }
+        addNote(`<b>Claude</b> finished “${esc(x.t)}” on ${esc(br)}. Tests passing.`);
+        bot('Claude', { html: `Done: <b>${esc(x.t)}</b>`, }, { pre: 0 });
+        later(() => { addMsg({ who: 'Claude', kind: 'card', html: `<div class="rc"><div class="rc-h">${ic('branch', 15)}<span class="mono">${esc(br)}</span><span class="tag live">tests passing</span></div><div class="rc-f mono">2 files · <span class="add">+24</span> −3 · ready for review</div></div>` }); });
+      }, 9000);
+    }
+  });
+  const suggIn = $('#sugg-in');
+  suggIn.oninput = () => { $('#sugg-go').disabled = !suggIn.value.trim(); };
+  let suggested = 0;
+  $('#sugg').onsubmit = e => {
+    e.preventDefault(); const v = suggIn.value.trim().slice(0, 80); if (!v) return;
+    suggIn.value = ''; $('#sugg-go').disabled = true;
+    tasks.s.push(T(v, 'me', { from: 'me', why: 'your idea' })); renderTasks();
+    addNote(`<b>${esc(me.name)}</b> suggested a task: “${esc(v)}”.`); addRecent('tasks', `<b>You</b> suggested “${esc(v)}”`);
+    sys(`${esc(me.name)} suggested “${esc(v)}”`);
+    if (suggested++ < 2) {
+      bot('Claude', { html: `Good one. I added a related suggestion next to “${esc(v)}” in Tasks.` });
+      later(() => { tasks.s.push(T(`Write a quick test for “${v}”`, 'Claude', { from: 'Claude', why: `Goes with ${me.name}'s idea, so we know when it works. I can do it.` })); if (S.view === 'tasks') renderTasks(); else { S.unread.tasks++; renderNav(); } });
+    }
+  };
+
+  /* ---------- composer ---------- */
+  const box = $('#box'), act = $('#act'), composer = $('#composer');
+  function grow(t, base) { t.style.height = base + 'px'; t.style.height = Math.min(t.scrollHeight, +getComputedStyle(t).maxHeight.replace('px', '') || 140) + 'px'; }
+  function setAct() {
+    const send = rec || box.value.trim();
+    act.classList.toggle('send', !!send);
+    act.innerHTML = ic(send ? 'arrowup' : 'mic', 22);
+    act.setAttribute('aria-label', rec ? 'Send voice note' : send ? 'Send' : 'Record a voice note');
+  }
+  box.addEventListener('input', () => { grow(box, 38); setAct(); });
+  box.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendText(); } });
+  box.addEventListener('focus', () => { composer.classList.add('kb'); setTimeout(() => toBottom(true), 250); });
+  box.addEventListener('blur', () => composer.classList.remove('kb'));
+  document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('appr-note')) grow(e.target, 44); });
+  act.addEventListener('pointerdown', e => { if (box.value.trim()) e.preventDefault(); });
+  act.onclick = () => { if (rec) stopRec(true); else if (box.value.trim()) sendText(); else startRec(); };
+  composer.onsubmit = e => { e.preventDefault(); sendText(); };
+  function sendText() {
+    const text = box.value.trim(); if (!text) return;
+    box.value = ''; grow(box, 38); setAct();
+    addMsg({ who: 'me', html: esc(text).slice(0, 2000) }); S.sent++;
+    react('text');
+  }
+  const SMALL = [['Orion', '😂 love it'], ['Maya', 'haha yes'], ['Orion', 'ship it 🚀'], ['Maya', 'on it']];
+  function react(kind) {
+    if (!S.started) {
+      S.started = true;
+      if (kind === 'file') bot('Maya', { html: 'ooh nice, saved it to Docs & files 👀' }, { pre: 700 });
+      if (kind === 'voice') bot('Orion', { html: 'voice notes!! 😂 love it' }, { pre: 700 });
+      bot('Orion', { html: `Welcome ${esc(me.name)}! 🔥 Glad you made it.` }, { pre: kind === 'text' ? 700 : 300 });
+      bot('Maya', { html: 'heyy 👋 the Level 2 doc and my slime are in Docs & files' });
+      bot('Claude', { html: `Hi ${esc(me.name)}. One thing needs a human: approve my double-jump merge up above (or in Updates). Or grab something in Tasks.` });
+      later(async () => { await wait(1200); endCard(); });
       return;
     }
-    log.push({ who: me.name, c: me.color, html: esc(text) }); show('chat'); sent++;
-    if (sent === 1) {
-      reply('Orion', `Welcome ${esc(me.name)}! 🔥 Glad you made it.`, 1400);
-      reply('Maya', 'Heyyy 👋 check Docs, Level 2 is up', 3200);
-      reply('Claude', `Hi ${esc(me.name)}. Want a task? Type <code>/task draw a coin</code>, or approve my double-jump fix in <b>Requests</b>.`, 5200);
-      setTimeout(() => { log.push({ end: true, html: `<div class="end"><span><b>That's TribeCode.</b> Chat, docs, tasks and Claude agents, together on one friend's computer.</span><a class="btn primary" href="./">Get TribeCode</a></div>` }); if (view === 'chat') show('chat'); }, 7600);
-    } else reply(['Orion', 'Maya'][sent % 2], ['😂 love it', 'On it', 'Nice', 'Ship it 🚀'][sent % 4], 1500);
+    if (kind === 'file' && S.firstFile) { S.firstFile = false; bot('Claude', { html: 'Got it. I filed that under Docs & files and noted it in the living notes.' }); return; }
+    if (kind === 'voice' && S.firstVoice) { S.firstVoice = false; bot('Claude', { html: "Your voice note is in the living notes, with a transcript line from the local brain." }); return; }
+    if (kind === 'text') { const [w, t] = SMALL[S.sent % SMALL.length]; bot(w, { html: t }, { pre: 900 }); }
   }
-  function enterRoom() {
-    $('#s-connect').classList.add('hidden'); $('#s-room').classList.remove('hidden'); $('.demo-tag').remove();
-    $('#me-av').textContent = me.name[0].toUpperCase(); $('#me-av').style.background = me.color;
-    $('#box').placeholder = `Message Pixel Quest as ${me.name}`;
-    log.push({ sys: true, html: `${esc(me.name)} joined Pixel Quest` });
-    renderPeople(); show('chat');
-    $('#hints').innerHTML = ['👋 Say hi', '/task draw a coin', 'Open Requests'].map((h, i) => `<button data-h="${i}">${h}</button>`).join('');
-    $('#hints').querySelectorAll('button').forEach(b => b.onclick = () => {
-      if (b.dataset.h === '0') send('Hey everyone! 👋'); else if (b.dataset.h === '1') send('/task draw a coin'); else show('requests');
+  function endCard() {
+    if (S.ended) return; S.ended = true;
+    const d = document.createElement('div'); d.className = 'endc';
+    d.innerHTML = `<img src="assets/icon-512.png" alt=""><div class="et"><b>That's TribeCode</b>Your tribe and Claude, on one computer.</div><a class="btn primary" href="./">Get TribeCode</a>`;
+    log.appendChild(d); toBottom();
+  }
+
+  // attachments: object URLs only, nothing leaves the page
+  $('#attach').onclick = () => $('#file').click();
+  $('#file').onchange = e => {
+    const list = [...e.target.files]; e.target.value = ''; if (!list.length) return;
+    list.forEach(f => {
+      const url = URL.createObjectURL(f), type = typeOf(f.name, f.type), size = f.size > 1e6 ? (f.size / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(f.size / 1e3)) + ' kB';
+      if (type === 'images') addMsg({ who: 'me', kind: 'image', src: url, name: f.name });
+      else addMsg({ who: 'me', kind: 'file', url, name: f.name, size: size + ' · ' + (f.name.split('.').pop() || 'file').toUpperCase(), mime: f.type });
+      files.unshift({ name: f.name, type, by: 'me', at: new Date(), src: type === 'images' ? url : null, url: type === 'images' ? null : url, fresh: true });
+      addNote(`<b>${esc(me.name)}</b> shared ${esc(f.name)}.`);
+      addRecent(TYPE_IC[type], `<b>You</b> shared ${esc(f.name)}`);
     });
-    setTimeout(() => $('#box').focus(), 50);
+    if (S.view === 'docs') renderFiles();
+    react('file');
+  };
+
+  // voice notes: real MediaRecorder when allowed, kept in memory; otherwise simulated
+  let rec = null;
+  async function startRec() {
+    rec = { t0: performance.now(), levels: [], chunks: [], sim: true };
+    const r = rec;
+    composer.classList.add('rec'); setAct(); $('#rec-wave').innerHTML = ''; $('#rec-time').textContent = '0:00';
+    r.tick = setInterval(() => {
+      const secs = (performance.now() - r.t0) / 1000; $('#rec-time').textContent = dur(secs);
+      let lv;
+      if (r.an) { const a = new Uint8Array(r.an.fftSize); r.an.getByteTimeDomainData(a); let m = 0; for (const v of a) m = Math.max(m, Math.abs(v - 128)); lv = clamp(m / 50, 0.05, 1); }
+      else lv = clamp(0.25 + 0.55 * Math.abs(Math.sin(secs * 3.1) * Math.cos(secs * 1.7)) + Math.random() * 0.2, 0, 1);
+      r.levels.push(lv);
+      const w = $('#rec-wave'); const i = document.createElement('i'); i.style.height = Math.round(3 + lv * 20) + 'px'; w.appendChild(i); while (w.children.length > 60) w.firstChild.remove();
+      if (secs > 120) stopRec(true);
+    }, 100);
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) throw new Error('no recorder');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (rec !== r) { stream.getTracks().forEach(t => t.stop()); return; }
+      r.stream = stream; r.mr = new MediaRecorder(stream);
+      r.mr.ondataavailable = e => { if (e.data && e.data.size) r.chunks.push(e.data); };
+      r.mr.start(); r.sim = false;
+      try { const AC = window.AudioContext || window.webkitAudioContext; r.ctx = new AC(); const src = r.ctx.createMediaStreamSource(stream); r.an = r.ctx.createAnalyser(); r.an.fftSize = 512; src.connect(r.an); } catch (_) { /* levels stay simulated */ }
+    } catch (_) { r.sim = true; }
   }
-  $('#composer').onsubmit = e => { e.preventDefault(); send($('#box').value); $('#box').value = ''; };
-  $('#huddle-btn').onclick = () => say('sys', 'Huddles are live voice with captions. In the real app this joins the call.');
-  setTimeout(() => name.focus(), 50);
+  async function stopRec(send) {
+    const r = rec; if (!r) return; rec = null;
+    clearInterval(r.tick); composer.classList.remove('rec'); setAct();
+    const secs = Math.max(1, Math.round((performance.now() - r.t0) / 1000));
+    if (r.mr && r.mr.state !== 'inactive') await new Promise(res => { r.mr.onstop = res; r.mr.stop(); });
+    if (r.stream) r.stream.getTracks().forEach(t => t.stop());
+    if (r.ctx) r.ctx.close().catch(() => {});
+    if (!send) { toast('Voice note discarded'); return; }
+    let url = null; if (!r.sim && r.chunks.length) url = URL.createObjectURL(new Blob(r.chunks, { type: r.mr.mimeType || 'audio/webm' }));
+    const lv = r.levels.length ? r.levels : [0.4];
+    addMsg({ who: 'me', kind: 'voice', url, secs, levels: lv });
+    files.unshift({ name: `Voice note ${dur(secs)}`, type: 'audio', by: 'me', at: new Date(), levels: lv, url, fresh: true });
+    addNote(`<b>${esc(me.name)}</b> sent a ${dur(secs)} voice note.<span class="tr">Transcript: the local brain writes the words here in the real app. This demo keeps your audio on your device only.</span>`);
+    addRecent('mic', `<b>You</b> sent a voice note (${dur(secs)})`);
+    react('voice');
+  }
+  $('#rec-cancel').onclick = () => stopRec(false);
+  // voice playback
+  let playing = null;
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.voice .play'); if (!b) return;
+    const el = b.closest('.voice'), m = voices[el.dataset.voice];
+    if (playing && playing.el === el) { stopPlay(); return; }
+    stopPlay();
+    const p = { el, m, t0: performance.now(), off: 0 };
+    if (m.url) { p.audio = new Audio(m.url); p.audio.play().catch(() => { p.audio = null; }); }
+    playing = p; b.innerHTML = ic('pause', 16); b.setAttribute('aria-label', 'Pause voice note');
+    const bars = [...el.querySelectorAll('.wave i')];
+    (function frame() {
+      if (playing !== p) return;
+      const t = p.audio && !p.audio.paused ? p.audio.currentTime : (performance.now() - p.t0) / 1000;
+      const f = clamp(t / m.secs, 0, 1);
+      bars.forEach((x, i) => x.classList.toggle('p', i / bars.length < f));
+      el.querySelector('.dur').textContent = dur(Math.max(0, m.secs - t));
+      if (f >= 1 || (p.audio && p.audio.ended)) { stopPlay(); return; }
+      requestAnimationFrame(frame);
+    })();
+  });
+  function stopPlay() {
+    if (!playing) return; const p = playing; playing = null;
+    if (p.audio) p.audio.pause();
+    const b = p.el.querySelector('.play'); b.innerHTML = ic('play', 16); b.setAttribute('aria-label', 'Play voice note');
+    p.el.querySelectorAll('.wave i').forEach(x => x.classList.remove('p')); p.el.querySelector('.dur').textContent = dur(p.m.secs);
+  }
+
+  /* ---------- huddle, drawer, viewport ---------- */
+  $('#huddle-btn').onclick = () => {
+    S.huddle = !S.huddle; const b = $('#huddle-btn'); b.textContent = S.huddle ? 'Leave' : 'Join'; b.classList.toggle('in-call', S.huddle);
+    toast(S.huddle ? 'In the real app this is live voice with captions.' : 'Left the huddle');
+    if (S.huddle) { sys(`${esc(me.name)} joined the huddle`); addNote(`<b>${esc(me.name)}</b> joined the huddle with Orion and Maya.`); }
+  };
+  /* Discord-style side panel on phones: tap the project, or swipe right; the main screen follows the finger */
+  const room = $('#s-room');
+  const panelW = () => $('.rail').offsetWidth + $('.nest').offsetWidth;
+  let pOpen = 0;
+  function setP(p, drag) { room.style.setProperty('--p', p); room.classList.toggle('dragging', !!drag); if (p > 0 || drag) room.classList.add('peek'); }
+  function panel(open) {
+    pOpen = open ? 1 : 0; setP(pOpen, false);
+    clearTimeout(panel.t); if (!open) panel.t = setTimeout(() => { if (!pOpen) room.classList.remove('peek'); }, 300);
+  }
+  S.panel = panel;
+  $('#pj').onclick = () => { room.classList.add('peek'); requestAnimationFrame(() => requestAnimationFrame(() => panel(true))); };
+  $('#shade').onclick = () => panel(false);
+  let tch = null;
+  room.addEventListener('touchstart', e => {
+    if (desk() || e.touches.length > 1 || $('.tour-block') || $('.sheet') || $('.viewer')) return;
+    if (!pOpen && e.target.closest('.swipe, .flow, .chips, textarea, input, .composer.rec')) return;
+    const t = e.touches[0]; tch = { x: t.clientX, y: t.clientY, t: performance.now(), on: false, w: panelW(), start: pOpen };
+  }, { passive: true });
+  room.addEventListener('touchmove', e => {
+    if (!tch) return; const t = e.touches[0], dx = t.clientX - tch.x, dy = t.clientY - tch.y;
+    if (!tch.on) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      if (Math.abs(dx) < Math.abs(dy) * 1.3 || (tch.start === 0 && dx < 0) || (tch.start === 1 && dx > 0)) { tch = null; return; }
+      tch.on = true; tch.x = t.clientX; tch.t = performance.now(); room.classList.add('peek');
+    }
+    e.preventDefault(); const dd = t.clientX - tch.x, now = performance.now();
+    tch.v = (dd - (tch.dx || 0)) / Math.max(1, now - (tch.lt || tch.t)); tch.dx = dd; tch.lt = now;
+    setP(clamp(tch.start + dd / tch.w, 0, 1), true);
+  }, { passive: false });
+  room.addEventListener('touchend', () => {
+    if (!tch) return; const c = tch; tch = null; if (!c.on) return;
+    const p = clamp(c.start + (c.dx || 0) / c.w, 0, 1);
+    panel(Math.abs(c.v || 0) > 0.4 ? c.v > 0 : p > 0.5);
+  });
+  room.addEventListener('touchcancel', () => { if (tch && tch.on) panel(pOpen === 1); tch = null; });
+
+  function fitVV() {
+    const vv = window.visualViewport; if (!vv || vv.scale > 1.05) return;
+    document.documentElement.style.setProperty('--app-h', vv.height + 'px');
+    if (!$('#s-room').classList.contains('hidden')) { window.scrollTo(0, 0); toBottom(); }
+  }
+  if (window.visualViewport) { visualViewport.addEventListener('resize', fitVV); visualViewport.addEventListener('scroll', fitVV); }
+
+  /* ---------- iOS Home Screen tip + optional tour ---------- */
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  function iosTip() {
+    if (!isIOS || standalone || S.tipShown) return; S.tipShown = true;
+    const sc = document.createElement('div'); sc.className = 'scrim';
+    const sh = document.createElement('div'); sh.className = 'sheet'; sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-label', 'Add TribeCode to your Home Screen');
+    sh.innerHTML = `<div class="grab"></div><div class="sh-row"><img src="assets/apple-touch-icon.png" alt=""><div><b class="st">Get TribeCode on your Home Screen</b><p>Tap Share <span class="share">${ic('share', 15)}</span> then <b style="color:var(--w)">Add to Home Screen</b>.</p></div></div>
+      <div class="btns"><button class="btn" id="tip-later">Later</button><button class="btn primary" id="tip-ok">Got it</button></div><div class="pointer">${ic('down', 26)}</div>`;
+    const close = () => { sc.remove(); sh.remove(); };
+    sc.onclick = close; document.body.append(sc, sh);
+    $('#tip-ok').onclick = close; $('#tip-later').onclick = close;
+  }
+  function tourPrompt() {
+    if (S.tourAsked) return; S.tourAsked = true;
+    const d = document.createElement('div'); d.className = 'tourq'; d.id = 'tourq';
+    d.innerHTML = `<span class="tt">Take a 20-second tour?</span><button type="button" id="tq-skip">Skip</button><button type="button" class="go" id="tq-go">Show me</button>`;
+    composer.appendChild(d);
+    $('#tq-skip').onclick = () => { d.remove(); setTimeout(iosTip, 500); };
+    $('#tq-go').onclick = () => { d.remove(); tour(); };
+  }
+  const desk = () => matchMedia('(min-width: 900px)').matches;
+  const STEPS = [
+    { v: 'chat', el: () => desk() ? $('#nest-nav') : $('#seg'), k: 'Sections', t: 'Chat, Docs, Updates, Tasks', p: 'Everything for the project lives behind these. Badges show what is new.' },
+    { v: 'chat', el: () => $('#composer .cmp'), k: 'Composer', t: 'Type, attach or talk', p: '+ attaches photos and files. The mic records a voice note. Start typing and it turns into the orange send arrow.' },
+    { v: 'docs', el: () => $('#repo'), k: 'Docs & files', t: 'A living repo and living notes', p: 'The repo is pinned on top and updates itself. The notes under it write themselves as people act.' },
+    { v: 'updates', el: () => $('#needs .appr') || $('#needs'), k: 'Updates', t: 'One-tap approvals', p: 'When Claude needs a human, it lands here. Approve or Deny, with an optional note.' },
+    { v: 'tasks', el: () => $('#l-s .tk') || $('#l-s'), k: 'Tasks', t: 'Take it, or give it to Claude', p: 'Suggestions from people and Claude, with who and why. One tap to take one.' }
+  ];
+  function tour() {
+    let i = 0;
+    const blk = document.createElement('div'); blk.className = 'tour-block';
+    const spot = document.createElement('div'); spot.className = 'spot';
+    const cap = document.createElement('div'); cap.className = 'tcap'; cap.setAttribute('role', 'dialog');
+    document.body.append(blk, spot, cap);
+    const end = () => { blk.remove(); spot.remove(); cap.remove(); window.removeEventListener('resize', place); show('chat'); setTimeout(iosTip, 500); };
+    function place() {
+      const s = STEPS[i], el = s.el(); if (!el) return;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect(), pad = 4, vh = window.innerHeight;
+      const top = Math.max(4, r.top - pad), h = Math.min(r.height + pad * 2, vh - top - 8);
+      Object.assign(spot.style, { left: Math.max(4, r.left - pad) + 'px', top: top + 'px', width: Math.min(r.width + pad * 2, window.innerWidth - 8) + 'px', height: h + 'px' });
+      const below = top + h + 12, ch = cap.offsetHeight || 170;
+      if (below + ch < vh - 8) { cap.style.top = below + 'px'; cap.style.bottom = ''; }
+      else if (top - ch - 12 > 8) { cap.style.top = (top - ch - 12) + 'px'; cap.style.bottom = ''; }
+      else { cap.style.top = ''; cap.style.bottom = 'calc(var(--sab) + 16px)'; }
+      if (desk()) { cap.style.left = clamp(r.left, 12, window.innerWidth - 372) + 'px'; cap.style.right = 'auto'; cap.style.margin = '0'; }
+    }
+    function step() {
+      const s = STEPS[i]; show(s.v);
+      cap.innerHTML = `<span class="k">${i + 1} of ${STEPS.length} · ${s.k}</span><b>${s.t}</b><p>${s.p}</p><div class="tb"><button type="button" class="skip" id="t-skip">Skip</button><button type="button" class="go" id="t-next">${i === STEPS.length - 1 ? 'Done' : 'Next'}</button></div>`;
+      $('#t-skip').onclick = end; $('#t-next').onclick = () => { i++; if (i >= STEPS.length) end(); else step(); };
+      requestAnimationFrame(() => { place(); requestAnimationFrame(place); });
+    }
+    window.addEventListener('resize', place);
+    step();
+  }
+
+  /* ---------- enter the room ---------- */
+  function enterRoom() {
+    $('#s-connect').classList.add('hidden'); $('#s-room').classList.remove('hidden');
+    document.title = 'Pixel Quest · TribeCode demo';
+    $('#rail-pq').innerHTML = `<span class="pav">${projSvg(42)}</span>`; $('#pj-pav').innerHTML = projSvg(28);
+    $('#rail-me').outerHTML = av('me');
+    box.placeholder = 'Message Pixel Quest';
+    renderPeople(); setAct(); fitVV();
+    tasks.s = [
+      T('Playtest Level 1 on your phone', 'Claude', { from: 'Claude', why: `Fresh eyes find the bugs we stopped seeing. A good first task for ${me.name}.` }),
+      T('Draw a coin sprite', 'Maya', { from: 'Maya', why: 'Level 2 has pickups but no art yet.' }),
+      T('Add a coin counter to the HUD', 'Orion', { from: 'Orion', why: 'Coins exist, but nothing shows the count.' })
+    ];
+    sys('Demo · nothing is sent anywhere', true);
+    sys('Today');
+    addMsg({ who: 'Orion', html: 'Morning tribe 🔥', at: ago(38) });
+    addMsg({ who: 'Orion', html: 'Claude is on the double jump, Maya has the slime.', at: ago(38) });
+    addMsg({ who: 'Maya', kind: 'image', src: SLIME_IMG, px: true, name: 'slime-idle.png', at: ago(14) });
+    addMsg({ who: 'Maya', html: 'Slime v2 is in Docs & files 👀', at: ago(14) });
+    addMsg({ who: 'Claude', html: `Double jump is fixed on <code>feat/double-jump</code>.<div class="rc"><div class="rc-h">${ic('branch', 15)}<span class="mono">feat/double-jump</span><span class="tag live">tests passing</span></div><div class="rc-b">Coyote time, and the second jump resets on landing.</div><div class="rc-f mono">player.ts · <span class="add">+18</span> −6 · 12 tests</div></div>`, at: ago(4) });
+    addMsg({ who: 'Claude', kind: 'card', html: apprHtml(approvals[0]), at: ago(4) });
+    sys(`${esc(me.name)} joined Pixel Quest`);
+    addNote(`<b>${esc(me.name)}</b> joined Pixel Quest, invited by Orion.`);
+    show('chat');
+    setTimeout(tourPrompt, 1100);
+  }
+  setTimeout(() => { if (!matchMedia('(pointer: coarse)').matches) nameIn.focus(); }, 50);
+  window.__demo = { S, approvals, tasks, files, notes };
 })();
 </script>
 </body>
