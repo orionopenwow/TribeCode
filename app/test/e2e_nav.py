@@ -122,7 +122,7 @@ def main():
             host.wait_for_selector("#huddle-live.hidden", state="attached")
             # Capture to notes is a row with a switch
             host.wait_for_selector("#pj-nav #capture-toggle[role='switch'] .sw")
-            shot(host, "nav-desktop-expanded")
+            host.mouse.move(720, 600); shot(host, "nav-desktop-expanded")
 
             # ---- groups: exact rows, collapse/expand, remembered across a reload
             assert rows(host, "#grp-hub-body .nest-row") == HUB, rows(host, "#grp-hub-body .nest-row")
@@ -134,7 +134,7 @@ def main():
             # a folded group still shows what waits on you
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project=pid); assert st == 200, r
             host.wait_for_selector("#gn-hub.hot", timeout=8000)
-            shot(host, "nav-desktop-collapsed")
+            host.mouse.move(720, 600); shot(host, "nav-desktop-collapsed")
             host.reload(); host.wait_for_selector("#grp-hub .nest-fold-head")
             assert host.locator("#grp-hub-body").is_hidden() and host.locator("#grp-ops-body").is_hidden()
             for g in ["hub", "ops"]:
