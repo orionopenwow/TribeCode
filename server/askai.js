@@ -38,7 +38,7 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
   function deliver(p) {   // hand the question to the agent; it answers in the channel
     const asker = member(p.by) || { name: 'A teammate' };
     coord.tell(p.agent, 'ask', `${asker.name} asks${p.phoneOnly ? ' (from their phone; they have no Claude of their own)' : ''}: "${p.text}". ` +
-      `Answer in #${p.channel === 'general' ? 'general' : p.channel} with post_chat, starting with @${first(asker.name)}. Keep it short and plain. ` +
+      `Answer with post_chat (project "${p.project}"), starting with @${first(asker.name)}. Keep it short and plain. ` +   // the project id, so the answer lands where the question was asked even if the agent works in another project
       `If it's a piece of work rather than a question, make a task for it (create_task) and say so.`, p.by);
     p.status = 'sent'; p.sentAt = new Date().toISOString(); save();
   }

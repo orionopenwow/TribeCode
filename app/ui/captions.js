@@ -72,12 +72,33 @@
       : can ? `<button class="cap-btn primary" id="cap-share" title="Your speech is transcribed on this device and shared with the huddle">Share my captions</button>`
         : `<span class="cap-hint" title="${esc(sp ? sp.HINT : '')}">This browser can't transcribe; you still see captions.</span>`;
     strip.innerHTML = `<div class="cap-pills">${pills}</div><div class="cap-lines" aria-live="polite">${linesHtml()}</div>
-      <div class="cap-actions">${share}<button class="cap-btn" id="cap-end" title="Write meeting notes from the transcript now">End &amp; summarize</button></div>`;
+      <div class="cap-actions">${share}<button class="cap-btn" id="cap-end" title="Write meeting notes from the transcript now">End &amp; summarize</button></div>${summaryHtml()}`;
     ctl.parentNode.insertBefore(strip, ctl);
     const sb = strip.querySelector('#cap-share');
     if (sb) sb.onclick = () => C.send({ type: 'caption-share', on: !sharingMe() });
+    const sum = strip.querySelector('#h-summary');
+    if (sum) sum.onchange = () => setSummary(sum.checked, sum);
     strip.querySelector('#cap-end').onclick = () => { C.send({ type: 'meeting-end' }); window.TribeApp && window.TribeApp.toast('Writing meeting notes… they show up in Docs.'); };
   }
+  // "Post a summary after each huddle" (server/huddlesum.js): a project setting the host or the project's lead switches
+  // here; everyone else sees that it is on. The summary and the mood go to the project's chat and, with a repo, notes/huddles/.
+  const project = () => (window.TribeProjects && window.TribeProjects.cur && window.TribeProjects.cur()) || null;
+  const canSetSummary = p => !!p && ((C.state().me || {}).role === 'host' || p.role === 'host');
+  function summaryHtml() {
+    const p = project(); if (!p) return '';
+    if (canSetSummary(p)) return `<label class="cap-check cap-sum" title="When the huddle ends: a short summary and the overall mood in ${esc(p.name)}'s chat${p.hasRepo ? ', and notes/huddles/ in its repo' : ''}"><input type="checkbox" id="h-summary" ${p.huddleSummary ? 'checked' : ''}> Post a summary after the huddle</label>`;
+    return p.huddleSummary ? `<div class="cap-check cap-sum">A summary is posted after the huddle</div>` : '';
+  }
+  async function setSummary(on, el) {
+    const p = project(); if (!p) return;
+    try {
+      await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { huddleSummary: !!on } });
+      p.huddleSummary = !!on;
+      if (window.TribeProjects.refresh) window.TribeProjects.refresh();
+      window.TribeApp && window.TribeApp.toast(on ? `A summary goes to ${p.name} after the huddle.` : 'No summary after the huddle.');
+    } catch (e) { if (el) el.checked = !on; window.TribeApp && window.TribeApp.toast(e.message); }
+  }
+
   C.on('ws', m => {
     if (m.type === 'captions') {
       const wasOn = cs.on;
