@@ -35,7 +35,7 @@ const gitutil = require('./gitutil');
 const SYS = new Set(['tribecode', 'secretary', 'brain']);
 const TEXT_EXT = new Set(['md', 'markdown', 'txt', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'py', 'json', 'css', 'html', 'rs', 'go', 'java', 'c', 'h', 'cpp', 'cs', 'rb', 'sh', 'yml', 'yaml', 'toml', 'csv', 'lua', 'gd', 'swift', 'kt']);
 const CODE_EXT = new Set(['js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'py', 'rs', 'go', 'java', 'c', 'h', 'cpp', 'cs', 'rb', 'sh', 'lua', 'gd', 'swift', 'kt', 'css', 'html']);
-const STOP = new Set(('that this with have from they will would there their what when where which about just like think make made also some more then than into them been were your yours okay yeah gonna wanna want really could should maybe thing things good great nice lets going doing done work working today tomorrow yesterday tribe tribecode project message note notes added update updated start starting still very much many only over after before because something anything everything every each well here sure know look looks take give used using first last next same other another again even those these being does while such both between around without within morning evening hello thanks thank cool awesome right left back down make makes made need needs needed want wants come comes came said says tell told time times kind sort stuff people someone everyone anyone guys folks didn doesn isn wasn aren hasn haven couldn wouldn shouldn mine ours theirs also any all can cant will dont didnt doesnt isnt wasnt arent wont thats whats heres theres youre theyre were well shes hes just yes nope sounds sound plan plans try trying tried new old big small little lot lots bit way ways day days week weeks one two three four five six seven eight nine ten once every how why who whom whose did has had was are the and for not but you our its out off get got put see seen saw use say able across along already always among became become becomes beside besides beyond came cannot during either else enough ever except far few further hence however indeed instead later least less likely may might mostly must near nearly neither never none nor often otherwise perhaps please quite rather shall since soon than thereafter therefore though through thus together toward towards under unless until upon usually via whatever whenever wherever whether whole whose within yet secretary brain claude agent agents task tasks chat voice image file files doc docs commit commits').split(/\s+/));
+const STOP = new Set(('that this with have from they will would there their what when where which about just like think make made also some more then than into them been were your yours okay yeah gonna wanna want really could should maybe thing things good great nice lets going doing done work working today tomorrow yesterday tribe tribecode project message note notes added update updated start starting still very much many only over after before because something anything everything every each well here sure know look looks take give used using first last next same other another again even those these being does while such both between around without within morning evening hello thanks thank cool awesome right left back down make makes made need needs needed want wants come comes came said says tell told time times kind sort stuff people someone everyone anyone guys folks didn doesn isn wasn aren hasn haven couldn wouldn shouldn mine ours theirs also any all can cant will dont didnt doesnt isnt wasnt arent wont thats whats heres theres youre theyre were well shes hes just yes nope sounds sound plan plans try trying tried new old big small little lot lots bit way ways day days week weeks one two three four five six seven eight nine ten once every how why who whom whose did has had was are the and for not but you our its out off get got put see seen saw use say able across along already always among became become becomes beside besides beyond came cannot during either else enough ever except far few further hence however indeed instead later least less likely may might mostly must near nearly neither never none nor often otherwise perhaps please quite rather shall since soon than thereafter therefore though through thus together toward towards under unless until upon usually via whatever whenever wherever whether whole whose within yet secretary brain claude agent agents task tasks chat voice image file files doc docs commit commits idea ideas thought thoughts stuff').split(/\s+/));
 const RESEARCH_RE = /\b(how (do|does|can|should|would) (we|i|you|one)|what('s| is| are) the best|which (library|libraries|engine|tool|tools|framework|lib|package|service)|is there an? (library|tool|way|api|package)|best way to|look into|find out|research|any (good )?(library|tool|examples?) for)\b/i;
 const DECIDE_RE = /\b(decided|we('re| are) going with|let'?s go with|agreed|we('ll| will) use|final answer|settled on|going with)\b/i;
 const Q_RE = /\?\s*$|^(who|what|how|why|should|can|could|is|are|does|do|which|when|where)\b/i;
@@ -274,18 +274,21 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     for (const { a, b, shared } of pairs) {
       if (out.length >= 3) break;
       const key = [a.id, b.id].sort().join('+');
-      const word = shared.sort((x, y) => (docFreq.get(y) || 0) - (docFreq.get(x) || 0) || y.length - x.length)[0];
-      if (known.has(key) || usedWords.has(word)) continue;
+      // the most specific word they share ("slime" over "cave"), then the other side's strongest topic ("boss")
+      const word = shared.sort((x, y) => (docFreq.get(x) || 0) - (docFreq.get(y) || 0) || y.length - x.length)[0];
+      if (known.has(key) || usedWords.has(word) || known.has('w:' + word)) continue;
       const extra = K.get(b.id).filter(w => !K.get(a.id).includes(w)).concat(K.get(a.id).filter(w => !K.get(b.id).includes(w)))
-        .sort((x, y) => (docFreq.get(y) || 0) - (docFreq.get(x) || 0) || y.length - x.length)[0];
+        .filter(w => w !== word).sort((x, y) => (docFreq.get(y) || 0) - (docFreq.get(x) || 0) || y.length - x.length)[0];
       const title = extra ? `A ${word} ${extra}?` : `More ${word}?`;
-      if (known.has('t:' + title.toLowerCase())) continue;
+      if (known.has('t:' + title.toLowerCase()) || known.has('k:' + titleKey(title))) continue;
+      known.add('k:' + titleKey(title));
       usedWords.add(word);
-      out.push({ key, title, body: `${a.who}'s ${KIND_LABEL[a.kind]} ("${clip(a.text, 90)}") and ${b.who}'s ${KIND_LABEL[b.kind]} ("${clip(b.text, 90)}") both circle "${word}". Put them together: what would ${extra ? `a ${word} ${extra}` : `more ${word}`} look like?`,
+      out.push({ key, word, title, body: `${a.who}'s ${KIND_LABEL[a.kind]} and ${b.who}'s ${KIND_LABEL[b.kind]} both circle "${word}". Put them together: what would ${extra ? `a ${word} ${extra}` : `more ${word}`} look like?`,
         sources: [a, b].map(src) });
     }
     return out;
   }
+  const titleKey = t => kw(t).sort().join(' ');   // "A cave boss?" and "A boss cave?" are the same idea
   const src = it => ({ type: (it.ref && it.ref.type) || it.kind, id: (it.ref && it.ref.id) || it.id, label: clip(it.text, 80), who: it.who || '', kind: it.kind, at: it.at });
   async function dreamBrain(pool, known, calls) {
     if (!brainOk() || calls.n <= 0 || pool.length < 2) return null; calls.n--;
@@ -300,14 +303,14 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
         const title = clip(String(x.title || ''), 120);
         if (!title || s.length < 2 || new Set(s.map(y => y.who)).size < 2) return null;
         return { key: s.map(y => y.id).sort().join('+'), title, body: clip(String(x.why || ''), 300), sources: s.map(src), by: 'brain' };
-      }).filter(x => x && !known.has(x.key) && !known.has('t:' + x.title.toLowerCase())).slice(0, 3);
+      }).filter(x => x && !known.has(x.key) && !known.has('t:' + x.title.toLowerCase()) && !known.has('k:' + titleKey(x.title))).slice(0, 3);
       return ideas.length ? ideas : null;
     } catch { return null; }
   }
   async function dream(p, calls) {
     const now = Date.now();
     const pool = itemsOf(p).filter(it => CREATIVE.has(it.kind) && now - Date.parse(it.at) < 7 * 86400_000 && it.text.length > 12).slice(-120);
-    const ideas = ideasOf(p), known = new Set([...ideas.map(i => i.key), ...ideas.map(i => 't:' + i.title.toLowerCase())]);
+    const ideas = ideasOf(p), known = new Set([...ideas.map(i => i.key), ...ideas.map(i => 't:' + i.title.toLowerCase()), ...ideas.map(i => 'k:' + titleKey(i.title)), ...ideas.filter(i => i.word).map(i => 'w:' + i.word)]);
     const fresh = (await dreamBrain(pool, known, calls)) || dreamRules(p, pool, known);
     const made = fresh.map(x => ({ id: 'idea-' + id(6).toLowerCase().replace(/[^a-z0-9]/g, 'x'), at: new Date().toISOString(), status: 'new', by: x.by || 'rules', ...x }));
     if (made.length) saveIdeas(p, [...ideas, ...made]);
@@ -488,7 +491,7 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     const today = localDay(); let j = readNote(p, `${today}.md`);
     const list = days(p);
     return {
-      host, enabled: cfg.enabled, quiet: isQuiet(), running: !!running, config: host ? publicCfg() : { enabled: cfg.enabled, model: cfg.model, quiet: { ...cfg.quiet } },
+      host, canAct: me.role !== 'agent' && me.role !== 'spectator', enabled: cfg.enabled, quiet: isQuiet(), running: !!running, config: host ? publicCfg() : { enabled: cfg.enabled, model: cfg.model, quiet: { ...cfg.quiet } },
       brain: { online: !!brain.status().online, model: cfg.model || brain.status().model || '', models: brain.models() },
       lastTick: st.lastTick || null, inShort: st.inShort || null,
       digest: digestOf(p), journal: { date: j ? today : list[0] || today, md: j || (list[0] ? readNote(p, `${list[0]}.md`) : '') }, days: list.slice(0, 30),
