@@ -371,11 +371,6 @@
     enter.innerHTML = g ? (on && p ? `<div class="nest-pick">Pick a project</div><button class="nest-row nest-open" id="nest-open" data-nav="home" title="Open ${esc(p.name)}">${h ? h.face(p, 'xs') : ''}<span>Open ${esc(p.name)}</span>${ico('i-chev', 14)}</button>`
       : `<div class="nest-pick">${on ? 'No project yet' : 'Not in a tribe yet'}</div>`) : '';
   }
-  function updates() {   // the bell's unread count (notify.js) mirrored on the Updates row
-    const c = $('#nf-count'), v = c && !c.classList.contains('hidden') ? Number(c.textContent) || 0 : 0;
-    const el = $('#nn-updates'); if (el) { el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!v); }
-  }
-  setTimeout(() => { const c = $('#nf-count'); if (c) new MutationObserver(updates).observe(c, { childList: true, attributes: true, characterData: true, subtree: true }); updates(); }, 0);
   async function refreshCounts() {
     if (!C.connected()) return;
     try { const s = await C.api('/coord/summary'); counts.reviews = s.reviews; counts.handoffs = s.handoffs; } catch { return; }

@@ -61,5 +61,19 @@
   // A new screenshot or README change can change the picture.
   C.on('ws', m => { if (m.type === 'visual' || m.type === 'visuals' || m.type === 'repo') at = 0; });
   C.on('project', () => { thumb = null; at = 0; });
+    // Desktop: the hero sits at the top of the Docs list (the pinned repo is the hero of Docs). Phones use mobile2.js.
+  async function mountDesk() {
+    const el = document.getElementById('doc-repo-hero'), view = document.getElementById('view-docs');
+    if (!el || !view || view.classList.contains('hidden') || matchMedia('(max-width: 820px)').matches || !C.connected()) return;
+    const st = C.state ? C.state() : {}, p = (st.projects || []).find(x => x.id === (C.project && C.project())) || null;
+    if (!p) { el.innerHTML = ''; el.className = 'doc-hero'; return; }
+    const r = p.hasRepo ? await C.api('/repo').catch(() => null) : null;
+    render(el, { project: p, status: r && r.status && r.status.enabled ? r.status : null, empty: !p.hasRepo });
+  }
+  setTimeout(() => {
+    const view = document.getElementById('view-docs'); if (!view) return;
+    new MutationObserver(() => mountDesk()).observe(view, { attributes: true, attributeFilter: ['class'] });
+    C.on('project', () => setTimeout(mountDesk, 50)); C.on('hello', () => setTimeout(mountDesk, 50));
+  }, 0);
   window.TribeRepoHero = { render, refresh: () => { at = 0; return load(true); }, current: () => thumb, onRender: fn => hooks.push(fn) };
 })();

@@ -264,7 +264,7 @@ def main():
             host.reload(); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             wait_text(host, "#home-ai-cards", "Cache the repo status")
             host.wait_for_selector("#home-ai-cards .ai-card.k-optimization .ai-tag"); host.wait_for_selector("#home-ai-cards .ai-card.k-health")
-            assert "Ink the moon" not in host.inner_text("#home-ai-cards"), "the endpoint's items replace the fallback"
+            assert "Ink the moon" in host.inner_text("#home-ai-cards"), "your own suggestions stay next to the host's insights"
             shot(host, "home-insights")
             host.click("#home-ai-cards .ai-card.k-optimization [data-ai-card-go]")
             host.wait_for_selector("#view-docs:not(.hidden)")

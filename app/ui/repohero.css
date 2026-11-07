@@ -32,3 +32,16 @@
   .rhx-art { aspect-ratio: 2 / 1; }
   .rhx-band { padding: 12px 14px 14px 17px; }
 }
+/* Desktop Docs: a compact hero at the top of the doc list */
+.doc-hero:empty { display: none; }
+.doc-hero.hero-card.rhx { margin-bottom: 14px; }
+.doc-hero .rhx-art { aspect-ratio: 2 / 1; }
+.doc-hero .rhx-band { padding: 12px 12px 12px 15px; }
+.doc-hero .rhx-band h2 { font-size: 16px; }
+.doc-hero .rhx-band p { font-size: 12.5px; line-height: 1.5; }
+.doc-hero .rhx-ic { width: 30px; height: 30px; border-radius: 9px; }
+.doc-hero .rhx-t b { font-size: 14px; }
+.doc-hero .rhx-c { padding: 8px 10px; margin-top: 10px; }
+.doc-hero .rhx-c b { font-size: 13px; }
+.doc-hero .rhx-chips { margin-top: 10px; }
+.doc-hero .rhx-chip { min-height: 24px; font-size: 11px; padding: 0 8px; }

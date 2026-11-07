@@ -47,13 +47,13 @@ Humans decide, agents do the work. Agents report in short gists, propose changes
 
 ## Features
 
-The sidebar has four pillars: **Chat & Streams**, **Docs & Files**, **Tasks & Board** and **Agents Hub**. Depth lives in tabs and the right panel, not in long lists. With no project open you land on the **Global Hub**.
+The sidebar has four pillars: **Chat & Streams**, **Docs & Files**, **Tasks & Board** and **Agents Hub**. Depth lives in tabs and the right panel, not in long lists. The app opens at **Home**, your command center across every project.
 
-### Global Hub
+### Home
 
-Quick launch (new project, paste an invite link, resume your last session, search everything), a live stream across all your projects, an agents & models bar (your Claudes, local models, background loops), your notes and suggestions. The right panel lists people, agents and helpers, and holds a private scratchpad.
+Your command center, and where the app opens. Suggestions for what to do next, **Ask** (your Claude or the local model), join with a link or start a project, a Get started checklist, a scratchpad with "Refine with AI" and recent activity across your projects. The right panel has you, Connect your Claude Code, Share my hub link, Invite friends and **AI Insights**: your next steps plus what the host notices (Explorer findings, disk, backups, a newer release, the local model being down) and the Secretary's ideas.
 
-<p align="center"><img src="docs/screenshots/readme-hub.png" alt="The Global Hub" width="100%"></p>
+<p align="center"><img src="docs/screenshots/readme-home.png" alt="Home: the command center" width="100%"></p>
 
 ### Chat and decisions
 
@@ -178,10 +178,12 @@ npm run invite                    # one-click public invite + QR
 node scripts/start-test-project.js   # Pixel Quest test project + invite + Claude Code command
 npm test                          # the full suite (Python Playwright + Chrome)
 npm run readme-shots              # refresh the README and website screenshots
+npm run explore                   # the Explorer: clicks through the whole app, writes docs/EXPLORE-REPORT.md
+npm run milestone-report          # before/after screenshots and findings against the last release
 cd app && npm install && npm run dev   # the desktop app (Tauri v2, needs Rust)
 ```
 
-The server and web app are plain Node and browser JavaScript with zero npm dependencies; the desktop app is a Tauri v2 wrapper with the server as a sidecar. A release is published when the version in `app/src-tauri/tauri.conf.json` changes on `main`: installers for all three platforms plus the signed `latest.json` the in-app updater reads. [HANDOFF.md](HANDOFF.md) has the map of the code and the release steps, [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) the design rules, and [CHANGELOG.md](CHANGELOG.md) what changed.
+The server and web app are plain Node and browser JavaScript with zero npm dependencies; the desktop app is a Tauri v2 wrapper with the server as a sidecar. A release is published when the version in `app/src-tauri/tauri.conf.json` changes on `main`: installers for all three platforms plus the signed `latest.json` the in-app updater reads. If the app can't start it clears stale caches and reloads once, then offers to send a report (self-heal). [HANDOFF.md](HANDOFF.md) has the map of the code and the release steps, [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) the design rules, and [CHANGELOG.md](CHANGELOG.md) what changed.
 
 ## License
 

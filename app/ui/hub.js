@@ -406,7 +406,9 @@
     };
   }
   function insightCards() {
-    const list = insights.src === 'api' && insights.items && insights.items.length ? insights.items.slice(0, 8) : fallbackInsights();
+    // Your own next steps (suggestions, approvals, Secretary) first, then the host's insights (explorer, health).
+    const api = insights.src === 'api' && insights.items ? insights.items : [], seen = new Set();
+    const list = [...fallbackInsights(), ...api].filter(it => { const k = String(it.title || '').toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
     insActs = {};
     if (!list.length) return '<p class="ai-cards-empty">Nothing to flag right now.</p>';
     return list.map((it, i) => { const [icon, label] = INS[it.kind] || INS.suggestion, run = insightRun(it), key = 'k' + i; if (run) insActs[key] = run;
@@ -459,7 +461,7 @@
   // ---------- actions ----------
   async function go(pid, then) {
     if (!pid || !projOf(pid)) return toast('You are not in that project.');
-    if (PJ().current() !== pid) await PJ().switchTo(pid);
+    if (PJ().current() !== pid) { await PJ().switchTo(pid); await new Promise(r => setTimeout(r, 250)); }   // the project's own reload lands first
     then && then();
   }
   // Open a doc after a project switch: Docs' own load() may still reopen the previous doc, so check once more.

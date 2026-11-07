@@ -29,7 +29,7 @@ IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/
 ONLY = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
 # Screens that also go on the website (site/assets/shots/<name>.webp), with the width to store.
 SITE = {"chat": 1600, "plus": 1600, "proposal": 1600, "tasks": 1600, "kickoff": 1600, "person": 1600, "preview": 1600,
-        "workshop": 1600, "secretary": 1600, "plan": 1600,
+        "workshop": 1600, "secretary": 1600, "plan": 1600, "home": 1600, "docs-desk": 1600,
         "phone-chat": 600, "phone-plus": 600, "phone-docs": 600}
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 done, failed = [], []
@@ -393,6 +393,15 @@ def run(srv_dir, work):
             host.evaluate("TribeSecretary.open()"); host.wait_for_selector("#view-secretary:not(.hidden) .sy-digest li", timeout=15000)
             host.evaluate("document.querySelector('.main') && (document.querySelector('.main').scrollTop = 0)")
         shoot(host, "secretary", prep_sec)
+
+        # ---------- Home (the command center) and desktop Docs with the pinned repo hero ----------
+        def prep_home():
+            host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero", timeout=15000)
+            host.wait_for_timeout(800); host.evaluate("scrollTo(0, 0); document.querySelector('.main') && (document.querySelector('.main').scrollTop = 0)")
+        shoot(host, "home", prep_home)
+        def prep_docs_desk():
+            host.evaluate("TribeApp.show('docs')"); host.wait_for_selector("#doc-repo-hero .rhx-n", timeout=15000); host.wait_for_timeout(900)
+        shoot(host, "docs-desk", prep_docs_desk)
 
 
 if __name__ == "__main__":

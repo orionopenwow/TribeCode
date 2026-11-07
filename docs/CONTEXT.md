@@ -2,7 +2,7 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-06 (v0.3.2 security release shipped from `main`; features build up on `dev` toward v0.4.0).
+Last updated: 2026-11-07 (v0.6.0 released from `main`: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
@@ -42,18 +42,16 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 Restraint: numbers only where they answer a question; few sidebar rows (4 pillars), depth lives in tabs and the right panel, not in long lists; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
-## In flight (v0.4.0 on `dev`)
-| Branch | What | Status |
-|---|---|---|
-| `feat/demo4` | Demo phone layout, reactions and vote card | ✅ merged into dev |
-| `feat/people` | Person panel in chat: now, timeline (commits, prompts, chat, notes), jump to chat, context bar, uptime and commit counters | ✅ merged into dev |
-| `feat/chat-votes` | Reactions on bubbles, team votes, suggest_vote (Claude proposes), /vote, decisions log, ✅ approves and 📌 pins | ✅ merged into dev |
-| `feat/mobile` | Real app phone UI and the repo hero with README art or a screenshot ("Flare") | building |
-| `feat/flow` | One-click Create project → room → invite → chat → GitHub repo; roles with colors and folder identity; gists; living PLAN.md; assessments | building |
-| `feat/workshop` | Community Workshop: skills, recipes, templates, assets (GLB, animations, scripts), a community index on GitHub served by jsDelivr | building |
-| `feat/secretary` | Solo mode: an agents hub (Claude Code, Claude Desktop through a stdio bridge, other MCP agents, local models). The Secretary: a background agent that ingests everything, distills a journal and digest, dreams up inspirations, and routes research to the Claudes | building |
-| `feat/chat-bubbles`, `feat/nav2`, `feat/preview`, `feat/demo5`, `feat/audit` | Chat bubbles; the sidebar per the user's layout; app preview; demo matches the app; audit fixes + friend smoke test + DATA.md + FEATURES-NEXT.md + quick wins (backup, chat search, file sharing, load earlier, drafts, rename everywhere) | ✅ merged into dev |
-| security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
+## State (v0.6.0 on `main`)
+Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `npm run explore` (fix criticals), `npm run milestone-report` (before/after against the last release, docs/milestones/), `npm run readme-shots`, then the release.
+| Area | Status |
+|---|---|
+| Home (command center), rail + window, 4-pillar sidebar | ✅ shipped |
+| Explorer + self-heal + AI Insights + milestone reports | ✅ shipped (docs/EXPLORER.md, docs/EXPLORE-REPORT.md) |
+| Nightly self-upgrade scheduled task | prompt ready in docs/NIGHTLY-UPGRADE.md; creating it was blocked from this session, the user can create it |
+| `feat/docs-start` (create-repo card, people/<member>/ folders, notes catalog) | parked locally, unmerged |
+| Security follow-ups: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | to do |
+| Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
 - 2026-11-07: Home redesign to the user's "AI Command Center" reference: a hero with suggestions, an Ask box (your Claude or the local brain) and Join; a Get started card; scratchpad with "Refine with AI"; recent activity; a right panel with share and invite links and AI Insights. Translated into the flat design rules (the mock uses gradients). (feat/home2)
@@ -88,14 +86,14 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 - Earlier: everything in CHANGELOG.md v0.2.0–v0.3.1.
 
 ## Next up
-- The feature roadmap now lives in docs/FEATURES-NEXT.md (top 10 next / later). Storage, backups and persistence are in docs/DATA.md.
-1. Merge the three branches into `dev`, run the full test suite, review screenshots, let the user try Working.
-2. Release v0.3.2 (bump 4 version files + CHANGELOG), confirm installers + latest.json, user restarts to update.
-3. Walk the user through the Pixel Quest test project with a real friend's phone.
-4. Real-device checks: iPhone Safari join + Home Screen, Web Push, speech, Messenger banner, Tailscale Funnel.
-5. Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
+- The feature roadmap lives in docs/FEATURES-NEXT.md (now with Part 3 from the Explorer). Storage, backups and persistence are in docs/DATA.md.
+1. The user updates the desktop app to v0.6.0 (Restart to update or TribeCode.bat) and tries Home.
+2. Set up the nightly self-upgrade task from docs/NIGHTLY-UPGRADE.md.
+3. Walk through the Pixel Quest test project with a real friend's phone; real-device checks (iPhone Safari join + Home Screen, Web Push, speech, Messenger banner, Tailscale Funnel).
+4. Security follow-ups (H5, M2–M5). Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
 
 ## Decisions
+- 2026-11-07: Home's AI Insights show your own next steps first and the host's insights (Explorer, health, Secretary) after, deduplicated, at most 8.
 - 2026-11-06: The security review found host RCE reachable by any builder. Fixes were shipped as v0.3.2 straight from `main` ahead of the features, with `app/test/security_test.py` as the regression test.
 - 2026-11-06: The Workshop's community index is a public GitHub repo served through jsDelivr (a free open-source CDN). Items need an open license and sha256 checks, and are never executed.
 - 2026-11-06: Automated browsers skip the GitHub update check (`navigator.webdriver`), so sandbox proxies don't break tests.
