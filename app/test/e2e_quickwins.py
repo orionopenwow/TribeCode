@@ -160,6 +160,12 @@ def main():
             body = hp.evaluate("u => fetch(u).then(r => r.text())", href); assert body == "%PDF-1.4 tiny", body
             wait_until(lambda: any(d["title"] == "notes" for d in api("/docs", token=htok)[1]["docs"]), what="notes.md became a doc")
             wait_text(mp, "#chat-list", "design.pdf")
+            # the Home drop zone keeps binary files too (shared in chat), text still becomes docs
+            hp.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File([new Uint8Array([80, 75, 3, 4, 1, 2])], 'level.zip', { type: 'application/zip' }));
+                document.querySelector('#dropzone').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }""")
+            wait_text(hp, "#chat-list", "level.zip")
+            z = next(m for m in api("/chat/general?limit=10", token=htok)[1]["messages"] if (m.get("media") or {}).get("name") == "level.zip")
+            assert api(f"/chat/general/media/{z['media']['file']}", token=htok, raw=True)[1] == bytes([80, 75, 3, 4, 1, 2])
 
             # ---- Backup from Settings (host), then restore it into a fresh server
             hp.evaluate("TribeSettings.open()"); hp.wait_for_selector("#set-backup")

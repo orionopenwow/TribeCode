@@ -79,7 +79,19 @@
     if (!real.length) return;
     real.forEach(f => drops.push({ name: f.name, size: f.size, saved: true }));
     renderDrops();
-    window.TribeDocs.importFiles(real).then(() => show('docs'));
+    // Text becomes docs; anything else (PDF, zip, images…) is shared in the chat as a file, so its bytes are kept
+    // (Docs import alone keeps only a stub for binary files).
+    const texty = f => /\.(md|markdown|txt|text|csv|json|ya?ml|js|ts|py|css|html?)$/i.test(f.name) && f.size < 2_000_000;
+    const bin = C.connected() ? real.filter(f => !texty(f)) : [];
+    const txt = real.filter(f => !bin.includes(f));
+    const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    (async () => {
+      for (const f of bin) {
+        if (f.size > 8 * 1024 * 1024) { toast(`${f.name} is over 8 MB: put it in the repo instead`); continue; }
+        try { await C.api('/chat/general/file', { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type } }); toast(`${f.name} shared in the chat`); } catch (err) { toast(err.message); }
+      }
+      if (txt.length) { await window.TribeDocs.importFiles(txt); show('docs'); } else if (bin.length) show('chat');
+    })();
   });
   function renderDrops() {
     $('#drops').innerHTML = drops.slice(-4).map(d => `<div><svg class="i" style="width:15px;height:15px;color:var(--accent-2)"><use href="#i-doc"/></svg><span>${esc(d.name)}</span><span class="faint" style="margin-left:auto">${d.saved ? 'saved' : 'queued'}</span></div>`).join('');
