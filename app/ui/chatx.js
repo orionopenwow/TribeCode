@@ -155,10 +155,13 @@
       const parts = body.split(META);
       body = parts.length > 1 ? parts.slice(0, -1).join('') + meta + parts[parts.length - 1] : body + `<div class="mt-row">${meta}</div>`;
     }
-    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}</b>`;
+    const day = new Date(m.at), today = new Date().toDateString() === day.toDateString(), yest = new Date(Date.now() - 864e5).toDateString() === day.toDateString();
+    const stamp = `${today ? 'Today' : yest ? 'Yesterday' : day.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${when}`;
+    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}<time class="nm-t">${esc(stamp)}</time></b>`;
+    const gut = `<time class="gut-t" aria-hidden="true">${esc(when)}</time>`;   // continuation lines: the time shows in the gutter on hover
     const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo') : m.gist ? 'gist-msg' : '';
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
-    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}
+    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}${sys ? '' : gut}
       <div class="mb">${nm}${body}</div>${more}</div>`;
   }
   function rerender(id) {

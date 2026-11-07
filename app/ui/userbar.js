@@ -10,7 +10,9 @@
   function build() {
     if (bar) return bar;
     bar = document.createElement('div'); bar.className = 'userbar'; bar.id = 'userbar';
-    bar.innerHTML = '<div class="ub-me" id="ub-me"><span class="ub-slot" id="ub-face"></span><span class="ub-t"><b id="ub-name"></b><small id="ub-st"></small></span></div><div class="ub-acts" id="ub-acts"></div>';
+    bar.innerHTML = '<div class="ub-me" id="ub-me"><span class="ub-slot" id="ub-face"></span><span class="ub-t"><b id="ub-name"></b><small id="ub-st"></small></span></div><div class="ub-acts" id="ub-acts"></div>'
+      + '<button class="nf-bell ub-gear" id="ub-gear" title="Settings" aria-label="Settings"><svg class="i"><use href="#i-gear"/></svg></button>';
+    bar.querySelector('#ub-gear').onclick = () => window.TribeSettings && window.TribeSettings.open();
     return bar;
   }
   function label() {
@@ -24,10 +26,10 @@
     const pf = $('#pf-btn'), fr = $('#fr-btn'), bell = $('#nf-bell'), tb = $('.titlebar .tb-right'), nest = $('#tour-side');
     if (!pf || !tb || !nest) return;
     if (!phone.matches) {
-      const b = build(); if (!b.isConnected) nest.appendChild(b);
+      const b = build(); if (!b.isConnected) document.body.appendChild(b);   // wedged into the bottom-left corner, across the rail and the sidebar
       $('#ub-face').appendChild(pf);
       const acts = $('#ub-acts'); if (bell) acts.appendChild(bell); if (fr) acts.appendChild(fr);   // Friends sits right of the bell
-      document.body.classList.add('has-userbar'); label();
+      document.body.classList.add('has-userbar'); label(); size();
     } else {
       const anchor = $('#sync-status');
       if (bell && bell.parentNode !== tb) tb.insertBefore(bell, anchor && anchor.parentNode === tb ? anchor : null);
@@ -36,6 +38,9 @@
       document.body.classList.remove('has-userbar');
     }
   }
+  // as wide as the rail + sidebar, whatever their width
+  function size() { if (!bar || phone.matches) return; const side = $('#tour-side'); const r = side && side.getBoundingClientRect(); if (r && r.right) bar.style.width = `${Math.round(r.right) - 16}px`; }
+  addEventListener('resize', size);
   // the bell and Friends buttons are added by their scripts on load; place once everything is there
   const ready = () => { place(); if (C && C.on) { C.on('status', label); C.on('presence', label); } };
   if (document.readyState === 'complete') setTimeout(ready, 0); else addEventListener('load', ready);

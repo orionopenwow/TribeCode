@@ -132,25 +132,25 @@ def main():
                 assert "g-first" in cls(y1["id"]) and "g-last" not in cls(y1["id"]), cls(y1["id"])
                 assert "g-last" in cls(y2["id"]) and "g-first" not in cls(y2["id"]), cls(y2["id"])
                 vis = lambda sel: page.eval_on_selector(sel, "e => getComputedStyle(e).visibility !== 'hidden' && getComputedStyle(e).display !== 'none'")
-                assert not vis(row(y1["id"]) + " > .avatar") and vis(row(y2["id"]) + " > .avatar"), "one avatar per group, on the last bubble"
+                # chat is a list (chatlist.css): avatar and name on the first line of a group, the date beside the name
+                assert vis(row(y1["id"]) + " > .avatar") and not vis(row(y2["id"]) + " > .avatar"), "one avatar per group, on the first line"
                 assert vis(row(y1["id"]) + " .mb > b.nm") and not vis(row(y2["id"]) + " .mb > b.nm"), "name only on the first bubble"
                 # every group of someone else's shows exactly one avatar
                 groups = page.evaluate("""() => { const out = []; let cur = null;
-                  for (const el of document.querySelectorAll('#chat-list .msg.dx:not(.sys):not(.mine)')) {
+                  for (const el of document.querySelectorAll('#chat-list .msg.dx:not(.sys)')) {
                     if (el.classList.contains('g-first')) { cur = { n: 0 }; out.push(cur); }
                     const a = el.querySelector(':scope > .avatar'); if (a && getComputedStyle(a).visibility !== 'hidden') cur.n++; }
                   return out.map(g => g.n); }""")
                 assert groups and all(n == 1 for n in groups), groups
-                # mine: right-aligned, no avatar, no name, a tick inside
+                # mine: on the left like everyone's (a list, not bubbles), a quiet tick inside
                 mb = page.eval_on_selector(row(t7["id"]) + " .mb", "e => e.getBoundingClientRect().toJSON()")
                 lb = page.eval_on_selector("#chat-list", "e => e.getBoundingClientRect().toJSON()")
-                assert "mine" in cls(t7["id"]) and lb["right"] - mb["right"] < 24, (mb, lb)
-                assert not vis(row(t7["id"]) + " > .avatar") and not vis(row(t7["id"]) + " .mb > b.nm")
+                assert "mine" in cls(t7["id"]) and mb["left"] - lb["left"] < 90, (mb, lb)
                 assert page.locator(row(t7["id"]) + " .mb .mt .tk svg").count() == 1
                 other = page.eval_on_selector(row(t1["id"]) + " .mb", "e => e.getBoundingClientRect().toJSON()")
-                assert other["left"] - lb["left"] < 60, (other, lb)
-                # time sits inside the bubble
-                assert page.locator(row(t1["id"]) + " .mb .mt time").count() == 1
+                assert other["left"] - lb["left"] < 90, (other, lb)   # text starts after the avatar column
+                # time: beside the name ("Today at …") and in the gutter on continuation lines
+                assert page.locator(row(t1["id"]) + " .mb .nm .nm-t").count() == 1
                 # date pills: yesterday and today
                 seps = page.eval_on_selector_all("#chat-list .day-sep", "els => els.map(e => e.textContent)")
                 assert "Yesterday" in seps and "Today" in seps, seps
@@ -166,12 +166,11 @@ def main():
                 vn = row(t6["id"])
                 assert "0:09 · 35.5 KB" in page.inner_text(vn + " .vn-meta"), page.inner_text(vn + " .vn-meta")
                 assert "checkpoint before the spikes" in page.inner_text(vn + " .vn-tx")
-                # image: time on a solid pill over the picture
+                # image renders
                 page.wait_for_function(f"(i => i && i.complete && i.naturalWidth === 240)(document.querySelector(\"{row(t5['id'])} .thumb img\"))")
-                assert page.locator(row(t5["id"]) + " .thumb .mt").count() == 1
-                # vote card sits in the alignment system (mine -> right)
+                # vote card lines up with the text column, like every message
                 vb = page.eval_on_selector(row(vote["id"]) + " .vt", "e => e.getBoundingClientRect().toJSON()")
-                assert lb["right"] - vb["right"] < 24, vb
+                assert vb["left"] - lb["left"] < 90, vb
                 # agent: teal name with the Claude glyph
                 assert page.locator(row(t4["id"]) + " .mb > b.nm .nm-g").count() == 1
                 # header + composer pill
@@ -195,9 +194,10 @@ def main():
                 phone.wait_for_selector(f"#chat-list .msg.dx[data-id='{vote['id']}'] .vt")
                 phone.wait_for_timeout(400)
                 over = phone.evaluate("() => ({ doc: document.documentElement.scrollWidth, list: (l => l.scrollWidth - l.clientWidth)(document.querySelector('#chat-list')) })")
+                if over["list"] > 1: print("WIDE", phone.evaluate("() => { const l = document.querySelector('#chat-list'), R = l.getBoundingClientRect().right; return [...l.querySelectorAll('*')].filter(e => e.getBoundingClientRect().right > R + 1).slice(0, 8).map(e => e.className + ' ' + Math.round(e.getBoundingClientRect().right)); }"))
                 assert over["doc"] <= 390 and over["list"] <= 1, over
                 w = phone.eval_on_selector(f"#chat-list .msg.dx[data-id='{t1['id']}'] .mb", "e => e.getBoundingClientRect().width")
-                assert w <= 390 * 0.84, w
+                assert w <= 390, w
                 phone.evaluate("document.querySelector('#chat-list').scrollTop = 1e9"); phone.wait_for_timeout(300)
                 phone.screenshot(path=str(SHOTS / "chat-bubbles-phone.png"))
                 phone.evaluate(f"document.querySelector(\"#chat-list .msg.dx[data-id='{t1['id']}']\").scrollIntoView({{block: 'start'}})"); phone.wait_for_timeout(300)

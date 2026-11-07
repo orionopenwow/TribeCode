@@ -2,7 +2,7 @@
 
 Read this to pick up the work in a new session (a new Claude chat, Claude Code, or a person). It is kept current at every milestone, alongside `docs/CONTEXT.md` (mirrored to the project doc "TribeCode-Context": vision, user requests, what's in flight).
 
-Last updated: 2026-11-06, v0.3.1.
+Last updated: 2026-11-07, v0.8.0. The living vision and request log are in docs/CONTEXT.md (also the project doc claude/TribeCode-Context.md); update both at every release.
 
 ## What TribeCode is
 A self-hosted "multiplayer vibecoding" app. Friends, each with their own Claude Code agents, build one app together. Everything runs on one friend's computer. The server and web app have zero npm dependencies (plain Node and browser JS), and a Tauri v2 desktop wrapper bundles the server as a sidecar. GitHub holds the code, the releases and a website (Pages).
@@ -88,37 +88,19 @@ Pushing from the Claude cloud sandbox:
 - Simplicity first: zero-step setup (no wizard), sleek and bare UI, no repeated labels.
 
 ## State right now
-- On main and released (v0.3.1): everything listed in CHANGELOG.md v0.2.0 to v0.3.1.
-- In flight (agents; branches may exist as git worktrees under /home/claude in the sandbox):
-  - `feat/mobile`: the real app's phone UI. Includes:
-    - Discord-mobile panel; bottom rack, moving to the top in Chat; no header; tight spacing
-    - the composer: "+" menu, a one-tap recorder with pause/stop/delete, the send arrow
-    - Docs hub (repo hero, living notes, files, screenshots)
-    - one-tap approvals with a comment
-    - Suggested tasks
-    - a "Talk to…" picker (my Claude, Qwen brain, my desktop, #agents)
-    - motion; profile sheet (add friend, network, DM, ask their Claude); DMs in Chat
-    - an in-app-browser escape banner on join/go pages
-    - the section-clarity principle written into DESIGN-SYSTEM.md
-    - tests in `app/test/e2e_mobile2.py`
-    If this branch is lost, rebuild from this list.
-  - `feat/demo4`: the demo's phone layout. No header, a richer and more distinct bottom rack, less whitespace.
-- The user's machine: Windows, Desktop folder `C:\Users\campw\Desktop\TribeCode` with `Get-Latest-TribeCode.bat`, the installer, `TribeCode-Start-Test-Project.bat` (clones the repo next to itself on first run) and README.txt. Tailscale is installed and signed in. Pages is enabled.
+- On `main` and released: v0.8.0 (everything in CHANGELOG.md). `dev` = working lane; release = bump 4 version files + CHANGELOG (with a **Phones** line) + sw.js CACHE, merge dev → main, push; CI builds installers + latest.json. If latest.json lacks windows, re-run the failed Windows job.
+- New since v0.7.0 (server modules): `openspace.js` (Office), `showcase.js` (project websites), `applink.js` + `export.js` + `github-auth.js` (app links, Desktop folders, GitHub device flow), `demo.js` (demo tribe), `oauth.js` (Discord/GitHub/Google sign-in), `huddlesum.js` (after-huddle summary), `files.js` + phone app mode (viewers, Expo starter). UI: `friends.js`, `userbar.js` (desktop bottom-left bar), `chatlist.css` (chat as a list), `themes.js`/`themes.css`, `guide.js` (when merged).
+- Windows desktop: the page is http://tauri.localhost; the client must use the saved server (:4747). The server answers Private Network Access preflights. Host switch in Settings; the server only runs with a tribe + Host on.
+- In flight: the vision/research/guide agent (docs/VISION.md, docs/RESEARCH-2026-11.md, docs/guide/*.md).
+- The user's machine: Windows, `C:\Users\campw\Desktop\TribeCode` (TribeCode.bat reinstaller, Invite-A-Friend.bat, Start-Demo-Tribe.bat, Working\ dev lane on :4848, Tools\). Tailscale signed in. Leyline workspace at Desktop\Leyline (reference only).
 
 ## Next steps (in order)
-1. Merge `feat/mobile` (resolve conflicts with shell.js, run the full npm test, look at the screenshots), then `feat/demo4`. Bump to v0.3.2 and refresh the README screenshots and this doc.
-2. Walk the user through the test project:
-   - Update the app (Restart to update, or `Get-Latest-TribeCode.bat`).
-   - Double-click `TribeCode-Start-Test-Project.bat`.
-   - Approve Tailscale Funnel once.
-   - Text the link.
-   - Run the printed `claude mcp add …` command.
-   - The friend taps the link, enters a name, taps Join, then Add to Home Screen.
-3. Verify on real devices: iPhone Safari join and Home Screen, Web Push, speech, Messenger in-app banner, Tailscale Funnel.
-4. Game Studio MVP (docs/GAME-STUDIO.md).
-5. Native iOS via Tauri + TestFlight (needs a Mac). Intel Mac builds. A TURN relay for huddles on cellular.
+1. Confirm v0.8.0 on the user's PC (Create your first project, GitHub client id, Office switch, Restart to update, installer art).
+2. Merge the vision/guide branch; build the roadmap's Now items (Workshop + featured projects, repo scraper, skills catalog).
+3. Real devices: phones on cellular huddles (TURN relay), iPhone speech, Web Push, Tailscale Funnel + OAuth redirect.
+4. Decide with the user: disable WebView2's Local Network Access check in the app window (future-proofing the desktop app).
 
 ## Known issues
 - The Tauri side can only be compiled in CI. Check the Release workflow logs after changing Rust.
-- The first desktop start on the user's PC once stalled on "Starting…". v0.2.1+ shows the server log and reuses a server already on port 4747; confirmation is pending.
+- Tests run in parallel can time out under load; re-run failures alone before treating them as real.
 - Real-device features (push, speech, tunnels) are verified only with emulators and mocks.
