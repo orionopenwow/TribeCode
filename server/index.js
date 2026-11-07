@@ -324,7 +324,8 @@ const agentsHub = makeAgentsHub({ P, store: baseStore, brain, getMembers: () => 
 dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
   isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
 // The global scratchpad (server/scratch.js): private quick notes per member, filed into a project later.
-const scratch = makeScratch({ P, base: baseStore, docs, createTask: o => createTask(o), id, str });
+const scratch = makeScratch({ P, base: baseStore, docs, createTask: o => createTask(o), id, str, brain });
+dashboard.useScratch(mid => scratch.load(mid));   // Home's Ask and Refine with AI read your own notes
 bus.on('notify', n => dashboard.onNotify(n));
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
