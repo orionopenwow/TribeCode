@@ -136,13 +136,15 @@ def main():
             ph.evaluate("document.body.classList.remove('drawer-open')")
             # Updates badge = inbox unread
             ok(api("/chat/general/send", "POST", {"text": "@Maya badge check"}, token=otok, project=a))
-            ph.wait_for_function("(() => { const b = document.querySelector('#tabbar [data-bd=updates]'); return b && !b.classList.contains('hidden') && +b.textContent >= 1; })()", timeout=8000)
+            ph.wait_for_function("(() => { const b = document.querySelector('#m2-bell [data-bd=updates], #tabbar [data-bd=updates]'); return b && !b.classList.contains('hidden') && +b.textContent >= 1; })()", timeout=8000)
             # Settings fits
             ph.evaluate("TribeSettings.open()"); ph.wait_for_selector("#set-close")
             r = ph.evaluate("(() => { const c = document.querySelector('#settings-body').getBoundingClientRect(), d = document.querySelector('#set-close').getBoundingClientRect(); return [c.width, d.right]; })()")
             assert r[0] <= 390 and r[1] <= 390, f"Settings fits the phone: {r}"
             ph.keyboard.press("Escape")
             # profile sheet: connect again
+            # (v0.8.1+: on phones your profile sits at the bottom of the side panel, a swipe or the top-left button away)
+            ph.click("#menu-btn"); ph.wait_for_function("document.body.classList.contains('drawer-open')")
             ph.click("#pf-btn"); ph.wait_for_selector("[data-pf=connect]")
             ctx.close()
 

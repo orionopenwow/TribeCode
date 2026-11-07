@@ -23,7 +23,7 @@
     try {
       const [p, ms, v] = await Promise.all([C.api('/proposals'), C.api('/milestones'), C.api('/vision')]);
       proposals = p.proposals; milestones = ms.milestones; loaded = true;
-      $('#ms-lead').textContent = ms.repo ? `Approved proposals become milestones. Releasing tags the project repo (next: ${ms.next}).` : `Approved proposals become milestones (next: ${ms.next}). Start the server with --repo to tag releases in git.`;
+      $('#ms-lead').textContent = ms.repo ? `Approved proposals become milestones. Releasing tags the project repo (next: ${ms.next}).` : `Approved proposals become milestones (next: ${ms.next}). Give the project a repo to tag releases in git.`;
       renderVision(v.text); render(); loadRadar();
     } catch (e) { window.TribeApp.toast('Could not load the board: ' + e.message); }
   }
@@ -76,7 +76,7 @@
 
     $('#ms-list').innerHTML = milestones.length ? milestones.slice().reverse().map(m => `<div class="mile"><code>${esc(m.version)}</code><span class="grow" title="${esc(m.title)}">${esc(m.title)}</span>
       ${m.status === 'released' ? `<span class="chip teal">${m.git && m.git.pushed ? 'pushed' : 'released'}</span>` : isHost() ? `<button class="btn" data-release="${esc(m.version)}">Release</button>` : '<span class="chip amber">planned</span>'}</div>`).join('')
-      : '<div class="faint" style="font-size:13px">No milestones yet.</div>';
+      : '<div class="faint" style="font-size:13px">No milestones yet. An approved proposal becomes the next one: <button class="btn sm" data-ms-new style="margin-left:6px">New proposal</button></div>';
     bind();
   }
 
@@ -141,7 +141,7 @@
 
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-pt]'); if (t) { tab = t.dataset.pt; render(); }
-    if (e.target.closest('#prop-new')) newProposal();
+    if (e.target.closest('#prop-new, [data-ms-new]')) newProposal();
   });
   C.on('proposal', p => { if (loaded) upsert(p); });
   C.on('milestones', ms => { milestones = ms; if (loaded) render(); });

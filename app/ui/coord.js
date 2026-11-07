@@ -14,7 +14,7 @@
   const members = () => C.state().members || [];
   const TABS = [['agents', 'Agents', 'i-robot'], ['ownership', 'Ownership', 'i-map'], ['conflicts', 'Conflicts', 'i-merge'], ['handoffs', 'Hand-offs', 'i-hand'], ['reviews', 'Reviews', 'i-eye'], ['plan', 'Daily plan', 'i-sun']];
   let tab = 'agents';
-  try { tab = sessionStorage.getItem('tribecode.coordTab') || 'agents'; } catch {}
+  try { tab = sessionStorage.getItem('tribecode.coordTab') || localStorage.getItem('tribecode.coordTab') || 'agents'; } catch {}   // remembered across restarts
 
   function frame() {
     const root = $('#coord-root'); if (!root || root.dataset.ready) return;
@@ -24,7 +24,7 @@
       <div id="coord-body" class="coord-body"></div>`;
     root.querySelector('#coord-tabs').addEventListener('click', e => { const b = e.target.closest('[data-ct]'); if (b) open(b.dataset.ct); });
   }
-  function open(t) { if (t) tab = t; try { sessionStorage.setItem('tribecode.coordTab', tab); } catch {} if (App().view() !== 'coord') App().show('coord'); else show(); }
+  function open(t) { if (t) tab = t; try { sessionStorage.setItem('tribecode.coordTab', tab); localStorage.setItem('tribecode.coordTab', tab); } catch {} if (App().view() !== 'coord') App().show('coord'); else show(); }
   function show() {
     frame();
     document.querySelectorAll('#coord-tabs [data-ct]').forEach(b => { b.classList.toggle('on', b.dataset.ct === tab); b.setAttribute('aria-selected', String(b.dataset.ct === tab)); });

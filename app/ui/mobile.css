@@ -50,7 +50,7 @@
   .chat { min-height: 0; }
 
   .hello { font-size: 25px; } .view-head h1 { font-size: 22px; }
-  .home-grid, .board-grid, .docs-grid { grid-template-columns: 1fr; }
+  .home-grid, .board-grid, .docs-grid { grid-template-columns: minmax(0, 1fr); }   /* minmax: a wide child (the doc toolbar) used to push the column past the screen edge */
   #tour-checklist { grid-row: auto; }
   .doc-side { position: static; } #doc-list { max-height: 30vh; }
   .doc-title { font-size: 26px; }

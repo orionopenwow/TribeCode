@@ -7,7 +7,7 @@
 .pa-sw-t { flex: 1; min-width: 0; line-height: 1.4; }
 .pa-sw-t b { display: block; font-size: 14px; color: var(--text); }
 .pa-sw-t small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
-.pa-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pa-switch input { position: absolute; width: 1px; height: 1px; margin: 0; clip-path: inset(50%); overflow: hidden; }   /* visually hidden, still focusable: the knob shows the focus ring */
 .pa-knob { width: 40px; height: 24px; border-radius: 999px; background: var(--surface-3, #2A313C); border: 1px solid var(--edge); position: relative; flex: none; transition: background .15s var(--ease, ease); }
 .pa-knob::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: transform .15s var(--ease, ease), background .15s; }
 .pa-switch input:checked + .pa-knob { background: var(--live, #38C6B1); border-color: var(--live, #38C6B1); }

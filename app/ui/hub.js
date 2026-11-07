@@ -377,7 +377,8 @@
     document.body.appendChild(ov);
     const ta = $('#note-text'); ta.focus();
     ta.oninput = () => scratch.quiet(id, ta.value || 'New note');
-    const done = async () => { await scratch.flush(); ov.remove(); if (mode === 'docs') render(); };
+    // A note you started and left empty doesn't linger as "New note" in your docs.
+    const done = async () => { if (fresh && !ta.value.trim()) { scratch.remove(id); ov.remove(); render(); return; } await scratch.flush(); ov.remove(); if (mode === 'docs') render(); };
     $('#note-done').onclick = done;
     $('#note-del').onclick = () => { scratch.remove(id); ov.remove(); render(); toast('Note deleted'); };
     ov.addEventListener('click', e => { if (e.target === ov) done(); });

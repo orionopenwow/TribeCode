@@ -29,9 +29,15 @@ del /q "TribeCode_*_x64-setup.exe" 2>nul
 del /q "latest.txt" 2>nul
 
 rem The old code copy: only delete it if it really is a git checkout of TribeCode with no tribe data in it.
+rem %USERPROFILE%\TribeCode is also the default tribe folder: its data lives in .tribe\ (tribe.json, members.json)
+rem and projects\, so any of those means "keep it".
 set "OLD=%USERPROFILE%\TribeCode"
+set "HASDATA="
+if exist "%OLD%\.tribe" set "HASDATA=1"
+if exist "%OLD%\projects" set "HASDATA=1"
+if exist "%OLD%\tribe.json" set "HASDATA=1"
 if exist "%OLD%\.git" if exist "%OLD%\server\index.js" (
-  if exist "%OLD%\tribe.json" (
+  if defined HASDATA (
     echo  Kept %OLD%: it also holds tribe data.
   ) else (
     echo  Removing the old code copy in %OLD%...

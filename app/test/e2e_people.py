@@ -221,7 +221,7 @@ def main():
                 phone = login(b, {"width": 390, "height": 844}, "Maya", "#6C7CFF", maya, pq, mobile=True)
                 chat(phone)
                 phone.wait_for_selector(f"#chat-list .msg.dx[data-by='{oid}']")
-                phone.click(f"#chat-list .msg.dx.g-last[data-by='{oid}'] > .avatar")   # one avatar per group, on its last bubble
+                phone.click(f"#chat-list .msg.dx.g-first[data-by='{oid}'] > .avatar")   # one avatar per group, on its first line (list-style chat, v0.8.0)
                 phone.wait_for_selector("#person-panel.sheet:not(.hidden)")
                 wait_text(phone, "#person-panel", "Orion"); wait_text(phone, "#person-panel", "Host"); wait_text(phone, "#person-panel .pp-foot", "up ")
                 wait_text(phone, "#person-panel", "Start Pixel Quest")
