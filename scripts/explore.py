@@ -45,7 +45,7 @@ PORT = ARGS.port
 BASE = f"http://localhost:{PORT}"
 OLLAMA = 11631 + OFF
 OUT_JSON = Path(ARGS.json) if ARGS.json else ROOT / ".explore" / ("findings-quick.json" if ARGS.quick else "findings.json")
-OUT_MD = Path(ARGS.report) if ARGS.report else (None if ARGS.quick or ARGS.app_root != str(ROOT) else ROOT / "docs" / "EXPLORE-REPORT.md")
+OUT_MD = None if ARGS.report == "none" else Path(ARGS.report) if ARGS.report else (None if ARGS.quick or ARGS.app_root != str(ROOT) else ROOT / "docs" / "EXPLORE-REPORT.md")
 SHOT_DIR = ROOT / "docs" / "screenshots" / "explore"
 PHASES = set(filter(None, ARGS.only.split(","))) or {"seed", "desktop", "crawl", "phone", "tauri", "offline", "journeys", "core"}
 if ARGS.quick: PHASES.discard("crawl")

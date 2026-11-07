@@ -18,10 +18,12 @@ npm run live                   # auto-pull + restart + UI live reload (TribeCode
 npm run invite                 # one-click public invite + QR (TribeCode-Invite-Friend.bat)
 node scripts/start-test-project.js   # Pixel Quest test project + project invite + Claude Code command
 npm test                       # 15 suites (Python Playwright with /usr/bin/google-chrome, --no-proxy-server)
+npm run explore                # click-around smoke + intuitive + core-intent journeys → docs/EXPLORE-REPORT.md (--quick is in npm test)
+npm run milestone-report       # previous release vs this checkout → docs/milestones/<version>.md
 npm run readme-shots           # docs/screenshots/readme-*.png + site/assets/shots/*.webp from a seeded throwaway tribe
 ```
 
-Every milestone: `npm run readme-shots`, refresh README.md and the Pages site (`site/`, published at `/about/`), then release.
+Every milestone: `npm run explore`, fix criticals, then readme-shots and release. In full: `npm run explore` (docs/EXPLORE-REPORT.md, docs/EXPLORER.md), fix the critical findings, `npm run milestone-report` (docs/milestones/<version>.md: before | after screens, findings delta, journeys), then `npm run readme-shots`, refresh README.md and the Pages site (`site/`, published at `/about/`), then release.
 
 How to write tests:
 - Host pages use `/?skipIntro=1`.
