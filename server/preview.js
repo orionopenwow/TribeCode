@@ -269,7 +269,8 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     const segs = rel.split(/[\\/]+/).filter(Boolean);
     if (segs.some(s => s === '..')) return deny(res, 403, 'That path leaves the app folder.');
     if (segs.some(s => s.startsWith('.') || s === 'node_modules' || s === RESERVED) || (segs.length && SECRET.test(segs[segs.length - 1]))) return deny(res, 404, 'Not found.');
-    let realRoot; try { realRoot = fs.realpathSync(r.root); } catch { return deny(res, 404, 'Not found.'); }
+    let realRoot, realRepo; try { realRoot = fs.realpathSync(r.root); realRepo = fs.realpathSync(r.repo); } catch { return deny(res, 404, 'Not found.'); }
+    if (realRoot !== realRepo && !realRoot.startsWith(realRepo + path.sep)) return deny(res, 403, 'The web root points outside the repo.');   // a symlinked public/ → elsewhere
     let file = path.resolve(realRoot, ...segs);
     const inside = f => f === realRoot || f.startsWith(realRoot + path.sep);
     if (!inside(file)) return deny(res, 403, 'That path leaves the app folder.');

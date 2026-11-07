@@ -116,6 +116,10 @@ def main():
     pq = os.path.join(work, "pixel-quest")
     shutil.copytree(ROOT / "templates" / "starter-game", pq)
     make_repo(pq, {})
+    os.symlink("/etc", os.path.join(hello, "etcdir"))   # a symlink inside the web root that points out of it
+    sym = os.path.join(work, "sym-app")
+    make_repo(sym, {"README.md": "# public/ is a symlink to another folder"})
+    os.symlink(pq, os.path.join(sym, "public"))
     empty = os.path.join(work, "empty-app")
     make_repo(empty, {"README.md": "# Nothing yet"})
 
@@ -193,6 +197,12 @@ def main():
         for secret_path in [".git/config", ".git/HEAD", ".env", "%2eenv", "node_modules/x/index.js", "id_rsa", ".tribe/x", "__tribe/x"]:
             code, _, body = raw(P + secret_path)
             assert code in (403, 404) and b"hunter2" not in body and b"KEY" != body.strip() and b"[core]" not in body, (secret_path, code, body[:120])
+
+        for link_path in ["etcdir/passwd", "etcdir/hostname"]:
+            code, _, body = raw(P + link_path); assert code in (403, 404) and b"root:" not in body, (link_path, code)
+        sp = ok(api("/projects", "POST", {"path": sym}, token=orion), "symlink project")["project"]["id"]
+        code, _, body = raw(ok(api("/preview/token", "POST", token=orion, project=sp))["path"])
+        assert code == 403 and b"Pixel Quest" not in body, (code, body[:200])   # public/ → a folder outside the repo
 
         # ---------------- MCP preview_url ----------------
         ag = ok(api("/agents", "POST", token=orion, project=hp))
