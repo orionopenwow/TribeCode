@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.6
+
+- **Sign in with Discord, GitHub or Google**: friends can join from an invite with one of these instead of typing a name, and sign back in on a new device without a new invite (`/signin.html`, linked from the join page). Each provider is off until the host adds its app in Settings › Sign-in; the redirect address to register is shown there (use Tailscale Funnel so it stays the same). Signing back in gives that device its own key, so other devices stay signed in. Members link or unlink accounts in Settings › Sign-in (docs/SIGN-IN.md)
+- One-time guest passes also work with these sign-ins
+- **Phones**: the join and sign-in pages work at 390px
+
 ## v0.7.5
 
 - **The Windows desktop app can finally talk to its own tribe.** Its page lives at `http://tauri.localhost`, and the app mistook that for its server: every sign-in and API call went to the app's own files and quietly got nothing back. It now uses its server on port 4747. (This is why Settings › GitHub, the Office and new projects "did nothing".)
