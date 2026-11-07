@@ -405,3 +405,14 @@
   /* in Chat the rack sits in the top bar: keep it the same icon style */
   body.m2-in-chat .m2-seg button svg { width: 26px !important; height: 26px !important; }
 }
+@media (max-width: 820px) { .tabbar.m2-rack .m2-seg button { width: 52px; } }
+
+@media (max-width: 820px) {
+  /* project top bar, right side: Updates bell (with its count) · side pane */
+  .m2-bell { position: relative; }
+  .m2-bell .bd { position: absolute; top: 4px; right: 3px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: #fff; font: 600 10px/17px var(--mono); text-align: center; box-shadow: 0 0 0 2px var(--canvas); }
+  .m2-bell .bd.hidden { display: none; }
+  body.m2-in-chat .tabbar.m2-rack { right: calc(48px + env(safe-area-inset-right)); }   /* in Chat the tabs leave room for the bell */
+  body.m2-in-chat #m2-pane { display: none; }
+  .tabbar.m2-rack .m2-seg button { width: 56px; }
+}

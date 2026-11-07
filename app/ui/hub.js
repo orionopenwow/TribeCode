@@ -758,6 +758,7 @@
         const local = (lsGet(LOCAL, []) || []).filter(n => n.text && n.text.trim());
         if (local.length) { r = await C.api('/scratch', { method: 'PUT', body: { notes: [...local.map(n => ({ text: n.text })), ...r.notes] } }); lsSet(LOCAL, []); }   // carry this device's notes into the tribe once
         notes = r.notes; synced = true; draw();
+        if (document.body.dataset.view === 'hub' && mode !== 'repos' && !document.querySelector('#note-ed')) render();   // Home's Notes and the docs center list your notes
       } catch {}
     }
     function persist(now) {

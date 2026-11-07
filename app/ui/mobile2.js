@@ -64,6 +64,7 @@
     'm2-mic-note': '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/>',
     'm2-user': '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     'm2-gear': '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+    'm2-robot': '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 13h.01M14.5 13h.01M9.5 16h5M3 12v3M21 12v3"/><circle cx="12" cy="4" r="1"/>',
     'm2-home': '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>', 'm2-list': '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>', 'm2-users': '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M15.5 5.3a3.2 3.2 0 0 1 0 5.4M17.5 14.4c1.6.6 2.7 2.2 3 4.6"/>', 'm2-link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'm2-search': '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   };
   (function sprite() {
@@ -113,8 +114,8 @@
     { nav: 'hub', label: 'Home', icon: 'home', m2: true },   // your Home (all projects); the side panel is a swipe from the left
     { nav: 'chat', label: 'Chat', icon: 'chat', badge: 'nn-chat' },
     { nav: 'docs', label: 'Docs', icon: 'doc' },
-    { nav: 'updates', label: 'Updates', icon: 'bell', badge: 'updates', m2: true },
     { nav: 'tasks', label: 'Tasks', icon: 'task', badge: 'nn-tasks' },
+    { nav: 'agents', label: 'Agents', icon: 'robot', m2: true },   // this project's Agents Hub
   ];
   function buildRack() {
     const bar = $('#tabbar'); if (!bar || bar.dataset.m2) return;
@@ -126,7 +127,7 @@
   // Home · Projects · Notes · Activity · +. Each icon jumps to that part of the dashboard; the lit one follows the scroll.
   // Same five slots and look as a project's rack (Home · Chat · Docs · Updates · Tasks), Home's versions:
   // You · Messages · Notes · Notifs · Projects. On Home the Home tab becomes your avatar: tap it for your profile.
-  const HOMEBAR = [['me', 'home', 'You'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
+  const HOMEBAR = [['me', 'home', 'You'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['agents', 'robot', 'Agents'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
   function homeBar() {
     if ($('#m2-homebar')) return;
     const bar = document.createElement('nav'); bar.id = 'm2-homebar'; bar.className = 'm2-homebar'; bar.setAttribute('aria-label', 'Home');
@@ -138,6 +139,7 @@
       const b = e.target.closest('[data-hb]'); if (!b) return;
       const k = b.dataset.hb;
       if (k === 'pjs') { document.body.classList.add('drawer-open'); return; }
+      if (k === 'agents') return window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // Agent fleet, every project
       if (k === 'notes') return window.TribeHub && window.TribeHub.open('docs');   // your docs center: your notes, then project docs
       if (k === 'msgs') { if (C.connected()) return App().show('chat'); return window.TribeFriends && window.TribeFriends.open(); }
       if (k === 'notifs') return window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : null;
@@ -190,7 +192,7 @@
 
   function paintMe() { const b = $('#m2-me'); if (b) b.innerHTML = avatar(me()); }
   function setBadge(key, n) {
-    const el = document.querySelector(`#tabbar [data-bd="${key}"]`); if (!el) return;
+    const el = document.querySelector(`#tabbar [data-bd="${key}"], .titlebar [data-bd="${key}"]`); if (!el) return;
     const was = el.textContent; el.textContent = n > 99 ? '99+' : n || '';
     el.classList.toggle('hidden', !n);
     if (n && was !== el.textContent) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
@@ -214,6 +216,7 @@
     return v;
   }
   function show(view) {
+    if (view === 'agents') return window.TribeAgentsHub && window.TribeAgentsHub.open();
     if (view === 'hub') return window.TribeHub ? window.TribeHub.open('home') : App().show('home');
     if (view !== 'updates') return App().show(view);
     if (window.TribeFlow && window.TribeFlow.isFlow && window.TribeFlow.isFlow() && window.TribeFlow.openUpdates) return window.TribeFlow.openUpdates();   // flow projects: the living plan + gists
@@ -239,7 +242,7 @@
   }
   function paintRack() {
     const bar = $('#tabbar'); if (!bar) return;
-    bar.querySelectorAll('[data-m2nav]').forEach(b => b.classList.toggle('on', b.dataset.m2nav === cur));
+    document.querySelectorAll('#tabbar [data-m2nav], #m2-bell').forEach(b => b.classList.toggle('on', b.dataset.m2nav === cur || (b.dataset.m2nav === 'agents' && cur === 'agents-hub')));
     bar.querySelectorAll('[data-nav]').forEach(b => b.setAttribute('aria-selected', b.classList.contains('on')));
     document.body.classList.toggle('m2-in-chat', cur === 'chat');
     const t = $('#m2-talk'); if (t) t.classList.toggle('hidden', cur !== 'chat');
@@ -283,6 +286,9 @@
     if (tb && !$('#m2-talk')) tb.insertAdjacentHTML('afterbegin', `<button class="m2-talk hidden" id="m2-talk" aria-haspopup="dialog" aria-label="Talk to…"><span id="m2-talk-l">#general</span>${ic('chev', 14)}</button>`);
     $('#m2-talk').addEventListener('click', e => { e.stopPropagation(); talkTo(); });
     // top right: the pane button opens the right-side pane (who's here, helpers, Claude, scratchpad) as a sheet
+    // In a project, Updates (the bell) sits top right like a social app's activity button, beside the pane button:
+    // it's checked at a glance, not navigated to, so it doesn't take a slot in the rack.
+    if (tb && !$('#m2-bell')) { tb.insertAdjacentHTML('beforeend', `<button class="m2-pane-btn m2-bell" id="m2-bell" data-m2nav="updates" aria-label="Updates" title="Updates">${ic('bell', 22)}<span class="bd hidden" data-bd="updates"></span></button>`); }
     if (tb && !$('#m2-pane')) { tb.insertAdjacentHTML('beforeend', '<button class="m2-pane-btn" id="m2-pane" aria-label="Open the side pane" title="Side pane"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M15 4v16"/></svg></button>');
       $('#m2-pane').addEventListener('click', e => { e.stopPropagation(); document.body.classList.toggle('m2-pane-open'); }); }
     document.addEventListener('click', e => { if (!document.body.classList.contains('m2-pane-open')) return; if (e.target.closest && (e.target.closest('#tour-room') || e.target.closest('#m2-pane'))) return; document.body.classList.remove('m2-pane-open'); }, true);

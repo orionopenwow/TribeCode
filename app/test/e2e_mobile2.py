@@ -105,7 +105,7 @@ def main():
             phone.evaluate("TribeApp.show('home')")
             rack = phone.locator("#tabbar").bounding_box()
             assert rack["y"] > 760 and rack["width"] >= 380, rack
-            for sel in ['#tabbar [data-nav="chat"]', '#tabbar [data-nav="docs"]', '#tabbar [data-m2nav="updates"]', '#tabbar [data-nav="tasks"]']:
+            for sel in ['#tabbar [data-nav="chat"]', '#tabbar [data-nav="docs"]', '#m2-bell', '#tabbar [data-nav="tasks"]']:
                 assert phone.locator(sel).is_visible(), sel
             assert phone.locator("#m2-me").count() == 0 and phone.locator("#m2-act").count() == 0, "the rack is just Chat · Docs · Updates · Tasks"
             assert phone.locator("#crumb-section").is_hidden() and phone.locator("#ws-name").is_hidden() and phone.locator("#sync-status").is_hidden(), "no header outside Chat"
@@ -240,7 +240,7 @@ def main():
 
             # ---- one-tap approvals with a comment
             st, ap = api("/approvals", "POST", {"title": "Merge feat/double-jump", "details": "Coyote time + double jump reset. 12 tests pass.", "risk": "medium"}, htok); assert st == 200, ap
-            phone.wait_for_function("(() => { const b = document.querySelector('#tabbar [data-bd=\"updates\"]'); return b && !b.classList.contains('hidden') && b.textContent === '1'; })()", timeout=8000)
+            phone.wait_for_function("(() => { const b = document.querySelector('#m2-bell [data-bd=\"updates\"]'); return b && !b.classList.contains('hidden') && b.textContent === '1'; })()", timeout=8000)
             # a long project name + a badge must not widen the page
             pid = phone.evaluate("TribeProjects.current()")
             assert api(f"/projects/{pid}", "PATCH", {"name": "The Extraordinarily Long Pixel Quest Adventure Project"}, htok)[0] == 200
@@ -248,10 +248,10 @@ def main():
             for v in ["home", "chat", "docs"]:
                 phone.evaluate(f"TribeApp.show('{v}')"); phone.wait_for_timeout(250)
                 no_overflow(phone, f"{v} with a long name"); assert phone.evaluate("document.querySelector('#main').getBoundingClientRect().width <= innerWidth + 1"), v
-            phone.click('#tabbar [data-m2nav="updates"]')
+            phone.click('#m2-bell')
             card = f"#view-updates .m2-ap[data-ap='{ap['approval']['id']}']"
             phone.wait_for_selector(card)
-            assert phone.locator('#tabbar [data-m2nav="updates"]').get_attribute("class") == "on"
+            assert "on" in phone.locator('#m2-bell').get_attribute("class").split()
             phone.click(f"{card} [data-note]"); phone.fill(f"{card} textarea", "Ship it, nice work")
             shot(phone, "approvals")
             no_overflow(phone, "updates")
@@ -263,7 +263,7 @@ def main():
             assert a["status"] == "approved" and a["note"] == "Ship it, nice work" and a["decidedBy"] == maya, a
             phone.wait_for_selector("#view-updates .m2-decided .m2-ap.approved")
             # Updates is reachable from the panel too
-            phone.click("#tabbar [data-m2nav='updates']"); phone.wait_for_selector("#view-updates:not(.hidden)")
+            phone.click("#m2-bell"); phone.wait_for_selector("#view-updates:not(.hidden)")
 
             # ---- Docs hub: the pinned repo hero (Flare thumbnail), living notes, files, screenshots
             def hero_kind(kind):
