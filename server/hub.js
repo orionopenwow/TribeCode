@@ -317,7 +317,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
   const views = new Map();   // mid -> { at, data, sig, dirty, timer, last }
   async function compute(me) {
     const visible = P.visibleTo(me);
-    const feed = (await Promise.all(visible.map(p => snap(p)))).flat().sort((a, b) => t(b.at) - t(a.at)).slice(0, FEED_MAX);
+    const feed = (await Promise.all(visible.map(p => snap(p)))).flat().filter(x => !(x.kind === 'join' && x.by === me.id)).sort((a, b) => t(b.at) - t(a.at)).slice(0, FEED_MAX);   // your own joins are not news
     const heroAll = heroFor(me, visible);
     const pres = presenceFor(me);
     const today = new Date(); today.setHours(0, 0, 0, 0);

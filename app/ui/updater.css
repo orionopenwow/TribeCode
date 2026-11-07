@@ -1,12 +1,15 @@
-/* Restart-to-update pill + popover: solid teal pill, flat bordered popover. */
-.update-pill { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
-  color: var(--on-live); background: var(--accent-2); box-shadow: none; position: relative; overflow: hidden; animation: pill-in .18s var(--ease); transition: background .15s var(--ease); }
-.update-pill svg.i { width: 14px; height: 14px; stroke-width: 2; }
-.update-pill:hover { background: #45D3BE; }
-.update-pill.downloading { color: var(--muted); background: var(--canvas); box-shadow: inset 0 0 0 1px var(--edge); cursor: default; font-family: var(--mono); font-weight: 500; font-size: 11px; }
-.update-pill.downloading::after { content: ''; position: absolute; left: 0; bottom: 0; height: 2px; width: var(--p, 0%); background: var(--accent-2); transition: width .2s var(--ease); }
-.update-pill.downloading svg.i { animation: spin 1.2s linear infinite; }
-.update-pill.quiet { background: var(--canvas); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent-2); }
+/* Update ready: a quiet icon next to the profile (refresh glyph + a small Teal dot), and a flat bordered popover. */
+.update-btn { position: relative; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); border: 1px solid transparent; background: none; animation: pill-in .18s var(--ease); }
+.update-btn:hover, .update-btn[aria-expanded="true"] { background: var(--hover); border-color: var(--edge); color: var(--text); }
+.update-btn svg.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+.update-btn .ub-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); border: 2px solid var(--nest, #12151A); box-sizing: content-box; }
+.update-btn.downloading { cursor: default; }
+.update-btn.downloading .ub-dot { background: var(--faint); }
+.update-btn.downloading svg.i { animation: spin 1.6s linear infinite; }
+.update-btn.downloading::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 5px; height: 2px; border-radius: 2px; background: var(--edge); }
+.update-btn.downloading::before { content: ''; position: absolute; z-index: 1; left: 8px; bottom: 5px; height: 2px; border-radius: 2px; width: calc((100% - 16px) * var(--pf, 0)); background: var(--accent-2); }
+.update-btn.quiet .ub-dot { background: var(--nest, #12151A); border-color: var(--accent-2); }
+.update-btn .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @keyframes pill-in { from { transform: translateY(-3px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -36,4 +39,4 @@
 .up-menu button { display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; font-size: 13px; }
 .up-menu button:hover { background: var(--surface-2); }
 
-.update-pop::before { content: ''; position: absolute; top: -7px; right: 60px; width: 12px; height: 12px; background: var(--surface); border-left: 1px solid var(--edge-pop); border-top: 1px solid var(--edge-pop); transform: rotate(45deg); }
+.update-pop::before { content: ''; position: absolute; top: -7px; left: var(--arrow, auto); right: auto; width: 12px; height: 12px; background: var(--surface); border-left: 1px solid var(--edge-pop); border-top: 1px solid var(--edge-pop); transform: rotate(45deg); }

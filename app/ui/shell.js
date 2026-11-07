@@ -4,7 +4,10 @@
 // Updates, Tasks, Huddle, Capture to notes), two collapsible groups (Project Hub, Coordinate & Ops), Pinned,
 // Recents and the bottom utility row (Settings, Invite friends). One registry (DEST) drives the nest, the
 // breadcrumb section menu and the Ctrl K palette, so every destination is listed exactly once.
-// Also: the project switcher dropdown, the + New menu (phones' orange action), the right panel's preview mode.
+// With no project selected (the Global Hub, app/ui/hub.js) the two groups collapse into one "Global" group (All repos,
+// Global docs, Agent fleet), the core rows dim (they open in the current project) and the header is the tribe.
+// Also: the workspace switcher (tribe, pinned projects, collaborative rooms, personal scratchpad, new project, paste
+// an invite link), the + New menu (phones' orange action), the right panel's preview mode.
 // Public: window.TribeShell = { render, onShow, preview, closePreview, switcher, go, dests, openNew, recent }.
 (function () {
   const $ = s => document.querySelector(s);
@@ -49,11 +52,25 @@
     { key: 'secretary', label: 'Secretary', icon: 'i-quill', group: 'ops', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
     { key: 'settings', label: 'Settings', icon: 'i-gear', group: 'foot', kind: 'Action', keys: 'preferences profile name color folder brain', run: () => window.TribeSettings && window.TribeSettings.open() },
     { key: 'invite', label: 'Invite friends', icon: 'i-users', group: 'foot', kind: 'Action', keys: 'link join share qr', run: () => App().openInvite() },
+    { key: 'repos-all', label: 'All repos', icon: 'i-git', group: 'global', keys: 'repositories every project code branches status', run: () => hubOpen('repos') },
+    { key: 'docs-all', label: 'Global docs', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
+    { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'hub', label: 'Global hub', icon: 'i-home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
+    { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
     { key: 'home', label: 'Project home', icon: 'i-home', keys: 'home overview', run: () => App().show('home') },
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
-  const GROUPS = [['hub', 'Project Hub'], ['ops', 'Coordinate & Ops']];
+  const PROJECT_GROUPS = [['hub', 'Project Hub'], ['ops', 'Coordinate & Ops']], GLOBAL_GROUPS = [['global', 'Global']];
+  // No project selected: the Global Hub is on screen (its sub-pages too).
+  const isGlobal = () => document.body.dataset.view === 'hub';
+  let GROUPS = PROJECT_GROUPS;
+  const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
+  function openScratch() {
+    if (isPhone() || !C.connected()) { hubOpen('home'); setTimeout(() => { const t = $('#hub-scratch .sc-in') || $('#scratch-in'); if (t) t.focus(); }, 150); return; }
+    document.body.classList.remove('panel-off'); syncToggle(); closePreview();
+    setTimeout(() => { const t = $('#scratch-in'); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } }, 60);
+  }
   const COUNT = { bugs: 1, requests: 1, reviews: 1, handoffs: 1 };
   const HOT = { requests: 1, reviews: 1, handoffs: 1 };
   function go(key) {
@@ -65,8 +82,10 @@
   // ---------- the two collapsible groups (open/closed per group in localStorage) ----------
   const FKEY = g => `tribecode.nav.${g}`;
   const isOpen = g => { try { return localStorage.getItem(FKEY(g)) !== '0'; } catch { return true; } };
+  let drawnGlobal = null;
   function drawGroups() {
     const box = $('#nest-groups'); if (!box) return;
+    GROUPS = isGlobal() ? GLOBAL_GROUPS : PROJECT_GROUPS; drawnGlobal = isGlobal();
     box.innerHTML = GROUPS.map(([g, label]) => `<div class="nest-fold ${isOpen(g) ? 'open' : ''}" id="grp-${g}" data-group="${g}">
         <button class="nest-fold-head" data-fold="${g}" aria-expanded="${isOpen(g)}" aria-controls="grp-${g}-body"><span>${esc(label)}</span><span class="n" id="gn-${g}"></span>${ico('i-chev', 14)}</button>
         <div class="nest-fold-body" id="grp-${g}-body" role="group" aria-label="${esc(label)}">${DEST.filter(d => d.group === g).map(d =>
@@ -99,6 +118,7 @@
   // ---------- which destination is on screen ----------
   function current() {
     const v = document.body.dataset.view || '';
+    if (v === 'hub') { const m = window.TribeHub ? window.TribeHub.mode() : 'home'; return m === 'repos' ? 'repos-all' : m === 'docs' ? 'docs-all' : 'hub'; }
     if (v === 'coord') return (window.TribeCoord && window.TribeCoord.tab()) || 'agents';
     if (v === 'flow-roles') return 'roles';
     if (v === 'flow-updates' || v === 'updates') return 'updates';
@@ -106,6 +126,7 @@
     return v;
   }
   function markActive() {
+    if (drawnGlobal !== isGlobal()) { drawGroups(); globalHead(); }
     const cur = document.body.classList.contains('ws-open') ? '' : current();
     document.querySelectorAll('[data-pnav]').forEach(b => { const on = b.dataset.pnav === cur; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     for (const [g] of GROUPS) { const el = $(`#grp-${g}`); if (el) el.classList.toggle('has-on', DEST.some(d => d.group === g && d.key === cur)); }
@@ -119,7 +140,7 @@
 
   // ---------- a small popover we own (flat, 1px border, no shadow) ----------
   let popEl = null;
-  function closePop() { if (popEl) { popEl.remove(); popEl = null; document.querySelectorAll('#crumb-section, #pj-switch, #nest-switch, [data-nav-menu]').forEach(b => b.setAttribute('aria-expanded', 'false')); } }
+  function closePop() { if (popEl) { popEl.remove(); popEl = null; document.querySelectorAll('#crumb-section, #pj-switch, #nest-switch, #ws-name, [data-nav-menu]').forEach(b => b.setAttribute('aria-expanded', 'false')); } }
   function pop(anchor, html, { id, side = 'right', cls = '' } = {}) {
     closePop();
     const el = document.createElement('div'); el.className = `sh-pop ${cls} ${isPhone() ? 'sheet' : ''}`; if (id) el.id = id; el.setAttribute('role', 'menu');
@@ -135,7 +156,7 @@
     const f = el.querySelector('button'); if (f && !isPhone()) f.focus({ preventScroll: true });
     return el;
   }
-  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-switch, #crumb-section, #pj-switch, [data-nav-menu]')) closePop(); });
+  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-switch, #ws-name, #crumb-section, #pj-switch, [data-nav-menu]')) closePop(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && popEl) { closePop(); e.stopPropagation(); }
     if (popEl && ['ArrowDown', 'ArrowUp'].includes(e.key)) { const all = [...popEl.querySelectorAll('button:not([disabled])')]; const i = all.indexOf(document.activeElement); const n = all[(i + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length]; if (n) { n.focus(); e.preventDefault(); } }
@@ -187,22 +208,53 @@
     const el = pop(anchor, html, { id: 'section-menu', side: 'below' });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
   }
+  // ---------- workspace switcher: tribe · pinned · collaborative rooms · personal · new / join ----------
+  // Pins persist per member on the server (/api/hub/prefs), with a localStorage copy for offline and first paint.
+  const PINKEY = () => `tribecode.pins:${C.base()}`;
+  let pins = (() => { try { return JSON.parse(localStorage.getItem(PINKEY()) || '[]'); } catch { return []; } })();
+  const setPinsLocal = list => { pins = list; try { localStorage.setItem(PINKEY(), JSON.stringify(list)); } catch {} };
+  async function loadPins() { if (!C.connected()) return; try { const r = await C.api('/hub/prefs'); setPinsLocal(r.pins || []); } catch {} }
+  async function togglePin(pidv) {
+    const next = pins.includes(pidv) ? pins.filter(x => x !== pidv) : [...pins, pidv];
+    setPinsLocal(next);
+    try { const r = await C.api('/hub/prefs', { method: 'PUT', body: { pins: next } }); setPinsLocal(r.pins || []); } catch (e) { toast(e.message); }
+  }
+  C.on('hello', loadPins);
   function switcher(anchor) {
-    const list = PJ() ? PJ().list() : [], cur = PJ() && PJ().current(), F = PJ().face;
-    const scoped = Array.isArray((C.state().me || {}).projects);
-    const el = pop(anchor, `<div class="sh-menu sh-projects"><h6>Projects</h6>${list.map(p => { const k = p.counts || {}, h = PJ().here(p.id).length;
-        return `<button data-pj-open="${esc(p.id)}" class="${p.id === cur ? 'on' : ''}">${F(p, 'sm')}<span>${esc(p.name)}<small>${h ? `${h} here` : ''}${k.tasks ? `${h ? ' · ' : ''}${k.tasks} open` : ''}</small></span>${p.id === cur ? ico('i-tick', 14) : ''}</button>`; }).join('')}
-      <hr>${scoped ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`, { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below' });
+    const list = PJ() ? PJ().list() : [], cur = isGlobal() ? null : PJ() && PJ().current(), F = PJ().face;
+    const meId = (C.state().me || {}).id, scoped = Array.isArray((C.state().me || {}).projects), on = C.connected();
+    const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || 'My Tribe';
+    const humans = p => (p.members || []).filter(m => m.role !== 'agent').length;
+    const collab = p => humans(p) > 1 || PJ().here(p.id).some(m => m.id !== meId);
+    const row = p => { const k = p.counts || {}, h = PJ().here(p.id).length, pinned = pins.includes(p.id);
+      return `<div class="sw-row"><button data-pj-open="${esc(p.id)}" class="${p.id === cur ? 'on' : ''}">${F(p, 'sm')}<span>${esc(p.name)}<small>${h ? `${h} here` : ''}${k.tasks ? `${h ? ' · ' : ''}${k.tasks} open` : ''}</small></span>${p.id === cur ? ico('i-tick', 14) : ''}</button>
+        <button class="sw-pin ${pinned ? 'on' : ''}" data-pin="${esc(p.id)}" title="${pinned ? 'Unpin' : 'Pin to the top'}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${esc(p.name)}" aria-pressed="${pinned}"><svg class="i" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></button></div>`; };
+    const pinnedL = list.filter(p => pins.includes(p.id)), rest = list.filter(p => !pins.includes(p.id));
+    const rooms = rest.filter(collab), personal = rest.filter(p => !collab(p));
+    const groupH = (label, items) => items.length ? `<h6>${esc(label)}</h6>${items.map(row).join('')}` : '';
+    const el = pop(anchor, `<div class="sh-menu sh-projects sh-switch">
+        <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Global hub · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
+        ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
+        <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
+        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`,
+      { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
+    el.querySelectorAll('.sw-row [data-pj-open]').forEach(b => b.onclick = () => { const id = b.dataset.pjOpen; closePop(); closeDrawer(); if (id === (PJ() && PJ().current())) App().show('home'); else PJ().switchTo(id, 'home'); });
+    el.querySelectorAll('[data-pin]').forEach(b => b.onclick = async e => { e.stopPropagation(); await togglePin(b.dataset.pin); switcher(anchor); });
+    el.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { const k = b.dataset.sw; closePop(); closeDrawer();
+      if (k === 'hub') hubOpen('home'); else if (k === 'scratch') openScratch(); else if (k === 'join') window.TribeSettings && window.TribeSettings.joinPrompt(); });
     return el;
   }
   $('#crumb-section').addEventListener('click', e => { e.stopPropagation(); popEl && popEl.id === 'section-menu' ? closePop() : sectionMenu(e.currentTarget); });
-  $('#ws-name').addEventListener('click', () => App().show('home'));
-  $('#nest-switch').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); if (PJ() && PJ().list().length) switcher(e.currentTarget); else App().show('home'); });
+  $('#ws-name').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); switcher(e.currentTarget); });
+  $('#nest-switch').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); switcher(e.currentTarget); });
 
   // ---------- nest ----------
+  let lastP = null, lastH = null;
   function render(p, h) {
-    if (!p) return;
+    if (h) lastH = h;
+    if (!p) { lastP = null; globalHead(); return; }
+    lastP = p;
     const k = p.counts || {}, here = h ? h.here(p.id).length : 0;
     const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || '';
     $('#nest-face').innerHTML = h ? h.face(p, 'sm') : '';
@@ -215,6 +267,31 @@
     paintCounts();
     pinned(p);
     recents();
+    globalHead();
+  }
+  // The nest header and the core rows with no project selected: the tribe is the header, the rows dim and say
+  // where they open, and one row goes straight into the current project.
+  function globalHead() {
+    const g = isGlobal(), p = lastP, h = lastH, on = C.connected();
+    document.body.classList.toggle('global', g);
+    const title = $('#nest-title'); if (!title) return;
+    const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || 'My Tribe';
+    if (g) {
+      title.dataset.nav = 'hub'; title.title = 'Global hub';
+      $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face">${esc(tribe.trim().charAt(0).toUpperCase() || 'T')}</span>`;
+      $('#nest-name').textContent = tribe;
+      $('#nest-sub').textContent = on ? 'Global hub' : 'Not connected';
+    } else {
+      title.dataset.nav = 'home'; title.title = 'Project home';
+      if (p) { $('#nest-face').innerHTML = h ? h.face(p, 'sm') : ''; $('#nest-name').textContent = p.name; }
+    }
+    let enter = $('#nest-enter');
+    if (!enter) { enter = document.createElement('div'); enter.id = 'nest-enter'; enter.className = 'nest-enter'; const nav = $('#pj-nav'); nav.insertBefore(enter, nav.firstChild); }
+    enter.innerHTML = g ? (on && p ? `<div class="nest-pick">Pick a project</div><button class="nest-row nest-open" id="nest-open" data-nav="home" title="Open ${esc(p.name)}">${h ? h.face(p, 'xs') : ''}<span>Open ${esc(p.name)}</span>${ico('i-chev', 14)}</button>`
+      : `<div class="nest-pick">${on ? 'No project yet' : 'Not in a tribe yet'}</div>`) : '';
+    document.querySelectorAll('#pj-nav > .nest-row:not(.nest-open), #pj-nav #nest-huddle-row').forEach(r => {
+      if (g) { r.dataset.hint = on && p ? `Opens in ${p.name}` : 'Needs a project'; r.title = r.dataset.hint; } else if (r.dataset.hint) { delete r.dataset.hint; r.removeAttribute('title'); }
+    });
   }
   function updates() {   // the bell's unread count (notify.js) mirrored on the Updates row
     const c = $('#nf-count'), v = c && !c.classList.contains('hidden') ? Number(c.textContent) || 0 : 0;

@@ -94,7 +94,7 @@
   // After the server moved us: reload what is on screen for the new project.
   C.on('project', () => {
     pulses[cur()] = 0;
-    const v = App().view();
+    const v = App().view() === 'hub' ? 'home' : App().view();   // picking a project from the Global Hub opens it
     App().reloadChat();
     // Lists other views keep in memory belong to the old project: reload them so live events land in the right list.
     for (const k of ['TribeTasks', 'TribeBoard', 'TribeBugs']) { const m = window[k]; if (m && m.load && !['tasks', 'board', 'bugs'].includes(v)) try { m.load(); } catch {} }

@@ -316,7 +316,7 @@ body.panel-off .panel { display: none; }
 /* Top right (desktop): status · tools · window lights, bigger and in a fixed order. */
 @media (min-width: 821px) {
   .tb-right { gap: 6px; }
-  .tb-right #update-pill { order: 1; margin-right: 6px; }
+  .tb-right #update-btn { order: 4; }   /* the quiet update icon sits right before the profile (same order, earlier in the DOM) */
   .tb-right #sync-status { display: none; }   /* the profile button's dot shows the connection now */
   .tb-right #panel-toggle { order: 2; }
   .tb-right #ctx-btn { order: 3; }

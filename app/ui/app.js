@@ -98,12 +98,15 @@
   }
 
   // nav + views (the shell: app/ui/shell.js renders the nest, breadcrumbs and menus around these)
-  const VIEWS = { home: 'Home', chat: 'Chat', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
+  const VIEWS = { hub: 'Hub', home: 'Home', chat: 'Chat', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
   const ALIAS = { overview: 'home', inbox: 'home' };
   let current = 'home';
   function show(view) {
     view = ALIAS[view] || view;
     if (!VIEWS[view]) return;
+    // Chat needs a tribe: with none yet, the Global Hub (quick launch, scratchpad, host or join) instead of a dead box.
+    if (view === 'chat' && !C.hasToken()) { view = 'hub'; setTimeout(() => toast('Chat lives in a tribe. Start hosting or join with a link, right here.'), 0); }
+    const leaving = current;
     document.body.classList.remove('mobile-chat', 'drawer-open');
     Object.keys(VIEWS).forEach(v => { const el = $('#view-' + v); if (el) el.classList.toggle('hidden', v !== view); });
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === view));
@@ -119,6 +122,7 @@
     if (view === 'visuals') window.TribeVisuals.show();
     if (view === 'chat') { const l = $('#chat-list'); if (l) l.scrollTop = 1e9; if (!isPhone()) setTimeout(() => { const i = $('#chat-input'); if (i && !document.activeElement.closest('.modal')) i.focus({ preventScroll: true }); }, 0); }
     current = view;
+    if (window.TribeHub) { if (view === 'hub') window.TribeHub.onShow(); else { if (leaving === 'hub') window.TribeHub.onHide(); window.TribeHub.remember(view); } }
     if (window.TribeProjects) window.TribeProjects.onShow(view);   // overview, requests, cascade highlight
     if (window.TribeShell) window.TribeShell.onShow(view);
     if (window.TribeCoord && view === 'coord') window.TribeCoord.show();
@@ -129,7 +133,8 @@
   document.addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-nav]'); if (!b || b.disabled) return;
     const v = ALIAS[b.dataset.nav] || b.dataset.nav;
-    if (VIEWS[v]) show(v);
+    if (v === 'hub' && window.TribeHub) window.TribeHub.open('home');
+    else if (VIEWS[v]) show(v);
     else if (v === 'brain') { show('home'); document.querySelector('#standup-card').scrollIntoView({ block: 'center' }); }
   });
 
@@ -525,7 +530,7 @@
   $('#invite-modal').addEventListener('click', e => { if (e.target.id === 'invite-modal') closeInvite(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvite(); });
   // Settings lives at the bottom of the nest (shell.js), the profile at the top right (profilemenu.js).
-  $('#rail-logo').addEventListener('click', () => show('home'));
+  $('#rail-logo').addEventListener('click', () => (window.TribeHub ? window.TribeHub.open('home') : show('hub')));   // the Global Hub (app/ui/hub.js)
   $('#tour-invite').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openInvite(); });
   $('#tour-search').addEventListener('click', () => window.TribePalette.open());
   if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
@@ -602,7 +607,12 @@
     else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
   })();
   window.TribeUpdater.init();
-  try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
+  // Start screen: the view you were on in this tab, else the project home, else (no tribe yet) the Global Hub.
+  { let v = null; try { v = sessionStorage.getItem('tribecode.view'); } catch {}
+    if (/^#\/hub/.test(location.hash) && window.TribeHub) window.TribeHub.open((location.hash.split('/')[2]) || 'home');
+    else show(v && VIEWS[v] ? v : C.hasToken() ? 'home' : 'hub'); }
+  // Nothing to connect to (no tribe yet): the project home has nothing to show, the hub does.
+  C.on('status', s => { if (s.status === 'offline' && !C.hasToken() && ['home', 'chat'].includes(current)) show('hub'); });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { show, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { show, hostHere, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

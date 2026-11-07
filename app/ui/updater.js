@@ -1,9 +1,10 @@
-// Auto-update: check GitHub Releases, download in the background, show a
-// "Restart to update" pill, and let the user save + hand off work before restarting.
+// Auto-update: check GitHub Releases, download in the background, show a quiet update icon next to the
+// profile (a refresh glyph with a small Teal dot; the profile menu also offers "Update ready · vX — Restart"),
+// and let the user save + hand off work before restarting.
 //
 // Desktop: uses tauri-plugin-updater (endpoint = latest.json on the GitHub release,
 // produced by .github/workflows/release.yml) and tauri-plugin-process to relaunch.
-// Browser/dev: checks the GitHub Releases API so the pill can be tested; ?simulateUpdate=0.2.0 forces one.
+// Browser/dev: ?simulateUpdate=0.2.0 forces one so the icon and the flow can be tested.
 (function () {
   const $ = s => document.querySelector(s);
   const S = window.TribeStore;
@@ -118,15 +119,19 @@
     return pending && u.snoozedVersion === pending.version && Date.now() < u.snoozeUntil;
   }
 
-  // ---- pill ----
+  // ---- the update icon (a refresh glyph with a Teal dot, next to the profile) ----
   function renderPill() {
-    const pill = $('#update-pill'), label = $('#update-pill-label');
-    if (!pending) { pill.classList.add('hidden'); return; }
-    pill.classList.remove('hidden');
-    pill.classList.toggle('downloading', !pending.ready);
-    pill.classList.toggle('quiet', pending.ready && snoozed());
-    pill.style.setProperty('--p', Math.round(pending.progress * 100) + '%');
-    label.textContent = pending.ready ? `Restart to update · v${pending.version}` : `Downloading v${pending.version} · ${Math.round(pending.progress * 100)}%`;
+    const btn = $('#update-btn'), label = $('#update-btn-label');
+    if (!pending) { btn.classList.add('hidden'); document.body.classList.remove('update-ready'); return; }
+    btn.classList.remove('hidden');
+    btn.classList.toggle('downloading', !pending.ready);
+    btn.classList.toggle('ready', !!pending.ready);
+    btn.classList.toggle('quiet', pending.ready && snoozed());
+    btn.style.setProperty('--pf', String(Math.round(pending.progress * 100) / 100));
+    const text = pending.ready ? `Update ready · v${pending.version} · Restart` : `Downloading v${pending.version} · ${Math.round(pending.progress * 100)}%`;
+    label.textContent = text; btn.title = text; btn.setAttribute('aria-label', text);
+    document.body.classList.toggle('update-ready', !!pending.ready);
+    if (window.TribeProfileMenu && window.TribeProfileMenu.paint) window.TribeProfileMenu.paint();
   }
 
   // ---- popover: save + hand off + restart ----
@@ -165,10 +170,11 @@
         <div class="spacer"></div>
         <button class="btn primary" data-u="go" id="up-go">Save, hand off &amp; restart</button>
       </div>`;
-    const pop = $('#update-pop'), r = $('#update-pill').getBoundingClientRect();
+    const pop = $('#update-pop'), btn = $('#update-btn'), anchor = btn && !btn.classList.contains('hidden') && btn.offsetParent ? btn : ($('#pf-btn') && $('#pf-btn').offsetParent ? $('#pf-btn') : btn), r = anchor.getBoundingClientRect();
     pop.classList.remove('hidden');
     pop.style.top = (r.bottom + 10) + 'px';
     pop.style.left = Math.max(12, Math.min(innerWidth - pop.offsetWidth - 12, r.right - pop.offsetWidth)) + 'px';
+    pop.style.setProperty('--arrow', Math.max(16, Math.min(pop.offsetWidth - 28, r.left + r.width / 2 - parseFloat(pop.style.left) - 6)) + 'px');
     $('#update-pop').querySelectorAll('[data-u]').forEach(b => b.addEventListener('click', e => onPop(e, b)));
   }
 
@@ -230,14 +236,15 @@
     if (v) { sessionStorage.removeItem('tribecode.justUpdated'); setTimeout(() => window.TribeApp.toast(`Updated to v${v}. Welcome back, your work was restored.`), 600); }
   }
 
-  $('#update-pill').addEventListener('click', e => { e.stopPropagation(); $('#update-pop').classList.contains('hidden') ? openPop() : closePop(); });
-  document.addEventListener('click', e => { if (!e.target.closest('#update-pop') && !e.target.closest('#update-pill')) closePop(); });
+  $('#update-btn').addEventListener('click', e => { e.stopPropagation(); $('#update-pop').classList.contains('hidden') ? openPop() : closePop(); });
+  document.addEventListener('click', e => { if (!e.target.closest('#update-pop') && !e.target.closest('#update-btn') && !e.target.closest('[data-act="restart"]')) closePop(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
   addEventListener('focus', () => check());
 
   window.TribeUpdater = {
     init() { welcomeBack(); check(); setInterval(check, CHECK_EVERY_MS); },
     check, openPop, current: () => current,
+    pending: () => (pending ? { version: pending.version, ready: !!pending.ready, progress: pending.progress, snoozed: !!snoozed() } : null),
     // app.js asks this before closing the desktop window: a downloaded update installs on the way out.
     async beforeClose() {
       if (!pending || !pending.ready || !pending.installOnClose) return false;
