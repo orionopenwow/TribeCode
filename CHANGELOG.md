@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.0
+
+- **Shared compute** (quiet, in a project's Helpers list once it has a repo and more than one person): lend this computer to the tribe for builds, test runs and analysis, and see who else lends. Splitting heavy builds across lenders is the next step (docs/SHARED-COMPUTE.md)
+- **Plans**: starting a tribe from a phone and sharing hosting with desktop friends (docs/MOBILE-TRIBES.md: QR pairing, a draft tribe on the phone, links that survive a move, move hosting in one tap, co-hosts with failover)
+- **Phone features report** (docs/PHONE-REPORT.md): join, chat (send, react, pin, edit, delete), DMs, docs, tasks, notes, approvals, profile and Home, each checked on the server and after a reload by a new test, plus suggested next edits
+- **Phones**: the project overview shows its picture again (tap to change it)
+
 ## v0.6.9
 
 - **Fix: "A TribeCode server is already running here with other members"** on your own computer. When the desktop app has lost its sign-in (a reinstall, cleared app data) it now signs you back in as the host. Only the desktop app on that computer can do this; other sites on your computer are refused

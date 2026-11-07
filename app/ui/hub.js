@@ -615,9 +615,10 @@
         sec2 ? row('secretary', 'i-quill', 'Secretary', `${sec2.on ? `<span class="ok">${esc(sec2.state)}</span>` : 'off'}${sec2.last ? ` · ${esc(ago(sec2.last))}` : ''}`, sec2.on) : '',
         row('models', 'i-net', m.online ? `Local model · ${m.model}` : 'Local model', m.online ? '<span class="ok">ready</span> · Ollama' : 'off · Ollama not running', m.online),
         auto ? row('autopilot', 'i-git', 'Repo autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
+        computeRow(row),
       ].join('');
       box.innerHTML = `<h6>Helpers</h6>${rows}`;
-      box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => fleetGo(r.dataset.helper));
+      box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : fleetGo(r.dataset.helper));
     }
     let pad = $('#room-scratch');
     if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'scratch room-scratch'; const cc = $('#cc-connect'); cc.after(pad); }
@@ -625,6 +626,30 @@
     pad.classList.toggle('hidden', document.body.dataset.view === 'hub');   // Home shows the scratchpad itself
     homePanel();
   }
+  // ---------- Shared compute: a quiet helper, only once a project has a repo and more than one person ----------
+  let cmp = { mine: { on: false }, helpers: [], at: 0 };
+  async function loadCompute(force) { if (!connected() || (!force && Date.now() - cmp.at < 30000)) return; cmp.at = Date.now(); try { cmp = { ...(await C.api('/compute')), at: Date.now() }; panel(); } catch {} }
+  C.on('ws', m => { if (m.type === 'compute') loadCompute(true); });
+  function computeRow(row) {
+    const p = PJ() && PJ().cur && PJ().cur(); if (!p || !p.hasRepo) return '';
+    const people = (p.members || []).filter(x => x.role !== 'agent' && x.role !== 'spectator').length; if (people < 2) return '';
+    loadCompute();
+    const n = cmp.helpers.length, on = cmp.mine && cmp.mine.on;
+    return row('compute', 'i-zap', 'Shared compute', on ? `<span class="ok">lending</span>${n > 1 ? ` · ${n} computers` : ''}` : n ? `${n} computer${n === 1 ? '' : 's'} lending` : 'off', on || n > 0);
+  }
+  function computeSheet() {
+    const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
+    const on = cmp.mine && cmp.mine.on, cores = navigator.hardwareConcurrency || null;
+    body.innerHTML = `<span class="eyebrow">Helpers</span><h2>Shared compute</h2>
+      <p class="lead">Lend this computer to the tribe for heavy repo work: builds, test runs and code analysis. Work only comes from this tribe's repos, runs on a clean copy, and you can stop any time.</p>
+      <div class="cmp-row"><span><b>Lend this computer</b><small>${cores ? `${cores} cores` : 'When it\'s on and TribeCode is open'}</small></span><button class="toggle set-toggle" role="switch" id="cmp-toggle" aria-checked="${!!on}" aria-label="Lend this computer"><span class="switch"></span></button></div>
+      <div class="cmp-list">${cmp.helpers.length ? cmp.helpers.map(h => `<div class="cmp-h"><span class="cmp-dot ${h.online ? 'on' : ''}"></span><b>${esc(h.name)}</b><small>${h.cores ? `${h.cores} cores` : ''}${h.online ? ' · online' : ' · away'}</small></div>`).join('') : '<p class="faint">Nobody is lending yet.</p>'}</div>
+      <p class="faint cmp-note">Lenders show up here for the tribe. Splitting big builds across them comes next.</p>
+      <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Done</button></div>`;
+    body.querySelector('[data-close]').onclick = () => m.classList.add('hidden');
+    $('#cmp-toggle').onclick = async () => { try { cmp = { ...(await C.api('/compute', { method: 'PUT', body: { on: !on, cores } })), at: Date.now() }; panel(); computeSheet(); } catch (e) { toast(e.message); } };
+  }
+
   // ---------- Home's right panel ----------
   const IKEY = 'tribecode.home.insightsOpen';
   function homePanel() {
