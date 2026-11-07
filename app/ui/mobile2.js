@@ -63,7 +63,7 @@
     'm2-pin': '<path d="M12 17v5M5 17h14l-2-4V5H7v8z"/>',
     'm2-mic-note': '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/>',
     'm2-user': '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-    'm2-gear': '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+    'm2-gear': '<path d="M10.3 2.6h3.4l.5 2.6a7.3 7.3 0 0 1 1.9 1.1l2.5-.9 1.7 2.9-2 1.8a7.4 7.4 0 0 1 0 2.2l2 1.8-1.7 2.9-2.5-.9a7.3 7.3 0 0 1-1.9 1.1l-.5 2.6h-3.4l-.5-2.6a7.3 7.3 0 0 1-1.9-1.1l-2.5.9-1.7-2.9 2-1.8a7.4 7.4 0 0 1 0-2.2l-2-1.8 1.7-2.9 2.5.9a7.3 7.3 0 0 1 1.9-1.1z"/><circle cx="12" cy="12" r="2.8"/>',
     'm2-robot': '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 13h.01M14.5 13h.01M9.5 16h5M3 12v3M21 12v3"/><circle cx="12" cy="4" r="1"/>',
     'm2-home': '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>', 'm2-list': '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>', 'm2-users': '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M15.5 5.3a3.2 3.2 0 0 1 0 5.4M17.5 14.4c1.6.6 2.7 2.2 3 4.6"/>', 'm2-link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'm2-search': '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   };
@@ -139,7 +139,7 @@
       const b = e.target.closest('[data-hb]'); if (!b) return;
       const k = b.dataset.hb;
       if (k === 'pjs') { document.body.classList.add('drawer-open'); return; }
-      if (k === 'agents') return window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // Agent fleet, every project
+      if (k === 'agents') return C.connected() ? talkTo() : window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // your Claude, the AI, Manage agents
       if (k === 'notes') return window.TribeHub && window.TribeHub.open('docs');   // your docs center: your notes, then project docs
       if (k === 'msgs') { if (C.connected()) return App().show('chat'); return window.TribeFriends && window.TribeFriends.open(); }
       if (k === 'notifs') return window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : null;
@@ -216,7 +216,7 @@
     return v;
   }
   function show(view) {
-    if (view === 'agents') return window.TribeAgentsHub && window.TribeAgentsHub.open();
+    if (view === 'agents') return phone() ? talkTo() : window.TribeAgentsHub && window.TribeAgentsHub.open();   // phones: reach your Claude on your computer in one tap
     if (view === 'hub') return window.TribeHub ? window.TribeHub.open('home') : App().show('home');
     if (view !== 'updates') return App().show(view);
     if (window.TribeFlow && window.TribeFlow.isFlow && window.TribeFlow.isFlow() && window.TribeFlow.openUpdates) return window.TribeFlow.openUpdates();   // flow projects: the living plan + gists
@@ -553,13 +553,14 @@
       .sort((a, b) => (f.has(b.id) - f.has(a.id)) || (b.online - a.online) || String(a.name).localeCompare(b.name));
     const unread = DM() && DM().unread ? DM().unread() : {};
     const row = (k, iconHtml, t, s, on = false, extra = '') => `<button class="m2-mi ${on ? 'on' : ''}" data-talk="${esc(k)}">${iconHtml}<span class="m2-mt"><b>${t}</b><small>${s}</small></span>${extra}</button>`;
-    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Talk to</span></div>
+    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Talk to your Claude, the AI or the tribe</span></div>
       <div class="m2-menu">
         ${row('ai', `<span class="m2-mic live">${ic('spark', 18)}</span>`, 'Ask AI', '<span id="m2-ai-sub">The tribe\'s AI answers in #general</span>')}
         ${ag ? row('claude', `<span class="m2-mic live">${ic('robot', 18)}</span>`, 'My Claude', `${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}`, ch === DM().channelWith(ag.id)) : ''}
         ${ag ? row('desktop', `<span class="m2-mic">${ic('desk', 18)}</span>`, 'My desktop', 'Hand a change to a computer that can push') : ''}
         ${row('agents', `<span class="m2-mic">${ic('robot', 18)}</span>`, '#agents', 'Where the agents coordinate')}
         ${row('general', `<span class="m2-mic">${ic('hash', 18)}</span>`, '#general', 'Everyone in this project', ch === 'general')}
+        ${row('manage', `<span class="m2-mic">${ic('gear', 18)}</span>`, 'Manage agents', 'Connect Claude Code, the fleet, the Office')}
       </div>
       ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have Claude Code on a computer? Connect it too</button>'}
       ${people.length ? `<div class="m2-sh-sub eyebrow">Direct messages</div><div class="m2-menu">${people.map(m => { const n = unread[DM().channelWith(m.id)] || 0;
@@ -584,6 +585,7 @@
     if (k === 'claude') { const ag = myAgent(); if (ag && DM()) return DM().open(ag.id); App().connectClaude ? App().connectClaude() : ($('#cc-connect') && $('#cc-connect').click()); return; }
     if (k === 'general') { if (DM() && DM().current() !== 'general') DM().back(); App().show('chat'); return setTimeout(talkLabel, 0); }
     if (k === 'brain') { if (DM() && DM().current() !== 'general') DM().back(); App().show('chat'); setTimeout(() => { const i = inp(); if (i) { if (!/^@brain\b/.test(i.value)) i.value = '@brain ' + i.value.replace(/^@brain\s*/, ''); i.dispatchEvent(new Event('input')); i.focus(); } talkLabel(); }, 60); return; }
+    if (k === 'manage') return window.TribeAgentsHub && window.TribeAgentsHub.open(document.body.classList.contains('global') ? { global: true } : undefined);
     if (k === 'desktop') { if (window.TribeRepo && window.TribeRepo.sendToDesktop) return window.TribeRepo.sendToDesktop({}); return App().show('repo'); }
     if (k === 'agents') { if (window.TribeCoord) window.TribeCoord.open('agents'); else App().show('coord'); setTimeout(() => { const t = $('#talk-input'); if (t) t.scrollIntoView({ block: 'center' }); }, 400); return; }
     if (k.startsWith('dm:') && DM()) { DM().open(k.slice(3)); setTimeout(talkLabel, 0); }

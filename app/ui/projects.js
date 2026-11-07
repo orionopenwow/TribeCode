@@ -237,20 +237,14 @@
     };
   }
 
-  // Project picture: any image, shrunk to a 128px square in the browser, stored with the project.
+  // Project picture: pick, frame it in the cropper (drag, zoom), stored with the project as a 256 px square.
   function pickImage(p) {
     if (me().role === 'spectator' || me().role === 'agent') return;
-    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-    inp.onchange = async () => {
-      const f = inp.files[0]; if (!f) return;
-      try {
-        const img = await createImageBitmap(f), c = document.createElement('canvas'); c.width = c.height = 128;
-        const sz = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - sz) / 2, (img.height - sz) / 2, sz, sz, 0, 0, 128, 128);
-        await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { image: c.toDataURL('image/png') } });
-        await refresh(); overview();
-      } catch (e) { toast(e.message || 'Could not use that image'); }
-    };
-    inp.click();
+    (async () => {   // pick → frame it (drag, zoom, round + square preview) → Apply (cropper.js)
+      const url = await window.TribeCropper.pick({ title: `Picture for ${p.name}` }); if (!url) return;
+      try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { image: url } }); await refresh(); overview(); toast('Picture updated'); }
+      catch (e) { toast(e.message || 'Could not use that image'); }
+    })();
   }
 
   // ---------- shared workspace panel (Overview + Repo view) ----------
@@ -396,13 +390,10 @@
       <div class="np-status" id="np-status"></div>
       <div class="ns-btns"><button class="linkish" id="np-back">Back</button><span style="flex:1"></span><button class="btn primary" id="np-create">Create</button></div>`;
     $('#np-back').onclick = openNew;
-    $('#np-pic').onclick = () => {
-      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-      inp.onchange = async () => { const f = inp.files[0]; if (!f) return;
-        try { const img = await createImageBitmap(f), c = document.createElement('canvas'); c.width = c.height = 128; const sz = Math.min(img.width, img.height);
-          c.getContext('2d').drawImage(img, (img.width - sz) / 2, (img.height - sz) / 2, sz, sz, 0, 0, 128, 128); setup.image = c.toDataURL('image/png');
-          const keep = { n: $('#np-input').value, b: $('#np-bio').value }; customize(); $('#np-input').value = keep.n; $('#np-bio').value = keep.b; } catch { toast('Could not use that image'); } };
-      inp.click();
+    $('#np-pic').onclick = async () => {   // Discord-style: upload, then frame it before it's used
+      const keep = { n: $('#np-input').value, b: $('#np-bio').value };
+      const url = await window.TribeCropper.pick({ title: 'Your project picture' }); if (!url) return;
+      setup.image = url; customize(); $('#np-input').value = keep.n; $('#np-bio').value = keep.b;
     };
     const inp = $('#np-input'); inp.focus(); inp.select();
     inp.onkeydown = e => { if (e.key === 'Enter') $('#np-create').click(); };

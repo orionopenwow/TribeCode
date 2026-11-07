@@ -8,7 +8,7 @@ The desktop app couldn't start its server.
 
 1. Home shows what went wrong. Open **Details** to read the log, then tap **Try again**.
 2. Something else may be using port 4747. An older TribeCode there is reused; anything else, close it or restart the computer.
-3. Still stuck? Run **TribeCode.bat** from the TribeCode folder on your Desktop. It installs the newest version and tidies up old ones.
+3. Still stuck? Run **Stable\\Update-and-Open-TribeCode.bat** from the TribeCode folder on your Desktop. It installs the newest version and tidies up old ones.
 
 ## "Something went wrong" or a half-loaded screen
 
@@ -39,7 +39,7 @@ TribeCode reloads once by itself. If the card still shows, tap **Reload**. **Sen
 - The desktop app updates itself. When **Update ready · vX · Restart** shows in your profile menu, tap it. Your work is saved first.
 - **Check for updates** is in the profile menu too.
 - A bar saying **TribeCode was updated… Reload to use it**: tap **Reload**.
-- Still looks old? Close it fully, then run **TribeCode.bat**.
+- Still looks old? Close it fully, then run **Stable\\Update-and-Open-TribeCode.bat**.
 
 ## Voice or notifications don't work on a phone
 

@@ -23,11 +23,11 @@ if (-not $Quiet) { Write-Host ""; Write-Host "  TribeCode" -ForegroundColor Whit
 if ($Clean) {
   Step 'Tidying up old files'
   Get-ChildItem $home2 -Filter 'TribeCode_*_x64-setup.exe' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-  foreach ($f in 'latest.txt','Get-Latest-TribeCode.bat','Reset-Old-TribeCode.bat','TribeCode-Start-Test-Project.bat','New-Project-For-A-Friend.bat') {
+  foreach ($f in 'latest.txt','Get-Latest-TribeCode.bat','Reset-Old-TribeCode.bat','TribeCode-Start-Test-Project.bat','New-Project-For-A-Friend.bat','Try-New-Work.bat') {
     $p = Join-Path $home2 $f; if (Test-Path $p) { Remove-Item $p -Force -ErrorAction SilentlyContinue }
   }
   $stable = Join-Path $home2 'Stable'
-  if ((Test-Path $stable) -and -not (Test-Path (Join-Path $stable 'TribeCode\.git'))) { Remove-Item $stable -Recurse -Force -ErrorAction SilentlyContinue }
+  if ((Test-Path $stable) -and -not (Test-Path (Join-Path $stable 'TribeCode\.git')) -and -not (Test-Path (Join-Path $stable 'Update-and-Open-TribeCode.bat'))) { Remove-Item $stable -Recurse -Force -ErrorAction SilentlyContinue }
   # The old v0.1 code copy that shared %USERPROFILE%\TribeCode with the tribe data: remove only the code, keep the tribe.
   $old = Join-Path $env:USERPROFILE 'TribeCode'
   if ((Test-Path (Join-Path $old '.git')) -and (Test-Path (Join-Path $old 'server\index.js'))) {

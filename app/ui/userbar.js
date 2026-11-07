@@ -41,7 +41,7 @@
     }
   }
   // as wide as the rail + sidebar, whatever their width
-  function size() { if (!bar || phone.matches) return; const side = $('#tour-side'); const r = side && side.getBoundingClientRect(); if (r && r.right) bar.style.width = `${Math.round(r.right) - 16}px`; }
+  function size() { if (!bar || phone.matches) return; const side = $('#tour-side'); const r = side && side.getBoundingClientRect(); if (r && r.right) bar.style.width = `${Math.round(r.right)}px`; }
   addEventListener('resize', size);
   // the bell and Friends buttons are added by their scripts on load; place once everything is there
   const ready = () => { place(); if (C && C.on) { C.on('status', label); C.on('presence', label); } };
