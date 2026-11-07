@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals }) {
+module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {} }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -75,6 +75,7 @@ module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent
       inputSchema: S({ id: str('Approval id from request_approval') }, ['id']),
       run: ({ id }) => { const ap = approvals && approvals.get(id); return ap ? text({ id: ap.id, status: ap.status, note: ap.note || '', questions: ap.questions.map(q => ({ from: q.name, at: q.at, text: q.text })), decidedBy: ap.decidedByName, decidedAt: ap.decidedAt || null }) : err(`No approval with id ${id}`); },
     },
+    ...extraTools,   // e.g. check_messages / reply (chatx.js)
   };
   if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
 

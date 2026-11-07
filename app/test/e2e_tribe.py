@@ -337,6 +337,7 @@ def main():
             # ---- follow mode ----
             host_id = host.evaluate("TribeClient.state().me.id")
             friend.click(f'[data-follow="{host_id}"]')
+            friend.click("#dm-menu [data-act='follow']")   # clicking a person offers Message / Follow
             friend.wait_for_selector("#view-bugs:not(.hidden)", timeout=5000)
             wait_text(friend, ".toast", "Following Orion")
 

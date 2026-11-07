@@ -180,6 +180,7 @@
     if (q('#h-mute')) q('#h-mute').onclick = toggleMute;
     if (q('#h-share')) q('#h-share').onclick = share;
     if (q('#h-leave')) q('#h-leave').onclick = () => leave();
+    if (window.TribeCaptions) window.TribeCaptions.decorate(box, inCall);   // captions strip + controls (captions.js)
   }
 
   C.on('huddle', sync);
@@ -190,6 +191,6 @@
   document.addEventListener('DOMContentLoaded', renderBar);
   setTimeout(renderBar, 0);
 
-  window.TribeHuddle = { join, leave, toggleMute, share, inCall: () => inCall, roster: () => roster,
+  window.TribeHuddle = { join, leave, toggleMute, share, inCall: () => inCall, roster: () => roster, render: renderBar,
     debug: () => [...peers].map(([id, p]) => ({ id, state: p.pc.connectionState, audio: !!(p.audio && p.audio.srcObject && p.audio.srcObject.getAudioTracks().length) })) };
 })();

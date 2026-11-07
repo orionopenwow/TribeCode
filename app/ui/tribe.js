@@ -33,6 +33,7 @@
     sock.onopen = () => { retry = 0; setStatus('online'); sendActivity(); };
     sock.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
+      emit('ws', m);   // every message, for feature modules (captions, typing, DMs…)
       if (m.type === 'hello') { state.huddle = m.huddle || []; emit('huddle', state.huddle); state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
       if (m.type === 'presence') { state.members = m.members; emit('presence', state.members); }
       if (m.type === 'chat') emit('chat', m);
