@@ -17,6 +17,10 @@ const makeBugs = require('./bugs');
 const makeDrift = require('./drift');
 const makeClaims = require('./claims');
 const makeMcp = require('./mcp');
+const makeDm = require('./dm');
+const makeVoice = require('./voice');
+const makeChatx = require('./chatx');
+const bus = require('./bus');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -111,15 +115,15 @@ const pushPresence = () => broadcast({ type: 'presence', members: presence() });
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
 const huddleState = () => [...huddle].map(([mid, h]) => ({ id: mid, muted: h.muted, sharing: h.sharing, joined: h.joined }));
-const pushHuddle = () => broadcast({ type: 'huddle', members: huddleState() });
+const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState() }); voice.huddleChanged(); };
 function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.sockets) s.send(msg); }
 
 // ---------- chat ----------
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
-function postChat(channel, by, text) {
-  const msg = { id: id(12), at: new Date().toISOString(), by, text };
+function postChat(channel, by, text, extra) {
+  const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js)
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
-  broadcast({ type: 'chat', channel, message: msg });
+  if (!dms.deliver(channel, msg)) broadcast({ type: 'chat', channel, message: msg });   // DMs reach only their two members
   return msg;
 }
 function handleCommands(channel, member, text) {
@@ -161,6 +165,9 @@ const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: 
 const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
 const claims = makeClaims({ store, id, broadcast, nameOf });
+const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
+const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t) });
+const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus });
 const mcp = makeMcp({
   VERSION, tribe, presence, touchAgent, readVision,
   tasks: {
@@ -175,7 +182,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims,
+  docs, claims, extraTools: chatx.mcpTools,
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
@@ -257,13 +264,16 @@ async function api(req, res, url) {
   if (a === 'invites' && !b && m === 'GET') return send(res, 200, { invites: invites.filter(i => !i.revoked && Date.parse(i.expires) > Date.now()) });
   if (a === 'invites' && b && m === 'DELETE') { const inv = invites.find(i => i.code === b); if (inv) { inv.revoked = true; saveInvites(); } return send(res, 200, { ok: true }); }
 
+  if (a === 'dms') return dms.route(req, res, { m, me, send, fail });
   if (a === 'chat' && b) {
-    if (!channelOk(b)) return fail(res, 400, 'bad channel');
+    if (!channelOk(b) && !dms.isDm(b)) return fail(res, 400, 'bad channel');
+    if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
+    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward…
     if (m === 'GET') return send(res, 200, { messages: store.readJSONL(`chat/${b}.jsonl`, Math.min(Number(url.searchParams.get('limit')) || 100, 500)) });
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
-      const msg = postChat(b, me.id, text); handleCommands(b, me, text);
+      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text);   // commands, notifications, @brain
       return send(res, 200, { message: msg });
     }
   }
@@ -368,6 +378,7 @@ server.on('upgrade', (req, sock) => {
     if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
+    if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string') postChat('general', me.id, msg.text.slice(0, 400));
     if (msg.type === 'huddle-join' && me.role !== 'agent') {
       const first = huddle.size === 0;
@@ -383,6 +394,7 @@ server.on('upgrade', (req, sock) => {
   });
   s.on('close', () => {
     o.sockets.delete(s); if (!o.sockets.size) online.delete(me.id);
+    voice.socketClosed(me, online.has(me.id));
     docs.live.leaveAll(s);
     const h = huddle.get(me.id); if (h && h.socket === s) { huddle.delete(me.id); pushHuddle(); }
     pushPresence();

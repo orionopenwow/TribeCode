@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision }) {
+module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, extraTools = {} }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -65,6 +65,7 @@ module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, doc
       inputSchema: S({ title: str('Proposal title'), body: str('Markdown: problem, plan, tasks') }, ['title', 'body']),
       run: ({ title, body }, me) => { const p = board.propose(title, body, me); return text(`Proposal opened: ${p.title}. Teammates vote on the Board.`); },
     },
+    ...extraTools,   // e.g. check_messages / reply (chatx.js)
   };
 
   async function handle(msg, me) {

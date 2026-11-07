@@ -14,6 +14,8 @@
       { kind: 'Action', label: 'Invite friends', keys: 'link join share', run: () => A.openInvite() },
       { kind: 'Action', label: 'Join / start huddle', keys: 'voice call talk mic audio', hint: 'Ctrl Shift M', run: () => window.TribeHuddle.join() },
       { kind: 'Action', label: 'Share my screen', keys: 'present screenshare', run: () => window.TribeHuddle.share() },
+      { kind: 'Action', label: 'Capture to notes (on / off)', keys: 'voice speech transcribe dictate record notes', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
+      { kind: 'Action', label: 'Dictate into chat', keys: 'voice speech mic talk type', hint: 'Ctrl Shift D', run: () => window.TribeSpeech && window.TribeSpeech.dictate(document.querySelector('#chat-input')) },
       { kind: 'Action', label: 'Connect Claude Code', keys: 'agent mcp ai claude', run: () => A.connectClaude() },
       { kind: 'Action', label: 'Report a bug', keys: 'issue problem crash', hint: 'Ctrl Shift B', run: () => window.TribeBugs.capture() },
       { kind: 'Action', label: "Write today's standup", keys: 'brain recap summary', run: () => { A.show('home'); document.querySelector('#standup-go').click(); } },
@@ -33,6 +35,7 @@
       ...docsCache.map(d => ({ kind: 'Doc', label: d.title, keys: d.slug, run: () => { window.TribeApp.show('docs'); setTimeout(() => window.TribeDocs.open(d.slug), 80); } })),
       ...tasks.map(t => ({ kind: 'Task', label: t.title, keys: t.status, hint: t.status, run: () => window.TribeApp.show('tasks') })),
       ...(C.state().members || []).map(m => ({ kind: 'Person', label: m.name, keys: m.where || '', hint: m.online ? 'online · ' + (m.where || '') : 'offline', run: () => { $('#chat-input').value = `@${m.name} `; $('#chat-input').focus(); } })),
+      ...(C.state().members || []).filter(m => window.TribeDM && m.role !== 'agent' && m.id !== (C.state().me || {}).id).map(m => ({ kind: 'Message', label: m.name, keys: 'dm direct message chat', run: () => window.TribeDM.open(m.id) })),
     ];
   }
 
