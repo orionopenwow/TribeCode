@@ -410,3 +410,11 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .cmp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
 .cmp-dot.on { background: var(--live); }
 .cmp-note { margin-top: 12px; font-size: 12.5px; }
+
+/* Desktop: the tribe server didn't start. Said plainly on Home, with Try again (not a quiet "not in a tribe yet"). */
+.gs-err { display: grid; gap: 6px; margin: 0 0 14px; padding: 14px 16px; border: 1px solid #FF6F8E; border-radius: var(--r, 10px); background: var(--surface); }
+.gs-err b { color: var(--text); font-size: 14px; }
+.gs-err span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.gs-err details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.gs-err pre { margin: 6px 0 0; padding: 10px; max-height: 160px; overflow: auto; background: var(--canvas, #12151A); border: 1px solid var(--edge); border-radius: 8px; font: 11.5px/1.5 var(--mono); white-space: pre-wrap; color: var(--muted); }
+.gs-err .btn { justify-self: start; margin-top: 4px; }

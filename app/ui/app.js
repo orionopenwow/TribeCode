@@ -483,7 +483,7 @@
         if (nice) { S.set({ name: nice }); st.name = nice; }
       }
       const keep = st.server && st.server.url === url ? st.server.token : '';
-      window.__hostError = null;
+      window.__hostError = null; dispatchEvent(new CustomEvent('tribe-host-error'));
       S.set({ server: { url, token: keep }, hosting: true });
       const role = await C.ensureMember({ name: st.name, color: st.color, reclaim: true });
       C.connect(); refresh();
@@ -495,6 +495,7 @@
   function showHostError(msg) {
     toast(msg.split('\n')[0] + ' Open Invite for details.');
     window.__hostError = msg;
+    dispatchEvent(new CustomEvent('tribe-host-error'));   // Home shows it with Try again, instead of a quiet "not in a tribe yet"
   }
 
   // Frameless desktop window: our own quiet buttons; the top bar drags (data-tauri-drag-region).
