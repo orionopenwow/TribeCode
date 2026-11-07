@@ -39,7 +39,7 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 - **Every milestone:** `npm run readme-shots`, refresh README.md and the Pages site (`site/`, served at `/about/`), then release (user, 2026-11-06: "keep the readme updated with features and screenshots and the pages updated with the current state of app flow").
 
 ## Design rules (user's, keep)
-Restraint: numbers only where they answer a question; color carries meaning (role colors on people, folders, gists, plan items).
+Restraint: numbers only where they answer a question; few sidebar rows (4 pillars), depth lives in tabs and the right panel, not in long lists; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
 ## In flight (v0.4.0 on `dev`)
@@ -56,6 +56,8 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
 
 ## User requests log (newest first)
+- 2026-11-06 23:02: Sidebar down to 4 pillars: Chat & Streams, Docs & Files, Tasks & Board (tabs: Board, Bugs, Proposals, Milestones, Calendar, Repo, Visuals), Agents Hub (tabs: Agents, Your agents, Ownership, Conflicts & hand-offs, Reviews, Daily plan, Secretary), with Settings and Invite at the bottom. Updates → the bell, Huddle → the chat call button, Capture → the profile menu. The right panel becomes contextual (agent detail). (Part of feat/hub.)
+- 2026-11-06: Brighter dark theme: text and icons white rather than grey. ✅ Header: an X on the right panel instead of a header toggle, profile in the rightmost slot, no docs icon. (feat/hub)
 - 2026-11-06: Global Hub as the home screen when no project or tribe is selected: global stream, quick-launch grid (new project, resume last session, search), an agents & models status bar. A contextual sidebar (a Global group with All repos, Global docs, Agent fleet), a workspace switcher with pins, agents present in the room, a global scratchpad, and the update pill moved into a subtle icon. (feat/hub, building)
 - 2026-11-06: The desktop app showed a half-old UI after updates. Cause: the phones-only service worker cached pages inside the desktop app. Fixed in v0.4.1. ✅ README + website kept current every milestone (docs/site-refresh, building).
 - 2026-11-06: Analyze the whole program and fix bugs and user flows; a one-click project with an instant link for a friend; smoke-test everything end to end (chat storage, persistence, files, integrations); 50 features tightened into quick wins / next / later, with the quick wins done. (feat/audit) Update the demo (feat/demo5). Update my folders (✅ Working\New-Project-For-A-Friend.bat). Preview the app in the browser (feat/preview). The revised sidebar layout (feat/nav2).
