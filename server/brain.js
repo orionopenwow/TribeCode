@@ -68,6 +68,21 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
         return question.endsWith('?') ? { question, options: options.length >= 2 ? options : [] } : null;
       } catch { return null; }
     },
+    // A quick note typed into the Docs catalog (server/notes.js) -> { title, text, topic, tags, related } or null
+    // (off, slow or not JSON: the caller falls back to rules). `topics`: the existing topic docs to prefer.
+    async tidyNote(raw, { topics = [], recent = [] } = {}) {
+      const out = await generate(`Raw note: ${clip(String(raw || ''), 1500)}\n\nTopics we already have: ${topics.join(', ') || 'none yet'}\nOther recent notes: ${recent.map(r => `"${clip(String(r), 80)}"`).join('; ') || 'none'}\n\nClean this note up: fix typos and grammar, keep the meaning and the author's voice, do not add facts. Reply with exactly one line of JSON: {"title": "<2-6 word title>", "text": "<the cleaned note>", "topic": "<one existing topic if it fits, else a new short topic name like 'Gameplay ideas'>", "tags": ["<1-3 short lowercase tags>"], "related": ["<titles of other recent notes this one relates to>"]}`,
+        { system: 'You tidy quick team notes for a small group of friends building software. JSON only.', maxTokens: 260, timeoutMs: 25_000 });
+      if (!out) return null;
+      try {
+        const j = JSON.parse((out.match(/\{[\s\S]*\}/) || [''])[0]);
+        const one = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, n);
+        const text = one(j.text, 2000), title = one(j.title, 60), topic = one(j.topic, 32).replace(/[[\]#|]/g, '');
+        if (!text || !title || !topic) return null;
+        return { title, text, topic, tags: (Array.isArray(j.tags) ? j.tags : []).map(t => one(t, 24).toLowerCase().replace(/[^\w-]/g, '')).filter(Boolean).slice(0, 3),
+          related: (Array.isArray(j.related) ? j.related : []).map(t => one(t, 60)).filter(Boolean).slice(0, 3) };
+      } catch { return null; }
+    },
     async visionCheck({ vision, title, body }) {
       if (!vision || !vision.trim()) return null;
       const out = await generate(`VISION.md:\n${clip(vision, 3000)}\n\nProposal: ${title}\n${clip(body || '', 4000)}\n\nDoes this proposal fit the vision? Answer on the first line with exactly FITS or CONFLICTS, then one short sentence explaining why.`,

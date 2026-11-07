@@ -176,7 +176,9 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     save(st);
     rooms.pushProjects();
     goPublic(pid);
-    setupRepo(pid, me).catch(e => console.error('flow repo:', e.message));
+    // The + starter (app/ui/starter.js) asks about the repo as its own step: { repo: false } leaves it to Docs.
+    if (body.repo === false) { st.steps.repo = { s: 'todo' }; st.steps.github = { s: 'todo' }; save(st); }
+    else setupRepo(pid, me).catch(e => console.error('flow repo:', e.message));
     syncLanes(st, me);
     return view(st);
   }
@@ -215,8 +217,14 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     } finally { clearTimeout(t); }
   }
   const tokenOwner = mid => (W.readSecret(mid).githubToken ? mid : (getMembers().find(m => m.role === 'host' && W.hasToken(m.id)) || {}).id || null);
+  // A project without a flow (its repo made from Docs, server/notes.js) keeps its GitHub state in a small side
+  // file, so creating a repo never starts a kickoff card in its chat.
+  const bareRel = pid => `.tribe/flow/${pid}.repo.json`;
+  const stateFor = pid => load(pid) || Object.assign(base.readJSON(bareRel(pid), null) || { project: pid, steps: {}, github: null }, { bare: true });
+  const keep = st => { if (st.bare) { const { bare, ...rest } = st; base.writeJSON(bareRel(st.project), rest); } else { save(st); push(st); } };
   async function github(pid, me) {
-    const st = load(pid), p = P.get(pid);
+    const st = stateFor(pid), p = P.get(pid);
+    const save = () => {}, push = () => keep(st);   // (shadowed: every save + push below goes through keep)
     if (!p || !p.repo || !W.isRepo(p.repo)) { st.steps.github = { s: 'todo' }; save(st); push(st); return st.steps.github; }
     st.steps.github = { s: 'run' }; save(st); push(st);
     const repoName = slug(p.name).slice(0, 90) || pid;
@@ -252,6 +260,37 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     }
     save(st); push(st);
     return st.steps.github;
+  }
+
+  // Is there a way to put a new repo on GitHub for this person? (a saved token: theirs or the host's; else gh)
+  async function githubReady(me) {
+    if (tokenOwner(me.id)) return { ready: true, via: 'token' };
+    if (!NOGH && (await W.ghStatus()).signedIn) return { ready: true, via: 'gh' };
+    return { ready: false, via: null };
+  }
+  // Docs: "Create a repo for <project>?" (server/notes.js). The same starter, repo and GitHub steps as create(),
+  // for a project that has none yet; role folders only when the project has a flow. `extra(dir)` adds more files
+  // (people/<member>/) before the first commit. Returns { steps, github, dir }.
+  async function createRepo(pid, me, { github: wantGh = true, extra = null } = {}) {
+    const p = P.get(pid); if (!p) throw err(404, 'project not found');
+    if (p.repo && W.isRepo(p.repo)) throw err(409, 'this project already has a repo');
+    const st = load(pid), fresh = !p.repo || !fs.existsSync(p.repo);
+    const dir = fresh ? base.p('workspaces', pid) : p.repo;
+    const steps = { repo: { s: 'run' }, folders: { s: 'run' }, github: { s: wantGh ? 'run' : 'off' } };
+    try {
+      if (fresh) writeStarter(dir, { name: p.name, roles: st ? st.roles : [] });
+      else if (st) makeFolders(st);
+      if (extra) extra(dir);
+      steps.folders = { s: 'ok' };
+      const ps = P.scopedStore(() => pid);
+      if (fresh && !fs.existsSync(ps.p('VISION.md'))) try { fs.writeFileSync(ps.p('VISION.md'), fs.readFileSync(path.join(dir, 'VISION.md'), 'utf8')); } catch {}
+      await W.makeRepo(dir, member(me.id) || me);
+      P.update(pid, { repo: dir, workspace: fresh ? true : !!p.workspace }); resetHub(pid); hubFor(pid);
+      steps.repo = { s: 'ok' };
+      if (st) { st.steps.repo = { s: 'ok' }; save(st); push(st); }
+    } catch (e) { steps.repo = { s: 'fail', note: safeSecret(one(e.message, 160)) }; if (steps.folders.s === 'run') steps.folders = { s: 'fail' }; return { steps, github: null, dir }; }
+    if (wantGh) steps.github = await github(pid, me);
+    return { steps, github: stateFor(pid).github || null, dir };
   }
 
   // ---------- kickoff: roles + notes ----------
@@ -622,7 +661,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     return null;
   }
 
-  return { route, create, start, setRoles, claim, addNote, assess, decide, onTask, onGist, onHead, onCommit, contextLines, roleOf, folderOwner: (pid, f) => { const st = load(pid); return st ? folderOwner(st, f) : null; },
+  return { route, create, createRepo, githubReady, connectGithub: (pid, me) => github(pid, me), githubState: pid => stateFor(pid).github || null, start, setRoles, claim, addNote, assess, decide, onTask, onGist, onHead, onCommit, contextLines, roleOf, folderOwner: (pid, f) => { const st = load(pid); return st ? folderOwner(st, f) : null; },
     view: pid => view(load(pid)), load, gists, planMd, PALETTE, GLYPHS };
 };
 module.exports.writeStarter = writeStarter;

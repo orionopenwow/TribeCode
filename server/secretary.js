@@ -120,7 +120,7 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
       for (const e of ents) {
         if (e.name.startsWith('.') || e.name === 'node_modules') continue;
         const r = rel + '/' + e.name; seen++;
-        if (r === 'notes/secretary') continue;   // its own notes
+        if (r === 'notes/secretary' || r === 'notes/catalog') continue;   // its own notes; the catalog feeds ingest() directly
         if (e.isDirectory()) walk(r, depth + 1);
         else if (e.isFile()) { let st; try { st = fs.statSync(path.join(repo, r)); } catch { continue; } if (st.mtimeMs > since) out.push({ rel: r, mtime: st.mtimeMs, size: st.size }); }
       }
@@ -381,6 +381,16 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     return it;
   }
 
+  // Ingest hook: a note filed by the Docs catalog (server/notes.js) lands in the journal right away, with a link
+  // to the topic doc it was filed into. Works whether or not the secretary is on (the journal is just notes).
+  function ingest(p, { text, by, kind = 'note', ref = null, at } = {}) {
+    const t = clip(plain(text), 1000); if (!t) return null;
+    const it = mkItem({ kind: KIND_LABEL[kind] ? kind : 'note', by: by || null, text: t, ref, at }); addItems(p, [it]);
+    try { journal(p, localDay()); } catch (e) { log('secretary ingest: ' + e.message); }
+    broadcast({ type: 'secretary', project: p, what: 'note' });
+    return it;
+  }
+
   // ---------- brain ----------
   const brainOk = () => cfg.useBrain && brain.status().online;
   async function gen(prompt, system, maxTokens) {
@@ -558,5 +568,5 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     ask: (q, me) => ask(pid(), q, me.name),
   };
 
-  return { route, tick, onChat, mcp, brief, config: publicCfg, setConfig, isQuiet, view, addRequest, ask };
+  return { route, tick, onChat, ingest, mcp, brief, config: publicCfg, setConfig, isQuiet, view, addRequest, ask };
 };

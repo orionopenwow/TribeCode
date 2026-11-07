@@ -33,6 +33,7 @@
     if (remote()) { try { list = (await C.api('/docs')).docs; } catch (e) { window.TribeApp.toast('Could not load docs: ' + e.message); } }
     else list = local.all().map(({ body, ...d }) => ({ ...d, words: (body || '').split(/\s+/).filter(Boolean).length }));
     loaded = true; renderList();
+    if (window.TribeNotes) window.TribeNotes.mount();   // the repo card + notes catalog at the top of Docs (notes.js)
     const want = openSlug || (cur && cur.slug) || (list[0] && list[0].slug);
     if (want) open(want); else renderEditor();
   }
@@ -212,6 +213,10 @@
 
   function renderEditor() {
     const pane = $('#doc-pane'); if (!pane) return;
+    if (!cur && window.TribeNotes && window.TribeNotes.active()) {   // the sections above already say what Docs is: no big empty state
+      pane.innerHTML = `<p class="doc-none">${list.length ? 'Pick a doc on the left.' : 'Docs you write show up here.'} <button class="linkish" id="doc-first">New doc</button></p>`;
+      $('#doc-first').onclick = () => create(); return;
+    }
     if (!cur) {
       pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>Your tribe's docs live here</h2>
         <p>Plain Markdown files in the tribe folder: design docs, notes, plans. Type <span class="kbd">/</span> in a doc for blocks.</p>
@@ -378,5 +383,5 @@
 
   async function refreshList() { if (remote()) { try { list = (await C.api('/docs')).docs; } catch {} } renderList(); }
   window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
-    current: () => cur, list: () => list, refreshList, renderList, changed, caretXY, mode: () => mode, setMode: m => { mode = m; renderEditor(); } };
+    current: () => cur, list: () => list, refreshList, renderList, renderEmpty: () => { if (!cur) renderEditor(); }, changed, caretXY, mode: () => mode, setMode: m => { mode = m; renderEditor(); } };
 })();

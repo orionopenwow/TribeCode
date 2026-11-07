@@ -14,7 +14,7 @@ const makeContext = require('./context');
 const makeIntegrator = require('./integrator');
 
 const DEFAULTS = {
-  autopilot: { enabled: false, autoPull: true, commitContext: false, reportTags: true },
+  autopilot: { enabled: false, autoPull: true, commitContext: false, reportTags: true, autoCommit: false },   // autoCommit: notes/ + people/ (server/notes.js)
   checkCommand: '',          // empty: `npm test` when package.json has a real test script
   checkTimeoutSec: 600,
   allowNoChecks: false,      // integrate even when no check command exists
@@ -340,5 +340,5 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
   }
   context.start();
 
-  return { route, mcp, status: () => status, poll, context, integrator, listChanges, createChange, claimChange, applyChange, finishChange, settings: () => publicSettings(), log };
+  return { route, mcp, status: () => status, poll, context, integrator, listChanges, createChange, claimChange, applyChange, finishChange, settings: () => publicSettings(), setSettings: b => updateSettings(b), log };
 };

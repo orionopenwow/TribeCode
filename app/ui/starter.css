@@ -1,0 +1,37 @@
+/* The + starter (app/ui/starter.js): create or join, then Repo · Notes · Agent. Flat matte, 1px borders,
+   luminance steps only. On phones the shared modal is a bottom sheet (mobile.css). Reuses .ds-* from notes.css. */
+.st-modal .modal-card { width: min(560px, calc(100vw - 32px)); }
+.st .st-h { margin: 4px 0 6px; }
+.st .st-p { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 62ch; margin: 0 0 4px; }
+.st-opt { padding: 14px 0 4px; }
+.st-opt h3 { font-family: var(--display); font-size: 15px; font-weight: 650; margin: 0 0 10px; color: var(--text); }
+.st-row { display: flex; gap: 8px; }
+.st-row .input { flex: 1; min-width: 0; height: 40px; }
+.st-row .btn { height: 40px; padding: 0 16px; }
+.st-more { display: inline-block; margin-top: 10px; font-size: 12.5px; }
+.st-or { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; color: var(--faint); font: 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.st-or::before, .st-or::after { content: ''; flex: 1; border-top: 1px solid var(--edge); }
+.st-prog { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; list-style: none; margin: 0 0 18px; padding: 0 0 12px; border-bottom: 1px solid var(--edge); font: 11.5px var(--mono); color: var(--faint); }
+.st-prog li { display: inline-flex; align-items: center; gap: 4px; }
+.st-prog li.now { color: var(--text); }
+.st-prog li.ok { color: var(--online); }
+.st-prog li.skip { text-decoration: line-through; }
+.st-prog svg.i { stroke: currentColor; fill: none; stroke-width: 2.4; }
+.st-wait { color: var(--faint); font-size: 13px; padding: 18px 0; }
+.st .ds-opts { margin-top: 14px; }
+.st .modal-foot { align-items: center; flex-wrap: wrap; }
+.st .ds-steps { margin: 0; }
+.st-lines { display: flex; flex-direction: column; gap: 4px; margin: 12px 0 0; }
+.st-lines:empty { display: none; }
+.st-line { align-self: flex-start; max-width: 100%; padding: 7px 11px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--edge); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.st .ds-compose { margin-top: 12px; }
+.st .linkbox { margin-top: 14px; }
+.st .cc-status { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.st .cc-status.on { color: var(--online); }
+.st .cc-status svg.i { stroke: currentColor; fill: none; stroke-width: 2.4; }
+@media (max-width: 820px) {
+  .st-modal .modal-card { width: 100%; }
+  .st-row .input, .st-row .btn { height: 44px; }
+  .st-row .input { font-size: 16px; }
+  .st .modal-foot .btn { height: 44px; }
+}

@@ -41,6 +41,7 @@ const makeWorkshop = require('./workshop');
 const makeWorkshopMcp = require('./mcp-workshop');
 const makeSecretary = require('./secretary');
 const makeAgentsHub = require('./agentshub');
+const makeNotes = require('./notes');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -334,6 +335,9 @@ function linkFor(c) {
 flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus, getMembers: () => members, nameOf, docs, brain, coord, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
   rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
+// The top of Docs: "Create a repo for <project>?" and the notes catalog (server/notes.js).
+const notes = makeNotes({ P, base: baseStore, docs, brain, secretary, flow, hubFor, W, coord, getMembers: () => members, nameOf, broadcast, bus, slug, id, str });
+{ const addMember = P.addMember; P.addMember = (pid, mid, role) => { const p = P.get(pid), had = !!(p && p.members[mid]); addMember(pid, mid, role); if (!had && p && p.members[mid]) try { notes.memberJoined(pid, mid); } catch (e) { console.error('notes join:', e.message); } }; }
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -627,6 +631,7 @@ async function apiInProject(req, res, url) {
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
   if (a === 'debug' && b === 'reminders' && m === 'POST' && DEBUG) { plan.tick(); return send(res, 200, { ok: true }); }
+  if (a === 'notes' || a === 'dstart') { const h = await notes.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'docs' && c) { const h = await docsx.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });

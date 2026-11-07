@@ -77,6 +77,7 @@
   // ---------- + New ----------
   function openNew(anchor) {
     const items = [
+      ...(window.TribeStarter ? [{ label: 'Project: create or join', icon: 'i-plus', run: () => window.TribeStarter.open() }] : []),
       { label: 'Task', icon: 'i-check', run: () => { App().show('tasks'); setTimeout(() => { const b = $('#task-new'); b && b.click(); }, 80); } },
       { label: 'Doc', icon: 'i-doc', run: () => { App().show('docs'); setTimeout(() => { const b = $('#doc-new'); b && b.click(); }, 120); } },
       { label: 'Upload a file', icon: 'i-upload', run: upload },

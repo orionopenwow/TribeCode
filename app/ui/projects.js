@@ -74,7 +74,7 @@
     if (!e.target.closest) return;
     const open = e.target.closest('[data-pj-open]');
     if (open && open.closest('#pj-rail, #pj-strip, .tf-pop')) { const id = open.dataset.pjOpen; document.body.classList.remove('drawer-open'); if (window.TribeFloat) window.TribeFloat.closePop(); if (id === cur()) App().show('home'); else switchTo(id); return; }
-    if (e.target.closest('#pj-plus, [data-pj-new]')) { document.body.classList.remove('drawer-open'); if (window.TribeFloat) window.TribeFloat.closePop(); openNew(); return; }
+    if (e.target.closest('#pj-plus, [data-pj-new]')) { document.body.classList.remove('drawer-open'); if (window.TribeFloat) window.TribeFloat.closePop(); starter(); return; }
   });
   // Keyboard: arrows move through the circles.
   document.addEventListener('keydown', e => {
@@ -273,6 +273,9 @@
       : c.kind === 'path' ? (host && onHostMachine() ? 'Opens that folder on this computer as the project\'s repo.' : 'Folder paths only work on the host computer.')
       : c.kind === 'name' ? (window.TribeFlow ? 'One click: the room, an invite link and a repo with a starter. The chat opens with a Getting started card.' : 'Starts an empty project. You can attach a repo later.') : '';
   }
+  // + opens the starter (app/ui/starter.js: create or join, then repo · notes · agent); this dialog stays for
+  // bringing existing code (drop a folder, a GitHub URL or a path) and as the one-click create.
+  const starter = () => (window.TribeStarter ? window.TribeStarter.open() : openNew());
   function openNew() {
     if (!C.connected()) return window.TribeHost.isDesktop ? App().openInvite() : window.TribeSettings.joinPrompt();
     dropped = null;
@@ -437,7 +440,7 @@
       <div class="pj-sheet-foot"><button class="btn" id="pj-sheet-invite">${ico('i-users', 15)}Invite</button>${scopedMe() ? '' : `<button class="btn" id="pj-sheet-new">+ New project</button>`}</div></div>`;
     s.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => { s.classList.add('hidden'); switchTo(b.dataset.sheet); });
     $('#pj-sheet-invite').onclick = () => { s.classList.add('hidden'); App().openInvite(); };
-    const nw = $('#pj-sheet-new'); if (nw) nw.onclick = () => { s.classList.add('hidden'); openNew(); };
+    const nw = $('#pj-sheet-new'); if (nw) nw.onclick = () => { s.classList.add('hidden'); starter(); };
     return s;
   }
   const sw = $('#pj-switch'); if (sw) sw.addEventListener('click', e => { if (isPhone() || !window.TribeShell) sheet().classList.remove('hidden'); else window.TribeShell.switcher(sw); });
@@ -446,5 +449,5 @@
 
   if (C.connected()) refresh();   // the socket may have said hello before this script loaded
 
-  window.TribeProjects = { refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  window.TribeProjects = { refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, openAdvanced: openNew, starter, startFromFiles, analyze, fromPath, overview, requests };
 })();

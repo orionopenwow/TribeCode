@@ -55,14 +55,16 @@
   function stepToast(s) { if (s.github && s.github.s === 'ok') toast('Pushed to a private GitHub repo'); }
 
   // ---------- create ----------
-  async function create(name) {
-    const r = await C.api('/flow/create', { method: 'POST', body: { name } });
-    if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(r.flow.project, 'chat'); }
+  // opts.repo === false: the + starter (starter.js) asks about the repo next; opts.stay: switch in, but don't open Chat yet.
+  async function create(name, opts = {}) {
+    const r = await C.api('/flow/create', { method: 'POST', body: { name, ...(opts.repo === false ? { repo: false } : {}) } });
+    if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(r.flow.project, opts.stay ? null : 'chat'); }
     flow = r.flow; minimized = false; draw();
-    App().show('chat');
-    toast(`${r.flow.name} is live. Share the link.`);
+    if (!opts.stay) { App().show('chat'); toast(`${r.flow.name} is live. Share the link.`); }
     return r.flow;
   }
+  // Fold the Getting started card (the + starter finishes in Chat with it folded).
+  function fold(pid) { try { localStorage.setItem('tribecode.flowMin.' + pid, '1'); } catch {} if (flow && flow.project === pid) { minimized = true; draw(); } }
   function suggestName() {
     const first = String(me().name || 'My').split(/\s+/)[0];
     const words = ['Studio', 'Lab', 'Quest', 'Arcade', 'Workshop', 'Garden'];
@@ -77,6 +79,7 @@
     return `<ol class="fk-steps" aria-label="Setup">${STEP.map(([k, label]) => {
       const s = (f.steps[k] || {}).s || 'run';
       if (k === 'github' && (s === 'todo' || s === 'fail')) return `<li class="todo"><button class="fk-gh" id="flow-gh" title="${esc((f.steps.github || {}).note || 'Create a private GitHub repo and push')}">${ico('i-git')}Connect GitHub</button></li>`;
+      if (k === 'repo' && s === 'todo') return `<li class="todo"><button class="fk-gh" data-nav="docs" title="Create the repo from Docs">${ico('i-git')}Create repo</button></li>`;   // skipped in the + starter
       return `<li class="${s}" title="${esc((f.steps[k] || {}).note || '')}">${s === 'ok' ? ico('i-tick') : s === 'fail' ? ico('i-x') : '<span class="spin" aria-hidden="true"></span>'}${label}</li>`;
     }).join('<li class="sep" aria-hidden="true">·</li>')}</ol>`;
   }
@@ -363,5 +366,5 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  window.TribeFlow = { create, suggestName, load, open, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
+  window.TribeFlow = { create, fold, suggestName, load, open, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
 })();
