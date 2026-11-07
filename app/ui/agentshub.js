@@ -18,14 +18,15 @@
     mcp: '<path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5"/>',
     model: '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="10" y="10" width="4" height="4"/>',
     secretary: '<path d="M6 3h10l3 3v15H6z"/><path d="M9 9h7M9 13h7M9 17h4"/>',
+    office: '<rect x="3" y="9" width="18" height="11" rx="1"/><path d="M3 13h18M8 9V5h8v4M7 17h2M15 17h2"/>',
     host: '<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.4 1.3-3.8 2.4-5 .3 1.6 1 2.4 1.9 2.8C11 8.8 11 6 12 3z"/>',
   };
-  const COLOR = { 'claude-code': '#38C6B1', 'claude-desktop': '#FFB86B', mcp: '#E86A92', model: '#9AE66E', secretary: '#F26B1D', host: '#F26B1D' };
+  const COLOR = { 'claude-code': '#38C6B1', 'claude-desktop': '#FFB86B', mcp: '#E86A92', model: '#9AE66E', secretary: '#F26B1D', host: '#F26B1D', office: '#6C7CFF' };
   const glyph = (k, size = 18) => `<svg class="ah-g" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${GLYPH[k] || GLYPH.mcp}</svg>`;
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'now'; if (s < 3600) return `${Math.floor(s / 60)}m`; if (s < 86400) return `${Math.floor(s / 3600)}h`; return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
   const copy = async (t, msg = 'Copied.') => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the text and copy it.'); } };
 
-  let data = null, open = false, connectKind = null, result = null, timer = null;
+  let office = null, data = null, open = false, connectKind = null, result = null, timer = null;
   const section = () => document.getElementById('view-' + NAME);
 
   // ---------- view mounting (beside app.js views, without touching them) ----------
@@ -53,6 +54,7 @@
   if (C && C.on) C.on('hello', () => { setTimeout(fromHash, 50); if (open) load(true); });
   let soon = null;
   if (C && C.on) C.on('presence', () => { if (open) { clearTimeout(soon); soon = setTimeout(() => load(true), 400); } });
+  if (C && C.on) C.on('ws', m => { if (open && m.type === 'openspace') C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); });
   if (C && C.on) C.on('project', () => { if (open) { result = null; load(); } });
   setTimeout(fromHash, 0);
 
@@ -60,7 +62,7 @@
   async function load(quiet) {
     const sec = section(); if (!sec) return;
     if (!C.hasToken || !C.hasToken()) { sec.innerHTML = `<div class="ah">${head()}<div class="hero-card"><span class="eyebrow">Not connected</span><h2>Start or join a tribe first</h2><p>Your agents connect to a tribe server, even when you're the only one in it.</p></div></div>`; return; }
-    try { data = await C.api('/agents/hub'); } catch (e) { if (!quiet) sec.innerHTML = `<div class="ah">${head()}<p class="faint">${esc(e.message)}</p></div>`; return; }
+    try { [data, office] = await Promise.all([C.api('/agents/hub'), C.api('/openspace').catch(() => null)]); } catch (e) { if (!quiet) sec.innerHTML = `<div class="ah">${head()}<p class="faint">${esc(e.message)}</p></div>`; return; }
     if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-agents-hub input, #view-agents-hub select')) return;   // don't redraw under the cursor
     render();
   }
@@ -124,6 +126,7 @@
         <div class="ah-tiles">${TILES.map(([k, t, d]) => `<button class="ah-tile${connectKind === k ? ' on' : ''}" style="--k:${COLOR[k]}" data-connect="${k}" aria-expanded="${connectKind === k}"><span class="ah-glyph">${glyph(k)}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>
         <div class="ah-connect${connectKind ? '' : ' hidden'}" id="ah-connect">${connectKind ? connectPanel() : ''}</div></section>
       <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2>Local models</h2></div>${modelsHtml(models, s)}</section>
+      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>
     </div>`;
     wire();
   }
@@ -174,8 +177,38 @@
     } catch (e) { toast(e.message); }
   }
 
+  // ---------- Office: Open Space (server/openspace.js), a pixel-art office for several Claude Code sessions ----------
+  function officeHtml() {
+    const o = office, k = COLOR.office;
+    const intro = `<div class="ah-id"><b>Open Space</b><span>A pixel-art office where several Claude Code sessions work side by side, each at its own desk, on this tribe's repos. By Fantomiald, MIT.</span></div>`;
+    if (!o) return '';
+    if (o.hostOnly) return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}<span class="ah-st${o.running ? ' live' : ''}"><i></i>${o.running ? 'open on the host' : 'host only'}</span></div>`;
+    const t = o.tools || {}, miss = [!t.git && 'Git (git-scm.com)', !t.nodeOk && `Node ${o.need}+ (nodejs.org${t.node ? `, you have ${t.node}` : ''})`, !t.npm && 'npm'].filter(Boolean);
+    const st = o.busy ? `<span class="ah-st live"><i></i>${esc(o.busy)}…</span>` : o.running ? '<span class="ah-st live"><i></i>running</span>' : o.installed ? '<span class="ah-st"><i></i>stopped</span>' : '';
+    let acts = '';
+    if (o.busy) acts = '';
+    else if (!o.installed) acts = miss.length ? '' : '<button class="btn primary" id="os-install">Install</button>';
+    else if (o.running) acts = `<button class="btn primary" id="os-open">Open the office</button>${o.ours ? '<button class="btn ghost" id="os-stop">Stop</button>' : ''}`;
+    else acts = '<button class="btn primary" id="os-open">Start and open</button>';
+    const need = !o.installed && miss.length ? `<p class="ah-os-need">Needs ${miss.join(', ')} on this computer first.</p>` : '';
+    const note = o.installed ? `<p class="faint ah-os-note">Runs on this computer at <code>${esc(o.url)}</code> with ${o.roots} project folder${o.roots === 1 ? '' : 's'} on its desks${t.claude ? '' : ' · Claude Code is not installed here yet, the office needs it'}.</p>`
+      : `<p class="faint ah-os-note">Install downloads it to <code>${esc(o.dir)}</code> and builds it (no install scripts run). Nothing starts until you press Open.</p>`;
+    const logs = (o.busy || o.error) && o.log && o.log.length ? `<pre class="ah-os-log">${esc(o.log.join('\n'))}</pre>` : '';
+    return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}${st}</div>${need}${o.error ? `<p class="ah-os-err">${esc(o.error)}</p>` : ''}${logs}<div class="ah-acts">${acts}</div>${note}`;
+  }
+  function drawOffice() { const el = $('#ah-office'); if (!el) return; el.innerHTML = officeHtml(); wireOffice(); }
+  function wireOffice() {
+    const act = (id, path, done) => { const b = $(id); if (b) b.onclick = async () => {
+      b.disabled = true; b.textContent = path === 'install' ? 'Installing…' : path === 'stop' ? 'Stopping…' : 'Opening…';
+      try { office = await C.api('/openspace/' + path, { method: 'POST' }); if (done) toast(done); } catch (e) { toast(e.message); try { office = await C.api('/openspace'); } catch {} }
+      drawOffice();
+    }; };
+    act('#os-install', 'install'); act('#os-open', 'open', 'The office opened in your browser.'); act('#os-stop', 'stop', 'Open Space stopped.');
+  }
+
   function wire() {
     const sec = section();
+    wireOffice();
     sec.querySelectorAll('[data-connect]').forEach(b => b.onclick = () => {
       const k = b.dataset.connect; connectKind = connectKind === k && b.classList.contains('ah-tile') ? null : k;
       if (result && result.kind !== connectKind) result = null;
