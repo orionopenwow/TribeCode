@@ -55,7 +55,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     claim_file: {
       description: 'Softly claim a file or folder before editing it, so teammates and their agents avoid conflicting edits. Fails if someone else holds an overlapping claim.',
       inputSchema: S({ path: str('Repo-relative path, e.g. src/world/campfire.ts or src/ui/'), note: str('What you are doing') }, ['path']),
-      run: ({ path, note }, me) => { const r = claims.claim(path, note, me); return r.conflict ? err(`${r.conflict.path} is claimed by ${r.conflict.name}${r.conflict.note ? ` (${r.conflict.note})` : ''}. Coordinate in chat or pick other files.`) : text(`Claimed ${r.claim.path}. Release it with release_file when done.`); },
+      run: ({ path, note }, me) => { const r = claims.claim(path, note, me); return r.conflict ? err(`${r.conflict.path} is claimed by ${r.conflict.name}${r.conflict.note ? ` (${r.conflict.note})` : ''}. Next: ask them (message_agent or post_chat), ask them to hand it to you (they call handoff), or pick other files.`) : text(`Claimed ${r.claim.path}. Release it with release_file when done.`); },
     },
     release_file: { description: 'Release your claim on a file or folder.', inputSchema: S({ path: str('Path you claimed') }, ['path']), run: ({ path }, me) => text(claims.release(path, me) ? `Released ${path}.` : `You had no claim on ${path}.`) },
     list_claims: { description: 'Show who has claimed which files.', inputSchema: S({}), run: () => text(claims.list().map(c => ({ path: c.path, by: c.name, note: c.note, since: c.at }))) },

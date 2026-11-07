@@ -75,6 +75,7 @@
     const seen = new Set(), out = [];
     for (const el of root.querySelectorAll(sel)) {
       if (seen.has(el) || !visible(el) || disabled(el)) continue;
+      { const r = el.getBoundingClientRect(); if (r.top >= 0 && r.bottom <= H() && r.left >= 0 && r.right <= W()) { const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); if (hit && hit !== el && !el.contains(hit) && !hit.contains(el)) continue; } }
       if (el.closest('a, button') && el.closest('a, button') !== el && el.parentElement.closest(sel)) continue;   // nested clickable: the outer one counts
       seen.add(el);
       const l = label(el), href = el.getAttribute('href') || '';
@@ -141,14 +142,14 @@
       const r = el.getBoundingClientRect(); if (r.top < 0 || r.bottom > H() || r.left < 0 || r.right > W() || r.width < 8 || r.height < 8) continue;
       const x = r.left + r.width / 2, y = r.top + r.height / 2, hit = document.elementFromPoint(x, y);
       if (!hit || hit === el || el.contains(hit) || hit.contains(el)) continue;
-      const cover = hit.closest('.toast, .modal, [role=dialog], .sheet, .backdrop, .scrim, #palette, .pf-menu, .float-menu, [role=menu]') || (big(hit) ? hit : null);
+      const cover = hit.closest('.toast, .modal, [role=dialog], .sheet, .backdrop, .scrim, #palette, .pf-menu, .float-menu, [role=menu], .fwin, .tf-pop') || (big(hit) ? hit : null);
       if (cover) continue;   // an open overlay covers the page on purpose
       let overlay = false;
       for (let e = hit; e && e !== document.body; e = e.parentElement) { const ps = getComputedStyle(e).position; if ((ps === 'fixed' || ps === 'absolute') && big(e) && !e.contains(el)) { overlay = true; break; } }
       if (overlay) continue;   // a full-screen page (Workshop, preview on a phone) sits above the shell
       let sc = el.parentElement, reachable = false;
       for (; sc && sc !== document.body; sc = sc.parentElement) { const cs = getComputedStyle(sc); if (/(auto|scroll)/.test(cs.overflowY) && sc.scrollHeight > sc.clientHeight + 2) { const sr = sc.getBoundingClientRect(); reachable = r.top < sr.top + 4 ? sc.scrollTop > 0 : sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2 || r.bottom > sr.bottom - 4 && sc.scrollTop > 0; break; } }
-      if (reachable && /sticky|fixed/.test(getComputedStyle(hit.closest('header, nav, [class*=head], [class*=bar]') || hit).position)) continue;   // scrolled under a sticky header: scrolling reveals it
+      if (reachable) continue;   // scrolled under a header or footer: scrolling the list reveals it
       add('obscured', { selector: desc(el), label: label(el), detail: `its center is covered by ${desc(hit)}` });
     }
     // 5. invisible but focusable (keyboard focus disappears into it)
@@ -160,9 +161,12 @@
       const s = getComputedStyle(el); if (s.visibility === 'hidden') continue;
       const r = el.getBoundingClientRect();
       let why = el.closest('[aria-hidden="true"]') ? 'inside aria-hidden' : opacityChain(el) < 0.05 ? 'opacity 0' : (r.right <= 0 || r.left >= W()) ? 'off-screen' : null;
+      if (why === 'off-screen') { for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) { const cs = getComputedStyle(e); if (/(auto|scroll)/.test(cs.overflowX) && e.scrollWidth > e.clientWidth + 2) { why = null; break; } } }   // in a sideways-scrolling board: scrolling reveals it
       if (why === 'opacity 0') {   // revealed on focus (:focus-within / :focus-visible)? then it is a keyboard-friendly hover control
         const prev = document.activeElement;
+        const chain = []; for (let e = el; e && e.nodeType === 1; e = e.parentElement) { chain.push([e, e.style.transition]); e.style.transition = 'none'; }   // read the end state, not a fade's first frame
         try { el.focus({ preventScroll: true }); if (opacityChain(el) > 0.5) why = null; } catch {}
+        chain.forEach(([e, t]) => { e.style.transition = t; });
         try { if (prev && prev.focus) prev.focus({ preventScroll: true }); else el.blur(); } catch {}
       }
       if (!why) continue;
@@ -225,6 +229,6 @@
     mark() { muts = 0; firstAt = 0; markAt = performance.now(); },
     since() { return { muts, first: firstAt ? Math.round(firstAt - markAt) : null }; },
     resetCls() { cls = 0; clsSrc = []; },
-    overlay() { return [...document.querySelectorAll('.modal:not(.hidden), [role=dialog]:not(.hidden), .pf-menu:not(.hidden), [role=menu]:not(.hidden), #palette:not(.hidden), .sheet.open, .float-menu')].filter(visible).map(desc); },
+    overlay() { return [...document.querySelectorAll('.modal:not(.hidden), [role=dialog]:not(.hidden), .pf-menu:not(.hidden), [role=menu]:not(.hidden), #palette:not(.hidden), .sheet.open, .float-menu, .tf-pop')].filter(visible).map(desc); },
   };
 })();

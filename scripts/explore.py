@@ -292,7 +292,7 @@ def report_window(w, context, view, steps, during="interaction"):
     for st, method, url, err in got["bad"]:
         path = url.replace(BASE, "").split("?")[0]
         if st and any(st == s and path.startswith(p) for s, p in EXPECTED_BAD): continue
-        sev = "high" if st >= 500 or st == 0 else "medium"
+        sev = "high" if st >= 500 or st == 0 else "low" if st == 400 else "medium"   # 400 = a validation answer to what the explorer typed
         F.add("request", sev, f"{method} {re.sub(r'/[A-Za-z0-9_-]{10,}', '/:id', path)} → {st or err}", context=context, view=view, steps=steps, detail=f"{method} {path} answered {st or err}")
     return got
 
@@ -452,6 +452,8 @@ CLOSE_ALL = """(() => { const t = (o, f) => { try { if (o && o[f]) o[f](); } cat
   t(window.TribePreview, 'close'); t(window.TribeNotify, 'closeInbox'); t(window.TribePeople, 'close'); t(window.TribePalette, 'close'); t(window.TribeSettings, 'close'); t(window.TribePlus, 'close');
   if (window.TribeShell && TribeShell.closePreview) t(TribeShell, 'closePreview');
   document.querySelectorAll('.modal:not(.hidden)').forEach(m => m.classList.add('hidden'));
+  document.querySelectorAll('.fwin [data-x]').forEach(b => b.click());   // pop-out windows stay open on purpose; close them between views
+  if (window.TribeFloat && TribeFloat.closePop) t(TribeFloat, 'closePop');
 })()"""
 
 
@@ -659,12 +661,12 @@ JOURNEYS = [
      "steps": [("click", [{"role": "button", "name": r"^add(:|$)"}, {"css": "#m2-plus, #composer-mount [aria-label^=Add]"}], "composer +"),
                ("click", [{"role": "menuitem", "name": r"propose"}, {"role": "button", "name": r"propose"}, {"text": r"^propose"}], "Propose to the tribe"),
                ("fill", [{"role": "textbox", "name": r"(question|title|propos|idea)"}, {"css": ".modal:not(.hidden) input, .vt-sheet input, [role=dialog] input, .sheet input"}], "Explorer: a photo mode", "proposal title"),
-               ("click", [{"role": "button", "name": r"^(propose|post|send|start|create)"}], "send proposal"),
+               ("click", [{"role": "button", "name": r"^propose$"}, {"role": "button", "name": r"^(propose|post|send)\b"}], "send proposal"),
                ("js", "TribeApp.show('board')"),
                ("expect", "document.querySelector('#view-board') && document.querySelector('#view-board').innerText.includes('photo mode') || [...document.querySelectorAll('#chat-list *')].some(e => /photo mode/.test(e.textContent || ''))")]},
     {"id": "connect-claude", "title": "Connect Claude Code",
      "steps_phone": [("click", [{"role": "button", "name": r"^you$|profile"}, {"css": "#m2-me"}], "You (profile)"),
-                     ("click", [{"role": "button", "name": r"connect.*claude"}, {"role": "menuitem", "name": r"connect.*claude"}, {"text": r"connect your claude"}], "Connect your Claude Code"),
+                     ("click", [{"role": "button", "name": r"connect.*claude|connect from another computer"}, {"role": "menuitem", "name": r"connect.*claude"}, {"text": r"connect your claude"}], "Connect your Claude Code"),
                      ("click?", [{"role": "button", "name": r"^new command"}], "New command"),
                      ("expect", "[...document.querySelectorAll('code, pre, input, textarea, .code, span, div')].some(e => window.__ex.visible(e) && /claude mcp add/.test(e.value || (e.children.length ? '' : e.textContent)))")], "goal": "a `claude mcp add` command is on screen", "max": 2,
      "steps": [("click", [{"role": "button", "name": r"connect.*claude|claude code|connect your claude|add (an )?agent"}, {"text": r"connect (your )?claude"}, {"css": "#cc-connect button, #cc-connect"}], "Connect Claude"),
@@ -684,6 +686,7 @@ JOURNEYS = [
                ("click", [{"role": "tab", "name": r"^bugs"}, {"role": "button", "name": r"^bugs"}], "Bugs"),
                ("expect", "!document.querySelector('#view-bugs').classList.contains('hidden')")]},
     {"id": "capture", "title": "Turn on capture to notes", "goal": "capture is on", "max": 2,
+     "start": "if (window.TribeCapture && TribeCapture.on()) TribeCapture.toggle(); TribeApp.show('home')",
      "steps": [("click", [{"role": "button", "name": r"profile|^you$"}, {"css": "#pf-btn"}], "profile"),
                ("click", [{"role": "menuitem", "name": r"capture"}, {"role": "button", "name": r"capture"}], "Capture to notes"),
                ("expect", "window.TribeCapture && TribeCapture.on()")]},
@@ -735,7 +738,7 @@ def core_collab(browser):
     # two branches touching the same file -> the conflict radar
     repo = S["repo"]
     for who, val in ((S["oid"], "5"), (S["mid"], "6")):
-        b = f"tribe/{who}"
+        b = f"explore/radar-{who}-{int(time.time())}"
         sh("git", "-C", repo, "branch", "-f", b, "main")
         tree = tempfile.mkdtemp(prefix="ex-wt-", dir="/tmp")
         sh("git", "-C", repo, "worktree", "add", "-q", "--force", tree, b)
@@ -958,7 +961,6 @@ def run_desktop(browser, crawl, shots):
     try:
         boot(page, w, "desktop")
         page.evaluate(f"TribeClient.switchProject({json.dumps(S['pq'])})"); settle(page, 600)
-        visit_all(page, w, "desktop", crawl=crawl, shots=shots)
         if "journeys" in PHASES:
             pq = S["pq"]
             for j in JOURNEYS:
@@ -968,6 +970,9 @@ def run_desktop(browser, crawl, shots):
                 if j["id"] != "home-to-project": page.evaluate(f"TribeClient.switchProject({json.dumps(pq)})"); settle(page, 400)
                 run_journey(page, w, "desktop", j)
                 if shots is not None and f"j-{j['id']}" in shots: shots[f"j-{j['id']}"](page)
+            page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 500)
+            page.evaluate(f"TribeClient.switchProject({json.dumps(S['pq'])})"); settle(page, 500)
+        visit_all(page, w, "desktop", crawl=crawl, shots=shots)
     finally: ctx.close()
 
 
@@ -976,13 +981,14 @@ def run_phone(browser, shots):
     try:
         boot(page, w, "phone")
         page.evaluate(f"TribeClient.switchProject({json.dumps(S['pq'])})"); settle(page, 600)
-        visit_all(page, w, "phone", phone=True, shots=shots)
         if "journeys" in PHASES:
             for j in JOURNEYS:
                 if j["id"] not in ("invite", "bugs", "connect-claude"): continue
                 jj = dict(j); jj["steps"] = [tuple(s) for s in j.get("steps_phone", j["steps"])]
                 page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 500)
                 run_journey(page, w, "phone", jj)
+            page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 500)
+        visit_all(page, w, "phone", phone=True, shots=shots)
     finally: ctx.close()
 
 
@@ -1143,14 +1149,6 @@ def main():
         seed(work)
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=CHROME, args=["--no-proxy-server"])
-            if "desktop" in PHASES: F.stats["contexts"].append("desktop"); run_desktop(browser, "crawl" in PHASES, shots)
-            if "phone" in PHASES:
-                F.stats["contexts"].append("phone")
-                pshots = None
-                if shots is not None: pshots = {k: (lambda n: (lambda page: (page.wait_for_timeout(300), page.screenshot(path=str(Path(ARGS.shots_dir) / n)), shot_manifest.__setitem__(n[:-4], n))))(f"phone-{k}.png") for k in ("hub", "chat", "docs", "ws-tasks")}
-                run_phone(browser, pshots)
-            if "tauri" in PHASES: F.stats["contexts"].append("desktop-app"); run_tauri(browser, version)
-            if "offline" in PHASES: F.stats["contexts"].append("not-connected"); run_offline(browser)
             if "core" in PHASES:
                 for fn in (core_collab, core_connect, core_autopilot, lambda b: core_chat(b, server), core_notify):
                     try: fn(browser)
@@ -1159,6 +1157,14 @@ def main():
                         F.journeys.append({"id": name.replace("core_", ""), "title": name, "kind": "core", "context": "api", "pass": False, "clicks": 0, "ms": 0, "notes": [f"crashed: {e}"], "checks": [{"name": "ran", "ok": False, "why": str(e)[:200]}]})
                         F.add("journey", "high", f"Core journey crashed: {name}", context="core", view="journey", detail=traceback.format_exc()[-600:], label=name)
                         log(f"core {name} crashed: {e}")
+            if "desktop" in PHASES: F.stats["contexts"].append("desktop"); run_desktop(browser, "crawl" in PHASES, shots)
+            if "phone" in PHASES:
+                F.stats["contexts"].append("phone")
+                pshots = None
+                if shots is not None: pshots = {k: (lambda n: (lambda page: (page.wait_for_timeout(300), page.screenshot(path=str(Path(ARGS.shots_dir) / n)), shot_manifest.__setitem__(n[:-4], n))))(f"phone-{k}.png") for k in ("hub", "chat", "docs", "ws-tasks")}
+                run_phone(browser, pshots)
+            if "tauri" in PHASES: F.stats["contexts"].append("desktop-app"); run_tauri(browser, version)
+            if "offline" in PHASES: F.stats["contexts"].append("not-connected"); run_offline(browser)
             browser.close()
         data = write_outputs(started, version)
         if ARGS.shots_dir: (Path(ARGS.shots_dir) / "manifest.json").write_text(json.dumps({"version": version, "shots": shot_manifest}, indent=1))

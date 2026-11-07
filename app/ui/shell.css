@@ -216,7 +216,7 @@ body.panel-off .panel { display: none; }
 
 /* project + app settings */
 .ps-row { display: flex; align-items: center; gap: 14px; margin: 4px 0 18px; }
-.set-card { width: 560px; padding: 0; }
+.set-card { width: min(560px, calc(100vw - 32px)); padding: 0; }
 .set-head { display: flex; align-items: center; padding: 16px 16px 12px 22px; border-bottom: 1px solid var(--edge); }
 .set-head h2 { font-size: 17px; margin: 0; flex: 1; }
 .set-row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--stroke); }
@@ -230,6 +230,10 @@ body.panel-off .panel { display: none; }
 .set-brain code { font-family: var(--mono); font-size: 12px; }
 .set-toggle { border: 0; padding: 0; width: auto; }
 .set-seg { display: inline-flex; }
+@media (max-width: 820px) {   /* phones: Settings was 560px wide in a 390px screen (Done and the hints were cut off) */
+  .set-card { width: 100%; }
+  .set-row { grid-template-columns: 1fr; gap: 8px; padding: 12px 18px; }
+}
 .set-links { display: flex; gap: 18px; padding: 14px 22px 18px; font-size: 13px; }
 .host-err { white-space: pre-wrap; font: 12px/1.5 var(--mono); color: var(--body); background: var(--canvas); border: 1px solid var(--border); border-radius: 10px; padding: 10px; max-height: 160px; overflow: auto; margin: 0 0 10px; }
 #invite-body .pj-dropzone { padding: 34px 20px; }

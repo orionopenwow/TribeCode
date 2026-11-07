@@ -33,7 +33,8 @@
     if (remote()) { try { list = (await C.api('/docs')).docs; } catch (e) { window.TribeApp.toast('Could not load docs: ' + e.message); } }
     else list = local.all().map(({ body, ...d }) => ({ ...d, words: (body || '').split(/\s+/).filter(Boolean).length }));
     loaded = true; renderList();
-    const want = openSlug || (cur && cur.slug) || (list[0] && list[0].slug);
+    const keep = cur && list.some(d => d.slug === cur.slug) ? cur.slug : null;   // the open doc may belong to the project we just left
+    const want = openSlug || keep || (list[0] && list[0].slug);
     if (want) open(want); else renderEditor();
   }
 

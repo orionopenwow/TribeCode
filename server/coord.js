@@ -225,6 +225,7 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
     return [...out.filter(r => r.status === 'pending'), ...waiting, ...out.filter(r => r.status !== 'pending')];
   }
   function decideReview(rid, decision, note, me) {
+    try { rid = decodeURIComponent(rid); } catch {}   // "task:t-…" comes URL-encoded from the path
     if (rid.startsWith('task:')) {   // a task someone moved to Review on the board
       const t = tasksNow().find(x => x.id === rid.slice(5)); if (!t) throw err(404, 'task not found');
       t.status = decision === 'approve' ? 'done' : 'doing'; t.updated = now(); t.updatedBy = me.id;

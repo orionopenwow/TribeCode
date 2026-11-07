@@ -514,7 +514,7 @@
     } else if (mine) {
       body = `${head}
         ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Status</div><div class="m2-pf-st">${esc(where)}</div></div>`}
-        <div class="m2-pf-sec"><div class="eyebrow">Your Claude</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your Claude Code</b><small>One command on your computer</small></span>${ic('right', 16)}</button>`}</div>
+        <div class="m2-pf-sec"><div class="eyebrow">Your Claude</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button><button class="m2-pf-more" data-pf="connect">Connect from another computer</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your Claude Code</b><small>One command on your computer</small></span>${ic('right', 16)}</button>`}</div>
         <div class="m2-pf-acts">
           <button data-pf="invite">${ic('userplus', 20)}<span>Invite</span></button>
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
