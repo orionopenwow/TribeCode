@@ -45,7 +45,8 @@
       "binaries/tribecode-server"
     ],
     "resources": {
-      "../ui/**/*": "ui/"
+      "../ui/**/*": "ui/",
+      "../../docs/guide/*.md": "guide/"
     }
   },
   "plugins": {

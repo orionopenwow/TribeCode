@@ -594,7 +594,8 @@
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
           <button data-pf="notify">${ic('bell', 20)}<span>Alerts</span></button>
           <button data-pf="settings">${ic('gear', 20)}<span>Settings</span></button>
-        </div>`;
+        </div>
+        ${window.TribeGuide ? '<button class="m2-pf-more" data-pf="guide">Guide: how to TribeCode</button>' : ''}`;   // feat/vision-guide: tucked under the actions
     } else {
       body = `${head}
         ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Now</div><div class="m2-pf-st">${esc(where)}</div></div>`}
@@ -622,6 +623,7 @@
       if (k === 'invite') return App().openInvite();
       if (k === 'notify') return window.TribeNotify && window.TribeNotify.openSettings();
       if (k === 'settings') return window.TribeSettings && window.TribeSettings.open();
+      if (k === 'guide') return window.TribeGuide && window.TribeGuide.open();
       if (k === 'ask' && ag) {
         if (window.TribeCoord) window.TribeCoord.open('agents'); else App().show('coord');
         const handle = '@' + ag.name + ' ';

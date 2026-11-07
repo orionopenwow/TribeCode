@@ -39,6 +39,7 @@ const makeFlow = require('./flow');
 const makeMcpFlow = require('./mcp-flow');
 const makeWorkshop = require('./workshop');
 const makeWorkshopMcp = require('./mcp-workshop');
+const makeGuide = require('./guide');   // feat/vision-guide: the Guide's pages (docs/guide/*.md), read-only
 const makeSecretary = require('./secretary');
 const makeAgentsHub = require('./agentshub');
 const makePreview = require('./preview');
@@ -329,6 +330,7 @@ const people = makePeople({ P, store, getMembers: () => members, presenceFor, cl
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
 // The Workshop (server/workshop.js): a tribe-wide library apart from projects, plus the community shelf.
 const workshop = makeWorkshop({ store: baseStore, P, approvals, getMembers: () => members, nameOf, postChat, broadcast, slug, id, hasToken: W.hasToken, readSecret: W.readSecret });
+const guide = makeGuide({ ui: UI });   // feat/vision-guide
 // Solo mode: the Secretary (background notes, digest, inspiration, research) and the agents hub.
 const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, docs, loadTasks: () => loadTasks(), hubFor, getMembers: () => members, nameOf, postChat, createTask: o => createTask(o),
   votes: chatx.votes, broadcast, str, id, log: m => console.error('  ' + m) });
@@ -439,6 +441,8 @@ async function apiInProject(req, res, url) {
 
   if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
+
+  if (a === 'guide') return guide.route(req, res, ctx());   // feat/vision-guide: public, read-only how-to pages (server/guide.js)
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
   // optionally turns on the public https address, and returns a fresh join link.
