@@ -53,6 +53,8 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
 
 ## User requests log (newest first)
+- 2026-11-06: Analyze the whole program and fix bugs and user flows; a one-click project with an instant link for a friend; smoke-test everything end to end (chat storage, persistence, files, integrations); 50 features tightened into quick wins / next / later, with the quick wins done. (feat/audit) Update the demo (feat/demo5). Update my folders (✅ Working\New-Project-For-A-Friend.bat). Preview the app in the browser (feat/preview). The revised sidebar layout (feat/nav2).
+- 2026-11-06: Composer "+" (back from the paperclip) holds: photo/file, Propose to the tribe (a vote that goes to the Board when approved), quick poll, task, ask my Claude, reminder, note, bug. ✅
 - 2026-11-06: With no project selected, the main screen is a dashboard: updates across projects, your own notes, suggestions, refreshed on a rolling basis. (feat/dashboard)
 - 2026-11-06: The rail "+" offers Create project (top) or Paste invite link (bottom), then a minimal start flow: GitHub repo if wanted → notes with context → add your agent → done. (part of feat/docs-start)
 - 2026-11-06: Top right: drop the connected pill; order panel, Context, profile, bell; a profile button with relevant options. ✅
