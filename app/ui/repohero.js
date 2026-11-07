@@ -15,6 +15,7 @@
   const RIGHT = '<path d="m9 6 6 6-6 6"/>';
   const LABEL = { readme: 'From the README', github: 'GitHub', screenshot: 'Latest screenshot', tile: '' };
   let thumb = null, at = 0, inflight = null;
+  const hooks = [];   // onRender(fn): features add to the hero (preview.js: "Preview app")
 
   const token = () => encodeURIComponent(((window.TribeStore && window.TribeStore.get().server) || {}).token || '');
   const srcOf = t => (/^\//.test(t.src) ? `${C.base()}${t.src}${t.src.includes('?') ? '&' : '?'}token=${token()}` : t.src);
@@ -46,6 +47,7 @@
         ${s ? `<div class="rhx-chips"><span class="rhx-chip live">${esc(s.branch || 'main')}</span><span class="rhx-chip">↑${s.ahead || 0} ↓${s.behind || 0}</span><span class="rhx-chip ${s.dirtyCount ? 'warn' : ''}">${s.dirtyCount ? `${s.dirtyCount} changed` : 'clean'}</span></div>` : ''}`}
       </div>`;
     const img = el.querySelector('.rhx-art img');
+    hooks.forEach(fn => { try { fn(el, { project, status, empty }); } catch (e) { console.error(e); } });
     if (img) img.onerror = () => { const a = el.querySelector('.rhx-art'); if (a && thumb) { a.innerHTML = tile(thumb); el.dataset.kind = 'tile'; } };   // offline GitHub card etc.
   }
   async function render(el, opts = {}) {
@@ -59,5 +61,5 @@
   // A new screenshot or README change can change the picture.
   C.on('ws', m => { if (m.type === 'visual' || m.type === 'visuals' || m.type === 'repo') at = 0; });
   C.on('project', () => { thumb = null; at = 0; });
-  window.TribeRepoHero = { render, refresh: () => { at = 0; return load(true); }, current: () => thumb };
+  window.TribeRepoHero = { render, refresh: () => { at = 0; return load(true); }, current: () => thumb, onRender: fn => hooks.push(fn) };
 })();
