@@ -429,7 +429,7 @@ def main():
 
             # ---------- phone: comments sheet + calendar fit ----------
             phone = open_as(b, "Maya", maya_tok, viewport=(390, 844))
-            phone.click('#tabbar [data-tab-more]'); phone.click("#more-menu [data-more='calendar']"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")
+            phone.click('#menu-btn'); phone.click('#nest-more'); phone.click("#more-menu [data-more='calendar']"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")   # phones: More lives in the panel
             b.close()
 
         assert not errors, "\n".join(errors)

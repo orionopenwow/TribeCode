@@ -132,7 +132,7 @@
     const num = id => { const e = document.getElementById(id); return e ? Number(String(e.textContent).replace('+', '')) || 0 : 0; };
     setBadge('nn-chat', num('nn-chat'));
     setBadge('nn-tasks', 0);   // the count of open tasks is not "news"; keep Tasks calm
-    setBadge('updates', pendingMine().length + num('nn-updates'));
+    setBadge('updates', Math.max(pendingMine().length, num('nn-updates')));   // the inbox count already includes approval asks
   }
 
   // =====================================================================
@@ -216,6 +216,7 @@
   function paintProject() {
     const p = PJ() && PJ().cur && PJ().cur();
     const f = $('#m2-face'), n = $('#m2-pjn'), s = $('#m2-pjs'); if (!f) return;
+    const sw = $('#pj-switch'); document.body.classList.toggle('m2-has-switch', !!(sw && !sw.classList.contains('hidden')));
     f.innerHTML = p && PJ().face ? PJ().face(p, 'sm') : '';
     n.textContent = p ? p.name : ((C.state().tribe || {}).name || 'TribeCode');
     const here = p && PJ().here ? PJ().here(p.id).length : 0;
@@ -379,7 +380,7 @@
       state('recording'); draw();
     }
     function speech(on) {
-      const SP = window.TribeSpeech; if (!SP || !SP.supported || !SP.supported()) return;
+      const SP = window.TribeSpeech; if (!SP || !SP.supported || !SP.supported() || navigator.webdriver) return;   // live transcript; automated browsers have no recognizer
       try {
         if (on) SP.use('m2voice', { label: 'recording', onFinal: t => { if (r) { r.words.push(t); r.interim = ''; } }, onInterim: t => { if (r) r.interim = t; } });
         else SP.release('m2voice');
@@ -504,7 +505,7 @@
         <div class="m2-pf-sec"><div class="eyebrow">People</div>${members().filter(x => x.role !== 'agent' && x.id !== m.id).map(x => `<div class="m2-pf-row">${avatar(x)}<span><b>${esc(x.name)}</b><small>${x.online ? 'online' : 'away'}${f.has(x.id) ? ' · friend' : ''}</small></span></div>`).join('') || '<p class="m2-fine left">Nobody else yet.</p>'}</div>`;
     } else if (mine) {
       body = `${head}
-        <div class="m2-pf-sec"><div class="eyebrow">Status</div><div class="m2-pf-st">${esc(where)}</div></div>
+        ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Status</div><div class="m2-pf-st">${esc(where)}</div></div>`}
         <div class="m2-pf-sec"><div class="eyebrow">Your Claude</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your Claude Code</b><small>One command on your computer</small></span>${ic('right', 16)}</button>`}</div>
         <div class="m2-pf-acts">
           <button data-pf="invite">${ic('userplus', 20)}<span>Invite</span></button>
@@ -514,7 +515,7 @@
         </div>`;
     } else {
       body = `${head}
-        <div class="m2-pf-sec"><div class="eyebrow">Now</div><div class="m2-pf-st">${esc(where)}</div></div>
+        ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Now</div><div class="m2-pf-st">${esc(where)}</div></div>`}
         ${ag ? `<div class="m2-pf-sec"><div class="eyebrow">Their Claude</div><div class="m2-pf-row">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'}</small></span></div></div>` : ''}
         <div class="m2-pf-acts">
           <button data-pf="dm">${ic('chat', 20)}<span>Message</span></button>
@@ -529,7 +530,7 @@
       const b = e.target.closest('[data-pf]'); if (!b || b.disabled) return;
       const k = b.dataset.pf;
       if (k === 'main' || k === 'net') return profile(id, k === 'net' ? 'net' : undefined);
-      if (k === 'friend') { const on = !friends().has(m.id); setFriend(m.id, on); toast(on ? `${m.name} is in your friends` : `Removed ${m.name} from friends`); return profile(id); }
+      if (k === 'friend') { const on = !friends().has(m.id); setFriend(m.id, on); return profile(id); }   // the button itself shows the new state
       closeSheet();
       if (k === 'dm') return DM() && DM().open(m.id);
       if (k === 'claude') return DM() && DM().open(ag.id);
@@ -635,6 +636,7 @@
   }
   async function loadHub() {
     hub.at = Date.now();
+    if (window.TribeRepoHero) window.TribeRepoHero.refresh();
     if (!C.connected()) return renderHub();
     const p = PJ() && PJ().cur && PJ().cur();
     const [repo, chat, vis] = await Promise.all([
@@ -676,20 +678,7 @@
     const top = $('#m2-docs-hub'); if (!top) return;
     const p = PJ() && PJ().cur && PJ().cur(), r = hub.repo;
     const md = s => (window.TribeMD ? window.TribeMD.inline(s) : esc(s));
-    let hero;
-    if (r && r.enabled) {
-      const c = (r.commits || [])[0];
-      hero = `<div class="hero-card m2-repo" data-nav="repo" role="button" tabindex="0" aria-label="Open the repo">
-        <span class="eyebrow">Pinned repo</span>
-        <div class="m2-rh">${`<span class="m2-rh-ic">${ic('git', 20)}</span>`}<div class="m2-rh-n"><b>${esc((r.remote && r.remote.github) || r.name || (p && p.name) || 'repo')}</b><small>${esc(r.upstream || 'local')}</small></div>${ic('right', 18)}</div>
-        ${c ? `<div class="m2-rh-c"><code>${esc(c.sha)}</code><span><b>${esc(c.subject)}</b><small>${esc(c.author)} · ${esc(ago(c.at))}</small></span></div>` : ''}
-        <div class="m2-chips"><span class="m2-chip live">${esc(r.branch || 'main')}</span><span class="m2-chip">↑${r.ahead || 0} ↓${r.behind || 0}</span><span class="m2-chip ${r.dirtyCount ? 'warn' : ''}">${r.dirtyCount ? `${r.dirtyCount} changed` : 'clean'}</span></div>
-      </div>`;
-    } else if (p && p.hasRepo) {
-      hero = `<div class="hero-card m2-repo" data-nav="repo" role="button" tabindex="0"><span class="eyebrow">Pinned repo</span><h2>${esc(p.name)}</h2><p>Reading the repo…</p></div>`;
-    } else {
-      hero = `<div class="hero-card m2-repo"><span class="eyebrow">Pinned repo</span><h2>No repo pinned yet</h2><p>Point this project at a git folder or a GitHub repo, and it lives here: branch, last commit, what changed.</p><div class="hero-acts"><button class="btn" data-nav="repo">Set up the repo</button></div></div>`;
-    }
+    const hero = '<div id="m2-repo-hero" class="m2-repo"></div>';
     const notes = hub.notes || [], shown = notes.slice(0, hub.more ? 30 : 6);
     let lastDay = '', journal = '';
     for (const n of shown) {
@@ -703,6 +692,8 @@
         <div class="m2-journal">${journal || `<p class="m2-empty">${hub.notes ? 'Decisions, voice notes, approvals and files from chat collect here.' : 'Loading…'}</p>`}
         ${notes.length > 6 ? `<button class="m2-more" id="m2-notes-more">${hub.more ? 'Show less' : `Show ${Math.min(24, notes.length - 6)} more`}</button>` : ''}</div>
       </section>`;
+    const rh = $('#m2-repo-hero');
+    if (rh && window.TribeRepoHero) window.TribeRepoHero.render(rh, { project: p, status: r && r.enabled ? r : null, empty: !(p && p.hasRepo) });
     const mb = $('#m2-notes-more'); if (mb) mb.onclick = () => { hub.more = !hub.more; renderHub(); };
     const sh = $('#m2-shots');
     if (sh) {
@@ -714,6 +705,7 @@
         <button class="btn m2-wide" data-nav="visuals">Open screenshots</button>`;
     }
   }
+  C.on('ws', m => { if ((m.type === 'visual' || m.type === 'visual-removed') && cur === 'docs' && phone()) { hub.at = 0; docsHub(); } });
   C.on('repo', m => { if (hub.repo !== null && m.status) { hub.repo = m.status; if (cur === 'docs') renderHub(); } });
   C.on('chat', () => { if (cur === 'docs' && phone()) { clearTimeout(hub.t); hub.t = setTimeout(() => { hub.at = 0; docsHub(); }, 800); } });
 
@@ -786,7 +778,7 @@
     buildRack(); topBar(); swipe(); ensureUpdatesView(); composer();
     const watch = (id, fn) => { const el = document.getElementById(id); if (el) new MutationObserver(fn).observe(el, { childList: true, characterData: true, subtree: true, attributes: true }); };
     ['nn-chat', 'nn-updates', 'nn-tasks'].forEach(id => watch(id, syncBadges));
-    watch('nest-name', paintProject); watch('nest-sub', paintProject);
+    watch('nest-name', paintProject); watch('nest-sub', paintProject); watch('pj-switch', paintProject);
     const head = $('#chat-head') || $('.chat-title'); if (head) new MutationObserver(talkLabel).observe(head, { childList: true, subtree: true });
     C.on('presence', () => { paintProject(); paintMe(); });
     C.on('project', () => { hub = { repo: null, notes: null, shots: null, more: false, at: 0 }; sugg = { items: null, at: 0 }; paintProject(); if (phone() && cur === 'docs') docsHub(true); });

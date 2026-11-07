@@ -41,6 +41,7 @@
   <div class="top"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
   <div id="view"><div class="row"><span class="dot wait"></span><span>Finding the tribe…</span></div></div>
 </main>
+<script src="inapp.js"></script>
 <script>
 (function () {
   'use strict';
@@ -94,7 +95,8 @@
         ${nextSteps()}
         <a class="btn" id="go" href="${esc(target)}">Continue</a>`);
       // Phones skip the extra tap: the next page is where the name goes.
-      if (phone) setTimeout(go, 900);
+      // (Not inside Messenger/Instagram: the banner above explains how to get to a real browser first.)
+      if (phone && !(window.TribeInApp && window.TribeInApp.inApp)) setTimeout(go, 900);
     } catch (e) {
       clearTimeout(t);
       offline(e.name === 'AbortError' ? 'No answer after 7 seconds.' : 'No connection to the host.');
