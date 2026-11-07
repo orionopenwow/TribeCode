@@ -36,7 +36,7 @@
     const st = S.get();
     applyTheme(st.theme);
     document.body.classList.toggle('compact', st.density === 'compact');
-    const first = (st.name || '').split(' ')[0];
+    const first = st.name && st.name !== 'Me' ? st.name.split(' ')[0] : '';   // 'Me' is the placeholder name, not a real one
     const tribeName = window.TribeClient && window.TribeClient.state().tribe && window.TribeClient.state().tribe.name;
     $('#ws-name').textContent = tribeName || (first ? `${first}'s Tribe` : 'My Tribe');
     for (const id of ['#me-avatar', '#room-me']) { const a = $(id); if (!a) continue; a.textContent = initials(st.name); a.style.background = st.color; a.style.color = ink(st.color); }
@@ -383,7 +383,7 @@
     const healthy = async url => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 1500);
       try { const r = await fetch(url + '/api/health', { signal: c.signal, cache: 'no-store' }); return r.ok; } catch { return false; } finally { clearTimeout(t); } };
     try {
-      const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: `${(st.name || 'My').split(' ')[0]}'s Tribe` });
+      const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: st.name && st.name !== 'Me' ? `${st.name.split(' ')[0]}'s Tribe` : 'My Tribe' });
       let ok = false;
       for (const until = Date.now() + 30000; Date.now() < until;) {
         if ((ok = await healthy(url))) break;
@@ -407,6 +407,12 @@
       if (!ok) {
         const log = (await inv.invoke('host_log').catch(() => [])).filter(Boolean).slice(-8).join('\n');
         throw new Error('The tribe server did not start.' + (log ? '\n\n' + log : ' It printed nothing. Your antivirus may have blocked tribecode-server.exe.'));
+      }
+      // The OS user name is only known once the server runs: replace the placeholder name with it.
+      if (!st.name || st.name === 'Me') {
+        const u = await fetch(url + '/api/health', { cache: 'no-store' }).then(r => r.json()).then(h => h.user || '').catch(() => '');
+        const nice = u.replace(/[._-]+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+        if (nice) { S.set({ name: nice }); st.name = nice; }
       }
       const keep = st.server && st.server.url === url ? st.server.token : '';
       window.__hostError = null;
