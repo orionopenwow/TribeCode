@@ -34,6 +34,7 @@ const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
 const makeCoord = require('./coord');
 const makeAgentNet = require('./agentnet');
+const makePeople = require('./people');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -286,6 +287,8 @@ const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, i
   broadcast, postChat, nameOf, str });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
+const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
+require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
 const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
@@ -357,7 +360,7 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
@@ -554,6 +557,7 @@ async function apiInProject(req, res, url) {
   }
   if (a === 'drift' && m === 'GET') { const r = await hubFor(P.current()).drift.radar(); if (r.branches) r.branches = r.branches.map(({ allFiles, ...x }) => x); return send(res, 200, r); }
   if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
