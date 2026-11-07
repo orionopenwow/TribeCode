@@ -55,8 +55,9 @@
     return (pulses[p.id] ? '<span class="pj-unread" aria-label="unread messages"></span>' : '') + (n ? `<span class="pj-badge" aria-label="${n} waiting">${n > 99 ? '99+' : n}</span>` : '');
   }
   function circles(where) {
-    const c = cur();
-    return projects.map(p => `<button class="pj-circle ${p.id === c ? 'on' : ''}" role="listitem" data-pj-open="${esc(p.id)}" title="${esc(p.name)}" aria-label="${esc(p.name)}${p.id === c ? ' (current project)' : ''}" aria-current="${p.id === c}">
+    const c = cur(), pin = window.TribeShell && window.TribeShell.pins ? window.TribeShell.pins() : [];
+    const order = [...projects].sort((a, b) => (pin.includes(b.id) - pin.includes(a.id)));   // pinned first (right-click a bubble)
+    return order.map(p => `<button class="pj-circle ${p.id === c ? 'on' : ''}" role="listitem" data-pj-open="${esc(p.id)}" title="${esc(p.name)}" aria-label="${esc(p.name)}${p.id === c ? ' (current project)' : ''}" aria-current="${p.id === c}">
         ${face(p)}${p.id === c ? '' : badge(p)}${here(p.id).some(m => m.id !== me().id) ? '<span class="pj-live-dot" title="People are here"></span>' : ''}</button>`).join('') +
       (where === 'strip' && !scopedMe() ? '<button class="pj-circle pj-plus" data-pj-new title="Start a project" aria-label="Start a project">+</button>' : '');
   }
@@ -66,7 +67,7 @@
     const strip = $('#pj-strip'); if (strip) strip.innerHTML = circles('strip');
     const plus = $('#pj-plus'); if (plus) plus.classList.toggle('hidden', scopedMe());
     const sw = $('#pj-switch');
-    if (sw) { sw.classList.toggle('hidden', !p); document.querySelectorAll('.pj-sep').forEach(x => x.classList.toggle('hidden', !p)); if (p) sw.innerHTML = `${face(p, 'sm')}<span>${esc(p.name)}</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`; }
+    if (sw) { sw.classList.toggle('hidden', !p); document.querySelectorAll('.pj-sep').forEach(x => x.classList.toggle('hidden', !p)); if (p) sw.innerHTML = `${face(p, 'sm')}<span>${esc(p.name)}</span>`; }
     if (window.TribeShell) window.TribeShell.render(p, { face, pulses, here });
     if ($('#pj-sheet') && !$('#pj-sheet').classList.contains('hidden')) sheet();
   }
@@ -466,7 +467,7 @@
     const nw = $('#pj-sheet-new'); if (nw) nw.onclick = () => { s.classList.add('hidden'); openNew(); };
     return s;
   }
-  const sw = $('#pj-switch'); if (sw) sw.addEventListener('click', e => { if (isPhone() || !window.TribeShell) sheet().classList.remove('hidden'); else window.TribeShell.switcher(sw); });
+  const sw = $('#pj-switch'); if (sw) sw.addEventListener('click', e => { if (isPhone() || !window.TribeShell) sheet().classList.remove('hidden'); else App().show('home'); });   // the crumb opens the project's overview; the rail bubbles switch
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#pj-sheet')) $('#pj-sheet').classList.add('hidden'); });
 
 

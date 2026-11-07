@@ -245,7 +245,7 @@ def main():
             fl = api("/flow", token=token, project=pid)[1]["flow"]
             ch = fl["changes"][0]; assert ch["title"] == "Add a wall jump" and len(fl["blockers"]) == 1
             assert api(f"/flow/changes/{ch['id']}/approve", "POST", {}, token=agent, project=pid)[0] == 403
-            host.click("#nest-switch"); host.click("#project-menu [data-dest='updates']"); host.wait_for_selector("#view-flow-updates:not(.hidden) #plan-hero")
+            host.evaluate("TribeShell.go('updates')"); host.wait_for_selector("#view-flow-updates:not(.hidden) #plan-hero")
             wait_text(host, "#plan-hero h2", "First playable")
             wait_text(host, "#plan-hero .ph-blk", "Need the coin sprite")
             host.click(f"[data-change='{ch['id']}'] [data-decide='approve']")

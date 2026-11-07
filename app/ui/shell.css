@@ -333,7 +333,8 @@ body.panel-off .panel { display: none; }
   .tb-right #ctx-btn svg, .tb-right #nf-bell svg, .tb-right #panel-toggle svg { width: 21px !important; height: 21px !important; }
   .tb-right #ctx-btn span { display: none; }
   body.tauri .win-ctl { display: flex; gap: 9px; margin-left: 10px; padding-left: 16px; border-left: 1px solid var(--edge); height: 24px; }
-  body:not(.tauri) .win-ctl { display: none !important; }
+  body.app-window .win-ctl { display: flex; gap: 9px; margin-left: 10px; padding-left: 16px; border-left: 1px solid var(--edge); height: 24px; }
+  body:not(.tauri):not(.app-window) .win-ctl { display: none !important; }
   body:not(.tauri) .shell { padding: 0; }
   body:not(.tauri) .shell .window { border-radius: 0; border: 0; }
   .win-ctl .tl { width: 15px; height: 15px; }
@@ -442,3 +443,15 @@ body.global #home-insights { order: 4; }
 body.global #room-agents { order: 5; margin-top: 4px; }
 body.global #room-helpers { order: 6; }
 .np-hint { font-size: 12.5px; line-height: 1.5; margin-top: 8px; }
+
+/* No dropdown at the top of the sidebar: a plain title (Home, or the project and its overview) */
+.nest-head .nest-title { background: none; border-color: transparent; }
+.nest-head .nest-title:hover { background: var(--hover); }
+/* Home: no project bubble is lit; the logo is */
+body.global .window .rail .pj-circle.on::before { height: 8px; width: 4px; background: var(--edge-strong, #3A4250); }
+body.global .window .rail .pj-circle.on .pj-face { border-radius: 50%; }
+body.global .window .rail .logo-btn { background: var(--raised); }
+/* Home: channels of every project, under the global rows */
+.nest-enter.below { margin-top: 14px; }
+.nest-chan .pj-face.xs { flex: none; }
+.nest-chan .nest-unread { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--text); }

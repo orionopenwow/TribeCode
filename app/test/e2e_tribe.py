@@ -176,7 +176,7 @@ def main():
             wait_text(friend, "#prop-list", "Campfire save points")
             wait_text(friend, "#prop-list", "1 yes")
             assert "You're the host" not in (friend.inner_text(".toast") if friend.locator(".toast").count() else ""), "friend must not be told they're host"
-            assert friend.inner_text("#ws-name") == "Campfire Crew"
+            assert friend.evaluate("(TribeClient.state().tribe || {}).name") == "Campfire Crew"
             shot(friend, "board-live")
             friend.click('.prop [data-vote="yes"]')
             wait_text(host, "#ms-list", "v0.1.0")

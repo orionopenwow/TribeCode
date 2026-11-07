@@ -536,6 +536,9 @@
     else { let pref = null; try { pref = localStorage.getItem('tribecode.ui'); } catch {} if (pref === 'working') useUi('working', { quiet: true }); }
   }
   if (onWorking()) document.body.classList.add('ui-working');
+  // The window buttons also show in an app window without the desktop API: the Working version (Try New Work opens it
+  // in an Edge app window when the desktop app can't show it) and an installed web app window.
+  if (!document.body.classList.contains('tauri') && (onWorking() || matchMedia('(display-mode: standalone), (display-mode: window-controls-overlay)').matches) && !matchMedia('(max-width: 820px)').matches) document.body.classList.add('app-window');
 
   // tribecode:// links: on launch and while running (single-instance forwards them here)
   const deepLink = u => {
