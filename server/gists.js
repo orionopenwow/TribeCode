@@ -53,7 +53,7 @@ module.exports = function gists({ P, base, id, postChat, broadcast, nameOf, role
   function post(pid, input, by, { auto = false } = {}) {
     const v = validate(input); if (v.error) return v;
     const who = by === 'tribecode' || !by ? { id: 'tribecode', name: 'TribeCode' } : by;
-    const role = roleOf(pid, who.id);
+    const role = roleOf(pid, who.id, v.gist.files);
     const g = { id: 'g-' + Date.now().toString(36) + id(3).toLowerCase(), ...v.gist, by: who.id, byName: who.id === 'tribecode' ? 'TribeCode' : (who.name || nameOf(who.id)),
       agent: who.role === 'agent', role: role ? role.id : null, at: new Date().toISOString(), project: pid, auto: !!auto };
     const msg = P.inProject(pid, () => postChat('general', who.id, asText(g), { gist: g }));

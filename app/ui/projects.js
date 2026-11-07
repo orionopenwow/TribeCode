@@ -271,38 +271,45 @@
     if (dropped && c.kind === 'none') { h.textContent = ''; return; }
     h.textContent = c.kind === 'url' ? (host ? 'Clones the repo onto the host and makes it this project\'s shared workspace.' : 'Only the host can bring a repo in. This will just be the project name.')
       : c.kind === 'path' ? (host && onHostMachine() ? 'Opens that folder on this computer as the project\'s repo.' : 'Folder paths only work on the host computer.')
-      : c.kind === 'name' ? 'Starts an empty project. You can attach a repo later.' : '';
+      : c.kind === 'name' ? (window.TribeFlow ? 'One click: the room, an invite link and a repo with a starter. The chat opens with a Getting started card.' : 'Starts an empty project. You can attach a repo later.') : '';
   }
   function openNew() {
     if (!C.connected()) return window.TribeHost.isDesktop ? App().openInvite() : window.TribeSettings.joinPrompt();
     dropped = null;
     modal().classList.remove('hidden');
     const host = isHost();
-    body().innerHTML = `<h2>New project</h2>
-      ${host ? `<div class="dropzone pj-dropzone" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 22)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:4px">or <span class="linkish">choose one</span></div></div>
-        <div class="np-status" id="np-status"></div>` : ''}
-      <div class="field"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Project name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Project name'}" autocomplete="off" maxlength="400"></div>
+    // One click (app/ui/flow.js): the name is filled in, so Create alone makes the room, link, repo and opens the chat.
+    const suggested = window.TribeFlow ? window.TribeFlow.suggestName() : '';
+    body().innerHTML = `<span class="eyebrow">New project</span><h2 style="margin-top:4px">Name it and go</h2>
+      <div class="field"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Project name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Project name'}" autocomplete="off" maxlength="400" value="${esc(suggested)}"></div>
       <div class="np-hint faint" id="np-hint"></div>
+      ${host ? `<div class="dropzone pj-dropzone np-drop-alt" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 18)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:2px">or <span class="linkish">choose one</span> to bring existing code</div></div>
+        <div class="np-status" id="np-status"></div>` : ''}
       <div class="modal-foot"><button class="btn ghost" id="np-join">Join with a link</button><span style="flex:1"></span><button class="btn" data-close>Cancel</button><button class="btn primary" id="np-create">Create</button></div>`;
     $('#np-join').onclick = () => window.TribeSettings.joinPrompt();
     body().querySelector('[data-close]').onclick = close;
     const inp = $('#np-input');
-    inp.oninput = hint;
+    inp.oninput = () => { inp.dataset.touched = '1'; hint(); };
     inp.onkeydown = e => { if (e.key === 'Enter') $('#np-create').click(); };
     $('#np-create').onclick = () => go().catch(() => {});
     const dz = $('#np-drop'); if (dz) wireDrop(dz);
-    inp.focus();
+    hint(); inp.focus(); inp.select();
   }
   async function go() {
     const c = classify($('#np-input').value), host = isHost();
     if (dropped && (c.kind === 'none' || c.kind === 'name')) {
-      const name = c.kind === 'name' ? c.name : dropped.name;
+      const name = c.kind === 'name' && $('#np-input').dataset.touched ? c.name : dropped.name;
       return dropped.mode === 'clone' ? create({ name, url: dropped.remote }, 'Cloning…') : startFromFiles(name, dropped.files);
     }
     if (c.kind === 'url' && host) return create({ url: c.url }, 'Cloning…');
     if (c.kind === 'path' && host && onHostMachine()) return create({ path: c.path }, 'Opening the folder…');
     if (c.kind === 'none') { $('#np-input').focus(); return; }
-    return create({ name: c.name || $('#np-input').value.trim().slice(0, 48) });
+    const name = c.name || $('#np-input').value.trim().slice(0, 48);
+    if (window.TribeFlow) {   // one-click flow: room + invite + repo + GitHub, then the chat with its Getting started card
+      status('<div class="faint">Creating…</div>'); $('#np-create').disabled = true;
+      try { await window.TribeFlow.create(name); close(); return; } catch (e) { $('#np-create').disabled = false; status(`<div class="np-err">${esc(e.message)}</div>`); if (!$('#np-status')) toast(e.message); throw e; }
+    }
+    return create({ name });
   }
   function status(html) { const s = $('#np-status'); if (s) s.innerHTML = html; else if (html) toast(html.replace(/<[^>]+>/g, '')); }
   async function create(payload, busy = 'Creating…') {

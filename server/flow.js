@@ -89,10 +89,17 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
   const agentsOf = mid => getMembers().filter(m => m.role === 'agent' && m.owner === mid);
 
   // ---------- roles ----------
-  function roleOf(pid, mid) {
+  // A person can hold several roles: the files a gist touches pick the one it is about.
+  function roleOf(pid, mid, files = []) {
     const st = load(pid); if (!st || !mid) return null;
     const m = member(mid), who = m && m.role === 'agent' && m.owner ? m.owner : mid;
-    return st.roles.find(r => r.members.includes(who)) || null;
+    const mine = st.roles.filter(r => r.members.includes(who));
+    if (mine.length > 1 && files.length) {
+      const score = r => files.filter(f => { const o = folderOwner(st, f); return o && o.role.id === r.id; }).length;
+      const best = mine.slice().sort((a, b) => score(b) - score(a))[0];
+      if (score(best)) return best;
+    }
+    return mine[0] || null;
   }
   const roleView = (r, st) => ({ ...r, hex: colorOf(r.color), people: r.members.map(mid => { const m = member(mid) || { id: mid, name: nameOf(mid) }; return { id: m.id, name: m.name, color: m.color, agents: agentsOf(mid).map(a => ({ id: a.id, name: a.name })) }; }),
     open: st && st.plan ? st.plan.milestones.flatMap(x => x.items).filter(i => i.role === r.id && !i.done).length : 0 });
@@ -238,7 +245,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
         st.steps.github = { s: 'todo' }; save(st); push(st); return st.steps.github;
       }
       st.steps.github = { s: 'ok', note: st.github.via };
-      P.inProject(pid, () => postChat('general', 'tribecode', `📦 ${p.name} is on GitHub${st.github.url ? `: ${st.github.url}` : ''} (private).`));
+      P.inProject(pid, () => postChat('general', 'tribecode', `📦 ${p.name} is on GitHub${st.github.url ? `: [${st.github.name}](${st.github.url})` : ''} (private).`));
       resetHub(pid); hubFor(pid);
     } catch (e) {
       st.steps.github = { s: 'fail', note: safeSecret(one(e.message, 200)) };
@@ -457,7 +464,8 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     c.status = decision === 'approve' ? 'approved' : 'denied'; c.decidedBy = me.id; c.decidedAt = now(); c.note = one(note, 200);
     if (c.status === 'approved') {
       const m = currentMilestone(st) || st.plan.milestones[st.plan.milestones.length - 1] || (st.plan.milestones.push({ id: 'm1', title: 'Next', items: [] }), st.plan.milestones[0]);
-      const role = c.role || roleFor(st, c.title, 0);
+      const kw = st.roles.find(r => (KEYS[r.id] && KEYS[r.id].test(c.title)) || new RegExp(`\\b${r.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(c.title));
+      const role = (kw && kw.id) || c.role || roleFor(st, c.title, 0);
       const r = st.roles.find(x => x.id === role);
       const t = P.inProject(pid, () => createTask({ title: c.title, by: me.id, source: 'plan', assignee: r && r.members.length === 1 ? r.members[0] : null, body: `Approved plan change from ${c.byName}.\n\n${(c.bullets || []).map(b => `- ${b}`).join('\n')}` }));
       m.items.push({ id: 'i-' + id(5).toLowerCase(), text: one(c.title, 110), role, task: t.id, assignee: t.assignee || null, done: false, from: c.id });
