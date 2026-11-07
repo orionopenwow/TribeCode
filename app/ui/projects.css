@@ -195,3 +195,36 @@
 .pj-vision-nudge b { color: var(--text); }
 .pj-vision-nudge .btn { margin-left: auto; flex: none; }
 .pj-vision-in { width: 100%; resize: vertical; min-height: 110px; line-height: 1.5; font: inherit; padding: 10px 12px; }
+
+/* Start a project, like Discord's "Create a server": centered head, big rows, a template list, an invite footer */
+.modal-card.np-setup { width: min(460px, calc(100vw - 32px)); padding: 0; position: relative; overflow: hidden; }
+.np-setup .ns-x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; display: grid; place-items: center; border: 0; background: none; color: var(--muted); border-radius: 8px; cursor: pointer; }
+.np-setup .ns-x:hover { background: var(--hover); color: var(--text); }
+.np-setup .ns-head { padding: 26px 24px 8px; text-align: center; }
+.np-setup .ns-head h2 { margin: 0 0 8px; font-size: 24px; }
+.np-setup .ns-head .lead { margin: 0 auto; max-width: 38ch; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.np-setup .ns-list { display: flex; flex-direction: column; gap: 8px; padding: 12px 18px 18px; max-height: 52vh; overflow: auto; }
+.np-setup .ns-sub { margin: 8px 2px 0; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.np-setup .ns-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.np-setup .ns-row:hover, .np-setup .ns-row:focus-visible { background: var(--raised); border-color: var(--edge-strong, #3A4250); }
+.np-setup .ns-row > svg.i:last-child { margin-left: auto; color: var(--faint); transform: rotate(-90deg); width: 16px; height: 16px; }
+.np-setup .ns-ic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--raised); border: 1px solid var(--edge); color: var(--live); }
+.np-setup .ns-own .ns-ic { background: var(--accent); border-color: var(--accent); color: #fff; }
+.np-setup .ns-emo { font-size: 20px; line-height: 1; }
+.np-setup .ns-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.np-setup .ns-t b { font-size: 15px; font-weight: 650; }
+.np-setup .ns-t small { font-size: 12.5px; color: var(--muted); }
+.np-setup .ns-foot { padding: 16px 20px 20px; background: var(--raised); border-top: 1px solid var(--edge); text-align: center; }
+.np-setup .ns-foot b { display: block; margin-bottom: 10px; font-size: 15px; }
+.np-setup .ns-foot .np-row { display: flex; gap: 8px; }
+.np-setup .ns-foot .np-row .input { flex: 1; }
+/* step 2: picture, name, bio */
+.np-setup .ns-pic { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 84px; height: 84px; margin: 8px auto 14px; border-radius: 50%; border: 2px dashed var(--edge-strong, #3A4250); background: var(--surface); color: var(--muted); font: inherit; font-size: 10.5px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; cursor: pointer; overflow: visible; }
+.np-setup .ns-pic:hover { border-color: var(--accent); color: var(--text); }
+.np-setup .ns-pic img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.np-setup .ns-pic-emo { font-size: 26px; line-height: 1; }
+.np-setup .ns-pic i { position: absolute; top: 0; right: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-style: normal; font-size: 16px; line-height: 23px; text-align: center; font-family: var(--font); }
+.np-setup .ns-lab { display: block; margin: 10px 24px 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.np-setup #np-input, .np-setup #np-bio { display: block; width: calc(100% - 48px); margin: 0 24px; }
+.np-setup .np-status { margin: 8px 24px 0; }
+.np-setup .ns-btns { display: flex; align-items: center; margin-top: 20px; padding: 14px 20px; background: var(--raised); border-top: 1px solid var(--edge); }

@@ -225,7 +225,8 @@ def main():
             host.keyboard.press("Escape")
 
             # ---- Roles: only for flow projects, a tab in Tasks & Board
-            host.click("#pj-plus"); host.wait_for_selector("#np-input"); host.click("#np-create")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
+            host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")
             host.wait_for_selector("#view-chat:not(.hidden)", timeout=20000)
             host.click("#nest-ws-tasks"); host.wait_for_selector("#wt-roles", timeout=15000)
             host.click("#wt-roles"); host.wait_for_selector("#view-flow-roles:not(.hidden)")

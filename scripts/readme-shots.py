@@ -233,7 +233,7 @@ def run(srv_dir, work):
 
         # ---------- Create project dialog + the getting-started card ----------
         def prep_create():
-            host.click("#pj-plus"); host.wait_for_selector("#np-input"); host.fill("#np-input", "Night Market")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='tpl:game']"); host.wait_for_selector("#np-input"); host.fill("#np-input", "Night Market")
         shoot(host, "create", prep_create)
         close_overlays(host)
         chat(host); host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
