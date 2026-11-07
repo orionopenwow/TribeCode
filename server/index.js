@@ -161,7 +161,11 @@ const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: 
 const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
 const claims = makeClaims({ store, id, broadcast, nameOf });
+// Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js).
+const repoHub = require('./repo')({ repo: REPO, store, str, broadcast, postChat, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
+  getMembers: () => members, nameOf, drift, board, presence, readVision, tribe, claims });
 const mcp = makeMcp({
+  extra: repoHub.mcp,
   VERSION, tribe, presence, touchAgent, readVision,
   tasks: {
     all: () => loadTasks().map(t => ({ ...t, assigneeName: t.assignee ? nameOf(t.assignee) : null })),
@@ -315,6 +319,10 @@ async function api(req, res, url) {
     if (m === 'PATCH' && b) { const body = await readBody(req); if (!members.some(x => x.id === body.to)) return fail(res, 400, 'unknown member'); const c = claims.handOff(b, body.to, me); return c ? send(res, 200, { claim: c }) : fail(res, 404, 'not your claim'); }
   }
   if (a === 'drift' && m === 'GET') return send(res, 200, await drift.radar());
+  if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
+    const handled = await repoHub.route(req, res, { m, a, b, c, me, readBody, send, fail });
+    if (handled !== null) return;
+  }
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
     if (handled !== null) return;
