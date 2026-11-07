@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision }) {
+module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -66,13 +66,14 @@ module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, doc
       run: ({ title, body }, me) => { const p = board.propose(title, body, me); return text(`Proposal opened: ${p.title}. Teammates vote on the Board.`); },
     },
   };
+  if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
 
   async function handle(msg, me) {
     const { id, method, params = {} } = msg;
     const reply = result => ({ jsonrpc: '2.0', id, result });
     if (method === 'initialize') return reply({ protocolVersion: params.protocolVersion || '2025-06-18', capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'tribecode', title: `TribeCode · ${tribe.name}`, version: VERSION },
-      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first. Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes.` });
+      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first. Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes.${extra.instructions ? extra.instructions(me) : ''}` });
     if (method === 'ping') return reply({});
     if (method === 'tools/list') return reply({ tools: Object.entries(TOOLS).map(([name, t]) => ({ name, description: t.description, inputSchema: t.inputSchema })) });
     if (method === 'tools/call') {
