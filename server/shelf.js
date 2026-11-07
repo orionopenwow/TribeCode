@@ -9,8 +9,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const TYPE_BY_EMOJI = { '🎮': 'game', '🌐': 'site', '📱': 'app', '🛠️': 'tool', '📚': 'notes' };
-const WORDS = { game: /\b(game|platformer|rpg|level|sprite|pixel|arcade|boss)\b/i, site: /\b(site|website|landing|blog|portfolio|page)\b/i, app: /\b(app|mobile|ios|android|desktop)\b/i, tool: /\b(tool|script|cli|bot|automat\w*|api)\b/i, notes: /\b(notes?|research|wiki|study|docs?)\b/i };
+const TYPE_BY_EMOJI = { '🎮': 'game', '🌐': 'site', '📱': 'app', '🛠️': 'tool', '📚': 'notes', '🍺': '3d' };   // 3d, platformer and rpg also come from the name/bio and the repo
+const WORDS = { game: /\b(game|platformer|rpg|level|sprite|pixel|arcade|boss)\b/i, site: /\b(site|website|landing|blog|portfolio|page)\b/i, app: /\b(app|mobile|ios|android|desktop)\b/i, tool: /\b(tool|script|cli|bot|automat\w*|api)\b/i, notes: /\b(notes?|research|wiki|study|docs?)\b/i, platformer: /\b(platformer|jump|run and jump)\b/i, '3d': /\b(3d|three\.?js|first[- ]person|fps|tavern)\b/i, rpg: /\b(rpg|quest|inventory|dungeon)\b/i };
 const OK_EXT = /\.(md|txt|py|js|mjs|cjs|ts|json|html|css|sh|yml|yaml|svg)$/i;
 
 module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
@@ -33,12 +33,14 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
     for (const [k, re] of Object.entries(WORDS)) if (re.test(text)) t.add(k);
     for (const it of catalog) if ((it.detect || []).some(x => d.has(x))) (it.for || []).filter(f => f !== 'any').forEach(f => t.add(f));
     if (dir && fs.existsSync(path.join(dir, 'assets')) && fs.existsSync(path.join(dir, 'index.html')) && !t.size) t.add('game');
+    if (t.has('3d') || t.has('platformer') || t.has('rpg')) t.add('game');
     return [...t];
   }
   function view(p) {
     const dir = repoDir(p), d = deps(dir), tb = dir ? toolbox(dir) : '', types = typesOf(p);
     const items = catalog.map(it => ({ ...it, added: (it.detect || []).some(x => d.has(x)) || hasSkill(dir, it) || tb.includes(`<!-- shelf:${it.id} -->`) }));
-    const score = it => (it.for || []).filter(f => types.includes(f)).length * 2 + ((it.for || []).includes('any') ? 1 : 0);
+    // matches count double; an item's main type (its first 'for') counts once more; 'any' only breaks ties
+    const score = it => { const f = it.for || [], hit = f.filter(x => types.includes(x)).length; return hit * 2 + (types.includes(f[0]) ? 1 : 0) + (f.includes('any') ? 0.5 : 0); };
     const kinds = {};
     const picks = items.filter(it => !it.added && score(it) > 0).sort((a, b) => score(b) - score(a))
       .filter(it => { kinds[it.kind] = (kinds[it.kind] || 0) + 1; return kinds[it.kind] <= 2; }).slice(0, 4);
