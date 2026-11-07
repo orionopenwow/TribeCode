@@ -6,6 +6,11 @@ Testing runs straight from the code on GitHub. No installer to rebuild.
   Reset-Old-TribeCode.bat     Run once: stops old copies, clears old settings and
                               installers, removes the old v0.1 code copy.
 
+  Working\New-Project-For-A-Friend.bat
+                              ONE CLICK: a Pixel Quest project, the public link,
+                              an invite page with QR for your friend, and the
+                              command for your Claude Code.
+
   Working\Start-Working.bat   NEW WORK (dev branch) at http://localhost:4848.
                               Opens in its own window, pulls new commits every
                               20 s and reloads by itself. Uses a test tribe.
