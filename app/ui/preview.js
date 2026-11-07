@@ -122,6 +122,7 @@
     meta.title = info.mode === 'dev' ? `Proxying the dev server on localhost:${info.port} on the host` : 'Serving index.html from the repo';
     const empty = !info.hasRepo || !info.hasIndex;
     pane.classList.toggle('is-empty', empty);
+    if (window.TribePhoneApp) window.TribePhoneApp.preview(pane, { empty });   // phone app mode: open it on a device (app/ui/phoneapp.js)
     pane.querySelectorAll('[data-act="tab"],[data-act="share"],[data-act="shot"],[data-act="reload"]').forEach(b => { b.disabled = empty; });
     const holder = pane.querySelector('#pvw-frame');
     if (empty) {
