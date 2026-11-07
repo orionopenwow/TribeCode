@@ -235,7 +235,7 @@ module.exports = function integrator({ repo, enabled, G, store, settings, board,
       },
       run_checks: {
         description: 'Integrator: run the repo\'s check command (host setting; default `npm test`) on a branch in a temporary worktree with a timeout. Returns pass/fail and the tail of the output.',
-        inputSchema: S({ branch: str('Branch to check') }, ['branch']), run: async ({ branch }) => { const r = await runChecks(branch); return r.ok === false ? err(JSON.stringify(r, null, 2)) : text(r); },
+        inputSchema: S({ branch: str('Branch to check') }, ['branch']), run: async ({ branch }, me) => { if (!isMaster(me)) return err('Only the master integrator agent (the host\'s Claude Code, with "Integrator agent" on) can run checks: they execute code from the branch on the host. Ask the host.'); const r = await runChecks(branch); return r.ok === false ? err(JSON.stringify(r, null, 2)) : text(r); },
       },
       propose_integration: {
         description: 'Integrator: ask the humans to approve merging branches into main in a given order. Creates a Board proposal and a high-priority approval request; returns the integration id.',
