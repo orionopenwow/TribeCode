@@ -752,7 +752,9 @@ function serveStatic(req, res, url) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  if (req.method === 'OPTIONS') return send(res, 204, '');
+  // Preflight. Chromium (WebView2 in the desktop app) asks before a page that isn't on localhost (tauri.localhost) may send
+  // JSON to a loopback server (Private Network Access); without this header the app's sign-in POSTs were refused.
+  if (req.method === 'OPTIONS') return send(res, 204, '', { 'Access-Control-Allow-Private-Network': 'true', 'Access-Control-Max-Age': '600' });
   try {
     if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);

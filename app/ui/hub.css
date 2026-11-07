@@ -418,3 +418,23 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .gs-err details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 .gs-err pre { margin: 6px 0 0; padding: 10px; max-height: 160px; overflow: auto; background: var(--canvas, #12151A); border: 1px solid var(--edge); border-radius: 8px; font: 11.5px/1.5 var(--mono); white-space: pre-wrap; color: var(--muted); }
 .gs-err .btn { justify-self: start; margin-top: 4px; }
+
+/* Getting started, polished: left-aligned band, tiles with an icon badge, a plain title, a short line and an action. */
+.hub-gs .gs-band { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; padding: 12px 22px; }
+.hub-gs .gs-band .eyebrow { color: var(--muted); }
+.hub-gs .gs-band-r { font: 12px var(--mono); color: var(--faint); }
+.hub-gs .gs-tile { align-items: flex-start; justify-content: flex-start; text-align: left; gap: 8px; min-height: 0; padding: 24px 24px 22px; position: relative; transition: background .15s; }
+.hub-gs .gs-tile:hover, .hub-gs .gs-tile:focus-visible { background: var(--raised); outline: none; }
+.hub-gs .gs-tile b, .hub-gs .gs-tile:hover b, .hub-gs .gs-tile:focus-visible b { padding: 0; border: 0; background: none; font-size: 19px; }
+.hub-gs .gs-tile span { max-width: 40ch; font-size: 13.5px; }
+.hub-gs .gs-ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 6px; border: 1px solid var(--edge); background: var(--raised); color: var(--muted); }
+.hub-gs .gs-ic .i { width: 18px; height: 18px; }
+.hub-gs .k-ember .gs-ic { color: #F26B1D; border-color: color-mix(in srgb, #F26B1D 45%, var(--edge)); background: color-mix(in srgb, #F26B1D 10%, var(--surface)); }
+.hub-gs .k-indigo .gs-ic { color: #6C7CFF; border-color: color-mix(in srgb, #6C7CFF 45%, var(--edge)); background: color-mix(in srgb, #6C7CFF 10%, var(--surface)); }
+.hub-gs .gs-go { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 13.5px; font-weight: 600; font-style: normal; color: var(--muted); transition: color .15s, gap .15s; }
+.hub-gs .gs-go .i { width: 13px; height: 13px; transform: rotate(-90deg); }
+.hub-gs .k-ember .gs-go { color: #F26B1D; }
+.hub-gs .k-indigo .gs-go { color: #6C7CFF; }
+.hub-gs .gs-tile:hover .gs-go { gap: 7px; }
+.hub-gs .gs-err { margin: 14px 18px 0; }
+@media (max-width: 720px) { .hub-gs .gs-tile { padding: 18px 16px; } .hub-gs .gs-band-r { display: none; } }

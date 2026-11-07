@@ -111,10 +111,10 @@
         return 'host';
       }
       if (reclaim) {   // the desktop app on the host computer: sign back in as the host (server checks it's really this machine)
-        const r = await api('/host/reclaim', { method: 'POST', body: {} }).catch(() => null);
+        const r = await api('/host/reclaim', { method: 'POST', body: {} }).catch(e => { window.__authError = `Signing back in as the host failed: ${e.message || e}`; return null; });
         if (r && r.token) { S.set({ server: { url: base(), token: r.token }, name: r.member.name, color: r.member.color }); connect(); return 'reclaimed'; }
       }
-    } catch { /* no server reachable: local-only mode */ }
+    } catch (e) { window.__authError = `Could not sign in to the TribeCode server at ${base()}: ${e && e.message || e}`; }
     return false;
   }
 

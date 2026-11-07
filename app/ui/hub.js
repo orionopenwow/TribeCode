@@ -135,10 +135,10 @@
   function gsHero(on) {
     const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
-    const tile = (id, title, sub, faceHtml = '') => `<button class="gs-tile" id="${id}">${faceHtml}<b>${title}</b><span>${sub}</span></button>`;
+    const tile = (id, title, sub, faceHtml = '', ic = '', go = '', k = '') => `<button class="gs-tile${k ? ' k-' + k : ''}" id="${id}">${ic ? `<span class="gs-ic"><svg class="i"><use href="#i-${ic}"/></svg></span>` : faceHtml}<b>${title}</b><span>${sub}</span>${go ? `<em class="gs-go">${go}<svg class="i"><use href="#i-chev"/></svg></em>` : ''}</button>`;
     const tiles = !on
-      ? tile(desk ? 'hub-host' : 'hub-host', 'Create your first project', desk ? 'Start a project on this computer and invite AI.' : 'Get the desktop app to host a project.')
-        + tile('hub-join', 'Join a friend\'s tribe', 'Use an invite link to collaborate.')
+      ? tile('hub-host', 'Create your first project', desk ? 'Your tribe runs on this computer. Pick a name, invite friends, connect your Claude.' : 'Projects are hosted by the desktop app on someone\'s computer.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
+        + tile('hub-join', 'Join a friend\'s tribe', 'Got an invite link? Paste it and you\'re in, on this computer or your phone.', '', 'link', 'Paste a link', 'indigo')
       : (lp || p1
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Your last session shows up here.')
           : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.'))
@@ -146,7 +146,7 @@
     const links = on ? `<div class="gs-links">${lp || p1 ? '<button class="linkish" id="hub-new">New project</button><span aria-hidden="true">·</span>' : ''}<button class="linkish" id="hub-join">Paste invite link</button></div>` : '';
     const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
-    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span></div>
+    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span>${on ? '' : '<span class="gs-band-r">Two ways in · about a minute</span>'}</div>
       ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;
   }
 

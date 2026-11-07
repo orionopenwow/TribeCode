@@ -487,13 +487,13 @@
       S.set({ server: { url, token: keep }, hosting: true });
       const role = await C.ensureMember({ name: st.name, color: st.color, reclaim: true });
       C.connect(); refresh();
-      if (!role && !keep) toast('A TribeCode server is running here but this app could not sign in to it. Settings › Devices has the log.');
+      if (!role && !keep) { showHostError(`A TribeCode server is running here but this app could not sign in to it.\n${window.__authError || ''}`.trim()); return; }
       else if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
       else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
     } catch (e) { reset(); if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message); }
   }
   function showHostError(msg) {
-    toast(msg.split('\n')[0] + ' Open Invite for details.');
+    toast(msg.split('\n')[0] + ' Details are on Home.');
     window.__hostError = msg;
     dispatchEvent(new CustomEvent('tribe-host-error'));   // Home shows it with Try again, instead of a quiet "not in a tribe yet"
   }
