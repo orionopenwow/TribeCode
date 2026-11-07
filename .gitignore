@@ -12,3 +12,6 @@ app/src-tauri/gen/
 app/node_modules/
 dist/
 app/src-tauri/binaries/tribecode-server-*
+
+# local agent worktrees
+.claude/

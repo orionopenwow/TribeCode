@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.2
+
+Security release: please update (Restart to update).
+- Only the host's integrator agent can run the repo's check command; a builder could otherwise run code on the host through a crafted change and `run_checks`
+- Spectators can't create invites; only the host or the invite's author can revoke one; project-scoped members only see their projects' invites; invite codes are longer
+- Forwarding a chat message into a project you're not in is refused
+- "Only from this computer" actions (bootstrap, quick invite, local folders, OS user name) refuse requests that arrive through a public tunnel
+- Cloning only from https or ssh URLs (no file:// or git://)
+- Connect your Claude Code from anywhere: Anywhere (public link) / Same Wi-Fi / This computer, live connected status, one-click Disconnect that revokes the key
+- New `app/test/security_test.py`
+
 ## v0.3.1
 
 - One-click test project: `TribeCode-Start-Test-Project.bat` creates Pixel Quest (a tiny no-build platformer with lanes, CLAUDE.md and VISION.md), starter tasks, a project-only invite with QR, and the Claude Code command

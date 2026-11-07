@@ -179,6 +179,8 @@
   .m2-pf-agent > span:not(.m2-av) { flex: 1; min-width: 0; line-height: 1.3; }
   .m2-pf-agent b { display: block; font-size: 14.5px; font-weight: 600; } .m2-pf-agent small { font-size: 12.5px; color: var(--muted); }
   .m2-pf-agent svg { color: var(--faint); }
+  .m2-pf-activity { margin-top: 10px; background: var(--surface-2); border-color: var(--edge); }
+  .m2-pf-activity > svg:first-child { color: var(--peer-ink); }
   .m2-pf-acts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 16px; }
   .m2-pf-acts button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 66px; padding: 4px; border-radius: 12px; border: 1px solid var(--edge); background: var(--surface-2); color: var(--text); font-size: 12px; font-weight: 550; }
   .m2-pf-acts button span { white-space: nowrap; }

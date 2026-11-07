@@ -20,6 +20,68 @@ def api(path, method="GET", body=None, tok=None):
         with opener.open(req, timeout=10) as r: return r.status, json.loads(r.read() or b"{}")
     except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b"{}")
 
+def no_overflow(pg, where):
+    sw, iw = pg.evaluate("[document.documentElement.scrollWidth, innerWidth]")
+    assert sw <= iw, f"horizontal overflow on {where}: {sw} > {iw}"
+
+def demo(b):
+    """The website demo (demo.html): phone rack without a header, reactions, the team vote, desktop layout."""
+    shots = ROOT / "docs" / "screenshots"
+    def enter(pg):
+        pg.goto(f"{SITE}/demo.html"); pg.fill("#name", "Sam"); pg.click("#join")
+        pg.wait_for_selector("#s-room:not(.hidden)"); pg.wait_for_selector("#tq-skip", timeout=5000); pg.click("#tq-skip")
+        if pg.viewport_size["width"] < 900:  # iPhone: the Home Screen tip follows the skipped tour
+            pg.wait_for_selector("#tip-later", timeout=4000); pg.click("#tip-later")
+    ph = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA).new_page()
+    errs = []; ph.on("pageerror", lambda e: errs.append(str(e)))
+    enter(ph)
+    # Chat: the rack sits in a compact top bar; no bottom rack
+    assert ph.is_visible("#pmid .seg") and not ph.is_visible("#tabbar")
+    # seeded reactions render as chips with counts
+    ph.wait_for_selector(".rxc")
+    assert "2" in ph.inner_text(".row[data-rid] .rxc")
+    # the team vote: Orion votes live, then my Approve passes it and it can become a task
+    ph.wait_for_selector(".vote .vt-q"); assert "Approve: double-jump for Pixel Quest?" in ph.inner_text(".vote")
+    assert "Suggested by Maya's Claude" in ph.inner_text(".vote")
+    ph.wait_for_function("document.querySelector('.vote .vt-st').textContent.includes('2 of 3')", timeout=6000)
+    ph.evaluate("document.querySelector('.vote').scrollIntoView({block:'center'})"); ph.wait_for_timeout(250)
+    ph.screenshot(path=str(shots / "demo-phone-chat.png")); no_overflow(ph, "phone chat")
+    ph.click(".vote [data-vt=yes]")
+    ph.wait_for_selector(".vote.passed [data-vtask]"); assert "Passed" in ph.inner_text(".vote .vt-st")
+    ph.click(".vote [data-vtask]"); ph.wait_for_selector(".vote .vt-go.done")
+    assert ph.evaluate("__demo.tasks.s[0].t") == "Ship the double jump"
+    # long-press a bubble -> quick-react bar -> chip with my reaction
+    bub = ph.locator(".row.them .bub:not(.bare):not(.media)").first
+    bub.scroll_into_view_if_needed(); bx = bub.bounding_box()
+    ph.mouse.move(bx["x"] + 20, bx["y"] + bx["height"] / 2); ph.mouse.down(); ph.wait_for_timeout(600); ph.mouse.up()
+    ph.wait_for_selector("#qr"); assert ph.locator("#qr button").count() == 6
+    ph.screenshot(path=str(shots / "demo-phone-react.png"))
+    ph.click("#qr [aria-label='React 👍']"); ph.wait_for_selector("#qr", state="detached")
+    rid = bub.evaluate("b => b.closest('.row').dataset.rid")
+    ph.wait_for_selector(f".row[data-rid='{rid}'] .rxc.mine")
+    assert ph.evaluate(f"__demo.RX['{rid}']['👍'].includes('me')")
+    ph.click(f".row[data-rid='{rid}'] .rxc.mine"); ph.wait_for_selector(f".row[data-rid='{rid}'] .rxc.mine", state="detached")
+    # other sections: no header, a distinct bottom rack with avatar, labels and the orange action
+    for v, act in [("docs", "Upload"), ("updates", "Ask"), ("tasks", "Suggest")]:
+        ph.evaluate(f"document.querySelector('#seg [data-v={v}]').click()"); ph.wait_for_timeout(350)
+        assert not ph.is_visible(".pbar") and ph.is_visible("#tabbar #seg")
+        assert ph.is_visible("#rk-me .av") and act in ph.inner_text("#rk-act")
+        assert ph.evaluate(f"getComputedStyle(document.querySelector('#rk-act .ab')).backgroundColor") == "rgb(242, 107, 29)"
+        assert ph.get_attribute(f"#seg [data-v={v}]", "aria-current") == "page"
+        assert ph.evaluate("getComputedStyle(document.querySelector('#tabbar')).backgroundColor") == "rgb(27, 32, 40)"  # a luminance step above the canvas
+        ph.screenshot(path=str(shots / f"demo-phone-{v}.png")); no_overflow(ph, "phone " + v)
+    assert ph.inner_text("#l-s .tk b") == "Ship the double jump"
+    # the avatar opens the side panel
+    ph.click("#rk-me"); ph.wait_for_function("document.querySelector('#s-room').classList.contains('peek')")
+    assert not errs, errs
+    # desktop
+    dk = b.new_page(viewport={"width": 1440, "height": 900}); derrs = []; dk.on("pageerror", lambda e: derrs.append(str(e)))
+    enter(dk); dk.wait_for_selector(".vote"); dk.wait_for_timeout(2500)
+    assert dk.is_visible(".mhead") and not dk.is_visible("#tabbar")
+    dk.screenshot(path=str(shots / "demo-desktop.png")); no_overflow(dk, "desktop")
+    assert not derrs, derrs
+    print("Demo test passed")
+
 def main():
     tmp = tempfile.mkdtemp()
     # The "GitHub Pages" site: a static server over app/ui, like the Pages workflow publishes.
@@ -69,6 +131,7 @@ def main():
             app.wait_for_function("!!(window.TribeApp && window.TribeApp.parseInvite)")
             got = app.evaluate(f"TribeApp.parseInvite('https://orionopenwow.github.io/TribeCode/go.html#s=' + encodeURIComponent('https://pc.tail1.ts.net') + '&c={code}')")
             assert got == {"server": "https://pc.tail1.ts.net", "code": code}, got
+            demo(b)
             b.close()
         print("Site friend-link test passed")
     finally:

@@ -34,6 +34,7 @@ const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
 const makeCoord = require('./coord');
 const makeAgentNet = require('./agentnet');
+const makePeople = require('./people');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -59,6 +60,15 @@ const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: 
 
 // ---------- helpers ----------
 // Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
+// Where a Claude Code session can reach this tribe's MCP endpoint: anywhere (public link), same Wi-Fi, or this computer.
+function agentEndpoints(req, token) {
+  const pub = share.publicUrl(), lan = (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url;
+  const mcpUrl = base => base && `${base.replace(/\/+$/, '')}/mcp`;
+  const cmd = u => u && `claude mcp add --transport http tribecode ${u} --header "Authorization: Bearer ${token || '<key>'}"`;
+  const urls = { anywhere: mcpUrl(pub), wifi: mcpUrl(lan), here: mcpUrl(`http://localhost:${PORT}`) };
+  const best = urls.anywhere || (isLocal(req) ? urls.here : urls.wifi || urls.here);
+  return { url: best, command: cmd(best), commands: { anywhere: cmd(urls.anywhere), wifi: cmd(urls.wifi), here: cmd(urls.here) }, public: !!pub, remove: 'claude mcp remove tribecode' };
+}
 function lanUrls() {
   const out = [];
   for (const [name, addrs] of Object.entries(os.networkInterfaces())) for (const a of addrs || []) {
@@ -88,7 +98,12 @@ function str(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : '
 const color = v => (/^#[0-9a-fA-F]{6}$/.test(v) ? v : '#F26B1D');
 // Local means this machine, not traffic that a tunnel (Tailscale Funnel, cloudflared, a reverse proxy) relays from localhost.
 const PROXY_HEADERS = ['x-forwarded-for', 'x-forwarded-host', 'x-real-ip', 'forwarded', 'tailscale-funnel-request', 'cf-connecting-ip', 'cf-ray'];
-const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress) && !PROXY_HEADERS.some(h => req.headers[h] !== undefined);
+// Tunnels (Tailscale Funnel, cloudflared) connect from 127.0.0.1, so the socket address alone proves nothing:
+// also require a localhost Host header (tunnels carry the public host name) and a local Origin when one is sent.
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
+const LOCAL_ORIGIN = /^(https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?|tauri:\/\/localhost|https?:\/\/tauri\.localhost|null)$/i;
+const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress) && !PROXY_HEADERS.some(h => req.headers[h] !== undefined)
+  && LOCAL_HOST.test(String(req.headers.host || '')) && (req.headers.origin === undefined || LOCAL_ORIGIN.test(String(req.headers.origin)));
 function authed(req) {
   const h = req.headers.authorization || '';
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
@@ -261,7 +276,10 @@ const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postC
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid) });
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
-const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t) });
+const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t),
+  approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
+  channelProject: ch => (P.byChannel(ch) || {}).id || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
+  voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
@@ -273,6 +291,8 @@ const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, i
   broadcast, postChat, nameOf, str });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
+const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
+require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
 const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
@@ -306,7 +326,8 @@ const mcp = makeMcp({
   },
   docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
-    post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
   },
   board, approvals,
@@ -344,7 +365,7 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
@@ -378,7 +399,7 @@ async function apiInProject(req, res, url) {
         agentCommand = `claude mcp add --transport http tribecode http://localhost:${PORT}/mcp --header "Authorization: Bearer ${token}"`;
       }
     }
-    const inv = { code: code(5), by: host.id, role: 'builder', maxUses: 3, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + 48 * 3600_000).toISOString(), ...(project ? { project: project.id } : {}) };
+    const inv = { code: code(8), by: host.id, role: 'builder', maxUses: 3, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + 48 * 3600_000).toISOString(), ...(project ? { project: project.id } : {}) };
     invites.push(inv); saveInvites();
     const base = (share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
     return send(res, 200, { join: site.joinLink(base, inv.code), project: project && { id: project.id, name: project.name, repo: project.repo }, agentCommand, public: !!share.publicUrl(), provider: shared && shared.provider, approveUrl: shared && shared.approveUrl || null,
@@ -439,6 +460,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'invites' && !b && m === 'POST') {
     if (me.role === 'agent') return fail(res, 403, 'agents cannot invite people');
+    if (me.role === 'spectator') return fail(res, 403, 'spectators cannot invite people');
     const body = await readBody(req);
     const hours = Math.min(Math.max(Number(body.hours) || 24, 1), 24 * 30);
     // Invite to one project (they only see that project) or to the whole tribe. Project-scoped people can only invite to their projects.
@@ -446,25 +468,33 @@ async function apiInProject(req, res, url) {
     if (project === 'tribe' || project === null) project = null;
     if (project && !P.canSee(me, project)) return fail(res, 403, 'you are not in that project');
     if (!project && P.scoped(me)) return fail(res, 403, 'you can invite people to your project only');
-    const inv = { code: code(5), by: me.id, role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Math.min(Math.max(Number(body.maxUses) || 5, 1), 100),
+    const inv = { code: code(8), by: me.id, role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Math.min(Math.max(Number(body.maxUses) || 5, 1), 100),
       uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}) };
     invites.push(inv); saveInvites();
     return send(res, 200, { invite: inv });
   }
-  if (a === 'invites' && !b && m === 'GET') return send(res, 200, { invites: invites.filter(i => !i.revoked && Date.parse(i.expires) > Date.now()) });
-  if (a === 'invites' && b && m === 'DELETE') { const inv = invites.find(i => i.code === b); if (inv) { inv.revoked = true; saveInvites(); } return send(res, 200, { ok: true }); }
+  if (a === 'invites' && !b && m === 'GET') {   // project-scoped people only see invites to their own projects
+    const visible = i => me.role === 'host' || (P.scoped(me) ? !!i.project && P.canSee(me, i.project) : true);
+    return send(res, 200, { invites: me.role === 'spectator' ? [] : invites.filter(i => !i.revoked && Date.parse(i.expires) > Date.now() && visible(i)) });
+  }
+  if (a === 'invites' && b && m === 'DELETE') {
+    const inv = invites.find(i => i.code === b);
+    if (inv && inv.by !== me.id && me.role !== 'host') return fail(res, 403, 'only the host or whoever made the invite can revoke it');
+    if (inv) { inv.revoked = true; saveInvites(); } return send(res, 200, { ok: true });
+  }
 
   if (a === 'dms') return dms.route(req, res, { m, me, send, fail });
   if (a === 'chat' && b) {
     if (b === 'general') b = P.channelOf(P.current());   // #general is the current project's channel
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
-    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward…
+    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
     if (m === 'GET') return send(res, 200, { messages: store.readJSONL(`chat/${b}.jsonl`, Math.min(Number(url.searchParams.get('limit')) || 100, 500)) });
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
-      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text);   // commands, notifications, @brain
+      const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
+      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
       return send(res, 200, { message: msg });
     }
   }
@@ -511,8 +541,18 @@ async function apiInProject(req, res, url) {
     else { ag = { id: 'agent-' + slug(me.name).slice(0, 10) + '-' + id(4), name, color: '#38C6B1', role: 'agent', owner: me.id, joined: new Date().toISOString(), tokenHash: hash(token), project: P.current() }; members.push(ag); pushPresence(); }
     if (Array.isArray(me.projects)) ag.projects = [...me.projects]; else delete ag.projects;   // the agent sees what its owner sees
     saveMembers();
-    const base = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`;
-    return send(res, 200, { agent: publicMember(ag), token, url: `${base}/mcp`, command: `claude mcp add --transport http tribecode ${base}/mcp --header "Authorization: Bearer ${token}"`, tools: mcp.tools });
+    return send(res, 200, { agent: publicMember(ag), token, ...agentEndpoints(req, token), tools: mcp.tools });
+  }
+  // Easy in and out for Claude Code anywhere: status, and disconnect (the key stops working at once).
+  if (a === 'agents' && b === 'mine' && m === 'GET') {
+    const ag = members.find(x => x.role === 'agent' && x.owner === me.id && x.tokenHash);
+    const seen = ag && agentSeen.get(ag.id);
+    return send(res, 200, { agent: ag ? publicMember(ag) : null, online: !!seen && Date.now() - seen.at < AGENT_IDLE, since: seen ? new Date(seen.at).toISOString() : null, ...agentEndpoints(req, null) });
+  }
+  if (a === 'agents' && b === 'mine' && m === 'DELETE') {
+    const ag = members.find(x => x.role === 'agent' && x.owner === me.id);
+    if (ag) { ag.tokenHash = null; agentSeen.delete(ag.id); saveMembers(); pushPresence(); }
+    return send(res, 200, { ok: true, remove: 'claude mcp remove tribecode' });
   }
   if (a === 'claims') {
     if (m === 'GET') return send(res, 200, { claims: claims.list() });
@@ -523,6 +563,7 @@ async function apiInProject(req, res, url) {
   }
   if (a === 'drift' && m === 'GET') { const r = await hubFor(P.current()).drift.radar(); if (r.branches) r.branches = r.branches.map(({ allFiles, ...x }) => x); return send(res, 200, r); }
   if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;

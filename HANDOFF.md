@@ -1,13 +1,13 @@
 # TribeCode handoff
 
-Read this to pick up the work in a new session (a new Claude chat, Claude Code, or a person). It is kept current at every milestone, alongside the project doc "TribeCode-Build-Status" (vision, direction, state).
+Read this to pick up the work in a new session (a new Claude chat, Claude Code, or a person). It is kept current at every milestone, alongside `docs/CONTEXT.md` (mirrored to the project doc "TribeCode-Context": vision, user requests, what's in flight).
 
 Last updated: 2026-11-06, v0.3.1.
 
 ## What TribeCode is
 A self-hosted "multiplayer vibecoding" app. Friends, each with their own Claude Code agents, build one app together. Everything runs on one friend's computer. The server and web app have zero npm dependencies (plain Node and browser JS), and a Tauri v2 desktop wrapper bundles the server as a sidecar. GitHub holds the code, the releases and a website (Pages).
 
-- Repo: https://github.com/orionopenwow/TribeCode (`main`). MIT.
+- Repo: https://github.com/orionopenwow/TribeCode. MIT. `main` = stable/released, `dev` = working lane (feature branches merge into `dev` first; the user tests it with Desktop\TribeCode\Working\Start-Working.bat at :4848, then it's merged to `main` and released).
 - Releases: one is published automatically when the version in `app/src-tauri/tauri.conf.json` changes on main. That builds Windows, Apple Silicon Mac and Linux installers plus signed `latest.json`, and the in-app updater picks it up. Bump it in 4 files: `package.json`, `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml`. Add an entry to `CHANGELOG.md`.
 - Website: https://orionopenwow.github.io/TribeCode/ (`app/ui` is the site root, marketing lives under `/about/`). Friend links: `go.html#s=<host>&c=<code>`. Demo: `demo.html`.
 
@@ -28,6 +28,7 @@ How to write tests:
 - `TRIBE_NO_DOWNLOAD=1` (set by `npm test`) stops tests from downloading cloudflared.
 
 Pushing from the Claude cloud sandbox:
+- If push returns 403, attach the repo with push access (add_repo, access: push) first.
 - `git push` prints "This repository moved…" but works. Check it with `git ls-remote origin main`.
 - Tag pushes and GitHub API writes are blocked from the sandbox. Releases don't need tags anymore.
 - `gh api` reads work. `gh release download` does not (GraphQL); use `gh api -H "Accept: application/octet-stream" repos/.../releases/assets/<id>` instead.

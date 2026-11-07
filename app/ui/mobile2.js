@@ -146,6 +146,7 @@
   }
   function show(view) {
     if (view !== 'updates') return App().show(view);
+    if (window.TribeFlow && window.TribeFlow.isFlow && window.TribeFlow.isFlow() && window.TribeFlow.openUpdates) return window.TribeFlow.openUpdates();   // flow projects: the living plan + gists
     if (!phone()) return window.TribeNotify ? window.TribeNotify.openInbox() : App().show('home');
     App().show('home');                                  // resets the shell (drawer, breadcrumbs, previews)
     $$('#main > section').forEach(s => s.classList.add('hidden'));
@@ -523,6 +524,7 @@
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
           <button data-pf="ask" ${ag ? '' : 'disabled'}>${ic('spark', 20)}<span>Ask Claude</span></button>
         </div>
+        ${window.TribePeople ? `<button class="m2-pf-agent m2-pf-activity" data-pf="activity">${ic('net', 18)}<span><b>Activity</b><small>Commits, prompts, chat and notes</small></span>${ic('right', 16)}</button>` : ''}
         ${ag ? '' : `<p class="m2-fine">${esc(m.name)} hasn't connected a Claude Code yet.</p>`}`;
     }
     const el = sheet(`<div class="m2-pf" data-who="${esc(m.id)}">${body}</div>`, { id: 'm2-profile', label: mine ? 'Your profile' : `${m.name}'s profile` });
@@ -533,6 +535,7 @@
       if (k === 'friend') { const on = !friends().has(m.id); setFriend(m.id, on); return profile(id); }   // the button itself shows the new state
       closeSheet();
       if (k === 'dm') return DM() && DM().open(m.id);
+      if (k === 'activity') return window.TribePeople && window.TribePeople.open(m.id);
       if (k === 'claude') return DM() && DM().open(ag.id);
       if (k === 'connect') return App().connectClaude ? App().connectClaude() : $('#cc-connect').click();
       if (k === 'invite') return App().openInvite();
@@ -549,7 +552,7 @@
   // Tap someone's avatar in chat (or in the people lists) for their profile.
   document.addEventListener('click', e => {
     if (!phone() || !e.target.closest) return;
-    const av = e.target.closest('.chat .msg[data-by] > .avatar');
+    const av = !window.TribePeople && e.target.closest('.chat .msg[data-by] > .avatar');   // people.js has its own person sheet for chat
     if (av) { const by = av.parentElement.dataset.by; if (member(by) && member(by).role !== 'agent') { e.preventDefault(); e.stopPropagation(); profile(by); } return; }
     const pp = e.target.closest('.pj-person');
     if (pp) { const name = (pp.children[1] || {}).textContent; const m = members().find(x => x.name === name && x.role !== 'agent'); if (m) profile(m.id); }
@@ -776,6 +779,12 @@
   // =====================================================================
   function boot() {
     buildRack(); topBar(); swipe(); ensureUpdatesView(); composer();
+    // Host uptime + commits today (people.js) belongs in the sidebar footer.
+    const foot = $('.nest-foot');
+    if (foot && window.TribePeople && window.TribePeople.statusLine && !$('#nest-status')) {
+      const el = document.createElement('div'); el.id = 'nest-status'; foot.appendChild(el); window.TribePeople.statusLine(el);
+      const d = $('#people-status'); if (d) d.remove();
+    }
     const watch = (id, fn) => { const el = document.getElementById(id); if (el) new MutationObserver(fn).observe(el, { childList: true, characterData: true, subtree: true, attributes: true }); };
     ['nn-chat', 'nn-updates', 'nn-tasks'].forEach(id => watch(id, syncBadges));
     watch('nest-name', paintProject); watch('nest-sub', paintProject); watch('pj-switch', paintProject);

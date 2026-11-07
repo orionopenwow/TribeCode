@@ -1,11 +1,16 @@
 // Chat extras: voice notes and pasted images (stored under chat/media/), replies, forwards (to a channel,
 // a DM or your daily notes), reactions, pins, edit/delete own messages, read receipts for your own agent's
 // channel, the @brain helper, and the agent's MCP tools check_messages / reply.
+// Team votes (server/votes.js) ride on chat messages: /vote, the vote routes, MCP suggest_vote / check_vote,
+// and the brain's "Turn this into a vote?" hint for messages that read like a decision.
+// Reactions can act: ✅ on your agent's request approves it, 📌 pins the message.
 // Routes live under /api/chat/<channel>/<action>; the caller already checked the member can read <channel>.
 'use strict';
 const fs = require('node:fs');
 
-const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '🔥'];
+// Reactions: the quick bar shows the first six; the picker shows all of them.
+const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '✅', '🔥', '👎', '❌', '🙏', '💯', '🚀', '🤔', '😮', '😢', '👏', '🙌', '⭐', '💡', '🐛', '📌', '➕', '🎮', '✨'];
+const makeVotes = require('./votes');
 const MAX_MEDIA = 3 * 1024 * 1024, MAX_PINS = 5;
 const EXT = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/aac': 'm4a', 'audio/mpeg': 'mp3', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
 const MIME = { webm: 'audio/webm', ogg: 'audio/ogg', m4a: 'audio/mp4', mp3: 'audio/mpeg', png: 'image/png', jpg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
@@ -13,7 +18,10 @@ const pad = n => String(n).padStart(2, '0');
 const localDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
-module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands }) {
+module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands,
+  approvals = null, board = null, createTask = null, bus = { notify() {} }, slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+  voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true,
+  channelProject = () => null, canSeeProject = () => false }) {   // project-scoped access for writes into other channels (forward)
   fs.mkdirSync(store.p('chat', 'media'), { recursive: true });
   const member = mid => getMembers().find(m => m.id === mid);
   const file = ch => `chat/${ch}.jsonl`;
@@ -37,6 +45,10 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     emit(ch, { type: 'chat-update', channel: ch, message: out });
     return out;
   }
+
+  // ---------- votes (server/votes.js) ----------
+  const votes = makeVotes({ store, id, str, slug, find, update, postChat, getMembers, voters, bus, createTask, board, channelOf, project, inProject,
+    isDm: ch => dms.isDm(ch), tick: voteTick });
 
   // ---------- pins ----------
   const pinsFile = ch => `chat/${ch}.pins.json`;
@@ -100,15 +112,51 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     postChat(ch, 'brain', answer || "The local brain is off on the host, so I can't answer. To turn it on: install Ollama (ollama.com), run `ollama pull qwen3`, then restart TribeCode on the host.");
   }
 
-  // Every member post (REST): slash commands, DM/mention notifications, @brain.
-  function onPost(ch, me, text) {
+  // "Should we…?" -> a gentle "Turn this into a vote?" hint for the author only (never posted by itself).
+  // The local brain words the vote when it is on; a plain heuristic draft otherwise.
+  const hinted = new Map();   // member id -> last hint time
+  async function hintVote(ch, me, msg) {
+    if (!msg || me.role === 'agent' || me.role === 'spectator' || dms.isDm(ch) || !votes.looksLikeDecision(msg.text)) return;
+    if (Date.now() - (hinted.get(me.id) || 0) < 60_000) return;
+    hinted.set(me.id, Date.now());
+    let d = null;
+    try { d = brain && brain.voteDraft ? await brain.voteDraft(msg.text) : null; } catch { d = null; }
+    const draft = d || votes.draftFrom(msg.text); if (!draft) return;
+    sendTo(me.id, { type: 'vote-hint', id: msg.id, question: draft.question, options: draft.options || [], by: d ? 'brain' : 'tribecode' });
+  }
+
+  // Every member post (REST): slash commands, DM/mention notifications, @brain, vote hints.
+  function onPost(ch, me, text, msg) {
     commands(ch, me, text);
     dms.onPost(ch, me, text);
     if (/(^|\s)@brain\b/i.test(text) && me.role !== 'agent') askBrain(ch, me, text).catch(e => console.error('brain', e));
+    else hintVote(ch, me, msg).catch(e => console.error('vote hint', e));
+  }
+  // "/vote Question? | opt | opt | 24h" posts a vote card instead of the raw text. Returns the message or null.
+  function command(ch, me, text) {
+    const c = votes.parseCommand(text); if (!c) return null;
+    return votes.create(ch, me, c);
+  }
+
+  // Your agent's request_approval also lands in your private chat with it, so a ✅ reaction approves it.
+  function approvalAsked(ap, me) {
+    if (!ap || ap.status !== 'pending' || me.role !== 'agent') return;
+    const ch = agentChannel(me); if (!ch) return;
+    postChat(ch, me.id, `🙋 Needs your OK: ${ap.title} (${ap.risk} risk). React ✅ to approve, or open Updates.`, { approval: ap.id });
+  }
+  // ✅ on an agent's message = approve its pending request (the one it links, or its latest one asked of you).
+  function approveByReaction(target, me) {
+    if (!approvals || me.role === 'agent') return null;
+    const ag = member(target.by); if (!ag || ag.role !== 'agent') return null;
+    const near = a => Math.abs(Date.parse(a.created) - Date.parse(target.at)) < 15 * 60_000;
+    const mine = a => a && a.status === 'pending' && a.by === ag.id && (a.to.includes(me.id) || me.role === 'host');
+    const ap = target.approval ? approvals.get(target.approval) : approvals.list().filter(a => mine(a) && near(a)).pop();
+    if (!mine(ap)) return null;
+    try { return approvals.decide(ap.id, 'approve', me, 'Approved with ✅ in chat'); } catch { return null; }
   }
 
   // ---------- routes: /api/chat/<ch>/<action>[/<arg>] ----------
-  async function route(req, res, { m, ch, action, arg, me, readBody, send, fail, url }) {
+  async function route(req, res, { m, ch, action, arg, sub, me, readBody, send, fail, url }) {
     if (action === 'media' && m === 'GET') {
       if (!okFile(arg) || !all(ch).some(x => x.media && x.media.file === arg)) return fail(res, 404, 'not found');
       let buf; try { buf = fs.readFileSync(store.p('chat', 'media', arg)); } catch { return fail(res, 404, 'not found'); }
@@ -118,6 +166,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     }
     if (action === 'pins' && m === 'GET') return send(res, 200, { pins: pins(ch) });
     if (action === 'receipt' && m === 'GET') return send(res, 200, { receipt: receipt(ch) });
+    if (action === 'votes' && m === 'GET') { votes.sweep(); return send(res, 200, { votes: votes.list(ch) }); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
     const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, 6 * 1024 * 1024);
 
@@ -133,11 +182,25 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       if (text) dms.onPost(ch, me, text);
       return send(res, 200, { message: msg });
     }
+    if (m === 'POST' && action === 'vote') {
+      const pid = channelProject(ch);   // a vote's voters, tasks and proposals belong to its channel's project
+      if (pid && pid !== project()) return inProject(pid, () => route(req, res, { m, ch, action, arg, sub, me, readBody: async () => body, send, fail, url }));
+      if (!arg) return send(res, 200, { message: votes.create(ch, me, { question: body.question, options: body.options, minutes: Number(body.minutes) || 0, deadline: body.deadline }) });
+      const op = sub || 'cast';
+      if (op === 'cast') return send(res, 200, { message: votes.cast(ch, arg, me, String(body.option || '')) });
+      if (op === 'close') return send(res, 200, { message: votes.close(ch, arg, me) });
+      if (op === 'seen') return send(res, 200, { message: votes.seen(ch, arg, me) });
+      if (op === 'remind') return send(res, 200, votes.remind(ch, arg, me));
+      if (op === 'task') return send(res, 200, votes.toTask(ch, arg, me));
+      if (op === 'board') return send(res, 200, votes.toBoard(ch, arg, me));
+      return fail(res, 404, 'not found');
+    }
     if (m === 'POST' && action === 'send') {
       const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
+      const voted = command(ch, me, text); if (voted) return send(res, 200, { message: voted });
       const orig = body.replyTo ? find(ch, String(body.replyTo)) : null;
       const extra = orig ? { replyTo: { id: orig.id, by: orig.by, text: orig.deleted ? 'message deleted' : clip(orig.text || (orig.media ? (orig.media.kind === 'voice' ? 'Voice note' : 'Image') : ''), 160) } } : {};
-      const msg = postChat(ch, me.id, text, extra); onPost(ch, me, text);
+      const msg = postChat(ch, me.id, text, extra); onPost(ch, me, text, msg);
       return send(res, 200, { message: msg });
     }
 
@@ -146,13 +209,20 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
 
     if (m === 'POST' && action === 'react') {
       const e = String(body.emoji || ''); if (!EMOJI.includes(e)) return fail(res, 400, 'unknown reaction');
+      if (target.deleted) return fail(res, 400, 'message was deleted');
+      let added = false;
       const msg = update(ch, target.id, x => {
         const r = { ...(x.reactions || {}) }, set = new Set(r[e] || []);
-        set.has(me.id) ? set.delete(me.id) : set.add(me.id);
+        if (body.on === true && set.has(me.id)) return x;   // "+👍" from the composer never toggles off
+        if (set.has(me.id)) set.delete(me.id); else { set.add(me.id); added = true; }
         if (set.size) r[e] = [...set]; else delete r[e];
         x.reactions = r; if (!Object.keys(r).length) delete x.reactions; return x;
       });
-      return send(res, 200, { message: msg });
+      // Reaction-to-action: ✅ approves the agent's request, 📌 pins (when there is room).
+      const out = { message: msg };
+      if (added && e === '✅') { const ap = approveByReaction(target, me); if (ap) out.approved = { id: ap.id, title: ap.title }; }
+      if (added && e === '📌' && !pinIds(ch).includes(target.id) && pinIds(ch).length < MAX_PINS) { store.writeJSON(pinsFile(ch), [target.id, ...pinIds(ch)]); pushPins(ch); out.pinned = true; }
+      return send(res, 200, out);
     }
     if (m === 'POST' && action === 'pin') {
       let ids = pinIds(ch).filter(i => i !== target.id);
@@ -167,6 +237,15 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       const to = String(body.to || '');
       if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(to) && !dms.isDm(to)) return fail(res, 400, 'bad channel');
       if (!dms.canRead(to, me)) return fail(res, 403, 'this conversation is private');
+      if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
+      if (!dms.isDm(to) && to !== 'general') {   // another project's channel: only if you can see that project
+        const pid = channelProject(to);
+        if (!pid) return fail(res, 404, 'no such channel');
+        if (!canSeeProject(me, pid)) return fail(res, 403, 'you are not in that project');
+        const extra = { fwd: { by: target.by, from: label(ch, me), at: target.at } };
+        if (target.media) extra.media = target.media;
+        return send(res, 200, { message: inProject(pid, () => postChat(to, me.id, target.text || '', extra)) });
+      }
       const extra = { fwd: { by: target.by, from, at: target.at } };
       if (target.media) extra.media = target.media;
       const msg = postChat(to, me.id, target.text || '', extra);
@@ -231,7 +310,30 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
         postChat(ch, me.id, t); return out('Sent.');
       },
     },
+    suggest_vote: {
+      description: "Suggest that the team votes on a decision (e.g. \"Should we approve dark mode for the level editor?\"). Posts a vote card in #general labelled as suggested by your owner's Claude. Only humans vote and a majority of the project decides; you cannot vote. Leave options empty for Approve / Not yet, or give 2-6 options for a poll. Use it for scope or product decisions, not routine work. Rate-limited.",
+      inputSchema: S({ question: { type: 'string', description: 'One short question ending with ?' }, options: { type: 'array', items: { type: 'string' }, description: 'Optional poll options (2-6)' },
+        why: { type: 'string', description: 'One line of context shown on the card' }, deadline_hours: { type: 'number', description: 'Optional: close after this many hours' } }, ['question']),
+      run: ({ question, options, why, deadline_hours }, me) => {
+        if (me.role !== 'agent') return fail2('Only agents suggest votes this way.');
+        try {
+          const msg = votes.create('general', me, { question, options, why, minutes: Number(deadline_hours) > 0 ? Number(deadline_hours) * 60 : 0 });
+          return out(`Vote posted in #general (id ${msg.id}): "${msg.vote.q}" · ${msg.vote.options.map(o => o.label).join(' / ')}. The humans vote; check the result later with check_vote.`);
+        } catch (e) { return fail2(e.message); }
+      },
+    },
+    check_vote: {
+      description: 'See team votes in #general: pass an id for one vote (status, counts, result, and any task or proposal it became), or nothing for open and recently decided votes.',
+      inputSchema: S({ id: { type: 'string', description: 'Vote id from suggest_vote (optional)' } }),
+      run: ({ id: vid }) => {
+        votes.sweep();
+        const list = votes.list('general', 30);
+        const fmt = v => `${v.id} [${v.status}] "${v.q}" · ${v.options.map(o => `${o.label} ${v.tally.counts[o.id]}`).join(', ')} · ${v.tally.voted}/${v.tally.n} voted${v.result ? ` · result: ${(v.options.find(o => o.id === v.result) || {}).label}` : ''}${v.task ? ` · task ${v.task.id}` : ''}${v.proposal ? ` · proposal ${v.proposal.id}` : ''}`;
+        if (vid) { const v = list.find(x => x.id === vid); return v ? out(fmt(v)) : fail2(`No vote ${vid} in #general.`); }
+        return out(list.length ? list.slice(0, 10).map(fmt).join('\n') : 'No votes yet.');
+      },
+    },
   };
 
-  return { route, onPost, mcpTools, appendNotes, receipt, EMOJI };
+  return { route, onPost, command, approvalAsked, mcpTools, appendNotes, receipt, votes, EMOJI };
 };

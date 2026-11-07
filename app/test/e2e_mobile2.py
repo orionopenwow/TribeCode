@@ -163,13 +163,16 @@ def main():
             # "+" menu: photo, file, task; "Start a vote" only when votes.js is loaded
             phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu")
             items = phone.eval_on_selector_all("#m2-plus-menu [data-plus]", "els => els.map(e => e.dataset.plus)")
-            assert items == ["photo", "file", "task"], items
-            phone.evaluate("window.TribeMobile.closeSheet()"); phone.wait_for_selector("#m2-plus-menu", state="detached")
-            phone.evaluate("window.TribeVotes = { openComposer() { window.__voted = (window.__voted || 0) + 1; } }")
-            phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu [data-plus='vote']")
+            assert items == ["photo", "file", "task", "vote"], items   # votes.js is loaded
             shot(phone, "plus")
             phone.click("#m2-plus-menu [data-plus='vote']")
-            assert phone.evaluate("window.__voted") == 1
+            phone.wait_for_function("TribeVotes.isOpen()")
+            phone.evaluate("TribeVotes.closeComposer()")
+            # without votes.js the entry hides itself
+            phone.evaluate("window.__tv = window.TribeVotes; window.TribeVotes = undefined")
+            phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu")
+            assert phone.eval_on_selector_all("#m2-plus-menu [data-plus]", "els => els.map(e => e.dataset.plus)") == ["photo", "file", "task"]
+            phone.evaluate("TribeMobile.closeSheet(); window.TribeVotes = window.__tv"); phone.wait_for_selector("#m2-plus-menu", state="detached")
             # photo
             img = Path(tmp, "lantern.png"); img.write_bytes(png(48, 32, (242, 107, 29)))
             phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu [data-plus='photo']")
@@ -236,6 +239,13 @@ def main():
             # ---- one-tap approvals with a comment
             st, ap = api("/approvals", "POST", {"title": "Merge feat/double-jump", "details": "Coyote time + double jump reset. 12 tests pass.", "risk": "medium"}, htok); assert st == 200, ap
             phone.wait_for_function("(() => { const b = document.querySelector('#tabbar [data-bd=\"updates\"]'); return b && !b.classList.contains('hidden') && b.textContent === '1'; })()", timeout=8000)
+            # a long project name + a badge must not widen the page
+            pid = phone.evaluate("TribeProjects.current()")
+            assert api(f"/projects/{pid}", "PATCH", {"name": "The Extraordinarily Long Pixel Quest Adventure Project"}, htok)[0] == 200
+            phone.wait_for_function("document.querySelector('#pj-switch').textContent.includes('Extraordinarily')", timeout=8000)
+            for v in ["home", "chat", "docs"]:
+                phone.evaluate(f"TribeApp.show('{v}')"); phone.wait_for_timeout(250)
+                no_overflow(phone, f"{v} with a long name"); assert phone.evaluate("document.querySelector('#main').getBoundingClientRect().width <= innerWidth + 1"), v
             phone.click('#tabbar [data-m2nav="updates"]')
             card = f"#view-updates .m2-ap[data-ap='{ap['approval']['id']}']"
             phone.wait_for_selector(card)

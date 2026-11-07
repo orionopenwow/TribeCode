@@ -164,20 +164,54 @@
       <code title="${esc(c.note || '')}">${esc(c.path)}</code><span class="faint">${esc(c.name)}</span>${c.by === meId ? `<button class="linkish" data-unclaim="${esc(c.id)}">release</button>` : ''}</div>`).join('');
     $('#claims-list').querySelectorAll('[data-unclaim]').forEach(b => b.onclick = () => C.api('/claims/' + b.dataset.unclaim, { method: 'DELETE' }).catch(e => toast(e.message)));
   }
+  // Connect Claude Code from anywhere (this computer, same Wi-Fi, or a remote session at home via the public link),
+  // see whether it's connected, and disconnect in one click.
   async function connectClaude() {
     if (!C.connected()) return openInvite();
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
     body.innerHTML = '<h2>Connect your Claude Code</h2><p class="lead">Creating a key…</p>';
-    try {
-      const r = await C.api('/agents', { method: 'POST' });
+    let r, where, timer;
+    const isHost = (C.state().me || {}).role === 'host';
+    const copy = async (t, msg) => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the command and copy it.'); } };
+    const status = async () => {
+      const el = $('#cc-status'); if (!el) return clearInterval(timer);
+      try { const s = await C.api('/agents/mine'); el.innerHTML = s.online ? `<span class="cc-dot on"></span>Connected · ${esc(s.agent.name)}` : `<span class="cc-dot"></span>Waiting for Claude Code…`; } catch {}
+    };
+    const draw = () => {
+      const cmd = r.commands[where];
+      const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => k !== 'wifi' || r.commands.wifi);
       body.innerHTML = `<h2>Connect your Claude Code</h2>
-        <p class="lead">Run this once in a terminal. Your Claude Code joins the tribe as <b>${esc(r.agent.name)}</b>: it sees the board, docs, chat and VISION.md, claims files before editing, and shows up in the room while it works.</p>
-        <div class="linkbox"><code id="cc-cmd" title="${esc(r.command)}">${esc(r.command)}</code><button class="btn primary" id="cc-copy">Copy</button></div>
-        <p class="faint" style="font-size:12px;line-height:1.5">${r.tools.length} tools: ${r.tools.map(esc).join(', ')}. Making a new key replaces the old one. Agents can't vote or invite people.</p>
-        <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
-      $('#cc-copy').onclick = async () => { try { await navigator.clipboard.writeText(r.command); toast('Command copied. Paste it in your terminal.'); } catch { getSelection().selectAllChildren($('#cc-cmd')); } };
-    } catch (e) { body.innerHTML = `<h2>Couldn't create a key</h2><p class="lead">${esc(e.message)}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; }
-    body.querySelector('[data-close]').onclick = closeInvite;
+        <p class="lead">Run this once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
+        <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>
+        ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
+          : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
+        <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
+        <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.</p>
+        <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button></div>`;
+      body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
+      if ($('#cc-copy')) $('#cc-copy').onclick = () => copy(cmd, 'Command copied. Paste it in your terminal.');
+      if ($('#cc-public')) $('#cc-public').onclick = async e => {
+        e.target.disabled = true; e.target.textContent = 'Turning on…';
+        try { await C.api('/share/public', { method: 'POST', body: {} }); r = await C.api('/agents', { method: 'POST' }); where = r.commands.anywhere ? 'anywhere' : where; draw(); }
+        catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = 'Turn on the public link'; }
+      };
+      $('#cc-out').onclick = async () => {
+        try { const o = await C.api('/agents/mine', { method: 'DELETE' }); clearInterval(timer);
+          body.innerHTML = `<h2>Disconnected</h2><p class="lead">The key stopped working. To remove it from Claude Code too, run:</p>
+            <div class="linkbox"><code>${esc(o.remove)}</code><button class="btn primary" id="cc-rm">Copy</button></div>
+            <div class="modal-foot"><button class="btn" id="cc-again">Connect again</button><button class="btn" data-close>Done</button></div>`;
+          $('#cc-rm').onclick = () => copy(o.remove, 'Copied.'); $('#cc-again').onclick = () => connectClaude();
+          body.querySelector('[data-close]').onclick = closeInvite;
+        } catch (err) { toast(err.message); }
+      };
+      body.querySelector('[data-close]').onclick = () => { clearInterval(timer); closeInvite(); };
+      status();
+    };
+    try {
+      r = await C.api('/agents', { method: 'POST' });
+      where = r.commands.anywhere ? 'anywhere' : (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'here' : (r.commands.wifi ? 'wifi' : 'here');
+      draw(); clearInterval(timer); timer = setInterval(status, 3000);
+    } catch (e) { body.innerHTML = `<h2>Couldn't create a key</h2><p class="lead">${esc(e.message)}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; }
   }
   $('#cc-connect').addEventListener('click', () => connectClaude());
   C.on('claims', renderClaims);
