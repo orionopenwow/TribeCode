@@ -5,6 +5,10 @@ const { EventEmitter } = require('node:events');
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_FRAME = 1 << 20; // 1 MiB
+const MAX_MESSAGE = 4 << 20; // a fragmented message may not grow past 4 MiB
+// Heartbeat: phones that lose signal never send a FIN, so their socket (and their "online" dot, their huddle
+// seat) would stay forever. Ping every 25 s; drop a socket that has been silent for 70 s. Browsers answer pings.
+const PING_MS = Number(process.env.TRIBE_WS_PING_MS) || 25_000, DEAD_MS = Number(process.env.TRIBE_WS_DEAD_MS) || 70_000;
 
 class Socket extends EventEmitter {
   constructor(sock) {
@@ -14,15 +18,21 @@ class Socket extends EventEmitter {
     this.frags = [];
     this.open = true;
     sock.setNoDelay(true);
-    sock.on('data', d => this._onData(d));
+    this.seen = Date.now();
+    this.beat = setInterval(() => {
+      if (Date.now() - this.seen > DEAD_MS) { try { sock.destroy(); } catch {} return this._closed(); }
+      try { sock.write(header(0x9, 0)); } catch {}
+    }, PING_MS);
+    if (this.beat.unref) this.beat.unref();
+    sock.on('data', d => { this.seen = Date.now(); this._onData(d); });
     sock.on('close', () => this._closed());
     sock.on('error', () => this._closed());
   }
 
   send(obj) {
-    if (!this.open) return;
+    if (!this.open || this.sock.destroyed) return;
     const data = Buffer.from(typeof obj === 'string' ? obj : JSON.stringify(obj));
-    this.sock.write(Buffer.concat([header(0x1, data.length), data]));
+    try { this.sock.write(Buffer.concat([header(0x1, data.length), data])); } catch { this._closed(); }
   }
 
   close(code = 1000) {
@@ -33,7 +43,7 @@ class Socket extends EventEmitter {
     this._closed();
   }
 
-  _closed() { if (this.open) { this.open = false; this.emit('close'); } }
+  _closed() { clearInterval(this.beat); if (this.open) { this.open = false; this.emit('close'); } }
 
   _onData(chunk) {
     this.buf = Buffer.concat([this.buf, chunk]);
@@ -56,11 +66,13 @@ class Socket extends EventEmitter {
       if (op === 0x9) { this.sock.write(Buffer.concat([header(0xA, payload.length), payload])); continue; }
       if (op === 0xA) continue;
       if (op === 0x1 || op === 0x0) {
-        this.frags.push(payload);
+        this.frags.push(payload); this.fragLen = (this.fragLen || 0) + payload.length;
+        if (this.fragLen > MAX_MESSAGE) { this.frags = []; this.fragLen = 0; return this.close(1009); }
         if (fin) {
-          const text = Buffer.concat(this.frags).toString('utf8'); this.frags = [];
+          const text = Buffer.concat(this.frags).toString('utf8'); this.frags = []; this.fragLen = 0;
           let msg; try { msg = JSON.parse(text); } catch { continue; }
-          this.emit('message', msg);
+          // A bug in one message handler must not take the whole tribe server down (this runs in a socket 'data' event).
+          try { this.emit('message', msg); } catch (e) { console.error('ws message handler:', e); }
         }
       }
     }
