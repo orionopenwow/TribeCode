@@ -77,3 +77,11 @@ Telegram-style bubbles laid out edge to edge like Instagram's web DMs (reference
 See [MOBILE.md](MOBILE.md#the-phone-layout) for the phone layout (rack, panel, composer, sheets). The same tokens and rules apply; motion is the 120–220 ms set above, and everything stops under `prefers-reduced-motion`.
 
 Tokens live in [`app/ui/tokens.css`](../app/ui/tokens.css) (app) and at the top of `site/styles.css` (website).
+
+## 8. Navigation
+
+- **Left sidebar = communication and core only.** Under the project header (the workspace switcher: tribe, the project's views Overview · Board · Repo · Timeline, pinned projects, collaborative rooms, personal scratchpad, new project, paste an invite link) sit four rows: **Chat & Streams** (#general, #agents and DMs fold out under it), **Docs & Files**, **Tasks & Board**, **Agents Hub**. Settings and Invite friends sit at the bottom. Nothing else gets a row: Updates live in the bell, the huddle in the chat header's call button (the sidebar shows it only while live, the call button gets a Teal dot), Capture to notes in the profile menu.
+- **Workspaces are tabbed.** Tasks & Board (Board · Bugs · Proposals · Milestones · Calendar · Repo · Visuals, plus Roles and Requests when they apply) and Agents Hub (Agents · Your agents · Ownership · Conflicts · Hand-offs · Reviews · Daily plan · Secretary) open on their last tab. The tab bar is a mono eyebrow over a flat row with a 2px Ember underline on the current tab. Deep links: `#/tasks/bugs`, `#/agents/conflicts`. Breadcrumbs read View › Tab.
+- **No project selected:** the Global Hub (`#/hub`) is the main screen and the four rows become Hub · Global docs · All repos · Agent fleet.
+- **The right panel is contextual.** "In the room" lists people, agents and helpers (Secretary, local model, repo autopilot) and the private scratchpad; clicking an agent opens its detail there (task, hand-offs, conflicts, reviews, recent timeline). It hides with the X in its own corner and comes back from a slim tab on the main column's right edge.
+- **Top right:** the update icon (only when an update is ready) · bell · profile (rightmost) · window lights.

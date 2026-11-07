@@ -261,3 +261,5 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 /* switcher: the project's views */
 .sw-views { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 0 2px 4px; }
 .sh-switch .sw-view { min-height: 34px !important; font-size: 13px; }
+.ad-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--stroke); }
+.ad-acts .btn { height: 32px; font-size: 12.5px; }

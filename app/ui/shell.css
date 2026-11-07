@@ -410,11 +410,11 @@ body.huddle-live .cb-btn[data-cb="huddle"]::after { content: ''; position: absol
 .view-tabs { max-width: 1120px; margin: 0 auto 26px; display: flex; flex-direction: column; gap: 8px; }
 .view-tabs.hidden { display: none; }
 .view-tabs .wt-eye { color: var(--muted); }
-.wt-row { display: flex; gap: 2px; border-bottom: 1px solid var(--edge); overflow-x: auto; scrollbar-width: none; }
-.wt { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 12px; font-size: 14px; font-weight: 500; color: var(--muted); white-space: nowrap; border-radius: 8px 8px 0 0; }
+.wt-row { position: relative; display: flex; gap: 2px; border-bottom: 1px solid var(--edge); overflow-x: auto; scrollbar-width: none; }
+.wt { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 9px; font-size: 13.5px; font-weight: 500; color: var(--muted); white-space: nowrap; border-radius: 8px 8px 0 0; }
 .wt:hover { color: var(--text); background: var(--hover); }
 .wt.on { color: var(--text); }
-.wt.on::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; border-radius: 2px; background: var(--accent); }
+.wt.on::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px; border-radius: 2px; background: var(--accent); }
 .wt .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 .wt .n.hot { color: #fff; background: var(--accent); border-radius: 9px; padding: 0 6px; line-height: 18px; }
 body.ws-tabbed #coord-tabs, body.ws-tabbed #view-coord > #coord-root > .view-head, body.ws-tabbed #coord-root > .view-head { display: none; }   /* the workspace tabs replace the Coordinate view's own */

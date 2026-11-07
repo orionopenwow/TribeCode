@@ -223,7 +223,7 @@ def main():
             host.wait_for_function("ts => ts.every(t => document.querySelector('#preview-body').textContent.includes(t))", arg=["Now", "Hand-offs", "Conflict radar", "Review queue", "Timeline"])
             assert host.locator("#view-chat:not(.hidden)").count() == 1, "the detail opens beside chat"
             host.mouse.move(720, 600); shot(host, "nav-agent-detail")
-            host.click("#preview-actions [data-pa='0']"); host.wait_for_selector("#person-panel:not(.hidden)")
+            host.click("#preview-body [data-ad='0']"); host.wait_for_selector("#person-panel:not(.hidden)")
             host.keyboard.press("Escape")
 
             # ---- Roles: only for flow projects, a tab in Tasks & Board

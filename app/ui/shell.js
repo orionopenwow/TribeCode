@@ -152,6 +152,8 @@
         return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')}</div>`;
     }
     bar.classList.remove('hidden');
+    const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
+    if (onTab && row && (onTab.offsetLeft < row.scrollLeft || onTab.offsetLeft + onTab.offsetWidth > row.scrollLeft + row.clientWidth)) row.scrollLeft = onTab.offsetLeft - 12;   // the current tab stays in view
     const want = `#/${w}/${d.slug}`;
     if (location.hash !== want && !/^#\/(agents-hub|secretary)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search + want);
     const crumb = $('#crumb-label'), text = `${WS[w].label} › ${d.tab}`;
@@ -527,12 +529,16 @@
       ${sec('Review queue', rvs.length ? `<ul class="ad-list">${rvs.map(r => `<li><b>${esc(r.title || r.branch)}</b><small>${esc(r.status)}${(r.askedOf || []).length ? ` · asked ${esc(r.askedOf.join(', '))}` : ''}</small></li>`).join('')}</ul>` : '', 'Nothing waiting for review.')}
       ${sec('Timeline', items.length ? `<ul class="ad-list ad-tl">${items.map(t => `<li class="k-${esc(t.kind)}"><b>${esc(t.text || t.title || '')}</b><small>${esc(t.kind)} · ${esc(agoS(t.at))}</small></li>`).join('')}</ul>` : '', 'Nothing yet.')}
     </div>`;
-    const steer = a.yours || (C.state().me || {}).role === 'host';
-    preview({ kind: 'Agent', title: a.name, html, actions: [
-      { label: 'Timeline', primary: true, run: () => { closePreview(); window.TribePeople && window.TribePeople.open(id); } },
+    const steer = a.yours || (C.state().me || {}).role === 'host', paused = a.control && a.control.action !== 'resume';
+    const acts = [
+      { label: 'Full timeline', primary: true, run: () => { closePreview(); window.TribePeople && window.TribePeople.open(id); } },
       { label: 'Agents Hub', run: () => { closePreview(); go('agents'); } },
-      ...(steer && a.online ? [{ label: a.control && a.control.action !== 'resume' ? 'Resume' : 'Pause', run: async () => { try { await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action: a.control && a.control.action !== 'resume' ? 'resume' : 'pause' } }); previewAgent(id); } catch (e) { toast(e.message); } } }] : []),
-    ] });
+      ...(steer && a.online ? [{ label: paused ? 'Resume' : 'Pause', run: async () => { try { await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action: paused ? 'resume' : 'pause' } }); previewAgent(id); } catch (e) { toast(e.message); } } }] : []),
+    ];
+    // the buttons sit under the detail, so the panel header keeps the name readable
+    const btns = `<div class="ad-acts">${acts.map((x, i) => `<button class="btn ${x.primary ? 'primary' : ''}" data-ad="${i}">${esc(x.label)}</button>`).join('')}</div>`;
+    preview({ kind: 'Agent', title: a.name, html: html + btns });
+    document.querySelectorAll('#preview-body [data-ad]').forEach(btn => btn.onclick = () => acts[+btn.dataset.ad].run());
     $('#tour-room').dataset.agent = id;
   }
   // Agents under "In the room" open here (capture: before the agents panel's own row handler).
