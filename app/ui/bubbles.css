@@ -224,3 +224,8 @@ body.light .mt .tk.read { color: var(--live-ink); }
 .msg.dx .fchip-dl .fd-t { display: flex; flex-direction: column; min-width: 0; }
 .msg.dx .fchip-dl b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .msg.dx .fchip-dl small { color: var(--body); font-size: 11.5px; font-family: var(--mono); }
+
+/* "Load earlier messages" at the top of a long chat */
+.chat-more { display: block; margin: 6px auto 14px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--body); font: 500 12px/1.4 var(--mono); cursor: pointer; }
+.chat-more:hover, .chat-more:focus-visible { color: var(--white); border-color: var(--brand); }
+.chat-more:disabled { opacity: .6; cursor: default; }

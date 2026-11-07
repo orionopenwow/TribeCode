@@ -499,6 +499,19 @@
     if (reply) bar.querySelector('button').onclick = () => { reply = null; drawReply(); };
   }
 
+  // ---------- drafts: what you were typing survives a reload, a project switch or a phone app restart ----------
+  const draftKey = ch => `tribecode.draft:${C.base()}:${C.project() || ''}:${ch}`;
+  const saveDraft = () => { const i = $('#chat-input'); if (!i) return; try { if (i.value.trim()) localStorage.setItem(draftKey(cur()), i.value); else localStorage.removeItem(draftKey(cur())); } catch {} };
+  function restoreDraft() {
+    const i = $('#chat-input'); if (!i || i.value) return;
+    let v = null; try { v = localStorage.getItem(draftKey(cur())); } catch {}
+    if (v) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') saveDraft(); });
+  document.addEventListener('submit', e => { if (e.target.id === 'chat-form') { try { localStorage.removeItem(draftKey(cur())); } catch {} } }, true);
+  C.on('hello', () => setTimeout(restoreDraft, 0));
+  C.on('project', () => setTimeout(restoreDraft, 50));
+
   // Sending: DMs and replies go through /chat/<ch>/send; plain #general posts stay with app.js.
   document.addEventListener('submit', async e => {
     if (e.target.id !== 'chat-form') return;

@@ -363,7 +363,11 @@ const mcp = makeMcp({
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
-    recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
+    recent: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted).map(x => {
+      const media = x.media ? (x.media.kind === 'voice' ? '[voice note] ' : x.media.kind === 'image' ? '[image] ' : x.media.kind === 'file' ? `[file: ${x.media.name || 'file'}] ` : '') : '';
+      const vote = x.vote ? `[vote] ${x.vote.q || ''} ` : '';
+      return `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${media}${vote}${x.text || ''}`.trimEnd();
+    }).join('\n'),
   },
   board, approvals,
 });
@@ -497,6 +501,23 @@ async function apiInProject(req, res, url) {
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
+  // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
+  if (a === 'backup' && m === 'GET') {
+    if (me.role !== 'host') return fail(res, 403, 'only the host can download a backup');
+    const day = new Date().toISOString().slice(0, 10), name = `${slug(tribe.name)}-backup-${day}.tar.gz`;
+    res.writeHead(200, { 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+    return require('./backup').stream(baseStore.root, res, slug(tribe.name) || 'tribe').catch(e => { console.error('backup:', e); res.destroy(); });
+  }
+
+  // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
+  if (a === 'me' && !b && m === 'PATCH') {
+    if (me.role === 'agent') return fail(res, 403, 'agents keep their names');
+    const body = await readBody(req), mem = memberById(me.id);
+    const name = body.name !== undefined ? str(body.name, 32) : mem.name; if (!name) return fail(res, 400, 'name required');
+    mem.name = name; if (body.color !== undefined) mem.color = color(body.color);
+    saveMembers(); pushPresence();
+    return send(res, 200, { member: publicMember(mem) });
+  }
   if (a === 'me' && !b) return send(res, 200, { member: publicMember(me), tribe, version: VERSION, project: P.current(), projects: P.visibleTo(me).map(p => P.view(p)) });
 
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
@@ -534,7 +555,10 @@ async function apiInProject(req, res, url) {
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
     if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
-    if (m === 'GET') return send(res, 200, { messages: store.readJSONL(`chat/${b}.jsonl`, Math.min(Number(url.searchParams.get('limit')) || 100, 500)) });
+    if (m === 'GET') {   // ?before=<message id> pages back through history
+      const limit = Math.min(Number(url.searchParams.get('limit')) || 100, 500), before = str(url.searchParams.get('before') || '', 40);
+      return send(res, 200, { messages: store.pageJSONL(`chat/${b}.jsonl`, limit, before ? `"id":${JSON.stringify(before)}` : null) });
+    }
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');

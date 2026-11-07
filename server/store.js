@@ -49,6 +49,13 @@ class Store {
   readJSONL(rel, limit = 200) {
     return this._lines(rel).slice(-limit).map(parseLine).filter(Boolean);
   }
+  // One page of history: up to `limit` entries just before the line containing `beforeHint` (newest page when no hint).
+  pageJSONL(rel, limit = 100, beforeHint = null) {
+    const lines = this._lines(rel);
+    let end = lines.length;
+    if (beforeHint) { end = -1; for (let i = lines.length - 1; i >= 0; i--) if (lines[i].includes(beforeHint)) { end = i; break; } if (end < 0) return []; }
+    return lines.slice(Math.max(0, end - limit), end).map(parseLine).filter(Boolean);
+  }
   // Newest-first search without parsing the whole file: `hint` is a substring every match contains
   // (e.g. '"id":"abc"'), so only candidate lines are parsed. Returns the first (newest) match or null.
   findJSONL(rel, pred, hint) {

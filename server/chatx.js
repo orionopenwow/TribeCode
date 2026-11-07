@@ -58,6 +58,21 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   const pins = ch => pinIds(ch).map(i => find(ch, i)).filter(m => m && !m.deleted);
   const pushPins = ch => emit(ch, { type: 'chat-pins', channel: ch, pins: pins(ch) });
 
+  // ---------- search: newest first, every word must appear (text, transcript, file name, vote question) ----------
+  function search(ch, q, limit = 30) {
+    const words = String(q || '').toLowerCase().split(/\s+/).filter(w => w.length > 1).slice(0, 6);
+    if (!words.length) return [];
+    const out = [], lines = store._lines(file(ch));
+    for (let i = lines.length - 1; i >= 0 && out.length < Math.min(limit, 100); i--) {
+      const low = lines[i].toLowerCase(); if (!words.every(w => low.includes(w))) continue;
+      let msg; try { msg = JSON.parse(lines[i]); } catch { continue; }
+      if (msg.deleted) continue;
+      const hay = [msg.text, msg.media && msg.media.name, msg.vote && msg.vote.q].filter(Boolean).join(' ').toLowerCase();
+      if (words.every(w => hay.includes(w))) out.push(msg);
+    }
+    return out;
+  }
+
   // ---------- media ----------
   function saveMedia(data, mime, kind) {
     const base = String(mime || '').split(';')[0].trim().toLowerCase(), ext = EXT[base];
@@ -186,6 +201,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       return res.end(buf);
     }
     if (action === 'pins' && m === 'GET') return send(res, 200, { pins: pins(ch) });
+    if (action === 'search' && m === 'GET') return send(res, 200, { messages: search(ch, url.searchParams.get('q'), Number(url.searchParams.get('limit')) || 30) });
     if (action === 'receipt' && m === 'GET') return send(res, 200, { receipt: receipt(ch) });
     if (action === 'votes' && m === 'GET') { votes.sweep(); return send(res, 200, { votes: votes.list(ch) }); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
@@ -311,6 +327,15 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   const fail2 = t => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
   const mcpTools = {
+    search_chat: {
+      description: 'Search the project chat (#general) for messages containing every word you give: decisions, links, file names, who said what. Newest first.',
+      inputSchema: S({ query: { type: 'string', description: 'Words to look for' }, limit: { type: 'number', description: 'Max results (default 15, max 50)' } }, ['query']),
+      run: ({ query, limit }) => {
+        const hits = search('general', query, Math.min(Number(limit) || 15, 50));
+        if (!hits.length) return out(`No messages match "${clip(query, 60)}".`);
+        return out(hits.map(x => `[${x.at.slice(0, 16).replace('T', ' ')}] ${(member(x.by) || {}).name || (x.by === 'tribecode' ? 'TribeCode' : 'someone')}: ${clip(x.text || (x.media && x.media.name) || (x.vote && x.vote.q) || '', 300)}`).join('\n'));
+      },
+    },
     check_messages: {
       description: "Read new messages for you: your owner's private chat with you, plus @mentions of you in #general. Marks them read (your owner sees \"read\"). Answer with reply.",
       inputSchema: S({}),
@@ -365,5 +390,5 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     },
   };
 
-  return { route, onPost, command, approvalAsked, mcpTools, appendNotes, receipt, votes, EMOJI };
+  return { route, onPost, command, approvalAsked, mcpTools, appendNotes, receipt, votes, search, EMOJI };
 };
