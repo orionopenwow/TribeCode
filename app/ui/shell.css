@@ -282,3 +282,22 @@ body.panel-off .panel { display: none; }
 .pj-overview .pj-grid { gap: 20px; }
 @media (max-width: 820px) { .sec { margin-top: 28px; } .hero-card { margin-bottom: 28px; } #doc-read { font-size: 16px; } }
 .pj-overview:not(:empty) ~ .home-start #upcoming-card { display: none; }
+
+/* Top right (desktop): status · tools · window lights, bigger and in a fixed order. */
+@media (min-width: 821px) {
+  .tb-right { gap: 6px; }
+  .tb-right #update-pill { order: 1; margin-right: 6px; }
+  .tb-right #sync-status { order: 2; margin-right: 8px; }
+  .tb-right #ctx-btn { order: 3; }
+  .tb-right #nf-bell { order: 4; }
+  .tb-right #panel-toggle { order: 5; }
+  .tb-right #win-ctl { order: 6; }
+  .tb-right #ctx-btn, .tb-right #nf-bell, .tb-right #panel-toggle { width: 40px; height: 40px; padding: 0; border-radius: 10px; border: 1px solid transparent; background: none; display: grid; place-items: center; color: var(--muted); }
+  .tb-right #ctx-btn:hover, .tb-right #nf-bell:hover, .tb-right #panel-toggle:hover { background: var(--hover); border-color: var(--edge); color: var(--text); }
+  .tb-right #ctx-btn.on, .tb-right #panel-toggle[aria-pressed="true"] { color: var(--text); }
+  .tb-right #ctx-btn svg, .tb-right #nf-bell svg, .tb-right #panel-toggle svg { width: 21px !important; height: 21px !important; }
+  .tb-right #ctx-btn span { display: none; }
+  .win-ctl { display: flex; gap: 9px; margin-left: 10px; padding-left: 16px; border-left: 1px solid var(--edge); height: 24px; }
+  .win-ctl .tl { width: 15px; height: 15px; }
+  .win-ctl svg { width: 9px; height: 9px; }
+}

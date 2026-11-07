@@ -431,6 +431,13 @@
     }));
   }
 
+  else document.querySelectorAll('#win-ctl [data-w]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.w, fs = document.fullscreenElement;
+    if (a === 'close') window.close();
+    else if (a === 'max') (fs ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {});
+    else if (fs) document.exitFullscreen().catch(() => {});
+  }));
+
   // tribecode:// links: on launch and while running (single-instance forwards them here)
   (async () => {
     const dl = window.__TAURI__ && window.__TAURI__.deepLink;
