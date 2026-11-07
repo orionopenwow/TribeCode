@@ -198,3 +198,6 @@
   .flow-view .view-head { flex-wrap: wrap; gap: 8px; }
   .flow-view .view-head > .faint { display: none; }
 }
+
+/* restraint: the color row appears when you reach for a role (always on touch screens) */
+@media (hover: hover) { .rc-colors { opacity: 0; transition: opacity .15s var(--ease); } .role-card:hover .rc-colors, .role-card:focus-within .rc-colors { opacity: 1; } }
