@@ -138,7 +138,7 @@ module.exports = function integrator({ repo, enabled, G, store, settings, board,
     const title = `Integrate ${seq.length} branch${seq.length > 1 ? 'es' : ''} into ${main}: ${seq.join(', ')}`.slice(0, 160);
     const body = `Merge these branches into **${main}**, in this order, run the checks, then fast-forward ${main} and push:\n\n${seq.map((b, i) => `${i + 1}. \`${b}\``).join('\n')}\n\n` +
       `${notes ? `## Notes\n${String(notes).slice(0, 4000)}\n\n` : ''}Integration \`${id}\`, requested by ${me.name}. Nothing is merged until this is approved.`;
-    const p = board.propose(title, body, me);
+    const p = board.propose(title, body, me, { kind: 'integration' });
     const rec = { id, proposal: p.id, branches: seq, notes: String(notes || '').slice(0, 4000), by: me.id, created: new Date().toISOString(), status: 'pending', main };
     const l = all(); l.push(rec); saveAll(l);
     bus.notify({ type: 'approval', priority: 'high', title: `Approve integration into ${main}?`, body: `${me.name} wants to merge ${seq.join(', ')}.`, view: 'board', ref: p.id,
