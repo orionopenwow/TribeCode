@@ -65,7 +65,7 @@
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
     { key: 'docs-all', label: 'Global docs', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
     { key: 'repos-all', label: 'All repos', icon: 'i-git', group: 'global', keys: 'repositories every project code branches status', run: () => hubOpen('repos') },
-    { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
     { key: 'huddle', label: 'Huddle', icon: 'i-mic', kind: 'Action', keys: 'voice call talk mic audio join start', hint: 'Ctrl Shift M', run: () => { const H = window.TribeHuddle; if (H && !H.inCall()) H.join(); } },
     { key: 'capture', label: 'Capture to notes', icon: 'i-doc', kind: 'Action', keys: 'voice speech transcribe dictate record notes toggle', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
@@ -88,7 +88,7 @@
     if (d) { lastDest = d.key; d.run(); }
   }
   // No project selected: the Global Hub is on screen (its sub-pages too).
-  const isGlobal = () => document.body.dataset.view === 'hub';
+  const isGlobal = () => document.body.dataset.view === 'hub' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global');
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
   function openScratch() {
     // Phones, no tribe yet, or already on Home: Home shows the scratchpad in its own page.
@@ -123,6 +123,7 @@
   function current() {
     const v = document.body.dataset.view || '';
     if (v === 'hub') { const m = window.TribeHub ? window.TribeHub.mode() : 'home'; return m === 'repos' ? 'repos-all' : m === 'docs' ? 'docs-all' : 'hub'; }
+    if (v === 'agents-hub' && document.body.dataset.scope === 'global') return 'fleet';
     if (v === 'coord') return (window.TribeCoord && window.TribeCoord.tab()) || 'agents';
     if (v === 'flow-roles') return 'roles';
     if (v === 'flow-updates' || v === 'updates') return 'updates';

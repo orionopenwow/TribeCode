@@ -5,7 +5,7 @@ Claude Code sessions work side by side, each at its own desk. TribeCode can inst
 computer, next to the tribe. It is optional: nothing is downloaded until the host presses Install.
 
 ## Where
-Your agents (the Agents hub) › **Office**, at the bottom.
+Home › **Agent fleet** › **Office** (at the top), or a project's Agents Hub. One switch turns it on and off.
 
 ## How it works
 - **Install** clones the repo into `~/TribeCode-Tools/open-space` at a commit we read through (`7b661d6`), runs
