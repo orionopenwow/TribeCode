@@ -244,9 +244,9 @@ def main():
             phone.click("#menu-btn"); phone.wait_for_selector(".nest-row[data-nav='chat']", state="visible")
             phone.wait_for_timeout(400)
             assert rows(phone, "#pj-nav .nest-row.core") == CORE
-            for sel in ["#nest-settings", "#tour-invite"]: phone.wait_for_selector(sel, state="visible")
-            fs, inv, nest = (phone.locator(s).bounding_box() for s in ["#nest-settings", "#tour-invite", "#nest"])
-            assert fs["y"] < inv["y"] and fs["y"] >= nest["y"] + nest["height"] - 2, (fs, inv, nest)
+            for sel in ["#ub-gear", "#tour-invite"]: phone.wait_for_selector(sel, state="visible")
+            fs, inv = (phone.locator(s).bounding_box() for s in ["#ub-gear", "#tour-invite"])
+            assert fs["y"] > inv["y"], (fs, inv)   # your bar (with Settings) sits at the very bottom of the panel, under Invite friends
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             assert phone.evaluate("(() => { const s = document.querySelector('.window > .side'); return s.scrollWidth <= s.clientWidth + 1 && document.querySelector('#nest').scrollWidth <= document.querySelector('#nest').clientWidth + 1; })()")
             no_dupes(phone)

@@ -166,7 +166,7 @@ def main():
             feature("Updates: approve an agent's request from the phone", approvals)
 
             def profile():
-                ph.click("#pf-btn"); ph.wait_for_selector("#m2-profile [data-pf='settings']", timeout=10000)
+                ph.evaluate("document.querySelector('#pf-btn').click()"); ph.wait_for_selector("#m2-profile [data-pf='settings']", timeout=10000)
                 ph.click("#m2-profile [data-pf='settings']"); ph.wait_for_selector("#set-name", timeout=10000)
                 ph.fill("#set-name", "Maya Lin"); ph.press("#set-name", "Tab"); ph.wait_for_timeout(1200)
                 wait_until(lambda: api("/me", token=ftok)[1]["member"]["name"] == "Maya Lin", 10, "name saved on the server")

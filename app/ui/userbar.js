@@ -31,11 +31,13 @@
       const acts = $('#ub-acts'); if (bell) acts.appendChild(bell); if (fr) acts.appendChild(fr);   // Friends sits right of the bell
       document.body.classList.add('has-userbar'); label(); size();
     } else {
+      // phones: you (and Settings) sit at the bottom of the side panel the fire logo opens; the rack keeps the tabs + Friends
+      const b = build(); if (b.parentNode !== nest) nest.appendChild(b);
+      $('#ub-face').appendChild(pf);
       const anchor = $('#sync-status');
       if (bell && bell.parentNode !== tb) tb.insertBefore(bell, anchor && anchor.parentNode === tb ? anchor : null);
-      if (fr && fr.parentNode !== tb) bell ? bell.after(fr) : tb.appendChild(fr);
-      if (pf.parentNode !== tb) tb.appendChild(pf);
-      document.body.classList.remove('has-userbar');
+      if (fr) $('#ub-acts').appendChild(fr);   // Friends rides in your bar on phones
+      document.body.classList.remove('has-userbar'); b.style.width = ''; label();
     }
   }
   // as wide as the rail + sidebar, whatever their width

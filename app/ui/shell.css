@@ -501,4 +501,6 @@ body.global .nest-foot { display: none; }
 .userbar .ub-gear .i { width: 17px; height: 17px; }
 body.has-userbar .window > .side, body.has-userbar .rail { padding-bottom: 68px; }
 body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is the gear in the user bar */
-@media (max-width: 820px) { .userbar { display: none; } }
+@media (max-width: 820px) {
+  .window > .side > .userbar { position: static; flex: none; width: auto; }
+}

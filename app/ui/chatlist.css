@@ -59,3 +59,22 @@
   .msg.dx.has-vn .mb, .msg.dx.has-vote .mb, .msg.dx.has-gx .mb { width: auto; max-width: 100%; }
   .msg.dx .vt, .msg.dx .gx, .msg.dx .vn { max-width: 100%; min-width: 0; }
 }
+
+/* Composer: a big rounded bar like a chat app's (desktop): + on the left, the message, then voice / photo / emoji. */
+.composer-dock .compose { height: 56px; padding: 0 10px 0 8px; gap: 4px; border-radius: 12px; background: var(--raised); border: 1px solid var(--edge); }
+.composer-dock .compose input { padding: 0 8px; font-size: 15px; }
+.composer-dock .compose .cx-plus { order: -2; width: 32px; height: 32px; border-radius: 50%; background: var(--surface-3); color: var(--text); }
+.composer-dock .compose .cx-plus svg.i { width: 18px; height: 18px; }
+.composer-dock .compose .cx-emo { order: 10; }
+/* day divider: a thin line with the date, not a pill */
+.day-sep { position: relative; align-items: center; margin: 18px 16px 6px; }
+.day-sep::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--edge); }
+.day-sep span { position: relative; padding: 0 8px; border: 0; border-radius: 0; background: var(--canvas); font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--faint); }
+/* system lines: quiet, no pill */
+.msg.dx.sys .mb > p { padding: 0; border: 0; background: none; }
+@media (max-width: 820px) {
+  .day-sep { margin: 14px 12px 4px; }
+}
+/* link chips read as small embeds: a card with an accent edge */
+.msg.dx .lps { gap: 6px; margin-top: 6px; }
+.msg.dx .lps .lp { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px 6px 10px; border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: 6px; background: var(--surface); font-family: var(--font); font-size: 13px; color: var(--text); }

@@ -114,7 +114,7 @@
       : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">
-        <header class="hub-head">${isPhone() ? '<div class="hub-thumb" aria-hidden="true"><img src="assets/icon-512.png" alt=""></div>' : ''}<span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
+        <header class="hub-head"><span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
         ${gsHero(on)}
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>

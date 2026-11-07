@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.8.1
+
+- **Guide**: how to TribeCode in nine short pages (start here, projects and invites, Claude Code, working together, repos and versions, phones, hosting, agents and the Office, troubleshooting). Tucked away: the profile menu, Ctrl K, or "? Guide" at the bottom of Settings; no new sidebar rows
+- **The new vision** (docs/VISION.md) from fresh research (docs/RESEARCH-2026-11.md): own the niche of small crews building together with their own Claude, starting with game jams; then one-tap Ship, a repo importer with license checks, a skills catalog, engine packs and a public Workshop
+- Chat looks more like a server channel: a big rounded message bar with + on the left, a thin date line, quiet system lines, links as small cards
+- **Phones**:
+  - Home has no top bar and less empty space. Its rack has five slots that line up with a project's: You (your avatar: tap for your profile) · Messages · Notes · Notifs · Projects
+  - In a project: Home · Chat · Docs · Updates · Tasks, centered. The project's picture sits top left, and a pane button top right opens the side pane (who's here, helpers, Claude, scratchpad)
+  - No #general pill or profile picture in the chat bar
+  - You, Friends and Settings sit flush at the bottom of the side panel
+  - The hosting banner stays on one line
+
 ## v0.8.0
 
 - **Themes**: nine flat matte themes (TribeCode Dark, Light, Midnight, Nordic, Nightshade, Campfire, Solar Dark, Solar Light, High contrast) with a swatch picker and "Match system" in Settings; every theme passes 4.5:1 text contrast; Ctrl+Shift+L flips your light/dark pair

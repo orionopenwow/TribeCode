@@ -110,6 +110,7 @@
   // Rack: avatar · Chat · Docs · Updates · Tasks · action
   // =====================================================================
   const RACK = [
+    { nav: 'hub', label: 'Home', icon: 'home', m2: true },   // your Home (all projects); the side panel is a swipe from the left
     { nav: 'chat', label: 'Chat', icon: 'chat', badge: 'nn-chat' },
     { nav: 'docs', label: 'Docs', icon: 'doc' },
     { nav: 'updates', label: 'Updates', icon: 'bell', badge: 'updates', m2: true },
@@ -123,19 +124,25 @@
   }
   // ---------- Home's own rack (phones): lines up with the dashboard, hides as you scroll down, + starts or joins ----------
   // Home · Projects · Notes · Activity · +. Each icon jumps to that part of the dashboard; the lit one follows the scroll.
-  const HOMEBAR = [['top', 'home', 'Home', '#hub-hero'], ['pjs', 'list', 'Projects', '#hub-pjs-sec'], ['notes', 'doc', 'Notes', '#hub-notes'], ['activity', 'bell', 'Activity', '#hub-stream']];
+  // Same five slots and look as a project's rack (Home · Chat · Docs · Updates · Tasks), Home's versions:
+  // You · Messages · Notes · Notifs · Projects. On Home the Home tab becomes your avatar: tap it for your profile.
+  const HOMEBAR = [['me', 'home', 'You'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['notifs', 'bell', 'Notifs'], ['pjs', 'list', 'Projects']];
   function homeBar() {
     if ($('#m2-homebar')) return;
     const bar = document.createElement('nav'); bar.id = 'm2-homebar'; bar.className = 'm2-homebar'; bar.setAttribute('aria-label', 'Home');
-    bar.innerHTML = `<div class="m2-seg">${HOMEBAR.map(([k, i, l]) => `<button data-hb="${k}" aria-label="${l}" title="${l}">${ic(i, 22)}<span class="lb">${l}</span></button>`).join('')}</div>
-      <button class="m2-hb-plus" id="m2-hb-plus" aria-label="Start or join a tribe">${ic('plus', 24)}</button>`;
+    bar.innerHTML = `<div class="m2-seg">${HOMEBAR.map(([k, i, l]) => k === 'plus' ? `<button class="m2-hb-plus" id="m2-hb-plus" aria-label="Start or join a tribe">${ic('plus', 24)}</button>`
+      : `<button data-hb="${k}" aria-label="${k === 'me' ? 'Your profile' : l}" title="${k === 'me' ? 'Your profile' : l}">${k === 'me' ? '<span class="m2-hb-av" id="m2-hb-av"></span>' : ic(i, 22)}<span class="lb">${l}</span></button>`).join('')}</div>`;
     document.body.appendChild(bar);
     bar.addEventListener('click', e => {
       if (e.target.closest('#m2-hb-plus')) return startTribe();
       const b = e.target.closest('[data-hb]'); if (!b) return;
-      const item = HOMEBAR.find(x => x[0] === b.dataset.hb), el = item && $(item[3]);
-      if (b.dataset.hb === 'top' || !el) { scroller().scrollTo({ top: 0, behavior: 'smooth' }); return; }
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const k = b.dataset.hb;
+      if (k === 'pjs') { document.body.classList.add('drawer-open'); return; }
+      if (k === 'notes') { const n = $('#hub-notes'); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => { const t = $('#hub-scratch textarea, #hub-scratch .sc-in'); if (t) t.focus({ preventScroll: true }); }, 350); return; }
+      if (k === 'msgs') { if (C.connected()) return App().show('chat'); return window.TribeFriends && window.TribeFriends.open(); }
+      if (k === 'notifs') return window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : null;
+      if (k === 'me') return profile(me().id);
+      scroller().scrollTo({ top: 0, behavior: 'smooth' });
     });
     // hide while scrolling down, show when scrolling up (or near the top)
     let lastY = 0;
@@ -151,10 +158,9 @@
   const scroller = () => { const m = $('#main'); return m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement || document.documentElement; };
   function litHome() {
     const bar = $('#m2-homebar'); if (!bar) return;
-    let on = 'top';
-    for (const [k, , , sel] of HOMEBAR) { const el = $(sel); if (el && el.getBoundingClientRect().top < innerHeight * 0.45) on = k; }
-    bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === on));
-    const pj = bar.querySelector('[data-hb="pjs"]'); if (pj) pj.classList.toggle('hidden', !$('#hub-pjs-sec'));
+    bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === 'me'));
+    const av = $('#m2-hb-av'), m = me() || {};
+    if (av) { let sn = ''; try { sn = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name || ''; } catch {} const n = (m.name || sn || '?').trim(); av.textContent = n.charAt(0).toUpperCase(); av.style.background = m.color || 'var(--accent)'; }
   }
   // "+" on Home: one sheet to start or join, even from a phone (phones can't run the tribe themselves).
   function startTribe() {
@@ -207,6 +213,7 @@
     return v;
   }
   function show(view) {
+    if (view === 'hub') return window.TribeHub ? window.TribeHub.open('home') : App().show('home');
     if (view !== 'updates') return App().show(view);
     if (window.TribeFlow && window.TribeFlow.isFlow && window.TribeFlow.isFlow() && window.TribeFlow.openUpdates) return window.TribeFlow.openUpdates();   // flow projects: the living plan + gists
     if (!phone()) return window.TribeNotify ? window.TribeNotify.openInbox() : App().show('home');
@@ -274,6 +281,10 @@
     const tb = $('.titlebar .tb-right');
     if (tb && !$('#m2-talk')) tb.insertAdjacentHTML('afterbegin', `<button class="m2-talk hidden" id="m2-talk" aria-haspopup="dialog" aria-label="Talk to…"><span id="m2-talk-l">#general</span>${ic('chev', 14)}</button>`);
     $('#m2-talk').addEventListener('click', e => { e.stopPropagation(); talkTo(); });
+    // top right: the pane button opens the right-side pane (who's here, helpers, Claude, scratchpad) as a sheet
+    if (tb && !$('#m2-pane')) { tb.insertAdjacentHTML('beforeend', '<button class="m2-pane-btn" id="m2-pane" aria-label="Open the side pane" title="Side pane"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M15 4v16"/></svg></button>');
+      $('#m2-pane').addEventListener('click', e => { e.stopPropagation(); document.body.classList.toggle('m2-pane-open'); }); }
+    document.addEventListener('click', e => { if (!document.body.classList.contains('m2-pane-open')) return; if (e.target.closest && (e.target.closest('#tour-room') || e.target.closest('#m2-pane'))) return; document.body.classList.remove('m2-pane-open'); }, true);
     // The profile moved from the bottom rack to the top bar: on phones it opens your profile sheet.
     document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#pf-btn'); if (!b || !phone()) return; e.preventDefault(); e.stopPropagation(); profile(me().id); }, true);
     // New task on phones: the quick sheet (the screen's own button, now that the rack has no + of its own)
@@ -285,8 +296,10 @@
     const f = $('#m2-face'), n = $('#m2-pjn'), s = $('#m2-pjs'); if (!f) return;
     const sw = $('#pj-switch'); document.body.classList.toggle('m2-has-switch', !!(sw && !sw.classList.contains('hidden')));
     // The fire logo opens the projects panel (like the desktop rail); the name says where you are.
-    if (!f.firstChild) f.innerHTML = '<img class="m2-logo" src="assets/icon-512.png" alt="">';
+    // In a project its own picture sits top left; on Home the fire logo
     const home = document.body.classList.contains('global');
+    const want = !home && p && PJ().face ? 'pj:' + p.id + ':' + (p.image || '') + (p.emoji || '') : 'logo';
+    if (f.dataset.k !== want) { f.dataset.k = want; f.innerHTML = want === 'logo' ? '<img class="m2-logo" src="assets/icon-512.png" alt="">' : PJ().face(p, 'sm'); }
     n.textContent = home ? 'Home' : p ? p.name : 'TribeCode';
     const here = p && PJ().here ? PJ().here(p.id).length : 0;
     s.textContent = home ? (C.connected() ? 'your projects' : 'not in a tribe yet') : C.connected() ? (here ? `${here} here` : 'just you') : 'offline';
@@ -594,7 +607,8 @@
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
           <button data-pf="notify">${ic('bell', 20)}<span>Alerts</span></button>
           <button data-pf="settings">${ic('gear', 20)}<span>Settings</span></button>
-        </div>`;
+        </div>
+        ${window.TribeGuide ? '<button class="m2-pf-more" data-pf="guide">Guide: how to TribeCode</button>' : ''}`;   // feat/vision-guide: tucked under the actions
     } else {
       body = `${head}
         ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Now</div><div class="m2-pf-st">${esc(where)}</div></div>`}
@@ -622,6 +636,7 @@
       if (k === 'invite') return App().openInvite();
       if (k === 'notify') return window.TribeNotify && window.TribeNotify.openSettings();
       if (k === 'settings') return window.TribeSettings && window.TribeSettings.open();
+      if (k === 'guide') return window.TribeGuide && window.TribeGuide.open();
       if (k === 'ask' && ag) {
         if (window.TribeCoord) window.TribeCoord.open('agents'); else App().show('coord');
         const handle = '@' + ag.name + ' ';

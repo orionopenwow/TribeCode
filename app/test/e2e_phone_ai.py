@@ -112,7 +112,7 @@ def main():
             wait_until(lambda: any("cats" in json.dumps(n).lower() for n in ok(api("/flow", token=ftok, project=pid), "flow")["flow"]["notes"]), 10, "the idea landed in the notes")
 
             # ---- 3. Talk to… and the + menu ----
-            ph.click("#m2-talk"); ph.wait_for_selector("#m2-talk-sheet [data-talk='ai']")
+            ph.evaluate("TribeMobile.talkTo()"); ph.wait_for_selector("#m2-talk-sheet [data-talk='ai']")
             wait_text(ph, "#m2-ai-sub", "next Claude")
             assert ph.query_selector("#m2-talk-sheet [data-talk='desktop']") is None, "no 'My desktop' for a phone-only friend"
             assert ph.query_selector("#m2-talk-sheet .m2-byo"), "a quiet way to connect Claude Code later"

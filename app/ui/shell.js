@@ -74,6 +74,7 @@
     { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
     { key: 'panel', label: 'Toggle right panel', icon: 'i-list', kind: 'Action', keys: 'right panel in the room sidebar show hide preview', run: () => setPanel(!document.body.classList.contains('panel-off')) },
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
+    { key: 'guide', label: 'Guide', icon: 'i-help', kind: 'Go to', keys: 'help how to wiki manual faq docs guide start troubleshooting tutorial', run: () => window.TribeGuide && window.TribeGuide.open() },   // no group: no row (feat/vision-guide, app/ui/guide.js)
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
@@ -133,7 +134,7 @@
   }
   function markActive() {
     if (drawnGlobal !== isGlobal() || document.body.classList.contains('global') !== isGlobal()) { drawGroups(); globalHead(); }
-    const cur = document.body.classList.contains('ws-open') ? '' : current(), w = wsOf(cur);
+    const cur = document.body.classList.contains('ws-open') || document.body.classList.contains('gd-open') ? '' : current(), w = wsOf(cur);   // gd-open: the Guide layer (feat/vision-guide)
     const own = cur && document.querySelector(`.side .nest-row[data-pnav="${cur}"]:not(.hidden)`);   // a page with its own row (Overview, a pinned Repo) lights that row
     const lit = own ? cur : w ? WS[w].row : cur;   // inside a workspace its row is the lit one
     document.querySelectorAll('.side [data-pnav], #tabbar [data-pnav]').forEach(b => { const on = b.dataset.pnav === lit; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -142,7 +143,7 @@
   // ---------- the tab bar of a workspace (Tasks & Board, Agents Hub) ----------
   let tabsSig = '';
   function drawTabs(cur) {
-    if (cur === undefined) cur = document.body.classList.contains('ws-open') ? '' : current();
+    if (cur === undefined) cur = document.body.classList.contains('ws-open') || document.body.classList.contains('gd-open') ? '' : current();
     const bar = $('#view-tabs'); if (!bar) return;
     const w = wsOf(cur);
     document.body.classList.toggle('ws-tabbed', !!w);
