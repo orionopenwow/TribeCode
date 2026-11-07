@@ -468,14 +468,22 @@ async function apiInProject(req, res, url) {
     const body = await readBody(req);
     const inv = invites.find(i => i.code === str(body.code, 16));
     if (!inv || inv.revoked || Date.parse(inv.expires) < Date.now() || inv.uses >= inv.maxUses) return fail(res, 410, 'invite expired or invalid');
+    const proj = inv.project && P.get(inv.project);
+    // Already a member (signed in on this device): a project invite adds that project instead of making a second account.
+    const already = authed(req);
+    if (already && already.role !== 'agent') {
+      if (proj && Array.isArray(already.projects) && !already.projects.includes(proj.id)) { already.projects.push(proj.id); inv.uses++; saveInvites(); }
+      if (proj) P.addMember(proj.id, already.id, P.scoped(already) ? inv.role : already.role);
+      saveMembers(); pushPresence(); rooms.pushProjects();
+      return send(res, 200, { member: publicMember(already), tribe, project: proj ? proj.id : null, existing: true });
+    }
     const name = str(body.name, 32); if (!name) return fail(res, 400, 'name required');
     inv.uses++; saveInvites();
-    const proj = inv.project && P.get(inv.project);
     const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
     if (proj) P.addMember(proj.id, out.member.id, inv.role);
     P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
     pushPresence();
-    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
+    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: proj ? proj.id : null });
   }
 
   if (a === 'device-link' || a === 'devices' || a === 'share') {
