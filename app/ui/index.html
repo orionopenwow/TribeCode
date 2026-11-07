@@ -76,11 +76,17 @@
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></symbol>
+  <symbol id="i-quill" viewBox="0 0 24 24"><path d="M20 4C12 4 7 9 6 18l-2 3M6 18c6 0 10-3 12-8h-5c3-1 5-3 7-6"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1.5 3h5L16 13h5M5.5 5h13L21 13v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></symbol>
 </svg>
 
 <!-- ============ App shell ============ -->
 <!-- Layout: far-left circle rail (projects) | the project's nest | main | right panel (In the room / preview).
-     app/ui/shell.js renders the nest, breadcrumbs, More menu, + New menu, Pinned, Recents and the preview panel. -->
+     app/ui/shell.js renders the nest (core rows, Project Hub, Coordinate & Ops, Settings), breadcrumbs, Pinned, Recents and the preview panel. -->
 <div class="shell" id="shell">
   <div class="window">
     <nav class="rail" id="tour-rail" aria-label="Projects" data-tauri-drag-region>
@@ -89,9 +95,6 @@
       <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
       <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-box"/></svg></button>
       <div class="spacer" data-tauri-drag-region></div>
-      <button class="nav help" id="help-btn" title="Take the tour">?</button>
-      <button class="nav" id="settings-btn" title="Settings · replay setup"><svg class="i"><use href="#i-gear"/></svg></button>
-      <button class="avatar me-btn" id="me-avatar" title="You · settings">?</button>
     </nav>
 
     <header class="titlebar" data-tauri-drag-region>
@@ -119,24 +122,21 @@
       <div class="pj-strip" id="pj-strip" aria-label="Projects"></div>
       <div class="nest" id="nest">
         <div class="nest-head" id="nest-head">
-          <button class="nest-title" id="nest-title" data-nav="home" title="Project home"><span id="nest-face" class="nest-face"></span><span class="nt"><b id="nest-name">Home</b><span class="nest-sub" id="nest-sub"></span></span></button>
+          <button class="nest-title" id="nest-title" data-nav="home" title="Project home"><span id="nest-face" class="nest-face"></span><span class="nt"><b id="nest-name">My Tribe</b><span class="nest-sub" id="nest-sub"></span></span></button>
+          <button class="nest-switch" id="nest-switch" aria-haspopup="menu" aria-expanded="false" title="Switch project" aria-label="Switch project"><svg class="i"><use href="#i-chev"/></svg></button>
         </div>
-        <div class="nest-group">
-          <button class="nest-row" id="nest-new" aria-haspopup="menu"><svg class="i"><use href="#i-plus"/></svg><span>New</span></button>
-          <button class="nest-row" id="nest-search"><svg class="i"><use href="#i-search"/></svg><span>Search</span><span class="kbd">Ctrl K</span></button>
-        </div>
-        <div class="nest-group" id="pj-nav" role="navigation" aria-label="Project sections">
-          <button class="nest-row" data-nav="chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat</span><span class="n" id="nn-chat"></span></button>
-          <button class="nest-row" data-nav="docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs &amp; files</span><span class="n" id="nn-docs"></span></button>
-          <button class="nest-row" data-pnav="inbox" id="nest-updates"><svg class="i"><use href="#i-bell"/></svg><span>Updates</span><span class="n" id="nn-updates"></span></button>
-          <button class="nest-row" data-nav="tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks</span><span class="n" id="nn-tasks"></span></button>
+        <div class="nest-group nest-core" id="pj-nav" role="navigation" aria-label="Project sections">
+          <button class="nest-row" data-nav="chat" data-pnav="chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat</span><span class="n" id="nn-chat"></span></button>
+          <button class="nest-row" data-nav="docs" data-pnav="docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs &amp; files</span></button>
+          <button class="nest-row" data-pnav="updates" id="nest-updates"><svg class="i"><use href="#i-bell"/></svg><span>Updates</span><span class="n" id="nn-updates"></span></button>
+          <button class="nest-row" data-nav="tasks" data-pnav="tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks</span><span class="n" id="nn-tasks"></span></button>
           <div class="nest-huddle" id="nest-huddle">
-            <div class="nest-row static"><svg class="i"><use href="#i-mic"/></svg><span>Huddle</span><span class="live-dot hidden" id="huddle-live" title="Live now"></span></div>
+            <button class="nest-row" data-pnav="huddle" id="nest-huddle-row" title="Start or join the huddle (Ctrl Shift M)"><svg class="i"><use href="#i-mic"/></svg><span>Huddle</span><span class="nest-live hidden" id="huddle-live"><i></i>Live</span></button>
             <div class="huddle-sub hidden" id="huddle-sub"></div>
             <div id="huddle-box" class="huddle-box"></div>
           </div>
-          <button class="nest-row" id="nest-more" aria-haspopup="menu" aria-expanded="false"><svg class="i"><use href="#i-more"/></svg><span>More</span><span class="n" id="nn-more"></span></button>
         </div>
+        <div id="nest-groups"></div>
         <div class="nest-sec empty" id="nest-pinned">
           <h6>Pinned</h6>
           <div id="pin-repo"></div>
@@ -146,6 +146,7 @@
         <div class="nest-sec empty" id="nest-recents"><h6>Recents</h6><div id="recents-list"></div></div>
       </div>
       <div class="nest-foot">
+        <button class="nest-row" id="nest-settings" data-pnav="settings"><svg class="i"><use href="#i-gear"/></svg><span>Settings</span></button>
         <button class="invite-pill" id="tour-invite"><span>+</span>Invite friends</button>
         <button class="item local-folder hidden" id="folder-item" title="Workspace folder"><span id="folder-label"></span></button>
       </div>
@@ -241,7 +242,7 @@
       <button data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat</span></button>
       <button data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs</span></button>
       <button data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks</span></button>
-      <button data-tab-more title="More"><svg class="i"><use href="#i-more"/></svg><span>More</span></button>
+      <button data-nav-menu title="All sections"><svg class="i"><use href="#i-list"/></svg><span>Sections</span></button>
     </nav>
   </div>
 </div>

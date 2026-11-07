@@ -239,12 +239,10 @@
   }
   new MutationObserver(() => { if (cur && !String(document.body.dataset.view || '').startsWith('flow-')) hideMine(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
-  // Sidebar: a Roles row after Updates, and Updates opens the project's plan + feed when the project runs the flow.
+  // Sidebar: shell.js draws the Roles row in Project Hub (#nest-roles); it shows only while the project runs the flow.
+  // Updates opens the project's plan + feed when the project runs the flow.
   function navRows() {
-    const after = $('#nest-updates'); if (!after) return;
-    let r = $('#nest-roles');
-    if (!flow) { if (r) r.remove(); return; }
-    if (!r) { r = document.createElement('button'); r.className = 'nest-row'; r.id = 'nest-roles'; r.dataset.flowNav = 'roles'; r.innerHTML = `${ico('i-users')}<span>Roles</span>`; after.insertAdjacentElement('afterend', r); r.onclick = () => open('roles'); }
+    const r = $('#nest-roles'); if (r) { r.classList.toggle('hidden', !flow); r.dataset.flowNav = 'roles'; }
   }
   document.addEventListener('click', e => {
     if (!flow || !e.target.closest) return;

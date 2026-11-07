@@ -453,10 +453,9 @@
   })();
   $('#invite-modal').addEventListener('click', e => { if (e.target.id === 'invite-modal') closeInvite(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvite(); });
-  $('#settings-btn').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
-  $('#me-avatar').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
+  // Settings lives at the bottom of the nest (shell.js), the profile at the top right (profilemenu.js).
   $('#rail-logo').addEventListener('click', () => show('home'));
-  $('#tour-invite').addEventListener('click', () => openInvite());
+  $('#tour-invite').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openInvite(); });
   $('#tour-search').addEventListener('click', () => window.TribePalette.open());
   if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
   document.addEventListener('keydown', e => {

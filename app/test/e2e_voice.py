@@ -203,9 +203,9 @@ def main():
             chat(orion).click("#dm-back")
 
             # ---- 2. huddle captions ----
-            orion.click("#h-join")
-            wait_text(maya, "#huddle-box", "Join huddle")
-            maya.click("#h-join")
+            orion.click("#nest-huddle-row")
+            maya.wait_for_selector("#nest-huddle.live #huddle-live:not(.hidden)")
+            maya.click("#nest-huddle-row")
             for pg in (orion, maya):
                 pg.wait_for_function("TribeHuddle.roster().length === 2 && TribeHuddle.inCall()")
             orion.click("#h-cc")
@@ -254,7 +254,7 @@ def main():
             orion.evaluate("TribeApp.show('home')")
 
             # "End & summarize" writes notes without ending the huddle
-            orion.click("#h-join"); orion.wait_for_function("TribeHuddle.inCall() && TribeHuddle.roster().length === 1")
+            orion.click("#nest-huddle-row"); orion.wait_for_function("TribeHuddle.inCall() && TribeHuddle.roster().length === 1")
             orion.click("#h-cc"); orion.wait_for_function("__fakeSpeech.active()")
             orion.evaluate("__fakeSpeech.say('quick sync about the soundtrack')")
             orion.wait_for_function("TribeCaptions.lines().length >= 1")

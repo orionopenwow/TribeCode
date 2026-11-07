@@ -302,15 +302,13 @@ def ui_host(b, host, orion, maya, pq, b1):
         wait_text(host, "#sync-status", "connected")
         host.wait_for_selector(f"#pj-rail .pj-circle.on[data-pj-open='{pq}']")
         # the shell: circles, nest, breadcrumbs, right panel
-        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", ".nest-row[data-nav='tasks']", "#nest-more", "#tour-invite", "#crumbs", "#tour-search", "#tour-room"]:
+        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", ".nest-row[data-nav='tasks']", "#grp-hub", "#grp-ops", "#nest-settings", "#tour-invite", "#crumbs", "#tour-search", "#tour-room"]:
             host.wait_for_selector(sel, state="visible")
         wait_text(host, "#crumbs", "pixel-quest")
-        # More menu: full feature set
-        host.click("#nest-more"); host.wait_for_selector("#more-menu:not(.hidden)")
+        # the nest: full feature set in Project Hub and Coordinate & Ops (e2e_nav.py covers it in depth)
         for label in ["Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals", "Agents", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Settings"]:
-            wait_text(host, "#more-menu", label)
-        shot(host, "shell-more-menu")
-        host.click("#more-menu [data-more='coord:agents']")
+            wait_text(host, "#tour-side", label)
+        host.click("#nest-agents")
         host.wait_for_selector("#view-coord:not(.hidden)")
         wait_text(host, "#coord-body", "Claude · Orion")
         wait_text(host, "#coord-body", "12k")
@@ -325,7 +323,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         # agents also show in the right panel
         wait_text(host, "#room-agents", "Claude · Orion")
         # bugs board: columns, ⋯ menu, copy as Markdown, preview of the attachment
-        host.click("#nest-more"); host.click("#more-menu [data-more='bugs']")
+        host.click("#nest-bugs")
         host.wait_for_selector("#view-bugs:not(.hidden) .bug-col")
         wait_text(host, "#bug-list", "Player falls through the bridge")
         for col in ["New", "Confirmed", "In progress", "Fixed"]: wait_text(host, "#bug-list", col)

@@ -40,14 +40,14 @@ def main():
         page.wait_for_selector("#tour-rail .logo", state="visible")
 
         # ---- Settings: one calm page ----
-        page.click("#settings-btn")
+        page.click("#nest-settings")   # Settings: the bottom row of the sidebar
         page.wait_for_selector("#settings-modal:not(.hidden) #set-name")
         page.fill("#set-name", "Riley Park"); page.press("#set-name", "Tab")
         page.click('#settings-body [data-color="#FFB86B"]')
         page.click('#settings-body [data-theme="dark"]')
         page.wait_for_function("!document.querySelector('#settings-body').innerText.includes('Looking')", timeout=5000)
         shot(page, "settings")
-        assert page.inner_text("#me-avatar") == "RP"
+        assert page.inner_text("#room-me") == "RP"
         assert page.evaluate("TribeStore.get().color") == "#FFB86B"
 
         # ---- the tour is optional, from Settings ----
@@ -64,7 +64,7 @@ def main():
 
         page.reload()
         page.wait_for_timeout(300)
-        assert page.inner_text("#me-avatar") == "RP"
+        assert page.inner_text("#room-me") == "RP"
 
         # ---- theme toggle ----
         page.keyboard.press("Control+Shift+L")

@@ -219,18 +219,17 @@ def main():
             wait_text(host, "#board", "Draw the hero sprite")
             assert "Old campfire task" not in host.inner_text("#board"), (host.inner_text("#board"), host.evaluate("TribeClient.project()"))
 
-            # ---- nest badges: only non-empty sections show a count; requests surface on More ⋯
+            # ---- nest badges: only non-empty sections show a count; requests surface in Project Hub
             wait_text(host, "#nn-tasks", "1")
-            assert host.inner_text("#nn-docs") == ""
-            assert host.inner_text("#nn-more") == ""
+            assert host.locator("#nest-requests").is_hidden()
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project="pixel-quest")
             assert st == 200, r
-            host.wait_for_selector("#nn-more.hot")
+            host.wait_for_selector("#nest-requests:not(.hidden) #nn-requests.hot")
             assert host.locator("#pj-rail [data-pj-open='pixel-quest'] .pj-badge").count() == 0   # current project: no badge on its circle
-            assert host.inner_text("#nn-more") == "1"
-            host.click("#nest-more"); host.click("#more-menu [data-more='requests']"); wait_text(host, "#pj-requests", "Hook up the gamepad")
+            assert host.inner_text("#nn-requests") == "1"
+            host.click("#nest-requests"); wait_text(host, "#pj-requests", "Hook up the gamepad")
             assert "Hook up the gamepad" not in json.dumps(api("/changes", token=token, project="campfire-crew")[1])
-            host.click("#nest-more"); host.click("#more-menu [data-more='repo']"); host.wait_for_selector("#pj-repo-ws")
+            host.click("#nest-repo"); host.wait_for_selector("#pj-repo-ws")
 
             # ---- project-scoped invite: the friend only sees Pixel Quest
             host.click("#tour-invite"); host.wait_for_selector("#inv-project")

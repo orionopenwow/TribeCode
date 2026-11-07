@@ -1,9 +1,11 @@
 // The shell around every view (the mix of Discord and the Claude desktop app):
 //   far-left circle rail (projects.js draws the circles) | the project's nest | main | right panel.
-// This file renders the nest (head, + New, Search, Chat, Docs & files, Updates, Tasks, Huddle, More ⋯,
-// Pinned, Recents), the breadcrumbs "Tribe / Project ▾ / Section ▾", the More menu with the full feature
-// set, the + New menu, the project switcher dropdown, the right panel's preview mode and its collapse.
-// Public: window.TribeShell = { render, onShow, preview, closePreview, switcher, openMore, recent }.
+// This file renders the nest: the header (project · switcher), the core daily drivers (Chat, Docs & files,
+// Updates, Tasks, Huddle, Capture to notes), two collapsible groups (Project Hub, Coordinate & Ops), Pinned,
+// Recents and the bottom utility row (Settings, Invite friends). One registry (DEST) drives the nest, the
+// breadcrumb section menu and the Ctrl K palette, so every destination is listed exactly once.
+// Also: the project switcher dropdown, the + New menu (phones' orange action), the right panel's preview mode.
+// Public: window.TribeShell = { render, onShow, preview, closePreview, switcher, go, dests, openNew, recent }.
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient;
@@ -14,34 +16,110 @@
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
   const toast = m => App() && App().toast(m);
   const pid = () => (PJ() && PJ().current()) || 'default';
+  const closeDrawer = () => document.body.classList.remove('drawer-open');
 
-  // ---------- the More menu: the full feature set, grouped ----------
-  const MORE = [
-    { group: 'Project' },
-    { key: 'bugs', label: 'Bugs', icon: 'i-bug', run: () => App().show('bugs') },
-    { key: 'board', label: 'Proposals & board', icon: 'i-vote', run: () => App().show('board') },
-    { key: 'milestones', label: 'Milestones', icon: 'i-flag', run: () => { App().show('board'); setTimeout(() => { const m = $('#ms-list'); m && m.closest('.card').scrollIntoView({ block: 'center' }); }, 120); } },
-    { key: 'calendar', label: 'Calendar', icon: 'i-cal', run: () => App().show('calendar') },
-    { key: 'repo', label: 'Repo', icon: 'i-git', run: () => App().show('repo') },
-    { key: 'visuals', label: 'Visuals & screenshots', icon: 'i-image', run: () => App().show('visuals') },
-    { key: 'requests', label: 'Requests', icon: 'i-vote', run: () => App().show('requests') },
-    { group: 'Coordinate' },
-    { key: 'coord:agents', label: 'Agents', icon: 'i-robot', run: () => coord('agents') },
-    { key: 'coord:ownership', label: 'Ownership map', icon: 'i-map', run: () => coord('ownership') },
-    { key: 'coord:conflicts', label: 'Conflict radar', icon: 'i-merge', run: () => coord('conflicts') },
-    { key: 'coord:handoffs', label: 'Hand-offs', icon: 'i-hand', run: () => coord('handoffs') },
-    { key: 'coord:reviews', label: 'Reviews', icon: 'i-eye', run: () => coord('reviews') },
-    { key: 'coord:plan', label: 'Daily plan', icon: 'i-sun', run: () => coord('plan') },
-    { group: '' },
-    { key: 'settings', label: 'Settings', icon: 'i-gear', run: () => projectSettings() },
-  ];
-  const MORE_VIEWS = ['bugs', 'board', 'calendar', 'repo', 'visuals', 'requests', 'coord'];
+  // ---------- every destination, once ----------
+  // group: core | hub | ops | foot | none (palette and crumbs only). when(): shown only while true (Roles, Requests).
   const coord = tab => { if (window.TribeCoord) window.TribeCoord.open(tab); else App().show('coord'); };
-  let counts = {};   // badges shown in the More menu: bugs, requests, reviews, handoffs
+  const flowOn = () => !!(window.TribeFlow && window.TribeFlow.state && window.TribeFlow.state());
+  let counts = {};   // badges: bugs, requests, reviews, handoffs
+  let lastDest = '';
+  const DEST = [
+    { key: 'chat', label: 'Chat', icon: 'i-chat', group: 'core', keys: 'messages general talk', run: () => App().show('chat') },
+    { key: 'docs', label: 'Docs & files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
+    { key: 'updates', label: 'Updates', icon: 'i-bell', group: 'core', keys: 'inbox notifications plan feed', run: () => openUpdates() },
+    { key: 'tasks', label: 'Tasks', icon: 'i-check', group: 'core', keys: 'todo kanban', run: () => App().show('tasks') },
+    { key: 'huddle', label: 'Huddle', icon: 'i-mic', group: 'core', kind: 'Action', keys: 'voice call talk mic audio join start', hint: 'Ctrl Shift M', run: () => { const H = window.TribeHuddle; if (H && !H.inCall()) H.join(); } },
+    { key: 'capture', label: 'Capture to notes', icon: 'i-doc', group: 'core', kind: 'Action', keys: 'voice speech transcribe dictate record notes toggle', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
+    { key: 'bugs', label: 'Bugs', icon: 'i-bug', group: 'hub', keys: 'bug inbox issues', run: () => App().show('bugs') },
+    { key: 'board', label: 'Proposals & board', icon: 'i-vote', group: 'hub', keys: 'approval board vote vision', run: () => App().show('board') },
+    { key: 'milestones', label: 'Milestones', icon: 'i-flag', group: 'hub', keys: 'roadmap goals', run: () => { App().show('board'); setTimeout(() => { const m = $('#ms-list'); m && m.closest('.card').scrollIntoView({ block: 'center' }); }, 120); } },
+    { key: 'calendar', label: 'Calendar', icon: 'i-calendar', group: 'hub', keys: 'schedule week month events', run: () => App().show('calendar') },
+    { key: 'repo', label: 'Repo', icon: 'i-git', group: 'hub', keys: 'git branches code github', run: () => App().show('repo') },
+    { key: 'visuals', label: 'Visuals & screenshots', icon: 'i-photo', group: 'hub', keys: 'screenshots compare diff images', run: () => App().show('visuals') },
+    { key: 'roles', label: 'Roles', icon: 'i-users', group: 'hub', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
+    { key: 'requests', label: 'Requests', icon: 'i-inbox', group: 'hub', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
+    { key: 'agents', label: 'Agents', icon: 'i-robot', group: 'ops', keys: 'coordinate claude agents panel', run: () => coord('agents') },
+    { key: 'ownership', label: 'Ownership map', icon: 'i-map', group: 'ops', keys: 'claims files owners', run: () => coord('ownership') },
+    { key: 'conflicts', label: 'Conflict radar', icon: 'i-merge', group: 'ops', keys: 'merge overlap branches', run: () => coord('conflicts') },
+    { key: 'handoffs', label: 'Hand-offs', icon: 'i-hand', group: 'ops', keys: 'handoff park take', run: () => coord('handoffs') },
+    { key: 'reviews', label: 'Reviews', icon: 'i-eye', group: 'ops', keys: 'review approve', run: () => coord('reviews') },
+    { key: 'plan', label: 'Daily plan', icon: 'i-sun', group: 'ops', keys: 'today standup plan', run: () => coord('plan') },
+    { key: 'agents-hub', label: 'Your agents', icon: 'i-plug', group: 'ops', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'secretary', label: 'Secretary', icon: 'i-quill', group: 'ops', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
+    { key: 'settings', label: 'Settings', icon: 'i-gear', group: 'foot', kind: 'Action', keys: 'preferences profile name color folder brain', run: () => window.TribeSettings && window.TribeSettings.open() },
+    { key: 'invite', label: 'Invite friends', icon: 'i-users', group: 'foot', kind: 'Action', keys: 'link join share qr', run: () => App().openInvite() },
+    { key: 'home', label: 'Project home', icon: 'i-home', keys: 'home overview', run: () => App().show('home') },
+    { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
+  ];
+  const byKey = k => DEST.find(d => d.key === k);
+  const GROUPS = [['hub', 'Project Hub'], ['ops', 'Coordinate & Ops']];
+  const COUNT = { bugs: 1, requests: 1, reviews: 1, handoffs: 1 };
+  const HOT = { requests: 1, reviews: 1, handoffs: 1 };
+  function go(key) {
+    const d = byKey(key); if (!d) return;
+    lastDest = key; closePop(); closeDrawer();
+    d.run(); setTimeout(markActive, 0);
+  }
+
+  // ---------- the two collapsible groups (open/closed per group in localStorage) ----------
+  const FKEY = g => `tribecode.nav.${g}`;
+  const isOpen = g => { try { return localStorage.getItem(FKEY(g)) !== '0'; } catch { return true; } };
+  function drawGroups() {
+    const box = $('#nest-groups'); if (!box) return;
+    box.innerHTML = GROUPS.map(([g, label]) => `<div class="nest-fold ${isOpen(g) ? 'open' : ''}" id="grp-${g}" data-group="${g}">
+        <button class="nest-fold-head" data-fold="${g}" aria-expanded="${isOpen(g)}" aria-controls="grp-${g}-body"><span>${esc(label)}</span><span class="n" id="gn-${g}"></span>${ico('i-chev', 14)}</button>
+        <div class="nest-fold-body" id="grp-${g}-body" role="group" aria-label="${esc(label)}">${DEST.filter(d => d.group === g).map(d =>
+          `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.label)}</span>${COUNT[d.key] ? `<span class="n" id="nn-${esc(d.key)}"></span>` : ''}</button>`).join('')}</div></div>`).join('');
+    visibility();
+  }
+  function fold(g, open) {
+    const el = $(`#grp-${g}`); if (!el) return;
+    el.classList.toggle('open', open); el.querySelector('.nest-fold-head').setAttribute('aria-expanded', String(open));
+    try { localStorage.setItem(FKEY(g), open ? '1' : '0'); } catch {}
+    paintGroupCounts();
+  }
+  function visibility() { DEST.forEach(d => { if (!d.when) return; const el = $(`#nest-${d.key}`); if (el) el.classList.toggle('hidden', !d.when()); }); }
+  function paintCounts() {
+    for (const k of Object.keys(COUNT)) {
+      const el = $(`#nn-${k}`); if (!el) continue; const v = counts[k] || 0;
+      el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!(v && HOT[k]));
+    }
+    visibility(); paintGroupCounts();
+  }
+  // A folded group still says when something inside waits on you.
+  function paintGroupCounts() {
+    for (const [g] of GROUPS) {
+      const el = $(`#gn-${g}`); if (!el) continue;
+      const v = isOpen(g) ? 0 : DEST.filter(d => d.group === g && HOT[d.key]).reduce((s, d) => s + (counts[d.key] || 0), 0);
+      el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!v);
+    }
+  }
+
+  // ---------- which destination is on screen ----------
+  function current() {
+    const v = document.body.dataset.view || '';
+    if (v === 'coord') return (window.TribeCoord && window.TribeCoord.tab()) || 'agents';
+    if (v === 'flow-roles') return 'roles';
+    if (v === 'flow-updates' || v === 'updates') return 'updates';
+    if (v === 'board') return lastDest === 'milestones' ? 'milestones' : 'board';
+    return v;
+  }
+  function markActive() {
+    const cur = document.body.classList.contains('ws-open') ? '' : current();
+    document.querySelectorAll('[data-pnav]').forEach(b => { const on = b.dataset.pnav === cur; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    for (const [g] of GROUPS) { const el = $(`#grp-${g}`); if (el) el.classList.toggle('has-on', DEST.some(d => d.group === g && d.key === cur)); }
+    visibility();
+  }
+  new MutationObserver(markActive).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
+  setTimeout(() => {
+    const cl = $('#crumb-label'); if (cl) new MutationObserver(markActive).observe(cl, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(() => markActive()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }, 0);
 
   // ---------- a small popover we own (flat, 1px border, no shadow) ----------
   let popEl = null;
-  function closePop() { if (popEl) { popEl.remove(); popEl = null; document.querySelectorAll('[aria-expanded="true"].nest-row, #crumb-section, #pj-switch').forEach(b => b.setAttribute('aria-expanded', 'false')); } }
+  function closePop() { if (popEl) { popEl.remove(); popEl = null; document.querySelectorAll('#crumb-section, #pj-switch, #nest-switch, [data-nav-menu]').forEach(b => b.setAttribute('aria-expanded', 'false')); } }
   function pop(anchor, html, { id, side = 'right', cls = '' } = {}) {
     closePop();
     const el = document.createElement('div'); el.className = `sh-pop ${cls} ${isPhone() ? 'sheet' : ''}`; if (id) el.id = id; el.setAttribute('role', 'menu');
@@ -57,21 +135,17 @@
     const f = el.querySelector('button'); if (f && !isPhone()) f.focus({ preventScroll: true });
     return el;
   }
-  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-more, #nest-new, #crumb-section, #pj-switch, [data-tab-more], #help-btn')) closePop(); });
+  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-switch, #crumb-section, #pj-switch, [data-nav-menu]')) closePop(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && popEl) { closePop(); e.stopPropagation(); }
     if (popEl && ['ArrowDown', 'ArrowUp'].includes(e.key)) { const all = [...popEl.querySelectorAll('button:not([disabled])')]; const i = all.indexOf(document.activeElement); const n = all[(i + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length]; if (n) { n.focus(); e.preventDefault(); } }
   }, true);
-  const n = k => (counts[k] ? `<span class="n hot">${counts[k]}</span>` : '');
-  function openMore(anchor) {
-    if (popEl && popEl.id === 'more-menu') return closePop();
-    const extra = (window.TribeFloat && window.TribeFloat.moreItems) ? window.TribeFloat.moreItems() : [];
-    const html = `<div class="sh-menu">${MORE.map((m, i) => m.group !== undefined ? (m.group ? `<h6>${esc(m.group)}</h6>` : '<hr>')
-        : `<button data-more="${esc(m.key)}" data-i="${i}" class="${(m.key === App().view() || m.key === 'coord:' + (window.TribeCoord && window.TribeCoord.tab()) && App().view() === 'coord') ? 'on' : ''}">${ico(m.icon)}<span>${esc(m.label)}</span>${n(m.key.replace('coord:', ''))}</button>`).join('')}
-      ${extra.length ? '<hr>' + extra.map((x, i) => `<button data-x="${i}">${ico(x.icon || 'i-popout')}<span>${esc(x.label)}</span></button>`).join('') : ''}</div>`;
-    const el = pop(anchor, html, { id: 'more-menu' });
-    el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { closePop(); document.body.classList.remove('drawer-open'); MORE[+b.dataset.i].run(); });
-    el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { closePop(); extra[+b.dataset.x].run(); });
+
+  // Updates: the flow's plan + feed, the phone's Updates screen, or the bell's inbox.
+  function openUpdates() {
+    if (flowOn() && window.TribeFlow.openUpdates) return window.TribeFlow.openUpdates();
+    if (isPhone() && window.TribeMobile) return window.TribeMobile.show('updates');
+    return window.TribeNotify ? window.TribeNotify.openInbox() : ($('#nf-bell') && $('#nf-bell').click());
   }
 
   // ---------- + New ----------
@@ -102,36 +176,43 @@
     if (!ag) toast('Connect your Claude Code (right panel) to ask it directly. @brain asks the local brain.');
   }
 
-  // ---------- breadcrumbs ----------
-  const SECTIONS = [['home', 'Home', 'i-home'], ['chat', 'Chat', 'i-chat'], ['docs', 'Docs & files', 'i-doc'], ['tasks', 'Tasks', 'i-check']];
+  // ---------- breadcrumbs: the section menu mirrors the nest (core, then the two groups) ----------
+  function menuRows(list) {
+    const cur = current();
+    return list.filter(d => !d.when || d.when()).map(d => `<button data-dest="${esc(d.key)}" class="${d.key === cur ? 'on' : ''}">${ico(d.icon)}<span>${esc(d.label)}</span>${COUNT[d.key] && counts[d.key] ? `<span class="n ${HOT[d.key] ? 'hot' : ''}">${counts[d.key]}</span>` : ''}</button>`).join('');
+  }
   function sectionMenu(anchor) {
-    const items = [...SECTIONS.map(([k, l, i]) => ({ key: k, label: l, icon: i, run: () => App().show(k) })), '-', ...MORE.filter(m => m.key && m.key !== 'settings')];
-    const el = pop(anchor, `<div class="sh-menu">${items.map((x, i) => x === '-' ? '<hr>' : `<button data-i="${i}" class="${x.key === App().view() ? 'on' : ''}">${ico(x.icon)}<span>${esc(x.label)}</span></button>`).join('')}</div>`, { id: 'section-menu', side: 'below' });
-    el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { closePop(); items[+b.dataset.i].run(); });
+    const core = DEST.filter(d => d.group === 'core' && d.kind !== 'Action');
+    const html = `<div class="sh-menu">${menuRows(core)}${GROUPS.map(([g, label]) => `<h6>${esc(label)}</h6>${menuRows(DEST.filter(d => d.group === g))}`).join('')}</div>`;
+    const el = pop(anchor, html, { id: 'section-menu', side: 'below' });
+    el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
   }
   function switcher(anchor) {
     const list = PJ() ? PJ().list() : [], cur = PJ() && PJ().current(), F = PJ().face;
     const scoped = Array.isArray((C.state().me || {}).projects);
     const el = pop(anchor, `<div class="sh-menu sh-projects"><h6>Projects</h6>${list.map(p => { const k = p.counts || {}, h = PJ().here(p.id).length;
         return `<button data-pj-open="${esc(p.id)}" class="${p.id === cur ? 'on' : ''}">${F(p, 'sm')}<span>${esc(p.name)}<small>${h ? `${h} here` : ''}${k.tasks ? `${h ? ' · ' : ''}${k.tasks} open` : ''}</small></span>${p.id === cur ? ico('i-tick', 14) : ''}</button>`; }).join('')}
-      ${scoped ? '' : `<hr><button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button id="sw-invite">${ico('i-users')}<span>Invite friends</span></button></div>`, { id: 'project-menu', side: 'below' });
-    el.querySelector('#sw-invite').onclick = () => { closePop(); App().openInvite(); };
+      <hr>${scoped ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`, { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below' });
+    el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
+    return el;
   }
   $('#crumb-section').addEventListener('click', e => { e.stopPropagation(); popEl && popEl.id === 'section-menu' ? closePop() : sectionMenu(e.currentTarget); });
   $('#ws-name').addEventListener('click', () => App().show('home'));
+  $('#nest-switch').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); if (PJ() && PJ().list().length) switcher(e.currentTarget); else App().show('home'); });
 
   // ---------- nest ----------
   function render(p, h) {
     if (!p) return;
     const k = p.counts || {}, here = h ? h.here(p.id).length : 0;
+    const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || '';
     $('#nest-face').innerHTML = h ? h.face(p, 'sm') : '';
     $('#nest-name').textContent = p.name;
-    $('#nest-sub').textContent = `${here ? `${here} here` : 'nobody else here'}${k.tasks ? ` · ${k.tasks} open task${k.tasks > 1 ? 's' : ''}` : ''}`;
+    $('#nest-sub').textContent = [tribe !== p.name ? tribe : '', here > 1 ? `${here} here` : ''].filter(Boolean).join(' · ');
     const set = (id, v, hot) => { const el = $(id); if (!el) return; el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!(v && hot)); };
     const pulse = h ? (h.pulses[p.id] || 0) : 0;
-    set('#nn-chat', pulse, true); set('#nn-tasks', k.tasks); set('#nn-docs', k.docs);
+    set('#nn-chat', pulse, true); set('#nn-tasks', k.tasks);
     counts.bugs = k.bugs || 0; counts.requests = k.requests || 0;
-    set('#nn-more', (counts.requests || 0) + (counts.reviews || 0) + (counts.handoffs || 0), true);
+    paintCounts();
     pinned(p);
     recents();
   }
@@ -143,7 +224,7 @@
   async function refreshCounts() {
     if (!C.connected()) return;
     try { const s = await C.api('/coord/summary'); counts.reviews = s.reviews; counts.handoffs = s.handoffs; } catch { return; }
-    const p = PJ() && PJ().cur(); if (p) { const k = p.counts || {}; const el = $('#nn-more'); const v = (k.requests || 0) + (counts.reviews || 0) + (counts.handoffs || 0); if (el) { el.textContent = v || ''; el.classList.toggle('hot', !!v); } }
+    paintCounts();
   }
   let ct; const countsSoon = () => { clearTimeout(ct); ct = setTimeout(refreshCounts, 500); };
   C.on('hello', countsSoon); C.on('project', countsSoon); C.on('task', countsSoon); C.on('approval', countsSoon);
@@ -151,31 +232,34 @@
 
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
-    if (e.target.closest('#nest-more')) { e.stopPropagation(); return openMore(e.target.closest('#nest-more')); }
-    if (e.target.closest('[data-tab-more]')) { e.stopPropagation(); return openMore(e.target.closest('[data-tab-more]')); }
-    if (e.target.closest('#nest-new')) { e.stopPropagation(); return popEl && popEl.id === 'new-menu' ? closePop() : openNew(e.target.closest('#nest-new')); }
-    if (e.target.closest('#nest-search')) { document.body.classList.remove('drawer-open'); return window.TribePalette.open(); }
-    if (e.target.closest('#nest-updates')) { document.body.classList.remove('drawer-open'); if (isPhone() && window.TribeMobile) return window.TribeMobile.show('updates'); return window.TribeNotify ? window.TribeNotify.openInbox() : ($('#nf-bell') && $('#nf-bell').click()); }
-    const rc = e.target.closest('[data-recent]'); if (rc) { document.body.classList.remove('drawer-open'); return openRecent(rc.dataset.recent); }
+    const f = e.target.closest('[data-fold]'); if (f) { const g = f.dataset.fold; return fold(g, !isOpen(g)); }
+    const nm = e.target.closest('[data-nav-menu]'); if (nm) { e.stopPropagation(); return document.body.classList.toggle('drawer-open'); }
+    const d = e.target.closest('.side [data-pnav], #tabbar [data-pnav]');
+    if (d && !d.dataset.nav && !e.defaultPrevented) { e.preventDefault(); return go(d.dataset.pnav); }
+    if (d && d.dataset.nav) lastDest = d.dataset.pnav;
+    const rc = e.target.closest('[data-recent]'); if (rc) { closeDrawer(); return openRecent(rc.dataset.recent); }
   });
   function onShow(view) {
     closePop();
-    const more = $('#nest-more'); if (more) more.classList.toggle('on', MORE_VIEWS.includes(view));
-    const tm = document.querySelector('[data-tab-more]'); if (tm) tm.classList.toggle('on', MORE_VIEWS.includes(view));
     if (window.TribeMobile) window.TribeMobile.onShow(view);   // phones: rack, hubs, composer (app/ui/mobile2.js)
     if (view === 'chat') { const p = PJ() && PJ().cur(); if (p && PJ().pulses()) { PJ().pulses()[p.id] = 0; const el = $('#nn-chat'); if (el) { el.textContent = ''; el.classList.remove('hot'); } } }
+    markActive();
   }
 
-  // ---------- huddle row: "Start a huddle" or "Orion and Maya talking" + live dot ----------
+  // ---------- huddle row: "Huddle · Live", then "Orion and Maya talking" ----------
   function huddleLine() {
     const r = (window.TribeHuddle && window.TribeHuddle.roster()) || C.state().huddle || [];
     const names = r.map(x => ((C.state().members || []).find(m => m.id === x.id) || {}).name || 'someone');
-    const sub = $('#huddle-sub'), live = $('#huddle-live');
+    const sub = $('#huddle-sub'), live = $('#huddle-live'), box = $('#nest-huddle');
     if (!sub) return;
     sub.classList.toggle('hidden', !names.length); live.classList.toggle('hidden', !names.length);
+    if (box) { box.classList.toggle('live', !!names.length); box.classList.toggle('in-call', !!(window.TribeHuddle && window.TribeHuddle.inCall())); }
+    const row = $('#nest-huddle-row'); if (row) row.title = window.TribeHuddle && window.TribeHuddle.inCall() ? 'You are in the huddle' : names.length ? 'Join the huddle (Ctrl Shift M)' : 'Start a huddle (Ctrl Shift M)';
     sub.textContent = !names.length ? '' : names.length === 1 ? `${names[0]} is talking` : names.length === 2 ? `${names[0]} and ${names[1]} talking` : `${names[0]}, ${names[1]} and ${names.length - 2} more talking`;
   }
   C.on('huddle', () => setTimeout(huddleLine, 0)); C.on('presence', huddleLine);
+  setTimeout(() => { const hb = $('#huddle-box'); if (hb) new MutationObserver(huddleLine).observe(hb, { childList: true }); }, 0);
+  drawGroups(); markActive();
 
   const repoBranch = {};
   // ---------- Pinned: the repo, pinned docs (docsx.js fills #side-pins-list), pinned chat messages ----------
@@ -274,7 +358,7 @@
   syncToggle();
   $('#panel-toggle').addEventListener('click', () => { const off = document.body.classList.toggle('panel-off'); if (off) closePreview(); try { localStorage.setItem(PKEY, off ? '1' : '0'); } catch {} syncToggle(); });
 
-  // ---------- project settings (More → Settings) ----------
+  // ---------- project settings (the switcher's Project settings, Ctrl K) ----------
   function projectSettings() {
     const p = PJ() && PJ().cur(); if (!p) return window.TribeOnboarding.open({ fromSettings: true });
     const host = (C.state().me || {}).role === 'host';
@@ -293,17 +377,13 @@
     const sv = $('#ps-save'); if (sv) sv.onclick = async () => { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: $('#ps-name').value, emoji: $('#ps-emoji').value, color } }); $('#invite-modal').classList.add('hidden'); PJ().refresh(); toast('Saved'); } catch (e) { toast(e.message); } };
   }
 
-  // Help (?): the tour is optional and lives here.
-  $('#help-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    const items = [{ label: 'Take a quick tour', icon: 'i-spark', run: () => window.TribeTour.start() }, { label: 'Report a bug', icon: 'i-bug', run: () => window.TribeBugs.capture() }, { label: 'Settings', icon: 'i-gear', run: () => window.TribeSettings.open() }];
-    const el = pop(e.currentTarget, `<div class="sh-menu">${items.map((x, i) => `<button data-i="${i}">${ico(x.icon)}<span>${esc(x.label)}</span></button>`).join('')}</div>`, { id: 'help-menu' });
-    el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { closePop(); items[+b.dataset.i].run(); });
-  });
-  // Ctrl K: the More features are searchable too.
-  if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(q => MORE.filter(m => m.key && m.label.toLowerCase().includes(String(q || '').toLowerCase())).map(m => ({ label: m.label, hint: 'More', icon: m.icon, run: m.run })));
+  // Ctrl K: every destination, once (palette.js drops other modules' duplicate "Go to" rows).
+  if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => DEST.filter(d => !d.when || d.when()).map(d => ({
+    kind: d.kind || 'Go to', label: d.label, dest: d.key, keys: `${d.key} ${d.keys || ''} ${(GROUPS.find(g => g[0] === d.group) || [])[1] || ''}`, icon: d.icon,
+    hint: d.key === 'capture' ? (window.TribeCapture && window.TribeCapture.on() ? 'on · Ctrl Shift N' : 'off · Ctrl Shift N') : d.hint || '',
+    run: () => go(d.key) })));
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openMore, openNew, recent, counts: () => counts };
+  window.TribeShell = { render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();
