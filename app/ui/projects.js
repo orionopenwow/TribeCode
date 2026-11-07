@@ -187,14 +187,15 @@
   // Toolbox: a few checked tools, libraries and Claude skills that fit this project (server/shelf.js). Tucked in: only picks, one row.
   const KIND_L = { skill: 'Claude skill', library: 'Library', tool: 'Tool', mcp: 'Agent tool' };
   async function toolbox(p) {
-    const slot = $('#pj-tools-slot'); if (!slot) return;
+    if (!$('#pj-tools-slot')) return;
     let d; try { d = await C.api(`/shelf?project=${encodeURIComponent(p.id)}`); } catch { return; }
+    const slot = $('#pj-tools-slot'); if (!slot) return;   // the overview may have redrawn while we waited
     if (!d.picks || !d.picks.length || (C.project && C.project() !== p.id)) { slot.innerHTML = ''; return; }
     const what = d.types && d.types.length ? `picks for a ${d.types[0]}` : 'picks for this project';
     slot.innerHTML = `<section class="card pj-tools" id="pj-tools"><div class="pt-head"><span class="eyebrow">Toolbox · ${esc(what)}</span><button class="linkish" id="pj-tools-all">All tools</button></div>
       <div class="pt-grid">${d.picks.map(it => `<div class="pt-tile"><span class="pt-kind">${esc(KIND_L[it.kind] || it.kind)} · ${esc(it.license)}</span><b>${esc(it.title)}</b><small>${esc(it.summary)}</small>
         <div class="pt-acts"><button class="btn sm" data-shelf-add="${esc(it.id)}">Add</button><a class="linkish" href="${esc(it.url || `https://github.com/${it.repo}`)}" target="_blank" rel="noopener noreferrer">Open</a></div></div>`).join('')}</div></section>`;
-    $('#pj-tools-all').onclick = () => window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : null;
+    slot.querySelector('#pj-tools-all').onclick = () => window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : null;
     slot.querySelectorAll('[data-shelf-add]').forEach(b => b.onclick = async () => {
       b.disabled = true; b.textContent = 'Adding…';
       try { const r = await C.api(`/shelf/${encodeURIComponent(b.dataset.shelfAdd)}/add`, { method: 'POST', body: { project: p.id } }); toast(r.where ? `${r.item.title}: Claude Code reads it from ${r.where}` : `${r.item.title} is in the Toolbox`); toolbox(p); }
