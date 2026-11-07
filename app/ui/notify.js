@@ -75,7 +75,7 @@
     const p = pendingForMe().length; $('#nf-needs-n').textContent = p ? String(p) : '';
     bell.title = unread ? `Inbox · ${unread} unread` : 'Inbox';
   }
-  const LABEL = { approval: 'Approval', mention: 'Mention', dm: 'Message', 'task-assigned': 'Task', reminder: 'Reminder', proposal: 'Proposal', 'bug-critical': 'Critical bug', release: 'Release', huddle: 'Huddle', digest: 'Digest', 'approval-question': 'Question', 'approval-result': 'Decision' };
+  const LABEL = { approval: 'Approval', mention: 'Mention', dm: 'Message', 'task-assigned': 'Task', reminder: 'Reminder', proposal: 'Proposal', 'bug-critical': 'Critical bug', release: 'Release', huddle: 'Huddle', digest: 'Digest', 'approval-question': 'Question', 'approval-result': 'Decision', 'comment-reply': 'Comment', 'meeting-notes': 'Meeting', 'visual-diff': 'Visuals', repo: 'Repo' };
   const GROUP = { 'task-assigned': n => `${n} new tasks assigned to you`, mention: n => `${n} new mentions`, dm: n => `${n} new messages`, proposal: n => `${n} new proposals`,
     release: n => `${n} releases`, huddle: n => `${n} huddles started`, 'bug-critical': n => `${n} critical bugs`, reminder: n => `${n} reminders` };
   const openGroups = new Set();
@@ -363,6 +363,9 @@
     ['bug-critical', 'Critical bugs', 'Crashes and data loss'],
     ['release', 'Releases', 'Off sends these to the digest'],
     ['huddle', 'Huddles', 'Off sends these to the digest'],
+    ['comment-reply', 'Doc comments', 'Replies in comment threads you are in'],
+    ['meeting-notes', 'Meeting notes', 'Off sends these to the digest'],
+    ['visual-diff', 'Visual changes', 'A screen changed by more than 5%'],
   ];
   const toggle = (key, label, sub, on, extra = '') => `<button class="toggle nf-tg" role="switch" aria-checked="${on ? 'true' : 'false'}" data-k="${esc(key)}" ${extra}><span><span class="nf-tg-l">${esc(label)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="switch"></span></button>`;
   const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && window.isSecureContext;

@@ -9,7 +9,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const webpush = require('./webpush');
 
-const TYPES = ['approval', 'mention', 'dm', 'task-assigned', 'reminder', 'proposal', 'bug-critical', 'release', 'huddle', 'meeting-notes', 'repo'];
+const TYPES = ['approval', 'mention', 'dm', 'task-assigned', 'reminder', 'proposal', 'bug-critical', 'release', 'huddle', 'meeting-notes', 'repo', 'comment-reply', 'visual-diff'];
 const RATE_MS = 2 * 60_000;           // at most one pocket push per type per member per 2 minutes
 const INBOX_KEEP = 200;
 const NTFY_PRIORITY = { high: '4', normal: '3', low: '2' };
@@ -18,7 +18,7 @@ const NTFY_TAGS = { approval: 'raising_hand', mention: 'speech_balloon', dm: 'en
 
 function defaultPrefs() {
   return {
-    types: { approval: true, mention: true, dm: true, 'task-assigned': true, reminder: true, proposal: true, 'bug-critical': true, release: false, huddle: false, 'meeting-notes': false, repo: false },
+    types: { approval: true, mention: true, dm: true, 'task-assigned': true, reminder: true, proposal: true, 'bug-critical': true, release: false, huddle: false, 'meeting-notes': false, repo: false, 'comment-reply': true, 'visual-diff': false },
     channels: { ntfy: true, webpush: true, desktop: true },
     ntfy: { server: 'https://ntfy.sh', topic: 'tribe-' + crypto.randomBytes(12).toString('base64url').replace(/[-_]/g, '').slice(0, 14).toLowerCase() },
     when: { mode: 'away', awayMinutes: 5, quiet: { on: false, from: '22:00', to: '08:00' } },
