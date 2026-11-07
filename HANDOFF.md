@@ -27,6 +27,8 @@ How to write tests:
 - Use `TRIBE_PORT_OFFSET` to run tests in parallel.
 - `TRIBE_NO_DOWNLOAD=1` (set by `npm test`) stops tests from downloading cloudflared.
 
+Branches: push only `dev` and `main` (no feature branches on GitHub, no pull requests; the user's rule). Milestones go dev → main with a version bump.
+
 Pushing from the Claude cloud sandbox:
 - If push returns 403, attach the repo with push access (add_repo, access: push) first.
 - `git push` prints "This repository moved…" but works. Check it with `git ls-remote origin main`.

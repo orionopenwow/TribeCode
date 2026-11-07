@@ -32,6 +32,7 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 - **Two lanes.** `main` = stable/released. `dev` = working lane where new work lands first.
   - Desktop\TribeCode\Stable\Start-Stable.bat runs `main` at :4747 with the real tribe.
   - Desktop\TribeCode\Working\Start-Working.bat runs `dev` at :4848 with live reload and its own test tribe (no exe compile needed to test UI).
+- **No pull requests, autopilot milestones** (user, 2026-11-06): agents' feature branches stay local in the sandbox (worktrees). Only `dev` and `main` get pushed, so GitHub never shows "Compare & pull request". At every milestone, dev is merged into main with a version bump, which releases automatically.
 - **Shipping.** Feature branches → `dev` (user tests in Working) → merge to `main` + version bump → CI release → in-app "Restart to update".
 - **Parallel agents, no interference.** Big work is split across agents in separate git worktrees, each owning an explicit set of files. Every branch is pushed to GitHub (branches were lost once because they weren't).
 - Commits end with the Co-Authored-By and Claude-Session trailers.
