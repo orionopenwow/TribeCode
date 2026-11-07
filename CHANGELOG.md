@@ -13,7 +13,8 @@
 - **Developer tools** (docs/DEV-TOOLS.md): `dev:test`, `dev:shots`, `dev:seed`, `dev:loop`, `dev:reset`, `dev:release`, `dev:doctor`, `dev:infographic`
 - **Infographic** (docs/infographic): how TribeCode works, from one host to friends, Claude, lanes, GitHub and releases, with how to reach your Claude from your phone in every section
 - Remembered between visits: the Agents Hub and Workshop tabs; an empty note you close doesn't linger
-- **Phones**: Docs fits the screen; Chat's top bar takes only the taps it shows
+- **New website** (orionopenwow.github.io/TribeCode/about/): a showcase of TribeCode with real screenshots, a 19-second demo of building with friends and Claude, Open the app, Download for your system, the phone flow with a QR, live GitHub stats, a fair comparison with sources, and an FAQ. The README leads with the demo
+- **Phones**: Docs fits the screen; Chat's top bar takes only the taps it shows; the website works at 390px
 
 ## v0.8.4
 
