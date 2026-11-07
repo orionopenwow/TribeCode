@@ -27,7 +27,8 @@ const POLL_MS = Number(process.env.TRIBE_REPO_POLL_MS) || 20_000;
 const FETCH_MS = Number(process.env.TRIBE_REPO_FETCH_MS) || 120_000;
 const COMMIT_EVERY_MS = Number(process.env.TRIBE_CONTEXT_COMMIT_MS) || 15 * 60_000;
 
-module.exports = function repoHub({ repo, store, str, broadcast, postChat, createTask, loadTasks, saveTask, getMembers, nameOf, drift, board, presence, readVision, tribe, claims }) {
+module.exports = function repoHub({ repo, store, str, broadcast, postChat, createTask, loadTasks, saveTask, getMembers, nameOf, drift, board, presence, readVision, tribe, claims, onHead = null, contextExtra = null }) {
+  let lastHead = null;   // onHead (server/flow.js): new commits on the checked-out branch become a gist
   const enabled = () => !!repo && fs.existsSync(path.join(repo, '.git'));
   const G = gitutil(repo);
   fs.mkdirSync(store.p('changes'), { recursive: true });
@@ -127,6 +128,9 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
       let next = await computeStatus();
       if (settings.autopilot.enabled && await autopilot(next)) next = await computeStatus();
       next.checked = new Date().toISOString();
+      const head = next.commits && next.commits[0] ? next.commits[0].sha : null;
+      if (onHead && head && lastHead && head !== lastHead) { const from = lastHead; try { onHead({ from, to: head, branch: next.branch, repo }); } catch (e) { console.error('repo onHead:', e.message); } }
+      if (head) lastHead = head;
       if (strip(next) !== strip(status)) { status = next; broadcast({ type: 'repo', status }); context.touch('repo'); }
       else status = next;
     } catch (e) { console.error('repo poll:', e.message); }
@@ -267,7 +271,7 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
 
   // ---------- context file + integrator ----------
   const context = makeContext({ store, repo: () => (enabled() ? repo : null), settings: () => settings, tribe, readVision, presence, loadTasks, nameOf, board, claims,
-    changes: () => listChanges(), repoStatus: () => status, broadcast, file: CONTEXT_FILE });
+    changes: () => listChanges(), repoStatus: () => status, broadcast, file: CONTEXT_FILE, extra: contextExtra });
   const integrator = makeIntegrator({ repo, enabled, G, store, settings: () => settings, board, nameOf, getMembers, listChanges, loadTasks, drift, log, postChat, poll,
     markPush: () => { settings.lastPush = new Date().toISOString(); saveSettings(); } });
 
