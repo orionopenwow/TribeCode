@@ -175,7 +175,9 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     st.steps.link = { s: 'ok', note: st.invite.kind };
     save(st);
     rooms.pushProjects();
-    goPublic(pid);
+    const pub = goPublic(pid);
+    // Instant invite: hold the answer a few seconds so the link that gets copied is the public one.
+    if (body.wait && pub) { await Promise.race([pub, new Promise(r => setTimeout(r, Math.min(Number(body.wait) || 12000, 20000)))]); Object.assign(st, load(pid) || {}); }
     setupRepo(pid, me).catch(e => console.error('flow repo:', e.message));
     syncLanes(st, me);
     return view(st);
@@ -183,7 +185,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
   function goPublic(pid) {
     let s; try { s = share.status(); } catch { return; }
     if (!s || s.status === 'on' || s.status === 'starting' || !(s.available && (s.available.tailscale || s.available.cloudflared))) return;
-    share.start('', { download: false }).then(() => {
+    return share.start('', { download: false }).then(() => {
       const st = load(pid); if (!st || !st.invite) return;
       const l = linkFor(st.invite.code); if (l.link === st.invite.link) return;
       Object.assign(st.invite, l); st.steps.link = { s: 'ok', note: l.kind }; save(st); push(st);

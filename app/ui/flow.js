@@ -361,5 +361,56 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  window.TribeFlow = { create, suggestName, load, open, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
+
+  // ---------- instant invite: one tap = a fresh project, its public link copied, ready to text ----------
+  const KIND = { public: 'Works from anywhere', tailscale: 'Works on your Tailscale network', wifi: 'Same Wi-Fi only', local: 'This computer only' };
+  async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch { return false; } }
+  async function instant() {
+    if (!C.connected()) { toast('Start or join a tribe first'); return; }
+    const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden'); body.classList.add('ii');
+    const close = () => { m.classList.add('hidden'); body.classList.remove('ii'); };
+    m.onclick = e => { if (e.target === m) close(); };
+    const name = suggestName();
+    body.innerHTML = `<span class="eyebrow">Instant invite</span><h2>Making ${esc(name)}…</h2>
+      <p class="lead">A fresh project, a room and a link your friend can open anywhere.</p><div class="ii-wait"><span class="spin"></span>Turning on the public link</div>`;
+    let f;
+    try {
+      const r = await C.api('/flow/create', { method: 'POST', body: { name, wait: 12000 } }); f = r.flow;
+      if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(f.project, 'chat'); }
+      flow = f; minimized = false; draw(); App().show('chat');
+    } catch (e) { body.innerHTML = `<span class="eyebrow">Instant invite</span><h2>That didn't work</h2><div class="np-err">${esc(e.message)}</div><div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = close; return; }
+    const link = f.invite ? f.invite.link : '', copied = link && await copyText(link), kind = f.invite && f.invite.kind;
+    const text = `Build ${f.name} with me on TribeCode: ${link}`;
+    body.innerHTML = `<span class="eyebrow">Instant invite · ${esc(f.name)}</span>
+      <h2>${copied ? 'Link copied. Text it to your friend.' : 'Send this link to your friend.'}</h2>
+      <p class="lead">They tap it, type a name and they're in, on a phone or a computer. On a computer it also hands them the one line that connects their Claude Code.</p>
+      <div class="linkbox ii-link"><code id="ii-link" title="${esc(link)}">${esc(link)}</code><button class="btn sm primary" id="ii-copy">${copied ? 'Copied' : 'Copy'}</button></div>
+      <div class="ii-kind ${kind === 'public' ? 'ok' : 'warn'}">${esc(KIND[kind] || '')}${kind === 'public' ? '' : ' · <button class="linkish" id="ii-public">Make it work from anywhere</button>'}</div>
+      <div class="ii-qr hidden" id="ii-qr"></div>
+      <div class="ii-acts">${navigator.share ? '<button class="btn" id="ii-share">Share…</button>' : ''}<button class="btn" id="ii-qrbtn">QR code</button><button class="btn" id="ii-claude">Connect my Claude Code</button></div>
+      <div class="modal-foot"><span class="faint">Good for 3 days · up to 10 people</span><span style="flex:1"></span><button class="btn primary" data-close>Done</button></div>`;
+    body.querySelector('[data-close]').onclick = close;
+    $('#ii-copy').onclick = async () => { if (await copyText(link)) { $('#ii-copy').textContent = 'Copied'; toast('Invite link copied'); } else { getSelection().selectAllChildren($('#ii-link')); toast('Press Ctrl+C to copy'); } };
+    if ($('#ii-share')) $('#ii-share').onclick = () => navigator.share({ title: `Join ${f.name} on TribeCode`, text, url: link }).catch(() => {});
+    $('#ii-qrbtn').onclick = () => { const q = $('#ii-qr'); if (q.classList.toggle('hidden')) return; q.innerHTML = `<div class="qr">${window.TribeQR.svg(link)}</div><p class="faint">Scan with a phone camera to join.</p>`; };
+    $('#ii-claude').onclick = () => { close(); App().connectClaude && App().connectClaude(); };
+    const pub = $('#ii-public'); if (pub) pub.onclick = async () => {   // turn on Tailscale Funnel / cloudflared, then swap in the public link
+      pub.disabled = true; pub.textContent = 'Turning it on…';
+      try {
+        await C.api('/share/public', { method: 'POST', body: {} });
+        const r = await C.api('/flow'); if (r.flow && r.flow.invite && r.flow.invite.kind === 'public') { setFlow(r.flow); instantDone(r.flow); return; }
+        pub.textContent = 'Still local. Settings › Public link has the details';
+      } catch (e) { pub.textContent = e.message; }
+    };
+  }
+  async function instantDone(f) {   // the public link arrived after the sheet opened: show and copy it
+    const link = f.invite.link, el = $('#ii-link'); if (!el) return;
+    el.textContent = link; el.title = link; const k = el.closest('.modal-card').querySelector('.ii-kind'); if (k) { k.className = 'ii-kind ok'; k.textContent = KIND.public; }
+    const ok = await copyText(link); $('#ii-copy').textContent = ok ? 'Copied' : 'Copy'; if (ok) toast('Public link copied');
+    $('#ii-copy').onclick = async () => { if (await copyText(link)) toast('Invite link copied'); };
+    $('#ii-qrbtn').onclick = () => { const q = $('#ii-qr'); if (q.classList.toggle('hidden')) return; q.innerHTML = `<div class="qr">${window.TribeQR.svg(link)}</div><p class="faint">Scan with a phone camera to join.</p>`; };
+    if ($('#ii-share')) $('#ii-share').onclick = () => navigator.share({ title: `Join ${f.name} on TribeCode`, text: `Build ${f.name} with me on TribeCode: ${link}`, url: link }).catch(() => {});
+  }
+
+  window.TribeFlow = { create, instant, suggestName, load, open, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
 })();

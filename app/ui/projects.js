@@ -286,6 +286,7 @@
           <p class="faint">A room, an invite link, chat and a repo, in one click.</p>
           <div class="np-row"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Tribe name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Tribe name'}" autocomplete="off" maxlength="400" value="${esc(suggested)}"><button class="btn primary" id="np-create">Create</button></div>
           <div class="np-hint faint" id="np-hint"></div>
+          ${window.TribeFlow ? `<button class="btn np-instant" id="np-instant">${ico('i-link', 15)}Invite a friend now<span class="faint">a fresh project, link copied</span></button>` : ''}
           ${host ? `<button class="linkish np-more" id="np-more">Bring existing code: a folder or repo</button>
             <div class="dropzone pj-dropzone np-drop-alt hidden" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 18)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:2px">or <span class="linkish">choose one</span></div></div>
             <div class="np-status" id="np-status"></div>` : ''}
@@ -307,6 +308,7 @@
     body().querySelector('[data-close]').onclick = close;
     const join = () => { const v = $('#np-link').value.trim(); if (v) window.TribeApp.joinLink(v); };
     $('#np-join-go').onclick = join; $('#np-link').onkeydown = e => { if (e.key === 'Enter') join(); };
+    const ib = $('#np-instant'); if (ib) ib.onclick = () => { close(); window.TribeFlow.instant(); };
     const hostBtn = $('#np-host'); if (hostBtn) hostBtn.onclick = () => { close(); App().openInvite(); };
     const inp = $('#np-input');
     if (inp) {

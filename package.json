@@ -1,7 +1,7 @@
 {
   "name": "tribecode",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Code with friends. One link to join, one shared brain, one vision.",
   "license": "MIT",
   "engines": { "node": ">=20" },
@@ -9,10 +9,10 @@
     "start": "node server/index.js",
     "live": "node scripts/live.js",
     "invite": "node scripts/invite-friend.js",
-    "test": "export TRIBE_NO_DOWNLOAD=1 && node app/test/ot_test.js && python3 app/test/security_test.py && python3 app/test/ui_smoke.py && python3 app/test/e2e_tribe.py && python3 app/test/e2e_huddle.py && python3 app/test/e2e_mobile.py && python3 app/test/e2e_coedit.py && python3 app/test/e2e_friend.py && python3 app/test/e2e_repo.py && node app/test/notify_test.js && python3 app/test/e2e_notify.py && python3 app/test/e2e_voice.py && python3 app/test/e2e_plan.py && python3 app/test/e2e_site.py && python3 app/test/e2e_rooms.py && python3 app/test/e2e_coord.py && python3 app/test/e2e_people.py && python3 app/test/e2e_votes.py && python3 app/test/e2e_flow.py && python3 app/test/e2e_mobile2.py && python3 app/test/e2e_workshop.py && python3 app/test/e2e_secretary.py && python3 app/test/e2e_bubbles.py && python3 app/test/e2e_plus.py && python3 app/test/e2e_preview.py && python3 app/test/e2e_nav.py && python3 app/test/e2e_hub.py && node app/test/ws_test.js && python3 app/test/e2e_friend_flow.py && python3 app/test/e2e_quickwins.py && python3 app/test/e2e_selfheal.py && python3 app/test/e2e_explorer_fixes.py && python3 scripts/explore.py --quick",
+    "test": "export TRIBE_NO_DOWNLOAD=1 && node app/test/ot_test.js && python3 app/test/security_test.py && python3 app/test/ui_smoke.py && python3 app/test/e2e_tribe.py && python3 app/test/e2e_huddle.py && python3 app/test/e2e_mobile.py && python3 app/test/e2e_coedit.py && python3 app/test/e2e_friend.py && python3 app/test/e2e_repo.py && node app/test/notify_test.js && python3 app/test/e2e_notify.py && python3 app/test/e2e_voice.py && python3 app/test/e2e_plan.py && python3 app/test/e2e_site.py && python3 app/test/e2e_rooms.py && python3 app/test/e2e_coord.py && python3 app/test/e2e_people.py && python3 app/test/e2e_votes.py && python3 app/test/e2e_flow.py && python3 app/test/e2e_mobile2.py && python3 app/test/e2e_workshop.py && python3 app/test/e2e_secretary.py && python3 app/test/e2e_bubbles.py && python3 app/test/e2e_plus.py && python3 app/test/e2e_preview.py && python3 app/test/e2e_nav.py && python3 app/test/e2e_hub.py && python3 app/test/e2e_instant.py && node app/test/ws_test.js && python3 app/test/e2e_friend_flow.py && python3 app/test/e2e_quickwins.py && python3 app/test/e2e_selfheal.py && python3 app/test/e2e_explorer_fixes.py && python3 scripts/explore.py --quick",
     "explore": "python3 scripts/explore.py",
     "milestone-report": "python3 scripts/milestone-report.py",
     "readme-shots": "python3 scripts/readme-shots.py",
-    "screenshots":"python3 app/test/ui_smoke.py --shots && python3 app/test/e2e_tribe.py --shots"
+    "screenshots": "python3 app/test/ui_smoke.py --shots && python3 app/test/e2e_tribe.py --shots"
   }
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.1
+
+Invite a friend in one tap.
+- **Invite a friend** (Home, the rail +, the "you're hosting" banner, or double-click **Invite-A-Friend.bat** on the Desktop): makes a fresh project, turns on the link that works from anywhere, and copies it. Paste it in a text. Share, QR code and Connect my Claude Code are on the same sheet
+- **The same link connects everything for your friend**: they tap it, type a name and land in that project. On a computer the app then opens "One line connects your Claude Code" with the command ready to copy; on a phone they get the app (Add to Home Screen)
+- If the link is Wi-Fi only, "Make it work from anywhere" turns on Tailscale Funnel or cloudflared right there and copies the new link
+- `tribecode://invite` and `?invite=1` start the same thing
+
 ## v0.6.0
 
 Home, and an app that checks itself.

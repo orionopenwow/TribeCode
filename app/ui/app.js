@@ -213,14 +213,14 @@
     const draw = () => {
       const cmd = r.commands[where];
       const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => k !== 'wifi' || r.commands.wifi);
-      body.innerHTML = `<h2>Connect your Claude Code</h2>
+      body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span><h2>One line connects your Claude Code</h2>` : '<h2>Connect your Claude Code</h2>'}
         <p class="lead">Run this once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
         <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>
         ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
           : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
         <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and local models →</a>' : ''}</p>
-        <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button></div>`;
+        <div class="modal-foot">${opts && opts.welcome ? '<span style="flex:1"></span><button class="btn" data-close>Later</button>' : '<button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button>'}</div>`;
       body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
       if ($('#cc-hub')) $('#cc-hub').onclick = e => { e.preventDefault(); clearInterval(timer); closeInvite(); window.TribeAgentsHub.open(); };
       if ($('#cc-copy')) $('#cc-copy').onclick = () => copy(cmd, 'Command copied. Paste it in your terminal.');
@@ -229,7 +229,7 @@
         try { await C.api('/share/public', { method: 'POST', body: {} }); r = await C.api('/agents', { method: 'POST' }); where = r.commands.anywhere ? 'anywhere' : where; draw(); }
         catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = 'Turn on the public link'; }
       };
-      $('#cc-out').onclick = async () => {
+      if ($('#cc-out')) $('#cc-out').onclick = async () => {
         try { const o = await C.api('/agents/mine', { method: 'DELETE' }); clearInterval(timer);
           body.innerHTML = `<h2>Disconnected</h2><p class="lead">The key stopped working. To remove it from Claude Code too, run:</p>
             <div class="linkbox"><code>${esc(o.remove)}</code><button class="btn primary" id="cc-rm">Copy</button></div>
@@ -307,6 +307,11 @@
   C.on('presence', renderRoom);
   C.on('hello', refreshBrain);
   C.on('hello', () => { loadChat(); refresh(); });
+  // Just joined from an invite on a computer: offer the one line that connects their Claude Code (once).
+  C.on('hello', () => {
+    let fresh = false; try { fresh = localStorage.getItem('tribecode.afterJoin') === '1'; localStorage.removeItem('tribecode.afterJoin'); } catch {}
+    if (fresh && !matchMedia('(max-width: 820px)').matches) setTimeout(() => connectClaude({ welcome: true }), 900);
+  });
   // Unread count in the tab / window title while you're away: "(3) TribeCode".
   let unseen = 0, baseTitle = document.title;
   const paintTitle = () => { document.title = unseen ? `(${unseen > 99 ? '99+' : unseen}) ${baseTitle}` : baseTitle; };
@@ -535,8 +540,16 @@
   const deepLink = u => {
     const m = /^tribecode:\/\/(working|dev|installed|stable)\b/i.exec(String(u || ''));
     if (m) return useUi(/working|dev/i.test(m[1]) ? 'working' : 'installed');
+    if (/^tribecode:\/\/invite\b/i.test(String(u || ''))) return instantWhenReady();
     joinLink(u);
   };
+  // tribecode://invite (Invite-A-Friend.bat) or ?invite=1: a fresh project and its link, copied, as soon as hosting is up.
+  async function instantWhenReady() {
+    for (let i = 0; i < 120 && !(C.connected() && window.TribeFlow); i++) await new Promise(r => setTimeout(r, 250));
+    if (!C.connected()) { if (window.TribeHost && window.TribeHost.isDesktop) await hostHere().catch(() => {}); for (let i = 0; i < 60 && !C.connected(); i++) await new Promise(r => setTimeout(r, 250)); }
+    if (C.connected() && window.TribeFlow) window.TribeFlow.instant(); else toast('Start or join a tribe first');
+  }
+  if (params.get('invite') === '1') setTimeout(instantWhenReady, 0);
   (async () => {
     const dl = window.__TAURI__ && window.__TAURI__.deepLink;
     if (!dl) return;

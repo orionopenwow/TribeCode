@@ -121,6 +121,7 @@ def main():
             assert "Orion invited you" in friend.inner_text("#lead")
             friend.fill("#name", "Maya")
             shot(friend, "join-live")
+            friend.add_init_script("try{localStorage.removeItem('tribecode.afterJoin')}catch(e){}")   # this test is not about the after-join Claude Code sheet (e2e_instant is)
             friend.click("#go")
             friend.wait_for_function("!!document.querySelector('#sync-status')", timeout=15000)
             friend.wait_for_function("document.querySelector('#sync-status').innerText.includes('connected')", timeout=5000)

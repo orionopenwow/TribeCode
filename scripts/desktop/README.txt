@@ -11,8 +11,11 @@ TribeCode
                               it reloads by itself when new commits land. Profile menu ->
                               "Back to the installed version" returns to the release.
 
-  New-Project-For-A-Friend.bat  ONE CLICK: a Pixel Quest project, the public link, an invite
-                              page with QR for your friend, and the command for your Claude Code.
+  Invite-A-Friend.bat         ONE DOUBLE-CLICK: a fresh project and a link that works from
+                              anywhere, already copied. Paste it in a text. Your friend taps
+                              it, types a name and is in; on a computer the same link hands
+                              them the one line that connects their Claude Code.
+                              (Same as Home -> Invite a friend inside the app.)
 
   Tools\
     Turn-On-Auto-Update.bat   Update quietly at log-in and daily at 4 am (never while open).
@@ -25,4 +28,4 @@ TribeCode
 
 Flow: new work lands on dev (Try-New-Work) -> merged to main and released -> the GitHub
 release, the website demo and the desktop app all update together.
-Needs Node.js and Git only for Try-New-Work and New-Project-For-A-Friend.
+Needs Node.js and Git only for Try-New-Work and the Working folder.

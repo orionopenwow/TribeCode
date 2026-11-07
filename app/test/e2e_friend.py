@@ -90,6 +90,7 @@ def main():
             friend.goto(f"{BASE}/join/{code}")
             friend.wait_for_selector("#form:not(.hidden)")
             assert friend.locator("#intro").count() == 0
+            friend.add_init_script("try{localStorage.removeItem('tribecode.afterJoin')}catch(e){}")   # this test is not about the after-join Claude Code sheet (e2e_instant is)
             friend.fill("#name", "Jay"); friend.click("#go")
             friend.wait_for_url(BASE + "/")
             friend.wait_for_timeout(200)

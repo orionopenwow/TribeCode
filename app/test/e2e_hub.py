@@ -246,8 +246,11 @@ def main():
 
             # ---------------- Share my hub link, Invite friends ----------------
             host.click("#home-share-btn"); wait_text(host, "#home-share", "/join/")
-            host.click("#home-invite"); host.wait_for_selector("#invite-modal:not(.hidden) #inv-link")
-            host.click("#invite-modal [data-close]"); host.wait_for_selector("#invite-modal.hidden", state="attached")
+            # "Invite a friend" is the instant invite: a fresh project and its link (copied); then back to Home
+            host.click("#home-invite"); host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
+            assert "/join/" in host.inner_text("#ii-link")
+            host.click(".modal-card.ii [data-close]"); host.wait_for_selector("#invite-modal.hidden", state="attached")
+            host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
 
             # ---------------- AI Insights: collapsible (remembered), and fed by /api/insights when the host has it ----------------
             host.click("#home-ins-toggle"); host.wait_for_selector("#home-ai-cards", state="hidden")

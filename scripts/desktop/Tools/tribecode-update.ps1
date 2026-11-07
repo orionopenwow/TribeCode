@@ -14,7 +14,7 @@ function Ver($s) { try { [version](($s -replace '^v','') -replace '[^0-9.].*$','
 # ---------- clean ----------
 if ($Clean) {
   Get-ChildItem $home2 -Filter 'TribeCode_*_x64-setup.exe' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-  foreach ($f in 'latest.txt','Get-Latest-TribeCode.bat','Reset-Old-TribeCode.bat','TribeCode-Start-Test-Project.bat') {
+  foreach ($f in 'latest.txt','Get-Latest-TribeCode.bat','Reset-Old-TribeCode.bat','TribeCode-Start-Test-Project.bat','New-Project-For-A-Friend.bat') {
     $p = Join-Path $home2 $f; if (Test-Path $p) { Remove-Item $p -Force -ErrorAction SilentlyContinue }
   }
   $stable = Join-Path $home2 'Stable'

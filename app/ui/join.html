@@ -170,6 +170,8 @@
           if (k.ok && kd.path) { location.replace(kd.path); return; }
         } catch { /* fall back to the plain app */ }
       }
+      // A computer: open the app with "Connect your Claude Code" ready, so the same link connects their agent too.
+      try { localStorage.setItem('tribecode.afterJoin', '1'); } catch {}
       location.replace('/');
     } catch (err) {
       $('#err').textContent = err.message || 'Could not join'; $('#go').disabled = false; $('#go').textContent = 'Join the tribe';

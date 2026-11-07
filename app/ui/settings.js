@@ -123,7 +123,7 @@
     const main = $('#main'); main.insertBefore(el, main.firstChild);
     const done = () => { el.remove(); S.set({ firstRun: false }); };
     $('#hi-x').onclick = done;
-    const iv = $('#hi-invite'); if (iv) iv.onclick = () => { done(); window.TribeApp.openInvite(); };
+    const iv = $('#hi-invite'); if (iv) iv.onclick = () => { done(); window.TribeFlow ? window.TribeFlow.instant() : window.TribeApp.openInvite(); };
   }
   C().on('hello', () => setTimeout(banner, 200));
 
