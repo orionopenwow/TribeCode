@@ -113,6 +113,19 @@ def main():
             pg.keyboard.press("Escape")
             ctx.close()
 
+            # chat history that lands before chatx.js boots is still upgraded (bubbles, media) — a slow last script makes the race certain
+            ok(api("/chat/general/send", "POST", {"text": "race check"}, token=otok, project=a))
+            ctx = br.new_context(viewport={"width": 1280, "height": 800}); signed_in(ctx, otok, "Orion", a)
+            ctx.add_init_script("sessionStorage.setItem('tribecode.view', 'chat')")
+            def slow(route):
+                time.sleep(1.2); route.continue_()
+            ctx.route("**/hub.js", slow)
+            pg = ctx.new_page(); watch(pg, "race")
+            pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected()")
+            pg.wait_for_function("document.querySelectorAll('#chat-list .msg[data-id]').length > 0", timeout=8000)
+            pg.wait_for_function("document.querySelectorAll('#chat-list .msg[data-id]:not(.dx)').length === 0", timeout=5000)
+            ctx.close()
+
             # ---------- phone ----------
             ctx = br.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); signed_in(ctx, mtok, "Maya", a)
             ph = ctx.new_page(); watch(ph, "phone")

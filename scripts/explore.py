@@ -38,6 +38,7 @@ ap.add_argument("--shots-dir", default=None, help="save a fixed set of screens h
 ap.add_argument("--no-shots", action="store_true", help="no finding screenshots")
 ap.add_argument("--only", default="", help="comma list of phases: seed,desktop,crawl,phone,tauri,offline,journeys,core")
 ap.add_argument("--keep", action="store_true", help="keep the temp tribe folder")
+ap.add_argument("--rewrite", action="store_true", help="re-render the report (and suggestions) from .explore/findings.json without running")
 ARGS = ap.parse_args() if __name__ == "__main__" else ap.parse_args([])
 
 APP = Path(ARGS.app_root).resolve()
@@ -1037,17 +1038,18 @@ def run_offline(browser):
 FEATURE_IDEAS = [
     # (key, idea, why, trigger(findings, journeys) -> bool, keywords to match docs/FEATURES-NEXT.md)
     ("dead-buttons", "Wire or remove controls that do nothing", "the explorer clicked {dead} control(s) with no visible effect", lambda f, j: F.stats["dead"] > 0, []),
-    ("contrast", "Lift faint text to 4.5:1 (the user wants white, not grey)", "{contrast} color pair(s) under WCAG AA in the dark theme", lambda f, j: any(x["kind"] == "contrast" for x in f), []),
+    ("contrast", "Lift faint text to 4.5:1 (the user wants white, not grey)", "{contrast} color pair(s) under WCAG AA in the dark theme", lambda f, j: any(x["kind"] == "contrast" for x in f), ["dark ink on ember"]),
+    ("preview-desktop", "A visible 'Preview app' button on desktop", "the Preview journey found no button outside Ctrl K", lambda f, j: any(x["id"] == "preview" and not x["pass"] for x in j), ['a visible "preview app" on desktop']),
     ("labels", "Name every icon button (aria-label) so screen readers and Ctrl K can find them", "{nolabel} unnamed icon control(s)", lambda f, j: any(x["kind"] == "no-label" for x in f), ["keyboard map", "focus-visible"]),
     ("journey-clicks", "Shortcuts for the journeys that take the longest", "slowest journeys: {slowj}", lambda f, j: any(x["kind"] == "intuitive" and x["pass"] and x["clicks"] > x["max_clicks"] for x in j), []),
-    ("refusal-next", "Claim refusals that say what to do next (ask the owner, wait, request a hand-off) in one tap", "a second claimant only hears 'claimed by'", lambda f, j: any("next" in n for x in j for n in x.get("notes", [])), ["conflict pre-flight"]),
-    ("anywhere", "Turn on the public link from the Connect Claude card when 'Anywhere' is missing", "the generator has no 'Anywhere' command until a tunnel runs", lambda f, j: any("Anywhere" in n for x in j for n in x.get("notes", [])), []),
+    ("refusal-next", "Claim refusals that say what to do next (ask the owner, wait, request a hand-off) in one tap", "a second claimant only hears 'claimed by'", lambda f, j: any("next" in n for x in j for n in x.get("notes", [])), ["ask for a hand-off"]),
+    ("anywhere", "Turn on the public link from the Connect Claude card when 'Anywhere' is missing", "the generator has no 'Anywhere' command until a tunnel runs", lambda f, j: any("Anywhere" in n for x in j for n in x.get("notes", [])), ["ask the host for the public link"]),
     ("plan-commits", "Tick PLAN.md items from commit messages too, not only from gists", "a pushed commit becomes a gist but the plan does not move", lambda f, j: any("plan does not mention" in n for x in j for n in x.get("notes", [])), []),
     ("offline", "Every view gets a 'host or join' next step when there is no tribe", "{offline} view(s) are dead ends without a tribe", lambda f, j: any(x["kind"] == "offline-dead-end" for x in f), []),
-    ("empty", "Empty states with one obvious action ('Nothing here' → 'Add the first …')", "{empty} empty state(s) with no button nearby", lambda f, j: any(x["kind"] == "empty-dead-end" for x in f), []),
+    ("empty", "Empty states with one obvious action ('Nothing here' → 'Add the first …')", "{empty} empty state(s) with no button nearby", lambda f, j: any(x["kind"] == "empty-dead-end" for x in f), ["empty states with one action"]),
     ("health", "A host health page: disk, JSONL sizes, backups, tunnel, version, errors in the last hour (now fed by /api/insights)", "the self-heal and insights work makes the data available", lambda f, j: True, ["health page"]),
-    ("selfreport", "One-tap 'Send report' on any error toast, deduplicated by the self-heal error budget", "errors seen while exploring: {errs}", lambda f, j: any(x["kind"] in ("pageerror", "console") for x in f), []),
-    ("explorer-nightly", "Nightly explorer run posts its delta (fixed / new) as a gist in #agents", "the explorer writes findings.json; the Insights panel reads it", lambda f, j: True, []),
+    ("selfreport", "One-tap 'Send report' on any error toast, deduplicated by the self-heal error budget", "errors seen while exploring: {errs}", lambda f, j: any(x["kind"] in ("pageerror", "console") for x in f), ["send report on any error toast"]),
+    ("explorer-nightly", "Nightly explorer run posts its delta (fixed / new) as a gist in #agents", "the explorer writes findings.json; the Insights panel reads it", lambda f, j: True, ["nightly explorer"]),
     ("slash", "Slash-command autocomplete in the composer (/task, /vote, /decide, @brain)", "commands exist but the explorer found no visible hint for them", lambda f, j: True, ["slash-command"]),
     ("permalink", "Message permalinks: copy link → jumps and highlights", "pointing a friend or an agent at one message takes a screenshot today", lambda f, j: True, ["permalink"]),
 ]
@@ -1180,5 +1182,15 @@ def main():
         else: log(f"kept {tmp}")
 
 
+def rewrite():
+    d = json.loads(OUT_JSON.read_text())
+    for f in d["findings"]: F.items[f["id"]] = f
+    F.journeys[:] = d["journeys"]; F.stats.update(d["stats"])
+    d["suggestions"] = suggestions()
+    OUT_JSON.write_text(json.dumps(d, indent=1, ensure_ascii=False))
+    write_md(d)
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(rewrite() if ARGS.rewrite else main())

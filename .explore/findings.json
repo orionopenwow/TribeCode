@@ -1,11 +1,11 @@
 {
- "generated": "2026-11-07T07:46:19Z",
+ "generated": "2026-11-07T08:04:35Z",
  "version": "0.5.0",
  "quick": false,
  "app_root": "/home/claude/tc/.claude/worktrees/agent-ad91101e594bac0a5",
- "seconds": 510,
+ "seconds": 462,
  "stats": {
-  "clicks": 265,
+  "clicks": 249,
   "dead": 0,
   "destinations": 78,
   "contexts": [
@@ -14,121 +14,16 @@
    "desktop-app",
    "not-connected"
   ],
-  "skipped_destructive": 2,
+  "skipped_destructive": 4,
   "inputs": 47
  },
  "summary": {
   "critical": 0,
-  "high": 6,
-  "medium": 57,
-  "low": 36
+  "high": 3,
+  "medium": 6,
+  "low": 33
  },
  "findings": [
-  {
-   "id": "7b88b1439e",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Journey fails: Propose a feature and get it on the Board",
-   "detail": "click failed: Locator.click: Timeout 2500ms exceeded.",
-   "selector": "",
-   "label": "propose",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [
-    "start: chat",
-    "composer +",
-    "Propose to the tribe",
-    "type 'Explorer: a photo mode'"
-   ],
-   "count": 1,
-   "screenshot": "docs/screenshots/explore/7b88b1439e.jpg"
-  },
-  {
-   "id": "a640343adb",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Journey fails: Preview the app",
-   "detail": "no visible affordance for: Preview app",
-   "selector": "",
-   "label": "preview",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [
-    "start: project home",
-    "Docs & Files"
-   ],
-   "count": 1,
-   "screenshot": "docs/screenshots/explore/a640343adb.jpg"
-  },
-  {
-   "id": "fe68d90321",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Journey fails: Turn on capture to notes",
-   "detail": "goal not reached: capture is on",
-   "selector": "",
-   "label": "capture",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [
-    "start: project home",
-    "profile",
-    "Capture to notes"
-   ],
-   "count": 1,
-   "screenshot": "docs/screenshots/explore/fe68d90321.jpg"
-  },
-  {
-   "id": "5748fa0cfd",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Journey fails: Connect Claude Code",
-   "detail": "click failed: Locator.click: Timeout 2500ms exceeded.",
-   "selector": "",
-   "label": "connect-claude",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [
-    "start: project home",
-    "You (profile)"
-   ],
-   "count": 1,
-   "screenshot": "docs/screenshots/explore/5748fa0cfd.jpg"
-  },
-  {
-   "id": "946fe27e9d",
-   "kind": "journey",
-   "severity": "high",
-   "title": "Core journey crashed: core_collab",
-   "detail": "01e594bac0a5/scripts/explore.py\", line 100, in sh\n    return subprocess.run(list(a), cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()\n           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/subprocess.py\", line 578, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['git', '-C', '/tmp/tribe-explore-hc38yt5p/src/pixel-quest', 'branch', '-f', 'tribe/orion-zlJ_', 'main']' returned non-zero exit status 128.\n",
-   "selector": "",
-   "label": "core_collab",
-   "contexts": [
-    "core"
-   ],
-   "views": [
-    "journey"
-   ],
-   "steps": [],
-   "count": 1,
-   "screenshot": null
-  },
   {
    "id": "5bfd253674",
    "kind": "journey",
@@ -160,6 +55,48 @@
    "screenshot": null
   },
   {
+   "id": "a640343adb",
+   "kind": "journey",
+   "severity": "high",
+   "title": "Journey fails: Preview the app",
+   "detail": "no visible affordance for: Preview app",
+   "selector": "",
+   "label": "preview",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "journey"
+   ],
+   "steps": [
+    "start: project home",
+    "Docs & Files"
+   ],
+   "count": 1,
+   "screenshot": "docs/screenshots/explore/a640343adb.jpg"
+  },
+  {
+   "id": "5748fa0cfd",
+   "kind": "journey",
+   "severity": "high",
+   "title": "Journey fails: Connect Claude Code",
+   "detail": "click failed: Locator.click: Timeout 2500ms exceeded.",
+   "selector": "",
+   "label": "connect-claude",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "journey"
+   ],
+   "steps": [
+    "start: project home",
+    "You (profile)"
+   ],
+   "count": 1,
+   "screenshot": "docs/screenshots/explore/5748fa0cfd.jpg"
+  },
+  {
    "id": "0236ba9d01",
    "kind": "contrast",
    "severity": "medium",
@@ -187,120 +124,6 @@
    "example": "#hub-new small"
   },
   {
-   "id": "9bc37935e8",
-   "kind": "focus-trap",
-   "severity": "medium",
-   "title": "Invisible controls take keyboard focus",
-   "detail": "6 focusable control(s) are not visible (opacity 0): Message actions, Message actions, Message actions, Message actions",
-   "selector": "#chat-list",
-   "label": "",
-   "contexts": [
-    "desktop",
-    "desktop-app"
-   ],
-   "views": [
-    "Chat & Streams",
-    "Composer + menu"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Chat & Streams (Ctrl K / nest)"
-   ],
-   "count": 3,
-   "screenshot": null
-  },
-  {
-   "id": "1574e9240e",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by h6#chat-head",
-   "selector": "#chat-list button.rx.has-f",
-   "label": "🔥 1, Maya",
-   "contexts": [
-    "desktop",
-    "desktop-app"
-   ],
-   "views": [
-    "Chat & Streams"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Chat & Streams (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "6a1296d0ec",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by article.md.fwin-md",
-   "selector": "button#wt-repo",
-   "label": "Repo",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Tasks & Board",
-    "Repo"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "62cf851d35",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by article.md.fwin-md",
-   "selector": "button#wt-visuals",
-   "label": "Visuals",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Tasks & Board",
-    "Repo"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "9d6857cbd8",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by article.md.fwin-md",
-   "selector": "button#wt-requests",
-   "label": "Requests 1",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Tasks & Board",
-    "Repo"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
    "id": "959051db19",
    "kind": "contrast",
    "severity": "medium",
@@ -318,18 +141,13 @@
     "Project settings",
     "Profile menu",
     "Inbox (bell)",
-    "Command palette",
-    "Composer + menu",
-    "Workspace switcher",
-    "Agent detail (right panel)",
-    "Person view",
-    "App preview"
+    "Command palette"
    ],
    "steps": [
     "open the app (desktop)",
     "go to Invite friends (Ctrl K / nest)"
    ],
-   "count": 105,
+   "count": 80,
    "screenshot": null,
    "example": "#nest-pinned h6"
   },
@@ -351,15 +169,13 @@
     "Project settings",
     "Profile menu",
     "Inbox (bell)",
-    "Command palette",
-    "Composer + menu",
-    "Workspace switcher"
+    "Command palette"
    ],
    "steps": [
     "open the app (desktop)",
     "go to Invite friends (Ctrl K / nest)"
    ],
-   "count": 27,
+   "count": 21,
    "screenshot": null,
    "example": "#room-list span.ok"
   },
@@ -381,105 +197,34 @@
     "Project settings",
     "Profile menu",
     "Inbox (bell)",
-    "Command palette",
-    "Composer + menu",
-    "Workspace switcher",
-    "Agent detail (right panel)",
-    "App preview"
+    "Command palette"
    ],
    "steps": [
     "open the app (desktop)",
     "go to Invite friends (Ctrl K / nest)"
    ],
-   "count": 12,
+   "count": 7,
    "screenshot": null,
    "example": "span#nest-sub"
   },
   {
-   "id": "9ab4104f76",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by button#nest-settings",
-   "selector": "#recents-list button.nest-row.small",
-   "label": "Explorer check: campfire save points",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Agent detail (right panel)",
-    "Person view",
-    "App preview"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Agent detail (right panel)"
-   ],
-   "count": 3,
-   "screenshot": null
-  },
-  {
-   "id": "5ffa8faa26",
-   "kind": "focus-trap",
-   "severity": "medium",
-   "title": "Invisible controls take keyboard focus",
-   "detail": "10 focusable control(s) are not visible (off-screen): +, Delete, Backlog In progress Review Done, Unassigned Orion Maya Claude · Orion Claude · Maya",
-   "selector": "#board",
-   "label": "",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Tasks & Board",
-    "Task board"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Tasks & Board (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "5519fe8907",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by div.fwin-body",
-   "selector": "#board button.add",
-   "label": "+",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Tasks & Board"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "f2295e81c2",
+   "id": "a426a3b54c",
    "kind": "request",
    "severity": "medium",
-   "title": "GET /api/docs/:id → 404",
-   "detail": "GET /api/docs/side-quest-ideas answered 404",
+   "title": "GET /api/docs/:id/backlinks → 404",
+   "detail": "GET /api/docs/level-design-notes/backlinks answered 404",
    "selector": "",
    "label": "",
    "contexts": [
     "desktop"
    ],
    "views": [
-    "Docs & Files",
-    "Global docs"
+    "Command palette"
    ],
    "steps": [
     "open the app (desktop)",
-    "go to Docs & Files",
-    "click \"Pixel Quest\" (#pj-rail button.pj-circle)"
+    "go to Command palette",
+    "click \"ACTION New doc\" (#pal-list button.pal-item)"
    ],
    "count": 2,
    "screenshot": null
@@ -507,937 +252,6 @@
    "example": "#pal-list span.k"
   },
   {
-   "id": "971ec983f9",
-   "kind": "contrast",
-   "severity": "medium",
-   "title": "Text contrast too low",
-   "detail": "2.45:1 (#8A93A3 on #E1E5EA, 11.5px) needs 4.5:1",
-   "selector": "#8A93A3 on #E1E5EA",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Workspace switcher"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Workspace switcher"
-   ],
-   "count": 1,
-   "screenshot": null,
-   "example": "#project-menu small"
-  },
-  {
-   "id": "f9e9bff626",
-   "kind": "focus-trap",
-   "severity": "medium",
-   "title": "Invisible controls take keyboard focus",
-   "detail": "1 focusable control(s) are not visible (opacity 0): Message actions",
-   "selector": "#dm-list",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Person view"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Person view"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "5a81046fc4",
-   "kind": "focus-trap",
-   "severity": "medium",
-   "title": "Invisible controls take keyboard focus",
-   "detail": "1 focusable control(s) are not visible (opacity 0): Swipe between versions",
-   "selector": "#vis-swipe",
-   "label": "",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Visuals & screenshots"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Visuals & screenshots (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "cb50e1c8db",
-   "kind": "focus-trap",
-   "severity": "medium",
-   "title": "Invisible controls take keyboard focus",
-   "detail": "1 focusable control(s) are not visible (off-screen): Close",
-   "selector": "#settings-body",
-   "label": "",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Settings"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Settings (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "7f2d47f1f1",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by div.fwin-body",
-   "selector": "button#task-new",
-   "label": "New task",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Tasks & Board"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "6c74127349",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by button#nest-settings",
-   "selector": "#recents-list button.nest-row.small",
-   "label": "Level design notes",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "App preview"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to App preview"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "2ae320cb8d",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by #pj-switch span",
-   "selector": "#prop-tabs button",
-   "label": "Open",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Milestones"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Milestones (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "3ca48a7d9d",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by #pj-switch span",
-   "selector": "#prop-tabs button",
-   "label": "Approved",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Milestones"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Milestones (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "2350012e24",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by #shell header.titlebar",
-   "selector": "#prop-tabs button",
-   "label": "Parked",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Milestones"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Milestones (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "6a271ac96b",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by #tour-search use",
-   "selector": "button#prop-new",
-   "label": "New proposal",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Milestones"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Milestones (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "e6df0db4f9",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by button#pj-switch",
-   "selector": "button#wt-calendar",
-   "label": "Calendar",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Repo"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Repo (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "5ac2210db7",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by div",
-   "selector": "#view-secretary button.sy-src",
-   "label": "commit",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Secretary"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Secretary (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "386b8be66b",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by div",
-   "selector": "#hub-feed button.hub-item.k-chat",
-   "label": "Explorer check: lava tiles feel good Chat · Orion 6m ago",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Home"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Home (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "fe11b94254",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by div",
-   "selector": "#hub-suggest button.btn",
-   "label": "Vote",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Scratchpad"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Scratchpad (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "053a89b495",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by button",
-   "selector": "#hub-suggest button.hs-x",
-   "label": "Dismiss",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Scratchpad"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Scratchpad (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "308dd58f76",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by div",
-   "selector": "button#standup-go",
-   "label": "Write today's standup",
-   "contexts": [
-    "phone"
-   ],
-   "views": [
-    "Project home"
-   ],
-   "steps": [
-    "open the app (phone)",
-    "go to Project home (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "e3cb491908",
-   "kind": "obscured",
-   "severity": "medium",
-   "title": "Button is covered by another element",
-   "detail": "its center is covered by h6#chat-head",
-   "selector": "#chat-list button.quote",
-   "label": "Orion Welcome to Pixel Quest! Lava world first?",
-   "contexts": [
-    "desktop-app"
-   ],
-   "views": [
-    "Chat & Streams"
-   ],
-   "steps": [
-    "open the desktop app",
-    "go to Chat & Streams"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "bb94cef7c1",
-   "kind": "request",
-   "severity": "medium",
-   "title": "POST /api/agents/channel → 400",
-   "detail": "POST /api/agents/channel answered 400",
-   "selector": "",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Agents"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Agents",
-    "type \"Explorer check: lava tiles feel good\" into input#talk-input",
-    "press Enter"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "ff44a0455c",
-   "kind": "request",
-   "severity": "medium",
-   "title": "POST /api/coord/reviews/task%3At-mw63cm4w-eun/approve → 404",
-   "detail": "POST /api/coord/reviews/task%3At-mw63cm4w-eun/approve answered 404",
-   "selector": "",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Reviews"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Reviews",
-    "click \"Approve\" (#coord-body button.btn.primary)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "fbb5731b3b",
-   "kind": "request",
-   "severity": "medium",
-   "title": "POST /api/coord/reviews/task%3At-mw63cm4w-eun/deny → 404",
-   "detail": "POST /api/coord/reviews/task%3At-mw63cm4w-eun/deny answered 404",
-   "selector": "",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Reviews"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Reviews",
-    "click \"Deny\" (#coord-body button.btn)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "dff4cd6abb",
-   "kind": "request",
-   "severity": "medium",
-   "title": "GET /api/docs/untitled → 404",
-   "detail": "GET /api/docs/untitled answered 404",
-   "selector": "",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Global docs"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Global docs",
-    "click \"Side quest ideas Side Quest Orion · 2m ago\" (#hub-docs button.hub-li)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "008e8002de",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#doc-sum",
-   "label": "Summarize with local brain",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Docs & Files"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Docs & Files",
-    "click \"Summarize with local brain\" (button#doc-sum)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "e017594fee",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#wt-requests",
-   "label": "Requests 1",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Tasks & Board"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Tasks & Board",
-    "click \"Requests 1\" (button#wt-requests)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "99b8bbae82",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#crumb-section",
-   "label": "Overview",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Updates"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Updates",
-    "click \"Overview\" (button#crumb-section)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "f761ac1b29",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#pj-face",
-   "label": "Change the project picture",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Updates"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Updates",
-    "click \"Change the project picture\" (button#pj-face)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "e8ecfc19ac",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#pj-invite",
-   "label": "Invite to Side Quest",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Updates"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Updates",
-    "click \"Invite to Side Quest\" (button#pj-invite)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "88f04c5224",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "#pj-hero button.btn.primary",
-   "label": "New task",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Updates"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Updates",
-    "click \"New task\" (#pj-hero button.btn.primary)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "bb5049c8f9",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "#pj-hero button.btn",
-   "label": "Invite a friend",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Updates"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Updates",
-    "click \"Invite a friend\" (#pj-hero button.btn)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "f1d28320f0",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#pj-cc",
-   "label": "Connect your Claude Code",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Settings"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Settings",
-    "click \"Connect your Claude Code\" (button#pj-cc)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "17f884a7df",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#capture-toggle",
-   "label": "Capture to notes",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Inbox (bell)"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Inbox (bell)",
-    "click \"Capture to notes\" (button#capture-toggle)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "55d9f3cbc5",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#capture-retry",
-   "label": "Allow mic & retry",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Inbox (bell)"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Inbox (bell)",
-    "click \"Allow mic & retry\" (button#capture-retry)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "8fc9b47ee6",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Timeout 1500ms exceeded.",
-   "selector": "button#capture-open",
-   "label": "Open today's notes",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Inbox (bell)"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Inbox (bell)",
-    "click \"Open today's notes\" (button#capture-open)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "fde509acfc",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION New doc",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION New doc\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "83db964b2a",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION New proposal",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION New proposal\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "c3f4db6bc1",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Share my screen",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Share my screen\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "5a0cc99373",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Dictate into chat Ctrl Shift D",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Dictate into chat Ctrl Shift D\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "6bfa851151",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Connect Claude Code",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Connect Claude Code\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "6564c882bb",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Report a bug Ctrl Shift B",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Report a bug Ctrl Shift B\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "7dc30303f7",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Write today's standup",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Write today's standup\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "61676029d7",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Toggle dark / light Ctrl Shift L",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Toggle dark / light Ctrl Shift L\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "d9c2417c06",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Take the tour",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Take the tour\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "8e5fd02747",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Check for updates",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Check for updates\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "85d2489da7",
-   "kind": "unclickable",
-   "severity": "medium",
-   "title": "Button cannot be clicked",
-   "detail": "ElementHandle.click: Element is not attached to the DOM",
-   "selector": "#pal-list button.pal-item",
-   "label": "ACTION Get the desktop app",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Command palette"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Command palette",
-    "click \"ACTION Get the desktop app\" (#pal-list button.pal-item)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
    "id": "d4675b835a",
    "kind": "contrast",
    "severity": "low",
@@ -1452,6 +266,7 @@
     "not-connected"
    ],
    "views": [
+    "Docs & Files",
     "Tasks & Board",
     "Task board",
     "Bugs",
@@ -1459,14 +274,16 @@
     "Calendar",
     "Repo",
     "Visuals & screenshots",
+    "Requests",
     "Your agents",
     "Ownership map",
+    "Conflict radar",
+    "Hand-offs",
     "Reviews",
     "Daily plan",
     "Secretary",
     "Home",
     "Agent fleet",
-    "Updates",
     "Settings",
     "Invite friends",
     "Scratchpad",
@@ -1479,8 +296,6 @@
     "Agent detail (right panel)",
     "App preview",
     "Workshop",
-    "Milestones",
-    "Hand-offs",
     "hub",
     "chat",
     "docs",
@@ -1494,11 +309,11 @@
    ],
    "steps": [
     "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
+    "go to Docs & Files (Ctrl K / nest)"
    ],
-   "count": 76,
+   "count": 75,
    "screenshot": null,
-   "example": "button#task-new"
+   "example": "button#doc-first"
   },
   {
    "id": "216619c934",
@@ -1514,7 +329,6 @@
     "desktop-app"
    ],
    "views": [
-    "Updates",
     "Settings",
     "Invite friends",
     "Scratchpad",
@@ -1529,32 +343,9 @@
    ],
    "steps": [
     "open the app (desktop)",
-    "go to Updates (Ctrl K / nest)"
+    "go to Settings (Ctrl K / nest)"
    ],
-   "count": 19,
-   "screenshot": null
-  },
-  {
-   "id": "186020c54d",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#coord-body span.faint",
-   "label": "none claimed",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Agents Hub",
-    "Agents"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Agents Hub (Ctrl K / nest)"
-   ],
-   "count": 8,
+   "count": 18,
    "screenshot": null
   },
   {
@@ -1578,6 +369,29 @@
     "go to Agents Hub (Ctrl K / nest)"
    ],
    "count": 6,
+   "screenshot": null
+  },
+  {
+   "id": "186020c54d",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#coord-body span.faint",
+   "label": "none claimed",
+   "contexts": [
+    "desktop",
+    "phone"
+   ],
+   "views": [
+    "Agents Hub",
+    "Agents"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agents Hub (Ctrl K / nest)"
+   ],
+   "count": 4,
    "screenshot": null
   },
   {
@@ -1648,116 +462,6 @@
    "screenshot": null
   },
   {
-   "id": "1c6225e439",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#pj-requests div.pj-none",
-   "label": "No agent is waiting on anyone.",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Requests"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Requests (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "ee9d24d9c5",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#pj-requests div.pj-none",
-   "label": "No “needs a desktop” requests.",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Requests"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Requests (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "b5d58d8ccc",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#coord-body div.coord-empty",
-   "label": "No overlaps No two branches touch the same files right now.",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Conflict radar"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Conflict radar (Ctrl K / nest)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "661ffc9b0f",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#preview-body p.ad-none",
-   "label": "Nothing handed to or from it.",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Agent detail (right panel)"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Agent detail (right panel)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
-   "id": "6d174e4087",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#preview-body p.ad-none",
-   "label": "No overlap with other branches.",
-   "contexts": [
-    "desktop",
-    "phone"
-   ],
-   "views": [
-    "Agent detail (right panel)"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Agent detail (right panel)"
-   ],
-   "count": 2,
-   "screenshot": null
-  },
-  {
    "id": "59ef9df8e8",
    "kind": "empty-dead-end",
    "severity": "low",
@@ -1819,19 +523,13 @@
     "Project settings",
     "Profile menu",
     "Inbox (bell)",
-    "Command palette",
-    "Composer + menu",
-    "Workspace switcher",
-    "Agent detail (right panel)",
-    "Person view",
-    "App preview",
-    "Workshop"
+    "Command palette"
    ],
    "steps": [
     "open the app (desktop)",
     "go to Invite friends (Ctrl K / nest)"
    ],
-   "count": 127,
+   "count": 101,
    "screenshot": null,
    "example": "button#tour-search"
   },
@@ -1848,50 +546,15 @@
    ],
    "views": [
     "Inbox (bell)",
-    "Command palette",
-    "Composer + menu",
-    "Workspace switcher",
-    "Agent detail (right panel)",
-    "Person view",
-    "App preview"
+    "Command palette"
    ],
    "steps": [
     "open the app (desktop)",
     "go to Inbox (bell)"
    ],
-   "count": 14,
+   "count": 4,
    "screenshot": null,
    "example": "button#capture-retry"
-  },
-  {
-   "id": "66c85566ba",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#pj-ws div.pj-none",
-   "label": "No repo yet. Start a project from a folder or a GitHub URL with + in the sidebar",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Updates",
-    "Settings",
-    "Invite friends",
-    "Scratchpad",
-    "Project home",
-    "Project settings",
-    "Profile menu",
-    "Inbox (bell)",
-    "Command palette",
-    "Workspace switcher"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Updates (Ctrl K / nest)"
-   ],
-   "count": 10,
-   "screenshot": null
   },
   {
    "id": "708be5f8f0",
@@ -1906,102 +569,60 @@
    ],
    "views": [
     "Milestones",
-    "Repo"
+    "Repo",
+    "Visuals & screenshots"
    ],
    "steps": [
     "open the app (desktop)",
     "go to Milestones (Ctrl K / nest)"
    ],
-   "count": 2,
+   "count": 3,
    "screenshot": null,
    "example": "button#prop-new"
   },
   {
-   "id": "1ec6eca895",
-   "kind": "contrast",
-   "severity": "low",
-   "title": "Text contrast too low",
-   "detail": "4.27:1 (#F26B1D on #3C2E2B, 11px) needs 4.5:1",
-   "selector": "#F26B1D on #3C2E2B",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Bugs"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Bugs (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null,
-   "example": "#bug-list span.chip"
-  },
-  {
-   "id": "895dc26f99",
-   "kind": "contrast",
-   "severity": "low",
-   "title": "Text contrast too low",
-   "detail": "4.47:1 (#F26B1D on #392B26, 11px) needs 4.5:1",
-   "selector": "#F26B1D on #392B26",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Requests"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Requests (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null,
-   "example": "#pj-requests span.pj-chip.hot"
-  },
-  {
-   "id": "a4f40a3f95",
-   "kind": "contrast",
-   "severity": "low",
-   "title": "Text contrast too low",
-   "detail": "4.07:1 (#C2530F on #FDEDE4, 10.5px) needs 4.5:1",
-   "selector": "#C2530F on #FDEDE4",
-   "label": "",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Workshop"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Workshop"
-   ],
-   "count": 1,
-   "screenshot": null,
-   "example": "#ws-body span.ws-kind.k-recipe"
-  },
-  {
-   "id": "2bf9700080",
+   "id": "66c85566ba",
    "kind": "empty-dead-end",
    "severity": "low",
    "title": "Empty state with no next action",
    "detail": "empty state with no button or link next to it",
-   "selector": "p.faint",
-   "label": "Empty doc.",
+   "selector": "#pj-ws div.pj-none",
+   "label": "No repo yet. Start a project from a folder or a GitHub URL with + in the sidebar",
    "contexts": [
     "desktop"
    ],
    "views": [
-    "Tasks & Board"
+    "Agent detail (right panel)",
+    "App preview"
    ],
    "steps": [
     "open the app (desktop)",
-    "go to Tasks & Board (Ctrl K / nest)"
+    "go to Agent detail (right panel)"
+   ],
+   "count": 2,
+   "screenshot": null
+  },
+  {
+   "id": "26344ddc1a",
+   "kind": "contrast",
+   "severity": "low",
+   "title": "Text contrast too low",
+   "detail": "4.19:1 (#A35F0C on #F6E9DB, 10.5px) needs 4.5:1",
+   "selector": "#A35F0C on #F6E9DB",
+   "label": "",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Inbox (bell)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Inbox (bell)"
    ],
    "count": 1,
-   "screenshot": null
+   "screenshot": null,
+   "example": "#nf-list span.nf-risk.medium"
   },
   {
    "id": "e76b0d1d98",
@@ -2025,64 +646,127 @@
    "screenshot": null
   },
   {
-   "id": "1b5116b5db",
+   "id": "7c0a7e07f3",
    "kind": "empty-dead-end",
    "severity": "low",
    "title": "Empty state with no next action",
    "detail": "empty state with no button or link next to it",
-   "selector": "#br-list div.empty",
-   "label": "Only main exists. Everyone is in sync.",
+   "selector": "#view-agents-hub span.faint",
+   "label": "Not connected yet",
    "contexts": [
     "desktop"
    ],
    "views": [
-    "Repo"
+    "Agent fleet"
    ],
    "steps": [
     "open the app (desktop)",
-    "go to Repo (Ctrl K / nest)"
+    "go to Agent fleet (Ctrl K / nest)"
    ],
    "count": 1,
    "screenshot": null
   },
   {
-   "id": "b19397b105",
+   "id": "661ffc9b0f",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "Nothing handed to or from it.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "c740a9bdfd",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "The radar needs a git repo.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "a69c950b3b",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "Nothing yet.",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agent detail (right panel)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "ee9d24d9c5",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#pj-requests div.pj-none",
+   "label": "No “needs a desktop” requests.",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Requests"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Requests (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "41c5370090",
    "kind": "empty-dead-end",
    "severity": "low",
    "title": "Empty state with no next action",
    "detail": "empty state with no button or link next to it",
    "selector": "#coord-body div.coord-empty",
-   "label": "Nothing waiting When someone parks work for a teammate (or an agent calls handof",
-   "contexts": [
-    "desktop"
-   ],
-   "views": [
-    "Hand-offs"
-   ],
-   "steps": [
-    "open the app (desktop)",
-    "go to Hand-offs (Ctrl K / nest)"
-   ],
-   "count": 1,
-   "screenshot": null
-  },
-  {
-   "id": "4760aad895",
-   "kind": "empty-dead-end",
-   "severity": "low",
-   "title": "Empty state with no next action",
-   "detail": "empty state with no button or link next to it",
-   "selector": "#m2-docs-hub p.m2-empty",
-   "label": "Decisions, voice notes, approvals and files from chat collect here.",
+   "label": "Nothing to review Agents call request_review when a branch is ready; tasks moved",
    "contexts": [
     "phone"
    ],
    "views": [
-    "Docs & Files"
+    "Reviews"
    ],
    "steps": [
     "open the app (phone)",
-    "go to Docs & Files (Ctrl K / nest)"
+    "go to Reviews (Ctrl K / nest)"
    ],
    "count": 1,
    "screenshot": null
@@ -2104,6 +788,27 @@
    "steps": [
     "open the app (phone)",
     "go to Updates (Ctrl K / nest)"
+   ],
+   "count": 1,
+   "screenshot": null
+  },
+  {
+   "id": "6d174e4087",
+   "kind": "empty-dead-end",
+   "severity": "low",
+   "title": "Empty state with no next action",
+   "detail": "empty state with no button or link next to it",
+   "selector": "#preview-body p.ad-none",
+   "label": "No overlap with other branches.",
+   "contexts": [
+    "phone"
+   ],
+   "views": [
+    "Agent detail (right panel)"
+   ],
+   "steps": [
+    "open the app (phone)",
+    "go to Agent detail (right panel)"
    ],
    "count": 1,
    "screenshot": null
@@ -2197,7 +902,7 @@
    "kind": "layout-shift",
    "severity": "low",
    "title": "Layout shifts after the view opens",
-   "detail": "cumulative layout shift 0.336 (sources: button#tour-search, #shell div.tb-right, div#room-scratch)",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
    "selector": "Chat & Streams",
    "label": "",
    "contexts": [
@@ -2218,7 +923,7 @@
    "kind": "layout-shift",
    "severity": "low",
    "title": "Layout shifts after the view opens",
-   "detail": "cumulative layout shift 0.336 (sources: button#tour-search, #shell div.tb-right, div#room-scratch)",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
    "selector": "Docs & Files",
    "label": "",
    "contexts": [
@@ -2239,7 +944,7 @@
    "kind": "layout-shift",
    "severity": "low",
    "title": "Layout shifts after the view opens",
-   "detail": "cumulative layout shift 0.336 (sources: button#tour-search, #shell div.tb-right, div#room-scratch)",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
    "selector": "Tasks & Board",
    "label": "",
    "contexts": [
@@ -2260,7 +965,7 @@
    "kind": "layout-shift",
    "severity": "low",
    "title": "Layout shifts after the view opens",
-   "detail": "cumulative layout shift 0.336 (sources: button#tour-search, #shell div.tb-right, div#room-scratch)",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
    "selector": "Home",
    "label": "",
    "contexts": [
@@ -2281,7 +986,7 @@
    "kind": "layout-shift",
    "severity": "low",
    "title": "Layout shifts after the view opens",
-   "detail": "cumulative layout shift 0.336 (sources: button#tour-search, #shell div.tb-right, div#room-scratch)",
+   "detail": "cumulative layout shift 0.347 (sources: button#tour-search, button#crumb-section, section#tour-drop)",
    "selector": "Settings",
    "label": "",
    "contexts": [
@@ -2296,178 +1001,73 @@
    ],
    "count": 1,
    "screenshot": null
+  },
+  {
+   "id": "bb94cef7c1",
+   "kind": "request",
+   "severity": "low",
+   "title": "POST /api/agents/channel → 400",
+   "detail": "POST /api/agents/channel answered 400",
+   "selector": "",
+   "label": "",
+   "contexts": [
+    "desktop"
+   ],
+   "views": [
+    "Agents"
+   ],
+   "steps": [
+    "open the app (desktop)",
+    "go to Agents",
+    "type \"Explorer check: lava tiles feel good\" into input#talk-input",
+    "press Enter"
+   ],
+   "count": 1,
+   "screenshot": null
   }
  ],
  "journeys": [
   {
-   "id": "invite",
-   "title": "Invite a friend and get a link",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": true,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 1004,
-   "notes": [],
-   "steps": [
-    "Invite friends"
-   ]
-  },
-  {
-   "id": "propose",
-   "title": "Propose a feature and get it on the Board",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": false,
-   "clicks": 2,
-   "max_clicks": 4,
-   "ms": 3965,
-   "notes": [
-    "click failed: Locator.click: Timeout 2500ms exceeded."
-   ],
-   "steps": [
-    "composer +",
-    "Propose to the tribe",
-    "type 'Explorer: a photo mode'"
-   ]
-  },
-  {
-   "id": "connect-claude",
-   "title": "Connect Claude Code",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": true,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 1022,
-   "notes": [],
-   "steps": [
-    "Connect Claude"
-   ]
-  },
-  {
-   "id": "preview",
-   "title": "Preview the app",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": false,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 1044,
-   "notes": [
-    "no visible affordance for: Preview app"
-   ],
-   "steps": [
-    "Docs & Files"
-   ]
-  },
-  {
-   "id": "bugs",
-   "title": "Find the bug inbox",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": true,
-   "clicks": 2,
-   "max_clicks": 2,
-   "ms": 1476,
-   "notes": [],
-   "steps": [
-    "Tasks & Board",
-    "Bugs"
-   ]
-  },
-  {
-   "id": "capture",
-   "title": "Turn on capture to notes",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": false,
-   "clicks": 2,
-   "max_clicks": 2,
-   "ms": 7417,
-   "notes": [
-    "goal not reached: capture is on"
-   ],
-   "steps": [
-    "profile",
-    "Capture to notes"
-   ]
-  },
-  {
-   "id": "home-to-project",
-   "title": "Start at Home and open a project",
-   "kind": "intuitive",
-   "context": "desktop",
-   "pass": true,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 1030,
-   "notes": [],
-   "steps": [
-    "Pixel Quest"
-   ]
-  },
-  {
-   "id": "invite",
-   "title": "Invite a friend and get a link",
-   "kind": "intuitive",
-   "context": "phone",
-   "pass": true,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 1004,
-   "notes": [],
-   "steps": [
-    "Invite friends"
-   ]
-  },
-  {
-   "id": "connect-claude",
-   "title": "Connect Claude Code",
-   "kind": "intuitive",
-   "context": "phone",
-   "pass": false,
-   "clicks": 1,
-   "max_clicks": 2,
-   "ms": 3486,
-   "notes": [
-    "click failed: Locator.click: Timeout 2500ms exceeded."
-   ],
-   "steps": [
-    "You (profile)"
-   ]
-  },
-  {
-   "id": "bugs",
-   "title": "Find the bug inbox",
-   "kind": "intuitive",
-   "context": "phone",
-   "pass": true,
-   "clicks": 2,
-   "max_clicks": 2,
-   "ms": 1480,
-   "notes": [],
-   "steps": [
-    "Tasks (rack)",
-    "Bugs"
-   ]
-  },
-  {
    "id": "collab",
-   "title": "core_collab",
+   "title": "Two humans + two Claudes: lanes, conflicts, hand-off",
    "kind": "core",
-   "context": "api",
-   "pass": false,
-   "clicks": 0,
-   "ms": 0,
-   "notes": [
-    "crashed: Command '['git', '-C', '/tmp/tribe-explore-hc38yt5p/src/pixel-quest', 'branch', '-f', 'tribe/orion-zlJ_', 'main']' returned non-zero exit status 128."
-   ],
+   "context": "desktop+phone+api",
+   "pass": true,
+   "clicks": 2,
+   "ms": 4105,
+   "notes": [],
    "checks": [
     {
-     "name": "ran",
-     "ok": false,
-     "why": "Command '['git', '-C', '/tmp/tribe-explore-hc38yt5p/src/pixel-quest', 'branch', '-f', 'tribe/orion-zlJ_', 'main']' returned non-zero exit status 128."
+     "name": "Orion's Claude claims src/player.js",
+     "ok": true
+    },
+    {
+     "name": "Maya's Claude gets a clear refusal",
+     "ok": true
+    },
+    {
+     "name": "the refusal names who holds it",
+     "ok": true
+    },
+    {
+     "name": "conflict radar flags the two branches",
+     "ok": true
+    },
+    {
+     "name": "hand-off accepted",
+     "ok": true
+    },
+    {
+     "name": "Maya's Claude hears about the hand-off",
+     "ok": true
+    },
+    {
+     "name": "after the hand-off Maya's Claude can claim the file",
+     "ok": true
+    },
+    {
+     "name": "the host sees src/world.js on the Conflicts tab",
+     "ok": true
     }
    ]
   },
@@ -2478,7 +1078,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 2,
-   "ms": 4220,
+   "ms": 4284,
    "notes": [
     "already connected: 'New command' is one extra deliberate tap",
     "no 'Anywhere' command until a public link (Funnel/cloudflared) is on"
@@ -2529,7 +1129,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 0,
-   "ms": 734,
+   "ms": 730,
    "notes": [],
    "checks": [
     {
@@ -2581,7 +1181,7 @@
    "context": "desktop+phone+api",
    "pass": false,
    "clicks": 1,
-   "ms": 16569,
+   "ms": 16284,
    "notes": [],
    "checks": [
     {
@@ -2638,7 +1238,7 @@
    "context": "desktop+phone+api",
    "pass": true,
    "clicks": 2,
-   "ms": 6708,
+   "ms": 6746,
    "notes": [],
    "checks": [
     {
@@ -2674,7 +1274,7 @@
      "ok": true
     },
     {
-     "name": "desktop bell count matches the inbox (4)",
+     "name": "desktop bell count matches the inbox (3)",
      "ok": true
     },
     {
@@ -2698,13 +1298,164 @@
      "ok": true
     }
    ]
+  },
+  {
+   "id": "invite",
+   "title": "Invite a friend and get a link",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 1019,
+   "notes": [],
+   "steps": [
+    "Invite friends"
+   ]
+  },
+  {
+   "id": "propose",
+   "title": "Propose a feature and get it on the Board",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 3,
+   "max_clicks": 4,
+   "ms": 2273,
+   "notes": [],
+   "steps": [
+    "composer +",
+    "Propose to the tribe",
+    "type 'Explorer: a photo mode'",
+    "send proposal"
+   ]
+  },
+  {
+   "id": "connect-claude",
+   "title": "Connect Claude Code",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1444,
+   "notes": [],
+   "steps": [
+    "Connect Claude",
+    "New command"
+   ]
+  },
+  {
+   "id": "preview",
+   "title": "Preview the app",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": false,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 995,
+   "notes": [
+    "no visible affordance for: Preview app"
+   ],
+   "steps": [
+    "Docs & Files"
+   ]
+  },
+  {
+   "id": "bugs",
+   "title": "Find the bug inbox",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1491,
+   "notes": [],
+   "steps": [
+    "Tasks & Board",
+    "Bugs"
+   ]
+  },
+  {
+   "id": "capture",
+   "title": "Turn on capture to notes",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1420,
+   "notes": [],
+   "steps": [
+    "profile",
+    "Capture to notes"
+   ]
+  },
+  {
+   "id": "home-to-project",
+   "title": "Start at Home and open a project",
+   "kind": "intuitive",
+   "context": "desktop",
+   "pass": true,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 1043,
+   "notes": [],
+   "steps": [
+    "Pixel Quest"
+   ]
+  },
+  {
+   "id": "invite",
+   "title": "Invite a friend and get a link",
+   "kind": "intuitive",
+   "context": "phone",
+   "pass": true,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 985,
+   "notes": [],
+   "steps": [
+    "Invite friends"
+   ]
+  },
+  {
+   "id": "connect-claude",
+   "title": "Connect Claude Code",
+   "kind": "intuitive",
+   "context": "phone",
+   "pass": false,
+   "clicks": 1,
+   "max_clicks": 2,
+   "ms": 3492,
+   "notes": [
+    "click failed: Locator.click: Timeout 2500ms exceeded."
+   ],
+   "steps": [
+    "You (profile)"
+   ]
+  },
+  {
+   "id": "bugs",
+   "title": "Find the bug inbox",
+   "kind": "intuitive",
+   "context": "phone",
+   "pass": true,
+   "clicks": 2,
+   "max_clicks": 2,
+   "ms": 1485,
+   "notes": [],
+   "steps": [
+    "Tasks (rack)",
+    "Bugs"
+   ]
   }
  ],
  "suggestions": [
   {
    "key": "contrast",
    "idea": "Lift faint text to 4.5:1 (the user wants white, not grey)",
-   "why": "13 color pair(s) under WCAG AA in the dark theme",
+   "why": "10 color pair(s) under WCAG AA in the dark theme",
    "in_features_next": false
   },
   {
@@ -2716,7 +1467,7 @@
   {
    "key": "empty",
    "idea": "Empty states with one obvious action ('Nothing here' → 'Add the first …')",
-   "why": "20 empty state(s) with no button nearby",
+   "why": "18 empty state(s) with no button nearby",
    "in_features_next": false
   },
   {

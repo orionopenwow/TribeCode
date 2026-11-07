@@ -705,6 +705,9 @@
         if (!placed && l.querySelector('.msg.dx')) { placed = true; divider(l, lastSeen.general); }
         drawJump();
       }).observe(l, { childList: true });
+      // The history can land before this runs (the page's first fetch races DOMContentLoaded): upgrade what is already
+      // there, or a reload showed plain lines with no images, voice notes or files (found by scripts/explore.py).
+      if (l.querySelector('.msg[data-id]:not(.dx)')) { upgrade(l, 'general'); regroup(l); if (!placed && l.querySelector('.msg.dx')) { placed = true; divider(l, lastSeen.general); } l.scrollTop = l.scrollHeight; }
     }
     const form = $('#chat-form'); if (form) new MutationObserver(bindMic).observe(form, { childList: true });
   }

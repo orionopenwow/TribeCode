@@ -26,8 +26,8 @@ body.light {
   --canvas: #F4F5F7; --page: #F4F5F7;
   --win: #FFFFFF; --surface: #FFFFFF; --surface-2: #EEF0F3; --surface-3: #E3E7EC;
   --stroke: #E4E8EE; --edge: #DADFE6; --border: #DADFE6; --edge-pop: #C5CCD6;
-  --text: #12151A; --muted: #4B5563; --faint: #8A93A3;
-  --accent-ink: #C2530F; --live-ink: #127A6C; --amber-ink: #A35F0C; --ember-ink: #C2304F; --peer-ink: #4A58D9;
+  --text: #12151A; --muted: #4B5563; --faint: #5F6775;   /* light theme: 4.8:1+ on every light surface (was 2.6–3.1:1) */
+  --accent-ink: #A34410; --live-ink: #127A6C; --amber-ink: #8A4E08; --ember-ink: #C2304F; --peer-ink: #4A58D9;
   --chip: rgba(242,107,29,0.12); --live-tint: rgba(56,198,177,0.14); --amber-tint: rgba(255,184,107,0.20);
   --ember-tint: rgba(255,111,142,0.14); --peer-tint: rgba(108,124,255,0.12);
   --on-live: #0B1F1C; --scrim: rgba(18,21,26,0.40);
