@@ -7,7 +7,7 @@
   const C = () => window.TribeClient;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast(m);
-  const ICON = '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 14.2c1.6.6 2.7 2.2 3 4.8"/></svg>';
+  const ICON = '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21c.5-4.4 3.3-7 7-7s6.5 2.6 7 7"/><path d="M16 3.3a4 4 0 0 1 0 7.4M18 14.4c2.2.8 3.6 3 4 6.6"/></svg>';
   let friends = new Set(), open = false;
 
   const btn = document.createElement('button');

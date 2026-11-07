@@ -1,0 +1,44 @@
+// Desktop: your avatar, Friends and the inbox bell live in a small bar at the bottom left of the sidebar (like a
+// chat app's user panel), instead of the top right. Phones keep them where they are. The buttons are moved, not
+// copied, so their own scripts (profilemenu.js, friends.js, notify.js) keep working unchanged.
+(() => {
+  const $ = s => document.querySelector(s);
+  const phone = matchMedia('(max-width: 820px)');
+  const C = window.TribeClient;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let bar = null;
+  function build() {
+    if (bar) return bar;
+    bar = document.createElement('div'); bar.className = 'userbar'; bar.id = 'userbar';
+    bar.innerHTML = '<div class="ub-me" id="ub-me"><span class="ub-slot" id="ub-face"></span><span class="ub-t"><b id="ub-name"></b><small id="ub-st"></small></span></div><div class="ub-acts" id="ub-acts"></div>';
+    return bar;
+  }
+  function label() {
+    if (!bar) return;
+    const st = (C && C.state()) || {}, m = st.me, on = C && C.connected();
+    let name = m && m.name; if (!name) { try { name = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name; } catch {} }
+    $('#ub-name').textContent = name || 'You';
+    $('#ub-st').textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : 'Not in a tribe';
+  }
+  function place() {
+    const pf = $('#pf-btn'), fr = $('#fr-btn'), bell = $('#nf-bell'), tb = $('.titlebar .tb-right'), nest = $('#tour-side');
+    if (!pf || !tb || !nest) return;
+    if (!phone.matches) {
+      const b = build(); if (!b.isConnected) nest.appendChild(b);
+      $('#ub-face').appendChild(pf);
+      const acts = $('#ub-acts'); if (bell) acts.appendChild(bell); if (fr) acts.appendChild(fr);   // Friends sits right of the bell
+      document.body.classList.add('has-userbar'); label();
+    } else {
+      const anchor = $('#sync-status');
+      if (bell && bell.parentNode !== tb) tb.insertBefore(bell, anchor && anchor.parentNode === tb ? anchor : null);
+      if (fr && fr.parentNode !== tb) bell ? bell.after(fr) : tb.appendChild(fr);
+      if (pf.parentNode !== tb) tb.appendChild(pf);
+      document.body.classList.remove('has-userbar');
+    }
+  }
+  // the bell and Friends buttons are added by their scripts on load; place once everything is there
+  const ready = () => { place(); if (C && C.on) { C.on('status', label); C.on('presence', label); } };
+  if (document.readyState === 'complete') setTimeout(ready, 0); else addEventListener('load', ready);
+  phone.addEventListener('change', place);
+  window.TribeUserbar = { place };
+})();

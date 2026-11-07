@@ -140,13 +140,13 @@
       ? tile('hub-host', 'Create your first project', desk ? 'Your tribe runs on this computer. Pick a name, invite friends, connect your Claude.' : 'Projects are hosted by the desktop app on someone\'s computer.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
         + tile('hub-join', 'Join a friend\'s tribe', 'Got an invite link? Paste it and you\'re in, on this computer or your phone.', '', 'link', 'Paste a link', 'indigo')
       : (lp || p1
-          ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Your last session shows up here.')
-          : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.'))
-        + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.');
-    const links = on ? `<div class="gs-links">${lp || p1 ? '<button class="linkish" id="hub-new">New project</button><span aria-hidden="true">·</span>' : ''}<button class="linkish" id="hub-join">Paste invite link</button></div>` : '';
+          ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Your last session shows up here.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
+          : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.', '', 'plus', 'Start a project', 'ember'))
+        + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.', '', 'link', 'Copy a link', 'teal');
+    const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>` : '';
     const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
-    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span>${on ? '' : '<span class="gs-band-r">Two ways in · about a minute</span>'}</div>
+    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span><span class="gs-band-r">${on ? 'Pick up, or bring someone in' : 'Two ways in · about a minute'}</span></div>
       ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;
   }
 
@@ -344,7 +344,7 @@
       : refine.status === 'thinking' ? '<div class="ref-out"><p class="aa-wait">Cleaning up your note…</p></div>'
       : refine.text ? `<div class="ref-out" id="hub-refine-out"><div class="aa-head">${aiTag()}<b>Cleaned up${refine.model ? ` · ${esc(refine.model)}` : ''}</b></div><div class="aa-text">${esc(refine.text)}</div>
           <div class="aa-acts"><button class="btn primary" id="hub-refine-replace">Replace</button><button class="btn" id="hub-refine-keep">Keep original</button></div></div>` : '';
-    return sec('Your notes', 'Scratchpad', `<div class="scratch" id="hub-scratch"></div>${out}${docs}`, 'id="hub-notes"',
+    return sec('Your notes', '<span class="emo" aria-hidden="true">📝</span>Scratchpad', `<div class="scratch" id="hub-scratch"></div>${out}${docs}`, 'id="hub-notes"',
       `<button class="btn ai" id="hub-refine" title="Clean up the selected note (or the newest) with the local model">${ico('i-sparkle', 14)}Refine with AI</button>`);
   }
   async function refineGo() {
@@ -379,7 +379,7 @@
     return `<span class="ha-av" style="background:${esc((m && m.color) || (it.kind === 'commit' ? '#6C7CFF' : '#2A313C'))}">${esc(name.trim().charAt(0).toUpperCase() || '?')}</span>`;
   }
   function activitySec(on) {
-    const head = inner => sec('Across your projects', 'Recent activity', inner, 'id="hub-stream"');
+    const head = inner => sec('Across your projects', '<span class="emo" aria-hidden="true">🧭</span>Recent activity', inner, 'id="hub-stream"');
     if (!on) {
       const local = scratch.notes().slice(0, 4), nm = ((window.TribeStore && window.TribeStore.get().name) || 'Me');
       return head(local.length ? `<div class="hub-act" id="hub-feed">${local.map(n => `<div class="ha-row static"><span class="ha-av" style="background:var(--accent)">${esc(nm.charAt(0).toUpperCase())}</span><span class="ha-t"><span class="ha-l1"><b>You</b><span class="ha-at">${esc(ago(n.updated || n.at))}</span></span><span class="ha-text">${esc(n.text.split('\n')[0])}</span><span class="ha-l3"><small>Scratchpad note</small><span class="ha-tag">On this device</span></span></span></div>`).join('')}</div>`

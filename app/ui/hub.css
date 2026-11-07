@@ -438,3 +438,11 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .hub-gs .gs-tile:hover .gs-go { gap: 7px; }
 .hub-gs .gs-err { margin: 14px 18px 0; }
 @media (max-width: 720px) { .hub-gs .gs-tile { padding: 18px 16px; } .hub-gs .gs-band-r { display: none; } }
+
+/* Quick start keeps its little marks: the project's face, a plus, a link, small icons on the links. */
+.hub-gs .gs-ic.gs-face { padding: 0; overflow: hidden; background: none; }
+.hub-gs .gs-ic.gs-face .pj-face { width: 40px; height: 40px; border-radius: 11px; }
+.hub-gs .k-teal .gs-ic { color: #38C6B1; border-color: color-mix(in srgb, #38C6B1 45%, var(--edge)); background: color-mix(in srgb, #38C6B1 10%, var(--surface)); }
+.hub-gs .k-teal .gs-go { color: #38C6B1; }
+.hub-gs .gs-links .linkish { display: inline-flex; align-items: center; gap: 6px; }
+.hub-gs .gs-links .linkish .i { width: 13px; height: 13px; opacity: .8; }

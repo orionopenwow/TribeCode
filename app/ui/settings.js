@@ -128,7 +128,7 @@
     const st = S.get(); if (!st.firstRun || $('#hi-banner') || !C().connected()) return;
     const me = C().state().me || {}, host = me.role === 'host', tribe = (C().state().tribe || {}).name || 'your tribe';
     const el = document.createElement('div'); el.className = 'hi-banner'; el.id = 'hi-banner';
-    el.innerHTML = `<span>Hi ${esc((st.name || '').split(' ')[0] || 'there')}, ${host ? "you're hosting." : `welcome to ${esc(tribe)}.`}</span>${host ? '<button class="linkish" id="hi-invite">Invite a friend →</button>' : ''}<span class="spacer"></span><button class="hi-x" id="hi-x" aria-label="Dismiss">✕</button>`;
+    el.innerHTML = `<span>${host ? '<span class="emo" aria-hidden="true">🔥</span>' : '<span class="emo" aria-hidden="true">👋</span>'}Hi ${esc((st.name || '').split(' ')[0] || 'there')}, ${host ? "you're hosting." : `welcome to ${esc(tribe)}.`}</span>${host ? '<button class="linkish" id="hi-invite">Invite a friend →</button>' : ''}<span class="spacer"></span><button class="hi-x" id="hi-x" aria-label="Dismiss">✕</button>`;
     const main = $('#main'); main.insertBefore(el, main.firstChild);
     const done = () => { el.remove(); S.set({ firstRun: false }); };
     $('#hi-x').onclick = done;

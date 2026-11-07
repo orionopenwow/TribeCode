@@ -363,10 +363,11 @@ def main():
             # ---------------- update icon: the same save / hand-off / restart flow ----------------
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
-            # top right: update · bell · profile (rightmost icon); no panel toggle or Context icon in the header
-            order = host.evaluate("['#update-btn', '#nf-bell', '#pf-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
+            # desktop: the header keeps only the update button; you, the bell and Friends sit in the bottom-left user bar
+            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn"]
+            assert host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].every(s => document.querySelector(s).closest('#userbar'))"), "user bar holds profile, bell, friends"
+            order = host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
-            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn", "nf-bell", "pf-btn"]
             assert host.locator(".titlebar #panel-toggle").count() == 0 and host.locator("#ctx-btn").is_hidden()
             host.keyboard.press("Control+Shift+K"); host.wait_for_selector("#ctx-win:not(.hidden)"); host.keyboard.press("Control+Shift+K")
             host.keyboard.press("Control+k"); host.fill("#pal-input", "tribe context"); host.keyboard.press("Enter"); host.wait_for_selector("#ctx-win:not(.hidden)")
