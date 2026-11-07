@@ -359,10 +359,28 @@ async function apiInProject(req, res, url) {
     }
     let shared = null;
     if (body.share) { try { shared = await share.start(['tailscale', 'cloudflare'].includes(body.provider) ? body.provider : ''); } catch (e) { shared = { status: 'error', message: e.message }; } }
-    const inv = { code: code(5), by: host.id, role: 'builder', maxUses: 3, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + 48 * 3600_000).toISOString() };
+    // Optional: start (or reuse) a project from a folder on this machine, scope the invite to it, and give
+    // the host's Claude Code a key for it (scripts/start-test-project.js).
+    let project = null, agentCommand = null;
+    if (body.project && body.project.path) {
+      try {
+        const r = await rooms.create(req, { path: body.project.path, name: body.project.name, emoji: body.project.emoji, init: true }, host);
+        project = r.project; rooms.pushProjects();
+        // Starter tasks (only for a brand-new project).
+        if (!r.existed && Array.isArray(body.project.tasks)) P.inProject(project.id, () => body.project.tasks.slice(0, 20).forEach(t => createTask({ title: t, by: host.id, source: 'starter' })));
+      } catch (e) { return fail(res, e.status || 400, e.message); }
+      if (body.agent) {
+        const token = id(32); let ag = members.find(x => x.role === 'agent' && x.owner === host.id);
+        if (ag) { ag.tokenHash = hash(token); ag.project = project.id; }
+        else { ag = { id: 'agent-' + slug(host.name).slice(0, 10) + '-' + id(4), name: `Claude · ${host.name}`.slice(0, 32), color: '#38C6B1', role: 'agent', owner: host.id, joined: new Date().toISOString(), tokenHash: hash(token), project: project.id }; members.push(ag); pushPresence(); }
+        saveMembers();
+        agentCommand = `claude mcp add --transport http tribecode http://localhost:${PORT}/mcp --header "Authorization: Bearer ${token}"`;
+      }
+    }
+    const inv = { code: code(5), by: host.id, role: 'builder', maxUses: 3, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + 48 * 3600_000).toISOString(), ...(project ? { project: project.id } : {}) };
     invites.push(inv); saveInvites();
     const base = (share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
-    return send(res, 200, { join: site.joinLink(base, inv.code), public: !!share.publicUrl(), provider: shared && shared.provider, approveUrl: shared && shared.approveUrl || null,
+    return send(res, 200, { join: site.joinLink(base, inv.code), project: project && { id: project.id, name: project.name, repo: project.repo }, agentCommand, public: !!share.publicUrl(), provider: shared && shared.provider, approveUrl: shared && shared.approveUrl || null,
       tailscale: !!(shared && shared.available && shared.available.tailscale), shareMessage: shared && shared.status !== 'on' ? (shared.message || '') : '',
       hostOpen, host: host.name, tribe: tribe.name, expires: inv.expires });
   }

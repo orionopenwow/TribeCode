@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pixel Quest</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #12151A; color: #F8FAFC; font: 14px/1.4 system-ui, sans-serif; }
+  body { display: grid; place-items: center; }
+  canvas { width: min(96vw, 960px); aspect-ratio: 16 / 9; background: #1B2028; border: 1px solid #2A313C; border-radius: 12px; image-rendering: pixelated; touch-action: none; }
+  p { color: #94A3B8; text-align: center; margin: 10px; }
+</style>
+</head>
+<body>
+<canvas id="game" width="480" height="270"></canvas>
+<p>Arrows or A/D to move · Space or W to jump (double jump too) · J to swing · tap the sides and middle on phones</p>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "about": "Who owns which files. One person (and their agent) per lane, so two people never edit the same file at once. Change owners in TribeCode or here.",
+  "lanes": {
+    "core":     { "owner": "host",   "files": ["index.html", "src/main.js", "src/systems/input.js"] },
+    "movement": { "owner": "host",   "files": ["src/systems/movement.js", "src/data/tuning.js"] },
+    "combat":   { "owner": "friend", "files": ["src/systems/combat.js", "src/systems/enemies.js"] },
+    "art":      { "owner": "friend", "files": ["src/art/"] }
+  }
+}

@@ -14,6 +14,10 @@ const root = path.resolve(__dirname, '..');
 const argv = process.argv.slice(2);
 const port = Number(argv[argv.indexOf('--port') + 1]) || 4747;
 const noOpen = argv.includes('--no-open');
+const opt = n => { const i = argv.indexOf(n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : null; };
+// --project-path <folder> [--project-name <name>] [--emoji <e>] [--tasks a|b|c] [--agent]: start (or reuse) a project
+// from that folder, scope the invite to it, and (with --agent) print the Claude Code command for it.
+const projectPath = opt('--project-path');
 // Usage note: --cloudflare skips Tailscale and uses a Cloudflare quick tunnel (address changes each start).
 const base = `http://localhost:${port}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -73,8 +77,10 @@ ol{margin:16px 0 0;padding-left:20px;color:#F8FAFC}ol li{margin:6px 0}ol small{c
 <div class="link"><input id="l" readonly value="${esc(r.join)}"><button id="c">Copy</button></div>
 <button class="sec" id="s">Share…</button>
 <ol><li>Camera → tap the TribeCode link</li><li>Type a name → <b>Join</b></li><li>Tap <b>Share → Add to Home Screen</b> <small>(signed in, opens like an app)</small></li></ol>
-<p class="foot">Link is already on your clipboard. Good for 3 people, expires in 48 hours.</p></div></main>
+<p class="foot">Link is already on your clipboard. Good for 3 people, expires in 48 hours.${r.project ? ` Joins <b>${esc(r.project.name)}</b> only.` : ''}</p>
+${r.agentCommand ? `<div class="k" style="margin-top:18px">Connect your Claude Code (run once in a terminal)</div><div class="link"><input id="cc" readonly value="${esc(r.agentCommand)}"><button id="ccb">Copy</button></div>` : ''}</div></main>
 <script>const l=document.getElementById('l');document.getElementById('c').onclick=async e=>{try{await navigator.clipboard.writeText(l.value)}catch{l.select();document.execCommand('copy')}e.target.textContent='Copied'};
+const cc=document.getElementById('ccb');if(cc)cc.onclick=async e=>{const v=document.getElementById('cc').value;try{await navigator.clipboard.writeText(v)}catch{document.getElementById('cc').select();document.execCommand('copy')}e.target.textContent='Copied'};
 const s=document.getElementById('s');if(navigator.share)s.onclick=()=>navigator.share({title:'Join my TribeCode',url:l.value}).catch(()=>{});else s.remove();</script></body></html>`;
 }
 
@@ -90,7 +96,8 @@ const s=document.getElementById('s');if(navigator.share)s.onclick=()=>navigator.
   if (share) console.log('  Getting a public https address (Tailscale or cloudflared)...');
   const name = (os.userInfo().username || 'Host').slice(0, 32);
   const invite = async provider => {
-    const r = await request('POST', '/api/host/quick-invite', { name, share, provider });
+    const project = projectPath ? { path: projectPath, name: opt('--project-name') || undefined, emoji: opt('--emoji') || undefined, tasks: (opt('--tasks') || '').split('|').filter(Boolean) } : undefined;
+    const r = await request('POST', '/api/host/quick-invite', { name, share, provider, project, agent: argv.includes('--agent') });
     if (r.status !== 200) { console.error(`  Could not make an invite: ${r.body.error || r.status}`); process.exit(1); }
     return r.body;
   };
@@ -120,5 +127,10 @@ const s=document.getElementById('s');if(navigator.share)s.onclick=()=>navigator.
   open(file);
   if (out.hostOpen) open(out.hostOpen);              // first run: opens your own signed-in window too
   else if (started) open(base);
+  if (out.project) console.log(`  Project:  ${out.project.name}  (${out.project.repo})`);
+  if (out.agentCommand) {
+    console.log('\n  Connect your Claude Code to it (run once in a terminal):\n  ' + out.agentCommand);
+    try { fs.writeFileSync(path.join(out.project.repo, 'CONNECT-CLAUDE.txt'), out.agentCommand + '\n'); } catch {}
+  }
   console.log('\n  Text the link (or show the QR). Your friend taps it, types a name, and they\'re in.\n');
 })().catch(e => { console.error('  ' + e.message); process.exit(1); });

@@ -162,5 +162,5 @@ module.exports = function rooms({ P, W, store, getMembers, saveMembers, isLocal,
     return null;
   }
 
-  return { route, listFor, counts, pulse, requests };
+  return { route, listFor, counts, pulse, requests, create, pushProjects };
 };
