@@ -8,7 +8,7 @@
 //   - Docs hub: the pinned repo as the hero, the living notes journal, files, screenshots.
 //   - Suggested tasks on Tasks and Home. Profile sheets (add friend, network, DM, ask their Claude).
 // Desktop is untouched: everything here is gated on the phone media query (and mobile2.css on @media).
-// Public: window.TribeMobile = { show, onShow, profile, talkTo, askAi, plusMenu, recorder, refresh }.
+// Public: window.TribeMobile = { show, onShow, profile, talkTo, startTribe, askAi, plusMenu, recorder, refresh }.
 (function () {
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const C = window.TribeClient;
@@ -126,7 +126,7 @@
   // Home · Projects · Notes · Activity · +. Each icon jumps to that part of the dashboard; the lit one follows the scroll.
   // Same five slots and look as a project's rack (Home · Chat · Docs · Updates · Tasks), Home's versions:
   // You · Messages · Notes · Notifs · Projects. On Home the Home tab becomes your avatar: tap it for your profile.
-  const HOMEBAR = [['me', 'home', 'You'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['notifs', 'bell', 'Notifs'], ['pjs', 'list', 'Projects']];
+  const HOMEBAR = [['me', 'home', 'You'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
   function homeBar() {
     if ($('#m2-homebar')) return;
     const bar = document.createElement('nav'); bar.id = 'm2-homebar'; bar.className = 'm2-homebar'; bar.setAttribute('aria-label', 'Home');
@@ -138,7 +138,7 @@
       const b = e.target.closest('[data-hb]'); if (!b) return;
       const k = b.dataset.hb;
       if (k === 'pjs') { document.body.classList.add('drawer-open'); return; }
-      if (k === 'notes') { const n = $('#hub-notes'); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => { const t = $('#hub-scratch textarea, #hub-scratch .sc-in'); if (t) t.focus({ preventScroll: true }); }, 350); return; }
+      if (k === 'notes') return window.TribeHub && window.TribeHub.open('docs');   // your docs center: your notes, then project docs
       if (k === 'msgs') { if (C.connected()) return App().show('chat'); return window.TribeFriends && window.TribeFriends.open(); }
       if (k === 'notifs') return window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : null;
       if (k === 'me') return profile(me().id);
@@ -150,7 +150,7 @@
       if (!document.body.classList.contains('global')) return;
       const y = scroller().scrollTop || window.scrollY || 0;
       if (Math.abs(y - lastY) < 6) return;
-      bar.classList.toggle('away', y > lastY && y > 80); lastY = y; litHome();
+      lastY = y; litHome();   // the rack stays put (no hiding on scroll)
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('scroll', e => { if (e.target && e.target.id === 'main') onScroll(); }, { passive: true, capture: true });
@@ -158,7 +158,8 @@
   const scroller = () => { const m = $('#main'); return m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement || document.documentElement; };
   function litHome() {
     const bar = $('#m2-homebar'); if (!bar) return;
-    bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === 'me'));
+    const on = window.TribeHub && window.TribeHub.mode && window.TribeHub.mode() === 'docs' ? 'notes' : 'me';
+    bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === on));
     const av = $('#m2-hb-av'), m = me() || {};
     if (av) { let sn = ''; try { sn = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name || ''; } catch {} const n = (m.name || sn || '?').trim(); av.textContent = n.charAt(0).toUpperCase(); av.style.background = m.color || 'var(--accent)'; }
   }

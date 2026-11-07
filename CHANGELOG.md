@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.2
+
+- **Home has an identity**: a card at the top with the campfire, your greeting in your color, and three live numbers (projects, friends online, agents working)
+- **Notes instead of the scratchpad**: Start a note opens a plain editor (title on the first line) and the note lands straight in your **docs center** (Home › Global docs): your own notes on top, then your projects' most recently updated docs. The right panel has a quiet Start a note too
+- **Phones**:
+  - Home's top bar works like a social app's: + (start or join) · TribeCode ⌄ (your projects) · the bell
+  - Bottom racks are icons only, bigger and bolder, flush with the bottom, and they no longer hide when you scroll. Home: You (your avatar opens your profile) · Messages · Notes (your docs center) · Projects
+  - The inbox reads at a comfortable size; the hosting banner stays off Home (the identity card says it)
+
 ## v0.8.1
 
 - **Guide**: how to TribeCode in nine short pages (start here, projects and invites, Claude Code, working together, repos and versions, phones, hosting, agents and the Office, troubleshooting). Tucked away: the profile menu, Ctrl K, or "? Guide" at the bottom of Settings; no new sidebar rows

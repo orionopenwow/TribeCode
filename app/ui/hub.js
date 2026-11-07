@@ -113,8 +113,10 @@
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
-      el.innerHTML = `<div class="hub hub-home">
-        <header class="hub-head"><span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
+      el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn" id="hpt-plus" aria-label="Start or join a tribe">${ico('i-plus', 26)}</button>
+          <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
+          <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
+        ${idCard(on, tribe, pj, live, sub)}
         ${gsHero(on)}
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
@@ -132,6 +134,22 @@
 
   // ---------- the one hero: two big choices (Getting started, or Quick start once you're in) ----------
   // Suggestions, Ask and the agents fleet moved out of the way: AI Insights (right panel), @ai in chat, Agent fleet row.
+  // The top of Home: who you are and where your tribe stands, with the campfire as the identity (flat matte card).
+  function idCard(on, tribe, pj, live, sub) {
+    const st = (window.TribeStore && TribeStore.get()) || {}, me = (C.state() || {}).me || {};
+    const name = (me.name || st.name || 'You').split(' ')[0], color = me.color || st.color || '#F26B1D';
+    const people = ((C.state() || {}).members || []).filter(m => m.role !== 'agent' && m.online && m.id !== me.id).length;
+    const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent' && m.online).length;
+    const chip = (k, n, l) => `<span class="hid-chip k-${k}"><b>${n}</b>${l}</span>`;
+    const chips = on ? chip('ember', pj.length, pj.length === 1 ? 'project' : 'projects') + chip('indigo', people, people === 1 ? 'friend online' : 'friends online') + chip('teal', agents, agents === 1 ? 'agent working' : 'agents working')
+      : `<span class="hid-chip k-muted">${C.hasToken() ? 'Reconnecting…' : 'Not in a tribe yet'}</span>`;
+    return `<header class="hub-head hub-id">
+      <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
+      <div class="hid-t"><span class="eyebrow">Your command center${on && tribe ? ` · ${esc(tribe)}` : ''}</span>
+        <h1><span class="hid-av" style="background:${esc(color)}">${esc(name.charAt(0).toUpperCase())}</span><span>${greeting()}</span></h1>
+        <div class="hid-chips">${chips}</div></div>
+    </header>`;
+  }
   function gsHero(on) {
     const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
@@ -337,15 +355,33 @@
 
   // ---------- bottom: Scratchpad (with Refine with AI) | Recent activity ----------
   const refine = { status: '', text: '', id: null, draft: false, error: '', model: '' };
+  // Your notes: Start a note puts a new note straight into your docs center (Global docs › Your notes).
+  const noteTitle = t => (String(t || '').split('\n').find(l => l.trim()) || 'Untitled note').replace(/^#+\s*/, '').slice(0, 80);
   function notesSec(on) {
-    const notes = (data && data.notes) || [];
-    const docs = on && notes.length ? `<div class="hub-list hub-mynotes"><span class="eyebrow">Docs you wrote</span>${notes.slice(0, 3).map(n => `<button class="hub-li" data-note="${esc(n.id)}">${ico('i-doc', 14)}<span><b>${esc(n.title)}</b><small>${chip(n.project)} ${esc(ago(n.at))}</small></span></button>`).join('')}</div>` : '';
-    const out = refine.error ? `<div class="ref-out err">${esc(refine.error)}</div>`
-      : refine.status === 'thinking' ? '<div class="ref-out"><p class="aa-wait">Cleaning up your note…</p></div>'
-      : refine.text ? `<div class="ref-out" id="hub-refine-out"><div class="aa-head">${aiTag()}<b>Cleaned up${refine.model ? ` · ${esc(refine.model)}` : ''}</b></div><div class="aa-text">${esc(refine.text)}</div>
-          <div class="aa-acts"><button class="btn primary" id="hub-refine-replace">Replace</button><button class="btn" id="hub-refine-keep">Keep original</button></div></div>` : '';
-    return sec('Your notes', '<span class="emo" aria-hidden="true">📝</span>Scratchpad', `<div class="scratch" id="hub-scratch"></div>${out}${docs}`, 'id="hub-notes"',
-      `<button class="btn ai" id="hub-refine" title="Clean up the selected note (or the newest) with the local model">${ico('i-sparkle', 14)}Refine with AI</button>`);
+    const mine = scratch.notes().filter(n => n.text && n.text.trim()).slice(0, 3);
+    const rows = mine.map(n => `<button class="hub-li" data-mynote="${esc(n.id || '')}">${ico('i-doc', 14)}<span><b>${esc(noteTitle(n.text))}</b><small>${esc(ago(n.updated || n.at))}</small></span>${ico('i-chev', 14)}</button>`).join('');
+    return sec('Your notes', '<span class="emo" aria-hidden="true">📝</span>Notes', `<button class="note-start" id="hub-note-new">${ico('i-plus', 18)}<span><b>Start a note</b><small>It goes straight into your docs</small></span></button>
+      ${rows ? `<div class="hub-list hub-mynotes">${rows}</div>` : ''}`, 'id="hub-notes"', `<button class="linkish" id="hub-notes-all">All your docs</button>`);
+  }
+  async function startNote() {
+    const id = await scratch.create('New note');
+    open('docs'); setTimeout(() => noteEditor(id, true), 60);
+  }
+  // A plain note editor (first line is the title); saves as you type.
+  function noteEditor(id, fresh) {
+    const n = scratch.notes().find(x => x.id === id); if (!n) return;
+    let ov = $('#note-ed'); if (ov) ov.remove();
+    ov = document.createElement('div'); ov.id = 'note-ed'; ov.className = 'note-ed-wrap' + (isPhone() ? ' sheet' : '');
+    ov.innerHTML = `<div class="note-ed" role="dialog" aria-label="Note"><header><span class="eyebrow">Your note · only you see it</span><span style="flex:1"></span><button class="linkish" id="note-del">Delete</button><button class="btn primary sm" id="note-done">Done</button></header>
+      <textarea id="note-text" spellcheck="true" placeholder="Title on the first line, then anything">${esc(fresh ? '' : n.text)}</textarea></div>`;
+    document.body.appendChild(ov);
+    const ta = $('#note-text'); ta.focus();
+    ta.oninput = () => scratch.quiet(id, ta.value || 'New note');
+    const done = async () => { await scratch.flush(); ov.remove(); if (mode === 'docs') render(); };
+    $('#note-done').onclick = done;
+    $('#note-del').onclick = () => { scratch.remove(id); ov.remove(); render(); toast('Note deleted'); };
+    ov.addEventListener('click', e => { if (e.target === ov) done(); });
+    ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(); });
   }
   async function refineGo() {
     if (!connected() || !C.hasToken()) { refine.error = 'Refine uses the local model on the tribe\'s host: host or join a tribe first. Your notes stay on this device until then.'; return render(); }
@@ -480,11 +516,22 @@
   // ---------- Global docs ----------
   let docsT = null;
   function renderDocs(el) {
-    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Global</span><h1>Global docs</h1><p class="faint">Docs from every project you are in.</p></header>
+    const mine = scratch.notes().filter(n => n.text && n.text.trim());
+    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Your docs center</span><h1>Docs</h1><p class="faint">Your own notes first, then the newest docs from your projects.</p></header>
+      <section class="sec hub-sec" id="hub-mydocs"><div class="sec-head"><div><span class="eyebrow">Only you</span><h2><span class="emo" aria-hidden="true">📝</span>Your notes</h2></div></div>
+        <button class="note-start" id="hub-note-new">${ico('i-plus', 18)}<span><b>Start a note</b><small>Title on the first line, then anything</small></span></button>
+        ${mine.length ? `<div class="hub-list hub-mynotes">${mine.map(n => `<button class="hub-li" data-mynote="${esc(n.id || '')}">${ico('i-doc', 14)}<span><b>${esc(noteTitle(n.text))}</b><small>${esc(ago(n.updated || n.at))}</small></span>${ico('i-chev', 14)}</button>`).join('')}</div>` : ''}</section>
+      <div class="sec-head hub-pdocs-h"><div><span class="eyebrow">Your projects</span><h2>Recently updated</h2></div></div>
       <div class="hub-docsearch">${ico('i-search', 16)}<input id="hub-dq" class="input" placeholder="Search titles and text across projects" autocomplete="off" value="${esc(docsQ)}"></div><div class="hub-list hub-docs" id="hub-docs"><div class="hub-empty faint">Loading…</div></div></div>`;
+    wireNotes(el);
     const inp = $('#hub-dq'); inp.oninput = () => { clearTimeout(docsT); docsT = setTimeout(() => { docsQ = inp.value.trim(); docsList(); }, 200); };
     if (!isPhone()) inp.focus();
     docsList();
+  }
+  function wireNotes(root) {
+    root.querySelectorAll('#hub-note-new').forEach(b => b.onclick = startNote);
+    root.querySelectorAll('[data-mynote]').forEach(b => b.onclick = () => { if (mode !== 'docs') open('docs'); setTimeout(() => noteEditor(b.dataset.mynote), 60); });
+    const all = root.querySelector('#hub-notes-all'); if (all) all.onclick = () => open('docs');
   }
   async function docsList() {
     const box = $('#hub-docs'); if (!box) return;
@@ -584,7 +631,12 @@
     el.querySelectorAll('[data-sug-go]').forEach(b => b.onclick = () => sugGo(b.dataset.sugGo));
     el.querySelectorAll('[data-sug-x]').forEach(b => b.onclick = () => dismiss(b.dataset.sugX));
     el.querySelectorAll('[data-fleet]').forEach(b => b.onclick = () => fleetGo(b.dataset.fleet, b.dataset.id));
-    const pad = el.querySelector('#hub-scratch'); if (pad) scratch.mount(pad);
+    wireNotes(el);
+    const tb = el.querySelector('#hub-ptop'); if (tb) {   // phone Home's own top bar: + · TribeCode ⌄ · bell
+      tb.querySelector('#hpt-plus').onclick = () => window.TribeMobile && window.TribeMobile.startTribe ? window.TribeMobile.startTribe() : newProject();
+      tb.querySelector('#hpt-brand').onclick = () => document.body.classList.add('drawer-open');
+      tb.querySelector('#hpt-bell').onclick = () => window.TribeNotify && window.TribeNotify.openInbox && window.TribeNotify.openInbox();
+    }
     const ins = el.querySelector('#hub-ins-phone'); if (ins) bindInsights(ins);
   }
   function fleetGo(kind, id) {
@@ -624,10 +676,11 @@
       box.innerHTML = `<h6><span class="emo" aria-hidden="true">🤝</span>Helpers</h6>${rows}`;
       box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : fleetGo(r.dataset.helper));
     }
-    let pad = $('#room-scratch');
-    if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'scratch room-scratch'; const cc = $('#cc-connect'); cc.after(pad); }
-    if (!pad.dataset.mounted) scratch.mount(pad);
-    pad.classList.toggle('hidden', document.body.dataset.view === 'hub');   // Home shows the scratchpad itself
+    let pad = $('#room-scratch');   // the scratchpad is gone: one quiet "Start a note" that lands in your docs
+    if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'room-note'; const cc = $('#cc-connect'); cc.after(pad);
+      pad.innerHTML = `<button class="note-start sm" id="room-note-new">${ico('i-plus', 16)}<span><b>Start a note</b><small>Goes to your docs</small></span></button>`;
+      pad.querySelector('#room-note-new').onclick = startNote; }
+    pad.classList.toggle('hidden', document.body.dataset.view === 'hub');
     homePanel();
   }
   // ---------- Shared compute: a quiet helper, only once a project has a repo and more than one person ----------
@@ -783,9 +836,14 @@
     function mount(root) { root.dataset.mounted = '1'; mounts.add(root); root.innerHTML = html(); wire(root); const t = root.querySelector('.sc-in'); if (t && root.id === 'room-scratch') t.id = 'scratch-in'; }
     // Refine with AI: save pending edits first, then swap a note's text (or the draft) for the cleaned-up one.
     const flush = () => (saveT ? persist(true) : Promise.resolve());
+    async function create(text) {   // a new personal note (Start a note): saved at once, returns its id
+      notes.unshift({ id: remote() ? undefined : 'n-' + Math.random().toString(36).slice(2, 10), text, at: new Date().toISOString(), updated: new Date().toISOString() });
+      draw(); await persist(true); return notes[0] && notes[0].id;
+    }
+    function quiet(id, text) { const n = notes.find(x => x.id === id); if (!n) return; n.text = text; n.updated = new Date().toISOString(); persist(); }
     function replace(id, text) { const n = notes.find(x => x.id === id); if (!n) return; n.text = text; n.updated = new Date().toISOString(); selected = id; draw(); persist(true); }
     function setDraft(text) { lsSet(DRAFT, text); mounts.forEach(m => { const t = m.querySelector('.sc-in'); if (t) t.value = text; }); }
-    return { sync, mount, add, count: () => notes.length, notes: () => notes.slice(), draw, flush, replace, setDraft, selected: () => selected };
+    return { sync, mount, add, create, quiet, remove, count: () => notes.length, notes: () => notes.slice(), draw, flush, replace, setDraft, selected: () => selected };
   })();
 
   setTimeout(() => { panel(); scratch.sync(); fromHash(); }, 0);
