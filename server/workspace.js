@@ -143,7 +143,11 @@ module.exports = function workspace({ store, slug }) {
     if (!fs.existsSync(dir)) throw fail(400, 'get your branch first');
     await must(['add', '-A'], dir);
     if ((await git(['diff', '--cached', '--quiet'], dir)).code === 0) throw fail(409, 'nothing to commit');
+    const before = (await git(['rev-parse', '--short', 'HEAD'], dir)).out || null;
     await must([...identity(member), 'commit', '-q', '-m', String(message || '').trim().slice(0, 2000) || `Work by ${nameOf(member)}`], dir);
+    const after = (await git(['rev-parse', '--short', 'HEAD'], dir)).out;
+    // Gists (server/flow.js): a commit becomes a short summary in chat instead of a raw diff.
+    if (api.onCommit) { try { api.onCommit({ repo, dir, member, branch: branchOf(member.id), before, after }); } catch {} }
     return myBranch(repo, member);
   }
   async function pushAs(repo, member) {
@@ -156,6 +160,7 @@ module.exports = function workspace({ store, slug }) {
     return { pushed: true, branch, as: hasToken(member.id) ? 'your GitHub token' : 'the host\'s git credentials' };
   }
 
-  return { isRepo, describe, remoteOf, makeRepo, clone, okUrl, repoNameFromUrl, writeUpload, giveBranch, myBranch, commitAs, pushAs, ghStatus, emailOf,
-    readSecret, writeSecret, hasToken, identity, SKIP_DIRS: [...SKIP_DIRS], UPLOAD_CAP };
+  const api = { isRepo, describe, remoteOf, makeRepo, clone, okUrl, repoNameFromUrl, writeUpload, giveBranch, myBranch, commitAs, pushAs, ghStatus, emailOf,
+    readSecret, writeSecret, hasToken, identity, pushEnv, git, GITIGNORE, NOPROMPT, SKIP_DIRS: [...SKIP_DIRS], UPLOAD_CAP, onCommit: null };
+  return api;
 };

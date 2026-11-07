@@ -2,13 +2,20 @@
 // edited/deleted states, voice notes (hold the composer mic), pasted images, domain-only link chips,
 // an unread divider, jump-to-latest, and "delivered / read" for your own agent's channel.
 // Actions live in a small per-message "…" menu (hover, focus, or long-press on touch).
+// Reactions sit on the bubble: a quick-react bar on hover (long-press on touch, with the menu below it),
+// a picker for the rest, double-click/double-tap = 👍, "+👍" in an empty composer and Ctrl/⌘ Shift \ react
+// to the latest message. Vote cards render through app/ui/votes.js (TribeVotes.card).
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient, S = window.TribeStore;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
-  const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '🔥'];
+  const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '✅', '🔥', '👎', '❌', '🙏', '💯', '🚀', '🤔', '😮', '😢', '👏', '🙌', '⭐', '💡', '🐛', '📌', '➕', '🎮', '✨'];   // same list as server/chatx.js
+  const QUICK = EMOJI.slice(0, 6);
+  const ALIAS = { '1': '👍', '+1': '👍', '-1': '👎', ok: '✅', yes: '✅', check: '✅', heart: '❤️', love: '❤️', lol: '😂', tada: '🎉', party: '🎉', eyes: '👀', fire: '🔥', pin: '📌', bug: '🐛', rocket: '🚀', idea: '💡', thanks: '🙏', star: '⭐' };
+  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prevRx = new Map();        // id -> { emoji: count } as last drawn, so only changed chips animate
   const SEEN = 'tribecode.lastSeen.v1';
   const pad = n => String(n).padStart(2, '0');
   const today = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -28,8 +35,7 @@
   const listFor = ch => (ch === 'general' ? $('#chat-list') : $('#dm-list'));
   const token = () => (S.get().server && S.get().server.token) || '';
   const mediaUrl = (ch, f) => `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}`;
-  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : 'Image') : '');
-  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : m.media.kind === 'file' ? `File: ${m.media.name || 'file'}` : 'Image') : '');  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
 
   // ---------- icons (added to the page's sprite) ----------
   const ICONS = {
@@ -45,6 +51,14 @@
     'i-down': '<path d="M12 5v14M6 13l6 6 6-6"/>',
     'i-chev': '<path d="m6 9 6 6 6-6"/>',
     'i-back': '<path d="M15 6l-6 6 6 6"/>',
+    'i-smile-plus': '<path d="M20.9 13A9 9 0 1 1 11 3.1"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/><path d="M16 5h6M19 2v6"/>',
+    'i-vt-yes': '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    'i-vt-no': '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8.5"/>',
+    'i-phone': '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+    'i-screen': '<rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    'i-info': '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+    'i-smile': '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+    'i-image': '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/>',
   };
   function addIcons() {
     const sprite = document.querySelector('svg[aria-hidden="true"]'); if (!sprite || sprite.querySelector('#i-reply')) return;
@@ -52,49 +66,151 @@
   }
   const icon = (k, cls = '') => `<svg class="i ${cls}"><use href="#${k}"/></svg>`;
 
-  // ---------- rendering ----------
+  // ---------- rendering: Telegram-style bubbles (app/ui/bubbles.css) ----------
+  // One message = one row: avatar (others only; shown on the last bubble of a group) + the bubble (.mb).
+  // The sender name sits inside the first bubble of a group; the time (+ a tick on yours) sits inside at the
+  // bottom-right of the last block (text, transcript, link chips or reactions). regroup() adds the
+  // grouping classes (g-first / g-last), the "mine" side and the date pills after each render.
+  const META = '<!--mt-->';   // where the time may go; the last one in the bubble wins
+  const BUB = { dark: '#1E242D', light: '#FFFFFF' };
+  function hexRgb(h) { const m = String(h).replace('#', '').match(/^([0-9a-f]{6})$/i); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function lum([r, g, b]) { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }
+  // A member's color, nudged toward white (dark) or ink (light) until it reads at 4.5:1 on the bubble.
+  const inkCache = new Map();
+  function nameInk(hex) {
+    const light = !!(document.body && document.body.classList.contains('light')), key = hex + (light ? 'L' : 'D');
+    if (inkCache.has(key)) return inkCache.get(key);
+    let c = hexRgb(hex), out = hex;
+    if (c) {
+      const bg = lum(hexRgb(light ? BUB.light : BUB.dark)), to = light ? 18 : 255;
+      for (let i = 0; i < 14; i++) {
+        const l = lum(c);
+        if ((Math.max(l, bg) + 0.05) / (Math.min(l, bg) + 0.05) >= 4.5) break;
+        c = c.map(v => Math.round(v + (to - v) * 0.12));
+      }
+      out = '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+    inkCache.set(key, out); return out;
+  }
+  const isAgent = id => (member(id) || {}).role === 'agent';
+  const tintOf = id => (isAgent(id) || id === 'brain' ? '#38C6B1' : id === 'tribecode' ? '#F26B1D' : colorOf(id));
+  const face = id => { const c = tintOf(id); return `<i class="rx-f" style="background:${esc(c)};color:${ink(c)}">${isAgent(id) ? '✦' : esc(initials(nameOf(id)).slice(0, 1))}</i>`; };
+  const TICK1 = '<svg class="i" viewBox="0 0 24 24"><path d="m4.5 12.5 4.5 4.5 10-10"/></svg>';
+  const TICK2 = '<svg class="i" viewBox="0 0 24 24"><path d="m1.5 12.5 4.5 4.5 10-10"/><path d="m11.5 16 1 1 10-10"/></svg>';
+  const kb = n => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1024).toFixed(1)} KB`);
   function linkChips(text) {
     const seen = new Set(), out = [];
     for (const u of String(text || '').match(/https?:\/\/[^\s<>()]+/g) || []) {
       let host; try { host = new URL(u).hostname.replace(/^www\./, ''); } catch { continue; }
       if (!seen.has(host) && out.length < 3) { seen.add(host); out.push(`<a class="lp" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${icon('i-link')}${esc(host)}</a>`); }
     }
-    return out.length ? `<div class="lps">${out.join('')}</div>` : '';
+    return out.length ? `<div class="lps">${out.join('')}${META}</div>` : '';
   }
   function voiceHtml(m, ch) {
     const w = m.media.wave && m.media.wave.length ? m.media.wave : Array.from({ length: 28 }, (_, i) => 3 + ((i * 7) % 5));
+    const info = [dur(m.media.dur), m.media.size ? kb(m.media.size) : ''].filter(Boolean).join(' · ');
     return `<div class="vn" data-src="${esc(mediaUrl(ch, m.media.file))}"><button class="vn-play" aria-label="Play voice note">${icon('i-play')}</button>
-      <div class="vn-wave" aria-hidden="true">${w.map(v => `<i style="height:${18 + Math.min(9, v) * 9}%"></i>`).join('')}</div><span class="vn-dur">${dur(m.media.dur)}</span></div>`;
+      <div class="vn-col"><div class="vn-wave" aria-hidden="true">${w.map(v => `<i style="height:${18 + Math.min(9, v) * 9}%"></i>`).join('')}</div>
+      <div class="vn-meta"><span class="vn-dur">${esc(info)}</span>${META}</div></div></div>`;
+  }
+  // Reaction chips inside the bubble: emoji + up to 3 tiny reactor faces (else the count), yours highlighted,
+  // names in the tooltip, a quiet "+" to add one. Only chips whose count went up since the last draw pop.
+  function reactsHtml(m) {
+    const rx = Object.entries(m.reactions || {});
+    const prev = prevRx.get(m.id);
+    prevRx.set(m.id, Object.fromEntries(rx.map(([e, w]) => [e, w.length])));
+    if (!rx.length) return '';
+    const who = ids => { const n = ids.map(nameOf); return n.length <= 2 ? n.join(' and ') : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`; };
+    return `<div class="reacts">${rx.map(([e, ids]) => {
+      const pop = prev && (prev[e] || 0) < ids.length ? 'pop' : '', faces = ids.length <= 3;
+      return `<button class="rx ${ids.includes(me()) ? 'on' : ''} ${pop} ${faces ? 'has-f' : ''}" data-rx="${e}" title="${esc(who(ids))} reacted ${e}" aria-label="${e} ${ids.length}, ${esc(who(ids))}${ids.includes(me()) ? ', tap to remove yours' : ''}"><span class="rx-e">${e}</span>${faces ? `<span class="rx-fs" aria-hidden="true">${ids.map(face).join('')}</span>` : ''}<span class="rx-n">${ids.length}</span></button>`;
+    }).join('')}<button class="rx rx-add" data-rx-add title="Add a reaction" aria-label="Add a reaction">${icon('i-smile-plus')}</button>${META}</div>`;
   }
   function html(m, ch) {
     msgs.set(m.id, { m, ch });
-    const sys = m.by === 'tribecode', brain = m.by === 'brain', agent = (member(m.by) || {}).role === 'agent';
+    const sys = m.by === 'tribecode', brain = m.by === 'brain', agent = isAgent(m.by), mine = !sys && !!me() && m.by === me();
     const when = new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const md = t => (window.TribeMD ? window.TribeMD.inline(t).replace(/\n/g, '<br>') : esc(t));
     const av = sys ? `<div class="avatar" style="background:var(--surface-3);color:var(--accent-2)">🔥</div>`
       : brain ? `<div class="avatar av-brain">${icon('i-brain')}</div>`
       : agent ? `<div class="avatar av-agent">${icon('i-sparkle')}</div>`
       : `<div class="avatar" style="background:${esc(colorOf(m.by))};color:${ink(colorOf(m.by))}">${esc(initials(nameOf(m.by)))}</div>`;
+    const meta = `<span class="mt">${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}<time datetime="${esc(m.at)}">${when}</time>${mine ? `<span class="tk">${TICK1}</span>` : ''}</span>`;
     let body = '';
-    if (m.deleted) body = `<p class="gone">message deleted</p>`;
+    if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>`;
+    else if (m.deleted) body = `<p class="gone">message deleted${META}</p>`;
     else {
       if (m.fwd) body += `<div class="fwd">${icon('i-fwd')}Forwarded from <b>${esc(nameOf(m.fwd.by))}</b> · ${esc(m.fwd.from || '')}</div>`;
-      if (m.replyTo) body += `<button class="quote" data-jump="${esc(m.replyTo.id)}" title="Jump to the original"><b>${esc(nameOf(m.replyTo.by))}</b><span>${esc(m.replyTo.text)}</span></button>`;
-      if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}</p>` : `<p class="vn-tx faint">No transcript</p>`);
-      else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy"></button>${m.text ? `<p>${md(m.text)}</p>` : ''}`;
-      else body += `<p>${md(m.text || '')}</p>`;
-      body += linkChips(m.text);
-      const rx = Object.entries(m.reactions || {});
-      if (rx.length) body += `<div class="reacts">${rx.map(([e, who]) => `<button class="rx ${who.includes(me()) ? 'on' : ''}" data-rx="${e}" title="${esc(who.map(nameOf).join(', '))}">${e}<span>${who.length}</span></button>`).join('')}</div>`;
+      if (m.replyTo) body += `<button class="quote" data-jump="${esc(m.replyTo.id)}" title="Jump to the original" style="--qc:${esc(nameInk(tintOf(m.replyTo.by)))}"><b>${esc(nameOf(m.replyTo.by))}</b><span>${esc(m.replyTo.text)}</span></button>`;
+      if (m.vote && window.TribeVotes) body += window.TribeVotes.card(m, ch);
+      else if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}${META}</p>` : '');
+      else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy">${m.text ? '' : META}</button>${m.text ? `<p>${md(m.text)}${META}</p>` : ''}`;
+      else if (m.media && m.media.kind === 'file') body += `<a class="fchip-dl" href="${esc(mediaUrl(ch, m.media.file))}" download="${esc(m.media.name || 'file')}" title="Download ${esc(m.media.name || 'file')}">${icon('i-down')}<span class="fd-t"><b>${esc(m.media.name || 'file')}</b><small>${esc(kb(m.media.size))}</small></span></a>${m.text ? `<p>${md(m.text)}${META}</p>` : META}`;
+      else body += `<p>${md(m.text || '')}${m.gist ? '' : META}</p>`;   // gists.js swaps a gist's <p> for its card, so its time sits below
+      if (!m.vote) body += linkChips(m.text);
+      body += reactsHtml(m);
+      if (window.TribeVotes) body += window.TribeVotes.hint(m);
     }
+    if (!sys) {
+      const parts = body.split(META);
+      body = parts.length > 1 ? parts.slice(0, -1).join('') + meta + parts[parts.length - 1] : body + `<div class="mt-row">${meta}</div>`;
+    }
+    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}</b>`;
+    const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo') : m.gist ? 'gist-msg' : '';
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
-    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${m.deleted ? 'deleted' : ''}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}
-      <div class="mb"><b>${esc(nameOf(m.by))}</b><time>${when}</time>${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}${body}</div>${more}</div>`;
+    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}
+      <div class="mb">${nm}${body}</div>${more}</div>`;
   }
   function rerender(id) {
     const e = msgs.get(id); if (!e) return;
     document.querySelectorAll(`.msg[data-id="${CSS.escape(id)}"]`).forEach(el => { el.outerHTML = html(e.m, e.ch); });
     drawPins(); drawReceipt();
+  }
+
+  // ---------- grouping + date pills (after every change to a chat list) ----------
+  const GAP = 10 * 60 * 1000, BURST = 30 * 60 * 1000;   // a new group after 10 quiet minutes; a time line after 30
+  const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  function dayLabel(d) {
+    const now = new Date(), y = new Date(now); y.setDate(now.getDate() - 1);
+    if (dayKey(d) === dayKey(now)) return 'Today';
+    if (dayKey(d) === dayKey(y)) return 'Yesterday';
+    return d.toLocaleDateString([], d.getFullYear() === now.getFullYear() ? { month: 'long', day: 'numeric' } : { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+  function regroup(list) {
+    if (!list) return;
+    const rows = [...list.children].filter(el => el.classList.contains('msg') && el.dataset.at);
+    const keep = new Set(), my = me();
+    const joins = (a, b) => a && b && !a.classList.contains('sys') && !b.classList.contains('sys') && a.dataset.by === b.dataset.by
+      && dayKey(new Date(a.dataset.at)) === dayKey(new Date(b.dataset.at)) && new Date(b.dataset.at) - new Date(a.dataset.at) < GAP;
+    rows.forEach((el, i) => {
+      const prev = rows[i - 1], d = new Date(el.dataset.at), day = dayKey(d);
+      const newDay = !prev || dayKey(new Date(prev.dataset.at)) !== day;
+      // a date pill at each new day; a quiet time line between bursts (30+ minutes apart) within a day
+      const sepKind = newDay ? 'day-sep' : d - new Date(prev.dataset.at) >= BURST ? 'time-sep' : '';
+      if (sepKind) {
+        const key = newDay ? day : el.dataset.at;
+        let p = el.previousElementSibling; while (p && p.classList.contains('unread-div')) p = p.previousElementSibling;
+        if (p && p.classList.contains(sepKind) && p.dataset.day === key) keep.add(p);
+        else {
+          const sep = document.createElement('div'); sep.className = sepKind; sep.setAttribute('role', 'separator'); sep.dataset.day = key;
+          sep.innerHTML = `<span>${esc(newDay ? dayLabel(d) : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}</span>`;
+          const before = el.previousElementSibling && el.previousElementSibling.classList.contains('unread-div') ? el.previousElementSibling : el;
+          list.insertBefore(sep, before); keep.add(sep);
+        }
+      }
+      const tog = (c, on) => { if (el.classList.contains(c) !== on) el.classList.toggle(c, on); };
+      tog('g-first', !joins(prev, el));
+      tog('g-last', !joins(el, rows[i + 1]));
+      tog('mine', !el.classList.contains('sys') && !!my && el.dataset.by === my);
+    });
+    list.querySelectorAll(':scope > .day-sep, :scope > .time-sep').forEach(s => { if (!keep.has(s)) s.remove(); });
+  }
+  const watched = new WeakSet();
+  function watchList(l) {
+    if (!l || watched.has(l)) return;
+    watched.add(l);
+    new MutationObserver(() => regroup(l)).observe(l, { childList: true });
+    regroup(l);
   }
   // app.js renders #general; upgrade its messages to this renderer as they arrive.
   function upgrade(list, ch) {
@@ -139,11 +255,17 @@
   function drawReceipt() {
     const ch = cur(), r = receipts.get(ch), l = $('#dm-list');
     if (!l) return;
-    l.querySelectorAll('.rcpt').forEach(x => x.remove());
-    if (!r || ch === 'general') return;
-    const mine = [...l.querySelectorAll('.msg[data-by]')].filter(el => el.dataset.by === me()).pop(); if (!mine) return;
-    const read = r.at && r.at >= mine.dataset.at;
-    mine.querySelector('.mb').insertAdjacentHTML('beforeend', `<div class="rcpt ${read ? 'read' : ''}">${read ? 'read' : 'delivered'}</div>`);
+    // Ticks inside your bubbles: ✓ sent, ✓✓ read (your own agent's channel has receipts). The last one
+    // carries .rcpt and a spoken "delivered" / "read".
+    const mine = [...l.querySelectorAll('.msg[data-by]')].filter(el => el.dataset.by === me());
+    const live = r && ch !== 'general';
+    mine.forEach((el, i) => {
+      const tk = el.querySelector('.mt .tk'); if (!tk) return;
+      const read = !!(live && r.at && r.at >= el.dataset.at), last = live && i === mine.length - 1;
+      const want = `${read ? TICK2 : TICK1}${last ? `<span class="sr">${read ? 'read' : 'delivered'}</span>` : ''}`;
+      if (tk.innerHTML !== want) tk.innerHTML = want;
+      tk.classList.toggle('read', read); tk.classList.toggle('rcpt', !!last);
+    });
   }
 
   // ---------- pins ----------
@@ -183,20 +305,23 @@
     for (const x of C.state().members || []) if (x.role !== 'agent' && x.id !== me()) out.push({ to: window.TribeDM.channelWith(x.id), label: x.name });
     return out.filter(t => t.to !== ch);
   }
-  function openMenu(el, anchor) {
+  function openMenu(el, anchor, touchMenu = false) {
     closeMenu();
     const e = msgs.get(el.dataset.id); if (!e) return;
     const { m, ch } = e, own = m.by === me(), pinned = (pinsBy.get(ch) || []).some(p => p.id === m.id);
     const menu = document.createElement('div'); menu.id = 'msg-menu'; menu.className = 'dm-menu msg-menu'; menu.setAttribute('role', 'menu');
     const main = () => {
-      menu.innerHTML = `<div class="rx-row">${EMOJI.map(x => `<button data-emoji="${x}" aria-label="React ${x}">${x}</button>`).join('')}</div>
+      // On touch the quick-react bar sits above the menu, so the menu skips its own emoji row.
+      const row = touchMenu ? '' : `<div class="rx-row">${[...QUICK, '🔥'].map(x => `<button data-emoji="${x}" aria-label="React ${x}">${x}</button>`).join('')}<button data-emoji-more aria-label="More reactions" title="More reactions">${icon('i-smile-plus')}</button></div>`;
+      menu.innerHTML = `${row}
         <button role="menuitem" data-act="reply">${icon('i-reply')}Reply</button>
         <button role="menuitem" data-act="forward">${icon('i-fwd')}Forward…</button>
         ${m.text ? `<button role="menuitem" data-act="copy">${icon('i-copy')}Copy text</button>` : ''}
         <button role="menuitem" data-act="pin">${icon('i-pin')}${pinned ? 'Unpin' : 'Pin'}</button>
-        ${m.text ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
+        ${m.text && !m.vote ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
+        ${m.text && !m.vote && window.TribeVotes ? `<button role="menuitem" data-act="vote">${icon('i-vote')}Make it a vote</button>` : ''}
         ${m.media && m.media.kind === 'voice' ? `<button role="menuitem" data-act="notes">${icon('i-doc')}Add to my notes</button>` : ''}
-        ${own && !m.media ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
+        ${own && !m.media && !m.vote ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
         ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}`;
       bind();
     };
@@ -215,6 +340,7 @@
     let armed = false;
     const bind = () => {
       menu.querySelectorAll('[data-emoji]').forEach(b => b.onclick = () => { closeMenu(); react(ch, m.id, b.dataset.emoji); });
+      const more = menu.querySelector('[data-emoji-more]'); if (more) more.onclick = () => { const a = anchor || el; closeMenu(); openPicker(m.id, a); };
       menu.querySelectorAll('[data-act]').forEach(b => b.onclick = async () => {
         const act = b.dataset.act;
         if (act === 'forward') return fwd();
@@ -226,6 +352,7 @@
           if (act === 'pin') await C.api(`/chat/${ch}/pin`, { method: 'POST', body: { id: m.id, on: !pinned } });
           if (act === 'task') { const { task } = await C.api('/tasks', { method: 'POST', body: { title: m.text.replace(/\s+/g, ' ').slice(0, 200) } }); toast(`Task created: ${task.title}`); }
           if (act === 'notes') { const r = await C.api(`/chat/${ch}/notes`, { method: 'POST', body: { id: m.id, date: today() } }); toast(`Added to ${r.doc.title}`); }
+          if (act === 'vote') window.TribeVotes.openComposer({ question: m.text.replace(/\s+/g, ' ').slice(0, 200), channel: ch });
           if (act === 'edit') edit(el, m, ch);
           if (act === 'delete') await C.api(`/chat/${ch}/msg/${m.id}`, { method: 'DELETE' });
         } catch (err) { toast(err.message); }
@@ -241,7 +368,112 @@
     document.body.appendChild(menu);
     main();
   }
-  async function react(ch, id, emoji) { try { await C.api(`/chat/${ch}/react`, { method: 'POST', body: { id, emoji } }); } catch (e) { toast(e.message); } }
+  async function react(ch, id, emoji, on) {
+    try {
+      const r = await C.api(`/chat/${ch}/react`, { method: 'POST', body: { id, emoji, ...(on ? { on: true } : {}) } });
+      if (r.approved) toast(`Approved: ${r.approved.title}`);
+      else if (r.pinned) toast('Pinned');
+    } catch (e) { toast(e.message); }
+  }
+
+  // ---------- quick-react bar + picker ----------
+  const reactable = el => { const e = el && msgs.get(el.dataset.id); return e && !e.m.deleted && e.m.by !== 'tribecode' ? e : null; };
+  let qrFor = null, qrHide = null, qrTouch = false, lpAt = 0;   // lpAt: when a long-press opened the bar (its trailing click is swallowed)
+  function qrBar() {
+    let b = $('#qr-bar');
+    if (!b) { b = document.createElement('div'); b.id = 'qr-bar'; b.className = 'qr-bar hidden'; b.setAttribute('role', 'toolbar'); b.setAttribute('aria-label', 'Quick reactions'); document.body.appendChild(b); }
+    return b;
+  }
+  function showQuick(el, { touch = false, focus = false } = {}) {
+    const e = reactable(el); if (!e) return;
+    clearTimeout(qrHide);
+    const b = qrBar(), mine = e.m.reactions || {};
+    qrFor = el.dataset.id; qrTouch = touch;
+    b.dataset.id = e.m.id;
+    b.innerHTML = QUICK.map(x => `<button type="button" data-q="${x}" class="${(mine[x] || []).includes(me()) ? 'on' : ''}" aria-label="React ${x}" title="React ${x}">${x}</button>`).join('')
+      + `<button type="button" data-q="more" class="qr-more" aria-label="More reactions" title="More reactions">${icon('i-smile-plus')}</button>`;
+    b.classList.toggle('touch', touch);
+    b.classList.remove('hidden');
+    const r = (el.querySelector('.mb') || el).getBoundingClientRect(), w = b.offsetWidth, h = b.offsetHeight;
+    let top, left;
+    if (touch) { top = r.top - h - 8; left = r.left; if (top < 8) top = r.bottom + 8; }
+    else { top = r.top - h + 4; left = el.getBoundingClientRect().right - w - 30; const list = el.closest('.chat'); if (list && top < list.getBoundingClientRect().top) top = r.top + 2; }
+    b.style.top = Math.max(8, Math.min(innerHeight - h - 8, top)) + 'px';
+    b.style.left = Math.max(8, Math.min(innerWidth - w - 8, left)) + 'px';
+    if (focus) b.querySelector('button').focus();
+  }
+  function hideQuick(now) {
+    clearTimeout(qrHide);
+    const go = () => { const b = $('#qr-bar'); if (b) b.classList.add('hidden'); qrFor = null; };
+    if (now) go(); else qrHide = setTimeout(go, 160);
+  }
+  function closePicker() { const p = $('#rx-picker'); if (p) p.remove(); }
+  function openPicker(id, anchor) {
+    closePicker();
+    const e = msgs.get(id); if (!e) return;
+    const mine = e.m.reactions || {};
+    const p = document.createElement('div'); p.id = 'rx-picker'; p.className = 'rx-picker'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Pick a reaction');
+    p.innerHTML = `<div class="rx-grid">${EMOJI.map(x => `<button type="button" data-pick="${x}" class="${(mine[x] || []).includes(me()) ? 'on' : ''}" aria-label="React ${x}">${x}</button>`).join('')}</div>
+      <div class="rx-tip">✅ on an agent's request approves it · 📌 pins</div>`;
+    document.body.appendChild(p);
+    const r = anchor.getBoundingClientRect();
+    p.style.top = Math.max(8, Math.min(innerHeight - p.offsetHeight - 8, r.bottom + 6)) + 'px';
+    p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.right - p.offsetWidth)) + 'px';
+    p.dataset.id = id;
+    p.querySelector('button').focus();
+  }
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType !== 'mouse') return;
+    if (e.target.closest && e.target.closest('#qr-bar')) { clearTimeout(qrHide); return; }
+    const el = e.target.closest && e.target.closest('.chat .msg.dx:not(.sys):not(.deleted)');
+    if (el) { if (qrFor !== el.dataset.id || $('#qr-bar').classList.contains('hidden')) showQuick(el); else clearTimeout(qrHide); }
+    else if (qrFor && !qrTouch) hideQuick();
+  });
+  document.addEventListener('click', e => {
+    if (lpAt && Date.now() - lpAt < 1200 && !(e.target.closest && e.target.closest('#qr-bar, #msg-menu'))) { lpAt = 0; e.preventDefault(); e.stopImmediatePropagation(); return; }
+    const q = e.target.closest && e.target.closest('#qr-bar [data-q]');
+    if (q) {
+      e.preventDefault(); e.stopPropagation();
+      const id = $('#qr-bar').dataset.id, x = msgs.get(id); if (!x) return;
+      if (q.dataset.q === 'more') { openPicker(id, q); hideQuick(true); closeMenu(); return; }
+      hideQuick(true); closeMenu(); react(x.ch, id, q.dataset.q);
+      return;
+    }
+    const pk = e.target.closest && e.target.closest('#rx-picker [data-pick]');
+    if (pk) { e.stopPropagation(); const id = $('#rx-picker').dataset.id, x = msgs.get(id); closePicker(); if (x) react(x.ch, id, pk.dataset.pick); return; }
+    if (!(e.target.closest && e.target.closest('#rx-picker'))) closePicker();
+    if (qrTouch && !(e.target.closest && e.target.closest('#qr-bar'))) hideQuick(true);
+  }, true);
+  addEventListener('scroll', () => { if (qrFor) hideQuick(true); const p = $('#rx-picker'); if (p && !p.classList.contains('cx-emoji')) closePicker(); }, true);   // the composer's emoji picker stays put
+
+  // Double-click (mouse) or double-tap (touch) a bubble = 👍. Never toggles a 👍 off.
+  let lastTap = { id: null, t: 0, x: 0, y: 0 };
+  const INTERACTIVE = 'button, a, input, textarea, select, label, .vn, .thumb, .vt, .quote, .edit-in, .rx, .reacts';
+  document.addEventListener('click', e => {
+    const el = e.target.closest && e.target.closest('.chat .msg.dx:not(.sys):not(.deleted)');
+    if (!el || e.target.closest(INTERACTIVE)) { lastTap.id = null; return; }
+    const now = Date.now(), near = Math.abs(e.clientX - lastTap.x) < 24 && Math.abs(e.clientY - lastTap.y) < 24;
+    if (lastTap.id === el.dataset.id && now - lastTap.t < 350 && near) {
+      lastTap.id = null;
+      const x = msgs.get(el.dataset.id); if (!x) return;
+      try { const s = getSelection(); if (s && !s.isCollapsed && el.contains(s.anchorNode)) s.removeAllRanges(); } catch {}
+      if (!((x.m.reactions || {})['👍'] || []).includes(me())) react(x.ch, x.m.id, '👍', true);
+      if (!reducedMotion()) { el.classList.remove('liked'); void el.offsetWidth; el.classList.add('liked'); setTimeout(() => el.classList.remove('liked'), 500); }
+      return;
+    }
+    lastTap = { id: el.dataset.id, t: now, x: e.clientX, y: e.clientY };
+  });
+
+  // The latest message you can react to in the open conversation.
+  const lastMsg = () => [...document.querySelectorAll('.chat:not(.hidden) .msg.dx:not(.sys):not(.deleted)')].pop() || null;
+  // Ctrl/⌘ Shift \ : quick-react to the latest message.
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Backslash') {
+      const el = lastMsg(); if (!el) return;
+      e.preventDefault(); showQuick(el, { touch: true, focus: true });
+    }
+    if (e.key === 'Escape') { if (qrFor) hideQuick(true); closePicker(); }
+  });
   function edit(el, m, ch) {
     const p = el.querySelector('.mb > p'); if (!p) return;
     p.outerHTML = `<input class="edit-in" maxlength="4000" aria-label="Edit message">`;
@@ -252,6 +484,15 @@
     };
     inp.onblur = () => setTimeout(() => { if (inp.isConnected) rerender(m.id); }, 150);
   }
+
+  // ↑ in an empty composer edits your last message (Slack/Discord habit).
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowUp' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || !e.target || e.target.id !== 'chat-input' || e.target.value) return;
+    const ch = cur(), list = listFor(ch); if (!list) return;
+    const el = [...list.querySelectorAll('.msg.dx.mine[data-id]:not(.deleted)')].reverse().find(x => { const v = msgs.get(x.dataset.id); return v && !v.m.media && !v.m.vote && v.m.text; });
+    if (!el) return;
+    e.preventDefault(); edit(el, msgs.get(el.dataset.id).m, ch);
+  });
 
   // ---------- reply ----------
   function startReply(m, ch) {
@@ -267,9 +508,33 @@
     if (reply) bar.querySelector('button').onclick = () => { reply = null; drawReply(); };
   }
 
+  // ---------- drafts: what you were typing survives a reload, a project switch or a phone app restart ----------
+  const draftKey = ch => `tribecode.draft:${C.base()}:${C.project() || ''}:${ch}`;
+  const saveDraft = () => { const i = $('#chat-input'); if (!i) return; try { if (i.value.trim()) localStorage.setItem(draftKey(cur()), i.value); else localStorage.removeItem(draftKey(cur())); } catch {} };
+  function restoreDraft() {
+    const i = $('#chat-input'); if (!i || i.value) return;
+    let v = null; try { v = localStorage.getItem(draftKey(cur())); } catch {}
+    if (v) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') saveDraft(); });
+  document.addEventListener('submit', e => { if (e.target.id === 'chat-form') { try { localStorage.removeItem(draftKey(cur())); } catch {} } }, true);
+  C.on('hello', () => setTimeout(restoreDraft, 0));
+  C.on('project', () => setTimeout(restoreDraft, 50));
+
   // Sending: DMs and replies go through /chat/<ch>/send; plain #general posts stay with app.js.
   document.addEventListener('submit', async e => {
     if (e.target.id !== 'chat-form') return;
+    // "+👍" (or +1, +ok, +fire…) reacts to the latest message instead of sending it.
+    const quick = ($('#chat-input').value.trim().match(/^\+(\S{1,12})$/) || [])[1];
+    const emo = quick && (EMOJI.includes(quick) ? quick : ALIAS[quick.toLowerCase()] || (EMOJI.includes(quick + '️') ? quick + '️' : null));
+    if (emo && C.connected()) {
+      const el = lastMsg(), x = el && msgs.get(el.dataset.id);
+      if (x) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        $('#chat-input').value = ''; react(x.ch, x.m.id, emo, true);
+        return;
+      }
+    }
     const ch = cur(); if (ch === 'general' && !reply) return;
     e.preventDefault(); e.stopImmediatePropagation();
     const inp = $('#chat-input'), text = inp.value.trim(); if (!text || !C.connected()) return;
@@ -392,6 +657,7 @@
     if (!e.composedPath().some(n => n.id === 'msg-menu')) closeMenu();   // path, not closest: submenus replace the clicked node
     const pin = t.closest('#pin-strip [data-jump]'); if (pin) return jump(pin.dataset.jump);
     const el = t.closest('.msg.dx'); if (!el) return;   // everything below lives inside a chat message
+    const add = t.closest('.rx-add'); if (add) { e.stopPropagation(); return openPicker(el.dataset.id, add); }
     const rx = t.closest('.rx'); if (rx) { const x = msgs.get(el.dataset.id); if (x) react(x.ch, x.m.id, rx.dataset.rx); return; }
     const q = t.closest('.quote[data-jump]'); if (q) return jump(q.dataset.jump);
     const play = t.closest('.vn-play'); if (play) return togglePlay(play.closest('.vn'));
@@ -401,9 +667,10 @@
   document.addEventListener('pointerdown', e => {
     if (e.pointerType !== 'touch') return;
     const el = e.target.closest && e.target.closest('.chat .msg.dx:not(.sys):not(.deleted)'); if (!el) return;
-    press = setTimeout(() => { press = null; openMenu(el); }, 520);
+    press = setTimeout(() => { press = null; lpAt = Date.now(); openMenu(el, null, true); showQuick(el, { touch: true }); if (navigator.vibrate) try { navigator.vibrate(8); } catch {} }, 480);   // emoji bar above, actions below
   });
   ['pointerup', 'pointercancel', 'pointermove'].forEach(t => document.addEventListener(t, () => { if (press) { clearTimeout(press); press = null; } }));
+  document.addEventListener('contextmenu', e => { if (qrTouch && qrFor && e.target.closest && e.target.closest('.chat .msg.dx')) e.preventDefault(); });   // long-press opened our bar, not the OS menu
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
 
   // ---------- events ----------
@@ -433,7 +700,7 @@
       watchScroll(l);
       new MutationObserver(() => {
         const stick = l.scrollHeight - l.scrollTop - l.clientHeight < 260;
-        upgrade(l, 'general');
+        upgrade(l, 'general'); regroup(l);
         if (stick) l.scrollTop = l.scrollHeight;   // richer bubbles are taller than app.js's plain ones
         if (!placed && l.querySelector('.msg.dx')) { placed = true; divider(l, lastSeen.general); }
         drawJump();
@@ -443,6 +710,106 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
+  // ---------- desktop conversation header: avatar · title + subtitle · huddle, share screen, info ----------
+  // dm.js owns the title button inside h6#chat-head and redraws it; this wraps whatever it drew.
+  const dmPeer = ch => (C.state().members || []).find(x => window.TribeDM && window.TribeDM.channelWith(x.id) === ch);
+  function decorateHead() {
+    const h = $('#chat-head') || ($('.chat-col > .chat-title')); if (!h || h.querySelector('.cb-av')) return;
+    const ch = cur(), peer = ch === 'general' ? null : dmPeer(ch), mem = C.state().members || [];
+    const av = !peer ? `<span class="cb-av cb-tribe">${icon('i-chat')}</span>`
+      : peer.role === 'agent' ? `<span class="cb-av av-agent">${icon('i-sparkle')}</span>`
+      : `<span class="cb-av" style="background:${esc(peer.color || '#6C7CFF')};color:${ink(peer.color || '#6C7CFF')}">${esc(initials(peer.name))}</span>`;
+    const humans = mem.filter(x => x.role !== 'agent'), on = humans.filter(x => x.online).length;
+    const sub = !peer ? `${humans.length} ${humans.length === 1 ? 'member' : 'members'} · ${on} online`
+      : peer.role === 'agent' ? 'Your Claude · private' : peer.online ? 'online' : 'offline';
+    const kids = [...h.childNodes];
+    h.classList.add('cb');
+    h.innerHTML = `${av}<span class="cb-tt"></span><span class="cb-acts">
+      <button type="button" class="cb-btn" data-cb="huddle" title="Start or join the huddle" aria-label="Huddle">${icon('i-phone')}</button>
+      <button type="button" class="cb-btn" data-cb="share" title="Share your screen in the huddle" aria-label="Share screen">${icon('i-screen')}</button>
+      <button type="button" class="cb-btn" data-cb="info" title="${peer ? 'Profile' : 'Who is here'}" aria-label="Details">${icon('i-info')}</button></span>`;
+    const tt = h.querySelector('.cb-tt'); kids.forEach(k => tt.appendChild(k));
+    tt.insertAdjacentHTML('beforeend', `<span class="cb-sub">${esc(sub)}</span>`);
+  }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest && e.target.closest('.cb-btn[data-cb]'); if (!b) return;
+    const H = window.TribeHuddle, ch = cur(), peer = ch === 'general' ? null : dmPeer(ch);
+    try {
+      if (b.dataset.cb === 'huddle' && H) return H.inCall() ? H.leave() : H.join();
+      if (b.dataset.cb === 'share' && H) { if (!H.inCall()) await H.join(); return H.share(); }
+      if (b.dataset.cb === 'info') {
+        if (peer && window.TribePeople) return window.TribePeople.open(peer.id);
+        const t = $('#panel-toggle'); if (t && document.body.classList.contains('panel-off')) t.click();
+      }
+    } catch (err) { toast(err.message); }
+  });
+  function watchHead() {
+    const h = $('#chat-head') || $('.chat-col > .chat-title'); if (!h || h.dataset.cbw) return;
+    h.dataset.cbw = '1';
+    new MutationObserver(decorateHead).observe(h, { childList: true });
+    decorateHead();
+  }
+  C.on('presence', () => { const h = $('#chat-head'); if (h) { const s = h.querySelector('.cb-av'); if (s) s.remove(); const kids = [...(h.querySelector('.cb-tt') || h).childNodes].filter(n => !(n.classList && n.classList.contains('cb-sub'))); h.innerHTML = ''; kids.forEach(k => h.appendChild(k)); } });
+
+  // ---------- desktop composer pill: emoji · input · mic · image · + (vote, task) ----------
+  function composerKit() {
+    const f = $('#chat-form'); if (!f || f.querySelector('.cx-emo')) return;
+    f.insertAdjacentHTML('afterbegin', `<button type="button" class="cx-btn cx-emo" aria-label="Emoji" title="Emoji">${icon('i-smile')}</button>`);
+    f.insertAdjacentHTML('beforeend', `<button type="button" class="cx-btn cx-img" aria-label="Send an image" title="Send an image">${icon('i-image')}</button>
+      <button type="button" class="cx-btn cx-plus" aria-label="Add: file, proposal, poll, task and more" title="Add a file, propose to the tribe, start a poll, make a task…" aria-haspopup="menu" aria-expanded="false">${icon('i-plus')}</button>`);
+  }
+  async function sendImage(file) {
+    if (!/^image\//.test(file.type)) return toast('That is not an image.');
+    if (file.size > 3 * 1024 * 1024) return toast('Images up to 3 MB.');
+    const inp = $('#chat-input'), text = inp.value.trim();
+    try { await C.api(`/chat/${cur()}/image`, { method: 'POST', body: { data: await toB64(file), mime: file.type, text } }); inp.value = ''; }
+    catch (err) { toast(err.message); }
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest ? e.target : null; if (!t) return;
+    if (t.closest('.cx-emo')) {
+      e.preventDefault(); const a = t.closest('.cx-emo'); closePicker();
+      const p = document.createElement('div'); p.id = 'rx-picker'; p.className = 'rx-picker cx-emoji'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Insert an emoji');
+      p.innerHTML = `<div class="rx-grid">${EMOJI.map(x => `<button type="button" data-ins="${x}" aria-label="${x}">${x}</button>`).join('')}</div>`;
+      document.body.appendChild(p);
+      const r = a.getBoundingClientRect();
+      p.style.left = Math.max(8, r.left) + 'px'; p.style.top = Math.max(8, r.top - p.offsetHeight - 8) + 'px';
+      p.addEventListener('click', ev => { const b = ev.target.closest('[data-ins]'); if (!b) return; ev.stopPropagation(); const i = $('#chat-input'); const s = i.selectionStart ?? i.value.length; i.value = i.value.slice(0, s) + b.dataset.ins + i.value.slice(i.selectionEnd ?? s); i.focus(); i.setSelectionRange(s + b.dataset.ins.length, s + b.dataset.ins.length); i.dispatchEvent(new Event('input', { bubbles: true })); closePicker(); });
+      setTimeout(() => { if (p.isConnected) p.querySelector('button').focus({ preventScroll: true }); }, 0);
+      return;
+    }
+    if (t.closest('.cx-img')) {
+      e.preventDefault(); const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+      i.onchange = () => { const f = i.files && i.files[0]; if (f) sendImage(f); }; i.click(); return;
+    }
+    if (t.closest('.cx-plus') && window.TribePlus) { e.preventDefault(); e.stopPropagation(); closeMenu(); return window.TribePlus.open(t.closest('.cx-plus')); }
+    if (t.closest('.cx-plus')) {
+      e.preventDefault(); e.stopPropagation(); closeMenu();
+      const a = t.closest('.cx-plus'), menu = document.createElement('div'); menu.id = 'msg-menu'; menu.className = 'dm-menu msg-menu'; menu.setAttribute('role', 'menu');
+      const txt = $('#chat-input').value.trim();
+      menu.innerHTML = `${window.TribeVotes ? `<button role="menuitem" data-cx="vote">${icon('i-vote')}Start a vote</button>` : ''}
+        <button role="menuitem" data-cx="image">${icon('i-image')}Image…</button>
+        ${txt ? `<button role="menuitem" data-cx="task">${icon('i-check')}Make it a task</button>` : ''}`;
+      document.body.appendChild(menu);
+      const r = a.getBoundingClientRect();
+      menu.style.left = Math.max(8, Math.min(innerWidth - menu.offsetWidth - 8, r.right - menu.offsetWidth)) + 'px';
+      menu.style.top = Math.max(8, r.top - menu.offsetHeight - 6) + 'px';
+      menu.addEventListener('click', async ev => {
+        const b = ev.target.closest('[data-cx]'); if (!b) return; closeMenu();
+        if (b.dataset.cx === 'vote') window.TribeVotes.openComposer({ question: txt.slice(0, 200), channel: cur() });
+        if (b.dataset.cx === 'image') { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => { const f = i.files && i.files[0]; if (f) sendImage(f); }; i.click(); }
+        if (b.dataset.cx === 'task') { try { const { task } = await C.api('/tasks', { method: 'POST', body: { title: txt.slice(0, 200) } }); $('#chat-input').value = ''; toast(`Task created: ${task.title}`); } catch (err) { toast(err.message); } }
+      });
+      menu.querySelector('button').focus();
+    }
+  }, true);
+  function bootChrome() {
+    composerKit(); watchHead();
+    const f = $('#chat-form'); if (f) new MutationObserver(composerKit).observe(f, { childList: true });
+    C.on('hello', () => setTimeout(watchHead, 0));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootChrome); else bootChrome();
+
   window.TribeChatX = {
     seen: (m, ch) => msgs.set(m.id, { m, ch }),
     html,
@@ -451,11 +818,14 @@
       if (ch !== 'general') remember('general');   // so #general shows "New since you left" next time
       if (reply && reply.ch !== ch) { reply = null; }
       drawReply(); drawPins(); watchScroll(list || listFor(ch)); newBelow = 0; drawJump();
+      if (ch !== 'general') watchList(list || listFor(ch)); regroup(list || listFor(ch));
       if (list && since !== undefined) divider(list, since);
       if (ch !== 'general' && !pinsBy.has(ch)) loadPins(ch);
       if (ch !== 'general') { try { const { receipt } = await C.api(`/chat/${ch}/receipt`); if (receipt) receipts.set(ch, receipt); else receipts.delete(ch); } catch {} }
       drawReceipt();
     },
-    drawReceipt, startRec, stopRec, recording: () => !!rec, EMOJI,
+    drawReceipt, startRec, stopRec, recording: () => !!rec, EMOJI, QUICK, regroup,
+    rerender, react: (id, emoji) => { const x = msgs.get(id); if (x) return react(x.ch, id, emoji); },
+    quickReact: id => { const el = document.querySelector(`.chat:not(.hidden) .msg[data-id="${CSS.escape(id)}"]`); if (el) showQuick(el, { touch: true, focus: true }); },
   };
 })();

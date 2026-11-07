@@ -333,7 +333,7 @@
       document.body.insertAdjacentHTML('beforeend', `<div class="ctx-win hidden" id="ctx-win" role="dialog" aria-label="Tribe context">
         <div class="ctx-head" id="ctx-head"><span class="ctx-name">${icon('doc', 14)}TRIBE_CONTEXT.md</span><span class="ctx-time" id="ctx-time"></span>
           <button class="ctx-b" id="ctx-copy" title="Copy for an AI agent">Copy</button>
-          <button class="ctx-b" id="ctx-min" title="Collapse">–</button><button class="ctx-b" id="ctx-close" title="Close (Ctrl Shift K)">${icon('x', 13)}</button></div>
+          <button class="ctx-b" id="ctx-min" title="Collapse">–</button><button class="ctx-b" id="ctx-close" title="Close (Ctrl Shift K)" aria-label="Close">${icon('x', 13)}</button></div>
         <div class="ctx-body md" id="ctx-body"></div></div>`);
       el = $('#ctx-win');
       $('#ctx-close').onclick = () => toggle(false);

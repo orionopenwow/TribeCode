@@ -1,0 +1,65 @@
+# Checks every contribution, and rebuilds index.json after a merge.
+# Pull requests: only items/ may change; every workshop.json, size, file type, path and sha256 must pass.
+# main: the same check, then index.json is regenerated and committed (jsDelivr serves it to every tribe).
+name: Validate workshop
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Only items/ may change in a pull request
+        if: github.event_name == 'pull_request'
+        run: |
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          echo "$changed"
+          outside=$(echo "$changed" | grep -v '^items/' || true)
+          if [ -n "$outside" ]; then
+            echo "::error::Contributions may only add or change files under items/. Outside: $outside"
+            exit 1
+          fi
+
+      - name: No file over 25 MB anywhere in the change
+        run: |
+          big=$(find items -type f -size +25M || true)
+          if [ -n "$big" ]; then echo "::error::Over 25 MB: $big"; exit 1; fi
+
+      - name: Validate workshop.json, types, paths, sizes and sha256
+        run: node scripts/validate.js
+
+  index:
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Rebuild index.json
+        run: node scripts/validate.js --write-index
+      - name: Commit index.json if it changed
+        run: |
+          if git diff --quiet -- index.json; then echo "index.json is up to date"; exit 0; fi
+          git config user.name "workshop-bot"
+          git config user.email "workshop-bot@users.noreply.github.com"
+          git add index.json
+          git commit -m "Rebuild index.json"
+          git push

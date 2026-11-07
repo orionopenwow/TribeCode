@@ -21,6 +21,10 @@ console.log(`\n  TribeCode · start a test project\n`);
 if (!fs.existsSync(path.join(dest, '.git'))) {
   fs.mkdirSync(dest, { recursive: true });
   fs.cpSync(path.join(root, 'templates', 'starter-game'), dest, { recursive: true, force: false, errorOnExist: false });
+  // Shared with the one-click flow (server/flow.js): agents report with gists, and PLAN.md is the living plan.
+  const flow = require(path.join(root, 'server', 'flow.js'));
+  flow.addGistRules(dest);
+  if (!fs.existsSync(path.join(dest, 'PLAN.md'))) fs.writeFileSync(path.join(dest, 'PLAN.md'), fs.readFileSync(path.join(root, 'templates', 'flow-starter', 'PLAN.md'), 'utf8').replace(/\{\{name\}\}/g, name));
   git('init', '-q');
   try { git('checkout', '-q', '-b', 'main'); } catch {}
   const who = (() => { try { return git('config', 'user.name') ? [] : null; } catch { return null; } })();

@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.4.0
+
+The big one: everything built since v0.3.3, released together to the desktop app, the GitHub release and the website demo.
+- **Chat**: Telegram-style bubbles with Instagram-DM alignment in our palette, grouped messages, replies, reactions and the time inside bubbles, voice-note bubbles, date pills, a chat header (call, screen share, info), one composer pill
+- **The + menu**: photo or file, **Propose to the tribe** (a vote that goes to the Board when approved, checklist becomes tasks), quick poll, task, ask my Claude, reminder, note, bug
+- **Team votes and reactions**: quick-react bar, double-tap 👍, polls and approvals in chat, Claude can suggest votes (MCP suggest_vote), /vote, decisions log
+- **Sidebar**: core (Chat, Docs, Updates, Tasks, Huddle, Capture to notes), Project Hub and Coordinate & Ops groups, Settings and Invite at the bottom; one destination list for the sidebar, breadcrumbs and Ctrl K
+- **Top right**: panel, Context, your profile (menu with profile, Claude, agents, invite, notifications, capture, settings, updates), bell, and real red/yellow/green window buttons
+- **One-click Create project**: room, invite link, chat, GitHub repo, roles with colors and folders, notes, Start the flow, gists instead of code dumps, a living PLAN.md and assessments
+- **People**: click anyone to see what they and their Claude are doing, their commits, prompts, chat and notes, and jump to the moment in chat
+- **Preview the app** you're building in the right panel, a browser tab or a friend's phone (signed, sandboxed, live reload, dev-server mode)
+- **Workshop**: a community library of skills, recipes, templates and assets, with a community shelf via jsDelivr
+- **Solo mode and the Secretary**: an agents hub (Claude Code, Claude Desktop bridge, other MCP agents, local models), and a background secretary that keeps a journal, digest and inspiration board
+- **Phones**: the real phone UI (rack, swipe panel, composer with recorder, Talk to, profile sheet, approvals, Docs hub with the repo hero)
+- **Quick wins**: share any file in chat, load earlier messages, chat search for agents, one-click backup, rename yourself everywhere, drafts survive a reload, unread count in the tab title, join a second project from an invite, ↑ edits your last message
+- **Fixes**: endless reconnect loop, lost binary files, cross-project agent channel access, ghost "online" friends, one bad message crashing the server, and more (docs/DATA.md explains where everything is stored)
+- **Desktop**: shows the Working version (newest code, live) in its own window via Try-New-Work.bat or the profile menu; downloaded updates install when you close the app; browser pages fill the window without a fake frame
+
 ## v0.3.3
 
 Fixes updates on Windows getting stuck on an old version.

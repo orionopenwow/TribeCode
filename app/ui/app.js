@@ -36,7 +36,7 @@
     const st = S.get();
     applyTheme(st.theme);
     document.body.classList.toggle('compact', st.density === 'compact');
-    const first = (st.name || '').split(' ')[0];
+    const first = st.name && st.name !== 'Me' ? st.name.split(' ')[0] : '';   // 'Me' is the placeholder name, not a real one
     const tribeName = window.TribeClient && window.TribeClient.state().tribe && window.TribeClient.state().tribe.name;
     $('#ws-name').textContent = tribeName || (first ? `${first}'s Tribe` : 'My Tribe');
     for (const id of ['#me-avatar', '#room-me']) { const a = $(id); if (!a) continue; a.textContent = initials(st.name); a.style.background = st.color; a.style.color = ink(st.color); }
@@ -79,7 +79,19 @@
     if (!real.length) return;
     real.forEach(f => drops.push({ name: f.name, size: f.size, saved: true }));
     renderDrops();
-    window.TribeDocs.importFiles(real).then(() => show('docs'));
+    // Text becomes docs; anything else (PDF, zip, images…) is shared in the chat as a file, so its bytes are kept
+    // (Docs import alone keeps only a stub for binary files).
+    const texty = f => /\.(md|markdown|txt|text|csv|json|ya?ml|js|ts|py|css|html?)$/i.test(f.name) && f.size < 2_000_000;
+    const bin = C.connected() ? real.filter(f => !texty(f)) : [];
+    const txt = real.filter(f => !bin.includes(f));
+    const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    (async () => {
+      for (const f of bin) {
+        if (f.size > 8 * 1024 * 1024) { toast(`${f.name} is over 8 MB: put it in the repo instead`); continue; }
+        try { await C.api('/chat/general/file', { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type } }); toast(`${f.name} shared in the chat`); } catch (err) { toast(err.message); }
+      }
+      if (txt.length) { await window.TribeDocs.importFiles(txt); show('docs'); } else if (bin.length) show('chat');
+    })();
   });
   function renderDrops() {
     $('#drops').innerHTML = drops.slice(-4).map(d => `<div><svg class="i" style="width:15px;height:15px;color:var(--accent-2)"><use href="#i-doc"/></svg><span>${esc(d.name)}</span><span class="faint" style="margin-left:auto">${d.saved ? 'saved' : 'queued'}</span></div>`).join('');
@@ -174,7 +186,7 @@
     const isHost = (C.state().me || {}).role === 'host';
     const copy = async (t, msg) => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the command and copy it.'); } };
     const status = async () => {
-      const el = $('#cc-status'); if (!el) return clearInterval(timer);
+      const el = $('#cc-status'); if (!el || $('#invite-modal').classList.contains('hidden')) return clearInterval(timer);   // closed with Esc or the backdrop
       try { const s = await C.api('/agents/mine'); el.innerHTML = s.online ? `<span class="cc-dot on"></span>Connected · ${esc(s.agent.name)}` : `<span class="cc-dot"></span>Waiting for Claude Code…`; } catch {}
     };
     const draw = () => {
@@ -186,9 +198,10 @@
         ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
           : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
-        <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.</p>
+        <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and local models →</a>' : ''}</p>
         <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button></div>`;
       body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
+      if ($('#cc-hub')) $('#cc-hub').onclick = e => { e.preventDefault(); clearInterval(timer); closeInvite(); window.TribeAgentsHub.open(); };
       if ($('#cc-copy')) $('#cc-copy').onclick = () => copy(cmd, 'Command copied. Paste it in your terminal.');
       if ($('#cc-public')) $('#cc-public').onclick = async e => {
         e.target.disabled = true; e.target.textContent = 'Turning on…';
@@ -227,13 +240,33 @@
   let readingHistory = false;
   $('#chat-list').addEventListener('scroll', () => { const l = $('#chat-list'); readingHistory = l.scrollTop + l.clientHeight < l.scrollHeight - 60; }, { passive: true });
   new ResizeObserver(() => { if (!readingHistory) $('#chat-list').scrollTop = 1e9; }).observe($('#chat-list'));
+  const PAGE = 100;
+  const moreBtn = () => '<button class="chat-more" id="chat-more" type="button">Load earlier messages</button>';
   async function loadChat() {
     try {
-      const { messages } = await C.api('/chat/general?limit=100');
-      $('#chat-list').innerHTML = messages.length ? messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
+      const { messages } = await C.api(`/chat/general?limit=${PAGE}`);
+      $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
       $('#chat-list').scrollTop = 1e9;
     } catch {}
   }
+  // Older history, a page at a time, keeping your place in the list.
+  async function loadEarlier() {
+    const list = $('#chat-list'), btn = $('#chat-more'), first = list.querySelector('.msg[data-id]');
+    if (!btn || !first) return;
+    btn.disabled = true; btn.textContent = 'Loading…';
+    try {
+      const { messages } = await C.api(`/chat/general?limit=${PAGE}&before=${encodeURIComponent(first.dataset.id)}`);
+      // Keep the message you were looking at in the same spot, also after chatx.js upgrades the new bubbles.
+      const id = first.dataset.id, offset = el => el.getBoundingClientRect().top - list.getBoundingClientRect().top, was = offset(first);
+      const keep = () => { const el = list.querySelector(`.msg[data-id="${CSS.escape(id)}"]`); if (el) list.scrollTop += offset(el) - was; };
+      readingHistory = true;
+      btn.remove();
+      list.insertAdjacentHTML('afterbegin', (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join(''));
+      keep(); await Promise.resolve(); keep(); requestAnimationFrame(keep);
+      if (!messages.length) toast("That's the start of the chat.");
+    } catch (e) { btn.disabled = false; btn.textContent = 'Load earlier messages'; toast(e.message); }
+  }
+  $('#chat-list').addEventListener('click', e => { if (e.target.closest && e.target.closest('#chat-more')) loadEarlier(); });
   async function refreshBrain() {
     if (!C.connected()) return;
     try {
@@ -253,6 +286,15 @@
   C.on('presence', renderRoom);
   C.on('hello', refreshBrain);
   C.on('hello', () => { loadChat(); refresh(); });
+  // Unread count in the tab / window title while you're away: "(3) TribeCode".
+  let unseen = 0, baseTitle = document.title;
+  const paintTitle = () => { document.title = unseen ? `(${unseen > 99 ? '99+' : unseen}) ${baseTitle}` : baseTitle; };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && unseen) { unseen = 0; paintTitle(); } });
+  C.on('chat', ({ message }) => {
+    if (!document.hidden || !message || message.by === 'tribecode' || message.by === (C.state().me || {}).id) return;
+    if (!/^\(\d+\+?\) /.test(document.title)) baseTitle = document.title;
+    unseen++; paintTitle();
+  });
   C.on('chat', ({ channel, message }) => {
     if (channel !== 'general') return;
     const list = $('#chat-list'); if (list.querySelector('.empty-room')) list.innerHTML = '';
@@ -382,7 +424,7 @@
     const healthy = async url => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 1500);
       try { const r = await fetch(url + '/api/health', { signal: c.signal, cache: 'no-store' }); return r.ok; } catch { return false; } finally { clearTimeout(t); } };
     try {
-      const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: `${(st.name || 'My').split(' ')[0]}'s Tribe` });
+      const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: st.name && st.name !== 'Me' ? `${st.name.split(' ')[0]}'s Tribe` : 'My Tribe' });
       let ok = false;
       for (const until = Date.now() + 30000; Date.now() < until;) {
         if ((ok = await healthy(url))) break;
@@ -407,6 +449,12 @@
         const log = (await inv.invoke('host_log').catch(() => [])).filter(Boolean).slice(-8).join('\n');
         throw new Error('The tribe server did not start.' + (log ? '\n\n' + log : ' It printed nothing. Your antivirus may have blocked tribecode-server.exe.'));
       }
+      // The OS user name is only known once the server runs: replace the placeholder name with it.
+      if (!st.name || st.name === 'Me') {
+        const u = await fetch(url + '/api/health', { cache: 'no-store' }).then(r => r.json()).then(h => h.user || '').catch(() => '');
+        const nice = u.replace(/[._-]+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+        if (nice) { S.set({ name: nice }); st.name = nice; }
+      }
       const keep = st.server && st.server.url === url ? st.server.token : '';
       window.__hostError = null;
       S.set({ server: { url, token: keep }, hosting: true });
@@ -426,23 +474,59 @@
     document.body.classList.add('tauri');
     const w = window.__TAURI__.window.getCurrentWindow();
     document.querySelectorAll('#win-ctl [data-w]').forEach(b => b.addEventListener('click', () => {
-      const a = b.dataset.w; (a === 'min' ? w.minimize() : a === 'max' ? w.toggleMaximize() : w.close()).catch(() => {});
+      const a = b.dataset.w;
+      if (a === 'close') return (async () => { try { if (window.TribeUpdater && window.TribeUpdater.beforeClose) await window.TribeUpdater.beforeClose(); } catch {} w.close().catch(() => {}); })();
+      (a === 'min' ? w.minimize() : w.toggleMaximize()).catch(() => {});
     }));
   }
 
+  else document.querySelectorAll('#win-ctl [data-w]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.w, fs = document.fullscreenElement;
+    if (a === 'close') window.close();
+    else if (a === 'max') (fs ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {});
+    else if (fs) document.exitFullscreen().catch(() => {});
+  }));
+
+  // ---- desktop app: switch between the installed UI and the Working version (dev, live on :4848) ----
+  // No exe rebuild to try new UI: the frameless desktop window simply shows the Working server's page.
+  const WORKING = 'http://localhost:4848/';
+  const INSTALLED = /Windows/.test(navigator.userAgent) ? 'http://tauri.localhost/' : 'tauri://localhost/';
+  const onWorking = () => location.origin === 'http://localhost:4848' || location.origin === 'http://127.0.0.1:4848';
+  async function workingUp() { try { const c = new AbortController(); setTimeout(() => c.abort(), 1500); return (await fetch(WORKING + 'api/health', { signal: c.signal, cache: 'no-store' })).ok; } catch { return false; } }
+  async function useUi(which, { quiet = false } = {}) {
+    if (!window.TribeHost.isDesktop) return;
+    if (which === 'working') {
+      if (!(await workingUp())) { if (!quiet) toast('The Working version isn\'t running. Double-click "Try New Work" in your TribeCode folder first.'); return; }
+      try { localStorage.setItem('tribecode.ui', 'working'); } catch {}
+      location.href = WORKING + '?skipIntro=1';
+    } else {
+      location.href = INSTALLED + '?ui=installed';
+    }
+  }
+  window.TribeUi = { useUi, onWorking, desktop: () => !!window.TribeHost.isDesktop };
+  if (window.TribeHost.isDesktop && !onWorking()) {
+    if (params.get('ui') === 'installed') { try { localStorage.removeItem('tribecode.ui'); } catch {} }
+    else { let pref = null; try { pref = localStorage.getItem('tribecode.ui'); } catch {} if (pref === 'working') useUi('working', { quiet: true }); }
+  }
+  if (onWorking()) document.body.classList.add('ui-working');
+
   // tribecode:// links: on launch and while running (single-instance forwards them here)
+  const deepLink = u => {
+    const m = /^tribecode:\/\/(working|dev|installed|stable)\b/i.exec(String(u || ''));
+    if (m) return useUi(/working|dev/i.test(m[1]) ? 'working' : 'installed');
+    joinLink(u);
+  };
   (async () => {
     const dl = window.__TAURI__ && window.__TAURI__.deepLink;
     if (!dl) return;
-    try { const urls = await dl.getCurrent(); if (urls && urls[0]) joinLink(urls[0]); } catch {}
-    try { await dl.onOpenUrl(urls => urls && urls[0] && joinLink(urls[0])); } catch {}
+    try { const urls = await dl.getCurrent(); if (urls && urls[0]) deepLink(urls[0]); } catch {}
+    try { await dl.onOpenUrl(urls => urls && urls[0] && deepLink(urls[0])); } catch {}
   })();
   $('#invite-modal').addEventListener('click', e => { if (e.target.id === 'invite-modal') closeInvite(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvite(); });
-  $('#settings-btn').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
-  $('#me-avatar').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
+  // Settings lives at the bottom of the nest (shell.js), the profile at the top right (profilemenu.js).
   $('#rail-logo').addEventListener('click', () => show('home'));
-  $('#tour-invite').addEventListener('click', () => openInvite());
+  $('#tour-invite').addEventListener('click', () => { document.body.classList.remove('drawer-open'); openInvite(); });
   $('#tour-search').addEventListener('click', () => window.TribePalette.open());
   if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
   document.addEventListener('keydown', e => {
@@ -499,7 +583,9 @@
   (async () => {
     await window.TribeSettings.autoSetup(); refresh();
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
-    if (window.TribeHost.isDesktop && !st.hostOff && !remote) hostHere({ quiet: true });
+    // The desktop app showing a page served by a TribeCode server (the Working version) talks to that server; it doesn't host its own.
+    const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
+    if (window.TribeHost.isDesktop && !served && !st.hostOff && !remote) hostHere({ quiet: true });
     else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
   })();
   window.TribeUpdater.init();

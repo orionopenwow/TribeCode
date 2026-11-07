@@ -1,0 +1,92 @@
+/* Solo mode: "Your agents" (app/ui/agentshub.js). Flat matte: 1px borders, depth from luminance steps only,
+   no glows, no blur, no gradients. Kind colors carry meaning: Claude Code teal, Claude Desktop amber,
+   other MCP agents rose, local models green, the Secretary ember. */
+.main > #view-agents-hub { max-width: 1120px; }
+.ah-head h1, .sy-head h1 { font-family: var(--display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0; line-height: 1.2; }
+.ah-head { margin-bottom: 22px; }
+
+/* hero: a sentence on the left, the constellation on the right */
+.ah-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 20px; align-items: center; }
+.ah-hero h2 { max-width: 22ch; }
+.ah-hero-v { display: flex; justify-content: center; }
+.ah-sky { width: 100%; max-width: 360px; height: auto; display: block; }
+.ah-node { transition: opacity .18s var(--ease); }
+.ah-node:not(.live) { opacity: .75; }
+
+/* agent cards */
+.ah-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ah-card { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 14px; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); min-width: 0; }
+.ah-card::before { content: ''; position: absolute; left: 14px; right: 14px; top: -1px; height: 2px; border-radius: 0 0 2px 2px; background: var(--k); opacity: .35; }
+.ah-card.live::before { opacity: 1; }
+.ah-card-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ah-glyph { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--k) 45%, var(--edge)); background: color-mix(in srgb, var(--k) 12%, var(--surface)); color: var(--k); }
+.ah-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.ah-id b { font-size: 14px; font-weight: 650; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ah-id span { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ah-st { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); flex: none; padding: 3px 8px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface-2); }
+.ah-st i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
+.ah-st.live { color: var(--live-ink); }
+.ah-st.live i { background: var(--live); }
+.ah-doing { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ah-doing code, .ah-models-off code, .ah-note code { font-family: var(--mono); font-size: 11.5px; color: var(--text); }
+.ah-lane { display: flex; flex-wrap: wrap; gap: 6px; }
+.ah-lane code { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 6px; border: 1px dashed var(--edge-pop); color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ah-last { margin: 0; padding-top: 10px; border-top: 1px solid var(--stroke); font-size: 12.5px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ah-last .eyebrow { margin-right: 8px; }
+.ah-last time { color: var(--faint); font-size: 11.5px; margin-left: 4px; }
+.ah-acts { display: flex; gap: 8px; margin-top: auto; }
+.ah-acts .btn { height: 30px; font-size: 12.5px; padding: 0 10px; }
+.ah-acts .btn.ghost { margin-left: -10px; color: var(--faint); }
+.ah-acts .btn.ghost:hover { color: var(--ember-ink); }
+.ah-empty { grid-column: 1 / -1; padding: 18px; border: 1px dashed var(--edge-pop); border-radius: var(--r); color: var(--faint); font-size: 13.5px; line-height: 1.5; }
+
+/* connect tiles + panel */
+.ah-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ah-tile { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; column-gap: 12px; row-gap: 2px; text-align: left; padding: 14px 16px; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); color: var(--text); cursor: pointer; font: inherit; }
+.ah-tile .ah-glyph { grid-row: 1 / 3; }
+.ah-tile b { font-size: 14px; font-weight: 650; align-self: end; }
+.ah-tile span:not(.ah-glyph) { font-size: 12.5px; color: var(--faint); line-height: 1.45; }
+.ah-tile:hover { border-color: var(--edge-pop); background: var(--surface-2); }
+.ah-tile.on { border-color: var(--k); background: var(--raised); }
+.ah-connect { margin-top: 12px; padding: 18px 20px; background: var(--raised); border: 1px solid var(--edge-pop); border-radius: var(--r); }
+.ah-connect.hidden { display: none; }
+.ah-form .eyebrow { display: block; margin-bottom: 6px; }
+.ah-row { display: flex; gap: 8px; max-width: 520px; }
+.ah-row .input { height: 38px; font-size: 14px; }
+.ah-row .btn { height: 38px; }
+.ah-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; max-width: 70ch; }
+.ah-note a { color: var(--accent-ink); }
+.ah-result { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--edge); }
+.ah-step { margin: 0 0 8px; font-size: 13.5px; color: var(--text); }
+.ah-kv .eyebrow { display: block; margin: 0 0 4px; }
+.ah-kv .linkbox { margin-bottom: 10px; }
+.ah-file { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 8px; min-width: 0; }
+.ah-file code { font-family: var(--mono); font-size: 12px; color: var(--peer-ink); overflow-wrap: anywhere; }
+.ah-code { position: relative; }
+.ah-code pre { margin: 0; padding: 12px 14px; padding-right: 84px; background: var(--canvas); border: 1px solid var(--edge); border-radius: var(--r-sm); font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--text); overflow-x: auto; white-space: pre; }
+.ah-code .btn { position: absolute; top: 8px; right: 8px; height: 30px; }
+
+/* local models */
+.ah-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ah-model { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); min-width: 0; }
+.ah-model.on { border-color: color-mix(in srgb, var(--k) 50%, var(--edge)); }
+.ah-model .btn { height: 30px; font-size: 12.5px; padding: 0 10px; flex: none; }
+.ah-models-off { display: flex; gap: 12px; align-items: flex-start; padding: 16px; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); }
+.ah-models-off b { font-size: 14px; }
+.ah-models-off p { margin: 4px 0 0; font-size: 13px; line-height: 1.55; color: var(--muted); max-width: 65ch; }
+
+/* phones: tight spacing, one column */
+@media (max-width: 820px) {
+  .ah-head h1, .sy-head h1 { font-size: 22px; }
+  .ah-head { margin-bottom: 14px; }
+  .ah-hero { grid-template-columns: 1fr; gap: 10px; }
+  .ah-hero-v { order: -1; }
+  .ah-sky { max-width: 300px; }
+  .ah-tiles { grid-template-columns: 1fr; gap: 8px; }
+  .ah-tile { padding: 12px 14px; }
+  .ah-grid, .ah-models { grid-template-columns: 1fr; gap: 8px; }
+  .ah-connect { padding: 14px; }
+  .ah-row { flex-direction: column; }
+  .ah-code pre { padding-right: 14px; padding-top: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .ah-node { transition: none; } }

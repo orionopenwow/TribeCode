@@ -135,7 +135,7 @@ def main():
             wait_text(phone, "#sync-status", "connected")
             ptok = phone.evaluate("TribeStore.get().server.token")
             phone.evaluate("localStorage.setItem('tribecode.iosHint', '1'); document.querySelector('.ios-hint') && document.querySelector('.ios-hint').remove()")
-            phone.click('#tabbar [data-tab-more]'); phone.click("#more-menu [data-more='repo']")
+            phone.click('#menu-btn'); phone.click("#nest-repo")   # phones: Project Hub lives in the panel
             phone.wait_for_selector('#ap-body [data-sw="autopilot.enabled"][disabled]')  # only the host toggles autopilot
             phone.click("#repo-send")
             phone.fill("#sd-title", "Amber lantern at night")

@@ -34,6 +34,14 @@ const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
 const makeCoord = require('./coord');
 const makeAgentNet = require('./agentnet');
+const makePeople = require('./people');
+const makeFlow = require('./flow');
+const makeMcpFlow = require('./mcp-flow');
+const makeWorkshop = require('./workshop');
+const makeWorkshopMcp = require('./mcp-workshop');
+const makeSecretary = require('./secretary');
+const makeAgentsHub = require('./agentshub');
+const makePreview = require('./preview');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -125,13 +133,14 @@ function limited(req, max = 20, windowMs = 60_000) {
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
+setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.length || now - h[h.length - 1] > 60_000) hits.delete(k); }, 60_000).unref();   // forget idle addresses
 
 // ---------- realtime ----------
 const online = new Map(); // memberId -> { sockets:Set, where, since, project }
 // Project rooms: data events reach only sockets that are in the event's project (and can see it); other
 // sockets of the same person get a tiny 'project-pulse' so the sidebar badges stay live. Project chat
 // channels are delivered as `general`, which is what the chat UI shows for the current project.
-const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello']);
+const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello', 'workshop']);
 const SOFT = new Set(['approval', 'claims']);   // everyone who can see the project, whatever room they are in
 const PULSE = new Set(['chat', 'task', 'proposal', 'change', 'approval', 'doc', 'bug']);
 const memberById = mid => members.find(x => x.id === mid);
@@ -195,12 +204,14 @@ function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.
 
 // ---------- chat ----------
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
+let chatHook = null;   // the secretary hears @secretary (server/secretary.js)
 function postChat(channel, by, text, extra) {
   if (channel === 'general') channel = P.channelOf(P.current() || P.defaultId());   // project rooms: each project has its own channel
   const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js)
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
   if (!dms.deliver(channel, msg)) broadcast({ type: 'chat', channel, message: msg });   // DMs reach only their two members
   if (by !== 'tribecode' && !channel.startsWith('dm-')) pocket.chat(channel, by, text);   // @mentions -> notification hub
+  if (chatHook) try { chatHook(channel, by, text, msg); } catch (e) { console.error(e); }
   return msg;
 }
 function handleCommands(channel, member, text) {
@@ -224,6 +235,7 @@ function loadTasks() {
 function saveTask(t) {
   const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t });
   bugs.onTask(t);
+  if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
   return t;
 }
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due }) {
@@ -234,6 +246,7 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
 }
 
 // ---------- brain, board, docs ----------
+let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via Ollama` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
@@ -258,7 +271,8 @@ function hubFor(pid) {
     const drift = makeDrift({ repo: p.repo, getTasks: inP(() => loadTasks()), members: () => members });
     const h = require('./repo')({ repo: p.repo, store: P.scopedStore(() => p.id), str, broadcast: m => broadcast({ ...m, project: p.id }), postChat: inP(postChat),
       createTask: inP(o => createTask(o)), loadTasks: inP(() => loadTasks()), saveTask: inP(t => saveTask(t)), getMembers: () => members, nameOf, drift, board,
-      presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims });
+      presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims,
+      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []) });
     return Object.assign(h, { drift });
   });
   hubs.set(p.id, hub);
@@ -268,24 +282,40 @@ const resetHub = pid => hubs.delete(pid);   // after the project's repo changes 
 for (const p of P.all()) if (p.repo || p.id === P.defaultId()) hubFor(p.id);
 const repoHub = {   // MCP tools run against the calling agent's project hub
   tools: h => Object.fromEntries(Object.entries(hubFor(P.defaultId()).mcp.tools(h)).map(([k, t]) => [k, { ...t, run: (a, me) => hubFor(P.current()).mcp.tools(h)[k].run(a, me) }])),
-  instructions: me => hubFor(P.current()).mcp.instructions(me),
+  instructions: me => hubFor(P.current()).mcp.instructions(me) + (mcpFlow ? mcpFlow.instructions : ''),
 };
+let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid) });
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
-const chatx = makeChatx({ store, id, str, getMembers: () => members, canWrite: (ch, mem) => { const pr = P.byChannel(ch); return mem.role !== 'spectator' && (!pr || P.canSee(mem, pr.id)); }, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t) });
+const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t),
+  approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
+  channelProject: ch => (P.byChannel(ch) || {}).id || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
+  voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
+const thumb = require('./thumb')({ P, visuals });
+const preview = makePreview({ P, store: baseStore, getMembers: () => members, broadcast, share, lanUrls, port: PORT, log: m => console.error('  ' + m) });   // app preview (server/preview.js)   // the pinned repo's thumbnail: README image → screenshot → tile
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
+const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
+require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
+// The Workshop (server/workshop.js): a tribe-wide library apart from projects, plus the community shelf.
+const workshop = makeWorkshop({ store: baseStore, P, approvals, getMembers: () => members, nameOf, postChat, broadcast, slug, id, hasToken: W.hasToken, readSecret: W.readSecret });
+// Solo mode: the Secretary (background notes, digest, inspiration, research) and the agents hub.
+const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, docs, loadTasks: () => loadTasks(), hubFor, getMembers: () => members, nameOf, postChat, createTask: o => createTask(o),
+  votes: chatx.votes, broadcast, str, id, log: m => console.error('  ' + m) });
+require('./mcp-secretary').bind(secretary);
+chatHook = (...x) => secretary.onChat(...x);
+const agentsHub = makeAgentsHub({ P, store: baseStore, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary });
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
 const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
@@ -294,6 +324,20 @@ const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run:
   const prev = r.content[0].text;
   return { content: [{ type: 'text', text: `From TribeCode coordination:\n${extra.join('\n')}${prev && prev !== 'No new messages.' ? '\n\n' + prev : ''}` }] };
 } } };
+// One-click project flow (server/flow.js): invites and links reuse the quick-invite logic.
+function makeInvite({ by, project, hours = 72, maxUses = 10 }) {
+  const inv = { code: code(5), by, role: 'builder', maxUses, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}) };
+  invites.push(inv); saveInvites(); return inv;
+}
+function linkFor(c) {
+  const pub = share.publicUrl(), lan = lanUrls().find(u => u.kind === 'lan') || lanUrls()[0];
+  const base = (pub || (lan || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
+  return { link: site.joinLink(base, c), kind: pub ? 'public' : lan ? (lan.kind === 'tailscale' ? 'tailscale' : 'wifi') : 'local' };
+}
+flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus, getMembers: () => members, nameOf, docs, brain, coord, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
+  rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
+W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
+mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
 function mcpScope(me, wanted, fn) {
@@ -317,10 +361,15 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
-    post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
-    recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
+    post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
+    recent: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted).map(x => {
+      const media = x.media ? (x.media.kind === 'voice' ? '[voice note] ' : x.media.kind === 'image' ? '[image] ' : x.media.kind === 'file' ? `[file: ${x.media.name || 'file'}] ` : '') : '';
+      const vote = x.vote ? `[vote] ${x.vote.q || ''} ` : '';
+      return `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${media}${vote}${x.text || ''}`.trimEnd();
+    }).join('\n'),
   },
   board, approvals,
 });
@@ -357,7 +406,7 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
@@ -384,7 +433,7 @@ async function apiInProject(req, res, url) {
         if (!r.existed && Array.isArray(body.project.tasks)) P.inProject(project.id, () => body.project.tasks.slice(0, 20).forEach(t => createTask({ title: t, by: host.id, source: 'starter' })));
       } catch (e) { return fail(res, e.status || 400, e.message); }
       if (body.agent) {
-        const token = id(32); let ag = members.find(x => x.role === 'agent' && x.owner === host.id);
+        const token = id(32); let ag = members.find(x => x.role === 'agent' && x.owner === host.id && !x.label);
         if (ag) { ag.tokenHash = hash(token); ag.project = project.id; }
         else { ag = { id: 'agent-' + slug(host.name).slice(0, 10) + '-' + id(4), name: `Claude · ${host.name}`.slice(0, 32), color: '#38C6B1', role: 'agent', owner: host.id, joined: new Date().toISOString(), tokenHash: hash(token), project: project.id }; members.push(ag); pushPresence(); }
         saveMembers();
@@ -426,14 +475,22 @@ async function apiInProject(req, res, url) {
     const body = await readBody(req);
     const inv = invites.find(i => i.code === str(body.code, 16));
     if (!inv || inv.revoked || Date.parse(inv.expires) < Date.now() || inv.uses >= inv.maxUses) return fail(res, 410, 'invite expired or invalid');
+    const proj = inv.project && P.get(inv.project);
+    // Already a member (signed in on this device): a project invite adds that project instead of making a second account.
+    const already = authed(req);
+    if (already && already.role !== 'agent') {
+      if (proj && Array.isArray(already.projects) && !already.projects.includes(proj.id)) { already.projects.push(proj.id); inv.uses++; saveInvites(); }
+      if (proj) P.addMember(proj.id, already.id, P.scoped(already) ? inv.role : already.role);
+      saveMembers(); pushPresence(); rooms.pushProjects();
+      return send(res, 200, { member: publicMember(already), tribe, project: proj ? proj.id : null, existing: true });
+    }
     const name = str(body.name, 32); if (!name) return fail(res, 400, 'name required');
     inv.uses++; saveInvites();
-    const proj = inv.project && P.get(inv.project);
     const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
     if (proj) P.addMember(proj.id, out.member.id, inv.role);
     P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
     pushPresence();
-    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
+    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: proj ? proj.id : null });
   }
 
   if (a === 'device-link' || a === 'devices' || a === 'share') {
@@ -441,13 +498,32 @@ async function apiInProject(req, res, url) {
     if (h !== null) return;
   }
 
+  if (a === 'agents' && b === 'bridge.js') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // the stdio bridge (plain code, no secrets)
   if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
+  // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
+  if (a === 'backup' && m === 'GET') {
+    if (me.role !== 'host') return fail(res, 403, 'only the host can download a backup');
+    const day = new Date().toISOString().slice(0, 10), name = `${slug(tribe.name)}-backup-${day}.tar.gz`;
+    res.writeHead(200, { 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+    return require('./backup').stream(baseStore.root, res, slug(tribe.name) || 'tribe').catch(e => { console.error('backup:', e); res.destroy(); });
+  }
+
+  // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
+  if (a === 'me' && !b && m === 'PATCH') {
+    if (me.role === 'agent') return fail(res, 403, 'agents keep their names');
+    const body = await readBody(req), mem = memberById(me.id);
+    const name = body.name !== undefined ? str(body.name, 32) : mem.name; if (!name) return fail(res, 400, 'name required');
+    mem.name = name; if (body.color !== undefined) mem.color = color(body.color);
+    saveMembers(); pushPresence();
+    return send(res, 200, { member: publicMember(mem) });
+  }
   if (a === 'me' && !b) return send(res, 200, { member: publicMember(me), tribe, version: VERSION, project: P.current(), projects: P.visibleTo(me).map(p => P.view(p)) });
 
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
+  if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'invites' && !b && m === 'POST') {
@@ -479,13 +555,21 @@ async function apiInProject(req, res, url) {
   if (a === 'chat' && b) {
     if (b === 'general') b = P.channelOf(P.current());   // #general is the current project's channel
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
+    // Only real conversations: a project's channel, a DM, or a project's #agents channel you can see.
+    // (Before, any name worked, so a project-only friend could read another project's chat/agents-<id>.jsonl.)
+    const agentsOf = /^agents-(.+)$/.exec(b);
+    if (!chProject && !dms.isDm(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
-    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward…
-    if (m === 'GET') return send(res, 200, { messages: store.readJSONL(`chat/${b}.jsonl`, Math.min(Number(url.searchParams.get('limit')) || 100, 500)) });
+    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
+    if (m === 'GET') {   // ?before=<message id> pages back through history
+      const limit = Math.min(Number(url.searchParams.get('limit')) || 100, 500), before = str(url.searchParams.get('before') || '', 40);
+      return send(res, 200, { messages: store.pageJSONL(`chat/${b}.jsonl`, limit, before ? `"id":${JSON.stringify(before)}` : null) });
+    }
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
-      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text);   // commands, notifications, @brain
+      const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
+      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
       return send(res, 200, { message: msg });
     }
   }
@@ -523,27 +607,42 @@ async function apiInProject(req, res, url) {
     if (handled !== null) return;
   }
   if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'agents' && b === 'hub') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // solo mode: "Your agents" (server/agentshub.js)
   if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
-    const name = `Claude · ${me.name}`.slice(0, 32);
-    let ag = members.find(x => x.role === 'agent' && x.owner === me.id);
+    // Default (no kind/label): the person's one Claude Code agent, as before. With { kind, label }: one more
+    // named agent per label (Claude Code · laptop, Claude Desktop, Codex…), each with its own revocable key.
+    const body = await readBody(req).catch(() => ({}));
+    const kind = makeAgentsHub.KINDS[body.kind] ? body.kind : null, label = str(body.label, 24);
+    const multi = !!(label || (kind && kind !== 'claude-code'));
+    const kindName = kind ? makeAgentsHub.KINDS[kind].label : 'Claude Code';
+    const name = (multi ? `${label || kindName} · ${me.name}` : `Claude · ${me.name}`).slice(0, 32);
+    const mineAll = members.filter(x => x.role === 'agent' && x.owner === me.id);
+    if (multi && mineAll.filter(x => x.tokenHash).length >= 8) return fail(res, 429, 'up to 8 connected agents per person: revoke one first');
+    let ag = multi ? mineAll.find(x => x.label && x.label.toLowerCase() === (label || kindName).toLowerCase()) : mineAll.find(x => !x.label);
     const token = id(32);
-    if (ag) { ag.tokenHash = hash(token); ag.project = P.current(); }
-    else { ag = { id: 'agent-' + slug(me.name).slice(0, 10) + '-' + id(4), name, color: '#38C6B1', role: 'agent', owner: me.id, joined: new Date().toISOString(), tokenHash: hash(token), project: P.current() }; members.push(ag); pushPresence(); }
+    if (ag) { ag.tokenHash = hash(token); ag.project = P.current(); if (kind) ag.kind = kind; }
+    else { ag = { id: 'agent-' + slug(me.name).slice(0, 10) + '-' + id(4), name, color: '#38C6B1', role: 'agent', owner: me.id, joined: new Date().toISOString(), tokenHash: hash(token), project: P.current(), ...(multi ? { label: label || kindName, kind: kind || 'claude-code' } : {}) }; members.push(ag); pushPresence(); }
     if (Array.isArray(me.projects)) ag.projects = [...me.projects]; else delete ag.projects;   // the agent sees what its owner sees
     saveMembers();
-    return send(res, 200, { agent: publicMember(ag), token, ...agentEndpoints(req, token), tools: mcp.tools });
+    const ep = agentEndpoints(req, token);
+    const desktop = kind === 'claude-desktop' || kind === 'mcp' ? agentsHub.desktopConfig(ep.url, token) : undefined;
+    return send(res, 200, { agent: { ...publicMember(ag), kind: agentsHub.kindOf(ag), label: ag.label || null }, token, ...ep, tools: mcp.tools, ...(desktop ? { desktop } : {}) });
   }
   // Easy in and out for Claude Code anywhere: status, and disconnect (the key stops working at once).
   if (a === 'agents' && b === 'mine' && m === 'GET') {
     const ag = members.find(x => x.role === 'agent' && x.owner === me.id && x.tokenHash);
     const seen = ag && agentSeen.get(ag.id);
-    return send(res, 200, { agent: ag ? publicMember(ag) : null, online: !!seen && Date.now() - seen.at < AGENT_IDLE, since: seen ? new Date(seen.at).toISOString() : null, ...agentEndpoints(req, null) });
+    const live = x => { const s = agentSeen.get(x.id); return !!s && Date.now() - s.at < AGENT_IDLE; };
+    return send(res, 200, { agent: ag ? publicMember(ag) : null, online: !!seen && Date.now() - seen.at < AGENT_IDLE, since: seen ? new Date(seen.at).toISOString() : null, ...agentEndpoints(req, null),
+      agents: members.filter(x => x.role === 'agent' && x.owner === me.id && x.tokenHash).map(x => ({ ...publicMember(x), kind: agentsHub.kindOf(x), label: x.label || null, online: live(x) })) });
   }
-  if (a === 'agents' && b === 'mine' && m === 'DELETE') {
-    const ag = members.find(x => x.role === 'agent' && x.owner === me.id);
+  if (a === 'agents' && b === 'mine' && m === 'DELETE') {   // ?id= revokes one key; without it, the default agent (as before)
+    const want = url.searchParams.get('id');
+    const ag = want ? members.find(x => x.role === 'agent' && x.owner === me.id && x.id === want) : (members.find(x => x.role === 'agent' && x.owner === me.id && !x.label) || members.find(x => x.role === 'agent' && x.owner === me.id));
+    if (want && !ag) return fail(res, 404, 'not one of your agents');
     if (ag) { ag.tokenHash = null; agentSeen.delete(ag.id); saveMembers(); pushPresence(); }
-    return send(res, 200, { ok: true, remove: 'claude mcp remove tribecode' });
+    return send(res, 200, { ok: true, remove: ag && ag.kind === 'claude-desktop' ? 'Remove "tribecode" from claude_desktop_config.json' : 'claude mcp remove tribecode' });
   }
   if (a === 'claims') {
     if (m === 'GET') return send(res, 200, { claims: claims.list() });
@@ -554,12 +653,17 @@ async function apiInProject(req, res, url) {
   }
   if (a === 'drift' && m === 'GET') { const r = await hubFor(P.current()).drift.radar(); if (r.branches) r.branches = r.branches.map(({ allFiles, ...x }) => x); return send(res, 200, r); }
   if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
+  if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }   // the Secretary (server/secretary.js)
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
   }
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
+  if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
   if (a === 'debug' && b === 'reminders' && m === 'POST' && DEBUG) { plan.tick(); return send(res, 200, { ok: true }); }
@@ -578,11 +682,11 @@ async function apiInProject(req, res, url) {
 
 function serveStatic(req, res, url) {
   if (devices.serveApp(req, res, url, UI)) return;
-  let rel = decodeURIComponent(url.pathname);
+  let rel; try { rel = decodeURIComponent(url.pathname); } catch { return fail(res, 400, 'bad path'); }
   if (rel === '/' ) rel = '/index.html';
   if (/^\/join\/[A-Za-z0-9]+\/?$/.test(rel)) rel = '/join.html';
   const file = path.resolve(UI, '.' + rel);
-  if (!file.startsWith(UI)) return fail(res, 403, 'forbidden');
+  if (!file.startsWith(UI + path.sep)) return fail(res, 403, 'forbidden');
   fs.readFile(file, (err, data) => {
     if (err) return fail(res, 404, 'not found');
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
@@ -596,6 +700,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
+    if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
     if (req.method === 'GET') return serveStatic(req, res, url);
     fail(res, 405, 'method not allowed');
   } catch (e) {
@@ -606,6 +711,7 @@ const server = http.createServer(async (req, res) => {
 
 server.on('upgrade', (req, sock) => {
   const url = new URL(req.url, 'http://x');
+  if (preview.upgrade(req, sock, url)) return;   // dev-server HMR sockets under /preview/
   if (url.pathname !== '/ws') return sock.destroy();
   const me = authed(req);
   if (!me) { sock.write('HTTP/1.1 401 Unauthorized\r\n\r\n'); return sock.destroy(); }
@@ -672,6 +778,8 @@ function start() {
     setInterval(() => { if (gone()) { try { docs.live.persistAll(); } catch {} process.exit(0); } }, 2000).unref();
     if (process.stdin && !process.stdin.isTTY) { process.stdin.on('end', () => process.exit(0)); process.stdin.on('error', () => {}); process.stdin.resume(); }
   }
+  // A stray rejected promise in one feature must not stop the tribe for everyone (Node exits on them by default).
+  process.on('unhandledRejection', e => console.error('  unhandled rejection:', e && e.stack || e));
   // Write live doc edits that are still inside the debounce window before exiting.
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { docs.live.persistAll(); } catch (e) { console.error(e); } process.exit(0); });
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });

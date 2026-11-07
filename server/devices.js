@@ -107,10 +107,10 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
       const body = { ...base, id: scope, start_url: scope, scope, icons: (base.icons || []).map(i => ({ ...i, src: '/' + String(i.src).replace(/^\.?\//, '') })) };
       res.writeHead(200, { 'Content-Type': 'application/manifest+json', ...headers }); res.end(JSON.stringify(body, null, 2)); return true;
     }
-    let rel = decodeURIComponent(rest);
+    let rel; try { rel = decodeURIComponent(rest); } catch { res.writeHead(400); res.end(); return true; }
     if (rel === '/') rel = '/index.html';
     const file = path.resolve(UI, '.' + rel);
-    if (!file.startsWith(UI)) { res.writeHead(403); res.end(); return true; }
+    if (!file.startsWith(UI + path.sep)) { res.writeHead(403); res.end(); return true; }
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('not found'); }
       res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', ...headers, 'Cache-Control': rel === '/index.html' ? 'no-store' : 'no-cache' });

@@ -1,0 +1,148 @@
+/* Reactions on bubbles + team votes in chat (app/ui/chatx.js, app/ui/votes.js).
+   Flat matte: 1px borders, depth from luminance steps only. No glows, blur or gradients. */
+
+/* ---------- reaction chips ---------- */
+.reacts { align-items: center; }
+.rx { cursor: pointer; transition: border-color .12s var(--ease), background .12s var(--ease); }
+.rx:hover { border-color: var(--edge-pop); background: var(--surface-2); }
+.rx.on:hover { border-color: var(--accent); background: var(--chip); }
+.rx-add { width: 26px; padding: 0; justify-content: center; color: var(--faint); opacity: 0; }
+.rx-add svg.i { width: 14px; height: 14px; }
+.msg:hover .rx-add, .msg:focus-within .rx-add, .rx-add:focus-visible { opacity: 1; }
+@media (hover: none) { .rx-add { opacity: 1; } }
+.rx.pop { animation: rx-pop .2s var(--ease); }
+@keyframes rx-pop { from { opacity: .4; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.msg.dx.liked { animation: rx-liked .45s var(--ease); }
+@keyframes rx-liked { 0% { background: transparent; } 30% { background: var(--chip); } 100% { background: transparent; } }
+
+/* ---------- quick-react bar (hover; long-press on touch) + picker ---------- */
+.qr-bar { position: fixed; z-index: 61; display: flex; gap: 1px; padding: 3px; border: 1px solid var(--edge-pop); border-radius: 999px; background: var(--surface);
+  animation: qr-in .12s var(--ease); }
+.qr-bar.hidden { display: none; }
+.qr-bar button { width: 30px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 999px; background: none; font-size: 16px; line-height: 1; cursor: pointer; color: var(--muted);
+  transition: background .1s var(--ease), transform .1s var(--ease); }
+.qr-bar button:hover, .qr-bar button:focus-visible { background: var(--surface-3); outline: none; }
+.qr-bar button:active { transform: translateY(1px); }
+.qr-bar button.on { background: var(--chip); }
+.qr-bar .qr-more svg.i { width: 16px; height: 16px; }
+.qr-bar.touch { padding: 4px; }
+.qr-bar.touch button { width: 40px; height: 38px; font-size: 21px; }
+@keyframes qr-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+.rx-picker { position: fixed; z-index: 62; width: 252px; padding: 6px; border: 1px solid var(--edge-pop); border-radius: var(--r); background: var(--surface); animation: qr-in .12s var(--ease); }
+.rx-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
+.rx-grid button { height: 36px; border: 0; border-radius: var(--r-sm); background: none; font-size: 19px; cursor: pointer; }
+.rx-grid button:hover, .rx-grid button:focus-visible { background: var(--surface-3); outline: none; }
+.rx-grid button.on { background: var(--chip); }
+.msg-menu .rx-row [data-emoji-more] { color: var(--faint); } .msg-menu .rx-row [data-emoji-more] svg.i { width: 16px; height: 16px; }
+.rx-tip { margin-top: 6px; padding: 6px 4px 2px; border-top: 1px solid var(--edge); font-family: var(--mono); font-size: 10px; color: var(--faint); line-height: 1.5; }
+
+/* ---------- vote card ---------- */
+.msg.has-vote .mb { max-width: 460px; }
+.vt { margin-top: 6px; padding: 12px 12px 10px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); color: var(--text); }
+.vt.sug { border-left: 2px solid var(--live); }
+.vt-eye { display: flex; align-items: center; gap: 8px; }
+.vt-k { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
+.vt.sug .vt-k { color: var(--live-ink); }
+.vt.st-passed .vt-k { color: #3BD16F; } .vt.st-failed .vt-k, .vt.st-tie .vt-k { color: var(--muted); }
+.vt-when { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--faint); white-space: nowrap; }
+.vt-q { margin: 5px 0 2px; font-family: var(--display); font-size: 15px; font-weight: 700; line-height: 1.35; letter-spacing: -.005em; color: var(--text); word-break: break-word; }
+.vt-sug { display: flex; align-items: center; gap: 5px; margin-top: 3px; font-size: 11.5px; color: var(--live-ink); }
+.vt-sug svg.i { width: 12px; height: 12px; } .vt-sug span { color: var(--muted); }
+.vt-opts { display: grid; gap: 6px; margin-top: 10px; }
+.vt-opts.two { grid-template-columns: 1fr 1fr; }
+.vt-o { position: relative; display: flex; align-items: center; gap: 7px; min-height: 38px; padding: 0 10px; overflow: hidden; border: 1px solid var(--edge); border-radius: var(--r-sm);
+  background: var(--surface-2); color: var(--text); font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; transition: border-color .12s var(--ease); }
+.vt-o:hover:not(:disabled) { border-color: var(--edge-pop); }
+.vt-o:disabled { cursor: default; }
+.vt-o > * { position: relative; }
+.vt-fill { position: absolute !important; left: 0; top: 0; bottom: 0; background: var(--surface-3); transition: width .22s var(--ease); }
+.vt-ic { width: 15px !important; height: 15px !important; color: var(--muted); }
+.vt-l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg .vt-n, .vt-n { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); }
+.vt-o.mine { border-color: var(--accent); } .vt-o.mine .vt-n { color: var(--accent-ink); }
+.vt-o.yes.mine { border-color: #3BD16F; } .vt-o.yes.mine .vt-ic, .vt-o.yes.mine .vt-n { color: #3BD16F; }
+.vt-o.no.mine { border-color: #FF6F8E; } .vt-o.no.mine .vt-ic, .vt-o.no.mine .vt-n { color: #FF6F8E; }
+.vt-o.win .vt-fill { background: var(--chip); }
+.vt-o.yes.win .vt-fill { background: rgba(59, 209, 111, .16); } .vt-o.yes.win { border-color: #3BD16F; } .vt-o.yes.win .vt-ic, .vt-o.yes.win .vt-n { color: #3BD16F; }
+.vt-o.no.win .vt-fill { background: rgba(255, 111, 142, .14); }
+.vt.closed .vt-o:not(.win) { color: var(--muted); }
+.vt-faces { display: inline-flex; }
+.vt-face { width: 18px; height: 18px; display: grid; place-items: center; margin-left: -4px; border-radius: 50%; border: 1px solid var(--surface-2); font-size: 8px; font-weight: 700; letter-spacing: 0; }
+.vt-face:first-child { margin-left: 0; }
+.vt-face.more { background: var(--surface-3); color: var(--muted); }
+.vt-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 9px; font-size: 11.5px; color: var(--muted); }
+.vt-sp { flex: 1; }
+.vt-link { padding: 0; border: 0; background: none; font-size: 11.5px; font-weight: 600; color: var(--accent-ink); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.vt-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+.vt-link svg.i { width: 13px; height: 13px; }
+.vt-seen { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.vt-seen svg.i { width: 12px; height: 12px; }
+.vt-res { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--edge); }
+.msg .vt-res b, .vt-res b { font-size: 13px; font-weight: 700; color: var(--text); }
+.vt.st-passed .vt-res b { color: #3BD16F; }
+.vt-res span { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+.vt-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.vt-btn { height: 30px; padding: 0 11px; font-size: 12px; }
+.vt-btn svg.i { width: 14px; height: 14px; }
+.vt-done { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px; border: 1px solid var(--edge); border-radius: var(--r-sm); font-size: 12px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-done svg.i { width: 14px; height: 14px; color: #3BD16F; }
+
+/* the brain's "Turn this into a vote?" hint, under your own message */
+.vt-hint { display: inline-flex; align-items: center; gap: 7px; margin-top: 6px; padding: 4px 4px 4px 9px; border: 1px dashed var(--edge-pop); border-radius: 999px; font-size: 12px; color: var(--muted);
+  animation: qr-in .18s var(--ease); }
+.vt-hint > svg.i { width: 13px; height: 13px; color: var(--live-ink); }
+.vt-x { width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--faint); cursor: pointer; }
+.vt-x:hover { background: var(--surface-3); color: var(--text); }
+.vt-x svg.i { width: 13px; height: 13px; }
+
+/* ---------- "Start a vote" sheet: a centered dialog on desktop, a bottom sheet on phones ---------- */
+.vt-layer { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; }
+.vt-scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; transition: opacity .16s var(--ease); }
+.vt-sheet { position: relative; width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 18px 20px 16px; border: 1px solid var(--edge-pop); border-radius: var(--r-lg);
+  background: var(--surface); color: var(--text); opacity: 0; transform: translateY(6px); transition: opacity .16s var(--ease), transform .16s var(--ease); }
+.vt-layer.in .vt-scrim { opacity: 1; } .vt-layer.in .vt-sheet { opacity: 1; transform: none; }
+.vt-grab { display: none; }
+.vt-sheet h3 { margin: 4px 0 14px; font-family: var(--display); font-size: 20px; font-weight: 800; letter-spacing: -.015em; }
+.vt-sheet .vt-eye .vt-x { margin-left: auto; }
+.vt-lbl { display: block; margin: 12px 0 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.vt-sheet label.vt-lbl { margin-top: 0; }
+.vt-sheet textarea, .vt-oin { width: 100%; padding: 9px 11px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); font: inherit; font-size: 14px; line-height: 1.45; resize: none; outline: none; }
+.vt-sheet textarea:focus, .vt-oin:focus { border-color: var(--accent); }
+.vt-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 12px; padding: 3px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); }
+.vt-seg button { height: 32px; border: 0; border-radius: 6px; background: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+.vt-seg button[aria-checked="true"] { background: var(--surface-3); color: var(--text); }
+.vt-optlist { display: grid; gap: 6px; margin-top: 10px; }
+.vt-optlist[hidden] { display: none; }
+.vt-orow { display: flex; align-items: center; gap: 4px; }
+.vt-oin { height: 36px; padding: 0 10px; }
+.vt-add { justify-self: start; margin-top: 2px; }
+.vt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vt-chips button { height: 30px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--muted); font-size: 12.5px; cursor: pointer; }
+.vt-chips button:hover { border-color: var(--edge-pop); color: var(--text); }
+.vt-chips button[aria-checked="true"] { border-color: var(--accent); background: var(--chip); color: var(--text); }
+.vt-note { margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: var(--faint); }
+.vt-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+@media (max-width: 640px) {
+  .msg.has-vote .mb { max-width: none; }
+  .vt { padding: 11px 11px 9px; }
+  .vt-q { font-size: 14.5px; }
+  .vt-o { min-height: 42px; }
+  .vt-opts.two .vt-faces { display: none; }   /* two columns are narrow on phones: keep the label whole */
+  .vt-layer { place-items: end stretch; }
+  .vt-sheet { width: 100%; max-height: 88vh; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: 0; padding: 8px 16px calc(14px + env(safe-area-inset-bottom)); transform: translateY(24px); }
+  .vt-grab { display: block; width: 36px; height: 4px; margin: 0 auto 10px; border-radius: 2px; background: var(--surface-3); }
+  .vt-actions .btn { flex: 1; height: 42px; }
+  .qr-bar:not(.touch) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rx.pop, .msg.dx.liked, .qr-bar, .rx-picker, .vt-hint { animation: none; }
+  .vt-scrim, .vt-sheet, .vt-fill { transition: none; }
+}
+
+/* Proposals to the tribe ("+" → Propose) */
+.vt-pitch { font-size: 13.5px; line-height: 1.6; color: var(--muted); margin: 2px 0 10px; max-width: 65ch; }
+.vt-pitch p { margin: 0 0 6px; } .vt-pitch ul { margin: 0 0 6px; padding-left: 18px; }
+.vt-board { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--faint); margin: -2px 0 10px; }
+.vt-board svg.i { width: 14px; height: 14px; }

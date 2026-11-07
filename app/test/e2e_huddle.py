@@ -51,10 +51,10 @@ def main():
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome",
                                   args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream", "--autoplay-policy=no-user-gesture-required"])
             host, maya = open_as(b, "Orion", host_tok), open_as(b, "Maya", maya_tok)
-            host.click("#h-join")
-            wait_text(maya, "#huddle-box", "Join huddle")
+            host.click("#nest-huddle-row")
+            maya.wait_for_selector("#nest-huddle.live #huddle-live:not(.hidden)")
             wait_text(maya, "#chat-list", "started a huddle")
-            maya.click("#h-join")
+            maya.click("#nest-huddle-row")
             for pg in (host, maya):
                 try:
                     pg.wait_for_function("TribeHuddle.debug().length === 1 && TribeHuddle.debug()[0].state === 'connected' && TribeHuddle.debug()[0].audio", timeout=20000)

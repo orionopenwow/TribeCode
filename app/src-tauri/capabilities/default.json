@@ -21,5 +21,11 @@
     "core:window:allow-internal-toggle-maximize",
     "core:window:allow-close",
     "core:window:allow-is-maximized"
-  ]
+  ],
+  "remote": {
+    "urls": [
+      "http://localhost:4848/*",
+      "http://127.0.0.1:4848/*"
+    ]
+  }
 }

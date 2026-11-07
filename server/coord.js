@@ -396,5 +396,5 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
     return null;
   }
 
-  return { route, mcpTools, inboxFor, tell, control, agents, ownership, conflicts, handoff, requestReview, reviews, plan, accept, summary, usage };
+  return { route, mcpTools, inboxFor, tell, control, agents, ownership, addLane, dropLane, conflicts, handoff, requestReview, reviews, plan, accept, summary, usage };
 };

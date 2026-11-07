@@ -21,7 +21,56 @@ proposals, calendar items, bugs, repo, agents, `VISION.md` and `TRIBE_CONTEXT.md
   project.
 - **Presence.** The room panel shows which project each person (and each agent) is in.
 
-## Starting a project
+## One click: Create project → room → link → chat → repo → flow
+
+Click **+**. The name is already filled in, so **Create** is the only click (server/flow.js, app/ui/flow.js):
+
+1. **Room.** The project is created and this computer hosts it.
+2. **Link.** A project invite (72 h, 10 uses). It uses the public https address when Tailscale Funnel or
+   cloudflared is available (turned on in the background), else the Wi-Fi address.
+3. **Chat opens** with a **Getting started** card docked on top: compact steps (Room ✓ · Link ✓ · Repo ✓ ·
+   GitHub ✓), the invite link (Copy, QR, Share on phones), roles, and a drop zone for notes and files.
+4. **Repo.** In the background: `workspaces/<project>/` with README, VISION.md, CLAUDE.md (the gist rules),
+   PLAN.md, TRIBE_CONTEXT.md and one folder per role (each with a README saying who owns it), `git init`
+   and a first commit.
+5. **GitHub.** A private repo is created and pushed: with the starter's saved GitHub token (REST API,
+   token passed to git through a credential helper, never in a URL or a log), else with the `gh` CLI when
+   it is signed in on the host, else it stays local and the card shows one **Connect GitHub** chip.
+   `TRIBE_GITHUB_API` points at another API base (tests use a mock); `TRIBE_NO_GH=1` skips the gh CLI.
+
+**Roles and folders.** Each role has a name, a color (Ember, Teal, Indigo, green, rose, or the muted sand,
+sage and plum), a glyph, its people (and their agents) and the folders it owns. Default: Lead (`docs/`),
+Design (`design/`, `assets/`), Frontend (`app/`), Backend (`server/`), QA (`tests/`); the starter makes
+these folders. Tap a role in the card to take it, leave it or give it to someone; **Edit roles** (or
+**Roles** in the sidebar) renames, recolors, changes the glyph and the folders. Holding a role gives you
+and your agents lanes on its folders in the ownership map (coord.js). The role color shows everywhere:
+gist cards, plan items, task cards, folder chips (color dot + friendly folder name) and avatar rings.
+`GET /api/projects/:id/roles` returns roles, people and folder → role mappings for other views.
+
+**Notes and files** dropped on the card become Docs (text) or files in the repo's `docs/notes/`
+(anything else), and a copy of text notes goes to `brain/notes/`.
+
+**Start the flow** turns the notes (or VISION.md) into a first plan: the local brain if it answers, else
+rules (headings → milestones, bullets → items, keywords or `[Role]` tags → roles). Every item becomes a
+task (assigned when the role has one person), PLAN.md is written and committed, and a plan gist is posted.
+
+**Gists.** Agents report with the MCP tool `post_gist` (kind: progress, upgrade, plan, blocker,
+assessment; a title, ≤5 bullets of ≤120 characters, files, link). The server rejects fenced code, code-like
+bullets and bodies over ~600 characters with a message telling the agent to summarize. Gists render as
+compact cards in chat and in **Updates**. Commits (Commit my changes, or new commits on the checked-out
+branch) become gists automatically: commit subjects + files and the role areas they touch (brain summary
+when available), with a link to the diff on GitHub. Also `read_plan`, `my_role`, `list_gists`.
+
+**The living plan** (Updates, one hero card): items check off as their tasks finish (PLAN.md commits keep
+the history), blocker gists surface on the plan until resolved (by a human, or a "fixed/unblocked"
+progress gist), upgrade gists become plan changes that only humans approve (Approve/Deny). **Assess now**
+(and once a day) posts an assessment gist: progress vs plan, who is blocked, risks, the next 3 moves.
+
+State: `.tribe/flow/<project>.json` and `.tribe/flow/<project>.gists.jsonl`. HTTP: `/api/flow`
+(`create`, `roles`, `notes`, `start`, `assess`, `plan`, `changes/:id/approve|deny`, `blockers/:id/resolve`,
+`github`, `invite`) and `/api/gists`.
+
+## Starting a project from a folder or repo
 
 Click the **+** circle (or drop a folder on the circles, or on the **Start a project** card on Home). One dialog: drop a folder or repo, or type a name, a GitHub URL or a folder path, then **Create**.
 

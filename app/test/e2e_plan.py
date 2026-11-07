@@ -398,7 +398,7 @@ def main():
             host.mouse.move(head["x"] + 60, head["y"] + 18); host.mouse.down(); host.mouse.move(head["x"] - 340, head["y"] + 250, steps=8); host.mouse.up()
             pos = host.evaluate("JSON.parse(localStorage.getItem('tribecode.floats'))['doc:roadmap']")
             assert pos["open"] and abs(pos["x"] - (head["x"] - 400)) < 3, (pos, head)
-            host.click("#nest-more"); host.click("#more-menu button:has-text('Pop out task board')")
+            host.keyboard.press("Control+k"); host.fill("#pal-input", "pop out the task board"); host.keyboard.press("Enter")   # Ctrl K: Pop out the task board
             host.wait_for_selector(".fwin[data-float='tasks'] .ft-row:has-text('Fix controller drift')")
             host.evaluate("TribeApp.show('calendar')"); host.wait_for_selector("#view-calendar:not(.hidden)")
             assert host.locator(".fwin[data-float='doc:roadmap']").is_visible() and host.locator(".fwin[data-float='tasks']").is_visible()
@@ -429,7 +429,7 @@ def main():
 
             # ---------- phone: comments sheet + calendar fit ----------
             phone = open_as(b, "Maya", maya_tok, viewport=(390, 844))
-            phone.click('#tabbar [data-tab-more]'); phone.click("#more-menu [data-more='calendar']"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")
+            phone.click('#menu-btn'); phone.click("#nest-calendar"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")   # phones: Project Hub lives in the panel
             b.close()
 
         assert not errors, "\n".join(errors)

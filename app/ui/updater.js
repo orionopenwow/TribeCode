@@ -52,6 +52,16 @@
         await new Promise(r => setTimeout(r, 800));
         await u.install(); await window.__TAURI__.process.relaunch();
       },
+      // Closing the window with an update ready: save, stop the server, install, and let the app exit.
+      async installOnClose() {
+        const inv = window.__TAURI__.core;
+        try { await window.TribeApp.saveAll(); } catch {}
+        try { await inv.invoke('host_stop'); } catch {}
+        try { await inv.invoke('host_kill_stale'); } catch {}
+        await new Promise(r => setTimeout(r, 600));
+        try { localStorage.setItem('tribecode.restoreAfterUpdate', JSON.stringify({ version: u.version, at: Date.now() })); } catch {}
+        await u.install();
+      },
     };
   }
 
@@ -227,5 +237,11 @@
   window.TribeUpdater = {
     init() { welcomeBack(); check(); setInterval(check, CHECK_EVERY_MS); },
     check, openPop, current: () => current,
+    // app.js asks this before closing the desktop window: a downloaded update installs on the way out.
+    async beforeClose() {
+      if (!pending || !pending.ready || !pending.installOnClose) return false;
+      window.TribeApp.toast(`Installing v${pending.version} while TribeCode closes…`);
+      try { await pending.installOnClose(); return true; } catch (e) { console.warn('install on close failed', e); return false; }
+    },
   };
 })();

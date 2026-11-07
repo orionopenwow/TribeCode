@@ -1,0 +1,231 @@
+/* Chat bubbles (app/ui/chatx.js): Telegram-style grouping and in-bubble details, laid out edge to edge like
+   Instagram's web DMs (design/inspiration/chat-ref-1..3.png). Flat matte: 1px borders, luminance steps,
+   no shadows, glows, blur or gradients. Loaded last so it wins over voice.css / votes.css / gists.css. */
+:root {
+  --bubble-other: #1E242D;      /* raised */
+  --bubble-other-edge: #2A313C;
+  --bubble-other-text: #E7EAF0;
+  --bubble-other-meta: #8391A6; /* 4.9:1 on the bubble */
+  --bubble-mine: #3A2416;       /* deep flat Ember tint */
+  --bubble-mine-edge: #5A3218;
+  --bubble-mine-text: #F4EDE8;  /* 12.5:1 */
+  --bubble-mine-meta: #C79C80;  /* ember tan, 5.9:1 */
+  --bubble-mine-chip: #4A2E1C;
+  --bubble-r: 14px;             /* outer corners */
+  --bubble-r-in: 6px;           /* corners between bubbles of one group */
+  --bubble-r-tail: 4px;         /* the corner next to the avatar on the last bubble */
+  --bubble-max: 68%;
+  --day-pill: #1B2028;
+}
+body.light {
+  --bubble-other: #FFFFFF; --bubble-other-edge: #DADFE6; --bubble-other-text: #12151A; --bubble-other-meta: #6B7484;
+  --bubble-mine: #FBE3D2; --bubble-mine-edge: #F0C4A4; --bubble-mine-text: #2A1608; --bubble-mine-meta: #8C5A3A; --bubble-mine-chip: #F6D2B8;
+  --day-pill: #FFFFFF;
+}
+
+/* ---------- the chat column uses the full width of main ---------- */
+.main > #view-chat:not(.hidden) { max-width: none; }
+.main > #view-chat.pp-open:not(.hidden) { max-width: none; }
+#chat-list, #dm-list { gap: 0; padding: 6px 4px 14px; }
+
+/* ---------- conversation header (desktop) ---------- */
+.chat-col .chat-title.cb { display: flex; align-items: center; gap: 12px; min-height: 58px; margin: 0 0 4px; padding: 6px 2px 10px; border-bottom: 1px solid var(--edge); }
+.cb-av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 13px; font-weight: 650; }
+.cb-av svg.i { width: 18px; height: 18px; }
+.cb-av.cb-tribe { background: var(--surface-3); color: var(--accent-ink); }
+.cb-tt { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; }
+.cb-tt .chan-switch, .cb-tt .dm-back { font-size: 15px; font-weight: 650; color: var(--text); height: 24px; }
+.cb-tt > span:not(.cb-sub) { font-size: 15px; }
+.cb-sub { font-family: var(--font); font-size: 12px; font-weight: 400; color: var(--faint); letter-spacing: 0; padding-left: 0; }
+.cb-acts { margin-left: auto; display: flex; gap: 4px; }
+.cb-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+.cb-btn svg.i { width: 21px; height: 21px; }
+.cb-btn:hover, .cb-btn:focus-visible { background: var(--surface-2); color: var(--text); outline: none; }
+
+/* ---------- rows ---------- */
+.msg.dx { position: relative; display: flex; align-items: flex-end; gap: 8px; padding: 0; margin-top: 2px; border-radius: 0; font-size: 14px; }
+.msg.dx.g-first { margin-top: 10px; }
+.day-sep + .msg.dx, .unread-div + .msg.dx { margin-top: 4px; }
+.msg.dx > .avatar { width: 30px; height: 30px; font-size: 11px; visibility: hidden; }
+.msg.dx.g-last > .avatar { visibility: visible; }
+.msg.dx.mine { justify-content: flex-end; }
+.msg.dx.mine > .avatar { display: none; }
+
+/* ---------- the bubble ---------- */
+.msg.dx .mb { position: relative; flex: 0 1 auto; min-width: 0; max-width: var(--bubble-max); padding: 6px 10px 5px; border: 1px solid var(--bubble-other-edge); border-radius: var(--bubble-r);
+  background: var(--bubble-other); color: var(--bubble-other-text); }
+.msg.dx:not(.g-first) .mb { border-top-left-radius: var(--bubble-r-in); }
+.msg.dx:not(.g-last) .mb { border-bottom-left-radius: var(--bubble-r-in); }
+.msg.dx.g-last .mb { border-bottom-left-radius: var(--bubble-r-tail); }
+.msg.dx.mine .mb { background: var(--bubble-mine); border-color: var(--bubble-mine-edge); color: var(--bubble-mine-text); border-radius: var(--bubble-r); }
+.msg.dx.mine:not(.g-first) .mb { border-top-right-radius: var(--bubble-r-in); }
+.msg.dx.mine:not(.g-last) .mb { border-bottom-right-radius: var(--bubble-r-in); }
+.msg.dx.mine.g-last .mb { border-bottom-right-radius: var(--bubble-r-tail); }
+/* a single short line of mine reads as a compact pill */
+.msg.dx.mine.g-first.g-last:not(.has-vn):not(.has-img):not(.has-vote):not(.has-gx) .mb { border-radius: 18px; border-bottom-right-radius: 18px; padding: 6px 12px 5px; }
+
+/* name: first bubble of a group, member color (agents Teal + the Claude glyph); never on yours */
+.msg.dx .mb > b.nm { display: none; align-items: center; gap: 4px; margin: 0 0 1px; font-size: 13px; font-weight: 650; line-height: 1.35; color: var(--nc, var(--peer-ink)); }
+.msg.dx.g-first:not(.mine) .mb > b.nm { display: flex; }
+.msg.dx .nm-g { width: 12px; height: 12px; color: var(--live); }
+
+/* text + the time inline at the bottom-right */
+.msg.dx .mb > p { display: flow-root; margin: 0; color: inherit; font-size: 14px; line-height: 1.42; word-break: break-word; overflow-wrap: anywhere; }
+.msg.dx.brain .mb > p { color: inherit; }
+.msg.dx .mb p strong { color: inherit; font-weight: 650; }
+.msg .mt { float: right; position: relative; top: 5px; display: inline-flex; align-items: center; gap: 3px; margin: 0 0 0 10px; height: 16px; line-height: 16px;
+  font-family: var(--font); font-size: 11px; font-weight: 400; color: var(--bubble-other-meta); white-space: nowrap; user-select: none; }
+.msg .mt time { margin: 0; font-family: inherit; font-size: inherit; color: inherit; }
+.msg .mt .edited { margin: 0 2px 0 0; font-family: inherit; font-size: 10.5px; font-style: italic; color: inherit; }
+.msg.dx.mine .mt { color: var(--bubble-mine-meta); }
+.mt .tk { display: inline-flex; align-items: center; }
+.mt .tk svg.i { width: 15px; height: 15px; stroke-width: 1.8; }
+.mt .tk.read { color: var(--live); }
+body.light .mt .tk.read { color: var(--live-ink); }
+.mt-row { display: flow-root; margin-top: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* forwarded line, reply quote */
+.msg.dx .fwd { margin: 1px 0 3px; font-size: 12px; color: var(--bubble-other-meta); }
+.msg.dx.mine .fwd { color: var(--bubble-mine-meta); }
+.msg.dx .fwd b { color: inherit; }
+.msg.dx .quote { --qc: var(--peer-ink); position: relative; display: flex; flex-direction: column; gap: 0; width: 100%; min-width: 160px; margin: 3px 0 4px; padding: 4px 10px 5px 12px;
+  border: 0; border-radius: 6px; background: color-mix(in srgb, var(--qc) 13%, transparent); text-align: left; font-size: 13px; line-height: 1.35; color: inherit; cursor: pointer; overflow: hidden; }
+.msg.dx .quote::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--qc); }
+.msg.dx .quote b { font-size: 13px; font-weight: 650; color: var(--qc); }
+.msg.dx .quote span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .86; }
+.msg.dx .quote:hover { background: color-mix(in srgb, var(--qc) 20%, transparent); }
+
+/* reactions inside the bubble: emoji + tiny faces (or a count); yours highlighted; time on the same row */
+.msg.dx .reacts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 5px; }
+.msg.dx .reacts .mt { float: none; top: 2px; margin-left: auto; padding-left: 8px; }
+.msg.dx .rx { height: 26px; gap: 4px; padding: 0 8px 0 6px; border: 1px solid transparent; border-radius: 999px; background: var(--surface-3); font-size: 14px; line-height: 1; color: inherit; }
+.msg.dx .rx:hover { border-color: var(--edge-pop); background: var(--surface-3); }
+.msg.dx .rx.on { border-color: var(--accent); background: rgba(242, 107, 29, .22); }
+.msg.dx .rx.on:hover { border-color: var(--accent); background: rgba(242, 107, 29, .28); }
+.msg.dx.mine .rx { background: var(--bubble-mine-chip); }
+.msg.dx.mine .rx.on { background: rgba(242, 107, 29, .34); }
+.msg.dx .rx-n { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); }
+.msg.dx.mine .rx-n { color: var(--bubble-mine-meta); }
+.msg.dx .rx.on .rx-n { color: var(--accent-ink); }
+.msg.dx .rx.has-f .rx-n { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.msg.dx .rx { position: relative; }
+.rx-fs { display: inline-flex; }
+.rx-f { width: 20px; height: 20px; display: grid; place-items: center; margin-left: -6px; border-radius: 50%; border: 1.5px solid var(--surface-3); font-size: 9.5px; font-weight: 700; font-style: normal; line-height: 1; }
+.rx-f:first-child { margin-left: 0; }
+.msg.dx.mine .rx-f { border-color: var(--bubble-mine-chip); }
+.msg.dx .rx.on .rx-f { border-color: #3A281F; }
+.msg.dx .rx-add { width: 26px; padding: 0; justify-content: center; background: none; color: var(--bubble-other-meta); }
+.msg.dx.mine .rx-add { color: var(--bubble-mine-meta); background: none; }
+
+/* link chips */
+.msg.dx .lps { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 5px; }
+.msg.dx .lps .mt { float: none; top: 2px; margin-left: auto; }
+.msg.dx .lp { background: var(--canvas); }
+
+/* voice note: big Ember play button, waveform, "0:09 · 35.5 KB", time at the right */
+.msg.dx.has-vn .mb { padding: 7px 10px 6px 7px; width: min(360px, var(--bubble-max)); }
+.msg.dx .vn { display: flex; align-items: center; gap: 10px; margin: 0; padding: 0; width: 100%; max-width: none; border: 0; background: none; border-radius: 0; }
+.msg.dx .vn-play { width: 44px; height: 44px; background: var(--accent); color: #fff; }
+.msg.dx .vn-play svg.i { width: 17px; height: 17px; }
+.msg.dx .vn-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.msg.dx .vn-wave { flex: none; height: 26px; gap: 2px; justify-content: flex-start; }
+.msg.dx .vn-wave i { flex: 0 0 2.5px; background: var(--bubble-other-meta); opacity: .75; }
+.msg.dx.mine .vn-wave i { background: var(--bubble-mine-meta); }
+.msg.dx .vn-wave i.on { background: var(--accent); opacity: 1; }
+.msg.dx .vn-meta { display: flex; align-items: center; gap: 8px; }
+.msg.dx .vn-dur { font-family: var(--font); font-size: 12px; color: var(--bubble-other-meta); }
+.msg.dx.mine .vn-dur { color: var(--bubble-mine-meta); }
+.msg.dx .vn-meta .mt { float: none; top: 0; margin-left: auto; }
+.msg.dx .mb > p.vn-tx { margin-top: 5px; font-size: 12.5px; line-height: 1.45; color: var(--bubble-other-meta); }
+.msg.dx.mine .mb > p.vn-tx { color: var(--bubble-mine-meta); }
+
+/* images: a tall rounded card, no bubble padding; time on a solid pill over the corner */
+.msg.dx.has-img .mb { padding: 3px; }
+.msg.dx.has-img .mb > b.nm { padding: 3px 7px 2px; }
+.msg.dx.has-img .mb > p { padding: 4px 7px 2px; }
+.msg.dx.has-img .reacts, .msg.dx.has-img .lps { padding: 0 5px 3px; }
+.msg.dx .thumb { position: relative; display: block; margin: 0; padding: 0; border: 0; border-radius: 11px; overflow: hidden; background: var(--canvas); max-width: 300px; cursor: zoom-in; }
+.msg.dx .thumb img { display: block; width: 100%; max-width: 300px; max-height: 340px; min-height: 60px; object-fit: cover; }
+.msg.dx .thumb .mt { position: absolute; float: none; top: auto; right: 7px; bottom: 7px; margin: 0; height: 20px; padding: 0 7px; border-radius: 999px; background: #12151A; color: #E7EAF0; }
+.msg.dx.mine .thumb .mt { color: #F4EDE8; }
+
+/* vote + gist cards keep their own card, in the same alignment system */
+.msg.dx.has-vote .mb, .msg.dx.has-gx .mb { padding: 0; border: 0; background: none; width: min(460px, var(--bubble-max)); max-width: var(--bubble-max); }
+.msg.dx.has-gx .mb { width: min(560px, var(--bubble-max)); }
+.msg.dx.has-vote .mb > b.nm, .msg.dx.has-gx .mb > b.nm { padding: 0 2px 2px; }
+.msg.dx.has-vote .vt, .msg.dx.has-gx .gx { margin-top: 0; max-width: none; }
+.msg.dx.has-vote .mt-row .mt, .msg.dx.has-gx .mt-row .mt, .msg.dx.has-vote .reacts .mt, .msg.dx.has-gx .reacts .mt { top: 1px; color: var(--faint); }
+.msg.dx.has-vote .reacts, .msg.dx.has-gx .reacts { margin-top: 6px; }
+.msg.dx.has-vote .mt-row, .msg.dx.has-gx .mt-row { margin-top: 3px; }
+
+/* deleted, system lines, the brain */
+.msg.dx .mb > p.gone { font-style: italic; color: var(--bubble-other-meta); }
+.msg.dx.sys { justify-content: center; margin: 8px 0 2px; }
+.msg.dx.sys > .avatar, .msg.dx.sys.g-first .mb > b.nm, .msg.dx.sys .mb > b.nm { display: none; }
+.msg.dx.sys .mb { display: flex; flex-direction: column; align-items: center; max-width: 82%; padding: 0; border: 0; background: none; }
+.msg.dx.sys .mb > p { padding: 3px 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--day-pill); font-size: 12px; line-height: 1.45; color: var(--muted); text-align: center; }
+.msg.dx.sys .chat-join { margin-top: 6px; }
+.msg.dx.brain .mb > b.nm .nm-g { display: none; }
+
+/* message actions button sits beside the bubble */
+.msg.dx .msg-more { position: static; align-self: center; flex: none; width: 26px; height: 26px; border-color: transparent; background: none; }
+.msg.dx .msg-more:hover, .msg.dx .msg-more:focus-visible { border-color: var(--edge); background: var(--surface); }
+.msg.dx.mine .msg-more { order: -1; }
+
+/* date pills; the unread line */
+.day-sep { display: flex; justify-content: center; margin: 14px 0 4px; flex: none; }
+.day-sep span { padding: 3px 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--day-pill); font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); }
+.time-sep { display: flex; justify-content: center; margin: 14px 0 2px; flex: none; font-size: 11.5px; color: var(--faint); }
+.day-sep + .msg.dx, .time-sep + .msg.dx { margin-top: 6px; }
+#chat-list .unread-div, #dm-list .unread-div { margin: 12px 0 2px; flex: none; }
+
+/* jump highlight and double-tap like land on the bubble */
+.msg.dx.flash, .msg.dx.pp-flash { background: none; box-shadow: none; }
+.msg.dx.flash .mb, .msg.dx.pp-flash .mb { border-color: var(--live); }
+.msg.dx.liked { animation: none; }
+.msg.dx.liked .mb { animation: bub-liked .4s var(--ease); }
+@keyframes bub-liked { 0% { transform: scale(1); } 35% { transform: scale(1.025); } 100% { transform: scale(1); } }
+
+/* the vote hint under your own message */
+.msg.dx .vt-hint { color: inherit; border-color: var(--bubble-mine-edge); }
+
+/* ---------- composer: one full-width pill (desktop) ---------- */
+.composer-dock .compose { height: 48px; padding: 0 8px 0 6px; gap: 2px; border-radius: 24px; }
+.composer-dock .compose input { padding: 0 6px; }
+.compose .cx-btn { width: 36px; height: 36px; display: grid; place-items: center; flex: none; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
+.compose .cx-btn svg.i { width: 21px; height: 21px; }
+.compose .cx-btn:hover, .compose .cx-btn:focus-visible { background: var(--surface-2); color: var(--text); outline: none; }
+.composer-dock .compose .kbd { display: none; }
+.cx-emoji { width: 268px; }
+
+/* ---------- phones ---------- */
+@media (max-width: 820px) {
+  :root { --bubble-max: 82%; }
+  #chat-list, #dm-list { padding: 4px 0 10px; }
+  .msg.dx > .avatar { width: 28px; height: 28px; font-size: 10.5px; }
+  .msg.dx { gap: 6px; }
+  .msg.dx .msg-more { display: none; }   /* long-press opens the actions */
+  .msg.dx.has-vn .mb { min-width: 0; width: var(--bubble-max); }
+  .msg.dx .thumb, .msg.dx .thumb img { max-width: 240px; }
+  .compose .cx-btn { display: none; }
+  .msg.dx.has-vote .mb, .msg.dx.has-gx .mb { width: var(--bubble-max); }
+}
+@media (hover: none) { .msg.dx .msg-more { display: none; } }
+@media (prefers-reduced-motion: reduce) { .msg.dx.liked .mb { animation: none; } }
+
+/* same size for every icon inside the composer pill */
+.compose .mic-btn svg, .compose [data-dictate] svg { width: 21px !important; height: 21px !important; }
+
+/* Shared files in chat: a download chip (name + size), flat like the rest of the bubble */
+.msg.dx .fchip-dl { display: flex; align-items: center; gap: 10px; margin: 2px 0 4px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--canvas); color: inherit; text-decoration: none; max-width: 300px; }
+.msg.dx .fchip-dl:hover, .msg.dx .fchip-dl:focus-visible { border-color: var(--brand); }
+.msg.dx .fchip-dl .i { width: 18px; height: 18px; flex: none; color: var(--brand); }
+.msg.dx .fchip-dl .fd-t { display: flex; flex-direction: column; min-width: 0; }
+.msg.dx .fchip-dl b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg.dx .fchip-dl small { color: var(--body); font-size: 11.5px; font-family: var(--mono); }
+
+/* "Load earlier messages" at the top of a long chat */
+.chat-more { display: block; margin: 6px auto 14px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--body); font: 500 12px/1.4 var(--mono); cursor: pointer; }
+.chat-more:hover, .chat-more:focus-visible { color: var(--white); border-color: var(--brand); }
+.chat-more:disabled { opacity: .6; cursor: default; }
