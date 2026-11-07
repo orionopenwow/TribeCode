@@ -16,6 +16,7 @@
     update: { snoozedVersion: '', snoozeUntil: 0 },
     server: { url: '', token: '' },
     hosting: false,
+    crashReports: true,       // self-heal + crash reports go to the bug inbox (Settings)
   };
 
   function merge(base, extra) {

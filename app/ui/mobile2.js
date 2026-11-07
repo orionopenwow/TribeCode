@@ -133,7 +133,9 @@
     const num = id => { const e = document.getElementById(id); return e ? Number(String(e.textContent).replace('+', '')) || 0 : 0; };
     setBadge('nn-chat', num('nn-chat'));
     setBadge('nn-tasks', 0);   // the count of open tasks is not "news"; keep Tasks calm
-    setBadge('updates', Math.max(pendingMine().length, num('nn-updates')));   // the inbox count already includes approval asks
+    // The bell's unread count (notify.js #nf-count; the old nest Updates row is gone) — it already includes approval asks.
+    const inbox = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state().unread || 0 : num('nf-count');
+    setBadge('updates', Math.max(pendingMine().length, inbox));
   }
 
   // =====================================================================
@@ -512,7 +514,7 @@
     } else if (mine) {
       body = `${head}
         ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Status</div><div class="m2-pf-st">${esc(where)}</div></div>`}
-        <div class="m2-pf-sec"><div class="eyebrow">Your Claude</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your Claude Code</b><small>One command on your computer</small></span>${ic('right', 16)}</button>`}</div>
+        <div class="m2-pf-sec"><div class="eyebrow">Your Claude</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button><button class="m2-pf-more" data-pf="connect">Connect from another computer</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your Claude Code</b><small>One command on your computer</small></span>${ic('right', 16)}</button>`}</div>
         <div class="m2-pf-acts">
           <button data-pf="invite">${ic('userplus', 20)}<span>Invite</span></button>
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
@@ -791,7 +793,7 @@
       const d = $('#people-status'); if (d) d.remove();
     }
     const watch = (id, fn) => { const el = document.getElementById(id); if (el) new MutationObserver(fn).observe(el, { childList: true, characterData: true, subtree: true, attributes: true }); };
-    ['nn-chat', 'nn-updates', 'nn-tasks'].forEach(id => watch(id, syncBadges));
+    ['nn-chat', 'nf-count', 'nn-tasks'].forEach(id => watch(id, syncBadges));
     watch('nest-name', paintProject); watch('nest-sub', paintProject); watch('pj-switch', paintProject);
     const head = $('#chat-head') || $('.chat-title'); if (head) new MutationObserver(talkLabel).observe(head, { childList: true, subtree: true });
     C.on('presence', () => { paintProject(); paintMe(); });
@@ -802,5 +804,11 @@
     if (C.connected()) loadUpdates();
   }
   window.TribeMobile = { show, onShow, profile, talkTo, plusMenu, recorder, closeSheet, refresh: () => { loadUpdates(); hub.at = 0; if (cur === 'docs') docsHub(true); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } };
+  // Phone: while the drawer (rail + nest) is closed it sits off-screen; keep its controls out of the Tab order
+  // and away from screen readers (found by scripts/explore.py: 15+ invisible focusable controls).
+  const phoneMq = matchMedia('(max-width: 820px)');
+  const drawerInert = () => { const closed = phoneMq.matches && !document.body.classList.contains('drawer-open'); ['#tour-rail', '#tour-side'].forEach(s => { const el = document.querySelector(s); if (el && el.inert !== closed) el.inert = closed; }); };
+  new MutationObserver(drawerInert).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  phoneMq.addEventListener('change', drawerInert); drawerInert();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

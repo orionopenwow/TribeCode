@@ -35,7 +35,7 @@
   const empty = (title, line) => `<div class="coord-empty"><b>${title}</b><span>${line}</span></div>`;
   async function draw() {
     const el = body(); if (!el) return;
-    if (!C.connected()) { el.innerHTML = empty('Needs a tribe', 'Coordination is shared, so it lives on the tribe host.'); return; }
+    if (!C.connected()) { el.innerHTML = empty('Needs a tribe', 'Coordination is shared, so it lives on the tribe host.') + '<div class="coord-empty-acts"><button class="btn primary" data-coord-join>Host or join a tribe</button></div>'; el.querySelector('[data-coord-join]').onclick = () => window.TribeApp.openInvite(); return; }
     try { await ({ agents, ownership, conflicts, handoffs, reviews, plan })[tab](el); }
     catch (e) { el.innerHTML = empty('Could not load this', esc(e.message)); }
   }

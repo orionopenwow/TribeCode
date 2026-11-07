@@ -124,3 +124,23 @@ Still quick, not yet done:
 8. Voice memo → tasks (#47)
 9. Share sheet: QR, spectator and device links in one place (#30, #34)
 10. "Host is back online" push for friends (#33)
+
+## Part 3: from the Explorer (2026-11-07)
+
+`npm run explore` (docs/EXPLORER.md) clicked through the app on desktop, on a phone, in the desktop app and with no tribe. It also ran the core-intent journeys: agents collaborating, the Claude Code connector, repo autopilot, chat fidelity and notifications. These ideas come from where it got stuck or took the long way. Anything already listed above is left out; where an idea builds on an existing one, the link is noted.
+
+### Quick wins
+1. **A visible "Preview app" on desktop.** On desktop the preview opens only from Ctrl K or the Home fleet row; the journey "Preview the app" found no button. Add it to the project header or the project home. On phones it already sits on the repo hero.
+2. **"Ask for a hand-off" in one tap.** When a claim is refused, a human sees "claimed by X" in the Ownership map. A button there should send X a hand-off request: agents now get a next step in the refusal text, and humans should get one too.
+3. **Hint before the #agents channel refuses.** Sending without an @mention answers 400 ("@mention an agent"). Show the hint, with @-autocomplete, while typing. This pairs with slash-command autocomplete (#9).
+4. **Empty states with one action.** "No milestones yet" should offer "Add a milestone", "No change requests" should offer "Send a request from your phone", and Conflict radar's "No overlaps" should offer "Give me a branch". Each one a single button.
+5. **Dark ink on Ember for small text.** White on Ember is 3.05:1, under AA for text below 18px. Use canvas-colored ink on Ember buttons and badges, or keep Ember for large labels only. This needs a decision in DESIGN-SYSTEM.md. The Home "New project" tile's subline (#FDE4D6 on Ember, 2.5:1) belongs to the Home redesign.
+
+### Next
+6. **Insights that fix themselves.** Every `/api/insights` item gets one action: Download backup, Connect GitHub, Install Ollama, "Open the view" for explorer findings, and "Make it a task" for suggestions. This builds on the Health page (#49), which `/api/insights` now feeds.
+7. **Nightly explorer with a delta.** A scheduled `npm run explore` uploads `findings.json` (POST /api/insights/explorer) and posts a gist in #agents: fixed, new and still-open findings since last night. Agents pick up the "new" list as tasks.
+8. **"Ask the host for the public link" from the Connect card.** A member who sees no "Anywhere" command can't turn on the tunnel. One tap should notify the host, and the command should appear for the member once the host approves.
+9. **Send report on any error toast.** Errors that reach a toast get "Send report". It goes through the self-heal error budget, so repeats are filed once.
+
+### Later
+10. **Explorer journeys written by the tribe.** A `journeys/` folder of plain-step goals ("invite a friend", "ship a level"), so a project's own app gets clicks-to-goal tracking in the milestone report.

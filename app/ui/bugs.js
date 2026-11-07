@@ -17,6 +17,8 @@
 
   function autoReport(msg, stack) {
     if (!C.connected() || autoSent >= 3 || /ResizeObserver|Script error/.test(msg)) return;   // never spam the inbox
+    const H = window.TribeSelfHeal;   // Settings → Send crash reports; identical errors filed once per 30 min, 5 an hour at most
+    if (H && (!H.reportsOn() || !H.shouldFile(msg))) return;
     autoSent++;
     C.api('/bugs', { method: 'POST', body: { title: `Crash: ${String(msg).slice(0, 120)}`, details: 'Reported automatically by TribeCode.', logs: [stack || '', ...recent.slice(-10)].join('\n'), view: currentView(), version: window.TribeUpdater ? window.TribeUpdater.current() : '', auto: true } }).catch(() => {});
   }

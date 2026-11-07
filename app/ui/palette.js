@@ -57,7 +57,7 @@
     sel = Math.min(sel, Math.max(0, shown.length - 1));
     $('#pal-list').innerHTML = shown.length ? shown.map((it, i) => `<button class="pal-item ${i === sel ? 'on' : ''}" data-i="${i}"><span class="k">${it.kind}</span><span class="l">${esc(it.label)}</span>${it.hint ? `<span class="h">${esc(it.hint)}</span>` : ''}</button>`).join('')
       : '<div class="faint" style="padding:14px;font-size:13px">No matches</div>';
-    $('#pal-list').querySelectorAll('[data-i]').forEach(b => { b.onmousemove = () => { if (sel !== +b.dataset.i) { sel = +b.dataset.i; draw(); } }; b.onclick = () => run(+b.dataset.i); });
+    $('#pal-list').querySelectorAll('[data-i]').forEach(b => { b.onmousemove = () => { if (sel !== +b.dataset.i) { sel = +b.dataset.i; $('#pal-list').querySelectorAll('[data-i]').forEach(x => x.classList.toggle('on', +x.dataset.i === sel)); } }; b.onclick = () => run(+b.dataset.i); });
   }
   function run(i) { const it = shown[i]; close(); if (it) setTimeout(it.run, 30); }
 

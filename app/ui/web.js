@@ -39,11 +39,11 @@
     try {
       const r = await C.api('/device-link/redeem', { method: 'POST', body: { key: deviceKey } });
       S.set({ name: r.member.name, color: r.member.color, onboarded: true, server: { url: C.base(), token: r.token } });
-      C.connect(); window.TribeApp.refresh();
+      C.connect(); if (window.TribeApp) window.TribeApp.refresh();   // the redeem can answer before app.js has run (it refreshes on boot)
       afterDeviceSignIn();
     } catch (e) {
       if (e.status === 404) { S.set({ server: { url: '', token: '' } }); C.connect(); showRevoked(); }
-      else window.TribeApp.toast("Couldn't reach your tribe. It will reconnect when the host is back.");
+      else if (window.TribeApp) window.TribeApp.toast("Couldn't reach your tribe. It will reconnect when the host is back.");
     }
   }
   function afterDeviceSignIn() {

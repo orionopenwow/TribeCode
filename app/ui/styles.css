@@ -14,7 +14,7 @@ body.dark {
   --win: #1B2028; --surface: #1B2028; --surface-2: #222833; --surface-3: #2A313C;
   --stroke: #232A33; --edge: #2A313C; --border: #2A313C; --edge-pop: #3A4452;
   --text: #F8FAFC; --muted: #D4DBE5; --faint: #A3AEBD;
-  --accent-ink: #F26B1D; --live-ink: #38C6B1; --amber-ink: #FFB86B; --ember-ink: #FF6F8E; --peer-ink: #8F9BFF;
+  --accent-ink: #FF7A33;   /* Ember text on dark tints: 5:1 (pure Ember on its own tint was 4.3:1) */  --live-ink: #38C6B1; --amber-ink: #FFB86B; --ember-ink: #FF6F8E; --peer-ink: #8F9BFF;
   --chip: rgba(242,107,29,0.14); --live-tint: rgba(56,198,177,0.14); --amber-tint: rgba(255,184,107,0.14);
   --ember-tint: rgba(255,111,142,0.14); --peer-tint: rgba(108,124,255,0.16);
   --on-live: #0B1F1C; --scrim: rgba(8,10,13,0.72);
@@ -26,8 +26,8 @@ body.light {
   --canvas: #F4F5F7; --page: #F4F5F7;
   --win: #FFFFFF; --surface: #FFFFFF; --surface-2: #EEF0F3; --surface-3: #E3E7EC;
   --stroke: #E4E8EE; --edge: #DADFE6; --border: #DADFE6; --edge-pop: #C5CCD6;
-  --text: #12151A; --muted: #4B5563; --faint: #8A93A3;
-  --accent-ink: #C2530F; --live-ink: #127A6C; --amber-ink: #A35F0C; --ember-ink: #C2304F; --peer-ink: #4A58D9;
+  --text: #12151A; --muted: #4B5563; --faint: #5F6775;   /* light theme: 4.8:1+ on every light surface (was 2.6–3.1:1) */
+  --accent-ink: #A34410; --live-ink: #127A6C; --amber-ink: #8A4E08; --ember-ink: #C2304F; --peer-ink: #4A58D9;
   --chip: rgba(242,107,29,0.12); --live-tint: rgba(56,198,177,0.14); --amber-tint: rgba(255,184,107,0.20);
   --ember-tint: rgba(255,111,142,0.14); --peer-tint: rgba(108,124,255,0.12);
   --on-live: #0B1F1C; --scrim: rgba(18,21,26,0.40);

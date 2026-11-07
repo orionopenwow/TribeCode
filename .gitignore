@@ -15,3 +15,7 @@ app/src-tauri/binaries/tribecode-server-*
 
 # local agent worktrees
 .claude/
+
+# Explorer raw dumps (findings.json is kept: the Insights feed and the nightly run read it)
+.explore/*
+!.explore/findings.json

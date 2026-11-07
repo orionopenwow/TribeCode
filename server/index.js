@@ -261,7 +261,10 @@ const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: 
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
 const claims = makeClaims({ store, id, broadcast, nameOf, project: () => P.current() });
 // ---------- web: device links (/m/<key>/) + public https address ----------
-const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe });
+// Pages carry the server version they were served with (<meta name="tribe-version">): app/ui/selfheal.js compares it
+// with the running server's version, so a page cached before an update (service worker, an old tab) knows it is stale.
+const stampHtml = (file, data) => (path.extname(file) === '.html' ? Buffer.from(String(data).replace('<meta name="tribe-version" content="">', `<meta name="tribe-version" content="${VERSION}">`)) : data);
+const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe, stamp: stampHtml });
 const share = makeShare({ port: PORT });
 const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m => console.log(m) });
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js): one hub
@@ -326,6 +329,8 @@ dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor
 // The global scratchpad (server/scratch.js): private quick notes per member, filed into a project later.
 const scratch = makeScratch({ P, base: baseStore, docs, createTask: o => createTask(o), id, str, brain });
 dashboard.useScratch(mid => scratch.load(mid));   // Home's Ask and Refine with AI read your own notes
+// Insights for the Home panel (server/insights.js): explorer findings, host health checks, the Secretary's ideas.
+const insights = require('./insights')({ P, base: baseStore, brain, getMembers: () => members, hasToken: W.hasToken, secretary, version: VERSION, appRoot: path.join(__dirname, '..'), repoOf: p => p.repo || null });
 bus.on('notify', n => dashboard.onNotify(n));
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
@@ -521,7 +526,8 @@ async function apiInProject(req, res, url) {
     if (me.role !== 'host') return fail(res, 403, 'only the host can download a backup');
     const day = new Date().toISOString().slice(0, 10), name = `${slug(tribe.name)}-backup-${day}.tar.gz`;
     res.writeHead(200, { 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
-    return require('./backup').stream(baseStore.root, res, slug(tribe.name) || 'tribe').catch(e => { console.error('backup:', e); res.destroy(); });
+    return require('./backup').stream(baseStore.root, res, slug(tribe.name) || 'tribe').then(() => baseStore.writeJSON('.tribe/backup.json', { last: new Date().toISOString() }))   // insights: "no backup in N days"
+      .catch(e => { console.error('backup:', e); res.destroy(); });
   }
 
   // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
@@ -670,6 +676,7 @@ async function apiInProject(req, res, url) {
   if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }   // the Secretary (server/secretary.js)
   if (a === 'hub' || a === 'dashboard') { const h = await dashboard.route(req, res, ctx()); if (h !== null) return; }   // the Global Hub (server/hub.js)
   if (a === 'scratch') { const h = await scratch.route(req, res, ctx()); if (h !== null) return; }   // private scratchpad (server/scratch.js)
+  if (a === 'insights') { const h = await insights.route(req, res, ctx()); if (h !== null) return; }   // AI Insights feed (server/insights.js)
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
@@ -705,7 +712,7 @@ function serveStatic(req, res, url) {
   fs.readFile(file, (err, data) => {
     if (err) return fail(res, 404, 'not found');
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
-    res.end(data);
+    res.end(stampHtml(file, data));
   });
 }
 

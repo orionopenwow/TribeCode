@@ -558,5 +558,5 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     ask: (q, me) => ask(pid(), q, me.name),
   };
 
-  return { route, tick, onChat, mcp, brief, config: publicCfg, setConfig, isQuiet, view, addRequest, ask };
+  return { route, tick, onChat, mcp, brief, config: publicCfg, setConfig, isQuiet, view, addRequest, ask, ideas: p => ideasOf(p) };   // ideas: the Insights feed (server/insights.js)
 };

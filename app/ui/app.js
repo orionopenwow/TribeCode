@@ -183,9 +183,25 @@
   }
   // Connect Claude Code from anywhere (this computer, same Wi-Fi, or a remote session at home via the public link),
   // see whether it's connected, and disconnect in one click.
-  async function connectClaude() {
+  async function connectClaude(opts) {
     if (!C.connected()) return openInvite();
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
+    // Opening this used to mint a new key at once, which silently cut off a Claude Code that was already working.
+    // When yours is online, say so first; a new command (and key) is one deliberate tap away.
+    if (!(opts && opts.fresh)) {
+      body.innerHTML = '<h2>Connect your Claude Code</h2><p class="lead">Checking…</p>';
+      let mine = null; try { mine = await C.api('/agents/mine'); } catch {}
+      if (mine && mine.online && mine.agent) {
+        body.innerHTML = `<h2>Your Claude Code is connected</h2>
+          <div class="cc-status"><span class="cc-dot on"></span>Connected · ${esc(mine.agent.name)}</div>
+          <p class="faint" style="font-size:13px;line-height:1.5">To connect it from another computer, make a new command. The new key replaces this one, so the session that is running now stops until you paste the new command there.</p>
+          <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><span style="flex:1"></span><button class="btn" data-close>Done</button><button class="btn primary" id="cc-new">New command</button></div>`;
+        body.querySelector('[data-close]').onclick = closeInvite;
+        $('#cc-new').onclick = () => connectClaude({ fresh: true });
+        $('#cc-out').onclick = async () => { try { await C.api('/agents/mine', { method: 'DELETE' }); toast('Disconnected. The key stopped working.'); closeInvite(); } catch (err) { toast(err.message); } };
+        return;
+      }
+    }
     body.innerHTML = '<h2>Connect your Claude Code</h2><p class="lead">Creating a key…</p>';
     let r, where, timer;
     const isHost = (C.state().me || {}).role === 'host';
@@ -218,7 +234,7 @@
           body.innerHTML = `<h2>Disconnected</h2><p class="lead">The key stopped working. To remove it from Claude Code too, run:</p>
             <div class="linkbox"><code>${esc(o.remove)}</code><button class="btn primary" id="cc-rm">Copy</button></div>
             <div class="modal-foot"><button class="btn" id="cc-again">Connect again</button><button class="btn" data-close>Done</button></div>`;
-          $('#cc-rm').onclick = () => copy(o.remove, 'Copied.'); $('#cc-again').onclick = () => connectClaude();
+          $('#cc-rm').onclick = () => copy(o.remove, 'Copied.'); $('#cc-again').onclick = () => connectClaude({ fresh: true });
           body.querySelector('[data-close]').onclick = closeInvite;
         } catch (err) { toast(err.message); }
       };
