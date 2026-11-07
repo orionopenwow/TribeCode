@@ -1,15 +1,14 @@
 TribeCode
 =========
 
-  TribeCode.bat               OPEN TRIBECODE. Installs it the first time, updates it to
-                              the newest release every time, and tidies away old
-                              versions and leftover files. (The app also updates itself:
-                              it downloads in the background and installs when you close it.)
+  Working\Start-Working.bat   THE MAIN FOLDER: the newest work (dev), open at once in its own
+                              window. No .exe to build; it pulls new work by itself every 20 s
+                              and reloads. Uses its own test tribe (Working\tribe-data).
 
-  Try-New-Work.bat            NEWEST WORK (dev branch), live: starts the Working server and
-                              shows it inside the TribeCode app window. No exe to rebuild:
-                              it reloads by itself when new commits land. Profile menu ->
-                              "Back to the installed version" returns to the release.
+  Stable\Update-and-Open-TribeCode.bat
+                              THE INSTALLED APP (released versions). Updates the .exe only when
+                              you double-click it (or press Restart to update in the app), then
+                              opens it. Uses your real tribe in %USERPROFILE%\TribeCode.
 
   Invite-A-Friend.bat         ONE DOUBLE-CLICK: a fresh project and a link that works from
                               anywhere, already copied. Paste it in a text. Your friend taps
@@ -30,9 +29,7 @@ TribeCode
     Start-Stable-From-Source.bat  The released code from source in a browser (rarely needed).
     Reset-Everything.bat      Clears old settings and caches (asks first).
 
-  Working\                    The dev copy and its test tribe (tribe-data). Your real tribe
-                              lives in %USERPROFILE%\TribeCode.
 
-Flow: new work lands on dev (Try-New-Work) -> merged to main and released -> the GitHub
+Flow: new work lands on dev (Working) -> merged to main and released -> the GitHub
 release, the website demo and the desktop app all update together.
-Needs Node.js and Git only for Try-New-Work and the Working folder.
+Needs Node.js and Git only for the Working folder.

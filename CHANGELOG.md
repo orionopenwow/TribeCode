@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.4
+
+- **Pictures you can frame** (like Discord): after you pick a project picture, drag it and zoom (slider, wheel or pinch), see it as the round rail bubble and the rounded square, then Apply. PNG, JPEG, WebP or GIF up to 10 MB and at least 64 px; saved as a crisp 256 px square. Works in the new-project setup and from the overview's picture
+- Your bar at the bottom left is now part of the sidebar (flush, no floating card), and Settings is a real gear
+- **Desktop folders**: `Working\Start-Working.bat` is the main folder: the newest work opens at once, no .exe to build. `Stable\Update-and-Open-TribeCode.bat` updates the installed app only when you double-click it (or press Restart to update)
+- **Phones**: the Agents (robot) button opens "Talk to your Claude": message your Claude on your computer, hand a change to your desktop, ask the AI, or Manage agents
+
 ## v0.8.3
 
 - Home's Notes and the docs center now list your notes as soon as they sync (they used to wait for the next redraw)

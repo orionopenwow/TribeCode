@@ -82,7 +82,7 @@ function makeRepo(spec) {
   console.log('  Setting up the projects (roles, plan, tasks, docs, vote, toolbox, autopilot)...');
   const name = (os.userInfo().username || 'Host').slice(0, 32);
   const r = await request('POST', '/api/host/demo-tribe', { name, share, provider: argv.includes('--cloudflare') ? 'cloudflare' : '', projects });
-  if (r.status === 404) { console.error('  This TribeCode is too old for the demo tribe: update it (Restart to update, or Try-New-Work).'); process.exit(1); }
+  if (r.status === 404) { console.error('  This TribeCode is too old for the demo tribe: update it (Restart to update, or Working\\Start-Working.bat).'); process.exit(1); }
   if (r.status !== 200) { console.error(`  Could not set up the demo tribe: ${r.body.error || r.status}`); process.exit(1); }
   const out = r.body;
 
