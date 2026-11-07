@@ -405,6 +405,7 @@ def main():
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+            ctx.add_init_script("try { sessionStorage.setItem('tribecode.wsTab', 'library') } catch (e) {}")   # this test is about the library (the Starter shelf has e2e_shelf)
             ctx.add_init_script(settings("Maya", "#6C7CFF", maya, P["pixel-quest"]))
             page = ctx.new_page(); watch(page, "desktop")
             page.goto(BASE + "/?skipIntro=1#/workshop")
@@ -472,6 +473,7 @@ def main():
 
             # phone
             pctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
+            pctx.add_init_script("try { sessionStorage.setItem('tribecode.wsTab', 'library') } catch (e) {}")   # this test is about the library (the Starter shelf has e2e_shelf)
             pctx.add_init_script(settings("Sam", "#38C6B1", sam, P["space-run"]))
             phone = pctx.new_page(); watch(phone, "phone")
             phone.goto(BASE + "/?skipIntro=1#/workshop")

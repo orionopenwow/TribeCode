@@ -264,3 +264,13 @@ body.light .ws-scrim { background: rgba(18, 21, 26, .35); }
 /* rail entry */
 .ws-nav { margin-top: 6px; }
 body.ws-open #rail-workshop { color: var(--accent, #F26B1D); background: var(--raised, #1E242D); box-shadow: inset 0 0 0 1px var(--edge, #2A313C); }
+/* Starter shelf */
+.wss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.ws-card-s { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.ws-card-s h3 { margin: 0; font-size: 16px; }
+.ws-card-s p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.wss-top { display: flex; align-items: center; gap: 8px; }
+.wss-added { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--live); }
+.wss-cmd { font-family: var(--mono); font-size: 11.5px; padding: 5px 8px; border-radius: 6px; background: var(--canvas); border: 1px solid var(--edge); color: var(--text); overflow-wrap: anywhere; }
+.wss-acts { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+.wss-note { margin: 18px 0 8px; font-size: 13px; color: var(--muted); }

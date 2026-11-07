@@ -316,6 +316,7 @@ const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMember
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
+const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
 // The Workshop (server/workshop.js): a tribe-wide library apart from projects, plus the community shelf.
@@ -561,6 +562,7 @@ async function apiInProject(req, res, url) {
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());
+  if (a === 'shelf') return shelf.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
