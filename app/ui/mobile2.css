@@ -389,3 +389,19 @@
   .m2-homebar .m2-seg button.on::before { content: ''; position: absolute; top: -7px; left: 50%; width: 22px; height: 3px; margin-left: -11px; border-radius: 0 0 3px 3px; background: var(--accent); }
   .m2-hb-av { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #12151A; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent); }
 }
+
+/* Bottom racks, Instagram-style: icons only, bigger and bolder, flush with the bottom edge */
+@media (max-width: 820px) {
+  .tabbar.m2-rack, .m2-homebar { height: calc(50px + env(safe-area-inset-bottom)); padding-top: 0; }
+  .tabbar.m2-rack .m2-seg .lb, .m2-homebar .m2-seg .lb { display: none; }
+  .tabbar.m2-rack .m2-seg button, .m2-homebar .m2-seg button { width: 56px; height: 48px; gap: 0; border-radius: 12px; }
+  .tabbar.m2-rack .m2-seg button svg, .m2-homebar .m2-seg button svg { width: 27px !important; height: 27px !important; stroke-width: 2.1; }
+  .tabbar.m2-rack .m2-seg button.on::before, .m2-homebar .m2-seg button.on::before { display: none; }
+  .tabbar.m2-rack .m2-seg button.on svg, .m2-homebar .m2-seg button.on svg { color: var(--text); stroke-width: 2.6; }
+  .tabbar.m2-rack .m2-seg button:not(.on), .m2-homebar .m2-seg button:not(.on) { color: var(--muted); }
+  .m2-homebar .m2-hb-av { width: 28px; height: 28px; font-size: 12px; box-shadow: none; }
+  .m2-homebar .m2-seg button.on .m2-hb-av { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+  .tabbar.m2-rack .m2-seg .bd { top: 5px; margin-left: 6px; }
+  /* in Chat the rack sits in the top bar: keep it the same icon style */
+  body.m2-in-chat .m2-seg button svg { width: 26px !important; height: 26px !important; }
+}

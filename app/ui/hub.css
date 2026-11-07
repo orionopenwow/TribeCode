@@ -446,3 +446,51 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .hub-gs .k-teal .gs-go { color: #38C6B1; }
 .hub-gs .gs-links .linkish { display: inline-flex; align-items: center; gap: 6px; }
 .hub-gs .gs-links .linkish .i { width: 13px; height: 13px; opacity: .8; }
+
+/* Home's identity card: the campfire, your greeting with your color, and three live numbers. Flat matte. */
+.hub-id { position: relative; display: flex; align-items: center; gap: 22px; margin: 4px 0 22px; padding: 20px 24px; border: 1px solid var(--edge); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.hub-id::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--accent); }
+.hid-art { flex: none; width: 132px; height: 90px; display: grid; place-items: center; border-radius: 12px; background: var(--canvas); border: 1px solid var(--edge); }
+.hid-art img { width: 118px; height: auto; display: block; }
+.hid-t { min-width: 0; flex: 1; }
+.hub-id .eyebrow { display: block; margin-bottom: 6px; }
+.hub-id h1 { display: flex; align-items: center; gap: 10px; margin: 0; font-family: var(--display); font-size: 28px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.2; color: var(--text); }
+.hid-av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--font); color: #12151A; }
+.hid-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hid-chip { display: inline-flex; align-items: baseline; gap: 6px; height: 28px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--raised); font-size: 12.5px; color: var(--muted); line-height: 26px; }
+.hid-chip b { font: 700 13px var(--mono); }
+.hid-chip.k-ember b { color: #F26B1D; } .hid-chip.k-indigo b { color: #6C7CFF; } .hid-chip.k-teal b { color: #38C6B1; }
+@media (max-width: 820px) {
+  .hub-id { gap: 14px; margin: 0 0 14px; padding: 14px 14px 16px; border-radius: 14px; }
+  .hid-art { width: 74px; height: 62px; } .hid-art img { width: 66px; }
+  .hub-id h1 { font-size: 21px; gap: 8px; } .hid-av { width: 24px; height: 24px; font-size: 11px; }
+  .hid-chips { gap: 6px; margin-top: 9px; } .hid-chip { height: 24px; padding: 0 9px; font-size: 11.5px; line-height: 22px; }
+}
+
+/* Start a note: one clear action (the scratchpad is gone); notes open in a plain editor and live in your docs center */
+.note-start { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: 1px dashed var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background .15s, border-color .15s; }
+.note-start:hover { background: var(--raised); border-color: var(--accent); }
+.note-start > .i { flex: none; width: 34px !important; height: 34px !important; padding: 8px; border-radius: 10px; color: #F26B1D; background: color-mix(in srgb, #F26B1D 12%, var(--surface)); border: 1px solid color-mix(in srgb, #F26B1D 40%, var(--edge)); }
+.note-start span { display: flex; flex-direction: column; } .note-start b { font-size: 15px; } .note-start small { font-size: 12.5px; color: var(--muted); }
+.note-start.sm { padding: 10px 12px; } .note-start.sm > .i { width: 28px !important; height: 28px !important; padding: 6px; }
+.hub-mynotes { margin-top: 10px; }
+#hub-mydocs { margin-bottom: 22px; } .hub-pdocs-h { margin: 6px 0 10px; }
+.room-note { margin-top: 12px; }
+.note-ed-wrap { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; background: var(--scrim); }
+.note-ed { width: min(720px, calc(100vw - 32px)); height: min(70vh, 640px); display: flex; flex-direction: column; border: 1px solid var(--edge); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.note-ed header { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--edge); }
+.note-ed textarea { flex: 1; width: 100%; padding: 18px 20px; border: 0; outline: none; resize: none; background: none; color: var(--text); font: 16px/1.6 var(--font); }
+.note-ed-wrap.sheet { place-items: end stretch; }
+.note-ed-wrap.sheet .note-ed { width: 100%; height: calc(100dvh - 40px); border-radius: 18px 18px 0 0; border-bottom: 0; }
+/* phone Home: + · TribeCode ⌄ · bell, like a social app's top bar */
+.hub-ptop { display: none; }
+@media (max-width: 820px) {
+  .hub-ptop { display: flex; align-items: center; justify-content: space-between; height: 48px; margin: -4px -4px 8px; }
+  .hpt-btn { position: relative; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--text); }
+  .hpt-btn .i { stroke-width: 2; }
+  .hpt-brand { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 6px; border: 0; background: none; color: var(--text); }
+  .hpt-brand img { height: 24px; width: auto; display: block; }
+  .hpt-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: #FF6F8E; box-shadow: 0 0 0 2px var(--canvas); }
+  body.global .main { padding-top: calc(4px + env(safe-area-inset-top)); }
+}
+@media (max-width: 820px) { body.global .hi-banner { display: none; } }   /* phone Home: the identity card says you're hosting */

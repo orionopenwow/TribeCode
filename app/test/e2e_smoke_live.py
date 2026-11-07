@@ -123,7 +123,7 @@ def main():
             ph.wait_for_selector("#hub-pjs [data-pj-go]")
             ph.evaluate("(() => { const m = document.querySelector('#main'); const s = m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement; s.scrollTo(0, 400); })()")
             ph.wait_for_timeout(400)
-            ph.wait_for_function("document.querySelector('#m2-homebar').classList.contains('away')", timeout=5000)
+            assert not ph.evaluate("document.querySelector('#m2-homebar').classList.contains('away')"), "the Home rack stays put when scrolling"
             ph.evaluate("(() => { const m = document.querySelector('#main'); const s = m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement; s.scrollTo(0, 0); })()")
             ph.wait_for_function("!document.querySelector('#m2-homebar').classList.contains('away')", timeout=5000)
             shot(ph, "phone-home")
