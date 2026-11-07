@@ -3,7 +3,7 @@ import subprocess, tempfile, time, sys, json, urllib.request
 from playwright.sync_api import sync_playwright
 import os
 PORT=4778+int(os.environ.get("TRIBE_PORT_OFFSET","0")); tmp=tempfile.mkdtemp(); B=f"http://localhost:{PORT}"
-srv=subprocess.Popen(["node","/home/claude/tc/server/index.js","--port",str(PORT),"--dir",tmp,"--ollama","http://localhost:9"],stdout=subprocess.DEVNULL); time.sleep(1.5)
+srv=subprocess.Popen(["node",str(__import__("pathlib").Path(__file__).resolve().parents[2] / "server" / "index.js"),"--port",str(PORT),"--dir",tmp,"--ollama","http://localhost:9"],stdout=subprocess.DEVNULL); time.sleep(1.5)
 def api(path, method="GET", body=None, tok=None):
     h={"Content-Type":"application/json"}; 
     if tok: h["Authorization"]="Bearer "+tok
