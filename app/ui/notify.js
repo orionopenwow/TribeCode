@@ -47,8 +47,8 @@
   <div class="nf-scrim hidden" id="nf-scrim"></div>
   <aside class="nf-panel hidden" id="nf-panel" role="dialog" aria-label="Inbox">
     <header class="nf-head"><h2>Inbox</h2><span class="nf-sub" id="nf-sub"></span>
-      <button class="nf-icon" id="nf-open-settings" title="Notification settings">${ico('gear')}</button>
-      <button class="nf-icon" id="nf-close" title="Close">${ico('x')}</button></header>
+      <button class="nf-icon" id="nf-open-settings" title="Notification settings" aria-label="Notification settings">${ico('gear')}</button>
+      <button class="nf-icon" id="nf-close" title="Close" aria-label="Close">${ico('x')}</button></header>
     <div class="nf-tabs" role="tablist"><button data-nf="all" class="on">All</button><button data-nf="needs">Needs you <span id="nf-needs-n"></span></button><button data-nf="mentions">Mentions</button></div>
     <div class="nf-list" id="nf-list"></div>
   </aside>
@@ -119,7 +119,7 @@
   function awayCard() {
     const s = meta.away; if (!s || filter !== 'all') return '';
     const counts = Object.entries(s.counts).sort((a, b) => b[1] - a[1]).map(([t, n]) => `<span class="nf-chip">${n} ${esc((LABEL[t] || t).toLowerCase())}${n > 1 && !/s$/.test(LABEL[t] || t) ? 's' : ''}</span>`).join('');
-    return `<section class="nf-away" id="nf-away-card"><div class="nf-away-head"><b>While you were away</b><span class="nf-faint">${esc(s.span)}</span><button class="nf-icon" id="nf-away-x" title="Dismiss">${ico('x')}</button></div>
+    return `<section class="nf-away" id="nf-away-card"><div class="nf-away-head"><b>While you were away</b><span class="nf-faint">${esc(s.span)}</span><button class="nf-icon" id="nf-away-x" title="Dismiss" aria-label="Dismiss">${ico('x')}</button></div>
       <div class="nf-chips">${counts}</div>
       <ol>${s.top.map(i => `<li data-jump="${esc(i.id)}">${esc(i.title)}</li>`).join('')}</ol></section>`;
   }
@@ -376,7 +376,7 @@
     const body = $('#nf-settings-body');
     body.innerHTML = '<div class="nf-set-head"><h2>Notifications</h2></div><p class="nf-faint">Loading…</p>';
     try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; }
-    catch (e) { body.innerHTML = `<div class="nf-set-head"><h2>Notifications</h2><button class="nf-icon" data-x>${ico('x')}</button></div><p class="nf-faint">${esc(C.connected() ? e.message : 'Join or host a tribe to set up notifications.')}</p>`; body.querySelector('[data-x]').onclick = closeSettings; return; }
+    catch (e) { body.innerHTML = `<div class="nf-set-head"><h2>Notifications</h2><button class="nf-icon" data-x title="Close" aria-label="Close">${ico('x')}</button></div><p class="nf-faint">${esc(C.connected() ? e.message : 'Join or host a tribe to set up notifications.')}</p>`; body.querySelector('[data-x]').onclick = closeSettings; return; }
     renderSettings();
   }
   function closeSettings() { $('#nf-settings').classList.add('hidden'); }
@@ -386,7 +386,7 @@
     const p = prefs, body = $('#nf-settings-body');
     const q = p.when.quiet;
     body.innerHTML = `
-      <div class="nf-set-head"><h2>Notifications</h2><span class="nf-saved" id="nf-saved"></span><button class="nf-icon" data-x title="Close">${ico('x')}</button></div>
+      <div class="nf-set-head"><h2>Notifications</h2><span class="nf-saved" id="nf-saved"></span><button class="nf-icon" data-x title="Close" aria-label="Close">${ico('x')}</button></div>
       <div class="nf-set-grid">
         <section class="nf-sec"><h6>Ping me about</h6><div class="toggles">
           ${TYPE_ROWS.map(([k, l, s]) => toggle('types.' + k, l, s, !!p.types[k])).join('')}

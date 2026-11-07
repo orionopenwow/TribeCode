@@ -83,13 +83,14 @@
       const r = await fetch(`${server}/api/invites/${encodeURIComponent(code)}`, { signal: ctl.signal, cache: 'no-store' });
       clearTimeout(t);
       if (r.status === 404 || r.status === 410) {
-        show(`<div class="k">Invite</div><h1>This invite has ${r.status === 410 ? 'expired' : 'been used up or removed'}</h1><p>Ask your friend for a fresh link. In TribeCode it's one click: <b>Invite</b>.</p>`);
+        show(`<div class="k">Invite</div><h1>This invite has ${r.status === 410 ? 'expired or been used up' : 'been turned off'}</h1><p>Ask your friend for a fresh link. In TribeCode it's one click: <b>Invite</b>.</p>`);
         return;
       }
+      if (r.status === 429) { show(`<div class="k">Invite</div><h1>Too many tries</h1><p>Wait a minute, then try again.</p><button class="btn" id="retry">Try again</button>`); $('#retry').onclick = () => check(); return; }
       if (!r.ok) return offline(`The host answered with an error (${r.status}).`);
       const inv = await r.json();
       const dots = (inv.members || []).slice(0, 5).map(m => `<span style="background:${esc(m.color || '#6C7CFF')}">${esc((m.name || '?')[0].toUpperCase())}</span>`).join('');
-      show(`<div class="k">${esc(inv.invitedBy)} invited you</div><h1>Join ${esc(inv.tribe)}</h1>
+      show(`<div class="k">${esc(inv.invitedBy)} invited you</div><h1>Join ${inv.project ? `${esc(inv.project.emoji || '')} ${esc(inv.project.name)}` : esc(inv.tribe)}</h1>
         ${dots ? `<div class="members">${dots}</div>` : ''}
         <div class="row"><span class="dot"></span><span>${esc(inv.invitedBy)}'s computer is online.</span></div>
         ${nextSteps()}
