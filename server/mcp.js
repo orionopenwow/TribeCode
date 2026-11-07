@@ -79,6 +79,7 @@ module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent
   };
   if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
 
+
   async function handle(msg, me) {
     const { id, method, params = {} } = msg;
     const reply = result => ({ jsonrpc: '2.0', id, result });
@@ -100,7 +101,7 @@ module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent
   async function route(req, res, { me, readBody, send }) {
     if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }); return res.end(); }
     if (!me) return send(res, 401, { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Missing or invalid TribeCode token' } });
-    const body = await readBody(req, 1024 * 1024);
+    const body = await readBody(req, 16 * 1024 * 1024);   // screenshots (add_visual) can be large
     const batch = Array.isArray(body) ? body : [body];
     const out = (await Promise.all(batch.map(m => handle(m, me)))).filter(Boolean);
     if (!out.length) { res.writeHead(202, { 'Access-Control-Allow-Origin': '*' }); return res.end(); }

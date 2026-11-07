@@ -11,6 +11,7 @@
     ['h1', 'Heading 1', '# '], ['h2', 'Heading 2', '## '], ['todo', 'To-do', '- [ ] '], ['bullet', 'Bulleted list', '- '],
     ['num', 'Numbered list', '1. '], ['quote', 'Quote', '> '], ['code', 'Code block', '```\n\n```'], ['hr', 'Divider', '---\n'],
     ['table', 'Table', '| Column | Column |\n| --- | --- |\n|  |  |\n'], ['date', 'Today\'s date', null], ['brain', 'Summarize with local brain', null],
+    ['template', 'Template…', null], ['link', 'Link to page [[…]]', null], ['mention', 'Mention @…', null],   // handled by docsx.js
   ];
   let list = [], cur = null, dirty = false, saving = false, saveTimer = null, mode = 'write', filter = '', slash = null, loaded = false;
   let sess = null, liveOn = true, openSeq = 0, peersNow = [], readTimer = null;
@@ -200,6 +201,7 @@
 
   function renderList() {
     const el = $('#doc-list'); if (!el) return;
+    if (window.TribeDocsX) return window.TribeDocsX.renderList(el, list, { filter, cur, open, nameOf, ago });   // pins + nested tree
     const f = filter.toLowerCase();
     const items = list.filter(d => !f || d.title.toLowerCase().includes(f));
     el.innerHTML = items.length ? items.map(d => `<button class="doc-item ${cur && cur.slug === d.slug ? 'on' : ''}" data-slug="${esc(d.slug)}">
@@ -236,7 +238,7 @@
     autosize(ta); renderPeers();
     title.oninput = titleChanged;
     title.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } };
-    ta.oninput = () => { autosize(ta); changed(); checkSlash(); };
+    ta.oninput = () => { autosize(ta); changed(); checkSlash(); if (window.TribeDocsX) window.TribeDocsX.onInput(ta); };
     ta.onkeydown = onKey;
     ta.onblur = () => setTimeout(hideSlash, 150);
     ta.ondragover = e => e.preventDefault();
@@ -245,6 +247,7 @@
     if (inLive()) sess.status();
     $('#doc-del').onclick = () => { if (confirmDelete()) remove(); };
     if (mode === 'read') renderRead();
+    if (window.TribeDocsX) window.TribeDocsX.afterEditor(pane, cur, mode);   // breadcrumbs, backlinks, comments, history
   }
 
   let delArmed = 0;
@@ -260,6 +263,7 @@
       lines[n] = lines[n].replace(/\[( |x|X)\]/, cb.checked ? '[x]' : '[ ]');
       cur.body = lines.join('\n'); $('#doc-body').value = cur.body; changed(); renderRead();
     });
+    if (window.TribeDocsX) window.TribeDocsX.afterRead(el, cur);   // [[links]], @mentions, comment highlights
   }
 
   function autosize(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 4) + 'px'; }
@@ -288,6 +292,7 @@
     let text = insert;
     if (key === 'date') text = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     if (key === 'brain') { ta.setRangeText('', slash.start, end, 'end'); hideSlash(); changed(); summarize(); return; }
+    if (window.TribeDocsX && window.TribeDocsX.slash(key, ta, slash.start, end)) { hideSlash(); return; }
     ta.setRangeText(text, slash.start, end, 'end');
     if (key === 'code') ta.selectionStart = ta.selectionEnd = slash.start + 4;
     hideSlash(); autosize(ta); changed(); ta.focus();
@@ -305,6 +310,7 @@
   // ---------- editing keys ----------
   function onKey(e) {
     const ta = e.target;
+    if (window.TribeDocsX && window.TribeDocsX.onKey(e)) return;   // [[ and @ autocomplete
     if (slash) {
       if (e.key === 'ArrowDown') { e.preventDefault(); slash.sel = (slash.sel + 1) % slash.items.length; return drawSlash(); }
       if (e.key === 'ArrowUp') { e.preventDefault(); slash.sel = (slash.sel - 1 + slash.items.length) % slash.items.length; return drawSlash(); }
@@ -370,5 +376,7 @@
   document.addEventListener('dragleave', e => { if (e.target.closest && e.target.closest('#doc-list-wrap') && !e.target.closest('#doc-list-wrap').contains(e.relatedTarget)) $('#doc-list-wrap').classList.remove('over'); });
   document.addEventListener('drop', e => { const w = e.target.closest && e.target.closest('#doc-list-wrap'); if (w) { e.preventDefault(); w.classList.remove('over'); importFiles([...e.dataTransfer.files]); } });
 
-  window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined };
+  async function refreshList() { if (remote()) { try { list = (await C.api('/docs')).docs; } catch {} } renderList(); }
+  window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
+    current: () => cur, list: () => list, refreshList, renderList, changed, caretXY, mode: () => mode, setMode: m => { mode = m; renderEditor(); } };
 })();

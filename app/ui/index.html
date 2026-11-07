@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="repo.css">
 <link rel="stylesheet" href="notify.css">
 <link rel="stylesheet" href="voice.css">
+<link rel="stylesheet" href="plan.css">
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -70,8 +71,10 @@
       <button class="nav" data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg></button>
       <button class="nav" data-nav="board" title="Approval board"><svg class="i"><use href="#i-vote"/></svg></button>
       <button class="nav" data-nav="bugs" title="Bug inbox"><svg class="i"><use href="#i-bug"/></svg></button>
+      <button class="nav" data-nav="calendar" title="Calendar"><svg class="i"><use href="#i-cal"/></svg></button>
       <button class="nav" data-nav="brain" title="Brain"><svg class="i"><use href="#i-brain"/></svg></button>
       <button class="nav" data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
+      <button class="nav" id="rail-more" title="More: Visuals, floating windows"><svg class="i"><use href="#i-more"/></svg></button>
       <div class="spacer"></div>
       <button class="nav help" id="help-btn" title="Take the tour">?</button>
       <button class="nav" id="settings-btn" title="Settings · replay setup"><svg class="i"><use href="#i-gear"/></svg></button>
@@ -200,6 +203,7 @@
 <div class="tour hidden" id="tour"><div class="spot" id="tour-spot"></div><div class="tip" id="tour-tip" role="dialog"></div></div>
 
 <script src="qr.js"></script>
+<script src="float.js"></script>
 <script src="store.js"></script>
 <script src="tribe.js"></script>
 <script src="onboarding.js"></script>
@@ -213,6 +217,9 @@
 <script src="board.js"></script>
 <script src="bugs.js"></script>
 <script src="palette.js"></script>
+<script src="plan.js"></script>
+<script src="docsx.js"></script>
+<script src="visuals.js"></script>
 <script src="huddle.js"></script>
 <script src="web.js"></script>
 <script src="repo.js"></script>

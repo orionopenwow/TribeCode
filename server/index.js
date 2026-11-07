@@ -25,6 +25,10 @@ const makeApprovals = require('./approvals');
 const makeDm = require('./dm');
 const makeVoice = require('./voice');
 const makeChatx = require('./chatx');
+const makePlan = require('./plan');
+const makeDocsX = require('./docsx');
+const makeVisuals = require('./visuals');
+const makeBusLog = require('./buslog');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -144,6 +148,7 @@ function handleCommands(channel, member, text) {
 }
 
 // ---------- tasks ----------
+const dueOk = v => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);   // YYYY-MM-DD
 const taskFile = t => `tasks/${t.id}.md`;
 function loadTasks() {
   return store.listMd('tasks').map(f => { const r = store.readMd(f); return r && { ...r.meta, body: r.body }; }).filter(t => t && t.id)
@@ -154,10 +159,10 @@ function saveTask(t) {
   bugs.onTask(t);
   return t;
 }
-function createTask({ title, by, status = 'backlog', assignee = null, body = '', source }) {
+function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due }) {
   const now = new Date().toISOString();
   const t = { id: `t-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title: str(title, 200) || 'Untitled task', status: STATUSES.includes(status) ? status : 'backlog',
-    assignee, by, created: now, updated: now, order: Date.now(), source, body: str(body, 20000) };
+    assignee, by, created: now, updated: now, order: Date.now(), source, body: str(body, 20000), due: dueOk(due) };
   return saveTask(t);
 }
 
@@ -166,7 +171,7 @@ const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http:
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via Ollama` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
 const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: REPO, brain, readVision });
-const docs = makeDocs({ store, slug, str, broadcast, brain, postChat });
+const docs = makeDocs({ store, slug, str, broadcast, brain, postChat, onWrite: (d, prev) => docsx.onWrite(d, prev) });
 const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid) });
 const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
@@ -184,6 +189,11 @@ const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
 const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t) });
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus });
+const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
+const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
+const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
+const busLog = makeBusLog({ broadcast, sendTo });
+const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const mcp = makeMcp({
   extra: repoHub.mcp,
   VERSION, tribe, presence, touchAgent, readVision,
@@ -199,7 +209,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: chatx.mcpTools,
+  docs, claims, extraTools: { ...chatx.mcpTools, ...visuals.mcpTools },
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
@@ -224,6 +234,7 @@ async function standup() {
 async function api(req, res, url) {
   const parts = url.pathname.split('/').filter(Boolean).slice(1); // after /api
   const [a, b, c] = parts; const m = req.method;
+  const ctx = () => ({ m, a, b, c, parts, me, url, readBody, send, fail });
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
@@ -316,6 +327,7 @@ async function api(req, res, url) {
       if (t.assignee && t.assignee !== prevAssignee && t.assignee !== me.id) bus.notify({ type: 'task-assigned', to: [t.assignee], from: me.id, title: `${me.name} assigned you a task`, body: t.title, view: 'tasks', ref: t.id });
       if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
       if (body.body !== undefined) t.body = str(body.body, 20000);
+      if (body.due !== undefined) t.due = dueOk(body.due);
       t.updated = new Date().toISOString(); t.updatedBy = me.id;
       return send(res, 200, { task: saveTask(t) });
     }
@@ -355,6 +367,12 @@ async function api(req, res, url) {
     const handled = await repoHub.route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
   }
+  if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
+  if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
+  if (a === 'debug' && b === 'reminders' && m === 'POST' && DEBUG) { plan.tick(); return send(res, 200, { ok: true }); }
+  if (a === 'docs' && c) { const h = await docsx.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
     if (handled !== null) return;
