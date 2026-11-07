@@ -20,7 +20,8 @@ const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return
 
 module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands,
   approvals = null, board = null, createTask = null, bus = { notify() {} }, slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-  voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true }) {
+  voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true,
+  channelProject = () => null, canSeeProject = () => false }) {   // project-scoped access for writes into other channels (forward)
   fs.mkdirSync(store.p('chat', 'media'), { recursive: true });
   const member = mid => getMembers().find(m => m.id === mid);
   const file = ch => `chat/${ch}.jsonl`;
@@ -141,7 +142,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   function approvalAsked(ap, me) {
     if (!ap || ap.status !== 'pending' || me.role !== 'agent') return;
     const ch = agentChannel(me); if (!ch) return;
-    postChat(ch, me.id, `🙋 Needs your OK: **${ap.title}** (${ap.risk} risk). React ✅ to approve, or open Updates.`, { approval: ap.id });
+    postChat(ch, me.id, `🙋 Needs your OK: ${ap.title} (${ap.risk} risk). React ✅ to approve, or open Updates.`, { approval: ap.id });
   }
   // ✅ on an agent's message = approve its pending request (the one it links, or its latest one asked of you).
   function approveByReaction(target, me) {
@@ -182,6 +183,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       return send(res, 200, { message: msg });
     }
     if (m === 'POST' && action === 'vote') {
+      const pid = channelProject(ch);   // a vote's voters, tasks and proposals belong to its channel's project
+      if (pid && pid !== project()) return inProject(pid, () => route(req, res, { m, ch, action, arg, sub, me, readBody: async () => body, send, fail, url }));
       if (!arg) return send(res, 200, { message: votes.create(ch, me, { question: body.question, options: body.options, minutes: Number(body.minutes) || 0, deadline: body.deadline }) });
       const op = sub || 'cast';
       if (op === 'cast') return send(res, 200, { message: votes.cast(ch, arg, me, String(body.option || '')) });
@@ -234,6 +237,14 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       const to = String(body.to || '');
       if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(to) && !dms.isDm(to)) return fail(res, 400, 'bad channel');
       if (!dms.canRead(to, me)) return fail(res, 403, 'this conversation is private');
+      if (!dms.isDm(to) && to !== 'general') {   // another project's channel: only if you can see that project
+        const pid = channelProject(to);
+        if (!pid) return fail(res, 404, 'no such channel');
+        if (!canSeeProject(me, pid)) return fail(res, 403, 'you are not in that project');
+        const extra = { fwd: { by: target.by, from: label(ch, me), at: target.at } };
+        if (target.media) extra.media = target.media;
+        return send(res, 200, { message: inProject(pid, () => postChat(to, me.id, target.text || '', extra)) });
+      }
       const extra = { fwd: { by: target.by, from, at: target.at } };
       if (target.media) extra.media = target.media;
       const msg = postChat(to, me.id, target.text || '', extra);

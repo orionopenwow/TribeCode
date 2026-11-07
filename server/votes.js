@@ -126,7 +126,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
       t.push(now()); recent.set(me.id, t);
     }
     const vote = { kind: opts.length ? 'poll' : 'approve', q, options: opts.length ? opts.map((label, i) => ({ id: 'o' + (i + 1), label })) : APPROVE.map(o => ({ ...o })),
-      ballots: {}, status: 'open', deadline: dl ? iso(dl) : null, seen: {} };
+      ballots: {}, status: 'open', deadline: dl ? iso(dl) : null, seen: {}, eligible: voters().map(m => m.id) };
     if (agent) { vote.suggested = { agent: me.id, owner: me.owner || null }; if (str(why, 400)) vote.why = str(why, 400); }
     const msg = postChat(ch, me.id, q, { vote });
     saveIdx([...idx(), { project: project(), ch, id: msg.id, by: me.id, deadline: vote.deadline }]);
@@ -152,7 +152,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     const v = m.vote;
     saveIdx(idx().filter(x => x.id !== m.id));
     const { head, counts } = resultLine(v);
-    postChat(ch, 'tribecode', `🗳 **${v.q}** → **${head}** (${counts})`, { replyTo: { id: m.id, by: m.by, text: clip(v.q, 160) }, voteResult: m.id });
+    postChat(ch, 'tribecode', `🗳️ **${v.q}** → **${head}** (${counts})`, { replyTo: { id: m.id, by: m.by, text: clip(v.q, 160) }, voteResult: m.id });
     const day = iso(now()).slice(0, 10);
     store.writeMd(`decisions/${day}-${slug(v.q).slice(0, 60) || 'vote'}.md`, { date: day, vote: m.id, channel: ch, result: head, ballots: v.ballots, by: m.by },
       `# ${head}: ${v.q}\n\nDecided by a chat vote (${counts}).${v.suggested ? ` Suggested by ${nameOf(v.suggested.agent)}.` : ''}\n\n${Object.entries(v.ballots).map(([mid, o]) => `- ${nameOf(mid)}: ${label(v, o)}`).join('\n')}\n`);
@@ -169,7 +169,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     update(chan(ch), m.id, x => {
       const b = { ...(x.vote.ballots || {}) };
       if (option === 'clear' || b[me.id] === option) delete b[me.id]; else b[me.id] = option;
-      x.vote.ballots = b; x.vote.seen = { ...(x.vote.seen || {}), [me.id]: x.vote.seen && x.vote.seen[me.id] || iso(now()) };
+      x.vote.ballots = b; x.vote.eligible = voters().map(p => p.id); x.vote.seen = { ...(x.vote.seen || {}), [me.id]: x.vote.seen && x.vote.seen[me.id] || iso(now()) };
       return x;
     });
     return settle(ch, m.id, false, me.id);
@@ -185,7 +185,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     if (!isHuman(me)) return null;
     const m = get(ch, vid);
     if ((m.vote.seen || {})[me.id]) return m;
-    return update(chan(ch), m.id, x => { x.vote.seen = { ...(x.vote.seen || {}), [me.id]: iso(now()) }; return x; });
+    return update(chan(ch), m.id, x => { x.vote.seen = { ...(x.vote.seen || {}), [me.id]: iso(now()) }; x.vote.eligible = voters().map(p => p.id); return x; });
   }
   function remind(ch, vid, me, { auto = false } = {}) {
     const m = get(ch, vid), v = m.vote;
