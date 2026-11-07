@@ -127,7 +127,7 @@ def main():
             home = home_ctx.new_page(); watch(home, "homescreen")
             home.goto(f"{BASE}/m/{key}/")
             connected(home)
-            assert home.evaluate("TribeClient.state().me.name") == "Maya"
+            home.wait_for_function("TribeClient.state().me && TribeClient.state().me.name === 'Maya'", timeout=8000)
             assert home.evaluate("TribeStore.get().name") == "Maya" and home.evaluate("TribeStore.get().color") == "#38C6B1"
             assert home.locator("#install-sheet").count() == 0, "already installed: no sheet"
             assert home.locator("#onboard:not(.hidden)").count() == 0 and home.locator("#intro").count() == 0
