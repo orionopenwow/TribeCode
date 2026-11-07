@@ -138,6 +138,17 @@ def main():
             mp.wait_for_timeout(400)
             assert mp.input_value("#chat-input") == "", "a sent draft is gone"
 
+            # ---- ↑ in an empty composer edits your last message
+            hp.fill("#chat-input", "typo mesage"); hp.press("#chat-input", "Enter")
+            wait_text(hp, "#chat-list", "typo mesage")
+            hp.wait_for_function("[...document.querySelectorAll('#chat-list .msg.dx.mine')].some(e => e.innerText.includes('typo mesage'))")
+            hp.focus("#chat-input"); hp.press("#chat-input", "ArrowUp")
+            hp.wait_for_selector("#chat-list .edit-in")
+            assert hp.input_value("#chat-list .edit-in") == "typo mesage"
+            hp.fill("#chat-list .edit-in", "fixed message"); hp.press("#chat-list .edit-in", "Enter")
+            wait_until(lambda: any(m["text"] == "fixed message" and m.get("edited") for m in api("/chat/general?limit=5", token=htok)[1]["messages"]), what="edited on the server")
+            wait_text(mp, "#chat-list", "fixed message")
+
             # ---- Rename yourself: Settings -> server -> friends
             mp.evaluate("TribeSettings.open()"); mp.wait_for_selector("#set-name")
             mp.fill("#set-name", "Maya Q"); mp.press("#set-name", "Tab")

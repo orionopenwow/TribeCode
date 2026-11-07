@@ -485,6 +485,15 @@
     inp.onblur = () => setTimeout(() => { if (inp.isConnected) rerender(m.id); }, 150);
   }
 
+  // ↑ in an empty composer edits your last message (Slack/Discord habit).
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowUp' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || !e.target || e.target.id !== 'chat-input' || e.target.value) return;
+    const ch = cur(), list = listFor(ch); if (!list) return;
+    const el = [...list.querySelectorAll('.msg.dx.mine[data-id]:not(.deleted)')].reverse().find(x => { const v = msgs.get(x.dataset.id); return v && !v.m.media && !v.m.vote && v.m.text; });
+    if (!el) return;
+    e.preventDefault(); edit(el, msgs.get(el.dataset.id).m, ch);
+  });
+
   // ---------- reply ----------
   function startReply(m, ch) {
     reply = { id: m.id, ch, by: m.by, text: textOf(m) };
