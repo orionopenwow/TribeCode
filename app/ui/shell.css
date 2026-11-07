@@ -475,3 +475,11 @@ body.global .window .rail .logo-btn { background: var(--raised); }
 
 /* Home is yours, not a project: no project Settings / Invite rows at the bottom of the sidebar */
 body.global .nest-foot { display: none; }
+/* The logo sits inside the top bar's row instead of touching the top edge */
+.window .rail .logo-btn { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 14px; margin: 8px 0 6px; }
+.window .rail .logo { width: 44px; height: 44px; }
+/* Project settings: the one destructive action, quiet until you ask for it */
+.ps-danger { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.linkish.danger, .btn.danger { color: var(--deny, #FF6F8E); }
+.btn.danger { border-color: color-mix(in srgb, var(--deny, #FF6F8E) 55%, var(--edge)); }
+.btn.danger:disabled { opacity: .5; }

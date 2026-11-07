@@ -309,3 +309,21 @@
   #m2-plus.open { background: var(--surface-2); color: var(--text); }
 }
 .m2-byo { display: block; width: 100%; background: none; border: 0; font: inherit; font-size: 12.5px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Home's own rack on phones: Home · Projects · Notes · Activity · +. Slides away while you scroll down. */
+@media (max-width: 820px) {
+  .m2-homebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; display: flex; align-items: center; gap: 6px; height: calc(62px + env(safe-area-inset-bottom)); padding: 0 calc(10px + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(10px + env(safe-area-inset-left)); background: var(--surface); border-top: 1px solid var(--edge); transition: transform .22s ease; }
+  .m2-homebar.hidden { display: none; }
+  .m2-homebar.away { transform: translateY(110%); }
+  .m2-homebar .m2-seg { flex: 1; display: flex; justify-content: space-around; }
+  .m2-homebar .m2-seg button { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 56px; padding: 6px 4px; border: 0; background: none; color: var(--faint); font: inherit; font-size: 10.5px; }
+  .m2-homebar .m2-seg button.on { color: var(--text); }
+  .m2-homebar .m2-seg button.on svg { color: var(--accent); }
+  .m2-homebar .m2-seg button.hidden { display: none; }
+  .m2-hb-plus { width: 46px; height: 46px; flex: none; border-radius: 14px; display: grid; place-items: center; border: 0; background: var(--accent); color: #fff; }
+  .m2-hb-plus:active { transform: scale(.94); }
+  body.global .main { padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+  body.drawer-open .m2-homebar { visibility: hidden; }
+  .m2-face .m2-logo { width: 30px; height: 30px; border-radius: 8px; }
+}
+@media (min-width: 821px) { .m2-homebar { display: none !important; } }

@@ -64,7 +64,7 @@
     'm2-mic-note': '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/>',
     'm2-user': '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     'm2-gear': '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
-    'm2-search': '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    'm2-home': '<path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>', 'm2-list': '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>', 'm2-users': '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M15.5 5.3a3.2 3.2 0 0 1 0 5.4M17.5 14.4c1.6.6 2.7 2.2 3 4.6"/>', 'm2-link': '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'm2-search': '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   };
   (function sprite() {
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -121,6 +121,66 @@
     // Just the four places: you are in the top bar (profile), new things come from each screen and the chat +.
     bar.innerHTML = `<div class="m2-seg" role="tablist">${RACK.map(r => `<button ${r.m2 ? `data-m2nav="${r.nav}"` : `data-nav="${r.nav}"`} role="tab" aria-label="${r.label}" title="${r.label}">${ic(r.icon, 22)}<span class="lb">${r.label}</span><span class="bd hidden" data-bd="${r.badge || ''}"></span></button>`).join('')}</div>`;
   }
+  // ---------- Home's own rack (phones): lines up with the dashboard, hides as you scroll down, + starts or joins ----------
+  // Home · Projects · Notes · Activity · +. Each icon jumps to that part of the dashboard; the lit one follows the scroll.
+  const HOMEBAR = [['top', 'home', 'Home', '#hub-hero'], ['pjs', 'list', 'Projects', '#hub-pjs-sec'], ['notes', 'doc', 'Notes', '#hub-notes'], ['activity', 'bell', 'Activity', '#hub-stream']];
+  function homeBar() {
+    if ($('#m2-homebar')) return;
+    const bar = document.createElement('nav'); bar.id = 'm2-homebar'; bar.className = 'm2-homebar'; bar.setAttribute('aria-label', 'Home');
+    bar.innerHTML = `<div class="m2-seg">${HOMEBAR.map(([k, i, l]) => `<button data-hb="${k}" aria-label="${l}" title="${l}">${ic(i, 22)}<span class="lb">${l}</span></button>`).join('')}</div>
+      <button class="m2-hb-plus" id="m2-hb-plus" aria-label="Start or join a tribe">${ic('plus', 24)}</button>`;
+    document.body.appendChild(bar);
+    bar.addEventListener('click', e => {
+      if (e.target.closest('#m2-hb-plus')) return startTribe();
+      const b = e.target.closest('[data-hb]'); if (!b) return;
+      const item = HOMEBAR.find(x => x[0] === b.dataset.hb), el = item && $(item[3]);
+      if (b.dataset.hb === 'top' || !el) { scroller().scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    // hide while scrolling down, show when scrolling up (or near the top)
+    let lastY = 0;
+    const onScroll = () => {
+      if (!document.body.classList.contains('global')) return;
+      const y = scroller().scrollTop || window.scrollY || 0;
+      if (Math.abs(y - lastY) < 6) return;
+      bar.classList.toggle('away', y > lastY && y > 80); lastY = y; litHome();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('scroll', e => { if (e.target && e.target.id === 'main') onScroll(); }, { passive: true, capture: true });
+  }
+  const scroller = () => { const m = $('#main'); return m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement || document.documentElement; };
+  function litHome() {
+    const bar = $('#m2-homebar'); if (!bar) return;
+    let on = 'top';
+    for (const [k, , , sel] of HOMEBAR) { const el = $(sel); if (el && el.getBoundingClientRect().top < innerHeight * 0.45) on = k; }
+    bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === on));
+    const pj = bar.querySelector('[data-hb="pjs"]'); if (pj) pj.classList.toggle('hidden', !$('#hub-pjs-sec'));
+  }
+  // "+" on Home: one sheet to start or join, even from a phone (phones can't run the tribe themselves).
+  function startTribe() {
+    if (C.connected()) return PJ() && PJ().openNew ? PJ().openNew() : null;   // in a tribe: a new project (Create my own · templates · Join)
+    const dl = (window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest';
+    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Start a tribe</span><h3>Who runs it?</h3></div>
+      <p class="m2-fine left">A tribe lives on one computer that stays on, so friends and their agents can reach it. Your phone joins in from anywhere.</p>
+      <div class="m2-menu">
+        <button class="m2-mi" data-st="mine"><span class="m2-mic live">${ic('desk', 18)}</span><span class="m2-mt"><b>My own computer</b><small>Send yourself the link, install, it starts hosting</small></span></button>
+        <button class="m2-mi" data-st="friend"><span class="m2-mic">${ic('users', 18)}</span><span class="m2-mt"><b>A friend's computer</b><small>Ask someone with a PC or Mac to host for the group</small></span></button>
+        <button class="m2-mi" data-st="join"><span class="m2-mic">${ic('link', 18)}</span><span class="m2-mt"><b>I have an invite link</b><small>Join a tribe someone already started</small></span></button>
+      </div>`, { id: 'm2-start-sheet', label: 'Start a tribe' });
+    el.querySelector('.m2-menu').addEventListener('click', async e => {
+      const b = e.target.closest('[data-st]'); if (!b) return; const k = b.dataset.st;
+      if (k === 'join') { closeSheet(); return window.TribeSettings && window.TribeSettings.joinPrompt(); }
+      const text = k === 'mine' ? `Install TribeCode on my computer (it hosts our tribe): ${dl}` : `Can you host our TribeCode tribe? Install the app, open it, tap Invite a friend and send me the link: ${dl}`;
+      try { if (navigator.share) await navigator.share({ title: 'TribeCode', text }); else { await navigator.clipboard.writeText(text); toast('Copied. Paste it in a message.'); } } catch {}
+      closeSheet();
+    });
+  }
+  function homeMode() {
+    const on = phone() && document.body.classList.contains('global');
+    if (on) homeBar();
+    const bar = $('#m2-homebar'); if (bar) { bar.classList.toggle('hidden', !on); if (on) { bar.classList.remove('away'); setTimeout(litHome, 50); } }
+  }
+
   function paintMe() { const b = $('#m2-me'); if (b) b.innerHTML = avatar(me()); }
   function setBadge(key, n) {
     const el = document.querySelector(`#tabbar [data-bd="${key}"]`); if (!el) return;
@@ -812,7 +872,7 @@
     watch('nest-name', paintProject); watch('nest-sub', paintProject); watch('pj-switch', paintProject);
     const head = $('#chat-head') || $('.chat-title'); if (head) new MutationObserver(talkLabel).observe(head, { childList: true, subtree: true });
     C.on('presence', () => { paintProject(); paintMe(); });
-    let wasHome = null; new MutationObserver(() => { const h = document.body.classList.contains('global'); if (h !== wasHome) { wasHome = h; paintProject(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // Home ⇄ project
+    let wasHome = null; new MutationObserver(() => { const h = document.body.classList.contains('global'); if (h !== wasHome) { wasHome = h; paintProject(); homeMode(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // Home ⇄ project
     C.on('project', () => { hub = { repo: null, notes: null, shots: null, more: false, at: 0 }; sugg = { items: null, at: 0 }; paintProject(); if (phone() && cur === 'docs') docsHub(true); });
     cur = (App() && App().view && App().view()) || 'home';
     onShow(cur); syncBadges();

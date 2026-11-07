@@ -177,6 +177,15 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
       P.update(b, host(me) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, ...shared } : shared);
       pushProjects(); return send(res, 200, { project: P.view(P.get(b)) });
     }
+    if (!c && m === 'DELETE') {   // the host deletes a project: it leaves the list; its tribe data goes to .tribe/trash (the code folder is never touched)
+      if (!host(me)) return fail(res, 403, 'only the host can delete a project');
+      if (p.id === P.defaultId()) return fail(res, 400, 'the first project stays: rename it instead');
+      const body = await readBody(req).catch(() => ({}));
+      if (str(body.confirm, 48) !== p.name) return fail(res, 400, 'type the project name to confirm');
+      P.trash(p.id);
+      pushProjects(); broadcast({ type: 'project-removed', id: p.id });
+      return send(res, 200, { ok: true, removed: p.id });
+    }
     if (c === 'pulse' && m === 'GET') return send(res, 200, pulse(b, me));
     if (c === 'requests' && m === 'GET') return send(res, 200, requests(b));
     if (c === 'git-init' && m === 'POST') {

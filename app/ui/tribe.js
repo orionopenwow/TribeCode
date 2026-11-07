@@ -100,7 +100,7 @@
   function sendActivity(w) { if (w) where = w; if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'activity', where })); }
 
   // Called after first-run setup on the host machine (UI served by the server, no token yet).
-  async function ensureMember({ name, color }) {
+  async function ensureMember({ name, color, reclaim = false }) {
     if (token()) return 'member';
     try {
       const h = await api('/health');
@@ -109,6 +109,10 @@
         S.set({ server: { url: base(), token: r.token } });
         connect();
         return 'host';
+      }
+      if (reclaim) {   // the desktop app on the host computer: sign back in as the host (server checks it's really this machine)
+        const r = await api('/host/reclaim', { method: 'POST', body: {} }).catch(() => null);
+        if (r && r.token) { S.set({ server: { url: base(), token: r.token }, name: r.member.name, color: r.member.color }); connect(); return 'reclaimed'; }
       }
     } catch { /* no server reachable: local-only mode */ }
     return false;

@@ -598,12 +598,24 @@
       ${host ? `<div class="field"><label for="ps-name">Name</label><input class="input" id="ps-name" maxlength="48" value="${esc(p.name)}"></div>
       <div class="field"><label for="ps-emoji">Emoji</label><input class="input" id="ps-emoji" maxlength="4" value="${esc(p.emoji || '')}" placeholder="🎮"></div>
       <div class="field"><label>Color</label><div class="swatches" id="ps-colors">${['#F26B1D', '#38C6B1', '#6C7CFF', '#FFB86B', '#9AE66E', '#E86A92'].map(c => `<button class="swatch ${c === p.color ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div></div>` : '<p class="lead">Only the host can rename the project.</p>'}
+      ${host && !p.default ? '<div class="ps-danger"><button class="linkish danger" id="ps-delete">Delete this project…</button></div>' : ''}
       <div class="modal-foot"><button class="btn" id="ps-app">App settings</button><span style="flex:1"></span><button class="btn" data-close>Close</button>${host ? '<button class="btn primary" id="ps-save">Save</button>' : ''}</div>`;
     let color = p.color;
     body.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; body.querySelectorAll('[data-c]').forEach(x => x.classList.toggle('on', x === b)); });
     body.querySelector('[data-close]').onclick = () => $('#invite-modal').classList.add('hidden');
     $('#ps-app').onclick = () => { $('#invite-modal').classList.add('hidden'); window.TribeOnboarding.open({ fromSettings: true }); };
     $('#ps-face').onclick = () => { $('#invite-modal').classList.add('hidden'); PJ().pickImage(p); };
+    const del = $('#ps-delete'); if (del) del.onclick = () => {   // type the name to confirm; its tribe data goes to the trash folder
+      body.innerHTML = `<h2>Delete ${esc(p.name)}?</h2><p class="lead">It leaves everyone's list. Its chat, docs and tasks move to the tribe's trash folder (.tribe/trash), and the code folder on this computer is not touched.</p>
+        <div class="field"><label for="ps-confirm">Type <b>${esc(p.name)}</b> to confirm</label><input class="input" id="ps-confirm" autocomplete="off"></div>
+        <div class="modal-foot"><button class="btn" id="ps-keep">Keep it</button><span style="flex:1"></span><button class="btn danger" id="ps-del-go" disabled>Delete project</button></div>`;
+      const inp = $('#ps-confirm'), go2 = $('#ps-del-go'); inp.focus();
+      inp.oninput = () => { go2.disabled = inp.value !== p.name; };
+      $('#ps-keep').onclick = projectSettings;
+      go2.onclick = async () => { go2.disabled = true;
+        try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'DELETE', body: { confirm: inp.value } }); $('#invite-modal').classList.add('hidden'); toast(`${p.name} deleted`); await PJ().refresh(); hubOpen('home'); }
+        catch (e) { toast(e.message); go2.disabled = false; } };
+    };
     const sv = $('#ps-save'); if (sv) sv.onclick = async () => { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: $('#ps-name').value, emoji: $('#ps-emoji').value, color } }); $('#invite-modal').classList.add('hidden'); PJ().refresh(); toast('Saved'); } catch (e) { toast(e.message); } };
   }
 

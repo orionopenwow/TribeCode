@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.9
+
+- **Fix: "A TribeCode server is already running here with other members"** on your own computer. When the desktop app has lost its sign-in (a reinstall, cleared app data) it now signs you back in as the host. Only the desktop app on that computer can do this; other sites on your computer are refused
+- **Delete a project**: Project settings › Delete this project (host only, type the name to confirm). It leaves everyone's list, everyone in it goes back Home, and its chat, docs and tasks move to the tribe's trash folder; the code folder is never touched. The first project stays
+- **Phones, Home**: its own bottom rack (Home · Projects · Notes · Activity · **+**) that lines up with the dashboard, slides away as you scroll down and comes back when you scroll up. **+** starts a project, or, before you have a tribe, asks who runs it (your computer, a friend's, or an invite link)
+- **The fire logo** goes back to Home in the desktop app too (it was a window-drag area there), and it's a little smaller so it sits inside the top bar
+- Home's right panel no longer has Share my hub link / Invite a friend (the hero's Invite a friend does it)
+- Fixes found by the new live smoke test: after a delete the project list didn't refresh; a friend invited only to a deleted project got stuck on it
+- New test: e2e_smoke_live (create, invite, overview, rename, pin, tasks, chat, phone join, Home rack, delete, host sign-back-in)
+
 ## v0.6.8
 
 Phones: Home first, then the project.
