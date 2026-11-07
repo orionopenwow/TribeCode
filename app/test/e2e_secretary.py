@@ -304,7 +304,7 @@ def main():
                 # the app's own nav closes the hub
                 page.evaluate("TribeApp.show('tasks')")
                 page.wait_for_selector("#view-agents-hub", state="hidden")
-                assert page.evaluate("location.hash") == ""
+                assert page.evaluate("location.hash") == "#/tasks/board"   # the Board tab of Tasks & Board has its own deep link
 
                 page.evaluate("TribeSecretary.open()")
                 page.wait_for_selector("#view-secretary:not(.hidden) .sy-digest li")

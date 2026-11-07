@@ -1,6 +1,7 @@
 // Top-right profile button: your avatar with a quiet connection dot, and a menu of the things that are
 // about you: your profile, status, your Claude and agents, inviting friends, notifications, settings,
-// updates. Replaces the old "connected" pill (the dot carries that now).
+// updates. Replaces the old "connected" pill (the dot carries that now). When an update is downloaded the
+// avatar gets a small Teal update mark and the menu leads with "Update ready · vX — Restart" (updater.js flow).
 (() => {
   const C = window.TribeClient, $ = s => document.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -10,7 +11,7 @@
   const btn = document.createElement('button');
   btn.id = 'pf-btn'; btn.className = 'pf-btn'; btn.title = 'You'; btn.setAttribute('aria-label', 'Your profile and settings');
   btn.setAttribute('aria-haspopup', 'menu'); btn.setAttribute('aria-expanded', 'false');
-  btn.innerHTML = '<span class="pf-face" id="pf-face">?</span><span class="pf-dot" id="pf-dot"></span>';
+  btn.innerHTML = '<span class="pf-face" id="pf-face">?</span><span class="pf-dot" id="pf-dot"></span><span class="pf-up hidden" id="pf-up" aria-hidden="true"></span>';
   tb.appendChild(btn);
 
   const menu = document.createElement('div');
@@ -32,7 +33,9 @@
     face.textContent = name.trim().charAt(0).toUpperCase() || '?';
     face.style.background = (m && m.color) || 'var(--surface-2, #262D38)';
     $('#pf-dot').className = 'pf-dot' + (s.on ? ' on' : '');
-    btn.title = `${name} · ${s.text}`;
+    const up = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
+    $('#pf-up').classList.toggle('hidden', !(up && up.ready));
+    btn.title = `${name} · ${s.text}${up && up.ready ? ` · update v${up.version} ready` : ''}`;
   }
 
   const item = (act, icon, label, extra = '') => `<button role="menuitem" class="pf-item" data-act="${act}">${ico(icon)}<span>${label}</span>${extra}</button>`;
@@ -40,10 +43,12 @@
     const m = me(), s = status(), name = (m && m.name) || settingsName() || 'You';
     const role = m ? (m.role === 'host' ? 'Host' : m.role === 'spectator' ? 'Spectator' : 'Builder') : 'Not in a tribe yet';
     const capOn = !!(window.TribeCapture && window.TribeCapture.on());
+    const upd = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
     menu.innerHTML = `
       <div class="pf-head"><span class="pf-face lg" style="background:${esc((m && m.color) || 'var(--surface-2, #262D38)')}">${esc(name.charAt(0).toUpperCase())}</span>
         <div><b>${esc(name)}</b><small>${esc(role)}</small></div></div>
       <div class="pf-status"><span class="pf-dot ${s.on ? 'on' : ''}"></span>${esc(s.text)}</div>
+      ${upd && upd.ready ? `<button role="menuitem" class="pf-item pf-update" data-act="restart"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg><span>Update ready · v${esc(upd.version)}</span><b class="pf-restart">Restart</b></button>` : ''}
       <div class="pf-sep"></div>
       ${m ? item('profile', 'i-users', 'My profile and activity') : ''}
       ${item('claude', 'i-sparkle', 'Connect your Claude Code')}
@@ -83,6 +88,7 @@
     else if (a === 'settings') window.TribeSettings ? window.TribeSettings.open() : click('#settings-btn');
     else if (a === 'working') window.TribeUi.useUi('working');
     else if (a === 'installed') window.TribeUi.useUi('installed');
+    else if (a === 'restart') window.TribeUpdater.openPop();
     else if (a === 'update') { window.TribeUpdater.check(); window.TribeApp && window.TribeApp.toast('Checking for updates…'); }
   });
 

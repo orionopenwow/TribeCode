@@ -42,6 +42,8 @@ const makeWorkshopMcp = require('./mcp-workshop');
 const makeSecretary = require('./secretary');
 const makeAgentsHub = require('./agentshub');
 const makePreview = require('./preview');
+const makeHub = require('./hub');
+const makeScratch = require('./scratch');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -153,6 +155,7 @@ function broadcast(msg, except) {
     pid = msg.project || (msg.approval && msg.approval.project) || chPid || (ch && !chPid ? null : P.current());
     if (type === 'approval' && !msg.project && !(msg.approval && msg.approval.project)) pid = P.defaultId();
   }
+  if (dashboard) dashboard.onEvent(type, pid);   // the Global Hub recomputes for whoever can see pid (server/hub.js)
   const asGeneral = typeof msg.channel === 'string' && pid && msg.channel === P.channelOf(pid) && msg.channel !== 'general' ? { ...msg, channel: 'general' } : msg;
   for (const [mid, o] of online) {
     const mem = memberById(mid); if (!mem) continue;
@@ -165,6 +168,7 @@ function broadcast(msg, except) {
     }
   }
 }
+let dashboard = null;   // the Global Hub, server/hub.js (made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
@@ -316,6 +320,12 @@ const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, doc
 require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
 const agentsHub = makeAgentsHub({ P, store: baseStore, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary });
+// The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
+dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
+  isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
+// The global scratchpad (server/scratch.js): private quick notes per member, filed into a project later.
+const scratch = makeScratch({ P, base: baseStore, docs, createTask: o => createTask(o), id, str });
+bus.on('notify', n => dashboard.onNotify(n));
 // Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
 const checkMessages = chatx.mcpTools.check_messages;
 const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
@@ -337,6 +347,7 @@ function linkFor(c) {
 flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus, getMembers: () => members, nameOf, docs, brain, coord, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
   rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
+dashboard.setFlow(flow);
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -395,6 +406,7 @@ async function api(req, res, url) {
   let pid = P.defaultId();
   if (who) {
     pid = P.pick(who, wanted || null, (online.get(who.id) || {}).project || who.project);
+    if (!pid && !wanted && /^\/api\/(hub|scratch)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // the hub and scratchpad need no project (never reads it)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
   return P.inProject(pid, () => apiInProject(req, res, url));
@@ -655,6 +667,8 @@ async function apiInProject(req, res, url) {
   if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
   if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }   // the Secretary (server/secretary.js)
+  if (a === 'hub' || a === 'dashboard') { const h = await dashboard.route(req, res, ctx()); if (h !== null) return; }   // the Global Hub (server/hub.js)
+  if (a === 'scratch') { const h = await scratch.route(req, res, ctx()); if (h !== null) return; }   // private scratchpad (server/scratch.js)
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
@@ -722,6 +736,7 @@ server.on('upgrade', (req, sock) => {
   if (s.project && me.role !== 'agent') P.addMember(s.project, me.id, P.scoped(me) ? (P.get(s.project).members[me.id] || me.role) : me.role);
   o.project = s.project;
   o.sockets.add(s); online.set(me.id, o);
+  dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
   s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleState(), project: s.project, projects: rooms.listFor(me) });
   pushPresence();
@@ -729,6 +744,7 @@ server.on('upgrade', (req, sock) => {
   function onMessage(msg) {
     if (msg.type === 'project' && typeof msg.id === 'string') {
       if (!P.canSee(me, msg.id)) return s.send({ type: 'project-error', id: msg.id, error: 'you are not in that project' });
+      dashboard.seen(me.id, s.project); dashboard.seen(me.id, msg.id);   // leaving one project, entering another
       s.project = o.project = msg.id;
       if (me.role !== 'agent') { P.addMember(msg.id, me.id, (P.get(msg.id).members[me.id]) || me.role); const mem = memberById(me.id); if (mem && mem.project !== msg.id) { mem.project = msg.id; saveMembers(); } }
       s.send({ type: 'project-switched', project: msg.id });
@@ -754,6 +770,7 @@ server.on('upgrade', (req, sock) => {
   }
   s.on('close', () => {
     o.sockets.delete(s); if (!o.sockets.size) online.delete(me.id);
+    dashboard.seen(me.id, s.project);
     voice.socketClosed(me, online.has(me.id));
     docs.live.leaveAll(s);
     const h = huddle.get(me.id); if (h && h.socket === s) { huddle.delete(me.id); pushHuddle(); }
