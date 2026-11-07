@@ -666,9 +666,10 @@ JOURNEYS = [
                ("js", "TribeApp.show('board')"),
                ("expect", "document.querySelector('#view-board') && document.querySelector('#view-board').innerText.includes('photo mode') || [...document.querySelectorAll('#chat-list *')].some(e => /photo mode/.test(e.textContent || ''))")]},
     {"id": "connect-claude", "title": "Connect Claude Code",
-     "steps_phone": [("click", [{"role": "button", "name": r"^you$|profile"}, {"css": "#pf-btn"}], "You (profile)"),
-                     ("click", [{"role": "button", "name": r"connect.*claude|connect from another computer"}, {"role": "menuitem", "name": r"connect.*claude"}, {"text": r"connect your claude"}], "Connect your Claude Code"),
-                     ("click?", [{"role": "button", "name": r"^new command"}], "New command"),
+     # phones (v0.8.3): your profile lives in the side panel; the rack's Agents button leads to Connect an agent
+     "steps_phone": [("click", [{"css": "#tabbar [data-m2nav=agents]"}, {"role": "button", "name": r"^agents$"}], "Agents (rack)"),
+                     ("click", [{"role": "button", "name": r"^connect an agent|connect.*claude"}], "Connect an agent"),
+                     ("click?", [{"role": "button", "name": r"^create key|^new command"}], "Create key"),
                      ("expect", "[...document.querySelectorAll('code, pre, input, textarea, .code, span, div')].some(e => window.__ex.visible(e) && /claude mcp add/.test(e.value || (e.children.length ? '' : e.textContent)))")], "goal": "a `claude mcp add` command is on screen", "max": 2,
      "steps": [("click", [{"role": "button", "name": r"connect.*claude|claude code|connect your claude|add (an )?agent"}, {"text": r"connect (your )?claude"}, {"css": "#cc-connect button, #cc-connect"}], "Connect Claude"),
                ("click?", [{"role": "button", "name": r"^new command"}], "New command"),
@@ -943,7 +944,7 @@ def core_notify(browser):
             boot(page, w, "phone" if phone else "desktop"); page.evaluate(f"TribeClient.switchProject({json.dumps(p)})"); settle(page, 800)
             want = unread(tok)
             shown = wait_until(lambda: page.evaluate("window.TribeNotify && TribeNotify.state().unread"), 6, 0.3)
-            badge = page.evaluate("(() => { for (const c of document.querySelectorAll('#nf-count, #tabbar [data-bd=updates]')) if (window.__ex.visible(c)) return c.textContent.trim(); return ''; })()")
+            badge = page.evaluate("(() => { for (const c of document.querySelectorAll('#nf-count, #m2-bell [data-bd=updates], #tabbar [data-bd=updates]')) if (window.__ex.visible(c)) return c.textContent.trim(); return ''; })()")
             ck(f"{'phone' if phone else 'desktop'} bell count matches the inbox ({want})", shown == want, f"client says {shown}, server {want}")
             ck(f"{'phone' if phone else 'desktop'} shows a visible unread badge", bool(re.search(r"\d", badge or "")), f"badge text '{badge}'")
             loc, _ = find_affordance(page, [{"role": "button", "name": r"^inbox|notifications|updates"}, {"role": "tab", "name": r"^updates"}, {"css": "#nf-bell"}])

@@ -15,7 +15,7 @@ module.exports = function drift({ repo, getTasks, members }) {
   }
 
   async function radar() {
-    if (!repo || !fs.existsSync(path.join(repo, '.git'))) return { enabled: false, reason: 'Start the server with --repo <path to your project> to see the drift radar.' };
+    if (!repo || !fs.existsSync(path.join(repo, '.git'))) return { enabled: false, reason: 'Give this project a repo (a folder or a GitHub repo, from its overview) to see the drift radar.' };
     if (Date.now() - lastFetch > 5 * 60_000) { lastFetch = Date.now(); git(['fetch', '--all', '--prune', '--quiet']).catch(() => {}); }
     const main = await mainBranch();
     const refs = (await git(['for-each-ref', '--format=%(refname:short)|%(authorname)|%(committerdate:iso8601)', 'refs/heads', 'refs/remotes'])).split('\n').filter(Boolean)

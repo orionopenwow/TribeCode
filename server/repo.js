@@ -73,12 +73,12 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
   const activity = (n = 60) => store.readJSONL('repo/activity.jsonl', n).reverse();
 
   // ---------- live status ----------
-  let status = enabled() ? { enabled: true, loading: true } : { enabled: false, reason: 'Start the server with --repo <path to your project> to see the repo here.' };
+  let status = enabled() ? { enabled: true, loading: true } : { enabled: false, reason: 'No repo yet: give this project a folder or a GitHub repo (from its overview) and it shows up here.' };
   let lastFetch = 0, ci = null, ciAt = 0, polling = false;
   const cleanUrl = u => String(u || '').replace(/\/\/[^/@]+@/, '//');
 
   async function computeStatus() {
-    if (!enabled()) return { enabled: false, reason: 'Start the server with --repo <path to your project> to see the repo here.' };
+    if (!enabled()) return { enabled: false, reason: 'No repo yet: give this project a folder or a GitHub repo (from its overview) and it shows up here.' };
     const branch = (await G.gitTry(['rev-parse', '--abbrev-ref', 'HEAD'])).out || '(no commits)';
     const main = await G.mainBranch();
     let upstream = null;

@@ -38,6 +38,11 @@
     probe = { state: 'checking', models: [] }; draw();
     let models = [];
     try { const b = C().connected() ? (await C().api('/brain')).brain : null; if (b && b.online) { probe = { state: 'host', models: [b.model] }; draw(); return; } } catch {}
+    // Only look for Ollama on this device when it could be the host (no tribe yet, or this page is served by this computer).
+    // A friend's phone or laptop asking its own localhost only got a console error (and, in newer browsers, a
+    // "allow access to devices on your local network" prompt).
+    const here = /^(localhost|127\.0\.0\.1|\[::1\]|tauri\.localhost)$/.test(location.hostname) || location.protocol === 'tauri:';
+    if (C().connected() && !here) { probe = { state: 'missing', models: [] }; draw(); return; }
     try {
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 1800);
       const r = await fetch(S.get().brain.host.replace(/\/$/, '') + '/api/tags', { signal: ctl.signal }); clearTimeout(t);

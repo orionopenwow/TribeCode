@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How TribeCode Works</title>
+<meta name="description" content="One host computer, friends joining with one link, each with their own Claude Code over MCP, building one app together.">
+<style>
+  /* Self-contained infographic: flat matte, 1px borders, depth from luminance steps only (docs/DESIGN-SYSTEM.md). */
+  @font-face { font-family: 'Inter'; font-weight: 400; src: local('Inter'), local('Inter Regular'), url('../../app/ui/assets/fonts/Inter-Regular.otf') format('opentype'); }
+  @font-face { font-family: 'Inter'; font-weight: 600; src: local('Inter SemiBold'), url('../../app/ui/assets/fonts/Inter-SemiBold.otf') format('opentype'); }
+  @font-face { font-family: 'Inter'; font-weight: 700; src: local('Inter Bold'), url('../../app/ui/assets/fonts/Inter-Bold.otf') format('opentype'); }
+  @font-face { font-family: 'Inter Display'; font-weight: 800; src: local('Inter Display ExtraBold'), url('../../app/ui/assets/fonts/InterDisplay-ExtraBold.otf') format('opentype'); }
+  :root {
+    --canvas: #12151A; --surface: #1B2028; --raised: #1E242D; --raised-2: #242B35; --edge: #2A313C;
+    --text: #E8ECF2; --muted: #A9B2C0; --faint: #8A94A4;
+    --ember: #F26B1D; --teal: #38C6B1; --indigo: #6C7CFF; --green: #3BD16F;
+    --mono: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--canvas); color: var(--text); }
+  body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+  .page { width: 1440px; margin: 0 auto; padding: 56px 40px 40px; }
+  .eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+
+  header { display: flex; align-items: center; gap: 22px; margin-bottom: 36px; }
+  header svg.logo { width: 76px; height: 76px; flex: none; }
+  header h1 { margin: 8px 0 6px; font: 800 46px/1 'Inter Display', 'Inter', sans-serif; letter-spacing: -0.015em; }
+  header h1 .c { color: var(--ember); }
+  header p { margin: 0; font-size: 19px; line-height: 1.45; color: var(--muted); max-width: 70ch; }
+
+  .diagram { border: 1px solid var(--edge); background: var(--surface); border-radius: 18px; padding: 26px 22px 18px; margin-bottom: 28px; }
+  .diagram .eyebrow { margin: 0 0 14px 6px; display: block; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .legend { display: flex; gap: 26px; margin: 12px 6px 0; font-size: 14px; color: var(--muted); }
+  .legend i { display: inline-block; width: 26px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .step { display: flex; flex-direction: column; border: 1px solid var(--edge); background: var(--surface); border-radius: 16px; padding: 22px 22px 0; }
+  .step .top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step .n { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font: 700 15px/1 var(--mono); background: var(--raised-2); border: 1px solid var(--edge); color: var(--ember); flex: none; }
+  .step h2 { margin: 0 0 8px; font-size: 23px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
+  .step p { margin: 0 0 8px; font-size: 16px; line-height: 1.55; color: var(--muted); }
+  .step p b { color: var(--text); font-weight: 600; }
+  .step code { font: 500 13.5px/1.4 var(--mono); color: var(--teal); background: var(--raised); border: 1px solid var(--edge); border-radius: 6px; padding: 1px 6px; }
+  .step .phone { margin: auto -22px 0; padding: 13px 22px 15px; border-top: 1px solid var(--edge); background: var(--raised); border-radius: 0 0 16px 16px; display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; line-height: 1.5; color: var(--text); }
+  .step .phone svg { flex: none; width: 18px; height: 18px; margin-top: 2px; stroke: var(--teal); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .step .phone .k { font: 600 11px/1.9 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-right: 4px; }
+  .step .spacer { height: 14px; }
+
+  footer { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--edge); font-size: 14px; color: var(--faint); }
+  footer b { color: var(--muted); font-weight: 600; }
+  footer .chips span { display: inline-block; margin-left: 8px; padding: 4px 10px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--muted); font: 500 12.5px/1.3 var(--mono); }
+
+  /* the page is a fixed-size poster; small screens scale it down instead of reflowing (no sideways scroll) */
+  @media (max-width: 1440px) { body { overflow-x: hidden; } .page { transform-origin: top left; } }
+</style>
+</head>
+<body>
+<div class="page" id="poster">
+  <header>
+    <svg class="logo" viewBox="26 28 496 496" aria-hidden="true">
+      <rect x="28" y="30" width="492" height="492" rx="112" fill="#171B26" stroke="#2A313C" stroke-width="4"/>
+      <g fill="#F8FAFC"><polygon points="158,160 60,272 158,384 158,330 106,272 158,214"/><polygon points="378,160 476,272 378,384 378,330 430,272 378,214"/></g>
+      <polygon fill="#F26B1D" points="268,110 302,182 303,250 342,218 366,290 352,358 268,410 186,360 172,290 203,203 226,240 226,182"/>
+    </svg>
+    <div>
+      <span class="eyebrow">TribeCode · how it works</span>
+      <h1>Friends and their Claudes, <span class="c">one app</span>.</h1>
+      <p>One computer hosts the tribe. Friends join with one link from a phone or a desktop, each brings their own Claude Code, and everything they build lands in one repo, one website and one release.</p>
+    </div>
+  </header>
+
+  <section class="diagram" aria-label="Diagram: friends join the host computer with one link; their Claude Code sessions connect over MCP; the host's autopilot pushes to GitHub, which ships releases and the website">
+    <span class="eyebrow">The whole picture</span>
+    <svg viewBox="0 0 1356 430" role="img" aria-hidden="true" font-family="Inter, system-ui, sans-serif">
+      <defs>
+        <marker id="ah-e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#F26B1D"/></marker>
+        <marker id="ah-i" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#6C7CFF"/></marker>
+        <marker id="ah-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#38C6B1"/></marker>
+      </defs>
+
+      <!-- friends -->
+      <g>
+        <text x="10" y="14" font-size="12" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.6" fill="#8A94A4">FRIENDS · PHONE OR DESKTOP</text>
+        <!-- Maya, phone -->
+        <rect x="10" y="30" width="300" height="112" rx="14" fill="#1E242D" stroke="#2A313C"/>
+        <circle cx="48" cy="68" r="20" fill="#6C7CFF"/><text x="48" y="74" font-size="16" font-weight="700" fill="#12151A" text-anchor="middle">M</text>
+        <text x="80" y="64" font-size="18" font-weight="700" fill="#E8ECF2">Maya</text>
+        <text x="80" y="85" font-size="14" fill="#A9B2C0">on her phone</text>
+        <rect x="246" y="46" width="26" height="44" rx="6" fill="none" stroke="#A9B2C0" stroke-width="2"/><path d="M255 84h8" stroke="#A9B2C0" stroke-width="2"/>
+        <rect x="28" y="104" width="226" height="26" rx="13" fill="#12151A" stroke="#38C6B1"/>
+        <text x="141" y="122" font-size="13" fill="#38C6B1" text-anchor="middle">her Claude on her computer</text>
+        <!-- Vega, laptop -->
+        <rect x="10" y="160" width="300" height="112" rx="14" fill="#1E242D" stroke="#2A313C"/>
+        <circle cx="48" cy="198" r="20" fill="#38C6B1"/><text x="48" y="204" font-size="16" font-weight="700" fill="#12151A" text-anchor="middle">V</text>
+        <text x="80" y="194" font-size="18" font-weight="700" fill="#E8ECF2">Vega</text>
+        <text x="80" y="215" font-size="14" fill="#A9B2C0">on a laptop</text>
+        <rect x="236" y="180" width="44" height="28" rx="4" fill="none" stroke="#A9B2C0" stroke-width="2"/><path d="M228 214h60" stroke="#A9B2C0" stroke-width="2"/>
+        <rect x="28" y="234" width="226" height="26" rx="13" fill="#12151A" stroke="#38C6B1"/>
+        <text x="141" y="252" font-size="13" fill="#38C6B1" text-anchor="middle">Claude Code in her terminal</text>
+        <!-- Lyra, phone -->
+        <rect x="10" y="290" width="300" height="112" rx="14" fill="#1E242D" stroke="#2A313C"/>
+        <circle cx="48" cy="328" r="20" fill="#F26B1D"/><text x="48" y="334" font-size="16" font-weight="700" fill="#12151A" text-anchor="middle">L</text>
+        <text x="80" y="324" font-size="18" font-weight="700" fill="#E8ECF2">Lyra</text>
+        <text x="80" y="345" font-size="14" fill="#A9B2C0">phone only, uses @ai</text>
+        <rect x="246" y="306" width="26" height="44" rx="6" fill="none" stroke="#A9B2C0" stroke-width="2"/><path d="M255 344h8" stroke="#A9B2C0" stroke-width="2"/>
+        <rect x="28" y="364" width="226" height="26" rx="13" fill="#12151A" stroke="#2A313C"/>
+        <text x="141" y="382" font-size="13" fill="#A9B2C0" text-anchor="middle">the tribe's AI answers in chat</text>
+      </g>
+
+      <!-- links: friends -> host (one link, indigo) and Claude -> host (MCP, teal dashed) -->
+      <path d="M310 78 C 380 78, 400 150, 470 160" fill="none" stroke="#6C7CFF" stroke-width="3" marker-end="url(#ah-i)"/>
+      <path d="M310 208 L 470 212" fill="none" stroke="#6C7CFF" stroke-width="3" marker-end="url(#ah-i)"/>
+      <path d="M310 338 C 380 338, 400 270, 470 262" fill="none" stroke="#6C7CFF" stroke-width="3" marker-end="url(#ah-i)"/>
+      <path d="M254 117 C 360 117, 400 186, 470 188" fill="none" stroke="#38C6B1" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ah-t)"/>
+      <path d="M254 247 C 380 247, 400 238, 470 237" fill="none" stroke="#38C6B1" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ah-t)"/>
+      <rect x="352" y="96" width="78" height="24" rx="12" fill="#12151A" stroke="#6C7CFF"/><text x="391" y="113" font-size="12.5" fill="#6C7CFF" text-anchor="middle">one link</text>
+      <rect x="318" y="233" width="60" height="24" rx="12" fill="#12151A" stroke="#38C6B1"/><text x="348" y="250" font-size="12.5" fill="#38C6B1" text-anchor="middle">MCP</text>
+
+      <!-- host -->
+      <text x="472" y="14" font-size="12" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.6" fill="#8A94A4">ONE HOST COMPUTER</text>
+      <rect x="472" y="30" width="388" height="372" rx="18" fill="#1E242D" stroke="#2A313C"/>
+      <rect x="472" y="30" width="5" height="372" rx="2.5" fill="#F26B1D"/>
+      <polygon fill="#F26B1D" transform="translate(500 50) scale(0.19)" points="268,110 302,182 303,250 342,218 366,290 352,358 268,410 186,360 172,290 203,203 226,240 226,182" />
+      <text x="572" y="86" font-size="24" font-weight="700" fill="#E8ECF2">The tribe</text>
+      <text x="572" y="110" font-size="14" fill="#A9B2C0">TribeCode app + its server, one folder</text>
+      <g font-size="15" fill="#E8ECF2">
+        <rect x="498" y="140" width="164" height="44" rx="10" fill="#242B35" stroke="#2A313C"/><text x="516" y="167">Chat · DMs · votes</text>
+        <rect x="672" y="140" width="164" height="44" rx="10" fill="#242B35" stroke="#2A313C"/><text x="690" y="167">Lanes · tasks</text>
+        <rect x="498" y="194" width="164" height="44" rx="10" fill="#242B35" stroke="#2A313C"/><text x="516" y="221">Live docs · notes</text>
+        <rect x="672" y="194" width="164" height="44" rx="10" fill="#242B35" stroke="#2A313C"/><text x="690" y="221">Huddles · captions</text>
+        <rect x="498" y="248" width="164" height="44" rx="10" fill="#242B35" stroke="#2A313C"/><text x="516" y="275">Agents · approvals</text>
+        <rect x="672" y="248" width="164" height="44" rx="10" fill="#242B35" stroke="#2A313C"/><text x="690" y="275">Live repo · preview</text>
+      </g>
+      <rect x="498" y="310" width="338" height="70" rx="12" fill="#12151A" stroke="#2A313C"/>
+      <text x="516" y="338" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#38C6B1">claude mcp add --transport http</text>
+      <text x="516" y="360" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#38C6B1">  tribecode https://…/mcp</text>
+
+      <!-- autopilot -> GitHub -->
+      <path d="M860 216 L 948 216" fill="none" stroke="#F26B1D" stroke-width="3" marker-end="url(#ah-e)"/>
+      <text x="904" y="200" font-size="13" fill="#F26B1D" text-anchor="middle">autopilot</text>
+      <text x="954" y="14" font-size="12" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.6" fill="#8A94A4">GITHUB</text>
+      <rect x="954" y="126" width="196" height="180" rx="16" fill="#1E242D" stroke="#2A313C"/>
+      <circle cx="1052" cy="176" r="24" fill="none" stroke="#E8ECF2" stroke-width="3"/>
+      <path d="M1052 162v28M1040 178l12 12 12-12" fill="none" stroke="#E8ECF2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 1052 176)"/>
+      <text x="1052" y="230" font-size="18" font-weight="700" fill="#E8ECF2" text-anchor="middle">One repo</text>
+      <text x="1052" y="252" font-size="13.5" fill="#A9B2C0" text-anchor="middle">gated merges, approved</text>
+      <text x="1052" y="270" font-size="13.5" fill="#A9B2C0" text-anchor="middle">on the Board, pushed</text>
+      <text x="1052" y="288" font-size="13.5" fill="#A9B2C0" text-anchor="middle">by the host</text>
+
+      <!-- GitHub -> releases, website -->
+      <path d="M1150 190 C 1180 190, 1180 106, 1196 104" fill="none" stroke="#F26B1D" stroke-width="3" marker-end="url(#ah-e)"/>
+      <path d="M1150 244 C 1180 244, 1180 324, 1196 326" fill="none" stroke="#F26B1D" stroke-width="3" marker-end="url(#ah-e)"/>
+      <text x="1200" y="14" font-size="12" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.6" fill="#8A94A4">SHIP</text>
+      <rect x="1200" y="40" width="146" height="128" rx="14" fill="#1E242D" stroke="#2A313C"/>
+      <text x="1273" y="82" font-size="17" font-weight="700" fill="#E8ECF2" text-anchor="middle">Releases</text>
+      <text x="1273" y="106" font-size="13" fill="#A9B2C0" text-anchor="middle">Windows · Mac</text>
+      <text x="1273" y="124" font-size="13" fill="#A9B2C0" text-anchor="middle">Linux installers</text>
+      <text x="1273" y="148" font-size="13" fill="#3BD16F" text-anchor="middle">auto-update</text>
+      <rect x="1200" y="262" width="146" height="128" rx="14" fill="#1E242D" stroke="#2A313C"/>
+      <text x="1273" y="304" font-size="17" font-weight="700" fill="#E8ECF2" text-anchor="middle">Website</text>
+      <text x="1273" y="328" font-size="13" fill="#A9B2C0" text-anchor="middle">each project's page</text>
+      <text x="1273" y="346" font-size="13" fill="#A9B2C0" text-anchor="middle">play link · credits</text>
+      <text x="1273" y="370" font-size="13" fill="#3BD16F" text-anchor="middle">kept up to date</text>
+    </svg>
+    <div class="legend"><span><i style="border-color:#6C7CFF"></i>people join with one link</span><span><i style="border-color:#38C6B1;border-top-style:dashed"></i>each person's own Claude, over MCP</span><span><i style="border-color:#F26B1D"></i>code goes out</span></div>
+  </section>
+
+  <section class="grid" aria-label="Six steps">
+    <article class="step">
+      <div class="top"><span class="n">1</span><span class="eyebrow">Host</span></div>
+      <h2>One computer runs the tribe</h2>
+      <p>Install the desktop app and create a project. Its server starts on that computer; chat, docs, tasks and code live in <b>one folder</b> there. Switch hosting off and nothing is deleted.</p>
+      <div class="spacer"></div>
+      <div class="phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span><span class="k">Phone</span>Agents › your Claude on your computer › <b>Talk to it</b>.</span></div>
+    </article>
+    <article class="step">
+      <div class="top"><span class="n">2</span><span class="eyebrow">Join</span></div>
+      <h2>Friends join with one link</h2>
+      <p>Text the invite. A friend taps it, types a name (or signs in with Discord, GitHub or Google) and lands in the project. A <b>guest pass</b> works once. Tailscale Funnel or cloudflared make the link work anywhere.</p>
+      <div class="phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span><span class="k">Phone</span>Tap the link, Add to Home Screen: your Claude is in the Agents tab.</span></div>
+    </article>
+    <article class="step">
+      <div class="top"><span class="n">3</span><span class="eyebrow">Your Claude</span></div>
+      <h2>Everyone brings their own Claude Code</h2>
+      <p>One line connects it: <code>claude mcp add … tribecode</code>. It reads the chat, claims files, takes tasks and asks for approval, on its owner's own plan.</p>
+      <div class="phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span><span class="k">Phone</span>Messages reach your desktop Claude Code over MCP; answers land in chat. Claude Code's Remote Control works alongside.</span></div>
+    </article>
+    <article class="step">
+      <div class="top"><span class="n">4</span><span class="eyebrow">Together</span></div>
+      <h2>Lanes, tasks, docs and huddles</h2>
+      <p>Each role owns its folders, so Claudes don't collide. Tasks and a board, live co-edited docs, notes in your docs center, votes in chat, and voice huddles with captions and meeting notes.</p>
+      <div class="phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span><span class="k">Phone</span>Ask your Claude in chat, or tap Approve when it asks.</span></div>
+    </article>
+    <article class="step">
+      <div class="top"><span class="n">5</span><span class="eyebrow">Autopilot</span></div>
+      <h2>Code flows to GitHub</h2>
+      <p>The live repo shows every branch. The integrator proposes a merge order, people approve it on the Board, then it <b>merges, checks and pushes</b> from the host. Sign in to GitHub once in Settings.</p>
+      <div class="phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span><span class="k">Phone</span>Approve the merge; your computer's Claude does the push.</span></div>
+    </article>
+    <article class="step">
+      <div class="top"><span class="n">6</span><span class="eyebrow">Ship</span></div>
+      <h2>Releases and a website</h2>
+      <p>Every project gets a <b>website</b> (colors, screenshots, play link, what's new) and a private live-app link for your Home Screen. TribeCode itself updates in the background: <b>Restart to update</b>.</p>
+      <div class="phone"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg><span><span class="k">Phone</span>Open the live app from its Home Screen icon.</span></div>
+    </article>
+  </section>
+
+  <footer>
+    <span><b>TribeCode</b> · self-hosted multiplayer vibecoding · github.com/orionopenwow/TribeCode</span>
+    <span class="chips"><span>zero npm dependencies</span><span>runs on your computer</span><span>MIT</span></span>
+  </footer>
+</div>
+<script>
+  // Fit the fixed-width poster to narrow windows (phones) without sideways scrolling.
+  (function fit() {
+    const p = document.getElementById('poster'), w = document.documentElement.clientWidth;
+    const s = Math.min(1, w / 1440);
+    p.style.transform = s < 1 ? `scale(${s})` : '';
+    document.body.style.height = s < 1 ? `${p.offsetHeight * s}px` : '';
+    window.addEventListener('resize', () => requestAnimationFrame(fit), { once: true });
+  })();
+</script>
+</body>
+</html>

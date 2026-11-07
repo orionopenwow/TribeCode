@@ -30,8 +30,10 @@
       <span class="pa-sw-t"><b>Phone app mode (iOS / Android)</b><small>A Phone app card on the overview: pick a stack, set up a starter, install its dependencies, open it on your phone.</small></span>
       <input type="checkbox" id="ps-phone" role="switch" disabled><span class="pa-knob" aria-hidden="true"></span></label>`);
     const cb = body.querySelector('#ps-phone');
-    load(true).then(s => {
-      if (!s || !cb.isConnected) return;
+    let tries = 0;
+    (function fill() { load(true).then(s => {
+      if (!cb.isConnected) return;
+      if (!s) { if (++tries < 4) setTimeout(fill, 1200); return; }   // a slow or failed answer used to leave the switch greyed out for good
       cb.checked = !!s.on; cb.disabled = !s.canEdit;
       cb.onchange = async () => {
         cb.disabled = true;
@@ -39,7 +41,7 @@
         catch (e) { cb.checked = !cb.checked; toast(e.message); }
         cb.disabled = false;
       };
-    });
+    }); })();
     void p;
   }
 
@@ -50,9 +52,17 @@
     if (!el) { const tools = $('#pj-tools-slot'); if (!tools) return null; el = document.createElement('div'); el.id = 'pj-phone-slot'; tools.after(el); }
     return el;
   }
+  // The overview redraws often (new slot each time): paint from the cached state at once so the card doesn't blink
+  // out and back (it used to vanish for a round trip on every redraw), then again only if the answer changed.
   async function paintCard() {
     const el = slot(); if (!el) return;
+    const cached = st && stPid === (C.project && C.project()) ? st : null;
+    if (cached) render(el, cached);
     const s = await load(); if (!el.isConnected) return;
+    if (s !== cached || !el.dataset.painted) render(el, s);
+  }
+  function render(el, s) {
+    el.dataset.painted = '1';
     if (!s || !s.on) { el.innerHTML = ''; return; }
     const stacks = s.stacks || {}, cur = chosen || s.stack || 'expo', S = stacks[s.stack] || {};
     const where = s.folder ? `${s.folder}/` : 'the repo root';
