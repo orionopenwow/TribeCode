@@ -260,10 +260,10 @@
           const { invite } = await C.api('/invites', { method: 'POST', body: { hours: +$('#inv-hours').value, maxUses: +$('#inv-uses').value, role: $('#inv-role').value } });
           // localhost links only work on this computer: share the network address instead
           let base = C.base(), note = '';
-          if (/\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base)) {
-            try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; if (pick) { base = pick.url; note = pick.kind === 'tailscale' ? 'Tailscale address: works from anywhere your friend is signed in to Tailscale.' : 'Wi-Fi address: your friend needs to be on the same network (or use Tailscale).'; } }
-            catch {}
-          }
+          // a public https address ("Share beyond my Wi-Fi") always wins; it comes first in /api/health lan
+          try { const h = await C.api('/health'); const pick = (h.lan || [])[0];
+            if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) { base = pick.url; note = pick.kind === 'public' ? 'Public https address: works from anywhere, and voice works on phones.' : pick.kind === 'tailscale' ? 'Tailscale address: works from anywhere your friend is signed in to Tailscale.' : 'Wi-Fi address: your friend needs to be on the same network (or use Tailscale).'; } }
+          catch {}
           const link = `${base}/join/${invite.code}`;
           $('#inv-link').textContent = link; $('#inv-copy').disabled = false;
           $('#inv-qr').innerHTML = window.TribeQR.svg(link); $('#inv-net').textContent = note;

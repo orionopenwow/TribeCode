@@ -17,6 +17,8 @@ const makeBugs = require('./bugs');
 const makeDrift = require('./drift');
 const makeClaims = require('./claims');
 const makeMcp = require('./mcp');
+const makeDevices = require('./devices');
+const makeShare = require('./share');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -46,7 +48,7 @@ function lanUrls() {
   }
   return out.sort((x, y) => (y.kind === 'tailscale') - (x.kind === 'tailscale'));
 }
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
@@ -70,8 +72,9 @@ function authed(req) {
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
   if (!t) return null;
   const th = hash(t);
-  return members.find(m => m.tokenHash === th) || null;
+  return members.find(m => m.tokenHash === th) || (devices && devices.memberForToken(th)) || null;
 }
+const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
 function newMember({ name, color: c, role }) {
   const token = id(32);
   const m = { id: slug(name).slice(0, 16) + '-' + id(4), name, color: color(c), role, joined: new Date().toISOString(), tokenHash: hash(token) };
@@ -161,6 +164,9 @@ const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: 
 const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
 const claims = makeClaims({ store, id, broadcast, nameOf });
+// ---------- web: device links (/m/<key>/) + public https address ----------
+const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe });
+const share = makeShare({ port: PORT });
 const mcp = makeMcp({
   VERSION, tribe, presence, touchAgent, readVision,
   tasks: {
@@ -203,7 +209,7 @@ async function api(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: lanUrls() });
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()] });
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
@@ -237,6 +243,11 @@ async function api(req, res, url) {
     postChat('general', 'tribecode', `${name} joined the tribe 👋`);
     pushPresence();
     return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
+  }
+
+  if (a === 'device-link' || a === 'devices' || a === 'share') {
+    const h = await (a === 'share' ? share : devices).route(req, res, { a, b, m, me, tokenHash: tokenHashOf(req), readBody, send, fail, limited });
+    if (h !== null) return;
   }
 
   if (!need()) return;
@@ -328,6 +339,7 @@ async function api(req, res, url) {
 }
 
 function serveStatic(req, res, url) {
+  if (devices.serveApp(req, res, url, UI)) return;
   let rel = decodeURIComponent(url.pathname);
   if (rel === '/' ) rel = '/index.html';
   if (/^\/join\/[A-Za-z0-9]+\/?$/.test(rel)) rel = '/join.html';

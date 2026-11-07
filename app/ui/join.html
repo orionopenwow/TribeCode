@@ -8,42 +8,78 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TribeCode">
+<meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.webmanifest">
 <title>Join a tribe · TribeCode</title>
 <link rel="icon" href="/assets/icon-512.png">
 <link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/styles.css">
 <style>
-  .join { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding: 20px; }
-  .jc { width: 460px; max-width: 100%; background: var(--win); border: 1px solid var(--edge); border-radius: 26px; box-shadow: var(--shadow); padding: 40px; text-align: center; }
-  .jc img { width: 84px; height: 84px; border-radius: 22px; margin-bottom: 18px; }
-  .jc h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
-  .jc .lead { color: var(--muted); font-size: 14.5px; margin-bottom: 22px; line-height: 1.5; }
-  .faces { display: flex; justify-content: center; margin-bottom: 24px; min-height: 38px; }
-  .faces .avatar { width: 38px; height: 38px; margin-left: -8px; border: 2.5px solid var(--surface); font-size: 13px; }
-  .jc .field { text-align: left; }
-  .jc .swatches { margin-bottom: 24px; }
-  .big { width: 100%; height: 50px; border-radius: 14px; font-size: 15.5px; }
-  .fine { font-size: 12px; color: var(--faint); margin-top: 16px; }
-  .err { color: var(--ember); font-size: 13.5px; margin-top: 12px; min-height: 18px; }
+  /* Phone-first join page. Flat matte: luminance steps and 1px borders only. */
+  html, body { min-height: 100%; }
+  .jw { position: relative; z-index: 1; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+  .jc { width: min(440px, 100%); background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); overflow: hidden; }
+  .jtop { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--edge); background: var(--canvas); }
+  .jtop img.icon { width: 28px; height: 28px; }
+  .jtop img.brand-wm { height: 15px; width: auto; }
+  .jtop .tag { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .jbody { padding: 26px 22px 22px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  h1 { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 8px; overflow-wrap: anywhere; }
+  .lead { color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 18px; }
+  .faces { display: flex; align-items: center; min-height: 0; margin: -4px 0 20px; }
+  .faces:empty { display: none; }
+  .faces .avatar { width: 34px; height: 34px; margin-left: -8px; border: 2px solid var(--surface); font-size: 12px; }
+  .faces .avatar:first-child { margin-left: 0; }
+  .faces .more { margin-left: 10px; font-size: 13px; color: var(--faint); }
+  .field { margin-bottom: 18px; }
+  .input { height: 50px; font-size: 17px; }   /* 16px+ keeps iOS from zooming in */
+  .swatches { gap: 10px; }
+  .swatch { width: 38px; height: 38px; }
+  .me { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--canvas); margin-bottom: 18px; }
+  .me .avatar { width: 38px; height: 38px; font-size: 13px; }
+  .me b { display: block; font-size: 14.5px; }
+  .me small { color: var(--faint); font-size: 12px; }
+  .big { width: 100%; height: 54px; font-size: 16.5px; }
+  .err { color: var(--ember-ink); font-size: 13.5px; margin-top: 12px; min-height: 0; }
+  .err:empty { display: none; }
+  .alt { display: block; text-align: center; margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+  .alt:hover { color: var(--text); }
+  .fine { padding: 12px 22px; border-top: 1px solid var(--edge); background: var(--canvas); font-family: var(--mono); font-size: 11px; color: var(--faint); display: flex; gap: 8px; flex-wrap: wrap; }
+  .fine:empty { display: none; }
+  .fine span + span::before { content: '·'; margin-right: 8px; }
+  .done-ico { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); color: var(--live); margin-bottom: 16px; }
+  .done-ico svg { width: 26px; height: 26px; }
+  .skeleton { height: 14px; border-radius: 4px; background: var(--surface-2); margin-bottom: 10px; }
+  @media (max-width: 520px) {
+    .jw { padding: 0; place-items: stretch; }
+    .jc { border-radius: 0; border: 0; min-height: 100dvh; display: flex; flex-direction: column; }
+    .jtop { padding-top: calc(14px + env(safe-area-inset-top)); }
+    .jbody { flex: 1; padding: 28px 20px; }
+    .fine { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+    h1 { font-size: 32px; }
+  }
 </style>
 </head>
 <body class="dark">
-<div class="join"><div class="jc" id="card">
-  <img src="/assets/icon-512.png" alt="">
-  <div><img class="brand-wm" src="/assets/wordmark.svg" alt="TribeCode" style="height:22px;width:auto;border-radius:0;margin:0 0 14px"></div>
-  <h1 id="title">Joining…</h1>
-  <p class="lead" id="lead">Checking your invite.</p>
-  <div class="faces" id="faces"></div>
-  <form id="form" class="hidden">
-    <div class="field"><label for="name">Display name</label><input class="input" id="name" maxlength="32" placeholder="e.g. Riley" autocomplete="off" required></div>
-    <div class="field"><label>Your color</label><div class="swatches" id="swatches"></div></div>
-    <button class="btn primary big" id="go" type="submit">Join the tribe</button>
-  </form>
-  <div class="err" id="err"></div>
-  <a class="btn ghost hidden" id="open-app" style="margin-top:6px">Have the desktop app? Open it there</a>
+<div class="jw"><div class="jc" id="card">
+  <div class="jtop"><img class="icon" src="/assets/icon-512.png" alt=""><img class="brand-wm" src="/assets/wordmark.svg" alt="TribeCode"><span class="tag">Invite</span></div>
+  <div class="jbody" id="jbody">
+    <div class="eyebrow" id="eyebrow"><span class="dot"></span>Checking your invite</div>
+    <h1 id="title">Joining…</h1>
+    <p class="lead" id="lead"><span class="skeleton" style="display:block;width:90%"></span><span class="skeleton" style="display:block;width:60%"></span></p>
+    <div class="faces" id="faces"></div>
+    <form id="form" class="hidden" autocomplete="off">
+      <div class="field"><label for="name">Your name</label><input class="input" id="name" maxlength="32" placeholder="e.g. Riley" autocomplete="nickname" autocapitalize="words" enterkeyhint="go" required></div>
+      <div class="field"><label>Your color</label><div class="swatches" id="swatches"></div></div>
+      <div class="me"><div class="avatar" id="me-av">?</div><div><b id="me-name">Your name</b><small>This is how the tribe sees you</small></div></div>
+      <button class="btn primary big" id="go" type="submit">Join the tribe</button>
+    </form>
+    <div class="err" id="err"></div>
+    <a class="alt hidden" id="open-app">Have the desktop app? Open it there</a>
+  </div>
   <div class="fine" id="fine"></div>
 </div></div>
 <script src="/store.js"></script>
@@ -51,16 +87,24 @@
 (function () {
   const $ = s => document.querySelector(s);
   const code = location.pathname.split('/').filter(Boolean)[1] || new URLSearchParams(location.search).get('code');
-  const COLORS = ['#F26B1D', '#7C5CFF', '#FFB86B', '#38C6B1', '#FF6F8E', '#5B8CFF', '#9AE66E'];
+  const COLORS = ['#F26B1D', '#6C7CFF', '#FFB86B', '#38C6B1', '#FF6F8E', '#5B8CFF', '#9AE66E'];
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E'].includes(c) ? '#0B0C10' : '#fff');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const ua = navigator.userAgent;
+  const mobile = /iPhone|iPad|iPod|Android/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const st = window.TribeStore.get();
+  let color = st.color && COLORS.includes(st.color) ? st.color : COLORS[Math.floor(Math.random() * COLORS.length)];
   document.body.className = st.theme === 'light' ? 'light' : 'dark';
 
+  function me() {
+    const n = $('#name').value.trim();
+    $('#me-av').textContent = initials(n); $('#me-av').style.background = color; $('#me-av').style.color = ink(color);
+    $('#me-name').textContent = n || 'Your name';
+  }
   function swatches() {
-    $('#swatches').innerHTML = COLORS.map(c => `<button type="button" class="swatch ${c === color ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
-    document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; swatches(); });
+    $('#swatches').innerHTML = COLORS.map(c => `<button type="button" class="swatch ${c === color ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="Color ${c}" aria-pressed="${c === color}"></button>`).join('');
+    document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; swatches(); me(); });
   }
 
   async function load() {
@@ -69,29 +113,50 @@
       const r = await fetch('/api/invites/' + encodeURIComponent(code || ''));
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
+      document.title = `Join ${d.tribe} · TribeCode`;
+      $('#eyebrow').innerHTML = `<span class="dot"></span>${d.role === 'spectator' ? "You're invited to watch" : "You're invited"}`;
       $('#title').textContent = `Join ${d.tribe}`;
-      $('#lead').innerHTML = `${esc(d.invitedBy)} invited you to code with the tribe.<br>No email, no password. Pick a name and you're in.`;
-      $('#faces').innerHTML = d.members.map(m => `<div class="avatar" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(m.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase())}</div>`).join('');
+      $('#lead').innerHTML = `${esc(d.invitedBy)} invited you to code with the tribe. No email, no password: pick a name and you're in.`;
+      $('#faces').innerHTML = d.members.map(m => `<div class="avatar" title="${esc(m.name)}" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(initials(m.name))}</div>`).join('')
+        + (d.members.length ? `<span class="more">${d.members.length === 1 ? esc(d.members[0].name) + ' is' : d.members.length + ' people are'} here</span>` : '');
       const hrs = Math.max(1, Math.round((Date.parse(d.expires) - Date.now()) / 3600000));
-      $('#fine').innerHTML = `Invite <span style="font-family:var(--mono)">${esc(code)}</span> · expires in ${hrs} h · role: ${esc(d.role)}`;
+      $('#fine').innerHTML = `<span>Invite ${esc(code)}</span><span>expires in ${hrs > 48 ? Math.round(hrs / 24) + ' days' : hrs + ' h'}</span><span>${esc(d.role)}</span>`;
       $('#form').classList.remove('hidden'); swatches();
-      const oa = $('#open-app'); oa.href = `tribecode://join?server=${encodeURIComponent(location.origin)}&code=${encodeURIComponent(code)}`; oa.classList.remove('hidden');
-      $('#name').value = st.name || ''; $('#name').focus();
+      if (!mobile) { const oa = $('#open-app'); oa.href = `tribecode://join?server=${encodeURIComponent(location.origin)}&code=${encodeURIComponent(code)}`; oa.classList.remove('hidden'); }
+      $('#name').value = st.name || ''; me();
+      $('#name').addEventListener('input', me);
+      if (!mobile) $('#name').focus();   // on phones, don't pop the keyboard over the invite
     } catch (e) {
+      $('#eyebrow').innerHTML = '<span class="dot" style="background:var(--alert)"></span>Invite unavailable';
       $('#title').textContent = 'This invite has expired';
       $('#lead').textContent = 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
     }
   }
 
+  function joined(name) {
+    $('#jbody').innerHTML = `<div class="done-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+      <div class="eyebrow"><span class="dot"></span>Joined</div><h1>You're in, ${esc(name.split(' ')[0])}</h1><p class="lead">Opening your tribe…</p>`;
+  }
+
   $('#form').addEventListener('submit', async e => {
     e.preventDefault();
-    const name = $('#name').value.trim(); if (!name) return;
+    const name = $('#name').value.trim(); if (!name) return $('#name').focus();
     $('#go').disabled = true; $('#go').textContent = 'Joining…'; $('#err').textContent = '';
     try {
       const r = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, name, color }) });
       const d = await r.json(); if (!r.ok) throw new Error(d.error);
-      // Personal preferences still come from first-run setup; name + color are pre-filled.
       window.TribeStore.set({ name, color, server: { url: location.origin, token: d.token } });
+      try { localStorage.setItem('tribecode.intro.v1', 'seen'); } catch {}
+      joined(name);
+      // Phones: open the app at a private device link (/m/<key>/), so "Add to Home Screen" installs an
+      // app that signs itself in. iOS Home Screen apps don't share storage with Safari.
+      if (mobile) {
+        try {
+          const k = await fetch('/api/device-link', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + d.token }, body: '{}' });
+          const kd = await k.json();
+          if (k.ok && kd.path) { location.replace(kd.path); return; }
+        } catch { /* fall back to the plain app */ }
+      }
       location.replace('/');
     } catch (err) {
       $('#err').textContent = err.message || 'Could not join'; $('#go').disabled = false; $('#go').textContent = 'Join the tribe';
