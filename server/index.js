@@ -132,6 +132,7 @@ function limited(req, max = 20, windowMs = 60_000) {
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
+setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.length || now - h[h.length - 1] > 60_000) hits.delete(k); }, 60_000).unref();   // forget idle addresses
 
 // ---------- realtime ----------
 const online = new Map(); // memberId -> { sockets:Set, where, since, project }
@@ -650,11 +651,11 @@ async function apiInProject(req, res, url) {
 
 function serveStatic(req, res, url) {
   if (devices.serveApp(req, res, url, UI)) return;
-  let rel = decodeURIComponent(url.pathname);
+  let rel; try { rel = decodeURIComponent(url.pathname); } catch { return fail(res, 400, 'bad path'); }
   if (rel === '/' ) rel = '/index.html';
   if (/^\/join\/[A-Za-z0-9]+\/?$/.test(rel)) rel = '/join.html';
   const file = path.resolve(UI, '.' + rel);
-  if (!file.startsWith(UI)) return fail(res, 403, 'forbidden');
+  if (!file.startsWith(UI + path.sep)) return fail(res, 403, 'forbidden');
   fs.readFile(file, (err, data) => {
     if (err) return fail(res, 404, 'not found');
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
@@ -744,6 +745,8 @@ function start() {
     setInterval(() => { if (gone()) { try { docs.live.persistAll(); } catch {} process.exit(0); } }, 2000).unref();
     if (process.stdin && !process.stdin.isTTY) { process.stdin.on('end', () => process.exit(0)); process.stdin.on('error', () => {}); process.stdin.resume(); }
   }
+  // A stray rejected promise in one feature must not stop the tribe for everyone (Node exits on them by default).
+  process.on('unhandledRejection', e => console.error('  unhandled rejection:', e && e.stack || e));
   // Write live doc edits that are still inside the debounce window before exiting.
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { docs.live.persistAll(); } catch (e) { console.error(e); } process.exit(0); });
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });
