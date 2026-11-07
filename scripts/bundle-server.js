@@ -16,10 +16,15 @@ code += `function __req(name) { if (__cache[name]) return __cache[name].exports;
 code += `function __req2() { return n => { const k = n.replace(/^\\.\\//, '').replace(/\\.js$/, ''); return __mods[k] ? __req(k) : require(n); }; }\n`;
 for (const f of modules) {
   const name = f.replace(/\.js$/, '');
-  const src = fs.readFileSync(path.join(srv, f), 'utf8').replace(/^#!.*\n/, '');
+  // Windows checkouts have CRLF line endings: strip the shebang whatever the line ending (a leftover '#!' inside
+  // the wrapper function is a syntax error, and the desktop app's server would not start).
+  const src = fs.readFileSync(path.join(srv, f), 'utf8').replace(/^\uFEFF?#![^\n]*\n/, '');
   code += `__mods[${JSON.stringify(name)}] = function (module, exports, require) {\n${src}\n};\n`;
 }
 code += `const __main = __req('index');\nif (__main && __main.start) __main.start();\n`;
+// Refuse to ship a bundle that doesn't even parse.
+try { new (require('node:vm').Script)(code, { filename: 'tribecode-server.js' }); }
+catch (e) { console.error('bundle-server: the bundle does not parse:', e.message); process.exit(1); }
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, code);
 fs.writeFileSync(path.join(root, 'dist', 'sea-config.json'), JSON.stringify({ main: 'dist/tribecode-server.js', output: 'dist/sea-prep.blob', disableExperimentalSEAWarning: true }, null, 2));

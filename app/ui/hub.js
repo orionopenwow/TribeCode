@@ -41,7 +41,7 @@
   }
   async function resume() {
     const l = last();
-    if (!l) return toast('Nothing to resume yet. Open a project and it shows up here.');
+    if (!l) { const p1 = pj1(); if (p1) return PJ().current() !== p1.id ? PJ().switchTo(p1.id, 'home') : App().show('home'); return toast('Nothing to resume yet. Open a project and it shows up here.'); }
     if (!projOf(l.project)) return toast(`${l.name || 'That project'} is not in this tribe any more.`);
     if (PJ().current() !== l.project) await PJ().switchTo(l.project, l.view); else App().show(l.view);
   }
@@ -113,14 +113,30 @@
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">
         <header class="hub-head"><span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
-        ${hero(on)}
-        ${startCard(on)}
+        ${gsHero(on)}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
-        ${on ? fleetSec() : ''}
         ${isPhone() ? sec('AI insights', 'Worth a look', `<div class="ai-cards" id="hub-ins-phone">${insightCards()}</div>`, 'id="hub-insights"') : ''}
       </div>`;
       bind(el);
     });
+  }
+
+  // ---------- the one hero: two big choices (Getting started, or Quick start once you're in) ----------
+  // Suggestions, Ask and the agents fleet moved out of the way: AI Insights (right panel), @ai in chat, Agent fleet row.
+  function gsHero(on) {
+    const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
+    const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
+    const tile = (id, title, sub, faceHtml = '') => `<button class="gs-tile" id="${id}">${faceHtml}<b>${title}</b><span>${sub}</span></button>`;
+    const tiles = !on
+      ? tile(desk ? 'hub-host' : 'hub-host', 'Create your first project', desk ? 'Start a project on this computer and invite AI.' : 'Get the desktop app to host a project.')
+        + tile('hub-join', 'Join a friend\'s tribe', 'Use an invite link to collaborate.')
+      : (lp || p1
+          ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Your last session shows up here.')
+          : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.'))
+        + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.');
+    const links = on ? `<div class="gs-links">${lp || p1 ? '<button class="linkish" id="hub-new">New project</button><span aria-hidden="true">·</span>' : ''}<button class="linkish" id="hub-join">Paste invite link</button></div>` : '';
+    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span></div>
+      <div class="gs-grid">${tiles}</div>${links}</section>`;
   }
 
   // ---------- the hero: Suggestions | Ask | Join or start ----------

@@ -148,13 +148,14 @@ def main():
             off = octx.new_page(); watch(off, "offline")
             off.goto(BASE + "/?skipIntro=1")
             off.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
-            for sel in ["#hub-suggest", "#hub-ask-in", "#hub-joinpanel", "#hub-join", "#hub-host", "#hub-start", "#hub-scratch .sc-in", "#hub-stream", "#grp-global", "#home-me", "#home-share-btn", "#home-invite"]: off.wait_for_selector(sel, state="visible")
+            # Home is simple: one hero (Getting started: two big choices), then Scratchpad | Recent activity
+            wait_text(off, "#hub-hero .gs-band", "GETTING STARTED")
+            wait_text(off, "#hub-hero", "Create your first project"); wait_text(off, "#hub-hero", "Join a friend")
+            for gone in ["#hub-suggest", "#hub-ask-in", "#hub-start", "#hub-fleet"]: assert off.locator(gone).count() == 0, f"{gone} is gone from Home"
+            for sel in ["#hub-join", "#hub-host", "#hub-scratch .sc-in", "#hub-stream", "#grp-global", "#home-me", "#home-share-btn", "#home-invite"]: off.wait_for_selector(sel, state="visible")
             wait_text(off, ".hub-head h1", "Your command center")
-            wait_text(off, "#hub-start-num", "0 of 5")
             wait_text(off, "#home-share", "Host or join a tribe first")
             wait_text(off, "#home-ai-cards", "Start or join a tribe")
-            off.fill("#hub-ask-in", "What should I build?"); off.keyboard.press("Enter")
-            wait_text(off, "#hub-answer", "needs a tribe")
             assert off.locator(".solo-empty:visible").count() == 0
             off.evaluate("TribeApp.show('chat')")
             off.wait_for_selector("#view-hub:not(.hidden)")
@@ -166,10 +167,6 @@ def main():
             wait_text(off, "#hub-scratch .sc-list", "lanterns that hum")
             wait_text(off, "#hub-feed", "On this device"); wait_text(off, "#hub-feed", "lanterns that hum")
             off.evaluate("scrollTo(0, 0)"); off.mouse.move(700, 880); shot(off, "home-desktop-not-connected")
-            # Get started: dismissed stays dismissed
-            off.click("#hub-start-x"); off.wait_for_selector("#hub-start", state="detached")
-            off.reload(); off.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
-            assert off.locator("#hub-start").count() == 0, "Get started stays dismissed"
             off.click("#hub-join"); off.wait_for_selector("#invite-modal:not(.hidden) #join-link")
             off.keyboard.press("Escape")
             octx.close()
@@ -183,10 +180,11 @@ def main():
             host.wait_for_selector("#view-home:not(.hidden)")   # connected: the project home, as before
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             assert host.evaluate("location.hash") == "#/hub"
-            # the hero: Suggestions | Ask | Join or start, side by side
-            tops = host.evaluate("['#hub-suggest', '#hub-ask', '#hub-joinpanel'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.top), Math.round(r.left), Math.round(r.width)]; })")
-            assert len({t[0] for t in tops}) == 1 and tops[0][1] < tops[1][1] < tops[2][1] and all(t[2] > 180 for t in tops), tops
-            host.wait_for_selector("#hub-joinpanel #hub-new"); host.wait_for_selector("#hub-joinpanel #hub-join")
+            # the hero once you're in: Quick start, two big choices side by side, and two small links
+            wait_text(host, "#hub-hero .gs-band", "QUICK START")
+            tops = host.evaluate("['#hub-resume', '#hub-instant'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.top), Math.round(r.left), Math.round(r.width)]; })")
+            assert tops[0][0] == tops[1][0] and tops[0][1] < tops[1][1] and all(t[2] > 250 for t in tops), tops
+            host.wait_for_selector("#hub-hero #hub-new"); host.wait_for_selector("#hub-hero #hub-join")
             wait_text(host, "#crumb-label", "Home")
             host.wait_for_selector("#hub-feed .ha-row")
             if host.locator("#hub-feed-more").count(): host.click("#hub-feed-more")
@@ -195,11 +193,6 @@ def main():
             host.wait_for_selector("#hub-feed .ha-row .ha-av")
             chips = host.evaluate("[...document.querySelectorAll('#hub-feed .hub-chip')].map(e => e.textContent.trim())")
             assert "lantern" in chips and "Sketches" in chips, chips   # a folder project is named after its folder
-            # Agents & models
-            wait_text(host, "#hub-fleet", "Claude")
-            wait_text(host, "#hub-fleet", "37%"); wait_text(host, "#hub-fleet", "42k tok")
-            wait_text(host, "#hub-fleet", "Ollama")
-            wait_text(host, "#hub-fleet", "Secretary")
             # the sidebar: the four rows are the Global ones, plus a way into the project
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
             assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Global docs", "All repos", "Agent fleet"]
@@ -216,33 +209,14 @@ def main():
             assert order == sorted(order), order
             wait_text(host, "#home-ai-cards", "Ink the moon")   # no /api/insights here: the hub's suggestions
             host.wait_for_selector("#home-ai-cards .ai-card .ai-tag")
-            # Get started: 4 of 5 (tribe, Claude Code, a project, a friend; no preview yet)
-            wait_text(host, "#hub-start-num", "4 of 5")
-            assert host.locator(".hst-step.done").count() == 4
             host.evaluate("scrollTo(0, 0)"); host.mouse.move(700, 880); shot(host, "home-desktop-connected")
             host.evaluate("document.querySelector('#hub-notes').scrollIntoView({ block: 'start' })"); shot(host, "home-desktop-connected-bottom"); host.evaluate("scrollTo(0, 0); document.querySelector('#hub-hero').scrollIntoView({ block: 'end' })")
-            host.click("#hub-start-ai"); wait_text(host, "#hub-start-out", "Lantern Garden", timeout=15000)
-            host.click("#hub-start-clear"); host.wait_for_selector("#hub-start-out", state="detached")
 
-            # ---------------- Ask: your agent's private chat first, else the local model ----------------
-            host.wait_for_selector("#hub-ask [data-ask-to='claude'].on")
-            host.fill("#hub-ask-in", "What should we build next?"); host.keyboard.press("Enter")
-            wait_text(host, "#hub-answer", "Sent to")
-            ch = "dm-" + "-".join(sorted([oid, agid]))
-            dmm = ok(api(f"/chat/{ch}", token=orion))["messages"]
-            assert any(m["text"] == "What should we build next?" and m["by"] == oid for m in dmm), dmm
-            ok(api(f"/chat/{ch}", "POST", {"text": "A lantern garden: start with the map."}, token=agt), "agent replies")
-            wait_text(host, "#hub-answer", "A lantern garden")
-            host.click("#hub-ask [data-ask-to='brain']")
-            host.fill("#hub-ask-in", "Who is building the save point?"); host.click("#hub-ask-send")
-            wait_text(host, "#hub-answer", "campfire save point", timeout=15000)
-            host.wait_for_selector("#hub-ask-open")
-            shot(host, "home-ask")
+            # ---------------- the Ask API (Home's box is gone; @ai in chat asks): limits still hold ----------------
             assert api("/hub/ask", "POST", {"prompt": "hi"}, token=agt)[0] == 403, "agents cannot use Ask"
             assert api("/hub/ask", "POST", {"prompt": ""}, token=orion)[0] == 400
             codes = [api("/hub/ask", "POST", {"prompt": f"q{i}"}, token=zed)[0] for i in range(7)]
             assert codes[:6] == [200] * 6 and codes[6] == 429, codes
-            host.click("#hub-ask [data-ask-to='claude']")
 
             # ---------------- Share my hub link, Invite friends ----------------
             host.click("#home-share-btn"); wait_text(host, "#home-share", "/join/")
@@ -430,8 +404,6 @@ def main():
             assert "lantern" not in zp.inner_text("#view-hub").lower().replace("lantern crew", ""), zp.inner_text("#view-hub")
             wait_text(zp, "#hub-scratch .sc-list", "try to file elsewhere")
             assert "Lantern flicker" not in zp.inner_text("#hub-scratch")
-            assert zp.locator("#hub-ask [data-ask-to]").count() == 0, "no agent of his own: Ask goes to the local model"
-            wait_text(zp, "#hub-ask", "Local model")
             zp.click("#nest-repos-all"); zp.wait_for_selector(f"#hub-repos [data-repo='{sk}']")
             assert zp.locator(f"#hub-repos [data-repo='{lan}']").count() == 0
             zctx.close()
@@ -445,14 +417,13 @@ def main():
             wait_text(phone, "#hub-feed", "Glow shader notes")
             phone.wait_for_selector("#hub-scratch .sc-in", state="visible")   # no right panel on phones: the scratchpad lives on Home
             phone.wait_for_selector("#hub-ins-phone .ai-card")               # and so do the AI insights
-            # stacked in the mock's order: hero (suggestions, ask, join), get started, notes, activity, agents, insights
-            ys = phone.evaluate("['#hub-suggest', '#hub-ask', '#hub-joinpanel', '#hub-start-sec', '#hub-notes', '#hub-stream', '#hub-agents', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
+            # stacked: the hero, notes, activity, insights
+            ys = phone.evaluate("['#hub-hero', '#hub-notes', '#hub-stream', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
             assert ys == sorted(ys), ys
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
             wide = phone.evaluate("[...document.querySelectorAll('#view-hub *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.ha-row, .hf-row, .hub-li, .sc-text, .hs-li')).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")
             assert not wide, wide
             shot(phone, "home-phone")
-            phone.evaluate("document.querySelector('#hub-start-sec').scrollIntoView({ block: 'start' })"); shot(phone, "home-phone-2")
             phone.evaluate("document.querySelector('#hub-stream').scrollIntoView({ block: 'start' })"); shot(phone, "home-phone-3")
             phone.click("#menu-btn"); phone.wait_for_selector("#grp-global", state="visible")
             assert phone.evaluate("(() => { const s = document.querySelector('.window > .side'); return s.scrollWidth <= s.clientWidth + 1; })()")
