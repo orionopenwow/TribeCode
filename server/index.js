@@ -194,7 +194,8 @@ function presenceFor(viewer) {
 }
 function touchAgent(me, tool) {
   if (me.role !== 'agent') return;
-  const prev = agentSeen.get(me.id), where = `using ${tool.replace(/_/g, ' ')}`, project = P.current();
+  const prev = agentSeen.get(me.id), project = P.current();
+  const where = tool === 'connected' ? (prev && Date.now() - prev.at < AGENT_IDLE ? prev.where : 'connected') : `using ${tool.replace(/_/g, ' ')}`;   // comms-smoke: MCP initialize/tools/list (server/mcp.js)
   const changed = !prev || Date.now() - prev.at > AGENT_IDLE || prev.where !== where || prev.project !== project;
   agentSeen.set(me.id, { at: Date.now(), where, project });
   if (changed) pushPresence();
@@ -306,7 +307,9 @@ const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, d
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
   channelProject: ch => (P.byChannel(ch) || {}).id || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
   voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
-const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus });
+// comms-smoke: meetings belong to the project where captions were turned on; optional after-huddle summary (server/huddlesum.js)
+const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m => console.error('  ' + m) });
+const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });

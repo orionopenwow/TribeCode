@@ -3,7 +3,8 @@
 // server. Captions are opt-in twice over: someone turns them on for the huddle, and each person decides
 // whether to share their own captions. Lines go to meetings/<date>-<id>.jsonl. When a captioned huddle
 // ends (or someone presses "End & summarize") the local brain writes notes into a "Meeting · …" doc and
-// its action items become tasks.
+// its action items become tasks. The meeting belongs to the project where captions were turned on: its notes,
+// chat lines and the optional after-huddle summary (server/huddlesum.js) land there, whoever leaves last and however.
 'use strict';
 const fs = require('node:fs');
 
@@ -11,7 +12,7 @@ const pad = n => String(n).padStart(2, '0');
 const day = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask, getMembers, nameOf, brain, docs, bus }) {
+module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask, getMembers, nameOf, brain, docs, bus, P = null, summary = null }) {
   fs.mkdirSync(store.p('meetings'), { recursive: true });
   let cap = null;                 // { id, file, on, by, started, sharing:Set, people:Set, lines:number }
   const notes = new Set();        // members capturing their own speech to notes right now (shown to the huddle)
@@ -25,7 +26,8 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
     if (!cap) {
       const now = new Date();
       const mid = `${day(now)}-${id(6).replace(/[^A-Za-z0-9]/g, 'x')}`;
-      cap = { id: mid, file: `meetings/${mid}.jsonl`, on: true, by: me.id, started: now.toISOString(), sharing: new Set(), people: new Set(), lines: 0 };
+      cap = { id: mid, file: `meetings/${mid}.jsonl`, on: true, by: me.id, started: now.toISOString(), sharing: new Set(), people: new Set(), lines: 0,
+        project: P ? P.current() || P.defaultId() : null };
     }
     cap.on = true; cap.by = me.id;
     cap.sharing.add(me.id);        // turning captions on is agreeing to share your own
@@ -75,12 +77,20 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
   function socketClosed(me, stillOnline) { if (!stillOnline && notes.delete(me.id)) push(); }
 
   // ---------- meeting notes ----------
+  // Runs in the meeting's project: the last person can leave from another project, or by closing the tab
+  // (socket close events run outside any project), and the notes used to land in that other project.
   async function finish(byId) {
     const m = cap; cap = null; push();
     if (!m) return null;
     const lines = store.readJSONL(m.file, 5000).filter(l => l && l.text);
     if (!lines.length) return null;
-    return buildNotes(m, lines, byId);
+    const inP = fn => (P && m.project ? P.inProject(m.project, fn) : fn());
+    const out = await inP(() => buildNotes(m, lines, byId));
+    if (summary && m.project) {
+      try { out.summary = await summary.post({ project: m.project, started: m.started, lines, docTitle: out.doc && out.doc.title }); }
+      catch (e) { console.error('huddle summary', e); }
+    }
+    return out;
   }
 
   const findMember = name => {

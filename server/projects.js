@@ -73,6 +73,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     if (typeof patch.bio === 'string') { const b = patch.bio.replace(/\s+/g, ' ').trim().slice(0, 200); if (b) p.bio = b; else delete p.bio; }
     if (patch.repo !== undefined) p.repo = patch.repo;
     if (patch.workspace !== undefined) p.workspace = !!patch.workspace;
+    if (typeof patch.huddleSummary === 'boolean') { if (patch.huddleSummary) p.huddleSummary = true; else delete p.huddleSummary; }   // server/huddlesum.js
     save(); return p;
   }
   function remove(pid) { if (pid === defaultId()) return; list = list.filter(p => p.id !== pid); save(); }
@@ -150,7 +151,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     return n;
   }
 
-  const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace,
+  const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace, huddleSummary: !!p.huddleSummary,
     members: Object.entries(p.members || {}).map(([id, role]) => ({ id, role })), created: p.created, default: p.id === defaultId(), ...extra });
 
   return { als, all, get, defaultId, current, inProject, channelOf, byChannel, okId, create, update, remove, trash, addMember, canSee, visibleTo, pick, scoped,

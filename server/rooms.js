@@ -1,7 +1,7 @@
 // HTTP for project rooms (server/projects.js) and the shared repo workspace (server/workspace.js):
 //   GET    /api/projects                     visible projects with badge counts and who is in each
 //   POST   /api/projects                     create: { name } | { path } (host machine) | { url } (clone) | { files } (upload)
-//   PATCH  /api/projects/:id                 rename, emoji, color (host)
+//   PATCH  /api/projects/:id                 rename, emoji, color (host); huddleSummary (host or project lead)
 //   POST   /api/projects/:id/git-init        make the project folder a git repo (host)
 //   POST   /api/projects/:id/members         { member, role } add or remove (role: null) someone (host)
 //   GET    /api/projects/:id/pulse           overview: people here, agents, recent changes, upcoming
@@ -174,6 +174,8 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
       const body = await readBody(req, 512 * 1024);
       if (body.image !== undefined && body.image !== null && body.image !== '' && !/^data:image\/(png|jpeg|webp|gif);base64,/.test(String(body.image))) return fail(res, 400, 'use a PNG, JPEG, WebP or GIF image');
       const shared = { image: body.image, bio: typeof body.bio === 'string' ? body.bio : undefined };   // any builder: picture and bio
+      // "Post a summary after each huddle" (server/huddlesum.js): the tribe host or the project's lead.
+      if (typeof body.huddleSummary === 'boolean') { if (!host(me) && p.members[me.id] !== 'host') return fail(res, 403, 'only the host or the project lead can change this'); shared.huddleSummary = body.huddleSummary; }
       P.update(b, host(me) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, ...shared } : shared);
       pushProjects(); return send(res, 200, { project: P.view(P.get(b)) });
     }
