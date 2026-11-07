@@ -25,7 +25,7 @@ TribeCode is a lightweight, self-hosted clubhouse for building software together
 > **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`), a shared drag-and-drop Tasks board, the approval board (proposals, votes, VISION.md, milestones tagged in git), shared Docs with a Notion-style editor, and the local brain (doc TL;DRs, daily standups, vision checks on proposals). Also working: the drift radar, a self-sorting, self-healing bug inbox, and the `Ctrl+K` command palette. The desktop app hosts the tribe itself and handles `tribecode://` invite links (built by CI, not yet run on real hardware) from [`design/mockups/app.html`](design/mockups/app.html) and are coming next (see [Roadmap](#-roadmap)).
 
 <p align="center">
-  <img src="docs/screenshots/docs-dark.png" alt="TribeCode docs workspace, dark mode" width="100%">
+  <img src="docs/screenshots/shell-desktop.png" alt="TribeCode: project circles, project sidebar, overview and who is in the room" width="100%">
 </p>
 
 ## 🔥 Four pillars
@@ -208,7 +208,7 @@ npm run build                     # Windows .exe/.msi, macOS .dmg, Linux AppImag
  Each member's desktop                 Tribe server (any member can host)        Outside
 ┌──────────────────────┐   sync    ┌────────────────────────────────┐
 │ Tauri app (glass UI) │ ◀───────▶ │ Relay + presence (WebSocket)   │ ──▶ GitHub (milestone tags)
-│ Claude Code ── MCP ──┤           │ Yjs live doc sync              │ ◀─▶ Google Drive
+│ Claude Code ── MCP ──┤           │ live doc co-editing (built-in) │ ◀─▶ Google Drive
 │ Ollama + Qwen brain  │           │ Git worktree (Markdown = truth)│ ◀── Tailscale / tunnel
 └──────────────────────┘           │ Governance: proposals, drift   │
                                    └────────────────────────────────┘
@@ -229,7 +229,7 @@ Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Mark
 - [x] **Sprint 8: Claude Code relay.** MCP endpoint (`/mcp`), agents with presence, soft file claims with hand-off, follow a teammate
 - [x] **Sprint 9: Voice.** Peer-to-peer huddles with mute, speaking indicators and screen share; live-test launcher; new logo
 - [x] **Sprint 10: Phones + brand.** Installable web app (iPhone/Android) with phone layout, invite QR codes with network/Tailscale addresses, exact wordmark, bundled fonts
-- [ ] **Next:** native iOS app via Tauri + TestFlight (needs a Mac), live co-editing (Yjs), Google Drive import, PDF/Office conversion
+- [ ] **Next:** native iOS app via Tauri + TestFlight (needs a Mac), Google Drive import, PDF/Office conversion
 - [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
 - [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
 - [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit
@@ -247,7 +247,7 @@ It adds an entry to [`CHANGELOG.md`](CHANGELOG.md), commits, creates an annotate
 
 ## 🧱 Built on
 
-[Tauri](https://github.com/tauri-apps/tauri) · [BlockNote](https://github.com/TypeCellOS/BlockNote) · [Yjs](https://github.com/yjs/yjs) · [Ollama](https://github.com/ollama/ollama) · [MarkItDown](https://github.com/microsoft/markitdown) · [dnd-kit](https://github.com/clauderic/dnd-kit) · [cmdk](https://github.com/pacocoursey/cmdk) · [Lucide](https://github.com/lucide-icons/lucide) · [LiveKit](https://github.com/livekit/livekit)
+[Tauri](https://github.com/tauri-apps/tauri) for the desktop app, [Ollama](https://github.com/ollama/ollama) for the local brain, and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) over MCP. The server and web app have zero npm dependencies: chat, live co-editing, huddles (WebRTC), the QR encoder and Web Push are written in plain Node and browser JavaScript.
 
 ## 🤝 Contributing
 
