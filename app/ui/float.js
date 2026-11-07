@@ -174,6 +174,6 @@
 
   window.TribeFloat = {
     peek: { register: (kind, fn) => { providers[kind] = fn; }, bind: (sel, fn) => binders.push([sel, fn]), hide: () => hidePeek(true) },
-    open, restorer, pop, menu, closePop, isOpen: id => wins.has(id), get: id => wins.get(id), more: item => more.push(item), esc,
+    open, restorer, pop, menu, closePop, isOpen: id => wins.has(id), get: id => wins.get(id), more: item => more.push(item), moreItems: () => more.slice(), esc,
   };
 })();

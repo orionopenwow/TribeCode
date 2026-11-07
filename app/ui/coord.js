@@ -46,10 +46,10 @@
   function agentCard(a, compact) {
     const pct = a.tokens && a.budget ? Math.min(100, Math.round(a.tokens / a.budget * 100)) : null;
     const canSteer = a.yours || me().role === 'host';
-    if (compact) return `<div class="ra-row ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}"><span class="ra-dot"></span><div><b>${esc(a.name)}</b><span>${esc(a.control ? ctlLabel(a.control) : a.task ? a.task.title : a.online ? (a.where || 'working') : 'idle')}</span></div></div>`;
+    if (compact) return `<div class="ra-row ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}"><span class="ra-dot"></span><div><b>${esc(a.name)}</b><span>${esc(a.control ? ctlLabel(a.control) : `${a.online ? (a.where || 'working') : 'idle'}${a.task ? ' · ' + a.task.title : ''}`)}</span></div></div>`;
     return `<article class="ag-card ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}">
       <header><span class="ag-ico">${ico('i-robot', 18)}</span><div class="ag-t"><b>${esc(a.name)}</b><span class="faint">${a.yours ? 'yours' : `${esc(a.ownerName)}'s`} · ${a.online ? `<span class="ok">active</span> ${esc(ago(a.lastActive))}` : a.lastActive ? `last seen ${esc(ago(a.lastActive))}` : 'never connected'}</span></div>
-        ${a.control ? `<span class="pj-chip hot">${esc(ctlLabel(a.control))}</span>` : ''}</header>
+</header>${a.control ? `<div class="ag-ctl">${ico('i-zap', 13)}${esc(ctlLabel(a.control))}</div>` : ''}
       <dl>
         <dt>Task</dt><dd>${a.task ? `${esc(a.task.title)} <span class="faint">· ${esc(a.task.status)}</span>` : '<span class="faint">none</span>'}</dd>
         <dt>Branch</dt><dd>${a.branch ? `<code>${esc(a.branch)}</code>` : '<span class="faint">none</span>'}</dd>
@@ -66,9 +66,7 @@
       ${list.length ? `<div class="ag-grid">${list.map(a => agentCard(a)).join('')}</div>` : empty('No agents yet', 'Connect your Claude Code from the right panel. Teammates\' agents show up here too.')}`;
     act(el, '[data-ctl]', async b => {
       const id = b.closest('[data-agent]').dataset.agent, action = b.dataset.ctl;
-      const note = action === 'resume' ? '' : (prompt(action === 'stop' ? 'Tell the agent why it should stop (optional)' : 'Why pause? (optional)', '') ?? null);
-      if (note === null) return;
-      await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action, note } });
+      await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action } });
       toast(action === 'resume' ? 'Resumed' : `${action === 'stop' ? 'Stop' : 'Pause'} requested`); draw(); side();
     });
     act(el, '[data-msg]', async b => window.TribeDM && window.TribeDM.open(b.closest('[data-agent]').dataset.agent));
@@ -135,9 +133,7 @@
     el.innerHTML = `${pend.length ? pend.map(row).join('') : empty('Nothing to review', 'Agents call request_review when a branch is ready; tasks moved to Review on the board show up here too.')}${done.length ? `<h6 class="coord-h">Decided</h6>${done.map(row).join('')}` : ''}`;
     act(el, '[data-rv-do]', async b => {
       const id = b.closest('[data-rv]').dataset.rv, d = b.dataset.rvDo;
-      const note = d === 'deny' ? prompt('What should change?', '') : '';
-      if (note === null) return;
-      await C.api(`/coord/reviews/${encodeURIComponent(id)}/${d}`, { method: 'POST', body: { note } }); toast(d === 'approve' ? 'Approved: task moved to Done' : 'Sent back with your note'); draw();
+      await C.api(`/coord/reviews/${encodeURIComponent(id)}/${d}`, { method: 'POST', body: {} }); toast(d === 'approve' ? 'Approved: task moved to Done' : 'Sent back to doing'); draw();
     });
     el.querySelectorAll('.rv-row .rv-main').forEach(m => m.onclick = () => { const r = list.find(x => x.id === m.closest('[data-rv]').dataset.rv); if (r && window.TribeShell) window.TribeShell.preview({ kind: 'Review', title: r.title, html: `<p class="faint"><code>${esc(r.branch || '')}</code> · ${esc(r.byName)}</p>${r.summary ? `<div class="md">${window.TribeMD.render(r.summary)}</div>` : ''}` }); });
   }

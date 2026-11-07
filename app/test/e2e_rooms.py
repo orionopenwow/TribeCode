@@ -21,6 +21,17 @@ errors = []
 IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
 
 
+
+
+def chat(page):
+    """Chat is its own view in the shell: open it before typing or clicking in it."""
+    page.evaluate("TribeApp.view() !== 'chat' && TribeApp.show('chat')")
+    return page
+
+def named(page, name):
+    """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
+    page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+
 def api(path, method="GET", body=None, token=None, project=None):
     h = {"Content-Type": "application/json"}
     if token: h["Authorization"] = "Bearer " + token
@@ -118,9 +129,8 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1500, "height": 950}).new_page(); watch(host, "host")
+            named(host, "Orion")
             host.goto(BASE + "/?skipIntro=1")
-            host.wait_for_selector("#onboard:not(.hidden)")
-            host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-skip")
             wait_text(host, "#sync-status", "connected")
             token = host.evaluate("TribeStore.get().server.token")
             host.wait_for_selector("#pj-rail .pj-circle")
@@ -133,7 +143,7 @@ def main():
             # ---- project from a local path that is already a git repo (host machine only)
             host.click("#pj-plus"); host.wait_for_selector("#np-input")
             host.fill("#np-input", lantern); wait_text(host, "#np-hint", "Opens that folder"); host.click("#np-create")
-            host.wait_for_selector("#view-overview:not(.hidden) .pj-title")
+            host.wait_for_selector("#view-home:not(.hidden) .pj-title")
             wait_text(host, "#pj-overview h1", "lantern")
             assert host.evaluate("TribeClient.project()") == "lantern"
             wait_text(host, "#pj-ws", "Give me a branch")
@@ -146,7 +156,7 @@ def main():
             # ---- a plain folder: "Make it a git repo" (gitignore for node_modules, first commit as Orion)
             host.click("#pj-plus"); host.fill("#np-input", sketches); host.press("#np-input", "Enter")
             host.wait_for_selector("#np-git"); host.click("#np-git")
-            host.wait_for_selector("#view-overview:not(.hidden)"); wait_text(host, "#pj-overview h1", "sketches")
+            host.wait_for_selector("#view-home:not(.hidden)"); wait_text(host, "#pj-overview h1", "sketches")
             wait_until(lambda: Path(sketches, ".git").exists(), what="git init")
             assert "node_modules/" in Path(sketches, ".gitignore").read_text()
             tracked = sh("git", "-C", sketches, "ls-files")
@@ -163,7 +173,7 @@ def main():
                 { path: 'src/main.js', file: new File(['console.log("pixel")\\n'], 'main.js') },
                 { path: 'README.md', file: new File(['# Pixel Quest\\n'], 'README.md') },
                 { path: 'node_modules/dep/index.js', file: new File(['x'], 'index.js') }])""")
-            host.wait_for_selector("#view-overview:not(.hidden)"); wait_text(host, "#pj-overview h1", "Pixel Quest")
+            host.wait_for_selector("#view-home:not(.hidden)"); wait_text(host, "#pj-overview h1", "Pixel Quest")
             ws = Path(tmp, "workspaces", "pixel-quest")
             assert (ws / "src/main.js").exists() and not (ws / "node_modules").exists()
             assert sh("git", "-C", str(ws), "log", "-1", "--format=%an <%ae>") == "Orion <orion@users.noreply.tribecode>"
@@ -180,7 +190,7 @@ def main():
             wait_text(host, "#np-status", "clones it"); assert host.is_visible("#np-do-upload")
             shot(host, "project-drop")
             host.click("#np-create")
-            host.wait_for_selector("#view-overview:not(.hidden)"); wait_text(host, "#pj-overview h1", "quest-engine")
+            host.wait_for_selector("#view-home:not(.hidden)"); wait_text(host, "#pj-overview h1", "quest-engine")
             qe = Path(tmp, "workspaces", "quest-engine")
             assert (qe / "engine.js").exists() and sh("git", "-C", str(qe), "remote", "get-url", "origin") == bare
             st, r = api("/projects", "POST", {"url": "--upload-pack=touch /tmp/pwned"}, token=token)
@@ -190,7 +200,7 @@ def main():
             host.click("#pj-rail [data-pj-open='pixel-quest']")
             wait_until(lambda: host.evaluate("TribeClient.project()") == "pixel-quest", what="switch to pixel quest")
             host.wait_for_function("!document.querySelector('#chat-list').innerText.includes('legacy hello')")
-            host.fill("#chat-input", "pixel only: sprites are 16px"); host.press("#chat-input", "Enter")
+            chat(host).fill("#chat-input", "pixel only: sprites are 16px"); chat(host).press("#chat-input", "Enter")
             wait_text(host, "#chat-list", "pixel only")
             st, r = api("/tasks", "POST", {"title": "Draw the hero sprite"}, token=token, project="pixel-quest")
             assert st == 200 and r["task"]["project"] == "pixel-quest", r
@@ -202,20 +212,18 @@ def main():
             wait_text(host, "#board", "Draw the hero sprite")
             assert "Old campfire task" not in host.inner_text("#board"), (host.inner_text("#board"), host.evaluate("TribeClient.project()"))
 
-            # ---- cascade badges: only non-empty sections show a count
-            wait_text(host, "#pj-nav [data-nav='tasks']", "1")
-            assert host.locator("#pj-nav [data-nav='docs'] .pj-n").count() == 0
-            assert host.locator("#pj-nav [data-nav='requests']").count() == 0   # Requests only shows up when there is one
+            # ---- nest badges: only non-empty sections show a count; requests surface on More ⋯
+            wait_text(host, "#nn-tasks", "1")
+            assert host.inner_text("#nn-docs") == ""
+            assert host.inner_text("#nn-more") == ""
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project="pixel-quest")
             assert st == 200, r
-            host.wait_for_selector("#pj-nav [data-nav='requests'] .pj-n.hot")
+            host.wait_for_selector("#nn-more.hot")
             assert host.locator("#pj-rail [data-pj-open='pixel-quest'] .pj-badge").count() == 0   # current project: no badge on its circle
-            assert host.inner_text("#pj-nav [data-nav='requests'] .pj-n") == "1"
-            host.click("#pj-nav [data-nav='requests']"); wait_text(host, "#pj-requests", "Hook up the gamepad")
+            assert host.inner_text("#nn-more") == "1"
+            host.click("#nest-more"); host.click("#more-menu [data-more='requests']"); wait_text(host, "#pj-requests", "Hook up the gamepad")
             assert "Hook up the gamepad" not in json.dumps(api("/changes", token=token, project="campfire-crew")[1])
-            if not host.is_visible("#pj-nav [data-nav='repo']"): host.click("#pj-more")
-            host.wait_for_selector("#pj-nav [data-nav='repo']")
-            host.click("#pj-nav [data-nav='repo']"); host.wait_for_selector("#pj-repo-ws")
+            host.click("#nest-more"); host.click("#more-menu [data-more='repo']"); host.wait_for_selector("#pj-repo-ws")
 
             # ---- project-scoped invite: the friend only sees Pixel Quest
             host.click("#tour-invite"); host.wait_for_selector("#inv-project")
@@ -225,7 +233,6 @@ def main():
             friend.goto(link); friend.wait_for_selector("#form:not(.hidden)")
             assert "Pixel Quest" in friend.inner_text("#lead")
             friend.fill("#name", "Maya"); friend.click("#go")
-            friend.wait_for_selector("#onboard:not(.hidden)"); friend.click("#ob-next"); friend.click("#ob-skip")
             wait_text(friend, "#sync-status", "connected")
             friend.wait_for_selector("#pj-rail .pj-circle")
             assert friend.locator("#pj-rail .pj-circle").count() == 1 and "Pixel Quest" in friend.inner_text("#nest-head")
@@ -248,7 +255,7 @@ def main():
             wait_text(host, "#chat-list", "pixel only")
 
             # ---- "Give me a branch": per-member worktrees, commits attributed to the right person
-            friend.click("#nest-head [data-nav='overview']")
+            friend.click("#nest-title")
             friend.wait_for_selector("#pj-mybranch"); friend.click("#pj-mybranch")
             friend.wait_for_selector("#pj-commit")
             fid = api("/me", token=ftoken)[1]["member"]["id"]
@@ -297,7 +304,7 @@ def main():
             host.evaluate("""() => { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.fillStyle = '#6C7CFF'; x.fillRect(0, 0, 8, 8);
                 return TribeClient.api('/projects/pixel-quest', { method: 'PATCH', body: { image: c.toDataURL('image/png') } }); }""")
             host.wait_for_selector("#pj-rail [data-pj-open='pixel-quest'] .pj-face.img img")
-            host.click("#nest-head [data-nav='overview']"); host.wait_for_selector("#pj-ws .pj-branch")
+            host.click("#nest-title"); host.wait_for_selector("#pj-ws .pj-branch")
             shot(host, "project-cascade")
 
             # ---- mobile: a whole-tribe invite, the project switcher sheet, tab bar scoped to the project
@@ -317,7 +324,7 @@ def main():
             phone.click(".pj-sheet-row[data-sheet='pixel-quest']")
             wait_until(lambda: phone.evaluate("TribeClient.project()") == "pixel-quest", what="phone switched")
             wait_text(phone, "#pj-switch", "Pixel Quest")
-            phone.click('.rail [data-nav="tasks"]')
+            phone.click('#tabbar [data-nav="tasks"]')
             wait_text(phone, "#board", "Draw the hero sprite")
             assert "Old campfire task" not in phone.inner_text("#board")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")

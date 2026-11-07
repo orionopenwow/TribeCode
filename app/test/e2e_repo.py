@@ -25,6 +25,11 @@ new file mode 100644
 """
 
 
+
+def named(page, name):
+    """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
+    page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+
 def api(path, method="GET", body=None, token=None, raw=False):
     req = urllib.request.Request(BASE + "/api" + path, method=method,
                                  data=json.dumps(body).encode() if body is not None else None,
@@ -105,9 +110,8 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1600, "height": 1000}).new_page(); watch(host, "host")
+            named(host, "Orion")
             host.goto(BASE + "/?skipIntro=1")
-            host.wait_for_selector("#onboard:not(.hidden)")
-            host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-skip")
             wait_text(host, "#sync-status", "connected")
             htok = host.evaluate("TribeStore.get().server.token")
 
@@ -120,7 +124,7 @@ def main():
             assert "↑0" in host.inner_text("#repo-strip") and "↓0" in host.inner_text("#repo-strip")
             wait_text(host, "#ap-body", "Auto-pull main when clean")
             assert host.locator('#ap-body [data-sw="autopilot.enabled"]:not([disabled])').count() == 1, "host can toggle autopilot"
-            assert host.inner_text(".titlebar .faint") == "/ Repo"
+            assert host.inner_text("#crumb-label") == "Repo"
 
             # ---- 2. phone sends a change with a patch; desktop takes it and applies it ----
             code = api("/invites", "POST", {"hours": 1, "maxUses": 2}, htok)[1]["invite"]["code"]
@@ -131,7 +135,7 @@ def main():
             wait_text(phone, "#sync-status", "connected")
             ptok = phone.evaluate("TribeStore.get().server.token")
             phone.evaluate("localStorage.setItem('tribecode.iosHint', '1'); document.querySelector('.ios-hint') && document.querySelector('.ios-hint').remove()")
-            phone.click('.rail [data-nav="repo"]')
+            phone.click('#tabbar [data-tab-more]'); phone.click("#more-menu [data-more='repo']")
             phone.wait_for_selector('#ap-body [data-sw="autopilot.enabled"][disabled]')  # only the host toggles autopilot
             phone.click("#repo-send")
             phone.fill("#sd-title", "Amber lantern at night")

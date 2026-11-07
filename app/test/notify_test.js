@@ -204,7 +204,7 @@ test('approvals: high risk asks every human; questions reach check_approval', as
   assert.deepEqual(a.to.sort(), ['host', 'maya']);
   const q = r.ap.question(a.id, r.m('host'), 'Why not a PR?');
   assert.equal(q.questions[0].text, 'Why not a PR?'); assert.equal(r.ap.get(a.id).questions.length, 1);
-  assert.throws(() => r.ap.decide(a.id, 'approve', r.m('agent-maya')), /not addressed/);
+  assert.throws(() => r.ap.decide(a.id, 'approve', r.m('agent-maya')), /agents never decide/);
 });
 test('approvals: bulk approves only low risk addressed to you', () => {
   const r = rig();

@@ -57,7 +57,7 @@
     const f = el.querySelector('button'); if (f && !isPhone()) f.focus({ preventScroll: true });
     return el;
   }
-  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-more, #nest-new, #crumb-section, #pj-switch, [data-tab-more]')) closePop(); });
+  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-more, #nest-new, #crumb-section, #pj-switch, [data-tab-more], #help-btn')) closePop(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && popEl) { closePop(); e.stopPropagation(); }
     if (popEl && ['ArrowDown', 'ArrowUp'].includes(e.key)) { const all = [...popEl.querySelectorAll('button:not([disabled])')]; const i = all.indexOf(document.activeElement); const n = all[(i + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length]; if (n) { n.focus(); e.preventDefault(); } }
@@ -290,6 +290,13 @@
     const sv = $('#ps-save'); if (sv) sv.onclick = async () => { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: $('#ps-name').value, emoji: $('#ps-emoji').value, color } }); $('#invite-modal').classList.add('hidden'); PJ().refresh(); toast('Saved'); } catch (e) { toast(e.message); } };
   }
 
+  // Help (?): the tour is optional and lives here.
+  $('#help-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    const items = [{ label: 'Take a quick tour', icon: 'i-spark', run: () => window.TribeTour.start() }, { label: 'Report a bug', icon: 'i-bug', run: () => window.TribeBugs.capture() }, { label: 'Settings', icon: 'i-gear', run: () => window.TribeSettings.open() }];
+    const el = pop(e.currentTarget, `<div class="sh-menu">${items.map((x, i) => `<button data-i="${i}">${ico(x.icon)}<span>${esc(x.label)}</span></button>`).join('')}</div>`, { id: 'help-menu' });
+    el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { closePop(); items[+b.dataset.i].run(); });
+  });
   // Ctrl K: the More features are searchable too.
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(q => MORE.filter(m => m.key && m.label.toLowerCase().includes(String(q || '').toLowerCase())).map(m => ({ label: m.label, hint: 'More', icon: m.icon, run: m.run })));
 

@@ -14,6 +14,17 @@ errors = []
 IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
 
 
+
+
+def chat(page):
+    """Chat is its own view in the shell: open it before typing or clicking in it."""
+    page.evaluate("TribeApp.view() !== 'chat' && TribeApp.show('chat')")
+    return page
+
+def named(page, name):
+    """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
+    page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+
 def wait_text(page, sel, text, timeout=10000):
     page.wait_for_function("([s, t]) => { const e = document.querySelector(s); return e && e.textContent.includes(t); }", arg=[sel, text], timeout=timeout)
 
@@ -33,8 +44,8 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             host = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(host, "host")
-            host.goto(BASE + "/?skipIntro=1"); host.wait_for_selector("#onboard:not(.hidden)")
-            host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-skip")
+            named(host, "Orion")
+            host.goto(BASE + "/?skipIntro=1")
             wait_text(host, "#sync-status", "connected")
             host.click("#tour-invite")
             host.wait_for_selector("#inv-qr svg")
@@ -64,7 +75,7 @@ def main():
             except Exception:
                 print("PHONE", phone.url, phone.inner_text("#sync-status"), phone.evaluate("JSON.stringify(TribeStore.get().server)")); raise
             # bottom tab bar, drawer, no horizontal overflow
-            box = phone.locator(".rail").bounding_box()
+            box = phone.locator("#tabbar").bounding_box()
             assert box["y"] > 700 and box["width"] >= 380, box
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             phone.click("#menu-btn")
@@ -72,21 +83,21 @@ def main():
             phone.mouse.click(370, 400)
             phone.wait_for_function("!document.body.classList.contains('drawer-open')")
             # chat tab
-            phone.click('.rail [data-nav="chat"]')
-            phone.wait_for_selector(".panel", state="visible")
+            phone.click('#tabbar [data-nav="chat"]')
+            phone.wait_for_selector("#view-chat:not(.hidden) #chat-input", state="visible")
             try:
                 wait_text(phone, "#chat-list", "Maya joined the tribe")
             except Exception:
                 print("PHONECHAT", phone.inner_text("#chat-list"), phone.evaluate("JSON.stringify([TribeClient.project(), TribeClient.state().status])")); raise
-            phone.fill("#chat-input", "on my phone 📱 /task Campfire save points")
-            phone.fill("#chat-input", "/task Campfire save points")
-            phone.press("#chat-input", "Enter")
+            chat(phone).fill("#chat-input", "on my phone 📱 /task Campfire save points")
+            chat(phone).fill("#chat-input", "/task Campfire save points")
+            chat(phone).press("#chat-input", "Enter")
             wait_text(host, "#chat-list", "Made that a task")
             if take: phone.wait_for_timeout(400); phone.screenshot(path=str(SHOTS / "phone-chat.png"))
             # tasks: move by tap (no drag on touch)
-            phone.click('.rail [data-nav="tasks"]')
+            phone.click('#tabbar [data-nav="tasks"]')
             phone.wait_for_selector('[data-col="backlog"] .task')
-            assert phone.locator(".panel").is_hidden()
+            assert phone.locator("#view-chat").is_hidden()
             phone.select_option('[data-col="backlog"] .task select.mv', "doing")
             host.click('[data-nav="tasks"]:visible')
             host.wait_for_selector('[data-col="doing"] .task', timeout=8000)

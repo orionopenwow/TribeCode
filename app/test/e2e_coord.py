@@ -15,7 +15,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-PORT = 4786 + int(os.environ.get('TRIBE_PORT_OFFSET', '0'))
+PORT = 4781 + int(os.environ.get('TRIBE_PORT_OFFSET', '0'))
 BASE = f"http://localhost:{PORT}"
 SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv
@@ -287,8 +287,17 @@ def ui(orion, maya, pq, b1):
     with sync_playwright() as p:
         b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
         ctx = b.new_context(viewport={"width": 1500, "height": 940})
-        ctx.add_init_script(f"localStorage.setItem('tribecode', JSON.stringify({{name:'Orion', color:'#F26B1D', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{orion}'}}, checklist:{{setup:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pq}');")
+        ctx.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Orion', color:'#F26B1D', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{orion}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pq}');")
         host = ctx.new_page(); watch(host, "host")
+        try:
+            ui_host(b, host, orion, maya, pq, b1)
+        except Exception:
+            host.screenshot(path="/tmp/coord-fail.png"); print("ERRORS:", errors); raise
+        b.close()
+
+
+def ui_host(b, host, orion, maya, pq, b1):
+    if True:
         host.goto(BASE + "/?skipIntro=1")
         wait_text(host, "#sync-status", "connected")
         host.wait_for_selector(f"#pj-rail .pj-circle.on[data-pj-open='{pq}']")
@@ -298,7 +307,7 @@ def ui(orion, maya, pq, b1):
         wait_text(host, "#crumbs", "pixel-quest")
         # More menu: full feature set
         host.click("#nest-more"); host.wait_for_selector("#more-menu:not(.hidden)")
-        for label in ["Bugs", "Board", "Milestones", "Calendar", "Repo", "Visuals", "Agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Settings"]:
+        for label in ["Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals", "Agents", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Settings"]:
             wait_text(host, "#more-menu", label)
         shot(host, "shell-more-menu")
         host.click("#more-menu [data-more='coord:agents']")
@@ -320,9 +329,9 @@ def ui(orion, maya, pq, b1):
         for col in ["New", "Confirmed", "In progress", "Fixed"]: wait_text(host, "#bug-list", col)
         card = f".bug[data-bid='{b1['id']}']"
         host.click(f"{card} [data-bug-menu]")
-        for label in ["Assign to me", "Give to agent", "Convert to task", "Mark duplicate", "Close", "Copy as Markdown for Claude"]:
-            wait_text(host, ".fl-menu", label)
-        host.click(".fl-menu button:has-text('Copy as Markdown for Claude')")
+        for label in ["Assign to me", "Give to agent", "linked task", "Mark duplicate", "Close", "Copy as Markdown for Claude"]:
+            wait_text(host, ".tf-menu", label)
+        host.click(".tf-menu button:has-text('Copy as Markdown for Claude')")
         wait_text(host, ".toast", "Copied")
         host.click(f"{card} .bug-att")
         host.wait_for_selector("#tour-room.previewing #preview-body img")
@@ -343,7 +352,7 @@ def ui(orion, maya, pq, b1):
         host.click("#panel-toggle"); host.wait_for_function("!document.body.classList.contains('panel-off')")
         # phone: circles in a strip inside the drawer, plus the nest
         phone_ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
-        phone_ctx.add_init_script(f"localStorage.setItem('tribecode', JSON.stringify({{name:'Maya', color:'#6C7CFF', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{maya}'}}, checklist:{{setup:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pq}');")
+        phone_ctx.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Maya', color:'#6C7CFF', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{maya}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pq}');")
         phone = phone_ctx.new_page(); watch(phone, "phone")
         phone.goto(BASE + "/?skipIntro=1")
         wait_text(phone, "#sync-status", "connected")
@@ -353,7 +362,6 @@ def ui(orion, maya, pq, b1):
         assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
         shot(phone, "shell-phone")
         phone.click(".nest-row[data-nav='tasks']"); phone.wait_for_selector("#view-tasks:not(.hidden)")
-        b.close()
 
 
 if __name__ == "__main__":

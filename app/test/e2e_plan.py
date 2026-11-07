@@ -16,6 +16,12 @@ SHOTS = ROOT / "docs" / "screenshots"
 errors = []
 
 
+
+def chat(page):
+    """Chat is its own view in the shell: open it before typing or clicking in it."""
+    page.evaluate("TribeApp.view() !== 'chat' && TribeApp.show('chat')")
+    return page
+
 def api(path, method="GET", body=None, token=None):
     req = urllib.request.Request(BASE + "/api" + path, method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})})
@@ -197,7 +203,7 @@ def main():
             assert maya_id in r[0]["to"] and r[0]["priority"] == "normal", r
             friend.wait_for_function("(TribePlan.received || []).some(n => n.type === 'reminder' && n.ref === %s)" % json.dumps(soon_ev["id"]), timeout=5000)
             hud = api("/calendar", "POST", {"title": "Bug bash", "start": iso(datetime.now().astimezone() + timedelta(seconds=2)), "duration": 30, "huddle": True, "attendees": [host_id, maya_id], "remind": 0}, token=host_tok)["event"]
-            host.wait_for_selector("#chat-list .chat-join", timeout=10000)
+            chat(host).wait_for_selector("#chat-list .chat-join", timeout=10000)
             assert "Bug bash" in host.inner_text("#chat-list")
             # task due today: morning-of reminder to the assignee (morning hour is 9; force the tick via API if before 9am)
             todays = api("/tasks", "POST", {"title": "Record devlog", "due": today}, token=host_tok)["task"]
@@ -392,8 +398,7 @@ def main():
             host.mouse.move(head["x"] + 60, head["y"] + 18); host.mouse.down(); host.mouse.move(head["x"] - 340, head["y"] + 250, steps=8); host.mouse.up()
             pos = host.evaluate("JSON.parse(localStorage.getItem('tribecode.floats'))['doc:roadmap']")
             assert pos["open"] and abs(pos["x"] - (head["x"] - 400)) < 3, (pos, head)
-            host.evaluate("(() => { if (!document.querySelector('[data-float-more]')) document.querySelector('#pj-more').click(); })()")
-            host.click("[data-float-more]"); host.click(".tf-menu button:has-text('Pop out task board')")
+            host.click("#nest-more"); host.click("#more-menu button:has-text('Pop out task board')")
             host.wait_for_selector(".fwin[data-float='tasks'] .ft-row:has-text('Fix controller drift')")
             host.evaluate("TribeApp.show('calendar')"); host.wait_for_selector("#view-calendar:not(.hidden)")
             assert host.locator(".fwin[data-float='doc:roadmap']").is_visible() and host.locator(".fwin[data-float='tasks']").is_visible()
@@ -424,7 +429,7 @@ def main():
 
             # ---------- phone: comments sheet + calendar fit ----------
             phone = open_as(b, "Maya", maya_tok, viewport=(390, 844))
-            phone.click('[data-nav="calendar"]:visible'); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")
+            phone.click('#tabbar [data-tab-more]'); phone.click("#more-menu [data-more='calendar']"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")
             b.close()
 
         assert not errors, "\n".join(errors)

@@ -139,13 +139,13 @@
     const on = list.filter(m => m.online).length;
     $('#room-count').textContent = `· ${on} online`;
     const meId = (C.state().me || {}).id;
-    const shown = list.filter(m => m.role !== 'agent' || m.online || m.owner === meId);
+    const shown = list.filter(m => m.role !== 'agent');   // agents have their own list below (coord.js #room-agents)
     $('#room-list').innerHTML = shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(m => `
       <div class="person ${m.online ? 'on' : ''} ${m.role === 'agent' ? 'agent' : ''}" data-follow="${esc(m.id)}" title="${m.online && m.id !== meId && m.role !== 'agent' ? 'Click to follow ' + esc(m.name) : ''}">
       <div class="avatar" style="background:${m.role === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.role === 'agent' ? '🤖' : esc(initials(m.name))}<span class="st"></span></div>
       <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}${(C.state().huddle || []).some(h => h.id === m.id) ? ' <span title="In the huddle">🎙️</span>' : ''}</span><div class="what">${m.online ? (m.role === 'agent' ? '<span class="ok">agent</span> · ' : '<span class="ok">online</span> · ') + (window.TribeProjects ? window.TribeProjects.whereLabel(m) : '') + esc(m.where || 'Home') : m.role === 'agent' ? 'agent · idle' : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
     $('#room-list').querySelectorAll('[data-follow]').forEach(el => el.onclick = () => follow(el.dataset.follow));
-    $('#room-hint').classList.toggle('hidden', list.length > 1);
+    $('#room-hint').classList.toggle('hidden', shown.length > 1);
     $('#room-hint').textContent = 'Invite friends to see them here.';
   }
   function follow(mid) {
@@ -395,7 +395,6 @@
   $('#settings-btn').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
   $('#me-avatar').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }));
   $('#rail-logo').addEventListener('click', () => show('home'));
-  $('#help-btn').addEventListener('click', () => window.TribeTour.start());
   $('#tour-invite').addEventListener('click', () => openInvite());
   $('#tour-search').addEventListener('click', () => window.TribePalette.open());
   if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
@@ -454,7 +453,7 @@
     await window.TribeSettings.autoSetup(); refresh();
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
     if (window.TribeHost.isDesktop && !st.hostOff && !remote) hostHere({ quiet: true });
-    else { await C.ensureMember({ name: st.name, color: st.color }); C.connect(); }
+    else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
   })();
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}

@@ -1,15 +1,13 @@
-// 60-second spotlight tour. Replay any time with the "?" button or Settings.
+// Optional quick tour: Help (?) → Take a quick tour, or Settings.
 (function () {
   const $ = s => document.querySelector(s);
   const S = window.TribeStore;
   const STEPS = [
-    { el: '#tour-rail', title: 'Everything is one click away', body: 'The left bar switches between Home, Docs, Tasks, the approval Board, Bugs, the Brain and Chat. A red dot means something new.', place: 'right' },
-    { el: '#tour-side', title: 'Your project', body: 'This is the current project: its docs, chat, notifications and tasks. More tucks away the calendar, repo, visuals, bugs and board. Switch projects with the circles on the far left; + starts a new one.', place: 'right' },
-    { el: '#tour-search', title: 'Jump anywhere with Ctrl K', body: 'Search files, tasks, docs, people and actions from the keyboard. Try "new task" or a teammate\'s name.', place: 'below' },
-    { el: '#tour-drop', title: 'Drop anything in', body: 'Files, slides, PDFs and Google Doc links become Markdown in your folder, with a short TL;DR written by your local brain.', place: 'left' },
-    { el: '#tour-room', title: 'See who\'s here', body: 'Friends, what they\'re editing, and whose Claude agent is running. Click a person to follow along.', place: 'left' },
-    { el: '#tour-invite', title: 'Bring your friends', body: 'Make a short invite link. Friends pick a name and they\'re in. No email or password needed.', place: 'right' },
-    { el: '#help-btn', title: 'That\'s it!', body: 'Replay this tour any time from this button. Work through the Getting started list on Home to finish setting up.', place: 'right' },
+    { el: '#tour-rail', title: 'Your projects', body: 'Each circle is a project room with its own people, chat, docs and tasks. The orange bar marks where you are; + starts a new one or joins a friend.', place: 'right' },
+    { el: '#tour-side', title: 'Everything in this project', body: 'Chat, Docs & files, Updates, Tasks and the Huddle. More ⋯ has bugs, the board, calendar, repo, agents and the rest.', place: 'right' },
+    { el: '#tour-search', title: 'Jump anywhere with Ctrl K', body: 'Search docs, tasks, people and actions from the keyboard.', place: 'below' },
+    { el: '#tour-room', title: 'Who\'s here', body: 'People and agents in this project and what they are doing. Opening a doc or screenshot previews it here.', place: 'left' },
+    { el: '#tour-invite', title: 'Bring your friends', body: 'One click makes an invite link. Friends pick a name and they\'re in.', place: 'right' },
   ];
   let i = 0, active = false;
 

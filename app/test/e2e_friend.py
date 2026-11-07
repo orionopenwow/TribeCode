@@ -14,6 +14,11 @@ IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/
 PHONE = dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA)
 
 
+
+def named(page, name):
+    """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
+    page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+
 def api(path, method="GET", body=None, token=None):
     req = urllib.request.Request(BASE + "/api" + path, method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})})
@@ -44,8 +49,9 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
 
-            # ---- 1. fresh browser: intro -> onboarding ----
+            # ---- 1. fresh browser: intro -> straight into the app (zero-step setup) ----
             host = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(host, "host")
+            named(host, "Orion")
             host.goto(BASE)
             host.wait_for_selector("#intro")
             assert host.get_attribute("#intro", "data-panel") == "0"
@@ -68,12 +74,9 @@ def main():
             host.wait_for_timeout(350); host.screenshot(path=str(SHOTS / "intro-final.png"))
             host.click("#intro-open")
             host.wait_for_selector("#intro", state="detached")
-            assert host.locator("#onboard:not(.hidden)").count() == 1, "intro hands off to first-run setup"
-            assert host.locator("#chat-list .solo-empty").count() == 1, "solo mode: friendly chat empty state"
-            host.reload(); host.wait_for_selector("#onboard:not(.hidden)")
+            host.reload()
             host.wait_for_timeout(200)
             assert host.locator("#intro").count() == 0, "the intro is shown once"
-            host.click("#ob-next"); host.fill("#ob-name", "Orion"); host.click("#ob-skip")
             connected(host)
             htok = token_of(host)
             # palette: desktop app entry in a browser
@@ -89,7 +92,6 @@ def main():
             assert friend.locator("#intro").count() == 0
             friend.fill("#name", "Jay"); friend.click("#go")
             friend.wait_for_url(BASE + "/")
-            friend.wait_for_selector("#onboard:not(.hidden)")
             friend.wait_for_timeout(200)
             assert friend.locator("#intro").count() == 0, "joined via link: no intro"
             # ...and the intro's own "Have an invite link?" field joins too
@@ -111,7 +113,6 @@ def main():
             arrow = phone.locator(".ins-arrow").bounding_box()
             assert arrow["y"] > 700 and abs(arrow["x"] + arrow["width"] / 2 - 195) < 12, f"arrow points at Safari's Share button: {arrow}"
             connected(phone)
-            assert phone.locator("#onboard:not(.hidden)").count() == 0, "phones skip desktop setup"
             phone.wait_for_timeout(450); phone.screenshot(path=str(SHOTS / "phone-install-sheet.png"))
             phone.click("#ins-later")
             man = json.loads(urllib.request.urlopen(f"{BASE}/m/{key}/manifest.webmanifest").read())
@@ -130,7 +131,6 @@ def main():
             home.wait_for_function("TribeClient.state().me && TribeClient.state().me.name === 'Maya'", timeout=8000)
             assert home.evaluate("TribeStore.get().name") == "Maya" and home.evaluate("TribeStore.get().color") == "#38C6B1"
             assert home.locator("#install-sheet").count() == 0, "already installed: no sheet"
-            assert home.locator("#onboard:not(.hidden)").count() == 0 and home.locator("#intro").count() == 0
             home_tok = token_of(home)
             assert api("/me", token=home_tok)[1]["member"]["name"] == "Maya"
 
@@ -167,7 +167,7 @@ def main():
             host.click("#tour-invite"); host.wait_for_selector("#share-pub-t")
             host.click("#share-pub-t"); host.wait_for_selector("#share-pub-msg.warn")
             assert "cloudflared" in host.inner_text("#share-pub-msg")
-            friend.click("#ob-skip"); connected(friend); friend.click("#tour-invite"); friend.wait_for_selector("#inv-qr svg")
+            connected(friend); friend.click("#tour-invite"); friend.wait_for_selector("#inv-qr svg")
             assert friend.locator("#share-pub").count() == 0, "toggle is host-only"
             b.close()
     finally:
