@@ -5,15 +5,17 @@ proposals, calendar items, bugs, repo, agents, `VISION.md` and `TRIBE_CONTEXT.md
 
 ## In the app
 
-- **Project circles.** The far-left rail is a column of round project avatars, Discord-style: tribe
-  home at the top, one circle per project (its picture, emoji or initials on its color), and **+** to
-  start a project. The current project has an orange bar on its left edge; other projects show a
-  badge for new chat and open requests. Click a project's picture in its Overview to change it.
-- **The nest.** The second column belongs to the current project: a "Tribe / Project" header (click
-  it for the Overview: who is here, live agents, recent changes, upcoming, your branch), then
-  **Docs**, **Chat**, **Notifications**, **Tasks**, **Requests** (only when something is waiting),
-  **More** (Overview, Calendar, Repo, Visuals, Bugs, Board, pop-out windows), the **Huddle** and
-  **Invite friends**. Arrow keys move through the circles and the nest.
+- **Project circles.** The far-left rail: the TribeCode logo, one round avatar per project (picture,
+  emoji or initials on its color) and **+** (new project, or Join with a link). The current project
+  has an orange bar on its left edge; others show a white unread pill and a red count for requests.
+- **The nest.** The second column belongs to the current project (app/ui/shell.js): its name (click
+  for Home, the project overview with today's focus), **New** (task, doc, upload, huddle, ask Claude),
+  **Search**, **Chat**, **Docs & files**, **Updates**, **Tasks**, **Huddle**, **More ⋯** (Bugs, Board,
+  Milestones, Calendar, Repo, Visuals, Requests, Agents, Ownership, Conflicts, Hand-offs, Reviews,
+  Daily plan, Settings), then **Pinned** and **Recents**, and **Invite friends** at the bottom.
+- **Top bar.** *Tribe / Project ▾ / Section ▾*, the search, the bell and status, the window buttons.
+- **Right panel.** In the room (people, then agents and what they're doing); opening a doc,
+  screenshot, bug or approval turns it into a preview with a close button. It collapses.
 - **Phones.** The drawer shows the circles as a horizontal strip above the nest, the project name
   in the title bar opens a project switcher sheet, and the bottom tab bar works on the current
   project.
