@@ -606,6 +606,7 @@
       <div class="field"><label>Color</label><div class="swatches" id="ps-colors">${['#F26B1D', '#38C6B1', '#6C7CFF', '#FFB86B', '#9AE66E', '#E86A92'].map(c => `<button class="swatch ${c === p.color ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div></div>` : '<p class="lead">Only the host can rename the project.</p>'}
       ${host && !p.default ? '<div class="ps-danger"><button class="linkish danger" id="ps-delete">Delete this project…</button></div>' : ''}
       <div class="modal-foot"><button class="btn" id="ps-app">App settings</button><span style="flex:1"></span><button class="btn" data-close>Close</button>${host ? '<button class="btn primary" id="ps-save">Save</button>' : ''}</div>`;
+    if (window.TribePhoneApp) window.TribePhoneApp.settingsRow(body, p);   // feat/viewers: "Phone app mode (iOS / Android)" switch (app/ui/phoneapp.js)
     let color = p.color;
     body.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; body.querySelectorAll('[data-c]').forEach(x => x.classList.toggle('on', x === b)); });
     body.querySelector('[data-close]').onclick = () => $('#invite-modal').classList.add('hidden');

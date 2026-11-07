@@ -351,6 +351,9 @@ askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => mem
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
 const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
 const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
+// feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
+const assetFiles = require('./files')({ P });
+const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
 // The Workshop (server/workshop.js): a tribe-wide library apart from projects, plus the community shelf.
@@ -605,6 +608,8 @@ async function apiInProject(req, res, url) {
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());
   if (a === 'shelf') return shelf.route(req, res, ctx());
+  if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
+  if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
