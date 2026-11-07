@@ -604,6 +604,118 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   .jt p { font-size: 16px; }
   .rh-n b { font-size: 19px; }
 }
+/* ---- reactions: long-press a bubble, chips with counts ---- */
+.rx { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 4px 0; max-width: 100%; }
+.row.me .rx { justify-content: flex-end; }
+.rxc { display: inline-flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 8px 0 6px; border-radius: 999px; border: 1px solid var(--b); background: var(--s); color: var(--m); font: 600 12px/1 var(--mono); }
+.rxc .e { font: 14px/1 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+.rxc.mine { border-color: rgba(242,107,29,.6); background: #2A2019; color: var(--w); }
+.rxc.pop { animation: bump .3s cubic-bezier(.3, 1.6, .5, 1); }
+.qr { position: fixed; z-index: 58; display: flex; gap: 2px; padding: 4px; background: var(--s2); border: 1px solid #3A4352; border-radius: 999px; animation: spring .18s cubic-bezier(.3, 1.35, .5, 1); transform-origin: 50% 100%; }
+.qr button { width: 42px; height: 42px; border-radius: 50%; border: 0; background: none; padding: 0; font: 24px/1 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; display: grid; place-items: center; transition: transform .12s ease-out; }
+.qr button:hover, .qr button:focus-visible { background: var(--s3); }
+.qr button:active { transform: scale(.82); }
+.qr button.mine { background: var(--s3); box-shadow: inset 0 0 0 1px rgba(242,107,29,.6); }
+.row.held .bub { outline: 1px solid #3A4352; outline-offset: 2px; }
+@media (pointer: coarse) { .bub { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; } }
+/* ---- team vote card ---- */
+.vote { margin: 14px 0 6px 38px; width: calc(100% - 38px); max-width: 460px; background: #1E242D; border: 1px solid var(--b); border-left: 3px solid var(--t); border-radius: 14px; padding: 12px 12px 12px 13px; animation: rise .2s ease-out; }
+.vt-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vt-top .eb { margin: 0; }
+.vt-st { font: 600 11px/1 var(--mono); color: var(--m); white-space: nowrap; }
+.vote.passed .vt-st { color: var(--ok); }
+.vt-q { display: block; color: var(--w); font: 700 17px/1.3 'Inter Display', Inter, sans-serif; letter-spacing: -.01em; margin: 7px 0 4px; }
+.vt-by { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--m); }
+.vt-by .av.agent { border-color: var(--t); }
+.vt-bars { display: grid; gap: 6px; margin-top: 10px; }
+.vt-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 12.5px; color: var(--txt); }
+.vt-tr { height: 6px; border-radius: 3px; background: var(--s3); overflow: hidden; }
+.vt-tr i { display: block; height: 100%; border-radius: 3px; background: var(--ok); transition: width .3s ease-out; }
+.vt-row.no .vt-tr i { background: var(--no); }
+.vt-n { display: flex; align-items: center; gap: 6px; font: 600 12px var(--mono); color: var(--w); min-width: 22px; justify-content: flex-end; }
+.vt-n .stack .av { width: 18px; height: 18px; font-size: 9px; border-width: 1.5px; border-color: #1E242D; margin-left: -5px; }
+.vt-n .stack .av:first-child { margin-left: 0; }
+.vt-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.vt-btns button { min-height: 42px; border-radius: 11px; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--b); background: var(--s2); color: var(--w); }
+.vt-btns .vy { background: var(--ok); border-color: var(--ok); color: #10141A; }
+.vt-btns.voted button:not(.chosen) { opacity: .45; }
+.vt-btns button.chosen.vn { border-color: var(--no); color: var(--no); }
+.vt-btns button:active { transform: scale(.98); }
+.vt-go { width: 100%; margin-top: 10px; min-height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15px; border: 1px solid var(--o); background: var(--o); color: #fff; animation: rise .2s ease-out; }
+.vt-go.done { background: var(--s2); border-color: var(--b); color: var(--w); font-weight: 600; }
+/* ---- phone v4: no header, a distinct bottom rack, tight spacing ---- */
+.rk-mid { display: contents; }
+@media (max-width: 899px) {
+  .room:not(.in-chat) .pbar { display: none; }
+  .room.in-chat .pbar { min-height: 0; padding: calc(var(--sat) + 2px) calc(var(--sar) + 4px) 2px calc(var(--sal) + 8px); }
+  .room.in-chat .pmid .seg button { width: 52px; height: 46px; }
+  .pmid .seg .tl { display: none; }
+  .pmid .seg .bd { top: 3px; right: 6px; }
+  .ptr { top: calc(var(--sat) + 8px); }
+  .tabbar { display: flex; align-items: stretch; gap: 0; background: var(--s); border-top: 1px solid var(--b); padding: 0 calc(var(--sar) + 4px) max(4px, var(--sab)) calc(var(--sal) + 4px); }
+  .rk-mid { display: flex; flex: 4; min-width: 0; }
+  .tabbar .seg { flex: 1; min-width: 0; }
+  .tabbar .seg button, .rk { position: relative; flex: 1; min-width: 0; width: auto; height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 0; background: none; color: var(--m); padding: 0; }
+  .tabbar .seg button svg { width: 22px; height: 22px; margin: 5px 0; position: relative; z-index: 1; }
+  .tabbar .tl { position: relative; z-index: 1; display: block; max-width: 100%; padding: 0 3px; font: 600 10.5px/1.1 Inter, system-ui, sans-serif; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tabbar .seg button.on { color: var(--w); }
+  .tabbar .seg button.on::before { content: ''; position: absolute; top: 9px; left: 50%; width: 50px; height: 28px; margin-left: -25px; border-radius: 14px; background: var(--s3); }
+  .tabbar .seg button.on::after { top: -1px; width: 24px; margin-left: -12px; }
+  .tabbar .seg button:active, .rk:active { background: none; transform: scale(.94); }
+  .tabbar .seg .bd { top: 5px; right: auto; left: calc(50% + 5px); z-index: 2; box-shadow: 0 0 0 2px var(--s); }
+  .rk-me .av { width: 28px; height: 28px; font-size: 12px; margin: 2px 0; }
+  .rk-me .tl { color: var(--m); }
+  .rk-act .ab { width: 46px; height: 32px; border-radius: 11px; background: var(--o); color: #fff; display: grid; place-items: center; }
+  .rk-act .tl { color: var(--w); }
+  /* tight */
+  .wrap { padding: calc(var(--sat) + 12px) calc(var(--sar) + 10px) 18px calc(var(--sal) + 10px); }
+  .sect + .sect { margin-top: 18px; }
+  .sect-h { margin: 0 2px 8px; align-items: center; }
+  .sect-h .eb, .lane-h .eb { margin-bottom: 0; font-size: 10px; }
+  .sect-h h3, .lane-h h3 { font-size: 17px; margin-top: 3px; }
+  .hero { padding: 12px 12px 12px 13px; border-radius: 14px; }
+  .rh-ic { width: 34px; height: 34px; border-radius: 9px; }
+  .rh-n b { font-size: 17px; }
+  .rh-commit { margin-top: 10px; padding: 9px 10px; gap: 10px; }
+  .rh-ct b { font-size: 14px; }
+  .rh-chips { margin-top: 8px; gap: 5px; }
+  .bchip { min-height: 26px; padding: 0 8px; font-size: 11.5px; }
+  .hero .activity { margin-top: 10px; height: 20px; }
+  .journal { padding: 0 12px 6px; border-radius: 14px; }
+  .jg { padding: 12px 0 2px; }
+  .je { gap: 10px; padding: 7px 0; }
+  .jk { width: 24px; height: 24px; }
+  .jt p { font-size: 15px; line-height: 1.5; }
+  .jt small { margin-top: 2px; }
+  .jmore { min-height: 34px; margin-top: 4px; }
+  .chips { margin-bottom: 8px; }
+  .chip { min-height: 32px; padding: 0 12px; font-size: 13px; }
+  .fgrid { gap: 6px; }
+  .thumb { height: 78px; }
+  .fmeta { padding: 6px 8px; }
+  .scr { width: 116px; }
+  .cmpw { margin-top: 4px; padding: 10px; }
+  .panel { border-radius: 14px; }
+  .appr { padding: 12px; border-radius: 14px; }
+  .appr-note { margin-top: 10px; }
+  .appr-btns { margin-top: 8px; } .appr-btns button { min-height: 44px; }
+  .appr.done { padding: 8px 10px; }
+  .needs-hero .sect-h { margin-bottom: 10px; }
+  .uitem { padding: 9px 12px; gap: 10px; font-size: 13.5px; }
+  .uitem .ui { width: 28px; height: 28px; }
+  .board { gap: 18px; }
+  .lane { gap: 6px; }
+  .lane-h { padding: 0 2px 8px; align-items: center; }
+  .tk { padding: 10px 11px; }
+  .tk .why { margin-top: 4px; }
+  .tk .tb { margin-top: 8px; } .tk .tb button { min-height: 38px; }
+  .tk .ln { margin-top: 6px; }
+  .sugg input, .sugg button { height: 42px; } .sugg button { width: 42px; }
+  .thr-in { padding: 6px 10px; }
+  .tchip { min-height: 32px; }
+  .chat-in { min-height: calc(100% - 45px); }
+  .vote { margin: 12px 0 4px; width: 100%; max-width: none; }
+}
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -713,7 +825,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
       </div>
       <input type="file" id="file" multiple hidden><input type="file" id="file-media" accept="image/*,video/*" multiple hidden><input type="file" id="file-cam" accept="image/*" capture="environment" hidden>
     </form>
-    <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+    <nav class="tabbar" id="tabbar" aria-label="Sections"><button type="button" class="rk rk-me" id="rk-me" aria-label="Projects, huddle and people"></button><div class="rk-mid" id="rk-mid"></div><button type="button" class="rk rk-act" id="rk-act"></button></nav>
   </main>
 </section>
 
@@ -825,6 +937,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     if (w === 'Claude') return `<span class="av agent ${cls}" data-p="Claude">${ic('spark', cls === 'xl' ? 28 : 15)}</span>`;
     return `<span class="av ${cls}" data-p="${w}" style="background:${colorOf(w)}">${esc(nameOf(w)[0].toUpperCase())}</span>`;
   }
+  const SHORT = { chat: 'Chat', docs: 'Docs', updates: 'Updates', tasks: 'Tasks' };
   const NAV = [['chat', 'chat', 'Chat'], ['docs', 'docs', 'Docs & files'], ['updates', 'bell', 'Updates'], ['tasks', 'tasks', 'Tasks']];
 
   const approvals = [
@@ -914,9 +1027,8 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   /* ---------- nav, badges, people ---------- */
   function badge(k) { return k === 'updates' ? approvals.filter(a => a.state === 'pending').length : (S.unread[k] || 0); }
   function renderNav() {
-    $('#tabbar').setAttribute('aria-hidden', 'true');
-    $('#nest-nav').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="nav ${S.view === k ? 'on' : ''}" data-v="${k}">${ic(i, 18)}<span>${l}</span>${n ? `<span class="cnt">${n}</span>` : ''}</button>`; }).join('');
-    $('#seg').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="${S.view === k ? 'on' : ''}" data-v="${k}" aria-label="${l}${n ? `, ${n} new` : ''}">${ic(i, 26)}${n ? `<span class="bd">${n}</span>` : ''}</button>`; }).join('');
+        $('#nest-nav').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="nav ${S.view === k ? 'on' : ''}" data-v="${k}">${ic(i, 18)}<span>${l}</span>${n ? `<span class="cnt">${n}</span>` : ''}</button>`; }).join('');
+    $('#seg').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="${S.view === k ? 'on' : ''}" data-v="${k}" aria-label="${l}${n ? `, ${n} new` : ''}"${S.view === k ? ' aria-current="page"' : ''}>${ic(i, 24)}<span class="tl">${SHORT[k]}</span>${n ? `<span class="bd">${n}</span>` : ''}</button>`; }).join('');
     S.prevB = S.prevB || {};
     NAV.forEach(([k]) => { const n = badge(k); if (S.room && n > (S.prevB[k] || 0)) $$(`[data-v="${k}"] .bd, [data-v="${k}"] .cnt`).forEach(x => x.classList.add('pop')); S.prevB[k] = n; });
   }
@@ -928,12 +1040,12 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $('#mh-stack').innerHTML = ['Orion', 'Maya', 'Claude', 'me'].map(w => av(w)).join('');
   }
   const TITLES = { chat: ['Chat', 'Orion, Maya, Claude and you'], docs: ['Docs & files', 'Repo, living notes, files and screens'], updates: ['Updates', 'What needs you, and what happened'], tasks: ['Tasks', 'Suggested, in progress, done'] };
-  const CTX = { docs: ['plus', 'Upload', () => $('#file').click()], tasks: ['plus', 'Suggest', () => { const v = $('#v-tasks'); v.scrollTo({ top: 0, behavior: 'smooth' }); $('#sugg-in').focus(); }] };
+  const CTX = { docs: ['plus', 'Upload', () => $('#file').click()], updates: ['spark', 'Ask', () => switchThread('dm:Claude')], tasks: ['plus', 'Suggest', () => { const v = $('#v-tasks'); v.scrollTo({ top: 0, behavior: 'smooth' }); $('#sugg-in').focus(); }] };
   // move the section rack between the top bar (Chat) and the bottom tab bar, FLIP-animated so it reads as one object
   function placeRack(v) {
     const room = $('#s-room'), seg = $('#seg'), chat = v === 'chat';
     const was = room.classList.contains('in-chat'); room.classList.toggle('in-chat', chat);
-    const host = chat ? $('#pmid') : $('#tabbar');
+    const host = chat ? $('#pmid') : $('#rk-mid');
     if (seg.parentNode === host) return;
     const a = seg.getBoundingClientRect(); host.appendChild(seg); const b = seg.getBoundingClientRect();
     if (!a.width || !b.width || was === chat || desk() || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -946,6 +1058,8 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $('#pjv').textContent = v === 'chat' ? '' : TITLES[v][0];
     const c = CTX[v], cb = $('#ctx'); cb.classList.toggle('hidden', !c);
     if (c) { cb.innerHTML = ic(c[0], 20) + `<span>${c[1]}</span>`; cb.onclick = c[2]; cb.setAttribute('aria-label', c[1]); }
+    const ra = $('#rk-act'), rc = c || CTX.docs;
+    ra.innerHTML = `<span class="ab">${ic(rc[0], 22)}</span><span class="tl">${rc[1]}</span>`; ra.onclick = rc[2]; ra.setAttribute('aria-label', rc[0] === 'spark' ? "Ask Orion's Claude" : rc[1]);
     $('#latest').classList.add('hidden');
     $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
     $('#composer').classList.toggle('hidden', v !== 'chat');
@@ -993,12 +1107,63 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     if (cont) prev.classList.remove('tail');
     const row = document.createElement('div');
     row.className = `row ${who === 'me' ? 'me' : 'them'}${who === 'Claude' ? ' claude' : ''} tail${cont ? '' : ' head'}${m.sent ? ' sent' : ''}`;
-    row.dataset.who = who; row.dataset.at = +at;
-    row.innerHTML = `<div class="avc">${who === 'me' ? '' : av(who)}</div><div class="col">${who === 'me' ? '' : `<div class="nm" data-p="${who}" style="color:${who === 'Claude' ? 'var(--t)' : colorOf(who)}">${esc(nameOf(who))}</div>`}${bubbleHtml(m)}<div class="meta">${fmt(at)}</div></div>`;
-    L.appendChild(row);
+    const rid = 'm' + (++ridN); RX[rid] = {}; Object.entries(m.rx || {}).forEach(([e, ws]) => { RX[rid][e] = [...ws]; });
+    row.dataset.who = who; row.dataset.at = +at; row.dataset.rid = rid;
+    row.innerHTML = `<div class="avc">${who === 'me' ? '' : av(who)}</div><div class="col">${who === 'me' ? '' : `<div class="nm" data-p="${who}" style="color:${who === 'Claude' ? 'var(--t)' : colorOf(who)}">${esc(nameOf(who))}</div>`}${bubbleHtml(m)}<div class="rx"></div><div class="meta">${fmt(at)}</div></div>`;
+    L.appendChild(row); renderRx(rid);
     if (tid === thread) { row.querySelectorAll('img').forEach(i => i.addEventListener('load', () => toBottom())); toBottom(who === 'me'); }
     return row;
   }
+  /* ---------- reactions: long-press (or right-click) a bubble; chips with counts ---------- */
+  const RX = {}, EMO = ['👍', '❤️', '😂', '🔥', '🎉', '👀'];
+  let ridN = 0;
+  const rxNames = ws => ws.map(w => w === 'me' ? 'You' : w).join(', ');
+  function renderRx(rid, popE) {
+    const row = document.querySelector(`.row[data-rid="${rid}"]`); if (!row) return;
+    const r = RX[rid], el = row.querySelector('.rx');
+    const keys = Object.keys(r).filter(e => r[e].length);
+    el.innerHTML = keys.map(e => `<button type="button" class="rxc ${r[e].includes('me') ? 'mine' : ''} ${e === popE ? 'pop' : ''}" data-rx="${rid}|${e}" title="${esc(rxNames(r[e]))}" aria-label="${e} ${r[e].length}: ${esc(rxNames(r[e]))}"><span class="e">${e}</span>${r[e].length}</button>`).join('');
+    el.classList.toggle('hidden', !keys.length);
+  }
+  function toggleRx(rid, e, who = 'me') {
+    const r = RX[rid]; if (!r) return; const ws = r[e] = r[e] || [];
+    const i = ws.indexOf(who); if (i >= 0) ws.splice(i, 1); else ws.push(who);
+    renderRx(rid, i >= 0 ? null : e);
+  }
+  const addRx = (rid, e, who) => { if (RX[rid] && !(RX[rid][e] || []).includes(who)) toggleRx(rid, e, who); };
+  function closeQR() { const q = $('#qr'); if (q) { q.remove(); $('#qr-scrim').remove(); } $$('.row.held').forEach(r => r.classList.remove('held')); }
+  function openQR(row) {
+    closeQR(); closeMenu();
+    const rid = row.dataset.rid, bub = row.querySelector('.bub'), r = RX[rid];
+    const sc = document.createElement('div'); sc.id = 'qr-scrim'; sc.className = 'menu-scrim'; sc.onclick = closeQR;
+    const q = document.createElement('div'); q.id = 'qr'; q.className = 'qr'; q.setAttribute('role', 'menu'); q.setAttribute('aria-label', 'React');
+    q.innerHTML = EMO.map(e => `<button type="button" role="menuitem" data-qr="${rid}|${e}" class="${(r[e] || []).includes('me') ? 'mine' : ''}" aria-label="React ${e}">${e}</button>`).join('');
+    document.body.append(sc, q); row.classList.add('held');
+    const b = bub.getBoundingClientRect(), w = q.offsetWidth, h = q.offsetHeight;
+    const top = b.top - h - 8 > 60 ? b.top - h - 8 : b.bottom + 8;
+    q.style.left = clamp(row.classList.contains('me') ? b.right - w : b.left, 8, innerWidth - w - 8) + 'px'; q.style.top = clamp(top, 8, innerHeight - h - 8) + 'px';
+    if (navigator.vibrate) navigator.vibrate(10);
+    q.querySelector('button').focus({ preventScroll: true });
+  }
+  let rxT = null, rxP = null;
+  const RXSKIP = '.bub.bare, .play, a, button, video, textarea';
+  document.addEventListener('pointerdown', e => {
+    const bub = e.target.closest('#v-chat .row:not(.typing-row) .bub'); if (!bub || e.target.closest(RXSKIP) || e.button > 0) return;
+    rxP = { x: e.clientX, y: e.clientY }; clearTimeout(rxT);
+    rxT = setTimeout(() => { S.rxFired = true; openQR(bub.closest('.row')); }, 430);
+  });
+  document.addEventListener('pointermove', e => { if (rxP && Math.hypot(e.clientX - rxP.x, e.clientY - rxP.y) > 9) { clearTimeout(rxT); rxP = null; } });
+  ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => { clearTimeout(rxT); rxP = null; }));
+  document.addEventListener('contextmenu', e => {
+    const bub = e.target.closest('#v-chat .row:not(.typing-row) .bub'); if (!bub || e.target.closest(RXSKIP)) return;
+    e.preventDefault(); if (!$('#qr')) openQR(bub.closest('.row'));
+  });
+  document.addEventListener('click', e => { if (S.rxFired) { S.rxFired = false; if (!e.target.closest('#qr')) { e.stopPropagation(); e.preventDefault(); } } }, true);
+  document.addEventListener('click', e => {
+    const q = e.target.closest('[data-qr]'); if (q) { const [rid, em] = q.dataset.qr.split('|'); closeQR(); toggleRx(rid, em); return; }
+    const c = e.target.closest('[data-rx]'); if (c) { const [rid, em] = c.dataset.rx.split('|'); toggleRx(rid, em); }
+  });
+
   function markSeen() {
     $$('.row.me .meta').forEach(x => { x.textContent = x.textContent.replace(' · Seen', ''); });
     const mine = $$('.row.me'); const last = mine[mine.length - 1];
@@ -1266,9 +1431,11 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   function sendText() {
     const text = box.value.trim(); if (!text) return;
     box.value = ''; grow(box, 38); setAct(); popAct();
-    addMsg({ who: 'me', html: esc(text).slice(0, 2000), sent: true, th: thread });
+    const row = addMsg({ who: 'me', html: esc(text).slice(0, 2000), sent: true, th: thread });
     if (thread !== 'room') { dmReply(thread.slice(3), text); return; }
     S.sent++; react('text');
+    const [rw, re] = [['Orion', '🔥'], ['Maya', '😂'], ['Jay', '👍']][(S.sent - 1) % 3];
+    setTimeout(() => addRx(row.dataset.rid, re, rw), 1100 + Math.random() * 600);
   }
   const SMALL = [['Orion', '😂 love it'], ['Maya', 'haha yes'], ['Orion', 'ship it 🚀'], ['Maya', 'on it']];
   function react(kind) {
@@ -1435,7 +1602,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   }
   $('#attach').setAttribute('aria-haspopup', 'menu');
   $('#attach').onclick = () => { $('#amenu') ? closeMenu() : openMenu(); };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeProfile(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeProfile(); closeQR(); } });
   document.addEventListener('click', e => {
     const d = e.target.closest('#amenu [data-doc]'); if (d) { closeMenu(); shareDoc(files[+d.dataset.doc]); return; }
     const b = e.target.closest('#amenu [data-m]'); if (!b) return;
@@ -1471,6 +1638,51 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     const b = e.target.closest('[data-vote]'); if (!b) return; const [id, k] = b.dataset.vote.split(':'), v = S.polls[id];
     v.yes = v.yes.filter(x => x !== 'me'); v.no = v.no.filter(x => x !== 'me'); v[k].push('me'); renderPoll(id);
   });
+  // team vote: an agent suggests, the humans decide; a pass can become a task in one tap
+  const VOTERS = ['Orion', 'Maya', 'Jay', 'me'], NEED = 3;
+  const vote = { q: 'Approve: double-jump for Pixel Quest?', by: "Maya's Claude", yes: ['Maya'], no: [], task: false };
+  const passed = () => vote.yes.length >= NEED;
+  function voteHtml() {
+    const tot = VOTERS.length, mine = vote.yes.includes('me') ? 'yes' : vote.no.includes('me') ? 'no' : '';
+    const left = VOTERS.filter(w => !vote.yes.includes(w) && !vote.no.includes(w)).map(w => w === 'me' ? 'you' : w);
+    const st = passed() ? `Passed · ${vote.yes.length}–${vote.no.length}` : `${vote.yes.length} of ${NEED} to pass`;
+    const bar = (k, l) => `<div class="vt-row ${k}"><span>${l}</span><span class="vt-tr"><i style="width:${Math.round(vote[k].length / tot * 100)}%"></i></span><span class="vt-n"><span class="stack">${vote[k].map(w => av(w)).join('')}</span>${vote[k].length}</span></div>`;
+    return `<div class="vt-top"><span class="eb">Team vote</span><span class="vt-st">${st}</span></div>
+      <b class="vt-q">${esc(vote.q)}</b>
+      <div class="vt-by">${av('Claude', 'xs')}<span>Suggested by ${esc(vote.by)}${!passed() && left.length ? ` · waiting on ${esc(left.join(' and '))}` : ''}</span></div>
+      <div class="vt-bars">${bar('yes', 'Approve')}${bar('no', 'Not yet')}</div>
+      ${passed() ? (vote.task ? `<button type="button" class="vt-go done" data-v="tasks">${ic('check', 18)}In Tasks · Suggested</button>` : `<button type="button" class="vt-go" data-vtask>${ic('tasks', 18)}Make it a task</button>`)
+        : `<div class="vt-btns ${mine ? 'voted' : ''}"><button type="button" class="vy ${mine === 'yes' ? 'chosen' : ''}" data-vt="yes" aria-pressed="${mine === 'yes'}">${ic('check', 18)}Approve</button><button type="button" class="vn ${mine === 'no' ? 'chosen' : ''}" data-vt="no" aria-pressed="${mine === 'no'}">Not yet</button></div>`}`;
+  }
+  function renderVote() { $$('.vote').forEach(el => { el.innerHTML = voteHtml(); el.classList.toggle('passed', passed()); }); }
+  function castVote(who, k) {
+    if (passed()) return; const was = passed();
+    vote.yes = vote.yes.filter(x => x !== who); vote.no = vote.no.filter(x => x !== who); vote[k].push(who); renderVote();
+    if (!was && passed()) {
+      addNote(`<b>Decided</b>: double-jump goes into Pixel Quest. Team vote ${vote.yes.length}–${vote.no.length}.`);
+      addRecent('check', `<b>Team vote passed</b>: double-jump (${vote.yes.length}–${vote.no.length})`);
+    }
+  }
+  function postVote() {
+    const d = document.createElement('div'); d.className = 'vote'; d.setAttribute('role', 'group'); d.setAttribute('aria-label', 'Team vote');
+    log.appendChild(d); renderVote();
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-vt]');
+    if (b) {
+      const k = b.dataset.vt; castVote('me', k);
+      if (k === 'no' && !vote.yes.includes('Jay') && !vote.no.includes('Jay')) setTimeout(() => castVote('Jay', 'yes'), 2600);
+      return;
+    }
+    if (e.target.closest('[data-vtask]')) {
+      vote.task = true; renderVote();
+      const t = T('Ship the double jump', 'Claude', { from: 'Claude', why: `Team vote passed ${vote.yes.length}–${vote.no.length}.` });
+      tasks.s.unshift(t); if (S.view === 'tasks') renderTasks(); else { S.unread.tasks++; renderNav(); }
+      addNote(`<b>${esc(me.name)}</b> made the double-jump vote a task.`); addRecent('tasks', '<b>You</b> made “Ship the double jump” a task');
+      toast('Added to Tasks › Suggested');
+    }
+  });
+
   // voice playback
   let playing = null;
   document.addEventListener('click', e => {
@@ -1515,7 +1727,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     clearTimeout(panel.t); if (!open) panel.t = setTimeout(() => { if (!pOpen) room.classList.remove('peek'); }, 300);
   }
   S.panel = panel;
-  $('#pj').onclick = () => { room.classList.add('peek'); requestAnimationFrame(() => requestAnimationFrame(() => panel(true))); };
+  $('#pj').onclick = $('#rk-me').onclick = e => { e.stopPropagation(); room.classList.add('peek'); requestAnimationFrame(() => requestAnimationFrame(() => panel(true))); };
   $('#shade').onclick = () => panel(false);
   $('#rail-pq').onclick = () => show(S.view);
   // long-press a section icon to see its name
@@ -1763,6 +1975,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     document.title = 'Pixel Quest · TribeCode demo';
     $('#rail-pq').innerHTML = `<span class="pav">${projSvg(42)}</span>`; $('#pj-pav').innerHTML = projSvg(28);
     $('#rail-me').outerHTML = av('me');
+    $('#rk-me').innerHTML = av('me') + `<span class="tl">${esc(me.name)}</span>`;
     box.placeholder = 'Message Pixel Quest';
     renderPeople(); setAct(); fitVV();
     tasks.s = [
@@ -1772,22 +1985,24 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     ];
     sys('Demo · nothing is sent anywhere', true);
     sys('Today', 'day');
-    addMsg({ who: 'Orion', html: 'Morning tribe 🔥', at: ago(38) });
+    addMsg({ who: 'Orion', html: 'Morning tribe 🔥', at: ago(38), rx: { '🔥': ['Maya', 'Jay'] } });
     addMsg({ who: 'Orion', html: 'Claude is on the double jump, Maya has the slime.', at: ago(38) });
-    addMsg({ who: 'Maya', kind: 'image', src: SLIME_IMG, px: true, name: 'slime-idle.png', at: ago(14) });
+    addMsg({ who: 'Maya', kind: 'image', src: SLIME_IMG, px: true, name: 'slime-idle.png', at: ago(14), rx: { '❤️': ['Orion', 'Jay'], '😂': ['Orion'] } });
     addMsg({ who: 'Maya', html: 'Slime v2 is in Docs & files 👀', at: ago(14) });
-    addMsg({ who: 'Claude', html: `Double jump is fixed on <code>feat/double-jump</code>.<div class="rc"><div class="rc-h">${ic('branch', 15)}<span class="mono">feat/double-jump</span><span class="tag live">tests passing</span></div><div class="rc-b">Coyote time, and the second jump resets on landing.</div><div class="rc-f mono">player.ts · <span class="add">+18</span> −6 · 12 tests</div></div>`, at: ago(4) });
+    postVote();
+    addMsg({ who: 'Claude', html: `Double jump is fixed on <code>feat/double-jump</code>.<div class="rc"><div class="rc-h">${ic('branch', 15)}<span class="mono">feat/double-jump</span><span class="tag live">tests passing</span></div><div class="rc-b">Coyote time, and the second jump resets on landing.</div><div class="rc-f mono">player.ts · <span class="add">+18</span> −6 · 12 tests</div></div>`, at: ago(4), rx: { '🎉': ['Orion', 'Maya'] } });
     addMsg({ who: 'Claude', kind: 'card', html: apprHtml(approvals[0]), at: ago(4) });
     sys(`${esc(me.name)} joined Pixel Quest`);
     addNote(`<b>${esc(me.name)}</b> joined Pixel Quest, invited by Orion.`);
     show('chat'); S.room = true;
     renderThreads(); th('dm:Orion');
     setTimeout(() => bot('Orion', { html: "hey! so glad you came 🔥 ping me here if anything's confusing" }, { th: 'dm:Orion', pre: 0 }), 2600);
+    setTimeout(() => castVote('Orion', 'yes'), 2200);
     setTimeout(installCard, 4000);
     setTimeout(tourPrompt, 1100);
   }
   setTimeout(() => { if (!matchMedia('(pointer: coarse)').matches) nameIn.focus(); }, 50);
-  window.__demo = { S, approvals, tasks, files, notes };
+  window.__demo = { S, approvals, tasks, files, notes, vote, RX };
 })();
 </script>
 </body>
