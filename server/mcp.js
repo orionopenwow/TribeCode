@@ -76,6 +76,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
       run: ({ id }) => { const ap = approvals && approvals.get(id); return ap ? text({ id: ap.id, status: ap.status, note: ap.note || '', questions: ap.questions.map(q => ({ from: q.name, at: q.at, text: q.text })), decidedBy: ap.decidedByName, decidedAt: ap.decidedAt || null }) : err(`No approval with id ${id}`); },
     },
     ...extraTools,   // e.g. check_messages / reply (chatx.js)
+    ...require('./mcp-people').tools({ text, err, S, str }),   // share_prompt, report_context (server/mcp-people.js)
   };
   if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
   if (coordTools) Object.assign(TOOLS, coordTools({ text, err, S, str }));   // my_lane, suggest_task, handoff, request_review (server/coord.js)
@@ -97,7 +98,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
       const tool = TOOLS[params.name];
       if (!tool) return { jsonrpc: '2.0', id, error: { code: -32602, message: `Unknown tool: ${params.name}` } };
       const { project, ...args } = params.arguments || {};
-      try { return reply(await scope(me, project, async () => { touchAgent(me, params.name); return tool.run(args, me); })); } catch (e) { return reply(err(e.message || String(e))); }
+      try { return reply(await scope(me, project, async () => { touchAgent(me, params.name); require('./mcp-people').log(me, params.name, args); return tool.run(args, me); })); } catch (e) { return reply(err(e.message || String(e))); }
     }
     if (method && method.startsWith('notifications/')) return null;
     return { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not found: ${method}` } };
