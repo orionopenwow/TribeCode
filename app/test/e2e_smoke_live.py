@@ -130,6 +130,14 @@ def main():
             ph.click(f"#hub-pjs [data-pj-go='{pid}']"); ph.wait_for_function("pid => TribeProjects.current() === pid && !document.body.classList.contains('global')", arg=pid, timeout=10000)
             ph.wait_for_selector("#tabbar", state="visible")
 
+            # ---- shared compute: a quiet helper once the project has a repo and two people ----
+            host.click("#nest-overview"); host.wait_for_selector("#room-helpers [data-helper='compute']", timeout=20000)
+            host.click("#room-helpers [data-helper='compute']"); host.wait_for_selector("#cmp-toggle")
+            host.click("#cmp-toggle"); wait_text(host, ".cmp-list", "Orion")
+            assert api("/compute", token=tok)[1]["mine"]["on"] is True
+            host.click("#invite-body [data-close]")
+            wait_text(host, "#room-helpers [data-helper='compute']", "lending")
+
             # ---- delete the project (host only, type the name) ----
             assert api(f"/projects/{pid}", "DELETE", {"confirm": "Lantern Dash"}, token=ph.evaluate("TribeStore.get().server.token"))[0] == 403, "friends can't delete"
             host.click(f"#pj-rail [data-pj-open='{pid}']", button="right"); host.click("#rail-menu [data-rc='settings']")

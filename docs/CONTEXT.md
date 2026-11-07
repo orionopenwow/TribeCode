@@ -2,7 +2,7 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-07 (v0.6.8 released from `main`: phone Home-first flow, task slates; v0.6.7 simpler rack; v0.6.6: Discord-style setup; v0.6.5 server fix + simple Home; v0.6.4: streamlined sidebar; v0.6.3: simpler navigation, living project overview; v0.6.2: phone-only friends and @ai; v0.6.1 one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
+Last updated: 2026-11-07 (v0.7.0 released from `main`: shared compute step 1, phone report; v0.6.9 host reclaim, delete projects, phone Home rack; v0.6.8: phone Home-first flow, task slates; v0.6.7 simpler rack; v0.6.6: Discord-style setup; v0.6.5 server fix + simple Home; v0.6.4: streamlined sidebar; v0.6.3: simpler navigation, living project overview; v0.6.2: phone-only friends and @ai; v0.6.1 one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
@@ -54,6 +54,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 | Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
+- 2026-11-07 09:46–09:55: Phone Home rack (shows on scroll up, hides on scroll down, + to start/join) ✅ v0.6.9; plan for starting tribes on phones and sharing hosting ✅ docs/MOBILE-TRIBES.md; Create showed 'server already running with other members' ✅ host reclaim v0.6.9; smoke-test create/delete/project management live ✅ e2e_smoke_live + delete projects v0.6.9; remove Share/Invite from the Home panel ✅; logo goes Home ✅; test every phone feature with saved data, report, suggest, polish ✅ e2e_phone_features + docs/PHONE-REPORT.md v0.7.0; shared compute tucked into Helpers ✅ step 1 v0.7.0 (docs/SHARED-COMPUTE.md).
 - 2026-11-07 09:31–09:32: Phone: fire logo top left opens the projects panel; no search/docs top right; Home header + no bottom rack until in a project; Settings only where relevant; tasks as horizontal slates. ✅ v0.6.8
 - 2026-11-07 09:26: Remove the + and the profile picture from the phone's bottom rack. ✅ v0.6.7 (profile in the top bar, New task / New doc on their screens)
 - 2026-11-07 09:13–09:17: Simplify Home like the 'Getting started hub' mock ✅ v0.6.5. Desktop server didn't start (CRLF shebang in the bundle) ✅ fixed v0.6.5. Discord-like setup flow ✅ v0.6.6. Keep mobile up to date with each version (standing rule).

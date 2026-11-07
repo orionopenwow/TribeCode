@@ -76,7 +76,12 @@
   .main > #view-chat:not(.hidden) { height: calc(100dvh - 52px - env(safe-area-inset-top) - 8px - env(safe-area-inset-bottom)); }
   #view-chat .chat-col { height: 100%; }
   #view-chat .chat-title { display: none; }
-  #view-home .pj-overview .pj-title .pj-face-btn, #view-home .pj-overview .pj-title h1 { display: none; }
+  #view-home .pj-overview .pj-title h1 { display: none; }   /* the name is in the top bar; the picture stays (tap to change it) */
+  #view-home .pj-overview .pj-title2 { gap: 12px; align-items: center; flex-wrap: wrap; }
+  #view-home .pj-overview .pj-title2 .pj-face-btn .pj-face { width: 52px; height: 52px; font-size: 18px; border-radius: 16px; }
+  #view-home .pj-overview .pj-title2 .pj-cam { opacity: 1; }
+  #view-home .pj-overview .pj-title2 .pj-id { flex: 1; min-width: 0; }
+  #view-home .pj-overview .pj-title2 #pj-invite { margin-left: 0 !important; width: 100%; justify-content: center; }
   .hi-banner { flex-wrap: wrap; margin: 0 0 14px; font-size: 13.5px; }
   .sec { margin-top: 26px; }
   .sec-head { margin-bottom: 10px; }
