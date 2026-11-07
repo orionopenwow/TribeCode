@@ -107,7 +107,7 @@ def main():
             ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             if ph.query_selector("#ins-later") and ph.is_visible("#ins-later"): ph.click("#ins-later")
             # on phones the avatar opens the profile sheet; the Guide is a quiet link under its actions
-            ph.wait_for_selector("#pf-btn", state="visible", timeout=10000); ph.click("#pf-btn")
+            ph.wait_for_selector("#pf-btn", state="attached", timeout=10000); ph.evaluate("document.querySelector('#pf-btn').click()")
             ph.wait_for_selector("#m2-profile [data-pf=guide]", timeout=10000); ph.click("#m2-profile [data-pf=guide]")
             ph.wait_for_selector("#guide:not(.hidden) .gd-item")
             assert ph.is_visible("#gd-list") and not ph.is_visible("#gd-read"), "phones start on the list"

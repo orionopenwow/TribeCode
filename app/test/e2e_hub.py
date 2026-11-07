@@ -418,7 +418,8 @@ def main():
             assert phone.locator("#tabbar").is_hidden(), "no bottom rack on Home: it opens once you're in a project"
             phone.wait_for_selector("#hub-pjs [data-pj-go]")                  # phones have no rail: projects are rows on Home
             assert phone.locator(".titlebar .search").is_hidden() and phone.locator("#ctx-btn").is_hidden(), "no search or docs icons on the phone's top bar"
-            phone.wait_for_selector("#m2-face .m2-logo", state="visible")
+            assert phone.locator(".titlebar").is_hidden(), "phone Home has no top bar: the rack at the bottom has everything"
+            phone.wait_for_selector("#m2-homebar [data-hb=me] .m2-hb-av", state="visible")   # on Home the Home tab is your avatar (profile)
             # stacked: the hero, notes, activity, insights
             ys = phone.evaluate("['#hub-hero', '#hub-pjs-sec', '#hub-notes', '#hub-stream', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
             assert ys == sorted(ys), ys
@@ -427,7 +428,9 @@ def main():
             assert not wide, wide
             shot(phone, "home-phone")
             phone.evaluate("document.querySelector('#hub-stream').scrollIntoView({ block: 'start' })"); shot(phone, "home-phone-3")
-            phone.click("#menu-btn"); phone.wait_for_selector("#grp-global", state="visible")
+            phone.evaluate("scrollTo(0, 0); document.querySelector('#m2-homebar').classList.remove('away')"); phone.wait_for_timeout(300)
+            r = phone.locator("#m2-homebar [data-hb=pjs]").bounding_box(); phone.mouse.click(r["x"] + r["width"] / 2, r["y"] + r["height"] / 2)   # tap Projects (no scrolling: that hides the rack)
+            phone.wait_for_selector("#grp-global", state="visible")
             assert phone.evaluate("(() => { const s = document.querySelector('.window > .side'); return s.scrollWidth <= s.clientWidth + 1; })()")
             b.close()
         assert not errors, "\n".join(errors)

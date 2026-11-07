@@ -105,13 +105,14 @@ def main():
             phone.evaluate("TribeApp.show('home')")
             rack = phone.locator("#tabbar").bounding_box()
             assert rack["y"] > 760 and rack["width"] >= 380, rack
-            for sel in ['#tabbar [data-nav="chat"]', '#tabbar [data-nav="docs"]', '#tabbar [data-m2nav="updates"]', '#tabbar [data-nav="tasks"]', "#pf-btn"]:
+            for sel in ['#tabbar [data-nav="chat"]', '#tabbar [data-nav="docs"]', '#tabbar [data-m2nav="updates"]', '#tabbar [data-nav="tasks"]']:
                 assert phone.locator(sel).is_visible(), sel
             assert phone.locator("#m2-me").count() == 0 and phone.locator("#m2-act").count() == 0, "the rack is just Chat · Docs · Updates · Tasks"
             assert phone.locator("#crumb-section").is_hidden() and phone.locator("#ws-name").is_hidden() and phone.locator("#sync-status").is_hidden(), "no header outside Chat"
             assert phone.locator(".titlebar").bounding_box()["height"] <= 60
             phone.wait_for_function("document.querySelector('#pj-switch').textContent.includes(TribeProjects.cur().name)")
-            assert phone.locator("#pj-switch").is_visible() and phone.locator("#m2-face .m2-logo").is_visible()   # the fire logo opens the projects panel
+            assert phone.locator("#pj-switch").is_visible() and phone.locator("#m2-face .pj-face").is_visible()   # in a project its picture sits top left (opens the projects panel)
+            assert phone.locator("#m2-pane").is_visible() and phone.locator("#tabbar [data-m2nav='hub']").is_visible()   # pane button top right; Home in the rack
             no_overflow(phone, "home")
 
             # ---- Discord-mobile panel: swipe from the left edge opens circles + sections, swipe back closes
@@ -152,7 +153,7 @@ def main():
             phone.wait_for_selector("#view-chat:not(.hidden) #chat-input", state="visible")
             phone.wait_for_function("document.querySelector('#tabbar').getBoundingClientRect().top < 60")
             assert phone.locator("#m2-me").count() == 0 and phone.locator("#m2-act").count() == 0, "top bar is icons only"
-            assert phone.locator("#m2-talk").is_visible() and phone.inner_text("#m2-talk") .strip().startswith("#general")
+            assert phone.locator("#m2-talk").is_hidden(), "the top bar is just the tabs (Talk to… opens from the side panel / code)"
             assert phone.locator("#m2-plus").is_visible() and phone.locator("#m2-mic").is_visible() and phone.locator("#m2-send").is_hidden()
             comp = phone.locator("#composer-mount").bounding_box(); assert comp["y"] + comp["height"] > 800, comp
             phone.fill("#chat-input", "hello from the phone")
@@ -204,7 +205,7 @@ def main():
             shot(phone, "chat")
 
             # ---- Talk to…: my Claude, Qwen brain, my desktop, #agents, #general, DMs
-            phone.click("#m2-talk"); phone.wait_for_selector("#m2-talk-sheet")
+            phone.evaluate("TribeMobile.talkTo()"); phone.wait_for_selector("#m2-talk-sheet")
             keys = phone.eval_on_selector_all("#m2-talk-sheet [data-talk]", "els => els.map(e => e.dataset.talk)")
             # Ask AI first (the tribe's AI, no Claude of your own needed); My Claude / My desktop only once you have a Claude
             assert keys[0] == "ai" and "agents" in keys and "general" in keys and f"dm:{orion}" in keys, keys
@@ -213,7 +214,7 @@ def main():
             phone.wait_for_function("document.querySelector('#chat-input').value.startsWith('@ai')")
             phone.fill("#chat-input", "")
             # profile from the people list: add friend, network
-            phone.click("#m2-talk"); phone.wait_for_selector(f"#m2-talk-sheet [data-prof='{orion}']")
+            phone.evaluate("TribeMobile.talkTo()"); phone.wait_for_selector(f"#m2-talk-sheet [data-prof='{orion}']")
             phone.click(f"#m2-talk-sheet [data-prof='{orion}']"); phone.wait_for_selector("#m2-profile [data-pf='friend']")
             assert phone.locator("#m2-profile [data-pf='ask']").is_disabled(), "no Claude connected for Orion"
             phone.click("#m2-profile [data-pf='friend']")
@@ -229,11 +230,11 @@ def main():
                 if any(m["text"] == "psst" for m in dm): break
                 time.sleep(0.1)
             else: raise AssertionError("DM not sent")
-            phone.click("#m2-talk"); phone.click("#m2-talk-sheet [data-talk='general']")
+            phone.evaluate("TribeMobile.talkTo()"); phone.click("#m2-talk-sheet [data-talk='general']")
             phone.wait_for_function("document.querySelector('#m2-talk-l').textContent === '#general'")
             # my own profile from the rack avatar (back outside Chat)
             phone.click('#tabbar [data-nav="docs"]')
-            phone.click("#pf-btn"); phone.wait_for_selector("#m2-profile [data-pf='settings']")
+            phone.evaluate("document.querySelector('#pf-btn').click()"); phone.wait_for_selector("#m2-profile [data-pf='settings']")
             assert "Maya" in phone.inner_text("#m2-profile .m2-pf-id")
             phone.evaluate("TribeMobile.closeSheet()")
 
