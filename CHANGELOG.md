@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.5
+
+- **Fix: the desktop app's tribe didn't start** ("Your tribe did not start … SyntaxError … #!/usr/bin/env node"). Windows builds kept the first line of the server file inside the bundled server. The bundle now strips it whatever the line endings, checks that the bundle parses before it can ship, and a new test (bundle_test) builds it from a Windows-style checkout
+- **Home is simpler**: one card with two big choices (Getting started: Create your first project · Join a friend's tribe; once you're in: Pick up where you left off · Invite a friend), then Scratchpad and Recent activity. Suggestions live in AI Insights, asking lives in chat (@ai), agents in Agent fleet
+
 ## v0.6.4
 
 One source of truth for where you are.

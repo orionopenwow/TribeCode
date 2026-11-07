@@ -1,7 +1,7 @@
 {
   "name": "tribecode-desktop",
   "private": true,
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "TribeCode desktop app (Tauri wrapper around app/ui)",
   "license": "MIT",
   "scripts": {

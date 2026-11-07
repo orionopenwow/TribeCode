@@ -368,3 +368,24 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .hh-join .hj-instant { width: 100%; justify-content: center; margin-top: auto; min-height: 40px; }
 .hh-join .hj-instant + .hj-acts { margin-top: 10px; }
 .hh-join .hj-instant + .hj-acts .btn { flex: 1; }
+
+/* Home's one hero: a band and two big choices. Flat: the band is one luminance step up, no gradient. */
+.hub-hero.hub-gs { padding: 0; overflow: hidden; border: 1px solid var(--edge); border-left-width: 1px; background: var(--surface); }
+.hub-gs .gs-band { padding: 13px 20px; background: var(--raised); border-bottom: 1px solid var(--edge); text-align: center; }
+.hub-gs .gs-band .eyebrow { color: var(--text); letter-spacing: .12em; }
+.hub-gs .gs-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.hub-gs .gs-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 172px; padding: 28px 22px; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+.hub-gs .gs-tile + .gs-tile { border-left: 1px solid var(--edge); }
+.hub-gs .gs-tile b { font-family: var(--display); font-size: 21px; font-weight: 750; letter-spacing: -0.015em; padding: 9px 16px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); transition: border-color .15s, background .15s; }
+.hub-gs .gs-tile span { font-size: 14px; line-height: 1.5; color: var(--muted); max-width: 34ch; }
+.hub-gs .gs-tile:hover b, .hub-gs .gs-tile:focus-visible b { border-color: var(--accent); background: var(--hover); }
+.hub-gs #hub-instant b { border-color: color-mix(in srgb, var(--accent) 55%, var(--edge)); }
+.hub-gs .gs-face .pj-face { width: 34px; height: 34px; }
+.hub-gs .gs-links { display: flex; justify-content: center; gap: 10px; padding: 10px 16px 14px; border-top: 1px solid var(--edge); font-size: 13px; color: var(--faint); }
+@media (max-width: 820px) {
+  .hub-gs .gs-grid { grid-template-columns: 1fr; }
+  .hub-gs .gs-tile { min-height: 120px; padding: 20px 16px; }
+  .hub-gs .gs-tile + .gs-tile { border-left: 0; border-top: 1px solid var(--edge); }
+  .hub-gs .gs-tile b { font-size: 18px; }
+}
+.hub-hero.hub-gs::before { display: none; }
