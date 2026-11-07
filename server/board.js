@@ -3,6 +3,7 @@
 const { execFile } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const bus = require('./bus');
 
 const VOTES = ['yes', 'no'];
 
@@ -72,6 +73,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     m.status = 'released'; m.released = new Date().toISOString(); m.releasedBy = me.id; m.git = out;
     saveMilestones(ms);
     postChat('general', 'tribecode', `Released **${version}**: ${m.title}${out.pushed ? ' · tag pushed to GitHub 🚀' : out.tagged ? ' · tagged in git' : ''}`);
+    bus.notify({ type: 'release', priority: 'low', from: me.id, title: `Released ${version}`, body: m.title, view: 'board', ref: version });
     return { milestone: m, ...out };
   }
 
@@ -127,6 +129,8 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, status: 'open', by: me.id, created: now,
       votes: me.role === 'agent' ? {} : { [me.id]: 'yes' }, body: str(text, 20000) });
     postChat('general', 'tribecode', `New proposal from ${me.name}: **${title}**. Vote on the Board.`);
+    bus.notify({ type: 'proposal', priority: 'normal', to: getMembers().filter(x => x.role !== 'agent' && x.role !== 'spectator' && x.id !== me.id && x.id !== me.owner).map(x => x.id),
+      from: me.id, title: `New proposal from ${me.name}`, body: title, view: 'board', ref: p.id });
     if (brain) brain.visionCheck({ vision: readVision(), title, body: p.body }).then(v => {
       if (!v) return; const fresh = load(p.id); if (!fresh) return;
       fresh.vision = v; save(fresh);

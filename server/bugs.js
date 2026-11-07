@@ -2,6 +2,7 @@
 // bugs resolve when their linked task is done). One Markdown file per bug in bugs/.
 'use strict';
 
+const bus = require('./bus');
 const SEVERITIES = ['critical', 'high', 'normal', 'low'];
 const AREAS = ['ui', 'sync', 'docs', 'tasks', 'board', 'brain', 'install', 'other'];
 
@@ -54,7 +55,9 @@ module.exports = function bugs({ store, id, str, broadcast, postChat, brain, cre
     const b = { id: `b-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, status: 'new', severity: 'normal', area: 'other', by: me.id, created: now, lastSeen: now, count: 1, reporters: [me.id], auto: !!auto, body };
     Object.assign(b, await heuristic(`${title}\n${body}`)); save(b);
     if (!auto) postChat('general', 'tribecode', `🐞 ${me.name} reported a bug: **${title}**`);
-    triage(b).then(t => { const fresh = load(b.id); if (fresh && fresh.status === 'new') { Object.assign(fresh, { severity: t.severity, area: t.area, status: 'triaged', triagedBy: t.by || 'rules' }); save(fresh); } });
+    const critical = x => bus.notify({ type: 'bug-critical', priority: 'high', from: auto ? null : me.id, title: `Critical bug: ${x.title}`.slice(0, 160), body: `${x.area} · reported by ${me.name}`, view: 'bugs', ref: x.id });
+    if (b.severity === 'critical') critical(b);
+    triage(b).then(t => { const fresh = load(b.id); if (fresh && fresh.status === 'new') { const was = fresh.severity; Object.assign(fresh, { severity: t.severity, area: t.area, status: 'triaged', triagedBy: t.by || 'rules' }); save(fresh); if (fresh.severity === 'critical' && was !== 'critical') critical(fresh); } });
     return { bug: b, merged: false };
   }
 

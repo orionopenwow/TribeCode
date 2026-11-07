@@ -42,6 +42,7 @@
       if (m.type === 'milestones') emit('milestones', m.milestones);
       if (m.type === 'doc') emit('doc', m.doc);
       if (m.type === 'bug') emit('bug', m.bug);
+      if (m.type === 'notification' || m.type === 'approval') emit(m.type, m);   // notify.js
       if (m.type === 'dev-reload') {
         const busy = (window.TribeDocs && window.TribeDocs.isDirty()) || (window.TribeHuddle && window.TribeHuddle.inCall());
         if (busy) window.TribeApp && window.TribeApp.toast('A new version is ready. It loads when you finish what you are doing.');
