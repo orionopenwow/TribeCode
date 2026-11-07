@@ -30,23 +30,29 @@
   const section = () => document.getElementById('view-' + NAME);
 
   // ---------- view mounting (beside app.js views, without touching them) ----------
-  function show() {
+  // From Home's sidebar (Agent fleet) the page belongs to the dashboard: the global sidebar stays. From a project
+  // (Agents Hub) it belongs to that project.
+  let fleet = false;
+  function show(opts) {
     const sec = section(); if (!sec) return;
+    fleet = !!(opts && opts.global);
+    if (fleet) document.body.dataset.scope = 'global'; else delete document.body.dataset.scope;
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
     sec.classList.remove('hidden');
     document.body.classList.remove('mobile-chat', 'drawer-open');
     document.body.dataset.view = NAME; open = true;
     document.querySelectorAll('[data-nav].on, [data-go].on').forEach(b => b.classList.remove('on'));   // the app's nav: nothing of its own is current
-    const crumb = $('#crumb-label'); if (crumb) crumb.textContent = 'Your agents';
-    if (location.hash !== '#/' + NAME) history.replaceState(null, '', location.pathname + location.search + '#/' + NAME);
+    const crumb = $('#crumb-label'); if (crumb) crumb.textContent = fleet ? 'Agent fleet' : 'Your agents';
+    const h = fleet ? '#/fleet' : '#/' + NAME;
+    if (location.hash !== h) history.replaceState(null, '', location.pathname + location.search + h);
     try { C.sendActivity && C.sendActivity('Your agents'); } catch {}
     load();
     clearInterval(timer); timer = setInterval(() => { if (open && !document.hidden) load(true); }, 15000);
   }
   function hide() {
     const sec = section(); if (sec) sec.classList.add('hidden');
-    open = false; clearInterval(timer);
-    if (location.hash === '#/' + NAME) history.replaceState(null, '', location.pathname + location.search);
+    open = false; clearInterval(timer); delete document.body.dataset.scope;
+    if (location.hash === '#/' + NAME || location.hash === '#/fleet') history.replaceState(null, '', location.pathname + location.search);
   }
   new MutationObserver(() => { if (open && document.body.dataset.view !== NAME) hide(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
   const fromHash = () => { if (location.hash === '#/' + NAME && !open) show(); };
@@ -66,7 +72,7 @@
     if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-agents-hub input, #view-agents-hub select')) return;   // don't redraw under the cursor
     render();
   }
-  const head = () => `<header class="sec-head ah-head"><span class="eyebrow">Solo mode</span><h1>Your agents</h1></header>`;
+  const head = () => fleet ? `<header class="sec-head ah-head"><span class="eyebrow">Every project</span><h1>Agent fleet</h1></header>` : `<header class="sec-head ah-head"><span class="eyebrow">Solo mode</span><h1>Your agents</h1></header>`;
 
   // ---------- constellation: this computer in the middle, agents and models around it ----------
   function constellation(nodes) {
@@ -128,6 +134,7 @@
       <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2><span class="emo" aria-hidden="true">🏠</span>Local models</h2></div>${modelsHtml(models, s)}</section>
       <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>
     </div>`;
+    if (fleet) { const o = $('#ah-office-sec'), first = sec.querySelector('.ah > .sec'); if (o && first && o !== first) first.before(o); }   // Agent fleet: the Office leads
     wire();
   }
   function modelsHtml(models, s) {
@@ -185,16 +192,14 @@
     if (o.hostOnly) return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}<span class="ah-st${o.running ? ' live' : ''}"><i></i>${o.running ? 'open on the host' : 'host only'}</span></div>`;
     const t = o.tools || {}, miss = [!t.git && 'Git (git-scm.com)', !t.nodeOk && `Node ${o.need}+ (nodejs.org${t.node ? `, you have ${t.node}` : ''})`, !t.npm && 'npm'].filter(Boolean);
     const st = o.busy ? `<span class="ah-st live"><i></i>${esc(o.busy)}…</span>` : o.running ? '<span class="ah-st live"><i></i>running</span>' : o.installed ? '<span class="ah-st"><i></i>stopped</span>' : '';
-    let acts = '';
-    if (o.busy) acts = '';
-    else if (!o.installed) acts = miss.length ? '' : '<button class="btn primary" id="os-install">Install</button>';
-    else if (o.running) acts = `<button class="btn primary" id="os-open">Open the office</button>${o.ours ? '<button class="btn ghost" id="os-stop">Stop</button>' : ''}`;
-    else acts = '<button class="btn primary" id="os-open">Start and open</button>';
+    const on = !!(o.running || o.busy), can = !o.busy && !(miss.length && !o.installed) && !(o.running && !o.ours);
+    const sw = `<button class="toggle ah-os-switch" role="switch" id="os-switch" aria-checked="${on}" aria-label="Open Space in TribeCode" ${can ? '' : 'disabled'}><span class="switch"></span></button>`;
+    const acts = o.running && !o.busy ? '<button class="btn primary" id="os-open">Open the office</button>' : '';
     const need = !o.installed && miss.length ? `<p class="ah-os-need">Needs ${miss.join(', ')} on this computer first.</p>` : '';
     const note = o.installed ? `<p class="faint ah-os-note">Runs on this computer at <code>${esc(o.url)}</code> with ${o.roots} project folder${o.roots === 1 ? '' : 's'} on its desks${t.claude ? '' : ' · Claude Code is not installed here yet, the office needs it'}.</p>`
-      : `<p class="faint ah-os-note">Install downloads it to <code>${esc(o.dir)}</code> and builds it (no install scripts run). Nothing starts until you press Open.</p>`;
+      : `<p class="faint ah-os-note">Turning it on the first time downloads it to <code>${esc(o.dir)}</code> and builds it (no install scripts run), then starts it.</p>`;
     const logs = (o.busy || o.error) && o.log && o.log.length ? `<pre class="ah-os-log">${esc(o.log.join('\n'))}</pre>` : '';
-    return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}${st}</div>${need}${o.error ? `<p class="ah-os-err">${esc(o.error)}</p>` : ''}${logs}<div class="ah-acts">${acts}</div>${note}`;
+    return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}${st}${sw}</div>${need}${o.error ? `<p class="ah-os-err">${esc(o.error)}</p>` : ''}${logs}<div class="ah-acts">${acts}</div>${note}`;
   }
   function drawOffice() { const el = $('#ah-office'); if (!el) return; el.innerHTML = officeHtml(); wireOffice(); }
   function wireOffice() {
@@ -203,7 +208,19 @@
       try { office = await C.api('/openspace/' + path, { method: 'POST' }); if (done) toast(done); } catch (e) { toast(e.message); try { office = await C.api('/openspace'); } catch {} }
       drawOffice();
     }; };
-    act('#os-install', 'install'); act('#os-open', 'open', 'The office opened in your browser.'); act('#os-stop', 'stop', 'Open Space stopped.');
+    act('#os-open', 'open', 'The office opened in your browser.');
+    const sw = $('#os-switch'); if (sw) sw.onclick = async () => {
+      const turnOn = sw.getAttribute('aria-checked') !== 'true'; sw.disabled = true; sw.setAttribute('aria-checked', String(turnOn));
+      try {
+        if (!turnOn) { office = await C.api('/openspace/stop', { method: 'POST' }); toast('Open Space is off.'); }
+        else if (!office.installed) {   // first time: install in the background, then start when it's ready
+          office = await C.api('/openspace/install', { method: 'POST' }); drawOffice();
+          for (let i = 0; i < 600 && office && office.busy; i++) { await new Promise(r => setTimeout(r, 1000)); office = await C.api('/openspace'); drawOffice(); }
+          if (office.installed) { office = await C.api('/openspace/start', { method: 'POST' }); toast('Open Space is on. Open the office to see your agents at their desks.'); }
+        } else { office = await C.api('/openspace/start', { method: 'POST' }); toast('Open Space is on.'); }
+      } catch (e) { toast(e.message); try { office = await C.api('/openspace'); } catch {} }
+      drawOffice();
+    };
   }
 
   function wire() {
@@ -230,5 +247,6 @@
     });
   }
 
-  window.TribeAgentsHub = { open: show, close: hide, glyph, colors: COLOR, isOpen: () => open };
+  window.TribeAgentsHub = { open: show, close: hide, glyph, colors: COLOR, isOpen: () => open, fleet: () => open && fleet };
+  if (location.hash === '#/fleet') setTimeout(() => show({ global: true }), 0);
 })();

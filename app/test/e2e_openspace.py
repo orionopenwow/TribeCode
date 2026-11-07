@@ -57,15 +57,17 @@ def main():
             host.goto(BASE + "/?skipIntro=1"); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             tok = host.evaluate("TribeStore.get().server.token")
             # not installed: the Office shows Install
-            host.evaluate("TribeAgentsHub.open()"); host.wait_for_selector("#ah-office .ah-office", timeout=15000)
+            # Home > Agent fleet keeps the dashboard sidebar (it doesn't switch to a project's)
+            host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#nest-fleet", timeout=15000); host.click("#nest-fleet")
+            host.wait_for_selector("#ah-office .ah-office", timeout=15000)
+            assert host.evaluate("document.body.classList.contains('global') && document.body.dataset.view === 'agents-hub'"), "fleet keeps the global sidebar"
+            assert host.evaluate("document.querySelector('#nest-fleet').classList.contains('on') && !!document.querySelector('#nest-hub')"), "Agent fleet lit, dashboard rows still there"
             assert "Open Space" in host.text_content("#ah-office")
-            host.wait_for_selector("#os-install"); host.click("#os-install")
-            host.wait_for_selector("#os-open", timeout=60000)
+            # one switch: the first time it installs, builds and starts
+            host.wait_for_selector("#os-switch[aria-checked='false']"); host.click("#os-switch")
+            host.wait_for_selector("#os-open", timeout=90000)
             assert (tmp / "tools" / "open-space" / "dist").exists(), "built"
-            assert "stopped" in host.text_content("#ah-office")
-            # start and open: it runs on its own port, with the tribe's repos as roots
-            host.click("#os-open"); host.wait_for_selector("#os-stop", timeout=30000)
-            assert "running" in host.text_content("#ah-office")
+            assert "running" in host.text_content("#ah-office") and host.get_attribute("#os-switch", "aria-checked") == "true"
             with urllib.request.urlopen(f"http://127.0.0.1:{OS_PORT}/", timeout=5) as r: assert r.read() == b"office"
             st, o = api("/openspace/open", "POST", token=tok); assert st == 200 and o["pair"].endswith("/pair?secret=abc123"), o
             # members who aren't the host (or calls that aren't from this computer) can't drive it
@@ -76,7 +78,11 @@ def main():
             g = api("/openspace", token=ftok)[1]; assert g.get("hostOnly") and g["running"] and "dir" not in g, g
             assert api("/openspace/stop", "POST", token=tok, headers={"X-Forwarded-For": "1.2.3.4"})[0] == 403, "proxied calls refused"
             host.screenshot(path=str(ROOT / "docs" / "screenshots" / "agents-office.png")) if "--shots" in sys.argv else None
-            host.click("#os-stop"); host.wait_for_selector("#os-open", timeout=15000)
+            host.click("#os-switch"); host.wait_for_selector("#os-switch[aria-checked='false']:not([disabled])", timeout=15000)
+            assert not host.query_selector("#os-open")
+            # from a project's Agents Hub it's the project's page again
+            host.evaluate("TribeAgentsHub.open()"); host.wait_for_timeout(300)
+            assert not host.evaluate("document.body.classList.contains('global')"), "project Agents Hub uses the project sidebar"
             time.sleep(0.5)
             try: urllib.request.urlopen(f"http://127.0.0.1:{OS_PORT}/", timeout=2); assert False, "still running"
             except (urllib.error.URLError, ConnectionError): pass

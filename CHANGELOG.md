@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.4
+
+- **Agent fleet stays on the dashboard**: from Home, Agent fleet keeps Home's sidebar (Home · Global docs · All repos · Agent fleet) instead of jumping to a project's. A project's Agents Hub is still that project's page
+- **Open Space has an on/off switch** and leads the Agent fleet page: turning it on the first time downloads, builds and starts it; off stops it. "Open the office" opens it once it's running
+- **Phones**: unchanged (the office runs on the host computer)
+
 ## v0.7.3
 
 - **Desktop sign-in fix**: the app could reach its own tribe server but not sign in ("A TribeCode server is running here but this app could not sign in to it"). The server now answers the browser engine's private-network check, so creating your tribe and signing back in work inside the app. If sign-in still fails, Home shows the exact reason with Try again (no more pointing at a Settings page that doesn't exist)
