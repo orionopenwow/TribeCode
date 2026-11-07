@@ -135,5 +135,6 @@ module.exports = function makeShare({ port, log = console.log }) {
 
   process.on('exit', () => { if (state.status === 'on' || child) { try { stop(); } catch {} } });
 
-  return { route, status, start, stop, lanEntry, INSTALL };
+  const publicUrl = () => (state.status === 'on' && state.url) || null;   // cheap: no CLI calls
+  return { route, status, start, stop, lanEntry, publicUrl, INSTALL };
 };

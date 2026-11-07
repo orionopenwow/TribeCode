@@ -19,6 +19,9 @@ const makeClaims = require('./claims');
 const makeMcp = require('./mcp');
 const makeDevices = require('./devices');
 const makeShare = require('./share');
+const bus = require('./bus');
+const makeNotify = require('./notify');
+const makeApprovals = require('./approvals');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -123,6 +126,7 @@ function postChat(channel, by, text) {
   const msg = { id: id(12), at: new Date().toISOString(), by, text };
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
   broadcast({ type: 'chat', channel, message: msg });
+  if (by !== 'tribecode') pocket.chat(channel, by, text);   // @mentions -> notification hub
   return msg;
 }
 function handleCommands(channel, member, text) {
@@ -170,6 +174,10 @@ const share = makeShare({ port: PORT });
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js).
 const repoHub = require('./repo')({ repo: REPO, store, str, broadcast, postChat, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
   getMembers: () => members, nameOf, drift, board, presence, readVision, tribe, claims });
+// Notification hub + approvals (server/notify.js, server/approvals.js)
+const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
+  publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket });
 const mcp = makeMcp({
   extra: repoHub.mcp,
   VERSION, tribe, presence, touchAgent, readVision,
@@ -190,7 +198,7 @@ const mcp = makeMcp({
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
   },
-  board,
+  board, approvals,
 });
 
 async function standup() {
@@ -254,7 +262,9 @@ async function api(req, res, url) {
     if (h !== null) return;
   }
 
+  if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
   if (!need()) return;
+  if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'me') return send(res, 200, { member: publicMember(me), tribe, version: VERSION });
 
@@ -292,7 +302,9 @@ async function api(req, res, url) {
       const body = await readBody(req);
       if (body.title !== undefined) t.title = str(body.title, 200) || t.title;
       if (body.status !== undefined) { if (!STATUSES.includes(body.status)) return fail(res, 400, 'bad status'); t.status = body.status; }
+      const prevAssignee = t.assignee;
       if (body.assignee !== undefined) t.assignee = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
+      if (t.assignee && t.assignee !== prevAssignee && t.assignee !== me.id) bus.notify({ type: 'task-assigned', to: [t.assignee], from: me.id, title: `${me.name} assigned you a task`, body: t.title, view: 'tasks', ref: t.id });
       if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
       if (body.body !== undefined) t.body = str(body.body, 20000);
       t.updated = new Date().toISOString(); t.updatedBy = me.id;
@@ -382,6 +394,7 @@ server.on('upgrade', (req, sock) => {
   const s = ws.accept(req, sock); if (!s) return;
   const o = online.get(me.id) || { sockets: new Set(), where: 'Home', since: new Date().toISOString() };
   o.sockets.add(s); online.set(me.id, o);
+  pocket.attach(me, s);   // idle/away tracking for notifications
   s.send({ type: 'hello', member: publicMember(me), tribe, members: presence(), version: VERSION, huddle: huddleState() });
   pushPresence();
   s.on('message', msg => {
@@ -393,6 +406,7 @@ server.on('upgrade', (req, sock) => {
       const first = huddle.size === 0;
       huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
       pushHuddle(); if (first) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
+      if (first) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });
     }
     if (msg.type === 'huddle-leave' && huddle.has(me.id)) { huddle.delete(me.id); pushHuddle(); }
     if (msg.type === 'huddle-state' && huddle.has(me.id)) { const h = huddle.get(me.id); h.muted = !!msg.muted; h.sharing = !!msg.sharing; pushHuddle(); }
