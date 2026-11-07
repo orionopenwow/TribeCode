@@ -155,13 +155,14 @@
     if (e.target.closest('[data-tab-more]')) { e.stopPropagation(); return openMore(e.target.closest('[data-tab-more]')); }
     if (e.target.closest('#nest-new')) { e.stopPropagation(); return popEl && popEl.id === 'new-menu' ? closePop() : openNew(e.target.closest('#nest-new')); }
     if (e.target.closest('#nest-search')) { document.body.classList.remove('drawer-open'); return window.TribePalette.open(); }
-    if (e.target.closest('#nest-updates')) { document.body.classList.remove('drawer-open'); return window.TribeNotify ? window.TribeNotify.openInbox() : ($('#nf-bell') && $('#nf-bell').click()); }
+    if (e.target.closest('#nest-updates')) { document.body.classList.remove('drawer-open'); if (isPhone() && window.TribeMobile) return window.TribeMobile.show('updates'); return window.TribeNotify ? window.TribeNotify.openInbox() : ($('#nf-bell') && $('#nf-bell').click()); }
     const rc = e.target.closest('[data-recent]'); if (rc) { document.body.classList.remove('drawer-open'); return openRecent(rc.dataset.recent); }
   });
   function onShow(view) {
     closePop();
     const more = $('#nest-more'); if (more) more.classList.toggle('on', MORE_VIEWS.includes(view));
     const tm = document.querySelector('[data-tab-more]'); if (tm) tm.classList.toggle('on', MORE_VIEWS.includes(view));
+    if (window.TribeMobile) window.TribeMobile.onShow(view);   // phones: rack, hubs, composer (app/ui/mobile2.js)
     if (view === 'chat') { const p = PJ() && PJ().cur(); if (p && PJ().pulses()) { PJ().pulses()[p.id] = 0; const el = $('#nn-chat'); if (el) { el.textContent = ''; el.classList.remove('hot'); } } }
   }
 
@@ -304,5 +305,5 @@
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openMore, recent, counts: () => counts };
+  window.TribeShell = { render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openMore, openNew, recent, counts: () => counts };
 })();
