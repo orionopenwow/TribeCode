@@ -56,16 +56,21 @@
 <!-- ============ App shell ============ -->
 <div class="shell" id="shell">
   <div class="window">
-    <header class="titlebar">
+    <header class="titlebar" data-tauri-drag-region>
       <button class="menu-btn" id="menu-btn" aria-label="Menu"><svg class="i"><use href="#i-list"/></svg></button><span class="ws" id="ws-name">My Tribe</span><span class="faint">/ Home</span>
       <button class="search" id="tour-search" title="Command palette"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></button>
       <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
       <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
       <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
+      <div class="win-ctl" id="win-ctl" aria-label="Window">
+        <button data-w="min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M2.5 6h7"/></svg></button>
+        <button data-w="max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1.5"/></svg></button>
+        <button data-w="close" title="Close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button>
+      </div>
     </header>
 
     <nav class="rail" id="tour-rail" aria-label="Main">
-      <img class="logo" src="assets/icon-512.png" alt="TribeCode">
+      <img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region>
       <button class="nav on" data-nav="home" title="Home"><svg class="i"><use href="#i-home"/></svg></button>
       <button class="nav" data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg></button>
       <button class="nav" data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg></button>

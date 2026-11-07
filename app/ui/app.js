@@ -368,6 +368,15 @@
     window.__hostError = msg;
   }
 
+  // Frameless desktop window: our own quiet buttons; the top bar drags (data-tauri-drag-region).
+  if (window.__TAURI__ && window.__TAURI__.window) {
+    document.body.classList.add('tauri');
+    const w = window.__TAURI__.window.getCurrentWindow();
+    document.querySelectorAll('#win-ctl [data-w]').forEach(b => b.addEventListener('click', () => {
+      const a = b.dataset.w; (a === 'min' ? w.minimize() : a === 'max' ? w.toggleMaximize() : w.close()).catch(() => {});
+    }));
+  }
+
   // tribecode:// links: on launch and while running (single-instance forwards them here)
   (async () => {
     const dl = window.__TAURI__ && window.__TAURI__.deepLink;
