@@ -65,7 +65,7 @@ let members = store.readJSON('.tribe/members.json', []);
 let invites = store.readJSON('.tribe/invites.json', []);
 const saveMembers = () => store.writeJSON('.tribe/members.json', members);
 const saveInvites = () => store.writeJSON('.tribe/invites.json', invites);
-const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}) });
+const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}) });
 
 // ---------- helpers ----------
 // Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
@@ -118,7 +118,9 @@ function authed(req) {
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
   if (!t) return null;
   const th = hash(t);
-  return members.find(m => m.tokenHash === th) || (devices && devices.memberForToken(th)) || null;
+  const m = members.find(x => x.tokenHash === th);
+  if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out
+  return m || (devices && devices.memberForToken(th)) || null;
 }
 const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
 function newMember({ name, color: c, role, projects }) {
@@ -532,6 +534,7 @@ async function apiInProject(req, res, url) {
     const name = str(body.name, 32); if (!name) return fail(res, 400, 'name required');
     inv.uses++; saveInvites();
     const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
+    if (inv.guest) { out.member.guestUntil = new Date(Date.now() + (inv.guestHours || 24) * 3600_000).toISOString(); saveMembers(); }
     if (proj) P.addMember(proj.id, out.member.id, inv.role);
     P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
     pushPresence(); if (proj) rooms.pushProjects();   // everyone's project list shows the new member (Shared compute, overview team)
@@ -569,7 +572,20 @@ async function apiInProject(req, res, url) {
   }
   if (a === 'me' && !b) return send(res, 200, { member: publicMember(me), tribe, version: VERSION, project: P.current(), projects: P.visibleTo(me).map(p => P.view(p)) });
 
-  if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
+  if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me).filter(x => !x.guestUntil || Date.parse(x.guestUntil) > Date.now()) });
+  // Friends: each person's own list of people in this tribe (kept on the server, so it follows you to every device).
+  if (a === 'friends' && !b) {
+    const all = store.readJSON('.tribe/friends.json', {}) || {};
+    if (m === 'GET') return send(res, 200, { friends: (all[me.id] || []).filter(fid => memberById(fid)) });
+    if (m === 'PUT' && me.role !== 'agent') {
+      const body = await readBody(req); const fid = str(body.id, 64), who = memberById(fid);
+      if (!who || who.id === me.id || who.role === 'agent' || !presenceFor(me).some(x => x.id === fid)) return fail(res, 400, 'not someone you can see');
+      const list = new Set(all[me.id] || []); body.on === false ? list.delete(fid) : list.add(fid);
+      all[me.id] = [...list].slice(0, 500); store.writeJSON('.tribe/friends.json', all);
+      return send(res, 200, { friends: all[me.id] });
+    }
+    return fail(res, 405, 'GET or PUT');
+  }
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());
   if (a === 'shelf') return shelf.route(req, res, ctx());
@@ -587,8 +603,10 @@ async function apiInProject(req, res, url) {
     if (project === 'tribe' || project === null) project = null;
     if (project && !P.canSee(me, project)) return fail(res, 403, 'you are not in that project');
     if (!project && P.scoped(me)) return fail(res, 403, 'you can invite people to your project only');
-    const inv = { code: code(8), by: me.id, role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Math.min(Math.max(Number(body.maxUses) || 5, 1), 100),
-      uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}) };
+    // A one-time guest pass: one use, and the account it makes stops working after `hours` (default a day).
+    const guest = !!body.guest;
+    const inv = { code: code(8), by: me.id, role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: guest ? 1 : Math.min(Math.max(Number(body.maxUses) || 5, 1), 100),
+      uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}), ...(guest ? { guest: true, guestHours: hours } : {}) };
     invites.push(inv); saveInvites();
     return send(res, 200, { invite: inv });
   }

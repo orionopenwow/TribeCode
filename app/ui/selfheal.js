@@ -164,7 +164,7 @@
     const tauri = window.__TAURI__, served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
     if (tauri && !served) {   // desktop app with its own bundled page: the server should be this app's version
       let mine = ''; try { mine = tauri.app ? await tauri.app.getVersion() : ''; } catch {}
-      if (!mine || mine === serverVersion || ss.get('tribecode.staleRecheck') || !settings().hosting) return null;
+      if (!mine || mine === serverVersion || ss.get('tribecode.staleRecheck') || !settings().hosting || settings().hostOff) return null;
       ss.set('tribecode.staleRecheck', serverVersion);
       log(`server v${serverVersion} differs from the app v${mine}: re-running the stale-server check`);
       if (window.TribeApp && window.TribeApp.hostHere) window.TribeApp.hostHere({ quiet: true });

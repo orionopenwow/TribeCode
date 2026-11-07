@@ -7,7 +7,10 @@
   const emit = (t, d) => [...(listeners[t] || [])].forEach(fn => { try { fn(d); } catch (e) { console.error(e); } });
 
   function base() {
-    if (location.protocol === 'http:' || location.protocol === 'https:') return location.origin;
+    // A page served by a TribeCode server talks to that server. The Windows desktop app's own page is also http
+    // (http://tauri.localhost), but that origin is the app's bundled files, not a server: every API call there came
+    // back as index.html, so sign-in silently failed. The desktop app uses its saved server (its own on :4747).
+    if (/^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/i.test(location.hostname)) return location.origin;
     return (S.get().server && S.get().server.url) || 'http://localhost:4747';
   }
   const token = () => (S.get().server && S.get().server.token) || '';
