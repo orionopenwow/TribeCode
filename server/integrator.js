@@ -12,7 +12,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const bus = require('./bus');
 
-module.exports = function integrator({ repo, enabled, G, store, settings, board, nameOf, getMembers, listChanges, loadTasks, drift, log, postChat, poll, markPush }) {
+module.exports = function integrator({ repo, enabled, G, store, settings, board, nameOf, getMembers, listChanges, loadTasks, drift, log, postChat, poll, markPush, pushAuth = () => ({ args: [], env: {} }) }) {
   const fail = (msg, status = 400) => Object.assign(new Error(msg), { status });
 
   // ---------- integrations store ----------
@@ -198,7 +198,7 @@ module.exports = function integrator({ repo, enabled, G, store, settings, board,
         const sha = await G.git(['rev-parse', '--short', main]);
         let pushed = false, pushNote = '';
         if (await G.hasRemote()) {
-          const p = await G.gitTry(['push', '--quiet', 'origin', `${main}:${main}`], repo, { timeout: 120_000 });
+          const pa = pushAuth(); const p = await G.gitTry([...pa.args, 'push', '--quiet', 'origin', `${main}:${main}`], repo, { timeout: 120_000, env: pa.env });
           pushed = p.code === 0; pushNote = pushed ? '' : (p.err || p.out).split('\n')[0];
           step(pushed ? `pushed ${main} to origin` : `push failed: ${pushNote}`);
         } else pushNote = 'no origin remote';
