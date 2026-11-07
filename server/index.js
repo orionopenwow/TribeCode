@@ -414,7 +414,7 @@ async function api(req, res, url) {
   let pid = P.defaultId();
   if (who) {
     pid = P.pick(who, wanted || null, (online.get(who.id) || {}).project || who.project);
-    if (!pid && !wanted && /^\/api\/(hub|scratch)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // the hub and scratchpad need no project (never reads it)
+    if (!pid && /^\/api\/(hub|scratch|projects|me)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
   return P.inProject(pid, () => apiInProject(req, res, url));
@@ -477,6 +477,20 @@ async function apiInProject(req, res, url) {
     const out = newMember({ name, color: body.color, role: 'host' });
     postChat('general', 'tribecode', `${name} started the tribe 🔥`);
     return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
+  }
+
+  // The desktop app on the host's own computer lost its sign-in (a reinstall, cleared app data) but the tribe is still
+  // here: give the host's account a fresh key instead of telling them to join their own tribe. Only from this machine,
+  // and only from the desktop app itself or a page this server serves (never another site running on localhost).
+  if (a === 'host' && b === 'reclaim' && m === 'POST') {
+    const o = req.headers.origin, own = o === undefined || /^(tauri:\/\/localhost|https?:\/\/tauri\.localhost)$/i.test(o) || new RegExp(`^http://(localhost|127\\.0\\.0\\.1|\\[::1\\]):${PORT}$`, 'i').test(o);
+    if (!isLocal(req) || !own) return fail(res, 403, 'only the TribeCode app on the host computer can do this');
+    if (limited(req, 5)) return fail(res, 429, 'slow down');
+    const h = members.find(x => x.role === 'host');
+    if (!h) return fail(res, 404, 'no host yet');
+    const token = id(32); h.tokenHash = hash(token); saveMembers();
+    console.log(`  Host ${h.name} signed back in from this computer`);
+    return send(res, 200, { member: publicMember(h), token, tribe });
   }
 
   if (a === 'invites' && b && m === 'GET') {

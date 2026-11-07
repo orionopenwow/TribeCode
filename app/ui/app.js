@@ -485,9 +485,10 @@
       const keep = st.server && st.server.url === url ? st.server.token : '';
       window.__hostError = null;
       S.set({ server: { url, token: keep }, hosting: true });
-      const role = await C.ensureMember({ name: st.name, color: st.color });
+      const role = await C.ensureMember({ name: st.name, color: st.color, reclaim: true });
       C.connect(); refresh();
-      if (!role && !keep) toast('A TribeCode server is already running here with other members. Open the invite link it gave you to join it.');
+      if (!role && !keep) toast('A TribeCode server is running here but this app could not sign in to it. Settings › Devices has the log.');
+      else if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
       else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
     } catch (e) { reset(); if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message); }
   }

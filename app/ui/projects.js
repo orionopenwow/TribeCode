@@ -20,7 +20,8 @@
 
   let projects = [], moreOpen = false, pulses = {};
   try { moreOpen = localStorage.getItem('tribecode.pjMore') === '1'; } catch {}
-  const cur = () => C.project() || (projects[0] || {}).id;
+  let loaded = false;   // once the list has come back, a project id that isn't in it (deleted) no longer counts
+  const cur = () => { const id = C.project(); if (loaded && id && !projects.some(p => p.id === id)) return (projects[0] || {}).id || null; return id || (projects[0] || {}).id; };
   const curP = () => projects.find(p => p.id === cur()) || projects[0] || null;
   const me = () => C.state().me || {};
   const isHost = () => me().role === 'host';
@@ -34,7 +35,7 @@
     if (!C.hasToken() || !C.connected()) return;
     if (refreshing) { again = true; return refreshing; }
     refreshing = (async () => {
-      try { const r = await C.api('/projects'); projects = r.projects || []; render(); } catch {}
+      try { const r = await C.api('/projects'); projects = r.projects || []; loaded = true; render(); } catch {}
       refreshing = null; if (again) { again = false; refresh(); }
     })();
     return refreshing;
@@ -598,5 +599,7 @@
 
   if (C.connected()) refresh();   // the socket may have said hello before this script loaded
 
+  // A project deleted (here or by the host elsewhere): leave it and go Home.
+  C.on('ws', m => { if (m.type !== 'project-removed') return; const was = cur() === m.id; refresh().then(async () => { if (!was) return; const d = projects[0]; if (d) await switchTo(d.id, 'home').catch(() => {}); if (window.TribeHub) window.TribeHub.open('home'); }); });
   window.TribeProjects = { refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
 })();

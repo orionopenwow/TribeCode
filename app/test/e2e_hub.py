@@ -152,9 +152,9 @@ def main():
             wait_text(off, "#hub-hero .gs-band", "GETTING STARTED")
             wait_text(off, "#hub-hero", "Create your first project"); wait_text(off, "#hub-hero", "Join a friend")
             for gone in ["#hub-suggest", "#hub-ask-in", "#hub-start", "#hub-fleet"]: assert off.locator(gone).count() == 0, f"{gone} is gone from Home"
-            for sel in ["#hub-join", "#hub-host", "#hub-scratch .sc-in", "#hub-stream", "#grp-global", "#home-me", "#home-share-btn", "#home-invite"]: off.wait_for_selector(sel, state="visible")
+            for sel in ["#hub-join", "#hub-host", "#hub-scratch .sc-in", "#hub-stream", "#grp-global", "#home-me"]: off.wait_for_selector(sel, state="visible")
             wait_text(off, ".hub-head h1", "Your command center")
-            wait_text(off, "#home-share", "Host or join a tribe first")
+            assert off.locator("#home-share-btn").count() == 0 and off.locator("#home-invite").count() == 0, "no Share / Invite buttons in the Home panel"
             wait_text(off, "#home-ai-cards", "Start or join a tribe")
             assert off.locator(".solo-empty:visible").count() == 0
             off.evaluate("TribeApp.show('chat')")
@@ -205,7 +205,7 @@ def main():
             assert host.locator("#room-scratch").is_hidden(), "Home shows the scratchpad in the page, not the panel"
             # right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
             wait_text(host, "#home-me", "Orion"); host.wait_for_selector("#cc-connect", state="visible")
-            order = host.evaluate("['#home-me', '#cc-connect', '#home-share', '#home-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top))")
+            order = host.evaluate("['#home-me', '#cc-connect', '#home-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top))")
             assert order == sorted(order), order
             wait_text(host, "#home-ai-cards", "Ink the moon")   # no /api/insights here: the hub's suggestions
             host.wait_for_selector("#home-ai-cards .ai-card .ai-tag")
@@ -219,9 +219,7 @@ def main():
             assert codes[:6] == [200] * 6 and codes[6] == 429, codes
 
             # ---------------- Share my hub link, Invite friends ----------------
-            host.click("#home-share-btn"); wait_text(host, "#home-share", "/join/")
-            # "Invite a friend" is the instant invite: a fresh project and its link (copied); then back to Home
-            host.click("#home-invite"); host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
+            host.click("#hub-instant"); host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
             assert "/join/" in host.inner_text("#ii-link")
             host.click(".modal-card.ii [data-close]"); host.wait_for_selector("#invite-modal.hidden", state="attached")
             host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")

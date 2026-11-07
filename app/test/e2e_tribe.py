@@ -357,7 +357,7 @@ def main():
             jay.evaluate("TribeStore.set({name: 'Jay'}); TribeApp.refresh()")
             parsed = jay.evaluate("TribeApp.parseInvite('tribecode://join?server=' + encodeURIComponent('http://10.0.0.5:4747') + '&code=ab12C')")
             assert parsed == {"server": "http://10.0.0.5:4747", "code": "ab12C"}, parsed
-            jay.click("#tour-invite")
+            jay.evaluate("TribeHub.open('home')"); jay.click("#hub-join")   # not in a tribe yet: Home's Join a friend's tribe
             jay.fill("#join-link", link); jay.click("#join-go")
             wait_text(jay, "#invite-body", "Join Campfire Crew")
             assert jay.input_value("#jn-name") == "Jay"

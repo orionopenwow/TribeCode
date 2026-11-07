@@ -76,6 +76,13 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     save(); return p;
   }
   function remove(pid) { if (pid === defaultId()) return; list = list.filter(p => p.id !== pid); save(); }
+  // Delete from the app: off the list, and its tribe data (chat, docs, tasks…) moved to .tribe/trash/<id>-<time> so it can be restored by hand.
+  function trash(pid) {
+    if (pid === defaultId() || !get(pid)) return false;
+    const src = store.p(pdir(pid)), dest = store.p('.tribe', 'trash', `${pid}-${Date.now().toString(36)}`);
+    try { if (fs.existsSync(src)) { fs.mkdirSync(require('node:path').dirname(dest), { recursive: true }); fs.renameSync(src, dest); } } catch (e) { console.error('trash project:', e.message); }
+    remove(pid); return true;
+  }
   function addMember(pid, mid, role = 'builder') {
     const p = get(pid); if (!p || !mid) return;
     if (p.members[mid] === role) return;
@@ -89,7 +96,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
   const visibleTo = m => list.filter(p => canSee(m, p.id));
   // Which project a request is about: explicit (header/query/argument) if visible, else a sensible default.
   function pick(m, wanted, fallback) {
-    if (wanted) return canSee(m, wanted) ? wanted : null;
+    if (wanted && get(wanted)) return canSee(m, wanted) ? wanted : null;   // a project that no longer exists (deleted) falls back below
     if (fallback && canSee(m, fallback)) return fallback;
     const v = visibleTo(m); return v.length ? v[0].id : null;
   }
@@ -146,6 +153,6 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
   const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace,
     members: Object.entries(p.members || {}).map(([id, role]) => ({ id, role })), created: p.created, default: p.id === defaultId(), ...extra });
 
-  return { als, all, get, defaultId, current, inProject, channelOf, byChannel, okId, create, update, remove, addMember, canSee, visibleTo, pick, scoped,
+  return { als, all, get, defaultId, current, inProject, channelOf, byChannel, okId, create, update, remove, trash, addMember, canSee, visibleTo, pick, scoped,
     scopedStore, migrate, view, pdir, TAGGED };
 };

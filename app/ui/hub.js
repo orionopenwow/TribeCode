@@ -637,11 +637,7 @@
     let nm = m.name; if (!nm) try { nm = (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name); } catch {}
     nm = nm || 'You';
     meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(nm.trim().charAt(0).toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home` : 'on this device · not in a tribe yet'}</div></div></div>`;
-    const link = shareState.link;
-    share.innerHTML = `<button class="home-share-card" id="home-share-btn">${ico('i-link', 16)}<span><b>Share my hub link</b><small>${link ? `<code>${esc(link.replace(/^https?:\/\//, ''))}</code>` : on ? 'Copies a 24-hour invite to your tribe' : 'Host or join a tribe first, then one link brings friends here'}</small></span></button>
-      <button class="btn home-invite" id="home-invite">${ico('i-users', 15)}Invite a friend</button>`;
-    $('#home-share-btn').onclick = shareLink;
-    $('#home-invite').onclick = () => instant();
+    share.innerHTML = '';   // Share my hub link / Invite a friend moved out of the panel: the hero's Invite a friend does it
     const open = lsGet(IKEY, true) !== false;
     if (!insBox.dataset.built) {
       insBox.dataset.built = '1';
