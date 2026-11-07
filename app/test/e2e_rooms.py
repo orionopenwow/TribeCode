@@ -148,7 +148,7 @@ def main():
             assert len(r["projects"]) == 1 and r["projects"][0]["default"], r
 
             # ---- project from a local path that is already a git repo (host machine only)
-            host.click("#pj-plus"); host.wait_for_selector("#np-input")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.wait_for_selector("#np-input")
             host.fill("#np-input", lantern); wait_text(host, "#np-hint", "Opens that folder"); host.click("#np-create")
             host.wait_for_selector("#view-home:not(.hidden) .pj-title")
             wait_text(host, "#pj-overview h1", "lantern")
@@ -161,7 +161,7 @@ def main():
             except urllib.error.HTTPError as e: assert e.code == 403, e.code
 
             # ---- a plain folder: "Make it a git repo" (gitignore for node_modules, first commit as Orion)
-            host.click("#pj-plus"); host.fill("#np-input", sketches); host.press("#np-input", "Enter")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.fill("#np-input", sketches); host.press("#np-input", "Enter")
             host.wait_for_selector("#np-git"); host.click("#np-git")
             host.wait_for_selector("#view-home:not(.hidden)"); wait_text(host, "#pj-overview h1", "sketches")
             wait_until(lambda: Path(sketches, ".git").exists(), what="git init")
@@ -171,7 +171,7 @@ def main():
             assert sh("git", "-C", sketches, "log", "-1", "--format=%an").strip() == "Orion"
 
             # ---- browser upload of a folder (the drop zone's code path) + the 25 MB cap
-            host.click("#pj-plus"); host.click("#np-more"); host.wait_for_selector("#np-drop")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.click("#np-more"); host.wait_for_selector("#np-drop")
             # a synthetic drop of a single file explains that a folder is needed
             host.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'one.txt')); const dz = document.querySelector('#np-drop');
                 dz.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }""")
@@ -190,7 +190,7 @@ def main():
             assert st == 200 and not Path(tmp, "workspaces", "escape.txt").exists() and r["uploaded"]["skipped"] == 1, r
 
             # ---- a dropped folder whose .git/config has a remote: offer "Clone it into TribeCode"
-            host.click("#pj-plus"); host.click("#np-more"); host.wait_for_selector("#np-drop")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.click("#np-more"); host.wait_for_selector("#np-drop")
             host.evaluate("""(url) => window.TribeProjects.analyze('quest-engine', [
                 { path: '.git/config', gitConfig: true, file: new File(['[core]\\n\\tbare = false\\n[remote "origin"]\\n\\turl = ' + url + '\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n'], 'config') },
                 { path: 'engine.js', file: new File(['export const tick = 1\\n'], 'engine.js') }])""", bare)

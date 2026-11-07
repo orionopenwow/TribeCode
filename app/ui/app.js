@@ -391,7 +391,7 @@
     }
     body.querySelectorAll('[data-close]').forEach(b => b.onclick = closeInvite);
   }
-  const closeInvite = () => $('#invite-modal').classList.add('hidden');
+  const closeInvite = () => { $('#invite-modal').classList.add('hidden'); $('#invite-body').classList.remove('np-setup', 'ii'); };   // sheets that restyle the card drop their class too
 
   // ---- join from a link (pasted, or a tribecode:// deep link) without leaving the app ----
   function parseInvite(raw) {

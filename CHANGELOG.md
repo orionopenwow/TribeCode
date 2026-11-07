@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.6
+
+Start a project like you'd start a Discord server.
+- **The rail +** opens "Create your project": **Create my own**, five **templates** (Game, Website, App, Tool or script, Notes & research), **Bring my code** (a folder or a GitHub repo), and at the bottom **Have an invite already?** with a Join box
+- **Customize your project**: a round picture to upload, the name (prefilled from the template), and a one-line bio. Back or Create
+- **Invite friends** comes right after: the link is already copied, with QR code, Share and Connect my Claude Code
+- A template also seeds the project's notes with a starting idea
+- **Phones**: the same three steps fit the screen; Home and the project overview match desktop
+
 ## v0.6.5
 
 - **Fix: the desktop app's tribe didn't start** ("Your tribe did not start … SyntaxError … #!/usr/bin/env node"). Windows builds kept the first line of the server file inside the bundled server. The bundle now strips it whatever the line endings, checks that the bundle parses before it can ship, and a new test (bundle_test) builds it from a Windows-style checkout

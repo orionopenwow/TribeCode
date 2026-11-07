@@ -299,7 +299,7 @@
 
   // ---------- Start a project: drop a folder or repo, paste a URL or a path ----------
   const modal = () => $('#invite-modal'), body = () => $('#invite-body');
-  const close = () => modal().classList.add('hidden');
+  const close = () => { modal().classList.add('hidden'); body().classList.remove('np-setup'); };
   // One dialog: drop a folder or repo, or type a name, a GitHub URL or a folder path, then Create.
   let dropped = null;   // { name, files, remote, mode: 'clone' | 'upload' }
   function classify(v) {
@@ -319,7 +319,88 @@
       : c.kind === 'name' ? (window.TribeFlow ? 'One click: the room, an invite link and a repo with a starter. The chat opens with a Getting started card.' : 'Starts an empty project. You can attach a repo later.') : '';
   }
   // The rail "+": two choices, stacked. Top: start a new tribe (one click, name prefilled). Bottom: paste an invite link.
+  // ---------- Start a project, like Discord's "Create a server" ----------
+  // 1. Create my own · a template · Bring my code · "Have an invite already? Join"   2. Picture, name, bio   3. Invite friends
+  const TEMPLATES = [
+    { k: 'game', emoji: '🎮', t: 'Game', s: 'Something to play together', word: 'Game', bio: 'A game we build together', note: 'Game idea: what is the player doing, what makes it fun, and the first level we can play.' },
+    { k: 'site', emoji: '🌐', t: 'Website', s: 'A site or a landing page', word: 'Site', bio: 'A website we build together', note: 'Website: who is it for, the pages it needs, and the one thing a visitor should do.' },
+    { k: 'app', emoji: '📱', t: 'App', s: 'For phones or the desktop', word: 'App', bio: 'An app we build together', note: 'App idea: the problem, who has it, and the first screen.' },
+    { k: 'tool', emoji: '🛠️', t: 'Tool or script', s: 'Automate something', word: 'Tool', bio: 'A small tool we build together', note: 'Tool: what it automates, the input, the output.' },
+    { k: 'notes', emoji: '📚', t: 'Notes & research', s: 'Plan, write, learn together', word: 'Notebook', bio: 'Notes and research we keep together', note: '' },
+  ];
+  const setup = { tpl: null, image: null };
   function openNew() {
+    dropped = null; setup.tpl = null; setup.image = null;
+    modal().classList.remove('hidden'); body().classList.add('np-setup');
+    const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
+    if (!on || scoped) {
+      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your computer runs the tribe; friends join with one link.' : 'TribeCode runs on one friend\'s computer. Get the app to start one, or join a friend.'}</p></div>
+        ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>${desk ? 'Host on this computer' : 'Get the desktop app'}</b><small>${desk ? 'Start a tribe here, then make your first project' : 'Windows, Mac and Linux'}</small></span>${ico('i-chev', 16)}</button></div>`}
+        ${joinFoot()}`;
+      wireStart(); return;
+    }
+    const row = (k, ic, t, sub, cls = '') => `<button class="ns-row ${cls}" data-ns="${k}"><span class="ns-ic">${ic}</span><span class="ns-t"><b>${t}</b><small>${sub}</small></span>${ico('i-chev', 16)}</button>`;
+    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button>
+      <div class="ns-head"><h2>Create your project</h2><p class="lead">Your project is where you, your friends and your agents build together. Make yours and start building.</p></div>
+      <div class="ns-list">${row('own', ico('i-plus', 18), 'Create my own', 'Start from a blank page', 'ns-own')}
+        <div class="ns-sub">Start from a template</div>
+        ${TEMPLATES.map(t => row('tpl:' + t.k, `<span class="ns-emo">${t.emoji}</span>`, t.t, t.s)).join('')}
+        ${host ? row('code', ico('i-folder', 18), 'Bring my code', 'A folder on this computer, or a GitHub repo') : ''}</div>
+      ${joinFoot()}`;
+    body().querySelectorAll('[data-ns]').forEach(b => b.onclick = () => {
+      const k = b.dataset.ns;
+      if (k === 'code') { body().classList.remove('np-setup'); return openAdvanced(); }
+      setup.tpl = k.startsWith('tpl:') ? TEMPLATES.find(t => t.k === k.slice(4)) : null;
+      customize();
+    });
+    wireStart();
+  }
+  const joinFoot = () => `<div class="ns-foot"><b>Have an invite already?</b><div class="np-row"><input class="input" id="np-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false" aria-label="Invite link"><button class="btn" id="np-join-go">Join</button></div></div>`;
+  function wireStart() {
+    const x = body().querySelector('[data-close]'); if (x) x.onclick = close;
+    const join = () => { const v = $('#np-link').value.trim(); if (v) window.TribeApp.joinLink(v); else $('#np-link').focus(); };
+    $('#np-join-go').onclick = join; $('#np-link').onkeydown = e => { if (e.key === 'Enter') join(); };
+    const hb = $('#np-host'); if (hb) hb.onclick = () => { close(); if (window.TribeHost.isDesktop && App().hostHere) App().hostHere(); else window.open('https://github.com/orionopenwow/TribeCode/releases/latest', '_blank', 'noopener'); };
+  }
+  function customize() {
+    const t = setup.tpl, first = String((me().name || 'My')).split(/\s+/)[0];
+    const taken = new Set(projects.map(p => p.name));
+    let name = t ? `${first}'s ${t.word}` : (window.TribeFlow ? window.TribeFlow.suggestName() : `${first}'s project`);
+    for (let i = 2; taken.has(name); i++) name = `${t ? `${first}'s ${t.word}` : name.replace(/ \d+$/, '')} ${i}`;
+    body().innerHTML = `<div class="ns-head"><h2>Customize your project</h2><p class="lead">Give it a personality with a picture, a name and a line about it. You can change these later.</p></div>
+      <button class="ns-pic" id="np-pic" aria-label="Upload a picture">${setup.image ? `<img src="${setup.image}" alt="">` : `${t ? `<span class="ns-pic-emo">${t.emoji}</span>` : ico('i-photo', 22)}<span>Upload</span>`}<i aria-hidden="true">+</i></button>
+      <label class="ns-lab" for="np-input">Project name</label><input class="input" id="np-input" maxlength="48" value="${esc(name)}" autocomplete="off">
+      <label class="ns-lab" for="np-bio">About it <span class="faint">optional</span></label><input class="input" id="np-bio" maxlength="200" value="${esc(t ? t.bio : '')}" placeholder="A one-line bio" autocomplete="off">
+      <div class="np-status" id="np-status"></div>
+      <div class="ns-btns"><button class="linkish" id="np-back">Back</button><span style="flex:1"></span><button class="btn primary" id="np-create">Create</button></div>`;
+    $('#np-back').onclick = openNew;
+    $('#np-pic').onclick = () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = async () => { const f = inp.files[0]; if (!f) return;
+        try { const img = await createImageBitmap(f), c = document.createElement('canvas'); c.width = c.height = 128; const sz = Math.min(img.width, img.height);
+          c.getContext('2d').drawImage(img, (img.width - sz) / 2, (img.height - sz) / 2, sz, sz, 0, 0, 128, 128); setup.image = c.toDataURL('image/png');
+          const keep = { n: $('#np-input').value, b: $('#np-bio').value }; customize(); $('#np-input').value = keep.n; $('#np-bio').value = keep.b; } catch { toast('Could not use that image'); } };
+      inp.click();
+    };
+    const inp = $('#np-input'); inp.focus(); inp.select();
+    inp.onkeydown = e => { if (e.key === 'Enter') $('#np-create').click(); };
+    $('#np-create').onclick = createFromSetup;
+  }
+  async function createFromSetup() {
+    const name = $('#np-input').value.trim().slice(0, 48); if (!name) return $('#np-input').focus();
+    const bio = $('#np-bio').value.trim(), t = setup.tpl, btn = $('#np-create');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Creating…';
+    try {
+      const f = await window.TribeFlow.create(name, { emoji: t ? t.emoji : undefined, wait: 8000 });
+      const patch = {}; if (bio) patch.bio = bio; if (setup.image) patch.image = setup.image;
+      if (Object.keys(patch).length) await C.api(`/projects/${encodeURIComponent(f.project)}`, { method: 'PATCH', body: patch }).catch(() => {});
+      if (t && t.note) await C.api('/flow/notes', { method: 'POST', body: { name: 'Starting idea', text: t.note } }).catch(() => {});
+      body().classList.remove('np-setup');
+      await refresh();
+      window.TribeFlow.inviteSheet(f);   // step 3, like Discord: invite your friends
+    } catch (e) { btn.disabled = false; btn.textContent = 'Create'; status(`<div class="np-err">${esc(e.message)}</div>`); }
+  }
+  function openAdvanced() {   // bring existing code (a folder, a repo, a GitHub URL), and the old one-box start
     dropped = null;
     modal().classList.remove('hidden');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop;
@@ -422,9 +503,9 @@
     const it = [...(dt.items || [])].find(i => i.kind === 'file');
     const entry = it && it.webkitGetAsEntry ? it.webkitGetAsEntry() : null;
     const uri = dt.getData && dt.getData('text/uri-list');
-    if (!entry && uri && /^https?:\/\//.test(uri)) { if (!$('#np-input')) openNew(); $('#np-input').value = uri.trim(); hint(); return; }
+    if (!entry && uri && /^https?:\/\//.test(uri)) { if (!$('#np-input') || $('#invite-body').classList.contains('np-setup')) { $('#invite-body').classList.remove('np-setup'); openAdvanced(); } $('#np-input').value = uri.trim(); hint(); return; }
     if (!entry || !entry.isDirectory) throw new Error('Drop a folder (or a repo folder). Single files go into Docs.');
-    if (!$('#np-status')) openNew();
+    if (!$('#np-status') || $('#invite-body').classList.contains('np-setup')) { $('#invite-body').classList.remove('np-setup'); openAdvanced(); }
     status('<div class="faint">Reading the folder…</div>');
     return analyze(entry.name, await readEntry(entry));
   }
@@ -486,9 +567,9 @@
   if (homeDz) {
     homeDz.addEventListener('dragover', e => { e.preventDefault(); homeDz.classList.add('over'); });
     homeDz.addEventListener('dragleave', () => homeDz.classList.remove('over'));
-    homeDz.addEventListener('drop', async e => { e.preventDefault(); homeDz.classList.remove('over'); if (!isHost()) return toast('Only the host can bring a repo in. Ask them, or start an empty project with +.'); openNew(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
+    homeDz.addEventListener('drop', async e => { e.preventDefault(); homeDz.classList.remove('over'); if (!isHost()) return toast('Only the host can bring a repo in. Ask them, or start an empty project with +.'); openAdvanced(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
     homeDz.addEventListener('click', openNew);
-    homeDz.addEventListener('keydown', e => { if (e.key === 'Enter') openNew(); });
+    homeDz.addEventListener('keydown', e => { if (e.key === 'Enter') openAdvanced(); });
   }
   const DROP = '#pj-rail, #pj-plus';   // drop a folder on the circles (or +) to start a project
   document.addEventListener('dragover', e => { if (e.target.closest && e.target.closest(DROP) && isHost()) { e.preventDefault(); $('#pj-plus').classList.add('over'); } });

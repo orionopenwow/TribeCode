@@ -117,9 +117,9 @@ def main():
             ph.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000); ph.wait_for_timeout(1500)
             assert ph.is_hidden("#invite-modal") or "Claude Code" not in ph.inner_text("#invite-body"), "phones skip the Claude Code sheet"
 
-            # ---- the + window's "Invite a friend now" ----
+            # ---- the + window, like Discord: Create my own -> name -> Create -> Invite friends (link copied) ----
             host.evaluate("TribeProjects.openNew()")
-            host.wait_for_selector("#np-instant", state="visible"); host.click("#np-instant")
+            host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
             assert host.evaluate("TribeProjects.current()") != fresh, "another fresh project"
             host.click(".modal-card.ii [data-close]")

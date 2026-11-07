@@ -128,10 +128,10 @@ def main():
             assert api("/me/git", "PUT", {"githubToken": TOKEN}, token=token)[0] == 200
 
             # ---- one click: the name is prefilled, Create does everything and opens the chat
-            host.click("#pj-plus"); host.wait_for_selector("#np-input")
+            host.click("#pj-plus"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input")
             name = host.input_value("#np-input"); assert name.startswith("Orion's"), name
-            wait_text(host, "#np-hint", "One click")
             host.click("#np-create")
+            host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")   # step 3: invite friends
             host.wait_for_selector("#view-chat:not(.hidden) #flow-kick")
             pid = host.evaluate("TribeClient.project()"); assert pid == "orion-s-studio", pid
             host.wait_for_function("document.querySelectorAll('#flow-kick .fk-steps li.ok').length === 4", timeout=25000)

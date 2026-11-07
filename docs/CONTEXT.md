@@ -2,7 +2,7 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-07 (v0.6.4 released from `main`: streamlined sidebar; v0.6.3: simpler navigation, living project overview; v0.6.2: phone-only friends and @ai; v0.6.1 one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
+Last updated: 2026-11-07 (v0.6.6 released from `main`: Discord-style setup; v0.6.5 server fix + simple Home; v0.6.4: streamlined sidebar; v0.6.3: simpler navigation, living project overview; v0.6.2: phone-only friends and @ai; v0.6.1 one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
@@ -54,6 +54,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 | Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
+- 2026-11-07 09:13–09:17: Simplify Home like the 'Getting started hub' mock ✅ v0.6.5. Desktop server didn't start (CRLF shebang in the bundle) ✅ fixed v0.6.5. Discord-like setup flow ✅ v0.6.6. Keep mobile up to date with each version (standing rule).
 - 2026-11-07 08:58: Redundant navigation: delete the sidebar header card, Overview row with correct active state, pinned items as plain rows, hosting status to the rail bottom. ✅ v0.6.4
 - 2026-11-07 08:36–08:49: Remove the sidebar dropdown; logo = Home (my overview), bubbles = projects each with its own overview; no 'My Tribe' in Home; no project list on Home; window buttons back; per-project bio, picture, vision nudge and a short living update (lately, chat, way forward, calendar). ✅ v0.6.3
 - 2026-11-07 08:22: Finalize the phone flow for a fresh project for a friend with no TribeCode at home and no Claude Code subscription; connect LLMs and agents for them. ✅ v0.6.2: phone "You're in" card (Ask AI, Voice note, Add an idea, roles), @ai routed own Claude → teammate's Claude (owner policy ask/always/never) → local model → board queue (server/askai.js), Talk to… and + menu lead with Ask AI.
@@ -97,6 +98,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 4. Security follow-ups (H5, M2–M5). Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
 
 ## Decisions
+- 2026-11-07: Every version keeps the phone in step (user's rule): each change also lands in the phone layout, checked at 390px, and the CHANGELOG has a phone line.
 - 2026-11-07: Home's AI Insights show your own next steps first and the host's insights (Explorer, health, Secretary) after, deduplicated, at most 8.
 - 2026-11-06: The security review found host RCE reachable by any builder. Fixes were shipped as v0.3.2 straight from `main` ahead of the features, with `app/test/security_test.py` as the regression test.
 - 2026-11-06: The Workshop's community index is a public GitHub repo served through jsDelivr (a free open-source CDN). Items need an open license and sha256 checks, and are never executed.
