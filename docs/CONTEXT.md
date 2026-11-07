@@ -53,6 +53,9 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
 
 ## User requests log (newest first)
+- 2026-11-06: With no project selected, the main screen is a dashboard: updates across projects, your own notes, suggestions, refreshed on a rolling basis. (feat/dashboard)
+- 2026-11-06: The rail "+" offers Create project (top) or Paste invite link (bottom), then a minimal start flow: GitHub repo if wanted → notes with context → add your agent → done. (part of feat/docs-start)
+- 2026-11-06: Top right: drop the connected pill; order panel, Context, profile, bell; a profile button with relevant options. ✅
 - 2026-11-06: Navigation cleanup into 4 tiers: core (Home, Chat, Docs, Updates, Huddle) + Workspace / Engineering & Ops / Coordination Hub groups; no duplicate New/Search; Settings, Pop out board and Capture to notes in a gear menu. (feat/nav)
 - 2026-11-06: Docs: "Create a repo?" hero with auto-commit, autopilot and a folder per person; under it, "Begin typing notes", where local models clean entries up into the living note network. (feat/docs-start)
 - 2026-11-06: Chat looks like Telegram (bubbles, grouping, reply quotes, reactions, voice bubbles, date pills), with Instagram-DM alignment on desktop, in our palette. (feat/chat-bubbles)
