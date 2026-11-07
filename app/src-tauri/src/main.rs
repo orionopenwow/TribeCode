@@ -86,6 +86,28 @@ fn host_stop(state: tauri::State<'_, Host>) -> Result<(), String> {
     Ok(())
 }
 
+/// Stop a bundled tribe server left running by an older copy of the app (it holds port 4747 and its own
+/// .exe, which blocks updates). Only our own sidecar binary is targeted.
+#[tauri::command]
+fn host_kill_stale(state: tauri::State<'_, Host>) -> Result<(), String> {
+    if let Some((child, _)) = state.0.lock().map_err(|e| e.to_string())?.take() {
+        let _ = child.kill();
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let _ = std::process::Command::new("taskkill")
+            .args(["/F", "/T", "/IM", "tribecode-server.exe"])
+            .creation_flags(0x0800_0000)
+            .status();
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = std::process::Command::new("pkill").args(["-f", "tribecode-server"]).status();
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn host_status(state: tauri::State<'_, Host>) -> Option<u16> {
     state.0.lock().ok().and_then(|s| s.as_ref().map(|(_, p)| *p))
@@ -113,7 +135,7 @@ fn main() {
         ))
         .manage(Host(Mutex::new(None)))
         .manage(HostLog(Arc::new(Mutex::new(Vec::new()))))
-        .invoke_handler(tauri::generate_handler![host_start, host_stop, host_status, host_log])
+        .invoke_handler(tauri::generate_handler![host_start, host_stop, host_status, host_log, host_kill_stale])
         .setup(|app| {
             // Register tribecode:// at runtime too (needed for dev builds on Windows and Linux).
             #[cfg(any(windows, target_os = "linux"))]
@@ -127,7 +149,7 @@ fn main() {
         .expect("error while building TribeCode");
 
     app.run(|handle, event| {
-        if let RunEvent::Exit = event {
+        if matches!(event, RunEvent::Exit | RunEvent::ExitRequested { .. }) {
             if let Some((child, _)) = handle.state::<Host>().0.lock().ok().and_then(|mut s| s.take()) {
                 let _ = child.kill();
             }

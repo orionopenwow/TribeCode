@@ -44,7 +44,14 @@
           if (ev.event === 'Finished') onProgress(1);
         });
       },
-      async installAndRelaunch() { await u.install(); await window.__TAURI__.process.relaunch(); },
+      async installAndRelaunch() {
+        // Stop the bundled server first: on Windows a running tribecode-server.exe is locked and the installer can't replace it.
+        const inv = window.__TAURI__.core;
+        try { await inv.invoke('host_stop'); } catch {}
+        try { await inv.invoke('host_kill_stale'); } catch {}
+        await new Promise(r => setTimeout(r, 800));
+        await u.install(); await window.__TAURI__.process.relaunch();
+      },
     };
   }
 

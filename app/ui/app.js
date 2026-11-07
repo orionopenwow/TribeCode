@@ -390,6 +390,19 @@
         if (log.some(l => l.startsWith('[server stopped'))) break;
         await new Promise(r => setTimeout(r, 400));
       }
+      // Sense a stale server: an older copy of TribeCode left running on this port serves old code and blocks
+      // updates. If its version differs from this app's, stop it and start ours.
+      if (ok && !(opts && opts.noStaleCheck)) {
+        const mine = await (window.__TAURI__.app ? window.__TAURI__.app.getVersion().catch(() => '') : '');
+        const theirs = await fetch(url + '/api/health', { cache: 'no-store' }).then(r => r.json()).then(h => h.version || '').catch(() => '');
+        if (mine && theirs && mine !== theirs) {
+          toast(`An older TribeCode server (v${theirs}) was still running. Restarting it as v${mine}…`);
+          await inv.invoke('host_kill_stale').catch(() => {});
+          for (const until = Date.now() + 8000; Date.now() < until;) { if (!(await healthy(url))) break; await new Promise(r => setTimeout(r, 300)); }
+          if (await healthy(url)) throw new Error(`Another TribeCode (v${theirs}) is running on port 4747 and isn't this app's server. Close it (for example a terminal running npm start), then reopen TribeCode.`);
+          return hostHere({ ...(opts || {}), noStaleCheck: true });
+        }
+      }
       if (!ok) {
         const log = (await inv.invoke('host_log').catch(() => [])).filter(Boolean).slice(-8).join('\n');
         throw new Error('The tribe server did not start.' + (log ? '\n\n' + log : ' It printed nothing. Your antivirus may have blocked tribecode-server.exe.'));
