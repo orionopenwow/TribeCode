@@ -92,9 +92,9 @@ Done in this audit (`feat/audit`), each with a test:
 8. ✅ Join a second project from an invite while signed in (#29)
 9. ✅ Agents' read_chat shows media and votes (#15)
 10. ✅ WebSocket heartbeat (#48)
+11. ✅ Edit your last message with ↑ (#10)
 
 Still quick, not yet done:
-- Edit your last message with ↑ (#10)
 - Slash-command autocomplete (#9)
 - Message permalinks (#7)
 - "Who's here" wave-back toast (#31)
