@@ -25,7 +25,10 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 4. **Shared compute.** Friends opt in to lend their machine as a worker for builds, asset compiling, test runs, analysis, bug repro and local-model jobs. A job queue on the host hands out work, results come back with hashes and are cross-checked. Jobs run sandboxed and only from the tribe's own repo. Workers show up in the person view.
 5. **Later.** An opt-in public recipe exchange between tribes (the "database for TribeCode").
 
-## How we work (decided 2026-11-06)
+## How we work (decided 2026-11-06, refreshed 20:45)
+- **Test from source, not the exe.** The user tests new work with Desktop\TribeCode\Working\Start-Working.bat (dev, :4848, opens in an app window, pulls every 20 s, live reload, own test tribe). The exe is only for release checks. Reset-Old-TribeCode.bat cleans out old installs, settings and the old v0.1 code copy.
+- **One release updates everything together:** merging dev → main with a version bump publishes the GitHub release (desktop installers + Restart to update) and redeploys the website and demo (Pages) from the same commit.
+- **No shell on the user's PC** (the device command workspace doesn't start, and screen control was declined): changes on the PC are delivered as files the user double-clicks.
 - **Two lanes.** `main` = stable/released. `dev` = working lane where new work lands first.
   - Desktop\TribeCode\Stable\Start-Stable.bat runs `main` at :4747 with the real tribe.
   - Desktop\TribeCode\Working\Start-Working.bat runs `dev` at :4848 with live reload and its own test tribe (no exe compile needed to test UI).
@@ -50,6 +53,12 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
 
 ## User requests log (newest first)
+- 2026-11-06: Navigation cleanup into 4 tiers: core (Home, Chat, Docs, Updates, Huddle) + Workspace / Engineering & Ops / Coordination Hub groups; no duplicate New/Search; Settings, Pop out board and Capture to notes in a gear menu. (feat/nav)
+- 2026-11-06: Docs: "Create a repo?" hero with auto-commit, autopilot and a folder per person; under it, "Begin typing notes", where local models clean entries up into the living note network. (feat/docs-start)
+- 2026-11-06: Chat looks like Telegram (bubbles, grouping, reply quotes, reactions, voice bubbles, date pills), with Instagram-DM alignment on desktop, in our palette. (feat/chat-bubbles)
+- 2026-11-06: Real red/yellow/green window buttons at the top right, with bigger, rearranged icons. ✅
+- 2026-11-06: The GitHub repo, demo and desktop app should all update together.
+- 2026-11-06: The desktop app showed the old UI after updating. Cause: a leftover server on Windows blocked the installer. Fixed in v0.3.3. ✅
 - 2026-11-06: Solo mode: connect Claude Desktop, other desktop agents and local models in an organized visual UI. The same autopilot to GitHub and per-person folders. Agents distill changes and upgrade everything. A background secretary that thinks, researches, collects notes and dreams up realizations from everything typed, voice notes and files.
 - 2026-11-06: A Workshop: a community directory separate from projects, holding Claude Code skills, projects, templates and assets (game scripts, animations, GLBs). Everyone's discoveries are donated to an open-source CDN.
 - 2026-11-06: Easy in and out for connecting Claude Code from a remote session at home. ✅ (v0.3.2: Anywhere / Same Wi-Fi / This computer, status, Disconnect)
