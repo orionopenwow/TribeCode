@@ -365,7 +365,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
 .tourq button.go { background: var(--o); border-color: var(--o); color: #fff; }
 .composer { position: relative; }
 .spot { position: fixed; z-index: 80; border-radius: 14px; outline: 2px solid var(--o); outline-offset: 2px; box-shadow: 0 0 0 9999px rgba(8,10,13,.74); pointer-events: none; transition: left .22s ease-out, top .22s ease-out, width .22s ease-out, height .22s ease-out; }
-.spot::after { content: ''; position: absolute; inset: -6px; border-radius: 18px; box-shadow: 0 0 0 4px rgba(242,107,29,.28), 0 0 18px 2px rgba(242,107,29,.22); animation: pulse 1.6s ease-in-out infinite; }
+.spot::after { content: ''; position: absolute; inset: -6px; border-radius: 18px; border: 2px solid rgba(242,107,29,.35); animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { opacity: .35; transform: scale(1); } 50% { opacity: 1; transform: scale(1.015); } }
 .tour-block { position: fixed; inset: 0; z-index: 79; }
 .tcap { position: fixed; z-index: 81; left: 12px; right: 12px; max-width: 360px; margin: 0 auto; background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 14px; animation: rise .2s ease-out; }
@@ -716,6 +716,367 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   .chat-in { min-height: calc(100% - 45px); }
   .vote { margin: 12px 0 4px; width: 100%; max-width: none; }
 }
+/* ================= v5: the real app on dev (bubbles.css, plusmenu, profile menu, top right, people, workshop) ================= */
+:root { --bo: #1E242D; --boe: #2A313C; --bot: #E7EAF0; --bom: #8391A6; --bm: #3A2416; --bme: #5A3218; --bmt: #F4EDE8; --bmm: #C79C80; --bmc: #4A2E1C;
+  --hov: #262D38; --pop: #3A4352; --faint: #6B7484; --chipo: rgba(242,107,29,.16); }
+/* rail + nest extras */
+.pc.ws { border-color: transparent; background: none; color: var(--m); }
+.pc.ws.on { border-color: var(--o); color: var(--w); }
+.pc.newp { background: #1F3B37; color: var(--t); border-color: #2F5A54; font-size: 13px; }
+.pin-repo { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; margin: 0 2px; width: calc(100% - 4px); padding: 9px 10px; border: 1px solid var(--b); border-radius: 12px; background: var(--s); color: var(--m); }
+.pin-repo:hover { background: var(--s2); }
+.pr-ic { width: 32px; height: 32px; border-radius: 9px; background: #1F3B37; color: var(--t); display: grid; place-items: center; flex: none; }
+.pr-t { min-width: 0; line-height: 1.25; } .pr-t small { display: block; font: 10px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.pr-t b { display: block; color: var(--w); font-size: 14px; font-weight: 600; } .pr-t em { display: block; font: normal 11.5px var(--mono); color: var(--i); }
+.nest-foot { border-top: 1px solid var(--b); padding: 10px 10px 0; }
+.nest-foot .btn.inv { min-height: 40px; font-size: 14px; background: none; }
+.nest-foot .btn.inv svg { color: var(--o); }
+.nest-foot .nest-demo { border-top: 0; padding: 8px 6px 10px; text-align: center; }
+@media (min-width: 900px) { .nest-foot .nest-demo { display: block; } }
+@media (min-width: 1200px) { .nest-ppl { display: none; } }
+/* desktop top bar: breadcrumb left; panel · Context · profile · bell · window lights right */
+.crumb { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.crumb .cr-p { color: var(--w); font-weight: 600; font-size: 14.5px; white-space: nowrap; }
+.crumb .cr-s { color: var(--faint); }
+.crumb h2 { font-size: 14.5px !important; font-weight: 500 !important; color: var(--m) !important; }
+.mhead .sub { display: none; }
+.mhead .right { gap: 6px; }
+.tbtn { position: relative; width: 40px; height: 40px; padding: 0; border-radius: 10px; border: 1px solid transparent; background: none; display: grid; place-items: center; color: var(--m); }
+.tbtn:hover, .tbtn[aria-expanded="true"] { background: var(--hov); border-color: var(--b); color: var(--w); }
+.tbtn[aria-pressed="true"] { color: var(--w); }
+.tbtn .bdg { position: absolute; top: 3px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--o); color: #fff; font: 600 10px/16px var(--mono); text-align: center; box-shadow: 0 0 0 2px var(--c); }
+.pf-face { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: #12151A; }
+.pf-face.lg { width: 40px; height: 40px; font-size: 16px; flex: none; }
+.pf-btn .pf-dot { position: absolute; right: 5px; bottom: 5px; border: 2px solid var(--c); }
+.pf-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--t); flex: none; }
+.win-ctl { display: flex; align-items: center; gap: 9px; margin-left: 10px; padding-left: 16px; border-left: 1px solid var(--b); height: 24px; }
+.wl { width: 15px; height: 15px; border-radius: 50%; border: 0; padding: 0; }
+.wl-close { background: #FF5F57; } .wl-min { background: #FEBC2E; } .wl-max { background: #28C840; }
+.pf-menu { position: fixed; z-index: 57; width: 280px; padding: 6px; background: #1E242D; border: 1px solid var(--b); border-radius: 12px; animation: spring .18s cubic-bezier(.3, 1.35, .5, 1); transform-origin: 100% 0; }
+.pf-head { display: flex; gap: 12px; align-items: center; padding: 10px 10px 8px; }
+.pf-head b { display: block; font-size: 14px; color: var(--w); } .pf-head small { font-size: 12px; color: var(--faint); }
+.pf-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--m); padding: 2px 10px 10px; }
+.pf-sep { height: 1px; background: var(--b); margin: 4px 2px; }
+.pf-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; background: none; border: 0; color: var(--txt); font-size: 13.5px; text-align: left; }
+.pf-item:hover, .pf-item:focus-visible { background: var(--hov); outline: none; }
+.pf-item svg { color: var(--m); } .pf-item span { flex: 1; }
+.pf-sw { width: 30px; height: 18px; border-radius: 9px; background: var(--b); position: relative; flex: none !important; }
+.pf-sw i { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--m); }
+.pf-sw.on { background: var(--t); } .pf-sw.on i { left: 15px; background: #fff; }
+.ctxp { padding: 12px; } .ctxp pre { margin: 8px 0 0; padding: 10px; border: 1px solid var(--b); border-radius: 8px; background: var(--c); font: 11.5px/1.6 var(--mono); color: var(--txt); white-space: pre-wrap; }
+.ccp code { display: block; margin: 8px 0 10px; padding: 10px; border: 1px solid var(--b); border-radius: 8px; background: var(--c); font: 11.5px/1.5 var(--mono); color: var(--t); overflow-wrap: anywhere; }
+/* right panel: in the room, or a person */
+.side { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--nest); border-left: 1px solid var(--b); }
+.pp-scrim { display: none; }
+@media (min-width: 1200px) {
+  .room { grid-template-columns: 72px 260px minmax(0, 1fr) 300px; }
+  .room.side-off { grid-template-columns: 72px 260px minmax(0, 1fr); }
+  .room.side-off .side { display: none; }
+}
+@media (max-width: 1199px) {
+  .side { display: none; }
+  .room.pp-open .side { display: flex; position: fixed; z-index: 45; right: 0; top: 56px; bottom: 0; width: 320px; animation: rise .18s ease-out; }
+}
+@media (max-width: 899px) {
+  .room.pp-open .pp-scrim { display: block; position: fixed; inset: 0; z-index: 55; background: rgba(8,10,13,.72); }
+  .room.pp-open .side { z-index: 56; left: 0; right: 0; top: auto; width: auto; max-height: 86dvh; border: 0; border-top: 1px solid var(--b); border-radius: 18px 18px 0 0; background: var(--s); padding-bottom: var(--sab); animation: up .22s ease-out; }
+}
+.sd-sec { padding: 16px 16px 4px; }
+.sd-l { font: 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin: 0 0 10px; }
+.sd-l em { font-style: normal; color: var(--t); }
+.sd-p { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 6px; border: 0; border-radius: 8px; background: none; text-align: left; color: var(--m); }
+.sd-p:hover { background: var(--s); }
+.sd-p .avw { position: relative; flex: none; } .sd-p .avw .av { width: 30px; height: 30px; font-size: 12px; }
+.sd-p .avw i { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; background: var(--ok); border: 2px solid var(--nest); }
+.sd-p .avw i.off { background: #4B5563; }
+.sd-p span.t { min-width: 0; line-height: 1.25; } .sd-p b { display: block; color: var(--w); font-weight: 500; font-size: 14px; } .sd-p small { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sd-p small .on { color: var(--ok); }
+.sd-cc { margin: 14px 16px 16px; display: flex; align-items: center; gap: 10px; width: calc(100% - 32px); min-height: 42px; padding: 0 14px; border: 1px solid var(--b); border-radius: 12px; background: var(--s); color: var(--w); font-weight: 600; font-size: 14px; }
+.sd-cc svg { color: var(--o); }
+.sd-foot { margin-top: auto; padding: 12px 16px; font: 11px var(--mono); color: var(--faint); border-top: 1px solid var(--b); }
+.pp-head { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-bottom: 1px solid var(--b); }
+.pp-head .av.xl { width: 52px; height: 52px; font-size: 20px; }
+.pp-id { flex: 1; min-width: 0; line-height: 1.3; } .pp-id b { display: block; color: var(--w); font: 700 18px/1.2 'Inter Display', Inter, sans-serif; }
+.pp-id small { display: flex; align-items: center; gap: 6px; font-size: 12.5px; margin-top: 3px; flex-wrap: wrap; }
+.pp-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; padding: 4px 9px; border: 1px solid var(--b); border-radius: 999px; font-size: 12px; color: var(--m); }
+.pp-chip b { display: inline; font: 600 12px Inter, sans-serif; color: var(--t); }
+.pp-x { width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--m); display: grid; place-items: center; flex: none; }
+.pp-x:hover { background: var(--s2); color: var(--w); }
+.pp-acts { display: flex; gap: 8px; padding: 14px 16px 0; flex-wrap: wrap; }
+.pp-acts .btn { min-height: 36px; padding: 0 12px; font-size: 13.5px; border-radius: 10px; }
+.pp-acts .btn svg { width: 16px; height: 16px; }
+.pp-acts .btn.ask { margin-top: 0; } .pp-acts .btn.ask svg { color: var(--t); }
+.pp-sec { padding: 18px 16px 0; }
+.pp-now { color: var(--w); font: 700 16px/1.3 'Inter Display', Inter, sans-serif; margin: 0 0 8px; }
+.pp-file { display: inline-block; font: 11.5px var(--mono); color: var(--w); border: 1px solid #2F5A54; background: #17262A; border-radius: 6px; padding: 3px 7px; }
+.pp-bar { height: 4px; border-radius: 2px; background: var(--s3); margin: 12px 0 8px; overflow: hidden; } .pp-bar i { display: block; height: 100%; background: var(--t); }
+.pp-focus { font-size: 12.5px; } .pp-focus span { font: 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t); margin-right: 6px; }
+.pp-tabs { display: flex; gap: 2px; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; }
+.pp-tabs button { flex: none; height: 28px; padding: 0 8px; border: 0; border-radius: 8px; background: none; color: var(--m); font-size: 12.5px; font-weight: 500; }
+.pp-tabs button.on { background: var(--s2); color: var(--w); }
+.pp-tl { display: flex; gap: 10px; padding: 8px 2px; border-top: 1px solid rgba(42,49,60,.6); }
+.pp-tl:first-of-type { border-top: 0; }
+.pp-tl .k { width: 24px; height: 24px; border-radius: 50%; background: var(--s2); border: 1px solid var(--b); display: grid; place-items: center; flex: none; color: var(--m); }
+.pp-tl .k.k-commit { color: var(--o); } .pp-tl .k.k-prompt { color: var(--t); } .pp-tl .k.k-note { color: var(--i); }
+.pp-tl .b { flex: 1; min-width: 0; line-height: 1.35; font-size: 13.5px; color: var(--txt); } .pp-tl .b small { display: block; font: 11px var(--mono); color: var(--faint); margin-top: 2px; }
+.pp-tl time { font: 11px var(--mono); color: var(--faint); flex: none; }
+.pp-tl.jump { cursor: pointer; } .pp-tl.jump:hover .b { color: var(--w); }
+.pp-me { padding: 18px 16px 0; }
+.pp-me .pf-colors { margin-top: 10px; }
+/* chat header bar */
+.cbar { position: sticky; top: 0; z-index: 3; background: var(--c); }
+.cbar-in { max-width: 920px; margin: 0 auto; display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 18px; border-bottom: 1px solid var(--b); }
+.cb-av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--s3); color: var(--o); overflow: hidden; }
+.cb-av .av { width: 36px; height: 36px; }
+.cb-tt { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.cb-t { display: flex; align-items: center; gap: 4px; border: 0; background: none; padding: 0; color: var(--w); font-size: 15px; font-weight: 650; height: 22px; }
+.cb-t svg { color: var(--m); }
+.cb-sub { font-size: 12px; color: var(--faint); }
+.cb-acts { margin-left: auto; display: flex; gap: 4px; }
+.cb-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--m); padding: 0; }
+.cb-btn:hover { background: var(--s2); color: var(--w); }
+.cb-btn.on { color: var(--t); }
+.chat-in { max-width: 920px; min-height: calc(100% - 61px); padding: 10px 18px 10px; }
+.thr-m { position: fixed; z-index: 57; width: 260px; padding: 6px; background: #1E242D; border: 1px solid var(--b); border-radius: 12px; animation: spring .18s cubic-bezier(.3, 1.35, .5, 1); }
+.thr-m .pf-item { gap: 10px; } .thr-m .pf-item .av { width: 24px; height: 24px; font-size: 10px; } .thr-m .pf-item.on { background: var(--s2); color: var(--w); }
+.thr-m .hash { width: 24px; text-align: center; font: 600 15px var(--mono); color: var(--m); }
+.thr-m .ud { width: 8px; height: 8px; border-radius: 50%; background: var(--o); flex: none; }
+.chan { display: none; }
+/* ---- bubbles: Telegram grouping, Instagram-DM alignment (app/ui/bubbles.css) ---- */
+.nm, .meta { display: none !important; }
+.row { gap: 8px; margin-top: 2px; }
+.row.head { margin-top: 10px; }
+.sysline + .row, .day + .row { margin-top: 6px; }
+.row .avc .av { width: 30px; height: 30px; font-size: 11px; }
+.row .col, .row.claude .col { max-width: 68%; }
+.row.has-card .col, .row.has-vote .col { width: min(460px, 68%); }
+.row.has-card.wide .col { width: min(560px, 68%); }
+.bub { position: relative; background: var(--bo); border: 1px solid var(--boe); color: var(--bot); border-radius: 14px; padding: 6px 10px 5px; font-size: 14.5px; line-height: 1.42; white-space: normal; }
+.row.claude .bub { border-color: var(--boe); }
+.bub .tx { display: flow-root; white-space: pre-wrap; }
+.row.them:not(.head) .bub { border-top-left-radius: 6px; }
+.row.them:not(.tail) .bub { border-bottom-left-radius: 6px; }
+.row.them.tail .bub { border-bottom-left-radius: 4px; }
+.row.me .bub { background: var(--bm); border-color: var(--bme); color: var(--bmt); border-radius: 14px; }
+.row.me:not(.head) .bub { border-top-right-radius: 6px; }
+.row.me:not(.tail) .bub { border-bottom-right-radius: 6px; }
+.row.me.tail .bub { border-bottom-right-radius: 4px; }
+.row.me.head.tail .bub.txt { border-radius: 18px; padding: 6px 12px 5px; }
+.bub b, .row.me .bub b { color: inherit; font-weight: 650; }
+.bn { display: flex; align-items: center; gap: 4px; margin: 0 0 1px; font-size: 13px; font-weight: 650; line-height: 1.35; cursor: pointer; }
+.bn svg { color: var(--t); }
+.mt { float: right; position: relative; top: 5px; display: inline-flex; align-items: center; gap: 3px; margin: 0 0 0 10px; height: 16px; line-height: 16px; font-size: 11px; font-weight: 400; color: var(--bom); white-space: nowrap; user-select: none; -webkit-user-select: none; }
+.row.me .mt { color: var(--bmm); }
+.mt .tck { display: inline-flex; } .mt .tck.read { color: var(--t); }
+.mtr { display: flow-root; margin-top: 3px; }
+.rxr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 5px; }
+.rxr .mt { float: none; top: 2px; margin-left: auto; padding-left: 8px; }
+.bub:not(.has-rx) .rxr { display: none; }
+.bub.has-rx .mt:not(.rxt) { display: none; }
+.rxc { position: relative; display: inline-flex; align-items: center; gap: 4px; height: 26px; min-height: 0; padding: 0 8px 0 6px; border: 1px solid transparent; border-radius: 999px; background: #2A313C; color: inherit; font: 14px/1 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', Inter, sans-serif; }
+.rxc:hover { border-color: var(--pop); }
+.rxc.mine { border-color: var(--o); background: rgba(242,107,29,.22); color: inherit; }
+.row.me .rxc { background: var(--bmc); } .row.me .rxc.mine { background: rgba(242,107,29,.34); }
+.rxc .fs { display: inline-flex; }
+.rxc .fs i { width: 20px; height: 20px; display: grid; place-items: center; margin-left: -6px; border-radius: 50%; border: 1.5px solid #2A313C; font: 700 9.5px/1 Inter, sans-serif; font-style: normal; color: #12151A; }
+.rxc .fs i:first-child { margin-left: 0; }
+.row.me .rxc .fs i { border-color: var(--bmc); } .rxc.mine .fs i { border-color: #3A281F; }
+.rxc .n { font: 600 11px var(--mono); color: var(--m); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.quote { position: relative; display: flex; flex-direction: column; width: 100%; min-width: 160px; margin: 3px 0 4px; padding: 4px 10px 5px 12px; border: 0; border-radius: 6px; background: var(--qb); text-align: left; font-size: 13px; line-height: 1.35; color: inherit; overflow: hidden; }
+.quote::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--qc); }
+.quote b { color: var(--qc) !important; font-size: 13px; } .quote span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .86; }
+.bub.voice { display: block; padding: 7px 10px 6px 7px; width: min(360px, 100%); }
+.vrow { display: flex; align-items: center; gap: 10px; }
+.row .bub.voice .play { width: 44px; height: 44px; background: var(--o); color: #fff; }
+.vcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.row .bub.voice .wave { height: 26px; gap: 2px; overflow: hidden; }
+.row .bub.voice .wave i { width: 2.5px; flex: none; background: var(--bom); opacity: .75; }
+.row.me .bub.voice .wave i { background: var(--bmm); }
+.row .bub.voice .wave i.p { background: var(--o); opacity: 1; }
+.vmeta { display: flex; align-items: center; gap: 8px; }
+.vmeta .dur { font: 12px Inter, sans-serif; color: var(--bom); min-width: 0; } .row.me .vmeta .dur { color: var(--bmm); }
+.vmeta .mt { float: none; top: 0; margin-left: auto; }
+.vtx { display: flow-root; margin: 5px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--bom); } .row.me .vtx { color: var(--bmm); }
+.bub.media { padding: 3px; line-height: 1.42; width: fit-content; background: var(--bo); overflow: visible; }
+.row.me .bub.media { background: var(--bm); }
+.bub.media .bn { padding: 3px 7px 2px; }
+.bub.media .ph { position: relative; display: block; border-radius: 11px; overflow: hidden; background: var(--c); line-height: 0; }
+.bub.media .ph img, .bub.media .ph video { display: block; max-width: min(300px, 60vw); max-height: 340px; }
+.bub.media .ph img.px { width: 240px; max-width: 60vw; }
+.bub.media .ph .mt { position: absolute; float: none; top: auto; right: 7px; bottom: 7px; margin: 0; height: 20px; padding: 0 7px; border-radius: 999px; background: #12151A; color: #E7EAF0; line-height: 20px; }
+.bub.media .rxr { padding: 0 5px 3px; }
+.bub.filechip { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 7px 10px 6px 7px; }
+.bub.filechip .mt { float: none; top: 0; margin-left: auto; align-self: flex-end; }
+.bub.filechip .rxr { flex-basis: 100%; }
+.row.me .filechip .fi { background: var(--bmc); color: var(--bmt); }
+.bub.bare, .row.me .bub.bare, .row.claude .bub.bare { background: none; border: 0; padding: 0; width: 100%; border-radius: 0; }
+.bub.bare > .bn { padding: 0 2px 3px; }
+.bub.bare .mt { color: var(--faint); top: 1px; }
+.bub.bare .rxr { margin-top: 6px; }
+.row .bub.bare .appr { border-color: var(--b); }
+.sysline span { padding: 3px 11px; font-size: 12px; line-height: 1.45; }
+.sysline.day { margin: 14px 0 4px; }
+.sysline.day::before, .sysline.day::after { display: none; }
+.sysline.day span { padding: 3px 11px; border: 1px solid var(--b); border-radius: 999px; background: var(--s); font: 600 11px/1.45 var(--mono); letter-spacing: 0; text-transform: none; color: var(--m); }
+.sysline.tsep { margin: 14px 0 2px; } .sysline.tsep span { background: none; border: 0; padding: 0; font-size: 11.5px; color: var(--faint); }
+.typing-row .bub { padding: 11px 13px; }
+.row.held .bub { outline: 1px solid var(--pop); }
+/* composer: one pill (desktop: emoji · message · mic · image · +; phone: + · message · mic) */
+.composer { border-top: 0; padding: 4px 16px calc(14px + var(--sab)); }
+.cmp { max-width: 920px; }
+.pillc { flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 2px; background: var(--s); border: 1px solid var(--b); border-radius: 24px; padding: 5px 8px 5px 6px; }
+.pillc:focus-within { border-color: var(--pop); }
+.pillc .field { order: 1; background: none; border: 0; border-radius: 0; }
+.pillc .field textarea { padding: 7px 6px; height: 36px; font-size: 15px; }
+.cx, .pillc .cbtn { width: 36px; height: 36px; border-radius: 50%; border: 0; background: none; color: var(--m); display: grid; place-items: center; flex: none; padding: 0; }
+.cx:hover, .pillc .cbtn:hover { background: var(--s2); color: var(--w); }
+.cx.emo { order: 0; } .pillc .cbtn.act { order: 2; } .cx.img { order: 3; } .pillc .cbtn.plus { order: 4; background: none; }
+.pillc .recbar { order: 1; }
+.pillc .cbtn.act.send, .pillc .cbtn.act.send:hover { background: var(--o); color: #fff; }
+.pillc .cbtn.plus.open { background: var(--s2); color: var(--w); }
+.cbtn.plus svg, .cbtn.plus.open svg { transform: none; }
+.composer.rec .pillc { background: none; border-color: transparent; padding: 0; }
+.composer.rec .cx { display: none; }
+.composer.rec .pillc .cbtn.act { width: 44px; height: 44px; }
+.emo-pop { position: fixed; z-index: 58; display: flex; gap: 2px; padding: 4px; background: var(--s2); border: 1px solid var(--pop); border-radius: 999px; animation: spring .18s cubic-bezier(.3, 1.35, .5, 1); }
+.emo-pop button { width: 38px; height: 38px; border: 0; border-radius: 50%; background: none; font: 20px/1 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+.emo-pop button:hover { background: var(--s3); }
+/* the "+" menu (app/ui/plusmenu.js): popover on desktop, sheet on phones */
+.pl-scrim { position: fixed; inset: 0; z-index: 54; }
+.pl-scrim.on { background: rgba(8,10,13,.6); }
+.pl-pop { position: fixed; z-index: 55; width: 320px; max-height: min(560px, calc(100vh - 24px)); overflow-y: auto; padding: 6px; background: #1E242D; border: 1px solid var(--b); border-radius: 14px; animation: spring .2s cubic-bezier(.3, 1.35, .5, 1); transform-origin: 100% 100%; }
+.pl-pop.form { width: 420px; padding: 16px; }
+.pl-pop.sheet { left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto; border-radius: 18px 18px 0 0; border-width: 1px 0 0; padding: 8px 8px calc(10px + var(--sab)); max-height: 82vh; animation: up .22s ease-out; }
+.pl-pop.sheet.form { padding: 16px 16px calc(16px + var(--sab)); }
+.pl-pop .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--b); margin: 2px auto 6px; }
+.pl-group { font: 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 12px 10px 6px; }
+.pl-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 7px 10px; border: 0; border-radius: 10px; background: none; color: var(--w); text-align: left; }
+.pl-item:hover, .pl-item:focus-visible { background: var(--hov); outline: none; }
+.pl-ic { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--s); border: 1px solid var(--b); color: var(--m); }
+.pl-item[data-pl="propose"] .pl-ic { color: var(--o); } .pl-item[data-pl="claude"] .pl-ic { color: var(--t); }
+.pl-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; } .pl-t b { font-size: 13.5px; font-weight: 600; } .pl-t small { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-form { display: flex; flex-direction: column; gap: 10px; }
+.pl-eye { font: 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--o); }
+.pl-form h3 { margin: -2px 0 2px; color: var(--w); font: 700 18px/1.25 'Inter Display', Inter, sans-serif; }
+.pl-form input, .pl-form textarea, .pl-form select { width: 100%; background: var(--c); border: 1px solid var(--b); border-radius: 10px; color: var(--w); font-size: 14px; padding: 10px 12px; outline: none; }
+.pl-form textarea { resize: vertical; line-height: 1.5; }
+.pl-form input:focus, .pl-form textarea:focus, .pl-form select:focus { border-color: var(--pop); }
+.pl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--m); }
+.pl-row select { width: auto; padding: 6px 10px; }
+.pl-hint { margin: 0; font-size: 12px; line-height: 1.5; color: var(--faint); }
+.pl-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.pl-foot .btn { min-height: 38px; padding: 0 14px; font-size: 14px; border-radius: 10px; }
+@media (max-width: 899px) { .pl-form input, .pl-form textarea, .pl-form select { font-size: 16px; } .pl-foot .btn { flex: 1; min-height: 44px; } }
+/* vote + proposal cards (app/ui/votes.js) */
+.vt { padding: 12px 12px 10px; border: 1px solid var(--b); border-radius: 12px; background: var(--s); color: var(--w); white-space: normal; animation: rise .2s ease-out; }
+.vt.sug { border-left: 2px solid var(--t); }
+.vt-eye { display: flex; align-items: center; gap: 8px; }
+.vt-k { font: 600 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--o); }
+.vt.sug .vt-k { color: var(--t); } .vt.st-passed .vt-k { color: var(--ok); }
+.vt-when { margin-left: auto; font: 10.5px var(--mono); color: var(--faint); white-space: nowrap; }
+.vt-q { margin: 6px 0 2px; font: 700 15px/1.35 'Inter Display', Inter, sans-serif; letter-spacing: -.005em; color: var(--w); overflow-wrap: anywhere; }
+.vt-pitch { font-size: 13.5px; line-height: 1.6; color: var(--m); margin: 2px 0 10px; max-width: 65ch; }
+.vt-pitch p { margin: 0 0 4px; } .vt-pitch ul { list-style: none; margin: 0 0 4px; padding: 0; }
+.vt-pitch li { display: flex; align-items: center; gap: 8px; } .vt-pitch li i { width: 12px; height: 12px; border: 1.5px solid var(--faint); border-radius: 3px; flex: none; }
+.vt-board { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--faint); margin: -2px 0 10px; }
+.vt-sug { display: block; margin-top: 3px; font-size: 11.5px; line-height: 1.45; color: var(--t); } .vt-sug svg { display: inline-block; vertical-align: -1px; margin-right: 4px; } .vt-sug span { color: var(--m); }
+.vt-opts { display: grid; gap: 6px; margin-top: 10px; } .vt-opts.two { grid-template-columns: 1fr 1fr; }
+.vt-o { position: relative; display: flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 10px; overflow: hidden; border: 1px solid var(--b); border-radius: 8px; background: var(--s2); color: var(--w); font-size: 13px; font-weight: 600; text-align: left; }
+.vt-o:hover:not(:disabled) { border-color: var(--pop); } .vt-o:disabled { cursor: default; }
+.vt-o > * { position: relative; }
+.vt-fill { position: absolute !important; left: 0; top: 0; bottom: 0; background: var(--s3); transition: width .22s ease-out; }
+.vt-o svg { color: var(--m); }
+.vt-l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-n { font: 600 12px var(--mono); color: var(--m); }
+.vt-o.yes.mine, .vt-o.yes.win { border-color: var(--ok); } .vt-o.yes.mine svg, .vt-o.yes.mine .vt-n, .vt-o.yes.win svg, .vt-o.yes.win .vt-n { color: var(--ok); }
+.vt-o.no.mine { border-color: var(--no); } .vt-o.no.mine svg, .vt-o.no.mine .vt-n { color: var(--no); }
+.vt-o.yes.win .vt-fill { background: rgba(59,209,111,.16); }
+.vt.closed .vt-o:not(.win) { color: var(--m); }
+.vt-faces { display: inline-flex; }
+.vt-face { width: 18px; height: 18px; display: grid; place-items: center; margin-left: -4px; border-radius: 50%; border: 1px solid var(--s2); font-size: 8px; font-weight: 700; color: #12151A; }
+.vt-face:first-child { margin-left: 0; }
+.vt-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 9px; font-size: 11.5px; color: var(--m); }
+.vt-res { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--b); }
+.vt-res b { font-size: 13px; font-weight: 700; color: var(--w); } .vt.st-passed .vt-res b { color: var(--ok); }
+.vt-res span { font: 10.5px var(--mono); color: var(--faint); }
+.vt-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.vt-btn { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 11px; font-size: 12px; font-weight: 600; border: 1px solid var(--b); border-radius: 8px; background: var(--s2); color: var(--w); }
+.vt-done { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px; border: 1px solid var(--b); border-radius: 8px; font-size: 12px; color: var(--m); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-done svg { color: var(--ok); }
+/* updates: the Secretary's digest */
+.dg { padding: 4px 16px; }
+.dg-i { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-top: 1px solid rgba(42,49,60,.6); font-size: 14.5px; line-height: 1.45; color: var(--txt); }
+.dg-i:first-child { border-top: 0; }
+.dg-i .d { width: 7px; height: 7px; border-radius: 1px; margin-top: 7px; flex: none; background: var(--t); }
+.dg-i .d.c-o { background: var(--o); } .dg-i .d.c-s { background: var(--faint); }
+.dg-i .dt { flex: 1; min-width: 0; } .dg-i b { color: var(--w); font-weight: 600; }
+.dg-i .tag { flex: none; margin-top: 1px; }
+/* workshop */
+.ws-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.ws-top h3 { margin: 4px 0 0; color: var(--w); font: 700 22px/1.2 'Inter Display', Inter, sans-serif; letter-spacing: -.01em; }
+.ws-top .btn { min-height: 38px; font-size: 14px; border-radius: 10px; }
+.ws-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.ws-hero { display: grid; grid-template-columns: 1.2fr 1fr; border: 1px solid var(--b); border-radius: 16px; overflow: hidden; background: #1E242D; }
+.ws-hero .art { background: var(--c); display: grid; place-items: center; min-height: 220px; border-right: 1px solid var(--b); }
+.ws-hero .art img { width: 120px; image-rendering: pixelated; }
+.ws-hero .inf { padding: 26px 24px; display: flex; flex-direction: column; justify-content: center; }
+.ws-hero .inf h4 { margin: 6px 0 6px; color: var(--w); font: 800 28px/1.1 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; }
+.ws-hero .inf p { margin: 0 0 6px; color: var(--m); }
+.ws-hero .inf .mono { font-size: 11.5px; color: var(--faint); }
+.ws-hero .row2 { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+.ws-hero .row2 .btn { min-height: 40px; font-size: 14px; border-radius: 10px; }
+.ws-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.ws-c { background: var(--s); border: 1px solid var(--b); border-radius: 12px; overflow: hidden; text-align: left; padding: 0; color: var(--m); }
+.ws-c .th { height: 110px; display: grid; place-items: center; background: var(--c); border-bottom: 1px solid var(--b); overflow: hidden; }
+.ws-c .th img { width: 56px; image-rendering: pixelated; }
+.ws-c .th pre { margin: 0; padding: 10px 12px; width: 100%; height: 100%; font: 10px/1.5 var(--mono); color: var(--m); text-align: left; white-space: pre; }
+.ws-c .th pre b { color: var(--t); font-weight: 400; }
+.ws-c .mt2 { padding: 9px 11px; line-height: 1.3; } .ws-c .mt2 b { display: block; color: var(--w); font-size: 13.5px; font-weight: 600; } .ws-c .mt2 small { font-size: 12px; }
+/* new project */
+.np { position: fixed; z-index: 56; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(440px, calc(100vw - 32px)); background: var(--s); border: 1px solid var(--b); border-radius: 16px; padding: 18px; animation: rise .18s ease-out; }
+.np h3 { margin: 0 0 4px; color: var(--w); font: 700 20px/1.2 'Inter Display', Inter, sans-serif; }
+.np > p { margin: 0 0 14px; font-size: 13.5px; }
+.np-opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px; border: 1px solid var(--b); border-radius: 12px; background: var(--s2); color: var(--m); }
+.np-opt + .np-opt, .np-opt + .np-link { margin-top: 8px; }
+.np-opt:hover { border-color: var(--pop); }
+.np-opt.pri { background: #1E242D; border-left: 3px solid var(--o); }
+.np-opt .ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--o); color: #fff; }
+.np-opt .ic.s { background: var(--s); border: 1px solid var(--b); color: var(--w); }
+.np-opt span.t { min-width: 0; line-height: 1.3; } .np-opt b { display: block; color: var(--w); font-size: 15px; } .np-opt small { font-size: 12.5px; }
+.np-link { display: flex; gap: 8px; } .np-link input { flex: 1; min-width: 0; height: 44px; border-radius: 10px; border: 1px solid var(--b); background: var(--c); color: var(--w); padding: 0 12px; font-size: 16px; outline: none; }
+.np-link .btn { min-height: 44px; }
+.np-x { position: absolute; right: 10px; top: 10px; }
+@media (max-width: 899px) {
+  .np { left: 0; right: 0; top: auto; bottom: 0; transform: none; width: auto; border-radius: 18px 18px 0 0; border-width: 1px 0 0; padding: 16px 16px calc(var(--sab) + 18px); animation: up .22s ease-out; }
+  .row .col, .row.claude .col { max-width: 82%; }
+  .row.has-card .col, .row.has-vote .col, .row.has-card.wide .col { width: 82%; }
+  .row .avc { width: 28px; } .row .avc .av { width: 28px; height: 28px; }
+  .row { gap: 6px; }
+  .chat-in { min-height: 100%; padding: 8px 10px 8px calc(var(--sal) + 10px); }
+  .cbar { display: none; }
+  .vote, .vt { max-width: none; }
+  .vt-opts.two .vt-faces { display: none; }
+  .vt-o { min-height: 42px; }
+  .composer { padding: 4px calc(var(--sar) + 8px) calc(8px + var(--sab)) calc(var(--sal) + 8px); }
+  .pillc { align-items: center; padding: 3px; border-radius: 26px; }
+  .cx.emo, .cx.img { display: none; }
+  .pillc .cbtn.plus { order: 0; width: 40px; height: 40px; }
+  .pillc .cbtn.act { width: 40px; height: 40px; }
+  .pillc .field textarea { font-size: 16px; padding: 8px 6px; height: 38px; }
+  .room.in-chat .chan { display: inline-flex; align-items: center; gap: 4px; max-width: 132px; height: 40px; padding: 0 10px 0 14px; border: 1px solid var(--b); border-radius: 999px; background: var(--s); color: var(--w); font-weight: 650; font-size: 14.5px; }
+  .room.in-chat .chan span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .room.in-chat .chan svg { color: var(--m); flex: none; }
+  .ws-hero { grid-template-columns: minmax(0, 1fr); } .ws-hero .art { min-height: 150px; border-right: 0; border-bottom: 1px solid var(--b); } .ws-hero .inf { padding: 16px; }
+  .ws-hero .inf h4 { font-size: 22px; }
+  .ws-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ws-top { margin-bottom: 12px; } .ws-top h3 { font-size: 19px; }
+  .dg { padding: 2px 12px; } .dg-i { font-size: 14px; padding: 9px 0; }
+  .nest-foot { padding-bottom: var(--sab); }
+  .pc.ws { border-color: var(--b); background: var(--s); }
+}
+@media (max-width: 899px) { .room.in-chat .pbar { grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px; } .room.in-chat .pmid { justify-content: flex-start; } .room.in-chat .pmid .seg button { width: 50px; } }
+@media (max-width: 380px) { .room.in-chat .chan { max-width: 100px; } .room.in-chat .pmid .seg button { width: 46px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -758,7 +1119,9 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     <div class="sep"></div>
     <button class="pc on" id="rail-pq" aria-label="Pixel Quest" aria-current="true"></button>
     <button class="pc" data-toast="In the demo you're only in Pixel Quest." aria-label="Website">W</button>
-    <button class="pc add" data-toast="Start or join another project in the real app." aria-label="New project" data-i="plus"></button>
+    <span id="rail-new"></span>
+    <button class="pc add" id="rail-add" aria-label="New project" data-i="plus"></button>
+    <button class="pc ws" id="rail-ws" aria-label="Workshop" title="Workshop" data-i="cube"></button>
     <div class="grow"></div>
     <span class="av" id="rail-me"></span>
   </nav>
@@ -768,26 +1131,34 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
       <div id="nest-nav"></div>
       <div class="lbl">Huddle</div>
       <div class="huddle"><div class="stack" id="huddle-stack"></div><div class="ht"><b>Orion and Maya talking</b></div><button id="huddle-btn">Join</button></div>
-      <div class="lbl">In the room</div>
+      <div class="lbl">Pinned</div>
+      <button type="button" class="pin-repo" data-v="docs"><span class="pr-ic" data-i="branch"></span><span class="pr-t"><small>Repo</small><b>pixel-quest</b><em>orion/pixel-quest</em></span></button>
+      <div class="nest-ppl"><div class="lbl">In the room</div>
       <div id="people"></div>
-      <div id="friends"></div>
+      <div id="friends"></div></div>
     </div>
-    <div class="nest-demo">Demo · nothing is sent anywhere</div>
+    <div class="nest-foot"><button type="button" class="btn block inv" id="nest-invite"><span data-i="plus"></span>Invite friends</button><div class="nest-demo">Demo · nothing is sent anywhere</div></div>
   </aside>
   <main class="main">
     <header class="pbar">
       <button class="pj" id="pj" aria-label="Pixel Quest: projects, huddle and people"><span class="pav" id="pj-pav"></span><span class="pjt"><span class="pjn">Pixel Quest</span><span class="pjv" id="pjv"></span></span></button>
       <div class="pmid" id="pmid"><nav class="seg" id="seg" aria-label="Sections"></nav></div>
-      <div class="pctx"><button type="button" class="ctx hidden" id="ctx"></button></div>
+      <div class="pctx"><button type="button" class="ctx hidden" id="ctx"></button><button type="button" class="chan" id="chan" aria-haspopup="menu"></button></div>
     </header>
-    <header class="mhead"><div><h2 id="mh-title">Chat</h2></div><span class="sub" id="mh-sub"></span>
-      <div class="right"><div class="stack" id="mh-stack"></div><span class="pill">Demo · nothing is sent anywhere</span></div></header>
+    <header class="mhead"><div class="crumb"><span class="cr-p" id="cr-p"></span><span class="cr-s">/</span><h2 id="mh-title">Chat</h2></div><span class="sub" id="mh-sub"></span>
+      <div class="right">
+        <button type="button" class="tbtn" id="panel-toggle" aria-label="Right panel" aria-pressed="true" title="Right panel"></button>
+        <button type="button" class="tbtn" id="ctx-btn" aria-label="Context" title="Context"></button>
+        <button type="button" class="tbtn pf-btn" id="pf-btn" aria-label="Your profile and settings" aria-haspopup="menu" aria-expanded="false"><span class="pf-face" id="pf-face"></span><span class="pf-dot"></span></button>
+        <button type="button" class="tbtn" id="nf-bell" aria-label="Notifications" title="Notifications"></button>
+        <div class="win-ctl" id="win-ctl"><button type="button" class="wl wl-close" aria-label="Close window"></button><button type="button" class="wl wl-min" aria-label="Minimize"></button><button type="button" class="wl wl-max" aria-label="Zoom"></button></div>
+      </div></header>
     <div class="shade" id="shade"></div>
     <div class="ptr" id="ptr"></div>
     <button type="button" class="latest hidden" id="latest">New messages</button>
     <div class="lp-tip hidden" id="lp-tip"></div>
     <div class="views">
-      <div class="view on" id="v-chat"><div class="thr" id="thr"></div><div class="chat-in"><div id="log" aria-live="polite"></div><div id="typing"></div></div></div>
+      <div class="view on" id="v-chat"><div class="cbar" id="cbar"></div><div class="chat-in"><div id="log" aria-live="polite"></div><div id="typing"></div></div></div>
       <div class="view" id="v-docs"><div class="wrap">
         <section class="sect"><div class="sect-h"><div><div class="eb">Pinned · living</div><h3>Repo</h3></div><span id="repo-upd"></span></div><div class="hero repo" id="repo"></div></section>
         <section class="sect"><div class="sect-h"><div><div class="eb">Written as things happen</div><h3>Living notes</h3></div></div><div class="journal" id="notes"></div></section>
@@ -796,6 +1167,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
       </div></div>
       <div class="view" id="v-updates"><div class="wrap" style="max-width:680px">
         <section class="sect"><div class="hero needs-hero"><div class="sect-h"><div><div class="eb">Needs you</div><h3 id="needs-t"></h3></div></div><div id="needs"></div></div></section>
+        <section class="sect"><div class="sect-h"><div><div class="eb">Secretary · digest</div><h3>What matters now</h3></div><span class="tag live">read just now</span></div><div class="panel dg" id="digest"></div></section>
         <section class="sect" id="s-decided"><div class="sect-h"><div><div class="eb">Decided</div><h3>Your calls</h3></div></div><div id="decided"></div></section>
         <section class="sect"><div class="sect-h"><div><div class="eb">What happened</div><h3>Recent</h3></div></div><div class="panel ulist" id="recent"></div></section>
       </div></div>
@@ -808,11 +1180,14 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
           <div><div class="lane-h"><div><div class="eb">Shipped</div><h3>Done</h3></div><span class="cnt-pill" id="n-d"></span></div><div class="lane" id="l-d"></div></div>
         </div>
       </div></div>
+      <div class="view" id="v-workshop"><div class="wrap" style="max-width:1000px" id="ws"></div></div>
     </div>
     <form class="composer" id="composer" autocomplete="off">
-      <div class="cmp">
-        <button type="button" class="cbtn plus" id="attach" aria-label="Attach files or photos" data-i="plus"></button>
+      <div class="cmp"><div class="pillc">
+        <button type="button" class="cx emo" id="emoji" aria-label="Emoji" data-i="smile"></button>
+        <button type="button" class="cbtn plus" id="attach" aria-label="Add to the conversation" data-i="plus"></button>
         <div class="field"><textarea id="box" rows="1" placeholder="Message" enterkeyhint="send" aria-label="Message"></textarea></div>
+        <button type="button" class="cx img" id="img-btn" aria-label="Photo" data-i="image"></button>
         <div class="recbar">
           <button type="button" class="cbtn rb" id="rec-del" aria-label="Delete voice note" data-i="trash"></button>
           <div class="rec-pill live"><span class="rec-dot"></span><span id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div></div>
@@ -822,11 +1197,13 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
           <button type="button" class="cbtn rb" id="rec-again" aria-label="Re-record" data-i="rotate"></button>
         </div>
         <button type="button" class="cbtn act" id="act" aria-label="Record a voice note"></button>
-      </div>
+      </div></div>
       <input type="file" id="file" multiple hidden><input type="file" id="file-media" accept="image/*,video/*" multiple hidden><input type="file" id="file-cam" accept="image/*" capture="environment" hidden>
     </form>
     <nav class="tabbar" id="tabbar" aria-label="Sections"><button type="button" class="rk rk-me" id="rk-me" aria-label="Projects, huddle and people"></button><div class="rk-mid" id="rk-mid"></div><button type="button" class="rk rk-act" id="rk-act"></button></nav>
   </main>
+  <div class="pp-scrim" id="pp-scrim"></div>
+  <aside class="side" id="side" aria-label="People"></aside>
 </section>
 
 <script>
@@ -884,6 +1261,23 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     pausel: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
     stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
     rotate: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+    smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
+    phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+    panel: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/>',
+    ctxdoc: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6M9 11h2"/>',
+    flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+    clip: '<path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    bug: '<path d="m8 2 1.9 1.9M16 2l-1.9 1.9"/><path d="M9 7.1V6a3 3 0 0 1 6 0v1.1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9M6.5 13H3M21 13h-3.5M6 17l-3 2M18 17l3 2M6 9 3 7M18 9l3-2"/>',
+    gear: '<path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/>',
+    robot: '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M8 4h8"/><path d="M9 13h.01M15 13h.01M9 17h6"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    cube: '<path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    chev: '<path d="m6 9 6 6 6-6"/>',
+    checks: '<path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>',
     hand: '<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>'
   };
   const motionOK = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1031,16 +1425,18 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $('#seg').innerHTML = NAV.map(([k, i, l]) => { const n = badge(k); return `<button class="${S.view === k ? 'on' : ''}" data-v="${k}" aria-label="${l}${n ? `, ${n} new` : ''}"${S.view === k ? ' aria-current="page"' : ''}>${ic(i, 24)}<span class="tl">${SHORT[k]}</span>${n ? `<span class="bd">${n}</span>` : ''}</button>`; }).join('');
     S.prevB = S.prevB || {};
     NAV.forEach(([k]) => { const n = badge(k); if (S.room && n > (S.prevB[k] || 0)) $$(`[data-v="${k}"] .bd, [data-v="${k}"] .cnt`).forEach(x => x.classList.add('pop')); S.prevB[k] = n; });
+    paintTop();
   }
   function renderPeople() {
     const ppl = [['Orion', 'Host · in the huddle', true], ['Maya', 'In the huddle · slime art', true], ['Claude', "Orion's agent · on feat/double-jump", true], ['Jay', 'Away', false], ['me', me.status ? 'You · ' + me.status : 'You · just joined', true]];
     $('#friends').innerHTML = S.friends && S.friends.size ? '<div class="lbl">Friends</div>' + [...S.friends].map(w => `<div class="person" data-p="${w}">${av(w)}<div class="pt"><b>${esc(w)}</b><small>Friend · ${esc(PI[w].status)}</small></div></div>`).join('') : '';
     $('#people').innerHTML = ppl.map(([w, s, on]) => `<div class="person" data-p="${w}">${av(w)}<div class="pt"><b>${esc(nameOf(w))}</b><small>${esc(s)}</small></div><span class="st ${on ? '' : 'idle'}"></span></div>`).join('');
     $('#huddle-stack').innerHTML = av('Orion') + av('Maya');
-    $('#mh-stack').innerHTML = ['Orion', 'Maya', 'Claude', 'me'].map(w => av(w)).join('');
+    if (!S.pp) renderSide();
   }
-  const TITLES = { chat: ['Chat', 'Orion, Maya, Claude and you'], docs: ['Docs & files', 'Repo, living notes, files and screens'], updates: ['Updates', 'What needs you, and what happened'], tasks: ['Tasks', 'Suggested, in progress, done'] };
-  const CTX = { docs: ['plus', 'Upload', () => $('#file').click()], updates: ['spark', 'Ask', () => switchThread('dm:Claude')], tasks: ['plus', 'Suggest', () => { const v = $('#v-tasks'); v.scrollTo({ top: 0, behavior: 'smooth' }); $('#sugg-in').focus(); }] };
+  const TITLES = { chat: ['Chat', 'Orion, Maya, Claude and you'], docs: ['Docs & files', 'Repo, living notes, files and screens'], updates: ['Updates', 'What needs you, and what happened'], tasks: ['Tasks', 'Suggested, in progress, done'], workshop: ['Workshop', 'Tribe library'] };
+  const CTX = { docs: ['plus', 'Upload', () => $('#file').click()], updates: ['spark', 'Ask', () => switchThread('dm:Claude')], tasks: ['plus', 'Suggest', () => { const v = $('#v-tasks'); v.scrollTo({ top: 0, behavior: 'smooth' }); $('#sugg-in').focus(); }],
+    workshop: ['plus', 'Add', () => toast('In the real app you add a skill, recipe or asset with an open license.')] };
   // move the section rack between the top bar (Chat) and the bottom tab bar, FLIP-animated so it reads as one object
   function placeRack(v) {
     const room = $('#s-room'), seg = $('#seg'), chat = v === 'chat';
@@ -1064,9 +1460,11 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $$('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
     $('#composer').classList.toggle('hidden', v !== 'chat');
     $('#mh-title').textContent = TITLES[v][0]; $('#mh-sub').textContent = TITLES[v][1];
-    if (v === 'docs') renderDocs(); if (v === 'updates') renderUpdates(); if (v === 'tasks') renderTasks();
+    $('#cr-p').textContent = v === 'workshop' ? 'Workshop' : 'Pixel Quest'; $('#mh-title').textContent = v === 'workshop' ? 'Tribe library' : TITLES[v][0];
+    $('#rail-ws').classList.toggle('on', v === 'workshop'); $('#rail-pq').classList.toggle('on', v !== 'workshop');
+    if (v === 'docs') renderDocs(); if (v === 'updates') renderUpdates(); if (v === 'tasks') renderTasks(); if (v === 'workshop') renderWorkshop();
     if (v === 'chat') toBottom(true);
-    if (S.panel) S.panel(false);
+    if (S.panel) S.panel(false); if (S.room && !desk()) closePP();
     renderNav();
   }
   document.addEventListener('click', e => {
@@ -1084,7 +1482,11 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     if (force || nearBottom()) { requestAnimationFrame(() => { chatSc.scrollTop = chatSc.scrollHeight; }); $('#latest').classList.add('hidden'); }
     else if (S.view === 'chat' && S.room) $('#latest').classList.remove('hidden');
   }
-  function sys(text, quiet, tid = 'room') { const d = document.createElement('div'); d.className = 'sysline' + (quiet === 'day' ? ' day' : quiet ? ' quiet' : ''); d.innerHTML = `<span>${text}</span>`; (tid === 'room' ? log : th(tid).el).appendChild(d); if (tid === thread) toBottom(); }
+  function sys(text, quiet, tid = 'room') { const d = document.createElement('div'); d.className = 'sysline' + (quiet === 'day' ? ' day' : quiet === 'tsep' ? ' tsep' : quiet ? ' quiet' : ''); d.innerHTML = `<span>${text}</span>`; (tid === 'room' ? log : th(tid).el).appendChild(d); if (tid === thread) toBottom(); }
+  const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+  const tick = read => `<span class="tck ${read ? 'read' : ''}" aria-label="${read ? 'Read' : 'Sent'}">${ic(read ? 'checks' : 'check', 15)}</span>`;
+  const mtHtml = (m, extra = '') => `<span class="mt ${extra}"><time>${fmt(m.at)}</time>${m.who === 'me' ? tick(false) : ''}</span>`;
+  const sizeOf = secs => (secs * 3.9).toFixed(1) + ' KB';
   const voices = {};
   let vid = 0;
   function waveBars(levels, n = 30) {
@@ -1092,24 +1494,33 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     const out = []; for (let i = 0; i < n; i++) { const v = levels.length ? levels[Math.floor(i * levels.length / n)] : 0.3; out.push(`<i style="height:${Math.round(4 + clamp(v, 0, 1) * 22)}px;--k:${i}"></i>`); }
     return out.join('');
   }
-  function bubbleHtml(m) {
-    if (m.kind === 'image') return `<div class="bub media"><img src="${m.src}" alt="${esc(m.name || 'image')}" class="${m.px ? 'px' : ''}" data-view></div>`;
-    if (m.kind === 'file') return `<a class="bub filechip" ${m.url ? `href="${m.url}" target="_blank" rel="noopener"` : ''}><span class="fi">${ic(TYPE_IC[typeOf(m.name, m.mime)], 20)}</span><span style="min-width:0"><span class="fn">${esc(m.name)}</span><small>${esc(m.size || '')}</small></span></a>`;
-    if (m.kind === 'voice') { const id = 'v' + (++vid); voices[id] = m; return `<div class="bub voice" data-voice="${id}"><button type="button" class="play" aria-label="Play voice note">${ic('play', 16)}</button><div class="wave ${m.settle ? 'settle' : ''}">${waveBars(m.levels)}</div><span class="dur">${dur(m.secs)}</span></div>`; }
-    if (m.kind === 'video') return `<div class="bub media"><video src="${m.src}" controls playsinline muted preload="metadata"></video></div>`;
-    if (m.kind === 'card') return `<div class="bub bare">${m.html}</div>`;
-    return `<div class="bub">${m.html}</div>`;
+  // one bubble: name (first of a group, not yours) · content · time inside (✓ / ✓✓ on yours) · reactions row
+  function bubbleHtml(m, head) {
+    const nm = head && m.who !== 'me' ? `<b class="bn" data-p="${m.who}" style="color:${m.who === 'Claude' ? 'var(--t)' : colorOf(m.who)}">${esc(m.who === 'Claude' ? 'Claude · Orion' : nameOf(m.who))}${m.who === 'Claude' ? ic('spark', 12) : ''}</b>` : '';
+    const rxr = `<div class="rxr"><span class="rxs"></span>${mtHtml(m, 'rxt')}</div>`;
+    const quote = m.reply ? `<button type="button" class="quote" style="--qc:${colorOf(m.reply.who)};--qb:${hexA(colorOf(m.reply.who), .13)}"><b>${esc(nameOf(m.reply.who))}</b><span>${esc(m.reply.text)}</span></button>` : '';
+    if (m.kind === 'image' || m.kind === 'video') return `<div class="bub media">${nm}<span class="ph">${m.kind === 'video' ? `<video src="${m.src}" controls playsinline muted preload="metadata"></video>` : `<img src="${m.src}" alt="${esc(m.name || 'image')}" class="${m.px ? 'px' : ''}" data-view>`}${mtHtml(m)}</span>${rxr}</div>`;
+    if (m.kind === 'file') return `<a class="bub filechip" ${m.url ? `href="${m.url}" target="_blank" rel="noopener"` : ''}><span class="fi">${ic(TYPE_IC[typeOf(m.name, m.mime)], 20)}</span><span style="min-width:0"><span class="fn">${esc(m.name)}</span><small>${esc(m.size || '')}</small></span>${mtHtml(m)}${rxr}</a>`;
+    if (m.kind === 'voice') {
+      const id = 'v' + (++vid); voices[id] = m;
+      return `<div class="bub voice" data-voice="${id}">${nm}<div class="vrow"><button type="button" class="play" aria-label="Play voice note">${ic('play', 17)}</button><div class="vcol"><div class="wave ${m.settle ? 'settle' : ''}">${waveBars(m.levels, 34)}</div><div class="vmeta"><span class="dur" data-d="${m.secs}">${dur(m.secs)} · ${esc(m.size || sizeOf(m.secs))}</span>${m.transcript ? '' : mtHtml(m)}</div></div></div>${m.transcript ? `<p class="vtx">${esc(m.transcript)}${mtHtml(m)}</p>` : ''}${rxr}</div>`;
+    }
+    if (m.kind === 'card') return `<div class="bub bare">${nm}${m.html}<div class="mtr">${mtHtml(m)}</div>${rxr}</div>`;
+    const plain = (m.html || '').replace(/<[^>]+>/g, '');
+    return `<div class="bub txt ${plain.length < 34 && !/<div/.test(m.html) ? 'short' : ''}">${nm}${quote}<div class="tx">${m.html}${mtHtml(m)}</div>${rxr}</div>`;
   }
   function addMsg(m) {
-    const who = m.who, at = m.at || new Date(), tid = m.th || 'room', L = tid === 'room' ? log : th(tid).el;
+    const who = m.who, at = m.at = m.at || new Date(), tid = m.th || 'room', L = tid === 'room' ? log : th(tid).el;
+    const last = [...L.querySelectorAll(':scope > .row')].pop();
+    if (last && at - +last.dataset.at > 30 * 60e3) sys(fmt(at), 'tsep', tid);
     const prev = L.lastElementChild;
-    const cont = prev && prev.classList.contains('row') && prev.dataset.who === who && (at - +prev.dataset.at) < 5 * 60e3;
+    const cont = prev && prev.classList.contains('row') && prev.dataset.who === who && (at - +prev.dataset.at) < 10 * 60e3 && !m.vote && !prev.classList.contains('has-vote');
     if (cont) prev.classList.remove('tail');
     const row = document.createElement('div');
-    row.className = `row ${who === 'me' ? 'me' : 'them'}${who === 'Claude' ? ' claude' : ''} tail${cont ? '' : ' head'}${m.sent ? ' sent' : ''}`;
+    row.className = `row ${who === 'me' ? 'me' : 'them'}${who === 'Claude' ? ' claude' : ''} tail${cont ? '' : ' head'}${m.sent ? ' sent' : ''}${m.kind === 'card' ? ' has-card' : ''}${m.vote ? ' has-vote' : ''}${m.wide ? ' wide' : ''}`;
     const rid = 'm' + (++ridN); RX[rid] = {}; Object.entries(m.rx || {}).forEach(([e, ws]) => { RX[rid][e] = [...ws]; });
     row.dataset.who = who; row.dataset.at = +at; row.dataset.rid = rid;
-    row.innerHTML = `<div class="avc">${who === 'me' ? '' : av(who)}</div><div class="col">${who === 'me' ? '' : `<div class="nm" data-p="${who}" style="color:${who === 'Claude' ? 'var(--t)' : colorOf(who)}">${esc(nameOf(who))}</div>`}${bubbleHtml(m)}<div class="rx"></div><div class="meta">${fmt(at)}</div></div>`;
+    row.innerHTML = `<div class="avc">${who === 'me' ? '' : av(who)}</div><div class="col">${bubbleHtml(m, !cont)}</div>`;
     L.appendChild(row); renderRx(rid);
     if (tid === thread) { row.querySelectorAll('img').forEach(i => i.addEventListener('load', () => toBottom())); toBottom(who === 'me'); }
     return row;
@@ -1120,10 +1531,11 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   const rxNames = ws => ws.map(w => w === 'me' ? 'You' : w).join(', ');
   function renderRx(rid, popE) {
     const row = document.querySelector(`.row[data-rid="${rid}"]`); if (!row) return;
-    const r = RX[rid], el = row.querySelector('.rx');
+    const r = RX[rid], el = row.querySelector('.rxs');
     const keys = Object.keys(r).filter(e => r[e].length);
-    el.innerHTML = keys.map(e => `<button type="button" class="rxc ${r[e].includes('me') ? 'mine' : ''} ${e === popE ? 'pop' : ''}" data-rx="${rid}|${e}" title="${esc(rxNames(r[e]))}" aria-label="${e} ${r[e].length}: ${esc(rxNames(r[e]))}"><span class="e">${e}</span>${r[e].length}</button>`).join('');
-    el.classList.toggle('hidden', !keys.length);
+    const faces = ws => ws.length <= 3 ? `<span class="fs">${ws.map(w => `<i style="background:${w === 'Claude' ? 'var(--t)' : colorOf(w)}">${esc(nameOf(w)[0].toUpperCase())}</i>`).join('')}</span><span class="sr">${ws.length}</span>` : `<span class="n">${ws.length}</span>`;
+    el.outerHTML = `<span class="rxs" style="display:contents">${keys.map(e => `<button type="button" class="rxc ${r[e].includes('me') ? 'mine' : ''} ${e === popE ? 'pop' : ''}" data-rx="${rid}|${e}" title="${esc(rxNames(r[e]))}" aria-label="${e} ${r[e].length}: ${esc(rxNames(r[e]))}"><span class="e">${e}</span>${faces(r[e])}</button>`).join('')}</span>`;
+    row.querySelector('.bub').classList.toggle('has-rx', keys.length > 0);
   }
   function toggleRx(rid, e, who = 'me') {
     const r = RX[rid]; if (!r) return; const ws = r[e] = r[e] || [];
@@ -1165,9 +1577,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   });
 
   function markSeen() {
-    $$('.row.me .meta').forEach(x => { x.textContent = x.textContent.replace(' · Seen', ''); });
-    const mine = $$('.row.me'); const last = mine[mine.length - 1];
-    if (last) { const mt = last.querySelector('.meta'); mt.textContent += ' · Seen'; }
+    $$('.row.me .mt .tck:not(.read)').forEach(x => { x.outerHTML = tick(true); });
   }
   function showTyping(who) {
     $('#typing').innerHTML = `<div class="row them typing-row tail head"><div class="avc">${av(who)}</div><div class="col"><div class="tn">${esc(nameOf(who))} is typing</div><div class="bub"><i></i><i></i><i></i></div></div></div>`;
@@ -1351,7 +1761,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     const dec = approvals.filter(a => a.state !== 'pending');
     $('#s-decided').classList.toggle('hidden', !dec.length); $('#decided').innerHTML = dec.map(apprHtml).join('');
     $('#recent').innerHTML = recent.slice(0, 6).map(r => `<div class="uitem ${r.fresh ? 'fresh' : ''}"><span class="ui">${ic(r.ic, 16)}</span><span class="ut">${r.html}</span><time>${rel(r.at)}</time></div>`).join('');
-    recent.forEach(r => { r.fresh = false; });
+    recent.forEach(r => { r.fresh = false; }); renderDigest();
   }
 
   /* ---------- tasks ---------- */
@@ -1576,111 +1986,173 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   $('#rec-pause').onclick = pauseRec;
   $('#rec-stop').onclick = toPreview;
   $('#rec-again').onclick = async () => { await discardRec(true); startRec(); };
-  // attach menu: springs up from "+"; a sheet on phones, a popover on desktop
-  const MENU = [['image', 'Photo or video', 'media'], ['file', 'File', 'file'], ['camera', 'Camera', 'cam'], ['docs', 'Doc from Docs & files', 'doc'], ['mic', 'Voice note', 'voice'], ['poll', 'Poll or task', 'task']];
-  function closeMenu() { const m = $('#amenu'); if (m) { m.remove(); $('#amenu-scrim').remove(); $('#attach').setAttribute('aria-expanded', 'false'); $('#attach').classList.remove('open'); } }
-  function openMenu(pane) {
+  // the composer "+" (app/ui/plusmenu.js): Add · Decide together · Get it done. A popover on desktop, a sheet on phones.
+  const PLUS = () => [
+    { group: 'Add' },
+    { k: 'attach', i: 'clip', t: 'Photo or file', s: 'Images go in the chat, files go to Docs' },
+    { group: 'Decide together' },
+    { k: 'propose', i: 'flag', t: 'Propose to the tribe', s: 'Everyone votes; approved ideas go to the Board' },
+    { k: 'poll', i: 'poll', t: 'Quick poll', s: 'Ask everyone to pick', hide: thread !== 'room' },
+    { group: 'Get it done' },
+    { k: 'task', i: 'tasks', t: 'Task', s: box.value.trim() ? `“${box.value.trim().slice(0, 40)}”` : 'Add it to the board' },
+    { k: 'claude', i: 'spark', t: 'Ask my Claude', s: 'Opens your private chat with it' },
+    { k: 'remind', i: 'sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”' },
+    { k: 'note', i: 'notebook', t: 'Note', s: 'Into the living notes' },
+    { k: 'bug', i: 'bug', t: 'Report a bug', s: 'With the recent logs attached' }
+  ].filter(x => !x.hide);
+  function closeMenu() { const m = $('#amenu'); if (m) { m.remove(); $('#amenu-scrim').remove(); } $('#attach').setAttribute('aria-expanded', 'false'); $('#attach').classList.remove('open'); }
+  function plusFrame(html, form) {
     closeMenu();
-    const sc = document.createElement('div'); sc.id = 'amenu-scrim'; sc.className = 'menu-scrim'; sc.onclick = closeMenu;
-    const m = document.createElement('div'); m.id = 'amenu'; m.className = 'amenu'; m.setAttribute('role', 'menu');
-    if (!pane) m.innerHTML = `<div class="grab"></div>` + MENU.map(([i, l, k]) => `<button type="button" role="menuitem" class="mi" data-m="${k}"><span class="mic">${ic(i, 20)}</span>${l}</button>`).join('');
-    else if (pane === 'doc') m.innerHTML = `<div class="grab"></div><div class="mh"><button type="button" class="mback" data-m="back" aria-label="Back">${ic('left', 18)}</button>Share a doc</div>` +
-      files.filter(f => f.type === 'docs' || f.type === 'code').slice(0, 5).map((f, i) => `<button type="button" class="mi" data-doc="${files.indexOf(f)}"><span class="mic">${ic(TYPE_IC[f.type], 20)}</span><span class="mt"><b>${esc(f.name)}</b><small>${esc(nameOf(f.by))} · ${rel(f.at)}</small></span></button>`).join('');
-    else m.innerHTML = `<div class="grab"></div><div class="mh"><button type="button" class="mback" data-m="back" aria-label="Back">${ic('left', 18)}</button>Poll or task</div>
-      <div class="segs"><button type="button" class="chip on" data-kind="task">Task</button><button type="button" class="chip" data-kind="poll">Poll</button></div>
-      <form class="sugg" id="mtask"><input id="mtask-in" placeholder="What needs doing?" maxlength="80" autocomplete="off" enterkeyhint="send" aria-label="Task or poll"><button aria-label="Post" disabled>${ic('arrowup', 20)}</button></form>`;
-    document.body.append(sc, m);
+    const sc = document.createElement('div'); sc.id = 'amenu-scrim'; sc.className = 'pl-scrim' + (desk() ? '' : ' on'); sc.onclick = closeMenu;
+    const m = document.createElement('div'); m.id = 'amenu'; m.className = `pl-pop ${desk() ? '' : 'sheet'} ${form ? 'form' : ''}`; m.setAttribute('role', 'dialog');
+    m.innerHTML = (desk() || form ? '' : '<div class="grab"></div>') + html; document.body.append(sc, m);
     $('#attach').setAttribute('aria-expanded', 'true'); $('#attach').classList.add('open');
-    if (desk()) { const r = $('#attach').getBoundingClientRect(); m.classList.add('pop'); m.style.left = r.left + 'px'; m.style.bottom = (innerHeight - r.top + 8) + 'px'; }
-    if (pane === 'task') {
-      let kind = 'task'; const inp = $('#mtask-in'), go = $('#mtask button');
-      m.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { kind = b.dataset.kind; m.querySelectorAll('[data-kind]').forEach(x => x.classList.toggle('on', x === b)); inp.placeholder = kind === 'task' ? 'What needs doing?' : 'Ask the group…'; inp.focus(); });
-      inp.oninput = () => { go.disabled = !inp.value.trim(); };
-      $('#mtask').onsubmit = e => { e.preventDefault(); const v = inp.value.trim().slice(0, 80); if (!v) return; closeMenu(); kind === 'task' ? postTask(v) : postPoll(v); };
-      setTimeout(() => inp.focus(), 60);
-    } else (m.querySelector('.mi') || m).focus();
+    if (desk()) { const r = $('#attach').getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth)) + 'px'; m.style.top = Math.max(8, r.top - m.offsetHeight - 8) + 'px'; }
+    return m;
+  }
+  function openMenu() {
+    const m = plusFrame(`<div class="pl-menu" role="menu" aria-label="Add to the conversation">${PLUS().map(x => x.group ? `<div class="pl-group">${x.group}</div>`
+      : `<button type="button" class="pl-item" role="menuitem" data-pl="${x.k}"><span class="pl-ic">${ic(x.i, 18)}</span><span class="pl-t"><b>${x.t}</b><small>${esc(x.s)}</small></span></button>`).join('')}</div>`);
+    m.querySelector('.pl-item').focus({ preventScroll: true });
   }
   $('#attach').setAttribute('aria-haspopup', 'menu');
   $('#attach').onclick = () => { $('#amenu') ? closeMenu() : openMenu(); };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeProfile(); closeQR(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closePP(); closeQR(); closePops(); } });
+  // a small form for one line (task, poll, reminder, note, bug)
+  const FORMS = {
+    task: ['Task', 'What needs doing?', 'Fix the slime hitbox', 'Add'],
+    poll: ['Quick poll', 'Ask the group', 'Pizza or tacos for the playtest?', 'Post'],
+    remind: ['Reminder or event', 'What and when?', 'playtest friday 7pm', 'Schedule'],
+    note: ['Note', 'Into the living notes', 'Boss fight needs a checkpoint', 'Save'],
+    bug: ['Report a bug', 'What went wrong?', 'Player falls through the bridge', 'Report']
+  };
+  function lineForm(k) {
+    const [eye, h, ph, go] = FORMS[k], pre = box.value.trim();
+    plusFrame(`<form class="pl-form" id="pl-line"><div class="pl-eye">${eye}</div><h3>${h}</h3><input id="pl-in" maxlength="120" placeholder="${esc(ph)}" value="${esc(pre)}" autocomplete="off" enterkeyhint="send">
+      <div class="pl-foot"><button type="button" class="btn" data-x>Cancel</button><button class="btn primary" type="submit">${go}</button></div></form>`, true);
+    $('#pl-in').focus(); $('#pl-line [data-x]').onclick = closeMenu;
+    $('#pl-line').onsubmit = e => {
+      e.preventDefault(); const v = $('#pl-in').value.trim().slice(0, 120); if (!v) return;
+      closeMenu(); if (pre && v === pre) { box.value = ''; grow(box, 36); setAct(); }
+      ({ task: postTask, poll: postPoll, remind: postRemind, note: postNoteLine, bug: postBug })[k](v);
+    };
+  }
   document.addEventListener('click', e => {
-    const d = e.target.closest('#amenu [data-doc]'); if (d) { closeMenu(); shareDoc(files[+d.dataset.doc]); return; }
-    const b = e.target.closest('#amenu [data-m]'); if (!b) return;
-    const k = b.dataset.m;
-    if (k === 'back') { openMenu(); return; }
-    if (k === 'doc' || k === 'task') { openMenu(k); return; }
+    const b = e.target.closest('#amenu [data-pl]'); if (!b) return;
+    const k = b.dataset.pl;
+    if (k === 'propose') { propose(); return; }
+    if (FORMS[k]) { lineForm(k); return; }
     closeMenu();
-    if (k === 'media') $('#file-media').click(); else if (k === 'file') $('#file').click(); else if (k === 'cam') $('#file-cam').click(); else if (k === 'voice') startRec();
+    if (k === 'attach') $('#file').click();
+    else if (k === 'claude') { switchThread('dm:Claude'); toast("In the demo you borrow Orion's Claude."); }
   });
-  function shareDoc(f) {
-    addMsg({ who: 'me', kind: 'card', sent: true, th: thread, html: `<div class="rc doc-card"><div class="rc-h">${ic(TYPE_IC[f.type], 16)}<span>${esc(f.name)}</span></div><div class="rc-f">From Docs & files · by ${esc(nameOf(f.by))}</div></div>` });
-    if (thread === 'room') { addRecent('docs', `<b>You</b> shared ${esc(f.name)} in chat`); bot(f.by === 'me' || f.by === 'Claude' ? 'Maya' : f.by, { html: 'oh yes, that one 👀' }); }
+  // Propose to the tribe: title, pitch (a "- [ ]" checklist becomes tasks), when voting closes -> a vote; approved -> the Board
+  function propose() {
+    const pre = box.value.trim();
+    plusFrame(`<form class="pl-form" id="pl-prop">
+        <div class="pl-eye">Proposal to the tribe</div>
+        <h3>What should we do?</h3>
+        <input id="pl-title" maxlength="120" placeholder="Add a double jump to Pixel Quest" value="${esc(pre)}" autocomplete="off" required>
+        <textarea id="pl-body" rows="5" placeholder="Why it matters, and what it takes.&#10;- [ ] Checklist items become tasks if it passes"></textarea>
+        <label class="pl-row">Voting closes
+          <select id="pl-dl"><option value="0">when decided</option><option value="60">in 1 hour</option><option value="1440" selected>in 24 hours</option><option value="4320">in 3 days</option></select></label>
+        <p class="pl-hint">Everyone in this project votes. If it's approved it goes to the Board: a milestone, a decision record, and tasks from the checklist.</p>
+        <div class="pl-foot"><button type="button" class="btn" data-x>Cancel</button><button class="btn primary" type="submit">Propose</button></div>
+      </form>`, true);
+    $('#pl-title').focus(); $('#pl-prop [data-x]').onclick = closeMenu;
+    $('#pl-prop').onsubmit = e => {
+      e.preventDefault(); const title = $('#pl-title').value.trim().slice(0, 120); if (!title) return;
+      const body = $('#pl-body').value.trim().slice(0, 800), mins = +$('#pl-dl').value;
+      closeMenu(); if (pre) { box.value = ''; grow(box, 36); setAct(); }
+      postProposal(title, body, mins);
+    };
   }
   function postTask(v) {
-    tasks.s.push(T(v, 'me', { from: 'me', why: 'posted in chat' })); if (S.view === 'tasks') renderTasks();
-    addMsg({ who: 'me', kind: 'card', sent: true, th: 'room', html: `<div class="rc task-card"><div class="rc-h">${ic('tasks', 16)}<span>${esc(v)}</span></div><div class="rc-f">New task · in Tasks › Suggested</div></div>` });
+    tasks.s.push(T(v, 'me', { from: 'me', why: 'posted in chat' })); if (S.view === 'tasks') renderTasks(); else { S.unread.tasks++; renderNav(); }
+    addMsg({ who: 'me', kind: 'card', sent: true, th: thread, html: `<div class="rc task-card"><div class="rc-h">${ic('tasks', 16)}<span>${esc(v)}</span></div><div class="rc-f">New task · in Tasks › Suggested</div></div>` });
     addNote(`<b>${esc(me.name)}</b> posted a task: “${esc(v)}”.`); addRecent('tasks', `<b>You</b> posted “${esc(v)}”`);
-    bot('Claude', { html: `Added “${esc(v)}” to Suggested. Anyone can take it, or give it to me.` });
+    if (thread === 'room') bot('Claude', { html: `Added “${esc(v)}” to Suggested. Anyone can take it, or give it to me.` });
   }
-  let pollN = 0;
-  function postPoll(v) {
-    const id = 'poll' + (++pollN), votes = { yes: [], no: [] };
-    S.polls = S.polls || {}; S.polls[id] = votes;
-    addMsg({ who: 'me', kind: 'card', sent: true, th: 'room', html: `<div class="rc poll" data-poll="${id}"><div class="rc-h">${ic('poll', 16)}<span>${esc(v)}</span></div><div class="pollb"></div></div>` });
-    renderPoll(id);
-    setTimeout(() => { votes.yes.push('Orion'); renderPoll(id); }, 1400); setTimeout(() => { votes.yes.push('Maya'); renderPoll(id); }, 2600);
+  function postRemind(v) {
+    sys(`${ic('sun', 13)} ${esc(me.name)} scheduled “${esc(v)}”`, false, thread);
+    addNote(`<b>${esc(me.name)}</b> scheduled “${esc(v)}” on the calendar.`); addRecent('bell', `<b>You</b> scheduled “${esc(v)}”`);
+    toast('Scheduled. Everyone gets a reminder.');
   }
-  function renderPoll(id) {
-    const v = S.polls[id], tot = v.yes.length + v.no.length || 1;
-    $$(`[data-poll="${id}"] .pollb`).forEach(el => { el.innerHTML = ['yes', 'no'].map(k => `<button type="button" class="popt ${v[k].includes('me') ? 'mine' : ''}" data-vote="${id}:${k}"><span class="pf" style="width:${Math.round(v[k].length / tot * 100)}%"></span><span class="pl">${k === 'yes' ? 'Yes' : 'No'}</span><span class="pn">${v[k].length}</span></button>`).join(''); });
+  function postNoteLine(v) { addNote(`<b>${esc(me.name)}</b> noted: “${esc(v)}”.`); toast('Noted. It is in the living notes.'); }
+  function postBug(v) {
+    addMsg({ who: 'me', kind: 'card', sent: true, th: thread, html: `<div class="rc task-card"><div class="rc-h">${ic('bug', 16)}<span>${esc(v)}</span></div><div class="rc-f">Bug report · recent logs attached</div></div>` });
+    addRecent('bug', `<b>You</b> reported “${esc(v)}”`);
+    bot('Claude', { html: "Filed it in Bugs with the last 50 log lines. I'll try to reproduce it on a branch." }, { th: thread });
   }
-  document.addEventListener('click', e => {
-    const b = e.target.closest('[data-vote]'); if (!b) return; const [id, k] = b.dataset.vote.split(':'), v = S.polls[id];
-    v.yes = v.yes.filter(x => x !== 'me'); v.no = v.no.filter(x => x !== 'me'); v[k].push('me'); renderPoll(id);
-  });
-  // team vote: an agent suggests, the humans decide; a pass can become a task in one tap
-  const VOTERS = ['Orion', 'Maya', 'Jay', 'me'], NEED = 3;
-  const vote = { q: 'Approve: double-jump for Pixel Quest?', by: "Maya's Claude", yes: ['Maya'], no: [], task: false };
-  const passed = () => vote.yes.length >= NEED;
-  function voteHtml() {
-    const tot = VOTERS.length, mine = vote.yes.includes('me') ? 'yes' : vote.no.includes('me') ? 'no' : '';
-    const left = VOTERS.filter(w => !vote.yes.includes(w) && !vote.no.includes(w)).map(w => w === 'me' ? 'you' : w);
-    const st = passed() ? `Passed · ${vote.yes.length}–${vote.no.length}` : `${vote.yes.length} of ${NEED} to pass`;
-    const bar = (k, l) => `<div class="vt-row ${k}"><span>${l}</span><span class="vt-tr"><i style="width:${Math.round(vote[k].length / tot * 100)}%"></i></span><span class="vt-n"><span class="stack">${vote[k].map(w => av(w)).join('')}</span>${vote[k].length}</span></div>`;
-    return `<div class="vt-top"><span class="eb">Team vote</span><span class="vt-st">${st}</span></div>
-      <b class="vt-q">${esc(vote.q)}</b>
-      <div class="vt-by">${av('Claude', 'xs')}<span>Suggested by ${esc(vote.by)}${!passed() && left.length ? ` · waiting on ${esc(left.join(' and '))}` : ''}</span></div>
-      <div class="vt-bars">${bar('yes', 'Approve')}${bar('no', 'Not yet')}</div>
-      ${passed() ? (vote.task ? `<button type="button" class="vt-go done" data-v="tasks">${ic('check', 18)}In Tasks · Suggested</button>` : `<button type="button" class="vt-go" data-vtask>${ic('tasks', 18)}Make it a task</button>`)
-        : `<div class="vt-btns ${mine ? 'voted' : ''}"><button type="button" class="vy ${mine === 'yes' ? 'chosen' : ''}" data-vt="yes" aria-pressed="${mine === 'yes'}">${ic('check', 18)}Approve</button><button type="button" class="vn ${mine === 'no' ? 'chosen' : ''}" data-vt="no" aria-pressed="${mine === 'no'}">Not yet</button></div>`}`;
+
+  /* ---------- votes (app/ui/votes.js): team votes, proposals to the tribe, quick polls ---------- */
+  const VOTERS = ['Orion', 'Maya', 'Jay', 'me'], NEED = 3, VOTES = {};
+  let vtN = 0;
+  const vNames = ws => { const n = ws.map(w => w === 'me' ? 'you' : w); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0] || ''; };
+  const vFaces = ws => ws.length ? `<span class="vt-faces">${ws.map(w => `<span class="vt-face" style="background:${colorOf(w)}">${esc(nameOf(w)[0].toUpperCase())}</span>`).join('')}</span>` : '';
+  const pitchHtml = b => { if (!b) return ''; const L = b.split('\n').filter(x => x.trim()); const li = L.filter(x => /^\s*-\s*\[\s?\]/.test(x)), ps = L.filter(x => !/^\s*-\s*\[\s?\]/.test(x));
+    return `<div class="vt-pitch">${ps.map(x => `<p>${esc(x)}</p>`).join('')}${li.length ? `<ul>${li.map(x => `<li><i></i>${esc(x.replace(/^\s*-\s*\[\s?\]\s*/, ''))}</li>`).join('')}</ul>` : ''}</div>`; };
+  function vtHtml(v) {
+    const open = v.status === 'open', poll = v.kind === 'poll', mine = v.yes.includes('me') ? 'yes' : v.no.includes('me') ? 'no' : '';
+    const voted = v.yes.length + v.no.length, left = VOTERS.filter(w => !v.yes.includes(w) && !v.no.includes(w));
+    const head = open ? (v.kind === 'proposal' ? 'Proposal to the tribe' : v.sug ? 'Suggested vote' : 'Poll') : 'Vote · passed';
+    const when = open ? (v.mins ? `closes ${v.mins >= 1440 ? `in ${Math.round(v.mins / 1440)}d` : 'in 1h'}` : poll ? `${voted} of 4 voted` : `${NEED} of 4 decide`) : `closed ${fmt(v.closed)}`;
+    const labels = poll ? ['Yes', 'No'] : ['Approve', 'Not yet'];
+    const opt = (k, l, icn) => { const c = v[k].length, win = !open && k === 'yes';
+      return `<button type="button" class="vt-o ${k} ${mine === k ? 'mine' : ''} ${win ? 'win' : ''}" data-vt="${v.id}|${k}" ${open ? '' : 'disabled'} aria-pressed="${mine === k}" aria-label="${l}: ${c}"><i class="vt-fill" style="width:${Math.round(c / 4 * 100)}%"></i>${ic(icn, 15)}<span class="vt-l">${l}</span>${vFaces(v[k])}<b class="vt-n">${c}</b></button>`; };
+    let foot;
+    if (open) foot = `<div class="vt-foot"><span>${voted} of 4 voted${left.length && left.length <= 3 ? ` · waiting on ${esc(vNames(left))}` : ''}</span></div>`;
+    else foot = `<div class="vt-res"><b>Approved</b><span>${v.yes.length} approve · ${v.no.length} not yet</span></div><div class="vt-acts">
+        ${v.task ? `<span class="vt-done">${ic('check', 14)}Task · ${esc(v.task)}</span>` : `<button type="button" class="vt-btn" data-vtask="${v.id}">${ic('tasks', 14)}Make it a task</button>`}
+        ${v.board ? `<span class="vt-done vt-ontb">${ic('poll', 14)}On the Board · approved</span>` : `<button type="button" class="vt-btn" data-vboard="${v.id}">${ic('poll', 14)}Send to Board</button>`}</div>`;
+    return `<div class="vt ${open ? 'open' : 'closed'} st-${v.status} ${v.sug ? 'sug' : ''}" data-vote="${v.id}" role="group" aria-label="${head}">
+      <div class="vt-eye"><span class="vt-k">${head}</span><span class="vt-when">${when}</span></div>
+      <div class="vt-q">${esc(v.q)}</div>${pitchHtml(v.pitch)}
+      ${v.kind === 'proposal' && open ? `<div class="vt-board">${ic('flag', 14)}Goes to the Board if approved: milestone, tasks from its checklist</div>` : ''}
+      ${v.sug ? `<div class="vt-sug">${ic('spark', 12)}Suggested by ${esc(v.sug)}${v.why ? ` · <span>${esc(v.why)}</span>` : ''}</div>` : ''}
+      <div class="vt-opts two">${opt('yes', labels[0], 'check')}${opt('no', labels[1], 'clock')}</div>${foot}</div>`;
   }
-  function renderVote() { $$('.vote').forEach(el => { el.innerHTML = voteHtml(); el.classList.toggle('passed', passed()); }); }
-  function castVote(who, k) {
-    if (passed()) return; const was = passed();
-    vote.yes = vote.yes.filter(x => x !== who); vote.no = vote.no.filter(x => x !== who); vote[k].push(who); renderVote();
-    if (!was && passed()) {
-      addNote(`<b>Decided</b>: double-jump goes into Pixel Quest. Team vote ${vote.yes.length}–${vote.no.length}.`);
-      addRecent('check', `<b>Team vote passed</b>: double-jump (${vote.yes.length}–${vote.no.length})`);
+  function renderVote(id) { const v = VOTES[id]; $$(`.vt[data-vote="${id}"]`).forEach(el => { el.outerHTML = vtHtml(v); }); }
+  function newVote(o) { const v = Object.assign({ id: 'vt' + (++vtN), yes: [], no: [], status: 'open' }, o); VOTES[v.id] = v; addMsg({ who: v.who, kind: 'card', vote: true, sent: v.who === 'me', at: v.at, th: 'room', html: vtHtml(v) }); return v; }
+  function castVote(id, who, k) {
+    const v = VOTES[id]; if (!v || v.status !== 'open') return;
+    v.yes = v.yes.filter(x => x !== who); v.no = v.no.filter(x => x !== who); v[k].push(who);
+    if (v.kind !== 'poll' && v.yes.length >= NEED) { v.status = 'passed'; v.closed = new Date(); passed(v); }
+    renderVote(id);
+  }
+  function passed(v) {
+    if (v.kind === 'proposal') {
+      v.board = true;
+      const items = (v.pitch || '').split('\n').filter(x => /^\s*-\s*\[\s?\]/.test(x)).map(x => x.replace(/^\s*-\s*\[\s?\]\s*/, '').trim()).filter(Boolean);
+      items.forEach(t => tasks.s.push(T(t, 'Claude', { from: 'Claude', why: `From the checklist of “${v.q}”.` })));
+      if (items.length) { if (S.view === 'tasks') renderTasks(); else { S.unread.tasks++; renderNav(); } }
+      later(async () => { await wait(500); sys(`Approved: <b>${esc(v.q)}</b> → on the Board, milestone v0.2${items.length ? ` · ${items.length} task${items.length > 1 ? 's' : ''}` : ''}`); });
     }
+    addNote(`<b>Decided</b>: ${esc(v.q.replace(/^Approve:\s*/, '').replace(/\?$/, ''))}. Team vote ${v.yes.length}–${v.no.length}.`);
+    addRecent('check', `<b>Team vote passed</b>: ${esc(v.q)} (${v.yes.length}–${v.no.length})`);
   }
-  function postVote() {
-    const d = document.createElement('div'); d.className = 'vote'; d.setAttribute('role', 'group'); d.setAttribute('aria-label', 'Team vote');
-    log.appendChild(d); renderVote();
+  function postPoll(q) { const v = newVote({ kind: 'poll', who: 'me', q }); setTimeout(() => castVote(v.id, 'Orion', 'yes'), 1400); setTimeout(() => castVote(v.id, 'Maya', 'no'), 2600); }
+  function postProposal(q, pitch, mins) {
+    const v = newVote({ kind: 'proposal', who: 'me', q, pitch, mins });
+    addNote(`<b>${esc(me.name)}</b> proposed “${esc(q)}” to the tribe.`); addRecent('flag', `<b>You</b> proposed “${esc(q)}”`);
+    setTimeout(() => castVote(v.id, 'Orion', 'yes'), 1300);
+    bot('Orion', { html: 'ooh yes, voted 🔥' }, { pre: 1500 });
+    setTimeout(() => castVote(v.id, 'Maya', 'yes'), 3000);
+    return v;
   }
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-vt]');
-    if (b) {
-      const k = b.dataset.vt; castVote('me', k);
-      if (k === 'no' && !vote.yes.includes('Jay') && !vote.no.includes('Jay')) setTimeout(() => castVote('Jay', 'yes'), 2600);
-      return;
+    if (b) { const [id, k] = b.dataset.vt.split('|'), v = VOTES[id]; castVote(id, 'me', k); if (v && v.id === 'vt1' && k === 'no' && !v.yes.includes('Jay')) setTimeout(() => castVote(id, 'Jay', 'yes'), 2600); return; }
+    const t = e.target.closest('[data-vtask]');
+    if (t) {
+      const v = VOTES[t.dataset.vtask], title = v.id === 'vt1' ? 'Ship the double jump' : v.q.slice(0, 80); v.task = title; renderVote(v.id);
+      tasks.s.unshift(T(title, 'Claude', { from: 'Claude', why: `Team vote passed ${v.yes.length}–${v.no.length}.` }));
+      if (S.view === 'tasks') renderTasks(); else { S.unread.tasks++; renderNav(); }
+      addNote(`<b>${esc(me.name)}</b> made “${esc(title)}” a task.`); addRecent('tasks', `<b>You</b> made “${esc(title)}” a task`);
+      toast('Added to Tasks › Suggested'); return;
     }
-    if (e.target.closest('[data-vtask]')) {
-      vote.task = true; renderVote();
-      const t = T('Ship the double jump', 'Claude', { from: 'Claude', why: `Team vote passed ${vote.yes.length}–${vote.no.length}.` });
-      tasks.s.unshift(t); if (S.view === 'tasks') renderTasks(); else { S.unread.tasks++; renderNav(); }
-      addNote(`<b>${esc(me.name)}</b> made the double-jump vote a task.`); addRecent('tasks', '<b>You</b> made “Ship the double jump” a task');
-      toast('Added to Tasks › Suggested');
-    }
+    const bd = e.target.closest('[data-vboard]');
+    if (bd) { const v = VOTES[bd.dataset.vboard]; v.board = true; renderVote(v.id); toast(`On the Board and approved: ${v.q}`); }
   });
 
   // voice playback
@@ -1699,7 +2171,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
       const t = p.audio && !p.audio.paused ? p.audio.currentTime : (performance.now() - p.t0) / 1000;
       const f = clamp(t / m.secs, 0, 1);
       bars.forEach((x, i) => x.classList.toggle('p', i / bars.length < f));
-      el.querySelector('.dur').textContent = dur(Math.max(0, m.secs - t));
+      el.querySelector('.dur').textContent = dur(Math.max(0, m.secs - t)) + ' · ' + (m.size || sizeOf(m.secs));
       if (f >= 1 || (p.audio && p.audio.ended)) { stopPlay(); return; }
       requestAnimationFrame(frame);
     })();
@@ -1708,12 +2180,12 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     if (!playing) return; const p = playing; playing = null;
     if (p.audio) p.audio.pause();
     const b = p.el.querySelector('.play'); b.innerHTML = ic('play', 16); b.setAttribute('aria-label', 'Play voice note');
-    p.el.querySelectorAll('.wave i').forEach(x => x.classList.remove('p')); p.el.querySelector('.dur').textContent = dur(p.m.secs);
+    p.el.querySelectorAll('.wave i').forEach(x => x.classList.remove('p')); p.el.querySelector('.dur').textContent = dur(p.m.secs) + ' · ' + (p.m.size || sizeOf(p.m.secs));
   }
 
   /* ---------- huddle, drawer, viewport ---------- */
   $('#huddle-btn').onclick = () => {
-    S.huddle = !S.huddle; const b = $('#huddle-btn'); b.textContent = S.huddle ? 'Leave' : 'Join'; b.classList.toggle('in-call', S.huddle);
+    S.huddle = !S.huddle; const b = $('#huddle-btn'); b.textContent = S.huddle ? 'Leave' : 'Join'; b.classList.toggle('in-call', S.huddle); renderThreads();
     toast(S.huddle ? 'In the real app this is live voice with captions.' : 'Left the huddle');
     if (S.huddle) { sys(`${esc(me.name)} joined the huddle`); addNote(`<b>${esc(me.name)}</b> joined the huddle with Orion and Maya.`); }
   };
@@ -1820,7 +2292,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   const desk = () => matchMedia('(min-width: 900px)').matches;
   const STEPS = [
     { v: 'chat', el: () => desk() ? $('#nest-nav') : $('#seg'), k: 'Sections', t: 'Chat, Docs, Updates, Tasks', p: 'Everything for the project lives behind these. Badges show what is new.' },
-    { v: 'chat', el: () => $('#composer .cmp'), k: 'Composer', t: 'Type, attach or talk', p: '+ attaches photos and files. The mic records a voice note. Start typing and it turns into the orange send arrow.' },
+    { v: 'chat', el: () => $('#composer .cmp'), k: 'Composer', t: 'Type, attach or talk', p: '+ adds photos and files, proposals and polls, tasks, notes and more. The mic records a voice note; type and it becomes the send arrow.' },
     { v: 'docs', el: () => $('#repo'), k: 'Docs & files', t: 'A living repo and living notes', p: 'The repo is pinned on top and updates itself. The notes under it write themselves as people act.' },
     { v: 'updates', el: () => $('#needs .appr') || $('#needs'), k: 'Updates', t: 'One-tap approvals', p: 'When Claude needs a human, it lands here. Approve or Deny, with an optional note.' },
     { v: 'tasks', el: () => $('#l-s .tk') || $('#l-s'), k: 'Tasks', t: 'Take it, or give it to Claude', p: 'Suggestions from people and Claude, with who and why. One tap to take one.' }
@@ -1868,19 +2340,40 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     }
     return threads[id];
   }
+  // the conversation header (desktop) and the "#general ⌄" pill (phone) both open the conversation switcher
+  const thrName = k => k === 'room' ? '#general' : k === 'dm:Claude' ? "Orion's Claude" : k.slice(3);
   function renderThreads() {
-    $('#thr').innerHTML = `<div class="thr-in"><button type="button" class="tchip ${thread === 'room' ? 'on' : ''}" data-th="room"><span class="hash">#</span>Pixel Quest${threads.room.unread ? '<i class="ud"></i>' : ''}</button>` +
-      Object.keys(threads).filter(k => k !== 'room').map(k => { const w = k.slice(3); return `<button type="button" class="tchip ${thread === k ? 'on' : ''}" data-th="${k}">${av(w, 'xs')}${w === 'Claude' ? "Orion's Claude" : esc(w)}${threads[k].unread ? '<i class="ud"></i>' : ''}</button>`; }).join('') + '</div>';
+    const k = thread, w = k.slice(3), unread = Object.keys(threads).some(x => x !== k && threads[x].unread);
+    const sub = k === 'room' ? '5 members · 4 online' : k === 'dm:Claude' ? "Orion's agent · anything risky needs Orion's OK" : w === 'Jay' ? 'Away' : 'Private · online';
+    $('#cbar').innerHTML = `<div class="cbar-in"><span class="cb-av">${k === 'room' ? ic('chat', 18) : av(w)}</span><div class="cb-tt"><button type="button" class="cb-t" id="cb-t" aria-haspopup="menu">${esc(thrName(k))}${ic('chev', 15)}${unread ? '<i class="ud" style="width:8px;height:8px;border-radius:50%;background:var(--o);display:block"></i>' : ''}</button><span class="cb-sub">${esc(sub)}</span></div>
+      <div class="cb-acts"><button type="button" class="cb-btn ${S.huddle ? 'on' : ''}" data-cb="call" aria-label="Huddle" title="Huddle">${ic('phone', 20)}</button><button type="button" class="cb-btn" data-cb="screen" aria-label="Share screen" title="Share screen">${ic('monitor', 20)}</button><button type="button" class="cb-btn" data-cb="info" aria-label="Info" title="Info">${ic('info', 20)}</button></div></div>`;
+    $('#chan').innerHTML = `<span>${esc(thrName(k))}</span>${ic('chev', 15)}`; $('#chan').setAttribute('aria-label', 'Conversation: ' + thrName(k));
   }
+  function openThrMenu(anchor) {
+    closePops();
+    const m = document.createElement('div'); m.className = 'thr-m'; m.id = 'thr-m'; m.setAttribute('role', 'menu');
+    const keys = ['room', ...Object.keys(threads).filter(x => x !== 'room')]; if (!threads['dm:Claude']) keys.push('dm:Claude');
+    m.innerHTML = keys.map(k => `<button type="button" role="menuitem" class="pf-item ${k === thread ? 'on' : ''}" data-th="${k}">${k === 'room' ? '<span class="hash">#</span>' : av(k.slice(3))}<span>${esc(thrName(k))}</span>${threads[k] && threads[k].unread ? '<i class="ud"></i>' : ''}</button>`).join('');
+    document.body.appendChild(m); popScrim(m);
+    const r = anchor.getBoundingClientRect();
+    m.style.top = (r.bottom + 6) + 'px'; m.style.left = clamp(desk() ? r.left : r.right - m.offsetWidth, 8, innerWidth - m.offsetWidth - 8) + 'px';
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest('#cb-t, #chan'); if (t) { openThrMenu(t); return; }
+    const c = e.target.closest('[data-cb]'); if (!c) return;
+    if (c.dataset.cb === 'call') $('#huddle-btn').click();
+    else if (c.dataset.cb === 'screen') toast('Share your screen with the huddle in the real app.');
+    else if (thread === 'room') toggleSide(); else openPP(thread.slice(3));
+  });
   function switchThread(id) {
     th(id); thread = id;
     Object.entries(threads).forEach(([k, t]) => t.el.classList.toggle('hidden', k !== id));
     threads[id].unread = 0; renderThreads(); hideTyping(); $('#latest').classList.add('hidden');
-    box.placeholder = id === 'room' ? 'Message Pixel Quest' : id === 'dm:Claude' ? "Ask Orion's Claude" : `Message ${id.slice(3)}`;
+    box.placeholder = id === 'room' ? 'Message the tribe…' : id === 'dm:Claude' ? "Ask Orion's Claude" : `Message ${id.slice(3)}`;
     if (S.view !== 'chat') show('chat'); else toBottom(true);
     renderNav();
   }
-  document.addEventListener('click', e => { const t = e.target.closest('[data-th]'); if (t) { e.stopPropagation(); switchThread(t.dataset.th); } }, true);
+  document.addEventListener('click', e => { const t = e.target.closest('[data-th]'); if (t) { e.stopPropagation(); closePops(); switchThread(t.dataset.th); } }, true);
   const DMR = { Orion: ["haha yes 🔥", "glad you're here! Claude has a good first task for you in Tasks", 'anytime 🙌'], Maya: ['omg hi 👋', 'want to help with the coin sprite? 👀', '😂😂'] };
   function dmReply(w, text) {
     const id = 'dm:' + w; S.dmN = (S.dmN || 0) + 1;
@@ -1896,79 +2389,201 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     const arr = DMR[w] || ['👍']; bot(w, { html: arr[(S.dmN - 1) % arr.length] }, { th: id });
   }
 
-  /* ---------- profiles: bottom sheet on phones, popover on desktop ---------- */
+  /* ---------- people: the right panel lists who's in the room; a name opens their person panel (now + timeline) ---------- */
   const PI = {
-    Orion: { color: 'Ember Orange', status: 'Host · reviewing the double jump', agents: [['Claude', 'on feat/double-jump']], other: ['Website'] },
-    Maya: { color: 'Huddle Indigo', status: 'Drawing the slime boss', agents: [], other: ['Pixel art pack'] },
-    Jay: { color: 'Amber', status: 'Away · Level 2 layout', agents: [], other: ['Chiptune jams'], away: true },
-    Claude: { color: 'Signal Teal', status: 'Working on feat/double-jump', agent: true, owner: 'Orion' }
+    Orion: { role: 'Host', status: 'online', now: 'Reviewing the double jump', file: 'src/player.ts', ctx: 58, focus: 'merge before the playtest', agent: 'Claude', line: 'Host · in the huddle',
+      tl: [['prompt', 'Claude, fix coyote time so the second jump resets on landing', 'to Claude · feat/double-jump', 40], ['chat', 'Claude is on the double jump, Maya has the slime.', '#general', 95], ['commit', 'Level 1 checkpoints', 'a3f09e1 · src/level1.ts', 160], ['note', 'Playtest on Friday, phones only', 'living notes', 200]] },
+    Maya: { role: 'Builder', status: 'online', now: 'Drawing the slime boss', file: 'art/slime-boss.png', ctx: 34, focus: 'three boss phases', line: 'In the huddle · slime art',
+      tl: [['commit', 'Slime idle animation, 4 frames', '9c41f7a · art/slime-idle.png', 14], ['chat', 'Quick one: the cave level needs a checkpoint before the spikes.', '#general · voice note', 48], ['note', 'Boss needs three phases', 'living notes', 70], ['commit', 'Tileset v2', '1be4c70 · art/tileset.png', 130]] },
+    Jay: { role: 'Builder', status: 'away', now: 'Away · last on the Level 2 layout', file: 'levels/level2.json', ctx: 0, focus: 'rooms 1 and 2', line: 'Away',
+      tl: [['chat', 'Yes, a checkpoint right after the bridge', '#general', 36], ['commit', 'Level 2 layout, rooms 1–2', '5d21aa8 · levels/level2.json', 120], ['commit', 'Level 1 music loop', 'c09b2f4 · audio/level1.mp3', 300]] },
+    Claude: { role: "Orion's agent", status: 'online', now: 'Waiting for approval on feat/double-jump', file: 'src/player.ts', ctx: 71, focus: '12 tests passing', agentOf: 'Orion', line: "Orion's agent · on feat/double-jump",
+      tl: [['commit', 'Fix coyote time', 'e1a7c33 · src/player.ts', 4], ['chat', 'Double jump is fixed on feat/double-jump.', '#general', 4], ['prompt', 'Orion: fix coyote time so the second jump resets on landing', 'from Orion', 40], ['commit', 'Double jump, first pass', '77b0d12 · src/player.ts', 60]] }
   };
   const MY_NAMES = { '#E86A9A': 'Rose', '#7CC46B': 'Moss', '#E8B04A': 'Amber', '#6C7CFF': 'Indigo' };
   S.friends = new Set(); S.muted = new Set();
-  function closeProfile() { const p = $('#prof'); if (p) { p.remove(); $('#prof-scrim').remove(); } }
-  function profileHtml(w, pane) {
-    const i = PI[w] || {};
-    if (pane === 'net') {
-      const both = ['Orion', 'Maya', 'Jay', 'Claude'].filter(x => x !== w);
-      return `<div class="pf-h"><button type="button" class="mback" data-pf="main" aria-label="Back">${ic('left', 18)}</button>Network · ${esc(w)}</div>
-        <div class="pf-sec"><div class="eb">Projects you share</div><div class="pf-row">${projSvg(28)}<span><b>Pixel Quest</b><small>You and ${esc(w)}</small></span>${ic('check', 16)}</div></div>
-        <div class="pf-sec"><div class="eb">${esc(w)}'s other projects</div>${(i.other || []).map(o => `<div class="pf-row"><span class="pc sm">${esc(o[0])}</span><span><b>${esc(o)}</b><small>Not shared with you</small></span></div>`).join('') || '<div class="pf-row"><small>None</small></div>'}</div>
-        <div class="pf-sec"><div class="eb">People you both know</div><div class="stack">${both.map(x => av(x)).join('')}</div></div>
-        <button type="button" class="btn block" data-pf="invite">${ic('plus', 18)}Invite to another project</button>`;
-    }
+  function renderSide() {
+    const hum = [['Orion', 'online · Chat · host'], ['Maya', 'online · slime art'], ['Jay', 'away'], ['me', 'online · Chat · you']];
+    $('#side').innerHTML = `<div class="sd-sec"><div class="sd-l">In the room · <em>4 online</em></div>${hum.map(([w, s]) => `<button type="button" class="sd-p" data-p="${w}"><span class="avw">${av(w)}<i class="${w === 'Jay' ? 'off' : ''}"></i></span><span class="t"><b>${esc(nameOf(w))}${w === 'me' ? ' <span style="color:var(--m);font-weight:400">(you)</span>' : ''}</b><small>${w === 'Jay' ? 'away' : `<span class="on">online</span>${esc(s.slice(6))}`}</small></span></button>`).join('')}</div>
+      <div class="sd-sec"><div class="sd-l">Agents</div><button type="button" class="sd-p" data-p="Claude"><span class="avw">${av('Claude')}<i></i></span><span class="t"><b>Claude · Orion</b><small>on feat/double-jump</small></span></button></div>
+      <button type="button" class="sd-cc" data-cc>${ic('spark', 18)}Connect your Claude Code</button>
+      <div class="sd-foot">up 3h 12m · 4 commits today</div>`;
+  }
+  const PPTABS = ['All', 'Commits', 'Prompts', 'Chat', 'Notes'], PPK = { Commits: 'commit', Prompts: 'prompt', Chat: 'chat', Notes: 'note' };
+  function myTimeline() {
+    return notes.filter(n => noteWho(n.html) === 'me').map(n => ['note', n.html.replace(/<[^>]+>/g, '').replace(me.name + ' ', ''), 'living notes', Math.max(0, (Date.now() - n.at) / 60e3)]).reverse()
+      .concat($$('#log .row.me').length ? [['chat', `${$$('#log .row.me').length} message${$$('#log .row.me').length > 1 ? 's' : ''} in #general`, '#general', 0]] : []);
+  }
+  function ppHtml(w) {
+    const tab = S.ppTab || 'All';
     if (w === 'me') {
-      return `<div class="pf-top">${av('me', 'xl')}<div class="pf-id"><b>${esc(me.name)}</b><small><i class="sw" style="background:${me.color}"></i>${MY_NAMES[me.color] || 'Your color'} · that's you</small></div></div>
-        <div class="pf-sec"><div class="eb">Status</div><form class="sugg" id="pf-status"><input id="pf-st" value="${esc(me.status || '')}" maxlength="60" placeholder="What are you working on?" autocomplete="off" enterkeyhint="done" aria-label="Status"><button aria-label="Set status">${ic('check', 20)}</button></form></div>
-        <div class="pf-sec"><div class="eb">Color</div><div class="pf-colors">${MY_COLORS.map(c => `<button type="button" data-col="${c}" aria-label="${MY_NAMES[c]}" aria-pressed="${c === me.color}" style="background:${c}"></button>`).join('')}</div></div>
-        <button type="button" class="btn block" data-pf="copy">${ic('link', 18)}Copy my invite link</button><p class="pf-fine">A demo link. The real app makes a one-time link on your computer.</p>`;
+      const tl = myTimeline();
+      return `<div class="pp-head">${av('me', 'xl')}<div class="pp-id"><b>${esc(me.name)}</b><small><i class="sw" style="background:${me.color}"></i>${MY_NAMES[me.color] || 'Your color'} · Builder · that's you</small></div><button type="button" class="pp-x" data-ppx aria-label="Close">${ic('x', 18)}</button></div>
+        <div class="pp-me"><div class="eb">Now</div><form class="sugg" id="pf-status"><input id="pf-st" value="${esc(me.status || '')}" maxlength="60" placeholder="What are you working on?" autocomplete="off" enterkeyhint="done" aria-label="Status"><button aria-label="Set status">${ic('check', 20)}</button></form>
+        <div class="pf-colors">${MY_COLORS.map(c => `<button type="button" data-col="${c}" aria-label="${MY_NAMES[c]}" aria-pressed="${c === me.color}" style="background:${c}"></button>`).join('')}</div></div>
+        <div class="pp-sec"><div class="eb">Timeline</div>${tl.map(tlHtml).join('') || '<div class="pp-tl"><span class="b">Nothing yet. Say hi in the chat.</span></div>'}</div>`;
     }
-    const fr = S.friends.has(w), mu = S.muted.has(w);
-    const acts = [['msg', 'chat', 'Message'], ['friend', fr ? 'check' : 'user', fr ? 'Friends ✓' : 'Add friend'], ['net', 'network', 'Network'], ['mute', mu ? 'bell' : 'belloff', mu ? 'Unmute' : 'Mute']].filter(a => !(i.agent && (a[0] === 'friend' || a[0] === 'net')));
-    return `<div class="pf-top">${av(w, 'xl')}<div class="pf-id"><b>${esc(w)}</b><small><i class="sw" style="background:${w === 'Claude' ? 'var(--t)' : colorOf(w)}"></i>${i.color}${i.agent ? ` · ${esc(i.owner)}'s agent` : ''}</small></div></div>
-      <div class="pf-sec"><div class="eb">Status</div><div class="pf-st"><span class="dot" style="${i.away ? 'background:var(--b)' : ''}"></span>${esc(i.status)}</div></div>
-      ${i.agent ? `<div class="pf-sec"><div class="eb">Permissions</div><div class="pf-st">Anything risky needs ${esc(i.owner)}'s OK.</div></div>` : `<div class="pf-sec"><div class="eb">Agents</div>${(i.agents || []).map(([a, s]) => `<button type="button" class="pf-agent" data-pf="claude">${av(a)}<span><b>${a}</b><small>${s}</small></span>${ic('right', 16)}</button>`).join('') || '<div class="pf-st">No agents yet</div>'}</div>`}
-      <div class="pf-acts">${acts.map(([k, icn, l]) => `<button type="button" data-pf="${k}" class="${k === 'friend' && fr ? 'on' : ''}">${ic(icn, 20)}<span>${l}</span></button>`).join('')}</div>
-      ${(i.agents || []).length ? `<button type="button" class="btn block ask" data-pf="claude">${ic('spark', 18)}Ask their Claude</button>` : ''}`;
+    const i = PI[w], away = i.status === 'away';
+    const tl = i.tl.filter(t => tab === 'All' || t[0] === PPK[tab]);
+    return `<div class="pp-head">${av(w, 'xl')}<div class="pp-id"><b>${esc(w === 'Claude' ? 'Claude · Orion' : w)}</b><small><i class="sw" style="background:${w === 'Claude' ? 'var(--t)' : colorOf(w)}"></i>${esc(i.role)} · ${away ? 'away' : '<span style="color:var(--ok)">online</span>'}</small>
+        ${i.agent ? `<span class="pp-chip"><span class="dot"></span><b>Claude</b> active now</span>` : ''}</div><button type="button" class="pp-x" data-ppx aria-label="Close">${ic('x', 18)}</button></div>
+      <div class="pp-acts"><button type="button" class="btn" data-ppm="${w}">${ic('chat', 16)}Message</button>${i.agent || w === 'Claude' ? `<button type="button" class="btn ask" data-ppc>${ic('spark', 16)}Ask ${w === 'Claude' ? 'it' : 'their Claude'}</button>` : ''}</div>
+      <div class="pp-sec"><div class="eb">Now</div><div class="pp-now">${esc(i.now)}</div><span class="pp-file">${esc(i.file)}</span>
+        ${i.ctx ? `<div class="pp-bar" title="Context window ${i.ctx}%"><i style="width:${i.ctx}%"></i></div><div class="pp-focus"><span>Focus</span>${esc(i.focus)}</div>` : ''}</div>
+      <div class="pp-sec"><div class="eb">Timeline</div><div class="pp-tabs" role="tablist">${PPTABS.map(t => `<button type="button" role="tab" class="${t === tab ? 'on' : ''}" data-ppt="${t}">${t}</button>`).join('')}</div>${tl.map(tlHtml).join('') || '<div class="pp-tl"><span class="b">Nothing here yet.</span></div>'}</div>
+      <div class="sd-foot" style="margin-top:16px">${i.tl.filter(t => t[0] === 'commit').length} commit${i.tl.filter(t => t[0] === 'commit').length === 1 ? '' : 's'} this week · ${away ? 'last seen 2h ago' : 'up 3h 12m'}</div>`;
   }
-  function openProfile(w, anchor) {
-    closeProfile(); closeMenu();
-    const sc = document.createElement('div'); sc.id = 'prof-scrim'; sc.className = desk() ? 'menu-scrim' : 'scrim'; sc.onclick = closeProfile;
-    const p = document.createElement('div'); p.id = 'prof'; p.className = desk() ? 'prof pop' : 'prof sheet'; p.dataset.w = w; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', (w === 'me' ? 'Your' : w + "'s") + ' profile');
-    p.innerHTML = (desk() ? '' : '<div class="grab"></div>') + `<div class="pf-body">${profileHtml(w)}</div>`;
-    document.body.append(sc, p);
-    if (desk() && anchor) {
-      const r = anchor.getBoundingClientRect(), h = p.offsetHeight;
-      p.style.left = clamp(r.right + 10, 10, innerWidth - 350) + 'px'; p.style.top = clamp(r.top - 20, 10, innerHeight - h - 10) + 'px';
-    }
-    bindProfile(p);
+  function tlHtml([k, t, sub, m]) { return `<div class="pp-tl ${k === 'chat' ? 'jump' : ''}" ${k === 'chat' ? 'data-ppj' : ''}><span class="k k-${k}">${ic({ commit: 'commit', prompt: 'spark', chat: 'chat', note: 'notebook' }[k], 13)}</span><span class="b">${esc(t)}<small>${esc(sub)}</small></span><time>${m < 1 ? 'now' : m < 60 ? Math.round(m) + 'm' : Math.round(m / 60) + 'h'}</time></div>`; }
+  function openPP(w) {
+    closeQR(); closeMenu(); closePops();
+    S.pp = w; if (!$('#side').dataset.keep) S.ppTab = 'All';
+    $('#side').innerHTML = ppHtml(w); $('#side').scrollTop = 0;
+    room.classList.add('pp-open'); room.classList.remove('side-off'); $('#panel-toggle').setAttribute('aria-pressed', 'true');
+    const f = $('#pf-status'); if (f) f.onsubmit = e => { e.preventDefault(); me.status = $('#pf-st').value.trim(); renderPeople(); toast(me.status ? 'Status set' : 'Status cleared'); $('#pf-st').blur(); };
   }
-  function bindProfile(p) {
-    const f = p.querySelector('#pf-status');
-    if (f) f.onsubmit = e => { e.preventDefault(); me.status = $('#pf-st').value.trim(); renderPeople(); toast(me.status ? 'Status set' : 'Status cleared'); $('#pf-st').blur(); };
+  function closePP() { if (!S.pp) return; S.pp = null; room.classList.remove('pp-open'); renderSide(); }
+  const closeProfile = closePP;
+  function toggleSide() {
+    if (!desk() || innerWidth < 1200) { S.pp ? closePP() : openPP('Orion'); return; }
+    const off = room.classList.toggle('side-off'); $('#panel-toggle').setAttribute('aria-pressed', String(!off));
   }
+  $('#pp-scrim').onclick = closePP;
   document.addEventListener('click', e => {
     const c = e.target.closest('[data-col]');
-    if (c) { me.color = c.dataset.col; $$('.av[data-p="me"]').forEach(a => { a.style.background = me.color; }); renderPeople(); $('#prof .pf-body').innerHTML = profileHtml('me'); bindProfile($('#prof')); return; }
-    const b = e.target.closest('#prof [data-pf]');
-    if (b) {
-      const p = $('#prof'), w = p.dataset.w, k = b.dataset.pf;
-      if (k === 'main' || k === 'net') { p.querySelector('.pf-body').innerHTML = profileHtml(w, k === 'net' ? 'net' : undefined); bindProfile(p); return; }
-      if (k === 'msg') { closeProfile(); switchThread('dm:' + w); return; }
-      if (k === 'claude') { closeProfile(); switchThread('dm:Claude'); return; }
-      if (k === 'friend') { S.friends.has(w) ? S.friends.delete(w) : S.friends.add(w); renderPeople(); p.querySelector('.pf-body').innerHTML = profileHtml(w); if (S.friends.has(w)) toast(`${w} is in Friends now`); return; }
-      if (k === 'mute') { S.muted.has(w) ? S.muted.delete(w) : S.muted.add(w); p.querySelector('.pf-body').innerHTML = profileHtml(w); toast(S.muted.has(w) ? `Muted ${w}. Messages still show, without badges.` : `Unmuted ${w}`); return; }
-      if (k === 'invite') { toast("You'd pick a project and they get an invite. (demo)"); return; }
-      if (k === 'copy') {
-        const link = `tribecode://invite/demo-${encodeURIComponent(me.name.toLowerCase())}`;
-        const done = () => toast('Invite link copied (demo link)');
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done); else done();
-        return;
-      }
-    }
+    if (c) { me.color = c.dataset.col; $$('.av[data-p="me"]').forEach(a => { a.style.background = me.color; }); paintTop(); renderPeople(); openPP('me'); return; }
+    if (e.target.closest('[data-ppx]')) { closePP(); return; }
+    const m = e.target.closest('[data-ppm]'); if (m) { const w = m.dataset.ppm; closePP(); switchThread('dm:' + w); return; }
+    if (e.target.closest('[data-ppc]')) { closePP(); switchThread('dm:Claude'); return; }
+    const t = e.target.closest('[data-ppt]'); if (t) { S.ppTab = t.dataset.ppt; $('#side').innerHTML = ppHtml(S.pp); return; }
+    if (e.target.closest('[data-ppj]')) { closePP(); if (thread !== 'room') switchThread('room'); else show('chat'); return; }
+    if (e.target.closest('[data-cc]')) { connectClaude(); return; }
     const a = e.target.closest('[data-p]');
-    if (a && !$('#s-room').classList.contains('hidden') && !e.target.closest('#prof, .tour-block, .tcap')) openProfile(a.dataset.p, a);
+    if (a && !room.classList.contains('hidden') && !e.target.closest('.tour-block, .tcap, .pp-head')) { if (S.panel && !desk()) S.panel(false); openPP(a.dataset.p); }
   });
 
+  /* ---------- top right: panel · Context · profile · bell · window lights ---------- */
+  let popEl = null;
+  function closePops() { $$('.pf-menu, .thr-m, .emo-pop').forEach(x => x.remove()); $$('.pop-scrim').forEach(x => x.remove()); $('#pf-btn').setAttribute('aria-expanded', 'false'); popEl = null; }
+  function popScrim(el) { const s = document.createElement('div'); s.className = 'menu-scrim pop-scrim'; s.style.zIndex = 56; s.onclick = closePops; document.body.insertBefore(s, el); popEl = el; }
+  function paintTop() {
+    if (!S.room) return;
+    $('#pf-face').textContent = (me.name[0] || '?').toUpperCase(); $('#pf-face').style.background = me.color;
+    const n = approvals.filter(a => a.state === 'pending').length;
+    $('#nf-bell').innerHTML = ic('bell', 21) + (n ? `<span class="bdg">${n}</span>` : ''); $('#nf-bell').setAttribute('aria-label', `Notifications${n ? `, ${n} waiting` : ''}`);
+  }
+  $('#panel-toggle').innerHTML = ic('panel', 21); $('#ctx-btn').innerHTML = ic('ctxdoc', 21);
+  $('#panel-toggle').onclick = toggleSide;
+  $('#nf-bell').onclick = () => show('updates');
+  $$('#win-ctl .wl').forEach(b => { b.onclick = () => toast('In the desktop app these close, minimize and zoom the window.'); });
+  function menuAt(btn, html, cls = '') {
+    closePops();
+    const m = document.createElement('div'); m.className = 'pf-menu ' + cls; m.setAttribute('role', 'menu'); m.innerHTML = html; document.body.appendChild(m); popScrim(m);
+    const r = btn.getBoundingClientRect(); m.style.top = (r.bottom + 8) + 'px'; m.style.right = Math.max(8, innerWidth - r.right) + 'px';
+    return m;
+  }
+  const pfItem = (act, i, l, extra = '') => `<button type="button" role="menuitem" class="pf-item" data-act="${act}">${ic(i, 18)}<span>${l}</span>${extra}</button>`;
+  $('#pf-btn').onclick = e => {
+    e.stopPropagation(); if ($('#pf-menu')) { closePops(); return; }
+    const m = menuAt($('#pf-btn'), `<div class="pf-head"><span class="pf-face lg" style="background:${me.color}">${esc(me.name[0].toUpperCase())}</span><div><b>${esc(me.name)}</b><small>Builder</small></div></div>
+      <div class="pf-status"><span class="pf-dot"></span>Connected to Orion's tribe</div><div class="pf-sep"></div>
+      ${pfItem('profile', 'users', 'My profile and activity')}${pfItem('claude', 'spark', 'Connect your Claude Code')}${pfItem('agents', 'robot', 'Your agents')}${pfItem('invite', 'link', 'Invite friends')}
+      <div class="pf-sep"></div>${pfItem('notify', 'bell', 'Notifications')}${pfItem('capture', 'mic', 'Capture to notes', `<span class="pf-sw ${S.capture ? 'on' : ''}"><i></i></span>`)}${pfItem('settings', 'gear', 'Settings')}${pfItem('update', 'refresh', 'Check for updates')}`);
+    m.id = 'pf-menu'; $('#pf-btn').setAttribute('aria-expanded', 'true'); m.querySelector('.pf-item').focus({ preventScroll: true });
+  };
+  document.addEventListener('click', e => {
+    const b = e.target.closest('#pf-menu [data-act]'); if (!b) return; const a = b.dataset.act;
+    if (a === 'capture') { S.capture = !S.capture; b.querySelector('.pf-sw').classList.toggle('on', S.capture); toast(S.capture ? 'Capture to notes is on: voice and chat flow into the living notes.' : 'Capture to notes is off'); return; }
+    closePops();
+    if (a === 'profile') openPP('me'); else if (a === 'claude') connectClaude(); else if (a === 'agents') openPP('Claude');
+    else if (a === 'invite') inviteLink(); else if (a === 'notify') show('updates');
+    else if (a === 'settings') toast('Settings live in the real app: name, color, notifications, the local brain.');
+    else if (a === 'update') toast("You're on the latest version (demo).");
+  });
+  $('#ctx-btn').onclick = () => {
+    if ($('.pf-menu.ctxp')) { closePops(); return; }
+    menuAt($('#ctx-btn'), `<div class="eb">Context · what every agent reads</div><pre># Pixel Quest · TRIBE_CONTEXT.md
+Vision: a cozy 2D platformer, 3 levels.
+Now: double jump (Claude), slime boss (Maya),
+     Level 2 layout (Jay).
+Decided: Level 2 is the Slime Caves.
+Rules: anything that changes main needs a human OK.</pre>`, 'ctxp').style.width = '340px';
+  };
+  function connectClaude() {
+    closePops();
+    const btn = desk() ? $('#pf-btn') : $('#rk-me');
+    const m = menuAt(btn, `<div class="eb">Connect your Claude Code</div><p style="margin:0;font-size:13px;line-height:1.5">Run this once in a terminal. Your Claude joins Pixel Quest as <b style="color:var(--w)">Claude · ${esc(me.name)}</b>.</p>
+      <code>claude mcp add tribecode -- npx tribecode-mcp --join demo-${esc(me.name.toLowerCase().replace(/[^a-z0-9]/g, ''))}</code><button type="button" class="btn primary block" data-ccopy style="min-height:40px">Copy command</button>`, 'ctxp ccp');
+    m.style.width = '340px'; if (!desk()) { m.style.left = '10px'; m.style.right = '10px'; m.style.width = 'auto'; m.style.top = 'auto'; m.style.bottom = 'calc(var(--sab) + 80px)'; }
+    m.querySelector('[data-ccopy]').onclick = () => { closePops(); toast('Copied (demo command)'); };
+  }
+  function inviteLink() {
+    const link = `https://orionopenwow.github.io/TribeCode/go.html#demo-${encodeURIComponent(me.name.toLowerCase())}`, done = () => toast('Invite link copied (demo link)');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done); else done();
+  }
+  $('#nest-invite').onclick = inviteLink;
+  // emoji + image in the desktop pill
+  $('#emoji').onclick = () => {
+    if ($('.emo-pop')) { closePops(); return; }
+    closePops(); const m = document.createElement('div'); m.className = 'emo-pop'; m.innerHTML = ['😂', '🔥', '👍', '❤️', '🎉', '👀', '🙏', '🚀'].map(e => `<button type="button" data-emo="${e}">${e}</button>`).join('');
+    document.body.appendChild(m); popScrim(m); const r = $('#emoji').getBoundingClientRect(); m.style.left = r.left + 'px'; m.style.top = (r.top - m.offsetHeight - 8) + 'px';
+  };
+  document.addEventListener('click', e => { const b = e.target.closest('[data-emo]'); if (!b) return; box.value += b.dataset.emo; grow(box, 36); setAct(); closePops(); box.focus(); });
+  $('#img-btn').onclick = () => $('#file-media').click();
+
+  /* ---------- Updates: the Secretary's digest ---------- */
+  function renderDigest() {
+    const passedV = Object.values(VOTES).filter(v => v.status === 'passed');
+    const items = [
+      ...passedV.map(v => ['o', `<b>Decided</b>: ${esc(v.q.replace(/^Approve:\s*/, '').replace(/\?$/, ''))}`, 'vote']),
+      ['o', '<b>Decided</b>: Level 2 is the Slime Caves, three rooms and a boss', 'chat'],
+      ['t', '<b>Found</b>: howler.js loops without a gap on iPhone; the browser audio API clicks', 'research'],
+      ['o', '<b>Open</b>: who draws the coin sprite? (Maya offered)', 'chat'],
+      ['t', '<b>Idea</b>: a slime boss that splits in three when hit', 'idea'],
+      ['s', "Maya's slime-idle.png is in Docs, 4 frames at 8 fps", 'file']
+    ].slice(0, 5);
+    $('#digest').innerHTML = items.map(([d, h, t]) => `<div class="dg-i"><span class="d c-${d}"></span><span class="dt">${h}</span><span class="tag">${t}</span></div>`).join('');
+  }
+
+  /* ---------- Workshop: the tribe library (rail entry under the project circles) ---------- */
+  function renderWorkshop() {
+    if ($('#ws').dataset.on) return; $('#ws').dataset.on = '1';
+    const code = '<b>// double jump: a second jump while airborne</b>\nexport function doubleJump(p, input) {\n  if (!input.jumpPressed) return\n  if (p.jumps &lt; 2) {\n    p.vy = -9; p.jumps++\n  }\n}';
+    $('#ws').innerHTML = `<div class="ws-top"><div><div class="eb">Workshop</div><h3>Tribe library</h3></div><button type="button" class="btn primary" data-toast="In the real app you add a skill, recipe or asset with an open license.">${ic('plus', 18)}Add</button></div>
+      <div class="ws-tabs"><button class="chip on" type="button">Tribe library</button><button class="chip" type="button" data-toast="The community index lives on GitHub and is served by jsDelivr.">Community</button></div>
+      <section class="sect"><div class="ws-hero"><div class="art"><img src="${SLIME_IMG}" alt="Slime hop sprite"></div><div class="inf"><div class="eb">Latest · asset</div><h4>Slime hop</h4><p>Three-frame slime, made for Pixel Quest.</p><span class="mono">Maya · CC0-1.0 · v1.2.0</span>
+        <div class="row2"><button type="button" class="btn primary" data-wsuse>Use in a project</button><button type="button" class="btn" style="background:none;border-color:transparent" data-toast="Files, license and a sha256 check, in the real app.">Details</button></div></div></div></section>
+      <section class="sect"><div class="sect-h"><div><div class="eb">Library</div><h3>Everything the tribe shared</h3></div></div><div class="ws-grid">
+        <button type="button" class="ws-c" data-toast="A recipe: replayed instead of rebuilt, with its test."><div class="th"><pre>${code}</pre></div><div class="mt2"><b>doublejump.js</b><small>Recipe · Claude</small></div></button>
+        <button type="button" class="ws-c" data-toast="A template: start a new game from it."><div class="th"><img src="${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 10" shape-rendering="crispEdges">${px(HERO)}</svg>`)}" alt=""></div><div class="mt2"><b>Pixel Quest starter</b><small>Template · Orion</small></div></button>
+        <button type="button" class="ws-c" data-toast="An asset: CC0, ready to drop in."><div class="th"><img src="${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 5" shape-rendering="crispEdges">${px(COIN)}</svg>`)}" alt="" style="width:40px"></div><div class="mt2"><b>Coin spin</b><small>Asset · Jay</small></div></button>
+        <button type="button" class="ws-c" data-toast="A Claude Code skill your agents can use."><div class="th"><span style="color:var(--t)">${ic('spark', 34)}</span></div><div class="mt2"><b>Playtest notes</b><small>Skill · Maya</small></div></button>
+      </div></section>`;
+  }
+  document.addEventListener('click', e => { if (e.target.closest('[data-wsuse]')) { addNote(`<b>${esc(me.name)}</b> added Slime hop from the Workshop to Pixel Quest.`); toast('Added to Pixel Quest › Docs & files'); } });
+  $('#rail-ws').onclick = () => show('workshop');
+
+  /* ---------- one-click Create project (the rail "+") ---------- */
+  function closeNP() { const n = $('#np'); if (n) { n.remove(); $('#np-scrim').remove(); } }
+  $('#rail-add').onclick = () => {
+    closeNP(); if (S.panel && !desk()) S.panel(false);
+    const sc = document.createElement('div'); sc.className = 'scrim'; sc.id = 'np-scrim'; sc.style.zIndex = 55; sc.onclick = closeNP;
+    const d = document.createElement('div'); d.className = 'np'; d.id = 'np'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'New project');
+    d.innerHTML = `<button type="button" class="pp-x np-x" data-npx aria-label="Close">${ic('x', 18)}</button><h3>New project</h3><p>One click. Friends join with a link.</p>
+      <button type="button" class="np-opt pri" id="np-create"><span class="ic">${ic('plus', 20)}</span><span class="t"><b>Create a new project</b><small>A room, an invite link, chat and a GitHub repo</small></span></button>
+      <button type="button" class="np-opt" id="np-join"><span class="ic s">${ic('link', 20)}</span><span class="t"><b>Paste an invite link</b><small>Join a friend's project</small></span></button>`;
+    document.body.append(sc, d);
+    d.querySelector('[data-npx]').onclick = closeNP;
+    $('#np-create').onclick = () => {
+      closeNP(); S.newP = (S.newP || 0) + 1;
+      const b = document.createElement('button'); b.className = 'pc newp'; b.textContent = 'NP'; b.setAttribute('aria-label', 'New project'); b.dataset.toast = "Your new project is ready in the real app. The demo stays in Pixel Quest.";
+      if (S.newP === 1) $('#rail-new').replaceWith(b);
+      toast('Created: room, invite link, chat and a private GitHub repo (demo).');
+    };
+    $('#np-join').onclick = () => {
+      $('#np-join').outerHTML = `<form class="np-link" id="np-link"><input id="np-in" placeholder="Paste the link your friend sent" autocomplete="off" aria-label="Invite link"><button class="btn primary">Join</button></form>`;
+      $('#np-in').focus(); $('#np-link').onsubmit = e => { e.preventDefault(); closeNP(); toast("In the demo you're only in Pixel Quest."); };
+    };
+  };
   /* ---------- enter the room ---------- */
   function enterRoom() {
     $('#s-connect').classList.add('hidden'); $('#s-room').classList.remove('hidden');
@@ -1976,7 +2591,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $('#rail-pq').innerHTML = `<span class="pav">${projSvg(42)}</span>`; $('#pj-pav').innerHTML = projSvg(28);
     $('#rail-me').outerHTML = av('me');
     $('#rk-me').innerHTML = av('me') + `<span class="tl">${esc(me.name)}</span>`;
-    box.placeholder = 'Message Pixel Quest';
+    box.placeholder = 'Message the tribe…';
     renderPeople(); setAct(); fitVV();
     tasks.s = [
       T('Playtest Level 1 on your phone', 'Claude', { from: 'Claude', why: `Fresh eyes find the bugs we stopped seeing. A good first task for ${me.name}.` }),
@@ -1985,24 +2600,26 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     ];
     sys('Demo · nothing is sent anywhere', true);
     sys('Today', 'day');
-    addMsg({ who: 'Orion', html: 'Morning tribe 🔥', at: ago(38), rx: { '🔥': ['Maya', 'Jay'] } });
-    addMsg({ who: 'Orion', html: 'Claude is on the double jump, Maya has the slime.', at: ago(38) });
-    addMsg({ who: 'Maya', kind: 'image', src: SLIME_IMG, px: true, name: 'slime-idle.png', at: ago(14), rx: { '❤️': ['Orion', 'Jay'], '😂': ['Orion'] } });
-    addMsg({ who: 'Maya', html: 'Slime v2 is in Docs & files 👀', at: ago(14) });
-    postVote();
+    addMsg({ who: 'Orion', html: 'Morning tribe 🔥', at: ago(110), rx: { '🔥': ['Maya', 'Jay'] } });
+    addMsg({ who: 'Orion', html: 'Claude is on the double jump, Maya has the slime.', at: ago(109) });
+    addMsg({ who: 'Maya', kind: 'image', src: SLIME_IMG, px: true, name: 'slime-idle.png', at: ago(52), rx: { '❤️': ['Orion', 'Jay'], '😂': ['Orion'] } });
+    const lv = Array.from({ length: 34 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6)));
+    addMsg({ who: 'Maya', kind: 'voice', secs: 9, size: '35.5 KB', levels: lv, transcript: 'Quick one: the cave level needs a checkpoint before the spikes.', at: ago(50) });
+    addMsg({ who: 'Jay', html: 'Yes, right after the bridge 👍', reply: { who: 'Maya', text: 'Quick one: the cave level needs a checkpoint before the spikes.' }, at: ago(36) });
+    newVote({ kind: 'approve', who: 'Maya', q: 'Approve: double-jump for Pixel Quest?', sug: "Maya's Claude", why: 'gap 2 is unfair without it', yes: ['Maya'], at: ago(20) });
     addMsg({ who: 'Claude', html: `Double jump is fixed on <code>feat/double-jump</code>.<div class="rc"><div class="rc-h">${ic('branch', 15)}<span class="mono">feat/double-jump</span><span class="tag live">tests passing</span></div><div class="rc-b">Coyote time, and the second jump resets on landing.</div><div class="rc-f mono">player.ts · <span class="add">+18</span> −6 · 12 tests</div></div>`, at: ago(4), rx: { '🎉': ['Orion', 'Maya'] } });
     addMsg({ who: 'Claude', kind: 'card', html: apprHtml(approvals[0]), at: ago(4) });
     sys(`${esc(me.name)} joined Pixel Quest`);
     addNote(`<b>${esc(me.name)}</b> joined Pixel Quest, invited by Orion.`);
-    show('chat'); S.room = true;
+    show('chat'); S.room = true; paintTop();
     renderThreads(); th('dm:Orion');
     setTimeout(() => bot('Orion', { html: "hey! so glad you came 🔥 ping me here if anything's confusing" }, { th: 'dm:Orion', pre: 0 }), 2600);
-    setTimeout(() => castVote('Orion', 'yes'), 2200);
+    setTimeout(() => castVote('vt1', 'Orion', 'yes'), 2200);
     setTimeout(installCard, 4000);
     setTimeout(tourPrompt, 1100);
   }
   setTimeout(() => { if (!matchMedia('(pointer: coarse)').matches) nameIn.focus(); }, 50);
-  window.__demo = { S, approvals, tasks, files, notes, vote, RX };
+  window.__demo = { S, approvals, tasks, files, notes, VOTES, RX };
 })();
 </script>
 </body>
