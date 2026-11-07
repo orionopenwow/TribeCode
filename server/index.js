@@ -32,6 +32,7 @@ const makeBusLog = require('./buslog');
 const makeProjects = require('./projects');
 const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
+const makeCoord = require('./coord');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -224,9 +225,9 @@ const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'u
 const projectRepo = () => (P.get(P.current() || P.defaultId()) || {}).repo || null;
 const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: projectRepo, brain, readVision });
 const docs = makeDocs({ store, slug, str, broadcast, brain, postChat, onWrite: (d, prev) => docsx.onWrite(d, prev) });
-const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid) });
+const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid), saveTask: t => saveTask(t), getMembers: () => members, tellAgent: (...x) => coord.tell(...x) });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
-const claims = makeClaims({ store, id, broadcast, nameOf });
+const claims = makeClaims({ store, id, broadcast, nameOf, project: () => P.current() });
 // ---------- web: device links (/m/<key>/) + public https address ----------
 const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe });
 const share = makeShare({ port: PORT });
@@ -268,6 +269,15 @@ const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str });
+const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
+// Agents read pause/stop requests, hand-offs and sync asks from coord through check_messages too.
+const checkMessages = chatx.mcpTools.check_messages;
+const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run: (a, me) => {
+  const r = checkMessages.run(a, me), extra = coord.inboxFor(me);
+  if (!extra.length) return r;
+  const prev = r.content[0].text;
+  return { content: [{ type: 'text', text: `From TribeCode coordination:\n${extra.join('\n')}${prev && prev !== 'No new messages.' ? '\n\n' + prev : ''}` }] };
+} } };
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
 function mcpScope(me, wanted, fn) {
@@ -291,7 +301,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...chatx.mcpTools, ...visuals.mcpTools },
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => coord.mcpTools(h),
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
@@ -466,7 +476,7 @@ async function apiInProject(req, res, url) {
     }
   }
   if (a === 'bugs') {
-    const handled = await bugs.route(req, res, { m, b, c, me, readBody, send, fail });
+    const handled = await bugs.route(req, res, { m, b, c, parts, me, readBody, send, fail });
     if (handled !== null) return;
   }
   if (a === 'agents' && m === 'POST') {
@@ -488,7 +498,8 @@ async function apiInProject(req, res, url) {
     if (m === 'DELETE' && b) return claims.releaseId(b, me) ? send(res, 200, { ok: true }) : fail(res, 404, 'not your claim');
     if (m === 'PATCH' && b) { const body = await readBody(req); if (!members.some(x => x.id === body.to)) return fail(res, 400, 'unknown member'); const c = claims.handOff(b, body.to, me); return c ? send(res, 200, { claim: c }) : fail(res, 404, 'not your claim'); }
   }
-  if (a === 'drift' && m === 'GET') return send(res, 200, await hubFor(P.current()).drift.radar());
+  if (a === 'drift' && m === 'GET') { const r = await hubFor(P.current()).drift.radar(); if (r.branches) r.branches = r.branches.map(({ allFiles, ...x }) => x); return send(res, 200, r); }
+  if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
   if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;

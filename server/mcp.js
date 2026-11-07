@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), projects = () => [], VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {} }) {
+module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), projects = () => [], VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {}, coordTools = null }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -78,6 +78,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     ...extraTools,   // e.g. check_messages / reply (chatx.js)
   };
   if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
+  if (coordTools) Object.assign(TOOLS, coordTools({ text, err, S, str }));   // my_lane, suggest_task, handoff, request_review (server/coord.js)
   // Project rooms: every tool takes an optional `project` (default: the agent's project).
   TOOLS.list_projects = { description: 'List the projects (rooms) you can work in. Every tool takes an optional `project` id; without it you work in your own project (marked yours).', inputSchema: S({}), run: (a, me) => text(projects(me)) };
   const PROJECT_ARG = { type: 'string', description: 'Project id (see list_projects). Default: your project.' };
@@ -89,7 +90,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     const reply = result => ({ jsonrpc: '2.0', id, result });
     if (method === 'initialize') return reply({ protocolVersion: params.protocolVersion || '2025-06-18', capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'tribecode', title: `TribeCode · ${tribe.name}`, version: VERSION },
-      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first. Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes.${extra.instructions ? extra.instructions(me) : ''}` });
+      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first, then my_lane (and again between steps: it carries pause/stop requests). Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes. When you finish, request_review; to pass work on, handoff; with nothing to do, suggest_task.${extra.instructions ? extra.instructions(me) : ''}` });
     if (method === 'ping') return reply({});
     if (method === 'tools/list') return reply({ tools: Object.entries(TOOLS).map(([name, t]) => ({ name, description: t.description, inputSchema: withProject(t.inputSchema) })) });
     if (method === 'tools/call') {
