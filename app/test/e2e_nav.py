@@ -20,7 +20,7 @@ SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
-CORE = ["Chat & Streams", "Docs & Files", "Tasks & Board", "Agents Hub"]
+CORE = ["Overview", "Chat & Streams", "Docs & Files", "Tasks & Board", "Agents Hub"]
 TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]
 AGENT_TABS = ["Agents", "Your agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary"]
 # tab key -> how to tell its view is on screen
@@ -183,7 +183,7 @@ def main():
             # ---- breadcrumb menu mirrors the hierarchy
             host.click("#crumb-section"); host.wait_for_selector("#section-menu")
             menu = host.evaluate("[...document.querySelectorAll('#section-menu h6, #section-menu button')].map(e => (e.tagName === 'H6' ? '# ' : '') + (e.querySelector('span') || e).textContent.trim())")
-            assert menu[:4] == CORE, menu
+            assert menu[:5] == CORE, menu
             assert "# Tasks & Board" in menu and "# Agents Hub" in menu, menu
             assert menu[menu.index("# Agents Hub") + 1:] == ["Agents", "Your agents", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
             host.click("#section-menu [data-dest='calendar']"); host.wait_for_selector("#view-calendar:not(.hidden)")

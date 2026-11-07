@@ -154,7 +154,7 @@
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
       ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? '<span class="pl-by">local model</span>' : ''}</div>
           <p class="pl-sum">${esc(L.summary)}</p>
-          <div class="pl-grid">${[['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', L.lines.next, 'tasks'], ['Coming up', 'i-cal', L.lines.soon, 'calendar']]
+          <div class="pl-grid">${[['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', L.lines.next, 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']]
             .map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
       ${d.vision && !d.vision.has ? `<section class="pj-vision-nudge" id="pj-vnudge">${ico('i-flag', 16)}<span><b>No vision yet.</b> A few lines on what ${esc(p.name)} is and who it's for keeps people and agents pointed the same way.</span><button class="btn sm primary" id="pj-vwrite">${isHost() ? 'Write the vision' : 'Suggest a vision'}</button></section>` : ''}
       ${hero}
@@ -166,8 +166,8 @@
       ${sec('Activity', 'What changed', `<div class="pj-grid">
         <section class="card"><h3>${ico('i-refresh', 16)}Recent changes</h3>
           ${d.recent.length ? d.recent.map(r => `<div class="pj-row-line" ${r.kind === 'doc' ? `data-doc="${esc(r.ref)}"` : r.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[r.kind] || 'i-doc', 14)}<span class="t">${esc(r.text)}</span><span class="faint">${esc(r.sub)} · ${ago(r.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Drop a doc, add a task or start a branch.</div>'}</section>
-        <section class="card"><h3>${ico('i-cal', 16)}Upcoming</h3>
-          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-cal', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled.</div>'}</section></div>`)}
+        <section class="card"><h3>${ico('i-calendar', 16)}Upcoming</h3>
+          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-calendar', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled.</div>'}</section></div>`)}
       ${sec('Workspace', 'Shared repo', `<section class="card pj-ws-card"><h3>${ico('i-git', 16)}Your branch</h3><div id="pj-ws">Loading…</div></section>`)}`;
     el.querySelectorAll('[data-hero]').forEach(x => x.onclick = () => { const k = x.dataset.hero;
       if (k === 'plan') window.TribeCoord.open('plan'); else if (k === 'tasks') App().show('tasks'); else if (k === 'invite') App().openInvite();

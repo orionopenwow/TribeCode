@@ -263,7 +263,7 @@ def main():
             wait_text(host, "#chat-list", "pixel only")
 
             # ---- "Give me a branch": per-member worktrees, commits attributed to the right person
-            friend.click("#nest-title")
+            friend.click("#nest-overview")
             friend.wait_for_selector("#pj-mybranch"); friend.click("#pj-mybranch")
             friend.wait_for_selector("#pj-commit")
             fid = api("/me", token=ftoken)[1]["member"]["id"]
@@ -312,7 +312,7 @@ def main():
             host.evaluate("""() => { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.fillStyle = '#6C7CFF'; x.fillRect(0, 0, 8, 8);
                 return TribeClient.api('/projects/pixel-quest', { method: 'PATCH', body: { image: c.toDataURL('image/png') } }); }""")
             host.wait_for_selector("#pj-rail [data-pj-open='pixel-quest'] .pj-face.img img")
-            host.click("#nest-title"); host.wait_for_selector("#pj-ws .pj-branch")
+            host.click("#nest-overview"); host.wait_for_selector("#pj-ws .pj-branch")
             shot(host, "project-cascade")
 
             # ---- mobile: a whole-tribe invite, the project switcher sheet, tab bar scoped to the project

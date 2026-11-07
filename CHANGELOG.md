@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.4
+
+One source of truth for where you are.
+- **The sidebar header card is gone**: the rail (which project) and the breadcrumb (which page) already say it
+- **Overview** is the first row of the project's tools, and it's the lit row when you're on the overview. Every page lights exactly one row (the Repo page lights Repo)
+- **Pinned links are plain rows** in the tool list (Repo with its branch, Preview app), marked with a small pin, instead of a separate card
+- **Hosting status** (uptime, commits today) moved to the bottom of the left rail: it's global, not a project tool
+
 ## v0.6.3
 
 Simpler navigation and a living overview for every project.

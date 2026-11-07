@@ -796,9 +796,10 @@
   function boot() {
     buildRack(); topBar(); swipe(); ensureUpdatesView(); composer();
     // Host uptime + commits today (people.js) belongs in the sidebar footer.
-    const foot = $('.nest-foot');
+    // Desktop: it's a global fact, so it sits small at the bottom of the left rail, not in a project's tools.
+    const desk = matchMedia('(min-width: 821px)').matches, foot = desk ? $('#tour-rail') : $('.nest-foot');
     if (foot && window.TribePeople && window.TribePeople.statusLine && !$('#nest-status')) {
-      const el = document.createElement('div'); el.id = 'nest-status'; foot.appendChild(el); window.TribePeople.statusLine(el);
+      const el = document.createElement('div'); el.id = 'nest-status'; if (desk) el.className = 'rail-status'; foot.appendChild(el); window.TribePeople.statusLine(el);
       const d = $('#people-status'); if (d) d.remove();
     }
     const watch = (id, fn) => { const el = document.getElementById(id); if (el) new MutationObserver(fn).observe(el, { childList: true, characterData: true, subtree: true, attributes: true }); };
