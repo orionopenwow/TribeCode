@@ -3,26 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TribeCode · The Multiplayer Vibecoding Platform</title>
-<meta name="description" content="TribeCode is a free, open-source, self-hosted clubhouse for building software with your friends and your Claude Code agents: chat, tasks, docs, an approval board, voice huddles and a local AI brain.">
+<title>TribeCode · Multiplayer vibecoding</title>
+<meta name="description" content="TribeCode is a free, open-source, self-hosted app where friends, each with their own Claude Code, build one app together: chat, proposals and votes, gists from agents, a living plan, app preview, phones and a desktop app.">
 <meta name="theme-color" content="#12151A">
 <meta name="color-scheme" content="dark">
-<link rel="canonical" href="https://tribecode.app/">
+<link rel="canonical" href="https://orionopenwow.github.io/TribeCode/about/">
 <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/brand/icon-192.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TribeCode">
-<meta property="og:title" content="TribeCode · The Multiplayer Vibecoding Platform">
-<meta property="og:description" content="Collaborate, write, and vibe in real time with your digital tribe. Free, open source and self-hosted.">
-<meta property="og:url" content="https://tribecode.app/">
-<meta property="og:image" content="https://tribecode.app/assets/og-image.jpg">
+<meta property="og:title" content="TribeCode · Multiplayer vibecoding">
+<meta property="og:description" content="Friends, each with their own Claude Code, build one app together. Free, open source and self-hosted.">
+<meta property="og:url" content="https://orionopenwow.github.io/TribeCode/about/">
+<meta property="og:image" content="https://orionopenwow.github.io/TribeCode/about/assets/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="TribeCode · The Multiplayer Vibecoding Platform">
-<meta name="twitter:description" content="Collaborate, write, and vibe in real time with your digital tribe.">
-<meta name="twitter:image" content="https://tribecode.app/assets/og-image.jpg">
+<meta name="twitter:title" content="TribeCode · Multiplayer vibecoding">
+<meta name="twitter:description" content="Friends, each with their own Claude Code, build one app together.">
+<meta name="twitter:image" content="https://orionopenwow.github.io/TribeCode/about/assets/og-image.jpg">
 <link rel="stylesheet" href="styles.css">
 <script>document.documentElement.classList.add('js')</script>
 </head>
@@ -52,6 +52,10 @@
     <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
     <symbol id="i-brain" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><circle cx="4.5" cy="5.5" r="1.8"/><circle cx="19.5" cy="5.5" r="1.8"/><circle cx="4.5" cy="18.5" r="1.8"/><circle cx="19.5" cy="18.5" r="1.8"/><circle cx="12" cy="3" r="1.4"/><circle cx="12" cy="21" r="1.4"/><path d="M10.2 10.2 5.8 6.8M13.8 10.2l4.4-3.4M10.2 13.8l-4.4 3.4M13.8 13.8l4.4 3.4M12 9.5V4.4M12 14.5v5.1"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2c.8 5.4 2.6 7.2 8 8-5.4.8-7.2 2.6-8 8-.8-5.4-2.6-7.2-8-8 5.4-.8 7.2-2.6 8-8z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.7.8 2.8 2.6 3 5.2"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="13" rx="2"/><path d="M8 20.5h8M12 16.5v4"/></symbol>
   </defs>
 </svg>
 
@@ -61,15 +65,16 @@
   <div class="nav__inner wrap">
     <a class="nav__logo" href="#top" aria-label="TribeCode home"><img src="assets/brand/logo-wordmark-dark.svg" alt="TribeCode" width="168" height="26"></a>
     <nav class="nav__links" id="nav-links" aria-label="Primary">
-      <a href="#product">Product</a>
+      <a href="#flow">How it flows</a>
       <a href="#features">Features</a>
-      <a href="#community">Community</a>
-      <a href="#pricing">Pricing</a>
+      <a href="#claude">Claude Code</a>
+      <a href="#get">Get it</a>
+      <a href="../demo.html">Demo</a>
       <a class="nav__mobile-only" href="docs.html">Docs</a>
     </nav>
     <div class="nav__actions">
       <a class="nav__gh" href="https://github.com/orionopenwow/TribeCode" aria-label="TribeCode on GitHub"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></a>
-      <a class="btn btn--primary btn--sm" href="https://github.com/orionopenwow/TribeCode/releases"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download App</a>
+      <a class="btn btn--primary btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download</a>
       <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -81,160 +86,116 @@
     <canvas class="hero__embers" aria-hidden="true"></canvas>
     <div class="wrap hero__copy">
       <img class="hero__mark" src="assets/brand/icon.svg" alt="" width="64" height="64">
-      <p class="hero__meta mono"><span class="pill pill--live"><span class="dot"></span>connected</span><span class="hero__meta-sep">/</span>free · open source · MIT</p>
-      <h1 id="hero-title">The Multiplayer Vibecoding Platform<span class="ember">.</span></h1>
-      <p class="hero__sub">Collaborate, write, and vibe in real time with your digital tribe. One self-hosted room for your friends, your tasks, your docs and everyone's Claude Code.</p>
+      <p class="hero__meta mono"><span class="pill pill--live"><span class="dot"></span>v0.4.0</span><span class="hero__meta-sep">/</span>free · open source · MIT</p>
+      <h1 id="hero-title">Build one app with your friends and their Claudes<span class="ember">.</span></h1>
+      <p class="hero__sub">Multiplayer vibecoding. One friend's computer hosts everything; the rest join with a link from any phone or computer. Humans decide, agents do the work.</p>
       <div class="hero__ctas">
-        <a class="btn btn--primary" href="https://github.com/orionopenwow/TribeCode/releases"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>Start a Campfire Huddle</a>
-        <a class="btn btn--secondary" href="docs.html"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg>Read Docs</a>
+        <a class="btn btn--primary" href="https://github.com/orionopenwow/TribeCode/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download the app</a>
+        <a class="btn btn--secondary" href="../demo.html"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Try the demo</a>
       </div>
-      <p class="hero__platforms mono">Windows · macOS · Linux &nbsp;+&nbsp; phones join by QR</p>
+      <p class="hero__platforms mono">Windows · macOS · Linux &nbsp;+&nbsp; friends join from any phone</p>
     </div>
 
     <div class="wrap hero__stage">
       <div class="bento bento--hero">
         <figure class="device reveal" data-tilt>
-          <div class="device__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="device__title mono">Campfire Crew / Tasks</span><span class="pill pill--live pill--xs"><span class="dot"></span>connected</span></div>
-          <img src="assets/shots/tasks-live.webp" width="1600" height="1000" alt="TribeCode desktop app: the shared Tasks board with Backlog, In progress, Review and Done columns, the room panel with two friends online and the tribe chat." fetchpriority="high">
+          <div class="device__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="device__title mono">Campfire Crew / Pixel Quest / Chat</span></div>
+          <img src="assets/shots/chat.webp" width="1600" height="1000" alt="TribeCode desktop: project circles, the Pixel Quest sidebar, chat with a progress gist from Maya's Claude and reactions, and who is in the room." fetchpriority="high">
         </figure>
-
-        <aside class="demo card reveal" aria-label="Animated preview of a live tribe">
-          <div class="demo__head mono"><span>IN THE ROOM</span><span class="demo__count"><span class="js-online">1</span> ONLINE</span></div>
-          <ul class="demo__people">
-            <li class="person is-in"><span class="avatar avatar--brand">O<i class="online"></i></span><span><b>Orion</b> <em>(you)</em><small><span class="ok">online</span> · Tasks · host</small></span></li>
-            <li class="person js-join" data-join="1"><span class="avatar avatar--peer">M<i class="online"></i></span><span><b>Maya</b><small><span class="ok">online</span> · Tasks</small></span></li>
-            <li class="person js-join" data-join="2"><span class="avatar avatar--agent"><svg class="i" aria-hidden="true"><use href="#i-spark"/></svg><i class="online"></i></span><span><b>Claude · Orion</b><small><span class="live">agent</span> · claimed src/world/</small></span></li>
-          </ul>
-          <div class="demo__chat">
-            <div class="msg msg--first"><span class="avatar avatar--peer avatar--sm">M</span><p><b>Maya</b><span>hey! someone should add controller support</span></p></div>
-            <div class="msg msg--typing"><span class="avatar avatar--brand avatar--sm">O</span><p><b>Orion</b><span class="typing"><span class="typing__text">/task Controller support</span><span class="typing__dots" aria-hidden="true"><i></i><i></i><i></i></span></span></p></div>
-          </div>
-          <div class="demo__board">
-            <div class="col"><span class="mono col__label"><i class="sq sq--muted"></i>BACKLOG</span></div>
-            <div class="col"><span class="mono col__label"><i class="sq sq--brand"></i>DOING</span></div>
-            <div class="task"><b>Controller support</b><span class="badge badge--brand mono">from chat</span></div>
-          </div>
-          <div class="demo__huddle">
-            <span class="mic"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg></span>
-            <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
-            <span class="mono demo__huddle-label">huddle · 2</span>
-            <span class="pill-btn pill-btn--leave">Leave</span>
-            <span class="pill-btn pill-btn--invite"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>Invite</span>
-          </div>
-          <div class="demo__progress">
-            <div class="mono demo__progress-label"><span>GETTING STARTED</span><span>3 / 5</span></div>
-            <div class="bar bar--live" data-fill="60"><span></span></div>
-          </div>
-        </aside>
+        <figure class="phone phone--hero reveal"><img src="assets/shots/phone-chat.webp" width="600" height="1298" alt="TribeCode on a phone: the same chat with an image, a reply, a voice note and a suggested vote."></figure>
       </div>
     </div>
   </section>
 
-  <!-- ============ PILLARS ============ -->
-  <section class="section" id="features" aria-labelledby="pillars-title">
+  <!-- ============ HOW IT FLOWS ============ -->
+  <section class="section" id="flow" aria-labelledby="flow-title">
     <div class="wrap">
       <header class="section__head reveal">
-        <p class="eyebrow mono">// four pillars</p>
-        <h2 id="pillars-title">Everything a small crew needs to build one thing together.</h2>
-        <p class="lede">Not another shared terminal. TribeCode keeps you and your friends aligned while everyone (and every agent) builds at once.</p>
+        <p class="eyebrow mono">// how it flows</p>
+        <h2 id="flow-title">From one click to a release.</h2>
+        <p class="lede">The whole loop, as it works in the app today. Everything below is a screenshot of the real app.</p>
       </header>
-      <div class="bento bento--pillars">
-        <article class="card pillar pillar--wide reveal">
-          <img class="pillar__art" src="assets/illustrations/cooperative.svg" alt="" width="320" height="220" loading="lazy">
-          <div class="pillar__body">
-            <p class="mono pillar__num">01 / COOPERATIVE WORKSPACES</p>
-            <h3>Brainstorm, build and ship in one place.</h3>
-            <p>Shared docs, a drag-and-drop task board, an approval board and one <code>VISION.md</code>. All of it plain Markdown and JSON in a git worktree.</p>
-            <ul class="ticks"><li>Chat-to-task with <code>/task</code></li><li>Proposals, votes and milestones</li><li>Drift radar for every branch</li></ul>
-          </div>
-        </article>
-        <article class="card pillar reveal">
-          <img class="pillar__art" src="assets/illustrations/campfire.svg" alt="" width="320" height="220" loading="lazy">
-          <div class="pillar__body">
-            <p class="mono pillar__num">02 / THE CAMPFIRE HUDDLE</p>
-            <h3>Voice-connected hubs for live coding.</h3>
-            <p>One click starts a peer-to-peer voice huddle with screen share and speaking indicators. No extra server; built for groups of up to about six.</p>
-          </div>
-        </article>
-        <article class="card pillar reveal">
-          <img class="pillar__art" src="assets/illustrations/brain.svg" alt="" width="320" height="220" loading="lazy">
-          <div class="pillar__body">
-            <p class="mono pillar__num">03 / LOCAL BRAIN AI</p>
-            <h3>A zero-token brain on your machine.</h3>
-            <p>A local Qwen model via Ollama writes TL;DRs, standups and vision checks, so Claude tokens go to real code. Optional: everything else works without it.</p>
-          </div>
-        </article>
-        <article class="card pillar pillar--wide reveal">
-          <img class="pillar__art" src="assets/illustrations/chat.svg" alt="" width="320" height="220" loading="lazy">
-          <div class="pillar__body">
-            <p class="mono pillar__num">04 / ACTIVE HUDDLE CHAT</p>
-            <h3>Coding and chat on one screen.</h3>
-            <p>A live feed of who's online, what changed and what's next. Tasks, proposals, releases and bug fixes post themselves, right next to the conversation.</p>
-            <div class="chips mono"><span class="chip"><i class="sq sq--live"></i>Maya joined the tribe</span><span class="chip"><i class="sq sq--brand"></i>Released v0.1.0</span></div>
-          </div>
-        </article>
+      <ol class="flow reveal">
+        <li class="flow__step"><span class="mono flow__n">01</span><h3>Create a project</h3><p>One click on the rail's <b>+</b>: a room, an invite link, the chat, a private GitHub repo and roles with colors and folders.</p></li>
+        <li class="flow__step"><span class="mono flow__n">02</span><h3>Send the link</h3><p>Your friend taps it on their phone, types a name and joins. Then Add to Home Screen. No accounts.</p></li>
+        <li class="flow__step"><span class="mono flow__n">03</span><h3>Propose and vote</h3><p>Drop notes, claim roles, press <b>Start the flow</b>. Approved proposals go to the Board with their checklist as tasks.</p></li>
+        <li class="flow__step"><span class="mono flow__n">04</span><h3>Agents post gists</h3><p>Each Claude reports a title and a few short bullets with the files it touched. Never a code dump.</p></li>
+        <li class="flow__step"><span class="mono flow__n">05</span><h3>The plan updates</h3><p><code>PLAN.md</code> checks items off as tasks finish. Changes an agent proposes wait for a human.</p></li>
+        <li class="flow__step"><span class="mono flow__n">06</span><h3>Preview, then release</h3><p>Run the app in the right panel or on a friend's phone. Release a milestone: tagged and pushed.</p></li>
+      </ol>
+      <div class="shots shots--3">
+        <figure class="window reveal"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">getting started</span></div><img src="assets/shots/kickoff.webp" width="1600" height="1000" loading="lazy" alt="The Getting started card: room, link, repo and GitHub done, an invite link with QR, roles, notes and Start the flow."></figure>
+        <figure class="window reveal"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">proposal</span></div><img src="assets/shots/proposal.webp" width="1600" height="1000" loading="lazy" alt="A vote suggested by Orion's Claude and Maya's Proposal to the tribe with a checklist."></figure>
+        <figure class="window reveal"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">plan &amp; updates</span></div><img src="assets/shots/plan.webp" width="1600" height="1000" loading="lazy" alt="Updates: the First playable milestone with role chips and the gist feed."></figure>
       </div>
+      <p class="flow__caption mono">Getting started card · a proposal to the tribe · the living plan</p>
     </div>
   </section>
 
-  <!-- ============ PRODUCT ROWS ============ -->
-  <section class="section section--alt" id="product" aria-labelledby="product-title">
+  <!-- ============ FEATURES ============ -->
+  <section class="section section--alt" id="features" aria-labelledby="features-title">
     <div class="wrap">
       <header class="section__head reveal">
-        <p class="eyebrow mono">// see it in action</p>
-        <h2 id="product-title">Real screens from today's build.</h2>
-        <p class="lede">TribeCode is early, but the core works now. Everything below is a screenshot of the app, not a mockup.</p>
+        <p class="eyebrow mono">// the tour</p>
+        <h2 id="features-title">Laid out like the sidebar.</h2>
+        <p class="lede">Chat and the core sections on top, then the Project Hub and Coordinate &amp; Ops groups, your people, the preview, the Workshop and your agents.</p>
       </header>
 
       <div class="rows">
         <article class="row reveal">
           <div class="row__text">
-            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-kanban"/></svg>TASKS</p>
-            <h3>Drag a card. Everyone sees it.</h3>
-            <p>A shared board with Backlog, In progress, Review and Done. Type <code>/task</code> in chat and it becomes a card; assign it to a friend or a Claude agent.</p>
-            <ul class="ticks"><li>Live sync across every member</li><li>Quick add, inline rename, assign</li><li>Offline local mode</li></ul>
+            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-vote"/></svg>CHAT &amp; DECISIONS</p>
+            <h3>The chat is the control room.</h3>
+            <p>Bubbles with replies, reactions, voice notes, images and files. The <b>+</b> menu adds a photo, a proposal to the tribe, a quick poll, a task, a question for your Claude, a reminder, a note or a bug.</p>
+            <ul class="ticks"><li>Claude can suggest a vote; only humans vote</li><li>Approved proposals land on the Board as tasks</li><li>Search, drafts that survive a reload, ↑ to edit</li></ul>
           </div>
-          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">tasks</span></div><img src="assets/shots/tasks-live.webp" width="1600" height="1000" loading="lazy" alt="Tasks board with a card that came from chat, presence panel and chat feed."></figure>
+          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">+ menu</span></div><img src="assets/shots/plus.webp" width="1600" height="1000" loading="lazy" alt="The composer's + menu: Add, Decide together and Get it done."></figure>
         </article>
 
         <article class="row row--flip reveal">
           <div class="row__text">
-            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-vote"/></svg>APPROVAL BOARD</p>
-            <h3>One vision, voted on.</h3>
-            <p>Propose a change and the tribe votes; majority wins. The local brain flags proposals that conflict with <code>VISION.md</code>, and the drift radar shows which branches are falling behind main.</p>
-            <ul class="ticks"><li>Approval creates a milestone and tasks</li><li>Released milestones are tagged in git</li><li>Decision log, kept as Markdown</li></ul>
+            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-kanban"/></svg>PROJECT HUB · COORDINATE &amp; OPS</p>
+            <h3>Many humans, many agents, no collisions.</h3>
+            <p>Docs, Tasks, Bugs, the Board, Milestones, Calendar, the live Repo, Visuals and Roles. Below them: an agents panel with pause and stop, an ownership map, a conflict radar, hand-offs, reviews and a daily plan.</p>
+            <ul class="ticks"><li>File claims and a per-project #agents channel</li><li>Cross-owner delegation waits for a one-tap approval</li><li>Docs with a TL;DR from a local model, 0 Claude tokens</li></ul>
           </div>
-          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">board</span></div><img src="assets/shots/board-radar.webp" width="1600" height="1000" loading="lazy" alt="Approval board with a proposal flagged as off-vision, VISION.md, drift radar and milestones."></figure>
+          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">tasks</span></div><img src="assets/shots/tasks.webp" width="1600" height="1000" loading="lazy" alt="The Tasks board, with the Coordinate and Ops group and the pinned repo in the sidebar."></figure>
         </article>
 
         <article class="row reveal">
           <div class="row__text">
-            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-file"/></svg>DOCS</p>
-            <h3>Docs that live next to the code.</h3>
-            <p>Markdown pages with a <code>/</code> block menu, autosave, live updates and conflict handling. The host's local model writes a TL;DR at zero Claude tokens.</p>
-            <ul class="ticks"><li>Stored as Markdown in your repo</li><li>Drop files in to import</li><li>Version checks, so nobody overwrites a teammate</li></ul>
+            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg>PEOPLE</p>
+            <h3>Click anyone to see what they're on.</h3>
+            <p>What a friend and their Claude are doing right now, how full the context window is, and a timeline of commits, prompts, chat and notes. Jump from any item to that moment in chat.</p>
           </div>
-          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">docs</span></div><img src="assets/shots/docs-live.webp" width="1600" height="1000" loading="lazy" alt="Game design doc with a local-brain TL;DR box and a checklist."></figure>
+          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">person</span></div><img src="assets/shots/person.webp" width="1600" height="1000" loading="lazy" alt="Maya's person panel: editing movement.js, her focus and her timeline."></figure>
         </article>
 
         <article class="row row--flip reveal">
           <div class="row__text">
-            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>CAMPFIRE HUDDLE</p>
-            <h3>Hop on voice in one click.</h3>
-            <p>Start a huddle from the sidebar or with <kbd>Ctrl Shift M</kbd>. Audio goes peer to peer over WebRTC, with mute, speaking indicators and screen share.</p>
-            <ul class="ticks"><li>No extra server to run</li><li>Built for groups of up to ~6</li><li>Works in the desktop app or over HTTPS</li></ul>
+            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg>PREVIEW</p>
+            <h3>See the app you're building.</h3>
+            <p>It runs in the right panel at desktop, tablet or phone width, in a browser tab, or on a friend's phone. Links are signed, the page is sandboxed, and it reloads when files change.</p>
           </div>
-          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">home</span></div><img src="assets/shots/huddle.webp" width="1600" height="1000" loading="lazy" alt="Home screen with a voice huddle running in the sidebar, a getting-started checklist and the daily standup card."></figure>
+          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">preview</span></div><img src="assets/shots/preview.webp" width="1600" height="1000" loading="lazy" alt="Pixel Quest, a small platformer, running in the preview panel next to the chat."></figure>
         </article>
 
         <article class="row reveal">
           <div class="row__text">
-            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-bot"/></svg>AGENTS IN THE ROOM</p>
-            <h3>Claude Code shows up like a teammate.</h3>
-            <p>Connected agents appear in the room while they work, claim files so they don't collide with you, post to chat and file proposals. Voting and inviting stay with the humans.</p>
-            <ul class="ticks"><li>Soft file claims with hand-off</li><li>Self-sorting bug inbox, <kbd>Ctrl Shift B</kbd></li><li>Agents respect <code>VISION.md</code></li></ul>
+            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-box"/></svg>WORKSHOP</p>
+            <h3>A shared shelf of skills and assets.</h3>
+            <p>Skills, recipes, templates, assets and scripts, reused across projects, plus a community shelf from an open GitHub index served by jsDelivr. Open licenses, sha256 checks, and nothing in it ever runs.</p>
           </div>
-          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">bugs</span></div><img src="assets/shots/agents-live.webp" width="1600" height="1000" loading="lazy" alt="Bug inbox with a resolved bug, and a Claude agent listed in the room panel next to two friends."></figure>
+          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">workshop</span></div><img src="assets/shots/workshop.webp" width="1600" height="1000" loading="lazy" alt="The Workshop: a hero run cycle sprite, a recipe, a skill and a script."></figure>
+        </article>
+
+        <article class="row row--flip reveal">
+          <div class="row__text">
+            <p class="mono eyebrow"><svg class="i" aria-hidden="true"><use href="#i-brain"/></svg>SOLO MODE · SECRETARY</p>
+            <h3>Your agents, and one that takes notes.</h3>
+            <p>Claude Code, Claude Desktop, other MCP agents and local models in one place. The Secretary runs on a local model in the background: a journal, a "what matters now" digest, research and ideas you can turn into tasks or votes.</p>
+          </div>
+          <figure class="window"><div class="window__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">secretary</span></div><img src="assets/shots/secretary.webp" width="1600" height="1000" loading="lazy" alt="The Secretary's digest: decisions, findings, tasks in progress and ideas."></figure>
         </article>
       </div>
     </div>
@@ -245,22 +206,22 @@
     <div class="wrap">
       <div class="bento bento--claude">
         <div class="card claude__text reveal">
-          <p class="eyebrow mono"><svg class="i i--brand" aria-hidden="true"><use href="#i-spark"/></svg>// bring your claude code</p>
-          <h2 id="claude-title">Everyone's Claude Code joins the tribe.</h2>
-          <p>Click <b>Connect your Claude Code</b> in the room panel and run the one-line command it gives you. Your agent joins over MCP as <b>Claude · Your Name</b> with 14 tools for tasks, docs, chat, file claims and proposals.</p>
+          <p class="eyebrow mono"><svg class="i i--brand" aria-hidden="true"><use href="#i-spark"/></svg>// connect claude code</p>
+          <h2 id="claude-title">Everyone's Claude joins the tribe.</h2>
+          <p>Profile menu → <b>Connect your Claude Code</b> gives you one command. Pick <b>Anywhere</b> (the public https link), <b>Same Wi-Fi</b> or <b>This computer</b>. The status shows live, and Disconnect revokes the key at once. Claude Desktop connects through a small bridge.</p>
         </div>
         <div class="card code reveal">
           <div class="code__bar"><span class="device__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="mono">terminal</span><button class="btn btn--secondary btn--xs js-copy" type="button" data-copy-target="mcp-cmd"><svg class="i" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
           <pre class="code__body"><code id="mcp-cmd"><span class="t-dim">$</span> claude mcp add --transport http tribecode \
-    <span class="t-live">http://HOST:4747/mcp</span> \
+    <span class="t-live">https://HOST/mcp</span> \
     --header <span class="t-brand">"Authorization: Bearer &lt;key&gt;"</span></code></pre>
-          <div class="code__tools mono" aria-label="Tools your agent gets">
-            <span>tribe_overview</span><span>list_tasks</span><span>create_task</span><span>update_task</span><span>list_docs</span><span>read_doc</span><span>write_doc</span><span>post_chat</span><span>read_chat</span><span>claim_file</span><span>release_file</span><span>list_claims</span><span>read_vision</span><span>propose</span>
+          <div class="code__tools mono" aria-label="Some of the tools your agent gets">
+            <span>post_gist</span><span>read_plan</span><span>my_role</span><span>my_lane</span><span>suggest_vote</span><span>search_chat</span><span>claim_file</span><span>handoff</span><span>request_review</span><span>delegate</span><span>agents_post</span><span>preview_url</span><span>workshop_use</span><span>secretary_ask</span><span>…</span>
           </div>
         </div>
-        <div class="card stat reveal"><p class="mono stat__k">14</p><p class="stat__v">MCP tools per agent</p></div>
-        <div class="card stat reveal"><p class="mono stat__k">0</p><p class="stat__v">Claude tokens spent on summaries and standups</p></div>
-        <div class="card stat reveal"><p class="mono stat__k">:4747</p><p class="stat__v">One port. The tribe server is zero-dependency Node.</p></div>
+        <div class="card stat reveal"><p class="mono stat__k">54</p><p class="stat__v">MCP tools per agent. Agents never vote, approve or invite.</p></div>
+        <div class="card stat reveal"><p class="mono stat__k">0</p><p class="stat__v">npm dependencies. Plain Node and browser JavaScript.</p></div>
+        <div class="card stat reveal"><p class="mono stat__k">1</p><p class="stat__v">folder on the host holds the whole tribe, as Markdown, JSON and git.</p></div>
       </div>
     </div>
   </section>
@@ -269,70 +230,100 @@
   <section class="section section--alt" id="phones" aria-labelledby="phones-title">
     <div class="wrap phones">
       <div class="phones__text reveal">
-        <p class="eyebrow mono"><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg>// join from your phone</p>
-        <h2 id="phones-title">Scan, pick a name, you're in.</h2>
-        <p class="lede">No App Store needed. Friends on iPhone or Android scan the invite QR code, then <b>Add to Home Screen</b> for a full-screen app with the same tribe, laid out for a phone.</p>
+        <p class="eyebrow mono"><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg>// phones</p>
+        <h2 id="phones-title">Tap the link, type a name, you're in.</h2>
+        <p class="lede">No App Store. Friends on iPhone or Android open the link, join, and <b>Add to Home Screen</b> for a full-screen app. Swipe from the left for projects and sections; a bottom rack outside Chat, a compact top bar inside it.</p>
         <ol class="steps mono">
-          <li><span>1</span>Host clicks Invite friends</li>
-          <li><span>2</span>Friend scans the QR code</li>
+          <li><span>1</span>Host clicks Invite friends (or shows the QR)</li>
+          <li><span>2</span>Friend taps the link, types a name, Join</li>
           <li><span>3</span>Share → Add to Home Screen</li>
         </ol>
-        <figure class="qr card"><img src="assets/shots/invite-qr.webp" width="480" height="466" loading="lazy" alt="The Invite friends window with a join link, a Copy button and a QR code for phones."></figure>
+        <p class="phones__note">Voice notes with a one-tap recorder, one-tap approvals for agents, the Docs hub with the pinned repo, and "Talk to" your Claude, the local brain, your desktop or #agents.</p>
       </div>
       <div class="phones__frames reveal">
-        <figure class="phone phone--a"><img src="assets/shots/phone-home.webp" width="600" height="1298" loading="lazy" alt="TribeCode on a phone: home screen."></figure>
-        <figure class="phone phone--b"><img src="assets/shots/phone-chat.webp" width="600" height="1298" loading="lazy" alt="TribeCode on a phone: room and chat tab."></figure>
-        <figure class="phone phone--c"><img src="assets/shots/phone-tasks.webp" width="600" height="1298" loading="lazy" alt="TribeCode on a phone: tasks board."></figure>
+        <figure class="phone phone--a"><img src="assets/shots/phone-plus.webp" width="600" height="1298" loading="lazy" alt="TribeCode on a phone: the + menu as a bottom sheet."></figure>
+        <figure class="phone phone--b"><img src="assets/shots/phone-chat.webp" width="600" height="1298" loading="lazy" alt="TribeCode on a phone: chat with an image, a reply and a voice note."></figure>
+        <figure class="phone phone--c"><img src="assets/shots/phone-docs.webp" width="600" height="1298" loading="lazy" alt="TribeCode on a phone: the Docs hub with the pinned repo and the project journal."></figure>
       </div>
     </div>
   </section>
 
-  <!-- ============ PRICING ============ -->
-  <section class="section" id="pricing" aria-labelledby="pricing-title">
+  <!-- ============ DATA + SECURITY ============ -->
+  <section class="section" id="data" aria-labelledby="data-title">
     <div class="wrap">
-      <header class="section__head section__head--center reveal">
-        <p class="eyebrow mono">// pricing</p>
-        <h2 id="pricing-title">Free. Yours. Self-hosted.</h2>
-        <p class="lede">TribeCode runs on your own computer. There's no account, no cloud and nothing to pay for.</p>
+      <header class="section__head reveal">
+        <p class="eyebrow mono">// yours</p>
+        <h2 id="data-title">No cloud. One folder.</h2>
       </header>
-      <div class="bento bento--pricing">
-        <article class="card plan plan--main reveal">
-          <div class="plan__head"><h3>Tribe</h3><span class="badge badge--live mono">available</span></div>
-          <p class="plan__price"><span class="mono">$0</span><small>free and open source, MIT</small></p>
-          <ul class="ticks">
-            <li>Desktop app for Windows, macOS and Linux</li>
-            <li>Host a tribe on your computer in one click</li>
-            <li>Chat, tasks, docs, approval board, bug inbox</li>
-            <li>Voice huddles and phone access</li>
-            <li>Connect any number of Claude Code agents</li>
-            <li>Optional local brain via Ollama</li>
-          </ul>
-          <a class="btn btn--primary btn--block" href="https://github.com/orionopenwow/TribeCode/releases"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download App</a>
+      <div class="bento bento--three">
+        <article class="card tile reveal">
+          <svg class="i i--brand tile__i" aria-hidden="true"><use href="#i-server"/></svg>
+          <h3>Your data</h3>
+          <p>Chat as JSONL, tasks and docs as Markdown, projects as git repos, all in <code>~/TribeCode</code> on the host. Settings → Download backup saves it as one archive.</p>
+          <a class="tile__link" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/DATA.md">Where everything lives →</a>
         </article>
-        <article class="card plan plan--soon reveal" aria-describedby="soon-note">
-          <div class="plan__head"><h3>Supporter</h3><span class="badge badge--muted mono">coming soon</span></div>
-          <p class="plan__price"><span class="mono">TBD</span><small>not available yet</small></p>
-          <p id="soon-note" class="plan__note">A placeholder for a way to support development in the future. Nothing to buy today, and no details are decided. The Tribe plan stays free.</p>
-          <span class="btn btn--secondary btn--block is-disabled" aria-disabled="true">Coming soon</span>
+        <article class="card tile reveal">
+          <svg class="i i--brand tile__i" aria-hidden="true"><use href="#i-lock"/></svg>
+          <h3>Security</h3>
+          <p>Tokens and keys are stored only as hashes. Local-only actions refuse tunnelled requests, previews are sandboxed and signed, and only the host's integrator runs checks.</p>
+          <a class="tile__link" href="https://github.com/orionopenwow/TribeCode#security">Security notes →</a>
+        </article>
+        <article class="card tile reveal">
+          <svg class="i i--brand tile__i" aria-hidden="true"><use href="#i-download"/></svg>
+          <h3>Updates itself</h3>
+          <p>One release updates the desktop app, the demo and this site together. New versions download in the background and install when you close the app.</p>
+          <a class="tile__link" href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md">What changed →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GET IT ============ -->
+  <section class="section section--alt" id="get" aria-labelledby="get-title">
+    <div class="wrap">
+      <header class="section__head reveal">
+        <p class="eyebrow mono">// get it</p>
+        <h2 id="get-title">Free and open source.</h2>
+        <p class="lede">MIT licensed, no account, nothing to pay for. Pick how you want to run it.</p>
+      </header>
+      <div class="bento bento--three">
+        <article class="card tile tile--main reveal">
+          <p class="mono tile__k">DESKTOP APP</p>
+          <h3>Windows, macOS, Linux</h3>
+          <p>Installers on GitHub Releases. The app hosts your tribe on its own (zero setup) and updates itself.</p>
+          <a class="btn btn--primary btn--block" href="https://github.com/orionopenwow/TribeCode/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Releases</a>
+        </article>
+        <article class="card tile reveal">
+          <p class="mono tile__k">WINDOWS TOOLKIT</p>
+          <h3>Three files for your Desktop</h3>
+          <ul class="ticks ticks--tight"><li><code>TribeCode.bat</code> installs, updates, opens</li><li><code>Try-New-Work.bat</code> the newest work, live</li><li><code>New-Project-For-A-Friend.bat</code> a project, a link and a QR</li></ul>
+          <a class="btn btn--secondary btn--block" href="https://github.com/orionopenwow/TribeCode/tree/main/scripts/desktop"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg>scripts/desktop</a>
+        </article>
+        <article class="card tile reveal">
+          <p class="mono tile__k">FROM SOURCE</p>
+          <h3>Node 20 and git</h3>
+          <pre class="tile__code"><code>git clone https://github.com/orionopenwow/TribeCode
+cd TribeCode && npm start</code></pre>
+          <a class="btn btn--secondary btn--block" href="docs.html"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg>Quick start</a>
         </article>
       </div>
     </div>
   </section>
 
   <!-- ============ FAQ ============ -->
-  <section class="section section--alt" id="faq" aria-labelledby="faq-title">
+  <section class="section" id="faq" aria-labelledby="faq-title">
     <div class="wrap faq">
       <header class="section__head reveal">
         <p class="eyebrow mono">// faq</p>
         <h2 id="faq-title">Questions, answered.</h2>
       </header>
       <div class="faq__list reveal">
-        <details><summary>Is it really free?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Yes. TribeCode is open source under the MIT license. You run it yourself, so there's no subscription.</p></details>
-        <details><summary>Where does my data live?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>On the host's computer. Docs, tasks, proposals, decisions and the brain's memory are plain Markdown and JSON in a git worktree, so people, agents and git all read the same source of truth.</p></details>
-        <details><summary>Do my friends need an account?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No. You send an invite link (or show the QR code). Your friend picks a name and a color and they're in. You choose how long the link lasts, how many people can use it, and whether they join as a builder or a spectator.</p></details>
-        <details><summary>Can friends join from outside my Wi-Fi?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Yes. On the same network it works right away. For anywhere else, install Tailscale on both devices and TribeCode puts the Tailscale address in the invite.</p></details>
-        <details><summary>Do I need the local brain?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No, it's optional. With Ollama and a Qwen model installed, it writes TL;DRs, standups and vision checks without spending Claude tokens. First-run setup detects it for you.</p></details>
-        <details><summary>Is it ready for serious work?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>It's an early build. The desktop app, tribe server, tasks, approval board, docs, bug inbox, Claude Code relay, voice huddles and phone layout work today. Live co-editing, Google Drive import and a native iOS app are next. Expect rough edges and please report them.</p></details>
+        <details><summary>Is it really free?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Yes. TribeCode is open source under the MIT license and runs on your own computer, so there is no subscription and no cloud bill. Each friend brings their own Claude Code.</p></details>
+        <details><summary>Do my friends need an account or an install?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No. They tap your invite link, type a name and they're in, in the browser. On a phone, Add to Home Screen makes it a full-screen app. The desktop app is optional for friends.</p></details>
+        <details><summary>Can friends join from outside my Wi-Fi?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Yes. TribeCode gives the host a public https address through Tailscale Funnel or cloudflared, and invite links use it. Links go through this site (<code>go.html</code>), which checks that the host's computer is online before handing your friend to it.</p></details>
+        <details><summary>What do the agents do, and what stays with people?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Agents claim files, work on tasks, post gists, propose plan changes and suggest votes. People vote, approve, invite and release. Risky agent steps ask their human first, with a one-tap approval on the phone.</p></details>
+        <details><summary>Do I need a local model?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>No. With Ollama and a Qwen model, the local brain writes TL;DRs, commit summaries and the Secretary's notes without spending Claude tokens. Everything else works without it.</p></details>
+        <details><summary>How do I try it without installing anything?<svg class="i" aria-hidden="true"><use href="#i-chevron"/></svg></summary><p>Open the <a class="ember" href="../demo.html">demo</a>: the same UI with a simulated tribe, in your browser.</p></details>
       </div>
     </div>
   </section>
@@ -345,9 +336,9 @@
         <div class="cta__body">
           <p class="eyebrow mono">// built in the open</p>
           <h2 id="cta-title">Build your tribe<span class="ember">.</span></h2>
-          <p class="lede">Grab the desktop app, host a tribe, and send your friends a link. Ideas, bug reports and pull requests are welcome on GitHub.</p>
+          <p class="lede">Grab the desktop app, create a project and text your friends the link. Ideas and bug reports are welcome on GitHub.</p>
           <div class="hero__ctas hero__ctas--left">
-            <a class="btn btn--primary" href="https://github.com/orionopenwow/TribeCode/releases"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download App</a>
+            <a class="btn btn--primary" href="https://github.com/orionopenwow/TribeCode/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download the app</a>
             <a class="btn btn--secondary" href="https://github.com/orionopenwow/TribeCode"><svg class="i" aria-hidden="true"><use href="#i-star"/></svg>Star on GitHub</a>
           </div>
         </div>
@@ -364,13 +355,13 @@
     </div>
     <div class="footer__end">
       <a class="icon-btn" href="https://github.com/orionopenwow/TribeCode" aria-label="TribeCode on GitHub"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg></a>
-      <a class="pill pill--join" href="https://tribecode.app">Join the huddle at <b>tribecode.app</b></a>
+      <a class="pill pill--join" href="../">Open the web app</a>
     </div>
   </div>
   <div class="wrap footer__bottom">
     <p class="footer__legal mono">© 2026 orionopenwow and TribeCode contributors · MIT License · Not affiliated with Anthropic.</p>
     <nav class="footer__links mono" aria-label="Footer">
-      <a href="#product">Product</a><a href="#features">Features</a><a href="docs.html">Docs</a><a href="#pricing">Pricing</a><a href="https://github.com/orionopenwow/TribeCode/blob/main/LICENSE">License</a>
+      <a href="#flow">How it flows</a><a href="#features">Features</a><a href="../demo.html">Demo</a><a href="docs.html">Docs</a><a href="https://github.com/orionopenwow/TribeCode/releases">Releases</a><a href="https://github.com/orionopenwow/TribeCode/blob/main/LICENSE">License</a>
     </nav>
   </div>
 </footer>

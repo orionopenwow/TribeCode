@@ -2,257 +2,181 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-wordmark-dark.png">
-  <img src="assets/brand/logo-wordmark.png" width="380" alt="TribeCode">
+  <img src="assets/brand/logo-wordmark.png" width="340" alt="TribeCode">
 </picture>
 
-### The Multiplayer Vibecoding Platform
+**Multiplayer vibecoding. Friends, each with their own Claude Code, build one app together.**
 
-Collaborate, write, and vibe in real time with your digital tribe.
+One friend's computer hosts everything. Everyone else joins with a link, from any phone or computer.
 
-TribeCode is a lightweight, self-hosted clubhouse for building software together with your friends **and** your Claude Code agents: chat, docs, tasks, proposals and live sessions in one glassy desktop app.
+[![License: MIT](https://img.shields.io/badge/license-MIT-F26B1D.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)
+![Desktop](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-6C7CFF.svg)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-7C5CFF.svg)](LICENSE)
-![Status](https://img.shields.io/badge/status-design%20phase-FFB86B.svg)
-![Platforms](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-3DD6D0.svg)
-![Local first](https://img.shields.io/badge/brain-local%20Qwen-FF6F8E.svg)
-
-[Features](#-features) · [Screenshots](#-screenshots) · [How it works](#-how-it-works) · [Roadmap](#-roadmap) · [Feature spec](docs/FEATURE_SPEC.md) · [Brand](docs/BRAND.md)
+[Get it](#get-it) · [How it flows](#how-it-flows) · [Features](#features) · [Connect Claude Code](#connect-claude-code) · [Website](https://orionopenwow.github.io/TribeCode/about/) · [Try the demo](https://orionopenwow.github.io/TribeCode/demo.html)
 
 </div>
 
----
+<p align="center"><img src="docs/screenshots/readme-chat.png" alt="TribeCode desktop: project circles, the project sidebar, the Pixel Quest chat with gists from Maya's Claude, and who is in the room" width="100%"></p>
 
-> **Status:** early build. Working today: desktop shell, first-run setup, tour, auto-updater, the tribe server (invite links, presence, chat with `/task` and `/decide`), a shared drag-and-drop Tasks board, the approval board (proposals, votes, VISION.md, milestones tagged in git), shared Docs with a Notion-style editor, and the local brain (doc TL;DRs, daily standups, vision checks on proposals). Also working: the drift radar, a self-sorting, self-healing bug inbox, and the `Ctrl+K` command palette. The desktop app hosts the tribe itself and handles `tribecode://` invite links (built by CI, not yet run on real hardware) from [`design/mockups/app.html`](design/mockups/app.html) and are coming next (see [Roadmap](#-roadmap)).
+Humans decide, agents do the work. Agents report in short gists, propose changes and suggest votes; people approve with one tap. Everything lives as plain Markdown, JSON and git in one folder on the host's computer. No cloud, no accounts, zero npm dependencies.
 
-<p align="center">
-  <img src="docs/screenshots/shell-desktop.png" alt="TribeCode: project circles, project sidebar, overview and who is in the room" width="100%">
-</p>
-
-## 🔥 Four pillars
+## Get it
 
 | | |
-| --- | --- |
-| **1. Cooperative Workspaces** | Brainstorm, build and ship together: shared docs, tasks, an approval board and one VISION.md. |
-| **2. The Campfire Huddle** | Voice-connected hubs for live multiplayer coding, discussion and status updates. |
-| **3. Local Brain AI** | Offline AI on your machine plus Claude Code online: drop files, get summaries, check work against the vision. |
-| **4. Active Huddle Chat** | A live feed that brings coding and chat together on one screen. |
+|---|---|
+| **Desktop app** | Installers for Windows, Apple Silicon Mac and Linux on [Releases](https://github.com/orionopenwow/TribeCode/releases/latest). The app hosts your tribe by itself (no setup wizard) and updates itself: new versions download in the background and install when you close it. |
+| **Windows toolkit** | Three files for your Desktop, in [`scripts/desktop`](scripts/desktop): `TribeCode.bat` installs or updates the app and opens it · `Try-New-Work.bat` runs the newest work (the `dev` branch) live in the app window · `New-Project-For-A-Friend.bat` makes a Pixel Quest project, a public link with a QR page and the command for your Claude Code. |
+| **From source** | Node 20+ and git: `npm start`, then open http://localhost:4747 (tribe folder `~/TribeCode`). See [Develop and test](#develop-and-test). |
 
-*Build your tribe. Vibe & code.*
+## How it flows
 
-## ✨ Why TribeCode
-
-Multiplayer Claude Code tools already let people share a terminal session. TribeCode is built for the part that comes next: keeping a small crew **aligned** while everyone (and every agent) builds at once.
-
-- **🔗 One link to join.** Send `tribe.link/k7Qx2`. Your friend picks a name and a color and is in. No email, no password form.
-- **🧭 One vision.** Proposals, an approval board, a drift radar and a `VISION.md` check stop people from building divergent copies.
-- **🧠 A zero-token brain.** A local Qwen model (via Ollama) writes summaries, standups and triage and keeps project memory, so Claude tokens go to real code.
-- **📝 Notion-like docs next to the code.** Blocks, slash menu, inline databases and Google Docs import, all stored as Markdown in your repo.
-- **🏷️ Milestones ship themselves.** When the board approves a milestone, TribeCode tags it, writes the changelog and pushes it to GitHub.
-
-## 🧩 Features
-
-| Area | Highlights |
-| --- | --- |
-| **Project rooms** | Discord-style project circles, each its own room: people, chat, docs, tasks, requests, calendar, repo · drop a repo or folder (or paste a GitHub URL) to start one · project-only invites · “Give me a branch” worktrees with commits attributed to each member · see **[docs/PROJECTS.md](docs/PROJECTS.md)** |
-| **Sessions** | Live lobby + follow mode · shared Claude Code relay over MCP · soft file claims · one-click voice huddles · spectator links |
-| **Alignment** | Proposals + approval board · drift radar · vision check · milestone auto-commit to GitHub · session snapshots · merge helper |
-| **Tasks** | Chat-to-task · auto standup · task ↔ branch link · assign tasks to Claude agents with a token cap · token budget meter |
-| **Knowledge** | Universal drop zone (any file → Markdown + TL;DR) · local semantic search · decision log · brain review queue · onboarding pack |
-| **Quality of life** | `Ctrl+K` command palette · focus mode + digest · one-key bug capture · shared skill shelf · easy remote hosting via Tailscale |
-| **Core** | Docs · Tasks · Projects · self-sorting, self-healing bug reports · drag and drop everywhere · glassmorphic dark + light themes |
-
-The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/FEATURE_SPEC.md)**.
-
-## 📸 Screenshots
-
-### New in v0.2
+1. **Create a project.** One click on the rail's **+**: a room, an invite link, the chat, a private GitHub repo with a starter, and roles with colors and folders.
+2. **Send the link.** Your friend taps it on their phone, types a name, taps Join, then Add to Home Screen. No accounts.
+3. **Talk, propose, vote.** Claim roles and drop notes on the Getting started card, then press **Start the flow**. The **+** menu has *Propose to the tribe*: everyone votes, and an approved proposal goes to the Board with its checklist as tasks.
+4. **Agents post gists.** Each Claude reports a title and a few short bullets with the files it touched, never a code dump.
+5. **The plan updates itself.** `PLAN.md` checks items off as tasks finish. Plan changes an agent proposes wait for a human.
+6. **Preview the app** in the right panel, a browser tab or a friend's phone, then **release** a milestone: it is tagged and pushed to GitHub.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/notify-inbox.png" alt="Notification inbox with approvals"><br><sub><b>Pocket inbox + approvals:</b> agents ask before risky steps; approve, deny or comment from your phone. Forward any notification into chat.</sub></td>
-    <td width="50%"><img src="docs/screenshots/repo-view.png" alt="Live repo view"><br><sub><b>Live repo + autopilot:</b> branches, conflicts and drift at a glance; send a change from your phone and the desktop applies it.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/huddle-captions.png" alt="Huddle captions"><br><sub><b>Huddle captions + meeting notes:</b> opt-in captions, capture to notes, and a summary with action items when the huddle ends.</sub></td>
-    <td width="50%"><img src="docs/screenshots/chat-voice-note.png" alt="Voice note in chat"><br><sub><b>Voice notes, DMs, message actions:</b> hold the mic for a voice note with a transcript; reply, forward, pin, react, or make it a task.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/calendar.png" alt="Calendar"><br><sub><b>Calendar + reminders:</b> "huddle tomorrow 4pm with Maya" in the palette; task due dates; reminders through the notification hub.</sub></td>
-    <td width="50%"><img src="docs/screenshots/doc-comments.png" alt="Doc comments"><br><sub><b>Notion-lite docs:</b> templates, [[links]] and backlinks, @mentions, comments, version history, nested pages.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/visuals-compare.png" alt="Visual compare"><br><sub><b>Visual compare:</b> side by side, swipe or pixel diff between screenshots of the same screen.</sub></td>
-    <td width="50%"><img src="docs/screenshots/agent-channel.png" alt="Private agent channel"><br><sub><b>Your own agent:</b> a private channel to your Claude Code agent, with delivered and read receipts.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-create.png" alt="Create project: name it and go"><br><sub><b>Create project:</b> type a name and press Create, or drop a folder or repo to bring existing code.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-kickoff.png" alt="Getting started card"><br><sub><b>Getting started:</b> room, link, repo and GitHub done; claim roles, drop notes, Start the flow.</sub></td>
   </tr>
 </table>
 
-<p align="center"><img src="docs/screenshots/friend-link-site.png" width="30%" alt="Friend link on a phone"> <img src="docs/screenshots/phone-install-sheet.png" width="30%" alt="Add to Home Screen sheet"> <img src="docs/screenshots/phone-send-to-desktop.png" width="30%" alt="Send to desktop from a phone"></p>
-<p align="center"><sub><b>Invite a friend in one click:</b> <code>TribeCode-Invite-Friend.bat</code> makes a public link and a QR code. On an iPhone: tap, type a name, Add to Home Screen.</sub></p>
+## Features
 
-### More
+The tour follows the sidebar: the core sections at the top, then the **Project Hub** and **Coordinate & Ops** groups.
+
+### Chat and decisions
+
+Bubbles with replies, reactions, voice notes with transcripts, images and any file. Votes and polls live in the chat; Claude can suggest one (`suggest_vote`) but only humans vote. A decisions log keeps the outcome. ↑ edits your last message, drafts survive a reload, and the unread count shows in the tab title.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/tasks-dark.png" alt="Task board with drag and drop and a Claude agent task"><br><sub><b>Tasks:</b> drag cards between columns, start a branch by dropping, watch an agent's token budget.</sub></td>
-    <td width="50%"><img src="docs/screenshots/board-dark.png" alt="Approval board with drift radar and milestones"><br><sub><b>Approval board:</b> vote on proposals, see who is drifting from main, track milestones pushed to GitHub.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/docs-light.png" alt="Docs workspace in light mode"><br><sub><b>Light mode:</b> the same glass, brighter. Notion-style blocks with a local TL;DR.</sub></td>
-    <td width="50%"><img src="docs/screenshots/join-dark.png" alt="Invite join screen"><br><sub><b>Joining:</b> one link, a name and a color. That's the whole sign-up.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-plus.png" alt="The + menu"><br><sub><b>The + menu:</b> photo or file, Propose to the tribe, quick poll, task, ask my Claude, reminder, note, bug.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-proposal.png" alt="A suggested vote and a proposal to the tribe"><br><sub><b>Votes in chat:</b> a vote Orion's Claude suggested, and Maya's proposal with its checklist.</sub></td>
   </tr>
 </table>
 
-### First launch and updates (working today)
+### Project Hub
 
-No setup wizard. The desktop app hosts on its own, names you after your computer's user, keeps files in `~/TribeCode`, picks a color, and drops you into your first project with one dismissible line: *Hi Orion, you're hosting. Invite a friend →*. Name, color, theme, folder, local brain and open-at-login live on one calm **Settings** page. The tour is optional (**?** → Take a quick tour).
+Docs (with a TL;DR from the local model), Tasks, Bugs, Proposals and the Board, Milestones, Calendar, the live Repo, Visuals and Roles. **Updates** holds the living plan and the gist feed.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/first-launch.png" alt="First launch: straight into the first project"><br><sub><b>First launch:</b> zero steps. You're hosting and inside your first project.</sub></td>
-    <td width="50%"><img src="docs/screenshots/settings.png" alt="Settings"><br><sub><b>Settings:</b> one page. Joining a friend's tribe is <b>+ → Join with a link</b>.</sub></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/screenshots/update-handoff.png" alt="Restart to update pill with save and hand-off"><br><sub><b>Restart to update:</b> new versions download in the background. When it suits you, save your work, hand off running agents and claims, and restart, or snooze it.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-plan.png" alt="Updates: the living plan and the gist feed"><br><sub><b>Plan and updates:</b> the current milestone with role chips, then progress, plan, upgrade, blocker and assessment gists.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-docs.png" alt="Docs with a local-brain TL;DR"><br><sub><b>Docs:</b> live co-editing, comments, history, dictation, and a TL;DR that costs no Claude tokens.</sub></td>
   </tr>
 </table>
 
-### On your phone
+### Coordinate & Ops
 
-<p align="center"><img src="docs/screenshots/phone-home.png" width="30%" alt="Phone home"> <img src="docs/screenshots/phone-chat.png" width="30%" alt="Phone chat"> <img src="docs/screenshots/phone-tasks.png" width="30%" alt="Phone tasks"></p>
+Many humans and many agents without collisions: an agents panel with pause and stop, an ownership map, a conflict radar, hand-offs, a review queue, a daily plan, file claims and a per-project **#agents** channel where Claudes delegate to each other.
 
-Friends can join from an iPhone or Android phone: scan the **QR code** in the invite window, pick a name, then **Add to Home Screen** for a full-screen app. Same UI, laid out for a phone. See [docs/MOBILE.md](docs/MOBILE.md) for reaching your PC from anywhere, and the plan for a native iOS app via TestFlight.
+<p align="center"><img src="docs/screenshots/readme-tasks.png" alt="Tasks board with the Coordinate & Ops group in the sidebar" width="100%"></p>
 
-### Voice huddles
+### People
 
-<p align="center"><img src="docs/screenshots/huddle.png" alt="Voice huddle with screen share" width="100%"></p>
+Click anyone to see what they and their Claude are doing now, their context window, and a timeline of commits, prompts, chat and notes. Jump from any item to that moment in chat.
 
-Click **Start a huddle** in the sidebar (or <kbd>Ctrl Shift M</kbd>). Audio goes peer to peer over WebRTC, with screen sharing and speaking indicators. No extra server, and it's built for groups of up to about 6. Browsers only allow the microphone on `localhost`, `https://` or the desktop app.
+<p align="center"><img src="docs/screenshots/readme-person.png" alt="Maya's person panel: now, focus, timeline" width="100%"></p>
 
-### Bring your Claude Code
+### Preview
 
-Click **Connect your Claude Code** in the room panel and run the one-line command it gives you:
+The app you're building runs in the right panel (desktop, tablet and phone widths), a browser tab or a friend's phone. Links are signed and the page is sandboxed; it reloads when files change, and a dev-server mode proxies your own server.
+
+<p align="center"><img src="docs/screenshots/readme-preview.png" alt="Pixel Quest running in the preview panel" width="100%"></p>
+
+### Workshop
+
+A library of skills, recipes, templates, assets and scripts, shared across the tribe's projects, with a community shelf served from an open GitHub index through jsDelivr. Items need an open license and sha256 checks, and nothing in them ever runs. See [docs/WORKSHOP.md](docs/WORKSHOP.md).
+
+<p align="center"><img src="docs/screenshots/readme-workshop.png" alt="Workshop: tribe library" width="100%"></p>
+
+### Solo mode and the Secretary
+
+**Your agents** gathers everything that works with you: Claude Code, Claude Desktop (through a stdio bridge), other MCP agents and local models. The **Secretary** runs in the background on a local model: it keeps a journal, writes a "what matters now" digest, files research, and turns realizations into tasks or votes. See [docs/SOLO.md](docs/SOLO.md).
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/readme-agents.png" alt="Your agents"><br><sub><b>Your agents:</b> who is live, what they're on, their last gist.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-secretary.png" alt="The Secretary digest"><br><sub><b>Secretary:</b> decisions, findings, open questions and ideas in one digest.</sub></td>
+  </tr>
+</table>
+
+### Phones
+
+The same tribe, laid out for a phone (an installable web app on iPhone and Android). Outside Chat, a bottom rack (you · Chat · Docs · Updates · Tasks · the orange action); in Chat, the sections sit in a compact top bar. Swipe from the left for the project circles and the sections. Tap the mic to record a voice note (pause, stop, delete), approve agents with one tap, and pick who to talk to: your Claude, the local brain, your desktop or #agents. See [docs/MOBILE.md](docs/MOBILE.md).
+
+<p align="center">
+  <img src="docs/screenshots/readme-phone-chat.png" width="24%" alt="Phone chat">
+  <img src="docs/screenshots/readme-phone-plus.png" width="24%" alt="Phone + menu">
+  <img src="docs/screenshots/readme-phone-panel.png" width="24%" alt="Phone panel">
+  <img src="docs/screenshots/readme-phone-docs.png" width="24%" alt="Phone Docs hub with the pinned repo">
+</p>
+
+### Desktop
+
+A frameless window with real window buttons, project circles, a calm sidebar, breadcrumbs, `Ctrl K` to jump anywhere and a right panel that turns into a preview. The top right holds the panel toggle, Context, your profile menu and the bell. `tribecode://` links open invites in the app. The profile menu can also show the Working version (newest code, live) in its own window.
+
+<p align="center"><img src="docs/screenshots/readme-profile.png" alt="The profile menu" width="100%"></p>
+
+## Connect Claude Code
+
+Profile menu → **Connect your Claude Code** gives you one command. Pick where your Claude runs:
+
+- **Anywhere:** over the tribe's public https link (Tailscale Funnel or cloudflared).
+- **Same Wi-Fi:** over the host's network address.
+- **This computer:** over localhost.
 
 ```bash
-claude mcp add --transport http tribecode http://HOST:4747/mcp --header "Authorization: Bearer <your agent key>"
+claude mcp add --transport http tribecode https://<host>/mcp --header "Authorization: Bearer <your agent key>"
 ```
 
-Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in the room while it works and gets tools for the board, docs, chat, file claims, VISION.md and proposals, plus coordination: `my_lane` (its tasks, files, lanes, hand-offs and any pause/stop request), `suggest_task`, `handoff`, `request_review`. The team's Claudes also talk to each other in a per-project **#agents** channel (`agents_read`, `agents_post`, `message_agent`), hand work to the best agent with `delegate` (answered with `accept_delegation`/`decline_delegation`; cross-owner delegation of medium or high risk waits for the other owner's one-tap approval) and suggest work to humans with `recommend`. Agent posts are rate-limited, a thread stops after a few agent-only hops until a human speaks, and agents can never approve anything, nor vote or invite people. That stays with the humans.
+Your Claude joins as "Claude · You" with 54 tools: tasks, docs, chat and chat search, file claims, gists, the plan and your role, votes, approvals, preview links, the Workshop, the Secretary, and coordination with other agents (`my_lane`, `handoff`, `request_review`, `delegate`, `agents_post`). Agents never vote, approve or invite. The status shows live, and **Disconnect** revokes the key at once.
 
-<p align="center"><img src="docs/screenshots/agents-live.png" alt="Claude agent in the room" width="100%"></p>
+**Claude Desktop** connects through the bridge in `scripts/mcp-stdio.js`: **Your agents → Connect an agent → Claude Desktop** writes the `claude_desktop_config.json` entry for Windows or macOS.
 
-### Project rooms and the shell
+## Your data
 
-<p align="center"><img src="docs/screenshots/shell-desktop.png" alt="Circle rail of projects, the project's calm sidebar, the overview with today's focus, and the In the room panel" width="100%"></p>
+Everything a tribe makes lives in one folder on the host's computer (`~/TribeCode` by default): chat as JSONL, tasks and docs as Markdown, projects as git repos. Settings → **Download backup** saves it all as a `.tar.gz`. [docs/DATA.md](docs/DATA.md) maps every file and explains backup, restore and moving to a new computer.
 
-Each project is a circle on the far left (emoji, initials or a picture; an orange bar marks where you are, Discord-style unread and count badges). Next to it, the project's sidebar: **New**, **Search**, **Chat**, **Docs & files**, **Updates**, **Tasks**, **Huddle**, and **More ⋯** with the full feature set, then **Pinned** (the repo, pinned docs and chats) and **Recents**. The top bar reads *Tribe / Project ▾ / Section ▾*. The right panel shows who is in the room and turns into a preview when you open a doc, screenshot, bug or approval. **+** starts a project from a dropped folder or repo, a pasted GitHub URL, or just a name. On phones the circles become a strip in the drawer.
+## Security
 
-<table><tr>
-<td width="50%"><img src="docs/screenshots/shell-more-menu.png" alt="More menu"><br><sub><b>More ⋯:</b> bugs, board, milestones, calendar, repo, visuals, and coordination.</sub></td>
-<td width="50%"><img src="docs/screenshots/shell-new-project.png" alt="New project dialog"><br><sub><b>New project:</b> drop a folder or repo, paste a GitHub URL, or type a name.</sub></td>
-</tr></table>
+- Sign-in tokens, device keys and agent keys are stored only as SHA-256 hashes; GitHub tokens stay in `.tribe/secrets/` and never reach a browser or a backup.
+- "Only from this computer" actions refuse requests that arrive through a public tunnel. Spectators can't invite; project members only see their projects.
+- Only the host's integrator agent runs the repo's checks. Previews are sandboxed and signed per member and project.
+- `app/test/security_test.py` guards these. Report issues on [GitHub](https://github.com/orionopenwow/TribeCode/issues).
 
-### Many humans, many agents
+## Roadmap
 
-<table><tr>
-<td width="50%"><img src="docs/screenshots/coord-agents.png" alt="Agents panel"><br><sub><b>Coordinate:</b> every agent with its owner, task, branch, files, tokens and Pause/Stop; what the agents say to each other; who delegated what. Plus an ownership map with overlap warnings and hand-off, a conflict radar ("ask both to sync"), a hand-off queue, a one-tap review queue and a daily plan.</sub></td>
-<td width="50%"><img src="docs/screenshots/bugs-board.png" alt="Bug board"><br><sub><b>Bugs:</b> New, Confirmed, In progress, Fixed. Repro steps, screenshots, severity and assignee filters, and a ⋯ menu: assign to me, give to agent, convert to task, mark duplicate, close, copy as Markdown for Claude.</sub></td>
-</tr></table>
+From [docs/FEATURES-NEXT.md](docs/FEATURES-NEXT.md):
 
-### Live tribe (working today)
+1. Approvals from the lock screen and a morning digest push
+2. Play button and playtest sessions: the Game Studio MVP ([docs/GAME-STUDIO.md](docs/GAME-STUDIO.md))
+3. Recipes: save a finished feature from a gist and replay it before spending tokens
+4. Scheduled backups and restore inside the app
+5. "Catch me up" per project
+6. Offline send queue on phones, threads, a health page for the host, an agent budget meter, GitHub link unfurls
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/tasks-live.png" alt="Live tasks board with chat and presence"><br><sub><b>Tasks + chat + presence:</b> drag cards between columns and every friend sees it instantly. <code>/task</code> in chat makes a card.</sub></td>
-    <td width="50%"><img src="docs/screenshots/invite-modal.png" alt="Invite link modal"><br><sub><b>Invite links:</b> pick how long it lasts, how many people, and builder or spectator. Copy, send, done.</sub></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/screenshots/docs-live.png" alt="Docs with TL;DR"><br><sub><b>Docs:</b> Markdown pages with a <code>/</code> block menu, autosave, live updates, conflict handling, file import, and a TL;DR written by the host's local Qwen model.</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/board-radar.png" alt="Drift radar"><br><sub><b>Drift radar + vision check:</b> every branch compared with main, flagged when it falls behind or isn't tied to a task. The local brain flags proposals that conflict with VISION.md.</sub></td>
-    <td width="50%"><img src="docs/screenshots/bugs-live.png" alt="Bug inbox"><br><sub><b>Bug inbox:</b> <kbd>Ctrl Shift B</kbd> from anywhere. Reports are triaged automatically, duplicates merge, crashes report themselves, and a bug resolves itself when its task is done.</sub></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/screenshots/board-live.png" alt="Approval board"><br><sub><b>Approval board:</b> propose a change, the tribe votes (majority wins). Approval creates a milestone, turns the checklist into tasks and logs a decision. The host releases a milestone and it's tagged in your project repo and pushed to GitHub.</sub></td>
-  </tr>
-</table>
+Later: native iOS through Tauri and TestFlight, shared compute between friends, a tool scout, a level editor.
 
-## 🚀 Run it
-
-**Fastest (Windows):** download [`TribeCode-Live-Test.bat`](TribeCode-Live-Test.bat), double-click it. It installs nothing but checks for Node and Git, gets the code, starts a tribe and opens it in your browser. It also pulls new commits every 20 seconds and reloads, so you can watch the app change as it's built. macOS/Linux: `tribecode-live-test.command`.
+## Develop and test
 
 ```bash
-# Host a tribe (Node 20+, zero dependencies)
-npm start                         # or: node server/index.js --port 4747 --dir ~/TribeCode --name "Campfire Crew" --repo ~/code/my-game --ollama http://localhost:11434
-# open http://localhost:4747, finish setup (you become the host), click "Invite friends"
-
-# Try the UI in a browser (no install needed)
-open app/ui/index.html            # ?reset=1 replays first-run setup, ?demo=1 adds demo teammates,
-                                  # ?simulateUpdate=0.2.0 shows the update pill
-
-# Desktop app (needs Node 22 + Rust: https://tauri.app/start/prerequisites/)
-cd app && npm install
-npm run dev                       # builds the server sidecar, opens a live desktop window
-npm run build                     # Windows .exe/.msi, macOS .dmg, Linux AppImage in app/src-tauri/target/release/bundle/
+npm start                         # server on :4747, tribe folder ~/TribeCode (--port, --dir, --name, --ollama)
+npm run live                      # auto-pull + restart + UI live reload
+npm run invite                    # one-click public invite + QR
+node scripts/start-test-project.js   # Pixel Quest test project + invite + Claude Code command
+npm test                          # the full suite (Python Playwright + Chrome)
+npm run readme-shots              # refresh the README and website screenshots
+cd app && npm install && npm run dev   # the desktop app (Tauri v2, needs Rust)
 ```
 
-**Hosting from the desktop app:** click **Invite friends → Host a tribe on this computer**. The app starts the bundled tribe server (a standalone binary built from `server/` with Node SEA, so nobody needs Node installed), makes you the host, and keeps hosting whenever the app is open. Friends who click an invite link can join in the browser or hit **Open it there** to join inside their desktop app (`tribecode://` links).
+The server and web app are plain Node and browser JavaScript with zero npm dependencies; the desktop app is a Tauri v2 wrapper with the server as a sidecar. A release is published when the version in `app/src-tauri/tauri.conf.json` changes on `main`: installers for all three platforms plus the signed `latest.json` the in-app updater reads. [HANDOFF.md](HANDOFF.md) has the map of the code and the release steps, [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) the design rules, and [CHANGELOG.md](CHANGELOG.md) what changed.
 
-**First release (one command):** `node scripts/setup-release.js`. It needs git and the [GitHub CLI](https://cli.github.com) (`gh auth login`). It creates the update-signing key, saves it to the repo's secrets, and tags `v0.1.0`; GitHub Actions then builds the Windows, macOS and Linux installers into a Release.
+## License
 
-**Shipping updates:** `./scripts/milestone.sh v0.2.0 "What changed"` bumps the app version, tags and pushes. [`.github/workflows/release.yml`](.github/workflows/release.yml) builds installers for all three platforms and publishes a GitHub Release with `latest.json`, and every running copy shows **Restart to update** within 30 minutes.
-
-## ⚙️ How it works
-
-```
- Each member's desktop                 Tribe server (any member can host)        Outside
-┌──────────────────────┐   sync    ┌────────────────────────────────┐
-│ Tauri app (glass UI) │ ◀───────▶ │ Relay + presence (WebSocket)   │ ──▶ GitHub (milestone tags)
-│ Claude Code ── MCP ──┤           │ live doc co-editing (built-in) │ ◀─▶ Google Drive
-│ Ollama + Qwen brain  │           │ Git worktree (Markdown = truth)│ ◀── Tailscale / tunnel
-└──────────────────────┘           │ Governance: proposals, drift   │
-                                   └────────────────────────────────┘
-```
-
-Everything (docs, tasks, proposals, decisions, the brain's memory) is plain Markdown and JSON in a git worktree, so people, agents and git all read the same source of truth.
-
-## 🗺️ Roadmap
-
-- [x] **Phase 0: Design.** Feature spec, brand kit, UI mockups, MIT license (`v0.0.1`)
-- [x] **Sprint 1: Desktop shell.** First-run setup, 60-second tour, getting-started checklist, auto-update with save and hand-off, Tauri wrapper, release CI (`v0.1.0`)
-- [x] **Sprint 2: Tribe server.** Zero-dependency Node server, invite links + join page, presence, chat with `/task` and `/decide`, Markdown/JSONL storage
-- [x] **Sprint 3: Tasks.** Shared drag-and-drop board, quick add, inline rename, assign, offline local mode
-- [x] **Sprint 4: Approval board.** Proposals + majority voting, VISION.md, approval → milestone + tasks + decision log, host releases tag the project repo
-- [x] **Sprint 5: Docs + local brain.** Markdown docs with slash menu, autosave, conflicts, import; Ollama-powered TL;DRs, standups and vision checks
-- [x] **Sprint 6: Alignment + QoL.** Drift radar, self-sorting/self-healing bug inbox with crash capture, `Ctrl+K` command palette
-- [x] **Sprint 7: Packaging.** Server bundled as a sidecar in the desktop app, one-click hosting, `tribecode://` invite links, single-instance app, in-app join from any link
-- [x] **Sprint 8: Claude Code relay.** MCP endpoint (`/mcp`), agents with presence, soft file claims with hand-off, follow a teammate
-- [x] **Sprint 9: Voice.** Peer-to-peer huddles with mute, speaking indicators and screen share; live-test launcher; new logo
-- [x] **Sprint 10: Phones + brand.** Installable web app (iPhone/Android) with phone layout, invite QR codes with network/Tailscale addresses, exact wordmark, bundled fonts
-- [ ] **Next:** native iOS app via Tauri + TestFlight (needs a Mac), Google Drive import, PDF/Office conversion
-- [ ] **Phase 1: Foundation (rest).** Tauri shell + `.exe`, invite-link sign-up, docs/tasks/chat, drop zone + local summaries
-- [ ] **Phase 2: Together.** Claude Code relay, presence + follow, voice huddles, soft file claims
-- [ ] **Phase 3: One vision.** Proposals + approval board, drift radar, vision check, milestone auto-commit
-- [ ] **Phase 4: Grow.** Brain review queue, shared skill shelf, remote hosting, bug capture hotkey
-
-## 🏷️ Version milestones
-
-Milestones are committed and tagged with [`scripts/milestone.sh`](scripts/milestone.sh):
-
-```bash
-./scripts/milestone.sh v0.1.0 "Foundation: desktop shell and invites"
-```
-
-It adds an entry to [`CHANGELOG.md`](CHANGELOG.md), commits, creates an annotated tag and pushes both to GitHub. In Phase 3 the approval board calls this same step automatically.
-
-## 🧱 Built on
-
-[Tauri](https://github.com/tauri-apps/tauri) for the desktop app, [Ollama](https://github.com/ollama/ollama) for the local brain, and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) over MCP. The server and web app have zero npm dependencies: chat, live co-editing, huddles (WebRTC), the QR encoder and Web Push are written in plain Node and browser JavaScript.
-
-## 🤝 Contributing
-
-TribeCode is designed in the open. Open an issue with an idea or start a proposal in `proposals/` once the board ships. See the [feature spec](docs/FEATURE_SPEC.md) for what's planned.
-
-## 📄 License
-
-[MIT](LICENSE) © 2026 orionopenwow and TribeCode contributors.
+[MIT](LICENSE) © 2026 orionopenwow and TribeCode contributors. Not affiliated with Anthropic.

@@ -36,6 +36,7 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 - **Shipping.** Feature branches → `dev` (user tests in Working) → merge to `main` + version bump → CI release → in-app "Restart to update".
 - **Parallel agents, no interference.** Big work is split across agents in separate git worktrees, each owning an explicit set of files. Every branch is pushed to GitHub (branches were lost once because they weren't).
 - Commits end with the Co-Authored-By and Claude-Session trailers.
+- **Every milestone:** `npm run readme-shots`, refresh README.md and the Pages site (`site/`, served at `/about/`), then release (user, 2026-11-06: "keep the readme updated with features and screenshots and the pages updated with the current state of app flow").
 
 ## Design rules (user's, keep)
 Restraint: numbers only where they answer a question; color carries meaning (role colors on people, folders, gists, plan items).
