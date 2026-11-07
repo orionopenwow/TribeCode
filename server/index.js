@@ -65,7 +65,7 @@ let members = store.readJSON('.tribe/members.json', []);
 let invites = store.readJSON('.tribe/invites.json', []);
 const saveMembers = () => store.writeJSON('.tribe/members.json', members);
 const saveInvites = () => store.writeJSON('.tribe/invites.json', invites);
-const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}) });
+const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
 
 // ---------- helpers ----------
 // Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
@@ -118,16 +118,36 @@ function authed(req) {
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
   if (!t) return null;
   const th = hash(t);
-  const m = members.find(x => x.tokenHash === th);
-  if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out
-  return m || (devices && devices.memberForToken(th)) || null;
+  const m = members.find(x => x.tokenHash === th) || (devices && devices.memberForToken(th)) || null;
+  if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out (any of its keys)
+  return m;
 }
 const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
-function newMember({ name, color: c, role, projects }) {
+function newMember({ name, color: c, role, projects, extra }) {
   const token = id(32);
-  const m = { id: slug(name).slice(0, 16) + '-' + id(4), name, color: color(c), role, joined: new Date().toISOString(), tokenHash: hash(token), ...(projects ? { projects } : {}) };
+  const m = { ...(extra || {}), id: slug(name).slice(0, 16) + '-' + id(4), name, color: color(c), role, joined: new Date().toISOString(), tokenHash: hash(token), ...(projects ? { projects } : {}) };
   members.push(m); saveMembers();
   return { member: m, token };
+}
+// ---- invites: shared by POST /api/join and Sign in with Discord/GitHub/Google (server/oauth.js) ----
+function findInvite(c) { const inv = invites.find(i => i.code === c); return inv && !inv.revoked && Date.parse(inv.expires) >= Date.now() && inv.uses < inv.maxUses ? inv : null; }
+// Someone already in the tribe opens a project invite: add that project instead of making a second account.
+function addToProject(mem, inv) {
+  const proj = inv.project && P.get(inv.project);
+  if (proj && Array.isArray(mem.projects) && !mem.projects.includes(proj.id)) { mem.projects.push(proj.id); inv.uses++; saveInvites(); }
+  if (proj) P.addMember(proj.id, mem.id, P.scoped(mem) ? inv.role : mem.role);
+  saveMembers(); pushPresence(); rooms.pushProjects();
+  return proj ? proj.id : null;
+}
+function joinByInvite(inv, { name, color: c, extra }) {
+  const proj = inv.project && P.get(inv.project);
+  inv.uses++; saveInvites();
+  const out = newMember({ name, color: c, role: inv.role, projects: proj ? [proj.id] : undefined, extra });
+  if (inv.guest) { out.member.guestUntil = new Date(Date.now() + (inv.guestHours || 24) * 3600_000).toISOString(); saveMembers(); }   // one-time guest pass
+  if (proj) P.addMember(proj.id, out.member.id, inv.role);
+  P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
+  pushPresence(); if (proj) rooms.pushProjects();   // everyone's project list shows the new member (Shared compute, overview team)
+  return { ...out, project: proj ? proj.id : null };
 }
 
 // simple per-IP limiter for public endpoints
@@ -272,6 +292,9 @@ const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m 
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js): one hub
 // per project, each bound to its project's repo and files (--repo is the first project's repo).
 // GitHub sign-in (server/github-auth.js): device flow / gh CLI / token; pushAuth() gives the autopilot the host's login.
+// Sign in with Discord / GitHub / Google to join a tribe or sign back in on a new device (server/oauth.js, docs/SIGN-IN.md).
+const oauth = require('./oauth')({ store: baseStore, getMembers: () => members, saveMembers, publicMember, isLocal, str, limited, devices, tribe,
+  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), findInvite, joinByInvite, addToProject, log: m => console.log('  ' + m) });
 const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
 const hubs = new Map();
 function hubFor(pid) {
@@ -425,7 +448,7 @@ async function api(req, res, url) {
   let pid = P.defaultId();
   if (who) {
     pid = P.pick(who, wanted || null, (online.get(who.id) || {}).project || who.project);
-    if (!pid && /^\/api\/(hub|scratch|projects|me|github)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
+    if (!pid && /^\/api\/(hub|scratch|projects|me|github|oauth)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
   return P.inProject(pid, () => apiInProject(req, res, url));
@@ -520,25 +543,14 @@ async function apiInProject(req, res, url) {
   if (a === 'join' && m === 'POST') {
     if (limited(req, 10)) return fail(res, 429, 'slow down');
     const body = await readBody(req);
-    const inv = invites.find(i => i.code === str(body.code, 16));
-    if (!inv || inv.revoked || Date.parse(inv.expires) < Date.now() || inv.uses >= inv.maxUses) return fail(res, 410, 'invite expired or invalid');
-    const proj = inv.project && P.get(inv.project);
+    const inv = findInvite(str(body.code, 16));
+    if (!inv) return fail(res, 410, 'invite expired or invalid');
     // Already a member (signed in on this device): a project invite adds that project instead of making a second account.
     const already = authed(req);
-    if (already && already.role !== 'agent') {
-      if (proj && Array.isArray(already.projects) && !already.projects.includes(proj.id)) { already.projects.push(proj.id); inv.uses++; saveInvites(); }
-      if (proj) P.addMember(proj.id, already.id, P.scoped(already) ? inv.role : already.role);
-      saveMembers(); pushPresence(); rooms.pushProjects();
-      return send(res, 200, { member: publicMember(already), tribe, project: proj ? proj.id : null, existing: true });
-    }
+    if (already && already.role !== 'agent') return send(res, 200, { member: publicMember(already), tribe, project: addToProject(already, inv), existing: true });
     const name = str(body.name, 32); if (!name) return fail(res, 400, 'name required');
-    inv.uses++; saveInvites();
-    const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
-    if (inv.guest) { out.member.guestUntil = new Date(Date.now() + (inv.guestHours || 24) * 3600_000).toISOString(); saveMembers(); }
-    if (proj) P.addMember(proj.id, out.member.id, inv.role);
-    P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
-    pushPresence(); if (proj) rooms.pushProjects();   // everyone's project list shows the new member (Shared compute, overview team)
-    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: proj ? proj.id : null });
+    const out = joinByInvite(inv, { name, color: body.color });
+    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: out.project });
   }
 
   if (a === 'device-link' || a === 'devices' || a === 'share') {
@@ -549,6 +561,7 @@ async function apiInProject(req, res, url) {
   if (a === 'agents' && b === 'bridge.js') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // the stdio bridge (plain code, no secrets)
   if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
   if (a === 'projects' && c === 'website') { const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
+  if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 

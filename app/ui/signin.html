@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<meta name="referrer" content="no-referrer">
+<meta name="tribe-version" content="">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<title>Sign in · TribeCode</title>
+<link rel="icon" href="/assets/icon-512.png">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/oauth.css">
+<style>
+  /* Sign back in on a new device with a linked Discord / GitHub / Google account (oauth.js). Same card as join.html. */
+  html, body { min-height: 100%; }
+  .jw { position: relative; z-index: 1; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+  .jc { width: min(440px, 100%); background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); overflow: hidden; }
+  .jtop { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--edge); background: var(--canvas); }
+  .jtop img.icon { width: 28px; height: 28px; }
+  .jtop img.brand-wm { height: 15px; width: auto; }
+  .jtop .tag { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .jbody { padding: 26px 22px 22px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  h1 { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 8px; overflow-wrap: anywhere; }
+  .lead { color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
+  .err { color: var(--ember-ink); font-size: 13.5px; margin-top: 12px; }
+  .err:empty { display: none; }
+  .alt { display: block; text-align: center; margin-top: 16px; font-size: 13.5px; color: var(--muted); }
+  .alt:hover { color: var(--text); }
+  .done-ico { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); color: var(--live); margin-bottom: 16px; }
+  .done-ico svg { width: 26px; height: 26px; }
+  @media (max-width: 520px) {
+    .jw { padding: 0; place-items: stretch; }
+    .jc { border-radius: 0; border: 0; min-height: 100dvh; display: flex; flex-direction: column; }
+    .jtop { padding-top: calc(14px + env(safe-area-inset-top)); }
+    .jbody { flex: 1; padding: 28px 20px; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body class="dark">
+<div class="jw"><div class="jc">
+  <div class="jtop"><img class="icon" src="/assets/icon-512.png" alt=""><img class="brand-wm" src="/assets/wordmark.svg" alt="TribeCode"><span class="tag">Sign in</span></div>
+  <div class="jbody" id="jbody">
+    <div class="eyebrow" id="eyebrow"><span class="dot"></span>Sign in</div>
+    <h1 id="title">Welcome back</h1>
+    <p class="lead" id="lead">Use the account you linked in Settings › Sign-in. No invite needed.</p>
+    <div id="oa-box" hidden></div>
+    <div class="err" id="err"></div>
+    <a class="alt" href="/">Open the tribe</a>
+  </div>
+</div></div>
+<script src="/inapp.js"></script>
+<script src="/store.js"></script>
+<script src="/oauth.js"></script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const OA = window.TribeOAuth;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const st = window.TribeStore.get();
+  document.body.className = st.theme === 'light' ? 'light' : 'dark';
+  const done = (eyebrow, title, lead) => { $('#jbody').innerHTML = `<div class="done-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
+    <div class="eyebrow"><span class="dot"></span>${esc(eyebrow)}</div><h1 id="title">${esc(title)}</h1><p class="lead">${esc(lead)}</p><a class="alt" href="/">Open the tribe</a>`; };
+
+  async function show() {
+    try { const h = await (await fetch('/api/health')).json(); if (h.tribe) { $('#title').textContent = `Welcome back to ${h.tribe}`; document.title = `Sign in · ${h.tribe} · TribeCode`; } } catch {}
+    const list = await OA.providers();
+    if (!list.length) { $('#lead').textContent = "This tribe hasn't turned on Discord, GitHub or Google sign-in. Ask a friend for a fresh invite link."; return; }
+    const draw = () => OA.buttons($('#oa-box'), list, 'Sign in with', p => OA.begin(p, 'signin').catch(e => { $('#err').textContent = e.message; draw(); }));
+    draw();
+  }
+
+  async function back() {
+    $('#eyebrow').innerHTML = '<span class="dot"></span>Signing you in'; $('#title').textContent = 'One moment…'; $('#lead').textContent = '';
+    const d = await OA.finish();
+    if (d && !d.error) {
+      if (d.mode === 'link') { done('Linked', `${d.providerName || 'Your account'} is linked`, 'Next time, sign in on any device with one tap.'); setTimeout(() => location.replace('/'), 1500); return; }
+      done('Signed in', `Welcome back, ${(d.member.name || '').split(' ')[0] || 'friend'}`, 'Opening your tribe…');
+      return OA.enter(d);
+    }
+    $('#eyebrow').innerHTML = '<span class="dot"></span>Sign in'; $('#title').textContent = 'Welcome back'; $('#lead').textContent = 'Use the account you linked in Settings › Sign-in. No invite needed.';
+    await show();
+    $('#err').textContent = (d && d.error) || 'Sign-in failed';
+  }
+  OA.landed() ? back() : show();
+})();
+</script>
+</body>
+</html>
