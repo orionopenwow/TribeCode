@@ -147,17 +147,18 @@
           <div class="hero-acts"><button class="btn primary" data-hero="newtask">New task</button><button class="btn" data-hero="invite">Invite a friend</button></div></section>`;
     const sec = (eyebrow, title, inner) => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2></div>${inner}</section>`;
     const L = d.living, canEdit = me().role !== 'spectator' && me().role !== 'agent';
-    const MOOD = { buzzing: 'Buzzing', steady: 'Steady', quiet: 'Quiet', fresh: 'Brand new' };
+    const MOOD = { buzzing: '<span class="emo" aria-hidden="true">🔥</span>Buzzing', steady: '<span class="emo" aria-hidden="true">🌿</span>Steady', quiet: '<span class="emo" aria-hidden="true">🌙</span>Quiet', fresh: '<span class="emo" aria-hidden="true">✨</span>Brand new' };
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${esc(p.name)}</h1>
           <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? 'Add a one-line bio: what is this?' : ''}</button>
-          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}</span></div>
+          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
       ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? '<span class="pl-by">local model</span>' : ''}</div>
           <p class="pl-sum">${esc(L.summary)}</p>
           <div class="pl-grid">${[['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', L.lines.next, 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']]
             .map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
       ${d.vision && !d.vision.has ? `<section class="pj-vision-nudge" id="pj-vnudge">${ico('i-flag', 16)}<span><b>No vision yet.</b> A few lines on what ${esc(p.name)} is and who it's for keeps people and agents pointed the same way.</span><button class="btn sm primary" id="pj-vwrite">${isHost() ? 'Write the vision' : 'Suggest a vision'}</button></section>` : ''}
+      <div id="pj-tools-slot"></div>
       ${hero}
       ${sec('People', 'Who\'s building', `<div class="pj-grid">
         <section class="card"><h3>${ico('i-users', 16)}Who is here</h3>
@@ -181,6 +182,26 @@
     el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => App().show(x.dataset.go));
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
+    toolbox(p);
+    if (window.TribeWebsite) window.TribeWebsite.overviewLink(p);   // "· Website" once the page exists (app/ui/website.js)
+  }
+  // Toolbox: a few checked tools, libraries and Claude skills that fit this project (server/shelf.js). Tucked in: only picks, one row.
+  const KIND_L = { skill: 'Claude skill', library: 'Library', tool: 'Tool', mcp: 'Agent tool' };
+  async function toolbox(p) {
+    if (!$('#pj-tools-slot')) return;
+    let d; try { d = await C.api(`/shelf?project=${encodeURIComponent(p.id)}`); } catch { return; }
+    const slot = $('#pj-tools-slot'); if (!slot) return;   // the overview may have redrawn while we waited
+    if (!d.picks || !d.picks.length || (C.project && C.project() !== p.id)) { slot.innerHTML = ''; return; }
+    const what = d.types && d.types.length ? `picks for a ${d.types[0]}` : 'picks for this project';
+    slot.innerHTML = `<section class="card pj-tools" id="pj-tools"><div class="pt-head"><span class="eyebrow"><span class="emo" aria-hidden="true">🧰</span>Toolbox · ${esc(what)}</span><button class="linkish" id="pj-tools-all">All tools</button></div>
+      <div class="pt-grid">${d.picks.map(it => `<div class="pt-tile"><span class="pt-kind">${esc(KIND_L[it.kind] || it.kind)} · ${esc(it.license)}</span><b>${esc(it.title)}</b><small>${esc(it.summary)}</small>
+        <div class="pt-acts"><button class="btn sm" data-shelf-add="${esc(it.id)}">Add</button><a class="linkish" href="${esc(it.url || `https://github.com/${it.repo}`)}" target="_blank" rel="noopener noreferrer">Open</a></div></div>`).join('')}</div></section>`;
+    slot.querySelector('#pj-tools-all').onclick = () => window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : null;
+    slot.querySelectorAll('[data-shelf-add]').forEach(b => b.onclick = async () => {
+      b.disabled = true; b.textContent = 'Adding…';
+      try { const r = await C.api(`/shelf/${encodeURIComponent(b.dataset.shelfAdd)}/add`, { method: 'POST', body: { project: p.id } }); toast(r.where ? `${r.item.title}: Claude Code reads it from ${r.where}` : `${r.item.title} is in the Toolbox`); toolbox(p); }
+      catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Add'; }
+    });
   }
 
   // One-line bio, edited in place on the overview (any builder).

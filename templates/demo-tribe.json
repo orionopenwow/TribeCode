@@ -1,0 +1,82 @@
+{
+  "about": "The demo tribe (scripts/start-demo-tribe.js): two projects copied from templates/ and seeded through POST /api/host/demo-tribe. Plan items start with [Role] so each task lands in that role's lane.",
+  "projects": [
+    {
+      "template": "lantern-run",
+      "dir": "lantern-run",
+      "name": "Lantern Run",
+      "emoji": "🎮",
+      "bio": "A cozy night platformer: carry a little flame through three short levels and light the lanterns.",
+      "roles": [
+        { "id": "lead", "name": "Lead", "color": "ember", "glyph": "i-flag", "folders": [{ "path": "docs/", "label": "Docs" }, { "path": "src/core/", "label": "Core" }] },
+        { "id": "player", "name": "Player", "color": "indigo", "glyph": "i-zap", "folders": [{ "path": "src/player/", "label": "Player" }] },
+        { "id": "levels", "name": "Levels", "color": "teal", "glyph": "i-map", "folders": [{ "path": "src/levels/", "label": "Levels" }] },
+        { "id": "art", "name": "Art", "color": "rose", "glyph": "i-eye", "folders": [{ "path": "src/art/", "label": "Art" }] },
+        { "id": "audio", "name": "Audio", "color": "plum", "glyph": "i-mic", "folders": [{ "path": "src/audio/", "label": "Audio" }] },
+        { "id": "ui", "name": "UI", "color": "sand", "glyph": "i-spark", "folders": [{ "path": "src/ui/", "label": "UI" }] }
+      ],
+      "plan": [
+        { "title": "Polish the first run", "items": [
+          "[Player] Add a tiny dust puff when Wick lands from a big fall",
+          "[Levels] Add a checkpoint flag halfway through Lantern Hill",
+          "[Art] Give the lit lantern a warm halo ring",
+          "[Audio] Add a soft night ambience loop with its own mute",
+          "[UI] Show the best time per level on the Lantern lit screen"
+        ] },
+        { "title": "A fourth lantern", "items": [
+          "[Levels] Design level 4 Firefly Bridge with moving planks",
+          "[Player] Wall slide on stone so tall climbs feel fair",
+          "[Lead] Level select on the title screen"
+        ] }
+      ],
+      "notes": [
+        { "name": "Kickoff notes.md", "text": "# Kickoff notes\n\n- Goal for tonight: everyone plays all three levels, then each lane ships one small polish.\n- Claim a role first (Player, Levels, Art, Audio, UI). Your Claude Code only edits your folders.\n- Playtest rule: if a jump feels unfair, it is unfair. Fix the level or the tuning, not the player.\n- Post a gist after every step. Vote in chat before changing the vision.\n" },
+        { "name": "Playtest 1.md", "text": "# Playtest 1\n\n- Level 1 is easy and short, good.\n- Level 2: the plank stairs over the thorns are the best moment. More of that.\n- Level 3: the light ran low once near the top. Maybe one more ember after the second water pit.\n- Everyone wanted to replay for a faster time. A best-time display would help.\n" }
+      ],
+      "docs": [
+        { "name": "Level design notes", "pinned": true, "body": "# Level design notes\n\nA living doc: edit it together (it co-edits live), and keep it short.\n\n## The grid\n- Tiles are 10x10 pixels, 18 rows tall. The view is 32 tiles wide.\n- Wick jumps about 5 tiles high and 7 tiles far at full speed. Keep required jumps to 4 high and 4 wide.\n- Bounce mushrooms throw you about 11 tiles up: use them for optional ember stashes.\n\n## The legend\n`.` empty · `#` ground · `=` stone · `-` plank (jump up through it) · `^` thorns · `~` water · `*` ember · `B` mushroom · `P` start · `L` lantern\n\n## Rules of thumb\n1. Teach, then test: show a new thing safely before it can hurt you.\n2. One idea per stretch: thorns, then planks, then planks over thorns.\n3. An ember every 3 to 5 seconds of running keeps the light comfortable.\n4. Every level ends on solid ground with the lantern in view for a few seconds.\n\n## Level ideas (add yours)\n- Firefly Bridge: planks that drift left and right over a long river.\n- Root Cellar: a dark level with very few embers, lit by glowing mushrooms.\n- The Belfry: a vertical climb with a bell you ring at the top.\n" }
+      ],
+      "vote": { "title": "Add a double jump to Wick", "body": "A second jump in the air, only after you pick up a blue ember. It would open up new level ideas, but it could make the current levels too easy. Approve to make it a task for the Player lane." },
+      "shelf": ["jsfxr", "pixelfx"],
+      "welcome": "🎮 **Lantern Run** is ready to play: run `node serve.js` in the repo (or open the preview) and light all three lanterns. Then claim a role in the flow card; each role owns one folder, and your Claude Code stays in it."
+    },
+    {
+      "template": "tavern-3d",
+      "dir": "tavern-3d",
+      "name": "Tavern 3D",
+      "emoji": "🍺",
+      "bio": "A cozy 3D tavern where bot patrons wander, sit, chat and take orders: a test bed for agents living in a room.",
+      "roles": [
+        { "id": "lead", "name": "Lead", "color": "ember", "glyph": "i-flag", "folders": [{ "path": "docs/", "label": "Docs" }] },
+        { "id": "scene", "name": "Scene", "color": "sage", "glyph": "i-map", "folders": [{ "path": "src/scene/", "label": "Scene" }] },
+        { "id": "npcs", "name": "NPCs", "color": "teal", "glyph": "i-robot", "folders": [{ "path": "src/npcs/", "label": "NPCs" }] },
+        { "id": "player", "name": "Player", "color": "indigo", "glyph": "i-zap", "folders": [{ "path": "src/player/", "label": "Player" }] },
+        { "id": "ui", "name": "UI", "color": "sand", "glyph": "i-spark", "folders": [{ "path": "src/ui/", "label": "UI" }] }
+      ],
+      "plan": [
+        { "title": "A livelier evening", "items": [
+          "[NPCs] Patrons remember your name after you talk twice",
+          "[NPCs] Add a seventh patron, a traveling tinker, in patrons.json",
+          "[Scene] Rain streaks on the windows and a dripping leak in the corner",
+          "[Player] A gentle head bob while walking",
+          "[UI] Show each patron's last line in the Patrons panel"
+        ] },
+        { "title": "Orders and systems", "items": [
+          "[NPCs] A Sit with me order for regulars",
+          "[Scene] The stage light follows the bard's music",
+          "[Lead] A settings card for mouse sensitivity and labels"
+        ] }
+      ],
+      "notes": [
+        { "name": "Kickoff notes.md", "text": "# Kickoff notes\n\n- The tavern is a test bed for agents living in a room: each person, or their Claude Code, owns a patron or a system.\n- Patrons are always bots and always labelled as bots.\n- Add patrons in src/npcs/patrons.json, not in code.\n- Original names and places only.\n" },
+        { "name": "Patron ideas.md", "text": "# Patron ideas\n\n- A traveling tinker who fixes one thing in the room per visit.\n- A cat that sleeps by the fire and moves when the fire gets low.\n- A quiet chess player at table 2 who challenges you after three visits.\n" }
+      ],
+      "docs": [
+        { "name": "NPC personalities", "pinned": true, "body": "# NPC personalities\n\nA living doc: edit it together (it co-edits live). When a patron changes here, the NPCs lane updates `src/npcs/patrons.json` to match.\n\nEvery patron is a bot and is always labelled as one.\n\n## Juniper Hale · barkeep · home: the bar\nWarm, quick, a little tired. Notices wet boots and chipped mugs. Rarely leaves the bar.\n\n## Rook Ambry · bard · home: the stage\nKnows four songs, five on a good night. Wants everyone in the next verse. Sways while playing.\n\n## Mags Tallow · cook · home: the kitchen hatch\nFeeds everyone whether they asked or not. Suspicious about the big spoon.\n\n## Old Fennick · regular · home: table 1\nThirty years in the same chair. Tells river stories. Hard to move, but follows if you ask nicely.\n\n## Pip Wren · regular · home: table 3\nYoung map maker, very restless. Measures drafts, hunts for secret passages.\n\n## Doran Vell · regular · home: the fireplace\nRetired ferryman, always cold. The fire is his favourite person.\n\n## How they behave\n- Go to their spot, work or sit for a while, then sometimes wander or walk over to chat.\n- Turn to face you and say hello when you come close.\n- Orders from the Patrons panel: Follow me, Stay, Go to your spot.\n" }
+      ],
+      "vote": { "title": "Open an upstairs room for the next milestone", "body": "A second room with beds and a balcony over the main hall. Patrons could go up to sleep late at night. Big scope: approve to put it on the Board as the next milestone." },
+      "shelf": ["threejs", "howler"],
+      "welcome": "🍺 **Tavern 3D** is open: run `node serve.js` in the repo (or open the preview), click Enter the tavern, press Tab for the patrons. Claim a role in the flow card; each role owns one folder."
+    }
+  ]
+}

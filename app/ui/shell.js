@@ -28,6 +28,7 @@
   const closeDrawer = () => document.body.classList.remove('drawer-open');
   const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const bootHash = location.hash;   // a deep link on a fresh load (#/docs/website) survives the first paint, which clears tab hashes
 
   // ---------- every destination, once ----------
   // group: core (the four rows) | tasks / agents (tabs of those workspaces) | global (rows with no project) | foot | none
@@ -42,6 +43,8 @@
     { key: 'docs', label: 'Docs & Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
     { key: 'ws-tasks', label: 'Tasks & Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
     { key: 'ws-agents', label: 'Agents Hub', icon: 'i-robot', group: 'core', keys: 'agents coordinate ops claude workspace', run: () => openWs('agents') },
+    { key: 'docs-files', label: 'Project docs', tab: 'Docs', slug: 'files', icon: 'i-doc', group: 'docs', keys: 'documents notes files pages journal', run: () => App().show('docs') },
+    { key: 'website', label: 'Website', tab: 'Website', slug: 'website', icon: 'i-link', group: 'docs', keys: 'site page public showcase landing credits github pages', run: () => { const o = () => window.TribeWebsite && window.TribeWebsite.open(); if (window.TribeWebsite) o(); else addEventListener('load', o, { once: true }); } },   // app/ui/website.js (a deep link can run before it loads)
     { key: 'tasks', label: 'Task board', tab: 'Board', slug: 'board', icon: 'i-check', group: 'tasks', keys: 'tasks todo kanban', run: () => App().show('tasks') },
     { key: 'bugs', label: 'Bugs', tab: 'Bugs', slug: 'bugs', icon: 'i-bug', group: 'tasks', keys: 'bug inbox issues', run: () => App().show('bugs') },
     { key: 'board', label: 'Proposals & board', tab: 'Proposals', slug: 'proposals', icon: 'i-vote', group: 'tasks', keys: 'approval board vote vision', run: () => App().show('board') },
@@ -74,7 +77,7 @@
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
-  const WS = { tasks: { label: 'Tasks & Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
+  const WS = { docs: { label: 'Docs & Files', row: 'docs' }, tasks: { label: 'Tasks & Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
   const tabsOf = w => DEST.filter(d => d.group === w && (!d.when || d.when()));
   const wsOf = key => { const d = byKey(key); return d && WS[d.group] ? d.group : null; };
   const TKEY = w => `tribecode.tab.${w}`;
@@ -124,6 +127,7 @@
     if (v === 'flow-roles') return 'roles';
     if (v === 'flow-updates' || v === 'updates') return 'updates';
     if (v === 'board') return lastDest === 'milestones' ? 'milestones' : 'board';
+    if (v === 'docs') return 'docs-files';   // Docs & Files: Docs · Website
     return v;
   }
   function markActive() {
@@ -143,7 +147,7 @@
     document.body.classList.toggle('ws-tabbed', !!w);
     if (!w) {
       if (!bar.classList.contains('hidden')) bar.classList.add('hidden');
-      if (/^#\/(tasks|agents)\//.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+      if (/^#\/(tasks|agents|docs)\//.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
       return;
     }
     lsSet(TKEY(w), cur);
@@ -177,7 +181,7 @@
   }, true);
   // Deep links: #/tasks/bugs, #/agents/conflicts.
   function fromHash() {
-    const m = /^#\/(tasks|agents)\/([a-z-]+)$/.exec(location.hash); if (!m) return;
+    const m = /^#\/(tasks|agents|docs)\/([a-z-]+)$/.exec(location.hash); if (!m) return;
     const d = DEST.find(x => x.group === m[1] && x.slug === m[2]);
     if (d && current() !== d.key) go(d.key);
   }
@@ -185,6 +189,7 @@
   C.on('hello', () => setTimeout(fromHash, 60));
   new MutationObserver(() => markActive()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
   setTimeout(() => {
+    if (!location.hash && /^#\/(tasks|agents|docs)\/[a-z-]+$/.test(bootHash)) history.replaceState(null, '', location.pathname + location.search + bootHash);
     fromHash();
     const cl = $('#crumb-label'); if (cl) new MutationObserver(() => markActive()).observe(cl, { childList: true, characterData: true, subtree: true });
     new MutationObserver(() => markActive()).observe(document.body, { attributes: true, attributeFilter: ['class'] });

@@ -72,6 +72,15 @@
 .ah-model.on { border-color: color-mix(in srgb, var(--k) 50%, var(--edge)); }
 .ah-model .btn { height: 30px; font-size: 12.5px; padding: 0 10px; flex: none; }
 .ah-models-off { display: flex; gap: 12px; align-items: flex-start; padding: 16px; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); }
+.ah-office { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); }
+.ah-office .ah-id span { white-space: normal; max-width: 65ch; line-height: 1.5; }
+.ah-office .ah-st { margin-left: auto; flex: none; }
+#ah-office .ah-acts { margin-top: 10px; display: flex; gap: 8px; }
+.ah-os-note, .ah-os-need, .ah-os-err { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; max-width: 70ch; }
+.ah-os-note code { font-family: var(--mono); font-size: 11.5px; color: var(--text); }
+.ah-os-need { color: var(--muted); }
+.ah-os-err { color: #FF6F8E; }
+.ah-os-log { margin: 8px 0 0; padding: 10px 12px; background: var(--canvas, #12151A); border: 1px solid var(--edge); border-radius: var(--r); font: 11.5px/1.5 var(--mono); color: var(--muted); max-height: 140px; overflow: auto; white-space: pre-wrap; }
 .ah-models-off b { font-size: 14px; }
 .ah-models-off p { margin: 4px 0 0; font-size: 13px; line-height: 1.55; color: var(--muted); max-width: 65ch; }
 

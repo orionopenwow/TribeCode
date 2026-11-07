@@ -228,3 +228,15 @@
 .np-setup #np-input, .np-setup #np-bio { display: block; width: calc(100% - 48px); margin: 0 24px; }
 .np-setup .np-status { margin: 8px 24px 0; }
 .np-setup .ns-btns { display: flex; align-items: center; margin-top: 20px; padding: 14px 20px; background: var(--raised); border-top: 1px solid var(--edge); }
+/* Toolbox on the overview: four picks in one row */
+.pj-tools { margin: 0 0 18px; padding: 14px 16px; }
+.pt-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.pt-head .linkish { margin-left: auto; font-size: 13px; }
+.pt-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.pt-tile { display: flex; flex-direction: column; gap: 4px; padding: 10px 11px; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised); min-width: 0; }
+.pt-kind { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.pt-tile b { font-size: 14px; }
+.pt-tile small { font-size: 12px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pt-acts { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 6px; }
+.pt-acts .linkish { font-size: 12.5px; }
+@media (max-width: 1100px) { .pt-grid { grid-template-columns: 1fr 1fr; } }

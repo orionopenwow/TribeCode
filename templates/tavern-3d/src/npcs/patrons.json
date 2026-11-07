@@ -1,0 +1,71 @@
+{
+  "about": "The tavern's patrons. All of them are bots and the game always labels them as bots. Add one: copy an entry, give it a new id, a role (barkeep, bard, cook, regular) and a home (bar, stage, kitchen, fireplace, window, or seat:t<table>-<stool>, tables 1-4, stools 1-4). restless 0-1: how often they get up and wander.",
+  "patrons": [
+    {
+      "id": "juniper", "name": "Juniper Hale", "role": "barkeep", "color": "#C9A66B", "hat": "none", "apron": "#E8DCC4",
+      "home": "bar", "restless": 0.15,
+      "lines": {
+        "idle": ["Mind the wet floor, it's pouring out there.", "Kettle's on. It's always on.", "Third mug this week with a chip in it."],
+        "greet": ["Evening! Sit anywhere that isn't wobbling.", "Welcome in. Cider or something warm?", "You look like you walked here through the rain."],
+        "follow": ["Lead on, the mugs can wash themselves."],
+        "stay": ["Right here, then."],
+        "home": ["Back to the bar."]
+      }
+    },
+    {
+      "id": "rook", "name": "Rook Ambry", "role": "bard", "color": "#6C7CFF", "hat": "feather",
+      "home": "stage", "restless": 0.25,
+      "lines": {
+        "idle": ["I'm writing a song about the leak in the roof.", "Requests? I know four songs. Five on a good night.", "La la la... no, that's not it."],
+        "greet": ["A new face! You'll be in the next verse.", "Clap on the off-beat, please.", "Do you hum? We need a hummer."],
+        "follow": ["A wandering bard! Very traditional."],
+        "stay": ["I'll hold this note. And this spot."],
+        "home": ["The stage calls."]
+      }
+    },
+    {
+      "id": "mags", "name": "Mags Tallow", "role": "cook", "color": "#F26B1D", "hat": "tall", "apron": "#F2EDE2",
+      "home": "kitchen", "restless": 0.2,
+      "lines": {
+        "idle": ["The stew is mostly carrots tonight. Mostly.", "Who keeps moving my big spoon?", "Bread's out in ten."],
+        "greet": ["Hungry? You look hungry.", "Try the stew. Don't ask what's in it.", "Wipe your boots, love."],
+        "follow": ["Quickly, the pot will boil over."],
+        "stay": ["I'll wait. The onions won't."],
+        "home": ["Back to the pots."]
+      }
+    },
+    {
+      "id": "fennick", "name": "Old Fennick", "role": "regular", "color": "#8FB39A", "hat": "cap",
+      "home": "seat:t1-2", "restless": 0.1,
+      "lines": {
+        "idle": ["Sat in this chair for thirty years.", "Rain like this, the river forgets its banks.", "Back in my day the mugs were bigger."],
+        "greet": ["Pull up a stool, young one.", "Ever been out on the river at night? Don't.", "Mm. Another new one."],
+        "follow": ["Slowly now. These knees are older than the roof."],
+        "stay": ["Staying is what I do best."],
+        "home": ["My chair, my chair."]
+      }
+    },
+    {
+      "id": "pip", "name": "Pip Wren", "role": "regular", "color": "#38C6B1", "hat": "hood",
+      "home": "seat:t3-1", "restless": 0.6,
+      "lines": {
+        "idle": ["I'm drawing a map of this room. It's harder than it looks.", "There's a draft from that window. I measured it.", "Has anyone seen my pencil?"],
+        "greet": ["Oh! Stand still, I'm putting you on my map.", "You came in the front door. Most people do.", "Do you know any secret passages?"],
+        "follow": ["An expedition! Finally!"],
+        "stay": ["Marking this spot with an X."],
+        "home": ["Back to my table and my maps."]
+      }
+    },
+    {
+      "id": "doran", "name": "Doran Vell", "role": "regular", "color": "#FF6F8E", "hat": "cap",
+      "home": "fireplace", "restless": 0.35,
+      "lines": {
+        "idle": ["Best seat in the house is the warm one.", "My boots are still drying from Tuesday.", "Fire's talking tonight. Hear it crackle?"],
+        "greet": ["Come warm your hands.", "Shut the door behind you, it's cold.", "Evening, friend."],
+        "follow": ["Away from the fire? For you, fine."],
+        "stay": ["Planting my feet."],
+        "home": ["Back to the warm spot."]
+      }
+    }
+  ]
+}

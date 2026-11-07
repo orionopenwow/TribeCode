@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.7.1
+
+- **Office (optional, in Your agents)**: [Open Space](https://github.com/Fantomiald/open-space) by Fantomiald, a pixel-art office where several Claude Code sessions work side by side. Install, Start and open, Stop, all from TribeCode. It runs on the host computer on port 4850 with every project repo on its desks, opens in your browser with its pairing link, and installs from a commit we read through without running install scripts (docs/OPEN-SPACE.md)
+- **Demo tribe in one command** (`Start-Demo-Tribe.bat` or `npm run demo-tribe`): two original games set up as projects with lanes, a plan, notes, a living doc, a vote, toolbox picks, autopilot and private GitHub repos. **Lantern Run** is a 2D night platformer; **The Crooked Kettle** is a 3D tavern whose patrons are always-labelled bots you can give orders (docs/DEMO-TRIBE.md)
+- **A website for every project** (Docs & Files › Website): one plain HTML page in `site/` with the project's colors, logo, about, screenshots, play link, GitHub link, credits and what's new. Preview it at desktop and phone width, keep it updated automatically, and let anyone suggest edits that the lead approves (docs/WEBSITE.md)
+- **Live app on your Home Screen or Desktop**: a private link per person and project that opens straight into the live preview, full screen, with the project's icon. Turn it off any time
+- **Desktop folders**: export a project to `Desktop\TribeCode Projects` (just the files, or with history), or keep a copy there that updates itself and never touches your own edits
+- **Sign in to GitHub** in the app (Settings › GitHub): once signed in, the autopilot and new projects push by themselves. Your GitHub CLI login or a pasted token work too (docs/GITHUB-AND-FOLDERS.md)
+- **Starter shelf**: picks for each project's type on its overview (pixelfx, Phaser, KAPLAY, three.js, Tiled…) and 16 game skills from awesome-gamedev-agent-skills. Claude skills are copied into `.claude/skills`, everything else goes in the Toolbox
+- A few small matte emoji on internal labels (Helpers, Toolbox, shelf sections, the living update's mood, Local models, Office)
+- Fixes: a new member now shows in everyone's project list at once (Shared compute appeared late); the overview's Toolbox no longer errors when the page redraws
+- **Phones**: the Home Screen link is on the repo hero, the Website editor stacks above its preview at 390px, and the Office shows its status (it runs on the host)
+
 ## v0.7.0
 
 - **Shared compute** (quiet, in a project's Helpers list once it has a repo and more than one person): lend this computer to the tribe for builds, test runs and analysis, and see who else lends. Splitting heavy builds across lenders is the next step (docs/SHARED-COMPUTE.md)

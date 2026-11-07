@@ -17,6 +17,13 @@ TribeCode
                               them the one line that connects their Claude Code.
                               (Same as Home -> Invite a friend inside the app.)
 
+  Start-Demo-Tribe.bat        A READY-MADE TRIBE TO TEST WITH FRIENDS: two projects in
+                              %USERPROFILE%\TribeCode-Projects (Lantern Run, a 2D platformer,
+                              and Tavern 3D, a tavern with bot patrons), each with roles that
+                              own folders, tasks, a living doc, a vote and repo autopilot.
+                              Prints the invite link and the Claude Code command. Uses the
+                              Working copy (dev) at :4848. Checklist: docs\DEMO-TRIBE.md.
+
   Tools\
     Turn-On-Auto-Update.bat   Update quietly at log-in and daily at 4 am (never while open).
     Turn-Off-Auto-Update.bat

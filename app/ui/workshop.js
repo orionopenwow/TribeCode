@@ -23,8 +23,8 @@
   const IMG = /\.(png|jpe?g|webp|gif)$/i, TEXT = /\.(md|txt|json|js|ts|lua|gd|cs|py|glsl|frag|vert|wgsl)$/i, AUDIO = /\.(ogg|mp3|wav)$/i, MODEL = /\.(glb|gltf)$/i;
   const ALLOWED = /\.(glb|gltf|bin|png|jpe?g|webp|gif|svg|ogg|mp3|wav|json|md|txt|js|ts|lua|gd|cs|py|glsl|frag|vert|wgsl)$/i;
 
-  let tab = 'library', kind = '', q = '', items = [], pending = [], comm = null, detail = null, open_ = false;
-  try { tab = sessionStorage.getItem('tribecode.wsTab') || 'library'; } catch {}
+  let tab = 'shelf', kind = '', q = '', items = [], pending = [], comm = null, detail = null, open_ = false;
+  try { tab = sessionStorage.getItem('tribecode.wsTab') || 'shelf'; } catch {}
 
   // ---------- authenticated blobs (never put the token in a URL) ----------
   const blobs = new Map();
@@ -49,7 +49,7 @@
         <button class="btn primary ws-add" id="ws-add">${ico('i-plus', 15)}<span>Add</span></button>
       </header>
       <div class="ws-bar">
-        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="library">Tribe library</button><button role="tab" data-wt="community">Community</button></nav>
+        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="shelf">Starter shelf</button><button role="tab" data-wt="library">Tribe library</button><button role="tab" data-wt="community">Community</button></nav>
         <div class="ws-chips" id="ws-chips">${KINDS.map(([k, l]) => `<button class="ws-chip" data-k="${k}">${l}</button>`).join('')}</div>
       </div>
       <div class="ws-scroll" id="ws-scroll"><div class="ws-inner" id="ws-body"></div></div>
@@ -68,7 +68,8 @@
     return root;
   }
 
-  function open() {
+  function open(which) {
+    if (typeof which === 'string' && ['shelf', 'library', 'community'].includes(which)) tab = which;
     const root = frame(); open_ = true;
     root.classList.remove('hidden'); document.body.classList.add('ws-open'); document.body.classList.remove('drawer-open');
     if (location.hash !== '#/workshop') history.replaceState(null, '', location.pathname + location.search + '#/workshop');
@@ -91,11 +92,13 @@
     const root = frame();
     root.querySelectorAll('[data-wt]').forEach(b => { b.classList.toggle('on', b.dataset.wt === tab); b.setAttribute('aria-selected', String(b.dataset.wt === tab)); });
     root.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === kind));
-    root.querySelector('#ws-title').textContent = tab === 'library' ? 'Tribe library' : 'Community shelf';
+    root.querySelector('#ws-title').textContent = tab === 'library' ? 'Tribe library' : tab === 'shelf' ? 'Starter shelf' : 'Community shelf';
+    root.querySelector('#ws-chips').classList.toggle('hidden', tab === 'shelf');
     root.querySelector('#ws-add').classList.toggle('hidden', !(me().role && me().role !== 'spectator') || tab !== 'library');
     const body = root.querySelector('#ws-body');
     if (!C.hasToken()) { body.innerHTML = empty('Needs a tribe', 'The Workshop is shared, so it lives on the tribe host. Host or join a tribe first.'); return; }
     try {
+      if (tab === 'shelf') { const pid = window.TribeProjects && window.TribeProjects.current(); drawShelf(body, await C.api('/shelf' + (pid ? `?project=${encodeURIComponent(pid)}` : '')), pid); return; }
       if (tab === 'library') {
         const qs = new URLSearchParams(); if (q) qs.set('q', q); if (kind) qs.set('kind', kind);
         const [a, p] = await Promise.all([C.api('/workshop/items?' + qs), C.api('/workshop/pending').catch(() => ({ pending: [] }))]);
@@ -150,6 +153,27 @@
         ${it.usedIn && it.usedIn.length ? `<span class="ws-used">${ico('i-folder', 12)}${esc(it.usedIn.slice(0, 2).map(u => `${u.emoji ? u.emoji + ' ' : ''}${u.name}`).join(', '))}${it.usedIn.length > 2 ? ` +${it.usedIn.length - 2}` : ''}</span>` : ''}
         ${extra}
       </div></article>`;
+  }
+  // ---------- Starter shelf (templates/shelf.json, server/shelf.js): checked open-source tools, libraries and Claude skills ----------
+  const SHELF_EMO = { skill: '✨', library: '📦', tool: '🛠️', mcp: '🔌' };
+  const SHELF_KIND = { skill: 'Claude Code skills', library: 'Libraries', tool: 'Tools', mcp: 'Agent tools (MCP)' };
+  function shelfCard(it) {
+    return `<article class="ws-card-s"><div class="wss-top"><span class="ws-eyebrow">${esc(it.license)}</span>${it.added ? '<span class="wss-added">in this project</span>' : ''}</div>
+      <h3>${esc(it.title)}</h3><p>${esc(it.summary)}</p>${it.install ? `<code class="wss-cmd">${esc(it.install)}</code>` : ''}
+      <div class="wss-acts">${it.added ? '' : `<button class="btn sm primary" data-shelf-add="${esc(it.id)}">${it.kind === 'skill' ? 'Add the skill' : 'Add to toolbox'}</button>`}<a class="btn sm" href="${esc(it.url || `https://github.com/${it.repo}`)}" target="_blank" rel="noopener noreferrer">Open</a></div></article>`;
+  }
+  function drawShelf(body, d, pid) {
+    const pick = new Set((d.picks || []).map(x => x.id)), items = (d.items || []).filter(it => !q || `${it.title} ${it.summary} ${(it.for || []).join(' ')}`.toLowerCase().includes(q.toLowerCase()));
+    const types = (d.types || []).length ? `Picks for this ${d.types.join(' / ')} project` : 'Picks for this project';
+    body.innerHTML = `${pick.size && !q ? `<section class="ws-sec"><div class="ws-sec-h"><span class="ws-eyebrow">${esc(types)}</span><h2>Start here</h2></div><div class="wss-grid">${items.filter(it => pick.has(it.id)).map(shelfCard).join('')}</div></section>` : ''}
+      ${Object.entries(SHELF_KIND).map(([k, l]) => { const list = items.filter(it => it.kind === k); return list.length ? `<section class="ws-sec"><div class="ws-sec-h"><span class="ws-eyebrow">${list.length}</span><h2>${SHELF_EMO[k] ? `<span class="emo" aria-hidden="true">${SHELF_EMO[k]}</span>` : ''}${l}</h2></div><div class="wss-grid">${list.map(shelfCard).join('')}</div></section>` : ''; }).join('')}
+      <p class="wss-note">Every entry is open source and was checked (repo, license, install line). Skills go into the project's <code>.claude/skills/</code>, where Claude Code finds them; everything else lands in the project's Toolbox doc.</p>`;
+    body.querySelectorAll('[data-shelf-add]').forEach(b => b.onclick = async () => {
+      if (!pid) return toast('Open a project first');
+      b.disabled = true; b.textContent = 'Adding…';
+      try { const r = await C.api(`/shelf/${encodeURIComponent(b.dataset.shelfAdd)}/add`, { method: 'POST', body: { project: pid } }); toast(r.where ? `Added to ${r.where}` : `${r.item.title} is in the Toolbox`); load(); }
+      catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Add'; }
+    });
   }
   function drawLibrary(body) {
     const mine = pending.filter(s => s.canDecide || s.by === me().id);

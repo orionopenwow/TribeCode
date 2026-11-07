@@ -269,6 +269,8 @@ const share = makeShare({ port: PORT });
 const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m => console.log(m) });
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js): one hub
 // per project, each bound to its project's repo and files (--repo is the first project's repo).
+// GitHub sign-in (server/github-auth.js): device flow / gh CLI / token; pushAuth() gives the autopilot the host's login.
+const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
 const hubs = new Map();
 function hubFor(pid) {
   const p = P.get(pid) || P.get(P.defaultId());
@@ -279,7 +281,7 @@ function hubFor(pid) {
     const h = require('./repo')({ repo: p.repo, store: P.scopedStore(() => p.id), str, broadcast: m => broadcast({ ...m, project: p.id }), postChat: inP(postChat),
       createTask: inP(o => createTask(o)), loadTasks: inP(() => loadTasks()), saveTask: inP(t => saveTask(t)), getMembers: () => members, nameOf, drift, board,
       presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims,
-      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []) });
+      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []), pushAuth: () => githubAuth.pushAuth() });
     return Object.assign(h, { drift });
   });
   hubs.set(p.id, hub);
@@ -308,6 +310,9 @@ const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () 
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
 const preview = makePreview({ P, store: baseStore, getMembers: () => members, broadcast, share, lanUrls, port: PORT, log: m => console.error('  ' + m) });   // app preview (server/preview.js)   // the pinned repo's thumbnail: README image → screenshot → tile
+// Home Screen app links (server/applink.js) and Desktop folders: export, live copy, shortcut (server/export.js).
+const applink = require('./applink')({ P, store: baseStore, getMembers: () => members, preview, shareBase: () => share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || null, log: m => console.error('  ' + m) });
+const exporter = require('./export')({ P, W, store: baseStore, applink, isLocal, port: PORT, getMembers: () => members, log: m => console.log('  ' + m) });
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
@@ -316,6 +321,8 @@ const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMember
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
+const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
+const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
 // The Workshop (server/workshop.js): a tribe-wide library apart from projects, plus the community shelf.
@@ -357,6 +364,7 @@ flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus
   rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
 dashboard.setFlow(flow);
+const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str });   // per-project Website (server/showcase.js)
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -415,7 +423,7 @@ async function api(req, res, url) {
   let pid = P.defaultId();
   if (who) {
     pid = P.pick(who, wanted || null, (online.get(who.id) || {}).project || who.project);
-    if (!pid && /^\/api\/(hub|scratch|projects|me)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
+    if (!pid && /^\/api\/(hub|scratch|projects|me|github)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
   return P.inProject(pid, () => apiInProject(req, res, url));
@@ -468,6 +476,8 @@ async function apiInProject(req, res, url) {
       tailscale: !!(shared && shared.available && shared.available.tailscale), shareMessage: shared && shared.status !== 'on' ? (shared.message || '') : '',
       hostOpen, host: host.name, tribe: tribe.name, expires: inv.expires });
   }
+
+  if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
@@ -524,7 +534,7 @@ async function apiInProject(req, res, url) {
     const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
     if (proj) P.addMember(proj.id, out.member.id, inv.role);
     P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
-    pushPresence();
+    pushPresence(); if (proj) rooms.pushProjects();   // everyone's project list shows the new member (Shared compute, overview team)
     return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: proj ? proj.id : null });
   }
 
@@ -535,6 +545,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'agents' && b === 'bridge.js') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // the stdio bridge (plain code, no secrets)
   if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
+  if (a === 'projects' && c === 'website') { const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
@@ -561,6 +572,8 @@ async function apiInProject(req, res, url) {
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());
+  if (a === 'shelf') return shelf.route(req, res, ctx());
+  if (a === 'openspace') return openspace.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
@@ -704,6 +717,7 @@ async function apiInProject(req, res, url) {
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
+  if (a === 'applink' || a === 'export' || a === 'shortcut' || a === 'github') { const h = await (a === 'applink' ? applink : a === 'github' ? githubAuth : exporter).route(req, res, ctx()); if (h !== null) return; }   // Home Screen app links, Desktop folders, GitHub sign-in
   if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
@@ -722,6 +736,7 @@ async function apiInProject(req, res, url) {
 }
 
 function serveStatic(req, res, url) {
+  if (applink.serve(req, res, url)) return;   // /app/<key>/: a project's app for the Home Screen (server/applink.js)
   if (devices.serveApp(req, res, url, UI)) return;
   let rel; try { rel = decodeURIComponent(url.pathname); } catch { return fail(res, 400, 'bad path'); }
   if (rel === '/' ) rel = '/index.html';

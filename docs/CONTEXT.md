@@ -101,6 +101,8 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 4. Security follow-ups (H5, M2–M5). Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
 
 ## Decisions
+- 2026-11-07: Open Space is integrated as an optional host-only tool (cloned at a pinned commit, `npm ci --ignore-scripts`, port 4850, opened in the host's browser because it refuses framing). Bump `REF` in server/openspace.js only after reading upstream changes.
+- 2026-11-07: The 3D demo is an original tavern (no WotLK content); only Leyline's bot design ideas (labelled bots, roles, orders, data in JSON) were reused.
 - 2026-11-07: Every version keeps the phone in step (user's rule): each change also lands in the phone layout, checked at 390px, and the CHANGELOG has a phone line.
 - 2026-11-07: Home's AI Insights show your own next steps first and the host's insights (Explorer, health, Secretary) after, deduplicated, at most 8.
 - 2026-11-06: The security review found host RCE reachable by any builder. Fixes were shipped as v0.3.2 straight from `main` ahead of the features, with `app/test/security_test.py` as the regression test.

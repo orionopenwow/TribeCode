@@ -483,3 +483,7 @@ body.global .nest-foot { display: none; }
 .linkish.danger, .btn.danger { color: var(--deny, #FF6F8E); }
 .btn.danger { border-color: color-mix(in srgb, var(--deny, #FF6F8E) 55%, var(--edge)); }
 .btn.danger:disabled { opacity: .5; }
+
+/* Small matte emoji on a few internal labels (never the main icons): desaturated, a touch dim, so they sit in the flat palette. */
+.emo { display: inline-block; margin-right: .4em; font-size: .92em; line-height: 1; filter: saturate(.5) brightness(.92) contrast(.95); font-style: normal; text-transform: none; letter-spacing: 0; vertical-align: -.04em; }
+.eyebrow .emo, h6 .emo { font-size: 1.05em; }
