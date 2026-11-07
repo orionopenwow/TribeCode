@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="notify.css">
 <link rel="stylesheet" href="voice.css">
 <link rel="stylesheet" href="plan.css">
+<link rel="stylesheet" href="projects.css">
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -57,7 +58,7 @@
 <div class="shell" id="shell">
   <div class="window">
     <header class="titlebar">
-      <button class="menu-btn" id="menu-btn" aria-label="Menu"><svg class="i"><use href="#i-list"/></svg></button><span class="ws" id="ws-name">My Tribe</span><span class="faint">/ Home</span>
+      <button class="menu-btn" id="menu-btn" aria-label="Menu"><svg class="i"><use href="#i-list"/></svg></button><span class="ws" id="ws-name">My Tribe</span><button class="pj-switch hidden" id="pj-switch" aria-haspopup="dialog" title="Switch project"></button><span class="faint">/ Home</span>
       <button class="search" id="tour-search" title="Command palette"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></button>
       <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
       <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
@@ -67,11 +68,13 @@
     <nav class="rail" id="tour-rail" aria-label="Main">
       <img class="logo" src="assets/icon-512.png" alt="TribeCode">
       <button class="nav on" data-nav="home" title="Home"><svg class="i"><use href="#i-home"/></svg></button>
+      <button class="nav g" id="rail-inbox" title="Inbox"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></button>
       <button class="nav" data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg></button>
       <button class="nav" data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg></button>
       <button class="nav" data-nav="board" title="Approval board"><svg class="i"><use href="#i-vote"/></svg></button>
       <button class="nav" data-nav="bugs" title="Bug inbox"><svg class="i"><use href="#i-bug"/></svg></button>
       <button class="nav" data-nav="calendar" title="Calendar"><svg class="i"><use href="#i-cal"/></svg></button>
+      <button class="nav g" id="rail-search" title="Search or jump to (Ctrl K)"><svg class="i"><use href="#i-search"/></svg></button>
       <button class="nav" data-nav="brain" title="Brain"><svg class="i"><use href="#i-brain"/></svg></button>
       <button class="nav" data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
       <button class="nav" id="rail-more" title="More: Visuals, floating windows"><svg class="i"><use href="#i-more"/></svg></button>
@@ -82,13 +85,7 @@
     </nav>
 
     <aside class="side" id="tour-side">
-      <h6>Projects</h6>
-      <button class="item" data-go="home"><span>🏕️</span>Welcome project<span class="n">main</span></button>
-      <h6>Workspace</h6>
-      <button class="item" data-go="tasks"><svg class="i" style="width:16px;height:16px"><use href="#i-check"/></svg>Tasks</button>
-      <button class="item" data-go="board"><svg class="i" style="width:16px;height:16px"><use href="#i-vote"/></svg>Proposals</button>
-      <button class="item" data-go="bugs"><svg class="i" style="width:16px;height:16px"><use href="#i-bug"/></svg>Bug inbox</button>
-      <button class="item" data-go="board"><svg class="i" style="width:16px;height:16px"><use href="#i-git"/></svg>Milestones</button>
+      <div id="pj-nav" class="pj-nav"></div>
       <h6>Huddle</h6>
       <div id="huddle-box" class="huddle-box"></div>
       <h6>Local folder</h6>
@@ -113,6 +110,11 @@
           <div class="standup" id="standup-text"></div>
           <button class="btn" id="standup-go">Write today's standup</button>
         </section>
+        <section class="card pj-drop-card" id="project-drop-card">
+          <h3><svg class="i" style="color:var(--accent)"><use href="#i-folder"/></svg>Start a project</h3>
+          <div class="lead">Drop a repo or a folder to make it a project room: its own people, chat, docs, tasks and a shared git workspace.</div>
+          <div class="dropzone pj-dropzone" id="pj-dropzone" tabindex="0" role="button" aria-label="Drop a folder or repo to start a project"><svg class="i"><use href="#i-folder"/></svg><div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:4px">or <span class="linkish">choose a folder</span>, paste a GitHub URL or a path</div></div>
+        </section>
         <section class="card" id="tour-drop">
           <h3><svg class="i" style="color:var(--accent-2)"><use href="#i-upload"/></svg>Drop zone</h3>
           <div class="lead">Drop any file: docs, PDFs, slides, images. It's converted to Markdown and summarized by your local brain.</div>
@@ -121,6 +123,8 @@
         </section>
       </div>
      </section>
+     <section id="view-overview" class="hidden"><div id="pj-overview"></div></section>
+     <section id="view-requests" class="hidden"><div id="pj-requests"></div></section>
      <section id="view-tasks" class="hidden">
       <div class="view-head"><h1>Tasks</h1><span class="faint" id="tasks-sub"></span>
         <button class="btn primary" id="task-new" style="margin-left:auto"><svg class="i" style="width:15px;height:15px"><use href="#i-check"/></svg>New task</button></div>
@@ -230,5 +234,6 @@
 <script src="chatx.js"></script>
 <script src="app.js"></script>
 <script src="notify.js"></script>
+<script src="projects.js"></script>
 </body>
 </html>

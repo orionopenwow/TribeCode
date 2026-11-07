@@ -53,6 +53,7 @@ Multiplayer Claude Code tools already let people share a terminal session. Tribe
 
 | Area | Highlights |
 | --- | --- |
+| **Project rooms** | Each project is its own room: people, chat, docs, tasks, requests, calendar, repo · drop a repo or folder (or paste a GitHub URL) to start one · project-only invites · “Give me a branch” worktrees with commits attributed to each member · see **[docs/PROJECTS.md](docs/PROJECTS.md)** |
 | **Sessions** | Live lobby + follow mode · shared Claude Code relay over MCP · soft file claims · one-click voice huddles · spectator links |
 | **Alignment** | Proposals + approval board · drift radar · vision check · milestone auto-commit to GitHub · session snapshots · merge helper |
 | **Tasks** | Chat-to-task · auto standup · task ↔ branch link · assign tasks to Claude agents with a token cap · token budget meter |
@@ -111,6 +112,14 @@ claude mcp add --transport http tribecode http://HOST:4747/mcp --header "Authori
 Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in the room while it works and gets 14 tools: `tribe_overview`, `list_tasks`, `create_task`, `update_task`, `list_docs`, `read_doc`, `write_doc` (with version checks, so it never overwrites a teammate), `post_chat`, `read_chat`, `claim_file`, `release_file`, `list_claims`, `read_vision`, `propose`. Agents respect file claims and VISION.md, but they can't vote or invite people. That stays with the humans.
 
 <p align="center"><img src="docs/screenshots/agents-live.png" alt="Claude agent in the room" width="100%"></p>
+
+### Project rooms
+
+<p align="center"><img src="docs/screenshots/project-cascade.png" alt="Project cascade: Overview, Chat, Docs, Tasks, Requests, More" width="100%"></p>
+<table><tr>
+<td width="62%"><img src="docs/screenshots/project-drop.png" alt="Start a project by dropping a folder or repo"></td>
+<td width="38%"><img src="docs/screenshots/project-mobile.png" alt="Project switcher on a phone"></td>
+</tr></table>
 
 ### Live tribe (working today)
 

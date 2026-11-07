@@ -112,7 +112,7 @@ def main():
             htok = host.evaluate("TribeStore.get().server.token")
 
             # ---- 1. Repo view: status + branches with a conflict hint ----
-            host.click('.rail [data-nav="repo"]')
+            host.evaluate("TribeApp.show('repo')")
             wait_text(host, "#repo-strip", "main")
             wait_text(host, "#br-list", "feat/fast-run"); wait_text(host, "#br-list", "feat/slow-mo")
             wait_text(host, "#br-list", "conflicts with feat/slow-mo", 15000)

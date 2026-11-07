@@ -86,7 +86,8 @@
   }
 
   // nav + views
-  const VIEWS = { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals' };
+  const VIEWS = { home: 'Home', overview: 'Overview', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals' };
+  let current = 'home';
   function show(view) {
     if (!VIEWS[view]) return;
     document.body.classList.remove('mobile-chat', 'drawer-open');
@@ -104,6 +105,8 @@
     if (view === 'repo') window.TribeRepo.load();
     if (view === 'calendar') window.TribePlan.show();
     if (view === 'visuals') window.TribeVisuals.show();
+    current = view;
+    if (window.TribeProjects) window.TribeProjects.onShow(view);   // overview, requests, title, cascade highlight
     window.TribeClient.sendActivity(VIEWS[view]);
     try { sessionStorage.setItem('tribecode.view', view); } catch {}
   }
@@ -135,7 +138,7 @@
     $('#room-list').innerHTML = shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(m => `
       <div class="person ${m.online ? 'on' : ''} ${m.role === 'agent' ? 'agent' : ''}" data-follow="${esc(m.id)}" title="${m.online && m.id !== meId && m.role !== 'agent' ? 'Click to follow ' + esc(m.name) : ''}">
       <div class="avatar" style="background:${m.role === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.role === 'agent' ? '🤖' : esc(initials(m.name))}<span class="st"></span></div>
-      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}${(C.state().huddle || []).some(h => h.id === m.id) ? ' <span title="In the huddle">🎙️</span>' : ''}</span><div class="what">${m.online ? (m.role === 'agent' ? '<span class="ok">agent</span> · ' : '<span class="ok">online</span> · ') + esc(m.where || 'Home') : m.role === 'agent' ? 'agent · idle' : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
+      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}${(C.state().huddle || []).some(h => h.id === m.id) ? ' <span title="In the huddle">🎙️</span>' : ''}</span><div class="what">${m.online ? (m.role === 'agent' ? '<span class="ok">agent</span> · ' : '<span class="ok">online</span> · ') + (window.TribeProjects ? window.TribeProjects.whereLabel(m) : '') + esc(m.where || 'Home') : m.role === 'agent' ? 'agent · idle' : 'offline'}${m.role === 'host' ? ' · host' : ''}</div></div></div>`).join('');
     $('#room-list').querySelectorAll('[data-follow]').forEach(el => el.onclick = () => follow(el.dataset.follow));
     $('#room-hint').classList.toggle('hidden', list.length > 1);
     $('#room-hint').textContent = 'Invite friends to see them here.';
@@ -255,13 +258,14 @@
         <div class="opts"><select id="inv-hours" title="Link expires after"><option value="24">24 hours</option><option value="168">7 days</option><option value="1">1 hour</option></select>
           <select id="inv-uses" title="How many people can use it"><option value="5">5 people</option><option value="1">1 person</option><option value="20">20 people</option></select>
           <select id="inv-role" title="Builders can edit; spectators can only watch"><option value="builder">Builder</option><option value="spectator">Spectator</option></select></div>
+        ${window.TribeProjects ? window.TribeProjects.invitePicker() : ''}
         <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
         <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p><b>On a phone?</b> Point the camera at this code to join. On iPhone, tap Share → <b>Add to Home Screen</b> afterwards to get the app.<br><span class="faint" id="inv-net"></span></p></div>
         <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
       const make = async () => {
         $('#inv-copy').disabled = true; $('#inv-link').textContent = 'Creating link…';
         try {
-          const { invite } = await C.api('/invites', { method: 'POST', body: { hours: +$('#inv-hours').value, maxUses: +$('#inv-uses').value, role: $('#inv-role').value } });
+          const { invite } = await C.api('/invites', { method: 'POST', body: { hours: +$('#inv-hours').value, maxUses: +$('#inv-uses').value, role: $('#inv-role').value, ...($('#inv-project') ? { project: $('#inv-project').value } : {}) } });
           // localhost links only work on this computer: share the network address instead
           let base = C.base(), note = '';
           // a public https address ("Share beyond my Wi-Fi") always wins; it comes first in /api/health lan
@@ -276,7 +280,7 @@
           S.set({ checklist: { invite: true } }); refresh();
         } catch (e) { $('#inv-link').textContent = 'Could not create invite: ' + e.message; }
       };
-      ['#inv-hours', '#inv-uses', '#inv-role'].forEach(s => $(s).addEventListener('change', make));
+      ['#inv-hours', '#inv-uses', '#inv-role', '#inv-project'].forEach(s => $(s) && $(s).addEventListener('change', make));
       $('#inv-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#inv-link').textContent); toast('Invite link copied'); } catch { getSelection().selectAllChildren($('#inv-link')); toast('Press Ctrl+C to copy'); } };
       make();
     }
@@ -417,5 +421,5 @@
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { show, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { show, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

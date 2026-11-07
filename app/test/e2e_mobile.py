@@ -74,7 +74,10 @@ def main():
             # chat tab
             phone.click('.rail [data-nav="chat"]')
             phone.wait_for_selector(".panel", state="visible")
-            wait_text(phone, "#chat-list", "Maya joined the tribe")
+            try:
+                wait_text(phone, "#chat-list", "Maya joined the tribe")
+            except Exception:
+                print("PHONECHAT", phone.inner_text("#chat-list"), phone.evaluate("JSON.stringify([TribeClient.project(), TribeClient.state().status])")); raise
             phone.fill("#chat-input", "on my phone 📱 /task Campfire save points")
             phone.fill("#chat-input", "/task Campfire save points")
             phone.press("#chat-input", "Enter")
@@ -85,7 +88,7 @@ def main():
             phone.wait_for_selector('[data-col="backlog"] .task')
             assert phone.locator(".panel").is_hidden()
             phone.select_option('[data-col="backlog"] .task select.mv', "doing")
-            host.click('[data-nav="tasks"]')
+            host.click('[data-nav="tasks"]:visible')
             host.wait_for_selector('[data-col="doing"] .task', timeout=8000)
             assert host.locator(".task select.mv").first.is_hidden(), "move menu is phone-only"
             phone.wait_for_selector('[data-col="doing"] .task')

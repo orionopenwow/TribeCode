@@ -296,7 +296,7 @@
         try {
           const st = await C.api('/share/public', { method: on ? 'DELETE' : 'POST', body: on ? undefined : { auto } });
           show(st);
-          const h = $('#inv-hours'); if (h) h.dispatchEvent(new Event('change'));   // re-make the link with the new address
+          const h = $('#inv-hours'); if (h && (on || st.status === 'on')) h.dispatchEvent(new Event('change'));   // re-make the link only when the address changed
         } catch (e) { show({ status: 'error', message: e.message }); }
       };
     }).observe(body, { childList: true });

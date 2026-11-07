@@ -135,7 +135,7 @@ def main():
             friend.wait_for_function("document.querySelector('#chat-list').innerText.includes('Made that a task')", timeout=5000)
 
             # tasks board: friend sees the task, drags it to In progress; host sees the move live
-            host.click('[data-nav="tasks"]'); friend.click('[data-nav="tasks"]')
+            host.click('[data-nav="tasks"]:visible'); friend.click('[data-nav="tasks"]:visible')
             friend.wait_for_selector('[data-col="backlog"] .task')
             friend.drag_and_drop('[data-col="backlog"] .task', '[data-col="doing"]')
             host.wait_for_selector('[data-col="doing"] .task', timeout=5000)
@@ -157,7 +157,7 @@ def main():
             assert Path(tmp, "chat", "general.jsonl").exists()
 
             # ---- approval board ----
-            host.click('[data-nav="board"]'); friend.click('[data-nav="board"]')
+            host.evaluate("TribeApp.show('board')"); friend.evaluate("TribeApp.show('board')")
             wait_text(host, "#prop-list", "No open proposals")
             host.dblclick("#vision-text"); host.keyboard.type("Cozy co-op pixel adventure. Never competitive."); host.click("#view-board h1")
             wait_text(host, ".toast", "VISION.md saved")
@@ -192,7 +192,7 @@ def main():
 
             # ---- docs ----
             wait_text(host, "#brain-label", "qwen3:8b")
-            host.click('[data-nav="docs"]')
+            host.click('[data-nav="docs"]:visible')
             host.wait_for_selector("#doc-first")
             host.click("#doc-first")
             host.wait_for_selector("#doc-title")
@@ -206,7 +206,7 @@ def main():
             host.keyboard.type("Shared inventory")
             assert "- [ ] Forest biome\n- [ ] Shared inventory" in host.input_value("#doc-body"), host.input_value("#doc-body")
             wait_text(host, "#doc-status", "Saved")
-            friend.click('[data-nav="docs"]')
+            friend.click('[data-nav="docs"]:visible')
             wait_text(friend, "#doc-list", "Game design doc")
             friend.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Game design doc'", timeout=8000)
             # live update reaches an idle reader
@@ -254,12 +254,12 @@ def main():
             assert Path(tmp, "docs", "jam-notes.md").exists()
 
             # ---- standup ----
-            host.click('[data-nav="home"]'); host.click("#standup-go")
+            host.click('[data-nav="home"]:visible'); host.click("#standup-go")
             wait_text(host, "#standup-text", "Maya: asked for controller support")
             assert list(Path(tmp, "brain").glob("standup-*.md"))
 
             # ---- drift radar ----
-            host.click('[data-nav="board"]')
+            host.evaluate("TribeApp.show('board')")
             wait_text(host, "#radar-list", "maya/campfire-save-points")
             wait_text(host, "#radar-list", "6 behind")
             wait_text(host, "#radar-list", "no task")
