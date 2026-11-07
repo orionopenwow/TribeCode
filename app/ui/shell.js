@@ -176,10 +176,12 @@
   }
   C.on('huddle', () => setTimeout(huddleLine, 0)); C.on('presence', huddleLine);
 
+  const repoBranch = {};
   // ---------- Pinned: the repo, pinned docs (docsx.js fills #side-pins-list), pinned chat messages ----------
   function pinned(p) {
     const repo = $('#pin-repo');
-    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="nest-row small" data-nav="repo">${ico('i-git')}<span>${esc(p.name)} repo</span><span class="n" id="pin-repo-branch"></span></button>` : '';
+    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="pin-repo-card" data-nav="repo" title="Open the repo"><span class="pr-ico">${ico('i-git')}</span><span class="pr-t"><span class="eyebrow">Repo</span><b>${esc(p.name)}</b><code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span></button>` : '';
+    if (p && p.hasRepo && repoBranch[p.id] === undefined) { repoBranch[p.id] = ''; C.api(`/projects/${encodeURIComponent(p.id)}/workspace`).then(w => { const b = w.branch && w.branch.exists ? w.branch.branch : (w.repo ? (w.repo.remote ? w.repo.remote.replace(/^https?:\/\/(www\.)?/, '').replace(/\.git$/, '') : 'local repo') : ''); repoBranch[p.id] = b; const el = $('#pin-repo-branch'); if (el) el.textContent = b; }).catch(() => {}); }
     const chats = $('#pin-chats'), strip = $('#pin-strip'), m = strip && !strip.classList.contains('hidden') && /(\d+) pinned/.exec(strip.textContent);
     if (chats) chats.innerHTML = m ? `<button class="nest-row small" id="pin-chat-open">${ico('i-pin')}<span>${m[1]} pinned in chat</span></button>` : '';
     const pc = $('#pin-chat-open'); if (pc) pc.onclick = () => { App().show('chat'); const s = $('#pin-strip'); if (s && !s.classList.contains('open')) { const hb = s.querySelector('.pin-head'); hb && hb.click(); } };

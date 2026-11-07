@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased (feat/rooms)
+
+- New shell: project circles on the far left, a calm project sidebar (New, Search, Chat, Docs & files, Updates, Tasks, Huddle, More ⋯, Pinned, Recents), breadcrumbs with a project switcher, a right panel that turns into a preview, Chat as its own view with a docked composer mount
+- Zero-step setup: no wizard; name from the OS user, ~/TribeCode, auto color, one Settings page, Join with a link from +
+- Coordination: agents panel with pause/stop, ownership map, conflict radar, hand-off queue, review queue, daily plan; MCP my_lane, suggest_task, handoff, request_review
+- Agents talk to agents: #agents channel, message_agent, delegate with cross-owner approval, recommend; rate limits and loop protection; agents can never decide approvals
+- Bug board: triage columns, repro steps, attachments, give to agent, duplicates, copy as Markdown for Claude
+
 ## v0.2.0
 
 - Pocket notifications: inbox, phone push (ntfy, Web Push, desktop), quiet hours, digests, approvals for agents with comments, questions, bulk low-risk approval, always-allow rules, escalation, forward to chat, "While you were away"

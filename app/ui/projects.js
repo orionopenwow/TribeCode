@@ -135,25 +135,38 @@
     const who = m => `<div class="pj-person"><span class="avatar" style="background:${m.kind === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.kind === 'agent' ? '🤖' : esc(initials(m.name))}</span><span>${esc(m.name)}</span><span class="faint">${m.here ? 'here' : m.online ? 'elsewhere' : 'away'}${m.role === 'host' ? ' · host' : m.role === 'spectator' ? ' · watching' : ''}</span></div>`;
     const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
     const team = d.team.filter(m => m.kind !== 'agent');
+    let plan = null; try { plan = (await C.api('/coord/plan')).plan; } catch {}
+    const mine = plan ? plan.items.filter(i => i.member === me().id || (C.state().members || []).some(m => m.id === i.member && m.owner === me().id)) : [];
+    const hero = plan && plan.items.length
+      ? `<section class="hero-card" id="pj-hero"><span class="eyebrow">Today's focus</span><h2>${esc(plan.focus || plan.items[0].title)}</h2>
+          <p>${mine.length ? `Yours today: ${mine.slice(0, 3).map(i => esc(i.title)).join(', ')}${mine.length > 3 ? ` and ${mine.length - 3} more` : ''}.` : 'Nothing is planned for you yet. The daily plan suggests who does what.'}</p>
+          <div class="hero-acts"><button class="btn primary" data-hero="plan">Open the daily plan</button><button class="btn" data-hero="tasks">Tasks</button></div></section>`
+      : `<section class="hero-card" id="pj-hero"><span class="eyebrow">Start here</span><h2>Give ${esc(p.name)} its first task</h2><p>Add a task, or invite a friend and connect your Claude Code. The daily plan then suggests who does what.</p>
+          <div class="hero-acts"><button class="btn primary" data-hero="newtask">New task</button><button class="btn" data-hero="invite">Invite a friend</button></div></section>`;
+    const sec = (eyebrow, title, inner) => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2></div>${inner}</section>`;
     el.innerHTML = `<div class="view-head pj-title"><button class="pj-face-btn" id="pj-face" title="Change the project picture" aria-label="Change the project picture">${face(p, 'lg')}</button><h1>${esc(p.name)}</h1>
         <span class="faint">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}</span>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
-      <div class="pj-grid">
+      ${hero}
+      ${sec('People', 'Who\'s building', `<div class="pj-grid">
         <section class="card"><h3>${ico('i-users', 16)}Who is here</h3>
           ${team.length ? team.sort((a, b) => b.here - a.here || b.online - a.online).map(who).join('') : '<div class="pj-none">Just you so far. Invite a friend to this project.</div>'}</section>
         <section class="card"><h3><span class="pj-live"></span>Agents</h3>
-          ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : `<div class="pj-none">No agent is working here right now. <button class="linkish" id="pj-cc">Connect your Claude Code</button></div>`}</section>
+          ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : `<div class="pj-none">No agent is working here right now. <button class="linkish" id="pj-cc">Connect your Claude Code</button></div>`}</section></div>`)}
+      ${sec('Activity', 'What changed', `<div class="pj-grid">
         <section class="card"><h3>${ico('i-refresh', 16)}Recent changes</h3>
           ${d.recent.length ? d.recent.map(r => `<div class="pj-row-line" ${r.kind === 'doc' ? `data-doc="${esc(r.ref)}"` : r.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[r.kind] || 'i-doc', 14)}<span class="t">${esc(r.text)}</span><span class="faint">${esc(r.sub)} · ${ago(r.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Drop a doc, add a task or start a branch.</div>'}</section>
         <section class="card"><h3>${ico('i-cal', 16)}Upcoming</h3>
-          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-cal', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled.</div>'}</section>
-        <section class="card pj-ws-card"><h3>${ico('i-git', 16)}Shared workspace</h3><div id="pj-ws">Loading…</div></section>
-      </div>`;
+          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-cal', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled.</div>'}</section></div>`)}
+      ${sec('Workspace', 'Shared repo', `<section class="card pj-ws-card"><h3>${ico('i-git', 16)}Your branch</h3><div id="pj-ws">Loading…</div></section>`)}`;
+    el.querySelectorAll('[data-hero]').forEach(x => x.onclick = () => { const k = x.dataset.hero;
+      if (k === 'plan') window.TribeCoord.open('plan'); else if (k === 'tasks') App().show('tasks'); else if (k === 'invite') App().openInvite();
+      else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); } });
     $('#pj-invite').onclick = () => App().openInvite();
     $('#pj-face').onclick = () => pickImage(p);
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
     el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => App().show(x.dataset.go));
-    el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => { App().show('docs'); setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150); });
+    el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
   }
 

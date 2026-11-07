@@ -293,7 +293,7 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
         }
       } catch {}
     }
-    if (!focus && s.items.length) focus = `Focus: ${s.items.slice(0, 2).map(i => i.title).join(' and ')}.`;
+    if (!focus && s.items.length) focus = s.items.length > 1 ? `${s.items[0].title}, then ${s.items[1].title}` : s.items[0].title;
     db.plans[key] = { date: today(), focus, by, items: s.items.map(i => ({ ...i, accepted: !!i.keep })), made: now(), madeBy: me.id };
     save(); push('plan');
     return { ...db.plans[key], crew: s.crew };

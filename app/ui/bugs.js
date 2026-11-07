@@ -58,7 +58,10 @@
       const done = bugs.filter(b => (CLOSED.includes(b.status) || b.status === 'resolved') && pass(b));
       $('#bug-list').innerHTML = filters + (done.length ? `<div class="bug-closed">${done.map(card).join('')}</div>` : '<div class="prop-empty">Nothing closed yet.</div>');
     } else {
-      $('#bug-list').innerHTML = filters + `<div class="bug-board">${COLS.map(([key, label, sts]) => { const list = bugs.filter(b => sts.includes(b.status) && pass(b));
+      const crit = open.filter(b => b.severity === 'critical');
+      const hero = crit.length ? `<section class="hero-card bug-hero"><span class="eyebrow">Critical</span><h2>${crit.length === 1 ? esc(crit[0].title) : `${crit.length} critical bugs are open`}</h2>
+        ${crit.length > 1 ? crit.slice(0, 5).map(b => `<div class="hero-row" data-crit="${esc(b.id)}"><b>${esc(b.title)}</b><span class="faint">${esc(b.assignee ? nameOf(b.assignee) : 'nobody yet')}</span></div>`).join('') : `<p>${esc(crit[0].assignee ? `${nameOf(crit[0].assignee)} has it.` : 'Nobody has it yet.')}${crit[0].count > 1 ? ` Seen ${crit[0].count}×.` : ''}</p><div class="hero-acts"><button class="btn primary" data-crit-agent="${esc(crit[0].id)}">Give to agent</button><button class="btn" data-crit-me="${esc(crit[0].id)}">Assign to me</button></div>`}</section>` : '';
+      $('#bug-list').innerHTML = hero + filters + `<div class="bug-board">${COLS.map(([key, label, sts]) => { const list = bugs.filter(b => sts.includes(b.status) && pass(b));
         return `<section class="bug-col" data-bcol="${key}"><header><b>${label}</b><span class="faint">${list.length}</span></header>${list.map(card).join('') || '<div class="bug-none">Nothing here</div>'}</section>`; }).join('')}</div>`;
     }
     $('#bug-list').querySelectorAll('.bug').forEach(el => {
@@ -69,6 +72,9 @@
       el.onclick = e => { if (!e.target.closest('button')) detail(bid); };
       el.onkeydown = e => { if (e.key === 'Enter') detail(bid); };
     });
+    $('#bug-list').querySelectorAll('[data-crit]').forEach(r => r.onclick = () => detail(r.dataset.crit));
+    const ca = $('#bug-list [data-crit-agent]'); if (ca) ca.onclick = async () => { try { const r = await C.api(`/bugs/${ca.dataset.critAgent}/agent`, { method: 'POST', body: {} }); window.TribeApp.toast(`${r.agent.name} has it`); load(); } catch (e) { window.TribeApp.toast(e.message); } };
+    const cm = $('#bug-list [data-crit-me]'); if (cm) cm.onclick = () => patch(cm.dataset.critMe, { assignee: 'me' });
     // drag between columns
     $('#bug-list').querySelectorAll('.bug-board .bug').forEach(el => { el.draggable = true; el.ondragstart = e => e.dataTransfer.setData('text/bug', el.dataset.bid); });
     $('#bug-list').querySelectorAll('.bug-col').forEach(col => { col.ondragover = e => { e.preventDefault(); col.classList.add('over'); }; col.ondragleave = () => col.classList.remove('over');

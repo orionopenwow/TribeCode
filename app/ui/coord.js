@@ -60,16 +60,34 @@
       ${canSteer ? `<footer>${a.control && a.control.action !== 'resume' ? '<button class="btn" data-ctl="resume">Resume</button>' : '<button class="btn" data-ctl="pause">Pause</button><button class="btn" data-ctl="stop">Stop</button>'}${a.yours ? '<button class="btn ghost" data-msg>Message</button>' : ''}</footer>` : ''}
     </article>`;
   }
+  const sec = (eyebrow, title, inner, extra = '') => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2>${extra}</div>${inner}</section>`;
   async function agents(el) {
-    const { agents: list } = await C.api('/coord/agents');
-    el.innerHTML = `<p class="coord-lead">Every agent in this project. Pause or stop reaches the agent the next time it calls <code>check_messages</code> or <code>my_lane</code>.</p>
-      ${list.length ? `<div class="ag-grid">${list.map(a => agentCard(a)).join('')}</div>` : empty('No agents yet', 'Connect your Claude Code from the right panel. Teammates\' agents show up here too.')}`;
+    const [{ agents: list }, dl, ch] = await Promise.all([C.api('/coord/agents'), C.api('/coord/delegations').catch(() => ({ delegations: [] })), C.api('/agents/channel?limit=20').catch(() => ({ messages: [] }))]);
+    const nameOf = id => ((members().find(m => m.id === id) || {}).name) || 'someone';
+    // Needs attention: the single most important thing here, as the hero card.
+    const attn = [
+      ...list.filter(a => a.control).map(a => ({ who: a.name, what: ctlLabel(a.control), id: a.id })),
+      ...list.filter(a => a.tokens && a.budget && a.tokens / a.budget > 0.85).map(a => ({ who: a.name, what: `${Math.round(a.tokens / a.budget * 100)}% of its token budget`, id: a.id })),
+      ...dl.delegations.filter(d => d.status === 'awaiting-approval').map(d => ({ who: `${d.fromName} → ${d.toName}`, what: `wants to hand over "${d.taskTitle}"`, ap: d.approval })),
+      ...list.filter(a => a.unread > 2 && !a.online).map(a => ({ who: a.name, what: `${a.unread} unread messages while idle`, id: a.id })),
+    ];
+    const hero = attn.length ? `<section class="hero-card ag-attn"><span class="eyebrow">Needs attention</span><h2>${attn.length === 1 ? esc(`${attn[0].who}: ${attn[0].what}`) : `${attn.length} things need a human`}</h2>
+        ${attn.length > 1 ? attn.slice(0, 5).map(x => `<div class="hero-row"><b>${esc(x.who)}</b><span>${esc(x.what)}</span>${x.ap ? `<button class="btn primary" data-ap-yes="${esc(x.ap)}">Approve</button><button class="btn" data-ap-no="${esc(x.ap)}">Deny</button>` : ''}</div>`).join('') : attn[0].ap ? `<div class="hero-acts"><button class="btn primary" data-ap-yes="${esc(attn[0].ap)}">Approve</button><button class="btn" data-ap-no="${esc(attn[0].ap)}">Deny</button></div>` : ''}</section>` : '';
+    const talk = ch.messages.slice(-15).map(m => `<div class="talk-row ${m.human ? 'human' : ''}"><b>${esc(nameOf(m.by))}</b>${m.to ? `<span class="faint">→ ${esc(nameOf(m.to))}</span>` : ''}<span class="talk-t">${esc(m.text)}</span><span class="faint">${esc(ago(m.at))}</span></div>`).join('');
+    el.innerHTML = `${hero}
+      ${sec('Agents', `${list.filter(a => a.online).length} working now`, list.length ? `<div class="ag-grid">${list.map(a => agentCard(a)).join('')}</div>` : empty('No agents yet', 'Connect your Claude Code from the right panel. Teammates\' agents show up here too.'))}
+      ${sec('#agents', 'What the agents are saying', `<div class="talk">${talk || '<div class="pj-none">Quiet so far. Agents post here with agents_post, message_agent and delegate.</div>'}</div>
+        <form class="coord-form talk-form" id="talk-form"><input class="input" id="talk-input" placeholder="@maya's-claude or @agents …" maxlength="2000" autocomplete="off"><button class="btn">Send</button></form>`)}
+      ${dl.delegations.length ? sec('Delegations', 'Who handed what to whom', dl.delegations.slice(0, 12).map(d => `<div class="dl-row"><b>${esc(d.fromName)}</b><span class="faint">→</span><b>${esc(d.toName)}</b><span class="dl-t">${esc(d.taskTitle)}</span><span class="pj-chip ${d.status === 'accepted' ? 'ok' : d.status === 'awaiting-approval' ? 'hot' : ''}">${esc(d.status.replace('-', ' '))}</span></div>`).join('')) : ''}`;
     act(el, '[data-ctl]', async b => {
       const id = b.closest('[data-agent]').dataset.agent, action = b.dataset.ctl;
       await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action } });
       toast(action === 'resume' ? 'Resumed' : `${action === 'stop' ? 'Stop' : 'Pause'} requested`); draw(); side();
     });
     act(el, '[data-msg]', async b => window.TribeDM && window.TribeDM.open(b.closest('[data-agent]').dataset.agent));
+    act(el, '[data-ap-yes]', async b => { await C.api(`/approvals/${b.dataset.apYes}/approve`, { method: 'POST', body: {} }); toast('Approved'); setTimeout(draw, 3200); });
+    act(el, '[data-ap-no]', async b => { await C.api(`/approvals/${b.dataset.apNo}/deny`, { method: 'POST', body: {} }); toast('Denied'); setTimeout(draw, 3200); });
+    el.querySelector('#talk-form').onsubmit = async e => { e.preventDefault(); const t = $('#talk-input').value.trim(); if (!t) return; try { await C.api('/agents/channel', { method: 'POST', body: { text: t } }); $('#talk-input').value = ''; draw(); } catch (err) { toast(err.message); } };
   }
 
   // ---------- ownership ----------
@@ -170,7 +188,7 @@
   const sideSoon = () => { clearTimeout(st); st = setTimeout(side, 400); };
   const drawSoon = (() => { let t; return () => { clearTimeout(t); t = setTimeout(() => { if (App() && App().view() === 'coord') draw(); }, 400); }; })();
   C.on('hello', sideSoon); C.on('presence', sideSoon); C.on('claims', sideSoon); C.on('project', () => { sideSoon(); drawSoon(); });
-  C.on('ws', m => { if (m.type === 'coord') { sideSoon(); drawSoon(); } });
+  C.on('ws', m => { if (m.type === 'coord' || (m.type === 'chat' && m.channel === 'agents' && tab === 'agents')) { sideSoon(); drawSoon(); } });
   C.on('task', () => { if (['plan', 'reviews', 'agents'].includes(tab)) drawSoon(); });
   C.on('approval', () => { if (tab === 'reviews') drawSoon(); });
   setInterval(() => { if (document.visibilityState === 'visible') side(); }, 60_000);

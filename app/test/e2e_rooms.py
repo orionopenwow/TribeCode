@@ -134,6 +134,13 @@ def main():
             wait_text(host, "#sync-status", "connected")
             token = host.evaluate("TribeStore.get().server.token")
             host.wait_for_selector("#pj-rail .pj-circle")
+            # first launch: zero steps, straight into the first project, one dismissible line
+            assert host.locator("#onboard").count() == 0
+            wait_text(host, "#hi-banner", "you're hosting")
+            host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
+            shot(host, "first-launch")
+            host.click("#hi-x"); host.wait_for_selector("#hi-banner", state="detached")
+            assert host.evaluate("TribeStore.get().firstRun") is False
             wait_text(host, "#chat-list", "legacy hello from the campfire")
             st, r = api("/tasks", token=token)
             assert any(t["id"] == "t-legacy-1" for t in r["tasks"]), r

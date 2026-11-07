@@ -249,7 +249,7 @@ def main():
         # ---------------- bugs: triage, assign, give to agent, attachment, duplicate, markdown ----------------
         b1 = ok(api("/bugs", "POST", {"title": "Player falls through the bridge", "repro": "1. Walk onto the bridge\n2. Jump twice", "details": "Happens on level 2."}, token=maya, project=pq))["bug"]
         assert b1["repro"].startswith("1. Walk"), b1
-        b1 = ok(api(f"/bugs/{b1['id']}", "PATCH", {"status": "confirmed", "severity": "high"}, token=orion, project=pq))["bug"]
+        b1 = ok(api(f"/bugs/{b1['id']}", "PATCH", {"status": "confirmed", "severity": "critical"}, token=orion, project=pq))["bug"]
         b1 = ok(api(f"/bugs/{b1['id']}", "PATCH", {"assignee": "me"}, token=orion, project=pq))["bug"]
         assert b1["assignee"] == oid and b1["status"] == "confirmed", b1
         r = ok(api(f"/bugs/{b1['id']}/agent", "POST", {}, token=orion, project=pq), "give to agent")
@@ -314,6 +314,8 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.wait_for_selector("#view-coord:not(.hidden)")
         wait_text(host, "#coord-body", "Claude · Orion")
         wait_text(host, "#coord-body", "12k")
+        wait_text(host, "#coord-body", "What the agents are saying"); wait_text(host, "#coord-body", "Polish bridge sprites")
+        host.fill("#talk-input", "@agents nice work"); host.press("#talk-input", "Enter"); wait_text(host, "#coord-body .talk", "nice work")
         host.click("#coord-body [data-ctl='pause']")
         wait_text(host, "#coord-body", "Pause requested")
         shot(host, "coord-agents")
@@ -335,6 +337,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         wait_text(host, ".toast", "Copied")
         host.click(f"{card} .bug-att")
         host.wait_for_selector("#tour-room.previewing #preview-body img")
+        wait_text(host, "#bug-list .hero-card", "Player falls through the bridge")
         wait_text(host, "#preview-head", "png")
         shot(host, "bugs-board")
         host.click("#preview-close"); host.wait_for_selector("#tour-room:not(.previewing)")
@@ -346,6 +349,8 @@ def ui_host(b, host, orion, maya, pq, b1):
         # home = project overview, chat has a docked composer mount
         host.click(".nest-row[data-nav='chat']"); host.wait_for_selector("#view-chat:not(.hidden) #composer-mount #chat-form")
         host.click("#nest-title"); host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
+        host.wait_for_selector("#pj-hero")
+        host.wait_for_selector("#nest-pinned .pin-repo-card")
         shot(host, "shell-desktop")
         # right panel collapses and comes back
         host.click("#panel-toggle"); host.wait_for_function("document.body.classList.contains('panel-off')")
