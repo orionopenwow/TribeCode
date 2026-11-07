@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.1
+
+- One-click test project: `TribeCode-Start-Test-Project.bat` creates Pixel Quest (a tiny no-build platformer with lanes, CLAUDE.md and VISION.md), starter tasks, a project-only invite with QR, and the Claude Code command
+- Demo: bottom tab bar that moves to the top in chat, motion, profiles and DMs, attach menu, one-tap voice recorder, in-app browser escape (Messenger, Instagram…), section clarity
+
 ## v0.3.0
 
 - New shell: project circles on the far left, a calm project sidebar (New, Search, Chat, Docs & files, Updates, Tasks, Huddle, More ⋯, Pinned, Recents), breadcrumbs with a project switcher, a right panel that turns into a preview, Chat as its own view with a docked composer mount
