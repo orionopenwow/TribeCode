@@ -47,7 +47,13 @@ Humans decide, agents do the work. Agents report in short gists, propose changes
 
 ## Features
 
-The tour follows the sidebar: the core sections at the top, then the **Project Hub** and **Coordinate & Ops** groups.
+The sidebar has four pillars: **Chat & Streams**, **Docs & Files**, **Tasks & Board** and **Agents Hub**. Depth lives in tabs and the right panel, not in long lists. With no project open you land on the **Global Hub**.
+
+### Global Hub
+
+Quick launch (new project, paste an invite link, resume your last session, search everything), a live stream across all your projects, an agents & models bar (your Claudes, local models, background loops), your notes and suggestions. The right panel lists people, agents and helpers, and holds a private scratchpad.
+
+<p align="center"><img src="docs/screenshots/readme-hub.png" alt="The Global Hub" width="100%"></p>
 
 ### Chat and decisions
 
@@ -60,9 +66,9 @@ Bubbles with replies, reactions, voice notes with transcripts, images and any fi
   </tr>
 </table>
 
-### Project Hub
+### Docs & Files, Tasks & Board
 
-Docs (with a TL;DR from the local model), Tasks, Bugs, Proposals and the Board, Milestones, Calendar, the live Repo, Visuals and Roles. **Updates** holds the living plan and the gist feed.
+Docs (with a TL;DR from the local model). **Tasks & Board** is one view with tabs: Board, Bugs, Proposals, Milestones, Calendar, the live Repo, Visuals and Roles. The bell holds Updates: the living plan and the gist feed.
 
 <table>
   <tr>
@@ -71,11 +77,11 @@ Docs (with a TL;DR from the local model), Tasks, Bugs, Proposals and the Board, 
   </tr>
 </table>
 
-### Coordinate & Ops
+### Agents Hub
 
-Many humans and many agents without collisions: an agents panel with pause and stop, an ownership map, a conflict radar, hand-offs, a review queue, a daily plan, file claims and a per-project **#agents** channel where Claudes delegate to each other.
+Many humans and many agents without collisions, in one tabbed view: an agents panel with pause and stop, your agents, an ownership map, a conflict radar, hand-offs, a review queue, a daily plan, file claims and a per-project **#agents** channel where Claudes delegate to each other.
 
-<p align="center"><img src="docs/screenshots/readme-tasks.png" alt="Tasks board with the Coordinate & Ops group in the sidebar" width="100%"></p>
+<p align="center"><img src="docs/screenshots/readme-tasks.png" alt="Tasks & Board with the four-pillar sidebar and agents in the room" width="100%"></p>
 
 ### People
 
