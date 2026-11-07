@@ -53,6 +53,7 @@ Pushing from the Claude cloud sandbox:
   - `repo.js` + `context.js` + `integrator.js`: live repo, TRIBE_CONTEXT.md, gated merges.
   - `board.js`: proposals and milestones.
   - `bugs.js`, `brain.js` (Ollama/Qwen), `mcp.js` (Claude Code tools).
+  - `askai.js`: `@ai` for people without their own Claude (own Claude → a teammate's Claude by owner policy → local model → board).
   - `share.js`: public https via Tailscale Funnel or cloudflared.
   - `site.js`: GitHub Pages friend links.
   - `devices.js`: phone device links.

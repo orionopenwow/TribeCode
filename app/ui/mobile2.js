@@ -8,7 +8,7 @@
 //   - Docs hub: the pinned repo as the hero, the living notes journal, files, screenshots.
 //   - Suggested tasks on Tasks and Home. Profile sheets (add friend, network, DM, ask their Claude).
 // Desktop is untouched: everything here is gated on the phone media query (and mobile2.css on @media).
-// Public: window.TribeMobile = { show, onShow, profile, talkTo, plusMenu, recorder, refresh }.
+// Public: window.TribeMobile = { show, onShow, profile, talkTo, askAi, plusMenu, recorder, refresh }.
 (function () {
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const C = window.TribeClient;
@@ -470,23 +470,32 @@
     const row = (k, iconHtml, t, s, on = false, extra = '') => `<button class="m2-mi ${on ? 'on' : ''}" data-talk="${esc(k)}">${iconHtml}<span class="m2-mt"><b>${t}</b><small>${s}</small></span>${extra}</button>`;
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Talk to</span></div>
       <div class="m2-menu">
-        ${row('claude', `<span class="m2-mic live">${ic('spark', 18)}</span>`, 'My Claude', ag ? `${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}` : 'Not connected yet · tap to connect', ag && ch === DM().channelWith(ag.id))}
-        ${row('brain', `<span class="m2-mic live">${ic('brain', 18)}</span>`, 'Qwen brain', 'The local brain answers in #general')}
-        ${row('desktop', `<span class="m2-mic">${ic('desk', 18)}</span>`, 'My desktop', 'Hand a change to a computer that can push')}
+        ${row('ai', `<span class="m2-mic live">${ic('spark', 18)}</span>`, 'Ask AI', '<span id="m2-ai-sub">The tribe\'s AI answers in #general</span>')}
+        ${ag ? row('claude', `<span class="m2-mic live">${ic('robot', 18)}</span>`, 'My Claude', `${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}`, ch === DM().channelWith(ag.id)) : ''}
+        ${ag ? row('desktop', `<span class="m2-mic">${ic('desk', 18)}</span>`, 'My desktop', 'Hand a change to a computer that can push') : ''}
         ${row('agents', `<span class="m2-mic">${ic('robot', 18)}</span>`, '#agents', 'Where the agents coordinate')}
         ${row('general', `<span class="m2-mic">${ic('hash', 18)}</span>`, '#general', 'Everyone in this project', ch === 'general')}
       </div>
+      ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have Claude Code on a computer? Connect it too</button>'}
       ${people.length ? `<div class="m2-sh-sub eyebrow">Direct messages</div><div class="m2-menu">${people.map(m => { const n = unread[DM().channelWith(m.id)] || 0;
         return row('dm:' + m.id, `<span class="m2-avw">${avatar(m)}<i class="m2-on ${m.online ? 'y' : ''}"></i></span>`, esc(m.name) + (f.has(m.id) ? ' <span class="m2-tag">friend</span>' : ''), m.online ? 'online' : 'away', ch === DM().channelWith(m.id),
           `${n ? `<span class="m2-n">${n}</span>` : ''}<span class="m2-info" data-prof="${esc(m.id)}" role="button" aria-label="${esc(m.name)}'s profile">${ic('user', 16)}</span>`); }).join('')}</div>` : '<p class="m2-fine">Invite friends to message them here.</p>'}`, { id: 'm2-talk-sheet', label: 'Talk to' });
+    C.api('/ask').then(r => { const sub = $('#m2-ai-sub'); if (sub) sub.textContent = AI_SUB[r.kind](r); }).catch(() => {});
     el.addEventListener('click', e => {
       const pf = e.target.closest('[data-prof]'); if (pf) { e.stopPropagation(); return profile(pf.dataset.prof); }
       const b = e.target.closest('[data-talk]'); if (!b) return;
       closeSheet(); talk(b.dataset.talk);
     });
   }
+  // Who answers "@ai" right now (server/askai.js decides when the question is sent)
+  const AI_SUB = { mine: r => `${r.label} answers`, theirs: r => `${r.label} answers${r.needsOk ? ' (they tap OK)' : ''}`, brain: () => 'The local model answers right away', queue: () => 'No AI on right now: it waits on the board for the next Claude' };
+  function askAi() {
+    if (DM() && DM().current() !== 'general') DM().back(); App().show('chat');
+    setTimeout(() => { const i = $('#chat-input'); if (i) { if (!/^@ai\b/i.test(i.value)) i.value = '@ai ' + i.value.replace(/^@(ai|brain)\s*/i, ''); i.dispatchEvent(new Event('input')); i.focus(); } talkLabel(); }, 60);
+  }
   function talk(k) {
     const inp = () => $('#chat-input');
+    if (k === 'ai') return askAi();
     if (k === 'claude') { const ag = myAgent(); if (ag && DM()) return DM().open(ag.id); App().connectClaude ? App().connectClaude() : ($('#cc-connect') && $('#cc-connect').click()); return; }
     if (k === 'general') { if (DM() && DM().current() !== 'general') DM().back(); App().show('chat'); return setTimeout(talkLabel, 0); }
     if (k === 'brain') { if (DM() && DM().current() !== 'general') DM().back(); App().show('chat'); setTimeout(() => { const i = inp(); if (i) { if (!/^@brain\b/.test(i.value)) i.value = '@brain ' + i.value.replace(/^@brain\s*/, ''); i.dispatchEvent(new Event('input')); i.focus(); } talkLabel(); }, 60); return; }

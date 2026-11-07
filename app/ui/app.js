@@ -219,6 +219,7 @@
         ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
           : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
+        ${opts && opts.welcome ? '<p class="cc-skip">No Claude Code? Skip this: type <b>@ai</b> in the chat and the tribe\'s AI answers.</p>' : ''}
         <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and local models →</a>' : ''}</p>
         <div class="modal-foot">${opts && opts.welcome ? '<span style="flex:1"></span><button class="btn" data-close>Later</button>' : '<button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button>'}</div>`;
       body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });

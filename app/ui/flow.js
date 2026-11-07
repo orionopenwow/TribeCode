@@ -102,6 +102,28 @@
     }
     d.className = 'flow-dock';
     const canEdit = human();
+    // A friend on a phone (not the one who started it): no setup steps, no GitHub, no link to manage.
+    // Just what they can do from the couch with no computer and no Claude of their own.
+    if (matchMedia('(max-width: 820px)').matches && f.by !== me().id) {
+      d.innerHTML = `<section class="fk fk-phone" id="flow-kick" aria-label="You're in">
+        <div class="fk-head"><div><span class="eyebrow">You're in</span><h2>${esc(f.name || 'Your project')}</h2></div><button class="tb-icon fk-min" id="flow-min" title="Fold" aria-label="Fold the card">${ico('i-x')}</button></div>
+        <p class="fk-lead">No computer needed. Talk ideas through, ask the tribe's AI, pick a part to own.</p>
+        <div class="fk-acts">
+          <button class="fk-act" id="fk-ai">${ico('i-sparkle')}<b>Ask AI</b><small>a question or an idea</small></button>
+          <button class="fk-act" id="fk-voice">${ico('i-mic')}<b>Voice note</b><small>say it, it's typed out</small></button>
+          <button class="fk-act" id="fk-idea">${ico('i-doc')}<b>Add an idea</b><small>goes into the notes</small></button>
+        </div>
+        <div class="fk-block"><div class="fk-label"><span>Pick a role</span>${f.roles.some(r => r.members.includes(me().id)) ? '<span class="faint">tap again to leave</span>' : ''}</div>
+          <div class="fk-roles" role="list">${f.roles.map(r => roleBtn(r)).join('')}</div><div class="fk-menu hidden" id="flow-rmenu" role="menu"></div></div>
+        <form class="fk-note hidden" id="flow-noteform"><input class="input" id="flow-note" placeholder="Type an idea and press Enter" maxlength="4000" autocomplete="off" ${canEdit ? '' : 'disabled'}></form>
+      </section>`;
+      wire(d);
+      const on = (sel, fn) => { const b = d.querySelector(sel); if (b) b.onclick = fn; };
+      on('#fk-ai', () => window.TribeMobile && window.TribeMobile.askAi());
+      on('#fk-voice', () => { const m = $('#m2-mic'); if (m) m.click(); });
+      on('#fk-idea', () => { const fm = $('#flow-noteform'); fm.classList.remove('hidden'); $('#flow-note').focus(); });
+      return;
+    }
     d.innerHTML = `<section class="fk" id="flow-kick" aria-label="Getting started">
       <div class="fk-head"><div><span class="eyebrow">Getting started</span><h2>${esc(f.name || 'Your project')}</h2></div>${steps(f)}<button class="tb-icon fk-min" id="flow-min" title="Fold" aria-label="Fold the card">${ico('i-x')}</button></div>
       <div class="fk-block">

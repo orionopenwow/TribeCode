@@ -62,7 +62,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
       rules.push({ id: 'r-' + id(6).toLowerCase(), owner: who.id, agent: a.by, kind: a.kind, example: a.title, created: a.decidedAt }); saveRules(); a.ruleAdded = true;
     }
     save();
-    postChat('general', 'tribecode', `${a.status === 'approved' ? '✅' : '⛔'} ${who.name} ${a.status} **${a.title}** for ${nameOf(a.by)}${a.note ? `: "${a.note}"` : ''}`);
+    if (a.kind !== 'ask-claude') postChat('general', 'tribecode', `${a.status === 'approved' ? '✅' : '⛔'} ${who.name} ${a.status} **${a.title}** for ${nameOf(a.by)}${a.note ? `: "${a.note}"` : ''}`);   // @ai questions say it in their own words (server/askai.js)
     broadcast({ type: 'approval', approval: view(a) });
     if (req && req.role !== 'agent' && req.id !== who.id) bus.notify({ type: 'approval-result', priority: 'normal', to: [req.id], from: who.id, title: `${who.name} ${a.status} your request`, body: a.title + (a.note ? ` · "${a.note}"` : ''), view: 'inbox', ref: a.id });
     return view(a);

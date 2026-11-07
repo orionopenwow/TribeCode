@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.2
+
+A friend with only a phone, from the first tap.
+- **"You're in"** on the phone for a friend who joins a fresh project: Ask AI, Voice note, Add an idea and Pick a role, with no setup steps, GitHub or link management in the way
+- **@ai, the tribe's AI for anyone**: no Claude Code needed. A question goes to your own Claude if it's on, else a teammate's Claude (the host's first; the owner taps OK, or sets Always or Never in Settings → Friends can ask my Claude), else the host's local model, else onto the board for the next Claude that connects. The answer comes back in the chat
+- **Talk to…** on the phone leads with Ask AI and says who would answer right now; "My desktop" only shows if you have a Claude; "Connect Claude Code too" is one quiet line
+- The **+** menu offers **Ask AI** when you have no Claude of your own
+- A friend joining on a computer sees "No Claude Code? Skip this: type @ai" under the connect command
+
 ## v0.6.1
 
 Invite a friend in one tap.
