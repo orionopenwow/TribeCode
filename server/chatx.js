@@ -13,7 +13,7 @@ const pad = n => String(n).padStart(2, '0');
 const localDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
-module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands }) {
+module.exports = function chatx({ store, id, str, getMembers, canWrite = () => true, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands }) {
   fs.mkdirSync(store.p('chat', 'media'), { recursive: true });
   const member = mid => getMembers().find(m => m.id === mid);
   const file = ch => `chat/${ch}.jsonl`;
@@ -167,6 +167,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       const to = String(body.to || '');
       if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(to) && !dms.isDm(to)) return fail(res, 400, 'bad channel');
       if (!dms.canRead(to, me)) return fail(res, 403, 'this conversation is private');
+      if (!dms.isDm(to) && !canWrite(to, me)) return fail(res, 403, 'you are not in that project');
       const extra = { fwd: { by: target.by, from, at: target.at } };
       if (target.media) extra.media = target.media;
       const msg = postChat(to, me.id, target.text || '', extra);

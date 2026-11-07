@@ -80,7 +80,7 @@ module.exports = function workspace({ store, slug }) {
   function okUrl(u) {
     u = String(u || '').trim();
     if (!u || u.startsWith('-') || /^ext::|^fd::/i.test(u) || /\s/.test(u)) return null;
-    if (/^(https?|ssh|git):\/\/[^\s]+$/i.test(u) || /^[\w.-]+@[\w.-]+:[^\s]+$/.test(u) || /^file:\/\/\/[^\s]+$/.test(u) || path.isAbsolute(u)) return u;
+    if (/^(https|ssh):\/\/[^\s]+$/i.test(u) || /^[\w.-]+@[\w.-]+:[^\s]+$/.test(u) || path.isAbsolute(u)) return u;
     if (/^[\w.-]+\/[\w.-]+$/.test(u)) return `https://github.com/${u}`;   // owner/repo shorthand
     return null;
   }
