@@ -216,3 +216,11 @@ body.light .mt .tk.read { color: var(--live-ink); }
 
 /* same size for every icon inside the composer pill */
 .compose .mic-btn svg, .compose [data-dictate] svg { width: 21px !important; height: 21px !important; }
+
+/* Shared files in chat: a download chip (name + size), flat like the rest of the bubble */
+.msg.dx .fchip-dl { display: flex; align-items: center; gap: 10px; margin: 2px 0 4px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--canvas); color: inherit; text-decoration: none; max-width: 300px; }
+.msg.dx .fchip-dl:hover, .msg.dx .fchip-dl:focus-visible { border-color: var(--brand); }
+.msg.dx .fchip-dl .i { width: 18px; height: 18px; flex: none; color: var(--brand); }
+.msg.dx .fchip-dl .fd-t { display: flex; flex-direction: column; min-width: 0; }
+.msg.dx .fchip-dl b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg.dx .fchip-dl small { color: var(--body); font-size: 11.5px; font-family: var(--mono); }

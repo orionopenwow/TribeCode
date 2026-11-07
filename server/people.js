@@ -127,7 +127,7 @@ module.exports = function people({ P, store, getMembers, presenceFor, claims, co
   // ---------- one person ----------
   function chatOf(mid, limit = 3000) {
     return store.readJSONL('chat/general.jsonl', limit).filter(x => x.by === mid && !x.deleted)
-      .map(x => ({ kind: 'chat', at: x.at, id: x.id, text: clip(plain(x.text) || (x.media ? (x.media.kind === 'voice' ? 'Voice note' : 'Image') : ''), 220) }));
+      .map(x => ({ kind: 'chat', at: x.at, id: x.id, text: clip(plain(x.text) || (x.media ? (x.media.kind === 'voice' ? 'Voice note' : x.media.kind === 'file' ? `File ${x.media.name || ''}` : 'Image') : ''), 220) }));
   }
   function promptsOf(ids, limit = 2000) {
     return store.readJSONL(logRel(pid()), limit).filter(x => ids.includes(x.by))

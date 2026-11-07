@@ -22,7 +22,7 @@
 
   const ITEMS = () => [
     { group: 'Add' },
-    { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Images go in the chat, files go to Docs' },
+    { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Docs' },
     { group: 'Decide together' },
     { k: 'propose', icon: 'i-flag', t: 'Propose to the tribe', s: 'Everyone votes; approved ideas go to the Board', hide: me().role === 'spectator' },
     { k: 'poll', icon: 'i-vote', t: 'Quick poll', s: 'Ask everyone to pick', hide: !window.TribeVotes || inDm() },
@@ -99,17 +99,20 @@
     if (k === 'bug') return window.TribeBugs.capture();
   }
 
+  const TEXTY = /\.(md|markdown|txt|text|csv|json|ya?ml|js|ts|py|css|html?)$/i;
   function pick() {
     const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
     i.onchange = async () => {
       for (const f of i.files || []) {
         try {
-          if (/^image\//.test(f.type) && f.size <= 3 * 1024 * 1024) {
+          if (/^image\/(png|jpeg|gif|webp)$/.test(f.type) && f.size <= 3 * 1024 * 1024) {
             await C.api(`/chat/${chan()}/image`, { method: 'POST', body: { data: await toB64(f), mime: f.type, text: draft() } }); clearDraft();
-          } else {
+          } else if (TEXTY.test(f.name) && f.size < 2_000_000 && window.TribeDocs) {   // text stays editable: it becomes a doc
             await window.TribeDocs.importFiles([f]);
             await C.api(`/chat/${chan()}`, { method: 'POST', body: { text: `📎 Shared **${f.name}** in Docs` } });
-          }
+          } else if (f.size <= 8 * 1024 * 1024) {   // anything else (PDF, zip, big photo…) is kept as a file to download
+            await C.api(`/chat/${chan()}/file`, { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type, text: draft() } }); clearDraft();
+          } else toast(`${f.name} is over 8 MB: put it in the repo instead`);
         } catch (e) { toast(e.message); }
       }
     };

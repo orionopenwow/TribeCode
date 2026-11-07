@@ -35,8 +35,7 @@
   const listFor = ch => (ch === 'general' ? $('#chat-list') : $('#dm-list'));
   const token = () => (S.get().server && S.get().server.token) || '';
   const mediaUrl = (ch, f) => `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}`;
-  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : 'Image') : '');
-  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : m.media.kind === 'file' ? `File: ${m.media.name || 'file'}` : 'Image') : '');  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
 
   // ---------- icons (added to the page's sprite) ----------
   const ICONS = {
@@ -146,6 +145,7 @@
       if (m.vote && window.TribeVotes) body += window.TribeVotes.card(m, ch);
       else if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}${META}</p>` : '');
       else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy">${m.text ? '' : META}</button>${m.text ? `<p>${md(m.text)}${META}</p>` : ''}`;
+      else if (m.media && m.media.kind === 'file') body += `<a class="fchip-dl" href="${esc(mediaUrl(ch, m.media.file))}" download="${esc(m.media.name || 'file')}" title="Download ${esc(m.media.name || 'file')}">${icon('i-down')}<span class="fd-t"><b>${esc(m.media.name || 'file')}</b><small>${esc(kb(m.media.size))}</small></span></a>${m.text ? `<p>${md(m.text)}${META}</p>` : META}`;
       else body += `<p>${md(m.text || '')}${m.gist ? '' : META}</p>`;   // gists.js swaps a gist's <p> for its card, so its time sits below
       if (!m.vote) body += linkChips(m.text);
       body += reactsHtml(m);

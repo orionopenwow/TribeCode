@@ -26,8 +26,10 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   const member = mid => getMembers().find(m => m.id === mid);
   const file = ch => `chat/${ch}.jsonl`;
   const emit = (ch, msg) => { const p = dms.pair(ch); if (p) p.forEach(mid => sendTo(mid, msg)); else broadcast(msg); };
-  const all = ch => store.readJSONL(file(ch), 100000);
-  const find = (ch, mid) => all(ch).find(m => m.id === mid) || null;
+  // Lookups scan the cached lines newest-first and parse only candidates (store.findJSONL), so a
+  // reaction, reply or image request no longer parses the whole channel history.
+  const find = (ch, mid) => (mid ? store.findJSONL(file(ch), m => m.id === mid, `"id":${JSON.stringify(mid)}`) : null);
+  const hasMedia = (ch, f) => !!store.findJSONL(file(ch), x => !!x.media && x.media.file === f, f);
 
   // Rewrite one message in place (chat files are append-only JSONL; edits are rare).
   function update(ch, mid, fn) {
@@ -53,7 +55,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   // ---------- pins ----------
   const pinsFile = ch => `chat/${ch}.pins.json`;
   const pinIds = ch => store.readJSON(pinsFile(ch), []);
-  const pins = ch => { const ids = pinIds(ch); const msgs = all(ch); return ids.map(i => msgs.find(m => m.id === i)).filter(m => m && !m.deleted); };
+  const pins = ch => pinIds(ch).map(i => find(ch, i)).filter(m => m && !m.deleted);
   const pushPins = ch => emit(ch, { type: 'chat-pins', channel: ch, pins: pins(ch) });
 
   // ---------- media ----------
@@ -67,7 +69,19 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     fs.writeFileSync(store.p('chat', 'media', name), buf);
     return { file: name, mime: MIME[ext], size: buf.length };
   }
-  const okFile = f => /^[A-Za-z0-9-]+\.(webm|ogg|m4a|mp3|png|jpg|gif|webp)$/.test(f || '');
+  const okFile = f => /^[A-Za-z0-9-]+\.(webm|ogg|m4a|mp3|png|jpg|gif|webp|bin)$/.test(f || '');
+  // Any other file (PDF, zip, a big photo, a level file...): kept as-is under chat/media/<id>.bin with its
+  // original name in the message, and always served as a download (never rendered by the browser).
+  const MAX_FILE = 8 * 1024 * 1024;
+  function saveFile(data, name, mime) {
+    const buf = Buffer.from(String(data || '').replace(/^data:[^,]*,/, ''), 'base64');
+    if (!buf.length) throw Object.assign(new Error('empty file'), { status: 400 });
+    if (buf.length > MAX_FILE) throw Object.assign(new Error('files up to 8 MB in chat; bigger ones go in the repo'), { status: 413 });
+    const file = `${Date.now().toString(36)}-${id(8).replace(/[^A-Za-z0-9]/g, 'x')}.bin`;
+    fs.writeFileSync(store.p('chat', 'media', file), buf);
+    const clean = String(name || 'file').replace(/[\u0000-\u001f\\/:*?"<>|]+/g, '_').trim().slice(0, 120) || 'file';
+    return { kind: 'file', file, name: clean, mime: /^[\w.+-]+\/[\w.+-]+$/.test(String(mime || '')) ? String(mime).slice(0, 100) : 'application/octet-stream', size: buf.length };
+  }
 
   // ---------- daily notes ----------
   function appendNotes(me, date, line) {
@@ -158,17 +172,32 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   // ---------- routes: /api/chat/<ch>/<action>[/<arg>] ----------
   async function route(req, res, { m, ch, action, arg, sub, me, readBody, send, fail, url }) {
     if (action === 'media' && m === 'GET') {
-      if (!okFile(arg) || !all(ch).some(x => x.media && x.media.file === arg)) return fail(res, 404, 'not found');
+      if (!okFile(arg) || !hasMedia(ch, arg)) return fail(res, 404, 'not found');
       let buf; try { buf = fs.readFileSync(store.p('chat', 'media', arg)); } catch { return fail(res, 404, 'not found'); }
       const ext = arg.split('.').pop();
-      res.writeHead(200, { 'Content-Type': MIME[ext], 'Content-Length': buf.length, 'Cache-Control': 'private, max-age=86400', 'Access-Control-Allow-Origin': '*' });
+      if (ext === 'bin') {   // shared files: always a download, never sniffed or rendered
+        const msg = store.findJSONL(file(ch), x => !!x.media && x.media.file === arg, arg) || { media: {} };
+        const nm = String(msg.media.name || 'file');
+        res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Length': buf.length, 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; sandbox",
+          'Content-Disposition': `attachment; filename="${nm.replace(/[^\w.-]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(nm)}`, 'Cache-Control': 'private, max-age=86400', 'Access-Control-Allow-Origin': '*' });
+        return res.end(buf);
+      }
+      res.writeHead(200, { 'Content-Type': MIME[ext], 'Content-Length': buf.length, 'Cache-Control': 'private, max-age=86400', 'Access-Control-Allow-Origin': '*', 'X-Content-Type-Options': 'nosniff' });
       return res.end(buf);
     }
     if (action === 'pins' && m === 'GET') return send(res, 200, { pins: pins(ch) });
     if (action === 'receipt' && m === 'GET') return send(res, 200, { receipt: receipt(ch) });
     if (action === 'votes' && m === 'GET') { votes.sweep(); return send(res, 200, { votes: votes.list(ch) }); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
-    const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, 6 * 1024 * 1024);
+    const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, action === 'file' ? 12 * 1024 * 1024 : 6 * 1024 * 1024);
+
+    if (m === 'POST' && action === 'file') {
+      const media = saveFile(body.data, body.name, body.mime);
+      const text = str(body.text, 4000);
+      const msg = postChat(ch, me.id, text, { media });
+      if (text) dms.onPost(ch, me, text);
+      return send(res, 200, { message: msg });
+    }
 
     if (m === 'POST' && (action === 'voice' || action === 'image')) {
       const media = saveMedia(body.data, body.mime, action);
@@ -199,7 +228,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = command(ch, me, text); if (voted) return send(res, 200, { message: voted });
       const orig = body.replyTo ? find(ch, String(body.replyTo)) : null;
-      const extra = orig ? { replyTo: { id: orig.id, by: orig.by, text: orig.deleted ? 'message deleted' : clip(orig.text || (orig.media ? (orig.media.kind === 'voice' ? 'Voice note' : 'Image') : ''), 160) } } : {};
+      const extra = orig ? { replyTo: { id: orig.id, by: orig.by, text: orig.deleted ? 'message deleted' : clip(orig.text || (orig.media ? (orig.media.kind === 'voice' ? 'Voice note' : orig.media.kind === 'file' ? `File: ${orig.media.name || ''}` : 'Image') : ''), 160) } } : {};
       const msg = postChat(ch, me.id, text, extra); onPost(ch, me, text, msg);
       return send(res, 200, { message: msg });
     }
@@ -262,7 +291,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
         const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
         return send(res, 200, { message: update(ch, target.id, x => ({ ...x, text, edited: new Date().toISOString() })) });
       }
-      if (target.media && target.media.file && ![].concat(...allChannels()).some(x => x.id !== target.id && x.media && x.media.file === target.media.file)) {
+      if (target.media && target.media.file && !otherUses(target.media.file, target.id)) {
         try { fs.unlinkSync(store.p('chat', 'media', target.media.file)); } catch {}
       }
       const msg = update(ch, target.id, x => ({ id: x.id, at: x.at, by: x.by, text: '', deleted: new Date().toISOString() }));
@@ -272,8 +301,9 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     return fail(res, 404, 'not found');
   }
   // Forwards share the media file across channels: only delete it when nothing else points at it.
-  function allChannels() {
-    try { return fs.readdirSync(store.p('chat')).filter(f => f.endsWith('.jsonl')).map(f => store.readJSONL('chat/' + f, 100000)); } catch { return []; }
+  function otherUses(f, mid) {
+    let names = []; try { names = fs.readdirSync(store.p('chat')).filter(n => n.endsWith('.jsonl')); } catch { return false; }
+    return names.some(n => store.findJSONL('chat/' + n, x => x.id !== mid && !!x.media && x.media.file === f, f));
   }
 
   // ---------- MCP tools for agents ----------
