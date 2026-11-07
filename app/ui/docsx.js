@@ -175,6 +175,7 @@
   // ================= backlinks =================
   async function loadBacklinks(slug) {
     if (!C.connected()) return;
+    const c0 = D().current(); if (!c0 || c0.slug !== slug) return;   // the doc closed (or its project was left) before this ran
     let bl = []; try { bl = (await C.api(`/docs/${slug}/backlinks`)).backlinks; } catch { return; }
     const box = $('#doc-backlinks'); const c = D().current(); if (!box || !c || c.slug !== slug) return;
     box.classList.toggle('hidden', !bl.length);
@@ -259,6 +260,7 @@
   // ================= comments =================
   async function loadThreads(slug) {
     if (!C.connected()) return;
+    const c0 = D().current(); if (!c0 || c0.slug !== slug) return;   // the doc closed (or its project was left) before this ran
     try { const r = await C.api(`/docs/${slug}/comments`); if (threadsFor !== slug) return; threads = r.threads; } catch { return; }
     refreshComments();
   }

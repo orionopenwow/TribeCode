@@ -30,10 +30,12 @@
 
   // ---------- data ----------
   async function load(openSlug) {
-    if (remote()) { try { list = (await C.api('/docs')).docs; } catch (e) { window.TribeApp.toast('Could not load docs: ' + e.message); } }
+    const pj = C.project ? C.project() : null;
+    if (remote()) { try { const got = (await C.api('/docs')).docs; if (C.project && C.project() !== pj) return; list = got; } catch (e) { window.TribeApp.toast('Could not load docs: ' + e.message); } }   // a list for a project we already left: the next load has the right one
     else list = local.all().map(({ body, ...d }) => ({ ...d, words: (body || '').split(/\s+/).filter(Boolean).length }));
     loaded = true; renderList();
     const keep = cur && list.some(d => d.slug === cur.slug) ? cur.slug : null;   // the open doc may belong to the project we just left
+    if (cur && !keep) cur = null;   // …then don't ask the new project for its comments or backlinks either
     const want = openSlug || keep || (list[0] && list[0].slug);
     if (want) open(want); else renderEditor();
   }
@@ -366,6 +368,7 @@
         setStatus(`Updated by ${nameOf(fresh.updatedBy)} · v${fresh.version}`); });
     }
   });
+  if (C.on) C.on('project', () => { if (remote() && !dirty) cur = null; });   // the open doc belongs to the project we left
   C.on('doc-summary', ({ slug, summary }) => { if (cur && cur.slug === slug) { cur.summary = summary; renderTldr(); } });
   C.on('doc-removed', slug => { list = list.filter(d => d.slug !== slug); renderList(); if (cur && cur.slug === slug) { if (sess) { sess.leave(); sess = null; peersNow = []; } cur = null; renderEditor(); window.TribeApp.toast('This doc was deleted by a teammate'); } });
   C.on('status', s => { if (s.status === 'online' && loaded) load(); });

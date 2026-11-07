@@ -169,7 +169,7 @@ def main():
         assert any("GitHub" in i["title"] for i in h["items"]), [i["title"] for i in h["items"]]   # no token for pushes yet
         assert all(set(i) >= {"id", "kind", "title", "body", "source", "at"} for i in h["items"])
         assert kinds <= {"optimization", "suggestion", "issue", "health"}, kinds
-        findings = {"generated": "2026-11-07T00:00:00Z", "version": "0.6.0", "summary": {"critical": 0, "high": 1, "medium": 1, "low": 0},
+        findings = {"generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 60)), "version": "0.6.0",   # newer than any .explore/findings.json in the checkout "summary": {"critical": 0, "high": 1, "medium": 1, "low": 0},
                     "findings": [{"id": "abc1234567", "kind": "dead", "severity": "high", "title": "Button does nothing", "detail": "Click Foo", "views": ["Chat"], "contexts": ["desktop"]},
                                  {"id": "def1234567", "kind": "contrast", "severity": "medium", "title": "Text contrast too low", "detail": "2.5:1 token=ghp_SECRET123456789", "views": ["Home"], "contexts": ["phone"]}],
                     "journeys": [{"id": "invite", "title": "Invite a friend", "pass": False, "clicks": 3, "notes": ["no link"]}], "suggestions": [{"idea": "Wire dead buttons", "why": "1 dead"}]}
