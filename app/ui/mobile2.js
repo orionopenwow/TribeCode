@@ -804,5 +804,11 @@
     if (C.connected()) loadUpdates();
   }
   window.TribeMobile = { show, onShow, profile, talkTo, plusMenu, recorder, closeSheet, refresh: () => { loadUpdates(); hub.at = 0; if (cur === 'docs') docsHub(true); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } };
+  // Phone: while the drawer (rail + nest) is closed it sits off-screen; keep its controls out of the Tab order
+  // and away from screen readers (found by scripts/explore.py: 15+ invisible focusable controls).
+  const phoneMq = matchMedia('(max-width: 820px)');
+  const drawerInert = () => { const closed = phoneMq.matches && !document.body.classList.contains('drawer-open'); ['#tour-rail', '#tour-side'].forEach(s => { const el = document.querySelector(s); if (el && el.inert !== closed) el.inert = closed; }); };
+  new MutationObserver(drawerInert).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  phoneMq.addEventListener('change', drawerInert); drawerInert();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

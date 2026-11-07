@@ -12,7 +12,7 @@ const KEY_RE = /^[A-Za-z0-9_-]{32,64}$/;
 const MAX_TOKENS = 6;          // one per redeem (Safari tab, Home Screen app, reinstall…), oldest dropped
 const MAX_DEVICES = 20;        // per member
 
-module.exports = function makeDevices({ store, id, hash, str, getMembers, publicMember, tribe }) {
+module.exports = function makeDevices({ store, id, hash, str, getMembers, publicMember, tribe, stamp = (f, d) => d }) {
   let devices = store.readJSON('.tribe/devices.json', []);
   const save = () => store.writeJSON('.tribe/devices.json', devices);
   const memberById = mid => getMembers().find(m => m.id === mid) || null;
@@ -114,7 +114,7 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('not found'); }
       res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', ...headers, 'Cache-Control': rel === '/index.html' ? 'no-store' : 'no-cache' });
-      res.end(data);
+      res.end(stamp(file, data));
     });
     return true;
   }

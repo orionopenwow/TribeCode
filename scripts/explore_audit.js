@@ -45,6 +45,7 @@
     const s = getComputedStyle(el); if (s.visibility === 'hidden' || s.display === 'none') return false;
     if (opacityChain(el) < 0.05) return false;
     if (r.right < 0 || r.left > W() || r.bottom < -2000) return false;
+    const det = el.closest('details:not([open])'); if (det && !el.closest('summary')) return false;   // inside a closed <details>
     // clipped away by an overflow:hidden ancestor (closed drawers, collapsed rows)
     for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) {
       const cs = getComputedStyle(e);
@@ -142,16 +143,28 @@
       if (!hit || hit === el || el.contains(hit) || hit.contains(el)) continue;
       const cover = hit.closest('.toast, .modal, [role=dialog], .sheet, .backdrop, .scrim, #palette, .pf-menu, .float-menu, [role=menu]') || (big(hit) ? hit : null);
       if (cover) continue;   // an open overlay covers the page on purpose
+      let overlay = false;
+      for (let e = hit; e && e !== document.body; e = e.parentElement) { const ps = getComputedStyle(e).position; if ((ps === 'fixed' || ps === 'absolute') && big(e) && !e.contains(el)) { overlay = true; break; } }
+      if (overlay) continue;   // a full-screen page (Workshop, preview on a phone) sits above the shell
+      let sc = el.parentElement, reachable = false;
+      for (; sc && sc !== document.body; sc = sc.parentElement) { const cs = getComputedStyle(sc); if (/(auto|scroll)/.test(cs.overflowY) && sc.scrollHeight > sc.clientHeight + 2) { const sr = sc.getBoundingClientRect(); reachable = r.top < sr.top + 4 ? sc.scrollTop > 0 : sc.scrollTop + sc.clientHeight < sc.scrollHeight - 2 || r.bottom > sr.bottom - 4 && sc.scrollTop > 0; break; } }
+      if (reachable && /sticky|fixed/.test(getComputedStyle(hit.closest('header, nav, [class*=head], [class*=bar]') || hit).position)) continue;   // scrolled under a sticky header: scrolling reveals it
       add('obscured', { selector: desc(el), label: label(el), detail: `its center is covered by ${desc(hit)}` });
     }
     // 5. invisible but focusable (keyboard focus disappears into it)
     const groups = {};
     for (const el of document.querySelectorAll('button, a[href], input:not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable=""], [contenteditable=true]')) {
       if (el.disabled || el.tabIndex < 0 || el.closest('[inert]')) continue;
+      if (el.closest('details:not([open])') && !el.closest('summary')) continue;
       const rects = el.getClientRects(); if (!rects.length) continue;   // display:none: not focusable, fine
       const s = getComputedStyle(el); if (s.visibility === 'hidden') continue;
       const r = el.getBoundingClientRect();
-      const why = el.closest('[aria-hidden="true"]') ? 'inside aria-hidden' : opacityChain(el) < 0.05 ? 'opacity 0' : (r.right <= 0 || r.left >= W()) ? 'off-screen' : null;
+      let why = el.closest('[aria-hidden="true"]') ? 'inside aria-hidden' : opacityChain(el) < 0.05 ? 'opacity 0' : (r.right <= 0 || r.left >= W()) ? 'off-screen' : null;
+      if (why === 'opacity 0') {   // revealed on focus (:focus-within / :focus-visible)? then it is a keyboard-friendly hover control
+        const prev = document.activeElement;
+        try { el.focus({ preventScroll: true }); if (opacityChain(el) > 0.5) why = null; } catch {}
+        try { if (prev && prev.focus) prev.focus({ preventScroll: true }); else el.blur(); } catch {}
+      }
       if (!why) continue;
       const g = (el.parentElement && el.parentElement.closest('[id]') || { id: 'page' }).id + ' · ' + why;
       (groups[g] = groups[g] || []).push(label(el) || desc(el));
@@ -163,6 +176,7 @@
     let n, count = 0;
     while ((n = tw.nextNode()) && count < 900) {
       const el = n.parentElement; if (!el || seenC.has(el)) continue; seenC.add(el); count++;
+      if (!/[A-Za-z0-9\u00C0-\u024F]/.test(n.nodeValue)) continue;   // emoji and symbols ignore CSS color
       if (el.closest('svg, script, style, [aria-hidden="true"], code.hl, .kbd') || disabled(el) || el.closest('button[disabled], .disabled')) continue;
       if (!visible(el)) continue;
       const r = el.getBoundingClientRect(); if (r.bottom < 0 || r.top > H()) continue;

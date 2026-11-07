@@ -329,7 +329,7 @@ def seed(work):
     sh("git", "init", "-q", "--bare", "-b", "main", origin)
     sh("git", "init", "-q", "-b", "main", repo)
     Path(repo, "src").mkdir(parents=True)
-    Path(repo, "index.html").write_text("<!doctype html><title>Pixel Quest</title><canvas id=game></canvas><script src=src/game.js></script>\n")
+    Path(repo, "index.html").write_text("<!doctype html><title>Pixel Quest</title><canvas id=game></canvas><script type=module src=src/game.js></script>\n")
     Path(repo, "src/game.js").write_text("export const speed = 2\n")
     Path(repo, "src/world.js").write_text("export const tiles = ['grass', 'lava']\n")
     Path(repo, "src/player.js").write_text("export const jump = 4\n")
@@ -372,7 +372,7 @@ def seed(work):
 
 def settings_js(token, name, color="#F26B1D", project=None):
     pj = f"localStorage.setItem('tribecode.project:{BASE}', {json.dumps(project)});" if project else ""
-    return (f"if (!sessionStorage.getItem('ex-seeded')) {{ sessionStorage.setItem('ex-seeded','1'); localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:{json.dumps(name)}, color:{json.dumps(color)}, onboarded:true, theme:'dark', tour:{{done:true}}, server:{{url:'{BASE}', token:{json.dumps(token)}}}}})); {pj} }}")
+    return (f"if (window.top === window && !sessionStorage.getItem('ex-seeded')) {{ sessionStorage.setItem('ex-seeded','1'); localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:{json.dumps(name)}, color:{json.dumps(color)}, onboarded:true, theme:'dark', tour:{{done:true}}, server:{{url:'{BASE}', token:{json.dumps(token)}}}}})); {pj} }}")
 
 
 def new_page(browser, context_name, *, phone=False, token=None, name="Orion", tauri=False, version="0.0.0", project=None):
@@ -380,9 +380,9 @@ def new_page(browser, context_name, *, phone=False, token=None, name="Orion", ta
     ctx = browser.new_context(viewport=vp, device_scale_factor=1, has_touch=phone, is_mobile=phone,
                               user_agent=("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" if phone else None))
     ctx.add_init_script(AUDIT_JS)
-    if tauri: ctx.add_init_script(f"window.__TAURI_VERSION__ = {json.dumps(version)};\n" + TAURI_JS)
+    if tauri: ctx.add_init_script(f"if (window.top === window) {{ window.__TAURI_VERSION__ = {json.dumps(version)};\n" + TAURI_JS + "}")
     if token: ctx.add_init_script(settings_js(token, name, project=project))
-    else: ctx.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name:'Guest', onboarded:true, tour:{done:true}}))")
+    else: ctx.add_init_script("if (window.top === window && !localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name:'Guest', onboarded:true, tour:{done:true}}))")
     page = ctx.new_page()
     w = Watch(page, context_name)
     return ctx, page, w
@@ -422,11 +422,11 @@ def destinations(page, phone=False):
         for v in page.evaluate("Object.keys({hub:1,home:1,chat:1,docs:1,tasks:1,board:1,bugs:1,repo:1,calendar:1,visuals:1,coord:1})"):
             out.append({"name": v, "key": v, "go": f"TribeApp.show({json.dumps(v)})"})
     extra = [
-        ("Profile menu", "pf", "document.querySelector('#pf-btn') && document.querySelector('#pf-btn').click()"),
+        ("Profile menu", "pf", "(() => { const b = document.querySelector('#pf-btn'); const m = document.querySelector('#m2-me'); (b && b.offsetParent ? b : m || b).click(); })()"),
         ("Inbox (bell)", "bell", "window.TribeNotify && TribeNotify.openInbox()"),
         ("Command palette", "palette", "window.TribePalette && TribePalette.open()"),
         ("Composer + menu", "plus", "TribeApp.show('chat'); setTimeout(() => window.TribePlus && TribePlus.open(document.querySelector('#composer-mount button, #chat-input')), 120)"),
-        ("Workspace switcher", "switcher", "window.TribeShell && TribeShell.switcher && TribeShell.switcher()"),
+        ("Workspace switcher", "switcher", "window.TribeShell && TribeShell.switcher && TribeShell.switcher(document.querySelector('#pj-switch') || document.querySelector('#nest-switch'))"),
         ("Agent detail (right panel)", "agent", f"window.TribeShell && TribeShell.previewAgent && TribeShell.previewAgent({json.dumps(S.get('a1id', ''))})"),
         ("Person view", "person", f"window.TribePeople && TribePeople.open({json.dumps(S.get('mid', ''))})"),
         ("App preview", "preview", "window.TribePreview && TribePreview.open()"),
@@ -487,7 +487,7 @@ def visit_all(page, w, context, phone=False, crawl=False, shots=None):
     log(f"{context}: {len(dests)} destinations{' + clicking everything' if crawl else ''}")
     clicked = set()
     for d in dests:
-        reset(page)
+        reset(page); settle(page, 150)
         w.mark(); page.evaluate("__ex.resetCls()")
         t0 = time.time(); err = go(page, d)
         steps = [f"open the app ({context})", f"go to {d['name']}" + (" (Ctrl K / nest)" if not d.get("overlay") else "")]
@@ -594,7 +594,7 @@ def find_affordance(page, alts):
 
 
 def run_journey(page, w, context, j):
-    t0 = time.time(); clicks = 0; notes = []; ok_ = True; trail = []
+    t0 = time.time(); clicks = 0; notes = []; ok_ = True; trail = []; skip_label = None
     try:
         page.evaluate(f"(() => {{ {j.get('start', 'TribeApp.show(\"home\")')} }})()"); settle(page, 500)
     except Exception as e:
@@ -605,9 +605,11 @@ def run_journey(page, w, context, j):
         if kind == "click?":   # only when it is there (e.g. "New command" when Claude is already connected)
             loc, how = find_affordance(page, step[1])
             if loc:
-                try: loc.click(timeout=2500); clicks += 1; trail.append(step[2]); settle(page, 400)
+                try: loc.click(timeout=2500); clicks += 1; trail.append(step[2]); settle(page, 400); skip_label = step[2]
                 except Exception: pass
             continue
+        if kind == "click" and len(step) > 2 and step[2] == skip_label: continue
+        if kind == "click" and skip_label and j["id"] == "preview": continue
         if kind == "click":
             loc, how = find_affordance(page, step[1])
             if not loc:
@@ -654,20 +656,30 @@ JOURNEYS = [
                ("expect", "[...document.querySelectorAll('input, code, .code, a, pre, span, div, textarea')].some(e => window.__ex.visible(e) && /https?:\\/\\/[^\\s]+(join|go\\.html|#s=|\\/m\\/)/.test(e.value || (e.children.length ? '' : e.textContent)))")]},
     {"id": "propose", "title": "Propose a feature and get it on the Board", "goal": "the proposal is listed on the Board", "max": 4,
      "start": "TribeApp.show('chat')", "start_label": "chat",
-     "steps": [("click", [{"role": "button", "name": r"^(\+|more|add|attach|plus)"}, {"css": "#composer-mount .cmp-plus, #composer-mount [aria-label*=More], #composer-mount button"}], "composer +"),
+     "steps": [("click", [{"role": "button", "name": r"^add(:|$)"}, {"css": "#m2-plus, #composer-mount [aria-label^=Add]"}], "composer +"),
                ("click", [{"role": "menuitem", "name": r"propose"}, {"role": "button", "name": r"propose"}, {"text": r"^propose"}], "Propose to the tribe"),
                ("fill", [{"role": "textbox", "name": r"(question|title|propos|idea)"}, {"css": ".modal:not(.hidden) input, .vt-sheet input, [role=dialog] input, .sheet input"}], "Explorer: a photo mode", "proposal title"),
                ("click", [{"role": "button", "name": r"^(propose|post|send|start|create)"}], "send proposal"),
                ("js", "TribeApp.show('board')"),
                ("expect", "document.querySelector('#view-board') && document.querySelector('#view-board').innerText.includes('photo mode') || [...document.querySelectorAll('#chat-list *')].some(e => /photo mode/.test(e.textContent || ''))")]},
-    {"id": "connect-claude", "title": "Connect Claude Code", "goal": "a `claude mcp add` command is on screen", "max": 2,
+    {"id": "connect-claude", "title": "Connect Claude Code",
+     "steps_phone": [("click", [{"role": "button", "name": r"^you$|profile"}, {"css": "#m2-me"}], "You (profile)"),
+                     ("click", [{"role": "button", "name": r"connect.*claude"}, {"role": "menuitem", "name": r"connect.*claude"}, {"text": r"connect your claude"}], "Connect your Claude Code"),
+                     ("click?", [{"role": "button", "name": r"^new command"}], "New command"),
+                     ("expect", "[...document.querySelectorAll('code, pre, input, textarea, .code, span, div')].some(e => window.__ex.visible(e) && /claude mcp add/.test(e.value || (e.children.length ? '' : e.textContent)))")], "goal": "a `claude mcp add` command is on screen", "max": 2,
      "steps": [("click", [{"role": "button", "name": r"connect.*claude|claude code|connect your claude|add (an )?agent"}, {"text": r"connect (your )?claude"}, {"css": "#cc-connect button, #cc-connect"}], "Connect Claude"),
                ("click?", [{"role": "button", "name": r"^new command"}], "New command"),
                ("expect", "[...document.querySelectorAll('code, pre, input, textarea, .code, span, div')].some(e => window.__ex.visible(e) && /claude mcp add/.test(e.value || (e.children.length ? '' : e.textContent)))")]},
+    # (phone variants live in steps_phone)
     {"id": "preview", "title": "Preview the app", "goal": "the preview pane is open", "max": 2,
-     "steps": [("click", [{"role": "button", "name": r"preview"}, {"text": r"^preview"}, {"css": "[data-preview], #pv-btn"}], "Preview"),
+     "steps": [("click?", [{"role": "button", "name": r"^preview app"}], "Preview app"),
+               ("click", [{"role": "button", "name": r"^docs"}, {"text": r"^docs & files$"}], "Docs & Files"),
+               ("click", [{"role": "button", "name": r"^preview app"}, {"role": "button", "name": r"preview"}], "Preview app"),
                ("expect", "(() => { const p = document.querySelector('#preview-pane'); return (p && window.__ex.visible(p)) || !!document.querySelector('iframe[src*=preview]'); })()")]},
-    {"id": "bugs", "title": "Find the bug inbox", "goal": "the Bugs view is open", "max": 2,
+    {"id": "bugs", "title": "Find the bug inbox",
+     "steps_phone": [("click", [{"role": "tab", "name": r"^tasks"}, {"role": "button", "name": r"^tasks"}], "Tasks (rack)"),
+                     ("click", [{"role": "tab", "name": r"^bugs"}, {"role": "button", "name": r"^bugs"}], "Bugs"),
+                     ("expect", "!document.querySelector('#view-bugs').classList.contains('hidden')")], "goal": "the Bugs view is open", "max": 2,
      "steps": [("click", [{"role": "button", "name": r"^tasks"}, {"text": r"^tasks & board"}], "Tasks & Board"),
                ("click", [{"role": "tab", "name": r"^bugs"}, {"role": "button", "name": r"^bugs"}], "Bugs"),
                ("expect", "!document.querySelector('#view-bugs').classList.contains('hidden')")]},
@@ -968,7 +980,7 @@ def run_phone(browser, shots):
         if "journeys" in PHASES:
             for j in JOURNEYS:
                 if j["id"] not in ("invite", "bugs", "connect-claude"): continue
-                jj = dict(j); jj["steps"] = [tuple(s) for s in j["steps"]]
+                jj = dict(j); jj["steps"] = [tuple(s) for s in j.get("steps_phone", j["steps"])]
                 page.goto(BASE + "/?skipIntro=1"); page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=12000); settle(page, 500)
                 run_journey(page, w, "phone", jj)
     finally: ctx.close()
