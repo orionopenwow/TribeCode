@@ -204,7 +204,7 @@ def main():
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
             assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Global docs", "All repos", "Agent fleet"]
             assert host.evaluate("document.body.classList.contains('global')")
-            host.wait_for_selector("#nest-open", state="visible")
+            host.wait_for_selector("#pj-rail [data-pj-open]", state="visible")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
             host.wait_for_selector("#room-agents .ra-row, #room-agents [data-agent]")
             wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Local model")
@@ -290,7 +290,7 @@ def main():
             host.wait_for_function("t => document.querySelector('#doc-title') && document.querySelector('#doc-title').value === t", arg="Glow shader notes", timeout=10000)
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
             wait_text(host, "#hub-resume", "lantern"); wait_text(host, "#hub-resume", "Docs")
-            host.click("#nest-open"); host.wait_for_selector("#view-home:not(.hidden)")
+            host.click("#pj-rail .pj-circle.on"); host.wait_for_selector("#view-home:not(.hidden)")
             assert not host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#nest-ws-tasks", state="visible")   # back in a project: its four rows
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tasks:not(.hidden)")
@@ -318,21 +318,20 @@ def main():
             host.mouse.move(700, 880); shot(host, "hub-sidebar-global")
             host.click("#nest-fleet"); host.wait_for_selector("#view-agents-hub:not(.hidden)")
 
-            # ---------------- workspace switcher: pins persist per member ----------------
+            # ---------------- no dropdown: the logo is Home, the bubbles are projects; right-click a bubble to pin ----------------
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
-            host.click("#nest-switch"); host.wait_for_selector("#project-menu .sh-switch")
-            for t in ["Tribe", "Personal scratchpad", "Paste invite link", "New project"]: wait_text(host, "#project-menu", t)
-            host.click(f"#project-menu [data-pin='{sk}']")
-            host.wait_for_function("sk => { const b = document.querySelector(`#project-menu [data-pin='${sk}']`); return b && b.classList.contains('on'); }", arg=sk)
-            assert ok(api("/hub/prefs", token=orion))["pins"] == [sk]
-            shot(host, "hub-switcher")
-            host.keyboard.press("Escape")
+            assert host.query_selector("#nest-switch") is None, "no switcher dropdown at the top of the sidebar"
+            assert host.locator("#ws-name").is_hidden(), "no tribe name in the breadcrumb"
+            assert not host.inner_text("#nest-enter").strip(), "Home lists no projects in the sidebar: the rail bubbles are the projects"
+            host.click(f"#pj-rail [data-pj-open='{sk}']", button="right"); host.wait_for_selector("#rail-menu [data-rc='pin']")
+            host.click("#rail-menu [data-rc='pin']")
+            for _ in range(40):
+                if ok(api("/hub/prefs", token=orion))["pins"] == [sk]: break
+                time.sleep(0.25)
+            assert ok(api("/hub/prefs", token=orion))["pins"] == [sk], "pin saved"
             host.reload(); host.wait_for_selector("#view-hub:not(.hidden)")
-            host.click("#nest-switch"); host.wait_for_selector("#project-menu .sh-switch")
-            heads = host.evaluate("[...document.querySelectorAll('#project-menu h6')].map(e => e.textContent)")
-            assert heads[:2] == ["Tribe", "Pinned"], heads
-            host.wait_for_selector(f"#project-menu [data-pin='{sk}'].on")
-            host.click(f"#project-menu .sw-row [data-pj-open='{lan}']")
+            host.wait_for_function("sk => { const b = document.querySelector('#pj-rail [data-pj-open]'); return b && b.dataset.pjOpen === sk; }", arg=sk)   # pinned first
+            host.click(f"#pj-rail [data-pj-open='{lan}']")
             host.wait_for_selector("#view-home:not(.hidden)")
             host.wait_for_function("lan => TribeClient.project() === lan", arg=lan)
 

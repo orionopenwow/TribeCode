@@ -204,12 +204,10 @@ def main():
             host.keyboard.press("Escape"); host.evaluate("TribeSettings.close()")
             host.click("#tour-invite"); host.wait_for_selector("#invite-modal:not(.hidden) #inv-link")
             host.keyboard.press("Escape")
-            # the header's switcher: the project's views (Overview · Board · Repo · Timeline) and project settings
-            host.click("#nest-switch"); host.wait_for_selector("#project-menu .sw-views")
-            assert host.evaluate("[...document.querySelectorAll('#project-menu .sw-view span')].map(e => e.textContent)") == ["Overview", "Board", "Repo", "Timeline"]
-            host.click("#project-menu [data-dest='repo']"); host.wait_for_selector("#view-repo:not(.hidden)")
-            host.click("#nest-switch"); host.wait_for_selector("#project-menu [data-dest='project-settings']")
-            host.click("#project-menu [data-dest='project-settings']"); wait_text(host, "#invite-body", "settings")
+            # right-click the project's bubble: overview, chat, pin, invite, project settings (no dropdown in the sidebar)
+            host.evaluate("TribeShell.go('repo')"); host.wait_for_selector("#view-repo:not(.hidden)")
+            host.click("#pj-rail .pj-circle.on", button="right"); host.wait_for_selector("#rail-menu [data-rc='settings']")
+            host.click("#rail-menu [data-rc='settings']"); wait_text(host, "#invite-body", "settings")
             host.keyboard.press("Escape")
 
             # ---- the right panel: an agent's detail next to chat

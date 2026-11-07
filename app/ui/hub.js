@@ -108,7 +108,7 @@
     if (mode === 'docs') return renderDocs(el);
     const on = connected(), tribe = (C.state().tribe || {}).name;
     const pj = projects(), live = (data && data.status) || {};
-    const sub = on ? [greeting(), tribe, `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
+    const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">
@@ -612,7 +612,7 @@
     const on = connected(), m = me();
     let nm = m.name; if (!nm) try { nm = (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name); } catch {}
     nm = nm || 'You';
-    meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(nm.trim().charAt(0).toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home${(C.state().tribe || {}).name ? ` · ${esc(C.state().tribe.name)}` : ''}` : 'on this device · not in a tribe yet'}</div></div></div>`;
+    meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(nm.trim().charAt(0).toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home` : 'on this device · not in a tribe yet'}</div></div></div>`;
     const link = shareState.link;
     share.innerHTML = `<button class="home-share-card" id="home-share-btn">${ico('i-link', 16)}<span><b>Share my hub link</b><small>${link ? `<code>${esc(link.replace(/^https?:\/\//, ''))}</code>` : on ? 'Copies a 24-hour invite to your tribe' : 'Host or join a tribe first, then one link brings friends here'}</small></span></button>
       <button class="btn home-invite" id="home-invite">${ico('i-users', 15)}Invite a friend</button>`;

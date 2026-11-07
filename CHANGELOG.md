@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.3
+
+Simpler navigation and a living overview for every project.
+- **The logo is Home** (your overview of everything); **the rail bubbles are projects**, each opening its own overview. The sidebar's switcher dropdown and the "My Tribe" breadcrumb are gone
+- **Right-click a project bubble**: Open overview, Chat, Pin to the top (pinned bubbles come first), Invite to this project, Project settings
+- **Each project's overview** now has a one-line **bio** (click to edit), a visible way to **change its picture**, and a **Living update**: one short sentence (written by the local model when it runs) plus Lately, Chat, Way forward and Coming up
+- **No vision yet?** The overview suggests writing one in three lines (the host saves VISION.md; others send a suggestion to chat)
+- Window buttons also show in app windows without the desktop API (the Working version)
+
 ## v0.6.2
 
 A friend with only a phone, from the first tap.

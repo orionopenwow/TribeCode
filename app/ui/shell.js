@@ -325,7 +325,6 @@
   }
   $('#crumb-section').addEventListener('click', e => { e.stopPropagation(); popEl && popEl.id === 'section-menu' ? closePop() : sectionMenu(e.currentTarget); });
   $('#ws-name').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); switcher(e.currentTarget); });
-  $('#nest-switch').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); switcher(e.currentTarget); });
 
   // ---------- nest ----------
   let lastP = null, lastH = null;
@@ -337,7 +336,7 @@
     const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || '';
     $('#nest-face').innerHTML = h ? h.face(p, 'sm') : '';
     $('#nest-name').textContent = p.name;
-    $('#nest-sub').textContent = [tribe !== p.name ? tribe : '', here > 1 ? `${here} here` : ''].filter(Boolean).join(' · ');
+    $('#nest-sub').textContent = here > 1 ? `${here} here · Overview` : 'Overview';
     const set = (id, v, hot) => { const el = $(id); if (!el) return; el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!(v && hot)); };
     const pulse = h ? (h.pulses[p.id] || 0) : 0;
     set('#nn-chat', pulse, true); set('#nn-tasks', k.tasks);
@@ -347,6 +346,19 @@
     recents();
     globalHead();
   }
+  // Right-click a project bubble: what the old dropdown held (pin, invite, settings), where the project is.
+  document.addEventListener('contextmenu', e => {
+    const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
+    e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
+    const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open overview</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Chat</span></button>
+      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button></div>`, { id: 'rail-menu', side: 'right' });
+    el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
+      const k = x.dataset.rc; closePop();
+      if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
+      if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
+      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings();
+    });
+  });
   // The nest header and the core rows with no project selected: the tribe is the header, the rows dim and say
   // where they open, and one row goes straight into the current project.
   function globalHead() {
@@ -361,15 +373,17 @@
       title.dataset.nav = 'hub'; title.title = 'Your home';
       $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face" style="background:${esc(me.color || 'var(--accent)')}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
       $('#nest-name').textContent = 'Home';
-      $('#nest-sub').textContent = on ? `${nm} · ${tribe}` : `${nm} · not in a tribe yet`;
+      $('#nest-sub').textContent = on ? 'Everything, every project' : 'Not in a tribe yet';
     } else {
       title.dataset.nav = 'home'; title.title = 'Project home';
       if (p) { $('#nest-face').innerHTML = h ? h.face(p, 'sm') : ''; $('#nest-name').textContent = p.name; }
     }
     let enter = $('#nest-enter');
     if (!enter) { enter = document.createElement('div'); enter.id = 'nest-enter'; enter.className = 'nest-enter'; const nav = $('#pj-nav'); nav.insertBefore(enter, nav.firstChild); }
-    enter.innerHTML = g ? (on && p ? `<div class="nest-pick">Pick a project</div><button class="nest-row nest-open" id="nest-open" data-nav="home" title="Open ${esc(p.name)}">${h ? h.face(p, 'xs') : ''}<span>Open ${esc(p.name)}</span>${ico('i-chev', 14)}</button>`
-      : `<div class="nest-pick">${on ? 'No project yet' : 'Not in a tribe yet'}</div>`) : '';
+    enter.innerHTML = g && !on ? `<div class="nest-pick">Not in a tribe yet</div>` : '';   // on Home the rail bubbles are the projects: no list here
+    enter.classList.toggle('below', g);
+    if (g) { const groups = $('#nest-groups'); if (groups && enter.previousElementSibling !== groups) groups.after(enter); }
+    else { const nav = $('#pj-nav'); if (nav && nav.firstChild !== enter) nav.insertBefore(enter, nav.firstChild); }
   }
   async function refreshCounts() {
     if (!C.connected()) return;
@@ -597,5 +611,5 @@
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
+  window.TribeShell = { pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();

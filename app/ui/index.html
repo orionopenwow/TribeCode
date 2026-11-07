@@ -98,7 +98,7 @@
 <div class="shell" id="shell">
   <div class="window">
     <nav class="rail" id="tour-rail" aria-label="Projects" data-tauri-drag-region>
-      <button class="logo-btn" id="rail-logo" title="TribeCode · global hub" aria-label="Global hub" data-tauri-drag-region><img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region></button>
+      <button class="logo-btn" id="rail-logo" title="Home: your overview of everything" aria-label="Home" data-tauri-drag-region><img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region></button>
       <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
       <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
       <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-box"/></svg></button>
@@ -108,7 +108,7 @@
     <header class="titlebar" data-tauri-drag-region>
       <button class="menu-btn" id="menu-btn" aria-label="Projects and sections"><svg class="i"><use href="#i-list"/></svg></button>
       <nav class="crumbs" id="crumbs" aria-label="Breadcrumbs" data-tauri-drag-region>
-        <button class="crumb ws" id="ws-name" title="Tribe">My Tribe</button><span class="sep">/</span>
+        <button class="crumb ws hidden" id="ws-name" title="Tribe">My Tribe</button><span class="sep ws-sep hidden">/</span>
         <button class="crumb pj-switch hidden" id="pj-switch" aria-haspopup="menu" title="Switch project"></button><span class="sep pj-sep hidden">/</span>
         <button class="crumb crumb-sec" id="crumb-section" aria-haspopup="menu" title="Go to a section"><span class="faint" id="crumb-label">Home</span><svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
       </nav>
@@ -129,8 +129,7 @@
       <div class="pj-strip" id="pj-strip" aria-label="Projects"></div>
       <div class="nest" id="nest">
         <div class="nest-head" id="nest-head">
-          <button class="nest-title" id="nest-title" data-nav="home" title="Project home"><span id="nest-face" class="nest-face"></span><span class="nt"><b id="nest-name">My Tribe</b><span class="nest-sub" id="nest-sub"></span></span></button>
-          <button class="nest-switch" id="nest-switch" aria-haspopup="menu" aria-expanded="false" title="Switch project" aria-label="Switch project"><svg class="i"><use href="#i-chev"/></svg></button>
+          <button class="nest-title" id="nest-title" data-nav="home" title="Project home"><span id="nest-face" class="nest-face"></span><span class="nt"><b id="nest-name">Home</b><span class="nest-sub" id="nest-sub"></span></span></button>
         </div>
         <div class="nest-group nest-core" id="pj-nav" role="navigation" aria-label="Project sections">
           <div class="nest-line"><button class="nest-row core" data-nav="chat" data-pnav="chat" id="nest-chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat &amp; Streams</span><span class="n" id="nn-chat"></span></button><button class="nest-sub-toggle" id="streams-toggle" aria-expanded="false" aria-controls="nest-streams" title="Channels and direct messages" aria-label="Show channels"><svg class="i"><use href="#i-chev"/></svg></button></div>
