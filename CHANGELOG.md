@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.7
+
+- **Calls, chat and Claude Code, smoke-tested end to end** (app/test/e2e_comms_smoke.py, docs/COMMS-SMOKE.md): project chat and DMs live on desktop and phone and after a reload; three-way huddle voice connects and carries audio both ways; captions reach everyone and land in the meeting notes; Claude Code connects with the printed `claude mcp add` line, shows online, reads chat, posts, and answers @ai
+- **After-huddle summary** (setting, off by default; host or project lead switches it in the huddle's captions strip): when a captioned huddle ends, a short summary and the overall mood go to the project chat and, with a repo, to `notes/huddles/<date>-<time>.md` (summary only; the transcript stays in Docs)
+- Fixes: meeting notes landed in the wrong project when the last person left from another project; Claude Code showed as offline until its first action; @ai answers could land in another project; the Claude Code connection now answers with the protocol version it supports
+- **Phones**: chat, DMs, captions and huddles checked at 390px in the same test
+
 ## v0.7.6
 
 - **Sign in with Discord, GitHub or Google**: friends can join from an invite with one of these instead of typing a name, and sign back in on a new device without a new invite (`/signin.html`, linked from the join page). Each provider is off until the host adds its app in Settings › Sign-in; the redirect address to register is shown there (use Tailscale Funnel so it stays the same). Signing back in gives that device its own key, so other devices stay signed in. Members link or unlink accounts in Settings › Sign-in (docs/SIGN-IN.md)
