@@ -34,6 +34,8 @@ const makeWorkspace = require('./workspace');
 const makeRooms = require('./rooms');
 const makeCoord = require('./coord');
 const makeAgentNet = require('./agentnet');
+const makeFlow = require('./flow');
+const makeMcpFlow = require('./mcp-flow');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
@@ -210,6 +212,7 @@ function loadTasks() {
 function saveTask(t) {
   const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t });
   bugs.onTask(t);
+  if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
   return t;
 }
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due }) {
@@ -220,6 +223,7 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
 }
 
 // ---------- brain, board, docs ----------
+let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via Ollama` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
@@ -244,7 +248,8 @@ function hubFor(pid) {
     const drift = makeDrift({ repo: p.repo, getTasks: inP(() => loadTasks()), members: () => members });
     const h = require('./repo')({ repo: p.repo, store: P.scopedStore(() => p.id), str, broadcast: m => broadcast({ ...m, project: p.id }), postChat: inP(postChat),
       createTask: inP(o => createTask(o)), loadTasks: inP(() => loadTasks()), saveTask: inP(t => saveTask(t)), getMembers: () => members, nameOf, drift, board,
-      presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims });
+      presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims,
+      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []) });
     return Object.assign(h, { drift });
   });
   hubs.set(p.id, hub);
@@ -254,8 +259,9 @@ const resetHub = pid => hubs.delete(pid);   // after the project's repo changes 
 for (const p of P.all()) if (p.repo || p.id === P.defaultId()) hubFor(p.id);
 const repoHub = {   // MCP tools run against the calling agent's project hub
   tools: h => Object.fromEntries(Object.entries(hubFor(P.defaultId()).mcp.tools(h)).map(([k, t]) => [k, { ...t, run: (a, me) => hubFor(P.current()).mcp.tools(h)[k].run(a, me) }])),
-  instructions: me => hubFor(P.current()).mcp.instructions(me),
+  instructions: me => hubFor(P.current()).mcp.instructions(me) + (mcpFlow ? mcpFlow.instructions : ''),
 };
+let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
@@ -280,6 +286,20 @@ const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run:
   const prev = r.content[0].text;
   return { content: [{ type: 'text', text: `From TribeCode coordination:\n${extra.join('\n')}${prev && prev !== 'No new messages.' ? '\n\n' + prev : ''}` }] };
 } } };
+// One-click project flow (server/flow.js): invites and links reuse the quick-invite logic.
+function makeInvite({ by, project, hours = 72, maxUses = 10 }) {
+  const inv = { code: code(5), by, role: 'builder', maxUses, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}) };
+  invites.push(inv); saveInvites(); return inv;
+}
+function linkFor(c) {
+  const pub = share.publicUrl(), lan = lanUrls().find(u => u.kind === 'lan') || lanUrls()[0];
+  const base = (pub || (lan || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
+  return { link: site.joinLink(base, c), kind: pub ? 'public' : lan ? (lan.kind === 'tailscale' ? 'tailscale' : 'wifi') : 'local' };
+}
+flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus, getMembers: () => members, nameOf, docs, brain, coord, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
+  rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
+W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
+mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
 function mcpScope(me, wanted, fn) {
@@ -303,7 +323,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
@@ -434,6 +454,7 @@ async function apiInProject(req, res, url) {
   if (a === 'me' && !b) return send(res, 200, { member: publicMember(me), tribe, version: VERSION, project: P.current(), projects: P.visibleTo(me).map(p => P.view(p)) });
 
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
+  if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'invites' && !b && m === 'POST') {

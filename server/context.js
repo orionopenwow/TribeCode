@@ -9,7 +9,7 @@ const path = require('node:path');
 const DEBOUNCE = Number(process.env.TRIBE_CONTEXT_DEBOUNCE_MS) || 10_000;
 const MAX_LINES = 250;
 
-module.exports = function context({ store, repo, settings, tribe, readVision, presence, loadTasks, nameOf, board, claims, changes, repoStatus, broadcast, file }) {
+module.exports = function context({ store, repo, settings, tribe, readVision, presence, loadTasks, nameOf, board, claims, changes, repoStatus, broadcast, file, extra = null }) {
   let timer = null, last = '', watcher = null;
   const one = (s, n = 140) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
   const hm = iso => { try { return new Date(iso).toISOString().slice(11, 16); } catch { return ''; } };
@@ -155,6 +155,14 @@ module.exports = function context({ store, repo, settings, tribe, readVision, pr
       if ((st.branches || []).length > 12) L.push(`- …and ${st.branches.length - 12} more branches`);
     }
     L.push('');
+
+    // Living plan, roles and recent gists (server/flow.js), when this project runs the flow.
+    if (extra) { try { const x = extra(); if (x && x.length) L.push(...x, ''); } catch (e) { console.error('context extra:', e.message); } }
+
+    L.push('## How to report: gists, not code dumps', '');
+    L.push('- Use the MCP tool `post_gist` (kind: progress | upgrade | plan | blocker | assessment): a one-line title, at most 5 bullets of at most 120 characters, the files you touched, a link to the commit or doc.');
+    L.push('- Never paste code, logs or diffs into chat; the server rejects gists with fenced code or over ~600 characters.');
+    L.push('- Propose plan changes with an `upgrade` gist; humans approve them with one tap. Never edit PLAN.md by hand.', '');
 
     L.push('## Recent chat', '');
     const chat = store.readJSONL('chat/general.jsonl', 300).filter(x => x.by !== 'tribecode' && String(x.text || '').trim()).slice(-20);
