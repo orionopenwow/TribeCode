@@ -2,7 +2,7 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-06 (v0.3.1 released; v0.3.2 in progress on `dev`).
+Last updated: 2026-11-06 (v0.3.2 security release shipped from `main`; features build up on `dev` toward v0.4.0).
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
@@ -37,17 +37,23 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 Restraint: numbers only where they answer a question; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
-## In flight (v0.3.2)
+## In flight (v0.4.0 on `dev`)
 | Branch | What | Status |
 |---|---|---|
-| `feat/mobile` | Real app phone UI: rack, composer (+ menu, recorder), Docs hub, one-tap approvals, suggested tasks, Talk-to picker, profile sheet/DMs, in-app-browser escape, section clarity doc, e2e_mobile2.py | rebuilding (agent) |
-| `feat/chat-votes` | Emoji reactions on bubbles (quick-react bar, double-tap), team votes in chat, Claude can propose votes (MCP), /vote, vote → task/Board, QoL extras | building (agent) |
-| `feat/flow` | One-click Create project → hosted room → invite link → chat opens → GitHub repo created + pushed → roles, notes and files dropped → Start the flow. Agents post short gists (post_gist), not code dumps. Self-updating PLAN.md + assessment gists | building (agent) |
-| `feat/people` | Click a person → panel inside chat: what they and their Claude are doing now, their commits, prompts, chat and notes in one timeline, jump to the moment in chat, context-window bar. Quiet uptime and commit counters | building (agent) |
-| security review | Full audit of the public-facing server, then fixes + regression tests | auditing (agent) |
-| `feat/demo4` | Demo phone layout: no header, richer rack, less whitespace, reactions + vote card in demo | rebuilding (agent) |
+| `feat/demo4` | Demo phone layout, reactions and vote card | ✅ merged into dev |
+| `feat/people` | Person panel in chat: now, timeline (commits, prompts, chat, notes), jump to chat, context bar, uptime and commit counters | ✅ merged into dev |
+| `feat/chat-votes` | Reactions on bubbles, team votes, suggest_vote (Claude proposes), /vote, decisions log, ✅ approves and 📌 pins | ✅ merged into dev |
+| `feat/mobile` | Real app phone UI and the repo hero with README art or a screenshot ("Flare") | building |
+| `feat/flow` | One-click Create project → room → invite → chat → GitHub repo; roles with colors and folder identity; gists; living PLAN.md; assessments | building |
+| `feat/workshop` | Community Workshop: skills, recipes, templates, assets (GLB, animations, scripts), a community index on GitHub served by jsDelivr | building |
+| `feat/secretary` | Solo mode: an agents hub (Claude Code, Claude Desktop through a stdio bridge, other MCP agents, local models). The Secretary: a background agent that ingests everything, distills a journal and digest, dreams up inspirations, and routes research to the Claudes | building |
+| security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
 
 ## User requests log (newest first)
+- 2026-11-06: Solo mode: connect Claude Desktop, other desktop agents and local models in an organized visual UI. The same autopilot to GitHub and per-person folders. Agents distill changes and upgrade everything. A background secretary that thinks, researches, collects notes and dreams up realizations from everything typed, voice notes and files.
+- 2026-11-06: A Workshop: a community directory separate from projects, holding Claude Code skills, projects, templates and assets (game scripts, animations, GLBs). Everyone's discoveries are donated to an open-source CDN.
+- 2026-11-06: Easy in and out for connecting Claude Code from a remote session at home. ✅ (v0.3.2: Anywhere / Same Wi-Fi / This computer, status, Disconnect)
+- 2026-11-06: The pinned repo hero shows the README's image or an auto screenshot. "Flare": hero areas carry real imagery (added to the design philosophy).
 - 2026-11-06 (future): a self-learning brain that remembers and replays feature scripts instead of spending tokens; a TribeCode feature database; scheduled GitHub tool scouting; friends contributing compute for compiling, analysis, notes and bug fixes. See "Future pillar".
 - 2026-11-06: Roles area you can navigate, named roles, named folders with a clear identity, color-coded concepts. Click a person → their commits, prompts, chats and notes in context, their position and context window. Not numbers everywhere, don't overwhelm, keep it sleek. Uptime counter, commit counter.
 - 2026-11-06: Security review. One-click Create project → hosting room → invite link → chat opens → repo created and pushed to GitHub → humans delegate roles, dump notes and files → flow begins → agents give gists (progress, upgrades, plans), not monolith code dumps → self-evolving plan and assessments.
@@ -65,5 +71,7 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 5. Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
 
 ## Decisions
+- 2026-11-06: The security review found host RCE reachable by any builder. Fixes were shipped as v0.3.2 straight from `main` ahead of the features, with `app/test/security_test.py` as the regression test.
+- 2026-11-06: The Workshop's community index is a public GitHub repo served through jsDelivr (a free open-source CDN). Items need an open license and sha256 checks, and are never executed.
 - 2026-11-06: Automated browsers skip the GitHub update check (`navigator.webdriver`), so sandbox proxies don't break tests.
 - 2026-11-06: `dev` branch introduced as the working lane.
