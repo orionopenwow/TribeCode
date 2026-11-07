@@ -240,7 +240,7 @@
       const desktop = window.TribeHost.isDesktop;
       body.innerHTML = `<h2>Start or join a tribe</h2>
         <p class="lead">A tribe lives on one member's computer, the host. Everyone else joins with an invite link.</p>
-        ${desktop ? `<button class="btn primary" id="host-here" style="width:100%;height:44px;margin-bottom:6px">Host a tribe on this computer</button>
+        ${desktop && window.__hostError ? `<pre class="host-err" style="white-space:pre-wrap;font:12px/1.5 var(--mono);color:var(--body);background:var(--canvas);border:1px solid var(--border);border-radius:10px;padding:10px;max-height:160px;overflow:auto;margin:0 0 10px">${esc(window.__hostError)}</pre>` : ''}${desktop ? `<button class="btn primary" id="host-here" style="width:100%;height:44px;margin-bottom:6px">${window.__hostError ? 'Try again' : 'Host a tribe on this computer'}</button>
           <p class="faint" style="font-size:12px;margin-bottom:16px">Files are stored in ${esc(S.get().folder || '~/TribeCode')}. TribeCode keeps hosting while the app is open.</p>`
         : `<ol class="steps-host"><li>On the host computer run <span class="code" style="display:inline-block;padding:3px 8px">npm start</span> (or use the desktop app)</li>
           <li>Open <b>http://localhost:4747</b> there. You'll be the host.</li><li>Click <b>Invite friends</b> to get a link.</li></ol>`}
@@ -333,19 +333,49 @@
   }
 
   // ---- desktop: host the tribe server on this computer (bundled sidecar) ----
-  async function hostHere({ quiet = false } = {}) {
+  async function hostHere(opts) {
+    const quiet = !!(opts && opts.quiet === true);
     const st = S.get(), inv = window.__TAURI__ && window.__TAURI__.core;
     if (!inv) return;
     const btn = $('#host-here'); if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
+    const reset = () => { if (btn) { btn.disabled = false; btn.textContent = 'Host a tribe on this computer'; } };
+    // Each check gives up after 1.5 s, and the whole start after 30 s, so this never hangs on "Starting…".
+    const healthy = async url => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 1500);
+      try { const r = await fetch(url + '/api/health', { signal: c.signal, cache: 'no-store' }); return r.ok; } catch { return false; } finally { clearTimeout(t); } };
     try {
       const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: `${(st.name || 'My').split(' ')[0]}'s Tribe` });
-      for (let i = 0; i < 40; i++) { try { const r = await fetch(url + '/api/health'); if (r.ok) break; } catch {} await new Promise(r => setTimeout(r, 250)); }
+      let ok = false;
+      for (const until = Date.now() + 30000; Date.now() < until;) {
+        if ((ok = await healthy(url))) break;
+        const log = await inv.invoke('host_log').catch(() => []);
+        if (log.some(l => l.startsWith('[server stopped'))) break;
+        await new Promise(r => setTimeout(r, 400));
+      }
+      if (!ok) {
+        const log = (await inv.invoke('host_log').catch(() => [])).filter(Boolean).slice(-8).join('\n');
+        throw new Error('The tribe server did not start.' + (log ? '\n\n' + log : ' It printed nothing. Your antivirus may have blocked tribecode-server.exe.'));
+      }
       const keep = st.server && st.server.url === url ? st.server.token : '';
+      window.__hostError = null;
       S.set({ server: { url, token: keep }, hosting: true });
       const role = await C.ensureMember({ name: st.name, color: st.color });
       C.connect(); refresh();
-      if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
-    } catch (e) { toast(String(e)); if (btn) { btn.disabled = false; btn.textContent = 'Host a tribe on this computer'; } }
+      if (!role && !keep) toast('A TribeCode server is already running here with other members. Open the invite link it gave you to join it.');
+      else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
+    } catch (e) { reset(); if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message); }
+  }
+  function showHostError(msg) {
+    toast(msg.split('\n')[0] + ' Open Invite for details.');
+    window.__hostError = msg;
+  }
+
+  // Frameless desktop window: our own quiet buttons; the top bar drags (data-tauri-drag-region).
+  if (window.__TAURI__ && window.__TAURI__.window) {
+    document.body.classList.add('tauri');
+    const w = window.__TAURI__.window.getCurrentWindow();
+    document.querySelectorAll('#win-ctl [data-w]').forEach(b => b.addEventListener('click', () => {
+      const a = b.dataset.w; (a === 'min' ? w.minimize() : a === 'max' ? w.toggleMaximize() : w.close()).catch(() => {});
+    }));
   }
 
   // tribecode:// links: on launch and while running (single-instance forwards them here)
@@ -414,7 +444,10 @@
   refresh();
   if (!S.get().onboarded) window.TribeOnboarding.open();
   else C.ensureMember({ name: S.get().name, color: S.get().color });
-  if (window.TribeHost.isDesktop && S.get().hosting) hostHere({ quiet: true }); else C.connect();
+  {
+    const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
+    if (window.TribeHost.isDesktop && !st.hostOff && !remote) hostHere({ quiet: true }); else C.connect();
+  }
   window.TribeUpdater.init();
   try { const v = sessionStorage.getItem('tribecode.view'); if (v) show(v); } catch {}
   setTimeout(iosHint, 1500);
