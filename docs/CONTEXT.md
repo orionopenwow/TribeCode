@@ -24,6 +24,7 @@ Where it's heading:
 - Commits end with the Co-Authored-By and Claude-Session trailers.
 
 ## Design rules (user's, keep)
+Restraint: numbers only where they answer a question; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
 ## In flight (v0.3.2)
@@ -32,10 +33,12 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | `feat/mobile` | Real app phone UI: rack, composer (+ menu, recorder), Docs hub, one-tap approvals, suggested tasks, Talk-to picker, profile sheet/DMs, in-app-browser escape, section clarity doc, e2e_mobile2.py | rebuilding (agent) |
 | `feat/chat-votes` | Emoji reactions on bubbles (quick-react bar, double-tap), team votes in chat, Claude can propose votes (MCP), /vote, vote → task/Board, QoL extras | building (agent) |
 | `feat/flow` | One-click Create project → hosted room → invite link → chat opens → GitHub repo created + pushed → roles, notes and files dropped → Start the flow. Agents post short gists (post_gist), not code dumps. Self-updating PLAN.md + assessment gists | building (agent) |
+| `feat/people` | Click a person → panel inside chat: what they and their Claude are doing now, their commits, prompts, chat and notes in one timeline, jump to the moment in chat, context-window bar. Quiet uptime and commit counters | building (agent) |
 | security review | Full audit of the public-facing server, then fixes + regression tests | auditing (agent) |
 | `feat/demo4` | Demo phone layout: no header, richer rack, less whitespace, reactions + vote card in demo | rebuilding (agent) |
 
 ## User requests log (newest first)
+- 2026-11-06: Roles area you can navigate, named roles, named folders with a clear identity, color-coded concepts. Click a person → their commits, prompts, chats and notes in context, their position and context window. Not numbers everywhere, don't overwhelm, keep it sleek. Uptime counter, commit counter.
 - 2026-11-06: Security review. One-click Create project → hosting room → invite link → chat opens → repo created and pushed to GitHub → humans delegate roles, dump notes and files → flow begins → agents give gists (progress, upgrades, plans), not monolith code dumps → self-evolving plan and assessments.
 - 2026-11-06: Keep the GitHub → main → Restart-to-update loop working end to end. Keep this living context doc.
 - 2026-11-06: Stable and Working folders on the Desktop to test UI without compiling an exe. ✅
