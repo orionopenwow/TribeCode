@@ -63,11 +63,12 @@
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
-      ${row('Theme', `<div class="tabs set-seg">${[['dark', 'Dark'], ['light', 'Light'], ['system', 'System']].map(([k, l]) => `<button data-theme="${k}" class="${st.theme === k ? 'on' : ''}">${l}</button>`).join('')}</div>`)}
+      ${themeRow(st)}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
       ${row('Local brain', `<span class="set-brain">${brainTxt}</span>${probe.state === 'found' && probe.models.length ? `<select id="set-model">${['', ...probe.models].map(m => `<option value="${esc(m)}" ${(st.brain.enabled ? st.brain.model : '') === m ? 'selected' : ''}>${m ? esc(m) : 'Off'}</option>`).join('')}</select>` : ''}`, 'Writes summaries and standups on this computer.')}
       ${desk ? row('Host on this computer', `<button class="toggle set-toggle" role="switch" id="set-host" aria-label="Host on this computer" aria-checked="${!!(st.hosting && !st.hostOff)}" ${st.hosting ? '' : 'disabled'}><span class="switch"></span></button>`, st.hosting ? 'Your tribe runs here only while this is on. Off stops the server; nothing is deleted.' : 'Starts when you create your first project.') : ''}
       ${desk ? row('Open at login', `<button class="toggle set-toggle" role="switch" id="set-login" aria-label="Open at login" aria-checked="${!!st.startup.launchAtLogin}"><span class="switch"></span></button>`) : ''}
+      ${window.TribeUpdater && window.TribeUpdater.supported() ? row('Download updates in the background', `<button class="toggle set-toggle" role="switch" id="set-bgupdate" aria-label="Download updates in the background" aria-checked="${st.startup.autoUpdate !== false}"><span class="switch"></span></button>`, st.startup.autoUpdate !== false ? 'New versions download quietly. When one is ready, Restart to update opens it in seconds.' : 'You see Update available and choose when to download.') : ''}
       ${C() && C().connected() ? row('Friends can ask my Claude', `<select class="input set-select" id="set-askai" aria-label="Friends can ask my Claude"><option value="ask">Ask me each time</option><option value="always">Always</option><option value="never">Never</option></select>`, 'When a friend without Claude Code types @ai, your Claude can answer. It uses your subscription, so you decide.') : ''}
       ${C() && C().connected() && window.TribeGitHub ? row('GitHub', '<div id="set-github"></div>', 'Sign in once and everything pushes on its own.') : row('GitHub', '<span class="faint">Start your tribe first (Home › Create your first project), then sign in here.</span>', 'Sign in once and everything pushes on its own.')}
       ${C() && C().connected() ? row('Sign-in', '<div id="set-oauth"></div>', 'Discord, GitHub or Google: join with one tap, sign back in on a new device.') : ''}
@@ -78,7 +79,19 @@
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;
-    box.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { S.set({ theme: b.dataset.theme }); window.TribeApp.applyTheme(b.dataset.theme); draw(); });
+    // Theme picker (themes.js): a chip sets the theme; with "Match system" on it becomes your light or dark theme.
+    box.querySelectorAll('[data-theme-id]').forEach(b => b.onclick = () => {
+      const T = window.TribeThemes, t = T.byId(b.dataset.themeId), cur = S.get();
+      const sysMode = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      S.set({ ...T.pick(t.id), themeSystem: !!(cur.themeSystem || cur.theme === 'system') && t.mode === sysMode });
+      window.TribeApp.applyTheme(); draw();
+    });
+    const tsys = $('#set-theme-sys'); if (tsys) tsys.onclick = () => {
+      const T = window.TribeThemes, cur = S.get(), on = !(cur.themeSystem || cur.theme === 'system');
+      S.set({ themeSystem: on, theme: cur.theme === 'system' ? T.resolve(cur) : cur.theme });
+      window.TribeApp.applyTheme(); draw();
+    };
+    const bgu = $('#set-bgupdate'); if (bgu) bgu.onclick = () => { const on = !S.get().startup.autoUpdate; S.set({ startup: { autoUpdate: on } }); if (on && window.TribeUpdater) window.TribeUpdater.check(); draw(); };
     const f = $('#set-folder'); if (f) f.onchange = () => S.set({ folder: f.value.trim() });
     const br = $('#set-browse'); if (br) br.onclick = async () => { const p = await window.TribeHost.pickFolder(); if (p) { S.set({ folder: p }); draw(); toast('Restart TribeCode to host from the new folder.'); } };
     const md = $('#set-model'); if (md) md.onchange = () => { S.set({ brain: { model: md.value, enabled: !!md.value }, checklist: { brain: !!md.value } }); window.TribeApp.refresh(); };
@@ -91,6 +104,15 @@
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
     $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };
     $('#set-join').onclick = () => { close(); joinPrompt(); };
+  }
+  // Settings › Theme: swatch chips (canvas · surface · accent) and a "Match system" switch. Styles in themes.css.
+  function themeRow(st) {
+    const T = window.TribeThemes; if (!T) return '';
+    const cur = T.resolve(st), sys = !!(st.themeSystem || st.theme === 'system');
+    const chips = T.list.map(t => `<button class="th-chip ${t.id === cur ? 'on' : ''}" role="radio" aria-checked="${t.id === cur}" data-theme-id="${t.id}" title="${esc(t.name)}">`
+      + `<span class="th-sw" aria-hidden="true"><i style="background:${t.sw[0]}"></i><i style="background:${t.sw[1]}"></i><b style="background:${t.sw[2]}"></b></span><span class="th-name">${esc(t.name)}</span></button>`).join('');
+    return `<div class="set-row set-theme"><div class="set-l"><b>Theme</b></div><div class="set-c"><div class="th-grid" role="radiogroup" aria-label="Theme">${chips}</div>
+      <div class="th-sys"><span>Match system (light/dark)</span><button class="toggle set-toggle" role="switch" id="set-theme-sys" aria-label="Match system light or dark" aria-checked="${sys}"><span class="switch"></span></button></div></div></div>`;
   }
   const isHost = () => C().connected() && (C().state().me || {}).role === 'host';
   // Your name and color live on the server too, so friends see the change (not only this device).

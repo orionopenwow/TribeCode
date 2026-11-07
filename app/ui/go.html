@@ -10,37 +10,42 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="themes.css">
 <style>
   /* Friend landing on GitHub Pages: go.html#s=<host address>&c=<invite code>.
      Checks the host is up, then hands off to the host's own /join page (account, Home Screen app, notifications). */
   * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; background: #12151A; color: #94A3B8; font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  /* Colors follow your theme (themes.js / themes.css): TribeCode Dark and Light here, the others override these. */
+  body { --canvas: #12151A; --surface: #1B2028; --edge: #2A313C; --text: #F8FAFC; --muted: #94A3B8; --live: #38C6B1; --accent-ink: #FF7A33; }
+  body.light { --canvas: #F4F5F7; --surface: #FFFFFF; --edge: #DADFE6; --text: #12151A; --muted: #4B5563; --live: #127A6C; --accent-ink: #A34410; }
+  html, body { margin: 0; min-height: 100%; background: var(--canvas); color: var(--muted); font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
   body { display: grid; place-items: center; min-height: 100dvh; padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); }
-  .card { width: min(440px, 100%); background: #1B2028; border: 1px solid #2A313C; border-radius: 16px; padding: 26px 22px; }
+  .card { width: min(440px, 100%); background: var(--surface); border: 1px solid var(--edge); border-radius: 16px; padding: 26px 22px; }
   .top { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
   .top img.icon { width: 36px; height: 36px; border-radius: 9px; }
   .top img.wm { height: 18px; }
-  .k { font: 12px/1.4 ui-monospace, "JetBrains Mono", Consolas, monospace; text-transform: uppercase; letter-spacing: .08em; color: #F26B1D; }
-  h1 { margin: 6px 0 6px; color: #F8FAFC; font-size: 24px; line-height: 1.2; letter-spacing: -.01em; }
+  .k { font: 12px/1.4 ui-monospace, "JetBrains Mono", Consolas, monospace; text-transform: uppercase; letter-spacing: .08em; color: var(--accent-ink); }
+  h1 { margin: 6px 0 6px; color: var(--text); font-size: 24px; line-height: 1.2; letter-spacing: -.01em; }
   p { margin: 0 0 12px; }
   .row { display: flex; gap: 10px; align-items: center; margin: 14px 0; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: #38C6B1; flex: none; }
-  .dot.wait { background: #94A3B8; animation: pulse 1.2s ease-in-out infinite; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); flex: none; }
+  .dot.wait { background: var(--muted); animation: pulse 1.2s ease-in-out infinite; }
   .dot.bad { background: #F26B1D; }
   @keyframes pulse { 50% { opacity: .35; } }
   .btn { display: flex; justify-content: center; align-items: center; width: 100%; min-height: 48px; border-radius: 12px; border: 0; background: #F26B1D; color: #fff; font-family: inherit; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer; margin-top: 10px; }
-  .btn.sec { background: #1B2028; color: #F8FAFC; border: 1px solid #2A313C; }
-  ol { margin: 8px 0 0; padding-left: 20px; color: #F8FAFC; } ol li { margin: 4px 0; } ol small { color: #94A3B8; }
-  .members { display: flex; margin: 4px 0 14px; } .members span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #12151A; font-family: inherit; font-weight: 600; font-size: 13px; border: 2px solid #1B2028; margin-right: -6px; }
+  .btn.sec { background: var(--surface); color: var(--text); border: 1px solid var(--edge); }
+  ol { margin: 8px 0 0; padding-left: 20px; color: var(--text); } ol li { margin: 4px 0; } ol small { color: var(--muted); }
+  .members { display: flex; margin: 4px 0 14px; } .members span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #12151A; font-family: inherit; font-weight: 600; font-size: 13px; border: 2px solid var(--surface); margin-right: -6px; }
   .faint { font-size: 13px; }
   .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <main class="card" id="card">
-  <div class="top"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
+  <div class="top"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm brand-wm" src="assets/wordmark.svg" alt="TribeCode"></div>
   <div id="view"><div class="row"><span class="dot wait"></span><span>Finding the tribe…</span></div></div>
 </main>
+<script src="themes.js"></script>
 <script src="inapp.js"></script>
 <script>
 (function () {
@@ -60,7 +65,7 @@
   const nextSteps = () => OS === 'iphone' || OS === 'ipad'
     ? `<ol><li>Pick a name → <b>Join</b></li><li><b>Share → Add to Home Screen</b> <small>(signed in, opens like an app)</small></li><li>Open it from your Home Screen and tap <b>Turn on notifications</b></li></ol>`
     : OS === 'android' ? `<ol><li>Pick a name → <b>Join</b></li><li><b>Install app</b> when Chrome offers it</li><li>Allow notifications when asked</li></ol>`
-    : `<ol><li>Pick a name → <b>Join</b></li><li>Want it as an app? <a href="${RELEASES}" style="color:#F26B1D">Download TribeCode</a></li></ol>`;
+    : `<ol><li>Pick a name → <b>Join</b></li><li>Want it as an app? <a href="${RELEASES}" style="color:var(--accent-ink)">Download TribeCode</a></li></ol>`;
 
   function go() { location.replace(target); }
 

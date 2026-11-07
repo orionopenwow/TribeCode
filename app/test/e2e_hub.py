@@ -366,7 +366,7 @@ def main():
             # top right: update · bell · profile (rightmost icon); no panel toggle or Context icon in the header
             order = host.evaluate("['#update-btn', '#nf-bell', '#pf-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
-            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn", "nf-bell", "pf-btn"]
+            tb = host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)"); assert tb == ["update-btn", "nf-bell", "fr-btn", "pf-btn"], tb   # friends sit right of the bell (e2e_friends.py)
             assert host.locator(".titlebar #panel-toggle").count() == 0 and host.locator("#ctx-btn").is_hidden()
             host.keyboard.press("Control+Shift+K"); host.wait_for_selector("#ctx-win:not(.hidden)"); host.keyboard.press("Control+Shift+K")
             host.keyboard.press("Control+k"); host.fill("#pal-input", "tribe context"); host.keyboard.press("Enter"); host.wait_for_selector("#ctx-win:not(.hidden)")
@@ -383,13 +383,12 @@ def main():
             host.keyboard.press("Control+k"); host.fill("#pal-input", "toggle right panel"); host.keyboard.press("Enter")
             host.wait_for_function("!document.body.classList.contains('panel-off')")
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
-            host.click("#update-btn"); host.wait_for_selector("#update-pop:not(.hidden)")
+            host.click("#update-btn", button="right"); host.wait_for_selector("#update-pop:not(.hidden)")   # left click restarts at once
             assert "v0.9.0 is ready" in host.inner_text("#update-pop")
             shot(host, "hub-update")
             host.click("[data-u='close']"); host.wait_for_selector("#update-pop.hidden", state="attached")
             host.click("#pf-btn"); host.wait_for_selector("#pf-menu [data-act='restart']")
-            wait_text(host, "#pf-menu", "Update ready · v0.9.0")
-            host.click("#pf-menu [data-act='restart']"); host.wait_for_selector("#update-pop:not(.hidden)")
+            wait_text(host, "#pf-menu", "Update ready · v0.9.0")   # its Restart restarts at once (app/test/e2e_updater.py)
             host.keyboard.press("Escape")
 
             # ---------------- Zed (scoped): only Sketches in the UI ----------------

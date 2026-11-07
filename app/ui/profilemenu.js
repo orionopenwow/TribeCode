@@ -88,7 +88,7 @@
     else if (a === 'settings') window.TribeSettings ? window.TribeSettings.open() : click('#settings-btn');
     else if (a === 'working') window.TribeUi.useUi('working');
     else if (a === 'installed') window.TribeUi.useUi('installed');
-    else if (a === 'restart') window.TribeUpdater.openPop();
+    else if (a === 'restart') window.TribeUpdater.restartNow();   // one click: save, install, reopen (updater.js)
     else if (a === 'update') { window.TribeUpdater.check(); window.TribeApp && window.TribeApp.toast('Checking for updates…'); }
   });
 
