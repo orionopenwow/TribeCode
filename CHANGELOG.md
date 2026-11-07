@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.8
+
+Phones: Home first, then the project.
+- **The fire logo** sits at the top left on phones and opens the projects panel; the search and docs icons are gone from the top right (your profile is there)
+- **Home on a phone** has a header with the logo, the two big choices, and **your projects as rows**; there's **no bottom rack on Home**. The rack (Chat · Docs · Updates · Tasks) appears once you open a project
+- **Tasks on a phone** are slim horizontal slates grouped by status (title · due · status chip), not swipeable full-screen columns
+- **Settings and Invite friends** at the bottom of the sidebar only show inside a project (Settings is always in your profile menu)
+- The calendar icon shows again on due dates and Upcoming
+
 ## v0.6.7
 
 - **Phones**: the bottom rack is just **Chat · Docs · Updates · Tasks**. Your profile moved to the top right of the top bar; **New task** and **New doc** are back on their own screens (the orange + is gone)

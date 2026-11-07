@@ -472,3 +472,6 @@ body.global .window .rail .logo-btn { background: var(--raised); }
 .rail .rail-status { display: flex; flex-direction: column; align-items: center; gap: 1px; margin-top: auto; padding: 6px 2px 10px; width: 100%; text-align: center; font-family: var(--mono); font-size: 9.5px; line-height: 1.35; color: var(--faint); }
 .rail .rail-status > span { display: block; max-width: 56px; white-space: normal; }
 .rail .rail-status .pp-sep { display: none; }
+
+/* Home is yours, not a project: no project Settings / Invite rows at the bottom of the sidebar */
+body.global .nest-foot { display: none; }

@@ -417,8 +417,12 @@ def main():
             wait_text(phone, "#hub-feed", "Glow shader notes")
             phone.wait_for_selector("#hub-scratch .sc-in", state="visible")   # no right panel on phones: the scratchpad lives on Home
             phone.wait_for_selector("#hub-ins-phone .ai-card")               # and so do the AI insights
+            assert phone.locator("#tabbar").is_hidden(), "no bottom rack on Home: it opens once you're in a project"
+            phone.wait_for_selector("#hub-pjs [data-pj-go]")                  # phones have no rail: projects are rows on Home
+            assert phone.locator(".titlebar .search").is_hidden() and phone.locator("#ctx-btn").is_hidden(), "no search or docs icons on the phone's top bar"
+            phone.wait_for_selector("#m2-face .m2-logo", state="visible")
             # stacked: the hero, notes, activity, insights
-            ys = phone.evaluate("['#hub-hero', '#hub-notes', '#hub-stream', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
+            ys = phone.evaluate("['#hub-hero', '#hub-pjs-sec', '#hub-notes', '#hub-stream', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
             assert ys == sorted(ys), ys
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
             wide = phone.evaluate("[...document.querySelectorAll('#view-hub *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.ha-row, .hf-row, .hub-li, .sc-text, .hs-li')).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")

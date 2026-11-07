@@ -14,6 +14,11 @@
   #menu-btn:active { background: var(--surface); }
   #menu-btn > svg.i { display: none; }
   .m2-face .pj-face { width: 32px; height: 32px; font-size: 12.5px; border-radius: 10px; }
+  .m2-face .m2-logo { width: 34px; height: 34px; display: block; border-radius: 10px; }
+  /* Home: no bottom rack until you're in a project */
+  body.global .tabbar.m2-rack { display: none !important; }
+  .side .nest-head { display: none; }   /* the drawer: the logo and the top bar already say where you are */
+  body.global .main { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
   .m2-face .pj-face.emo { font-size: 17px; }
   .m2-pj { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
   .m2-pj b { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 58vw; }
@@ -25,12 +30,12 @@
   .titlebar .pj-switch:not(.hidden) { border: 0; background: none; padding: 0 6px; height: 40px; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; max-width: 60vw; }
   .titlebar .pj-switch .pj-face { display: none; }
   body.m2-in-chat .titlebar .crumbs { display: none; }
-  .window .titlebar .search { color: var(--muted); margin: 0 0 0 auto; }
+  .window .titlebar .search { display: none !important; }   /* no search or context icons on phones */
   body.m2-in-chat .window .titlebar .search { display: none; }
-  .titlebar #ctx-btn { width: 40px; height: 40px; padding: 0; justify-content: center; border: 0; background: none; color: var(--muted); }   /* Tribe context, icon only */
+  .titlebar #ctx-btn { display: none !important; }
   .titlebar #ctx-btn span { display: none; }
   body.m2-in-chat .titlebar #ctx-btn { display: none; }
-  .window > .titlebar .tb-right { margin-left: 0; }
+  .window > .titlebar .tb-right { margin-left: auto; }
   body.m2-in-chat .window > .titlebar .tb-right { margin-left: auto; }
   #m2-talk { display: inline-flex; align-items: center; gap: 4px; height: 36px; max-width: 112px; padding: 0 8px 0 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; }
   #m2-talk.hidden { display: none; }

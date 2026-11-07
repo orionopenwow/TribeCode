@@ -389,3 +389,15 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
   .hub-gs .gs-tile b { font-size: 18px; }
 }
 .hub-hero.hub-gs::before { display: none; }
+/* Phone Home: a header with the logo, and the projects as rows */
+.hub-thumb { width: 100%; height: 96px; margin-bottom: 14px; border: 1px solid var(--edge); border-radius: 16px; background: var(--raised); display: grid; place-items: center; }
+.hub-thumb img { width: 56px; height: 56px; }
+.hub-pjs { display: flex; flex-direction: column; gap: 8px; }
+.hub-pj { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.hub-pj:active { background: var(--raised); }
+.hub-pj .pj-face { width: 38px; height: 38px; flex: none; }
+.hub-pj span { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.hub-pj b { font-size: 15px; font-weight: 650; }
+.hub-pj small { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hub-pj .hub-pj-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text); flex: none; }
+.hub-pj > svg.i:last-child { color: var(--faint); transform: rotate(-90deg); flex: none; }

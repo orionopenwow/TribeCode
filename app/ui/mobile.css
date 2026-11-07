@@ -54,9 +54,19 @@
   #tour-checklist { grid-row: auto; }
   .doc-side { position: static; } #doc-list { max-height: 30vh; }
   .doc-title { font-size: 26px; }
-  .board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 84vw; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
-  .col { scroll-snap-align: center; min-height: 55vh; }
-  .task .del { display: grid; }
+  /* Phones: the board is one list grouped by status, and each task is a slim horizontal slate
+     (title · due · status), not a swipeable full-height pane. Tap the title to rename, the status chip to move. */
+  .board { display: flex; flex-direction: column; gap: 10px; overflow: visible; margin: 0; padding: 0; }
+  .board > .col { width: 100%; align-self: stretch; min-height: 0; padding: 10px 10px 4px; }
+  .col h5 { margin: 0 2px 8px; }
+  .task { display: flex; align-items: center; gap: 8px; padding: 9px 10px; margin-bottom: 6px; min-height: 44px; }
+  .task .t { flex: 1; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task .t[contenteditable="true"] { white-space: normal; }
+  .task .meta { flex: none; flex-wrap: nowrap; gap: 5px; }
+  .task .meta .chip, .task .meta select:not(.mv) { display: none; }
+  .task .meta select.mv { max-width: 104px; padding: 3px 8px; border-radius: 99px; font-size: 12px !important; height: 26px; }
+  .task .meta .due-chip.none { display: none; }   /* no due date: nothing to show on a slate */
+  .task .del { position: static; display: grid; flex: none; width: 26px; height: 26px; order: 3; }
   .view-head > .btn.primary, .view-head > #bug-new { margin-left: 0; }
 
   .modal { place-items: end center; }

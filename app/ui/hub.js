@@ -112,13 +112,20 @@
       : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">
-        <header class="hub-head"><span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
+        <header class="hub-head">${isPhone() ? '<div class="hub-thumb" aria-hidden="true"><img src="assets/icon-512.png" alt=""></div>' : ''}<span class="eyebrow">Your home</span><h1>Your command center</h1><p>${sub}</p></header>
         ${gsHero(on)}
+        ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
         ${isPhone() ? sec('AI insights', 'Worth a look', `<div class="ai-cards" id="hub-ins-phone">${insightCards()}</div>`, 'id="hub-insights"') : ''}
       </div>`;
       bind(el);
     });
+  }
+
+  // Phones have no rail: your projects are rows on Home; tapping one opens it (and its bottom rack).
+  function phoneProjects(pj) {
+    const pulses = (PJ().pulses && PJ().pulses()) || {};
+    return sec('Your projects', 'Jump in', `<div class="hub-pjs" id="hub-pjs">${pj.map(p => `<button class="hub-pj" data-pj-go="${esc(p.id)}">${PJ().face(p, 'sm')}<span><b>${esc(p.name)}</b><small>${esc(p.bio || (p.counts && p.counts.tasks ? `${p.counts.tasks} open tasks` : 'Open the project'))}</small></span>${pulses[p.id] ? '<i class="hub-pj-dot" aria-label="unread"></i>' : ''}${ico('i-chev', 15)}</button>`).join('')}</div>`, 'id="hub-pjs-sec"');
   }
 
   // ---------- the one hero: two big choices (Getting started, or Quick start once you're in) ----------
@@ -548,6 +555,7 @@
 
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
+    el.querySelectorAll('[data-pj-go]').forEach(b => b.onclick = () => { const id = b.dataset.pjGo; if (PJ().current() === id) App().show('home'); else PJ().switchTo(id, 'home'); });
     on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-resume', resume);
     on('#hub-cc', () => App().connectClaude());
     on('#hub-sug-more', () => { sugOpen = !sugOpen; render(); });
