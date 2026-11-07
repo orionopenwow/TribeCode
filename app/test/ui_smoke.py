@@ -73,10 +73,10 @@ def main():
 
         # ---- updater ----
         page.goto(UI + "?demo=1&simulateUpdate=0.2.0")
-        page.wait_for_selector("#update-pill:not(.hidden)")
-        page.wait_for_function("document.querySelector('#update-pill-label').innerText.startsWith('Restart')", timeout=5000)
+        page.wait_for_selector("#update-btn:not(.hidden)")   # a quiet icon next to the profile (refresh glyph + Teal dot)
+        page.wait_for_function("document.querySelector('#update-btn').classList.contains('ready') && document.querySelector('#update-btn-label').textContent.startsWith('Update ready')", timeout=5000)
         shot(page, "update-pill")
-        page.click("#update-pill")
+        page.click("#update-btn")
         page.wait_for_selector("#update-pop:not(.hidden)")
         assert "v0.2.0 is ready" in page.inner_text("#update-pop")
         assert page.locator(".handoff-to").count() == 2
@@ -84,8 +84,8 @@ def main():
         page.click('[data-u="later-menu"]')
         page.click('[data-ms="3600000"]')
         assert page.is_hidden("#update-pop")
-        assert "quiet" in page.get_attribute("#update-pill", "class")
-        page.click("#update-pill")
+        assert "quiet" in page.get_attribute("#update-btn", "class")
+        page.click("#update-btn")
         page.click("#up-go")
         page.wait_for_function("!location.search.includes('simulateUpdate')", timeout=8000)
         page.wait_for_timeout(1000)

@@ -343,7 +343,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
     const v = views.get(me.id) || {};
     if (!fresh && v.data && !v.dirty && Date.now() - v.at < STALE_MS) return v.data;
     const data = await compute(me);
-    views.set(me.id, { ...v, at: Date.now(), data, sig: data.rev, dirty: false, last: Date.now() });
+    Object.assign(v, { at: Date.now(), data, sig: data.rev, dirty: false, last: Date.now() }); views.set(me.id, v);   // in place: a pending timer keeps its handle
     return data;
   }
 

@@ -378,10 +378,10 @@ def main():
 
             # update hand-off picks real online peers
             host.goto(BASE + "/?simulateUpdate=9.9.9")
-            host.wait_for_function("document.querySelector('#update-pill-label').innerText.startsWith('Restart')", timeout=8000)
+            host.wait_for_function("document.querySelector('#update-btn').classList.contains('ready')", timeout=8000)
             api("/claims", "POST", {"path": "src/ui/hud.ts", "note": "HUD polish"}, token=tok)
             host.wait_for_function("(TribeClient.state().claims || []).length > 0", timeout=5000)
-            host.click("#update-pill")
+            host.click("#update-btn")
             assert "1 friend online" in host.inner_text("#update-pop")
             assert "src/ui/hud.ts" in host.inner_text("#update-pop")
             host.select_option(".handoff-to >> nth=-1", label="Maya")

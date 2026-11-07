@@ -209,7 +209,7 @@
       if (mode !== 'docs') return;
       box.innerHTML = docs.length ? docs.map(d => `<button class="hub-li" data-gdoc="${esc(d.project)}|${esc(d.slug)}">${ico('i-doc', 14)}<span><b>${esc(d.title)}</b><small>${chip(d.project)} ${esc(d.byName || '')} · ${esc(ago(d.at))}${d.snippet ? ` · ${esc(d.snippet)}` : ''}</small></span></button>`).join('')
         : `<div class="hub-empty">${docsQ ? 'No doc matches that.' : 'No docs yet.'}</div>`;
-      box.querySelectorAll('[data-gdoc]').forEach(b => b.onclick = () => { const [pid, slug] = b.dataset.gdoc.split('|'); go(pid, () => { App().show('docs'); setTimeout(() => window.TribeDocs.open(slug), 120); }); });
+      box.querySelectorAll('[data-gdoc]').forEach(b => b.onclick = () => { const [pid, slug] = b.dataset.gdoc.split('|'); go(pid, () => openDoc(slug)); });
     } catch (e) { box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
   }
 
@@ -219,11 +219,17 @@
     if (PJ().current() !== pid) await PJ().switchTo(pid);
     then && then();
   }
+  // Open a doc after a project switch: Docs' own load() may still reopen the previous doc, so check once more.
+  function openDoc(slug) {
+    App().show('docs'); const D = window.TribeDocs;
+    setTimeout(() => D.open(slug), 120);
+    setTimeout(() => { const c = D.current && D.current(); if (!c || c.slug !== slug) D.open(slug); }, 800);
+  }
   function flash(sel) { setTimeout(() => { const el = document.querySelector(sel); if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1400); } }, 450); }
   function jump(it) {
     const ref = it.ref || {};
     return go(it.project, () => {
-      if (ref.type === 'doc') { App().show('docs'); setTimeout(() => window.TribeDocs.open(ref.id), 120); }
+      if (ref.type === 'doc') openDoc(ref.id);
       else if (ref.type === 'task') { App().show('tasks'); flash(`.task[data-id="${CSS.escape(ref.id)}"]`); }
       else if (ref.type === 'commit') App().show('repo');
       else if (ref.type === 'proposal' || ref.type === 'decision') App().show('board');
@@ -287,7 +293,7 @@
   // The hub's search box types straight into Ctrl K.
   document.addEventListener('keydown', e => {
     if (document.body.dataset.view !== 'hub' || mode !== 'home' || e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
-    if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"], .modal:not(.hidden)')) return;
+    if (e.target.closest && e.target.id !== 'pal-input' && e.target.closest('input, textarea, select, [contenteditable="true"], .modal:not(.hidden), .sh-pop, .pf-menu')) return;
     if (!$('#palette').classList.contains('hidden')) return;
     e.preventDefault(); search(e.key);
   });

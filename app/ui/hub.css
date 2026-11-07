@@ -60,7 +60,8 @@
 .hub-item:hover .hi-go, .hub-item:focus-visible .hi-go { display: inline-flex; }
 
 /* ---------- agents & models: one compact row each ---------- */
-.hub-fleet { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.hub-fleet { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.hf-group { min-width: 0; }
 .hf-group { border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); padding: 4px; }
 .hf-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px; padding: 0 12px; border-radius: 8px; text-align: left; font-size: 13px; color: var(--muted); }
 button.hf-row:hover { background: var(--hover); color: var(--text); }
