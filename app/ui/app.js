@@ -79,7 +79,19 @@
     if (!real.length) return;
     real.forEach(f => drops.push({ name: f.name, size: f.size, saved: true }));
     renderDrops();
-    window.TribeDocs.importFiles(real).then(() => show('docs'));
+    // Text becomes docs; anything else (PDF, zip, images…) is shared in the chat as a file, so its bytes are kept
+    // (Docs import alone keeps only a stub for binary files).
+    const texty = f => /\.(md|markdown|txt|text|csv|json|ya?ml|js|ts|py|css|html?)$/i.test(f.name) && f.size < 2_000_000;
+    const bin = C.connected() ? real.filter(f => !texty(f)) : [];
+    const txt = real.filter(f => !bin.includes(f));
+    const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    (async () => {
+      for (const f of bin) {
+        if (f.size > 8 * 1024 * 1024) { toast(`${f.name} is over 8 MB: put it in the repo instead`); continue; }
+        try { await C.api('/chat/general/file', { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type } }); toast(`${f.name} shared in the chat`); } catch (err) { toast(err.message); }
+      }
+      if (txt.length) { await window.TribeDocs.importFiles(txt); show('docs'); } else if (bin.length) show('chat');
+    })();
   });
   function renderDrops() {
     $('#drops').innerHTML = drops.slice(-4).map(d => `<div><svg class="i" style="width:15px;height:15px;color:var(--accent-2)"><use href="#i-doc"/></svg><span>${esc(d.name)}</span><span class="faint" style="margin-left:auto">${d.saved ? 'saved' : 'queued'}</span></div>`).join('');
@@ -174,7 +186,7 @@
     const isHost = (C.state().me || {}).role === 'host';
     const copy = async (t, msg) => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the command and copy it.'); } };
     const status = async () => {
-      const el = $('#cc-status'); if (!el) return clearInterval(timer);
+      const el = $('#cc-status'); if (!el || $('#invite-modal').classList.contains('hidden')) return clearInterval(timer);   // closed with Esc or the backdrop
       try { const s = await C.api('/agents/mine'); el.innerHTML = s.online ? `<span class="cc-dot on"></span>Connected · ${esc(s.agent.name)}` : `<span class="cc-dot"></span>Waiting for Claude Code…`; } catch {}
     };
     const draw = () => {
@@ -228,13 +240,33 @@
   let readingHistory = false;
   $('#chat-list').addEventListener('scroll', () => { const l = $('#chat-list'); readingHistory = l.scrollTop + l.clientHeight < l.scrollHeight - 60; }, { passive: true });
   new ResizeObserver(() => { if (!readingHistory) $('#chat-list').scrollTop = 1e9; }).observe($('#chat-list'));
+  const PAGE = 100;
+  const moreBtn = () => '<button class="chat-more" id="chat-more" type="button">Load earlier messages</button>';
   async function loadChat() {
     try {
-      const { messages } = await C.api('/chat/general?limit=100');
-      $('#chat-list').innerHTML = messages.length ? messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
+      const { messages } = await C.api(`/chat/general?limit=${PAGE}`);
+      $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
       $('#chat-list').scrollTop = 1e9;
     } catch {}
   }
+  // Older history, a page at a time, keeping your place in the list.
+  async function loadEarlier() {
+    const list = $('#chat-list'), btn = $('#chat-more'), first = list.querySelector('.msg[data-id]');
+    if (!btn || !first) return;
+    btn.disabled = true; btn.textContent = 'Loading…';
+    try {
+      const { messages } = await C.api(`/chat/general?limit=${PAGE}&before=${encodeURIComponent(first.dataset.id)}`);
+      // Keep the message you were looking at in the same spot, also after chatx.js upgrades the new bubbles.
+      const id = first.dataset.id, offset = el => el.getBoundingClientRect().top - list.getBoundingClientRect().top, was = offset(first);
+      const keep = () => { const el = list.querySelector(`.msg[data-id="${CSS.escape(id)}"]`); if (el) list.scrollTop += offset(el) - was; };
+      readingHistory = true;
+      btn.remove();
+      list.insertAdjacentHTML('afterbegin', (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join(''));
+      keep(); await Promise.resolve(); keep(); requestAnimationFrame(keep);
+      if (!messages.length) toast("That's the start of the chat.");
+    } catch (e) { btn.disabled = false; btn.textContent = 'Load earlier messages'; toast(e.message); }
+  }
+  $('#chat-list').addEventListener('click', e => { if (e.target.closest && e.target.closest('#chat-more')) loadEarlier(); });
   async function refreshBrain() {
     if (!C.connected()) return;
     try {
@@ -254,6 +286,15 @@
   C.on('presence', renderRoom);
   C.on('hello', refreshBrain);
   C.on('hello', () => { loadChat(); refresh(); });
+  // Unread count in the tab / window title while you're away: "(3) TribeCode".
+  let unseen = 0, baseTitle = document.title;
+  const paintTitle = () => { document.title = unseen ? `(${unseen > 99 ? '99+' : unseen}) ${baseTitle}` : baseTitle; };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && unseen) { unseen = 0; paintTitle(); } });
+  C.on('chat', ({ message }) => {
+    if (!document.hidden || !message || message.by === 'tribecode' || message.by === (C.state().me || {}).id) return;
+    if (!/^\(\d+\+?\) /.test(document.title)) baseTitle = document.title;
+    unseen++; paintTitle();
+  });
   C.on('chat', ({ channel, message }) => {
     if (channel !== 'general') return;
     const list = $('#chat-list'); if (list.querySelector('.empty-room')) list.innerHTML = '';

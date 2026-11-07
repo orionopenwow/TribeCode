@@ -35,8 +35,7 @@
   const listFor = ch => (ch === 'general' ? $('#chat-list') : $('#dm-list'));
   const token = () => (S.get().server && S.get().server.token) || '';
   const mediaUrl = (ch, f) => `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}`;
-  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : 'Image') : '');
-  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : m.media.kind === 'file' ? `File: ${m.media.name || 'file'}` : 'Image') : '');  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
 
   // ---------- icons (added to the page's sprite) ----------
   const ICONS = {
@@ -146,6 +145,7 @@
       if (m.vote && window.TribeVotes) body += window.TribeVotes.card(m, ch);
       else if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}${META}</p>` : '');
       else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy">${m.text ? '' : META}</button>${m.text ? `<p>${md(m.text)}${META}</p>` : ''}`;
+      else if (m.media && m.media.kind === 'file') body += `<a class="fchip-dl" href="${esc(mediaUrl(ch, m.media.file))}" download="${esc(m.media.name || 'file')}" title="Download ${esc(m.media.name || 'file')}">${icon('i-down')}<span class="fd-t"><b>${esc(m.media.name || 'file')}</b><small>${esc(kb(m.media.size))}</small></span></a>${m.text ? `<p>${md(m.text)}${META}</p>` : META}`;
       else body += `<p>${md(m.text || '')}${m.gist ? '' : META}</p>`;   // gists.js swaps a gist's <p> for its card, so its time sits below
       if (!m.vote) body += linkChips(m.text);
       body += reactsHtml(m);
@@ -485,6 +485,15 @@
     inp.onblur = () => setTimeout(() => { if (inp.isConnected) rerender(m.id); }, 150);
   }
 
+  // ↑ in an empty composer edits your last message (Slack/Discord habit).
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowUp' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || !e.target || e.target.id !== 'chat-input' || e.target.value) return;
+    const ch = cur(), list = listFor(ch); if (!list) return;
+    const el = [...list.querySelectorAll('.msg.dx.mine[data-id]:not(.deleted)')].reverse().find(x => { const v = msgs.get(x.dataset.id); return v && !v.m.media && !v.m.vote && v.m.text; });
+    if (!el) return;
+    e.preventDefault(); edit(el, msgs.get(el.dataset.id).m, ch);
+  });
+
   // ---------- reply ----------
   function startReply(m, ch) {
     reply = { id: m.id, ch, by: m.by, text: textOf(m) };
@@ -498,6 +507,19 @@
     bar.innerHTML = reply ? `${icon('i-reply')}<span>Replying to <b>${esc(nameOf(reply.by))}</b> · ${esc(reply.text)}</span><button type="button" aria-label="Cancel reply">${icon('i-x')}</button>` : '';
     if (reply) bar.querySelector('button').onclick = () => { reply = null; drawReply(); };
   }
+
+  // ---------- drafts: what you were typing survives a reload, a project switch or a phone app restart ----------
+  const draftKey = ch => `tribecode.draft:${C.base()}:${C.project() || ''}:${ch}`;
+  const saveDraft = () => { const i = $('#chat-input'); if (!i) return; try { if (i.value.trim()) localStorage.setItem(draftKey(cur()), i.value); else localStorage.removeItem(draftKey(cur())); } catch {} };
+  function restoreDraft() {
+    const i = $('#chat-input'); if (!i || i.value) return;
+    let v = null; try { v = localStorage.getItem(draftKey(cur())); } catch {}
+    if (v) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') saveDraft(); });
+  document.addEventListener('submit', e => { if (e.target.id === 'chat-form') { try { localStorage.removeItem(draftKey(cur())); } catch {} } }, true);
+  C.on('hello', () => setTimeout(restoreDraft, 0));
+  C.on('project', () => setTimeout(restoreDraft, 50));
 
   // Sending: DMs and replies go through /chat/<ch>/send; plain #general posts stay with app.js.
   document.addEventListener('submit', async e => {

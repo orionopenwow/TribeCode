@@ -109,7 +109,7 @@
   }
 
   async function load() {
-    if (st.server && st.server.token && st.server.url === location.origin) { location.replace('/'); return; }
+    if (st.server && st.server.token && st.server.url === location.origin) return joinAsMember();
     try {
       const r = await fetch('/api/invites/' + encodeURIComponent(code || ''));
       const d = await r.json();
@@ -128,10 +128,21 @@
       $('#name').addEventListener('input', me);
       if (!mobile) $('#name').focus();   // on phones, don't pop the keyboard over the invite
     } catch (e) {
+      const busy = /slow down/i.test(e.message || ''), offline = e instanceof TypeError;
       $('#eyebrow').innerHTML = '<span class="dot" style="background:var(--alert)"></span>Invite unavailable';
-      $('#title').textContent = 'This invite has expired';
-      $('#lead').textContent = 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
+      $('#title').textContent = busy ? 'Too many tries' : offline ? "Can't reach the tribe" : 'This invite has expired';
+      $('#lead').textContent = busy ? 'Wait a minute, then reload this page.' : offline ? "Your friend's computer may be asleep or offline. Try again in a bit." : 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
     }
+  }
+
+  // Already signed in here: a project invite adds that project to your account, then opens it.
+  async function joinAsMember() {
+    try {
+      const r = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + st.server.token }, body: JSON.stringify({ code }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.project) { try { localStorage.setItem('tribecode.project:' + location.origin, d.project); } catch {} }
+    } catch { /* offline: just open the app */ }
+    location.replace('/');
   }
 
   function joined(name) {
@@ -147,6 +158,7 @@
       const r = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, name, color }) });
       const d = await r.json(); if (!r.ok) throw new Error(d.error);
       window.TribeStore.set({ name, color, server: { url: location.origin, token: d.token } });
+      if (d.project) { try { localStorage.setItem('tribecode.project:' + location.origin, d.project); } catch {} }
       try { localStorage.setItem('tribecode.intro.v1', 'seen'); } catch {}
       joined(name);
       // Phones: open the app at a private device link (/m/<key>/), so "Add to Home Screen" installs an

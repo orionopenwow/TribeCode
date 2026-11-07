@@ -133,6 +133,7 @@ function limited(req, max = 20, windowMs = 60_000) {
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
+setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.length || now - h[h.length - 1] > 60_000) hits.delete(k); }, 60_000).unref();   // forget idle addresses
 
 // ---------- realtime ----------
 const online = new Map(); // memberId -> { sockets:Set, where, since, project }
@@ -364,7 +365,11 @@ const mcp = makeMcp({
   chat: {
     post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
-    recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
+    recent: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted).map(x => {
+      const media = x.media ? (x.media.kind === 'voice' ? '[voice note] ' : x.media.kind === 'image' ? '[image] ' : x.media.kind === 'file' ? `[file: ${x.media.name || 'file'}] ` : '') : '';
+      const vote = x.vote ? `[vote] ${x.vote.q || ''} ` : '';
+      return `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${media}${vote}${x.text || ''}`.trimEnd();
+    }).join('\n'),
   },
   board, approvals,
 });
@@ -470,14 +475,22 @@ async function apiInProject(req, res, url) {
     const body = await readBody(req);
     const inv = invites.find(i => i.code === str(body.code, 16));
     if (!inv || inv.revoked || Date.parse(inv.expires) < Date.now() || inv.uses >= inv.maxUses) return fail(res, 410, 'invite expired or invalid');
+    const proj = inv.project && P.get(inv.project);
+    // Already a member (signed in on this device): a project invite adds that project instead of making a second account.
+    const already = authed(req);
+    if (already && already.role !== 'agent') {
+      if (proj && Array.isArray(already.projects) && !already.projects.includes(proj.id)) { already.projects.push(proj.id); inv.uses++; saveInvites(); }
+      if (proj) P.addMember(proj.id, already.id, P.scoped(already) ? inv.role : already.role);
+      saveMembers(); pushPresence(); rooms.pushProjects();
+      return send(res, 200, { member: publicMember(already), tribe, project: proj ? proj.id : null, existing: true });
+    }
     const name = str(body.name, 32); if (!name) return fail(res, 400, 'name required');
     inv.uses++; saveInvites();
-    const proj = inv.project && P.get(inv.project);
     const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
     if (proj) P.addMember(proj.id, out.member.id, inv.role);
     P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
     pushPresence();
-    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
+    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: proj ? proj.id : null });
   }
 
   if (a === 'device-link' || a === 'devices' || a === 'share') {
@@ -490,6 +503,23 @@ async function apiInProject(req, res, url) {
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
+  // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
+  if (a === 'backup' && m === 'GET') {
+    if (me.role !== 'host') return fail(res, 403, 'only the host can download a backup');
+    const day = new Date().toISOString().slice(0, 10), name = `${slug(tribe.name)}-backup-${day}.tar.gz`;
+    res.writeHead(200, { 'Content-Type': 'application/gzip', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+    return require('./backup').stream(baseStore.root, res, slug(tribe.name) || 'tribe').catch(e => { console.error('backup:', e); res.destroy(); });
+  }
+
+  // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
+  if (a === 'me' && !b && m === 'PATCH') {
+    if (me.role === 'agent') return fail(res, 403, 'agents keep their names');
+    const body = await readBody(req), mem = memberById(me.id);
+    const name = body.name !== undefined ? str(body.name, 32) : mem.name; if (!name) return fail(res, 400, 'name required');
+    mem.name = name; if (body.color !== undefined) mem.color = color(body.color);
+    saveMembers(); pushPresence();
+    return send(res, 200, { member: publicMember(mem) });
+  }
   if (a === 'me' && !b) return send(res, 200, { member: publicMember(me), tribe, version: VERSION, project: P.current(), projects: P.visibleTo(me).map(p => P.view(p)) });
 
   if (a === 'members' && m === 'GET') return send(res, 200, { members: presenceFor(me) });
@@ -525,9 +555,16 @@ async function apiInProject(req, res, url) {
   if (a === 'chat' && b) {
     if (b === 'general') b = P.channelOf(P.current());   // #general is the current project's channel
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
+    // Only real conversations: a project's channel, a DM, or a project's #agents channel you can see.
+    // (Before, any name worked, so a project-only friend could read another project's chat/agents-<id>.jsonl.)
+    const agentsOf = /^agents-(.+)$/.exec(b);
+    if (!chProject && !dms.isDm(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
     if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
-    if (m === 'GET') return send(res, 200, { messages: store.readJSONL(`chat/${b}.jsonl`, Math.min(Number(url.searchParams.get('limit')) || 100, 500)) });
+    if (m === 'GET') {   // ?before=<message id> pages back through history
+      const limit = Math.min(Number(url.searchParams.get('limit')) || 100, 500), before = str(url.searchParams.get('before') || '', 40);
+      return send(res, 200, { messages: store.pageJSONL(`chat/${b}.jsonl`, limit, before ? `"id":${JSON.stringify(before)}` : null) });
+    }
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
@@ -645,11 +682,11 @@ async function apiInProject(req, res, url) {
 
 function serveStatic(req, res, url) {
   if (devices.serveApp(req, res, url, UI)) return;
-  let rel = decodeURIComponent(url.pathname);
+  let rel; try { rel = decodeURIComponent(url.pathname); } catch { return fail(res, 400, 'bad path'); }
   if (rel === '/' ) rel = '/index.html';
   if (/^\/join\/[A-Za-z0-9]+\/?$/.test(rel)) rel = '/join.html';
   const file = path.resolve(UI, '.' + rel);
-  if (!file.startsWith(UI)) return fail(res, 403, 'forbidden');
+  if (!file.startsWith(UI + path.sep)) return fail(res, 403, 'forbidden');
   fs.readFile(file, (err, data) => {
     if (err) return fail(res, 404, 'not found');
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
@@ -741,6 +778,8 @@ function start() {
     setInterval(() => { if (gone()) { try { docs.live.persistAll(); } catch {} process.exit(0); } }, 2000).unref();
     if (process.stdin && !process.stdin.isTTY) { process.stdin.on('end', () => process.exit(0)); process.stdin.on('error', () => {}); process.stdin.resume(); }
   }
+  // A stray rejected promise in one feature must not stop the tribe for everyone (Node exits on them by default).
+  process.on('unhandledRejection', e => console.error('  unhandled rejection:', e && e.stack || e));
   // Write live doc edits that are still inside the debounce window before exiting.
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { docs.live.persistAll(); } catch (e) { console.error(e); } process.exit(0); });
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });

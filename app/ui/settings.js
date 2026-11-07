@@ -67,10 +67,12 @@
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
       ${row('Local brain', `<span class="set-brain">${brainTxt}</span>${probe.state === 'found' && probe.models.length ? `<select id="set-model">${['', ...probe.models].map(m => `<option value="${esc(m)}" ${(st.brain.enabled ? st.brain.model : '') === m ? 'selected' : ''}>${m ? esc(m) : 'Off'}</option>`).join('')}</select>` : ''}`, 'Writes summaries and standups on this computer.')}
       ${desk ? row('Open at login', `<button class="toggle set-toggle" role="switch" id="set-login" aria-checked="${!!st.startup.launchAtLogin}"><span class="switch"></span></button>`) : ''}
+      ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
       <div class="set-links"><button class="linkish" id="set-tour">Take a quick tour</button><button class="linkish" id="set-join">Join another tribe with a link</button></div>`;
     $('#set-close').onclick = close;
-    $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) S.set({ name: v }); window.TribeApp.refresh(); };
-    box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
+    $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
+    box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
+    const bk = $('#set-backup'); if (bk) bk.onclick = backup;
     box.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { S.set({ theme: b.dataset.theme }); window.TribeApp.applyTheme(b.dataset.theme); draw(); });
     const f = $('#set-folder'); if (f) f.onchange = () => S.set({ folder: f.value.trim() });
     const br = $('#set-browse'); if (br) br.onclick = async () => { const p = await window.TribeHost.pickFolder(); if (p) { S.set({ folder: p }); draw(); toast('Restart TribeCode to host from the new folder.'); } };
@@ -78,6 +80,24 @@
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
     $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };
     $('#set-join').onclick = () => { close(); joinPrompt(); };
+  }
+  const isHost = () => C().connected() && (C().state().me || {}).role === 'host';
+  // Your name and color live on the server too, so friends see the change (not only this device).
+  async function syncMe(patch) {
+    if (!C().connected()) return;
+    try { await C().api('/me', { method: 'PATCH', body: patch }); } catch (e) { toast(e.message); }
+  }
+  async function backup(e) {
+    const b = e.currentTarget; b.disabled = true; b.textContent = 'Packing…';
+    try {
+      const st = S.get(), res = await fetch(C().base() + '/api/backup', { headers: { Authorization: 'Bearer ' + st.server.token } });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+      const name = (/filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || 'tribe-backup.tar.gz';
+      const url = URL.createObjectURL(await res.blob()), a = document.createElement('a');
+      a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      toast(`Saved ${name}`);
+    } catch (err) { toast(`Backup failed: ${err.message}`); }
+    b.disabled = false; b.textContent = 'Download backup';
   }
   function open() { ensure(); modal().classList.remove('hidden'); draw(); probeBrain(); const n = $('#set-name'); if (n) n.focus(); return Promise.resolve(); }
 

@@ -4,6 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
+const _jsonl = new Map();   // absolute path -> { lines, size, mtimeMs, ino }
+const statOf = f => { try { const s = fs.statSync(f); return { size: s.size, mtimeMs: s.mtimeMs, ino: s.ino }; } catch { return null; } };
+const sameStat = (a, b) => a.size === b.size && a.mtimeMs === b.mtimeMs && a.ino === b.ino;
+const parseLine = l => { try { return JSON.parse(l); } catch { return null; } };
+
 class Store {
   constructor(root) {
     this.root = path.resolve(root);
@@ -13,7 +18,7 @@ class Store {
 
   p(...parts) {
     const full = path.resolve(this.root, ...parts);
-    if (!full.startsWith(this.root)) throw new Error('path escapes tribe folder');
+    if (full !== this.root && !full.startsWith(this.root + path.sep)) throw new Error('path escapes tribe folder');
     return full;
   }
 
@@ -21,10 +26,45 @@ class Store {
   writeJSON(rel, data) { this._atomic(this.p(rel), JSON.stringify(data, null, 2)); }
   _atomic(file, text) { const tmp = file + '.' + process.pid + '.tmp'; fs.writeFileSync(tmp, text); fs.renameSync(tmp, file); }
 
-  appendJSONL(rel, obj) { fs.appendFileSync(this.p(rel), JSON.stringify(obj) + '\n'); }
+  // JSONL (chat, inboxes, logs): append-only. Reads go through a per-file cache of raw lines that is
+  // checked against the file's size/mtime/inode on every read, so a chat with 100k lines is split once,
+  // and only the lines a caller asks for are parsed. Appends from this process update the cache in place.
+  appendJSONL(rel, obj) {
+    const file = this.p(rel), line = JSON.stringify(obj);
+    const c = _jsonl.get(file), before = c && statOf(file);
+    fs.appendFileSync(file, line + '\n');
+    if (c && before && sameStat(c, before)) { c.lines.push(line); Object.assign(c, statOf(file) || {}); } else _jsonl.delete(file);
+  }
+  _lines(rel) {
+    const file = this.p(rel), st = statOf(file);
+    if (!st) { _jsonl.delete(file); return []; }
+    const c = _jsonl.get(file);
+    if (c && sameStat(c, st)) return c.lines;
+    let text; try { text = fs.readFileSync(file, 'utf8'); } catch { return []; }
+    const lines = text.split('\n').filter(Boolean);
+    _jsonl.set(file, { lines, ...st });
+    if (_jsonl.size > 200) _jsonl.delete(_jsonl.keys().next().value);   // keep the cache bounded
+    return lines;
+  }
   readJSONL(rel, limit = 200) {
-    let text; try { text = fs.readFileSync(this.p(rel), 'utf8'); } catch { return []; }
-    return text.split('\n').filter(Boolean).slice(-limit).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    return this._lines(rel).slice(-limit).map(parseLine).filter(Boolean);
+  }
+  // One page of history: up to `limit` entries just before the line containing `beforeHint` (newest page when no hint).
+  pageJSONL(rel, limit = 100, beforeHint = null) {
+    const lines = this._lines(rel);
+    let end = lines.length;
+    if (beforeHint) { end = -1; for (let i = lines.length - 1; i >= 0; i--) if (lines[i].includes(beforeHint)) { end = i; break; } if (end < 0) return []; }
+    return lines.slice(Math.max(0, end - limit), end).map(parseLine).filter(Boolean);
+  }
+  // Newest-first search without parsing the whole file: `hint` is a substring every match contains
+  // (e.g. '"id":"abc"'), so only candidate lines are parsed. Returns the first (newest) match or null.
+  findJSONL(rel, pred, hint) {
+    const lines = this._lines(rel);
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (hint && !lines[i].includes(hint)) continue;
+      const o = parseLine(lines[i]); if (o && pred(o)) return o;
+    }
+    return null;
   }
 
   // ---- markdown with front-matter ----
