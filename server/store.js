@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
+const _kept = new Set();   // broken JSON files already copied aside (once each)
 const _jsonl = new Map();   // absolute path -> { lines, size, mtimeMs, ino }
 const statOf = f => { try { const s = fs.statSync(f); return { size: s.size, mtimeMs: s.mtimeMs, ino: s.ino }; } catch { return null; } };
 const sameStat = (a, b) => a.size === b.size && a.mtimeMs === b.mtimeMs && a.ino === b.ino;
@@ -22,7 +23,15 @@ class Store {
     return full;
   }
 
-  readJSON(rel, fallback) { try { return JSON.parse(fs.readFileSync(this.p(rel), 'utf8')); } catch { return fallback; } }
+  readJSON(rel, fallback) {
+    let text; try { text = fs.readFileSync(this.p(rel), 'utf8'); } catch { return fallback; }
+    try { return JSON.parse(text); } catch {
+      // A file that exists but doesn't parse (edited by hand, a disk that filled up): keep a copy before the next
+      // write replaces it with the fallback, so members, invites or projects can be put back by hand.
+      if (text.trim() && !_kept.has(this.p(rel))) { _kept.add(this.p(rel)); const keep = this.p(rel) + '.broken-' + Date.now().toString(36); try { if (!fs.existsSync(keep)) fs.copyFileSync(this.p(rel), keep); console.error(`  ${rel} could not be read; kept a copy at ${path.basename(keep)}`); } catch {} }
+      return fallback;
+    }
+  }
   writeJSON(rel, data) { this._atomic(this.p(rel), JSON.stringify(data, null, 2)); }
   _atomic(file, text) { const tmp = file + '.' + process.pid + '.tmp'; fs.writeFileSync(tmp, text); fs.renameSync(tmp, file); }
 

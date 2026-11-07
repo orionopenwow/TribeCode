@@ -24,7 +24,7 @@
   const ALLOWED = /\.(glb|gltf|bin|png|jpe?g|webp|gif|svg|ogg|mp3|wav|json|md|txt|js|ts|lua|gd|cs|py|glsl|frag|vert|wgsl)$/i;
 
   let tab = 'shelf', kind = '', q = '', items = [], pending = [], comm = null, detail = null, open_ = false;
-  try { tab = sessionStorage.getItem('tribecode.wsTab') || 'shelf'; } catch {}
+  try { tab = sessionStorage.getItem('tribecode.wsTab') || localStorage.getItem('tribecode.wsTab') || 'shelf'; } catch {}   // remembered across restarts
 
   // ---------- authenticated blobs (never put the token in a URL) ----------
   const blobs = new Map();
@@ -60,7 +60,7 @@
     root.querySelector('#ws-add').onclick = () => addDialog();
     let t; root.querySelector('#ws-q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => { q = e.target.value.trim(); load(); }, 180); });
     const top = () => { root.querySelector('#ws-scroll').scrollTop = 0; };
-    root.querySelectorAll('[data-wt]').forEach(b => b.onclick = () => { tab = b.dataset.wt; try { sessionStorage.setItem('tribecode.wsTab', tab); } catch {} top(); load(); });
+    root.querySelectorAll('[data-wt]').forEach(b => b.onclick = () => { tab = b.dataset.wt; try { sessionStorage.setItem('tribecode.wsTab', tab); localStorage.setItem('tribecode.wsTab', tab); } catch {} top(); load(); });
     root.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { kind = b.dataset.k; top(); load(); });
     root.querySelector('#ws-drawer').addEventListener('click', e => { if (e.target.closest('[data-close]')) closeDetail(); });
     root.querySelector('#ws-modal').addEventListener('click', e => { if (e.target.closest('[data-mclose]')) closeModal(); });

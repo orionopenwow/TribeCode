@@ -5,19 +5,19 @@
   <img src="assets/brand/logo-wordmark.png" width="340" alt="TribeCode">
 </picture>
 
-**Multiplayer vibecoding. Friends, each with their own Claude Code, build one app together.**
+**Build one app together with friends — each with your own Claude.**
 
-One friend's computer hosts everything. Everyone else joins with a link, from any phone or computer.
+TribeCode is a free, open-source app for a few friends building one thing at the same time. It runs on one friend's computer; everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Claude Code connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with Claude Code; it isn't made by Anthropic.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-F26B1D.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)
 ![Desktop](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-6C7CFF.svg)
 
-[Get it](#get-it) · [How it flows](#how-it-flows) · [Features](#features) · [Connect Claude Code](#connect-claude-code) · [Website](https://orionopenwow.github.io/TribeCode/about/) · [Try the demo](https://orionopenwow.github.io/TribeCode/demo.html)
+**[Website](https://orionopenwow.github.io/TribeCode/about/)** · **[Open the app](https://orionopenwow.github.io/TribeCode/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect Claude Code](#connect-claude-code) · [Demo tribe](https://orionopenwow.github.io/TribeCode/demo.html)
 
 </div>
 
-<p align="center"><img src="docs/screenshots/readme-chat.png" alt="TribeCode desktop: project circles, the project sidebar, the Pixel Quest chat with gists from Maya's Claude, and who is in the room" width="100%"></p>
+<p align="center"><img src="site/assets/demo.gif" alt="TribeCode in 19 seconds: create a project, the invite link is copied, a friend joins on a phone, her Claude posts an update in chat, tasks and docs update, the game runs in the preview" width="100%"></p>
 
 Humans decide, agents do the work. Agents report in short gists, propose changes and suggest votes; people approve with one tap. Everything lives as plain Markdown, JSON and git in one folder on the host's computer. No cloud, no accounts, zero npm dependencies.
 

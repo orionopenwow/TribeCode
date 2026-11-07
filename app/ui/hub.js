@@ -161,7 +161,9 @@
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Your last session shows up here.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
           : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.', '', 'plus', 'Start a project', 'ember'))
         + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.', '', 'link', 'Copy a link', 'teal');
-    const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>` : '';
+    // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
+    const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`
+      : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://orionopenwow.github.io/TribeCode/about/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
     const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span><span class="gs-band-r">${on ? 'Pick up, or bring someone in' : 'Two ways in · about a minute'}</span></div>
@@ -377,7 +379,8 @@
     document.body.appendChild(ov);
     const ta = $('#note-text'); ta.focus();
     ta.oninput = () => scratch.quiet(id, ta.value || 'New note');
-    const done = async () => { await scratch.flush(); ov.remove(); if (mode === 'docs') render(); };
+    // A note you started and left empty doesn't linger as "New note" in your docs.
+    const done = async () => { if (fresh && !ta.value.trim()) { scratch.remove(id); ov.remove(); render(); return; } await scratch.flush(); ov.remove(); if (mode === 'docs') render(); };
     $('#note-done').onclick = done;
     $('#note-del').onclick = () => { scratch.remove(id); ov.remove(); render(); toast('Note deleted'); };
     ov.addEventListener('click', e => { if (e.target === ov) done(); });

@@ -1,0 +1,227 @@
+"""The showcase site at /about/ (site/ in the repo, published by .github/workflows/pages.yml).
+
+Assembles the Pages layout like the workflow (app/ui at the root, site/ under /about/) on a static server, then checks:
+no console errors, every link has a real target (in-page anchors exist, local pages answer 200), every image loads,
+the demo video and its GIF exist, no sideways scroll at 390px (menu open too), the download button picks the visitor's
+OS from the latest release, live GitHub numbers render from the API, the fallback renders when the API is unreachable,
+and reduced motion shows everything at once with the video paused. External requests never leave the test.
+
+Usage: python app/test/e2e_showcase.py [--shots]   (--shots saves docs/screenshots/showcase-*.png)
+"""
+import functools, http.server, json, os, shutil, sys, tempfile, threading, urllib.request
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+ROOT = Path(__file__).resolve().parents[2]
+OFF = int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
+PORT = 4941 + OFF
+BASE = f"http://localhost:{PORT}"
+ABOUT = BASE + "/about/"
+SHOTS = "--shots" in sys.argv
+IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+V = "v9.9.9"
+NAMES = ["latest.json", f"TribeCode_9.9.9_x64-setup.exe", "TribeCode_9.9.9_x64_en-US.msi", "TribeCode_9.9.9_aarch64.dmg",
+         "TribeCode_9.9.9_amd64.AppImage", "TribeCode_9.9.9_amd64.deb", "TribeCode-9.9.9-1.x86_64.rpm", "TribeCode_aarch64.app.tar.gz"]
+RELEASE = {"tag_name": V, "published_at": "2026-11-05T12:00:00Z",
+           "assets": [{"name": n, "size": 40_000_000, "browser_download_url": f"https://github.com/orionopenwow/TribeCode/releases/download/{V}/{n}"} for n in NAMES]}
+REPO = {"stargazers_count": 1234, "forks_count": 56, "open_issues_count": 7}
+CONTRIB = [{"login": "orionopenwow", "type": "User", "contributions": 400, "html_url": "https://github.com/orionopenwow", "avatar_url": "https://avatars.githubusercontent.com/u/1?v=4"}]
+PNG = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000" "1f15c4890000000d49444154789c6360f8cfc0f01f0005000201" "a5f6e1d70000000049454e44ae426082")
+
+
+def assemble():
+    """Like the Pages workflow: app/ui at the root, site/ at /about/."""
+    out = Path(tempfile.mkdtemp(prefix="tc-pages-"))
+    shutil.copytree(ROOT / "app" / "ui", out, dirs_exist_ok=True)
+    shutil.copytree(ROOT / "site", out / "about")
+    return out
+
+
+def route_external(ctx, mode, seen):
+    """Nothing leaves the test: GitHub's API is mocked ("ok") or unreachable ("down"); other hosts are refused."""
+    def handle(route):
+        url = route.request.url
+        if url.startswith(BASE): return route.continue_()
+        seen.append(url)
+        if url.startswith("https://api.github.com/"):
+            if mode == "down": return route.abort()
+            path = url.split("/repos/orionopenwow/TribeCode", 1)[1].split("?")[0]
+            body = {"": REPO, "/releases/latest": RELEASE, "/contributors": CONTRIB}.get(path)
+            if body is None: return route.fulfill(status=404, body="{}")
+            return route.fulfill(status=200, body=json.dumps(body), headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"})
+        if url.startswith("https://avatars.githubusercontent.com/"): return route.fulfill(status=200, body=PNG, headers={"Content-Type": "image/png"})
+        return route.abort()
+    ctx.route("**/*", handle)
+
+
+def watch(pg, errs, allow_network=False):
+    def con(m):
+        if m.type != "error": return
+        if allow_network and ("Failed to load resource" in m.text or "ERR_FAILED" in m.text): return
+        errs.append(m.text)
+    pg.on("console", con); pg.on("pageerror", lambda e: errs.append(str(e)))
+
+
+def scroll_through(pg):
+    pg.evaluate("""async () => { document.documentElement.style.scrollBehavior = 'auto'; for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.7) { scrollTo(0, y); await new Promise(r => setTimeout(r, 80)); } scrollTo(0, document.body.scrollHeight); await new Promise(r => setTimeout(r, 200)); scrollTo(0, 0); document.documentElement.style.scrollBehavior = ''; }""")
+    try: pg.wait_for_function("[...document.images].filter(i => !i.closest('video')).every(i => i.complete)", timeout=15000)
+    except Exception: raise AssertionError("images not loaded: %s" % pg.evaluate("[...document.images].filter(i => !i.complete).map(i => i.src)"))
+
+
+def no_overflow(pg, where):
+    sw, iw = pg.evaluate("[document.documentElement.scrollWidth, innerWidth]")
+    assert sw <= iw, f"sideways scroll on {where}: {sw} > {iw}"
+
+
+def status(url):
+    try:
+        with opener.open(urllib.request.Request(url, method="GET"), timeout=5) as r: return r.status
+    except urllib.error.HTTPError as e: return e.code
+
+
+def main():
+    root = assemble()
+    class Quiet(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *a): pass
+        def handle(self):   # the browser drops video range requests mid-way; that's not an error
+            try: super().handle()
+            except (BrokenPipeError, ConnectionResetError): pass
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), functools.partial(Quiet, directory=str(root)))
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    try:
+        # assets the page and README rely on
+        for f, cap in [("demo.gif", 8e6), ("demo.mp4", 8e6), ("demo.webm", 8e6), ("og-image.png", 1e6), ("demo-poster.webp", 1e6)]:
+            p = ROOT / "site" / "assets" / f; assert p.exists() and p.stat().st_size < cap, f
+        shots = sum(p.stat().st_size for p in (ROOT / "site" / "assets" / "shots").glob("*"))
+        assert shots < 6.5e6, f"screenshots are {shots / 1e6:.1f} MB"
+
+        with sync_playwright() as p:
+            b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server", "--autoplay-policy=no-user-gesture-required"])
+
+            # ---------------- desktop, GitHub answers ----------------
+            seen, errs = [], []
+            ctx = b.new_context(viewport={"width": 1440, "height": 900}); route_external(ctx, "ok", seen)
+            pg = ctx.new_page(); watch(pg, errs)
+            pg.goto(ABOUT); pg.wait_for_load_state("load")
+            assert pg.title().startswith("TribeCode"), pg.title()
+            assert "Build one app together with friends" in pg.inner_text("h1")
+            assert pg.locator('meta[property="og:image"]').get_attribute("content").endswith("/about/assets/og-image.png")
+            # live GitHub numbers, release line and downloads from the release (headless Chrome here reports Linux)
+            pg.wait_for_function("document.querySelector('[data-gh=forks]').textContent === '56' && document.querySelector('.gh [data-gh=version]').textContent === 'v9.9.9'", timeout=8000)
+            assert pg.inner_text(".gh [data-gh=stars]") == "1.2k" and pg.inner_text(".nav [data-gh=stars]") == "1.2k" and pg.is_visible(".nav [data-gh=stars]")
+            assert pg.inner_text(".gh [data-gh=issues]") == "7" and pg.inner_text(".gh [data-gh=version]") == V
+            eb = pg.text_content(".hero .eyebrow"); assert V in eb and "works with Claude Code" in eb, eb
+            pg.wait_for_selector(".gh__faces img")
+            assert not pg.is_visible("[data-gh-fallback]")
+            main_dl = pg.locator(".hero [data-dl-main]")
+            assert main_dl.get_attribute("href").endswith("_amd64.AppImage") and "Download for Linux" in main_dl.inner_text(), main_dl.get_attribute("href")
+            # the other platforms
+            pg.click(".dl__more"); assert pg.is_visible("#dl-menu")
+            hrefs = {a.get_attribute("data-os"): a.get_attribute("href") for a in pg.locator("#dl-menu [data-os]").all()}
+            assert hrefs["windows"].endswith("_x64-setup.exe") and hrefs["mac"].endswith("_aarch64.dmg") and hrefs["deb"].endswith(".deb"), hrefs
+            pg.keyboard.press("Escape"); assert not pg.is_visible("#dl-menu")
+            # every link points somewhere real
+            links = pg.evaluate("[...document.querySelectorAll('a')].map(a => ({ raw: a.getAttribute('href'), abs: a.href, text: a.textContent.trim() || a.getAttribute('aria-label') }))")
+            assert len(links) > 30
+            for l in links:
+                raw = l["raw"] or ""
+                assert raw and raw != "#" and not raw.startswith("javascript:"), l
+                if raw.startswith("#"):
+                    assert pg.locator(raw).count() == 1, f"missing anchor {raw}"
+                elif l["abs"].startswith(BASE):
+                    assert status(l["abs"].split("#")[0]) == 200, l
+                else:
+                    assert l["abs"].startswith("https://"), l
+            for t in ["Open the app", "On your phone"]:
+                assert pg.locator(f".hero a:has-text('{t}')").count() == 1, t
+            assert pg.locator(".hero a:has-text('Open the app')").get_attribute("href") == "../"
+            # images load (lazy ones after scrolling), the demo video has its sources and a GIF fallback
+            scroll_through(pg)
+            bad = pg.evaluate("[...document.images].filter(i => !i.closest('video') && !i.naturalWidth).map(i => i.src)")
+            assert not bad, bad
+            srcs = pg.evaluate("[...document.querySelectorAll('video source')].map(s => s.src).concat([document.querySelector('video').poster, document.querySelector('video img').src])")
+            assert len(srcs) == 4 and all(status(s) == 200 for s in srcs), srcs
+            pg.wait_for_function("!document.querySelector('video').paused && document.querySelector('video').readyState >= 2", timeout=10000)
+            pg.click("[data-video-toggle]"); assert pg.evaluate("document.querySelector('video').paused")
+            assert pg.get_attribute("[data-video-toggle]", "aria-label") == "Play the demo"
+            # scroll reveal, the typed command, the campfire
+            pg.locator("#claude").scroll_into_view_if_needed()
+            pg.wait_for_function("document.querySelector('.term').classList.contains('is-done')", timeout=10000)
+            assert pg.inner_text("#mcp-line").startswith("claude mcp add --transport http tribecode ")
+            assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 5
+            pg.locator(".cta").scroll_into_view_if_needed(); pg.wait_for_timeout(1200)
+            assert pg.evaluate("(() => { const c = document.querySelector('.fire__embers'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; })()"), "embers are drawn"
+            # never presented as Anthropic's: an independent project that works with Claude Code
+            body = pg.inner_text("body")
+            assert "© 2026 TribeCode contributors · MIT" in body and "independent project" in body
+            assert all(u.startswith(("https://api.github.com/", "https://avatars.githubusercontent.com/")) for u in seen), seen
+            if SHOTS:
+                pg.evaluate("document.querySelectorAll('.reveal').forEach(e => e.classList.add('is-in'))"); pg.evaluate("scrollTo(0, 0)"); pg.wait_for_timeout(300)
+                pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "showcase-desktop.png"))
+            assert not errs, errs
+            # the quick start page shares the stylesheet
+            dp = ctx.new_page(); derrs = []; watch(dp, derrs); dp.goto(ABOUT + "docs.html"); dp.wait_for_load_state("load")
+            assert "Your first project" in dp.inner_text("h1") and dp.evaluate("document.querySelector('.nav__logo img').naturalWidth > 0")
+            assert not derrs, derrs
+            # the app at the root (as on Pages, with no tribe) links back here from its not-connected Home
+            ap = ctx.new_page(); ap.goto(BASE + "/?skipIntro=1")
+            ap.wait_for_function("window.TribeHub", timeout=15000); ap.evaluate("TribeHub.open('home')")
+            ap.wait_for_selector("#hub-about", timeout=15000)
+            assert ap.get_attribute("#hub-about", "href") == "https://orionopenwow.github.io/TribeCode/about/" and "About TribeCode" in ap.inner_text("#hub-about")
+            ctx.close()
+
+            # ---------------- phone 390px, GitHub unreachable ----------------
+            seen, errs = [], []
+            ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA)
+            route_external(ctx, "down", seen)
+            ph = ctx.new_page(); watch(ph, errs, allow_network=True)
+            ph.goto(ABOUT); ph.wait_for_load_state("load")
+            ph.wait_for_selector("[data-gh-fallback]:not([hidden])", timeout=12000)
+            assert "github.com/orionopenwow/TribeCode" in ph.inner_text("[data-gh-fallback]")
+            assert ph.inner_text(".gh [data-gh=stars]") == "–" and not ph.is_visible(".nav [data-gh=stars]")
+            assert ph.locator(".hero [data-dl-main]").get_attribute("href") == "https://github.com/orionopenwow/TribeCode/releases/latest", "falls back to the releases page"
+            assert "Desktop app" in ph.inner_text(".hero [data-dl-label]"), "a phone isn't offered an installer as if it could run it"
+            no_overflow(ph, "phone top")
+            scroll_through(ph)
+            for y in [0.25, 0.5, 0.75, 1.0]:
+                ph.evaluate(f"scrollTo({{top: document.body.scrollHeight * {y}, behavior: 'instant'}})"); ph.wait_for_timeout(120); no_overflow(ph, f"phone at {int(y * 100)}%")
+            assert not ph.evaluate("[...document.images].filter(i => !i.closest('video') && !i.naturalWidth).map(i => i.src)")
+            ph.evaluate("scrollTo(0, 0)"); ph.click(".nav__toggle"); assert ph.is_visible("#nav-links a[href='#phone']"); no_overflow(ph, "phone menu")
+            ph.click("#nav-links a[href='#phone']")
+            ph.wait_for_function("Math.abs(document.querySelector('#phone').getBoundingClientRect().top) < 120", timeout=5000)
+            assert not ph.is_visible("#nav-links a[href='#phone']"), "the menu closes after a pick"
+            assert ph.evaluate("document.querySelector('.qr img').naturalWidth > 0")
+            for sel in [".ctas .btn", ".flow__s", ".cmp__row", ".frame--phone"]:
+                w = ph.evaluate(f"Math.max(...[...document.querySelectorAll('{sel}')].map(e => e.getBoundingClientRect().right))")
+                assert w <= 390, (sel, w, ph.evaluate(f"[...document.querySelectorAll('{sel}')].filter(e => e.getBoundingClientRect().right > 390).map(e => e.outerHTML.slice(0, 160))"))
+            if SHOTS:
+                ph.evaluate("document.querySelectorAll('.reveal').forEach(e => e.classList.add('is-in')); scrollTo(0, 0)"); ph.wait_for_timeout(300)
+                ph.screenshot(path=str(ROOT / "docs" / "screenshots" / "showcase-phone.png"))
+            assert not errs, errs
+            ctx.close()
+
+            # ---------------- reduced motion ----------------
+            seen, errs = [], []
+            ctx = b.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce"); route_external(ctx, "ok", seen)
+            rm = ctx.new_page(); watch(rm, errs)
+            rm.goto(ABOUT); rm.wait_for_load_state("load"); rm.wait_for_timeout(400)
+            assert rm.evaluate("[...document.querySelectorAll('.reveal')].every(e => getComputedStyle(e).opacity === '1')"), "everything shows at once"
+            assert rm.evaluate("document.querySelector('video').paused"), "the demo waits for a click"
+            assert rm.get_attribute("[data-video-toggle]", "aria-label") == "Play the demo"
+            assert rm.inner_text("#mcp-line").startswith("claude mcp add") and rm.evaluate("document.querySelector('.term').classList.contains('is-done')")
+            assert rm.evaluate("getComputedStyle(document.querySelector('.flame--outer')).animationName") == "none"
+            rm.locator(".cta").scroll_into_view_if_needed(); rm.wait_for_timeout(500)
+            assert not rm.evaluate("(() => { const c = document.querySelector('.fire__embers'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; })()"), "no embers"
+            assert rm.evaluate("[...document.querySelectorAll('[data-parallax]')].every(e => !e.style.transform)")
+            assert not errs, errs
+            ctx.close()
+            b.close()
+        print("Showcase site test passed")
+    finally:
+        httpd.shutdown(); shutil.rmtree(root, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    main()
