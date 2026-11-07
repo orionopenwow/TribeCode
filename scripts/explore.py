@@ -666,7 +666,7 @@ JOURNEYS = [
                ("js", "TribeApp.show('board')"),
                ("expect", "document.querySelector('#view-board') && document.querySelector('#view-board').innerText.includes('photo mode') || [...document.querySelectorAll('#chat-list *')].some(e => /photo mode/.test(e.textContent || ''))")]},
     {"id": "connect-claude", "title": "Connect Claude Code",
-     "steps_phone": [("click", [{"role": "button", "name": r"^you$|profile"}, {"css": "#m2-me"}], "You (profile)"),
+     "steps_phone": [("click", [{"role": "button", "name": r"^you$|profile"}, {"css": "#pf-btn"}], "You (profile)"),
                      ("click", [{"role": "button", "name": r"connect.*claude|connect from another computer"}, {"role": "menuitem", "name": r"connect.*claude"}, {"text": r"connect your claude"}], "Connect your Claude Code"),
                      ("click?", [{"role": "button", "name": r"^new command"}], "New command"),
                      ("expect", "[...document.querySelectorAll('code, pre, input, textarea, .code, span, div')].some(e => window.__ex.visible(e) && /claude mcp add/.test(e.value || (e.children.length ? '' : e.textContent)))")], "goal": "a `claude mcp add` command is on screen", "max": 2,

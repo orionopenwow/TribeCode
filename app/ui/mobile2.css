@@ -32,7 +32,6 @@
   body.m2-in-chat .titlebar #ctx-btn { display: none; }
   .window > .titlebar .tb-right { margin-left: 0; }
   body.m2-in-chat .window > .titlebar .tb-right { margin-left: auto; }
-  #view-tasks #task-new, #view-docs #doc-new { display: none; }   /* the orange action makes them */
   #m2-talk { display: inline-flex; align-items: center; gap: 4px; height: 36px; max-width: 112px; padding: 0 8px 0 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; }
   #m2-talk.hidden { display: none; }
   #m2-talk span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

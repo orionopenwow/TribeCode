@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.7
+
+- **Phones**: the bottom rack is just **Chat · Docs · Updates · Tasks**. Your profile moved to the top right of the top bar; **New task** and **New doc** are back on their own screens (the orange + is gone)
+
 ## v0.6.6
 
 Start a project like you'd start a Discord server.

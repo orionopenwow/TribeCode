@@ -105,9 +105,9 @@ def main():
             phone.evaluate("TribeApp.show('home')")
             rack = phone.locator("#tabbar").bounding_box()
             assert rack["y"] > 760 and rack["width"] >= 380, rack
-            for sel in ["#m2-me", '#tabbar [data-nav="chat"]', '#tabbar [data-nav="docs"]', '#tabbar [data-m2nav="updates"]', '#tabbar [data-nav="tasks"]', "#m2-act"]:
+            for sel in ['#tabbar [data-nav="chat"]', '#tabbar [data-nav="docs"]', '#tabbar [data-m2nav="updates"]', '#tabbar [data-nav="tasks"]', "#pf-btn"]:
                 assert phone.locator(sel).is_visible(), sel
-            assert phone.evaluate("getComputedStyle(document.querySelector('#m2-act')).backgroundColor") == "rgb(242, 107, 29)", "orange action"
+            assert phone.locator("#m2-me").count() == 0 and phone.locator("#m2-act").count() == 0, "the rack is just Chat · Docs · Updates · Tasks"
             assert phone.locator("#crumb-section").is_hidden() and phone.locator("#ws-name").is_hidden() and phone.locator("#sync-status").is_hidden(), "no header outside Chat"
             assert phone.locator(".titlebar").bounding_box()["height"] <= 60
             phone.wait_for_function("document.querySelector('#pj-switch').textContent.includes(TribeProjects.cur().name)")
@@ -138,8 +138,8 @@ def main():
                 if t.get("assignee") == maya: break
                 time.sleep(0.1)
             assert t["assignee"] == maya and t["status"] == "doing", t
-            # the orange action on Tasks: a quick task sheet
-            phone.click("#m2-act"); phone.wait_for_selector("#m2-task-sheet #m2-qt-in")
+            # New task on Tasks: a quick task sheet
+            phone.click("#task-new"); phone.wait_for_selector("#m2-task-sheet #m2-qt-in")
             phone.fill("#m2-qt-in", "Lantern glow"); phone.press("#m2-qt-in", "Enter")
             phone.wait_for_selector("#m2-task-sheet", state="detached")
             for _ in range(30):
@@ -151,7 +151,7 @@ def main():
             phone.click('#tabbar [data-nav="chat"]')
             phone.wait_for_selector("#view-chat:not(.hidden) #chat-input", state="visible")
             phone.wait_for_function("document.querySelector('#tabbar').getBoundingClientRect().top < 60")
-            assert phone.locator("#m2-me").is_hidden() and phone.locator("#m2-act").is_hidden(), "top bar is icons only"
+            assert phone.locator("#m2-me").count() == 0 and phone.locator("#m2-act").count() == 0, "top bar is icons only"
             assert phone.locator("#m2-talk").is_visible() and phone.inner_text("#m2-talk") .strip().startswith("#general")
             assert phone.locator("#m2-plus").is_visible() and phone.locator("#m2-mic").is_visible() and phone.locator("#m2-send").is_hidden()
             comp = phone.locator("#composer-mount").bounding_box(); assert comp["y"] + comp["height"] > 800, comp
@@ -233,7 +233,7 @@ def main():
             phone.wait_for_function("document.querySelector('#m2-talk-l').textContent === '#general'")
             # my own profile from the rack avatar (back outside Chat)
             phone.click('#tabbar [data-nav="docs"]')
-            phone.click("#m2-me"); phone.wait_for_selector("#m2-profile [data-pf='settings']")
+            phone.click("#pf-btn"); phone.wait_for_selector("#m2-profile [data-pf='settings']")
             assert "Maya" in phone.inner_text("#m2-profile .m2-pf-id")
             phone.evaluate("TribeMobile.closeSheet()")
 
