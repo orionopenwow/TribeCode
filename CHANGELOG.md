@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.3
+
+- **Desktop sign-in fix**: the app could reach its own tribe server but not sign in ("A TribeCode server is running here but this app could not sign in to it"). The server now answers the browser engine's private-network check, so creating your tribe and signing back in work inside the app. If sign-in still fails, Home shows the exact reason with Try again (no more pointing at a Settings page that doesn't exist)
+- Window buttons: close is now on the right (green and red swapped)
+- Getting started, polished: left-aligned band, each way in has an icon, a short line and a clear action
+- **Phones**: the Getting started tiles get the same look at 390px
+
 ## v0.7.2
 
 - The desktop app no longer sits quietly on "Not in a tribe yet" when its tribe server fails to start: Home says so, shows the reason, and has Try again

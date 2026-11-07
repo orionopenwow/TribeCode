@@ -120,6 +120,12 @@ def main():
         for u in ["file:///etc", "git://169.254.169.254/x.git", "ext::sh -c id", "--upload-pack=id"]:
             st, d = api("/projects", "POST", {"url": u}, token=host)
             assert st == 400, f"clone URL {u} accepted: {st} {d}"
+        # The desktop app's page (http://tauri.localhost) posts JSON to this loopback server: Chromium's Private Network
+        # Access preflight needs this header, or sign-in (bootstrap / reclaim) is refused inside the app.
+        pre = urllib.request.Request(BASE + "/api/bootstrap", method="OPTIONS", headers={"Origin": "http://tauri.localhost",
+            "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type", "Access-Control-Request-Private-Network": "true"})
+        with urllib.request.urlopen(pre, timeout=10) as r:
+            assert r.headers.get("Access-Control-Allow-Private-Network") == "true", dict(r.headers)
     finally:
         srv.terminate()
     print("Security test passed")
