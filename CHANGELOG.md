@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.5
+
+- **The Windows desktop app can finally talk to its own tribe.** Its page lives at `http://tauri.localhost`, and the app mistook that for its server: every sign-in and API call went to the app's own files and quietly got nothing back. It now uses its server on port 4747. (This is why Settings › GitHub, the Office and new projects "did nothing".)
+- **The server only runs when it should**: on a fresh install nothing starts until you create your first project; Settings has **Host on this computer**, and switching it off stops the server (nothing is deleted)
+- **Friends**: a people button right of the bell opens your friends (online first, Message), everyone else in the tribe with Add friend, and two ways to bring someone new: an invite link, or a **one-time guest pass** (one use; the guest's account stops working after a day). Friends are kept on the server, so they follow you to every device
+- **Phones**: the Friends panel fits at 390px
+
 ## v0.7.4
 
 - **Agent fleet stays on the dashboard**: from Home, Agent fleet keeps Home's sidebar (Home · Global docs · All repos · Agent fleet) instead of jumping to a project's. A project's Agents Hub is still that project's page

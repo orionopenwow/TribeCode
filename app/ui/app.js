@@ -415,7 +415,7 @@
   async function joinLink(raw) {
     const inv = parseInvite(raw);
     if (!inv) return toast('Paste the full invite link, e.g. http://host:4747/join/abc12');
-    if (location.protocol.startsWith('http') && inv.server !== location.origin) { location.href = `${inv.server}/join/${inv.code}`; return; }
+    if (location.protocol.startsWith('http') && !/(^|\.)tauri\.localhost$/i.test(location.hostname) && inv.server !== location.origin) { location.href = `${inv.server}/join/${inv.code}`; return; }
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
     body.innerHTML = '<h2>Checking invite…</h2>';
     let info;
@@ -484,13 +484,24 @@
       }
       const keep = st.server && st.server.url === url ? st.server.token : '';
       window.__hostError = null; dispatchEvent(new CustomEvent('tribe-host-error'));
-      S.set({ server: { url, token: keep }, hosting: true });
+      S.set({ server: { url, token: keep }, hosting: true, hostOff: false });
       const role = await C.ensureMember({ name: st.name, color: st.color, reclaim: true });
       C.connect(); refresh();
       if (!role && !keep) { showHostError(`A TribeCode server is running here but this app could not sign in to it.\n${window.__authError || ''}`.trim()); return; }
       else if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
       else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
     } catch (e) { reset(); if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message); }
+  }
+  // Stop this computer's tribe server (and any older copy left on the port).
+  async function stopHost() {
+    const inv = window.__TAURI__ && window.__TAURI__.core; if (!inv) return;
+    try { await inv.invoke('host_stop'); } catch {}
+    try { await inv.invoke('host_kill_stale'); } catch {}
+  }
+  async function setHosting(on) {
+    if (on) { S.set({ hostOff: false }); return hostHere(); }
+    S.set({ hostOff: true, server: { url: (S.get().server || {}).url || '', token: (S.get().server || {}).token || '' } });
+    await stopHost(); refresh(); toast('Hosting is off. Your tribe stays in its folder; switch Host back on to bring it back.');
   }
   function showHostError(msg) {
     toast(msg.split('\n')[0] + ' Details are on Home.');
@@ -640,7 +651,10 @@
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
     // The desktop app showing a page served by a TribeCode server (the Working version) talks to that server; it doesn't host its own.
     const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
-    if (window.TribeHost.isDesktop && !served && !st.hostOff && !remote) hostHere({ quiet: true });
+    // The desktop server runs only when you've made a tribe here (hosting) and the Host switch is on. A fresh install,
+    // or Host switched off, starts no server; Create your first project starts it.
+    if (window.TribeHost.isDesktop && !served && !remote && st.hosting && !st.hostOff) hostHere({ quiet: true });
+    else if (window.TribeHost.isDesktop && !served && !remote) stopHost();
     else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
   })();
   window.TribeUpdater.init();
@@ -654,5 +668,5 @@
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
   C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { show, hostHere, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { show, hostHere, setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();
