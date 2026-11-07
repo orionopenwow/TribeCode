@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<meta name="description" content="Try TribeCode: accept an invite, join a project and say hi. A self-contained demo, nothing is sent anywhere.">
+<title>You're invited · TribeCode demo</title>
+<link rel="icon" href="assets/icon-512.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* Self-contained demo of the friend flow: invite -> join a project -> chat. No server, no storage.
+     Flat matte per docs/DESIGN-SYSTEM.md: luminance steps and 1px borders, no glows, blur or gradients. */
+  * { box-sizing: border-box; }
+  :root { --c: #12151A; --s: #1B2028; --s2: #222833; --b: #2A313C; --o: #F26B1D; --t: #38C6B1; --i: #6C7CFF; --w: #F8FAFC; --m: #94A3B8;
+    --mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace; }
+  html, body { margin: 0; height: 100%; background: var(--c); color: var(--m); font: 15px/1.5 Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; }
+  .hidden { display: none !important; }
+  .demo-tag { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 20; font: 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--m); background: var(--s); border: 1px solid var(--b); border-radius: 999px; padding: 6px 10px; white-space: nowrap; }
+  .k { font: 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--o); }
+  h1 { margin: 6px 0 8px; color: var(--w); font-size: 26px; line-height: 1.15; letter-spacing: -.015em; }
+  .btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--b); background: var(--s); color: var(--w); font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--o); border-color: var(--o); color: #fff; }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #12151A; font-weight: 700; font-size: 14px; flex: none; }
+  .av.sm { width: 26px; height: 26px; font-size: 12px; }
+  .av.agent { border-radius: 9px; background: var(--s2); border: 1px solid var(--t); color: var(--t); }
+
+  /* ---- screen 1 + 2: invite / connecting ---- */
+  .center { min-height: 100dvh; display: grid; place-items: center; padding: 64px 18px max(24px, env(safe-area-inset-bottom)); }
+  .card { width: min(440px, 100%); background: var(--s); border: 1px solid var(--b); border-radius: 18px; padding: 24px 22px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .brand img.icon { width: 36px; height: 36px; border-radius: 9px; } .brand img.wm { height: 18px; }
+  .proj { display: flex; gap: 12px; align-items: center; background: var(--c); border: 1px solid var(--b); border-radius: 14px; padding: 12px; margin: 14px 0 6px; }
+  .proj-ic { width: 44px; height: 44px; border-radius: 11px; background: var(--s2); border: 1px solid var(--b); display: grid; place-items: center; font-size: 22px; }
+  .proj b { color: var(--w); display: block; } .proj small { font-size: 13px; }
+  .stack { display: flex; margin-left: auto; } .stack .av { width: 28px; height: 28px; font-size: 12px; border: 2px solid var(--c); margin-left: -8px; }
+  .live { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 10px 0 16px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t); flex: none; }
+  label.l { display: block; font: 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 6px; }
+  input.in { width: 100%; height: 48px; border-radius: 12px; border: 1px solid var(--b); background: var(--c); color: var(--w); padding: 0 14px; font-size: 16px; outline: none; }
+  input.in:focus { border-color: var(--o); }
+  .colors { display: flex; gap: 10px; margin: 4px 0 18px; }
+  .colors button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .colors button[aria-pressed="true"] { border-color: var(--w); }
+  .fine { font-size: 12px; text-align: center; margin: 12px 0 0; }
+  .steps { list-style: none; padding: 0; margin: 18px 0 0; }
+  .steps li { display: flex; gap: 10px; align-items: center; padding: 8px 0; color: var(--m); }
+  .steps li .tick { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--b); display: grid; place-items: center; font-size: 12px; flex: none; }
+  .steps li.done { color: var(--w); } .steps li.done .tick { background: var(--t); border-color: var(--t); color: #12151A; }
+  .steps li.now .tick { border-color: var(--o); }
+
+  /* ---- screen 3: project room ---- */
+  .room { height: 100dvh; display: grid; grid-template-columns: 240px 1fr 280px; grid-template-rows: 56px 1fr; }
+  .top { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--b); background: var(--c); }
+  .top img.icon { width: 28px; height: 28px; border-radius: 7px; } .top .crumb { color: var(--w); font-weight: 600; } .top .crumb span { color: var(--m); font-weight: 400; }
+  .top .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .pill { font: 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--b); border-radius: 999px; padding: 6px 9px; display: inline-flex; gap: 6px; align-items: center; }
+  .side { border-right: 1px solid var(--b); padding: 14px 10px; overflow: auto; }
+  .side .h { font: 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; padding: 8px 10px; }
+  .nav { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 10px; border: 1px solid transparent; background: none; color: var(--m); cursor: pointer; text-align: left; }
+  .nav.on { background: var(--s); border-color: var(--b); color: var(--w); }
+  .nav .n { margin-left: auto; font: 11px/1 var(--mono); background: var(--o); color: #fff; border-radius: 999px; padding: 3px 6px; }
+  .nav .n.t { background: var(--t); color: #12151A; }
+  .nav.proj-nav { color: var(--w); font-weight: 600; }
+  .sub { padding-left: 14px; border-left: 1px solid var(--b); margin: 2px 0 8px 18px; }
+  .sub .nav { padding: 7px 10px; }
+  .main { display: flex; flex-direction: column; min-height: 0; }
+  .pane { flex: 1; min-height: 0; overflow: auto; padding: 18px 22px; }
+  .msg { display: flex; gap: 10px; padding: 8px 0; animation: in .25s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(4px); } }
+  .msg .who { color: var(--w); font-weight: 600; font-size: 14px; } .msg .who time { color: var(--m); font-weight: 400; font: 11px var(--mono); margin-left: 6px; }
+  .msg .txt { color: #D5DCE6; }
+  .msg .txt code { font: 13px var(--mono); background: var(--s2); border: 1px solid var(--b); border-radius: 6px; padding: 1px 5px; }
+  .sys { font: 12px/1.4 var(--mono); color: var(--m); text-align: center; padding: 10px 0; }
+  .agent-card { margin-top: 6px; background: var(--s); border: 1px solid var(--b); border-left: 3px solid var(--t); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  .agent-card b { color: var(--w); } .agent-card .mono { font-family: var(--mono); font-size: 12px; }
+  .task-card { margin-top: 6px; display: inline-flex; gap: 8px; align-items: center; background: var(--s); border: 1px solid var(--b); border-radius: 10px; padding: 8px 12px; font-size: 13px; color: var(--w); }
+  .typing { font-size: 13px; padding: 4px 0 0 44px; min-height: 22px; }
+  .composer { display: flex; gap: 8px; padding: 12px 16px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--b); background: var(--c); }
+  .composer input { flex: 1; min-width: 0; height: 46px; border-radius: 12px; border: 1px solid var(--b); background: var(--s); color: var(--w); padding: 0 14px; font-size: 16px; outline: none; }
+  .composer input:focus { border-color: var(--o); }
+  .hint { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 10px; }
+  .hint button { font: 12px var(--mono); color: var(--m); background: var(--s); border: 1px solid var(--b); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+  .people { border-left: 1px solid var(--b); padding: 14px; overflow: auto; }
+  .person { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 10px; }
+  .person b { color: var(--w); font-weight: 600; display: block; font-size: 14px; } .person small { font-size: 12px; }
+  .person .st { width: 8px; height: 8px; border-radius: 50%; background: var(--t); margin-left: auto; } .person .st.idle { background: var(--b); }
+  .box { background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 12px; margin-top: 14px; font-size: 13px; }
+  .box .k { margin-bottom: 6px; }
+  .tlist { display: grid; gap: 8px; }
+  .t { background: var(--s); border: 1px solid var(--b); border-radius: 12px; padding: 12px; color: var(--w); display: flex; gap: 10px; align-items: center; }
+  .t small { color: var(--m); margin-left: auto; font: 11px var(--mono); text-transform: uppercase; }
+  .t.new { border-color: var(--o); }
+  .doc { background: var(--s); border: 1px solid var(--b); border-radius: 14px; padding: 16px 18px; color: #D5DCE6; }
+  .doc h2 { color: var(--w); margin: 0 0 6px; font-size: 20px; }
+  .end { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--s); border: 1px solid var(--b); border-left: 3px solid var(--o); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+  .end b { color: var(--w); }
+  .tabs { display: none; }
+
+  @media (max-width: 900px) {
+    .room { grid-template-columns: 1fr; grid-template-rows: 52px auto 1fr; }
+    .side, .people { display: none; }
+    .tabs { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--b); overflow-x: auto; }
+    .tabs button { flex: none; font-size: 14px; color: var(--m); background: none; border: 1px solid transparent; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+    .tabs button.on { color: var(--w); background: var(--s); border-color: var(--b); }
+    .tabs .n { font: 11px var(--mono); color: #fff; background: var(--o); border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
+    .top .right .pill.hide-sm { display: none; }
+    .pane { padding: 14px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-tag">Demo · nothing is sent anywhere</div>
+
+<!-- 1. the invite -->
+<section class="center" id="s-invite">
+  <div class="card">
+    <div class="brand"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
+    <div class="k">Orion invited you</div>
+    <h1>Join Pixel Quest</h1>
+    <div class="proj"><div class="proj-ic">🕹️</div><div><b>Pixel Quest</b><small>2D platformer · 3 people + 1 agent</small></div>
+      <div class="stack"><span class="av" style="background:#F26B1D">O</span><span class="av" style="background:#6C7CFF">M</span><span class="av" style="background:#E8B04A">J</span></div></div>
+    <div class="live"><span class="dot"></span>Orion's computer is online · Claude is fixing the double jump</div>
+    <label class="l" for="name">Your name</label>
+    <input class="in" id="name" autocomplete="nickname" maxlength="24" placeholder="e.g. Sam" enterkeyhint="go">
+    <label class="l">Your color</label>
+    <div class="colors" id="colors"></div>
+    <button class="btn primary block" id="join" disabled>Join project</button>
+    <p class="fine">No account, no password. Just a name.</p>
+  </div>
+</section>
+
+<!-- 2. connecting -->
+<section class="center hidden" id="s-connect">
+  <div class="card">
+    <div class="brand"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
+    <div class="k">Pixel Quest</div><h1 id="hello">Welcome!</h1>
+    <ul class="steps" id="steps">
+      <li><span class="tick">✓</span>Invite checked</li>
+      <li><span class="tick">✓</span>Connected to Orion's computer</li>
+      <li><span class="tick">✓</span>Joined Pixel Quest</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 3. the project room -->
+<section class="room hidden" id="s-room">
+  <header class="top">
+    <img class="icon" src="assets/icon-512.png" alt="">
+    <div class="crumb">Pixel Quest <span id="crumb-view">/ Chat</span></div>
+    <div class="right"><span class="pill">demo</span><span class="pill hide-sm"><span class="dot"></span>live</span><span class="av sm" id="me-av">S</span></div>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <aside class="side">
+    <div class="h">Projects</div>
+    <button class="nav proj-nav on">🕹️ Pixel Quest</button>
+    <div class="sub" id="side-nav"></div>
+    <button class="nav">🌐 Website</button>
+    <div class="h" style="margin-top:10px">Huddle</div>
+    <button class="nav" id="huddle-btn">🎙️ Join huddle · 2 talking</button>
+  </aside>
+  <main class="main">
+    <div class="pane" id="pane"></div>
+    <div id="chat-foot">
+      <div class="typing" id="typing"></div>
+      <div class="hint" id="hints"></div>
+      <form class="composer" id="composer"><input id="box" placeholder="Message Pixel Quest" autocomplete="off" enterkeyhint="send"><button class="btn primary" id="send">Send</button></form>
+    </div>
+  </main>
+  <aside class="people">
+    <div class="k">In the room</div>
+    <div id="people"></div>
+    <div class="box"><div class="k">Live agent</div><b style="color:#F8FAFC">Claude</b> is on <span style="font-family:var(--mono);font-size:12px">feat/double-jump</span><br>Edited <span style="font-family:var(--mono);font-size:12px">player.ts</span> · tests passing</div>
+  </aside>
+</section>
+
+<script>
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const COLORS = ['#38C6B1', '#6C7CFF', '#E8B04A', '#E86A9A', '#7CC46B'];
+  let me = { name: '', color: COLORS[0] }, view = 'chat', tasks = [
+    { t: 'Fix the double jump', who: 'Claude', s: 'in progress' }, { t: 'Draw the slime enemy', who: 'Maya', s: 'review' }, { t: 'Level 2 layout', who: 'Jay', s: 'todo' }];
+  const unread = { docs: 1, tasks: 0, requests: 1 };
+  const PEOPLE = () => [
+    { n: 'Orion', c: '#F26B1D', s: 'Host · in Chat', on: true }, { n: 'Maya', c: '#6C7CFF', s: 'In Docs · Level design', on: true },
+    { n: 'Jay', c: '#E8B04A', s: 'Away', on: false }, { n: 'Claude', c: '', s: "Orion's agent · coding", on: true, agent: true },
+    ...(me.name ? [{ n: me.name + ' (you)', c: me.color, s: 'Just joined', on: true }] : [])];
+  const now = () => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  // ---- 1. invite ----
+  const colors = $('#colors');
+  COLORS.forEach((c, i) => { const b = document.createElement('button'); b.style.background = c; b.setAttribute('aria-label', 'Color ' + (i + 1)); b.setAttribute('aria-pressed', String(i === 0));
+    b.onclick = () => { me.color = c; colors.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }; colors.appendChild(b); });
+  const name = $('#name'), join = $('#join');
+  name.oninput = () => { join.disabled = !name.value.trim(); };
+  name.onkeydown = e => { if (e.key === 'Enter' && name.value.trim()) join.click(); };
+  join.onclick = () => {
+    me.name = name.value.trim().slice(0, 24);
+    $('#s-invite').classList.add('hidden'); $('#s-connect').classList.remove('hidden');
+    $('#hello').textContent = `Welcome, ${me.name}!`;
+    const li = [...document.querySelectorAll('#steps li')];
+    li.forEach((l, i) => { l.className = i === 0 ? 'now' : ''; setTimeout(() => { l.className = 'done'; if (li[i + 1]) li[i + 1].className = 'now'; }, 450 + i * 450); });
+    setTimeout(enterRoom, 450 + li.length * 450 + 250);
+  };
+
+  // ---- 3. room ----
+  const log = [
+    { who: 'Orion', c: '#F26B1D', html: 'Morning tribe 🔥 Claude is on the double jump, Maya has the slime.' },
+    { who: 'Maya', c: '#6C7CFF', html: 'Slime sprite is up for review in <b>Tasks</b> 👀' },
+    { who: 'Claude', agent: true, html: 'Update from <b>feat/double-jump</b>',
+      card: '<div class="agent-card"><b>Fixed:</b> coyote time + second jump reset on landing<br><span class="mono">player.ts · +18 −6 · 12 tests passing</span><br>Needs approval to merge into <b>main</b> → Requests</div>' },
+  ];
+  function msgHtml(m) {
+    const av = m.agent ? '<span class="av agent">✦</span>' : `<span class="av" style="background:${m.c}">${esc(m.who[0])}</span>`;
+    return `<div class="msg">${av}<div><div class="who">${esc(m.who)}<time>${m.t || now()}</time></div><div class="txt">${m.html}</div>${m.card || ''}</div></div>`;
+  }
+  function renderNav() {
+    const items = [['chat', '💬', 'Chat', 0], ['docs', '📄', 'Docs', unread.docs], ['tasks', '✅', 'Tasks', unread.tasks], ['requests', '🛎️', 'Requests', unread.requests]];
+    $('#side-nav').innerHTML = items.map(([k, ic, l, n]) => `<button class="nav ${view === k ? 'on' : ''}" data-v="${k}">${ic} ${l}${n ? `<span class="n${k === 'tasks' ? ' t' : ''}">${n}</span>` : ''}</button>`).join('') + '<button class="nav" data-v="more">⋯ More</button>';
+    $('#tabs').innerHTML = items.map(([k, ic, l, n]) => `<button class="${view === k ? 'on' : ''}" data-v="${k}">${l}${n ? `<span class="n">${n}</span>` : ''}</button>`).join('');
+    document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
+  }
+  function renderPeople() {
+    $('#people').innerHTML = PEOPLE().map(p => `<div class="person">${p.agent ? '<span class="av sm agent">✦</span>' : `<span class="av sm" style="background:${p.c}">${esc(p.n[0])}</span>`}<div><b>${esc(p.n)}</b><small>${esc(p.s)}</small></div><span class="st ${p.on ? '' : 'idle'}"></span></div>`).join('');
+  }
+  function show(v) {
+    if (v === 'more') { say('sys', 'More holds Calendar, Repo, Visuals, Bugs and the Board.'); v = 'chat'; }
+    view = v; if (unread[v]) unread[v] = 0;
+    $('#crumb-view').textContent = '/ ' + v[0].toUpperCase() + v.slice(1);
+    $('#chat-foot').classList.toggle('hidden', v !== 'chat');
+    const pane = $('#pane');
+    if (v === 'chat') pane.innerHTML = log.map(m => m.sys ? `<div class="sys">${m.html}</div>` : m.end ? m.html : msgHtml(m)).join('');
+    if (v === 'tasks') pane.innerHTML = `<div class="tlist">${tasks.map(t => `<div class="t ${t.new ? 'new' : ''}">${t.s === 'done' ? '✅' : '◻️'} ${esc(t.t)}<small>${esc(t.who)} · ${esc(t.s)}</small></div>`).join('')}</div>`;
+    if (v === 'docs') pane.innerHTML = `<div class="doc"><div class="k">Doc · edited by Maya just now</div><h2>Level 2: Slime Caves</h2><p>Three rooms, a moving platform, and the slime boss. The double jump has to clear the second gap.</p><p style="margin:0"><b style="color:#F8FAFC">TL;DR</b> (local brain): short cave level that teaches the double jump, ends with the slime.</p></div>`;
+    if (v === 'requests') pane.innerHTML = `<div class="t" style="flex-wrap:wrap">✦ Claude wants to merge <b>feat/double-jump</b> into main<small>low risk</small>
+      <div style="width:100%;display:flex;gap:8px;margin-top:10px"><button class="btn primary" id="ap">Approve</button><button class="btn" id="dn">Not yet</button></div></div>`;
+    if (v === 'requests') { $('#ap').onclick = () => decide(true); $('#dn').onclick = () => decide(false); }
+    renderNav(); pane.scrollTop = pane.scrollHeight;
+  }
+  function decide(ok) {
+    unread.requests = 0;
+    log.push({ who: 'Claude', agent: true, html: ok ? `${esc(me.name)} approved. Merged <b>feat/double-jump</b> into main and pushed ✓` : `Got it, ${esc(me.name)}. I'll hold the merge.` });
+    show('chat');
+  }
+  function say(kind, html) { log.push(kind === 'sys' ? { sys: true, html } : html); if (view === 'chat') show('chat'); }
+  function reply(who, html, delay, extra) {
+    setTimeout(() => { $('#typing').textContent = `${who} is typing…`; }, delay - 900);
+    setTimeout(() => { $('#typing').textContent = ''; const p = { Orion: '#F26B1D', Maya: '#6C7CFF', Jay: '#E8B04A' }[who];
+      log.push(Object.assign(who === 'Claude' ? { who, agent: true, html } : { who, c: p, html }, extra || {})); if (view === 'chat') show('chat'); else { unread.chat = 1; renderNav(); } }, delay);
+  }
+  let sent = 0;
+  function send(text) {
+    text = text.trim(); if (!text) return;
+    if (text.startsWith('/task')) {
+      const t = text.replace(/^\/task\s*/, '') || 'Something new';
+      tasks.unshift({ t, who: me.name, s: 'todo', new: true }); unread.tasks++;
+      log.push({ who: me.name, c: me.color, html: esc(text), card: `<div class="task-card">✅ New task: <b>${esc(t)}</b></div>` }); show('chat');
+      reply('Claude', `I can take <b>${esc(t)}</b> on a branch whenever you want. Say the word.`, 1600);
+      return;
+    }
+    log.push({ who: me.name, c: me.color, html: esc(text) }); show('chat'); sent++;
+    if (sent === 1) {
+      reply('Orion', `Welcome ${esc(me.name)}! 🔥 Glad you made it.`, 1400);
+      reply('Maya', 'Heyyy 👋 check Docs, Level 2 is up', 3200);
+      reply('Claude', `Hi ${esc(me.name)}. Want a task? Type <code>/task draw a coin</code>, or approve my double-jump fix in <b>Requests</b>.`, 5200);
+      setTimeout(() => { log.push({ end: true, html: `<div class="end"><span><b>That's TribeCode.</b> Chat, docs, tasks and Claude agents, together on one friend's computer.</span><a class="btn primary" href="./">Get TribeCode</a></div>` }); if (view === 'chat') show('chat'); }, 7600);
+    } else reply(['Orion', 'Maya'][sent % 2], ['😂 love it', 'On it', 'Nice', 'Ship it 🚀'][sent % 4], 1500);
+  }
+  function enterRoom() {
+    $('#s-connect').classList.add('hidden'); $('#s-room').classList.remove('hidden'); $('.demo-tag').remove();
+    $('#me-av').textContent = me.name[0].toUpperCase(); $('#me-av').style.background = me.color;
+    $('#box').placeholder = `Message Pixel Quest as ${me.name}`;
+    log.push({ sys: true, html: `${esc(me.name)} joined Pixel Quest` });
+    renderPeople(); show('chat');
+    $('#hints').innerHTML = ['👋 Say hi', '/task draw a coin', 'Open Requests'].map((h, i) => `<button data-h="${i}">${h}</button>`).join('');
+    $('#hints').querySelectorAll('button').forEach(b => b.onclick = () => {
+      if (b.dataset.h === '0') send('Hey everyone! 👋'); else if (b.dataset.h === '1') send('/task draw a coin'); else show('requests');
+    });
+    setTimeout(() => $('#box').focus(), 50);
+  }
+  $('#composer').onsubmit = e => { e.preventDefault(); send($('#box').value); $('#box').value = ''; };
+  $('#huddle-btn').onclick = () => say('sys', 'Huddles are live voice with captions. In the real app this joins the call.');
+  setTimeout(() => name.focus(), 50);
+})();
+</script>
+</body>
+</html>
