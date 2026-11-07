@@ -341,7 +341,10 @@
     catch (e) { toast(e.message); }
   }
   async function sendFile(f) {
-    try { await window.TribeDocs.importFiles([f]); await C.api('/chat/' + chan(), { method: 'POST', body: { text: `📎 Shared **${f.name}** in Docs` } }); toast('Added to Docs'); }
+    try {
+      if (/\.(md|markdown|txt)$/i.test(f.name)) { await window.TribeDocs.importFiles([f]); await C.api('/chat/' + chan(), { method: 'POST', body: { text: `📎 Shared **${f.name}** in Docs` } }); toast('Added to Docs'); }
+      else { if (f.size > 8 * 1024 * 1024) return toast('Files up to 8 MB.'); await C.api(`/chat/${chan()}/file`, { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type || 'application/octet-stream' } }); }   // keeps the bytes (a download chip in chat)
+    }
     catch (e) { toast(e.message); }
   }
 

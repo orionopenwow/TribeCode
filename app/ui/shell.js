@@ -172,7 +172,7 @@
     const ag = (C.state().members || []).find(m => m.role === 'agent' && m.owner === me);
     if (ag && window.TribeDM) { window.TribeDM.open(ag.id); return; }
     App().show('chat');
-    setTimeout(() => { const i = $('#chat-input'); if (i) { i.value = '@brain '; i.focus(); } }, 60);
+    setTimeout(() => { const i = $('#chat-input'); if (i) { i.value = '@brain '; i.focus(); i.dispatchEvent(new Event('input', { bubbles: true })); } }, 60);
     if (!ag) toast('Connect your Claude Code (right panel) to ask it directly. @brain asks the local brain.');
   }
 
