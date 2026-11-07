@@ -48,7 +48,7 @@
     const v = m.vote, s = stats(v), open = v.status === 'open', mine = (v.ballots || {})[me()];
     const approve = v.kind === 'approve', suggested = v.suggested && v.suggested.agent;
     const meM = member(me()) || {}, canVote = open && meM.role !== 'agent' && meM.role !== 'spectator';
-    const head = open ? (suggested ? 'Suggested vote' : approve ? 'Vote · approve?' : 'Poll')
+    const head = open ? (v.pitch ? 'Proposal to the tribe' : suggested ? 'Suggested vote' : approve ? 'Vote · approve?' : 'Poll')
       : v.status === 'passed' ? 'Vote · passed' : v.status === 'failed' ? (v.reason === 'no quorum' ? 'Vote · no quorum' : 'Vote · not yet') : v.status === 'tie' ? 'Poll · tie' : 'Poll · closed';
     const when = open ? (v.deadline ? left(v.deadline) : `${s.needed} of ${s.n} decide`) : `closed ${clock(v.closed || m.at)}`;
     const total = Math.max(1, open ? s.n : s.voted || 1);
@@ -77,7 +77,9 @@
     const seen = open && seenIds.length ? `<div class="vt-seen" title="${esc(names(seenIds))}">${icon('i-eye')}Seen by ${seenIds.length === 1 ? esc(nameOf(seenIds[0])) : `${seenIds.length}`}</div>` : '';
     return `<div class="vt ${open ? 'open' : 'closed'} st-${esc(v.status)} ${suggested ? 'sug' : ''}" data-vote="${esc(m.id)}" data-ch="${esc(ch)}" ${open && !(v.seen || {})[me()] ? 'data-unseen="1"' : ''}>
       <div class="vt-eye"><span class="vt-k">${esc(head)}</span><span class="vt-when" ${open && v.deadline ? `data-dl="${esc(v.deadline)}"` : ''}>${esc(when)}</span></div>
-      <div class="vt-q">${esc(v.q)}</div>
+      <div class="vt-q">${esc(v.pitch ? v.pitch.title : v.q)}</div>
+      ${v.pitch && v.pitch.body ? `<div class="vt-pitch">${window.TribeMD ? window.TribeMD.render(v.pitch.body) : esc(v.pitch.body)}</div>` : ''}
+      ${v.pitch && open ? `<div class="vt-board">${icon('i-flag')}Goes to the Board if approved: milestone, tasks from its checklist</div>` : ''}
       ${suggested ? `<div class="vt-sug">${icon('i-sparkle')}Suggested by ${esc(nameOf(v.suggested.agent))}${v.why ? ` · <span>${esc(v.why)}</span>` : ''}</div>` : ''}
       <div class="vt-opts ${approve ? 'two' : ''}">${opts}</div>
       ${foot}${seen}</div>`;
@@ -217,7 +219,8 @@
       } catch (err) { toast(err.message); go.disabled = false; }
     });
     draw();
-    requestAnimationFrame(() => { sheet.classList.add('in'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); });
+    const opened = sheet;   // it can be closed again before the next frame
+    requestAnimationFrame(() => { if (sheet !== opened) return; opened.classList.add('in'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); });
   }
   function closeComposer() {
     if (!sheet) return;

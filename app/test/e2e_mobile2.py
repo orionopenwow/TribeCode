@@ -160,23 +160,23 @@ def main():
             phone.click("#m2-send")
             wait_text(host, "#chat-list", "hello from the phone")
             no_overflow(phone, "chat")
-            # "+" menu: photo, file, task; "Start a vote" only when votes.js is loaded
-            phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu")
-            items = phone.eval_on_selector_all("#m2-plus-menu [data-plus]", "els => els.map(e => e.dataset.plus)")
-            assert items == ["photo", "file", "task", "vote"], items   # votes.js is loaded
+            # "+" menu (app/ui/plusmenu.js): attach, propose, poll, task, Claude, reminder, note, bug; "Quick poll" only when votes.js is loaded
+            phone.click("#m2-plus"); phone.wait_for_selector(".pl-pop.sheet .pl-menu")
+            items = phone.eval_on_selector_all(".pl-menu [data-pl]", "els => els.map(e => e.dataset.pl)")
+            assert items[:4] == ["attach", "propose", "poll", "task"] and "claude" in items, items
             shot(phone, "plus")
-            phone.click("#m2-plus-menu [data-plus='vote']")
+            phone.click(".pl-menu [data-pl='poll']")
             phone.wait_for_function("TribeVotes.isOpen()")
             phone.evaluate("TribeVotes.closeComposer()")
-            # without votes.js the entry hides itself
+            # without votes.js the poll entry hides itself
             phone.evaluate("window.__tv = window.TribeVotes; window.TribeVotes = undefined")
-            phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu")
-            assert phone.eval_on_selector_all("#m2-plus-menu [data-plus]", "els => els.map(e => e.dataset.plus)") == ["photo", "file", "task"]
-            phone.evaluate("TribeMobile.closeSheet(); window.TribeVotes = window.__tv"); phone.wait_for_selector("#m2-plus-menu", state="detached")
+            phone.click("#m2-plus"); phone.wait_for_selector(".pl-pop.sheet .pl-menu")
+            assert "poll" not in phone.eval_on_selector_all(".pl-menu [data-pl]", "els => els.map(e => e.dataset.pl)")
+            phone.evaluate("TribePlus.close(); window.TribeVotes = window.__tv"); phone.wait_for_selector(".pl-pop", state="detached")
             # photo
             img = Path(tmp, "lantern.png"); img.write_bytes(png(48, 32, (242, 107, 29)))
-            phone.click("#m2-plus"); phone.wait_for_selector("#m2-plus-menu [data-plus='photo']")
-            with phone.expect_file_chooser() as fc: phone.click("#m2-plus-menu [data-plus='photo']")
+            phone.click("#m2-plus"); phone.wait_for_selector(".pl-menu [data-pl='attach']")
+            with phone.expect_file_chooser() as fc: phone.click(".pl-menu [data-pl='attach']")
             fc.value.set_files(str(img))
             phone.wait_for_selector("#chat-list .msg .thumb img", timeout=10000)
             # recorder: start, pause, resume, delete → nothing sent

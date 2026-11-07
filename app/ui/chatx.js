@@ -734,7 +734,7 @@
     const f = $('#chat-form'); if (!f || f.querySelector('.cx-emo')) return;
     f.insertAdjacentHTML('afterbegin', `<button type="button" class="cx-btn cx-emo" aria-label="Emoji" title="Emoji">${icon('i-smile')}</button>`);
     f.insertAdjacentHTML('beforeend', `<button type="button" class="cx-btn cx-img" aria-label="Send an image" title="Send an image">${icon('i-image')}</button>
-      <button type="button" class="cx-btn cx-plus" aria-label="Attach: image, vote, task" title="Attach an image, start a vote, make a task" aria-haspopup="menu">${icon('i-clip')}</button>`);
+      <button type="button" class="cx-btn cx-plus" aria-label="Add: file, proposal, poll, task and more" title="Add a file, propose to the tribe, start a poll, make a task…" aria-haspopup="menu" aria-expanded="false">${icon('i-plus')}</button>`);
   }
   async function sendImage(file) {
     if (!/^image\//.test(file.type)) return toast('That is not an image.');
@@ -760,6 +760,7 @@
       e.preventDefault(); const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
       i.onchange = () => { const f = i.files && i.files[0]; if (f) sendImage(f); }; i.click(); return;
     }
+    if (t.closest('.cx-plus') && window.TribePlus) { e.preventDefault(); e.stopPropagation(); closeMenu(); return window.TribePlus.open(t.closest('.cx-plus')); }
     if (t.closest('.cx-plus')) {
       e.preventDefault(); e.stopPropagation(); closeMenu();
       const a = t.closest('.cx-plus'), menu = document.createElement('div'); menu.id = 'msg-menu'; menu.className = 'dm-menu msg-menu'; menu.setAttribute('role', 'menu');

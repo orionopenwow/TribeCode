@@ -277,7 +277,7 @@
   function composer() {
     const mount = $('#composer-mount'), form = $('#chat-form'); if (!mount || !form || $('#m2-plus')) return;
     mount.classList.add('m2-composer');
-    form.insertAdjacentHTML('beforebegin', `<button type="button" class="m2-cbtn m2-only" id="m2-plus" aria-label="Attach" aria-haspopup="dialog">${ic('clip', 21)}</button>`);
+    form.insertAdjacentHTML('beforebegin', `<button type="button" class="m2-cbtn m2-only" id="m2-plus" aria-label="Add" aria-haspopup="dialog">${ic('plus', 22)}</button>`);
     form.insertAdjacentHTML('afterend', `<button type="button" class="m2-cbtn m2-only" id="m2-mic" aria-label="Record a voice note">${ic('mic', 21)}</button>
       <button type="button" class="m2-cbtn m2-send m2-only" id="m2-send" aria-label="Send">${ic('up', 21)}</button>
       <div class="m2-rec m2-only" id="m2-rec" aria-live="polite" hidden>
@@ -306,6 +306,7 @@
 
   // "+": photo, file, task, vote (votes.js from another branch registers window.TribeVotes).
   function plusMenu() {
+    if (window.TribePlus) return window.TribePlus.open($('#m2-plus'));
     const votes = !!(window.TribeVotes && typeof window.TribeVotes.openComposer === 'function');
     const items = [
       { k: 'photo', icon: 'image', t: 'Photo', s: 'From your camera roll or camera' },

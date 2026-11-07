@@ -185,7 +185,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     if (m === 'POST' && action === 'vote') {
       const pid = channelProject(ch);   // a vote's voters, tasks and proposals belong to its channel's project
       if (pid && pid !== project()) return inProject(pid, () => route(req, res, { m, ch, action, arg, sub, me, readBody: async () => body, send, fail, url }));
-      if (!arg) return send(res, 200, { message: votes.create(ch, me, { question: body.question, options: body.options, minutes: Number(body.minutes) || 0, deadline: body.deadline }) });
+      if (!arg) return send(res, 200, { message: votes.create(ch, me, { question: body.question, options: body.options, minutes: Number(body.minutes) || 0, deadline: body.deadline, pitch: body.pitch }) });
       const op = sub || 'cast';
       if (op === 'cast') return send(res, 200, { message: votes.cast(ch, arg, me, String(body.option || '')) });
       if (op === 'close') return send(res, 200, { message: votes.close(ch, arg, me) });

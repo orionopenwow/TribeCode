@@ -102,10 +102,14 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
   }
 
   // ---------- create ----------
-  function create(ch, me, { question, options, minutes, deadline, why } = {}) {
+  function create(ch, me, { question, options, minutes, deadline, why, pitch } = {}) {
     ch = chan(ch);
     if (isDm(ch)) throw err(400, 'votes live in team channels, not DMs');
     if (me.role === 'spectator') throw err(403, 'spectators can read but not start votes');
+    // A proposal to the tribe ("+" → Propose): a title + pitch, voted Approve / Not yet; if it passes it goes to the Board.
+    const pt = pitch && typeof pitch === 'object' && me.role !== 'agent' ? { title: str(pitch.title, 120).replace(/\s+/g, ' '), body: str(pitch.body, 4000) } : null;
+    if (pt && !pt.title) throw err(400, 'give the proposal a title');
+    if (pt) { question = `Proposal: ${pt.title}`; options = []; }
     const q = str(question, 200).replace(/\s+/g, ' ');
     if (!q) throw err(400, 'ask a question');
     const opts = (Array.isArray(options) ? options : []).map(o => str(typeof o === 'string' ? o : (o && o.label) || '', 60)).filter(Boolean);
@@ -128,6 +132,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     const vote = { kind: opts.length ? 'poll' : 'approve', q, options: opts.length ? opts.map((label, i) => ({ id: 'o' + (i + 1), label })) : APPROVE.map(o => ({ ...o })),
       ballots: {}, status: 'open', deadline: dl ? iso(dl) : null, seen: {}, eligible: voters().map(m => m.id) };
     if (agent) { vote.suggested = { agent: me.id, owner: me.owner || null }; if (str(why, 400)) vote.why = str(why, 400); }
+    if (pt) vote.pitch = pt;
     const msg = postChat(ch, me.id, q, { vote });
     saveIdx([...idx(), { project: project(), ch, id: msg.id, by: me.id, deadline: vote.deadline }]);
     if (agent) bus.notify({ type: 'vote', priority: 'normal', to: voters().map(m => m.id), from: me.id, title: `${me.owner && member(me.owner) ? `${member(me.owner).name}'s Claude` : me.name} suggests a vote`, body: q, view: 'chat', ref: msg.id });
@@ -157,6 +162,8 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     store.writeMd(`decisions/${day}-${slug(v.q).slice(0, 60) || 'vote'}.md`, { date: day, vote: m.id, channel: ch, result: head, ballots: v.ballots, by: m.by },
       `# ${head}: ${v.q}\n\nDecided by a chat vote (${counts}).${v.suggested ? ` Suggested by ${nameOf(v.suggested.agent)}.` : ''}\n\n${Object.entries(v.ballots).map(([mid, o]) => `- ${nameOf(mid)}: ${label(v, o)}`).join('\n')}\n`);
     bus.notify({ type: 'decision', priority: 'low', to: voters().map(x => x.id), from: 'tribecode', title: `Decided: ${clip(v.q, 120)}`, body: `${head} · ${counts}`, view: 'chat', ref: m.id });
+    // A passed proposal goes straight to the Board (milestone, tasks from its checklist, decision record), as its author.
+    if (v.pitch && v.status === 'passed' && board) { const by = member(m.by); if (by && isHuman(by)) { try { toBoard(ch, m.id, by); } catch (e) { /* already on the Board */ } } }
   }
 
   function cast(ch, vid, me, option) {
@@ -222,6 +229,11 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     if (v.proposal) return { message: m, proposal: v.proposal };
     const { counts } = resultLine(v);
     const ballots = v.kind === 'approve' ? Object.fromEntries(Object.entries(v.ballots).filter(([mid]) => isHuman(member(mid))).map(([mid, o]) => [mid, o === 'yes' ? 'yes' : 'no'])) : undefined;
+    if (v.pitch) {
+      const p = board.propose(v.pitch.title, `${v.pitch.body || ''}\n\n---\nApproved in a chat vote (${counts}).`.trim(), me, { votes: ballots });
+      const msg = update(chan(ch), m.id, x => { x.vote.proposal = { id: p.id, title: p.title, status: p.status }; return x; });
+      return { message: msg, proposal: msg.vote.proposal };
+    }
     const p = board.propose(taskTitle(v), `Agreed in a chat vote (${counts}).\n\n> ${v.q}${v.task ? `\n\nTask: ${v.task.title}` : ''}${v.why ? `\n\nWhy: ${v.why}` : ''}`, me, { votes: ballots });
     const msg = update(chan(ch), m.id, x => { x.vote.proposal = { id: p.id, title: p.title, status: p.status }; return x; });
     return { message: msg, proposal: msg.vote.proposal };
