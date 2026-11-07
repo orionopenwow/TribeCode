@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.3
+
+Fixes updates on Windows getting stuck on an old version.
+- The bundled server now really exits with the app on Windows (it watched for a parent-process change that Windows never makes, so an old `tribecode-server.exe` kept running, held port 4747, and blocked the installer from replacing it)
+- "Restart to update" stops the server before installing
+- On launch, if the server on port 4747 is a different version, the app stops it and starts its own; if it's not ours (e.g. a terminal running `npm start`), it says so
+
 ## v0.3.2
 
 Security release: please update (Restart to update).

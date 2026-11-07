@@ -694,7 +694,14 @@ function start() {
     } catch (e) { console.log('  Live:     file watching unavailable (' + e.message + ')'); }
   }
   // When launched by the desktop app, exit if the app goes away.
-  if (args['exit-with-parent']) { const parent = process.ppid; setInterval(() => { if (process.ppid !== parent) process.exit(0); }, 2000).unref(); }
+  if (args['exit-with-parent']) {
+    // Exit with the desktop app. On Windows a child's ppid never changes when the parent dies, so also
+    // probe the parent pid directly (signal 0 = "does it exist?") and watch for stdin closing.
+    const parent = process.ppid;
+    const gone = () => { if (process.ppid !== parent) return true; try { process.kill(parent, 0); return false; } catch (e) { return e.code === 'ESRCH'; } };
+    setInterval(() => { if (gone()) { try { docs.live.persistAll(); } catch {} process.exit(0); } }, 2000).unref();
+    if (process.stdin && !process.stdin.isTTY) { process.stdin.on('end', () => process.exit(0)); process.stdin.on('error', () => {}); process.stdin.resume(); }
+  }
   // Write live doc edits that are still inside the debounce window before exiting.
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { docs.live.persistAll(); } catch (e) { console.error(e); } process.exit(0); });
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });
