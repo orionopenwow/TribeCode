@@ -50,6 +50,7 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | `feat/flow` | One-click Create project → room → invite → chat → GitHub repo; roles with colors and folder identity; gists; living PLAN.md; assessments | building |
 | `feat/workshop` | Community Workshop: skills, recipes, templates, assets (GLB, animations, scripts), a community index on GitHub served by jsDelivr | building |
 | `feat/secretary` | Solo mode: an agents hub (Claude Code, Claude Desktop through a stdio bridge, other MCP agents, local models). The Secretary: a background agent that ingests everything, distills a journal and digest, dreams up inspirations, and routes research to the Claudes | building |
+| `feat/chat-bubbles`, `feat/nav2`, `feat/preview`, `feat/demo5`, `feat/audit` | Chat bubbles; the sidebar per the user's layout; app preview; demo matches the app; audit fixes + friend smoke test + DATA.md + FEATURES-NEXT.md + quick wins (backup, chat search, file sharing, load earlier, drafts, rename everywhere) | ✅ merged into dev |
 | security | v0.3.2 shipped (C1, H2, H3, H4, M1, L1). Still to do: Tauri CSP (H5), tokens in URLs (M2), WS Origin + CORS (M3), JSONL caps (M4), Host allowlist (M5) | partly done |
 
 ## User requests log (newest first)
@@ -78,6 +79,7 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 - Earlier: everything in CHANGELOG.md v0.2.0–v0.3.1.
 
 ## Next up
+- The feature roadmap now lives in docs/FEATURES-NEXT.md (top 10 next / later). Storage, backups and persistence are in docs/DATA.md.
 1. Merge the three branches into `dev`, run the full test suite, review screenshots, let the user try Working.
 2. Release v0.3.2 (bump 4 version files + CHANGELOG), confirm installers + latest.json, user restarts to update.
 3. Walk the user through the Pixel Quest test project with a real friend's phone.
