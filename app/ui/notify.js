@@ -491,5 +491,5 @@
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'tribe-open') go(e.data.view, e.data.ref); });
 
-  window.TribeNotify = { openInbox, closeInbox, openSettings, closeSettings, reload: load, state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
+  window.TribeNotify = { openInbox, closeInbox, openSettings, closeSettings, reload: load, enableWebPush, pushOk, state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
 })();

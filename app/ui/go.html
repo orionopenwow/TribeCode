@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<meta name="referrer" content="no-referrer">
+<title>Join a tribe · TribeCode</title>
+<link rel="icon" href="assets/icon-512.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* Friend landing on GitHub Pages: go.html#s=<host address>&c=<invite code>.
+     Checks the host is up, then hands off to the host's own /join page (account, Home Screen app, notifications). */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #12151A; color: #94A3B8; font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display: grid; place-items: center; min-height: 100dvh; padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom)); }
+  .card { width: min(440px, 100%); background: #1B2028; border: 1px solid #2A313C; border-radius: 16px; padding: 26px 22px; }
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .top img.icon { width: 36px; height: 36px; border-radius: 9px; }
+  .top img.wm { height: 18px; }
+  .k { font: 12px/1.4 ui-monospace, "JetBrains Mono", Consolas, monospace; text-transform: uppercase; letter-spacing: .08em; color: #F26B1D; }
+  h1 { margin: 6px 0 6px; color: #F8FAFC; font-size: 24px; line-height: 1.2; letter-spacing: -.01em; }
+  p { margin: 0 0 12px; }
+  .row { display: flex; gap: 10px; align-items: center; margin: 14px 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #38C6B1; flex: none; }
+  .dot.wait { background: #94A3B8; animation: pulse 1.2s ease-in-out infinite; }
+  .dot.bad { background: #F26B1D; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .btn { display: flex; justify-content: center; align-items: center; width: 100%; min-height: 48px; border-radius: 12px; border: 0; background: #F26B1D; color: #fff; font-family: inherit; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer; margin-top: 10px; }
+  .btn.sec { background: #1B2028; color: #F8FAFC; border: 1px solid #2A313C; }
+  ol { margin: 8px 0 0; padding-left: 20px; color: #F8FAFC; } ol li { margin: 4px 0; } ol small { color: #94A3B8; }
+  .members { display: flex; margin: 4px 0 14px; } .members span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #12151A; font-family: inherit; font-weight: 600; font-size: 13px; border: 2px solid #1B2028; margin-right: -6px; }
+  .faint { font-size: 13px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main class="card" id="card">
+  <div class="top"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
+  <div id="view"><div class="row"><span class="dot wait"></span><span>Finding the tribe…</span></div></div>
+</main>
+<script>
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ua = navigator.userAgent;
+  const OS = /iPhone|iPod/.test(ua) ? 'iphone' : /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'ipad' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'mac' : 'linux';
+  const phone = ['iphone', 'ipad', 'android'].includes(OS);
+  const RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
+
+  const h = new URLSearchParams(location.hash.slice(1));
+  const server = (h.get('s') || '').replace(/\/+$/, ''), code = h.get('c') || '';
+  const valid = /^https?:\/\/[^/\s]+$/.test(server) && /^[A-Za-z0-9]{3,16}$/.test(code);
+  const target = valid ? `${server}/join/${encodeURIComponent(code)}` : '';
+
+  const nextSteps = () => OS === 'iphone' || OS === 'ipad'
+    ? `<ol><li>Pick a name → <b>Join</b></li><li><b>Share → Add to Home Screen</b> <small>(signed in, opens like an app)</small></li><li>Open it from your Home Screen and tap <b>Turn on notifications</b></li></ol>`
+    : OS === 'android' ? `<ol><li>Pick a name → <b>Join</b></li><li><b>Install app</b> when Chrome offers it</li><li>Allow notifications when asked</li></ol>`
+    : `<ol><li>Pick a name → <b>Join</b></li><li>Want it as an app? <a href="${RELEASES}" style="color:#F26B1D">Download TribeCode</a></li></ol>`;
+
+  function go() { location.replace(target); }
+
+  function show(html) { $('#view').innerHTML = html; }
+
+  function offline(reason) {
+    show(`<div class="k">Can't reach the host</div><h1>Your friend's computer is offline</h1>
+      <p>TribeCode runs on your friend's computer, so it has to be on with TribeCode open. Ask them to open it, then try again.</p>
+      <div class="row faint"><span class="dot bad"></span><span>${esc(reason)}</span></div>
+      <button class="btn" id="retry">Try again</button>
+      <a class="btn sec" href="${esc(target)}">Open the link anyway</a>`);
+    $('#retry').onclick = () => { show('<div class="row"><span class="dot wait"></span><span>Trying again…</span></div>'); check(); };
+  }
+
+  async function check() {
+    // A public https host can be checked from here; a plain http (same Wi-Fi) host can't (mixed content), so go straight there.
+    if (location.protocol === 'https:' && !/^https:/.test(server)) return go();
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 7000);
+    try {
+      const r = await fetch(`${server}/api/invites/${encodeURIComponent(code)}`, { signal: ctl.signal, cache: 'no-store' });
+      clearTimeout(t);
+      if (r.status === 404 || r.status === 410) {
+        show(`<div class="k">Invite</div><h1>This invite has ${r.status === 410 ? 'expired' : 'been used up or removed'}</h1><p>Ask your friend for a fresh link. In TribeCode it's one click: <b>Invite</b>.</p>`);
+        return;
+      }
+      if (!r.ok) return offline(`The host answered with an error (${r.status}).`);
+      const inv = await r.json();
+      const dots = (inv.members || []).slice(0, 5).map(m => `<span style="background:${esc(m.color || '#6C7CFF')}">${esc((m.name || '?')[0].toUpperCase())}</span>`).join('');
+      show(`<div class="k">${esc(inv.invitedBy)} invited you</div><h1>Join ${esc(inv.tribe)}</h1>
+        ${dots ? `<div class="members">${dots}</div>` : ''}
+        <div class="row"><span class="dot"></span><span>${esc(inv.invitedBy)}'s computer is online.</span></div>
+        ${nextSteps()}
+        <a class="btn" id="go" href="${esc(target)}">Continue</a>`);
+      // Phones skip the extra tap: the next page is where the name goes.
+      if (phone) setTimeout(go, 900);
+    } catch (e) {
+      clearTimeout(t);
+      offline(e.name === 'AbortError' ? 'No answer after 7 seconds.' : 'No connection to the host.');
+    }
+  }
+
+  addEventListener('hashchange', () => location.reload());
+  if (!valid) {
+    show(`<div class="k">TribeCode</div><h1>This link is missing a piece</h1><p>Ask your friend to copy the invite link again.</p>
+      <a class="btn sec" href="./">What is TribeCode?</a>`);
+  } else check();
+})();
+</script>
+</body>
+</html>

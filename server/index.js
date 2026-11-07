@@ -181,6 +181,7 @@ const claims = makeClaims({ store, id, broadcast, nameOf });
 // ---------- web: device links (/m/<key>/) + public https address ----------
 const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe });
 const share = makeShare({ port: PORT });
+const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m => console.log(m) });
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js).
 const repoHub = require('./repo')({ repo: REPO, store, str, broadcast, postChat, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
   getMembers: () => members, nameOf, drift, board, presence, readVision, tribe, claims });
@@ -240,7 +241,7 @@ async function api(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()] });
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()], site: site.url() });
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
   // optionally turns on the public https address, and returns a fresh join link.
@@ -254,11 +255,12 @@ async function api(req, res, url) {
       hostOpen = `http://localhost:${PORT}/m/${devices.create(host, req, 'This computer').key}/`;
     }
     let shared = null;
-    if (body.share) { try { shared = await share.start(''); } catch (e) { shared = { status: 'error', message: e.message }; } }
+    if (body.share) { try { shared = await share.start(['tailscale', 'cloudflare'].includes(body.provider) ? body.provider : ''); } catch (e) { shared = { status: 'error', message: e.message }; } }
     const inv = { code: code(5), by: host.id, role: 'builder', maxUses: 3, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + 48 * 3600_000).toISOString() };
     invites.push(inv); saveInvites();
     const base = (share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
-    return send(res, 200, { join: `${base}/join/${inv.code}`, public: !!share.publicUrl(), shareMessage: shared && shared.status !== 'on' ? (shared.message || '') : '',
+    return send(res, 200, { join: site.joinLink(base, inv.code), public: !!share.publicUrl(), provider: shared && shared.provider, approveUrl: shared && shared.approveUrl || null,
+      tailscale: !!(shared && shared.available && shared.available.tailscale), shareMessage: shared && shared.status !== 'on' ? (shared.message || '') : '',
       hostOpen, host: host.name, tribe: tribe.name, expires: inv.expires });
   }
 

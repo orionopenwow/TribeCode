@@ -48,6 +48,19 @@
   }
   function afterDeviceSignIn() {
     if (mobile && !standalone() && !sessionStorage.getItem('tribecode.installSheet')) setTimeout(showInstallSheet, 400);
+    if (standalone()) setTimeout(offerPush, 1200);
+  }
+  // First open of the installed Home Screen app: one tap turns on notifications (iOS only asks from a tap).
+  function offerPush() {
+    const N = window.TribeNotify;
+    if (!N || !N.pushOk || !N.pushOk() || !('Notification' in window) || Notification.permission !== 'default' || lsGet('tribecode.pushAsked') || $('#push-offer')) return;
+    const el = document.createElement('div'); el.id = 'push-offer'; el.className = 'push-offer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Turn on notifications');
+    el.innerHTML = `<div><b>Get pinged when your tribe needs you</b><span>Mentions, messages and approvals. Quiet hours and everything else live in Settings.</span></div>
+      <div class="push-offer-btns"><button class="btn ghost" id="po-later">Not now</button><button class="btn primary" id="po-on">Turn on</button></div>`;
+    document.body.appendChild(el);
+    const close = () => { lsSet('tribecode.pushAsked', '1'); el.remove(); };
+    $('#po-later').onclick = close;
+    $('#po-on').onclick = async () => { close(); await N.enableWebPush(); };
   }
   function showRevoked() {
     const el = document.createElement('div'); el.className = 'web-cover'; el.id = 'device-revoked';
@@ -265,15 +278,23 @@
         t.disabled = st.status === 'starting';
         msg.className = 'share-msg ' + (st.status === 'on' ? 'ok' : st.status === 'error' || st.status === 'unavailable' ? 'warn' : '');
         msg.innerHTML = st.status === 'on' ? `<code>${esc(st.url)}</code> ${esc(st.message || '')}`
-          : st.status === 'starting' ? 'Starting…'
-          : st.status === 'unavailable' || st.status === 'error' ? `${esc(st.message)}${st.install ? `<ul><li>${esc(st.install.tailscale)}</li><li>${esc(st.install.cloudflared)}</li></ul>` : ''}` : '';
+          : st.status === 'starting' ? 'Getting a public address… (the first time this can take a minute)'
+          : st.status === 'unavailable' || st.status === 'error'
+            ? (st.approveUrl ? `<a class="btn" href="${esc(st.approveUrl)}" target="_blank" rel="noopener">Allow Tailscale Funnel (one time)</a> then switch this on again for an address that never changes.<br>` : '') +
+              `${esc(st.message)}${st.install && !st.approveUrl ? `<ul><li>${esc(st.install.tailscale)}</li><li>${esc(st.install.cloudflared)}</li></ul>` : ''}` : '';
       };
-      C.api('/share/public').then(st => { if (st.status === 'on') show(st); }).catch(() => {});
-      t.onclick = async () => {
+      // Invites should work from anywhere, so the public address turns on by itself unless the host switched it off.
+      const OFF_KEY = 'tribecode.sharePublicOff';
+      C.api('/share/public').then(st => {
+        if (st.status === 'on') return show(st);
+        if (!lsGet(OFF_KEY)) t.onclick(null, true);
+      }).catch(() => {});
+      t.onclick = async (_e, auto = false) => {
         const on = t.getAttribute('aria-checked') === 'true';
+        if (on) lsSet(OFF_KEY, '1'); else try { localStorage.removeItem(OFF_KEY); } catch {}
         show({ status: 'starting' });
         try {
-          const st = await C.api('/share/public', { method: on ? 'DELETE' : 'POST', body: on ? undefined : {} });
+          const st = await C.api('/share/public', { method: on ? 'DELETE' : 'POST', body: on ? undefined : { auto } });
           show(st);
           const h = $('#inv-hours'); if (h) h.dispatchEvent(new Event('change'));   // re-make the link with the new address
         } catch (e) { show({ status: 'error', message: e.message }); }

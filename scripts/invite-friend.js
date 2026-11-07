@@ -14,6 +14,7 @@ const root = path.resolve(__dirname, '..');
 const argv = process.argv.slice(2);
 const port = Number(argv[argv.indexOf('--port') + 1]) || 4747;
 const noOpen = argv.includes('--no-open');
+// Usage note: --cloudflare skips Tailscale and uses a Cloudflare quick tunnel (address changes each start).
 const base = `http://localhost:${port}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -87,9 +88,30 @@ const s=document.getElementById('s');if(navigator.share)s.onclick=()=>navigator.
   }
   const share = !argv.includes('--no-share');
   if (share) console.log('  Getting a public https address (Tailscale or cloudflared)...');
-  const r = await request('POST', '/api/host/quick-invite', { name: (os.userInfo().username || 'Host').slice(0, 32), share });
-  if (r.status !== 200) { console.error(`  Could not make an invite: ${r.body.error || r.status}`); process.exit(1); }
-  const out = r.body;
+  const name = (os.userInfo().username || 'Host').slice(0, 32);
+  const invite = async provider => {
+    const r = await request('POST', '/api/host/quick-invite', { name, share, provider });
+    if (r.status !== 200) { console.error(`  Could not make an invite: ${r.body.error || r.status}`); process.exit(1); }
+    return r.body;
+  };
+  let out = await invite(process.argv.includes('--cloudflare') ? 'cloudflare' : '');
+  // Tailscale Funnel gives an address that never changes (best for a friend's Home Screen app), but each
+  // tailnet has to allow it once. Open that page and wait for the click.
+  if (share && out.approveUrl && out.provider !== 'tailscale') {
+    console.log('\n  One-time step: allow Tailscale Funnel in the page that just opened (click "Enable").');
+    open(out.approveUrl);
+    for (let i = 0; i < 36; i++) {
+      await sleep(5000);
+      const again = await invite('tailscale');
+      if (again.provider === 'tailscale') { out = again; console.log('  Funnel allowed.'); break; }
+    }
+    if (out.provider !== 'tailscale') console.log('  Still waiting on Funnel, so this link uses a temporary Cloudflare address for now.');
+  }
+  if (share && !out.public) {
+    console.error(`\n  Could not get a public address. ${out.shareMessage || ''}`);
+    console.error('  Check your internet connection and run this again. (Same-Wi-Fi link, for now: ' + out.join + ')\n');
+    process.exit(1);
+  }
   const copied = copy(out.join);
   const file = path.join(os.tmpdir(), 'tribecode-invite.html');
   fs.writeFileSync(file, page(out));

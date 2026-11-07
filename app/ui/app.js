@@ -265,10 +265,12 @@
           // localhost links only work on this computer: share the network address instead
           let base = C.base(), note = '';
           // a public https address ("Share beyond my Wi-Fi") always wins; it comes first in /api/health lan
-          try { const h = await C.api('/health'); const pick = (h.lan || [])[0];
+          let site = null;
+          try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null;
             if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) { base = pick.url; note = pick.kind === 'public' ? 'Public https address: works from anywhere, and voice works on phones.' : pick.kind === 'tailscale' ? 'Tailscale address: works from anywhere your friend is signed in to Tailscale.' : 'Wi-Fi address: your friend needs to be on the same network (or use Tailscale).'; } }
           catch {}
-          const link = `${base}/join/${invite.code}`;
+          // Public hosts get the friendly GitHub Pages link (device-aware, says when the host is offline).
+          const link = site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
           $('#inv-link').textContent = link; $('#inv-copy').disabled = false;
           $('#inv-qr').innerHTML = window.TribeQR.svg(link); $('#inv-net').textContent = note;
           S.set({ checklist: { invite: true } }); refresh();
@@ -289,6 +291,10 @@
     if (m) return { server: m[1], code: m[2] };
     try {
       const u = new URL(v);
+      if (/\/go\.html$/.test(u.pathname) && u.hash) {   // GitHub Pages friend link: go.html#s=<host>&c=<code>
+        const h = new URLSearchParams(u.hash.slice(1)), server = (h.get('s') || '').replace(/\/+$/, ''), code = h.get('c') || '';
+        if (/^https?:\/\/[^/\s]+$/.test(server) && /^[A-Za-z0-9]{3,16}$/.test(code)) return { server, code };
+      }
       if (u.protocol === 'tribecode:') {
         const code = u.searchParams.get('code') || u.pathname.replace(/^\/+/, '').split('/').pop();
         const server = u.searchParams.get('server');
