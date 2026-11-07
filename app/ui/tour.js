@@ -4,7 +4,7 @@
   const S = window.TribeStore;
   const STEPS = [
     { el: '#tour-rail', title: 'Everything is one click away', body: 'The left bar switches between Home, Docs, Tasks, the approval Board, Bugs, the Brain and Chat. A red dot means something new.', place: 'right' },
-    { el: '#tour-side', title: 'Projects and shortcuts', body: 'Each project is its own room: click one to unfold its overview, chat, docs, tasks and requests. More tucks away the calendar, repo, visuals, bugs and board. Drop a folder on + to start a new one.', place: 'right' },
+    { el: '#tour-side', title: 'Your project', body: 'This is the current project: its docs, chat, notifications and tasks. More tucks away the calendar, repo, visuals, bugs and board. Switch projects with the circles on the far left; + starts a new one.', place: 'right' },
     { el: '#tour-search', title: 'Jump anywhere with Ctrl K', body: 'Search files, tasks, docs, people and actions from the keyboard. Try "new task" or a teammate\'s name.', place: 'below' },
     { el: '#tour-drop', title: 'Drop anything in', body: 'Files, slides, PDFs and Google Doc links become Markdown in your folder, with a short TL;DR written by your local brain.', place: 'left' },
     { el: '#tour-room', title: 'See who\'s here', body: 'Friends, what they\'re editing, and whose Claude agent is running. Click a person to follow along.', place: 'left' },

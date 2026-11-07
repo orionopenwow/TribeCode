@@ -67,14 +67,14 @@
 
     <nav class="rail" id="tour-rail" aria-label="Main">
       <img class="logo" src="assets/icon-512.png" alt="TribeCode">
-      <button class="nav on" data-nav="home" title="Home"><svg class="i"><use href="#i-home"/></svg></button>
-      <button class="nav g" id="rail-inbox" title="Inbox"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></button>
+      <button class="nav on" data-nav="home" title="Tribe home"><svg class="i"><use href="#i-home"/></svg></button>
+      <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
+      <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
       <button class="nav" data-nav="docs" title="Docs"><svg class="i"><use href="#i-doc"/></svg></button>
       <button class="nav" data-nav="tasks" title="Tasks"><svg class="i"><use href="#i-check"/></svg></button>
       <button class="nav" data-nav="board" title="Approval board"><svg class="i"><use href="#i-vote"/></svg></button>
       <button class="nav" data-nav="bugs" title="Bug inbox"><svg class="i"><use href="#i-bug"/></svg></button>
       <button class="nav" data-nav="calendar" title="Calendar"><svg class="i"><use href="#i-cal"/></svg></button>
-      <button class="nav g" id="rail-search" title="Search or jump to (Ctrl K)"><svg class="i"><use href="#i-search"/></svg></button>
       <button class="nav" data-nav="brain" title="Brain"><svg class="i"><use href="#i-brain"/></svg></button>
       <button class="nav" data-nav="chat" title="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
       <button class="nav" id="rail-more" title="More: Visuals, floating windows"><svg class="i"><use href="#i-more"/></svg></button>
@@ -85,11 +85,12 @@
     </nav>
 
     <aside class="side" id="tour-side">
-      <div id="pj-nav" class="pj-nav"></div>
-      <h6>Huddle</h6>
-      <div id="huddle-box" class="huddle-box"></div>
-      <h6>Local folder</h6>
-      <button class="item" id="folder-item" title="Workspace folder"><svg class="i" style="width:16px;height:16px"><use href="#i-folder"/></svg><span id="folder-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></button>
+      <div class="pj-strip" id="pj-strip" aria-label="Projects"></div>
+      <div class="nest-head" id="nest-head"></div>
+      <div id="pj-nav" class="pj-nav" role="navigation" aria-label="Project"></div>
+      <div class="nest-huddle"><div class="nest-label"><svg class="i"><use href="#i-mic"/></svg>Huddle</div><div id="huddle-box" class="huddle-box"></div></div>
+      <h6 class="local-folder">Local folder</h6>
+      <button class="item local-folder" id="folder-item" title="Workspace folder"><svg class="i" style="width:16px;height:16px"><use href="#i-folder"/></svg><span id="folder-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></button>
       <button class="invite-pill" id="tour-invite"><span>+</span>Invite friends</button>
     </aside>
 

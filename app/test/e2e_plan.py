@@ -392,9 +392,10 @@ def main():
             host.mouse.move(head["x"] + 60, head["y"] + 18); host.mouse.down(); host.mouse.move(head["x"] - 340, head["y"] + 250, steps=8); host.mouse.up()
             pos = host.evaluate("JSON.parse(localStorage.getItem('tribecode.floats'))['doc:roadmap']")
             assert pos["open"] and abs(pos["x"] - (head["x"] - 400)) < 3, (pos, head)
-            host.click("#rail-more"); host.click(".tf-menu button:has-text('Pop out task board')")
+            host.evaluate("(() => { if (!document.querySelector('[data-float-more]')) document.querySelector('#pj-more').click(); })()")
+            host.click("[data-float-more]"); host.click(".tf-menu button:has-text('Pop out task board')")
             host.wait_for_selector(".fwin[data-float='tasks'] .ft-row:has-text('Fix controller drift')")
-            host.click('[data-nav="calendar"]:visible'); host.wait_for_selector("#view-calendar:not(.hidden)")
+            host.evaluate("TribeApp.show('calendar')"); host.wait_for_selector("#view-calendar:not(.hidden)")
             assert host.locator(".fwin[data-float='doc:roadmap']").is_visible() and host.locator(".fwin[data-float='tasks']").is_visible()
             # the floating doc follows live edits
             d = api("/docs/roadmap", token=host_tok)["doc"]
@@ -404,7 +405,7 @@ def main():
             host.click(f".fwin[data-float='tasks'] [data-ft='{soon['id']}']")
             wait_for(lambda: [t for t in api("/tasks", token=host_tok)["tasks"] if t["id"] == soon["id"] and t["status"] == "done"], what="task done from floating window")
             if take:   # compose the screenshot: both windows parked over the calendar's empty evening hours
-                host.click('[data-nav="calendar"]:visible'); host.wait_for_selector("#view-calendar:not(.hidden) .cal-ev")
+                host.evaluate("TribeApp.show('calendar')"); host.wait_for_selector("#view-calendar:not(.hidden) .cal-ev")
                 host.evaluate("document.querySelector('#cal-scroll').scrollTop = 8.5 * 48")
                 host.evaluate("""(() => { const put = (id, x, y, w, h) => { const e = document.querySelector(`.fwin[data-float='${id}']`); Object.assign(e.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' }); };
                     put('tasks', 560, 618, 330, 330); put('doc:roadmap', 910, 560, 350, 388); })()""")

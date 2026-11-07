@@ -53,7 +53,7 @@ Multiplayer Claude Code tools already let people share a terminal session. Tribe
 
 | Area | Highlights |
 | --- | --- |
-| **Project rooms** | Each project is its own room: people, chat, docs, tasks, requests, calendar, repo · drop a repo or folder (or paste a GitHub URL) to start one · project-only invites · “Give me a branch” worktrees with commits attributed to each member · see **[docs/PROJECTS.md](docs/PROJECTS.md)** |
+| **Project rooms** | Discord-style project circles, each its own room: people, chat, docs, tasks, requests, calendar, repo · drop a repo or folder (or paste a GitHub URL) to start one · project-only invites · “Give me a branch” worktrees with commits attributed to each member · see **[docs/PROJECTS.md](docs/PROJECTS.md)** |
 | **Sessions** | Live lobby + follow mode · shared Claude Code relay over MCP · soft file claims · one-click voice huddles · spectator links |
 | **Alignment** | Proposals + approval board · drift radar · vision check · milestone auto-commit to GitHub · session snapshots · merge helper |
 | **Tasks** | Chat-to-task · auto standup · task ↔ branch link · assign tasks to Claude agents with a token cap · token budget meter |
@@ -115,7 +115,7 @@ Your Claude Code joins the tribe as an agent ("Claude · Riley"). It shows up in
 
 ### Project rooms
 
-<p align="center"><img src="docs/screenshots/project-cascade.png" alt="Project cascade: Overview, Chat, Docs, Tasks, Requests, More" width="100%"></p>
+<p align="center"><img src="docs/screenshots/project-cascade.png" alt="Project circles on the left, the project nest (Docs, Chat, Notifications, Tasks, More, Huddle) next to them" width="100%"></p>
 <table><tr>
 <td width="62%"><img src="docs/screenshots/project-drop.png" alt="Start a project by dropping a folder or repo"></td>
 <td width="38%"><img src="docs/screenshots/project-mobile.png" alt="Project switcher on a phone"></td>

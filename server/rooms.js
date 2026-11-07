@@ -127,7 +127,13 @@ module.exports = function rooms({ P, W, store, getMembers, saveMembers, isLocal,
     }
     const p = P.get(b);
     if (!p || !P.canSee(me, b)) return fail(res, 404, 'project not found');
-    if (!c && m === 'PATCH') { if (!host(me)) return fail(res, 403, 'only the host renames projects'); const body = await readBody(req); P.update(b, { name: str(body.name, 48), emoji: body.emoji, color: body.color }); pushProjects(); return send(res, 200, { project: P.view(P.get(b)) }); }
+    if (!c && m === 'PATCH') {   // the host renames and recolors; any builder in the project can set its picture
+      if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'read-only');
+      const body = await readBody(req, 512 * 1024);
+      if (body.image !== undefined && body.image !== null && body.image !== '' && !/^data:image\/(png|jpeg|webp|gif);base64,/.test(String(body.image))) return fail(res, 400, 'use a PNG, JPEG, WebP or GIF image');
+      P.update(b, host(me) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, image: body.image } : { image: body.image });
+      pushProjects(); return send(res, 200, { project: P.view(P.get(b)) });
+    }
     if (c === 'pulse' && m === 'GET') return send(res, 200, pulse(b, me));
     if (c === 'requests' && m === 'GET') return send(res, 200, requests(b));
     if (c === 'git-init' && m === 'POST') {

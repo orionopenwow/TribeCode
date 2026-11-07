@@ -93,9 +93,6 @@
     document.body.classList.remove('mobile-chat', 'drawer-open');
     Object.keys(VIEWS).forEach(v => $('#view-' + v).classList.toggle('hidden', v !== view));
     document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === view));
-    const isPhone = () => matchMedia('(max-width: 820px)').matches;
-  $('#menu-btn').addEventListener('click', () => document.body.classList.toggle('drawer-open'));
-  document.addEventListener('click', e => { if (document.body.classList.contains('drawer-open') && !e.target.closest('.side') && !e.target.closest('#menu-btn')) document.body.classList.remove('drawer-open'); });
   document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === view && !b.textContent.includes('Milestones')));
     document.querySelector('.titlebar .faint').textContent = '/ ' + VIEWS[view];
     if (view === 'tasks') window.TribeTasks.load();

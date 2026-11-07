@@ -165,7 +165,7 @@
   // ---------- rail "more" menu (features that don't need their own rail slot) ----------
   const more = [];
   document.addEventListener('click', e => {
-    const b = e.target.closest('#rail-more'); if (!b) return;
+    const b = e.target.closest('#rail-more, [data-float-more]'); if (!b) return;
     const r = b.getBoundingClientRect();
     const items = more.map(m => ({ ...m }));
     if (matchMedia('(max-width: 820px)').matches) menu({ left: r.left, top: r.top, bottom: r.top }, items);

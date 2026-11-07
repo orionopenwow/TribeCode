@@ -57,7 +57,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
   function create({ name, emoji, color, repo, workspace, by, role = 'host' }) {
     const nm = String(name || '').trim().slice(0, 48) || 'New project';
     const pid = uniqueId(nm);
-    const p = { id: pid, name: nm, emoji: String(emoji || '').slice(0, 4) || '📁', color: COLORS.includes(color) || /^#[0-9a-fA-F]{6}$/.test(color || '') ? color : COLORS[list.length % COLORS.length],
+    const p = { id: pid, name: nm, emoji: String(emoji || '').slice(0, 4), color: COLORS.includes(color) || /^#[0-9a-fA-F]{6}$/.test(color || '') ? color : COLORS[list.length % COLORS.length],
       channel: `p-${pid}`.slice(0, 32), repo: repo || null, workspace: !!workspace, members: by ? { [by]: role } : {}, created: new Date().toISOString(), by: by || null };
     list.push(p); save();
     fs.mkdirSync(store.p(pdir(pid)), { recursive: true });
@@ -68,6 +68,8 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     if (typeof patch.name === 'string' && patch.name.trim()) p.name = patch.name.trim().slice(0, 48);
     if (typeof patch.emoji === 'string') p.emoji = patch.emoji.slice(0, 4) || p.emoji;
     if (/^#[0-9a-fA-F]{6}$/.test(patch.color || '')) p.color = patch.color;
+    if (patch.image === null || patch.image === '') delete p.image;
+    else if (typeof patch.image === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(patch.image) && patch.image.length <= 300_000) p.image = patch.image;
     if (patch.repo !== undefined) p.repo = patch.repo;
     if (patch.workspace !== undefined) p.workspace = !!patch.workspace;
     save(); return p;
@@ -140,7 +142,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     return n;
   }
 
-  const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji, color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace,
+  const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace,
     members: Object.entries(p.members || {}).map(([id, role]) => ({ id, role })), created: p.created, default: p.id === defaultId(), ...extra });
 
   return { als, all, get, defaultId, current, inProject, channelOf, byChannel, okId, create, update, remove, addMember, canSee, visibleTo, pick, scoped,

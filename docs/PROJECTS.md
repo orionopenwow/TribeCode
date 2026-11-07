@@ -5,18 +5,23 @@ proposals, calendar items, bugs, repo, agents, `VISION.md` and `TRIBE_CONTEXT.md
 
 ## In the app
 
-- **Sidebar.** The rail on the left is global (Home, Inbox, Calendar, Search, More, Settings). Under
-  **Projects**, the current project unfolds into **Overview** (who is here, live agents, recent
-  changes, upcoming, your branch), **Chat**, **Docs**, **Tasks**, **Requests** (approvals, change
-  requests and proposals) and **More ›** (Calendar, Repo, Visuals, Bugs, Board). Counts show only for
-  sections that have something in them. Arrow keys move through the cascade.
-- **Phones.** Tap the project name in the title bar to switch projects; the bottom tab bar always
-  works on the current project.
+- **Project circles.** The far-left rail is a column of round project avatars, Discord-style: tribe
+  home at the top, one circle per project (its picture, emoji or initials on its color), and **+** to
+  start a project. The current project has an orange bar on its left edge; other projects show a
+  badge for new chat and open requests. Click a project's picture in its Overview to change it.
+- **The nest.** The second column belongs to the current project: a "Tribe / Project" header (click
+  it for the Overview: who is here, live agents, recent changes, upcoming, your branch), then
+  **Docs**, **Chat**, **Notifications**, **Tasks**, **Requests** (only when something is waiting),
+  **More** (Overview, Calendar, Repo, Visuals, Bugs, Board, pop-out windows), the **Huddle** and
+  **Invite friends**. Arrow keys move through the circles and the nest.
+- **Phones.** The drawer shows the circles as a horizontal strip above the nest, the project name
+  in the title bar opens a project switcher sheet, and the bottom tab bar works on the current
+  project.
 - **Presence.** The room panel shows which project each person (and each agent) is in.
 
 ## Starting a project
 
-Click **+** next to Projects, or drop a folder on the **Start a project** card on Home:
+Click the **+** circle (or drop a folder on the circles, or on the **Start a project** card on Home). One dialog: drop a folder or repo, or type a name, a GitHub URL or a folder path, then **Create**.
 
 | How | What happens |
 | --- | --- |
