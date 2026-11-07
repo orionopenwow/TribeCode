@@ -261,7 +261,9 @@ const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postC
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid) });
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
-const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t) });
+const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t),
+  approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
+  voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
@@ -305,7 +307,8 @@ const mcp = makeMcp({
   },
   docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
-    post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
   },
   board, approvals,
@@ -458,12 +461,13 @@ async function apiInProject(req, res, url) {
     if (b === 'general') b = P.channelOf(P.current());   // #general is the current project's channel
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
-    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward…
+    if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
     if (m === 'GET') return send(res, 200, { messages: store.readJSONL(`chat/${b}.jsonl`, Math.min(Number(url.searchParams.get('limit')) || 100, 500)) });
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
-      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text);   // commands, notifications, @brain
+      const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
+      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
       return send(res, 200, { message: msg });
     }
   }

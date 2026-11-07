@@ -132,9 +132,10 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
   function propose(title, text, me, opts = {}) {
     title = str(title, 160) || 'Untitled proposal';
     const now = new Date().toISOString();
-    // An agent's proposal starts with no votes: only humans vote.
+    // An agent's proposal starts with no votes: only humans vote. opts.votes carries ballots over (a passed chat vote, server/votes.js).
+    const carried = opts.votes && typeof opts.votes === 'object' ? Object.fromEntries(Object.entries(opts.votes).filter(([mid, v]) => VOTES.includes(v) && getMembers().some(x => x.id === mid && x.role !== 'agent' && x.role !== 'spectator'))) : null;
     const p = save({ id: `p-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title, kind: opts.kind || 'feature', status: 'open', by: me.id, created: now,
-      votes: me.role === 'agent' ? {} : { [me.id]: 'yes' }, body: str(text, 20000) });
+      votes: carried || (me.role === 'agent' ? {} : { [me.id]: 'yes' }), body: str(text, 20000), ...(opts.votes ? { from: 'chat-vote' } : {}) });
     postChat('general', 'tribecode', `New proposal from ${me.name}: **${title}**. Vote on the Board.`);
     bus.notify({ type: 'proposal', priority: 'normal', to: getMembers().filter(x => x.role !== 'agent' && x.role !== 'spectator' && x.id !== me.id && x.id !== me.owner).map(x => x.id),
       from: me.id, title: `New proposal from ${me.name}`, body: title, view: 'board', ref: p.id });
