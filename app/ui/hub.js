@@ -617,7 +617,7 @@
         auto ? row('autopilot', 'i-git', 'Repo autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
         computeRow(row),
       ].join('');
-      box.innerHTML = `<h6>Helpers</h6>${rows}`;
+      box.innerHTML = `<h6><span class="emo" aria-hidden="true">🤝</span>Helpers</h6>${rows}`;
       box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : fleetGo(r.dataset.helper));
     }
     let pad = $('#room-scratch');
@@ -630,6 +630,8 @@
   let cmp = { mine: { on: false }, helpers: [], at: 0 };
   async function loadCompute(force) { if (!connected() || (!force && Date.now() - cmp.at < 30000)) return; cmp.at = Date.now(); try { cmp = { ...(await C.api('/compute')), at: Date.now() }; panel(); } catch {} }
   C.on('ws', m => { if (m.type === 'compute') loadCompute(true); });
+  let pSoon = null; const panelSoon = () => { clearTimeout(pSoon); pSoon = setTimeout(panel, 300); };   // members / repo changed: the Shared compute row may now apply
+  ['projects', 'project', 'presence'].forEach(e => C.on(e, panelSoon));
   function computeRow(row) {
     const p = PJ() && PJ().cur && PJ().cur(); if (!p || !p.hasRepo) return '';
     const people = (p.members || []).filter(x => x.role !== 'agent' && x.role !== 'spectator').length; if (people < 2) return '';

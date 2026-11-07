@@ -125,8 +125,8 @@
       <section class="sec" id="ah-connect-sec"><div class="sec-head"><span class="eyebrow">Connect</span><h2>Add an agent</h2></div>
         <div class="ah-tiles">${TILES.map(([k, t, d]) => `<button class="ah-tile${connectKind === k ? ' on' : ''}" style="--k:${COLOR[k]}" data-connect="${k}" aria-expanded="${connectKind === k}"><span class="ah-glyph">${glyph(k)}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>
         <div class="ah-connect${connectKind ? '' : ' hidden'}" id="ah-connect">${connectKind ? connectPanel() : ''}</div></section>
-      <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2>Local models</h2></div>${modelsHtml(models, s)}</section>
-      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>
+      <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2><span class="emo" aria-hidden="true">🏠</span>Local models</h2></div>${modelsHtml(models, s)}</section>
+      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>
     </div>`;
     wire();
   }

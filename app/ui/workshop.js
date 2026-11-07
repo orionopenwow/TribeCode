@@ -155,6 +155,7 @@
       </div></article>`;
   }
   // ---------- Starter shelf (templates/shelf.json, server/shelf.js): checked open-source tools, libraries and Claude skills ----------
+  const SHELF_EMO = { skill: '✨', library: '📦', tool: '🛠️', mcp: '🔌' };
   const SHELF_KIND = { skill: 'Claude Code skills', library: 'Libraries', tool: 'Tools', mcp: 'Agent tools (MCP)' };
   function shelfCard(it) {
     return `<article class="ws-card-s"><div class="wss-top"><span class="ws-eyebrow">${esc(it.license)}</span>${it.added ? '<span class="wss-added">in this project</span>' : ''}</div>
@@ -165,7 +166,7 @@
     const pick = new Set((d.picks || []).map(x => x.id)), items = (d.items || []).filter(it => !q || `${it.title} ${it.summary} ${(it.for || []).join(' ')}`.toLowerCase().includes(q.toLowerCase()));
     const types = (d.types || []).length ? `Picks for this ${d.types.join(' / ')} project` : 'Picks for this project';
     body.innerHTML = `${pick.size && !q ? `<section class="ws-sec"><div class="ws-sec-h"><span class="ws-eyebrow">${esc(types)}</span><h2>Start here</h2></div><div class="wss-grid">${items.filter(it => pick.has(it.id)).map(shelfCard).join('')}</div></section>` : ''}
-      ${Object.entries(SHELF_KIND).map(([k, l]) => { const list = items.filter(it => it.kind === k); return list.length ? `<section class="ws-sec"><div class="ws-sec-h"><span class="ws-eyebrow">${list.length}</span><h2>${l}</h2></div><div class="wss-grid">${list.map(shelfCard).join('')}</div></section>` : ''; }).join('')}
+      ${Object.entries(SHELF_KIND).map(([k, l]) => { const list = items.filter(it => it.kind === k); return list.length ? `<section class="ws-sec"><div class="ws-sec-h"><span class="ws-eyebrow">${list.length}</span><h2>${SHELF_EMO[k] ? `<span class="emo" aria-hidden="true">${SHELF_EMO[k]}</span>` : ''}${l}</h2></div><div class="wss-grid">${list.map(shelfCard).join('')}</div></section>` : ''; }).join('')}
       <p class="wss-note">Every entry is open source and was checked (repo, license, install line). Skills go into the project's <code>.claude/skills/</code>, where Claude Code finds them; everything else lands in the project's Toolbox doc.</p>`;
     body.querySelectorAll('[data-shelf-add]').forEach(b => b.onclick = async () => {
       if (!pid) return toast('Open a project first');

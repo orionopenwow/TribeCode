@@ -54,6 +54,10 @@ Pushing from the Claude cloud sandbox:
   - `board.js`: proposals and milestones.
   - `bugs.js`, `brain.js` (Ollama/Qwen), `mcp.js` (Claude Code tools).
   - `askai.js`: `@ai` for people without their own Claude (own Claude → a teammate's Claude by owner policy → local model → board).
+  - `openspace.js`: optional Open Space office (host-only install/start/stop/open, port 4850).
+  - `showcase.js`: per-project website (`site/index.html`), preview, suggestions.
+  - `applink.js` + `export.js` + `github-auth.js`: Home Screen/desktop app links, Desktop folder export/copy, GitHub device-flow sign-in.
+  - `demo.js` + `scripts/start-demo-tribe.js`: the demo tribe (templates/lantern-run, templates/tavern-3d).
   - `share.js`: public https via Tailscale Funnel or cloudflared.
   - `site.js`: GitHub Pages friend links.
   - `devices.js`: phone device links.

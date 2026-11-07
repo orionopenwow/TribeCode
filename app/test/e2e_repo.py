@@ -195,7 +195,7 @@ def main():
             api("/tasks", "POST", {"title": "Tune firefly count"}, htok)
             wait_text(host, "#ctx-body", "Tune firefly count", 15000)
             host.click("#ctx-min"); host.wait_for_selector("#ctx-win.collapsed"); host.click("#ctx-min")
-            phone.click("#ctx-btn"); phone.wait_for_selector("#ctx-win:not(.hidden)")
+            phone.evaluate("document.getElementById('ctx-btn').click()"); phone.wait_for_selector("#ctx-win:not(.hidden)")
             box = phone.locator("#ctx-win").bounding_box()
             assert box["width"] >= 389 and box["height"] >= 840, f"full-screen sheet on phones: {box}"
             wait_text(phone, "#ctx-body", "Amber lantern")

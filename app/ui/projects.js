@@ -147,7 +147,7 @@
           <div class="hero-acts"><button class="btn primary" data-hero="newtask">New task</button><button class="btn" data-hero="invite">Invite a friend</button></div></section>`;
     const sec = (eyebrow, title, inner) => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2></div>${inner}</section>`;
     const L = d.living, canEdit = me().role !== 'spectator' && me().role !== 'agent';
-    const MOOD = { buzzing: 'Buzzing', steady: 'Steady', quiet: 'Quiet', fresh: 'Brand new' };
+    const MOOD = { buzzing: '<span class="emo" aria-hidden="true">🔥</span>Buzzing', steady: '<span class="emo" aria-hidden="true">🌿</span>Steady', quiet: '<span class="emo" aria-hidden="true">🌙</span>Quiet', fresh: '<span class="emo" aria-hidden="true">✨</span>Brand new' };
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${esc(p.name)}</h1>
           <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? 'Add a one-line bio: what is this?' : ''}</button>
@@ -193,7 +193,7 @@
     const slot = $('#pj-tools-slot'); if (!slot) return;   // the overview may have redrawn while we waited
     if (!d.picks || !d.picks.length || (C.project && C.project() !== p.id)) { slot.innerHTML = ''; return; }
     const what = d.types && d.types.length ? `picks for a ${d.types[0]}` : 'picks for this project';
-    slot.innerHTML = `<section class="card pj-tools" id="pj-tools"><div class="pt-head"><span class="eyebrow">Toolbox · ${esc(what)}</span><button class="linkish" id="pj-tools-all">All tools</button></div>
+    slot.innerHTML = `<section class="card pj-tools" id="pj-tools"><div class="pt-head"><span class="eyebrow"><span class="emo" aria-hidden="true">🧰</span>Toolbox · ${esc(what)}</span><button class="linkish" id="pj-tools-all">All tools</button></div>
       <div class="pt-grid">${d.picks.map(it => `<div class="pt-tile"><span class="pt-kind">${esc(KIND_L[it.kind] || it.kind)} · ${esc(it.license)}</span><b>${esc(it.title)}</b><small>${esc(it.summary)}</small>
         <div class="pt-acts"><button class="btn sm" data-shelf-add="${esc(it.id)}">Add</button><a class="linkish" href="${esc(it.url || `https://github.com/${it.repo}`)}" target="_blank" rel="noopener noreferrer">Open</a></div></div>`).join('')}</div></section>`;
     slot.querySelector('#pj-tools-all').onclick = () => window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : null;

@@ -534,7 +534,7 @@ async function apiInProject(req, res, url) {
     const out = newMember({ name, color: body.color, role: inv.role, projects: proj ? [proj.id] : undefined });
     if (proj) P.addMember(proj.id, out.member.id, inv.role);
     P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
-    pushPresence();
+    pushPresence(); if (proj) rooms.pushProjects();   // everyone's project list shows the new member (Shared compute, overview team)
     return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: proj ? proj.id : null });
   }
 
