@@ -64,6 +64,32 @@ The full list of 25 features with rationale is in **[docs/FEATURE_SPEC.md](docs/
 
 ## 📸 Screenshots
 
+### New in v0.2
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/notify-inbox.png" alt="Notification inbox with approvals"><br><sub><b>Pocket inbox + approvals:</b> agents ask before risky steps; approve, deny or comment from your phone. Forward any notification into chat.</sub></td>
+    <td width="50%"><img src="docs/screenshots/repo-view.png" alt="Live repo view"><br><sub><b>Live repo + autopilot:</b> branches, conflicts and drift at a glance; send a change from your phone and the desktop applies it.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/huddle-captions.png" alt="Huddle captions"><br><sub><b>Huddle captions + meeting notes:</b> opt-in captions, capture to notes, and a summary with action items when the huddle ends.</sub></td>
+    <td width="50%"><img src="docs/screenshots/chat-voice-note.png" alt="Voice note in chat"><br><sub><b>Voice notes, DMs, message actions:</b> hold the mic for a voice note with a transcript; reply, forward, pin, react, or make it a task.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/calendar.png" alt="Calendar"><br><sub><b>Calendar + reminders:</b> "huddle tomorrow 4pm with Maya" in the palette; task due dates; reminders through the notification hub.</sub></td>
+    <td width="50%"><img src="docs/screenshots/doc-comments.png" alt="Doc comments"><br><sub><b>Notion-lite docs:</b> templates, [[links]] and backlinks, @mentions, comments, version history, nested pages.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/visuals-compare.png" alt="Visual compare"><br><sub><b>Visual compare:</b> side by side, swipe or pixel diff between screenshots of the same screen.</sub></td>
+    <td width="50%"><img src="docs/screenshots/agent-channel.png" alt="Private agent channel"><br><sub><b>Your own agent:</b> a private channel to your Claude Code agent, with delivered and read receipts.</sub></td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/screenshots/friend-link-site.png" width="30%" alt="Friend link on a phone"> <img src="docs/screenshots/phone-install-sheet.png" width="30%" alt="Add to Home Screen sheet"> <img src="docs/screenshots/phone-send-to-desktop.png" width="30%" alt="Send to desktop from a phone"></p>
+<p align="center"><sub><b>Invite a friend in one click:</b> <code>TribeCode-Invite-Friend.bat</code> makes a public link and a QR code. On an iPhone: tap, type a name, Add to Home Screen.</sub></p>
+
+### More
+
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/tasks-dark.png" alt="Task board with drag and drop and a Claude agent task"><br><sub><b>Tasks:</b> drag cards between columns, start a branch by dropping, watch an agent's token budget.</sub></td>

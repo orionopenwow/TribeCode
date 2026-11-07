@@ -9,7 +9,14 @@ name: Release
 on:
   push:
     tags: ['v*']
+    # A version bump on main releases too (tauri-action creates the vX.Y.Z tag), so no tag push is needed.
+    branches: [main]
+    paths: ['app/src-tauri/tauri.conf.json', '.github/workflows/release.yml']
   workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -25,9 +32,6 @@ jobs:
           - platform: macos-latest
             args: '--target aarch64-apple-darwin'
             triple: aarch64-apple-darwin
-          - platform: macos-13
-            args: '--target x86_64-apple-darwin'
-            triple: x86_64-apple-darwin
           - platform: ubuntu-22.04
             args: ''
     runs-on: ${{ matrix.platform }}
@@ -64,7 +68,7 @@ jobs:
         shell: bash
         run: |
           V="${GITHUB_REF_NAME#v}"
-          if [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]] && [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             node -e "const f='app/src-tauri/tauri.conf.json';const c=require('./'+f);c.version='$V';require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
           fi
 
@@ -87,8 +91,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: app
-          tagName: ${{ github.ref_name }}
-          releaseName: 'TribeCode ${{ github.ref_name }}'
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseName: 'TribeCode v__VERSION__'
           releaseBody: 'See CHANGELOG.md for what changed. Already installed? TribeCode will show a "Restart to update" pill.'
           releaseDraft: false
           prerelease: false

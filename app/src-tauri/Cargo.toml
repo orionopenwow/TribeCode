@@ -1,6 +1,6 @@
 [package]
 name = "tribecode"
-version = "0.1.0"
+version = "0.2.0"
 description = "TribeCode desktop app"
 license = "MIT"
 repository = "https://github.com/orionopenwow/TribeCode"
@@ -11,6 +11,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tauri-plugin-dialog = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
