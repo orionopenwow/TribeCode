@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, extraTools }) {
+module.exports = function mcp({ extra = {}, VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -65,7 +65,18 @@ module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, doc
       inputSchema: S({ title: str('Proposal title'), body: str('Markdown: problem, plan, tasks') }, ['title', 'body']),
       run: ({ title, body }, me) => { const p = board.propose(title, body, me); return text(`Proposal opened: ${p.title}. Teammates vote on the Board.`); },
     },
+    request_approval: {
+      description: 'Ask a human to approve something before you do it (deleting data, force-pushing, migrations, spending, anything risky or irreversible). Low/medium risk asks your owner; high risk asks every human. Their phone gets Approve/Deny buttons. Returns an id: poll check_approval and do not proceed while it is pending.',
+      inputSchema: S({ title: str('What you want to do, in one line'), details: str('Why, what changes, how to undo it'), risk: { type: 'string', enum: ['low', 'medium', 'high'] }, kind: str('Short category, e.g. run-migration or install-dependency. Your human can always-allow low-risk kinds.') }, ['title']),
+      run: (a, me) => { if (!approvals) return err('Approvals are not available on this server.'); const ap = approvals.create(a, me); return text({ id: ap.id, status: ap.status, askedOf: ap.toNames, note: ap.note || '', next: ap.status === 'approved' ? 'Already approved by a standing rule. Go ahead.' : `Call check_approval with id ${ap.id} in a minute or two. Do not proceed until it says approved.` }); },
+    },
+    check_approval: {
+      description: 'Check an approval you requested: pending, approved or denied, plus the human\'s note and any questions they asked you (answer questions in chat, then keep polling).',
+      inputSchema: S({ id: str('Approval id from request_approval') }, ['id']),
+      run: ({ id }) => { const ap = approvals && approvals.get(id); return ap ? text({ id: ap.id, status: ap.status, note: ap.note || '', questions: ap.questions.map(q => ({ from: q.name, at: q.at, text: q.text })), decidedBy: ap.decidedByName, decidedAt: ap.decidedAt || null }) : err(`No approval with id ${id}`); },
+    },
   };
+  if (extra.tools) Object.assign(TOOLS, extra.tools({ text, err, S, str })); // repo, context and integrator tools (server/repo.js)
 
   Object.assign(TOOLS, extraTools || {});   // feature modules add tools (e.g. visuals.js: add_visual)
 
@@ -74,7 +85,7 @@ module.exports = function mcp({ VERSION, tribe, presence, touchAgent, tasks, doc
     const reply = result => ({ jsonrpc: '2.0', id, result });
     if (method === 'initialize') return reply({ protocolVersion: params.protocolVersion || '2025-06-18', capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'tribecode', title: `TribeCode · ${tribe.name}`, version: VERSION },
-      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first. Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes.` });
+      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first. Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes.${extra.instructions ? extra.instructions(me) : ''}` });
     if (method === 'ping') return reply({});
     if (method === 'tools/list') return reply({ tools: Object.entries(TOOLS).map(([name, t]) => ({ name, description: t.description, inputSchema: t.inputSchema })) });
     if (method === 'tools/call') {

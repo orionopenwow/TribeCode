@@ -6,9 +6,10 @@ No App Store needed. Your friend's phone gets the same TribeCode, laid out for a
 
 1. On your PC: **Invite friends**. The window shows a link and a **QR code** that point at your PC's network address.
 2. Your friend points the iPhone camera at the QR code and opens the link, picks a name, and is in.
-3. In Safari: **Share → Add to Home Screen**. TribeCode now opens full screen from its own icon, like an app (the app shows this hint too).
+3. After joining, the phone opens a private link (`/m/<key>/`) and shows a guided sheet: **Share → Add to Home Screen**. The installed app opens full screen from its own icon, already signed in (iPhone Home Screen apps don't share storage with Safari, so the key in the link signs them in). Sign a phone out any time from **Settings → Devices & desktop app**.
 
 ### Reaching your PC
+- **Easiest:** as the host, turn on **Invite friends → Share beyond my Wi-Fi** for a public https address (Tailscale Funnel or a Cloudflare tunnel). See [HOSTING.md](HOSTING.md).
 - **Same Wi-Fi:** works right away (the QR uses your Wi-Fi address).
 - **Anywhere else:** install [Tailscale](https://tailscale.com) on the PC and the phone (free for personal use), sign both in, and TribeCode automatically puts the Tailscale address in the invite.
 - **Voice huddles on a phone** need HTTPS (browsers block the mic on plain `http://` addresses). Run `tailscale serve 4747` on the PC once and share the `https://…ts.net` address it prints. Everything, including voice, then works on the phone.

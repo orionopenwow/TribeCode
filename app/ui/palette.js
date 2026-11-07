@@ -22,6 +22,7 @@
       { kind: 'Action', label: 'Take the tour', keys: 'help tutorial', run: () => window.TribeTour.start() },
       { kind: 'Action', label: 'Settings · replay setup', keys: 'preferences profile name color folder', run: () => window.TribeOnboarding.open({ fromSettings: true }) },
       { kind: 'Action', label: 'Check for updates', keys: 'version upgrade', run: () => window.TribeUpdater.check({ manual: true }) },
+      ...(window.TribePaletteActions || []).flatMap(f => { try { return f() || []; } catch { return []; } }),   // feature modules add commands here
       ...['home', 'docs', 'tasks', 'board', 'bugs'].map(v => ({ kind: 'Go to', label: { home: 'Home', docs: 'Docs', tasks: 'Tasks', board: 'Approval board', bugs: 'Bug inbox' }[v], keys: v, run: () => A.show(v) })),
     ];
   }

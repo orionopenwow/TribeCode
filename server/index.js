@@ -17,6 +17,11 @@ const makeBugs = require('./bugs');
 const makeDrift = require('./drift');
 const makeClaims = require('./claims');
 const makeMcp = require('./mcp');
+const makeDevices = require('./devices');
+const makeShare = require('./share');
+const bus = require('./bus');
+const makeNotify = require('./notify');
+const makeApprovals = require('./approvals');
 const makePlan = require('./plan');
 const makeDocsX = require('./docsx');
 const makeVisuals = require('./visuals');
@@ -50,7 +55,7 @@ function lanUrls() {
   }
   return out.sort((x, y) => (y.kind === 'tailscale') - (x.kind === 'tailscale'));
 }
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
@@ -74,8 +79,9 @@ function authed(req) {
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
   if (!t) return null;
   const th = hash(t);
-  return members.find(m => m.tokenHash === th) || null;
+  return members.find(m => m.tokenHash === th) || (devices && devices.memberForToken(th)) || null;
 }
+const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
 function newMember({ name, color: c, role }) {
   const token = id(32);
   const m = { id: slug(name).slice(0, 16) + '-' + id(4), name, color: color(c), role, joined: new Date().toISOString(), tokenHash: hash(token) };
@@ -124,6 +130,7 @@ function postChat(channel, by, text) {
   const msg = { id: id(12), at: new Date().toISOString(), by, text };
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
   broadcast({ type: 'chat', channel, message: msg });
+  if (by !== 'tribecode') pocket.chat(channel, by, text);   // @mentions -> notification hub
   return msg;
 }
 function handleCommands(channel, member, text) {
@@ -166,12 +173,23 @@ const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: 
 const drift = makeDrift({ repo: REPO, getTasks: () => loadTasks(), members: () => members });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
 const claims = makeClaims({ store, id, broadcast, nameOf });
+// ---------- web: device links (/m/<key>/) + public https address ----------
+const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe });
+const share = makeShare({ port: PORT });
+// Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js).
+const repoHub = require('./repo')({ repo: REPO, store, str, broadcast, postChat, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
+  getMembers: () => members, nameOf, drift, board, presence, readVision, tribe, claims });
+// Notification hub + approvals (server/notify.js, server/approvals.js)
+const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
+  publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const mcp = makeMcp({
+  extra: repoHub.mcp,
   VERSION, tribe, presence, touchAgent, readVision,
   tasks: {
     all: () => loadTasks().map(t => ({ ...t, assigneeName: t.assignee ? nameOf(t.assignee) : null })),
@@ -190,7 +208,7 @@ const mcp = makeMcp({
     post(me, text) { const tx = str(text, 4000); if (!tx) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
     recent: n => store.readJSONL('chat/general.jsonl', n).map(x => `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${x.text}`).join('\n'),
   },
-  board,
+  board, approvals,
 });
 
 async function standup() {
@@ -214,7 +232,7 @@ async function api(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: lanUrls() });
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, lan: [...share.lanEntry(), ...lanUrls()] });
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
@@ -250,7 +268,14 @@ async function api(req, res, url) {
     return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
   }
 
+  if (a === 'device-link' || a === 'devices' || a === 'share') {
+    const h = await (a === 'share' ? share : devices).route(req, res, { a, b, m, me, tokenHash: tokenHashOf(req), readBody, send, fail, limited });
+    if (h !== null) return;
+  }
+
+  if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
   if (!need()) return;
+  if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'me') return send(res, 200, { member: publicMember(me), tribe, version: VERSION });
 
@@ -288,7 +313,9 @@ async function api(req, res, url) {
       const body = await readBody(req);
       if (body.title !== undefined) t.title = str(body.title, 200) || t.title;
       if (body.status !== undefined) { if (!STATUSES.includes(body.status)) return fail(res, 400, 'bad status'); t.status = body.status; }
+      const prevAssignee = t.assignee;
       if (body.assignee !== undefined) t.assignee = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
+      if (t.assignee && t.assignee !== prevAssignee && t.assignee !== me.id) bus.notify({ type: 'task-assigned', to: [t.assignee], from: me.id, title: `${me.name} assigned you a task`, body: t.title, view: 'tasks', ref: t.id });
       if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
       if (body.body !== undefined) t.body = str(body.body, 20000);
       if (body.due !== undefined) t.due = dueOk(body.due);
@@ -327,6 +354,10 @@ async function api(req, res, url) {
     if (m === 'PATCH' && b) { const body = await readBody(req); if (!members.some(x => x.id === body.to)) return fail(res, 400, 'unknown member'); const c = claims.handOff(b, body.to, me); return c ? send(res, 200, { claim: c }) : fail(res, 404, 'not your claim'); }
   }
   if (a === 'drift' && m === 'GET') return send(res, 200, await drift.radar());
+  if (['repo', 'changes', 'context', 'integrations'].includes(a)) {
+    const handled = await repoHub.route(req, res, { m, a, b, c, me, readBody, send, fail });
+    if (handled !== null) return;
+  }
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
@@ -346,6 +377,7 @@ async function api(req, res, url) {
 }
 
 function serveStatic(req, res, url) {
+  if (devices.serveApp(req, res, url, UI)) return;
   let rel = decodeURIComponent(url.pathname);
   if (rel === '/' ) rel = '/index.html';
   if (/^\/join\/[A-Za-z0-9]+\/?$/.test(rel)) rel = '/join.html';
@@ -380,6 +412,7 @@ server.on('upgrade', (req, sock) => {
   const s = ws.accept(req, sock); if (!s) return;
   const o = online.get(me.id) || { sockets: new Set(), where: 'Home', since: new Date().toISOString() };
   o.sockets.add(s); online.set(me.id, o);
+  pocket.attach(me, s);   // idle/away tracking for notifications
   s.send({ type: 'hello', member: publicMember(me), tribe, members: presence(), version: VERSION, huddle: huddleState() });
   pushPresence();
   s.on('message', msg => {
@@ -391,6 +424,7 @@ server.on('upgrade', (req, sock) => {
       const first = huddle.size === 0;
       huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
       pushHuddle(); if (first) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
+      if (first) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });
     }
     if (msg.type === 'huddle-leave' && huddle.has(me.id)) { huddle.delete(me.id); pushHuddle(); }
     if (msg.type === 'huddle-state' && huddle.has(me.id)) { const h = huddle.get(me.id); h.muted = !!msg.muted; h.sharing = !!msg.sharing; pushHuddle(); }

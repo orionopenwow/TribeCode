@@ -480,9 +480,11 @@
   C.on('*', m => {
     if (m.type === 'event' || m.type === 'event-removed') { if (cal.loaded && !$('#view-calendar').classList.contains('hidden')) load(); else cal.loaded && (cal.stale = true); loadUpcoming(); }
     if (m.type === 'task') { if (cal.loaded && !$('#view-calendar').classList.contains('hidden')) load(); clearTimeout(cal.upT); cal.upT = setTimeout(loadUpcoming, 200); }
-    if (m.type === 'notification' && m.fallback && m.notification) {
-      const n = m.notification; toast(`${n.title}${n.body ? ' · ' + n.body : ''}`);
+    // Notifications arrive from the hub (server/notify.js) as { item }; buslog.js only delivers { fallback } when no hub runs.
+    if (m.type === 'notification' && (m.item || m.notification)) {
+      const n = m.item || m.notification;
       (window.TribePlan.received = window.TribePlan.received || []).push(n);
+      if (m.fallback) toast(`${n.title}${n.body ? ' · ' + n.body : ''}`);
     }
   });
   C.on('hello', () => { loadUpcoming(); if (window.TribeTasks && !window.TribeTasks.all().length) window.TribeTasks.load().catch(() => {}); });

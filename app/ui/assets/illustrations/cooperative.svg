@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="t"><title id="t">Two friends building together at a shared screen</title>
+<ellipse cx="160" cy="206" rx="140" ry="8" fill="#0E1115" opacity=".55"/>
+<rect x="88" y="26" width="144" height="98" rx="12" fill="#1B2028" stroke="#38C6B1" stroke-width="2.5"/>
+<rect x="88" y="26" width="144" height="16" rx="12" fill="#232A35"/>
+<circle cx="100" cy="34" r="2.6" fill="#FF6F8E"/><circle cx="109" cy="34" r="2.6" fill="#FFB86B"/><circle cx="118" cy="34" r="2.6" fill="#3BD16F"/>
+<g fill="#F8FAFC"><polygon points="138,62 120,80 138,98 138,89 129,80 138,71"/><polygon points="182,62 200,80 182,98 182,89 191,80 182,71"/></g>
+<polygon fill="#F26B1D" points="161,56 167,69 167,80 174,75 178,88 175,99 161,106 147,99 145,88 151,73 155,79 155,69"/>
+<g stroke-linecap="round" stroke-width="3.5"><path d="M100 54h14M100 64h10M206 106h16M100 108h22M100 116h12" stroke="#38C6B1"/><path d="M204 54h16M210 64h12M128 116h18" stroke="#F26B1D"/></g>
+<path d="M160 124v18M120 156h80M120 142h80" stroke="#38C6B1" stroke-width="2" fill="none" stroke-linecap="round"/>
+<g fill="#1B2028" stroke="#38C6B1" stroke-width="2"><circle cx="120" cy="149" r="5"/><circle cx="160" cy="142" r="5"/><circle cx="200" cy="149" r="5"/><circle cx="140" cy="164" r="4"/><circle cx="180" cy="164" r="4"/></g>
+<path d="M120 149l20 15M200 149l-20 15M140 164h40" stroke="#38C6B1" stroke-width="1.6" opacity=".6"/>
+<circle cx="160" cy="142" r="2.4" fill="#F26B1D"/>
+<!-- left friend -->
+<path d="M28 204c0-44 10-62 32-62s32 18 32 62z" fill="#F26B1D"/>
+<path d="M78 160c10 2 22-6 32-18" stroke="#F26B1D" stroke-width="11" stroke-linecap="round" fill="none"/>
+<circle cx="111" cy="141" r="6" fill="#E8B48A"/>
+<rect x="52" y="124" width="16" height="22" rx="6" fill="#D49A70"/>
+<circle cx="60" cy="112" r="20" fill="#E8B48A"/>
+<path d="M40 110c0-16 10-24 22-24 12 0 20 8 19 18-8-6-22-4-30 6z" fill="#F26B1D"/>
+<path d="M40 110c0-16 10-24 22-24 6 0 11 2 14 5-10-1-22 6-28 20z" fill="#C2541A"/>
+<!-- right friend -->
+<path d="M228 204c0-44 10-62 32-62s32 18 32 62z" fill="#38C6B1"/>
+<path d="M242 160c-10 4-14 8-22 4" stroke="#38C6B1" stroke-width="11" stroke-linecap="round" fill="none"/>
+<rect x="206" y="146" width="22" height="30" rx="4" fill="#F8FAFC" transform="rotate(-12 217 161)"/>
+<rect x="210" y="152" width="14" height="3" rx="1.5" fill="#F26B1D" transform="rotate(-12 217 161)"/>
+<rect x="252" y="124" width="16" height="22" rx="6" fill="#A86B4A"/>
+<circle cx="260" cy="112" r="20" fill="#A86B4A"/>
+<path d="M238 118c-4-22 8-34 24-34 16 0 26 12 22 30-2 14 4 22 8 28-14 2-22-8-22-20 0-10-4-16-8-20-6 6-14 10-24 16z" fill="#171B26"/>
+<path d="M240 108c0-14 10-22 22-22" stroke="#2C3347" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

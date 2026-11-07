@@ -9,6 +9,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const bus = require('./bus');
+const { mentionsIn } = require('./notify');
 
 const HISTORY_CAP = Number(process.env.TRIBE_HISTORY_CAP) || 200;
 const TEMPLATES = {
@@ -50,15 +51,12 @@ module.exports = function docsx({ store, id, str, slug: slugify, broadcast, docs
   }
 
   // ---------- mentions ----------
+  // memberId -> how many times they are @mentioned. Uses the chat parser from notify.js so docs and chat agree
+  // (@Maya, @maya, @MayaLee, @everyone), skipping code spans and blocks.
   function mentioned(body) {
-    const low = String(body || '').toLowerCase(), out = new Map();
-    for (const m of getMembers()) {
-      if (m.role === 'agent') continue;
-      for (const n of new Set([m.name, m.name.split(/\s+/)[0]])) {
-        const re = new RegExp(`(^|[^\\w@])@${n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w])`, 'g');
-        const c = (low.match(re) || []).length; if (c) out.set(m.id, Math.max(out.get(m.id) || 0, c));
-      }
-    }
+    const out = new Map(), ms = getMembers();
+    const text = String(body || '').replace(/```[\s\S]*?```/g, ' ').replace(/`[^`\n]*`/g, ' ');
+    for (const tok of text.match(/(^|[^\w@])@[^\s@]+/g) || []) for (const mid of mentionsIn(tok.trim().replace(/^[^@]+/, ''), ms, null)) out.set(mid, (out.get(mid) || 0) + 1);
     return out;
   }
 
@@ -81,7 +79,7 @@ module.exports = function docsx({ store, id, str, slug: slugify, broadcast, docs
     try { snapshot(d); } catch (e) { console.error('history', e.message); }
     const before = mentioned(prev ? prev.body : ''), after = mentioned(d.body), by = d.updatedBy || d.by;
     for (const [mid, n] of after) if (n > (before.get(mid) || 0) && mid !== by)
-      bus.notify({ type: 'mention', to: [mid], priority: 'normal', view: 'docs', ref: d.slug, title: `${nameOf(by)} mentioned you in ${d.title}`, body: snippetAround(d.body, getMembers().find(m => m.id === mid)) });
+      bus.notify({ type: 'mention', to: [mid], from: by, priority: 'normal', view: 'docs', ref: d.slug, title: `${nameOf(by)} mentioned you in ${d.title}`, body: snippetAround(d.body, getMembers().find(m => m.id === mid)) });
   }
   function snippetAround(body, m) {
     if (!m) return ''; const i = body.toLowerCase().indexOf('@' + m.name.split(/\s+/)[0].toLowerCase());
@@ -153,7 +151,7 @@ module.exports = function docsx({ store, id, str, slug: slugify, broadcast, docs
         if (t.resolved) t.resolved = false;
         saveThreads(b, list);
         const people = [...new Set([t.by, ...t.replies.map(r => r.by)])].filter(x => x !== me.id);
-        if (people.length) bus.notify({ type: 'comment-reply', to: people, priority: 'normal', view: 'docs', ref: b, title: `${me.name} replied on ${d.title}`, body: text.slice(0, 160) });
+        if (people.length) bus.notify({ type: 'comment-reply', to: people, from: me.id, priority: 'normal', view: 'docs', ref: b, title: `${me.name} replied on ${d.title}`, body: text.slice(0, 160) });
         mentionNotify(text, me, d, t, people);
         return send(res, 200, { thread: t });
       }
@@ -168,7 +166,7 @@ module.exports = function docsx({ store, id, str, slug: slugify, broadcast, docs
   }
   function mentionNotify(text, me, d, t, already) {
     for (const [mid] of mentioned(text)) if (mid !== me.id && !already.includes(mid))
-      bus.notify({ type: 'mention', to: [mid], priority: 'normal', view: 'docs', ref: d.slug, title: `${me.name} mentioned you in a comment on ${d.title}`, body: text.slice(0, 160) });
+      bus.notify({ type: 'mention', to: [mid], from: me.id, priority: 'normal', view: 'docs', ref: d.slug, title: `${me.name} mentioned you in a comment on ${d.title}`, body: text.slice(0, 160) });
   }
 
   return { route, templates, backlinks, history, onWrite, setMeta, mentioned };

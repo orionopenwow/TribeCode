@@ -83,7 +83,7 @@ def open_as(browser, name, token, viewport=(1600, 1000)):
     page = ctx.new_page(); watch(page, name)
     settings = {"onboarded": True, "name": name, "server": {"url": BASE, "token": token}, "tour": {"done": True}, "checklist": {"setup": True, "tour": True}}
     page.add_init_script(f"localStorage.getItem('tribecode.settings.v1') || localStorage.setItem('tribecode.settings.v1', {json.dumps(json.dumps(settings))})")
-    page.goto(BASE)
+    page.goto(BASE + "/?skipIntro=1")
     page.wait_for_function("document.querySelector('#sync-status') && document.querySelector('#sync-status').textContent.includes('connected')", timeout=10000)
     return page
 
