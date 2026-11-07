@@ -31,6 +31,8 @@ ONLY = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys
 SITE = {"chat": 1600, "plus": 1600, "proposal": 1600, "tasks": 1600, "kickoff": 1600, "person": 1600, "preview": 1600,
         "workshop": 1600, "secretary": 1600, "plan": 1600, "home": 1600, "docs-desk": 1600,
         "phone-chat": 600, "phone-plus": 600, "phone-docs": 600}
+# Hooks for scripts/site-shots.py (the /about/ showcase): extra Chrome flags, and a call at the end of run() with its locals.
+CHROME_ARGS, AFTER = [], None
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 done, failed = [], []
 
@@ -219,7 +221,7 @@ def run(srv_dir, work):
     api("/projects", "POST", {"path": str(arena), "name": "Slime Arena", "emoji": "🟢"}, O)
 
     with sync_playwright() as p:
-        b = p.chromium.launch(executable_path=CHROME, args=["--no-proxy-server"])
+        b = p.chromium.launch(executable_path=CHROME, args=["--no-proxy-server", *CHROME_ARGS])
         def open_as(name, color, tok, mobile=False):
             if mobile: ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA)
             else: ctx = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=2)
@@ -236,8 +238,12 @@ def run(srv_dir, work):
             host.click("#pj-plus"); host.click(".np-setup [data-ns='tpl:game']"); host.wait_for_selector("#np-input"); host.fill("#np-input", "Night Market")
         shoot(host, "create", prep_create)
         close_overlays(host)
-        chat(host); host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
-        shoot(host, "kickoff", lambda: host.evaluate("document.querySelector('#flow-kick').scrollIntoView({block: 'start'})"))
+        def prep_kickoff():   # the card can take a moment after the dialog closes; reload once if it doesn't show
+            chat(host)
+            try: host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
+            except Exception: host.reload(); wait_text(host, "#sync-status", "connected"); chat(host); host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
+            host.evaluate("document.querySelector('#flow-kick').scrollIntoView({block: 'start'})")
+        shoot(host, "kickoff", prep_kickoff)
 
         # ---------- Start the flow, then a lively chat ----------
         api("/flow/start", "POST", {}, O, pid)
@@ -402,6 +408,7 @@ def run(srv_dir, work):
         def prep_docs_desk():
             host.evaluate("TribeApp.show('docs')"); host.wait_for_selector("#doc-repo-hero .rhx-n", timeout=15000); host.wait_for_timeout(900)
         shoot(host, "docs-desk", prep_docs_desk)
+        if AFTER: AFTER(dict(locals()))
 
 
 if __name__ == "__main__":
