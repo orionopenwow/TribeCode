@@ -20,7 +20,7 @@
   const ago = at => { const s = (Date.now() - Date.parse(at)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; if (s < 7 * 86400) return `${Math.floor(s / 86400)}d ago`; return new Date(at).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
   const me = () => C.state().me || {};
   const connected = () => C.connected();
-  const projects = () => (PJ() ? PJ().list() : []) || [];
+  const projects = () => { const l = PJ() ? PJ().list() || [] : []; return l.length ? l : ((data && data.projects) || []); };   // the hub's own list until projects.js has loaded
   const projOf = id => projects().find(p => p.id === id) || ((data && data.projects) || []).find(p => p.id === id) || null;
 
   let data = null, mode = 'home', loading = null, docsQ = '', reposCache = null;
@@ -51,9 +51,9 @@
     const want = mode === 'home' ? '#/hub' : `#/hub/${mode}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
     const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All repos' : mode === 'docs' ? 'Global docs' : 'Hub';
-    render(); load();
+    render(); load(); panel();
   }
-  function onHide() { if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
+  function onHide() { setTimeout(panel, 0); if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
   const fromHash = () => { const m = /^#\/hub(?:\/(repos|docs))?$/.exec(location.hash); if (m && (document.body.dataset.view !== 'hub' || mode !== (m[1] || 'home'))) open(m[1] || 'home'); };
   addEventListener('hashchange', fromHash);
 
@@ -321,6 +321,7 @@
     let pad = $('#room-scratch');
     if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'scratch room-scratch'; const cc = $('#cc-connect'); cc.after(pad); }
     if (!pad.dataset.mounted) scratch.mount(pad);
+    pad.classList.toggle('hidden', !connected() && document.body.dataset.view === 'hub');   // offline, the hub shows the scratchpad itself
   }
 
   // ---------- the scratchpad ----------

@@ -229,3 +229,9 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .hub-item.k-commit .hi-ico { color: var(--peer-ink); }
 .hub-item.k-decision .hi-ico, .hub-item.k-proposal .hi-ico, .hub-item.k-vote .hi-ico { color: var(--accent-ink); }
 .hub-launch .eyebrow { color: var(--accent-ink); }
+.room-scratch.hidden { display: none; }
+.room-scratch .sc-acts .sc-at { flex-basis: 100%; margin: 0 0 2px; }
+.room-scratch .sc-acts .sc-x { margin-left: auto; }
+/* the right panel scrolls; its rows never squash */
+.room-pane > * { flex-shrink: 0; }
+.room-agents h6 { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }

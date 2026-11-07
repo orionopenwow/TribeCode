@@ -84,7 +84,7 @@
   function fakeRelease(v) {
     return {
       version: v.replace(/^v/, ''), date: new Date().toISOString(),
-      notes: '- Restart-to-update pill with save and hand-off\n- First-run setup and 60-second tour\n- Graphite theme with higher contrast\n- Faster local summaries',
+      notes: '- A quiet update icon with save and hand-off\n- First-run setup and 60-second tour\n- Graphite theme with higher contrast\n- Faster local summaries',
       async download(p) { for (let k = 1; k <= 10; k++) { await new Promise(r => setTimeout(r, 120)); p(k / 10); } },
       async installAndRelaunch() { sessionStorage.setItem('tribecode.justUpdated', v); location.search = ''; },
     };
