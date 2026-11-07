@@ -77,7 +77,7 @@ def main():
             if host.locator("#pj-tools [data-shelf-add='pixelfx-skill']").count(): host.click("#pj-tools [data-shelf-add='pixelfx-skill']")
             else: assert api("/shelf/pixelfx-skill/add", "POST", {"project": pid}, token=tok)[0] == 200
             for _ in range(60):
-                if (repo / ".claude" / "skills" / "pixelfx" / "SKILL.md").exists(): break
+                if (repo / ".claude" / "skills" / "pixelfx" / "notes" / "ref.md").exists() and (repo / "TOOLBOX.md").exists(): break
                 time.sleep(0.25)
             sk = repo / ".claude" / "skills" / "pixelfx"
             assert (sk / "SKILL.md").read_text().startswith("---\nname: pixelfx"), "the skill is in the repo"
