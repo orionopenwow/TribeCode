@@ -212,7 +212,7 @@ def main():
                 wait_for(lambda: [e for e in bus(host_tok, "reminder") if e.get("ref") == todays["id"]], what="task-due reminder")
 
             # ---------- 3. task due chips + overdue color ----------
-            host.click('[data-nav="tasks"]:visible')
+            host.click('[data-nav="tasks"]:visible'); host.click("#wt-tasks")   # Tasks & Board opens on its last tab: pick Board
             host.wait_for_selector(f".task[data-id='{late['id']}'] .due-chip.overdue")
             color = host.evaluate(f"getComputedStyle(document.querySelector(\".task[data-id='{late['id']}'] .due-chip\")).color")
             ember = host.evaluate("getComputedStyle(document.body).getPropertyValue('--ember-ink').trim()")
@@ -429,7 +429,7 @@ def main():
 
             # ---------- phone: comments sheet + calendar fit ----------
             phone = open_as(b, "Maya", maya_tok, viewport=(390, 844))
-            phone.click('#menu-btn'); phone.click("#nest-calendar"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")   # phones: Project Hub lives in the panel
+            phone.click('#menu-btn'); phone.click("#nest-ws-tasks"); phone.click("#wt-calendar"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")   # phones: Project Hub lives in the panel
             b.close()
 
         assert not errors, "\n".join(errors)

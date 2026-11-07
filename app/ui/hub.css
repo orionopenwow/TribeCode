@@ -162,9 +162,6 @@ button.hf-row:hover { background: var(--hover); color: var(--text); }
 .nest-open .pj-face { width: 20px; height: 20px; border-radius: 6px; font-size: 9px; flex: none; }
 .nest-open .pj-face.emo { font-size: 12px; }
 .nest-open > svg.i:last-child { transform: rotate(-90deg); width: 14px !important; height: 14px !important; }
-body.global #pj-nav > .nest-row:not(.nest-open), body.global #pj-nav #nest-huddle-row, body.global #pj-nav #capture-toggle { opacity: .5; }
-body.global #pj-nav > .nest-row:not(.nest-open):hover, body.global #pj-nav #nest-huddle-row:hover { opacity: .85; }
-body.global #pj-nav .n { display: none; }
 body.global #nest-pinned, body.global #nest-recents { display: none; }
 body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !important; }
 
@@ -235,3 +232,32 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 /* the right panel scrolls; its rows never squash */
 .room-pane > * { flex-shrink: 0; }
 .room-agents h6 { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
+
+/* ---------- right panel: an agent's detail (shell.js previewAgent) ---------- */
+.ad { display: flex; flex-direction: column; gap: 18px; font-size: 13px; line-height: 1.5; }
+.ad-head { display: flex; align-items: center; gap: 10px; }
+.ad-head b { display: block; font-size: 15px; color: var(--text); }
+.ad-head small { color: var(--muted); font-size: 12px; }
+.ad-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-3); flex: none; }
+.ad-dot.on { background: var(--accent-2); }
+.ad-ctl { padding: 8px 10px; border: 1px solid var(--edge); border-left: 3px solid var(--amber); border-radius: 8px; color: var(--text); }
+.ad-sec { display: flex; flex-direction: column; gap: 6px; }
+.ad-sec .eyebrow { color: var(--muted); }
+.ad-none { margin: 0; color: var(--muted); }
+.ad-now b { display: block; color: var(--text); font-size: 14px; }
+.ad-now small, .ad-list small { display: block; color: var(--muted); font-size: 12px; }
+.ad-now code, .ad-list code, .ad-files code { font-family: var(--mono); font-size: 11.5px; color: var(--peer-ink); }
+.ad-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ad-files code { padding: 2px 6px; border: 1px solid var(--edge); border-radius: 6px; }
+.ad-meter { display: grid; grid-template-columns: 58px 1fr 34px; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.ad-meter i { height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.ad-meter em { display: block; height: 100%; background: var(--accent-2); }
+.ad-meter span:last-child { font-family: var(--mono); font-size: 11px; text-align: right; }
+.ad-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ad-list li { padding: 7px 0; border-top: 1px solid var(--stroke); }
+.ad-list li:first-child { border-top: 0; padding-top: 0; }
+.ad-list b { color: var(--text); font-weight: 550; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#room-agents [data-agent] { cursor: pointer; }
+/* switcher: the project's views */
+.sw-views { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 0 2px 4px; }
+.sh-switch .sw-view { min-height: 34px !important; font-size: 13px; }

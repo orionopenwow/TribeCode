@@ -145,7 +145,7 @@ def main():
             off.wait_for_selector("#view-hub:not(.hidden) #hub-launch")
             for sel in ["#hub-new", "#hub-join", "#hub-search", "#hub-host", "#hub-join2", "#hub-scratch .sc-in", "#grp-global"]: off.wait_for_selector(sel, state="visible")
             assert off.locator(".solo-empty:visible").count() == 0
-            off.click(".nest-row[data-nav='chat']")
+            off.evaluate("TribeApp.show('chat')")
             off.wait_for_selector("#view-hub:not(.hidden)")
             assert off.is_hidden("#view-chat"), "chat without a tribe lands on the hub"
             off.fill("#hub-scratch .sc-in", "Offline idea: lanterns that hum")
@@ -176,9 +176,9 @@ def main():
             wait_text(host, "#hub-fleet", "37%"); wait_text(host, "#hub-fleet", "42k tok")
             wait_text(host, "#hub-fleet", "Ollama")
             wait_text(host, "#hub-fleet", "Secretary")
-            # the sidebar: one Global group, core rows dimmed, a way into the project
-            assert host.locator("#grp-hub").count() == 0 and host.locator("#grp-ops").count() == 0
-            assert [t.strip() for t in host.locator("#grp-global-body .nest-row span").all_inner_texts()] == ["All repos", "Global docs", "Agent fleet"]
+            # the sidebar: the four rows are the Global ones, plus a way into the project
+            assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
+            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Hub", "Global docs", "All repos", "Agent fleet"]
             assert host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#nest-open", state="visible")
             # right panel: agents + helpers + scratchpad
@@ -205,8 +205,8 @@ def main():
             wait_text(host, "#hub-resume", "lantern"); wait_text(host, "#hub-resume", "Docs")
             host.click("#nest-open"); host.wait_for_selector("#view-home:not(.hidden)")
             assert not host.evaluate("document.body.classList.contains('global')")
-            host.wait_for_selector("#grp-hub .nest-fold-head")   # back in a project: Project Hub + Coordinate & Ops
-            host.click("[data-nav='tasks']:visible"); host.wait_for_selector("#view-tasks:not(.hidden)")
+            host.wait_for_selector("#nest-ws-tasks", state="visible")   # back in a project: its four rows
+            host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tasks:not(.hidden)")
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
             wait_text(host, "#hub-resume", "Tasks")
             host.click("#hub-resume"); host.wait_for_selector("#view-tasks:not(.hidden)")

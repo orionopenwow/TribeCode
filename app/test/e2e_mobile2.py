@@ -261,7 +261,7 @@ def main():
             assert a["status"] == "approved" and a["note"] == "Ship it, nice work" and a["decidedBy"] == maya, a
             phone.wait_for_selector("#view-updates .m2-decided .m2-ap.approved")
             # Updates is reachable from the panel too
-            phone.click("#menu-btn"); phone.click("#nest-updates"); phone.wait_for_selector("#view-updates:not(.hidden)")
+            phone.click("#tabbar [data-m2nav='updates']"); phone.wait_for_selector("#view-updates:not(.hidden)")
 
             # ---- Docs hub: the pinned repo hero (Flare thumbnail), living notes, files, screenshots
             def hero_kind(kind):

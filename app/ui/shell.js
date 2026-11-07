@@ -1,14 +1,20 @@
 // The shell around every view (the mix of Discord and the Claude desktop app):
 //   far-left circle rail (projects.js draws the circles) | the project's nest | main | right panel.
-// This file renders the nest: the header (project · switcher), the core daily drivers (Chat, Docs & files,
-// Updates, Tasks, Huddle, Capture to notes), two collapsible groups (Project Hub, Coordinate & Ops), Pinned,
-// Recents and the bottom utility row (Settings, Invite friends). One registry (DEST) drives the nest, the
-// breadcrumb section menu and the Ctrl K palette, so every destination is listed exactly once.
-// With no project selected (the Global Hub, app/ui/hub.js) the two groups collapse into one "Global" group (All repos,
-// Global docs, Agent fleet), the core rows dim (they open in the current project) and the header is the tribe.
-// Also: the workspace switcher (tribe, pinned projects, collaborative rooms, personal scratchpad, new project, paste
-// an invite link), the + New menu (phones' orange action), the right panel's preview mode.
-// Public: window.TribeShell = { render, onShow, preview, closePreview, switcher, go, dests, openNew, recent }.
+// The nest is communication and core only: Chat & Streams (with #general, #agents and DMs under it), Docs & Files,
+// Tasks & Board and Agents Hub, then Settings and Invite friends. Tasks & Board and Agents Hub are tabbed workspaces:
+// a tab bar (#view-tabs) at the top of main holds what used to be the Project Hub and Coordinate & Ops groups
+// (Board · Bugs · Proposals · Milestones · Calendar · Repo · Visuals · Roles · Requests, and Agents · Your agents ·
+// Ownership · Conflicts · Hand-offs · Reviews · Daily plan · Secretary). The last tab per workspace is remembered,
+// deep links (#/tasks/bugs, #/agents/conflicts) work, breadcrumbs say View › Tab, Ctrl K lists every tab.
+// Updates live in the bell (and the switcher's Timeline), the huddle in the chat header's call button (the nest
+// shows it only while live), Capture to notes in the profile menu (the nest shows it only while on).
+// With no project selected (the Global Hub, app/ui/hub.js) the four rows are the Global ones: Hub · Global docs ·
+// All repos · Agent fleet, and the header is the tribe.
+// One registry (DEST) drives the nest, the tabs, the breadcrumb menu and the Ctrl K palette.
+// Also: the workspace switcher (tribe, project views, pinned projects, collaborative rooms, personal scratchpad, new
+// project, paste an invite link), the + New menu (phones' orange action), the right panel's preview mode and the
+// agent detail in the right panel (task, hand-offs, conflicts, reviews, recent timeline).
+// Public: window.TribeShell = { render, onShow, preview, closePreview, switcher, go, dests, openNew, recent, previewAgent }.
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient;
@@ -20,42 +26,47 @@
   const toast = m => App() && App().toast(m);
   const pid = () => (PJ() && PJ().current()) || 'default';
   const closeDrawer = () => document.body.classList.remove('drawer-open');
+  const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 
   // ---------- every destination, once ----------
-  // group: core | hub | ops | foot | none (palette and crumbs only). when(): shown only while true (Roles, Requests).
-  const coord = tab => { if (window.TribeCoord) window.TribeCoord.open(tab); else App().show('coord'); };
+  // group: core (the four rows) | tasks / agents (tabs of those workspaces) | global (rows with no project) | foot | none
+  // tab: the short tab label; slug: the deep link (#/tasks/<slug>). when(): shown only while true (Roles, Requests).
+  const coord = tab => { if (window.TribeCoord) window.TribeCoord.open(tab); if (document.body.dataset.view !== 'coord') App().show('coord'); };   // also from Your agents / Secretary, which app.js does not track
   const flowOn = () => !!(window.TribeFlow && window.TribeFlow.state && window.TribeFlow.state());
   let counts = {};   // badges: bugs, requests, reviews, handoffs
   let lastDest = '';
   const DEST = [
-    { key: 'chat', label: 'Chat', icon: 'i-chat', group: 'core', keys: 'messages general talk', run: () => App().show('chat') },
-    { key: 'docs', label: 'Docs & files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
-    { key: 'updates', label: 'Updates', icon: 'i-bell', group: 'core', keys: 'inbox notifications plan feed', run: () => openUpdates() },
-    { key: 'tasks', label: 'Tasks', icon: 'i-check', group: 'core', keys: 'todo kanban', run: () => App().show('tasks') },
-    { key: 'huddle', label: 'Huddle', icon: 'i-mic', group: 'core', kind: 'Action', keys: 'voice call talk mic audio join start', hint: 'Ctrl Shift M', run: () => { const H = window.TribeHuddle; if (H && !H.inCall()) H.join(); } },
-    { key: 'capture', label: 'Capture to notes', icon: 'i-doc', group: 'core', kind: 'Action', keys: 'voice speech transcribe dictate record notes toggle', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
-    { key: 'bugs', label: 'Bugs', icon: 'i-bug', group: 'hub', keys: 'bug inbox issues', run: () => App().show('bugs') },
-    { key: 'board', label: 'Proposals & board', icon: 'i-vote', group: 'hub', keys: 'approval board vote vision', run: () => App().show('board') },
-    { key: 'milestones', label: 'Milestones', icon: 'i-flag', group: 'hub', keys: 'roadmap goals', run: () => { App().show('board'); setTimeout(() => { const m = $('#ms-list'); m && m.closest('.card').scrollIntoView({ block: 'center' }); }, 120); } },
-    { key: 'calendar', label: 'Calendar', icon: 'i-calendar', group: 'hub', keys: 'schedule week month events', run: () => App().show('calendar') },
-    { key: 'repo', label: 'Repo', icon: 'i-git', group: 'hub', keys: 'git branches code github', run: () => App().show('repo') },
-    { key: 'visuals', label: 'Visuals & screenshots', icon: 'i-photo', group: 'hub', keys: 'screenshots compare diff images', run: () => App().show('visuals') },
-    { key: 'roles', label: 'Roles', icon: 'i-users', group: 'hub', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
-    { key: 'requests', label: 'Requests', icon: 'i-inbox', group: 'hub', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
-    { key: 'agents', label: 'Agents', icon: 'i-robot', group: 'ops', keys: 'coordinate claude agents panel', run: () => coord('agents') },
-    { key: 'ownership', label: 'Ownership map', icon: 'i-map', group: 'ops', keys: 'claims files owners', run: () => coord('ownership') },
-    { key: 'conflicts', label: 'Conflict radar', icon: 'i-merge', group: 'ops', keys: 'merge overlap branches', run: () => coord('conflicts') },
-    { key: 'handoffs', label: 'Hand-offs', icon: 'i-hand', group: 'ops', keys: 'handoff park take', run: () => coord('handoffs') },
-    { key: 'reviews', label: 'Reviews', icon: 'i-eye', group: 'ops', keys: 'review approve', run: () => coord('reviews') },
-    { key: 'plan', label: 'Daily plan', icon: 'i-sun', group: 'ops', keys: 'today standup plan', run: () => coord('plan') },
-    { key: 'agents-hub', label: 'Your agents', icon: 'i-plug', group: 'ops', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
-    { key: 'secretary', label: 'Secretary', icon: 'i-quill', group: 'ops', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
+    { key: 'chat', label: 'Chat & Streams', icon: 'i-chat', group: 'core', keys: 'messages general talk channels streams dm', run: () => { if (window.TribeDM && window.TribeDM.current && window.TribeDM.current() !== 'general' && window.TribeDM.back) window.TribeDM.back(); App().show('chat'); } },
+    { key: 'docs', label: 'Docs & Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
+    { key: 'ws-tasks', label: 'Tasks & Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
+    { key: 'ws-agents', label: 'Agents Hub', icon: 'i-robot', group: 'core', keys: 'agents coordinate ops claude workspace', run: () => openWs('agents') },
+    { key: 'tasks', label: 'Task board', tab: 'Board', slug: 'board', icon: 'i-check', group: 'tasks', keys: 'tasks todo kanban', run: () => App().show('tasks') },
+    { key: 'bugs', label: 'Bugs', tab: 'Bugs', slug: 'bugs', icon: 'i-bug', group: 'tasks', keys: 'bug inbox issues', run: () => App().show('bugs') },
+    { key: 'board', label: 'Proposals & board', tab: 'Proposals', slug: 'proposals', icon: 'i-vote', group: 'tasks', keys: 'approval board vote vision', run: () => App().show('board') },
+    { key: 'milestones', label: 'Milestones', tab: 'Milestones', slug: 'milestones', icon: 'i-flag', group: 'tasks', keys: 'roadmap goals', run: () => { App().show('board'); setTimeout(() => { const m = $('#ms-list'); m && m.closest('.card').scrollIntoView({ block: 'center' }); }, 120); } },
+    { key: 'calendar', label: 'Calendar', tab: 'Calendar', slug: 'calendar', icon: 'i-calendar', group: 'tasks', keys: 'schedule week month events', run: () => App().show('calendar') },
+    { key: 'repo', label: 'Repo', tab: 'Repo', slug: 'repo', icon: 'i-git', group: 'tasks', keys: 'git branches code github', run: () => App().show('repo') },
+    { key: 'visuals', label: 'Visuals & screenshots', tab: 'Visuals', slug: 'visuals', icon: 'i-photo', group: 'tasks', keys: 'screenshots compare diff images', run: () => App().show('visuals') },
+    { key: 'roles', label: 'Roles', tab: 'Roles', slug: 'roles', icon: 'i-users', group: 'tasks', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
+    { key: 'requests', label: 'Requests', tab: 'Requests', slug: 'requests', icon: 'i-inbox', group: 'tasks', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
+    { key: 'agents', label: 'Agents', tab: 'Agents', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
+    { key: 'agents-hub', label: 'Your agents', tab: 'Your agents', slug: 'yours', icon: 'i-plug', group: 'agents', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'ownership', label: 'Ownership map', tab: 'Ownership', slug: 'ownership', icon: 'i-map', group: 'agents', keys: 'claims files owners', run: () => coord('ownership') },
+    { key: 'conflicts', label: 'Conflict radar', tab: 'Conflicts', slug: 'conflicts', icon: 'i-merge', group: 'agents', keys: 'merge overlap branches', run: () => coord('conflicts') },
+    { key: 'handoffs', label: 'Hand-offs', tab: 'Hand-offs', slug: 'handoffs', icon: 'i-hand', group: 'agents', keys: 'handoff park take', run: () => coord('handoffs') },
+    { key: 'reviews', label: 'Reviews', tab: 'Reviews', slug: 'reviews', icon: 'i-eye', group: 'agents', keys: 'review approve', run: () => coord('reviews') },
+    { key: 'plan', label: 'Daily plan', tab: 'Daily plan', slug: 'plan', icon: 'i-sun', group: 'agents', keys: 'today standup plan', run: () => coord('plan') },
+    { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
+    { key: 'hub', label: 'Global hub', icon: 'i-home', group: 'global', row: 'Hub', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
+    { key: 'docs-all', label: 'Global docs', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
+    { key: 'repos-all', label: 'All repos', icon: 'i-git', group: 'global', keys: 'repositories every project code branches status', run: () => hubOpen('repos') },
+    { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
+    { key: 'huddle', label: 'Huddle', icon: 'i-mic', kind: 'Action', keys: 'voice call talk mic audio join start', hint: 'Ctrl Shift M', run: () => { const H = window.TribeHuddle; if (H && !H.inCall()) H.join(); } },
+    { key: 'capture', label: 'Capture to notes', icon: 'i-doc', kind: 'Action', keys: 'voice speech transcribe dictate record notes toggle', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
     { key: 'settings', label: 'Settings', icon: 'i-gear', group: 'foot', kind: 'Action', keys: 'preferences profile name color folder brain', run: () => window.TribeSettings && window.TribeSettings.open() },
     { key: 'invite', label: 'Invite friends', icon: 'i-users', group: 'foot', kind: 'Action', keys: 'link join share qr', run: () => App().openInvite() },
-    { key: 'repos-all', label: 'All repos', icon: 'i-git', group: 'global', keys: 'repositories every project code branches status', run: () => hubOpen('repos') },
-    { key: 'docs-all', label: 'Global docs', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
-    { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
-    { key: 'hub', label: 'Global hub', icon: 'i-home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
     { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
     { key: 'panel', label: 'Toggle right panel', icon: 'i-list', kind: 'Action', keys: 'right panel in the room sidebar show hide preview', run: () => setPanel(!document.body.classList.contains('panel-off')) },
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
@@ -63,10 +74,18 @@
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
-  const PROJECT_GROUPS = [['hub', 'Project Hub'], ['ops', 'Coordinate & Ops']], GLOBAL_GROUPS = [['global', 'Global']];
+  const WS = { tasks: { label: 'Tasks & Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
+  const tabsOf = w => DEST.filter(d => d.group === w && (!d.when || d.when()));
+  const wsOf = key => { const d = byKey(key); return d && WS[d.group] ? d.group : null; };
+  const TKEY = w => `tribecode.tab.${w}`;
+  // A workspace opens on its last tab (if it is still there).
+  function openWs(w) {
+    const last = lsGet(TKEY(w)), list = tabsOf(w);
+    const d = list.find(x => x.key === last) || list[0];
+    if (d) { lastDest = d.key; d.run(); }
+  }
   // No project selected: the Global Hub is on screen (its sub-pages too).
   const isGlobal = () => document.body.dataset.view === 'hub';
-  let GROUPS = PROJECT_GROUPS;
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
   function openScratch() {
     if (isPhone() || !C.connected()) { hubOpen('home'); setTimeout(() => { const t = $('#hub-scratch .sc-in') || $('#scratch-in'); if (t) t.focus(); }, 150); return; }
@@ -81,40 +100,18 @@
     d.run(); setTimeout(markActive, 0);
   }
 
-  // ---------- the two collapsible groups (open/closed per group in localStorage) ----------
-  const FKEY = g => `tribecode.nav.${g}`;
-  const isOpen = g => { try { return localStorage.getItem(FKEY(g)) !== '0'; } catch { return true; } };
+  // ---------- the rows: Global ones with no project (in #nest-groups); the project's four are in index.html ----------
   let drawnGlobal = null;
   function drawGroups() {
     const box = $('#nest-groups'); if (!box) return;
-    GROUPS = isGlobal() ? GLOBAL_GROUPS : PROJECT_GROUPS; drawnGlobal = isGlobal();
-    box.innerHTML = GROUPS.map(([g, label]) => `<div class="nest-fold ${isOpen(g) ? 'open' : ''}" id="grp-${g}" data-group="${g}">
-        <button class="nest-fold-head" data-fold="${g}" aria-expanded="${isOpen(g)}" aria-controls="grp-${g}-body"><span>${esc(label)}</span><span class="n" id="gn-${g}"></span>${ico('i-chev', 14)}</button>
-        <div class="nest-fold-body" id="grp-${g}-body" role="group" aria-label="${esc(label)}">${DEST.filter(d => d.group === g).map(d =>
-          `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.label)}</span>${COUNT[d.key] ? `<span class="n" id="nn-${esc(d.key)}"></span>` : ''}</button>`).join('')}</div></div>`).join('');
-    visibility();
+    drawnGlobal = isGlobal();
+    box.innerHTML = drawnGlobal ? `<div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global').map(d =>
+      `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.row || d.label)}</span></button>`).join('')}</div>` : '';
   }
-  function fold(g, open) {
-    const el = $(`#grp-${g}`); if (!el) return;
-    el.classList.toggle('open', open); el.querySelector('.nest-fold-head').setAttribute('aria-expanded', String(open));
-    try { localStorage.setItem(FKEY(g), open ? '1' : '0'); } catch {}
-    paintGroupCounts();
-  }
-  function visibility() { DEST.forEach(d => { if (!d.when) return; const el = $(`#nest-${d.key}`); if (el) el.classList.toggle('hidden', !d.when()); }); }
   function paintCounts() {
-    for (const k of Object.keys(COUNT)) {
-      const el = $(`#nn-${k}`); if (!el) continue; const v = counts[k] || 0;
-      el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!(v && HOT[k]));
-    }
-    visibility(); paintGroupCounts();
-  }
-  // A folded group still says when something inside waits on you.
-  function paintGroupCounts() {
-    for (const [g] of GROUPS) {
-      const el = $(`#gn-${g}`); if (!el) continue;
-      const v = isOpen(g) ? 0 : DEST.filter(d => d.group === g && HOT[d.key]).reduce((s, d) => s + (counts[d.key] || 0), 0);
-      el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!v);
-    }
+    const v = (counts.reviews || 0) + (counts.handoffs || 0), el = $('#nn-agents');
+    if (el) { el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!v); }
+    drawTabs();
   }
 
   // ---------- which destination is on screen ----------
@@ -129,16 +126,90 @@
   }
   function markActive() {
     if (drawnGlobal !== isGlobal()) { drawGroups(); globalHead(); }
-    const cur = document.body.classList.contains('ws-open') ? '' : current();
-    document.querySelectorAll('[data-pnav]').forEach(b => { const on = b.dataset.pnav === cur; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    for (const [g] of GROUPS) { const el = $(`#grp-${g}`); if (el) el.classList.toggle('has-on', DEST.some(d => d.group === g && d.key === cur)); }
-    visibility();
+    const cur = document.body.classList.contains('ws-open') ? '' : current(), w = wsOf(cur);
+    const lit = w ? WS[w].row : cur;   // inside a workspace its row is the lit one
+    document.querySelectorAll('.side [data-pnav], #tabbar [data-pnav]').forEach(b => { const on = b.dataset.pnav === lit; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    drawTabs(cur);
   }
-  new MutationObserver(markActive).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
+  // ---------- the tab bar of a workspace (Tasks & Board, Agents Hub) ----------
+  let tabsSig = '';
+  function drawTabs(cur) {
+    if (cur === undefined) cur = document.body.classList.contains('ws-open') ? '' : current();
+    const bar = $('#view-tabs'); if (!bar) return;
+    const w = wsOf(cur);
+    document.body.classList.toggle('ws-tabbed', !!w);
+    if (!w) {
+      if (!bar.classList.contains('hidden')) bar.classList.add('hidden');
+      if (/^#\/(tasks|agents)\//.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+      return;
+    }
+    lsSet(TKEY(w), cur);
+    const list = tabsOf(w), d = byKey(cur);
+    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',');
+    if (sig !== tabsSig) {
+      tabsSig = sig;
+      bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')}</div>`;
+    }
+    bar.classList.remove('hidden');
+    const want = `#/${w}/${d.slug}`;
+    if (location.hash !== want && !/^#\/(agents-hub|secretary)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search + want);
+    const crumb = $('#crumb-label'), text = `${WS[w].label} › ${d.tab}`;
+    if (crumb && crumb.textContent !== text) crumb.textContent = text;
+  }
+  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (t) { e.preventDefault(); go(t.dataset.tab); } });
+  document.addEventListener('keydown', e => {   // arrow keys move along the tabs
+    const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (!t || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const all = [...document.querySelectorAll('#view-tabs [data-tab]')], i = all.indexOf(t);
+    const n = e.key === 'Home' ? all[0] : e.key === 'End' ? all[all.length - 1] : all[(i + (e.key === 'ArrowRight' ? 1 : -1) + all.length) % all.length];
+    if (n) { e.preventDefault(); go(n.dataset.tab); setTimeout(() => { const f = document.getElementById('wt-' + n.dataset.tab); if (f) f.focus(); }, 30); }
+  });
+  // The Tasks & Board row also carries data-nav="tasks" (the Board); with another tab remembered it opens that one instead.
+  addEventListener('click', e => {
+    const r = e.target.closest && e.target.closest('#nest-ws-tasks'); if (!r) return;
+    const last = lsGet(TKEY('tasks')); if (!last || last === 'tasks' || !tabsOf('tasks').some(t => t.key === last)) return;
+    e.preventDefault(); e.stopImmediatePropagation(); go('ws-tasks');
+  }, true);
+  // Deep links: #/tasks/bugs, #/agents/conflicts.
+  function fromHash() {
+    const m = /^#\/(tasks|agents)\/([a-z-]+)$/.exec(location.hash); if (!m) return;
+    const d = DEST.find(x => x.group === m[1] && x.slug === m[2]);
+    if (d && current() !== d.key) go(d.key);
+  }
+  addEventListener('hashchange', fromHash);
+  C.on('hello', () => setTimeout(fromHash, 60));
+  new MutationObserver(() => markActive()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
   setTimeout(() => {
-    const cl = $('#crumb-label'); if (cl) new MutationObserver(markActive).observe(cl, { childList: true, characterData: true, subtree: true });
+    fromHash();
+    const cl = $('#crumb-label'); if (cl) new MutationObserver(() => markActive()).observe(cl, { childList: true, characterData: true, subtree: true });
     new MutationObserver(() => markActive()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   }, 0);
+
+  // ---------- Chat & Streams: #general, #agents and direct messages under the Chat row ----------
+  const SKEY = 'tribecode.nav.streams';
+  function drawStreams() {
+    const box = $('#nest-streams'), tg = $('#streams-toggle'); if (!box || !tg) return;
+    const open = lsGet(SKEY) === '1', me = (C.state().me || {}).id;
+    tg.setAttribute('aria-expanded', String(open)); tg.setAttribute('aria-label', open ? 'Hide channels' : 'Show channels'); box.classList.toggle('open', open);
+    if (!open) { box.innerHTML = ''; return; }
+    const ms = (C.state().members || []).filter(m => m.id !== me && (m.role !== 'agent' || m.owner === me)).sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name)).slice(0, 8);
+    const dmCur = window.TribeDM && window.TribeDM.current ? window.TribeDM.current() : 'general', inChat = document.body.dataset.view === 'chat';
+    const isDm = id => dmCur !== 'general' && String(dmCur).includes(id);
+    box.innerHTML = `<button class="nest-row small ${inChat && dmCur === 'general' ? 'on' : ''}" data-stream="general"><span class="hash">#</span><span>general</span></button>
+      <button class="nest-row small" data-stream="agents"><span class="hash">#</span><span>agents</span></button>
+      ${ms.map(m => `<button class="nest-row small ${inChat && isDm(m.id) ? 'on' : ''}" data-stream="dm:${esc(m.id)}"><span class="dm-dot ${m.online ? 'on' : ''}" style="--mc:${esc(m.role === 'agent' ? '#38C6B1' : m.color)}"></span><span>${esc(m.role === 'agent' ? 'My Claude' : m.name)}</span></button>`).join('')}`;
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest) return;
+    if (e.target.closest('#streams-toggle')) { lsSet(SKEY, lsGet(SKEY) === '1' ? '0' : '1'); return drawStreams(); }
+    const st = e.target.closest('[data-stream]'); if (!st) return;
+    const k = st.dataset.stream; closeDrawer();
+    if (k === 'general') return go('chat');
+    if (k === 'agents') { coord('agents'); setTimeout(() => { const t = $('#talk-input'); if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); } }, 400); return; }
+    if (k.startsWith('dm:') && window.TribeDM) window.TribeDM.open(k.slice(3));
+  });
+  C.on('presence', () => { if (lsGet(SKEY) === '1') drawStreams(); }); C.on('hello', drawStreams);
+  new MutationObserver(() => drawStreams()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
   // ---------- a small popover we own (flat, 1px border, no shadow) ----------
   let popEl = null;
@@ -199,14 +270,14 @@
     if (!ag) toast('Connect your Claude Code (right panel) to ask it directly. @brain asks the local brain.');
   }
 
-  // ---------- breadcrumbs: the section menu mirrors the nest (core, then the two groups) ----------
+  // ---------- breadcrumbs: the section menu mirrors the nest (the four rows, then each workspace's tabs) ----------
   function menuRows(list) {
     const cur = current();
     return list.filter(d => !d.when || d.when()).map(d => `<button data-dest="${esc(d.key)}" class="${d.key === cur ? 'on' : ''}">${ico(d.icon)}<span>${esc(d.label)}</span>${COUNT[d.key] && counts[d.key] ? `<span class="n ${HOT[d.key] ? 'hot' : ''}">${counts[d.key]}</span>` : ''}</button>`).join('');
   }
   function sectionMenu(anchor) {
-    const core = DEST.filter(d => d.group === 'core' && d.kind !== 'Action');
-    const html = `<div class="sh-menu">${menuRows(core)}${GROUPS.map(([g, label]) => `<h6>${esc(label)}</h6>${menuRows(DEST.filter(d => d.group === g))}`).join('')}</div>`;
+    const core = DEST.filter(d => d.group === (isGlobal() ? 'global' : 'core'));
+    const html = `<div class="sh-menu">${menuRows(core)}${isGlobal() ? '' : Object.entries(WS).map(([g, w]) => `<h6>${esc(w.label)}</h6>${menuRows(DEST.filter(d => d.group === g))}`).join('')}</div>`;
     const el = pop(anchor, html, { id: 'section-menu', side: 'below' });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
   }
@@ -236,6 +307,7 @@
     const groupH = (label, items) => items.length ? `<h6>${esc(label)}</h6>${items.map(row).join('')}` : '';
     const el = pop(anchor, `<div class="sh-menu sh-projects sh-switch">
         <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Global hub · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
+        ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Overview', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
         <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`,
@@ -291,9 +363,6 @@
     if (!enter) { enter = document.createElement('div'); enter.id = 'nest-enter'; enter.className = 'nest-enter'; const nav = $('#pj-nav'); nav.insertBefore(enter, nav.firstChild); }
     enter.innerHTML = g ? (on && p ? `<div class="nest-pick">Pick a project</div><button class="nest-row nest-open" id="nest-open" data-nav="home" title="Open ${esc(p.name)}">${h ? h.face(p, 'xs') : ''}<span>Open ${esc(p.name)}</span>${ico('i-chev', 14)}</button>`
       : `<div class="nest-pick">${on ? 'No project yet' : 'Not in a tribe yet'}</div>`) : '';
-    document.querySelectorAll('#pj-nav > .nest-row:not(.nest-open), #pj-nav #nest-huddle-row').forEach(r => {
-      if (g) { r.dataset.hint = on && p ? `Opens in ${p.name}` : 'Needs a project'; r.title = r.dataset.hint; } else if (r.dataset.hint) { delete r.dataset.hint; r.removeAttribute('title'); }
-    });
   }
   function updates() {   // the bell's unread count (notify.js) mirrored on the Updates row
     const c = $('#nf-count'), v = c && !c.classList.contains('hidden') ? Number(c.textContent) || 0 : 0;
@@ -311,7 +380,6 @@
 
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
-    const f = e.target.closest('[data-fold]'); if (f) { const g = f.dataset.fold; return fold(g, !isOpen(g)); }
     const nm = e.target.closest('[data-nav-menu]'); if (nm) { e.stopPropagation(); return document.body.classList.toggle('drawer-open'); }
     const d = e.target.closest('.side [data-pnav], #tabbar [data-pnav]');
     if (d && !d.dataset.nav && !e.defaultPrevented) { e.preventDefault(); return go(d.dataset.pnav); }
@@ -333,10 +401,14 @@
     if (!sub) return;
     sub.classList.toggle('hidden', !names.length); live.classList.toggle('hidden', !names.length);
     if (box) { box.classList.toggle('live', !!names.length); box.classList.toggle('in-call', !!(window.TribeHuddle && window.TribeHuddle.inCall())); }
+    document.body.classList.toggle('huddle-live', !!names.length);   // the chat header's call button shows a Teal dot
     const row = $('#nest-huddle-row'); if (row) row.title = window.TribeHuddle && window.TribeHuddle.inCall() ? 'You are in the huddle' : names.length ? 'Join the huddle (Ctrl Shift M)' : 'Start a huddle (Ctrl Shift M)';
     sub.textContent = !names.length ? '' : names.length === 1 ? `${names[0]} is talking` : names.length === 2 ? `${names[0]} and ${names[1]} talking` : `${names[0]}, ${names[1]} and ${names.length - 2} more talking`;
   }
   C.on('huddle', () => setTimeout(huddleLine, 0)); C.on('presence', huddleLine);
+  // capture.js puts its box after #huddle-box (inside the huddle block); keep it beside it, since the huddle hides when not live.
+  const moveCapture = () => { const cb = $('#capture-box'), hb = $('#nest-huddle'); if (cb && hb && hb.contains(cb)) hb.after(cb); };
+  setTimeout(() => { const hb = $('#nest-huddle'); if (hb) new MutationObserver(moveCapture).observe(hb, { childList: true, subtree: true }); moveCapture(); }, 0);
   setTimeout(() => { const hb = $('#huddle-box'); if (hb) new MutationObserver(huddleLine).observe(hb, { childList: true }); }, 0);
   drawGroups(); markActive();
 
@@ -401,7 +473,7 @@
     act.querySelectorAll('[data-pa]').forEach(b => b.onclick = () => actions[+b.dataset.pa].run());
     if (isPhone()) document.body.classList.add('phone-preview');
   }
-  function closePreview() { room.classList.remove('previewing'); document.body.classList.remove('phone-preview'); $('#preview-body').innerHTML = ''; }
+  function closePreview() { delete room.dataset.agent; room.classList.remove('previewing'); document.body.classList.remove('phone-preview'); $('#preview-body').innerHTML = ''; }
   $('#preview-close').addEventListener('click', closePreview);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && room.classList.contains('previewing') && !popEl && !document.querySelector('.modal:not(.hidden)')) closePreview(); });
   async function previewDoc(slug) {
@@ -422,6 +494,52 @@
       actions: mine ? [{ label: 'Approve', primary: true, run: () => decide('approve') }, { label: 'Deny', run: () => decide('deny') }] : [] });
     async function decide(d) { try { await C.api(`/approvals/${a.id}/${d}`, { method: 'POST', body: {} }); toast(d === 'approve' ? 'Approved' : 'Denied'); closePreview(); after && after(); } catch (e) { toast(e.message); } }
   }
+  // ---------- right panel: an agent's detail, next to chat (click an agent under "In the room") ----------
+  // Its task, files, tokens and pause/stop state, the hand-offs to or from it, the conflict radar rows on its branch,
+  // its review queue, and the latest of its timeline (people.js shows the full one).
+  const agoS = at => { const s = (Date.now() - Date.parse(at)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'now'; if (s < 3600) return `${Math.floor(s / 60)}m`; if (s < 86400) return `${Math.floor(s / 3600)}h`; return `${Math.floor(s / 86400)}d`; };
+  async function previewAgent(id) {
+    const m0 = (C.state().members || []).find(x => x.id === id) || { name: 'Agent' };
+    preview({ kind: 'Agent', title: m0.name, html: '<div class="ad"><div class="pp-skel"></div></div>' });
+    $('#tour-room').dataset.agent = id;
+    const get = path => C.api(path).catch(() => null);
+    const [ag, ho, cf, rv, pp] = await Promise.all([get('/coord/agents'), get('/coord/handoffs'), get('/coord/conflicts'), get('/coord/reviews'), get(`/people/${encodeURIComponent(id)}?kind=all&limit=6`)]);
+    if ($('#tour-room').dataset.agent !== id || !$('#tour-room').classList.contains('previewing')) return;
+    const a = ((ag && ag.agents) || []).find(x => x.id === id) || { name: m0.name, online: !!m0.online };
+    const mine = h => h.from === id || h.to === id || h.takenBy === id;
+    const hos = ((ho && ho.handoffs) || []).filter(mine).slice(0, 5);
+    const branch = a.branch || '';
+    const cfs = ((cf && cf.pairs) || []).filter(p => p.a.owner === id || p.b.owner === id || (branch && (p.a.branch === branch || p.b.branch === branch))).slice(0, 5);
+    const rvs = ((rv && rv.reviews) || []).filter(r => r.by === id).slice(0, 5);
+    const items = ((pp && pp.timeline && pp.timeline.items) || []).slice(0, 6);
+    const sec = (eyebrow, inner, empty) => `<section class="ad-sec"><span class="eyebrow">${esc(eyebrow)}</span>${inner || `<p class="ad-none">${esc(empty)}</p>`}</section>`;
+    const pct = a.tokens && a.budget ? Math.min(100, Math.round(a.tokens / a.budget * 100)) : null;
+    const ctx = pp && pp.context && Number.isFinite(pp.context.usedPct) ? pp.context.usedPct : null;
+    const html = `<div class="ad">
+      <div class="ad-head"><span class="ad-dot ${a.online ? 'on' : ''}"></span><div><b>${esc(a.name)}</b><small>${a.online ? `active · ${esc(a.where || 'working')}` : a.lastActive ? `idle · last seen ${esc(agoS(a.lastActive))} ago` : 'not connected yet'}${a.ownerName ? ` · ${a.yours ? 'yours' : esc(a.ownerName) + "'s"}` : ''}</small></div></div>
+      ${a.control ? `<div class="ad-ctl">${esc(a.control.action === 'stop' ? 'Stop' : 'Pause')} requested by ${esc(a.control.by)}${a.control.note ? `: ${esc(a.control.note)}` : ''}</div>` : ''}
+      ${sec('Now', `<div class="ad-now"><b>${a.task ? esc(a.task.title) : 'No task'}</b>${a.task ? `<small>${esc(a.task.status)}${branch ? ` · <code>${esc(branch)}</code>` : ''}</small>` : ''}
+        ${ctx !== null ? `<div class="ad-meter" title="Context window used: ${ctx}%"><span>Context</span><i><em style="width:${ctx}%"></em></i><span>${ctx}%</span></div>` : ''}
+        ${pct !== null ? `<div class="ad-meter" title="${a.tokens} of ${a.budget} tokens"><span>Tokens</span><i><em style="width:${pct}%"></em></i><span>${pct}%</span></div>` : ''}
+        ${(a.files || []).length ? `<div class="ad-files">${a.files.slice(0, 4).map(f => `<code>${esc(f)}</code>`).join('')}</div>` : ''}</div>`)}
+      ${sec('Hand-offs', hos.length ? `<ul class="ad-list">${hos.map(h => `<li><b>${esc(h.title)}</b><small>${esc(h.fromName)} → ${esc(h.toName)} · ${esc(h.status || 'open')} · ${esc(agoS(h.created || h.at))}</small></li>`).join('')}</ul>` : '', 'Nothing handed to or from it.')}
+      ${sec('Conflict radar', cfs.length ? `<ul class="ad-list">${cfs.map(p => `<li><b>${esc(p.count)} shared file${p.count === 1 ? '' : 's'} with ${esc((p.a.owner === id || p.a.branch === branch ? p.b : p.a).ownerName || 'another branch')}</b><small><code>${esc(p.files[0] || '')}</code>${p.count > 1 ? ` and ${p.count - 1} more` : ''}</small></li>`).join('')}</ul>` : '', cf && cf.enabled === false ? 'The radar needs a git repo.' : 'No overlap with other branches.')}
+      ${sec('Review queue', rvs.length ? `<ul class="ad-list">${rvs.map(r => `<li><b>${esc(r.title || r.branch)}</b><small>${esc(r.status)}${(r.askedOf || []).length ? ` · asked ${esc(r.askedOf.join(', '))}` : ''}</small></li>`).join('')}</ul>` : '', 'Nothing waiting for review.')}
+      ${sec('Timeline', items.length ? `<ul class="ad-list ad-tl">${items.map(t => `<li class="k-${esc(t.kind)}"><b>${esc(t.text || t.title || '')}</b><small>${esc(t.kind)} · ${esc(agoS(t.at))}</small></li>`).join('')}</ul>` : '', 'Nothing yet.')}
+    </div>`;
+    const steer = a.yours || (C.state().me || {}).role === 'host';
+    preview({ kind: 'Agent', title: a.name, html, actions: [
+      { label: 'Timeline', primary: true, run: () => { closePreview(); window.TribePeople && window.TribePeople.open(id); } },
+      { label: 'Agents Hub', run: () => { closePreview(); go('agents'); } },
+      ...(steer && a.online ? [{ label: a.control && a.control.action !== 'resume' ? 'Resume' : 'Pause', run: async () => { try { await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action: a.control && a.control.action !== 'resume' ? 'resume' : 'pause' } }); previewAgent(id); } catch (e) { toast(e.message); } } }] : []),
+    ] });
+    $('#tour-room').dataset.agent = id;
+  }
+  // Agents under "In the room" open here (capture: before the agents panel's own row handler).
+  addEventListener('click', e => {
+    const r = e.target.closest && e.target.closest('#room-agents [data-agent]'); if (!r) return;
+    e.preventDefault(); e.stopImmediatePropagation(); previewAgent(r.dataset.agent);
+  }, true);
   // Anything can ask for a preview declaratively.
   document.addEventListener('click', e => {
     const im = e.target.closest && e.target.closest('[data-preview-img]'); if (im) { e.preventDefault(); return previewImage(im.dataset.previewImg, im.dataset.previewTitle || 'Image', im.dataset.previewKind || 'Screenshot'); }
@@ -467,11 +585,11 @@
 
   // Ctrl K: every destination, once (palette.js drops other modules' duplicate "Go to" rows).
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => DEST.filter(d => !d.when || d.when()).map(d => ({
-    kind: d.kind || 'Go to', label: d.label, dest: d.key, keys: `${d.key} ${d.keys || ''} ${(GROUPS.find(g => g[0] === d.group) || [])[1] || ''}`, icon: d.icon,
+    kind: d.kind || 'Go to', label: d.label, dest: d.key, keys: `${d.key} ${d.keys || ''} ${(WS[d.group] || {}).label || ''} ${d.tab || ''}`, icon: d.icon,
     hint: d.key === 'capture' ? (window.TribeCapture && window.TribeCapture.on() ? 'on · Ctrl Shift N' : 'off · Ctrl Shift N') : d.hint || '',
     run: () => go(d.key) })));
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { setPanel, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
+  window.TribeShell = { setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();

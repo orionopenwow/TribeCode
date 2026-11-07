@@ -302,13 +302,17 @@ def ui_host(b, host, orion, maya, pq, b1):
         wait_text(host, "#sync-status", "connected")
         host.wait_for_selector(f"#pj-rail .pj-circle.on[data-pj-open='{pq}']")
         # the shell: circles, nest, breadcrumbs, right panel
-        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", ".nest-row[data-nav='tasks']", "#grp-hub", "#grp-ops", "#nest-settings", "#tour-invite", "#crumbs", "#tour-search", "#tour-room"]:
+        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", "#nest-ws-tasks", "#nest-ws-agents", "#nest-settings", "#tour-invite", "#crumbs", "#tour-search", "#tour-room"]:
             host.wait_for_selector(sel, state="visible")
         wait_text(host, "#crumbs", "pixel-quest")
-        # the nest: full feature set in Project Hub and Coordinate & Ops (e2e_nav.py covers it in depth)
-        for label in ["Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals", "Agents", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Settings"]:
+        # the nest: four rows; the full feature set lives in the Tasks & Board and Agents Hub tabs (e2e_nav.py covers it in depth)
+        for label in ["Chat & Streams", "Docs & Files", "Tasks & Board", "Agents Hub", "Settings"]:
             wait_text(host, "#tour-side", label)
-        host.click("#nest-agents")
+        host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
+        for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]: wait_text(host, "#view-tabs", label)
+        host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-agents")
+        for label in ["Agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan"]: wait_text(host, "#view-tabs", label)
+        host.click("#wt-agents")
         host.wait_for_selector("#view-coord:not(.hidden)")
         wait_text(host, "#coord-body", "Claude · Orion")
         wait_text(host, "#coord-body", "12k")
@@ -319,11 +323,11 @@ def ui_host(b, host, orion, maya, pq, b1):
         shot(host, "coord-agents")
         host.click("#coord-body [data-ctl='resume']")
         for tab, text in [("ownership", "src/ui/"), ("conflicts", "src/game.js"), ("handoffs", "Campfire save points"), ("reviews", "Speed boots"), ("plan", "Title screen music")]:
-            host.click(f"#coord-tabs [data-ct='{tab}']"); wait_text(host, "#coord-body", text)
+            host.click(f"#wt-{tab}"); wait_text(host, "#coord-body", text)
         # agents also show in the right panel
         wait_text(host, "#room-agents", "Claude · Orion")
         # bugs board: columns, ⋯ menu, copy as Markdown, preview of the attachment
-        host.click("#nest-bugs")
+        host.click("#nest-ws-tasks"); host.click("#wt-bugs")
         host.wait_for_selector("#view-bugs:not(.hidden) .bug-col")
         wait_text(host, "#bug-list", "Player falls through the bridge")
         for col in ["New", "Confirmed", "In progress", "Fixed"]: wait_text(host, "#bug-list", col)

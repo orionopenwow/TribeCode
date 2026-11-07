@@ -382,3 +382,43 @@ body.dark .compose .cx-btn, body.dark .m2-cbtn { color: #D9DFE7; }
   body.panel-off .panel-reopen:hover, body.panel-off .panel-reopen:focus-visible { color: var(--text); background: var(--hover); border-color: var(--edge-pop); }
   .panel-reopen svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; }
 }
+
+/* ---------- the nest: four rows (Chat & Streams · Docs & Files · Tasks & Board · Agents Hub) ---------- */
+.nest-line { position: relative; display: flex; align-items: center; }
+.nest-line > .nest-row { flex: 1; min-width: 0; padding-right: 40px; }
+.nest-sub-toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; color: var(--muted); }
+.nest-sub-toggle:hover { background: var(--sel); color: var(--text); }
+.nest-sub-toggle svg.i { width: 14px; height: 14px; transition: transform .15s var(--ease); transform: rotate(-90deg); }
+.nest-sub-toggle[aria-expanded="true"] svg.i { transform: none; }
+.nest-streams { display: none; flex-direction: column; gap: 1px; margin: 0 0 4px 22px; padding-left: 8px; border-left: 1px solid var(--stroke); }
+.nest-streams.open { display: flex; }
+.nest-streams .nest-row.small { min-height: 30px; padding: 0 8px; gap: 9px; }
+.nest-streams .hash { width: 14px; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--muted); flex: none !important; }
+.nest-streams .dm-dot { width: 8px; height: 8px; margin: 0 3px; border-radius: 50%; border: 1.5px solid var(--mc, var(--muted)); flex: none !important; box-sizing: border-box; }
+.nest-streams .dm-dot.on { background: var(--mc, var(--accent-2)); }
+.nest-streams .nest-row > span:last-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the huddle shows here only while it is live (start it from the chat header's call button); Capture only while on */
+#nest-huddle:not(.live):not(.in-call) { display: none; }
+#nest-huddle { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--stroke); }
+#capture-box:not(:has(.cap-toggle.on)) { display: none; }
+body.global #pj-nav .nest-line, body.global #pj-nav > .nest-row.core, body.global #nest-streams { display: none; }
+.nest-global { padding-top: 0; }
+body.huddle-live .cb-btn[data-cb="huddle"] { position: relative; color: var(--live-ink); }
+body.huddle-live .cb-btn[data-cb="huddle"]::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); border: 2px solid var(--main); }
+
+/* ---------- workspace tabs (Tasks & Board, Agents Hub): mono eyebrow, then a flat tab row ---------- */
+.view-tabs { max-width: 1120px; margin: 0 auto 26px; display: flex; flex-direction: column; gap: 8px; }
+.view-tabs.hidden { display: none; }
+.view-tabs .wt-eye { color: var(--muted); }
+.wt-row { display: flex; gap: 2px; border-bottom: 1px solid var(--edge); overflow-x: auto; scrollbar-width: none; }
+.wt { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 12px; font-size: 14px; font-weight: 500; color: var(--muted); white-space: nowrap; border-radius: 8px 8px 0 0; }
+.wt:hover { color: var(--text); background: var(--hover); }
+.wt.on { color: var(--text); }
+.wt.on::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; border-radius: 2px; background: var(--accent); }
+.wt .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.wt .n.hot { color: #fff; background: var(--accent); border-radius: 9px; padding: 0 6px; line-height: 18px; }
+body.ws-tabbed #coord-tabs, body.ws-tabbed #view-coord > #coord-root > .view-head, body.ws-tabbed #coord-root > .view-head { display: none; }   /* the workspace tabs replace the Coordinate view's own */
+@media (max-width: 820px) {
+  .view-tabs { margin: 0 -14px 18px; padding: 0 14px; gap: 6px; }
+  .wt { height: 40px; padding: 0 11px; font-size: 14.5px; }
+}
