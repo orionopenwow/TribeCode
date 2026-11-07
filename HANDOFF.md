@@ -79,7 +79,7 @@ Pushing from the Claude cloud sandbox:
 - Desktop: Discord-style project circles, a calm Claude-app-style sidebar (New, Search, sections, More, Pinned, Recents), and a right panel that becomes a preview. The window is frameless with mac-style traffic lights, a 64px logo and a 40px search.
 - Phone:
   - Discord-mobile flow: swipe from the left for the circles and the section list.
-  - Outside Chat: no header, and a distinct bottom rack (avatar · Chat · Docs · Updates · Tasks · orange action).
+  - Outside Chat: no header, and a bottom rack of Chat · Docs · Updates · Tasks (profile in the top bar).
   - In Chat, the icons sit in a compact top bar.
 - Simplicity first: zero-step setup (no wizard), sleek and bare UI, no repeated labels.
 

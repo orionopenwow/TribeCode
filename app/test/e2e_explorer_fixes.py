@@ -143,7 +143,7 @@ def main():
             assert r[0] <= 390 and r[1] <= 390, f"Settings fits the phone: {r}"
             ph.keyboard.press("Escape")
             # profile sheet: connect again
-            ph.click("#m2-me"); ph.wait_for_selector("[data-pf=connect]")
+            ph.click("#pf-btn"); ph.wait_for_selector("[data-pf=connect]")
             ctx.close()
 
             # ---------- no tribe ----------

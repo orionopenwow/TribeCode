@@ -118,9 +118,8 @@
   function buildRack() {
     const bar = $('#tabbar'); if (!bar || bar.dataset.m2) return;
     bar.dataset.m2 = '1'; bar.classList.add('m2-rack');
-    bar.innerHTML = `<button class="m2-me" id="m2-me" data-m2="me" aria-label="You">${avatar(me())}</button>
-      <div class="m2-seg" role="tablist">${RACK.map(r => `<button ${r.m2 ? `data-m2nav="${r.nav}"` : `data-nav="${r.nav}"`} role="tab" aria-label="${r.label}" title="${r.label}">${ic(r.icon, 22)}<span class="lb">${r.label}</span><span class="bd hidden" data-bd="${r.badge || ''}"></span></button>`).join('')}</div>
-      <button class="m2-act" id="m2-act" data-m2="act" aria-label="New">${ic('plus', 24)}</button>`;
+    // Just the four places: you are in the top bar (profile), new things come from each screen and the chat +.
+    bar.innerHTML = `<div class="m2-seg" role="tablist">${RACK.map(r => `<button ${r.m2 ? `data-m2nav="${r.nav}"` : `data-nav="${r.nav}"`} role="tab" aria-label="${r.label}" title="${r.label}">${ic(r.icon, 22)}<span class="lb">${r.label}</span><span class="bd hidden" data-bd="${r.badge || ''}"></span></button>`).join('')}</div>`;
   }
   function paintMe() { const b = $('#m2-me'); if (b) b.innerHTML = avatar(me()); }
   function setBadge(key, n) {
@@ -215,6 +214,10 @@
     const tb = $('.titlebar .tb-right');
     if (tb && !$('#m2-talk')) tb.insertAdjacentHTML('afterbegin', `<button class="m2-talk hidden" id="m2-talk" aria-haspopup="dialog" aria-label="Talk to…"><span id="m2-talk-l">#general</span>${ic('chev', 14)}</button>`);
     $('#m2-talk').addEventListener('click', e => { e.stopPropagation(); talkTo(); });
+    // The profile moved from the bottom rack to the top bar: on phones it opens your profile sheet.
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#pf-btn'); if (!b || !phone()) return; e.preventDefault(); e.stopPropagation(); profile(me().id); }, true);
+    // New task on phones: the quick sheet (the screen's own button, now that the rack has no + of its own)
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#task-new'); if (!b || !phone()) return; e.preventDefault(); e.stopPropagation(); quickTask(); }, true);
     paintProject();
   }
   function paintProject() {
