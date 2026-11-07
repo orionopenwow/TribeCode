@@ -328,7 +328,10 @@ body.panel-off .panel { display: none; }
   .tb-right #ctx-btn.on, .tb-right #panel-toggle[aria-pressed="true"] { color: var(--text); }
   .tb-right #ctx-btn svg, .tb-right #nf-bell svg, .tb-right #panel-toggle svg { width: 21px !important; height: 21px !important; }
   .tb-right #ctx-btn span { display: none; }
-  .win-ctl { display: flex; gap: 9px; margin-left: 10px; padding-left: 16px; border-left: 1px solid var(--edge); height: 24px; }
+  body.tauri .win-ctl { display: flex; gap: 9px; margin-left: 10px; padding-left: 16px; border-left: 1px solid var(--edge); height: 24px; }
+  body:not(.tauri) .win-ctl { display: none !important; }
+  body:not(.tauri) .shell { padding: 0; }
+  body:not(.tauri) .shell .window { border-radius: 0; border: 0; }
   .win-ctl .tl { width: 15px; height: 15px; }
   .win-ctl svg { width: 9px; height: 9px; }
 }
@@ -355,3 +358,6 @@ body.panel-off .panel { display: none; }
 .pf-sw i { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); }
 .pf-sw.on { background: var(--accent-2, #38C6B1); } .pf-sw.on i { left: 15px; background: #fff; }
 @media (max-width: 820px) { #pf-btn { display: none; } }
+
+/* Desktop app showing the Working version: a quiet marker so you know which code you're looking at */
+body.ui-working .tb-right #pf-btn::after { content: 'WORKING'; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font: 600 8.5px/1 var(--mono); letter-spacing: .06em; color: var(--accent-2, #38C6B1); background: var(--nest, #12151A); padding: 1px 3px; border-radius: 3px; }

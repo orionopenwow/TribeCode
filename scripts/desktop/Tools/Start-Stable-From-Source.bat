@@ -22,6 +22,8 @@ if errorlevel 1 (
 )
 
 rem STABLE = the released code on the main branch, with your real tribe (%USERPROFILE%\TribeCode).
+if not exist "%~dp0..\Stable" mkdir "%~dp0..\Stable"
+cd /d "%~dp0..\Stable"
 if not exist "TribeCode\server\index.js" (
   echo  Downloading TribeCode...
   git clone https://github.com/orionopenwow/TribeCode.git TribeCode || (pause & exit /b 1)

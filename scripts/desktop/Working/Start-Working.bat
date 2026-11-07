@@ -40,7 +40,7 @@ echo.
 echo  Working TribeCode: http://localhost:4848   (test tribe: %TRIBE_DIR%)
 echo  Keep this window open while you test. Close it to stop.
 rem Open it in its own app window (like the desktop app), a few seconds after the server starts.
-start "" /b cmd /c "timeout /t 4 >nul && (start msedge --app=http://localhost:4848 || start http://localhost:4848)"
+if /i not "%~1"=="--no-window" start "" /b cmd /c "timeout /t 4 >nul && (start msedge --app=http://localhost:4848 || start http://localhost:4848)"
 node scripts\live.js --port 4848 --no-open
 echo.
 echo  The server stopped. If there is an error above, send it to Claude.

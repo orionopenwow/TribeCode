@@ -53,7 +53,8 @@
       ${window.TribeNotify ? item('notify', 'i-bell', 'Notifications') : ''}
       ${window.TribeCapture ? item('capture', 'i-mic', 'Capture to notes', `<span class="pf-sw ${capOn ? 'on' : ''}"><i></i></span>`) : ''}
       ${item('settings', 'i-gear', 'Settings')}
-      ${window.TribeUpdater ? item('update', 'i-refresh', 'Check for updates') : ''}`;
+      ${window.TribeUpdater ? item('update', 'i-refresh', 'Check for updates') : ''}
+      ${window.TribeUi && window.TribeUi.desktop() ? (window.TribeUi.onWorking() ? item('installed', 'i-home', 'Back to the installed version') : item('working', 'i-zap', 'Open the Working version (newest)')) : ''}`;
   }
 
   const close = () => { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', 'false'); };
@@ -80,6 +81,8 @@
     else if (a === 'invite') click('#tour-invite');
     else if (a === 'notify') window.TribeNotify.openSettings ? window.TribeNotify.openSettings() : window.TribeNotify.openInbox();
     else if (a === 'settings') window.TribeSettings ? window.TribeSettings.open() : click('#settings-btn');
+    else if (a === 'working') window.TribeUi.useUi('working');
+    else if (a === 'installed') window.TribeUi.useUi('installed');
     else if (a === 'update') { window.TribeUpdater.check(); window.TribeApp && window.TribeApp.toast('Checking for updates…'); }
   });
 

@@ -474,7 +474,9 @@
     document.body.classList.add('tauri');
     const w = window.__TAURI__.window.getCurrentWindow();
     document.querySelectorAll('#win-ctl [data-w]').forEach(b => b.addEventListener('click', () => {
-      const a = b.dataset.w; (a === 'min' ? w.minimize() : a === 'max' ? w.toggleMaximize() : w.close()).catch(() => {});
+      const a = b.dataset.w;
+      if (a === 'close') return (async () => { try { if (window.TribeUpdater && window.TribeUpdater.beforeClose) await window.TribeUpdater.beforeClose(); } catch {} w.close().catch(() => {}); })();
+      (a === 'min' ? w.minimize() : w.toggleMaximize()).catch(() => {});
     }));
   }
 
@@ -485,12 +487,40 @@
     else if (fs) document.exitFullscreen().catch(() => {});
   }));
 
+  // ---- desktop app: switch between the installed UI and the Working version (dev, live on :4848) ----
+  // No exe rebuild to try new UI: the frameless desktop window simply shows the Working server's page.
+  const WORKING = 'http://localhost:4848/';
+  const INSTALLED = /Windows/.test(navigator.userAgent) ? 'http://tauri.localhost/' : 'tauri://localhost/';
+  const onWorking = () => location.origin === 'http://localhost:4848' || location.origin === 'http://127.0.0.1:4848';
+  async function workingUp() { try { const c = new AbortController(); setTimeout(() => c.abort(), 1500); return (await fetch(WORKING + 'api/health', { signal: c.signal, cache: 'no-store' })).ok; } catch { return false; } }
+  async function useUi(which, { quiet = false } = {}) {
+    if (!window.TribeHost.isDesktop) return;
+    if (which === 'working') {
+      if (!(await workingUp())) { if (!quiet) toast('The Working version isn\'t running. Double-click "Try New Work" in your TribeCode folder first.'); return; }
+      try { localStorage.setItem('tribecode.ui', 'working'); } catch {}
+      location.href = WORKING + '?skipIntro=1';
+    } else {
+      location.href = INSTALLED + '?ui=installed';
+    }
+  }
+  window.TribeUi = { useUi, onWorking, desktop: () => !!window.TribeHost.isDesktop };
+  if (window.TribeHost.isDesktop && !onWorking()) {
+    if (params.get('ui') === 'installed') { try { localStorage.removeItem('tribecode.ui'); } catch {} }
+    else { let pref = null; try { pref = localStorage.getItem('tribecode.ui'); } catch {} if (pref === 'working') useUi('working', { quiet: true }); }
+  }
+  if (onWorking()) document.body.classList.add('ui-working');
+
   // tribecode:// links: on launch and while running (single-instance forwards them here)
+  const deepLink = u => {
+    const m = /^tribecode:\/\/(working|dev|installed|stable)\b/i.exec(String(u || ''));
+    if (m) return useUi(/working|dev/i.test(m[1]) ? 'working' : 'installed');
+    joinLink(u);
+  };
   (async () => {
     const dl = window.__TAURI__ && window.__TAURI__.deepLink;
     if (!dl) return;
-    try { const urls = await dl.getCurrent(); if (urls && urls[0]) joinLink(urls[0]); } catch {}
-    try { await dl.onOpenUrl(urls => urls && urls[0] && joinLink(urls[0])); } catch {}
+    try { const urls = await dl.getCurrent(); if (urls && urls[0]) deepLink(urls[0]); } catch {}
+    try { await dl.onOpenUrl(urls => urls && urls[0] && deepLink(urls[0])); } catch {}
   })();
   $('#invite-modal').addEventListener('click', e => { if (e.target.id === 'invite-modal') closeInvite(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvite(); });
@@ -553,7 +583,9 @@
   (async () => {
     await window.TribeSettings.autoSetup(); refresh();
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
-    if (window.TribeHost.isDesktop && !st.hostOff && !remote) hostHere({ quiet: true });
+    // The desktop app showing a page served by a TribeCode server (the Working version) talks to that server; it doesn't host its own.
+    const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
+    if (window.TribeHost.isDesktop && !served && !st.hostOff && !remote) hostHere({ quiet: true });
     else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
   })();
   window.TribeUpdater.init();
