@@ -248,7 +248,7 @@ body.panel-off .panel { display: none; }
   .crumbs .pj-switch { max-width: 52vw; }
   .window .titlebar .search { flex: 0 0 36px; min-width: 0; width: 36px; height: 34px; margin-left: auto; background: none; border-color: transparent; }
   .tb-right { gap: 4px; }
-  #panel-toggle { display: none; }
+  #panel-toggle, #panel-close { display: none !important; }
   .window > .side { position: fixed; z-index: 30; top: 0; bottom: 0; left: 0; width: min(88vw, 340px); transform: translateX(-102%); transition: transform .22s var(--ease); padding-top: env(safe-area-inset-top); }
   body.drawer-open .window > .side { transform: none; }
   .side .pj-strip { display: flex; gap: 10px; overflow-x: auto; padding: 14px 14px 12px; margin: 0; border-bottom: 1px solid var(--edge); background: var(--rail); scrollbar-width: none; flex: none; }
@@ -313,16 +313,16 @@ body.panel-off .panel { display: none; }
 @media (max-width: 820px) { .sec { margin-top: 28px; } .hero-card { margin-bottom: 28px; } #doc-read { font-size: 16px; } }
 .pj-overview:not(:empty) ~ .home-start #upcoming-card { display: none; }
 
-/* Top right (desktop): status · tools · window lights, bigger and in a fixed order. */
+/* Top right (desktop): update (only when one is ready) · bell · profile (rightmost icon) · divider · window lights.
+   The right panel hides with the X in its own corner; the Tribe context drawer is Ctrl Shift K / Ctrl K. */
 @media (min-width: 821px) {
   .tb-right { gap: 6px; }
-  .tb-right #update-btn { order: 4; }   /* the quiet update icon sits right before the profile (same order, earlier in the DOM) */
   .tb-right #sync-status { display: none; }   /* the profile button's dot shows the connection now */
-  .tb-right #panel-toggle { order: 2; }
-  .tb-right #ctx-btn { order: 3; }
-  .tb-right #pf-btn { order: 4; }
-  .tb-right #nf-bell { order: 5; }
-  .tb-right #win-ctl { order: 6; }
+  .tb-right #ctx-btn { display: none !important; }   /* repo.js still inserts it (phones use it); Ctrl Shift K opens the drawer */
+  .tb-right #update-btn { order: 1; }
+  .tb-right #nf-bell { order: 2; }
+  .tb-right #pf-btn { order: 3; }
+  .tb-right #win-ctl { order: 4; }
   .tb-right #ctx-btn, .tb-right #nf-bell, .tb-right #panel-toggle { width: 40px; height: 40px; padding: 0; border-radius: 10px; border: 1px solid transparent; background: none; display: grid; place-items: center; color: var(--muted); }
   .tb-right #ctx-btn:hover, .tb-right #nf-bell:hover, .tb-right #panel-toggle:hover { background: var(--hover); border-color: var(--edge); color: var(--text); }
   .tb-right #ctx-btn.on, .tb-right #panel-toggle[aria-pressed="true"] { color: var(--text); }
@@ -361,3 +361,16 @@ body.panel-off .panel { display: none; }
 
 /* Desktop app showing the Working version: a quiet marker so you know which code you're looking at */
 body.ui-working .tb-right #pf-btn::after { content: 'WORKING'; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font: 600 8.5px/1 var(--mono); letter-spacing: .06em; color: var(--accent-2, #38C6B1); background: var(--nest, #12151A); padding: 1px 3px; border-radius: 3px; }
+
+/* ---------- right panel: an X in its corner hides it; a slim tab brings it back ---------- */
+.room-head { display: flex; align-items: center; gap: 8px; margin: -6px -6px 0 0; }
+.room-head h6 { flex: 1; min-width: 0; margin: 0; }
+.panel-x { width: 28px; height: 28px; border-radius: 8px; flex: none; }
+.panel-x svg.i { width: 15px; height: 15px; }
+.room-pane > .room-head + * { margin-top: -6px; }
+.panel-reopen { display: none; }
+@media (min-width: 821px) {
+  body.panel-off .panel-reopen { display: grid; place-items: center; position: absolute; z-index: 6; top: 78px; right: 0; width: 28px; height: 40px; border: 1px solid var(--edge); border-right: 0; border-radius: 9px 0 0 9px; background: var(--nest); color: var(--faint); }
+  body.panel-off .panel-reopen:hover, body.panel-off .panel-reopen:focus-visible { color: var(--text); background: var(--hover); border-color: var(--edge-pop); }
+  .panel-reopen svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+}

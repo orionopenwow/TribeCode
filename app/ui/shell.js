@@ -57,6 +57,8 @@
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
     { key: 'hub', label: 'Global hub', icon: 'i-home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
     { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
+    { key: 'panel', label: 'Toggle right panel', icon: 'i-list', kind: 'Action', keys: 'right panel in the room sidebar show hide preview', run: () => setPanel(!document.body.classList.contains('panel-off')) },
+    { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
     { key: 'home', label: 'Project home', icon: 'i-home', keys: 'home overview', run: () => App().show('home') },
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
@@ -68,7 +70,7 @@
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
   function openScratch() {
     if (isPhone() || !C.connected()) { hubOpen('home'); setTimeout(() => { const t = $('#hub-scratch .sc-in') || $('#scratch-in'); if (t) t.focus(); }, 150); return; }
-    document.body.classList.remove('panel-off'); syncToggle(); closePreview();
+    setPanel(false); closePreview();
     setTimeout(() => { const t = $('#scratch-in'); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } }, 60);
   }
   const COUNT = { bugs: 1, requests: 1, reviews: 1, handoffs: 1 };
@@ -390,7 +392,7 @@
   // ---------- right panel: In the room ⇄ preview ----------
   const room = $('#tour-room');
   function preview({ kind = 'File', title = '', html = '', node = null, actions = [] } = {}) {
-    document.body.classList.remove('panel-off'); syncToggle();
+    if (document.body.classList.contains('panel-off')) { document.body.classList.remove('panel-off'); syncToggle(); }
     room.classList.add('previewing');
     $('#preview-kind').textContent = kind;
     $('#preview-title').textContent = title;
@@ -428,12 +430,21 @@
   // Pinned docs open as a preview first (docsx.js binds them to the editor; the preview has "Open").
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#side-pins-list [data-pin-open]'); if (b) { e.stopImmediatePropagation(); e.preventDefault(); document.body.classList.remove('drawer-open'); previewDoc(b.dataset.pinOpen); } }, true);
 
-  // collapse
+  // Hide / show: an X in the panel's own corner hides it; a slim tab at the main column's right edge (#panel-toggle,
+  // only while hidden) brings it back. Remembered per browser (body.panel-off), also in Ctrl K ("Toggle right panel").
   const PKEY = 'tribecode.panelOff';
-  function syncToggle() { const t = $('#panel-toggle'); if (t) t.setAttribute('aria-pressed', String(!document.body.classList.contains('panel-off'))); }
+  function syncToggle() { const t = $('#panel-toggle'), on = !document.body.classList.contains('panel-off'); if (t) { t.setAttribute('aria-pressed', String(on)); t.tabIndex = on ? -1 : 0; } }
+  function setPanel(off) {
+    document.body.classList.toggle('panel-off', off); if (off) closePreview();
+    try { localStorage.setItem(PKEY, off ? '1' : '0'); } catch {}
+    syncToggle();
+    if (off) { const t = $('#panel-toggle'); if (t && document.activeElement && document.activeElement.closest && document.activeElement.closest('#tour-room')) t.focus(); }
+    else { const x = $('#panel-close'); if (x && document.activeElement === $('#panel-toggle')) x.focus(); }
+  }
   try { if (localStorage.getItem(PKEY) === '1') document.body.classList.add('panel-off'); } catch {}
   syncToggle();
-  $('#panel-toggle').addEventListener('click', () => { const off = document.body.classList.toggle('panel-off'); if (off) closePreview(); try { localStorage.setItem(PKEY, off ? '1' : '0'); } catch {} syncToggle(); });
+  $('#panel-toggle').addEventListener('click', () => setPanel(!document.body.classList.contains('panel-off')));
+  $('#panel-close').addEventListener('click', () => setPanel(true));
 
   // ---------- project settings (the switcher's Project settings, Ctrl K) ----------
   function projectSettings() {
@@ -462,5 +473,5 @@
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
+  window.TribeShell = { setPanel, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();

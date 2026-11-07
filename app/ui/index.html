@@ -112,7 +112,6 @@
         <button class="update-btn hidden" id="update-btn" aria-haspopup="dialog" title="Update ready" aria-label="Update ready"><svg class="i"><use href="#i-refresh"/></svg><span class="ub-dot"></span><span class="sr" id="update-btn-label">Update ready</span></button>
         <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
         <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
-        <button class="tb-icon" id="panel-toggle" title="Show or hide the right panel" aria-label="Toggle the right panel" aria-pressed="true"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
         <div class="win-ctl" id="win-ctl" aria-label="Window">
           <button data-w="close" class="tl tl-close" title="Close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/></svg></button>
           <button data-w="min" class="tl tl-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M3 6h6"/></svg></button>
@@ -225,9 +224,11 @@
      </section>
     </main>
 
+    <!-- With the right panel hidden: a slim tab at the main column's right edge brings it back (shell.js). -->
+    <button class="panel-reopen" id="panel-toggle" title="Show panel" aria-label="Show the right panel" aria-pressed="true" aria-controls="tour-room"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
     <aside class="panel" id="tour-room" aria-label="Right panel">
       <div class="room-pane" id="room-pane">
-        <h6>In the room <span id="room-count"></span></h6>
+        <div class="room-head"><h6>In the room <span id="room-count"></span></h6><button class="tb-icon panel-x" id="panel-close" title="Hide the panel" aria-label="Hide the right panel"><svg class="i"><use href="#i-x"/></svg></button></div>
         <div class="room-list" id="room-list">
           <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
         </div>

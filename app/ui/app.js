@@ -607,12 +607,15 @@
     else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
   })();
   window.TribeUpdater.init();
+  let autoHub = false;   // the hub was shown only because there was no tribe yet
   // Start screen: the view you were on in this tab, else the project home, else (no tribe yet) the Global Hub.
   { let v = null; try { v = sessionStorage.getItem('tribecode.view'); } catch {}
     if (/^#\/hub/.test(location.hash) && window.TribeHub) window.TribeHub.open((location.hash.split('/')[2]) || 'home');
-    else show(v && VIEWS[v] ? v : C.hasToken() ? 'home' : 'hub'); }
+    else { autoHub = !(v && VIEWS[v]) && !C.hasToken(); show(v && VIEWS[v] ? v : C.hasToken() ? 'home' : 'hub'); } }
   // Nothing to connect to (no tribe yet): the project home has nothing to show, the hub does.
-  C.on('status', s => { if (s.status === 'offline' && !C.hasToken() && ['home', 'chat'].includes(current)) show('hub'); });
+  C.on('status', s => { if (s.status === 'offline' && !C.hasToken() && ['home', 'chat'].includes(current)) { autoHub = true; show('hub'); } });
+  // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
+  C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);
   Object.assign(window.TribeApp, { show, hostHere, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

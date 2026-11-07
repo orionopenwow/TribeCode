@@ -292,8 +292,26 @@ def main():
             # ---------------- update icon: the same save / hand-off / restart flow ----------------
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
-            order = host.evaluate("['#panel-toggle', '#update-btn', '#pf-btn', '#nf-bell'].map(s => document.querySelector(s).getBoundingClientRect().left)")
+            # top right: update · bell · profile (rightmost icon); no panel toggle or Context icon in the header
+            order = host.evaluate("['#update-btn', '#nf-bell', '#pf-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
+            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn", "nf-bell", "pf-btn"]
+            assert host.locator(".titlebar #panel-toggle").count() == 0 and host.locator("#ctx-btn").is_hidden()
+            host.keyboard.press("Control+Shift+K"); host.wait_for_selector("#ctx-win:not(.hidden)"); host.keyboard.press("Control+Shift+K")
+            host.keyboard.press("Control+k"); host.fill("#pal-input", "tribe context"); host.keyboard.press("Enter"); host.wait_for_selector("#ctx-win:not(.hidden)")
+            host.keyboard.press("Control+Shift+K"); host.wait_for_selector("#ctx-win.hidden", state="attached")
+            # the right panel: an X in its corner hides it, a slim tab brings it back (remembered)
+            assert host.locator("#panel-toggle").is_hidden()
+            host.click("#panel-close"); host.wait_for_function("document.body.classList.contains('panel-off')")
+            host.wait_for_selector("#panel-toggle", state="visible")
+            shot(host, "hub-header-panel-closed")
+            host.reload(); host.wait_for_selector("#view-hub:not(.hidden)"); host.wait_for_selector("#panel-toggle", state="visible")
+            host.click("#panel-toggle"); host.wait_for_function("!document.body.classList.contains('panel-off')")
+            host.keyboard.press("Control+k"); host.fill("#pal-input", "toggle right panel"); host.keyboard.press("Enter")
+            host.wait_for_function("document.body.classList.contains('panel-off')")
+            host.keyboard.press("Control+k"); host.fill("#pal-input", "toggle right panel"); host.keyboard.press("Enter")
+            host.wait_for_function("!document.body.classList.contains('panel-off')")
+            host.wait_for_selector("#update-btn.ready:not(.hidden)")
             host.click("#update-btn"); host.wait_for_selector("#update-pop:not(.hidden)")
             assert "v0.9.0 is ready" in host.inner_text("#update-pop")
             shot(host, "hub-update")

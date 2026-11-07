@@ -351,8 +351,11 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.wait_for_selector("#nest-pinned .pin-repo-card")
         shot(host, "shell-desktop")
         # right panel collapses and comes back
-        host.click("#panel-toggle"); host.wait_for_function("document.body.classList.contains('panel-off')")
-        host.click("#panel-toggle"); host.wait_for_function("!document.body.classList.contains('panel-off')")
+        assert host.locator("#panel-toggle").is_hidden(), "the reopen tab only shows while the panel is hidden"
+        host.click("#panel-close"); host.wait_for_function("document.body.classList.contains('panel-off')")   # the X in the panel's corner
+        host.wait_for_selector("#panel-toggle", state="visible")
+        host.click("#panel-toggle"); host.wait_for_function("!document.body.classList.contains('panel-off')")   # the slim tab brings it back
+        host.wait_for_selector("#panel-close", state="visible")
         # phone: circles in a strip inside the drawer, plus the nest
         phone_ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
         phone_ctx.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Maya', color:'#6C7CFF', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{maya}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pq}');")

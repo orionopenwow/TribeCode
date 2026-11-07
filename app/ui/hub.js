@@ -276,7 +276,7 @@
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
     on('#hub-new', newProject); on('#hub-join', join); on('#hub-join2', join); on('#hub-host', host); on('#hub-resume', resume);
     on('#hub-search', () => search()); on('#hub-cc', () => App().connectClaude());
-    on('#hub-pad', () => { document.body.classList.remove('panel-off'); const t = $('#scratch-in'); if (t) { t.focus(); t.closest('.scratch').scrollIntoView({ block: 'nearest' }); } });
+    on('#hub-pad', () => { if (SH() && SH().setPanel) SH().setPanel(false); const t = $('#scratch-in'); if (t) { t.focus(); t.closest('.scratch').scrollIntoView({ block: 'nearest' }); } });
     el.querySelectorAll('[data-feed]').forEach(b => b.onclick = () => { const it = ((data && data.feed) || []).find(x => x.id === b.dataset.feed); if (it) jump(it); });
     el.querySelectorAll('[data-note]').forEach(b => b.onclick = () => { const n = ((data && data.notes) || []).find(x => x.id === b.dataset.note); if (n) jump(n); });
     el.querySelectorAll('[data-sug-go]').forEach(b => b.onclick = () => sugGo(b.dataset.sugGo));
