@@ -541,7 +541,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     let title = merges.length && !real.length ? `Merged into ${branch}: ${one(merges[0], 60)}` : real.length === 1 ? one(real[0].subject, 80) : `${real.length} commits on ${branch}`;
     let bullets = real.slice(0, 3).map(c => one(c.subject, 110));
     if (real.length > 3) bullets.push(`…and ${real.length - 3} more commits`);
-    bullets.push(`${files.length} file${files.length === 1 ? '' : 's'}${areas.length ? ` in ${areas.slice(0, 3).join(', ')}` : ''}${stat ? ` · ${one(stat.replace(/ changed|\(\+\)|\(-\)/g, '').replace(/files?/, ''), 50)}` : ''}`);
+    bullets.push(`${files.length} file${files.length === 1 ? '' : 's'}${areas.length ? ` in ${areas.slice(0, 3).join(', ')}` : ''}${stat ? (() => { const ins = (/(\d+) insertions?/.exec(stat) || [])[1], del = (/(\d+) deletions?/.exec(stat) || [])[1]; return ins || del ? ` · ${ins ? `+${ins}` : ''}${ins && del ? ' ' : ''}${del ? `−${del}` : ''}` : ''; })() : ''}`);
     if (brain && brain.status().online && real.length) {
       try {
         const diff = (await g(['diff', '--stat', from || `${to}~1`, to])).out.slice(0, 3000);
