@@ -15,6 +15,16 @@ Where it's heading:
 3. Game Studio (docs/GAME-STUDIO.md): friends build small games together, starting with Pixel Quest.
 4. Real-device reliability: push, speech, tunnels and huddles on cellular (TURN).
 
+## Future pillar: the Tribe Brain (recipes, tools, shared compute)
+The user's idea (2026-11-06): a self-learning brain that remembers the scripts behind facets of features and replays them instead of spending tokens again. Over time that becomes a TribeCode database of reusable features. It also scouts GitHub for tools that help projects like this, and friends contribute compute.
+
+Sketch (not started; the gists and plan work now lays the groundwork):
+1. **Recipes.** When an agent finishes a facet (e.g. "add a double-jump to a 2D platformer", "web push setup", "level select screen"), it saves a recipe: intent, inputs, the script/diff template, the files it touches, and a check that proves it worked (a test or screenshot). Stored as Markdown + code in `recipes/`, shared across the tribe's projects and versioned in git.
+2. **Replay first, tokens second.** Before an agent builds something, the local brain (Qwen) searches the recipes. On a match it applies the template and runs the check; Claude only fills the gaps. Recipes that pass get reused more, and ones that fail decay. That's the "self-learning" part, kept honest by the checks.
+3. **Tool scout.** On a schedule, search GitHub for libraries and tools for the tribe's stack (game engines, asset pipelines, deploy and upload helpers). It posts them as upgrade gists that humans approve. It never auto-installs (supply-chain risk). It checks license, activity and stars, and pins versions.
+4. **Shared compute.** Friends opt in to lend their machine as a worker for builds, asset compiling, test runs, analysis, bug repro and local-model jobs. A job queue on the host hands out work, results come back with hashes and are cross-checked. Jobs run sandboxed and only from the tribe's own repo. Workers show up in the person view.
+5. **Later.** An opt-in public recipe exchange between tribes (the "database for TribeCode").
+
 ## How we work (decided 2026-11-06)
 - **Two lanes.** `main` = stable/released. `dev` = working lane where new work lands first.
   - Desktop\TribeCode\Stable\Start-Stable.bat runs `main` at :4747 with the real tribe.
@@ -38,6 +48,7 @@ Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Emb
 | `feat/demo4` | Demo phone layout: no header, richer rack, less whitespace, reactions + vote card in demo | rebuilding (agent) |
 
 ## User requests log (newest first)
+- 2026-11-06 (future): a self-learning brain that remembers and replays feature scripts instead of spending tokens; a TribeCode feature database; scheduled GitHub tool scouting; friends contributing compute for compiling, analysis, notes and bug fixes. See "Future pillar".
 - 2026-11-06: Roles area you can navigate, named roles, named folders with a clear identity, color-coded concepts. Click a person → their commits, prompts, chats and notes in context, their position and context window. Not numbers everywhere, don't overwhelm, keep it sleek. Uptime counter, commit counter.
 - 2026-11-06: Security review. One-click Create project → hosting room → invite link → chat opens → repo created and pushed to GitHub → humans delegate roles, dump notes and files → flow begins → agents give gists (progress, upgrades, plans), not monolith code dumps → self-evolving plan and assessments.
 - 2026-11-06: Keep the GitHub → main → Restart-to-update loop working end to end. Keep this living context doc.
