@@ -290,3 +290,6 @@
   .m2-enter, .m2-sheet, .m2-scrim, .m2-rec, .m2-seg .bd.pop, .m2-send.pop, .m2-dot, body.m2-in-chat .tabbar.m2-rack, .m2-ap.deciding .chosen svg { animation: none !important; }
   .m2-sheet, .m2-seg button, .m2-si, .window > .side { transition: none !important; }
 }
+
+/* host uptime + commits today (people.js statusLine), under Invite friends */
+#nest-status { margin: 8px 2px 0; text-align: center; }
