@@ -2,13 +2,20 @@
 // edited/deleted states, voice notes (hold the composer mic), pasted images, domain-only link chips,
 // an unread divider, jump-to-latest, and "delivered / read" for your own agent's channel.
 // Actions live in a small per-message "…" menu (hover, focus, or long-press on touch).
+// Reactions sit on the bubble: a quick-react bar on hover (long-press on touch, with the menu below it),
+// a picker for the rest, double-click/double-tap = 👍, "+👍" in an empty composer and Ctrl/⌘ Shift \ react
+// to the latest message. Vote cards render through app/ui/votes.js (TribeVotes.card).
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient, S = window.TribeStore;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
-  const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '🔥'];
+  const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '✅', '🔥', '👎', '❌', '🙏', '💯', '🚀', '🤔', '😮', '😢', '👏', '🙌', '⭐', '💡', '🐛', '📌', '➕', '🎮', '✨'];   // same list as server/chatx.js
+  const QUICK = EMOJI.slice(0, 6);
+  const ALIAS = { '1': '👍', '+1': '👍', '-1': '👎', ok: '✅', yes: '✅', check: '✅', heart: '❤️', love: '❤️', lol: '😂', tada: '🎉', party: '🎉', eyes: '👀', fire: '🔥', pin: '📌', bug: '🐛', rocket: '🚀', idea: '💡', thanks: '🙏', star: '⭐' };
+  const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prevRx = new Map();        // id -> { emoji: count } as last drawn, so only changed chips animate
   const SEEN = 'tribecode.lastSeen.v1';
   const pad = n => String(n).padStart(2, '0');
   const today = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -45,6 +52,9 @@
     'i-down': '<path d="M12 5v14M6 13l6 6 6-6"/>',
     'i-chev': '<path d="m6 9 6 6 6-6"/>',
     'i-back': '<path d="M15 6l-6 6 6 6"/>',
+    'i-smile-plus': '<path d="M20.9 13A9 9 0 1 1 11 3.1"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/><path d="M16 5h6M19 2v6"/>',
+    'i-vt-yes': '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    'i-vt-no': '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8.5"/>',
   };
   function addIcons() {
     const sprite = document.querySelector('svg[aria-hidden="true"]'); if (!sprite || sprite.querySelector('#i-reply')) return;
@@ -66,6 +76,19 @@
     return `<div class="vn" data-src="${esc(mediaUrl(ch, m.media.file))}"><button class="vn-play" aria-label="Play voice note">${icon('i-play')}</button>
       <div class="vn-wave" aria-hidden="true">${w.map(v => `<i style="height:${18 + Math.min(9, v) * 9}%"></i>`).join('')}</div><span class="vn-dur">${dur(m.media.dur)}</span></div>`;
   }
+  // Reaction chips under the bubble: counts, yours highlighted, names in the tooltip, a quiet "+" to add one.
+  // Only chips whose count went up since the last draw get the small pop (none on first load).
+  function reactsHtml(m) {
+    const rx = Object.entries(m.reactions || {});
+    const prev = prevRx.get(m.id);
+    prevRx.set(m.id, Object.fromEntries(rx.map(([e, w]) => [e, w.length])));
+    if (!rx.length) return '';
+    const who = ids => { const n = ids.map(nameOf); return n.length <= 2 ? n.join(' and ') : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`; };
+    return `<div class="reacts">${rx.map(([e, ids]) => {
+      const pop = prev && (prev[e] || 0) < ids.length ? 'pop' : '';
+      return `<button class="rx ${ids.includes(me()) ? 'on' : ''} ${pop}" data-rx="${e}" title="${esc(who(ids))} reacted ${e}" aria-label="${e} ${ids.length}, ${esc(who(ids))}${ids.includes(me()) ? ', tap to remove yours' : ''}">${e}<span>${ids.length}</span></button>`;
+    }).join('')}<button class="rx rx-add" data-rx-add title="Add a reaction" aria-label="Add a reaction">${icon('i-smile-plus')}</button></div>`;
+  }
   function html(m, ch) {
     msgs.set(m.id, { m, ch });
     const sys = m.by === 'tribecode', brain = m.by === 'brain', agent = (member(m.by) || {}).role === 'agent';
@@ -80,15 +103,16 @@
     else {
       if (m.fwd) body += `<div class="fwd">${icon('i-fwd')}Forwarded from <b>${esc(nameOf(m.fwd.by))}</b> · ${esc(m.fwd.from || '')}</div>`;
       if (m.replyTo) body += `<button class="quote" data-jump="${esc(m.replyTo.id)}" title="Jump to the original"><b>${esc(nameOf(m.replyTo.by))}</b><span>${esc(m.replyTo.text)}</span></button>`;
-      if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}</p>` : `<p class="vn-tx faint">No transcript</p>`);
+      if (m.vote && window.TribeVotes) body += window.TribeVotes.card(m, ch);
+      else if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}</p>` : `<p class="vn-tx faint">No transcript</p>`);
       else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy"></button>${m.text ? `<p>${md(m.text)}</p>` : ''}`;
       else body += `<p>${md(m.text || '')}</p>`;
-      body += linkChips(m.text);
-      const rx = Object.entries(m.reactions || {});
-      if (rx.length) body += `<div class="reacts">${rx.map(([e, who]) => `<button class="rx ${who.includes(me()) ? 'on' : ''}" data-rx="${e}" title="${esc(who.map(nameOf).join(', '))}">${e}<span>${who.length}</span></button>`).join('')}</div>`;
+      if (!m.vote) body += linkChips(m.text);
+      body += reactsHtml(m);
+      if (window.TribeVotes) body += window.TribeVotes.hint(m);
     }
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
-    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${m.deleted ? 'deleted' : ''}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}
+    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${m.deleted ? 'deleted' : ''} ${m.vote ? 'has-vote' : ''}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}
       <div class="mb"><b>${esc(nameOf(m.by))}</b><time>${when}</time>${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}${body}</div>${more}</div>`;
   }
   function rerender(id) {
@@ -183,20 +207,23 @@
     for (const x of C.state().members || []) if (x.role !== 'agent' && x.id !== me()) out.push({ to: window.TribeDM.channelWith(x.id), label: x.name });
     return out.filter(t => t.to !== ch);
   }
-  function openMenu(el, anchor) {
+  function openMenu(el, anchor, touchMenu = false) {
     closeMenu();
     const e = msgs.get(el.dataset.id); if (!e) return;
     const { m, ch } = e, own = m.by === me(), pinned = (pinsBy.get(ch) || []).some(p => p.id === m.id);
     const menu = document.createElement('div'); menu.id = 'msg-menu'; menu.className = 'dm-menu msg-menu'; menu.setAttribute('role', 'menu');
     const main = () => {
-      menu.innerHTML = `<div class="rx-row">${EMOJI.map(x => `<button data-emoji="${x}" aria-label="React ${x}">${x}</button>`).join('')}</div>
+      // On touch the quick-react bar sits above the menu, so the menu skips its own emoji row.
+      const row = touchMenu ? '' : `<div class="rx-row">${[...QUICK, '🔥'].map(x => `<button data-emoji="${x}" aria-label="React ${x}">${x}</button>`).join('')}<button data-emoji-more aria-label="More reactions" title="More reactions">${icon('i-smile-plus')}</button></div>`;
+      menu.innerHTML = `${row}
         <button role="menuitem" data-act="reply">${icon('i-reply')}Reply</button>
         <button role="menuitem" data-act="forward">${icon('i-fwd')}Forward…</button>
         ${m.text ? `<button role="menuitem" data-act="copy">${icon('i-copy')}Copy text</button>` : ''}
         <button role="menuitem" data-act="pin">${icon('i-pin')}${pinned ? 'Unpin' : 'Pin'}</button>
-        ${m.text ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
+        ${m.text && !m.vote ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
+        ${m.text && !m.vote && window.TribeVotes ? `<button role="menuitem" data-act="vote">${icon('i-vote')}Make it a vote</button>` : ''}
         ${m.media && m.media.kind === 'voice' ? `<button role="menuitem" data-act="notes">${icon('i-doc')}Add to my notes</button>` : ''}
-        ${own && !m.media ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
+        ${own && !m.media && !m.vote ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
         ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}`;
       bind();
     };
@@ -215,6 +242,7 @@
     let armed = false;
     const bind = () => {
       menu.querySelectorAll('[data-emoji]').forEach(b => b.onclick = () => { closeMenu(); react(ch, m.id, b.dataset.emoji); });
+      const more = menu.querySelector('[data-emoji-more]'); if (more) more.onclick = () => { const a = anchor || el; closeMenu(); openPicker(m.id, a); };
       menu.querySelectorAll('[data-act]').forEach(b => b.onclick = async () => {
         const act = b.dataset.act;
         if (act === 'forward') return fwd();
@@ -226,6 +254,7 @@
           if (act === 'pin') await C.api(`/chat/${ch}/pin`, { method: 'POST', body: { id: m.id, on: !pinned } });
           if (act === 'task') { const { task } = await C.api('/tasks', { method: 'POST', body: { title: m.text.replace(/\s+/g, ' ').slice(0, 200) } }); toast(`Task created: ${task.title}`); }
           if (act === 'notes') { const r = await C.api(`/chat/${ch}/notes`, { method: 'POST', body: { id: m.id, date: today() } }); toast(`Added to ${r.doc.title}`); }
+          if (act === 'vote') window.TribeVotes.openComposer({ question: m.text.replace(/\s+/g, ' ').slice(0, 200), channel: ch });
           if (act === 'edit') edit(el, m, ch);
           if (act === 'delete') await C.api(`/chat/${ch}/msg/${m.id}`, { method: 'DELETE' });
         } catch (err) { toast(err.message); }
@@ -241,7 +270,112 @@
     document.body.appendChild(menu);
     main();
   }
-  async function react(ch, id, emoji) { try { await C.api(`/chat/${ch}/react`, { method: 'POST', body: { id, emoji } }); } catch (e) { toast(e.message); } }
+  async function react(ch, id, emoji, on) {
+    try {
+      const r = await C.api(`/chat/${ch}/react`, { method: 'POST', body: { id, emoji, ...(on ? { on: true } : {}) } });
+      if (r.approved) toast(`Approved: ${r.approved.title}`);
+      else if (r.pinned) toast('Pinned');
+    } catch (e) { toast(e.message); }
+  }
+
+  // ---------- quick-react bar + picker ----------
+  const reactable = el => { const e = el && msgs.get(el.dataset.id); return e && !e.m.deleted && e.m.by !== 'tribecode' ? e : null; };
+  let qrFor = null, qrHide = null, qrTouch = false, lpAt = 0;   // lpAt: when a long-press opened the bar (its trailing click is swallowed)
+  function qrBar() {
+    let b = $('#qr-bar');
+    if (!b) { b = document.createElement('div'); b.id = 'qr-bar'; b.className = 'qr-bar hidden'; b.setAttribute('role', 'toolbar'); b.setAttribute('aria-label', 'Quick reactions'); document.body.appendChild(b); }
+    return b;
+  }
+  function showQuick(el, { touch = false, focus = false } = {}) {
+    const e = reactable(el); if (!e) return;
+    clearTimeout(qrHide);
+    const b = qrBar(), mine = e.m.reactions || {};
+    qrFor = el.dataset.id; qrTouch = touch;
+    b.dataset.id = e.m.id;
+    b.innerHTML = QUICK.map(x => `<button type="button" data-q="${x}" class="${(mine[x] || []).includes(me()) ? 'on' : ''}" aria-label="React ${x}" title="React ${x}">${x}</button>`).join('')
+      + `<button type="button" data-q="more" class="qr-more" aria-label="More reactions" title="More reactions">${icon('i-smile-plus')}</button>`;
+    b.classList.toggle('touch', touch);
+    b.classList.remove('hidden');
+    const r = (el.querySelector('.mb') || el).getBoundingClientRect(), w = b.offsetWidth, h = b.offsetHeight;
+    let top, left;
+    if (touch) { top = r.top - h - 8; left = r.left; if (top < 8) top = r.bottom + 8; }
+    else { top = r.top - h + 4; left = el.getBoundingClientRect().right - w - 30; const list = el.closest('.chat'); if (list && top < list.getBoundingClientRect().top) top = r.top + 2; }
+    b.style.top = Math.max(8, Math.min(innerHeight - h - 8, top)) + 'px';
+    b.style.left = Math.max(8, Math.min(innerWidth - w - 8, left)) + 'px';
+    if (focus) b.querySelector('button').focus();
+  }
+  function hideQuick(now) {
+    clearTimeout(qrHide);
+    const go = () => { const b = $('#qr-bar'); if (b) b.classList.add('hidden'); qrFor = null; };
+    if (now) go(); else qrHide = setTimeout(go, 160);
+  }
+  function closePicker() { const p = $('#rx-picker'); if (p) p.remove(); }
+  function openPicker(id, anchor) {
+    closePicker();
+    const e = msgs.get(id); if (!e) return;
+    const mine = e.m.reactions || {};
+    const p = document.createElement('div'); p.id = 'rx-picker'; p.className = 'rx-picker'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Pick a reaction');
+    p.innerHTML = `<div class="rx-grid">${EMOJI.map(x => `<button type="button" data-pick="${x}" class="${(mine[x] || []).includes(me()) ? 'on' : ''}" aria-label="React ${x}">${x}</button>`).join('')}</div>
+      <div class="rx-tip">✅ on an agent's request approves it · 📌 pins</div>`;
+    document.body.appendChild(p);
+    const r = anchor.getBoundingClientRect();
+    p.style.top = Math.max(8, Math.min(innerHeight - p.offsetHeight - 8, r.bottom + 6)) + 'px';
+    p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.right - p.offsetWidth)) + 'px';
+    p.dataset.id = id;
+    p.querySelector('button').focus();
+  }
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType !== 'mouse') return;
+    if (e.target.closest && e.target.closest('#qr-bar')) { clearTimeout(qrHide); return; }
+    const el = e.target.closest && e.target.closest('.chat .msg.dx:not(.sys):not(.deleted)');
+    if (el) { if (qrFor !== el.dataset.id || $('#qr-bar').classList.contains('hidden')) showQuick(el); else clearTimeout(qrHide); }
+    else if (qrFor && !qrTouch) hideQuick();
+  });
+  document.addEventListener('click', e => {
+    if (lpAt && Date.now() - lpAt < 1200 && !(e.target.closest && e.target.closest('#qr-bar, #msg-menu'))) { lpAt = 0; e.preventDefault(); e.stopImmediatePropagation(); return; }
+    const q = e.target.closest && e.target.closest('#qr-bar [data-q]');
+    if (q) {
+      e.preventDefault(); e.stopPropagation();
+      const id = $('#qr-bar').dataset.id, x = msgs.get(id); if (!x) return;
+      if (q.dataset.q === 'more') { openPicker(id, q); hideQuick(true); closeMenu(); return; }
+      hideQuick(true); closeMenu(); react(x.ch, id, q.dataset.q);
+      return;
+    }
+    const pk = e.target.closest && e.target.closest('#rx-picker [data-pick]');
+    if (pk) { e.stopPropagation(); const id = $('#rx-picker').dataset.id, x = msgs.get(id); closePicker(); if (x) react(x.ch, id, pk.dataset.pick); return; }
+    if (!(e.target.closest && e.target.closest('#rx-picker'))) closePicker();
+    if (qrTouch && !(e.target.closest && e.target.closest('#qr-bar'))) hideQuick(true);
+  }, true);
+  addEventListener('scroll', () => { if (qrFor) hideQuick(true); closePicker(); }, true);
+
+  // Double-click (mouse) or double-tap (touch) a bubble = 👍. Never toggles a 👍 off.
+  let lastTap = { id: null, t: 0, x: 0, y: 0 };
+  const INTERACTIVE = 'button, a, input, textarea, select, label, .vn, .thumb, .vt, .quote, .edit-in, .rx, .reacts';
+  document.addEventListener('click', e => {
+    const el = e.target.closest && e.target.closest('.chat .msg.dx:not(.sys):not(.deleted)');
+    if (!el || e.target.closest(INTERACTIVE)) { lastTap.id = null; return; }
+    const now = Date.now(), near = Math.abs(e.clientX - lastTap.x) < 24 && Math.abs(e.clientY - lastTap.y) < 24;
+    if (lastTap.id === el.dataset.id && now - lastTap.t < 350 && near) {
+      lastTap.id = null;
+      const x = msgs.get(el.dataset.id); if (!x) return;
+      try { const s = getSelection(); if (s && !s.isCollapsed && el.contains(s.anchorNode)) s.removeAllRanges(); } catch {}
+      if (!((x.m.reactions || {})['👍'] || []).includes(me())) react(x.ch, x.m.id, '👍', true);
+      if (!reducedMotion()) { el.classList.remove('liked'); void el.offsetWidth; el.classList.add('liked'); setTimeout(() => el.classList.remove('liked'), 500); }
+      return;
+    }
+    lastTap = { id: el.dataset.id, t: now, x: e.clientX, y: e.clientY };
+  });
+
+  // The latest message you can react to in the open conversation.
+  const lastMsg = () => [...document.querySelectorAll('.chat:not(.hidden) .msg.dx:not(.sys):not(.deleted)')].pop() || null;
+  // Ctrl/⌘ Shift \ : quick-react to the latest message.
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Backslash') {
+      const el = lastMsg(); if (!el) return;
+      e.preventDefault(); showQuick(el, { touch: true, focus: true });
+    }
+    if (e.key === 'Escape') { if (qrFor) hideQuick(true); closePicker(); }
+  });
   function edit(el, m, ch) {
     const p = el.querySelector('.mb > p'); if (!p) return;
     p.outerHTML = `<input class="edit-in" maxlength="4000" aria-label="Edit message">`;
@@ -270,6 +404,17 @@
   // Sending: DMs and replies go through /chat/<ch>/send; plain #general posts stay with app.js.
   document.addEventListener('submit', async e => {
     if (e.target.id !== 'chat-form') return;
+    // "+👍" (or +1, +ok, +fire…) reacts to the latest message instead of sending it.
+    const quick = ($('#chat-input').value.trim().match(/^\+(\S{1,12})$/) || [])[1];
+    const emo = quick && (EMOJI.includes(quick) ? quick : ALIAS[quick.toLowerCase()] || (EMOJI.includes(quick + '️') ? quick + '️' : null));
+    if (emo && C.connected()) {
+      const el = lastMsg(), x = el && msgs.get(el.dataset.id);
+      if (x) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        $('#chat-input').value = ''; react(x.ch, x.m.id, emo, true);
+        return;
+      }
+    }
     const ch = cur(); if (ch === 'general' && !reply) return;
     e.preventDefault(); e.stopImmediatePropagation();
     const inp = $('#chat-input'), text = inp.value.trim(); if (!text || !C.connected()) return;
@@ -392,6 +537,7 @@
     if (!e.composedPath().some(n => n.id === 'msg-menu')) closeMenu();   // path, not closest: submenus replace the clicked node
     const pin = t.closest('#pin-strip [data-jump]'); if (pin) return jump(pin.dataset.jump);
     const el = t.closest('.msg.dx'); if (!el) return;   // everything below lives inside a chat message
+    const add = t.closest('.rx-add'); if (add) { e.stopPropagation(); return openPicker(el.dataset.id, add); }
     const rx = t.closest('.rx'); if (rx) { const x = msgs.get(el.dataset.id); if (x) react(x.ch, x.m.id, rx.dataset.rx); return; }
     const q = t.closest('.quote[data-jump]'); if (q) return jump(q.dataset.jump);
     const play = t.closest('.vn-play'); if (play) return togglePlay(play.closest('.vn'));
@@ -401,9 +547,10 @@
   document.addEventListener('pointerdown', e => {
     if (e.pointerType !== 'touch') return;
     const el = e.target.closest && e.target.closest('.chat .msg.dx:not(.sys):not(.deleted)'); if (!el) return;
-    press = setTimeout(() => { press = null; openMenu(el); }, 520);
+    press = setTimeout(() => { press = null; lpAt = Date.now(); openMenu(el, null, true); showQuick(el, { touch: true }); if (navigator.vibrate) try { navigator.vibrate(8); } catch {} }, 480);   // emoji bar above, actions below
   });
   ['pointerup', 'pointercancel', 'pointermove'].forEach(t => document.addEventListener(t, () => { if (press) { clearTimeout(press); press = null; } }));
+  document.addEventListener('contextmenu', e => { if (qrTouch && qrFor && e.target.closest && e.target.closest('.chat .msg.dx')) e.preventDefault(); });   // long-press opened our bar, not the OS menu
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
 
   // ---------- events ----------
@@ -456,6 +603,8 @@
       if (ch !== 'general') { try { const { receipt } = await C.api(`/chat/${ch}/receipt`); if (receipt) receipts.set(ch, receipt); else receipts.delete(ch); } catch {} }
       drawReceipt();
     },
-    drawReceipt, startRec, stopRec, recording: () => !!rec, EMOJI,
+    drawReceipt, startRec, stopRec, recording: () => !!rec, EMOJI, QUICK,
+    rerender, react: (id, emoji) => { const x = msgs.get(id); if (x) return react(x.ch, id, emoji); },
+    quickReact: id => { const el = document.querySelector(`.chat:not(.hidden) .msg[data-id="${CSS.escape(id)}"]`); if (el) showQuick(el, { touch: true, focus: true }); },
   };
 })();

@@ -50,6 +50,19 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
       return generate(`Team: ${people}\n\nChat from the last 24 hours:\n${clip(log, 6000)}\n\nTask board:\n${clip(board, 3000)}\n\nWrite a short daily standup: one bullet per person (what they did / are doing), then one line "Blocked:" (or "Blocked: nothing").`,
         { system: 'You write friendly, factual standups. Only use facts from the input. Never invent work.', maxTokens: 350 });
     },
+    // A chat message that reads like a decision -> a short vote draft { question, options } (chatx.js offers
+    // it to the author as a "Turn this into a vote?" chip; never posted by itself). null when off or unsure.
+    async voteDraft(text) {
+      const out = await generate(`Chat message: ${clip(String(text || ''), 600)}\n\nTurn it into a team vote. Reply with exactly one line of JSON: {"question": "<short question ending with ?>", "options": []}. Leave options empty for a yes/no approval; list 2-4 short options only if the message names alternatives.`,
+        { system: 'You turn chat messages into short, neutral team votes. JSON only.', maxTokens: 120 });
+      if (!out) return null;
+      try {
+        const j = JSON.parse((out.match(/\{[\s\S]*\}/) || [''])[0]);
+        const question = String(j.question || '').trim().slice(0, 200);
+        const options = (Array.isArray(j.options) ? j.options : []).map(o => String(o).trim().slice(0, 60)).filter(Boolean).slice(0, 4);
+        return question.endsWith('?') ? { question, options: options.length >= 2 ? options : [] } : null;
+      } catch { return null; }
+    },
     async visionCheck({ vision, title, body }) {
       if (!vision || !vision.trim()) return null;
       const out = await generate(`VISION.md:\n${clip(vision, 3000)}\n\nProposal: ${title}\n${clip(body || '', 4000)}\n\nDoes this proposal fit the vision? Answer on the first line with exactly FITS or CONFLICTS, then one short sentence explaining why.`,
