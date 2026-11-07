@@ -376,7 +376,20 @@ def main():
         assert {x[1] for x in puts} == {"/api/repos/maya-gh/workshop/contents/items/hero-run-cycle/workshop.json", "/api/repos/maya-gh/workshop/contents/items/hero-run-cycle/hero-run.png"}, puts
         png_put = next(x for x in puts if x[1].endswith(".png"))
         assert base64.b64decode(png_put[3]["content"]) == (pq / "assets" / "hero-run.png").read_bytes() and png_put[3]["branch"] == "workshop/hero-run-cycle-1.0.1"
-        print("ok donate: bundle + upload link + index entry; PR through the GitHub API with the member's stored token")
+        # the community repo scaffold accepts the bundle, and its validator catches tampering
+        import shutil
+        repo_dir = Path(tempfile.mkdtemp(prefix="ws-repo-", dir="/tmp")) / "r"
+        shutil.copytree(ROOT / "templates" / "workshop-repo", repo_dir)
+        shutil.copytree(bundle, repo_dir / "items" / "hero-run-cycle")
+        v = subprocess.run(["node", "scripts/validate.js", "--write-index", "--repo=" + GOOD], cwd=repo_dir, capture_output=True, text=True)
+        assert v.returncode == 0, v.stdout + v.stderr
+        built = json.loads((repo_dir / "index.json").read_text())
+        assert [x["id"] for x in built["items"]] == ["hero-run-cycle"] and built["items"][0]["files"][0]["sha256"] == d["indexEntry"]["files"][0]["sha256"], built
+        (repo_dir / "items" / "hero-run-cycle" / "hero-run.png").write_bytes(b"not the same bytes")
+        (repo_dir / "items" / "hero-run-cycle" / "extra.exe").write_bytes(b"MZ")
+        v = subprocess.run(["node", "scripts/validate.js"], cwd=repo_dir, capture_output=True, text=True)
+        assert v.returncode == 1 and "sha256 does not match" in v.stdout and "not listed" in v.stdout, v.stdout
+        print("ok donate: bundle + upload link + index entry; PR through the GitHub API with the member's stored token; templates/workshop-repo validator accepts it, rejects tampering")
 
         # ---------------- tampering on disk is caught on use ----------------
         Path(tmp, "workshop/items/level-design/notes.txt").write_text("changed behind our back\n")
