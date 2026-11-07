@@ -490,3 +490,9 @@
   window.TribeWorkshop = { open, close, isOpen: () => open_, reload: load };
   if (location.hash === '#/workshop') setTimeout(open, 0);
 })();
+
+// Rail entry (top level, apart from the project circles) and a palette-friendly global.
+(() => {
+  const b = document.getElementById('rail-workshop');
+  if (b) b.addEventListener('click', e => { e.stopPropagation(); window.TribeWorkshop && (window.TribeWorkshop.isOpen() ? window.TribeWorkshop.close() : window.TribeWorkshop.open()); });
+})();
