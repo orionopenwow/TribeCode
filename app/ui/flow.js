@@ -104,7 +104,7 @@
     const canEdit = human();
     // A friend on a phone (not the one who started it): no setup steps, no GitHub, no link to manage.
     // Just what they can do from the couch with no computer and no Claude of their own.
-    if (matchMedia('(max-width: 820px)').matches && f.by !== me().id) {
+    if (matchMedia('(max-width: 820px)').matches && me().id && f.by !== me().id) {
       d.innerHTML = `<section class="fk fk-phone" id="flow-kick" aria-label="You're in">
         <div class="fk-head"><div><span class="eyebrow">You're in</span><h2>${esc(f.name || 'Your project')}</h2></div><button class="tb-icon fk-min" id="flow-min" title="Fold" aria-label="Fold the card">${ico('i-x')}</button></div>
         <p class="fk-lead">No computer needed. Talk ideas through, ask the tribe's AI, pick a part to own.</p>

@@ -149,7 +149,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
     if (!st) return null;
     const items = st.plan ? st.plan.milestones.flatMap(m => m.items) : [];
     const p = P.get(st.project) || {};
-    return { project: st.project, name: p.name, status: st.status, steps: st.steps, invite: st.invite, roles: st.roles.map(r => roleView(r, st)), notes: st.notes.slice(-30),
+    return { project: st.project, name: p.name, by: st.by, status: st.status, steps: st.steps, invite: st.invite, roles: st.roles.map(r => roleView(r, st)), notes: st.notes.slice(-30),
       plan: st.plan ? { ...st.plan, total: items.length, done: items.filter(i => i.done).length, current: currentMilestone(st) ? currentMilestone(st).id : null } : null,
       changes: st.changes.filter(c => c.status === 'pending'), blockers: (st.plan ? st.plan.blockers : []).filter(b => b.open),
       lastAssessment: st.lastAssessment || null, github: st.github || null, created: st.created, palette: PALETTE, glyphs: GLYPHS };
