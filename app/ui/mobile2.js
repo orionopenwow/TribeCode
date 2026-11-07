@@ -133,7 +133,9 @@
     const num = id => { const e = document.getElementById(id); return e ? Number(String(e.textContent).replace('+', '')) || 0 : 0; };
     setBadge('nn-chat', num('nn-chat'));
     setBadge('nn-tasks', 0);   // the count of open tasks is not "news"; keep Tasks calm
-    setBadge('updates', Math.max(pendingMine().length, num('nn-updates')));   // the inbox count already includes approval asks
+    // The bell's unread count (notify.js #nf-count; the old nest Updates row is gone) — it already includes approval asks.
+    const inbox = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state().unread || 0 : num('nf-count');
+    setBadge('updates', Math.max(pendingMine().length, inbox));
   }
 
   // =====================================================================
@@ -791,7 +793,7 @@
       const d = $('#people-status'); if (d) d.remove();
     }
     const watch = (id, fn) => { const el = document.getElementById(id); if (el) new MutationObserver(fn).observe(el, { childList: true, characterData: true, subtree: true, attributes: true }); };
-    ['nn-chat', 'nn-updates', 'nn-tasks'].forEach(id => watch(id, syncBadges));
+    ['nn-chat', 'nf-count', 'nn-tasks'].forEach(id => watch(id, syncBadges));
     watch('nest-name', paintProject); watch('nest-sub', paintProject); watch('pj-switch', paintProject);
     const head = $('#chat-head') || $('.chat-title'); if (head) new MutationObserver(talkLabel).observe(head, { childList: true, subtree: true });
     C.on('presence', () => { paintProject(); paintMe(); });
