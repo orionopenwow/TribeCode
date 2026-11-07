@@ -124,7 +124,7 @@ def main():
             assert "↑0" in host.inner_text("#repo-strip") and "↓0" in host.inner_text("#repo-strip")
             wait_text(host, "#ap-body", "Auto-pull main when clean")
             assert host.locator('#ap-body [data-sw="autopilot.enabled"]:not([disabled])').count() == 1, "host can toggle autopilot"
-            assert host.inner_text("#crumb-label") == "Repo"
+            assert host.inner_text("#crumb-label") == "Tasks & Board › Repo"
 
             # ---- 2. phone sends a change with a patch; desktop takes it and applies it ----
             code = api("/invites", "POST", {"hours": 1, "maxUses": 2}, htok)[1]["invite"]["code"]
@@ -135,7 +135,7 @@ def main():
             wait_text(phone, "#sync-status", "connected")
             ptok = phone.evaluate("TribeStore.get().server.token")
             phone.evaluate("localStorage.setItem('tribecode.iosHint', '1'); document.querySelector('.ios-hint') && document.querySelector('.ios-hint').remove()")
-            phone.click('#menu-btn'); phone.click("#nest-repo")   # phones: Project Hub lives in the panel
+            phone.click('#menu-btn'); phone.click("#nest-ws-tasks"); phone.click("#wt-repo")   # phones: Project Hub lives in the panel
             phone.wait_for_selector('#ap-body [data-sw="autopilot.enabled"][disabled]')  # only the host toggles autopilot
             phone.click("#repo-send")
             phone.fill("#sd-title", "Amber lantern at night")

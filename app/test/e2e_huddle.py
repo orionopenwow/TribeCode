@@ -51,7 +51,7 @@ def main():
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome",
                                   args=["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream", "--autoplay-policy=no-user-gesture-required"])
             host, maya = open_as(b, "Orion", host_tok), open_as(b, "Maya", maya_tok)
-            host.click("#nest-huddle-row")
+            host.evaluate("TribeApp.show('chat')"); host.click(".cb-btn[data-cb='huddle']")   # the huddle starts from the chat header
             maya.wait_for_selector("#nest-huddle.live #huddle-live:not(.hidden)")
             wait_text(maya, "#chat-list", "started a huddle")
             maya.click("#nest-huddle-row")

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.0
+
+A calmer, faster workspace.
+- **Global Hub**: the home screen when no project is open, or before you join a tribe. Quick launch (new project, paste invite link, resume last session, search everything), a live stream across all your projects, an agents & models status bar (your Claudes, local models, background loops), your notes and suggestions. No more dead "Start or join a tribe" box
+- **Sidebar in 4 pillars**: Chat & Streams (channels and DMs fold out), Docs & Files, Tasks & Board (tabs: Board, Bugs, Proposals, Milestones, Calendar, Repo, Visuals), Agents Hub (tabs: Agents, Your agents, Ownership, Conflicts, Hand-offs, Reviews, Daily plan, Secretary), with Settings and Invite at the bottom. Deep links like #/tasks/bugs; Ctrl K lists every tab
+- **Workspace switcher**: pin favourite projects, collaborative rooms, personal space and scratchpad, project views (Overview, Board, Repo, Timeline)
+- **Right panel**: agents and helpers (Secretary, local model, autopilot) are in the room; click an agent for its task, context, hand-offs, conflicts and reviews; a private scratchpad you can move into a project or turn into a task; close it with the X, reopen from the edge
+- **Header**: update is a quiet icon with a dot; profile is rightmost; no panel or docs icons
+- **Brighter dark theme**: text and icons white, not grey
+- Commit gists read "3 files in game/ · +12 −4"
+- README and website rewritten with fresh screenshots (npm run readme-shots)
+
 ## v0.4.1
 
 Fixes the desktop app showing an old, half-updated layout after updates.

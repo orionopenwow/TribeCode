@@ -40,6 +40,7 @@
 <link rel="stylesheet" href="bubbles.css">
 <link rel="stylesheet" href="plusmenu.css">
 <link rel="stylesheet" href="preview.css">
+<link rel="stylesheet" href="hub.css">
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -86,12 +87,16 @@
 </svg>
 
 <!-- ============ App shell ============ -->
+<!-- The nest (shell.js): Chat & Streams · Docs & Files · Tasks & Board · Agents Hub, then Settings and Invite. Tasks & Board
+     and Agents Hub are tabbed workspaces (#view-tabs at the top of main); with no project selected the rows are the
+     Global ones (Hub · Global docs · All repos · Agent fleet). -->
 <!-- Layout: far-left circle rail (projects) | the project's nest | main | right panel (In the room / preview).
-     app/ui/shell.js renders the nest (core rows, Project Hub, Coordinate & Ops, Settings), breadcrumbs, Pinned, Recents and the preview panel. -->
+     app/ui/shell.js renders the nest (core rows, Project Hub, Coordinate & Ops, Settings; with no project selected a
+     single Global group), breadcrumbs, Pinned, Recents and the preview panel. app/ui/hub.js renders the Global Hub. -->
 <div class="shell" id="shell">
   <div class="window">
     <nav class="rail" id="tour-rail" aria-label="Projects" data-tauri-drag-region>
-      <button class="logo-btn" id="rail-logo" title="TribeCode · project home" aria-label="Project home" data-tauri-drag-region><img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region></button>
+      <button class="logo-btn" id="rail-logo" title="TribeCode · global hub" aria-label="Global hub" data-tauri-drag-region><img class="logo" src="assets/icon-512.png" alt="TribeCode" data-tauri-drag-region></button>
       <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
       <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
       <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-box"/></svg></button>
@@ -107,10 +112,9 @@
       </nav>
       <button class="search" id="tour-search" title="Command palette"><svg class="i" style="width:14px;height:14px"><use href="#i-search"/></svg>Search or jump to…<span class="kbd">Ctrl K</span></button>
       <div class="tb-right" data-tauri-drag-region>
-        <button class="update-pill hidden" id="update-pill" aria-haspopup="dialog"><svg class="i"><use href="#i-refresh"/></svg><span id="update-pill-label">Restart to update</span></button>
+        <button class="update-btn hidden" id="update-btn" aria-haspopup="dialog" title="Update ready" aria-label="Update ready"><svg class="i"><use href="#i-refresh"/></svg><span class="ub-dot"></span><span class="sr" id="update-btn-label">Update ready</span></button>
         <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
         <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
-        <button class="tb-icon" id="panel-toggle" title="Show or hide the right panel" aria-label="Toggle the right panel" aria-pressed="true"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
         <div class="win-ctl" id="win-ctl" aria-label="Window">
           <button data-w="close" class="tl tl-close" title="Close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/></svg></button>
           <button data-w="min" class="tl tl-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M3 6h6"/></svg></button>
@@ -127,10 +131,13 @@
           <button class="nest-switch" id="nest-switch" aria-haspopup="menu" aria-expanded="false" title="Switch project" aria-label="Switch project"><svg class="i"><use href="#i-chev"/></svg></button>
         </div>
         <div class="nest-group nest-core" id="pj-nav" role="navigation" aria-label="Project sections">
-          <button class="nest-row" data-nav="chat" data-pnav="chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat</span><span class="n" id="nn-chat"></span></button>
-          <button class="nest-row" data-nav="docs" data-pnav="docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs &amp; files</span></button>
-          <button class="nest-row" data-pnav="updates" id="nest-updates"><svg class="i"><use href="#i-bell"/></svg><span>Updates</span><span class="n" id="nn-updates"></span></button>
-          <button class="nest-row" data-nav="tasks" data-pnav="tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks</span><span class="n" id="nn-tasks"></span></button>
+          <div class="nest-line"><button class="nest-row core" data-nav="chat" data-pnav="chat" id="nest-chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat &amp; Streams</span><span class="n" id="nn-chat"></span></button><button class="nest-sub-toggle" id="streams-toggle" aria-expanded="false" aria-controls="nest-streams" title="Channels and direct messages" aria-label="Show channels"><svg class="i"><use href="#i-chev"/></svg></button></div>
+          <div class="nest-streams" id="nest-streams" role="group" aria-label="Channels and direct messages"></div>
+          <button class="nest-row core" data-nav="docs" data-pnav="docs" id="nest-docs"><svg class="i"><use href="#i-doc"/></svg><span>Docs &amp; Files</span></button>
+          <button class="nest-row core" data-nav="tasks" data-pnav="ws-tasks" id="nest-ws-tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks &amp; Board</span><span class="n" id="nn-tasks"></span></button>
+          <button class="nest-row core" data-pnav="ws-agents" id="nest-ws-agents"><svg class="i"><use href="#i-robot"/></svg><span>Agents Hub</span><span class="n" id="nn-agents"></span></button>
+          <!-- Huddle and Capture to notes have no rows: the huddle starts from the chat header's call button and shows
+               here only while it is live; Capture to notes lives in the profile menu and shows here only while on. -->
           <div class="nest-huddle" id="nest-huddle">
             <button class="nest-row" data-pnav="huddle" id="nest-huddle-row" title="Start or join the huddle (Ctrl Shift M)"><svg class="i"><use href="#i-mic"/></svg><span>Huddle</span><span class="nest-live hidden" id="huddle-live"><i></i>Live</span></button>
             <div class="huddle-sub hidden" id="huddle-sub"></div>
@@ -154,7 +161,9 @@
     </aside>
 
     <main class="main" id="main">
-     <section id="view-home">
+     <nav class="view-tabs hidden" id="view-tabs" aria-label="Sections of this view"></nav>
+     <section id="view-hub" class="hidden" aria-label="Global hub"></section>
+     <section id="view-home" class="hidden">
       <div id="pj-overview" class="pj-overview"></div>
       <div class="home-start sec" id="home-start">
       <div class="sec-head"><span class="eyebrow">Tools</span><h2>Standup and files</h2></div>
@@ -222,9 +231,11 @@
      </section>
     </main>
 
+    <!-- With the right panel hidden: a slim tab at the main column's right edge brings it back (shell.js). -->
+    <button class="panel-reopen" id="panel-toggle" title="Show panel" aria-label="Show the right panel" aria-pressed="true" aria-controls="tour-room"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
     <aside class="panel" id="tour-room" aria-label="Right panel">
       <div class="room-pane" id="room-pane">
-        <h6>In the room <span id="room-count"></span></h6>
+        <div class="room-head"><h6>In the room <span id="room-count"></span></h6><button class="tb-icon panel-x" id="panel-close" title="Hide the panel" aria-label="Hide the right panel"><svg class="i"><use href="#i-x"/></svg></button></div>
         <div class="room-list" id="room-list">
           <div class="person"><div class="avatar" id="room-me" style="width:28px;height:28px;font-size:11px">?</div><div><span id="room-name">You</span><div class="what">online · Home</div></div></div>
         </div>
@@ -306,5 +317,6 @@
 <script src="profilemenu.js"></script>
 <script src="plusmenu.js"></script>
 <script src="preview.js"></script>
+<script src="hub.js"></script>
 </body>
 </html>

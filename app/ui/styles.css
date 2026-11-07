@@ -13,7 +13,7 @@ body.dark {
   --canvas: #12151A; --page: #12151A;
   --win: #1B2028; --surface: #1B2028; --surface-2: #222833; --surface-3: #2A313C;
   --stroke: #232A33; --edge: #2A313C; --border: #2A313C; --edge-pop: #3A4452;
-  --text: #F8FAFC; --muted: #94A3B8; --faint: #64748B;
+  --text: #F8FAFC; --muted: #D4DBE5; --faint: #A3AEBD;
   --accent-ink: #F26B1D; --live-ink: #38C6B1; --amber-ink: #FFB86B; --ember-ink: #FF6F8E; --peer-ink: #8F9BFF;
   --chip: rgba(242,107,29,0.14); --live-tint: rgba(56,198,177,0.14); --amber-tint: rgba(255,184,107,0.14);
   --ember-tint: rgba(255,111,142,0.14); --peer-tint: rgba(108,124,255,0.16);

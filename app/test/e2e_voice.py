@@ -203,7 +203,7 @@ def main():
             chat(orion).click("#dm-back")
 
             # ---- 2. huddle captions ----
-            orion.click("#nest-huddle-row")
+            orion.evaluate("TribeApp.show('chat')"); orion.click(".cb-btn[data-cb='huddle']")   # the huddle starts from the chat header
             maya.wait_for_selector("#nest-huddle.live #huddle-live:not(.hidden)")
             maya.click("#nest-huddle-row")
             for pg in (orion, maya):
@@ -254,7 +254,7 @@ def main():
             orion.evaluate("TribeApp.show('home')")
 
             # "End & summarize" writes notes without ending the huddle
-            orion.click("#nest-huddle-row"); orion.wait_for_function("TribeHuddle.inCall() && TribeHuddle.roster().length === 1")
+            orion.evaluate("TribeApp.show('chat')"); orion.click(".cb-btn[data-cb='huddle']"); orion.wait_for_function("TribeHuddle.inCall() && TribeHuddle.roster().length === 1")
             orion.click("#h-cc"); orion.wait_for_function("__fakeSpeech.active()")
             orion.evaluate("__fakeSpeech.say('quick sync about the soundtrack')")
             orion.wait_for_function("TribeCaptions.lines().length >= 1")
@@ -264,7 +264,7 @@ def main():
             orion.click("#h-leave")
 
             # ---- 4. capture to notes ----
-            jay.click("#capture-toggle")
+            jay.click("#pf-btn"); jay.click("#pf-menu [data-act='capture']"); jay.keyboard.press("Escape")   # Capture to notes lives in the profile menu
             jay.wait_for_function("__fakeSpeech.active()")
             wait_text(jay, "#capture-box", "visible to the tribe")
             wait_text(jay, "#voice-pill", "notes")
