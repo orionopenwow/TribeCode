@@ -145,9 +145,18 @@
       : `<section class="hero-card" id="pj-hero"><span class="eyebrow">Start here</span><h2>Give ${esc(p.name)} its first task</h2><p>Add a task, or invite a friend and connect your Claude Code. The daily plan then suggests who does what.</p>
           <div class="hero-acts"><button class="btn primary" data-hero="newtask">New task</button><button class="btn" data-hero="invite">Invite a friend</button></div></section>`;
     const sec = (eyebrow, title, inner) => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2></div>${inner}</section>`;
-    el.innerHTML = `<div class="view-head pj-title"><button class="pj-face-btn" id="pj-face" title="Change the project picture" aria-label="Change the project picture">${face(p, 'lg')}</button><h1>${esc(p.name)}</h1>
-        <span class="faint">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}</span>
+    const L = d.living, canEdit = me().role !== 'spectator' && me().role !== 'agent';
+    const MOOD = { buzzing: 'Buzzing', steady: 'Steady', quiet: 'Quiet', fresh: 'Brand new' };
+    el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
+        <div class="pj-id"><h1>${esc(p.name)}</h1>
+          <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? 'Add a one-line bio: what is this?' : ''}</button>
+          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}</span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
+      ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? '<span class="pl-by">local model</span>' : ''}</div>
+          <p class="pl-sum">${esc(L.summary)}</p>
+          <div class="pl-grid">${[['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', L.lines.next, 'tasks'], ['Coming up', 'i-cal', L.lines.soon, 'calendar']]
+            .map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
+      ${d.vision && !d.vision.has ? `<section class="pj-vision-nudge" id="pj-vnudge">${ico('i-flag', 16)}<span><b>No vision yet.</b> A few lines on what ${esc(p.name)} is and who it's for keeps people and agents pointed the same way.</span><button class="btn sm primary" id="pj-vwrite">${isHost() ? 'Write the vision' : 'Suggest a vision'}</button></section>` : ''}
       ${hero}
       ${sec('People', 'Who\'s building', `<div class="pj-grid">
         <section class="card"><h3>${ico('i-users', 16)}Who is here</h3>
@@ -165,10 +174,45 @@
       else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); } });
     $('#pj-invite').onclick = () => App().openInvite();
     $('#pj-face').onclick = () => pickImage(p);
+    const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);
+    const vw = $('#pj-vwrite'); if (vw) vw.onclick = () => writeVision(p);
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
     el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => App().show(x.dataset.go));
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
+  }
+
+  // One-line bio, edited in place on the overview (any builder).
+  function editBio(p, cur) {
+    const b = $('#pj-bio'); if (!b) return;
+    const inp = document.createElement('input'); inp.className = 'input pj-bio-in'; inp.maxLength = 200; inp.value = cur || ''; inp.placeholder = 'What is this, in one line?';
+    b.replaceWith(inp); inp.focus();
+    let done = false;
+    const save = async keep => { if (done) return; done = true;
+      if (keep && inp.value.trim() !== (cur || '')) { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { bio: inp.value } }); await refresh(); } catch (e) { toast(e.message); } }
+      overview(); };
+    inp.onkeydown = e => { if (e.key === 'Enter') save(true); if (e.key === 'Escape') save(false); };
+    inp.onblur = () => save(true);
+  }
+  // No vision yet: the host writes it (VISION.md, read by the plan, the board and the agents); others suggest one in chat.
+  function writeVision(p) {
+    const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
+    const h = isHost();
+    body.innerHTML = `<span class="eyebrow">Vision · ${esc(p.name)}</span><h2>${h ? 'What are you building?' : 'Suggest a vision'}</h2>
+      <p class="lead">Three short lines are plenty: what it is, who it's for, what "done" looks like for now. ${h ? 'It becomes VISION.md, which the plan, the board and every agent read.' : 'It goes to the chat for the host to adopt.'}</p>
+      <textarea class="input pj-vision-in" id="pj-vtext" rows="5" placeholder="A cozy pixel platformer for friends to build together.&#10;For people who like short levels and silly bosses.&#10;Done for now: 3 levels, a boss, playable in the browser."></textarea>
+      <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Later</button><button class="btn primary" id="pj-vsave">${h ? 'Save the vision' : 'Send to chat'}</button></div>`;
+    const close = () => m.classList.add('hidden');
+    body.querySelector('[data-close]').onclick = close;
+    $('#pj-vtext').focus();
+    $('#pj-vsave').onclick = async () => {
+      const t = $('#pj-vtext').value.trim(); if (!t) return $('#pj-vtext').focus();
+      try {
+        if (h) { await C.api('/vision', { method: 'PUT', body: { text: `# ${p.name}\n\n${t}\n` } }); toast('Vision saved'); }
+        else { await C.api('/chat/general', { method: 'POST', body: { text: `💡 Vision suggestion for ${p.name}:\n${t}` } }); toast('Sent to the chat'); }
+        close(); overview();
+      } catch (e) { toast(e.message); }
+    };
   }
 
   // Project picture: any image, shrunk to a 128px square in the browser, stored with the project.

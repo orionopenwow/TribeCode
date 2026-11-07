@@ -15,7 +15,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-module.exports = function rooms({ P, W, store, getMembers, saveMembers, isLocal, presenceFor, loadTasks, hubFor, resetHub, plan, approvals, docs, broadcast, postChat, nameOf, str }) {
+module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMembers, isLocal, presenceFor, loadTasks, hubFor, resetHub, plan, approvals, docs, broadcast, postChat, nameOf, str }) {
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const host = me => me && me.role === 'host';
 
@@ -86,8 +86,50 @@ module.exports = function rooms({ P, W, store, getMembers, saveMembers, isLocal,
         .map(m => ({ id: m.id, name: m.name, color: m.color, role: p.members[m.id] || m.role, online: m.online, here: m.online && m.project === pid, kind: m.role === 'agent' ? 'agent' : 'person' }));
       return { project: P.view(p, { counts: counts(pid) }), here: here.map(m => ({ id: m.id, name: m.name, color: m.color, where: m.where, role: m.role })),
         agents: agents.map(a => ({ id: a.id, name: a.name, where: a.where, since: a.since })), team, recent,
-        upcoming: plan.upcoming(5, me), repo: st.enabled ? { name: st.name, branch: st.branch, ahead: st.ahead, behind: st.behind, dirty: st.dirtyCount } : null };
+        upcoming: plan.upcoming(5, me), repo: st.enabled ? { name: st.name, branch: st.branch, ahead: st.ahead, behind: st.behind, dirty: st.dirtyCount } : null,
+        ...living(pid, p, tasks, st, recent) };
     });
+  }
+
+  // ---------- the living update on a project's overview: a few short lines, refreshed as things happen ----------
+  // Rule-based right away; the local model (when it runs) rewrites the one-line summary in the background.
+  const briefs = new Map();   // pid -> { text, at, key }
+  function living(pid, p, tasks, st, recent) {
+    let vision = ''; try { vision = require('node:fs').readFileSync(store.p('VISION.md'), 'utf8'); } catch {}
+    // The starter's placeholder (templates/flow-starter/VISION.md) still counts as no vision yet.
+    const vtext = /Replace these lines together/.test(vision) ? '' : vision.replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim();
+    const day = Date.now() - 24 * 3600_000, week = Date.now() - 7 * 24 * 3600_000;
+    let chat = []; try { chat = store.readJSONL('chat/general.jsonl', 400).filter(m => !m.deleted && m.by !== 'tribecode'); } catch {}
+    const chatDay = chat.filter(m => Date.parse(m.at) > day), last = chat[chat.length - 1];
+    const speakers = [...new Set(chatDay.map(m => m.by))].map(nameOf).filter(Boolean);
+    const commitsWeek = (st.commits || []).filter(c => Date.parse(c.at) > week).length;
+    const doing = tasks.filter(t => t.status === 'doing'), todo = tasks.filter(t => t.status === 'backlog' || t.status === 'review'), doneWeek = tasks.filter(t => t.status === 'done' && Date.parse(t.updated || t.created) > week);
+    const up = plan.upcoming(3);
+    const mood = chatDay.length >= 20 || commitsWeek >= 10 ? 'buzzing' : chatDay.length || commitsWeek || doneWeek.length ? 'steady' : chat.length || tasks.length ? 'quiet' : 'fresh';
+    const pl = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+    const lines = {
+      lately: doneWeek.length || commitsWeek ? [doneWeek.length ? `${pl(doneWeek.length, 'task')} done` : '', commitsWeek ? pl(commitsWeek, 'commit') : ''].filter(Boolean).join(' · ') + ' this week'
+        : recent[0] ? `Last: ${recent[0].text}` : 'Nothing yet',
+      chat: chatDay.length ? `${pl(chatDay.length, 'message')} today${speakers.length ? ` · ${speakers.slice(0, 3).join(', ')}` : ''}` : last ? `Quiet today · last from ${nameOf(last.by) || 'someone'}` : 'No messages yet',
+      next: doing.length ? `In progress: ${doing[0].title}${doing.length > 1 ? ` (+${doing.length - 1})` : ''}` : todo.length ? `Up next: ${todo[0].title}${todo.length > 1 ? ` (+${todo.length - 1})` : ''}` : 'No tasks yet',
+      soon: up.length ? `${up[0].title} · ${new Date(up[0].at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}${up.length > 1 ? ` (+${up.length - 1})` : ''}` : 'Nothing on the calendar',
+    };
+    const rule = mood === 'fresh' ? `${p.name} is brand new: write a line of vision, add a first task, invite a friend.`
+      : mood === 'buzzing' ? `${p.name} is buzzing${speakers.length ? ` with ${speakers.slice(0, 2).join(' and ')}` : ''}. ${doing.length ? `Focus: ${doing[0].title}.` : todo.length ? `Next up: ${todo[0].title}.` : ''}`
+      : mood === 'steady' ? `Steady progress${doneWeek.length ? `: ${pl(doneWeek.length, 'task')} done this week` : ''}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Pick the next task.'}`
+      : `Quiet lately. ${todo.length ? `${todo[0].title} is waiting.` : 'A new task or a question in chat gets it moving.'}`;
+    const key = [chat.length, tasks.length, doneWeek.length, commitsWeek, up.length, doing.map(t => t.id).join()].join('|');
+    const cached = briefs.get(pid);
+    if (brain && brain.status && brain.status().online && (!cached || cached.key !== key) && mood !== 'fresh' && !(cached && cached.busy)) {
+      briefs.set(pid, { ...(cached || {}), busy: true, key });
+      const ctx = `Project: ${p.name}${p.bio ? ` (${p.bio})` : ''}\nVision: ${vtext.slice(0, 300) || '(none)'}\nLately: ${lines.lately}\nChat: ${lines.chat}\nNext: ${lines.next}\nCalendar: ${lines.soon}\nRecent chat:\n${chat.slice(-12).map(m => `${nameOf(m.by) || 'someone'}: ${String(m.text || '').slice(0, 140)}`).join('\n')}`;
+      brain.generate(`${ctx}\n\nIn ONE short, warm sentence (max 25 words), say how the project is going and what's next. Plain text.`,
+        { system: 'You write the one-line status of a small team project for its dashboard. Be specific and brief. No preamble.', maxTokens: 70, timeoutMs: 20000 })
+        .then(t => briefs.set(pid, { text: t ? t.replace(/\s+/g, ' ').trim().slice(0, 220) : null, at: Date.now(), key }))
+        .catch(() => briefs.set(pid, { text: null, at: Date.now(), key }));
+    }
+    const ai = cached && cached.text && cached.key === key ? cached.text : null;
+    return { bio: p.bio || '', vision: { has: !!vtext, excerpt: vtext.slice(0, 160) }, living: { mood, summary: ai || rule.replace(/\s+/g, ' ').trim(), by: ai ? 'local model' : 'tribecode', lines } };
   }
 
   function requests(pid) {
@@ -131,7 +173,8 @@ module.exports = function rooms({ P, W, store, getMembers, saveMembers, isLocal,
       if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'read-only');
       const body = await readBody(req, 512 * 1024);
       if (body.image !== undefined && body.image !== null && body.image !== '' && !/^data:image\/(png|jpeg|webp|gif);base64,/.test(String(body.image))) return fail(res, 400, 'use a PNG, JPEG, WebP or GIF image');
-      P.update(b, host(me) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, image: body.image } : { image: body.image });
+      const shared = { image: body.image, bio: typeof body.bio === 'string' ? body.bio : undefined };   // any builder: picture and bio
+      P.update(b, host(me) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, ...shared } : shared);
       pushProjects(); return send(res, 200, { project: P.view(P.get(b)) });
     }
     if (c === 'pulse' && m === 'GET') return send(res, 200, pulse(b, me));
