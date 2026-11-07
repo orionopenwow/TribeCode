@@ -60,7 +60,19 @@ The UI stays calm and bare, but each screen's **one hero area may carry real ima
 - **Still flat.** No glows, gradients, vignettes or blur on or around the image. A 1px border separates it from the rest of the card.
 - **Text never sits on the picture.** Titles, branch and status sit on a solid raised band under the image (or a solid chip over it, like "From the README"), never on a scrim.
 
-## 6. Phones
+## 6. Chat
+
+Telegram-style bubbles laid out edge to edge like Instagram's web DMs (references: `design/inspiration/chat-ref-1..3.png`; code: `app/ui/chatx.js`, `app/ui/bubbles.css`).
+
+- **Sides.** Others hug the left with a 30px avatar on the last bubble of their group; yours hug the right with no avatar or name. Max bubble width 68% (82% on phones).
+- **Groups.** Consecutive messages from one person within 10 minutes form a group: 2px apart inside, 10px between groups. The name (member color, Teal + the Claude glyph for agents) sits in the first bubble only. Corners are 14px, 6px between bubbles of a group, 4px at the avatar corner of the last one; a single short line of yours is a full pill.
+- **Inside the bubble.** Time at the bottom-right, inline after short text (plus ✓, or ✓✓ in Teal once your agent has read it). Reply quotes with a 3px bar in the quoted person's color. Reactions as chips with up to three tiny faces (else the count), yours with an Ember edge.
+- **Media.** Voice notes: a 44px Ember play button, waveform, "0:09 · 35.5 KB", transcript under it. Images: a rounded card with the time on a solid pill. Vote and gist cards keep their own card in the same alignment.
+- **Separators.** Date pills ("Today", "Yesterday", "July 20") and a quiet centered time between bursts 30+ minutes apart. System lines are small centered pills.
+- **Tokens.** `--bubble-other` #1E242D with #2A313C border, text #E7EAF0, meta #8391A6 (4.9:1). `--bubble-mine` #3A2416 (a flat Ember tint, chosen over Indigo so "yours" reads as the brand) with #5A3218 border, text #F4EDE8 (12.5:1), meta #C79C80 (5.9:1).
+- **Desktop chrome.** A header bar (avatar · channel + subtitle · huddle, share screen, info) and one full-width composer pill (emoji · message · mic · image · +).
+
+## 7. Phones
 
 See [MOBILE.md](MOBILE.md#the-phone-layout) for the phone layout (rack, panel, composer, sheets). The same tokens and rules apply; motion is the 120–220 ms set above, and everything stops under `prefers-reduced-motion`.
 
