@@ -203,14 +203,21 @@ Earlier runs found these; this run no longer does. Tests: `app/test/e2e_explorer
 | Phone: 15+ controls in the closed drawer took keyboard focus off-screen | The drawer is `inert` while closed | app/ui/mobile2.js:807 |
 | Phone: Settings was 560px wide in a 390px screen (Done and the hints were cut off) | Full width, stacked rows | app/ui/shell.css:233 |
 | A reload could show chat as plain lines: no bubbles, images, voice notes or files (history arrived before chatx.js booted) | chatx upgrades what is already rendered when it boots | app/ui/chatx.js:708 |
+| A phone device link whose sign-in answered before app.js ran threw "Cannot read properties of undefined (reading 'toast')" (seen in e2e_friend) | Guarded; app.js refreshes on boot anyway | app/ui/web.js:42 |
 | Approve / Deny on a board task in Reviews answered 404 (the `task:` id arrives URL-encoded) | Decoded | server/coord.js:228 |
 | Switching project fetched the old project's open doc (404) | Docs keep the open doc only if it is in the new project | app/ui/docs.js:36 |
+| …and its comments and backlinks (the medium `GET /api/docs/:id/backlinks → 404` above, fixed after this run) | A list fetched for the project you left is ignored; comments and backlinks skip a closed doc | app/ui/docs.js:33, app/ui/docsx.js:176, 260 |
 | Ctrl K rebuilt the whole list on hover (the item under the pointer was replaced) | Hover moves the highlight in place | app/ui/palette.js:60 |
 | A second agent's claim refusal said only "coordinate in chat" | It names the holder and the next step (message_agent, handoff, other files) | server/mcp.js:58 |
 | Offline people's names and status at 3.3:1, disabled autopilot rows at 2.9:1 | Only the avatar or switch dims | app/ui/live.css:7, app/ui/repo.css:60 |
 | Ember text on Ember tints at 4.3:1; light-theme faint text at 2.6–3.1:1 | Dark `--accent-ink` #FF7A33 (5:1); light `--faint` #5F6775, `--accent-ink` #A34410, `--amber-ink` #8A4E08 | app/ui/styles.css:17, 29–30 |
 | "Open at login" switch had no accessible name | aria-label | app/ui/settings.js |
 | Agents Hub with no tribe was a dead end | "Host or join a tribe" | app/ui/coord.js:38 |
+
+## Still open elsewhere
+
+- **Light theme**: the online green #3BD16F used as text reaches 1.83:1 on light surfaces (Invite, Scratchpad, Project home). It needs a darker `--online` ink for light mode; the dark theme is fine.
+- **Primary buttons**: white on Ember is 3.05:1 (13.5px). This is a design decision: dark ink on Ember, or larger labels (FEATURES-NEXT Part 3 #5).
 
 ## Open, owned by the Home redesign (hub.js / hub.css, not touched here)
 
