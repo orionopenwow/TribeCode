@@ -2,8 +2,8 @@
 // fragmented messages are capped, and server/store.js JSONL caching stays correct across appends and rewrites.
 // Usage: node app/test/ws_test.js
 'use strict';
-process.env.TRIBE_WS_PING_MS = '80';
-process.env.TRIBE_WS_DEAD_MS = '300';
+process.env.TRIBE_WS_PING_MS = '100';
+process.env.TRIBE_WS_DEAD_MS = '1500';
 const assert = require('node:assert');
 const http = require('node:http');
 const net = require('node:net');
@@ -35,6 +35,7 @@ function client(port, { answer }) {
   });
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
+const until = async (fn, ms = 4000) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await wait(20); } return !!fn(); };
 
 (async () => {
   const sockets = [];
@@ -46,25 +47,23 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
-  const origErr = console.error; console.error = () => {};
+  const origErr = console.error; console.error = (...a) => { if (!String(a[0]).startsWith('ws message handler')) origErr(...a); };
 
   const silent = await client(port, { answer: false });
   const alive = await client(port, { answer: true });
-  await wait(700);
-  ok(sockets[0].closedAt, 'a socket that never answers pings is dropped');
+  await until(() => sockets.length === 2);
+  ok(await until(() => sockets[0].closedAt, 8000), 'a socket that never answers pings is dropped');
   ok(!sockets[1].closedAt, 'a socket that answers pings stays open');
 
   alive.write(frame(0x1, JSON.stringify({ boom: true })));
   alive.write(frame(0x1, JSON.stringify({ hi: 1 })));
-  await wait(100);
-  ok(sockets[1].open && sockets[1].last && sockets[1].last.hi === 1, 'a throwing handler does not kill the socket or the process');
+  ok(await until(() => sockets[1].last && sockets[1].last.hi === 1) && sockets[1].open, 'a throwing handler does not kill the socket or the process');
 
-  // fragments: 5 continuation frames of 1 MiB exceed the 4 MiB message cap
+  // fragments: 81 frames of 60 KB exceed the 4 MiB message cap
   const big = 'x'.repeat(60000);
   alive.write(frame(0x1, big, false));
   for (let i = 0; i < 80; i++) alive.write(frame(0x0, big, false));
-  await wait(300);
-  ok(!sockets[1].open, 'a fragmented message over 4 MiB closes the socket');
+  ok(await until(() => !sockets[1].open, 8000), 'a fragmented message over 4 MiB closes the socket');
   silent.destroy(); alive.destroy(); server.close();
   console.error = origErr;
 
