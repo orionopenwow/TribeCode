@@ -163,7 +163,7 @@ def main():
             # "+" menu (app/ui/plusmenu.js): attach, propose, poll, task, Claude, reminder, note, bug; "Quick poll" only when votes.js is loaded
             phone.click("#m2-plus"); phone.wait_for_selector(".pl-pop.sheet .pl-menu")
             items = phone.eval_on_selector_all(".pl-menu [data-pl]", "els => els.map(e => e.dataset.pl)")
-            assert items[:4] == ["attach", "propose", "poll", "task"] and "claude" in items, items
+            assert items[:4] == ["attach", "propose", "poll", "task"] and ("claude" in items or "ai" in items), items
             shot(phone, "plus")
             phone.click(".pl-menu [data-pl='poll']")
             phone.wait_for_function("TribeVotes.isOpen()")
@@ -206,10 +206,11 @@ def main():
             # ---- Talk to…: my Claude, Qwen brain, my desktop, #agents, #general, DMs
             phone.click("#m2-talk"); phone.wait_for_selector("#m2-talk-sheet")
             keys = phone.eval_on_selector_all("#m2-talk-sheet [data-talk]", "els => els.map(e => e.dataset.talk)")
-            assert keys[:5] == ["claude", "brain", "desktop", "agents", "general"] and f"dm:{orion}" in keys, keys
+            # Ask AI first (the tribe's AI, no Claude of your own needed); My Claude / My desktop only once you have a Claude
+            assert keys[0] == "ai" and "agents" in keys and "general" in keys and f"dm:{orion}" in keys, keys
             shot(phone, "talk-to")
-            phone.click("#m2-talk-sheet [data-talk='brain']")
-            phone.wait_for_function("document.querySelector('#chat-input').value.startsWith('@brain')")
+            phone.click("#m2-talk-sheet [data-talk='ai']")
+            phone.wait_for_function("document.querySelector('#chat-input').value.startsWith('@ai')")
             phone.fill("#chat-input", "")
             # profile from the people list: add friend, network
             phone.click("#m2-talk"); phone.wait_for_selector(f"#m2-talk-sheet [data-prof='{orion}']")

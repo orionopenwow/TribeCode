@@ -18,7 +18,7 @@ const pad = n => String(n).padStart(2, '0');
 const localDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
-module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands,
+module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands, ask = null,
   approvals = null, board = null, createTask = null, bus = { notify() {} }, slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
   voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true,
   channelProject = () => null, canSeeProject = () => false }) {   // project-scoped access for writes into other channels (forward)
@@ -158,7 +158,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   function onPost(ch, me, text, msg) {
     commands(ch, me, text);
     dms.onPost(ch, me, text);
-    if (/(^|\s)@brain\b/i.test(text) && me.role !== 'agent') askBrain(ch, me, text).catch(e => console.error('brain', e));
+    if (/(^|\s)@ai\b/i.test(text) && me.role !== 'agent' && ask) Promise.resolve(ask(ch, me, text)).catch(e => console.error('ask ai', e));   // server/askai.js
+    else if (/(^|\s)@brain\b/i.test(text) && me.role !== 'agent') askBrain(ch, me, text).catch(e => console.error('brain', e));
     else hintVote(ch, me, msg).catch(e => console.error('vote hint', e));
   }
   // "/vote Question? | opt | opt | 24h" posts a vote card instead of the raw text. Returns the message or null.
@@ -390,5 +391,5 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     },
   };
 
-  return { route, onPost, command, approvalAsked, mcpTools, appendNotes, receipt, votes, search, EMOJI };
+  return { route, onPost, command, askBrain, approvalAsked, mcpTools, appendNotes, receipt, votes, search, EMOJI };
 };

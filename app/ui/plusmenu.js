@@ -28,7 +28,8 @@
     { k: 'poll', icon: 'i-vote', t: 'Quick poll', s: 'Ask everyone to pick', hide: !window.TribeVotes || inDm() },
     { group: 'Get it done' },
     { k: 'task', icon: 'i-check', t: 'Task', s: draft() ? `“${draft().slice(0, 40)}”` : 'Add it to the board' },
-    { k: 'claude', icon: 'i-sparkle', t: 'Ask my Claude', s: myAgent() ? 'Opens your private chat with it' : 'Connect your Claude Code first' },
+    myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my Claude', s: 'Opens your private chat with it' }
+      : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no Claude of your own needed', hide: inDm() || me().role === 'spectator' },
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
     { k: 'note', icon: 'i-doc', t: 'Note', s: 'Into the living notes' },
     { k: 'bug', icon: 'i-bug', t: 'Report a bug', s: 'With the recent logs attached', hide: !window.TribeBugs },
@@ -74,6 +75,10 @@
       const title = text || prompt('Task');
       if (!title) return;
       try { const { task } = await C.api('/tasks', { method: 'POST', body: { title: title.slice(0, 200) } }); if (text) clearDraft(); toast(`Task added: ${task.title}`); } catch (e) { toast(e.message); }
+      return;
+    }
+    if (k === 'ai') {   // @ai (server/askai.js): a teammate's Claude, the local model, or the board
+      const i = input(); if (i) { i.value = '@ai ' + text.replace(/^@ai\s*/i, ''); i.dispatchEvent(new Event('input', { bubbles: true })); i.focus(); }   // they press send; the question shows in chat
       return;
     }
     if (k === 'claude') {

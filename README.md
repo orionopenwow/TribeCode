@@ -53,6 +53,10 @@ The sidebar has four pillars: **Chat & Streams**, **Docs & Files**, **Tasks & Bo
 
 Home → **Invite a friend** (or double-click `Invite-A-Friend.bat`): a fresh project, a link that works from anywhere, already copied. Your friend taps it, types a name and is in that project; on a computer the same visit hands them the one line that connects their Claude Code.
 
+### A friend with only a phone
+
+No TribeCode at home, no Claude Code subscription. They tap the link, type a name and land on **"You're in"**: Ask AI, Voice note, Add an idea, Pick a role. `@ai` answers from whatever AI the tribe has: their own Claude, a teammate's Claude (the owner decides: ask each time, always or never), the host's local model, or the board for the next Claude. [docs/MOBILE.md](docs/MOBILE.md)
+
 ### Home
 
 Your command center, and where the app opens. Suggestions for what to do next, **Ask** (your Claude or the local model), join with a link or start a project, a Get started checklist, a scratchpad with "Refine with AI" and recent activity across your projects. The right panel has you, Connect your Claude Code, Share my hub link, Invite friends and **AI Insights**: your next steps plus what the host notices (Explorer findings, disk, backups, a newer release, the local model being down) and the Secretary's ideas.

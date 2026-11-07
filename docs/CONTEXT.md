@@ -2,7 +2,7 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-07 (v0.6.1 released from `main`: one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
+Last updated: 2026-11-07 (v0.6.2 released from `main`: phone-only friends and @ai; v0.6.1 one-tap Invite a friend; v0.6.0: Home command center, AI Insights, self-heal, the Explorer and milestone reports).
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
@@ -54,6 +54,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 | Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
+- 2026-11-07 08:22: Finalize the phone flow for a fresh project for a friend with no TribeCode at home and no Claude Code subscription; connect LLMs and agents for them. ✅ v0.6.2: phone "You're in" card (Ask AI, Voice note, Add an idea, roles), @ai routed own Claude → teammate's Claude (owner policy ask/always/never) → local model → board queue (server/askai.js), Talk to… and + menu lead with Ask AI.
 - 2026-11-07: "As few steps as possible: an instant invite link for friends to a fresh project, connecting everything through this link." ✅ v0.6.1: one tap (Home, rail +, banner, Invite-A-Friend.bat / tribecode://invite) → fresh project + public link copied; friend taps → name → in the project → (computer) the Claude Code command opens ready to copy.
 - 2026-11-07: Home redesign to the user's "AI Command Center" reference: a hero with suggestions, an Ask box (your Claude or the local brain) and Join; a Get started card; scratchpad with "Refine with AI"; recent activity; a right panel with share and invite links and AI Insights. Translated into the flat design rules (the mock uses gradients). (feat/home2)
 - 2026-11-07: "Invent a way to click around yourself": an explorer bot (crawls every view and button on desktop, phone and a simulated desktop app; finds errors, dead buttons, overflow, contrast and click-heavy journeys; writes a report and suggestions), app self-heal (boot watchdog, cache clear, error card, version mismatch), an insights feed. (feat/explorer)

@@ -252,3 +252,4 @@ body.tauri .win-ctl { display: flex; }
   .search { width: min(560px, 42vw); height: 40px; border-radius: 12px; font-size: 14px; padding: 0 8px 0 14px; }
   .search svg { width: 16px !important; height: 16px !important; }
 }
+.cc-skip { margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised); font-size: 13px; line-height: 1.5; color: var(--muted); } .cc-skip b { color: var(--text); font-family: var(--mono); font-weight: 600; }

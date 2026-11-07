@@ -1,14 +1,30 @@
 # TribeCode on phones
 
-## One click: invite a friend
+## One tap: invite a friend
 
-Double-click **`TribeCode-Invite-Friend.bat`** (Windows) or **`tribecode-invite-friend.command`** (Mac), or run `npm run invite`. It:
+On the host: Home → **Invite a friend** (or the rail **+**, the "you're hosting" banner, or double-click **`Invite-A-Friend.bat`** on the Desktop). It makes a fresh project, turns on the link that works from anywhere (Tailscale Funnel or cloudflared), and copies it. Paste it in a text.
 
-1. starts TribeCode if it isn't running (and makes you the host on first run),
-2. turns on a public https address with Tailscale Funnel or cloudflared when either is installed,
-3. creates an invite (3 people, 48 hours), copies the link, and opens a page with a big QR code.
+## A friend with only a phone
 
-Your friend scans or taps the link, types a name, taps **Join**, then **Share → Add to Home Screen**. That's it.
+No TribeCode at home and no Claude Code subscription needed. Everything runs on the host's computer; the phone is a full member.
+
+1. **Tap the link → type a name → Join.** The phone opens the app at its private link and offers **Add to Home Screen**.
+2. **Chat shows "You're in"**: three big actions and the roles. No setup steps, no GitHub, no link to manage.
+   - **Ask AI**: types `@ai` in the chat. The tribe's AI answers in the chat (see below).
+   - **Voice note**: say it; it's typed out.
+   - **Add an idea**: goes into the project notes that become the plan.
+   - **Pick a role**: tap one to own that part (its folders and tasks follow).
+3. **Talk to…** (top right in Chat) leads with Ask AI and says who answers right now. "Have Claude Code on a computer? Connect it too" is there for later.
+
+### `@ai`: the tribe's AI, for anyone (server/askai.js)
+A question after `@ai` goes to whatever AI the tribe has right now:
+1. your own Claude Code, if it's online;
+2. a teammate's Claude Code that's online, the host's first. It uses their subscription, so they decide in **Settings → Friends can ask my Claude**: *Ask me each time* (default: one tap on their phone), *Always*, or *Never*;
+3. the host's local model (Ollama), which answers in the chat right away;
+4. nobody: the question goes on the board as a task for the next Claude that connects.
+The Claude that takes it answers in the same chat, starting with @name.
+
+A friend who joins on a **computer** gets "One line connects your Claude Code" right after joining, with "No Claude Code? Skip this: type @ai" under it.
 
 ## Today: the installable web app (iPhone, iPad, Android)
 
