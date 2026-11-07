@@ -4,7 +4,7 @@ Everything a tribe makes lives in **one folder on the host's computer**: the *tr
 
 - Default location: `~/TribeCode` (Windows `C:\Users\<you>\TribeCode`). The desktop app's Settings → Folder, or `npm start -- --dir <folder>`, picks another one.
 - Formats are plain text wherever possible: Markdown with a small front-matter block, JSON, and JSONL (one JSON object per line). You can read every file in a text editor.
-- Friends' phones and computers keep almost nothing. A browser stores only its own settings and sign-in token in `localStorage` (`tribecode.settings.v1`), a remembered project and unsent composer drafts.
+- Friends' phones and computers keep almost nothing. A browser stores only its own settings and sign-in token in `localStorage` (`tribecode.settings.v1`), a remembered project, the last session for the hub's Resume card, unsent composer drafts, and scratchpad notes written before joining a tribe (moved to the tribe on the first connect).
 
 This was verified end to end by `app/test/e2e_friend_flow.py`. A friend joins from a phone, sends text, a reply, a reaction, an image, a voice note, a file, a doc and a vote. The test finds each one on disk, restarts the server and checks that everything is still there.
 
@@ -23,6 +23,8 @@ This was verified end to end by `app/test/e2e_friend_flow.py`. A friend joins fr
 | `.tribe/flow/<project>.json`, `.gists.jsonl` | One-click project flow: roles, notes, plan, gists | JSON / JSONL |
 | `.tribe/people/<project>.jsonl` | Agent prompt/context log for the person view | JSONL |
 | `.tribe/coord.json`, `votes-open.json`, `agent-read.json` | Coordination state, open votes, agent read receipts | JSON |
+| `.tribe/scratch/<member>.json` | Each person's private global scratchpad (quick notes before they go into a project). Only its owner can read it | JSON |
+| `.tribe/dashboard.json` | The Global Hub's per-person state: dismissed suggestions, last visit per project, pinned projects | JSON |
 | `chat/general.jsonl` | The **first** project's chat | JSONL, one message per line |
 | `chat/p-<project>.jsonl` | Every other project's chat | JSONL |
 | `chat/dm-<idA>-<idB>.jsonl` | Direct messages (also the private chat with your own Claude) | JSONL |
