@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.17.10
+
+- **Updates apply by themselves**: when the server updates while TribeCode is open, the page now reloads into the new version on its own (it waits if you're mid-sentence), instead of asking you to click Reload. Your work is saved first
+- **One set of window buttons**: in a browser or Edge app window (like the Working version), TribeCode no longer draws its own traffic lights next to the window's real ones; the desktop app keeps them
+- **Phones**: updates apply the same way on phones
+
 ## v0.17.9
 
 - **Flint's flame is a button**: click the flame in the Ask Flint bar for a small menu: What's new?, Take a note, Make a task, What did we decide?, Show me around, What can Flint do?, and Pick Flint's brain

@@ -173,6 +173,15 @@
     const page = pageVersion();
     if (!page || page === serverVersion || prompted === serverVersion) return null;
     prompted = serverVersion;
+    // The server is newer than this page (an update landed): reload into it by itself, once per version, unless
+    // someone is mid-sentence. Then the page and the server always match, with nothing to click.
+    if (newer(serverVersion, page) && ss.get('tribecode.autoReloaded') !== serverVersion) {
+      const busy = () => { const a = document.activeElement; return !!(a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && a.type !== 'button') || a.isContentEditable) && String(a.value || a.textContent || '').trim()); };
+      const go = async () => { ss.set('tribecode.autoReloaded', serverVersion); log(`server v${serverVersion} is newer than this page v${page}: reloading`); try { if (window.TribeApp && window.TribeApp.saveAll) await Promise.race([window.TribeApp.saveAll(), new Promise(r => setTimeout(r, 1500))]); } catch {} await clearCaches(); location.reload(); };
+      if (!busy()) { go(); return 'reload'; }
+      const t = setInterval(() => { if (!busy()) { clearInterval(t); go(); } }, 2000);
+      return 'reload-soon';
+    }
     style();
     let bar = document.getElementById('sh-ver'); if (bar) bar.remove();
     bar = document.createElement('div'); bar.id = 'sh-ver'; bar.setAttribute('role', 'status');

@@ -111,10 +111,10 @@ def main():
 
             # ---------- 4. version mismatch: the server is updated while the tab is open ----------
             stop(); start("0.6.0")
-            pg.wait_for_selector("#sh-ver", timeout=20000)
-            assert "v0.6.0" in pg.inner_text("#sh-ver") and "updated" in pg.inner_text("#sh-ver"), pg.inner_text("#sh-ver")
-            pg.click("#sh-ver-later"); pg.wait_for_selector("#sh-ver", state="detached")
-            pg.reload(); pg.wait_for_function("window.TribeClient && TribeClient.connected()")
+            # the page reloads itself into the new version (nothing to click), once
+            pg.wait_for_function("document.querySelector('meta[name=tribe-version]') && document.querySelector('meta[name=tribe-version]').content === '0.6.0'", timeout=25000)
+            pg.wait_for_function("window.TribeClient && TribeClient.connected()")
+            assert pg.evaluate("sessionStorage.getItem('tribecode.autoReloaded')") == "0.6.0"
             pg.wait_for_function("TribeSelfHeal.state().settled", timeout=8000); pg.wait_for_timeout(800)
             assert pg.evaluate("TribeSelfHeal.state().page") == "0.6.0" and pg.locator("#sh-ver").count() == 0, "a fresh page has no prompt"
             ctx.close()
