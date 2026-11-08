@@ -1,13 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="t"><title id="t">One computer with a campfire on its screen, linked to a phone and a laptop</title>
-<path d="M50 36C28 40 24 64 21 76M110 36c22 4 26 28 29 42" stroke="#5C544E" stroke-width="3" fill="none" stroke-dasharray="5 5"/>
-<rect x="46" y="8" width="68" height="50" rx="6" fill="#E4E4E4"/>
-<rect x="51" y="13" width="58" height="38" rx="3" fill="#1D2021"/>
-<rect x="74" y="58" width="12" height="10" fill="#B9B9B9"/><rect x="62" y="68" width="36" height="5" rx="2.5" fill="#B9B9B9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="t"><title id="t">A small home server with a campfire on its screen and a moon badge for always on, linked to a phone, a laptop and another phone</title>
+<path d="M52 44C30 48 24 66 21 76M108 44c22 4 26 24 29 36M80 82v14" stroke="#5C544E" stroke-width="3" fill="none" stroke-dasharray="5 5"/>
+<rect x="50" y="12" width="60" height="58" rx="6" fill="#E4E4E4"/>
+<rect x="55" y="17" width="50" height="34" rx="3" fill="#1D2021"/>
 <g stroke-linecap="round"><path d="M70 46l20-6" stroke="#6E4C39" stroke-width="4"/><path d="M70 40l20 6" stroke="#5A3E30" stroke-width="4"/></g>
-<path d="M80 18l5 10v6l4-3 3 8-1 5-11 6-11-6-1-5 4-10 3 4v-6z" fill="#F26B1D"/>
-<path d="M80 31l3 5v3l2-1 1 4-6 4-6-4 1-4 2 1v-3z" fill="#FABD2F"/>
+<path d="M80 21l5 9v5l4-3 3 7-1 5-11 5-11-5-1-5 4-9 3 4v-5z" fill="#F26B1D"/>
+<path d="M80 32l3 5v2l2-1 1 4-6 3-6-3 1-4 2 1v-2z" fill="#FABD2F"/>
+<rect x="55" y="56" width="34" height="3" rx="1.5" fill="#B9B9B9"/><rect x="55" y="62" width="34" height="3" rx="1.5" fill="#B9B9B9"/>
+<circle cx="99" cy="60" r="3" fill="#8EC07C"/>
+<rect x="56" y="70" width="8" height="6" fill="#B9B9B9"/><rect x="96" y="70" width="8" height="6" fill="#B9B9B9"/>
+<circle cx="112" cy="12" r="10" fill="#FABD2F"/><path d="M114 6a6.5 6.5 0 1 0 4 10 5.5 5.5 0 0 1-4-10z" fill="#1D2021"/>
 <rect x="10" y="76" width="22" height="38" rx="5" fill="#E4E4E4"/><rect x="13" y="80" width="16" height="28" rx="2" fill="#83A598"/>
 <rect x="122" y="80" width="34" height="22" rx="3" fill="#E4E4E4"/><rect x="125" y="83" width="28" height="16" rx="1.5" fill="#FABD2F"/>
 <path d="M116 102h46l-4 6h-38z" fill="#B9B9B9"/>
-<circle cx="80" cy="96" r="10" fill="#8EC07C"/><path d="M75 96h10M80 91v10" stroke="#1D2021" stroke-width="2.5" stroke-linecap="round"/>
+<rect x="70" y="96" width="20" height="22" rx="4" fill="#E4E4E4"/><rect x="73" y="99" width="14" height="15" rx="1.5" fill="#6C7CFF"/>
 </svg>

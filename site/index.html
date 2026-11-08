@@ -62,10 +62,10 @@
       <div class="nav__item" data-menu>
         <button class="nav__link nav__drop" type="button" aria-expanded="false" aria-controls="menu-features">Features<svg class="i i--xs" aria-hidden="true"><use href="#i-chevron"/></svg></button>
         <ul class="menu" id="menu-features" hidden>
-          <li><a href="#room"><b>Friends + agents in one room</b><span>One chat for people and their Agents</span></a></li>
+          <li><a href="#room"><b>Friends + agents in one room</b><span>One chat for people and their AI</span></a></li>
           <li><a href="#phone"><b>Your phone as a remote</b><span>One-tap approvals, voice notes, tasks</span></a></li>
-          <li><a href="#lanes"><b>Lanes</b><span>Ownership, conflicts and hand-offs</span></a></li>
-          <li><a href="#host"><b>Self-hosted</b><span>Runs on one friend's computer</span></a></li>
+          <li><a href="#lanes"><b>Lanes</b><span>Every agent in its own lane, people approve</span></a></li>
+          <li><a href="#host"><b>Share the network</b><span>One computer hosts, friends join from anywhere</span></a></li>
         </ul>
       </div>
       <div class="nav__item" data-menu>
@@ -77,6 +77,7 @@
           <li><a href="#download"><b>All downloads</b><span>Every platform and format</span></a></li>
         </ul>
       </div>
+      <a class="nav__link" href="#pricing">Pricing</a>
       <a class="nav__link" href="docs.html">Docs</a>
       <a class="nav__link" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/01-start-here.md">Guide</a>
       <a class="nav__link" href="https://github.com/orionopenwow/TribeCode">GitHub</a>
@@ -93,8 +94,6 @@
     </div>
   </div>
 </header>
-
-<a class="continue" id="continue" href="app/" hidden><span class="continue__dot" aria-hidden="true"></span><span data-continue-label>Continue to your tribe</span><svg class="i i--sm" aria-hidden="true"><use href="#i-arrow"/></svg></a>
 
 <main id="main">
 
@@ -113,108 +112,134 @@
         <a class="btn btn--dark btn--lg hero__open" href="app/" data-open-app>Open in your browser<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </div>
       <p class="hero__more reveal"><a href="app/?demo=showcase">Watch a demo tribe</a><span aria-hidden="true">·</span><span class="hero__more-note">runs by itself in your browser, nothing sent anywhere</span></p>
-      <p class="hero__meta mono reveal"><span data-gh="release-line">Free and open source · MIT · works with Claude Code, Codex, Gemini CLI and more</span></p>
+      <p class="hero__meta mono reveal"><span data-gh="release-line">Free and open source · MIT · works with Claude Code, Codex, Gemini CLI, Cursor and more</span></p>
     </div>
 
-    <!-- ================= STAGE ================= -->
+    <!-- ================= STAGE: the app as it looks today (Campfire theme), scaled from a 1200x750 design ================= -->
     <div class="wrap">
       <figure class="stage reveal" id="stage" aria-labelledby="stage-desc">
         <div class="stage__scaler" data-loop="stage">
           <img class="stage__art" src="assets/art/stage-night.svg" alt="" width="1200" height="750">
           <div class="mk-win" aria-hidden="true">
-            <div class="mk-bar"><span class="mk-lights"><i></i><i></i><i></i></span><span class="mk-title">TribeCode</span><span class="mk-crumb">Pixel Quest › Chat</span></div>
-            <div class="mk-body">
-              <div class="mk-rail">
-                <span class="mk-circle mk-circle--home"><img src="assets/brand/icon.svg" alt="" width="20" height="20"></span>
-                <span class="mk-sep"></span>
-                <span class="mk-circle is-on" style="--c:#F26B1D">PQ</span>
-                <span class="mk-circle" style="--c:#83A598">LG</span>
-                <span class="mk-circle" style="--c:#FABD2F">TS</span>
-                <span class="mk-circle mk-circle--add">+</span>
+            <!-- project circles rail, with the slate logo tile on top -->
+            <div class="mk-rail">
+              <span class="mk-logo"><img src="assets/brand/icon.svg" alt="" width="44" height="44"></span>
+              <span class="mk-sep"></span>
+              <span class="mk-circle is-on" title="Pixel Quest">🎮</span>
+              <span class="mk-circle">🏮</span>
+              <span class="mk-circle">🎵</span>
+              <span class="mk-circle mk-circle--add">+</span>
+              <span class="mk-up" id="mk-up">up 12d</span>
+            </div>
+            <!-- top bar: project pill, search, help, traffic lights -->
+            <div class="mk-bar">
+              <span class="mk-pill"><i class="mk-dot"></i><b>Pixel Quest</b><span>4 here</span></span>
+              <span class="mk-search"><i class="mk-glass"></i>Search or jump to…<kbd>Ctrl K</kbd></span>
+              <span class="mk-bar__end"><span class="mk-help">?</span><span class="mk-lights"><i></i><i></i><i></i></span></span>
+            </div>
+            <!-- the calm sidebar -->
+            <div class="mk-side">
+              <span class="mk-row"><i class="mk-ic mk-ic--home"></i>Dashboard</span>
+              <span class="mk-row is-on"><i class="mk-ic mk-ic--chat"></i>Messages<em class="mk-chev">›</em></span>
+              <span class="mk-row mk-row--sub is-on"># general</span>
+              <span class="mk-row mk-row--sub"># agents <em>2</em></span>
+              <span class="mk-row"><i class="mk-ic mk-ic--file"></i>Files</span>
+              <span class="mk-row"><i class="mk-ic mk-ic--check"></i>Task Board<em>4</em></span>
+              <span class="mk-row"><i class="mk-ic mk-ic--bot"></i>Agents Hub<em>3</em></span>
+              <span class="mk-row mk-row--pin">📌 Level design</span>
+              <span class="mk-row mk-row--add">+ Add</span>
+              <div class="mk-side__foot">
+                <span class="mk-invite">👋 Invite friends</span>
+                <div class="mk-me"><i class="mk-av mk-av--sm" style="--c:#F26B1D">O</i><div><b>Orion</b><span>Hosting</span></div></div>
               </div>
-              <div class="mk-side">
-                <div class="mk-side__top"><span class="mk-row mk-row--btn">New chat</span><span class="mk-row mk-row--search">Search</span></div>
-                <p class="mk-eyebrow">Pixel Quest</p>
-                <span class="mk-row is-on">Chat</span><span class="mk-row">Docs</span><span class="mk-row">Tasks <em>4</em></span>
-                <p class="mk-eyebrow">Recents</p>
-                <div class="mk-chat is-on"><b>Title screen + lantern</b><span id="mk-st0">Orion's Claude · now</span></div>
-                <div class="mk-chat"><b>Fix lantern physics</b><span>Maya's Codex · 2m</span></div>
-                <div class="mk-chat"><b>Build landing page</b><span>Jay · 14m</span></div>
-                <div class="mk-chat"><b>Level 2 layout</b><span>Maya · 1h</span></div>
-                <p class="mk-eyebrow">Agents</p>
-                <div class="mk-agent"><i class="mk-dot"></i><b>Orion's Claude</b><span id="mk-st1">waiting for a task</span></div>
-                <div class="mk-agent"><i class="mk-dot"></i><b>Maya's Codex</b><span>reviewing audio.js</span></div>
-                <div class="mk-agent"><i class="mk-dot mk-dot--amber"></i><b>Secretary</b><span>taking notes</span></div>
+            </div>
+            <!-- # general -->
+            <div class="mk-main">
+              <div class="mk-head"><span class="mk-head__ic"><i class="mk-ic mk-ic--chat"></i></span><div><b># general</b><span>5 members · 4 online</span></div><span class="mk-head__acts"><i></i><i></i><i></i></span></div>
+              <div class="mk-convo">
+                <div class="mk-msg mk-msg--agent"><i class="mk-av mk-av--agent mk-av--gemini"><span>✦</span></i><div><p class="mk-who">Jay's Gemini <em>Gemini CLI</em><time>9:38</time></p><p>Level 2 is laid out: three platforms and a secret door behind the waterfall. 🌊</p></div></div>
+                <div class="mk-msg" data-step id="mk-m1"><i class="mk-av" style="--c:#6C7CFF;--ink:#FFFFFF">M</i><div><p class="mk-who" style="--n:#9AA6FF">Maya<time>9:41</time></p><p>Can we get a title screen? And the lantern should swing when you jump.</p></div></div>
+                <div class="mk-msg mk-msg--agent" data-step id="mk-a1"><i class="mk-av mk-av--agent mk-av--claude"><span>✦</span></i><div><p class="mk-who">Orion's Claude <em>Claude Code</em><time>9:41</time></p>
+                  <p class="mk-thinking" data-step id="mk-think">thinking<span>.</span><span>.</span><span>.</span></p>
+                  <p data-type id="mk-a1t">On it. Title screen first, then I'll hang the lantern on a spring so it swings on every jump.</p>
+                  <div class="mk-tools">
+                    <div class="mk-tool" data-step id="mk-t1"><span class="mk-tool__k">Read</span><span class="mk-tool__v">the scene setup</span></div>
+                    <div class="mk-tool" data-step id="mk-t2"><span class="mk-tool__k">Edited</span><span class="mk-tool__v">title screen</span><span class="mk-diff"><ins>+42</ins> <del>−7</del></span></div>
+                    <div class="mk-tool" data-step id="mk-t3"><span class="mk-tool__k">Edited</span><span class="mk-tool__v">lantern</span><span class="mk-diff"><ins>+31</ins> <del>−2</del></span></div>
+                    <div class="mk-tool" data-step id="mk-t4"><span class="mk-tool__k">Tests</span><span class="mk-tool__v">12 passed</span><span class="mk-ok">✓</span></div>
+                  </div>
+                  <p data-type id="mk-a2t">Done. The title screen and a swinging lantern are in the preview. Two files changed, tests pass.</p>
+                </div></div>
+                <div class="mk-msg" data-step id="mk-m2"><i class="mk-av" style="--c:#6C7CFF;--ink:#FFFFFF">M</i><div><p class="mk-who" style="--n:#9AA6FF">Maya<time>9:43</time></p><p>love it, ship it 🚀</p><span class="mk-react">👍 <b>2</b></span></div></div>
+                <div class="mk-msg mk-msg--agent" data-step id="mk-c1"><i class="mk-av mk-av--agent mk-av--codex"><span>◎</span></i><div><p class="mk-who">Maya's Codex <em>Codex</em><time>9:43</time></p><p data-type id="mk-c1t">I'll add a soft creak when the lantern swings. 🔔</p></div></div>
               </div>
-              <div class="mk-main">
-                <div class="mk-head"><b># general</b><span class="mk-faces"><i style="--c:#F26B1D">O</i><i style="--c:#83A598">M</i><i style="--c:#FABD2F">J</i><i class="mk-face--agent">2</i></span></div>
-                <div class="mk-convo">
-                  <div class="mk-msg" data-step id="mk-m1"><i class="mk-av" style="--c:#83A598">M</i><div><p class="mk-who">Maya <time>9:41</time></p><p>Can we get a title screen? And the lantern should swing when you jump.</p></div></div>
-                  <div class="mk-msg mk-msg--agent" data-step id="mk-a1"><i class="mk-av mk-av--agent"><span></span></i><div><p class="mk-who">Orion's Claude <em>agent</em></p>
-                    <p class="mk-thinking" data-step id="mk-think">thinking<span>.</span><span>.</span><span>.</span></p>
-                    <p data-type id="mk-a1t">On it. Title screen first, then I'll hang the lantern on a spring so it reacts to every jump.</p>
-                    <div class="mk-tool" data-step id="mk-t1"><span class="mk-tool__k">read_file</span><span class="mk-tool__v">src/scenes/title.js</span></div>
-                    <div class="mk-tool" data-step id="mk-t2"><span class="mk-tool__k">apply_patch</span><span class="mk-tool__v">src/scenes/title.js</span><span class="mk-diff"><ins>+42</ins> <del>−7</del></span></div>
-                    <div class="mk-tool" data-step id="mk-t3"><span class="mk-tool__k">apply_patch</span><span class="mk-tool__v">src/props/lantern.js</span><span class="mk-diff"><ins>+31</ins> <del>−2</del></span></div>
-                    <div class="mk-tool" data-step id="mk-t4"><span class="mk-tool__k">run_tests</span><span class="mk-tool__v">12 passed</span><span class="mk-ok">✓</span></div>
-                    <p data-type id="mk-a2t">Done. The title screen and a swinging lantern are in the preview. Two files changed, tests pass.</p>
-                  </div></div>
-                  <div class="mk-msg" data-step id="mk-m2"><i class="mk-av" style="--c:#83A598">M</i><div><p class="mk-who">Maya <time>9:43</time></p><p>ship it</p><span class="mk-react">+1 <b>2</b></span></div></div>
-                </div>
-                <div class="mk-composer"><span>Message #general</span><i class="mk-send"></i></div>
+              <div class="mk-composer"><span class="mk-plus">+</span><span>Message the tribe…</span><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><i class="mk-send"></i></div>
+            </div>
+            <!-- right panel: the preview, In the room, Flint -->
+            <div class="mk-right">
+              <div class="mk-pv-bar"><span class="mk-pv-dot"></span><b>Preview</b><span class="mk-url">Pixel Quest · live</span></div>
+              <div class="mk-pv">
+                <svg viewBox="0 0 300 190" class="mk-game" id="mk-game" shape-rendering="crispEdges">
+                  <rect width="300" height="190" fill="#282828"/>
+                  <g data-step id="pv-1">
+                    <rect width="300" height="190" fill="#32302F"/>
+                    <g fill="#FFFFFF" class="mk-stars"><rect x="30" y="16" width="3" height="3"/><rect x="128" y="10" width="2" height="2"/><rect x="262" y="24" width="3" height="3"/><rect x="18" y="64" width="2" height="2"/><rect x="276" y="76" width="2" height="2"/></g>
+                    <g fill="#FFFFFF" class="mk-stars mk-stars--b"><rect x="200" y="12" width="2" height="2"/><rect x="70" y="40" width="2" height="2"/><rect x="240" y="56" width="2" height="2"/></g>
+                    <path d="M0 140 L60 118 L120 132 L190 108 L250 126 L300 116 V190 H0Z" fill="#45403D"/>
+                    <rect y="160" width="300" height="30" fill="#282828"/>
+                    <g fill="#3C3836"><rect y="160" width="300" height="4"/><rect x="20" y="172" width="20" height="4"/><rect x="120" y="180" width="20" height="4"/><rect x="230" y="174" width="20" height="4"/></g>
+                  </g>
+                  <g data-step id="pv-2">
+                    <text x="150" y="46" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="26" fill="#FABD2F" letter-spacing="3">PIXEL</text>
+                    <text x="150" y="74" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="26" fill="#FFFFFF" letter-spacing="3">QUEST</text>
+                  </g>
+                  <g data-step id="pv-3" class="mk-start">
+                    <rect x="102" y="86" width="96" height="22" rx="4" fill="#F26B1D"/>
+                    <text x="150" y="101" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="11" fill="#1D2021" letter-spacing="1">PRESS START</text>
+                  </g>
+                  <g data-step id="pv-4"><g class="mk-walker"><g class="mk-hero" id="pv-hero">
+                    <rect x="208" y="128" width="20" height="20" fill="#83A598"/><rect x="211" y="117" width="14" height="11" fill="#E8B48A"/><rect x="211" y="113" width="14" height="5" fill="#1D2021"/>
+                    <rect x="209" y="148" width="7" height="12" fill="#1D2021" class="mk-leg"/><rect x="220" y="148" width="7" height="12" fill="#1D2021" class="mk-leg mk-leg--b"/><rect x="220" y="121" width="3" height="3" fill="#1D2021"/>
+                  </g></g></g>
+                  <g data-step id="pv-5">
+                    <rect x="30" y="92" width="64" height="6" fill="#5A3E30"/><rect x="38" y="98" width="6" height="62" fill="#5A3E30"/>
+                    <g class="mk-lantern" id="pv-lantern">
+                      <rect x="82" y="98" width="2" height="18" fill="#B9B9B9"/>
+                      <rect x="74" y="116" width="18" height="4" fill="#45403D"/><rect x="75" y="120" width="16" height="14" fill="#FABD2F"/><rect x="79" y="123" width="8" height="8" fill="#FFFFFF"/><rect x="74" y="134" width="18" height="4" fill="#45403D"/>
+                    </g>
+                  </g>
+                </svg>
               </div>
-              <div class="mk-right">
-                <div class="mk-pv-bar"><span class="mk-pv-dot"></span><span>Preview</span><span class="mk-url">localhost:4747/play</span></div>
-                <div class="mk-pv">
-                  <svg viewBox="0 0 300 260" class="mk-game">
-                    <rect width="300" height="260" fill="#282828"/>
-                    <g data-step id="pv-1">
-                      <rect width="300" height="260" fill="#32302F"/>
-                      <g fill="#FFFFFF"><rect x="30" y="20" width="3" height="3"/><rect x="128" y="12" width="2" height="2"/><rect x="262" y="30" width="3" height="3"/><rect x="200" y="16" width="2" height="2"/><rect x="18" y="80" width="2" height="2"/><rect x="276" y="96" width="2" height="2"/></g>
-                      <path d="M0 196 L60 170 L120 188 L190 160 L250 180 L300 168 V260 H0Z" fill="#45403D"/>
-                      <rect y="220" width="300" height="40" fill="#282828"/>
-                      <g fill="#3C3836"><rect y="220" width="300" height="5"/><rect x="20" y="234" width="20" height="5"/><rect x="120" y="246" width="20" height="5"/><rect x="230" y="238" width="20" height="5"/></g>
-                    </g>
-                    <g data-step id="pv-2">
-                      <text x="150" y="64" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="30" fill="#FABD2F" letter-spacing="3">PIXEL</text>
-                      <text x="150" y="98" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="30" fill="#FFFFFF" letter-spacing="3">QUEST</text>
-                    </g>
-                    <g data-step id="pv-3">
-                      <rect x="98" y="114" width="104" height="26" rx="4" fill="#F26B1D"/>
-                      <text x="150" y="131.5" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="12" fill="#1D2021" letter-spacing="1">PRESS START</text>
-                    </g>
-                    <g data-step id="pv-4" class="mk-hero">
-                      <rect x="208" y="186" width="22" height="22" fill="#83A598"/><rect x="212" y="174" width="14" height="12" fill="#E8B48A"/><rect x="212" y="170" width="14" height="5" fill="#1D2021"/>
-                      <rect x="210" y="208" width="7" height="12" fill="#1D2021"/><rect x="221" y="208" width="7" height="12" fill="#1D2021"/><rect x="220" y="178" width="3" height="3" fill="#1D2021"/>
-                    </g>
-                    <g data-step id="pv-5">
-                      <rect x="30" y="140" width="70" height="7" fill="#5A3E30"/><rect x="40" y="147" width="6" height="73" fill="#5A3E30"/>
-                      <g class="mk-lantern" id="pv-lantern">
-                        <rect x="86" y="147" width="2" height="22" fill="#B9B9B9"/>
-                        <rect x="78" y="169" width="18" height="5" fill="#45403D"/><rect x="79" y="174" width="16" height="16" fill="#FABD2F"/><rect x="83" y="177" width="8" height="10" fill="#FFFFFF"/><rect x="78" y="190" width="18" height="4" fill="#45403D"/>
-                      </g>
-                    </g>
-                  </svg>
-                </div>
+              <div class="mk-room">
+                <p class="mk-eyebrow">In the room <span class="mk-live">6 online</span></p>
+                <div class="mk-person"><i class="mk-av mk-av--xs" style="--c:#6C7CFF;--ink:#FFFFFF">M</i><b>Maya</b><span>Messages</span></div>
+                <div class="mk-person"><i class="mk-av mk-av--xs" style="--c:#F4A64A">J</i><b>Jay</b><span>Files · Art direction</span></div>
+                <div class="mk-person mk-person--agent"><i class="mk-av mk-av--agent mk-av--xs mk-av--claude"><span>✦</span></i><b>Orion's Claude</b><span id="mk-st1">waiting for a task</span></div>
+                <div class="mk-person mk-person--agent"><i class="mk-av mk-av--agent mk-av--xs mk-av--codex"><span>◎</span></i><b>Maya's Codex</b><span id="mk-st2">on sound</span></div>
+                <div class="mk-person mk-person--agent"><i class="mk-av mk-av--agent mk-av--xs mk-av--gemini"><span>✦</span></i><b>Jay's Gemini</b><span>on level 2</span></div>
+              </div>
+              <div class="mk-flint">
+                <p class="mk-eyebrow">Flint <span>lives in this room</span></p>
+                <div class="mk-flint__bar"><img src="assets/brand/flint.svg" alt="" width="18" height="18"><span>Ask Flint…</span><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><i class="mk-send"></i></div>
               </div>
             </div>
           </div>
 
           <div class="mk-card" aria-hidden="true" data-step id="mk-card">
-            <div class="mk-card__head"><i class="mk-av mk-av--agent mk-av--sm"><span></span></i><b>Orion's Claude</b><span class="mk-chip" id="mk-count">0/5</span></div>
+            <div class="mk-card__head"><i class="mk-av mk-av--agent mk-av--sm mk-av--claude"><span>✦</span></i><b>Orion's Claude</b><span class="mk-chip" id="mk-count">0/5</span></div>
             <p class="mk-card__title">Title screen + swinging lantern</p>
             <ol class="mk-plan">
               <li data-tick><i></i><span>Read the scene setup</span></li>
               <li data-tick><i></i><span>Draw the title screen</span></li>
-              <li data-tick><i></i><span>Add the lantern prop</span></li>
-              <li data-tick><i></i><span>Spring physics on jump</span></li>
+              <li data-tick><i></i><span>Add the lantern</span></li>
+              <li data-tick><i></i><span>Swing it on every jump</span></li>
               <li data-tick><i></i><span>Run the tests</span></li>
             </ol>
             <div class="mk-follow"><span>+ Add a follow-up</span><i class="mk-send"></i></div>
           </div>
         </div>
         <script>(function(){var f=document.currentScript.parentNode;function k(){f.style.setProperty('--k',f.clientWidth/1200)}k();addEventListener('resize',k)})()</script>
-        <figcaption class="sr-only" id="stage-desc">An animated mock of the TribeCode desktop app. Maya asks for a title screen and a swinging lantern in the Pixel Quest chat. Orion's Claude thinks, reads a file, patches two files and runs the tests while the preview builds the game's title screen step by step, and a floating card checks off its five-step plan. Maya replies "ship it".</figcaption>
+        <figcaption class="sr-only" id="stage-desc">An animated mock of the TribeCode desktop app in the Pixel Quest project. In the # general channel, Jay's Gemini has laid out level 2. Maya asks for a title screen and a swinging lantern. Orion's Claude thinks, reads the scene setup, edits the title screen and the lantern and runs the tests, while the Preview builds the game's title screen and the little hero starts walking and jumping. A floating card checks off the agent's five-step plan. Maya says "ship it" and Maya's Codex offers to add a creak sound. The right panel shows who is in the room and Flint's ask bar.</figcaption>
       </figure>
     </div>
   </section>
@@ -233,7 +258,7 @@
         <div class="mini__bar" aria-hidden="true"><b># level-2</b><span class="mk-faces"><i style="--c:#F26B1D">O</i><i style="--c:#83A598">M</i><i style="--c:#FABD2F">J</i></span></div>
         <div class="mini__body" aria-hidden="true">
           <div class="mk-msg" data-step><i class="mk-av" style="--c:#FABD2F">J</i><div><p class="mk-who">Jay <time>8:12</time></p><p>Level 2 needs a secret door behind the waterfall.</p></div></div>
-          <div class="mk-msg mk-msg--agent" data-step><i class="mk-av mk-av--agent"><span></span></i><div><p class="mk-who">Jay's Gemini <em>agent</em></p>
+          <div class="mk-msg mk-msg--agent" data-step><i class="mk-av mk-av--agent mk-av--gemini"><span>✦</span></i><div><p class="mk-who">Jay's Gemini <em>Gemini CLI</em></p>
             <div class="gist"><b data-type>Added a breakable wall behind the waterfall</b><span>src/levels/2.json</span><span>src/props/wall.js</span></div></div></div>
           <div class="mk-msg" data-step><i class="mk-av" style="--c:#83A598">M</i><div><p class="mk-who">Maya <time>8:14</time></p><p>found it on my first try, love it</p></div></div>
           <div class="vote" data-step><p class="mk-who">Vote · suggested by Jay's Gemini</p><b>Ship level 2 tonight?</b><div class="vote__bar"><i data-step></i></div><p class="vote__n"><span>Yes · 2</span><span>Not yet · 0</span></p></div>
@@ -265,7 +290,7 @@
               <div class="ask__btns" id="ph-btns"><span class="ask__ok" id="ph-ok">Approve</span><span class="ask__no">Deny</span></div>
               <p class="ask__done" data-step id="ph-done">Approved from your phone · 9:41</p>
             </div>
-            <div class="mk-msg mk-msg--agent" data-step><i class="mk-av mk-av--agent"><span></span></i><div><p class="mk-who">Orion's Claude</p><p data-type>Installed. Footsteps play on grass and stone now.</p></div></div>
+            <div class="mk-msg mk-msg--agent" data-step><i class="mk-av mk-av--agent mk-av--claude"><span>✦</span></i><div><p class="mk-who">Orion's Claude</p><p data-type>Installed. Footsteps play on grass and stone now.</p></div></div>
           </div>
           <div class="ph__rack"><span class="ph__me">O</span><span class="is-on">Chat</span><span>Docs</span><span>Updates</span><span>Tasks</span><span class="ph__act">+</span></div>
         </div>
@@ -280,42 +305,51 @@
         <img class="feature__art" src="assets/art/lanes.svg" alt="" width="120" height="90" loading="lazy">
         <p class="eyebrow mono">// lanes</p>
         <h2 id="lanes-title">Lanes so nobody collides.</h2>
-        <p class="feature__text">Agents claim files before they edit them. When two want the same file, TribeCode flags it and one hands off to the other with a note on what changed. A person reviews before anything merges.</p>
-        <ul class="facts mono"><li>File ownership</li><li>Conflict alerts</li><li>Hand-offs and reviews</li></ul>
+        <p class="feature__text">Every agent gets its own lane: the title screen, the sound, level 2. When two need the same thing, one asks the other and hands it off with a note. A person approves before anything merges.</p>
+        <ul class="facts mono"><li>Clear lanes</li><li>Friendly hand-offs</li><li>You approve merges</li></ul>
       </div>
-      <div class="mini reveal" data-loop="lanes" role="img" aria-label="A lanes board: Orion's Claude owns the scenes folder, Maya's Codex the audio folder, Jay's Gemini the levels folder. Maya's Codex asks for title.js, which Orion's Claude owns; Orion's Claude hands it off and the conflict clears.">
-        <div class="mini__bar" aria-hidden="true"><b>Agents · lanes</b><span class="mk-chip mk-chip--live">3 working</span></div>
-        <div class="mini__body lanes" aria-hidden="true">
-          <div class="lane" data-step><i class="mk-dot"></i><b>Orion's Claude</b><code>src/scenes/**</code><span class="lane__tag" style="--c:#F26B1D">owns</span></div>
-          <div class="lane" data-step><i class="mk-dot"></i><b>Maya's Codex</b><code>src/audio/**</code><span class="lane__tag" style="--c:#83A598">owns</span></div>
-          <div class="lane" data-step><i class="mk-dot"></i><b>Jay's Gemini</b><code>src/levels/**</code><span class="lane__tag" style="--c:#FABD2F">owns</span></div>
-          <div class="clash" data-step id="ln-clash"><p class="clash__k">Conflict</p><p>Maya's Codex wants <code>src/scenes/title.js</code>, which Orion's Claude owns.</p><p class="clash__act" data-step>Hand-off requested · waiting</p></div>
-          <div class="handoff" data-step><span class="mk-ok">✓</span><p><b>Orion's Claude</b> handed off <code>title.js</code> to <b>Maya's Codex</b>: "Title music hook is on line 18."</p></div>
+      <div class="mini mini--lanes reveal" data-loop="lanes">
+        <div class="mini__bar"><b>Agents Hub · Lanes</b><span class="mk-chip mk-chip--live">4 working</span><button class="lanes__files" type="button" aria-pressed="false" aria-controls="lanes-body">Show files</button></div>
+        <div class="mini__body lanes" id="lanes-body" role="img" aria-label="Lanes: Orion's Claude (Orion, engineer) is working on the title screen, Maya's Codex (Maya, sound and music) on the sound, Jay's Gemini (Jay, game designer) on level 2, and Rio's Cursor (Rio, writer) on the intro story. Maya's Codex needs the title screen too, asks Orion's Claude, and it is handed off with a note. A person approves before anything merges.">
+          <div class="lane" data-step><i class="mk-av mk-av--agent mk-av--claude"><span>✦</span></i><div><p class="lane__what"><b>Orion's Claude</b> is working on the title screen</p><p class="lane__who"><span class="lane__role">🛠️ Orion · Engineer</span><code class="lane__file">src/scenes/title.js</code></p></div></div>
+          <div class="lane" data-step><i class="mk-av mk-av--agent mk-av--codex"><span>◎</span></i><div><p class="lane__what"><b>Maya's Codex</b> is on sound</p><p class="lane__who"><span class="lane__role">🎵 Maya · Sound &amp; music</span><code class="lane__file">src/audio/**</code></p></div></div>
+          <div class="lane" data-step><i class="mk-av mk-av--agent mk-av--gemini"><span>✦</span></i><div><p class="lane__what"><b>Jay's Gemini</b> is on level 2</p><p class="lane__who"><span class="lane__role">🎮 Jay · Game designer</span><code class="lane__file">src/levels/2.json</code></p></div></div>
+          <div class="lane" data-step><i class="mk-av mk-av--agent mk-av--cursor"><span>▲</span></i><div><p class="lane__what"><b>Rio's Cursor</b> is writing the intro story</p><p class="lane__who"><span class="lane__role">✍️ Rio · Writer</span><code class="lane__file">docs/story.md</code></p></div></div>
+          <div class="clash" data-step id="ln-clash">
+            <p class="clash__k">Needs the same thing</p>
+            <p><b>Maya's Codex</b> needs the title screen too <span class="clash__arrow">→</span> asks <b>Orion's Claude</b><code class="lane__file">src/scenes/title.js</code></p>
+            <p class="clash__act" data-step>Asking… waiting for a reply</p>
+          </div>
+          <div class="handoff" data-step><span class="mk-ok">✓</span><p>Handed off with a note: <q>The title music starts on line 18.</q></p></div>
+          <p class="lanes__ok" data-step><span aria-hidden="true">🙋</span> Orion approves before anything merges.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ================= HOST ================= -->
+  <!-- ================= HOST: share the network ================= -->
   <section class="feature feature--flip" id="host" aria-labelledby="host-title">
     <div class="wrap feature__grid">
       <div class="feature__copy reveal">
         <img class="feature__art" src="assets/art/host.svg" alt="" width="120" height="90" loading="lazy">
-        <p class="eyebrow mono">// self-hosted</p>
-        <h2 id="host-title">Runs on one friend's computer.</h2>
-        <p class="feature__text">The tribe lives in a folder on the host's machine: chat as JSON lines, docs as Markdown, projects as git repos. Friends outside your Wi-Fi come in through Tailscale Funnel or cloudflared. No accounts and no cloud bill.</p>
+        <p class="eyebrow mono">// share the network</p>
+        <h2 id="host-title">Share the network.</h2>
+        <p class="feature__text">One friend's computer hosts the tribe. Friends join from anywhere with a link, on a laptop or a phone, through Tailscale Funnel or a Cloudflare tunnel.</p>
+        <p class="feature__text">Want it up all the time? Keep a spare computer or a small home server on, and your tribe is there 24/7. There's no paid TribeCode cloud yet; your chat, docs and code stay in plain files on the host.</p>
         <ul class="facts mono"><li>Zero npm dependencies</li><li>Plain files + git</li><li>MIT licensed</li></ul>
       </div>
-      <div class="mini mini--term reveal" data-loop="host" role="img" aria-label="A terminal: npm start runs TribeCode on port 4747, sharing turns on through Tailscale Funnel with a public https address, then Maya joins from an iPhone and Jay from a laptop.">
-        <div class="mini__bar" aria-hidden="true"><span class="mk-lights"><i></i><i></i><i></i></span><b>~/TribeCode</b></div>
+      <div class="mini mini--term reveal" data-loop="host" role="img" aria-label="A terminal on the host, a small home server: TribeCode starts, shares a public link through Tailscale Funnel, Maya joins from an iPhone, Jay from a laptop and Rio from a phone. Later it is still up after 12 days with 4 friends connected and 3 agents working.">
+        <div class="mini__bar" aria-hidden="true"><span class="mk-lights"><i></i><i></i><i></i></span><b>home-server · ~/TribeCode</b><span class="mk-chip mk-chip--live">24/7</span></div>
         <div class="mini__body term" aria-hidden="true">
           <p data-step><span class="t-dim">$</span> <span data-type>npm start</span></p>
-          <p data-step><span class="t-live">●</span> TribeCode on http://localhost:4747</p>
-          <p data-step><span class="t-dim">  tribe folder</span> ~/TribeCode <span class="t-dim">· chat, docs, 3 repos</span></p>
-          <p data-step><span class="t-live">●</span> Sharing through Tailscale Funnel</p>
-          <p data-step><span class="t-dim">  →</span> <span class="t-ember">https://orion-pc.tail5e2.ts.net</span></p>
+          <p data-step><span class="t-live">●</span> TribeCode is up on this computer</p>
+          <p data-step><span class="t-dim">  tribe folder</span> ~/TribeCode <span class="t-dim">· 3 projects</span></p>
+          <p data-step><span class="t-live">●</span> Shared through Tailscale Funnel</p>
+          <p data-step><span class="t-dim">  link →</span> <span class="t-ember">https://home-server.tail5e2.ts.net</span></p>
           <p data-step><span class="t-peer">+</span> Maya joined from an iPhone</p>
           <p data-step><span class="t-peer">+</span> Jay joined from a laptop</p>
+          <p data-step><span class="t-peer">+</span> Rio joined from a phone</p>
+          <p data-step class="t-up"><span class="t-live">●</span> <span id="tm-up">still up · 12 days</span> <span class="t-dim">·</span> 4 friends connected <span class="t-dim">·</span> 3 agents working</p>
           <p data-step><span class="t-dim">$</span> <span class="caret"></span></p>
         </div>
       </div>
@@ -336,6 +370,71 @@
         <a class="stat" href="https://github.com/orionopenwow/TribeCode/blob/main/LICENSE"><svg class="i" aria-hidden="true"><use href="#i-scale"/></svg><b class="mono">MIT</b><span>license</span></a>
       </div>
       <p class="stats__fallback" data-gh-fallback hidden>GitHub's public API didn't answer (it limits how often a browser may ask). The numbers are one click away on <a class="link" href="https://github.com/orionopenwow/TribeCode">github.com/orionopenwow/TribeCode</a>.</p>
+    </div>
+  </section>
+
+  <!-- ================= PRICING (paid tiers aren't live: every paid button is disabled) ================= -->
+  <section class="pricing" id="pricing" aria-labelledby="pricing-title">
+    <div class="wrap">
+      <div class="pricing__head reveal">
+        <p class="eyebrow mono">// pricing</p>
+        <h2 id="pricing-title">Free to run yourself. Hosting when you want it.</h2>
+        <p class="pricing__note" data-price-note>Prices aren't final. TribeCode stays free and open source.</p>
+      </div>
+      <div class="tiers reveal">
+        <article class="tier" data-tier="free">
+          <p class="tier__name"><span aria-hidden="true">🔥</span> Free</p>
+          <p class="tier__price"><b>$0</b><span>forever</span></p>
+          <ul class="tier__list">
+            <li>Self-host on your computer</li>
+            <li>Unlimited friends and projects</li>
+            <li>Bring your own AI: Claude Code, Codex, Gemini, Cursor, Ollama or the built-in browser model</li>
+            <li>Every feature</li>
+          </ul>
+          <div class="tier__ctas">
+            <a class="btn btn--light" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a>
+            <a class="btn btn--dark" href="app/">Open in browser</a>
+          </div>
+        </article>
+        <article class="tier" data-tier="campfire">
+          <p class="tier__name"><span aria-hidden="true">⛺</span> Campfire</p>
+          <p class="tier__price"><b>$8</b><span>/mo per tribe</span></p>
+          <ul class="tier__list">
+            <li>Always-on hosting: your tribe is up 24/7</li>
+            <li>A stable yourtribe.tribecode.org link</li>
+            <li>A voice relay for huddles on cellular</li>
+            <li>Nightly backups</li>
+          </ul>
+          <div class="tier__ctas"><button class="btn btn--dark" type="button" disabled>Coming soon</button></div>
+        </article>
+        <article class="tier tier--pop" data-tier="crew">
+          <p class="tier__name"><span aria-hidden="true">🧑‍🤝‍🧑</span> Crew <span class="tier__badge">Most popular</span></p>
+          <p class="tier__price"><b>$30</b><span>/mo per tribe</span></p>
+          <ul class="tier__list">
+            <li>Everything in Campfire</li>
+            <li>Built-in AI for the whole tribe: shared monthly AI credits, with a fair-use window that refills every 5 hours</li>
+            <li>Priority models</li>
+            <li>Flint's smart mode</li>
+          </ul>
+          <div class="tier__ctas"><button class="btn btn--dark" type="button" disabled>Coming soon</button></div>
+        </article>
+        <article class="tier" data-tier="teams">
+          <p class="tier__name"><span aria-hidden="true">🏢</span> Teams</p>
+          <p class="tier__price"><b>$25</b><span>/user/mo</span></p>
+          <ul class="tier__list">
+            <li>Everything in Crew, for organizations and classrooms</li>
+            <li>Admin and roles controls</li>
+            <li>More credits</li>
+            <li>Priority help and invoices</li>
+          </ul>
+          <div class="tier__ctas"><button class="btn btn--dark" type="button" disabled>Contact us — coming soon</button></div>
+        </article>
+      </div>
+      <div class="credits reveal" data-tier="credits">
+        <p class="credits__k"><span aria-hidden="true">⚡</span> AI credits</p>
+        <p class="credits__t">Top-up packs of <b>$10</b>, <b>$25</b> or <b>$50</b> for when a tribe uses more. Bringing your own key is always free.</p>
+        <button class="btn btn--dark" type="button" disabled>Coming soon</button>
+      </div>
     </div>
   </section>
 
@@ -370,11 +469,12 @@
   <div class="wrap footer__in">
     <div class="footer__brand">
       <span class="footer__lock"><img src="assets/brand/logo-flame-sm.gif" alt="" width="24" height="24" loading="lazy"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="120" height="21" loading="lazy"></span>
-      <p>Build one app together with friends.</p>
+      <p>Build one app with your friends and their AI.</p>
     </div>
     <nav class="footer__links" aria-label="Footer">
       <a href="app/">Open the app</a>
       <a href="app/?demo=showcase">Demo tribe</a>
+      <a href="#pricing">Pricing</a>
       <a href="docs.html">Quick start</a>
       <a href="https://github.com/orionopenwow/TribeCode">GitHub</a>
       <a href="https://github.com/orionopenwow/TribeCode/releases">Releases</a>
@@ -384,7 +484,7 @@
   </div>
   <div class="wrap footer__legal mono">
     <p>© 2026 TribeCode contributors · MIT</p>
-    <p>Claude, Claude Code, Codex, Gemini CLI and the other tools named here belong to their makers. TribeCode is an independent project that works with them.</p>
+    <p>Claude Code, Codex, Gemini CLI, Cursor and the other tools named here belong to their makers. TribeCode is an independent project that works with them.</p>
   </div>
 </footer>
 
