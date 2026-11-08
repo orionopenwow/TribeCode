@@ -26,6 +26,7 @@
     ['Do', [
       ['keys', 'i-grid', 'Keyboard shortcuts', 'Ctrl K, Ctrl Shift B and the rest', () => shortcuts(), 'Ctrl /'],
       ['bug', 'i-bug', 'Report a bug', 'With the recent logs attached', () => window.TribeBugs && window.TribeBugs.capture(), 'Ctrl Shift B'],
+      ['review', 'i-spark', 'Rate TribeCode', 'A quick review, good or bad', () => window.TribeFeedback && window.TribeFeedback.open()],
       ['update', 'i-refresh', 'Check for updates', '', () => { if (window.TribeUpdater && window.TribeUpdater.check) { window.TribeUpdater.check(true); window.TribeApp && window.TribeApp.toast('Checking for updates…'); } }],
     ]],
     ['More', [

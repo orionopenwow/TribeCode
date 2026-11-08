@@ -694,6 +694,29 @@
   })();
 })();
 
+/* ---------- reviews: real ones only, from reviews.json (docs/REVIEWS.md). The pricing page lists them; the home page
+   shows one quiet line once there are any. Nothing is shown while the list is empty. ---------- */
+(function () {
+  const list = document.getElementById('rv-list'), quiet = document.querySelector('[data-rv-quiet]');
+  if (!list && !quiet) return;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  fetch('reviews.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : { reviews: [] })).then(d => {
+    const rs = (d.reviews || []).filter(r => r && r.text && r.name && r.link && r.stars >= 1 && r.stars <= 5);
+    if (!rs.length) return;
+    const stars = n => '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
+    if (list) {
+      const e = document.getElementById('rv-empty'); if (e) e.hidden = true;
+      list.innerHTML = rs.map(r => `<figure class="rv"><div class="rv-stars" aria-label="${r.stars} out of 5">${stars(r.stars)}</div><blockquote>${esc(r.text)}</blockquote>
+        <figcaption><b>${esc(r.name)}</b>${r.what ? ` · ${esc(r.what)}` : ''} <a href="${esc(r.link)}" rel="noopener nofollow">source</a></figcaption></figure>`).join('');
+    }
+    if (quiet) {
+      const avg = rs.reduce((a, r) => a + r.stars, 0) / rs.length, top = rs.filter(r => r.stars >= 4)[0];
+      quiet.innerHTML = `<a href="pricing.html#reviews">${'★'.repeat(Math.round(avg))} ${rs.length} review${rs.length === 1 ? '' : 's'}</a>${top ? ` · “${esc(top.text.length > 90 ? top.text.slice(0, 88).replace(/\s+\S*$/, '') + '…' : top.text)}” ${esc(top.name)}` : ''}`;
+      quiet.hidden = false;
+    }
+  }).catch(() => {});
+})();
+
 /* ---------- phones can't install the desktop app: "Open the app" leads, the desktop download follows ---------- */
 (function () {
   if (document.documentElement.dataset.os === 'phone') document.documentElement.classList.add('is-phone');

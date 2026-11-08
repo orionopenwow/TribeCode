@@ -1,0 +1,28 @@
+name: Review TribeCode
+description: Tell us how TribeCode went for you and your tribe. With your OK, we may quote it on tribecode.org.
+title: "Review: "
+labels: ["review"]
+body:
+  - type: dropdown
+    id: stars
+    attributes:
+      label: How was it?
+      options: ["★★★★★ Loved it", "★★★★☆ Good", "★★★☆☆ Okay", "★★☆☆☆ Not great", "★☆☆☆☆ Didn't work for us"]
+    validations: { required: true }
+  - type: textarea
+    id: review
+    attributes:
+      label: What did you make, and how did it go?
+      description: A couple of sentences is perfect. What worked, what should change.
+    validations: { required: true }
+  - type: input
+    id: name
+    attributes:
+      label: Name to show (first name or handle)
+      placeholder: "Maya, game jam team"
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Showing it on the website
+      options:
+        - label: "OK to quote this review, with the name above, on tribecode.org"
