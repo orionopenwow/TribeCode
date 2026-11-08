@@ -66,9 +66,11 @@
     const st = S.get(), desk = window.TribeHost.isDesktop;
     const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
+      ${window.TribeProfiles && C() && C().connected() ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and presence.') : ''}
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
       ${themeRow(st)}
+      ${window.TribeLook ? row('Look', '<button class="btn" id="set-look">Customize…</button>', 'Accent, background, spacing, font size, and the tribe\'s name and icon.') : ''}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
       ${window.TribeBrain ? row('Flint\'s brain', '<div id="set-flintbrain"></div>', 'Built in, Ollama, or a cloud model with your key. Also writes summaries, drafts and standups.') : row('Local brain', `<span class="set-brain">${brainTxt}</span>${probe.state === 'found' && probe.models.length ? `<select id="set-model">${['', ...probe.models].map(m => `<option value="${esc(m)}" ${(st.brain.enabled ? st.brain.model : '') === m ? 'selected' : ''}>${m ? esc(m) : 'Off'}</option>`).join('')}</select>` : ''}`, 'Writes summaries and standups on this computer.')}
       ${desk ? row('Host on this computer', `<button class="toggle set-toggle" role="switch" id="set-host" aria-label="Host on this computer" aria-checked="${!!(st.hosting && !st.hostOff)}" ${st.hosting ? '' : 'disabled'}><span class="switch"></span></button>`, st.hosting ? 'Your tribe runs here only while this is on. Off stops the server; nothing is deleted.' : 'Starts when you create your first project.') : ''}
@@ -77,14 +79,18 @@
       ${C() && C().connected() ? row('Friends can ask my Claude', `<select class="input set-select" id="set-askai" aria-label="Friends can ask my Claude"><option value="ask">Ask me each time</option><option value="always">Always</option><option value="never">Never</option></select>`, 'When a friend without Claude Code types @ai, your Claude can answer. It uses your subscription, so you decide.') : ''}
       ${C() && C().connected() && window.TribeGitHub ? row('GitHub', '<div id="set-github"></div>', 'Sign in once and everything pushes on its own.') : row('GitHub', '<span class="faint">Start your tribe first (Home › Create your first project), then sign in here.</span>', 'Sign in once and everything pushes on its own.')}
       ${C() && C().connected() && window.TribeMcpDir ? row('TribeCode MCP', '<button class="btn" id="set-mcp" data-mcpdir-open>Open</button>', 'Use this project inside Claude, ChatGPT, VS Code, Cursor and more.') : ''}
+      ${C() && C().connected() && window.TribeChatRich ? row('Chat', '<div id="set-chat"></div>', 'Link previews, GIF search and chat backgrounds.') : ''}
       ${C() && C().connected() ? row('Sign-in', '<div id="set-oauth"></div>', 'Discord, GitHub or Google: join with one tap, sign back in on a new device.') : ''}
       ${row('Crash reports', `<button class="toggle set-toggle" role="switch" id="set-crash" aria-label="Send crash reports" aria-checked="${st.crashReports !== false}"><span class="switch"></span></button>`, 'When something breaks, send the error and recent logs to the bug inbox. Repeats are filed once.')}
+      ${canRoles() ? row('Roles &amp; privileges', '<button class="btn" id="set-roles">Manage</button>', 'Admins, 🛡️ mods and what each role can do.') : ''}
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
       <div class="set-links"><button class="linkish" id="set-tour">Take a quick tour</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
+    const sp = $('#set-profile'); if (sp) sp.onclick = () => { close(); window.TribeProfiles.edit(); };   // feat/profiles
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;
+    const rl = $('#set-roles'); if (rl) rl.onclick = () => { close(); window.TribeRoles.open(); };   // feat/roles (roles.js)
     // Theme picker (themes.js): a chip sets the theme; with "Match system" on it becomes your light or dark theme.
     box.querySelectorAll('[data-theme-id]').forEach(b => b.onclick = () => {
       const T = window.TribeThemes, t = T.byId(b.dataset.themeId), cur = S.get();
@@ -105,6 +111,7 @@
     if (ai) { C().api('/ask/policy').then(r => { ai.value = r.policy; }).catch(() => {}); ai.onchange = () => C().api('/ask/policy', { method: 'PUT', body: { policy: ai.value } }).then(() => toast('Saved')).catch(e => toast(e.message)); }
     const fb = $('#set-flintbrain'); if (fb) window.TribeBrain.mountRow(fb);   // feat/any-llm: Flint's brain (app/ui/brainpick.js)
     const gh = $('#set-github'); if (gh) window.TribeGitHub.mount(gh);   // GitHub sign-in (app/ui/github.js)
+    const sc = $('#set-chat'); if (sc) window.TribeChatRich.mountSettings(sc);   // feat/chat2 (app/ui/chatrich.js)
     const oa = $('#set-oauth'); if (oa && window.TribeOAuth) window.TribeOAuth.mount(oa);   // Sign in with Discord/GitHub/Google (app/ui/oauth.js)
     const cr = $('#set-crash'); if (cr) cr.onclick = () => { S.set({ crashReports: S.get().crashReports === false }); draw(); };
     const hs = $('#set-host'); if (hs) hs.onclick = async () => { hs.disabled = true; await window.TribeApp.setHosting(hs.getAttribute('aria-checked') !== 'true'); draw(); };
@@ -112,6 +119,7 @@
     $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };
     $('#set-join').onclick = () => { close(); joinPrompt(); };
     const sd = $('#set-demo'); if (sd) sd.onclick = () => { close(); window.TribeOffline.toggle(); };   // feat/offline-demo
+    const lk = $('#set-look'); if (lk) lk.onclick = () => { close(); window.TribeLook.open(C().connected() ? 'tribe' : 'me'); };   // feat/customize (app/ui/look.js)
     const sg = $('#set-guide'); if (sg) sg.onclick = () => { close(); window.TribeGuide.open(); };   // feat/vision-guide
   }
   // Settings › Theme: swatch chips (canvas · surface · accent) and a "Match system" switch. Styles in themes.css.
@@ -124,6 +132,7 @@
       <div class="th-sys"><span>Match system (light/dark)</span><button class="toggle set-toggle" role="switch" id="set-theme-sys" aria-label="Match system light or dark" aria-checked="${sys}"><span class="switch"></span></button></div></div></div>`;
   }
   const isHost = () => C().connected() && (C().state().me || {}).role === 'host';
+  const canRoles = () => C().connected() && window.TribeRoles && (['host', 'admin'].includes((C().state().me || {}).role) || window.TribeRoles.can('roles.assign'));   // feat/roles
   // Your name and color live on the server too, so friends see the change (not only this device).
   async function syncMe(patch) {
     if (!C().connected()) return;

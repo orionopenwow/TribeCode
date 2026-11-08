@@ -67,7 +67,10 @@ let members = store.readJSON('.tribe/members.json', []);
 let invites = store.readJSON('.tribe/invites.json', []);
 const saveMembers = () => store.writeJSON('.tribe/members.json', members);
 const saveInvites = () => store.writeJSON('.tribe/invites.json', invites);
-const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
+// feat/roles: roles & privileges (server/perms.js): host, admin, mod, builder, spectator, agent; the capability table, mutes, audit log.
+const perms = require('./perms')({ P, store: baseStore, getMembers: () => members, saveMembers: () => saveMembers(), bus, broadcast: m => broadcast(m), pushPresence: () => pushPresence(),
+  pushProjects: () => rooms.pushProjects(), postChat: (...x) => postChat(...x), str: (v, n) => str(v, n) });
+const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}), ...(perms.mutedUntil(m.id) ? { mutedUntil: perms.mutedUntil(m.id) } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
 
 // ---------- helpers ----------
 // Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
@@ -166,7 +169,7 @@ const online = new Map(); // memberId -> { sockets:Set, where, since, project }
 // Project rooms: data events reach only sockets that are in the event's project (and can see it); other
 // sockets of the same person get a tiny 'project-pulse' so the sidebar badges stay live. Project chat
 // channels are delivered as `general`, which is what the chat UI shows for the current project.
-const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello', 'workshop']);
+const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello', 'workshop', 'perms']);   // perms: feat/roles
 const SOFT = new Set(['approval', 'claims']);   // everyone who can see the project, whatever room they are in
 const PULSE = new Set(['chat', 'task', 'proposal', 'change', 'approval', 'doc', 'bug']);
 const memberById = mid => members.find(x => x.id === mid);
@@ -175,7 +178,7 @@ function broadcast(msg, except) {
   let pid = null;
   if (!UNSCOPED.has(type)) {
     const ch = typeof msg.channel === 'string' ? msg.channel : null;
-    const chPid = ch ? (ch === 'general' ? (P.current() || P.defaultId()) : (P.byChannel(ch) || {}).id) : null;
+    const chPid = ch ? (ch === 'general' ? (P.current() || P.defaultId()) : (P.byChannel(ch) || {}).id || (chans && chans.projectOf(ch))) : null;   // feat/chat2: created channels
     pid = msg.project || (msg.approval && msg.approval.project) || chPid || (ch && !chPid ? null : P.current());
     if (type === 'approval' && !msg.project && !(msg.approval && msg.approval.project)) pid = P.defaultId();
   }
@@ -194,6 +197,7 @@ function broadcast(msg, except) {
   }
 }
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
+let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
@@ -201,10 +205,15 @@ function presence() {
   return members.map(m => {
     if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
     const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null, project: o ? o.project || null : null };
-  });
+  }).map(e => (profiles ? profiles.decorate(e, memberById(e.id) || e, idleAll(e.id)) : e));   // feat/profiles
+}
+const idleAll = mid => { const o = online.get(mid); return !!o && o.sockets.size > 0 && [...o.sockets].every(s => s.idle); };   // feat/profiles: every tab idle
+function presenceFor(viewer) {
+  const fix = list => (profiles ? list.map(e => profiles.forViewer(e, viewer, online.has(e.id))) : list);   // feat/profiles: invisible, nicknames
+  return fix(presenceForRaw(viewer));
 }
 // What one viewer sees: project-scoped friends only see people who share one of their projects.
-function presenceFor(viewer) {
+function presenceForRaw(viewer) {
   const all = presence();
   if (!viewer || !P.scoped(viewer)) return all;
   const mine = new Set(viewer.projects);
@@ -279,16 +288,16 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
-const llm = require('./llm')({ brain, store: baseStore, log: m => console.error('  ' + m) });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
+const llm = require('./llm')({ brain, store: baseStore, log: m => console.error('  ' + m), canUseHost: me => perms.can(me, 'ai.use_host_brain') });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
 const flint = makeFlint({ brain, str, llm });   // feat/flint
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} ${st.cloud ? "(the host's key)" : "via Ollama"}` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
 const projectRepo = () => (P.get(P.current() || P.defaultId()) || {}).repo || null;
-const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: projectRepo, brain, readVision });
+const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: projectRepo, brain, readVision, can: (me, cap) => perms.can(me, cap) });
 const docs = makeDocs({ store, slug, str, broadcast, brain, postChat, onWrite: (d, prev) => docsx.onWrite(d, prev) });
-const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid), saveTask: t => saveTask(t), getMembers: () => members, tellAgent: (...x) => coord.tell(...x) });
+const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid), saveTask: t => saveTask(t), getMembers: () => members, tellAgent: (...x) => coord.tell(...x), can: (me, cap) => perms.can(me, cap) });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
-const claims = makeClaims({ store, id, broadcast, nameOf, project: () => P.current() });
+const claims = makeClaims({ store, id, broadcast, nameOf, project: () => P.current(), isBoss: me => me.role === 'host' || perms.atLeast(me, 'admin') });
 // ---------- web: device links (/m/<key>/) + public https address ----------
 // Pages carry the server version they were served with (<meta name="tribe-version">): app/ui/selfheal.js compares it
 // with the running server's version, so a page cached before an update (service worker, an old tab) knows it is stale.
@@ -313,7 +322,7 @@ function hubFor(pid) {
     const h = require('./repo')({ repo: p.repo, store: P.scopedStore(() => p.id), str, broadcast: m => broadcast({ ...m, project: p.id }), postChat: inP(postChat),
       createTask: inP(o => createTask(o)), loadTasks: inP(() => loadTasks()), saveTask: inP(t => saveTask(t)), getMembers: () => members, nameOf, drift, board,
       presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims,
-      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []), pushAuth: () => githubAuth.pushAuth() });
+      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => (flow ? flow.contextLines(p.id) : []), pushAuth: () => githubAuth.pushAuth(), can: (me, cap) => perms.can(me, cap, p.id) });
     return Object.assign(h, { drift });
   });
   hubs.set(p.id, hub);
@@ -328,14 +337,22 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
 let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
+  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid) });
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+  canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
 const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
-  channelProject: ch => (P.byChannel(ch) || {}).id || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
+  channelProject: ch => (P.byChannel(ch) || {}).id || (chans && chans.projectOf(ch)) || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
+  canModerate: (mem, msg, ch) => { const pid = (P.byChannel(ch) || {}).id || P.current(); const by = memberById(msg.by); return perms.can(mem, 'chat.moderate', pid) && (!by || perms.outranks(mem, by, pid)); },   // feat/roles
+  muteBlock: mem => perms.muteBlock(mem), audit: (...x) => perms.audit(...x),
   voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
+// feat/chat2: created channels, link previews (SSRF-safe fetch + picture proxy), GIF search (server/channels.js, embeds.js, gifs.js)
+const chans = require('./channels')({ store: baseStore, P, str, broadcast, getMembers: () => members });
+const embeds = require('./embeds')({ store: baseStore });
+const gifs = require('./gifs')({ store: baseStore, pstore: store, P, channels: chans });
 // comms-smoke: meetings belong to the project where captions were turned on; optional after-huddle summary (server/huddlesum.js)
 const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m => console.error('  ' + m) });
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
@@ -350,7 +367,7 @@ const exporter = require('./export')({ P, W, store: baseStore, applink, isLocal,
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
-  broadcast, postChat, nameOf, str });
+  broadcast, postChat, nameOf, str, perms });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
@@ -360,8 +377,10 @@ const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, po
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
-const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast });   // the Files center: any file type, yours or the project's
+const codeFiles = require('./codefiles')({ P });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
+const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, can: (me, cap) => perms.can(me, cap) });   // the Files center: any file type, yours or the project's
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
+profiles = require('./profiles')({ P, store: baseStore, getMembers: () => members, pushPresence: () => pushPresence() });   // feat/profiles
 const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
@@ -405,9 +424,10 @@ flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus
   rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
 dashboard.setFlow(flow);
-const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str });   // per-project Website (server/showcase.js)
+const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str , ui: UI, llm, sense: () => sense });   // per-project Website (server/showcase.js)
 sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
-const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense });   // feat/sidebar-widgets (server/widgets.js)
+const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W });   // feat/customize: tribe + project look (server/look.js)
+const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -432,11 +452,16 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...showcase.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
-    post(me, text) { const tx = str(text, 4000); if (!tx) return; if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
+      const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
+      const ch = channel ? chans.resolve(P.current() || P.defaultId(), channel) : 'general';
+      if (!ch) throw new Error(`No channel ${String(channel).slice(0, 40)} in this project.`);
+      if (chatx.command(ch, me, tx)) return; postChat(ch, me.id, tx); handleCommands(ch, me, tx);
+    },
     approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
-    recent: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted).map(x => {
+    recent: (n, channel) => store.readJSONL(`chat/${(channel && chans.resolve(P.current() || P.defaultId(), channel)) || 'general'}.jsonl`, n).filter(x => !x.deleted).map(x => {
       const media = x.media ? (x.media.kind === 'voice' ? '[voice note] ' : x.media.kind === 'image' ? '[image] ' : x.media.kind === 'file' ? `[file: ${x.media.name || 'file'}] ` : '') : '';
       const vote = x.vote ? `[vote] ${x.vote.q || ''} ` : '';
       return `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${media}${vote}${x.text || ''}`.trimEnd();
@@ -619,12 +644,18 @@ async function apiInProject(req, res, url) {
     }
     return fail(res, 405, 'GET or PUT');
   }
+  if (a === 'perms') return perms.route(req, res, ctx());   // feat/roles: Settings › Roles & privileges, mutes, audit (server/perms.js)
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());
   if (a === 'shelf') return shelf.route(req, res, ctx());
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
+  if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
+  if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
+  if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
+  if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
+  if (a === 'gifs') return gifs.route(req, res, ctx());        // feat/chat2
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
@@ -636,6 +667,7 @@ async function apiInProject(req, res, url) {
   if (a === 'invites' && !b && m === 'POST') {
     if (me.role === 'agent') return fail(res, 403, 'agents cannot invite people');
     if (me.role === 'spectator') return fail(res, 403, 'spectators cannot invite people');
+    if (!perms.can(me, 'members.invite', P.current())) return fail(res, 403, 'your role cannot invite people');   // feat/roles
     const body = await readBody(req);
     const hours = Math.min(Math.max(Number(body.hours) || 24, 1), 24 * 30);
     // Invite to one project (they only see that project) or to the whole tribe. Project-scoped people can only invite to their projects.
@@ -651,13 +683,13 @@ async function apiInProject(req, res, url) {
     return send(res, 200, { invite: inv });
   }
   if (a === 'invites' && !b && m === 'GET') {   // project-scoped people only see invites to their own projects
-    const visible = i => me.role === 'host' || (P.scoped(me) ? !!i.project && P.canSee(me, i.project) : true);
+    const visible = i => me.role === 'host' || perms.atLeast(me, 'admin') || (P.scoped(me) ? !!i.project && P.canSee(me, i.project) : true);
     return send(res, 200, { invites: me.role === 'spectator' ? [] : invites.filter(i => !i.revoked && Date.parse(i.expires) > Date.now() && visible(i)) });
   }
   if (a === 'invites' && b && m === 'DELETE') {
     const inv = invites.find(i => i.code === b);
-    if (inv && inv.by !== me.id && me.role !== 'host') return fail(res, 403, 'only the host or whoever made the invite can revoke it');
-    if (inv) { inv.revoked = true; saveInvites(); } return send(res, 200, { ok: true });
+    if (inv && inv.by !== me.id && me.role !== 'host' && !perms.atLeast(me, 'admin')) return fail(res, 403, 'only the host, an admin or whoever made the invite can revoke it');
+    if (inv) { inv.revoked = true; saveInvites(); if (inv.by !== me.id) perms.audit(me, 'invite-revoke', null, { code: inv.code.slice(0, 3) + '…' }); } return send(res, 200, { ok: true });
   }
 
   if (a === 'dms') return dms.route(req, res, { m, me, send, fail });
@@ -667,7 +699,9 @@ async function apiInProject(req, res, url) {
     // Only real conversations: a project's channel, a DM, or a project's #agents channel you can see.
     // (Before, any name worked, so a project-only friend could read another project's chat/agents-<id>.jsonl.)
     const agentsOf = /^agents-(.+)$/.exec(b);
-    if (!chProject && !dms.isDm(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
+    if (chans.isCustom(b) && !chans.canRead(me, b)) return fail(res, 403, 'you are not in that project');   // feat/chat2: created channels
+    if (!chProject && !dms.isDm(b) && !chans.isCustom(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
+    if (m !== 'GET' && chans.archived(b) && !(c === 'react' || c === 'pin')) return fail(res, 403, 'this channel is archived');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
     if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
     if (m === 'GET') {   // ?before=<message id> pages back through history
@@ -676,6 +710,7 @@ async function apiInProject(req, res, url) {
     }
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
+      const muted = perms.muteBlock(me); if (muted) return fail(res, 403, muted);   // feat/roles
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
       const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
@@ -688,6 +723,8 @@ async function apiInProject(req, res, url) {
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
     if (m === 'POST' && !b) { const body = await readBody(req); return send(res, 200, { task: createTask({ ...body, by: me.id, source: 'board' }) }); }
     const t = b && loadTasks().find(x => x.id === b); if (!t) return fail(res, 404, 'task not found');
+    const ownTask = t.by === me.id || t.assignee === me.id || (me.role === 'agent' && (t.by === me.owner || t.assignee === me.owner));
+    if ((m === 'PATCH' || m === 'DELETE') && !ownTask && !perms.can(me, 'tasks.triage')) return fail(res, 403, 'your role can only change your own tasks');   // feat/roles
     if (m === 'PATCH') {
       const body = await readBody(req);
       if (body.title !== undefined) t.title = str(body.title, 200) || t.title;
@@ -705,6 +742,7 @@ async function apiInProject(req, res, url) {
   }
 
   if (a === 'flint') return flint.route(req, res, ctx());   // feat/flint: GET status, POST /ask streams the local model's reply
+  if (a === 'look') return look.route(req, res, ctx());   // feat/customize: Settings › Look + the project menu's Customize (server/look.js)
   if (a === 'llm') return llm.route(req, res, ctx());   // feat/any-llm: Settings › Flint's brain (host sets provider + key; key never leaves the host)
   if (a === 'brain') {
     if (m === 'GET') return send(res, 200, { brain: await brain.refresh() });
@@ -856,6 +894,7 @@ server.on('upgrade', (req, sock) => {
       pushPresence(); return;
     }
     if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
+    if (msg.type === 'activity' && typeof msg.idle === 'boolean' && !!s.idle !== msg.idle) { const was = idleAll(me.id); s.idle = msg.idle; if (idleAll(me.id) !== was) pushPresence(); }   // feat/profiles: idle after inactivity
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture

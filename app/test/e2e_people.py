@@ -168,6 +168,7 @@ def main():
                 chat(page)
                 page.wait_for_selector(f"#chat-list .msg.dx[data-by='{mid}']")
                 page.click(f"#chat-list .msg.dx[data-by='{mid}'] .mb > b")
+                page.wait_for_selector("#pf-pop .pf-full"); page.click("#pf-pop .pf-full")   # feat/profiles: a name opens the profile popout; View activity opens the panel
                 page.wait_for_selector("#view-chat.pp-open #person-panel:not(.hidden)")
                 wait_text(page, "#person-panel", "Add a pause menu")
                 for t in ["Maya", "Build the pause menu with resume and quit", "Morning! Starting on the pause menu", "Pause menu notes", "src/menu.js", "wiring the pause key", "Ask their Claude"]:
@@ -195,6 +196,7 @@ def main():
                 page.keyboard.press("Escape"); page.wait_for_selector("#person-panel", state="hidden")
                 # room list: the avatar opens the profile; the row menu gains "Profile"
                 page.click(f"#room-list .person[data-follow='{mid}'] .avatar")
+                page.wait_for_selector("#pf-pop .pf-full"); page.click("#pf-pop .pf-full")
                 wait_text(page, "#person-panel", "Add a pause menu")
                 page.click("#person-panel .pp-close"); page.wait_for_selector("#person-panel", state="hidden")
                 page.click(f"#room-list .person[data-follow='{mid}']")
@@ -222,6 +224,7 @@ def main():
                 chat(phone)
                 phone.wait_for_selector(f"#chat-list .msg.dx[data-by='{oid}']")
                 phone.click(f"#chat-list .msg.dx.g-first[data-by='{oid}'] > .avatar")   # one avatar per group, on its first line (list-style chat, v0.8.0)
+                phone.wait_for_selector("#pf-pop.sheet .pf-full"); phone.click("#pf-pop .pf-full")   # feat/profiles: the popout sheet first
                 phone.wait_for_selector("#person-panel.sheet:not(.hidden)")
                 wait_text(phone, "#person-panel", "Orion"); wait_text(phone, "#person-panel", "Host"); wait_text(phone, "#person-panel .pp-foot", "up ")
                 wait_text(phone, "#person-panel", "Start Pixel Quest")

@@ -7,7 +7,7 @@ const bus = require('./bus');
 
 const VOTES = ['yes', 'no'];
 
-module.exports = function board({ store, id, slug, str, getMembers, broadcast, postChat, createTask, repo, brain, readVision }) {
+module.exports = function board({ store, id, slug, str, getMembers, broadcast, postChat, createTask, repo, brain, readVision, can = (me) => me.role === 'host' }) {   // can(me, cap): feat/roles (server/perms.js)
   const file = p => `proposals/${p.id}.md`;
   const load = pid => { const r = store.readMd(`proposals/${pid}.md`); return r && { ...r.meta, body: r.body }; };
   const all = () => store.listMd('proposals').map(f => { const r = store.readMd(f); return r && { ...r.meta, body: r.body }; })
@@ -88,7 +88,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     if (a === 'vision') {
       if (m === 'GET') { let text = ''; try { text = fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch {} return send(res, 200, { text }); }
       if (m === 'PUT') {
-        if (me.role !== 'host') return fail(res, 403, 'only the host edits VISION.md directly; propose a change instead');
+        if (!can(me, 'settings.edit')) return fail(res, 403, 'only the host or an admin edits VISION.md directly; propose a change instead');
         const body = await readBody(req); fs.writeFileSync(store.p('VISION.md'), str(body.text, 20000) + '\n');
         postChat('general', 'tribecode', 'VISION.md was updated'); return send(res, 200, { ok: true });
       }
@@ -96,7 +96,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
     if (a === 'milestones') {
       if (m === 'GET' && !b) return send(res, 200, { milestones: milestones(), next: nextVersion(), repo: !!repoPath() });
       if (m === 'POST' && b && c === 'release') {
-        if (me.role !== 'host') return fail(res, 403, 'only the host can release milestones');
+        if (!can(me, 'repo.merge')) return fail(res, 403, 'only the host or an admin can release milestones');
         return send(res, 200, await release(b, me));
       }
     }
@@ -121,7 +121,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
         const fresh = load(p.id); return send(res, 200, { proposal: { ...fresh, tally: tally(fresh) } });
       }
       if (m === 'DELETE') {
-        if (p.by !== me.id && me.role !== 'host') return fail(res, 403, 'only the author or host can withdraw');
+        if (p.by !== me.id && !can(me, 'board.manage')) return fail(res, 403, 'only the author, a mod or the host can withdraw');
         if (p.status !== 'open') return fail(res, 409, 'only open proposals can be withdrawn');
         p.status = 'withdrawn'; save(p); return send(res, 200, { ok: true });
       }

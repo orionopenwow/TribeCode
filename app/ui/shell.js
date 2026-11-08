@@ -54,7 +54,7 @@
     { key: 'visuals', label: 'Visuals & screenshots', tab: 'Visuals', slug: 'visuals', icon: 'i-photo', group: 'tasks', keys: 'screenshots compare diff images', run: () => App().show('visuals') },
     { key: 'roles', label: 'Roles', tab: 'Roles', slug: 'roles', icon: 'i-users', group: 'tasks', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
     { key: 'requests', label: 'Requests', tab: 'Requests', slug: 'requests', icon: 'i-inbox', group: 'tasks', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
-    { key: 'agents', label: 'Agents', tab: 'Agents', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
+    { key: 'agents', label: 'Agents dashboard', tab: 'Dashboard', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
     { key: 'agents-hub', label: 'Your agents', tab: 'Your agents', slug: 'yours', icon: 'i-plug', group: 'agents', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
     { key: 'mcp-directory', label: 'TribeCode MCP', tab: 'MCP', slug: 'mcp', icon: 'i-plug', group: 'agents', keys: 'mcp clients connect claude.ai chatgpt vs code cursor windsurf zed cline goose continue codex gemini artcraft apps connections', run: () => window.TribeMcpDir && window.TribeMcpDir.open() },   // feat/mcp-directory (app/ui/mcpdir.js)
     { key: 'ownership', label: 'Ownership map', tab: 'Ownership', slug: 'ownership', icon: 'i-map', group: 'agents', keys: 'claims files owners', run: () => coord('ownership') },
@@ -77,6 +77,7 @@
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
     { key: 'guide', label: 'Guide', icon: 'i-help', kind: 'Go to', keys: 'help how to wiki manual faq docs guide start troubleshooting tutorial', run: () => window.TribeGuide && window.TribeGuide.open() },   // no group: no row (feat/vision-guide, app/ui/guide.js)
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
+    { key: 'customize', label: 'Customize', icon: 'i-sparkle', kind: 'Action', keys: 'look theme background accent banner cover density font size tribe name emoji icon', run: () => window.TribeLook && window.TribeLook.open(isGlobal() ? 'tribe' : 'project') },   // feat/customize (app/ui/look.js)
   ];
   const byKey = k => DEST.find(d => d.key === k);
   const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Task Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
@@ -85,10 +86,13 @@
   const TKEY = w => `tribecode.tab.${w}`;
   // A workspace opens on its last tab (if it is still there).
   function openWs(w) {
-    const last = lsGet(TKEY(w)), list = tabsOf(w);
+    const last = lsGet(TKEY(w)), list = adTabs(w, tabsOf(w), null);
     const d = list.find(x => x.key === last) || list[0];
     if (d) { lastDest = d.key; d.run(); }
   }
+  // feat/agents-dash: the Agents Hub's top line shows only Dashboard, pinned tabs and the view on screen (app/ui/agentsdash.js)
+  const AD = w => (w === 'agents' && window.TribeAgentsDash) || null;
+  const adTabs = (w, list, cur) => (AD(w) ? AD(w).tabs(list, cur) : list);
   // No project selected: the Global Hub is on screen (its sub-pages too).
   const isGlobal = () => document.body.dataset.view === 'hub' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global');
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
@@ -154,12 +158,12 @@
       return;
     }
     lsSet(TKEY(w), cur);
-    const list = tabsOf(w), d = byKey(cur);
-    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',');
+    const ad = AD(w), list = adTabs(w, tabsOf(w), cur), d = byKey(cur);
+    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',') + (ad ? '|' + ad.sig() : '');
     if (sig !== tabsSig) {
       tabsSig = sig;
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
-        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')}</div>`;
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`;
     }
     bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
@@ -209,6 +213,7 @@
     const dmCur = window.TribeDM && window.TribeDM.current ? window.TribeDM.current() : 'general', inChat = document.body.dataset.view === 'chat';
     const isDm = id => dmCur !== 'general' && String(dmCur).includes(id);
     box.innerHTML = `<button class="nest-row small ${inChat && dmCur === 'general' ? 'on' : ''}" data-stream="general"><span class="hash">#</span><span>general</span></button>
+      ${(window.TribeChannels ? window.TribeChannels.list().filter(c => !c.main && !c.archived) : []).map(c => `<button class="nest-row small ${inChat && dmCur === c.id ? 'on' : ''}" data-stream="ch:${esc(c.id)}"><span class="hash">${c.emoji ? esc(c.emoji) : '#'}</span><span>${esc(c.name)}</span></button>`).join('')}
       <button class="nest-row small" data-stream="agents"><span class="hash">#</span><span>agents</span></button>
       ${ms.map(m => `<button class="nest-row small ${inChat && isDm(m.id) ? 'on' : ''}" data-stream="dm:${esc(m.id)}"><span class="dm-dot ${m.online ? 'on' : ''}" style="--mc:${esc(m.role === 'agent' ? '#38C6B1' : m.color)}"></span><span>${esc(m.role === 'agent' ? 'My Claude' : m.name)}</span></button>`).join('')}`;
   }
@@ -220,7 +225,9 @@
     if (k === 'general') return go('chat');
     if (k === 'agents') { coord('agents'); setTimeout(() => { const t = $('#talk-input'); if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); } }, 400); return; }
     if (k.startsWith('dm:') && window.TribeDM) window.TribeDM.open(k.slice(3));
+    if (k.startsWith('ch:') && window.TribeDM) window.TribeDM.openChannel(k.slice(3));   // feat/chat2
   });
+  document.addEventListener('tribe-channels', () => { if (lsGet(SKEY) === '1') drawStreams(); });   // feat/chat2
   C.on('presence', () => { if (lsGet(SKEY) === '1') drawStreams(); }); C.on('hello', drawStreams);
   new MutationObserver(() => drawStreams()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
@@ -323,7 +330,7 @@
         ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
-        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`,
+        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
       { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
     el.querySelectorAll('.sw-row [data-pj-open]').forEach(b => b.onclick = () => { const id = b.dataset.pjOpen; closePop(); closeDrawer(); if (id === (PJ() && PJ().current())) App().show('home'); else PJ().switchTo(id, 'home'); });
@@ -360,12 +367,12 @@
     const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
     e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
     const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open dashboard</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Messages</span></button>
-      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button></div>`, { id: 'rail-menu', side: 'right' });
+      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button><button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
     el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
       const k = x.dataset.rc; closePop();
       if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
       if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
-      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings();
+      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
     });
   });
   // The nest header and the core rows with no project selected: the tribe is the header, the rows dim and say
@@ -636,5 +643,5 @@
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
+  window.TribeShell = { tabs: () => { tabsSig = ''; drawTabs(); }, pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();

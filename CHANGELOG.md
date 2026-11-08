@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.14.0
+
+- **Chat channels**: the "# general" menu creates and switches channels (emoji, topic, archive), with DMs below. The header is compact with an emoji, the hover highlight spans the whole line, and there's a 📌 Pinned panel
+- **Richer messages**: links work, pictures show as a grid with a viewer, link previews (fetched safely by the host), click-to-load YouTube and Vimeo, GIFs (search with a GIPHY key, or your own), backgrounds per channel, and a bigger emoji picker with search, categories, frequent emoji and skin tones
+- **Profiles**: pick an avatar (initials, emoji, 24 pixel critters or a photo), a name color that stays readable, pronouns, an About me, a banner, links and a custom status. Presence includes idle, do not disturb and invisible. Click any name for a profile card, and keep private notes or mute someone just for you
+- **Roles**: Admin and 🛡️ Mod, with Settings › Roles & privileges to choose what each role can do. Mods can remove messages, mute people and triage. Everything is logged
+- **Customize**: tribe accent, backgrounds, spacing and font size; a Dashboard cover (color, pattern, picture or your GitHub repo's preview); per-project themes
+- **Website, designed for you**: six editorial layouts filled from your project (story, devlog, roadmap, team, screenshots), with Shuffle, Regenerate and an optional "Write it for me" from your AI or a local Qwen model
+- **Files · Code · Docs**: code projects get a folder tree, a branch picker, a code viewer and one list of docs
+- **Agents Hub dashboard**: big cards that only show when they matter (agents working, Needs you, who owns what, #agents, today), plus a + to pin extra tabs
+- **Simpler start**: the right panel shows big Next steps cards while a project is new, and Flint can do setup steps and take you to any place. The top breadcrumb is gone on desktop. Add context (drop docs) sits right under Set up
+- **Phones**: channels, pickers and profile cards open as sheets; the Code view drills down; the Agents dashboard and Customize stack cleanly at 390px
+
 ## v0.13.0
 
 - **Set up comes first**: a new project opens with one big "Set up" card. Each step has its own card with a big emoji, one line of help and its buttons, and the next step is highlighted. The Living update appears once the tribe has started (a vision, a task or a friend)

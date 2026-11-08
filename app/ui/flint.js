@@ -59,6 +59,8 @@
     doc: ref => { const [pid, slug] = String(ref).split('|'); const open = () => { App().show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open && window.TribeDocs.open(slug), 120); }; if (pid && PJ() && PJ().current && PJ().current() !== pid && PJ().switchTo) { PJ().switchTo(pid, 'docs'); setTimeout(open, 400); } else open(); },
     search: q => { if (!window.TribePalette) return; window.TribePalette.open(); const i = $('#pal-input'); if (i) { i.value = q || ''; i.dispatchEvent(new Event('input', { bubbles: true })); } },
     ask: text => send(text),
+    website: () => (window.TribeShell ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open()),   // feat/customize
+    customize: tab => window.TribeLook && window.TribeLook.open(tab || 'tribe'),
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
 
@@ -118,11 +120,14 @@
     hosting: /\b(start|stop|turn (on|off)|begin|end)\s+(the\s+)?host(ing)?\b|^host( here| a tribe| on this computer)?$/,
     note: /^(?:please\s+)?(?:capture|note|remember|jot(?:\s+down)?|write down|save)(?:\s+(?:a|this|the|that))?(?:\s+note)?(?:\s*(?::|-|,|that)\s*|\s+|$)([\s\S]*)$/,
     task: /^(?:please\s+)?(?:add|new|make|create)?\s*(?:a\s+)?(?:task|todo|to-do)(?:\s*(?::|-|,)\s*|\s+)([\s\S]+)$/,
-    nav: /^(?:open|go to|goto|show(?: me)?|take me to|switch to)\s+(?:the\s+|my\s+)?(files|docs|documents|tasks|board|chat|home|repo|guide|settings|calendar)\b/,
+    nav: /^(?:open|go to|goto|show(?: me)?|take me to|switch to|bring me to|where(?:'s| is| are| do i find)|how do i (?:get to|find))\s+(?:the\s+|my\s+|our\s+)?(files|docs|documents|tasks|task board|board|chat|messages|home|dashboard|overview|repo|code|guide|settings|calendar|agents hub|agents|mcp|bugs|website)\b/,
+    doStep: /^(?:how (?:do|can) i |help me |let'?s |i want to |)(?:add|make|create|start)(?: a| my| the)? (?:first )?task\b|^(?:how (?:do|can) i |help me |let'?s |)(write|start)(?: the| our)? vision\b|^(?:how (?:do|can) i |help me |)(?:connect|hook up|add)(?: my)? (?:ai|claude|codex|gemini|cursor|agent)\b/,
     find: /^(?:find|search(?: for)?|look for|where(?:'s| is))\s+(.+)$/,
     help: /^(how|what|why|where|when|can i|could i|help|guide|explain|is there|do i)\b|\?$/,
     invite: /\binvite\b|\badd (a )?friend\b|\bshare (the|a) link\b/,
     hello: /^(hi|hey|hello|yo|hiya|good (morning|afternoon|evening))\b|^(thanks|thank you|thx|cheers)\b/,
+    website: /\b(make|build|generate|create|design|redo|refresh|write|shuffle)\b.*\b(web ?site|home ?page|landing page|site)\b|^(our |the )?web ?site$/,   // feat/customize
+    customize: /\b(customi[sz]e|change|pick|set)\b.*\b(background|accent|look|banner|font size|density)\b|^customi[sz]e\b/,
   };
 
   async function route(raw) {
@@ -133,12 +138,20 @@
     if (RX.helper.test(t)) return helper(t);
     if (RX.connect.test(t)) { ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
     if (RX.hosting.test(t)) return hosting(t);
+    if (RX.website.test(t)) return website(t);   // feat/customize: "make our website"
+    if (RX.customize.test(t)) { ACTS.customize(/\b(banner|this project)\b/.test(t) ? 'project' : 'tribe'); return say('I opened Customize: accent, background, spacing, font size and the tribe\'s name and icon. "Just me" changes only your view.', [act('Open Customize again', 'customize')]); }
     if ((m = RX.task.exec(t)) && m[1].trim()) return task(text.slice(text.length - m[1].length).trim());
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
-    if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', tasks: 'tasks', board: 'tasks', chat: 'chat', home: 'hub', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar' }, v = map[m[1]];
+    // Setup steps by name: Flint does them (and shows where they live) instead of explaining
+    if ((m = RX.doStep.exec(t))) { const k = /task/.test(t) ? 'newtask' : /vision/.test(t) ? 'vision' : 'claude';
+      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. A few short answers is plenty.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
+    if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website' }, v = map[m[1]];
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
-      const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]' }, row = ROW[v] && document.querySelector(ROW[v]);
-      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', repo: 'Repo', settings: 'Settings', calendar: 'Calendar' };
+      const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]' }, row = ROW[v] && document.querySelector(ROW[v]);
+      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Repo', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website' };
+      if (v === 'agents' || v === 'mcp') { if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
+        if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const r = document.querySelector('#nest-ws-agents'); if (r) r.click(); }
+        return say(`Opened ${NAME[v].replace(/^The /, 'the ')}.`); }
       if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v] || m[1]} lives here. Opening it for you.`, { next: 'Thanks' });
       ACTS.nav(v); return say(`Opened ${m[1] === 'home' ? 'Home' : m[1]}.`); }
     if ((m = RX.find.exec(t)) && !RX.help.test(t.replace(/^where('s| is)/, ''))) return find(text.slice(text.length - m[1].length).trim());
@@ -163,6 +176,19 @@
     try { const { task: tk } = await C.api('/tasks', { method: 'POST', body: { title: title.slice(0, 200) } }); const p = PJ() && PJ().cur && PJ().cur();
       return say(`Added to Tasks${p ? ` in ${p.name}` : ''}: “${tk.title}”.`, [act('Open Tasks', 'nav', 'tasks')], { link: 'task:' + tk.id }); }
     catch (e) { return say('I could not add that task: ' + e.message); }
+  }
+  // feat/customize: the site generator (server/sitegen.js). A draft only; the host or the project lead publishes.
+  async function website(t) {
+    if (!connected()) return say('Websites belong to a project. Host or join a tribe first.', [act('Host or join', 'invite')]);
+    const pid = PJ() && PJ().current && PJ().current(); if (!pid) return say('Open a project first, then ask me again.');
+    const how = /\b(shuffle|another|different|new layout)\b/.test(t) ? 'shuffle' : /\b(redo|refresh|regenerate)\b/.test(t) ? 'regenerate' : 'generate';
+    try {
+      const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/gen`, { method: 'POST', body: { how } });
+      const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a';
+      ACTS.website();
+      return say(`Here's a draft in the ${L} layout, filled from the bio, vision, screenshots, commits and team. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
+        [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
+    } catch (e) { return say('I could not make the draft: ' + e.message); }
   }
   function invite() { ACTS.invite(); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {
@@ -279,7 +305,13 @@
   const CHIPS = ['Connect my AI', 'Capture a note', 'What\'s happening?', 'How do invites work?'];
   const statusLine = () => (model.online ? `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}` : 'basic mode · no model');
   const privLine = () => (model.online && model.cloud ? `Flint uses ${model.via || model.model} through the host's key. The key never leaves the host.` : model.online && model.browser ? 'Flint runs in your browser. Nothing you type here leaves it.' : 'Flint runs on this computer. Nothing you type here leaves it.');
+  // Early on Flint keeps it simple: a short hello and the next setup steps as nudges. He shows more as the tribe grows.
+  const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], friend: ['👋 Invite a friend', 'invite'], agent: ['🤖 Connect my AI', 'claude'] };
   function emptyHtml() {
+    const S = window.TribeStage, lv = S ? S.level() : 'going', st = S ? S.steps() : null;
+    if (lv !== 'going' && st) {   // the next steps are big cards at the top of the panel; Flint just says hi
+      return `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> ${lv === 'new' ? 'Pick a step above and I’ll show you where it happens.' : 'Nice start. Ask me anything, or pick the next step above.'}</p></div>`;
+    }
     return `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> I live in this room and get things going.</p>
       <div class="fl-chips">${CHIPS.map(c => `<button class="fl-chip" data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
       <p class="fl-priv">${esc(privLine())}</p></div>`;
@@ -298,6 +330,7 @@
       <button type="submit" class="fl-ic fl-send" title="Send" aria-label="Send">${SEND}</button></form>`;
   }
   const threads = () => [...document.querySelectorAll('.fl-thread')];
+  window.addEventListener('tribe:stage', () => { if (!thread.length) draw(); });   // nudges follow the project's progress
   function draw() {
     threads().forEach(el => { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; });
     const dock = $('#flint'); if (dock) { dock.classList.toggle('has-msgs', thread.length > 0); const c = dock.querySelector('#fl-clear'); if (c) c.hidden = !thread.length; }
@@ -309,6 +342,7 @@
   function drawStatus() { document.querySelectorAll('[data-flst]').forEach(e => { e.textContent = statusLine(); e.classList.toggle('ok', model.online); }); }
   function wire(root) {
     root.addEventListener('click', e => {
+      const ns = e.target.closest('[data-step]'); if (ns && ns.closest('.fl-empty')) { if (window.TribeProjects && window.TribeProjects.step) window.TribeProjects.step(ns.dataset.step); return; }
       const c = e.target.closest('[data-chip]'); if (c) { const v = c.dataset.chip; if (v === 'Capture a note') { const i = root.querySelector('.fl-in'); if (i) { i.value = 'note: '; i.focus(); } return; } return send(v); }
       const a = e.target.closest('[data-act]'); if (a) { const [i, j] = a.dataset.act.split(':').map(Number), x = thread[i] && thread[i].acts[j]; if (x && ACTS[x.act]) { if (x.act !== 'ask' && phone()) closeFull(); ACTS[x.act](x.arg); } return; }
       const mic = e.target.closest('[data-flmic]'); if (mic) { const i = root.querySelector('.fl-in'); if (window.TribeSpeech && window.TribeSpeech.supported && window.TribeSpeech.supported()) window.TribeSpeech.dictate(i); else toast((window.TribeSpeech && window.TribeSpeech.HINT) || 'Dictation is not available in this browser.'); }

@@ -113,7 +113,7 @@ function mentionsIn(text, members, byId) {
     w === m.id.toLowerCase() || w === m.name.toLowerCase().replace(/\s+/g, '') || w === m.name.toLowerCase().split(/\s+/)[0]))).map(m => m.id);
 }
 
-function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () => {}, log = () => {}, now = () => Date.now(), fetchImpl = (...a) => globalThis.fetch(...a), tick = true }) {
+function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () => {}, log = () => {}, now = () => Date.now(), fetchImpl = (...a) => globalThis.fetch(...a), tick = true, dnd = () => false, muted = () => false }) {
   fs.mkdirSync(store.p('.tribe/inbox'), { recursive: true });
   const db = store.readJSON('.tribe/notify.json', null) || {};
   db.secret = db.secret || crypto.randomBytes(32).toString('base64url');
@@ -237,7 +237,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
 
   function recipients(n) {
     const list = n.to === 'all' || !n.to ? humans().map(m => m.id) : [].concat(n.to);
-    return [...new Set(list)].filter(mid => { const m = memberById(mid); return m && m.role !== 'agent' && mid !== n.from; });
+    return [...new Set(list)].filter(mid => { const m = memberById(mid); return m && m.role !== 'agent' && mid !== n.from && !muted(mid, n.from); });   // feat/profiles: people you muted don't notify you
   }
 
   async function handle(n) {
@@ -249,7 +249,8 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
       sendTo(mid, { type: 'notification', item, unread: unread(mid) });
       const prefs = prefsOf(mid);
       const lp = lastPush.get(mid) || {};
-      const d = decide({ prefs, n: n.force ? { ...item, force: true } : item, away: isAway(mid, prefs), now: now(), lastPush: lp });
+      const d = !n.force && dnd(mid) ? { pocket: false, digest: false, reason: 'dnd' }   // feat/profiles: do not disturb silences pushes (the inbox still gets it)
+        : decide({ prefs, n: n.force ? { ...item, force: true } : item, away: isAway(mid, prefs), now: now(), lastPush: lp });
       note(mid, { at: item.at, type: item.type, title: item.title, ...d });
       if (d.pocket) {
         const c = collapsed.get(mid) || {};
@@ -273,6 +274,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     for (const [mid, r] of Object.entries(db.members)) {
       if (!r.queue || !r.queue.length || !memberById(mid)) continue;
       const prefs = prefsOf(mid);
+      if (dnd(mid)) continue;   // feat/profiles: hold the digest while do not disturb is on
       if (!digestDue({ prefs, queue: r.queue, lastDigest: r.lastDigest || 0, lastDigestDay: r.lastDigestDay || '', now: now() })) continue;
       const q = r.queue; r.queue = []; r.lastDigest = now(); r.lastDigestDay = localParts(now(), prefs.tz).day; save();
       if (prefs.when.mode !== 'always' && !isAway(mid, prefs)) continue;          // they've seen it all in the app

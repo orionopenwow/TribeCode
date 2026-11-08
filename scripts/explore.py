@@ -765,6 +765,12 @@ def core_collab(browser):
         if loc: loc.click(); clicks += 1; settle(page)
         loc, _ = find_affordance(page, [{"role": "tab", "name": r"conflict"}, {"role": "button", "name": r"conflict"}])
         if loc: loc.click(); clicks += 1; settle(page, 900)
+        else:   # feat/agents-dash: the Agents Hub opens on its dashboard; "+" (Pin a tab) reaches Conflicts
+            loc, _ = find_affordance(page, [{"role": "button", "name": r"pin a tab"}])
+            if loc:
+                loc.click(); clicks += 1; settle(page, 300)
+                loc, _ = find_affordance(page, [{"role": "menuitemcheckbox", "name": r"conflicts"}])
+                if loc: loc.click(); clicks += 1; settle(page, 900)
         seen = wait_until(lambda: page.evaluate("document.body.innerText.includes('src/world.js')"), 8, 0.4)
         ck("the host sees src/world.js on the Conflicts tab", seen, "not on screen")
         report_window(w, "desktop", "journey: collaboration", ["Agents Hub", "Conflicts"])

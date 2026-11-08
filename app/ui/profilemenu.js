@@ -32,6 +32,7 @@
     const face = $('#pf-face');
     face.textContent = name.trim().charAt(0).toUpperCase() || '?';
     face.style.background = (m && m.color) || 'var(--surface-2, #262D38)';
+    const P = window.TribeProfiles, pm = m && P && (C.state().members || []).find(x => x.id === m.id); if (pm) { P.fill(face, pm); $('#pf-dot').dataset.state = pm.state || ''; }   // feat/profiles: your avatar + presence
     $('#pf-dot').className = 'pf-dot' + (s.on ? ' on' : '');
     const up = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
     $('#pf-up').classList.toggle('hidden', !(up && up.ready));
@@ -50,7 +51,8 @@
       <div class="pf-status"><span class="pf-dot ${s.on ? 'on' : ''}"></span>${esc(s.text)}</div>
       ${upd && upd.ready ? `<button role="menuitem" class="pf-item pf-update" data-act="restart"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg><span>Update ready · v${esc(upd.version)}</span><b class="pf-restart">Restart</b></button>` : ''}
       <div class="pf-sep"></div>
-      ${m ? item('profile', 'i-users', 'My profile and activity') : ''}
+      ${m && window.TribeProfiles ? item('editprofile', 'i-users', 'Edit profile') + item('status', 'i-smile', 'Set a status') : ''}
+      ${m ? item('profile', window.TribeProfiles ? 'i-net' : 'i-users', window.TribeProfiles ? 'My activity' : 'My profile and activity') : ''}
       ${item('claude', 'i-sparkle', 'Connect your AI')}
       ${window.TribeAgentsHub ? item('agents', 'i-robot', 'Your agents') : ''}
       ${item('invite', 'i-link', 'Invite friends')}
@@ -84,6 +86,8 @@
     close();
     const click = sel => { const el = $(sel); if (el) el.click(); };
     if (a === 'profile' && m && window.TribePeople) window.TribePeople.open(m.id);
+    else if (a === 'editprofile') window.TribeProfiles.edit();   // feat/profiles
+    else if (a === 'status') window.TribeProfiles.edit('status');
     else if (a === 'claude') click('#cc-connect');
     else if (a === 'agents') window.TribeAgentsHub.open();
     else if (a === 'invite') click('#tour-invite');

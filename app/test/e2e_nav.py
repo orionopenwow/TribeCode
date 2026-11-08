@@ -22,7 +22,7 @@ errors = []
 
 CORE = ["Dashboard", "Messages", "Files", "Task Board", "Agents Hub"]
 TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]
-AGENT_TABS = ["Agents", "Your agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary"]
+AGENT_KEYS = ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]   # the Agents Hub shows Dashboard + pinned tabs (feat/agents-dash)
 # tab key -> how to tell its view is on screen
 OPENS = {
     "tasks": "#view-tasks:not(.hidden)", "bugs": "#view-bugs:not(.hidden)", "board": "#view-board:not(.hidden)", "milestones": "#view-board:not(.hidden)",
@@ -163,15 +163,16 @@ def main():
             host.wait_for_selector("#wt-requests .n.hot", timeout=8000)
             host.click("#wt-requests"); host.wait_for_selector("#view-requests:not(.hidden)"); wait_text(host, "#pj-requests", "Hook up the gamepad")
 
-            # ---- Agents Hub: one tabbed workspace (the Coordinate view's own tabs give way)
+            # ---- Agents Hub: one dashboard; every deep view still opens (as a temporary tab when it isn't pinned)
             host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden)")
-            assert tabs(host) == AGENT_TABS, tabs(host)
-            for key in ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]:
-                host.click(f"#wt-{key}"); host.wait_for_selector(OPENS[key], timeout=8000)
+            assert tabs(host) == ["Dashboard"], tabs(host)
+            for key in AGENT_KEYS:
+                host.evaluate("k => TribeShell.go(k)", key); host.wait_for_selector(OPENS[key], timeout=8000)
                 host.wait_for_function("k => document.querySelector(`#wt-${k}`) && document.querySelector(`#wt-${k}`).classList.contains('on')", arg=key, timeout=6000)
                 assert host.evaluate("document.querySelector('#nest-ws-agents').classList.contains('on')"), key
+                assert len(tabs(host)) == (1 if key == "agents" else 2), (key, tabs(host))
                 if host.locator("#coord-tabs").count(): assert host.locator("#coord-tabs").is_hidden()
-            host.click("#wt-conflicts"); host.wait_for_function("TribeCoord.tab() === 'conflicts'")
+            host.evaluate("TribeShell.go('conflicts')"); host.wait_for_function("TribeCoord.tab() === 'conflicts'")
             wait_text(host, "#crumb-label", "Agents Hub › Conflicts")
             host.mouse.move(720, 600); shot(host, "nav-tabs-conflicts")
             # deep links
@@ -183,11 +184,11 @@ def main():
             assert host.locator("#userbar #ub-gear").is_visible(), "Settings is the gear in the user bar"
 
             # ---- breadcrumb menu mirrors the hierarchy
-            host.click("#crumb-section"); host.wait_for_selector("#section-menu")
+            host.evaluate("document.querySelector('#crumb-section').click()"); host.wait_for_selector("#section-menu")
             menu = host.evaluate("[...document.querySelectorAll('#section-menu h6, #section-menu button')].map(e => (e.tagName === 'H6' ? '# ' : '') + (e.querySelector('span') || e).textContent.trim())")
             assert menu[:5] == CORE, menu
             assert "# Task Board" in menu and "# Agents Hub" in menu, menu
-            assert menu[menu.index("# Agents Hub") + 1:] == ["Agents", "Your agents", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
+            assert menu[menu.index("# Agents Hub") + 1:] == ["Agents dashboard", "Your agents", "TribeCode MCP", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
             host.click("#section-menu [data-dest='calendar']"); host.wait_for_selector("#view-calendar:not(.hidden)")
 
             # ---- Ctrl K finds every destination exactly once
@@ -254,7 +255,7 @@ def main():
             shot(phone, "nav-phone-panel")
             phone.click("#nest-ws-agents"); phone.wait_for_selector("#view-tabs:not(.hidden)")
             assert not phone.evaluate("document.body.classList.contains('drawer-open')")
-            phone.click("#wt-conflicts"); phone.wait_for_function("TribeCoord.tab() === 'conflicts'")
+            phone.evaluate("TribeShell.go('conflicts')"); phone.wait_for_function("TribeCoord.tab() === 'conflicts'")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             phone.wait_for_selector("#tabbar.m2-rack", state="visible")
             shot(phone, "nav-phone-tabs")

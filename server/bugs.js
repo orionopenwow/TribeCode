@@ -14,7 +14,7 @@ const STATUSES = ['new', 'triaged', 'confirmed', 'progress', 'resolved', 'wontfi
 const CLOSED = ['resolved', 'wontfix', 'duplicate'];
 const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', txt: 'text/plain; charset=utf-8', log: 'text/plain; charset=utf-8', json: 'application/json', pdf: 'application/pdf', mp4: 'video/mp4', webm: 'video/webm' };
 
-module.exports = function bugs({ store, id, str, broadcast, postChat, brain, createTask, getTask, saveTask = null, getMembers = () => [], tellAgent = () => {} }) {
+module.exports = function bugs({ store, id, str, broadcast, postChat, brain, createTask, getTask, saveTask = null, getMembers = () => [], tellAgent = () => {}, can = () => true }) {   // can(me, cap): feat/roles tasks.triage
   const rel = b => `bugs/${b.id}.md`;
   const all = () => store.listMd('bugs').map(f => { const r = store.readMd(f); return r && { ...r.meta, body: r.body }; }).filter(b => b && b.id);
   const load = bid => { const r = store.readMd(`bugs/${bid}.md`); return r && { ...r.meta, body: r.body }; };
@@ -150,6 +150,8 @@ module.exports = function bugs({ store, id, str, broadcast, postChat, brain, cre
     }
     if (m === 'POST' && c === 'attach') { const body = await readBody(req, 12 * 1024 * 1024); try { return send(res, 200, { bug: attach(bug, body, me) }); } catch (e) { return fail(res, e.status || 400, e.message); } }
     if (m === 'PATCH') {
+      const mine = (bug.reporters || []).includes(me.id) || bug.by === me.id || bug.assignee === me.id;
+      if (!mine && !can(me, 'tasks.triage')) return fail(res, 403, 'your role can only change bugs you reported or own');   // feat/roles
       const body = await readBody(req);
       if (SEVERITIES.includes(body.severity)) bug.severity = body.severity;
       if (AREAS.includes(body.area)) bug.area = body.area;

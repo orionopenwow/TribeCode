@@ -11,7 +11,10 @@ const fs = require('node:fs');
 // Reactions: the quick bar shows the first six; the picker shows all of them.
 const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '✅', '🔥', '👎', '❌', '🙏', '💯', '🚀', '🤔', '😮', '😢', '👏', '🙌', '⭐', '💡', '🐛', '📌', '➕', '🎮', '✨'];
 const makeVotes = require('./votes');
-const MAX_MEDIA = 3 * 1024 * 1024, MAX_PINS = 5;
+// feat/chat2: the emoji picker offers hundreds; a reaction is one emoji (with an optional skin tone / ZWJ sequence), nothing else
+const okEmoji = e => EMOJI.includes(e) || (typeof e === 'string' && e.length <= 16 && /^[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u.test(e)
+  && /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Modifier}\u200D\uFE0F\u20E3]|[\u{1F1E6}-\u{1F1FF}])+$/u.test(e));
+const MAX_MEDIA = 3 * 1024 * 1024, MAX_IMAGE = 6 * 1024 * 1024, MAX_IMAGES = 6, MAX_PINS = 20;   // feat/chat2: GIFs need room; up to 6 pictures per message
 const EXT = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/aac': 'm4a', 'audio/mpeg': 'mp3', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
 const MIME = { webm: 'audio/webm', ogg: 'audio/ogg', m4a: 'audio/mp4', mp3: 'audio/mpeg', png: 'image/png', jpg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
 const pad = n => String(n).padStart(2, '0');
@@ -21,7 +24,8 @@ const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return
 module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands, ask = null,
   approvals = null, board = null, createTask = null, bus = { notify() {} }, slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
   voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true,
-  channelProject = () => null, canSeeProject = () => false }) {   // project-scoped access for writes into other channels (forward)
+  channelProject = () => null, canSeeProject = () => false,
+  canModerate = () => false, muteBlock = () => '', audit = () => {} }) {   // feat/roles (server/perms.js): delete anyone's message, mutes, audit log   // project-scoped access for writes into other channels (forward)
   fs.mkdirSync(store.p('chat', 'media'), { recursive: true });
   const member = mid => getMembers().find(m => m.id === mid);
   const file = ch => `chat/${ch}.jsonl`;
@@ -29,7 +33,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   // Lookups scan the cached lines newest-first and parse only candidates (store.findJSONL), so a
   // reaction, reply or image request no longer parses the whole channel history.
   const find = (ch, mid) => (mid ? store.findJSONL(file(ch), m => m.id === mid, `"id":${JSON.stringify(mid)}`) : null);
-  const hasMedia = (ch, f) => !!store.findJSONL(file(ch), x => !!x.media && x.media.file === f, f);
+  const hasMedia = (ch, f) => !!store.findJSONL(file(ch), x => (!!x.media && x.media.file === f) || (Array.isArray(x.images) && x.images.some(i => i && i.file === f)), f);
 
   // Rewrite one message in place (chat files are append-only JSONL; edits are rare).
   function update(ch, mid, fn) {
@@ -79,10 +83,20 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     if (!ext || !base.startsWith(kind === 'voice' ? 'audio/' : 'image/')) throw Object.assign(new Error('unsupported file type'), { status: 415 });
     const buf = Buffer.from(String(data || '').replace(/^data:[^,]*,/, ''), 'base64');
     if (!buf.length) throw Object.assign(new Error('empty file'), { status: 400 });
-    if (buf.length > MAX_MEDIA) throw Object.assign(new Error('file too large (max 3 MB)'), { status: 413 });
+    const cap = kind === 'voice' ? MAX_MEDIA : MAX_IMAGE;
+    if (buf.length > cap) throw Object.assign(new Error(`file too large (max ${cap / 1048576} MB)`), { status: 413 });
+    if (kind !== 'voice' && !sniffImage(buf, ext)) throw Object.assign(new Error('that file is not the picture it says it is'), { status: 415 });
     const name = `${Date.now().toString(36)}-${id(8).replace(/[^A-Za-z0-9]/g, 'x')}.${ext}`;
     fs.writeFileSync(store.p('chat', 'media', name), buf);
     return { file: name, mime: MIME[ext], size: buf.length };
+  }
+  // feat/chat2: pictures must start with their format's signature (a mislabelled file is refused, not served as an image)
+  function sniffImage(b, ext) {
+    if (ext === 'png') return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+    if (ext === 'jpg') return b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+    if (ext === 'gif') return b.slice(0, 4).toString('latin1') === 'GIF8';
+    if (ext === 'webp') return b.slice(0, 4).toString('latin1') === 'RIFF' && b.slice(8, 12).toString('latin1') === 'WEBP';
+    return false;
   }
   const okFile = f => /^[A-Za-z0-9-]+\.(webm|ogg|m4a|mp3|png|jpg|gif|webp|bin)$/.test(f || '');
   // Any other file (PDF, zip, a big photo, a level file...): kept as-is under chat/media/<id>.bin with its
@@ -206,7 +220,20 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     if (action === 'receipt' && m === 'GET') return send(res, 200, { receipt: receipt(ch) });
     if (action === 'votes' && m === 'GET') { votes.sweep(); return send(res, 200, { votes: votes.list(ch) }); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
-    const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, action === 'file' ? 12 * 1024 * 1024 : 6 * 1024 * 1024);
+    if (m === 'POST' && !['notes', 'react'].includes(action)) { const muted = muteBlock(me); if (muted) return fail(res, 403, muted); }   // feat/roles: muted people read along
+    const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, action === 'file' ? 12 * 1024 * 1024 : action === 'images' ? 40 * 1024 * 1024 : action === 'image' ? 9 * 1024 * 1024 : 6 * 1024 * 1024);
+
+    // feat/chat2: several pictures in one message (a small grid in the chat). GIF files keep animating.
+    if (m === 'POST' && action === 'images') {
+      const items = Array.isArray(body.items) ? body.items.slice(0, MAX_IMAGES + 1) : [];
+      if (!items.length) return fail(res, 400, 'no pictures');
+      if (items.length > MAX_IMAGES) return fail(res, 400, `up to ${MAX_IMAGES} pictures at a time`);
+      const images = items.map(it => ({ ...saveMedia(it && it.data, it && it.mime, 'image'), kind: 'image' }));
+      const text = str(body.text, 4000);
+      const msg = images.length === 1 ? postChat(ch, me.id, text, { media: images[0] }) : postChat(ch, me.id, text, { images });
+      if (text) dms.onPost(ch, me, text);
+      return send(res, 200, { message: msg });
+    }
 
     if (m === 'POST' && action === 'file') {
       const media = saveFile(body.data, body.name, body.mime);
@@ -254,7 +281,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     if (!target) return fail(res, 404, 'message not found');
 
     if (m === 'POST' && action === 'react') {
-      const e = String(body.emoji || ''); if (!EMOJI.includes(e)) return fail(res, 400, 'unknown reaction');
+      const e = String(body.emoji || ''); if (!okEmoji(e)) return fail(res, 400, 'unknown reaction');
       if (target.deleted) return fail(res, 400, 'message was deleted');
       let added = false;
       const msg = update(ch, target.id, x => {
@@ -290,10 +317,12 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
         if (!canSeeProject(me, pid)) return fail(res, 403, 'you are not in that project');
         const extra = { fwd: { by: target.by, from: label(ch, me), at: target.at } };
         if (target.media) extra.media = target.media;
+        if (target.images) extra.images = target.images;
         return send(res, 200, { message: inProject(pid, () => postChat(to, me.id, target.text || '', extra)) });
       }
       const extra = { fwd: { by: target.by, from, at: target.at } };
       if (target.media) extra.media = target.media;
+      if (target.images) extra.images = target.images;
       const msg = postChat(to, me.id, target.text || '', extra);
       return send(res, 200, { message: msg });
     }
@@ -302,17 +331,19 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       return send(res, 200, { doc: { slug: d.slug, title: d.title } });
     }
     if (action === 'msg' && (m === 'PATCH' || m === 'DELETE')) {
-      if (target.by !== me.id) return fail(res, 403, 'you can only change your own messages');
+      const mod = target.by !== me.id && m === 'DELETE' && !dms.isDm(ch) && canModerate(me, target, ch);   // feat/roles: "Delete for everyone" by a mod/admin/host
+      if (target.by !== me.id && !mod) return fail(res, 403, 'you can only change your own messages');
       if (target.deleted) return fail(res, 400, 'message was deleted');
       if (m === 'PATCH') {
         const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
         return send(res, 200, { message: update(ch, target.id, x => ({ ...x, text, edited: new Date().toISOString() })) });
       }
-      if (target.media && target.media.file && !otherUses(target.media.file, target.id)) {
-        try { fs.unlinkSync(store.p('chat', 'media', target.media.file)); } catch {}
+      for (const md of [target.media, ...(Array.isArray(target.images) ? target.images : [])]) {
+        if (md && md.file && !otherUses(md.file, target.id)) { try { fs.unlinkSync(store.p('chat', 'media', md.file)); } catch {} }
       }
-      const msg = update(ch, target.id, x => ({ id: x.id, at: x.at, by: x.by, text: '', deleted: new Date().toISOString() }));
+      const msg = update(ch, target.id, x => ({ id: x.id, at: x.at, by: x.by, text: '', deleted: new Date().toISOString(), ...(mod ? { removedBy: me.id } : {}) }));
       if (pinIds(ch).includes(target.id)) { store.writeJSON(pinsFile(ch), pinIds(ch).filter(i => i !== target.id)); pushPins(ch); }
+      if (mod) audit(me, 'message-delete', member(target.by) || { id: target.by }, { channel: ch, message: target.id, excerpt: clip(target.text || '', 80) });
       return send(res, 200, { message: msg });
     }
     return fail(res, 404, 'not found');
@@ -320,7 +351,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   // Forwards share the media file across channels: only delete it when nothing else points at it.
   function otherUses(f, mid) {
     let names = []; try { names = fs.readdirSync(store.p('chat')).filter(n => n.endsWith('.jsonl')); } catch { return false; }
-    return names.some(n => store.findJSONL('chat/' + n, x => x.id !== mid && !!x.media && x.media.file === f, f));
+    return names.some(n => store.findJSONL('chat/' + n, x => x.id !== mid && ((!!x.media && x.media.file === f) || (Array.isArray(x.images) && x.images.some(i => i && i.file === f))), f));
   }
 
   // ---------- MCP tools for agents ----------

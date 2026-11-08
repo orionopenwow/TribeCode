@@ -15,7 +15,7 @@
   const draft = () => (input() ? input().value.trim() : '');
   const clearDraft = () => { const i = input(); if (i) { i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); } };
   // The conversation the composer is in: #general (this project) or a DM.
-  const chan = () => { const D = window.TribeDM, v = D && D.current(); return !v || v === 'general' ? 'general' : D.channelWith(v); };
+  const chan = () => { const D = window.TribeDM, v = D && D.current(); return !v || v === 'general' ? 'general' : v; };   // feat/chat2: current() is already the channel (a DM or a created channel)
   const inDm = () => chan() !== 'general';
   const myAgent = () => (C.state().members || []).find(m => m.role === 'agent' && m.owner === me().id);
   const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
@@ -23,6 +23,7 @@
   const ITEMS = () => [
     { group: 'Add' },
     { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Docs' },
+    { k: 'gif', icon: 'i-gif', t: 'GIF', s: 'Search, your GIFs, or paste a link', hide: !window.TribeChatRich || me().role === 'spectator' },   // feat/chat2
     { group: 'Decide together' },
     { k: 'propose', icon: 'i-flag', t: 'Propose to the tribe', s: 'Everyone votes; approved ideas go to the Board', hide: me().role === 'spectator' },
     { k: 'poll', icon: 'i-vote', t: 'Quick poll', s: 'Ask everyone to pick', hide: !window.TribeVotes || inDm() },
@@ -71,6 +72,7 @@
     if (k === 'propose') return propose({ title: text });
     close();
     if (k === 'attach') return pick();
+    if (k === 'gif') return window.TribeChatRich.gifPicker(anchorBtn);   // feat/chat2
     if (k === 'poll') return window.TribeVotes.openComposer({ question: text.slice(0, 200), channel: 'general' });
     if (k === 'task') {
       const title = text || prompt('Task');
@@ -110,7 +112,10 @@
   function pick() {
     const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
     i.onchange = async () => {
+      const pics = [...(i.files || [])].filter(f => /^image\/(png|jpeg|gif|webp)$/.test(f.type) && f.size <= 6 * 1024 * 1024);   // feat/chat2: pictures go together as one grid
+      if (pics.length && window.TribeChatRich) { await window.TribeChatRich.sendImages(pics, chan()); }
       for (const f of i.files || []) {
+        if (pics.includes(f) && window.TribeChatRich) continue;
         try {
           if (/^image\/(png|jpeg|gif|webp)$/.test(f.type) && f.size <= 3 * 1024 * 1024) {
             await C.api(`/chat/${chan()}/image`, { method: 'POST', body: { data: await toB64(f), mime: f.type, text: draft() } }); clearDraft();
