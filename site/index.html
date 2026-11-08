@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, and it runs on one friend's computer.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=0.14.1">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -77,7 +77,7 @@
           <li><a href="#download"><b>All downloads</b><span>Every platform and format</span></a></li>
         </ul>
       </div>
-      <a class="nav__link" href="#pricing">Pricing</a>
+      <a class="nav__link" href="pricing.html">Pricing</a>
       <a class="nav__link" href="docs.html">Docs</a>
       <a class="nav__link" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/01-start-here.md">Guide</a>
       <a class="nav__link" href="https://github.com/orionopenwow/TribeCode">GitHub</a>
@@ -374,69 +374,6 @@
   </section>
 
   <!-- ================= PRICING (paid tiers aren't live: every paid button is disabled) ================= -->
-  <section class="pricing" id="pricing" aria-labelledby="pricing-title">
-    <div class="wrap">
-      <div class="pricing__head reveal">
-        <p class="eyebrow mono">// pricing</p>
-        <h2 id="pricing-title">Free to run yourself. Hosting when you want it.</h2>
-        <p class="pricing__note" data-price-note>Prices aren't final. TribeCode stays free and open source.</p>
-      </div>
-      <div class="tiers reveal">
-        <article class="tier" data-tier="free">
-          <p class="tier__name"><span aria-hidden="true">🔥</span> Free</p>
-          <p class="tier__price"><b>$0</b><span>forever</span></p>
-          <ul class="tier__list">
-            <li>Self-host on your computer</li>
-            <li>Unlimited friends and projects</li>
-            <li>Bring your own AI: Claude Code, Codex, Gemini, Cursor, Ollama or the built-in browser model</li>
-            <li>Every feature</li>
-          </ul>
-          <div class="tier__ctas">
-            <a class="btn btn--light" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a>
-            <a class="btn btn--dark" href="app/">Open in browser</a>
-          </div>
-        </article>
-        <article class="tier" data-tier="campfire">
-          <p class="tier__name"><span aria-hidden="true">⛺</span> Campfire</p>
-          <p class="tier__price"><b>$8</b><span>/mo per tribe</span></p>
-          <ul class="tier__list">
-            <li>Always-on hosting: your tribe is up 24/7</li>
-            <li>A stable yourtribe.tribecode.org link</li>
-            <li>A voice relay for huddles on cellular</li>
-            <li>Nightly backups</li>
-          </ul>
-          <div class="tier__ctas"><button class="btn btn--dark" type="button" disabled>Coming soon</button></div>
-        </article>
-        <article class="tier tier--pop" data-tier="crew">
-          <p class="tier__name"><span aria-hidden="true">🧑‍🤝‍🧑</span> Crew <span class="tier__badge">Most popular</span></p>
-          <p class="tier__price"><b>$30</b><span>/mo per tribe</span></p>
-          <ul class="tier__list">
-            <li>Everything in Campfire</li>
-            <li>Built-in AI for the whole tribe: shared monthly AI credits, with a fair-use window that refills every 5 hours</li>
-            <li>Priority models</li>
-            <li>Flint's smart mode</li>
-          </ul>
-          <div class="tier__ctas"><button class="btn btn--dark" type="button" disabled>Coming soon</button></div>
-        </article>
-        <article class="tier" data-tier="teams">
-          <p class="tier__name"><span aria-hidden="true">🏢</span> Teams</p>
-          <p class="tier__price"><b>$25</b><span>/user/mo</span></p>
-          <ul class="tier__list">
-            <li>Everything in Crew, for organizations and classrooms</li>
-            <li>Admin and roles controls</li>
-            <li>More credits</li>
-            <li>Priority help and invoices</li>
-          </ul>
-          <div class="tier__ctas"><button class="btn btn--dark" type="button" disabled>Contact us — coming soon</button></div>
-        </article>
-      </div>
-      <div class="credits reveal" data-tier="credits">
-        <p class="credits__k"><span aria-hidden="true">⚡</span> AI credits</p>
-        <p class="credits__t">Top-up packs of <b>$10</b>, <b>$25</b> or <b>$50</b> for when a tribe uses more. Bringing your own key is always free.</p>
-        <button class="btn btn--dark" type="button" disabled>Coming soon</button>
-      </div>
-    </div>
-  </section>
 
   <!-- ================= DOWNLOAD ================= -->
   <section class="get" id="download" aria-labelledby="get-title">
@@ -474,7 +411,7 @@
     <nav class="footer__links" aria-label="Footer">
       <a href="app/">Open the app</a>
       <a href="app/?demo=showcase">Demo tribe</a>
-      <a href="#pricing">Pricing</a>
+      <a href="pricing.html">Pricing</a>
       <a href="docs.html">Quick start</a>
       <a href="https://github.com/orionopenwow/TribeCode">GitHub</a>
       <a href="https://github.com/orionopenwow/TribeCode/releases">Releases</a>
@@ -488,6 +425,6 @@
   </div>
 </footer>
 
-<script src="main.js" defer></script>
+<script src="main.js?v=0.14.1" defer></script>
 </body>
 </html>
