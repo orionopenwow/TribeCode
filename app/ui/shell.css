@@ -528,5 +528,11 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 .userbar .ub-slot .pf-btn .pf-face { width: 32px; height: 32px; }
 .userbar .ub-slot .pf-btn .pf-dot { width: 9px; height: 9px; right: -3px; bottom: -3px; border: 2.5px solid var(--nest, #1B2028); box-sizing: content-box; }
 /* the Home tent: bigger, with room above and below */
-.window .rail .logo-btn.camp-btn { width: 54px; height: 50px; flex: 0 0 50px; margin: 14px 0 8px; }
+.window .rail .logo-btn.camp-btn { width: 54px; height: 50px; flex: 0 0 50px; margin: 3px 0 19px; }   /* centered on the top bar (68px), level with the flame and the wordmark */
 .window .rail .camp-btn .camp-e { width: 46px; }
+/* the bar's icons: three equal buttons, evenly spaced, one size; the bell's count sits on its corner */
+.userbar .ub-acts { gap: 4px; }
+.userbar .ub-acts > button, .userbar .ub-acts .nf-bell, .userbar .ub-acts .fr-btn, .userbar .ub-acts .ub-gear { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 9px; position: relative; flex: none; }
+.userbar .ub-acts > button:hover { background: var(--hover); }
+.userbar .ub-acts svg.i, .userbar .ub-acts .i { width: 20px !important; height: 20px !important; stroke-width: 2; }
+.userbar .ub-acts .nf-count { top: 1px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; line-height: 16px; border: 2px solid var(--nest, #1B2028); box-sizing: content-box; }
