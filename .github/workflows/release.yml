@@ -118,6 +118,18 @@ jobs:
           if (-not (Test-Path (Join-Path $d 'nsis_tauri_utils.dll'))) { Fetch 'nsis_tauri_utils-v0.5.3' 'tauri-apps/nsis-tauri-utils' 'nsis_tauri_utils.dll' $d | Out-Null }
           Get-ChildItem $n -Recurse -Filter 'nsis_tauri_utils.dll' | ForEach-Object { $_.FullName }
 
+      - name: Pre-fetch the AppImage tools
+        if: matrix.platform == 'ubuntu-22.04'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          t=~/.cache/tauri; mkdir -p "$t"
+          if [ ! -s "$t/AppRun-x86_64" ]; then
+            for i in 1 2 3 4 5; do gh release download apprun-old --repo tauri-apps/binary-releases --pattern AppRun-x86_64 --dir "$t" --clobber && break; sleep 20; done
+          fi
+          chmod +x "$t"/AppRun-x86_64 2>/dev/null || true; ls -la "$t"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
