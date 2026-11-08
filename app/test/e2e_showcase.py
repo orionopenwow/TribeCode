@@ -153,6 +153,14 @@ def main():
             # never presented as Anthropic's: an independent project that works with Claude Code
             body = pg.inner_text("body")
             assert "© 2026 TribeCode contributors · MIT" in body and "independent project" in body
+            # agents in general, not one tool; the honest hosting line; pricing with every paid button disabled; no "Welcome back" bar
+            for tool in ["Claude Code", "Codex", "Gemini CLI", "Cursor"]:
+                assert tool in body, tool
+            assert "Share the network." in body and "no paid TribeCode cloud yet" in body and "Anthropic" not in body
+            assert pg.locator("#pricing").count() == 1 and "Prices aren't final" in pg.inner_text("#pricing")
+            assert pg.evaluate("[...document.querySelectorAll('#pricing button.btn')].every(b => b.disabled && /coming soon/i.test(b.textContent))")
+            assert pg.evaluate("document.querySelectorAll('#pricing button.btn').length") == 4
+            assert pg.locator("#continue").count() == 0
             assert all(u.startswith(("https://api.github.com/", "https://avatars.githubusercontent.com/")) for u in seen), seen
             if SHOTS:
                 pg.evaluate("document.querySelectorAll('.reveal').forEach(e => e.classList.add('is-in'))"); pg.evaluate("scrollTo(0, 0)"); pg.wait_for_timeout(300)
@@ -194,7 +202,7 @@ def main():
             ph.click("#nav-links a[href='#phone']")
             ph.wait_for_function("Math.abs(document.querySelector('#phone').getBoundingClientRect().top) < 120", timeout=5000)
             assert not ph.is_visible("#nav-links a[href='#phone']"), "the menu closes after a pick"
-            for sel in [".hero__ctas .btn", ".get__ctas .btn", ".lane", ".plats a", ".ph", ".mk-win", ".mk-card"]:
+            for sel in [".hero__ctas .btn", ".get__ctas .btn", ".lane", ".plats a", ".ph", ".mk-win", ".mk-card", ".tier", ".credits", "#lanes .mini__bar"]:
                 w = ph.evaluate(f"Math.max(...[...document.querySelectorAll('{sel}')].map(e => e.getBoundingClientRect().right))")
                 assert w <= 390, (sel, w, ph.evaluate(f"[...document.querySelectorAll('{sel}')].filter(e => e.getBoundingClientRect().right > 390).map(e => e.outerHTML.slice(0, 160))"))
             if SHOTS:

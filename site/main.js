@@ -111,7 +111,7 @@
   gh('/releases/latest').then(rel => {
     const v = rel.tag_name || rel.name; if (!v) return;
     set('version', v); set('released', 'released ' + ago(rel.published_at));
-    set('release-line', `${v} · free and open source · MIT · works with Claude Code, Codex, Gemini CLI and more`);
+    set('release-line', `${v} · free and open source · MIT · works with Claude Code, Codex, Gemini CLI, Cursor and more`);
     const assets = rel.assets || [];
     $$('[data-os]').forEach(a => {
       const x = find(assets, a.dataset.os); if (!x) return;
@@ -147,13 +147,14 @@
       ['show', '#mk-a1'], ['show', '#mk-think'], ['text', '#mk-st1', 'reading the request'], ['wait', 1400],
       ['hide', '#mk-think'], ['type', '#mk-a1t'], ['wait', 300],
       ['show', '#mk-card'], ['active', 0], ['wait', 600],
-      ['show', '#mk-t1'], ['text', '#mk-st1', 'reading title.js'], ['wait', 900], ['tick', 0], ['show', '#pv-1'], ['active', 1], ['wait', 700],
-      ['show', '#mk-t2'], ['text', '#mk-st1', 'editing title.js'], ['wait', 600], ['show', '#pv-2'], ['wait', 700], ['show', '#pv-3'], ['tick', 1], ['active', 2], ['wait', 800],
-      ['show', '#mk-t3'], ['text', '#mk-st1', 'editing lantern.js'], ['wait', 600], ['show', '#pv-4'], ['wait', 500], ['show', '#pv-5'], ['tick', 2], ['active', 3], ['wait', 900],
-      ['cls', '#pv-lantern', 'is-swinging'], ['cls', '#pv-4', 'is-jumping'], ['wait', 600], ['tick', 3], ['active', 4], ['wait', 700],
+      ['show', '#mk-t1'], ['text', '#mk-st1', 'reading the scene'], ['wait', 900], ['tick', 0], ['show', '#pv-1'], ['active', 1], ['wait', 700],
+      ['show', '#mk-t2'], ['text', '#mk-st1', 'on the title screen'], ['wait', 600], ['show', '#pv-2'], ['wait', 700], ['show', '#pv-3'], ['tick', 1], ['active', 2], ['wait', 800],
+      ['show', '#mk-t3'], ['text', '#mk-st1', 'on the lantern'], ['wait', 600], ['show', '#pv-4'], ['wait', 500], ['show', '#pv-5'], ['tick', 2], ['active', 3], ['wait', 900],
+      ['cls', '#pv-lantern', 'is-swinging'], ['cls', '#pv-hero', 'is-jumping'], ['wait', 600], ['tick', 3], ['active', 4], ['wait', 700],
       ['show', '#mk-t4'], ['text', '#mk-st1', 'running tests'], ['wait', 1000], ['tick', 4], ['wait', 300],
-      ['type', '#mk-a2t'], ['text', '#mk-st1', 'idle · 2 files changed'], ['text', '#mk-st0', "Orion's Claude · done"], ['wait', 900],
-      ['show', '#mk-m2'], ['wait', 4200],
+      ['type', '#mk-a2t'], ['text', '#mk-st1', 'done · 2 files'], ['wait', 900],
+      ['show', '#mk-m2'], ['wait', 1100],
+      ['show', '#mk-c1'], ['type', '#mk-c1t'], ['text', '#mk-st2', 'on the creak'], ['wait', 4200],
     ],
     room: [
       ['wait', 500], ['next'], ['wait', 1000], ['next'], ['type', '.gist [data-type]'], ['wait', 1100], ['next'], ['wait', 1100], ['next'], ['next'], ['wait', 4500],
@@ -163,12 +164,13 @@
       ['next'], ['type', '.mk-msg--agent [data-type]'], ['wait', 4500],
     ],
     lanes: [
-      ['wait', 400], ['next'], ['wait', 500], ['next'], ['wait', 500], ['next'], ['wait', 1000], ['next'], ['wait', 900], ['next'], ['wait', 1400],
-      ['cls', '#ln-clash', 'is-resolved'], ['text', '.clash__act', 'Handed off · 12s'], ['next'], ['wait', 4500],
+      ['wait', 400], ['next'], ['wait', 450], ['next'], ['wait', 450], ['next'], ['wait', 450], ['next'], ['wait', 1000],
+      ['next'], ['wait', 900], ['next'], ['wait', 1400],
+      ['cls', '#ln-clash', 'is-resolved'], ['text', '.clash__act', 'Handed off · 12s'], ['next'], ['wait', 900], ['next'], ['wait', 4500],
     ],
     host: [
       ['wait', 400], ['next'], ['type', '.term [data-type]'], ['wait', 500], ['next'], ['wait', 400], ['next'], ['wait', 900], ['next'], ['wait', 700], ['next'], ['wait', 1200],
-      ['next'], ['wait', 900], ['next'], ['wait', 600], ['next'], ['wait', 4500],
+      ['next'], ['wait', 800], ['next'], ['wait', 700], ['next'], ['wait', 1300], ['next'], ['wait', 500], ['next'], ['wait', 4500],
     ],
   };
 
@@ -222,23 +224,18 @@
     }
   }
   $$('[data-loop]').forEach(root => { const ops = SCRIPTS[root.dataset.loop]; if (ops) runLoop(root, ops); });
+
+  /* ---------- lanes: plain words by default; "Show files" reveals the paths for developers ---------- */
+  const filesBtn = $('.lanes__files'), lanesBody = $('#lanes-body');
+  if (filesBtn && lanesBody) filesBtn.addEventListener('click', () => {
+    const on = !lanesBody.classList.contains('show-files');
+    lanesBody.classList.toggle('show-files', on); filesBtn.setAttribute('aria-pressed', String(on)); filesBtn.textContent = on ? 'Hide files' : 'Show files';
+  });
 })();
 
-/* ---------- getting into the app: phones open it first; returning people get "Continue to your tribe" ---------- */
+/* ---------- phones can't install the desktop app: "Open the app" leads, the desktop download follows ---------- */
 (function () {
-  const root = document.documentElement;
-  // phones can't install the desktop app: "Open the app" leads, the desktop download follows
-  if (root.dataset.os === 'phone') root.classList.add('is-phone');
-  // the app and the site share this origin, so the app's saved settings tell us you've been in before
-  let st = null; try { st = JSON.parse(localStorage.getItem('tribecode.settings.v1') || 'null'); } catch (e) {}
-  const back = st && (st.name || (st.server && st.server.token));
-  const bar = document.getElementById('continue');
-  if (back && bar) {
-    const first = String(st.name || '').trim().split(/\s+/)[0];
-    const label = bar.querySelector('[data-continue-label]'); if (label) label.textContent = first ? `Welcome back, ${first}. Continue to your tribe` : 'Continue to your tribe';
-    bar.hidden = false;
-    document.querySelectorAll('[data-open-app]').forEach(a => { a.firstChild && a.firstChild.nodeType === 3 && (a.firstChild.textContent = a.classList.contains('nav__open') ? 'Open your tribe' : 'Continue in your browser'); });
-  }
+  if (document.documentElement.dataset.os === 'phone') document.documentElement.classList.add('is-phone');
 })();
 
 /* ---------- the hero's typing line: things people ask their tribe, typed out one after another ---------- */
@@ -246,12 +243,12 @@
   const el = document.querySelector('[data-typer]'); if (!el) return;
   const ASKS = [
     'make a website for my game and invite my friends',
-    'connect my Claude and fix the jump physics',
-    'plan the boss fight with Maya’s Claude',
+    'connect my AI and fix the jump physics',
+    'plan the boss fight with Maya’s Codex',
     'add a title screen, then ship v0.2',
     'turn tonight’s huddle into notes and tasks',
     'split the levels so nobody steps on each other',
-    'host our tribe from my laptop',
+    'keep our tribe up 24/7 on the spare PC',
     'preview the game on my phone',
   ];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = ASKS[0]; return; }
