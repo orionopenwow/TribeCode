@@ -19,7 +19,7 @@ TribeCode is a free, open-source app for a few friends building one thing at the
 
 <p align="center"><img src="site/assets/hero-loop.gif" alt="TribeCode at work: Maya asks for a title screen, Orion's Claude reads the code, patches two files and runs the tests while the game builds itself in the preview and the plan ticks off, all around the campfire" width="100%"></p>
 
-Humans decide, agents do the work. Agents report in short gists, propose changes and suggest votes; people approve with one tap. Everything lives as plain Markdown, JSON and git in one folder on the host's computer. No cloud, no accounts, zero npm dependencies.
+Humans decide, agents do the work. Agents report in short gists, propose changes and suggest votes; people approve with one tap. Everything lives as plain Markdown, JSON and git in one folder on the host's computer. No TribeCode cloud, no accounts, zero npm dependencies.
 
 ## Get it
 
@@ -122,7 +122,7 @@ Many humans and many agents without collisions. The Hub opens on one dashboard o
 
 ### Flint, the built-in helper
 
-**Flint** lives at the bottom of the room panel ("Ask Flint…") and runs on this computer: nothing you type leaves it. Even with no local model it connects your Claude Code, answers how-to questions from the Guide, captures notes ("note: …"), adds tasks ("task …"), invites a friend, starts or stops hosting and tells you what's happening. With a local model on, it answers anything else too. On phones it's the first row in *Talk to…*.
+**Flint** lives at the bottom of the room panel ("Ask Flint…"). Its basic mode runs on the host with no model at all. For anything else it uses the host's Ollama, the built-in model in your browser (nothing leaves your device), or the AI provider the host picked (then your question goes to that provider). Even with no local model it connects your Claude Code, answers how-to questions from the Guide, captures notes ("note: …"), adds tasks ("task …"), invites a friend, starts or stops hosting and tells you what's happening. With a local model on, it answers anything else too. On phones it's the first row in *Talk to…*.
 
 <p align="center"><img src="docs/screenshots/readme-flint.png" alt="Flint answering in the room panel" width="100%"></p>
 
@@ -213,12 +213,15 @@ Your Claude joins as "Claude · You" with 54 tools: tasks, docs, chat and chat s
 
 Everything a tribe makes lives in one folder on the host's computer (`~/TribeCode` by default): chat as JSONL, tasks and docs as Markdown, projects as git repos. Settings → **Download backup** saves it all as a `.tar.gz`. [docs/DATA.md](docs/DATA.md) maps every file and explains backup, restore and moving to a new computer.
 
-## Security
+## Security & privacy
 
-- Sign-in tokens, device keys and agent keys are stored only as SHA-256 hashes; GitHub tokens stay in `.tribe/secrets/` and never reach a browser or a backup.
-- "Only from this computer" actions refuse requests that arrive through a public tunnel. Spectators can't invite; project members only see their projects.
-- Only the host's integrator agent runs the repo's checks. Previews are sandboxed and signed per member and project.
-- `app/test/security_test.py` guards these. Report issues on [GitHub](https://github.com/orionopenwow/TribeCode/issues).
+- **Where data lives:** one folder on the host's computer. There is no TribeCode server; nothing is uploaded unless you push to GitHub or turn on a service below.
+- **The public link:** with sharing on, chat, files and docs travel over https between friends and the host. Tailscale Funnel ends that connection on the host; a Cloudflare quick tunnel ends it at Cloudflare. Anyone with an invite can join, so share invites only with people you trust.
+- **AI:** each person's agent sends what it reads (chat, docs, tasks) to its own provider. If the host sets a cloud AI key, Flint and `@ai` send their prompts there. Ollama and the in-browser model stay on the device. AI keys and GitHub tokens never leave the host.
+- **Agents:** they act for their owner, never above builder. They chat, write docs and tasks and propose; they can't vote, approve, invite, publish, run programs on the host or merge without a person's OK. An agent with shell access on a computer can still do what that computer's user can, so keep its permissions tight.
+- **Host-only actions** (programs, installs, local folders, sign-in setup) work only on the host computer, never through the tunnel, another site or a project's preview.
+- **Other services, only when used:** link previews (the host visits the site), GIF search (GIPHY), the Workshop shelf and the in-browser model (jsDelivr), ntfy (off until you set it up), Web Push (encrypted, via your browser maker), captions (your browser's speech service).
+- Read [SECURITY.md](SECURITY.md) for the full list of what is and isn't protected, and to report a problem privately. `app/test/security_test.py` and `security2_test.py` guard past fixes.
 
 ## Roadmap
 

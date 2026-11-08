@@ -127,8 +127,9 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
       if (me.role === 'agent' || me.role === 'spectator') return f(res, 403, 'only teammates can decide');
       const body = await readBody(req); return send(res, 200, { approved: bulk(me, body.note) });
     }
-    if (m === 'POST' && b && c === 'question') { const body = await readBody(req); return send(res, 200, { approval: question(b, me, body.text) }); }
-    if (m === 'GET' && b) { const a = get(b); return a ? send(res, 200, { approval: view(a) }) : f(res, 404, 'approval not found'); }
+    const seeOk = a => a && (a.to.includes(me.id) || a.by === me.id || me.role === 'host' || canSee(me, a.project));   // fix/security-review: not other projects' approvals
+    if (m === 'POST' && b && c === 'question') { if (!seeOk(get(b))) return f(res, 404, 'approval not found'); const body = await readBody(req); return send(res, 200, { approval: question(b, me, body.text) }); }
+    if (m === 'GET' && b) { const a = get(b); return seeOk(a) ? send(res, 200, { approval: view(a) }) : f(res, 404, 'approval not found'); }
     if (m === 'POST' && !b) {
       if (me.role === 'spectator') return f(res, 403, 'spectators are read-only');
       const body = await readBody(req); return send(res, 200, { approval: create(body, me) });

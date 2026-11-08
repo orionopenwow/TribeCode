@@ -139,6 +139,8 @@ test('mentions: @first name, @fullname, @id, @everyone; never self or agents', (
 test('prefs are validated', () => {
   const p = cleanPrefs(defaultPrefs(), { ntfy: { server: 'javascript:alert(1)', topic: 'a b' }, when: { mode: 'never', quiet: { from: '25:00' } }, tz: 'Mars/Base', digest: { everyHours: 999 } });
   assert.equal(p.ntfy.server, 'https://ntfy.sh'); assert.match(p.ntfy.topic, /^tribe-/); assert.equal(p.when.mode, 'away');
+  assert.equal(defaultPrefs().channels.ntfy, false, 'ntfy (a third-party server) is off until the member sets it up');   // fix/security-review
+  assert.equal(cleanPrefs(defaultPrefs(), { ntfy: { server: 'https://ntfy.example.org' } }).channels.ntfy, true, 'pointing ntfy at a server turns it on');
   assert.equal(p.when.quiet.from, '22:00'); assert.equal(p.tz, 'UTC'); assert.equal(p.digest.everyHours, 24);
 });
 
@@ -153,8 +155,8 @@ function rig() {
   const fetchImpl = async (url, o) => { posts.push({ url, ...o }); return { status: 200 }; };
   const hub = makeNotify({ store, bus, getMembers: () => members, sendTo: () => {}, publicUrl: () => 'http://tribe.local', postChat: (c, b, t) => chat.push(t), now: () => clock.t, fetchImpl, tick: false });
   const ap = makeApprovals({ store, id, str: (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : ''), bus, getMembers: () => members, postChat: (c, b, t) => chat.push(t), broadcast: () => {}, hub, now: () => clock.t, tick: false, remindHours: 4 });
-  const prefs = hub.prefsOf('maya'); prefs.ntfy.server = 'http://ntfy.local'; prefs.ntfy.topic = 'maya-secret';
-  const hostPrefs = hub.prefsOf('host'); hostPrefs.ntfy.server = 'http://ntfy.local'; hostPrefs.ntfy.topic = 'host-secret';
+  const prefs = hub.prefsOf('maya'); prefs.ntfy.server = 'http://ntfy.local'; prefs.ntfy.topic = 'maya-secret'; prefs.channels.ntfy = true;   // ntfy is opt-in
+  const hostPrefs = hub.prefsOf('host'); hostPrefs.ntfy.server = 'http://ntfy.local'; hostPrefs.ntfy.topic = 'host-secret'; hostPrefs.channels.ntfy = true;
   return { store, bus, hub, ap, clock, members, posts, chat, m: id => members.find(x => x.id === id) };
 }
 test('hub: away member gets one ntfy push with headers; inbox keeps it; rate limit collapses the second', async () => {

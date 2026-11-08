@@ -65,7 +65,7 @@ Optional fields:
 
 ## Back up, restore, move
 
-**Back up (one click).** Settings → **Download backup** (host only) streams the whole tribe folder as `<tribe>-backup-<date>.tar.gz`. `GET /api/backup` with the host token does the same. The backup leaves out `.tribe/secrets/` (GitHub tokens), `node_modules` and temp files. Members and devices are in it, but only as hashes.
+**Back up (one click).** Settings → **Download backup** (host only) streams the whole tribe folder as `<tribe>-backup-<date>.tar.gz`. `GET /api/backup` with the host token does the same. The backup leaves out `.tribe/secrets/` (GitHub tokens, AI and GIPHY keys), `.tribe/oauth.json` (sign-in client secrets), `node_modules` and temp files. Members and devices are in it, but only as hashes.
 
 **Back up (by hand).** Copy the tribe folder while TribeCode is closed. You can also use git: the folder's `.gitignore` already keeps `.tribe/` out of commits.
 
@@ -73,7 +73,7 @@ Optional fields:
 1. Close TribeCode on the old computer.
 2. Extract the archive, or copy the folder: `tar -xzf crew-backup-2026-11-07.tar.gz`. On Windows, Explorer and 7-Zip open .tar.gz too.
 3. Start TribeCode on that folder. In the desktop app, use Settings → Folder and restart. From a terminal, run `npm start -- --dir ./crew`.
-4. Reconnect GitHub, because secrets are not in backups. Projects made with **+ → Create** live in `workspaces/` with their git history. Projects that pointed at a folder elsewhere need that folder at the same path, or a new path set in the project.
+4. Reconnect GitHub, re-enter AI keys and set up Sign in with Discord/GitHub/Google again, because secrets are not in backups. Projects made with **+ → Create** live in `workspaces/` with their git history. Projects that pointed at a folder elsewhere need that folder at the same path, or a new path set in the project.
 5. Friends keep their accounts. If the address changed, send a new invite link. People who are already members get the project added to their account, and no second account is created.
 
 ## Privacy notes

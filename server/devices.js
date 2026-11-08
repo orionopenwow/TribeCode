@@ -99,7 +99,7 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
     if (!mm) return false;
     const key = mm[1], rest = mm[2];
     if (!KEY_RE.test(key)) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('not found'); return true; }
-    const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex' };
+    const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "frame-ancestors 'self'" };   // fix/security-review: no framing
     if (!rest) { res.writeHead(302, { Location: `/m/${key}/${url.search}`, ...headers }); res.end(); return true; }
     if (rest === '/manifest.webmanifest') {
       let base = {}; try { base = JSON.parse(fs.readFileSync(path.join(UI, 'manifest.webmanifest'), 'utf8')); } catch {}

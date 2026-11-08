@@ -24,7 +24,9 @@ TribeCode uses whichever of these you have:
 1. **Tailscale Funnel** (recommended): free, and the address stays the same. Install Tailscale and sign in. The first time, Tailscale may show a link to allow Funnel: open it, allow it, then flip the switch again.
 2. **Cloudflare quick tunnel**: no account needed, but the address changes every restart, so send a fresh invite afterwards.
 
-It never installs these for you. If neither is there, it tells you what to install.
+It never installs Tailscale. If neither is there, TribeCode downloads Cloudflare's official cloudflared program into `~/.tribecode/bin` the first time you turn sharing on (one file, no installer, no admin), or tells you what to install.
+
+With Tailscale Funnel the https connection ends on your computer. With a Cloudflare quick tunnel it ends at Cloudflare, which relays the traffic. Either way, anyone with the address can open your tribe's join page, so invite links are what keep it private.
 
 ## Who can do what
 
