@@ -398,7 +398,7 @@ def main():
             phone.wait_for_selector("#hub-pjs [data-pj-go]")                  # phones have no rail: projects are rows on Home
             assert phone.locator(".titlebar .search").is_hidden() and phone.locator("#ctx-btn").is_hidden(), "no search or docs icons on the phone's top bar"
             assert phone.locator(".titlebar").is_hidden(), "phone Home has no top bar: the rack at the bottom has everything"
-            phone.wait_for_selector("#m2-homebar [data-hb=me] .m2-hb-av", state="visible")   # on Home the Home tab is your avatar (profile)
+            phone.wait_for_selector("#m2-homebar [data-hb=home]", state="visible"); phone.wait_for_selector("#hpt-me .me-face", state="visible")   # Home tab in the rack; you sit top left of Home
             # stacked: the hero, notes, activity, insights
             ys = phone.evaluate("['#hub-hero', '#hub-pjs-sec', '#hub-notes', '#hub-stream', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
             assert ys == sorted(ys), ys

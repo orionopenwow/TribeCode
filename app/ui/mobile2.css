@@ -418,3 +418,4 @@
 }
 .m2-pjf .pj-face { width: 34px; height: 34px; border-radius: 10px; } .m2-pjlist .m2-mi.on { background: var(--raised); }
 .m2-pjlist .m2-mi > svg:last-child { transform: rotate(-90deg); color: var(--faint); }
+.m2-conv { box-shadow: inset 3px 0 0 var(--cc); } .m2-conv .m2-n { margin-left: auto; }

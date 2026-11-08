@@ -8,7 +8,7 @@
 //   - Docs hub: the pinned repo as the hero, the living notes journal, files, screenshots.
 //   - Suggested tasks on Tasks and Home. Profile sheets (add friend, network, DM, ask their Claude).
 // Desktop is untouched: everything here is gated on the phone media query (and mobile2.css on @media).
-// Public: window.TribeMobile = { show, onShow, profile, talkTo, startTribe, projectsSheet, askAi, plusMenu, recorder, refresh }.
+// Public: window.TribeMobile = { show, onShow, profile, myProfile: () => profile(me().id), talkTo, startTribe, projectsSheet, askAi, plusMenu, recorder, refresh }.
 (function () {
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const C = window.TribeClient;
@@ -127,7 +127,7 @@
   // Home · Projects · Notes · Activity · +. Each icon jumps to that part of the dashboard; the lit one follows the scroll.
   // Same five slots and look as a project's rack (Home · Chat · Docs · Updates · Tasks), Home's versions:
   // You · Messages · Notes · Notifs · Projects. On Home the Home tab becomes your avatar: tap it for your profile.
-  const HOMEBAR = [['me', 'home', 'You'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['agents', 'robot', 'Agents'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
+  const HOMEBAR = [['home', 'home', 'Home'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['agents', 'robot', 'Agents'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
   function homeBar() {
     if ($('#m2-homebar')) return;
     const bar = document.createElement('nav'); bar.id = 'm2-homebar'; bar.className = 'm2-homebar'; bar.setAttribute('aria-label', 'Home');
@@ -141,9 +141,9 @@
       if (k === 'pjs') return projectsSheet();
       if (k === 'agents') return C.connected() ? talkTo() : window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // your Claude, the AI, Manage agents
       if (k === 'notes') return window.TribeHub && window.TribeHub.open('docs');   // your docs center: your notes, then project docs
-      if (k === 'msgs') { if (C.connected()) return App().show('chat'); return window.TribeFriends && window.TribeFriends.open(); }
+      if (k === 'msgs') return C.connected() ? messagesSheet() : window.TribeFriends && window.TribeFriends.open();   // all chats + DMs, color-coded
       if (k === 'notifs') return window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : null;
-      if (k === 'me') return profile(me().id);
+      if (k === 'home') return window.TribeHub && window.TribeHub.open('home');   // back to the dashboard from anywhere on Home (docs center too)
       scroller().scrollTo({ top: 0, behavior: 'smooth' });
     });
     // hide while scrolling down, show when scrolling up (or near the top)
@@ -160,10 +160,35 @@
   const scroller = () => { const m = $('#main'); return m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement || document.documentElement; };
   function litHome() {
     const bar = $('#m2-homebar'); if (!bar) return;
-    const on = window.TribeHub && window.TribeHub.mode && window.TribeHub.mode() === 'docs' ? 'notes' : 'me';
+    const on = window.TribeHub && window.TribeHub.mode && window.TribeHub.mode() === 'docs' ? 'notes' : 'home';
     bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === on));
-    const av = $('#m2-hb-av'), m = me() || {};
+    const av = $('#hpt-av') || $('#m2-hb-av'), m = me() || {};
     if (av) { let sn = ''; try { sn = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name || ''; } catch {} const n = (m.name || sn || '?').trim(); av.textContent = n.charAt(0).toUpperCase(); av.style.background = m.color || 'var(--accent)'; }
+  }
+  // Messages: every conversation in one list — each project's chat (in its color) and your direct messages (in
+  // each person's color), unread first. Tap one to open it.
+  function messagesSheet() {
+    const pulses = (PJ() && PJ().pulses ? PJ().pulses() : {}) || {}, unread = (DM() && DM().unread ? DM().unread() : {}) || {};
+    const pjs = (PJ() && PJ().list ? PJ().list() : []).map(p => ({ p, n: pulses[p.id] ? 1 : 0, here: PJ().here ? PJ().here(p.id).length : 0 }))
+      .sort((a, b) => b.n - a.n || String(a.p.name).localeCompare(String(b.p.name)));
+    const f = friends();
+    const people = members().filter(m => m.role !== 'agent' && m.id !== me().id).map(m => ({ m, n: unread[DM().channelWith(m.id)] || 0 }))
+      .sort((a, b) => b.n - a.n || (f.has(b.m.id) - f.has(a.m.id)) || (b.m.online - a.m.online) || String(a.m.name).localeCompare(String(b.m.name)));
+    const ag = myAgent();
+    const pRows = pjs.map(({ p, n, here }) => `<button class="m2-mi m2-conv" data-conv="pj:${esc(p.id)}" style="--cc:${esc(p.color || '#6C7CFF')}"><span class="m2-pjf">${PJ().face(p, 'sm')}</span><span class="m2-mt"><b># ${esc(p.name)}</b><small>${n ? 'New messages' : here ? `${here} here now` : 'Project chat'}</small></span>${n ? '<span class="m2-n">•</span>' : ''}</button>`).join('');
+    const dRows = people.map(({ m, n }) => `<button class="m2-mi m2-conv" data-conv="dm:${esc(m.id)}" style="--cc:${esc(m.color || '#6C7CFF')}"><span class="m2-avw">${avatar(m)}<i class="m2-on ${m.online ? 'y' : ''}"></i></span><span class="m2-mt"><b>${esc(m.name)}${f.has(m.id) ? ' <span class="m2-tag">friend</span>' : ''}</b><small>${n ? `${n} new` : m.online ? 'online' : 'away'}</small></span>${n ? `<span class="m2-n">${n}</span>` : ''}</button>`).join('');
+    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Messages</span></div>
+      ${ag ? `<div class="m2-menu"><button class="m2-mi m2-conv" data-conv="claude" style="--cc:#38C6B1"><span class="m2-mic live">${ic('robot', 18)}</span><span class="m2-mt"><b>My Claude</b><small>${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}</small></span></button></div>` : ''}
+      <div class="m2-sh-sub eyebrow">Project chats</div><div class="m2-menu">${pRows || '<p class="m2-fine left">No projects yet.</p>'}</div>
+      <div class="m2-sh-sub eyebrow">Direct messages</div><div class="m2-menu">${dRows || '<p class="m2-fine left">Invite friends to message them here.</p>'}</div>`, { id: 'm2-messages-sheet', label: 'Messages' });
+    el.addEventListener('click', async e => {
+      const b = e.target.closest('[data-conv]'); if (!b) return; closeSheet();
+      const [k, id] = b.dataset.conv.split(':');
+      if (k === 'pj') { try { if (PJ().current() !== id || document.body.classList.contains('global')) await PJ().switchTo(id); } catch {} return setTimeout(() => App().show('chat'), 200); }
+      if (document.body.classList.contains('global')) { try { await PJ().switchTo(PJ().current()); } catch {} }
+      App().show('chat');
+      setTimeout(() => { if (k === 'claude') { const a = myAgent(); if (a && DM()) DM().open(a.id); } else if (DM()) DM().open(id); }, 250);
+    });
   }
   // Your projects as a list sheet (Home's Projects button and the TribeCode ⌄ header): tap one to open it.
   function projectsSheet() {
