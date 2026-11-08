@@ -20,13 +20,14 @@
   const first = n => String(n || '').split(/\s+/)[0];
   const ago = iso => { const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000); return !isFinite(s) ? '' : s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} d ago`; };
 
-  // The flint glyph: a faceted stone with a spark (drawn once into the page's icon sprite).
-  const GLYPH = '<path d="M5 15.5 8.5 9l6-1.5 4 4.5-2 6.5-7 1.5z" /><path d="M8.5 9 11 14l5.5 4.5M11 14l-6 1.5M11 14l3.5-6.5"/><path d="M17.5 2.5v3M16 4h3M20.5 6.5l-1 1" />';
+  // Flint's face: the mascot, the logo's flame with blinking pixel eyes (assets/flint.svg, scripts/icon.js), drawn once
+  // into the page's icon sprite so every #i-flint shows him (the Helpers row, the ? menu, the phone Talk to… row).
+  const GLYPH = '<image href="assets/flint.svg" x="1" y="0" width="22" height="24" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>';
   (function sprite() {
     const host = document.querySelector('svg symbol') && document.querySelector('svg symbol').parentNode; if (!host || document.getElementById('i-flint')) return;
     const s = document.createElementNS('http://www.w3.org/2000/svg', 'symbol'); s.id = 'i-flint'; s.setAttribute('viewBox', '0 0 24 24'); s.innerHTML = GLYPH; host.appendChild(s);
   })();
-  const flintIco = (sz = 16) => `<svg class="i fl-glyph" viewBox="0 0 24 24" style="width:${sz}px;height:${sz}px" aria-hidden="true">${GLYPH}</svg>`;
+  const flintIco = (sz = 16) => `<img class="fl-face" src="assets/flint.svg" alt="" width="${Math.round(sz * 1.3)}" height="${Math.round(sz * 1.3)}" aria-hidden="true">`;
   const ico = (id, sz = 16) => `<svg class="i" style="width:${sz}px;height:${sz}px" aria-hidden="true"><use href="#${id}"/></svg>`;
   const SEND = '<svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
 
@@ -131,6 +132,10 @@
     if ((m = RX.task.exec(t)) && m[1].trim()) return task(text.slice(text.length - m[1].length).trim());
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
     if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', tasks: 'tasks', board: 'tasks', chat: 'chat', home: 'hub', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar' }, v = map[m[1]];
+      // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
+      const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]' }, row = ROW[v] && document.querySelector(ROW[v]);
+      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', repo: 'Repo', settings: 'Settings', calendar: 'Calendar' };
+      if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v] || m[1]} lives here. Opening it for you.`, { next: 'Thanks' });
       ACTS.nav(v); return say(`Opened ${m[1] === 'home' ? 'Home' : m[1]}.`); }
     if ((m = RX.find.exec(t)) && !RX.help.test(t.replace(/^where('s| is)/, ''))) return find(text.slice(text.length - m[1].length).trim());
     if (RX.help.test(t) || /\b(guide|how do i|how to)\b/.test(t)) { const g = await guideSearch(text); if (g) return guideReply(g); if (RX.invite.test(t)) return invite(); return fallback(text, true); }
