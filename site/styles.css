@@ -584,3 +584,35 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-even
 .btn .os-ico { margin-right: 2px; }
 [data-os] .os-ico { margin-right: 10px; vertical-align: -3px; }
 .btn--light .os-ico--mac { color: #1D2021; }
+
+/* ---------- Pricing page (pricing.html) ---------- */
+.pr-page { padding: 72px 0 96px; }
+.pr-title { text-align: center; font-size: clamp(44px, 7vw, 72px); font-weight: 700; letter-spacing: -0.03em; margin: 0 0 10px; }
+.pr-note { text-align: center; color: var(--muted, #A8A29E); margin: 0 0 26px; }
+.pr-tabs { display: flex; width: max-content; margin: 0 auto 36px; padding: 4px; gap: 4px; border: 1px solid var(--line, #3C3836); border-radius: 999px; background: #282828; }
+.pr-tab { height: 40px; padding: 0 20px; border-radius: 999px; border: 0; background: none; color: var(--muted, #A8A29E); font: inherit; font-size: 16px; cursor: pointer; }
+.pr-tab.on { background: #3C3836; color: #fff; }
+.pr-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.pr-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 980px; margin: 0 auto; }
+.pr-grid[hidden] { display: none; }
+.pr-card { display: flex; flex-direction: column; padding: 22px 18px 20px; border: 1px solid var(--line, #3C3836); border-radius: 14px; background: #232526; }
+.pr-card.pop { border-color: #B4512A; }
+.pr-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pr-name { margin: 0; font-size: 21px; font-weight: 600; }
+.pr-pop { font-size: 12.5px; color: #F2A27A; border: 1px solid #6B3A24; background: #3A2419; padding: 2px 8px; border-radius: 999px; }
+.pr-price { margin: 14px 0 16px; display: flex; align-items: baseline; gap: 6px; }
+.pr-price b { font-size: 38px; font-weight: 600; letter-spacing: -0.02em; } .pr-price span { color: var(--muted, #A8A29E); font-size: 14.5px; }
+.pr-btn { width: 100%; justify-content: center; height: 44px; }
+.pr-btn[disabled] { opacity: .6; cursor: not-allowed; }
+.pr-lead { margin: 20px 0 2px; color: var(--muted, #A8A29E); font-size: 14.5px; }
+.pr-big { margin: 0; font-size: 22px; font-weight: 600; } .pr-sub { margin: 0 0 14px; font-size: 14.5px; }
+.pr-g { margin: 10px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--line, #3C3836); color: var(--muted, #A8A29E); font-size: 14px; }
+.pr-list { list-style: none; margin: 10px 0 6px; padding: 0; display: grid; gap: 8px; font-size: 14.5px; }
+.pr-list li { position: relative; padding-left: 22px; line-height: 1.4; }
+.pr-list li::before { content: '✓'; position: absolute; left: 2px; color: #8EC07C; }
+.pr-foot { margin-top: auto; padding-top: 14px; color: var(--muted, #A8A29E); font-size: 13px; }
+.pr-foot a { color: #E58A5E; }
+.pr-credits { display: flex; align-items: center; gap: 14px; margin: 18px auto 0; padding: 16px 18px; border: 1px solid var(--line, #3C3836); border-radius: 14px; background: #232526; }
+.pr-credits > span { font-size: 24px; } .pr-credits p { margin: 0; flex: 1; } .pr-credits .pr-btn { width: auto; padding: 0 18px; }
+@media (max-width: 1100px) { .pr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pr-page { padding: 40px 0 64px; } .pr-grid, .pr-grid--3 { grid-template-columns: 1fr; } .pr-credits { flex-direction: column; align-items: stretch; } .pr-credits .pr-btn { width: 100%; } }

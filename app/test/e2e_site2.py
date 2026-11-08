@@ -132,21 +132,21 @@ def main():
             assert "Share the network." in host and "24/7" in host and "no paid TribeCode cloud yet" in host, host
             assert all(c in host for c in ["Zero npm dependencies", "Plain files + git", "MIT licensed"])
             assert "Tailscale Funnel" in host and "Cloudflare tunnel" in host
-            # pricing: present; every paid button is disabled and reads "Coming soon"
-            assert pg.locator("#pricing").count() == 1 and pg.locator(".nav__links a[href='#pricing']").count() == 1
-            assert "Prices aren't final. TribeCode stays free and open source." in pg.inner_text("#pricing")
-            names = pg.evaluate("[...document.querySelectorAll('#pricing .tier__name')].map(e => e.textContent.trim())")
-            assert [n.split()[1] for n in names] == ["Free", "Campfire", "Crew", "Teams"], names
-            assert "Most popular" in pg.inner_text("[data-tier=crew]")
-            for t, price in [("free", "$0"), ("campfire", "$8"), ("crew", "$30"), ("teams", "$25")]:
-                assert price in pg.inner_text(f"[data-tier={t}]"), t
-            paid = pg.evaluate("[...document.querySelectorAll('[data-tier=campfire] .btn, [data-tier=crew] .btn, [data-tier=teams] .btn, [data-tier=credits] .btn')].map(b => [b.tagName, b.disabled, b.textContent.trim()])")
-            assert len(paid) == 4 and all(t == "BUTTON" and d for t, d, _ in paid), paid
-            assert [x for _, _, x in paid] == ["Coming soon", "Coming soon", "Contact us — coming soon", "Coming soon"], paid
-            free = pg.evaluate("[...document.querySelectorAll('[data-tier=free] .btn')].map(b => [b.tagName, b.textContent.trim(), b.getAttribute('href')])")
-            assert [f[:2] for f in free] == [["A", "Download"], ["A", "Open in browser"]] and free[1][2] == "app/", free
-            assert free[0][2].endswith("_x64-setup.exe"), free
-            assert "$10" in pg.inner_text("[data-tier=credits]") and "own key" in pg.inner_text("[data-tier=credits]")
+            # pricing lives on its own page (pricing.html), not the front page: Individual / Teams tabs, paid buttons say Coming soon
+            assert pg.locator("#pricing, .tier").count() == 0 and pg.locator(".nav__links a[href='pricing.html']").count() == 1
+            pp = pg.context.new_page(); pp.goto(BASE + "pricing.html"); pp.wait_for_load_state("load")
+            assert "Prices aren't final. TribeCode stays free and open source." in pp.inner_text(".pr-hero")
+            names = pp.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-name')].map(e => e.textContent.trim().split(' ').pop())")
+            assert names == ["Free", "Campfire", "Crew", "Bonfire"], names
+            assert "Most popular" in pp.inner_text("[data-tier=crew]")
+            for t, price in [("free", "$0"), ("campfire", "$8"), ("crew", "$30"), ("bonfire", "$100")]:
+                assert price in pp.inner_text(f"[data-tier={t}]"), t
+            assert pp.evaluate("[...document.querySelectorAll('.pr-page button.pr-btn')].every(b => b.disabled && /coming soon/i.test(b.textContent))")
+            assert pp.locator("[data-tier=free] a.pr-btn").inner_text().strip() == "Download"
+            assert pp.locator("[data-panel=teams]").is_hidden(); pp.click(".pr-tab[data-tab=teams]")
+            assert pp.locator("[data-panel=teams]").is_visible() and "$25" in pp.inner_text("[data-tier=teams]")
+            assert "$10" in pp.inner_text("[data-tier=credits]") and "own key" in pp.inner_text("[data-tier=credits]")
+            assert "Anthropic" not in pp.inner_text("body"); pp.close()
             assert "Anthropic" not in pg.inner_text("body")
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 6
             if SHOTS:
@@ -217,8 +217,10 @@ def main():
             win = ph.evaluate("document.querySelector('.mk-win').getBoundingClientRect().right")
             assert win <= 390, win
             no_overflow(ph, "phone top")
-            lefts = ph.evaluate("[...document.querySelectorAll('#pricing .tier')].map(t => Math.round(t.getBoundingClientRect().left))")
+            pq = ph.context.new_page(); pq.set_viewport_size({"width": 390, "height": 844}); pq.goto(BASE + "pricing.html"); pq.wait_for_load_state("load")
+            lefts = pq.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-card')].map(t => Math.round(t.getBoundingClientRect().left))")
             assert len(lefts) == 4 and len(set(lefts)) == 1, f"pricing stacks on phones: {lefts}"
+            assert pq.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"); pq.close()
             for y in [0.25, 0.5, 0.75, 1.0]:
                 ph.evaluate(f"scrollTo({{top: document.body.scrollHeight * {y}, behavior: 'instant'}})"); ph.wait_for_timeout(150); no_overflow(ph, f"phone at {int(y * 100)}%")
             ph.evaluate("scrollTo(0, 0)"); ph.click(".nav__toggle"); assert ph.is_visible("#nav-links a[href='docs.html']"); no_overflow(ph, "phone menu")
