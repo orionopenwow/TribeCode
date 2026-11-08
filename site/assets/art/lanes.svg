@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="t"><title id="t">Three lanes, each with its own flag, and two robot agents passing a file between lanes</title>
+<g fill="#32302F"><rect x="8" y="16" width="144" height="24" rx="6"/><rect x="8" y="48" width="144" height="24" rx="6"/><rect x="8" y="80" width="144" height="24" rx="6"/></g>
+<g fill="#45403D"><rect x="22" y="27" width="20" height="2"/><rect x="52" y="27" width="20" height="2"/><rect x="22" y="91" width="20" height="2"/><rect x="52" y="91" width="20" height="2"/><rect x="40" y="59" width="20" height="2"/><rect x="70" y="59" width="20" height="2"/></g>
+<path d="M140 8v34" stroke="#E4E4E4" stroke-width="2.5"/><path d="M140 8h-14l4 5-4 5h14z" fill="#F26B1D"/>
+<path d="M18 40v34" stroke="#E4E4E4" stroke-width="2.5"/><path d="M18 40h14l-4 5 4 5h-14z" fill="#83A598"/>
+<path d="M140 72v34" stroke="#E4E4E4" stroke-width="2.5"/><path d="M140 72h-14l4 5-4 5h14z" fill="#FABD2F"/>
+<rect x="80" y="12" width="26" height="22" rx="6" fill="#E4E4E4"/><rect x="85" y="17" width="16" height="10" rx="3" fill="#1D2021"/>
+<rect x="88" y="20" width="3" height="4" fill="#8EC07C"/><rect x="95" y="20" width="3" height="4" fill="#8EC07C"/>
+<rect x="80" y="76" width="26" height="22" rx="6" fill="#E4E4E4"/><rect x="85" y="81" width="16" height="10" rx="3" fill="#1D2021"/>
+<rect x="88" y="84" width="3" height="4" fill="#8EC07C"/><rect x="95" y="84" width="3" height="4" fill="#8EC07C"/>
+<path d="M114 38c9 6 9 24 0 32" stroke="#8EC07C" stroke-width="2.5" fill="none" stroke-dasharray="4 4"/>
+<path d="M108 66l6 6 6-7" stroke="#8EC07C" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M118 44h12l4 4v14h-16z" fill="#FFFFFF"/><path d="M130 44v4h4z" fill="#B9B9B9"/>
+</svg>
