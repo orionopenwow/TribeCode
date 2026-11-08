@@ -4,7 +4,7 @@
 
 ## The mark
 
-A solid orange flame between two white code brackets `< >`, on a deep navy rounded square. Flat, geometric, no gradients, so it stays sharp from a 16 px taskbar icon up to a store listing.
+A solid orange **pixel-art flame** between two white pixel brackets `( )`, on a deep navy rounded square (since v0.9.9). It is drawn on a 45 × 45 pixel grid by `scripts/icon.js` (flat, no gradients, crisp edges), and `scripts/render-icons.py` writes every PNG, ICO and ICNS from it, so it stays sharp from a 16 px taskbar icon up to a store listing. The flame is always one solid Ember; nothing is drawn on it.
 
 - **The fire** is the campfire the tribe gathers around: warm and casual, not an enterprise dashboard.
 - **The brackets** say *code* at a glance.

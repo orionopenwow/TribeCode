@@ -1084,7 +1084,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
 
 <!-- 1. the invite -->
 <section class="center" id="s-invite">
-  <div class="lockup"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
+  <div class="lockup"><img class="icon" src="assets/icon.svg" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
   <div class="card">
     <p class="inv-from">Orion invited you to</p>
     <div class="projline">
@@ -1100,7 +1100,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
 
 <!-- 2. connecting -->
 <section class="center hidden" id="s-connect">
-  <div class="lockup"><img class="icon" src="assets/icon-512.png" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
+  <div class="lockup"><img class="icon" src="assets/icon.svg" alt=""><img class="wm" src="assets/wordmark.svg" alt="TribeCode"></div>
   <div class="card">
     <h1 class="hi" id="hello">Welcome!</h1>
     <ul class="steps" id="steps">
@@ -1115,7 +1115,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
 <!-- 3. the project room -->
 <section class="room hidden" id="s-room">
   <nav class="rail" aria-label="Projects">
-    <img class="logo" src="assets/icon-512.png" alt="TribeCode">
+    <img class="logo" src="assets/icon.svg" alt="TribeCode">
     <div class="sep"></div>
     <button class="pc on" id="rail-pq" aria-label="Pixel Quest" aria-current="true"></button>
     <button class="pc" data-toast="In the demo you're only in Pixel Quest." aria-label="Website">W</button>
@@ -1866,7 +1866,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   function endCard() {
     if (S.ended) return; S.ended = true;
     const d = document.createElement('div'); d.className = 'endc';
-    d.innerHTML = `<img src="assets/icon-512.png" alt=""><div class="et"><b>That's TribeCode</b>Your tribe and Claude, on one computer.</div><a class="btn primary" href="./">Get TribeCode</a>`;
+    d.innerHTML = `<img src="assets/icon.svg" alt=""><div class="et"><b>That's TribeCode</b>Your tribe and Claude, on one computer.</div><a class="btn primary" href="./">Get TribeCode</a>`;
     log.appendChild(d); toBottom();
   }
 

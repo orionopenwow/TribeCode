@@ -347,7 +347,7 @@
     // In a project its own picture sits top left; on Home the fire logo
     const home = document.body.classList.contains('global');
     const want = !home && p && PJ().face ? 'pj:' + p.id + ':' + (p.image || '') + (p.emoji || '') : 'logo';
-    if (f.dataset.k !== want) { f.dataset.k = want; f.innerHTML = want === 'logo' ? '<img class="m2-logo" src="assets/icon-512.png" alt="">' : PJ().face(p, 'sm'); }
+    if (f.dataset.k !== want) { f.dataset.k = want; f.innerHTML = want === 'logo' ? '<img class="m2-logo" src="assets/icon.svg" alt="">' : PJ().face(p, 'sm'); }
     n.textContent = home ? 'Home' : p ? p.name : 'TribeCode';
     const here = p && PJ().here ? PJ().here(p.id).length : 0;
     s.textContent = home ? (C.connected() ? 'your projects' : 'not in a tribe yet') : C.connected() ? (here ? `${here} here` : 'just you') : 'offline';
