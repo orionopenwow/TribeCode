@@ -370,7 +370,7 @@
     const mine = scratch.notes().filter(n => n.text && n.text.trim()).slice(0, 3);
     const rows = mine.map(n => `<button class="hub-li" data-mynote="${esc(n.id || '')}">${ico('i-doc', 14)}<span><b>${esc(noteTitle(n.text))}</b><small>${esc(ago(n.updated || n.at))}</small></span>${ico('i-chev', 14)}</button>`).join('');
     return sec('Your notes', '<span class="emo" aria-hidden="true">📝</span>Notes', `<button class="note-start" id="hub-note-new">${ico('i-plus', 18)}<span><b>Start a note</b><small>It goes straight into your docs</small></span></button>
-      ${rows ? `<div class="hub-list hub-mynotes">${rows}</div>` : ''}`, 'id="hub-notes"', `<button class="linkish" id="hub-notes-all">All your docs</button>`);
+      ${rows ? `<div class="hub-list hub-mynotes">${rows}</div>` : ''}`, 'id="hub-notes"', `<button class="linkish" id="hub-notes-all">All files</button>`);
   }
   async function startNote() {
     const id = await scratch.create('New note');
