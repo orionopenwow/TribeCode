@@ -56,6 +56,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 | Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
+- 2026-11-07 18:58–18:59: Resizable panes ✅ v0.9.7 (panes.js: --side-w / --right-w / --pvw-w). New wordmark typography everywhere (heavy sans: 'Tribe' white + 'Code' ember) → in progress.
 - 2026-11-07 19:2x: Rich text while editing ✅ v0.9.6 (richtext.js: a contenteditable surface with the textarea API; Markdown is still stored; View Markdown toggle).
 - 2026-11-07 19:0x: Overview per the user's mockup ✅ v0.9.5 (projects.js ock-* checklist). e2e_flow is flaky at the agent progress-gist step (2/3 passes) — watch it.
 - 2026-11-07 18:4x: Flint (the named built-in helper, room panel bar + phone thread) ✅ v0.9.4 (app/ui/flint.js, server/flint.js POST /api/flint/ask).
