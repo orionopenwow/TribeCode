@@ -54,7 +54,7 @@
   const tile = (k, emoji) => `<span class="mcd-tile" style="--k:${COLOR[k] || COLOR.custom}">${emoji ? `<span class="mcd-emo" aria-hidden="true">${esc(emoji)}</span>` : mark(k)}</span>`;
   const nameOf = k => (CLIENTS.find(c => c[0] === k) || [k, k])[1];
 
-  let open = false, tab = 'discover', q = '', searchOn = false, hub = null, mine = null, conns = null, timer = null, adding = false, noteFlash = false;
+  let open = false, tab = 'discover', q = '', searchOn = false, hub = null, mine = null, conns = null, timer = null, adding = false, noteFlash = false, lastSig = '';
   function section() {
     let s = document.getElementById('view-' + NAME);
     if (!s) {   // mounted beside app.js views without touching index.html's sections
@@ -111,6 +111,10 @@
       const [h, m, cx] = await Promise.all([C.api('/agents/hub').catch(() => hub), C.api('/agents/mine').catch(() => mine), C.api('/connections').catch(() => conns)]);
       hub = h; mine = m; conns = cx;
     } catch {}
+    // Quiet refreshes redraw only when something on the page changed (no DOM churn under the cursor).
+    const sig = JSON.stringify([isPublic(), amHost(), myAgents().map(a => [a.id, a.online, a.name]), conns]);
+    if (quiet && sig === lastSig) return;
+    lastSig = sig;
     const ae = document.activeElement;
     if (quiet && ae && ae.closest && ae.closest('#view-mcp-directory') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) { paintCounts(); return; }   // don't redraw under the cursor
     render();

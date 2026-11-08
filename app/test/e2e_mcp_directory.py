@@ -133,7 +133,9 @@ def main():
             # ---------- 3. each client's Connect mints a working key ----------
             tokens = {}
             for k in LOCAL_KINDS:
-                host.click(f".mcd-row[data-kind='{k}'] [data-enable]")
+                # one atomic click: revoking the previous key can redraw the grid between Playwright's locate and click
+                host.wait_for_selector(f".mcd-row[data-kind='{k}'] [data-enable]")
+                host.evaluate("k => document.querySelector(`.mcd-row[data-kind='${k}'] [data-enable]`).click()", k)
                 if k == "claude-code":
                     host.wait_for_selector("#cc-cmd", timeout=10000); text = host.text_content("#cc-cmd")
                 else:
