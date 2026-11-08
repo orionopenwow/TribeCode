@@ -99,7 +99,7 @@
   }
 
   // nav + views (the shell: app/ui/shell.js renders the nest, breadcrumbs and menus around these)
-  const VIEWS = { hub: 'Home', home: 'Overview', chat: 'Chat', requests: 'Requests', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
+  const VIEWS = { hub: 'Home', home: 'Overview', chat: 'Chat', requests: 'Requests', docs: 'Files', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
   const ALIAS = { overview: 'home', inbox: 'home' };
   let current = 'home';
   function show(view) {

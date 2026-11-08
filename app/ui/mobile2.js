@@ -113,7 +113,7 @@
   const RACK = [
     { nav: 'hub', label: 'Home', icon: 'home', m2: true },   // your Home (all projects); the side panel is a swipe from the left
     { nav: 'chat', label: 'Chat', icon: 'chat', badge: 'nn-chat' },
-    { nav: 'docs', label: 'Docs', icon: 'doc' },
+    { nav: 'docs', label: 'Files', icon: 'doc' },
     { nav: 'tasks', label: 'Tasks', icon: 'task', badge: 'nn-tasks' },
     { nav: 'agents', label: 'Agents', icon: 'robot', m2: true },   // this project's Agents Hub
   ];
@@ -127,7 +127,7 @@
   // Home · Projects · Notes · Activity · +. Each icon jumps to that part of the dashboard; the lit one follows the scroll.
   // Same five slots and look as a project's rack (Home · Chat · Docs · Updates · Tasks), Home's versions:
   // You · Messages · Notes · Notifs · Projects. On Home the Home tab becomes your avatar: tap it for your profile.
-  const HOMEBAR = [['home', 'home', 'Home'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Notes'], ['agents', 'robot', 'Agents'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
+  const HOMEBAR = [['home', 'home', 'Home'], ['msgs', 'chat', 'Messages'], ['notes', 'doc', 'Files'], ['agents', 'robot', 'Agents'], ['pjs', 'list', 'Projects']];   // the bell lives in Home's top bar
   function homeBar() {
     if ($('#m2-homebar')) return;
     const bar = document.createElement('nav'); bar.id = 'm2-homebar'; bar.className = 'm2-homebar'; bar.setAttribute('aria-label', 'Home');
@@ -777,7 +777,7 @@
     let top = $('#m2-docs-hub');
     if (!top) {
       top = document.createElement('div'); top.id = 'm2-docs-hub'; top.className = 'm2-only m2-hub'; view.insertBefore(top, grid);
-      grid.insertAdjacentHTML('beforebegin', '<div class="sec-head m2-only m2-files-h" id="m2-files-h"><span class="eyebrow">Files</span><h2>Docs &amp; files</h2></div>');
+      grid.insertAdjacentHTML('beforebegin', '<div class="sec-head m2-only m2-files-h" id="m2-files-h"><span class="eyebrow">Project</span><h2>Files</h2></div>');
       grid.insertAdjacentHTML('afterend', '<section class="m2-only m2-sect" id="m2-shots"></section>');
     }
     renderHub();

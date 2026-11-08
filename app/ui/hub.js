@@ -33,7 +33,7 @@
   // ---------- resume last session (client side, per server) ----------
   const LKEY = () => `tribecode.lastSession:${C.base()}`;
   const last = () => lsGet(LKEY());
-  const LABEL = { home: 'Project home', chat: 'Chat', docs: 'Docs', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
+  const LABEL = { home: 'Project home', chat: 'Chat', docs: 'Files', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
   function remember(view) {
     if (!connected() || !LABEL[view]) return;
     const p = PJ() && PJ().cur(); if (!p) return;
@@ -54,7 +54,7 @@
   function onShow() {   // app.js show('hub') calls this
     const want = mode === 'home' ? '#/hub' : `#/hub/${mode}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
-    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All repos' : mode === 'docs' ? 'Global docs' : 'Home';
+    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All repos' : mode === 'docs' ? 'All files' : 'Home';
     render(); load(); panel();
   }
   function onHide() { setTimeout(panel, 0); if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
@@ -114,7 +114,7 @@
       : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
-          <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
+          <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
         ${gsHero(on)}
@@ -543,18 +543,28 @@
   let docsCache = [];
   function renderDocs(el) {
     el.innerHTML = `<div class="hub dc">
-      <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your docs" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your docs">${isPhone() ? `<button class="dc-me" id="dc-me" aria-label="Your profile">${meFace()}</button>` : ''}</div>
+      <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your files" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your files">${isPhone() ? `<button class="dc-me" id="dc-me" aria-label="Your profile">${meFace()}</button>` : ''}</div>
       <div class="dc-bar"><button class="dc-sort" id="dc-sort">${docsSort === 'name' ? 'Name A–Z' : 'Last updated'}<span class="dc-arrow">${ico('i-chev', 16)}</span></button><span style="flex:1"></span>
-        <button class="btn primary dc-new" id="dc-new">${ico('i-plus', 15)}New note</button>
+        <button class="btn dc-up" id="dc-up">${ico('i-upload', 15)}Upload</button><button class="btn primary dc-new" id="dc-new">${ico('i-plus', 15)}New note</button>
         <div class="dc-seg" role="group" aria-label="View"><button data-dv="list" class="${docsView === 'list' ? 'on' : ''}" aria-label="List">${ico('i-list', 18)}</button><button data-dv="grid" class="${docsView === 'grid' ? 'on' : ''}" aria-label="Grid">${ico('i-grid', 18)}</button></div></div>
+      <div class="dc-chips" role="group" aria-label="Show">${FKINDS.map(([k, l]) => `<button data-dk="${k}" class="${docsKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div class="dc-items ${docsView}" id="hub-docs"></div>
-      <button class="dc-fab" id="hub-note-new" aria-label="Start a note" title="Start a note">${ico('i-plus', 26)}</button></div>`;
+      <div class="dc-drop" id="dc-drop" aria-hidden="true"><span>${ico('i-upload', 28)}<b>Drop to add to your files</b></span></div>
+      <button class="dc-fab" id="dc-fab" aria-label="New" title="New note or upload">${ico('i-plus', 26)}</button></div>`;
     const inp = $('#hub-dq'); inp.oninput = () => { clearTimeout(docsT); docsT = setTimeout(() => { docsQ = inp.value.trim(); docsList(); }, 200); };
     $('#dc-sort').onclick = () => { docsSort = docsSort === 'name' ? 'updated' : 'name'; try { localStorage.setItem('tribecode.docs.sort', docsSort); } catch {} $('#dc-sort').firstChild.textContent = docsSort === 'name' ? 'Name A–Z' : 'Last updated'; drawDocs(); };
     el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { docsView = b.dataset.dv; try { localStorage.setItem('tribecode.docs.view', docsView); } catch {} el.querySelectorAll('[data-dv]').forEach(x => x.classList.toggle('on', x === b)); $('#hub-docs').className = 'dc-items ' + docsView; });
-    $('#hub-note-new').onclick = startNote; $('#dc-new').onclick = startNote;
+    $('#dc-fab').onclick = newSheet; $('#dc-new').onclick = startNote; $('#dc-up').onclick = e => upMenu(e.currentTarget);
+    el.querySelectorAll('[data-dk]').forEach(b => b.onclick = () => { docsKind = b.dataset.dk; try { localStorage.setItem('tribecode.files.kind', docsKind); } catch {} el.querySelectorAll('[data-dk]').forEach(x => x.classList.toggle('on', x === b)); drawDocs(); });
+    // drag files from the computer onto the Files center
+    const dc = el.querySelector('.dc'), drop = $('#dc-drop'); let dragN = 0;
+    const hasFiles = e => [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files');
+    dc.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; drop.classList.add('on'); });
+    dc.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+    dc.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; drop.classList.remove('on'); } });
+    dc.addEventListener('drop', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.classList.remove('on'); uploadFiles([...e.dataTransfer.files], 'me'); });
     const dm = $('#dc-me'); if (dm) dm.onclick = () => window.TribeMobile && window.TribeMobile.myProfile && window.TribeMobile.myProfile();
-    drawDocs(); docsList();
+    drawDocs(); docsList(); upList().then(() => { if (mode === 'docs') drawDocs(); });
   }
   function drawDocs() {
     const box = $('#hub-docs'); if (!box) return;
@@ -562,12 +572,21 @@
     const notes = scratch.notes().filter(n => n.text && n.text.trim() && (!q || n.text.toLowerCase().includes(q)))
       .map(n => ({ kind: 'note', id: n.id, title: noteTitle(n.text), preview: n.text.split('\n').slice(1).join(' ').trim(), at: n.updated || n.at, where: 'Only you' }));
     const pdocs = docsCache.map(d => ({ kind: 'doc', id: `${d.project}|${d.slug}`, title: d.title, preview: d.snippet || d.preview || '', at: d.at, where: (projOf(d.project) || {}).name || d.projectName || '', color: d.color }));
-    let items = [...notes, ...pdocs];
+    const ups = [...(upCache.mine || []), ...(upCache.project || [])].filter(f => !q || f.name.toLowerCase().includes(q))
+      .map(f => ({ kind: 'file', id: f.id, f, title: f.name, at: f.at, where: f.scope === 'project' ? ((projOf(f.project) || {}).name || 'Project') : 'Only you' }));
+    let items = [...notes, ...pdocs, ...ups].filter(it => docsKind === 'all' || (docsKind === 'notes' ? it.kind === 'note' : docsKind === 'docs' ? it.kind === 'doc'
+      : docsKind === 'pics' ? it.kind === 'file' && it.f.kind === 'image' : it.kind === 'file' && it.f.kind !== 'image'));
     items.sort(docsSort === 'name' ? (a, b) => String(a.title).localeCompare(String(b.title)) : (a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
-    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : 'No docs yet'}</b><span>${q ? 'Try another word.' : 'Tap + to start a note. It stays yours until you move it into a project.'}</span></div>`; return; }
-    box.innerHTML = items.map(it => `<button class="dc-card" ${it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : `data-gdoc="${esc(it.id)}"`}>
-        <span class="dc-head"><span class="dc-ic ${it.kind}">${ico(it.kind === 'note' ? 'i-quill' : 'i-doc', 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span></span>
-        <span class="dc-prev">${it.preview ? esc(it.preview.slice(0, 240)) : '<i>Empty</i>'}</span></button>`).join('');
+    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : docsKind === 'all' ? 'No files yet' : 'Nothing here yet'}</b><span>${q ? 'Try another word.' : 'Tap + to start a note or upload any file: pictures, audio, video, PDFs, code, models, zips.'}</span></div>`; return; }
+    const attr = it => it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : it.kind === 'file' ? `data-up="${esc(it.id)}"` : `data-gdoc="${esc(it.id)}"`;
+    const icon = it => it.kind === 'note' ? 'i-quill' : it.kind === 'file' ? (FK_IC[it.f.kind] || 'i-clip') : 'i-doc';
+    const prev = it => it.kind === 'file' ? (it.f.kind === 'image' && it.f.size < 4 * 1048576 ? `<img class="dc-thumb" data-thumb="${esc(it.id)}" alt="">` : `<span class="dc-fk">${ico(icon(it), 30)}<small>${esc(FK_LABEL[it.f.kind] || 'File')} · ${esc(fsize(it.f.size))}</small></span>`)
+      : it.preview ? esc(it.preview.slice(0, 240)) : '<i>Empty</i>';
+    box.innerHTML = items.map(it => `<button class="dc-card${it.kind === 'file' ? ' file k-' + esc(it.f.kind) : ''}" ${attr(it)}>
+        <span class="dc-head"><span class="dc-ic ${it.kind}">${ico(icon(it), 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span></span>
+        <span class="dc-prev">${prev(it)}</span></button>`).join('');
+    box.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const it = ups.find(x => x.id === b.dataset.up); if (it) openFile(it.f); });
+    box.querySelectorAll('img[data-thumb]').forEach(img => { const it = ups.find(x => x.id === img.dataset.thumb); if (it) thumb(it.f, img); });
     box.querySelectorAll('[data-mynote]').forEach(b => b.onclick = () => noteEditor(b.dataset.mynote));
     box.querySelectorAll('[data-gdoc]').forEach(b => b.onclick = () => { const [pid, slug] = b.dataset.gdoc.split('|'); go(pid, () => openDoc(slug)); });
   }
@@ -581,6 +600,97 @@
     if (!connected()) { docsCache = []; return drawDocs(); }
     try { const { docs } = await C.api('/hub/docs?q=' + encodeURIComponent(docsQ)); if (mode !== 'docs') return; docsCache = docs; drawDocs(); }
     catch (e) { const box = $('#hub-docs'); if (box && !docsCache.length) box.innerHTML = `<div class="dc-empty"><b>Couldn't load project docs</b><span>${esc(e.message)}</span></div>`; }
+  }
+
+  // ---------- uploads: any kind of file, yours or a project's (server/uploads.js) ----------
+  const FKINDS = [['all', 'All'], ['notes', 'Notes'], ['docs', 'Docs'], ['pics', 'Pictures'], ['other', 'Other files']];
+  const FK_IC = { image: 'i-photo', audio: 'i-mic', video: 'i-play', pdf: 'i-doc', model: 'i-box', archive: 'i-folder', code: 'i-git', text: 'i-doc', file: 'i-clip' };
+  const FK_LABEL = { image: 'Picture', audio: 'Audio', video: 'Video', pdf: 'PDF', model: '3D model', archive: 'Archive', code: 'Code', text: 'Text', file: 'File' };
+  let docsKind = (() => { try { const k = localStorage.getItem('tribecode.files.kind'); return FKINDS.some(x => x[0] === k) ? k : 'all'; } catch { return 'all'; } })();
+  let upCache = { mine: [], project: [], max: 50 * 1048576 };
+  const blobs = new Map();   // id -> object URL (thumbnails and the viewer)
+  const fsize = n => n < 1024 ? `${n} B` : n < 1048576 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+  const authH = () => { const t = ((window.TribeStore && window.TribeStore.get().server) || {}).token, pid = C.project && C.project(); return { ...(t ? { Authorization: 'Bearer ' + t } : {}), ...(pid ? { 'X-Project': pid } : {}) }; };
+  async function upList() { if (!connected()) { upCache = { mine: [], project: [], max: upCache.max }; return; } try { upCache = await C.api('/uploads?all=1'); } catch {} }
+  async function blobUrl(f) {
+    if (blobs.has(f.id)) return blobs.get(f.id);
+    const r = await fetch(C.base() + '/api/uploads/' + encodeURIComponent(f.id) + '/raw', { headers: authH() });
+    if (!r.ok) throw new Error('Could not open that file.');
+    const u = URL.createObjectURL(await r.blob()); blobs.set(f.id, u); return u;
+  }
+  async function thumb(f, img) { try { img.src = await blobUrl(f); } catch { img.replaceWith(Object.assign(document.createElement('span'), { className: 'dc-fk', innerHTML: ico('i-photo', 30) })); } }
+  async function uploadFiles(files, scope) {
+    if (!connected()) return toast('Join or host a tribe to keep files.');
+    const pid = C.project && C.project();
+    for (const file of files) {
+      if (file.size > upCache.max) { toast(`${file.name} is over ${Math.round(upCache.max / 1048576)} MB.`); continue; }
+      if (!file.size) { toast(`${file.name} is empty.`); continue; }
+      toast(`Uploading ${file.name}…`);
+      try {
+        const r = await fetch(`${C.base()}/api/uploads?name=${encodeURIComponent(file.name)}&scope=${scope}`, { method: 'POST', headers: { ...authH(), 'Content-Type': 'application/octet-stream', ...(scope === 'project' && pid ? { 'X-Project': pid } : {}) }, body: file });
+        const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Upload failed');
+      } catch (e) { toast(e.message); continue; }
+    }
+    toast(files.length > 1 ? `${files.length} files added.` : 'Added to your files.');
+    await upList(); if (mode === 'docs') drawDocs();
+  }
+  function pickUpload(scope) {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.id = 'dc-file';
+    inp.onchange = () => { const fs = [...inp.files]; inp.remove(); if (fs.length) uploadFiles(fs, scope); };
+    inp.style.display = 'none'; document.body.appendChild(inp); inp.click();
+  }
+  const curPj = () => { const pid = C.project && C.project(); return pid ? projOf(pid) : null; };
+  function closeMenus() { document.querySelectorAll('.dc-menu,.dc-sheet-wrap').forEach(x => x.remove()); }
+  // desktop: Upload -> to my files / to the current project
+  function upMenu(anchor) {
+    closeMenus(); const pj = curPj(), r = anchor.getBoundingClientRect();
+    const m = document.createElement('div'); m.className = 'dc-menu'; m.id = 'dc-upmenu'; m.setAttribute('role', 'menu');
+    m.style.top = `${r.bottom + 6}px`; m.style.left = `${Math.max(8, r.left)}px`;
+    m.innerHTML = `<button data-scope="me" role="menuitem">${ico('i-users', 16)}<span><b>To my files</b><small>Only you</small></span></button>${pj ? `<button data-scope="project" role="menuitem">${ico('i-folder', 16)}<span><b>To ${esc(pj.name)}</b><small>Everyone in the project</small></span></button>` : ''}`;
+    document.body.appendChild(m);
+    m.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => { closeMenus(); pickUpload(b.dataset.scope); });
+    setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off); } }), 0);
+  }
+  // phones: the + opens a sheet like a files app (New note · Upload · Upload to the project)
+  function newSheet() {
+    closeMenus(); const pj = curPj();
+    const w = document.createElement('div'); w.className = 'dc-sheet-wrap'; w.id = 'dc-newsheet';
+    w.innerHTML = `<div class="dc-sheet" role="dialog" aria-label="New"><span class="dc-grab"></span>
+      <button data-do="note">${ico('i-quill', 22)}<span><b>New note</b><small>Only you, until you share it</small></span></button>
+      <button data-do="me">${ico('i-upload', 22)}<span><b>Upload a file</b><small>Any kind, up to ${Math.round(upCache.max / 1048576)} MB · only you</small></span></button>
+      ${pj ? `<button data-do="project">${ico('i-folder', 22)}<span><b>Upload to ${esc(pj.name)}</b><small>Everyone in the project sees it</small></span></button>` : ''}</div>`;
+    document.body.appendChild(w);
+    w.onclick = e => { if (e.target === w) w.remove(); };
+    w.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { w.remove(); b.dataset.do === 'note' ? startNote() : pickUpload(b.dataset.do); });
+  }
+  // open a file: a full-screen viewer with a preview when the browser can show it, Download and Delete
+  async function openFile(f) {
+    closeMenus(); const me = (C.state && C.state().me) || {}, canDel = f.by === me.id || me.role === 'host';
+    const w = document.createElement('div'); w.className = 'fv-wrap'; w.id = 'fv';
+    w.innerHTML = `<div class="fv" role="dialog" aria-label="${esc(f.name)}">
+      <header class="fv-top"><button class="fv-x" id="fv-close" aria-label="Close">${ico('i-x', 22)}</button><span class="fv-t"><b>${esc(f.name)}</b><small>${esc(FK_LABEL[f.kind] || 'File')} · ${esc(fsize(f.size))} · ${esc(f.byName || '')} · ${esc(ago(f.at))}</small></span>
+        <a class="btn fv-dl" id="fv-dl" download="${esc(f.name)}">${ico('i-upload', 15)}Download</a>${canDel ? `<button class="btn fv-del" id="fv-del">Delete</button>` : ''}</header>
+      <div class="fv-body" id="fv-body"><span class="faint">Opening…</span></div></div>`;
+    document.body.appendChild(w);
+    const close = () => { w.remove(); document.removeEventListener('keydown', key); }, key = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', key); $('#fv-close').onclick = close; w.onclick = e => { if (e.target === w) close(); };
+    const del = $('#fv-del'); if (del) del.onclick = async () => {
+      if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'Tap again to delete'; setTimeout(() => { if (del.isConnected) { del.classList.remove('arm'); del.textContent = 'Delete'; } }, 3000); return; }
+      try { await C.api('/uploads/' + encodeURIComponent(f.id), { method: 'DELETE' }); toast('Deleted.'); close(); await upList(); if (mode === 'docs') drawDocs(); } catch (e) { toast(e.message); }
+    };
+    let url; try { url = await blobUrl(f); } catch (e) { $('#fv-body').innerHTML = `<span class="faint">${esc(e.message)}</span>`; return; }
+    $('#fv-dl').href = url;
+    const body = $('#fv-body'); if (!body) return;
+    if (f.kind === 'image') body.innerHTML = `<img src="${url}" alt="${esc(f.name)}">`;
+    else if (f.kind === 'video') body.innerHTML = `<video src="${url}" controls playsinline></video>`;
+    else if (f.kind === 'audio') body.innerHTML = `<div class="fv-audio">${ico('i-mic', 40)}<audio src="${url}" controls></audio></div>`;
+    else if (f.kind === 'pdf') body.innerHTML = `<iframe src="${url}" title="${esc(f.name)}"></iframe>`;
+    else if ((f.kind === 'code' || f.kind === 'text') && f.size < 512 * 1024 && /^text\//.test(f.type)) { const t = await (await fetch(url)).text(); body.innerHTML = `<pre class="fv-pre">${esc(t)}</pre>`; }
+    else if (f.kind === 'model' && window.TribeViewers && window.TribeViewers.kindOf(f.name) === 'model') {
+      body.innerHTML = `<div class="fv-none">${ico('i-box', 44)}<b>3D model</b><span>Spin it around in the 3D viewer.</span><button class="btn primary" id="fv-3d">Open in 3D</button></div>`;
+      $('#fv-3d').onclick = () => { close(); window.TribeViewers.open({ name: f.name, src: url, size: f.size, kind: 'model' }); };
+    }
+    else body.innerHTML = `<div class="fv-none">${ico(FK_IC[f.kind] || 'i-clip', 44)}<b>${esc(FK_LABEL[f.kind] || 'File')}</b><span>No preview for this kind of file. Download it to open it.</span></div>`;
   }
 
   // ---------- actions ----------

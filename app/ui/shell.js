@@ -40,10 +40,10 @@
   const DEST = [
     { key: 'home', label: 'Overview', icon: 'i-home', group: 'core', keys: 'home overview project dashboard living update', run: () => App().show('home') },
     { key: 'chat', label: 'Chat & Streams', icon: 'i-chat', group: 'core', keys: 'messages general talk channels streams dm', run: () => { if (window.TribeDM && window.TribeDM.current && window.TribeDM.current() !== 'general' && window.TribeDM.back) window.TribeDM.back(); App().show('chat'); } },
-    { key: 'docs', label: 'Docs & Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
+    { key: 'docs', label: 'Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
     { key: 'ws-tasks', label: 'Tasks & Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
     { key: 'ws-agents', label: 'Agents Hub', icon: 'i-robot', group: 'core', keys: 'agents coordinate ops claude workspace', run: () => openWs('agents') },
-    { key: 'docs-files', label: 'Project docs', tab: 'Docs', slug: 'files', icon: 'i-doc', group: 'docs', keys: 'documents notes files pages journal', run: () => App().show('docs') },
+    { key: 'docs-files', label: 'Project files', tab: 'Files', slug: 'files', icon: 'i-doc', group: 'docs', keys: 'documents notes files pages journal', run: () => App().show('docs') },
     { key: 'website', label: 'Website', tab: 'Website', slug: 'website', icon: 'i-link', group: 'docs', keys: 'site page public showcase landing credits github pages', run: () => { const o = () => window.TribeWebsite && window.TribeWebsite.open(); if (window.TribeWebsite) o(); else addEventListener('load', o, { once: true }); } },   // app/ui/website.js (a deep link can run before it loads)
     { key: 'tasks', label: 'Task board', tab: 'Board', slug: 'board', icon: 'i-check', group: 'tasks', keys: 'tasks todo kanban', run: () => App().show('tasks') },
     { key: 'bugs', label: 'Bugs', tab: 'Bugs', slug: 'bugs', icon: 'i-bug', group: 'tasks', keys: 'bug inbox issues', run: () => App().show('bugs') },
@@ -63,7 +63,7 @@
     { key: 'plan', label: 'Daily plan', tab: 'Daily plan', slug: 'plan', icon: 'i-sun', group: 'agents', keys: 'today standup plan', run: () => coord('plan') },
     { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
-    { key: 'docs-all', label: 'Global docs', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
+    { key: 'docs-all', label: 'All files', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
     { key: 'repos-all', label: 'All repos', icon: 'i-git', group: 'global', keys: 'repositories every project code branches status', run: () => hubOpen('repos') },
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
@@ -78,7 +78,7 @@
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
-  const WS = { docs: { label: 'Docs & Files', row: 'docs' }, tasks: { label: 'Tasks & Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
+  const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Tasks & Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
   const tabsOf = w => DEST.filter(d => d.group === w && (!d.when || d.when()));
   const wsOf = key => { const d = byKey(key); return d && WS[d.group] ? d.group : null; };
   const TKEY = w => `tribecode.tab.${w}`;

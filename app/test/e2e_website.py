@@ -126,9 +126,9 @@ def main():
             host.wait_for_function("pid => TribeProjects.current() === pid", arg=pid, timeout=10000)
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
             host.wait_for_selector("#view-tabs:not(.hidden) #wt-website")
-            assert host.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.textContent.trim())") == ["Docs", "Website"]
+            assert host.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.textContent.trim())") == ["Files", "Website"]
             host.click("#wt-website"); host.wait_for_selector("#wb-root")
-            wait_text(host, "#crumb-label", "Docs & Files › Website")
+            wait_text(host, "#crumb-label", "Files › Website")
             assert host.evaluate("location.hash") == "#/docs/website"
             assert host.evaluate("document.querySelector('#nest-docs').classList.contains('on')")
             wait_text(host, ".wb-empty", "No page yet")
