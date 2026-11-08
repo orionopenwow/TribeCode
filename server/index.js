@@ -194,6 +194,7 @@ function broadcast(msg, except) {
   }
 }
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
+let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
@@ -201,10 +202,15 @@ function presence() {
   return members.map(m => {
     if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
     const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null, project: o ? o.project || null : null };
-  });
+  }).map(e => (profiles ? profiles.decorate(e, memberById(e.id) || e, idleAll(e.id)) : e));   // feat/profiles
+}
+const idleAll = mid => { const o = online.get(mid); return !!o && o.sockets.size > 0 && [...o.sockets].every(s => s.idle); };   // feat/profiles: every tab idle
+function presenceFor(viewer) {
+  const fix = list => (profiles ? list.map(e => profiles.forViewer(e, viewer, online.has(e.id))) : list);   // feat/profiles: invisible, nicknames
+  return fix(presenceForRaw(viewer));
 }
 // What one viewer sees: project-scoped friends only see people who share one of their projects.
-function presenceFor(viewer) {
+function presenceForRaw(viewer) {
   const all = presence();
   if (!viewer || !P.scoped(viewer)) return all;
   const mine = new Set(viewer.projects);
@@ -328,6 +334,7 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
 let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
+  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid) });
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
@@ -360,7 +367,8 @@ const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, po
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
-const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast });   // the Files center: any file type, yours or the project's
+const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast });
+profiles = require('./profiles')({ P, store: baseStore, getMembers: () => members, pushPresence: () => pushPresence() });   // feat/profiles   // the Files center: any file type, yours or the project's
 const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
@@ -623,6 +631,7 @@ async function apiInProject(req, res, url) {
   if (a === 'shelf') return shelf.route(req, res, ctx());
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
+  if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
@@ -854,6 +863,7 @@ server.on('upgrade', (req, sock) => {
       pushPresence(); return;
     }
     if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
+    if (msg.type === 'activity' && typeof msg.idle === 'boolean' && !!s.idle !== msg.idle) { const was = idleAll(me.id); s.idle = msg.idle; if (idleAll(me.id) !== was) pushPresence(); }   // feat/profiles: idle after inactivity
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
