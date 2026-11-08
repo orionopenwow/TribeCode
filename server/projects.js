@@ -73,6 +73,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     if (typeof patch.bio === 'string') { const b = patch.bio.replace(/\s+/g, ' ').trim().slice(0, 200); if (b) p.bio = b; else delete p.bio; }
     if (patch.repo !== undefined) p.repo = patch.repo;
     if (patch.workspace !== undefined) p.workspace = !!patch.workspace;
+    if (typeof patch.hidden === 'boolean') { if (patch.hidden) p.hidden = true; else delete p.hidden; }
     if (typeof patch.huddleSummary === 'boolean') { if (patch.huddleSummary) p.huddleSummary = true; else delete p.huddleSummary; }   // server/huddlesum.js
     save(); return p;
   }
@@ -94,7 +95,8 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
   // Tribe-wide members (no `projects` list) see every project; project-scoped friends see only theirs.
   const scoped = m => !!m && Array.isArray(m.projects);
   const canSee = (m, pid) => !!m && !!get(pid) && (!scoped(m) || m.projects.includes(pid));
-  const visibleTo = m => list.filter(p => canSee(m, p.id));
+  // hidden: a project folded away (e.g. the built-in first project once you work elsewhere); it keeps its data and links
+  const visibleTo = m => { const v = list.filter(p => canSee(m, p.id)), shown = v.filter(p => !p.hidden); return shown.length ? shown : v; };
   // Which project a request is about: explicit (header/query/argument) if visible, else a sensible default.
   function pick(m, wanted, fallback) {
     if (wanted && get(wanted)) return canSee(m, wanted) ? wanted : null;   // a project that no longer exists (deleted) falls back below

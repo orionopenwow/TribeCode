@@ -22,7 +22,10 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
   }
   function list() {
     return store.listMd('docs').map(f => f.replace(/^docs[\\/]/, '').replace(/\.md$/, '')).map(read).filter(Boolean)
-      .map(({ body, ...d }) => ({ ...d, words: body.split(/\s+/).filter(Boolean).length }))
+      .map(({ body, ...d }) => {   // feat/file-grid: a short excerpt and the first picture, for thumbnails
+        const m = /!\[[^\]]*\]\(([^)\s]+)/.exec(body);
+        return { ...d, words: body.split(/\s+/).filter(Boolean).length, excerpt: body.slice(0, 600), img: m ? m[1] : '' };
+      })
       .sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
   }
   function write(d) {

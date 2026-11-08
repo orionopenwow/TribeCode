@@ -76,7 +76,7 @@ def main():
             # nav
             assert pg.is_visible(".nav__logo img")
             labels = pg.evaluate("[...document.querySelectorAll('.nav__links > .nav__item > button, .nav__links > a')].map(e => e.textContent.trim())")
-            assert labels == ["Features", "Download", "Pricing", "Mission", "Docs", "Guide", "GitHub"], labels
+            assert labels == ["Features", "Pricing", "Mission", "Docs"], labels   # no repeats: Download, Star and the Guide live elsewhere
             assert pg.is_visible(".nav__end a:has-text('Open the app')") and pg.is_visible(".nav__end .btn:has-text('Download')")
             pg.wait_for_function("document.querySelector('.nav [data-gh=stars]').textContent === '2.3k'", timeout=8000)
             assert pg.is_visible(".nav [data-gh=stars]")
@@ -93,7 +93,6 @@ def main():
             pg.wait_for_function("document.querySelector('.hero [data-dl-main]').href.endsWith('_x64-setup.exe')", timeout=8000)
             assert "Download for Windows" in dl.inner_text(), dl.inner_text()
             assert pg.get_attribute(".hero a:has-text('Watch a demo tribe')", "href") == "app/?demo=showcase"
-            assert pg.evaluate("document.querySelector('#menu-download [data-os=windows]').classList.contains('is-mine')")
             # the stage animates: text grows over ~3 s
             pg.wait_for_function("document.querySelector('[data-loop=stage]').dataset.state === 'running'", timeout=5000)
             pg.wait_for_timeout(1500); a = convo_len(pg)

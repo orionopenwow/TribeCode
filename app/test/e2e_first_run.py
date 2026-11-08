@@ -357,7 +357,7 @@ def main():
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
             shot(host, "20-files"); audit(host, "files")
             d0 = len(api("/docs", token=tok, project=pid)[1].get("docs", []))
-            host.dblclick("#doc-new"); host.wait_for_timeout(1500)
+            host.dblclick("#doc-first"); host.wait_for_timeout(1500)   # desktop Files opens on the grid: its + New doc
             d1 = len(api("/docs", token=tok, project=pid)[1].get("docs", []))
             assert d1 == d0 + 1, f"a double click on + made {d1 - d0} docs"
             host.click("#wt-website"); host.wait_for_selector("#wb-root")

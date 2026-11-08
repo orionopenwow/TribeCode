@@ -36,7 +36,7 @@
     loaded = true; renderList();
     const keep = cur && list.some(d => d.slug === cur.slug) ? cur.slug : null;   // the open doc may belong to the project we just left
     if (cur && !keep) cur = null;   // …then don't ask the new project for its comments or backlinks either
-    const want = openSlug || keep || (list[0] && list[0].slug);
+    const want = openSlug || keep || (!(window.TribeFileGrid && desk()) && list[0] && list[0].slug);   // desktop opens on the file grid (feat/file-grid)
     if (want) open(want); else renderEditor();
   }
 
@@ -249,9 +249,11 @@
 
   function renderEditor() {
     const pane = $('#doc-pane'); if (!pane) return;
+    { const h = $('#doc-repo-hero'), w = $('#doc-list-wrap'); if (h && w && !w.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // feat/file-grid: the repo strip lives in the grid while it shows
     parkAside(); outlineCtl = null; wasDesk = desk();
     if (!cur) {
       wideMode(false);
+      if (window.TribeFileGrid && desk()) { window.TribeFileGrid.render(pane, list, { open, create: () => createOnce(), nameOf, ago }); return; }   // feat/file-grid: files as a drive-like grid
       pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>${list.length ? 'Pick a doc to open' : 'Your tribe\'s files live here'}</h2>
         <p>Notes, docs, pictures, PDFs: any file, kept in the tribe folder. Docs are plain Markdown; type <span class="kbd">/</span> in one for blocks.</p>
         <button class="btn" id="doc-first">New doc</button></div>`;
@@ -343,7 +345,7 @@
     if (body) {
       const fit = () => body.classList.toggle('narrow', pane.clientWidth < 1000);   // a squeezed pane (room panel open): a slimmer side panel and page margins
       fit(); if (!pane.__dlFit && window.ResizeObserver) { pane.__dlFit = new ResizeObserver(() => { const b = pane.querySelector('.dl-body'); if (b) b.classList.toggle('narrow', pane.clientWidth < 1000); }); pane.__dlFit.observe(pane); }   // the room panel opening or closing resizes the pane
-      body.classList.toggle('side-off', get(sideKey) === 'off');
+      body.classList.toggle('side-off', get(sideKey) !== 'on');   // the side panel starts hidden; the button top-left brings it back
       $('#dl-side-x').onclick = () => { body.classList.add('side-off'); set(sideKey, 'off'); $('#dl-side-open').focus(); };
       $('#dl-side-open').onclick = () => { body.classList.remove('side-off'); set(sideKey, 'on'); $('#dl-side-x').focus(); if (outlineCtl) outlineCtl.render(); };
     }

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.17.3
+
+- **Files, tidied**: one emoji tab row (📝 Notes · 💻 Code · 📚 Docs · 🌐 Website · 📎 Captures) instead of two rows of tabs. Files opens on a drive-like grid: each file gets a type chip (DOC, CSV, </>, PDF, IMG) and a thumbnail (the start of the page, the code, or its first picture), with the pinned repo as a strip on top and app screenshots below. In a doc, the side panel starts hidden
+- **Top bar**: the idling pixel flame now sits next to the TribeCode wordmark; the rail's top slot is Home, drawn as the camp ⛺
+- **Camp setup**: the Dashboard's setup card is called Camp setup, says what the four steps are for, and shows "2 of 4 done"
+- **Right panel**: no more "In the room" people list on desktop; it starts with Next steps
+- **Fewer test projects**: a project can be hidden (it keeps its data); the built-in first project can fold away once you work in another
+- **First-run fixes** (QA pass): after a reload a friend no longer loses the "You're in" card or agent updates; a cloudflared error is no longer mistaken for the invite address; projects with existing code keep their Repo tab; emoji-only names get proper avatars; double clicks don't make two channels or docs; channel names work in any language; Flint says where your words go; "your AI" and "Files" wording throughout
+- **Website**: the top bar lists Features, Pricing, Mission and Docs (Download, Star and the Guide live elsewhere); new phone art (the phone beams to the computer); the corner fire is off for now
+- **Phones**: Files keeps its Notes · Code · Docs switch and the phone hub; no Ctrl K hint; right-to-left messages read from the right; the "You're in" card shows reliably after a reload
+
 ## v0.17.2
 
 - **Safer media links**: pictures, voice notes, screenshots and downloads load through short-lived signed links (about an hour, one file each, read-only) instead of carrying your sign-in key. Signing a device out turns its links off
