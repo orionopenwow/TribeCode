@@ -119,7 +119,7 @@ def main():
             # ---- four rows, exactly, in order; nothing else between them and Settings
             assert rows(host, "#pj-nav .nest-row.core") == CORE, rows(host, "#pj-nav .nest-row.core")
             host.wait_for_selector("#nest-add", state="visible")   # the + row (widgets.js) closes the list for the host
-            assert rows(host, "#pj-nav .nest-row") == CORE + ["Add"], rows(host, "#pj-nav .nest-row")
+            assert rows(host, "#pj-nav .nest-row") == CORE, rows(host, "#pj-nav .nest-row")   # + Add sits below the Repo row, outside the rows
             assert host.locator("#nest-huddle").is_hidden() and host.locator("#capture-toggle").is_hidden(), "huddle and capture have no rows"
             for t in ["One", "Two"]: assert api("/tasks", "POST", {"title": f"Task {t}"}, token=token, project=pid)[0] == 200
             host.wait_for_function("document.querySelector('#nn-tasks').textContent === '2'", timeout=8000)

@@ -128,11 +128,14 @@ def main():
 
             # ---- the rows, in order: core, Preview game, + Add
             host.wait_for_selector("#nest-add", state="visible")
-            assert rows(host) == CORE + ["Preview game", "Add"], rows(host)
+            assert rows(host) == CORE, rows(host)   # Preview and + Add are not among the rows
+            assert host.evaluate("!!document.querySelector('.nest-foot #nest-preview')"), "Preview sits at the bottom of the pane"
+            assert host.evaluate("document.querySelector('#nest-add').getBoundingClientRect().top >= document.querySelector('#nest-pinned').getBoundingClientRect().bottom - 1"), "+ Add sits below the Repo row"
+            assert "Preview game" in host.inner_text("#nest-preview")
             assert host.locator("#nest-website").count() == 0, "no Website row before the site is built"
             assert host.locator("#nest-extra .pin-tag, #nest-extra [href='#i-pin']").count() == 0, "no pin icons"
             sz = host.evaluate("(() => { const i = document.querySelector('#nest-preview svg.i'); const s = getComputedStyle(i); return [s.width, s.strokeWidth]; })()")
-            assert sz == ["20px", "2.1px"] or sz[0] == "20px", sz
+            assert sz[0] in ("16px", "20px"), sz
             host.click("#nest-preview")
             host.wait_for_selector("body.pvw-on #pvw", timeout=15000)
             assert host.text_content("#preview-kind") == "Preview"
@@ -141,7 +144,7 @@ def main():
             # ---- Website: shows only once the site is built
             ok(api(f"/projects/{pid}/website/build", "POST", {}, token=orion), "build")
             host.wait_for_selector("#nest-website", state="visible", timeout=15000)
-            assert rows(host) == CORE + ["Preview game", "Website", "Add"], rows(host)
+            assert rows(host) == CORE + ["Website"], rows(host)
             host.click("#nest-website"); host.wait_for_selector("#wb-root", timeout=15000)
             wait_text(host, "#crumb-label", "Files › Website")
 
@@ -157,7 +160,7 @@ def main():
             host.fill("#wg-emoji", "🗺️"); host.fill("#wg-name", "Level map"); host.fill("#wg-url", BASE + "/demo.html")
             host.click("#wg-save")
             host.wait_for_selector("#nest-extra [data-wopen]:has-text('Level map')", state="visible")
-            assert rows(host) == CORE + ["Preview game", "Website", "Calendar", "Level map", "Add"], rows(host)
+            assert rows(host) == CORE + ["Website", "Calendar", "Level map"], rows(host)
             host.click("#nest-extra [data-wopen]:has-text('Level map')")
             host.wait_for_selector("#preview-body #wg-iframe")
             assert host.get_attribute("#wg-iframe", "src") == BASE + "/demo.html"
@@ -172,7 +175,7 @@ def main():
             host.click("#nest-add"); host.click("#wg-picker [data-wadd='bugs']"); host.wait_for_selector("#wg-bugs", state="visible")
             host.reload(); host.wait_for_selector("#nest-extra [data-wopen]:has-text('Level map')", state="visible", timeout=15000)
             host.wait_for_selector("#wg-bugs", state="visible")
-            assert rows(host) == CORE + ["Preview game", "Website", "Level map", "Bugs", "Add"], rows(host)
+            assert rows(host) == CORE + ["Website", "Level map", "Bugs"], rows(host)
 
             # ---- the room panel: readable, fewer lines
             host.click("#nest-overview")
@@ -219,7 +222,7 @@ def main():
             ph.click("#menu-btn"); ph.wait_for_selector("#nest-preview", state="visible", timeout=15000)
             ph.wait_for_selector("#nest-extra [data-wopen]:has-text('Level map')", state="visible")
             ph.wait_for_timeout(400)
-            assert rows(ph)[:6] == CORE + ["Preview game"] and rows(ph)[-1] == "Add", rows(ph)
+            assert rows(ph)[:5] == CORE and ph.is_visible("#nest-preview") and ph.is_visible("#nest-add"), rows(ph)   # phones: Preview at the bottom, + Add below Repo
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             shot(ph, "phone")
             ph.click("#nest-add"); ph.wait_for_selector("#wg-picker.sheet", state="visible")

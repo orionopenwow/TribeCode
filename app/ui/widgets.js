@@ -61,13 +61,17 @@
   function draw() {
     const box = $('#nest-extra'); if (!box) return;
     const rows = [];
-    if (autoPreview()) rows.push(`<button class="nest-row wg-auto" id="nest-preview" data-wrun="preview" title="Run it and see it here">${ico('i-play')}<span>${esc(st.preview.label || 'Preview')}</span></button>`);
     if (autoSite()) rows.push(`<button class="nest-row wg-auto" id="nest-website" data-pnav="website" title="The project's public page">${ico('i-link')}<span>Website</span></button>`);
     (st.widgets || []).forEach(w => rows.push(rowOf(w)));
-    if (st.canEdit) rows.push(`<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>`);
     const html = rows.join('');
     if (box.innerHTML !== html) box.innerHTML = html;
     box.classList.toggle('empty', !rows.length);
+    // Preview game / app: its own button at the bottom of the pane, above Invite friends (not among the rows)
+    const pslot = $('#nest-preview-slot'), prev = autoPreview() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" title="Run it and see it here">${ico('i-play')}<span>${esc(st.preview.label || 'Preview')}</span></button>` : '';
+    if (pslot && pslot.innerHTML !== prev) pslot.innerHTML = prev;
+    // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows
+    const slot = $('#nest-add-slot') || box, add = st.canEdit ? `<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>` : '';
+    if (slot !== box && slot.innerHTML !== add) slot.innerHTML = add; else if (slot === box && add) box.insertAdjacentHTML('beforeend', add);
   }
 
   // ---------- clicks ----------
@@ -84,7 +88,7 @@
     if (!e.target.closest) return;
     const m = e.target.closest('#nest-extra [data-wmore]'); if (m) { e.preventDefault(); e.stopPropagation(); return menu(m, m.dataset.wmore); }
     const add = e.target.closest('#nest-add'); if (add) { e.preventDefault(); return openPicker(add); }
-    const r = e.target.closest('#nest-extra [data-wrun]'); if (r) { e.preventDefault(); closeDrawer(); const b = BUILT[r.dataset.wrun]; return b && b.run && b.run(); }
+    const r = e.target.closest('#nest-extra [data-wrun], #nest-preview-slot [data-wrun]'); if (r) { e.preventDefault(); closeDrawer(); const b = BUILT[r.dataset.wrun]; return b && b.run && b.run(); }
     const o = e.target.closest('#nest-extra [data-wopen]'); if (o) { e.preventDefault(); const w = (st.widgets || []).find(x => x.id === o.dataset.wopen); if (w) openWidget(w); }
   }, true);
   document.addEventListener('contextmenu', e => {

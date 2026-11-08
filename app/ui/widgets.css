@@ -101,3 +101,16 @@ body.global #nest-extra { display: none; }
 
 /* Home's panel shares the readable sizes */
 #tour-room .home-me .what { font-size: 13px; }
+/* + Add: below the Repo row, a bordered rounded rectangle */
+.nest-add-slot { padding: 4px 10px 6px; }
+.nest-add-slot:empty { display: none; }
+.nest-add-slot .wg-add { width: 100%; justify-content: flex-start; border: 1px solid var(--edge); border-radius: 10px; background: transparent; color: var(--muted); }
+.nest-add-slot .wg-add svg.i { color: var(--muted); }
+.nest-add-slot .wg-add:hover { border-color: var(--edge-pop, var(--edge)); background: var(--hover, var(--surface)); color: var(--text); }
+.nest-add-slot .wg-add:hover svg.i { color: var(--text); }
+/* Preview game / app: a clear button at the bottom of the sidebar, above Invite friends */
+.nest-preview-slot:empty { display: none; }
+.nest-preview-slot { margin-bottom: 8px; }
+.wg-preview { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; height: 40px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2, var(--raised)); color: var(--text); font: 600 14px var(--font); cursor: pointer; }
+.wg-preview svg.i { width: 16px; height: 16px; color: var(--accent); fill: currentColor; }
+.wg-preview:hover { background: var(--surface-3, var(--hover)); border-color: var(--edge-pop, var(--edge)); }
