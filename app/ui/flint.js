@@ -121,7 +121,7 @@
     note: /^(?:please\s+)?(?:capture|note|remember|jot(?:\s+down)?|write down|save)(?:\s+(?:a|this|the|that))?(?:\s+note)?(?:\s*(?::|-|,|that)\s*|\s+|$)([\s\S]*)$/,
     task: /^(?:please\s+)?(?:add|new|make|create)?\s*(?:a\s+)?(?:task|todo|to-do)(?:\s*(?::|-|,)\s*|\s+)([\s\S]+)$/,
     nav: /^(?:open|go to|goto|show(?: me)?|take me to|switch to|bring me to|where(?:'s| is| are| do i find)|how do i (?:get to|find))\s+(?:the\s+|my\s+|our\s+)?(files|docs|documents|tasks|task board|board|chat|messages|home|dashboard|overview|repo|code|guide|settings|calendar|agents hub|agents|mcp|bugs|website|whiteboard|white board)\b/,
-    doStep: /^(?:how (?:do|can) i |help me |let'?s |i want to |)(?:add|make|create|start)(?: a| my| the)? (?:first )?task\b|^(?:how (?:do|can) i |help me |let'?s |)(write|start)(?: the| our)? vision\b|^(?:how (?:do|can) i |help me |)(?:connect|hook up|add)(?: my)? (?:ai|claude|codex|gemini|cursor|agent)\b/,
+    doStep: /^(?:how (?:do|can) i |help me |let'?s |i want to |)(?:add|make|create|start)(?: a| my| the)? (?:first )?task\b|^(?:how (?:do|can) i |help me |let'?s |)(write|start)(?: the| our)? vision\b|^(?:how (?:do|can) i |help me |)(?:connect|hook up|add)(?: my)? (?:ai|claude|codex|gemini|cursor|agent)\b|^(?:how (?:do|can) i |help me |let'?s |)(?:create|make|set up|start)(?: a| the| our)? (?:git )?repo\b/,
     find: /^(?:find|search(?: for)?|look for|where(?:'s| is))\s+(.+)$/,
     help: /^(how|what|why|where|when|can i|could i|help|guide|explain|is there|do i)\b|\?$/,
     invite: /\binvite\b|\badd (a )?friend\b|\bshare (the|a) link\b/,
@@ -143,8 +143,8 @@
     if ((m = RX.task.exec(t)) && m[1].trim()) return task(text.slice(text.length - m[1].length).trim());
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
     // Setup steps by name: Flint does them (and shows where they live) instead of explaining
-    if ((m = RX.doStep.exec(t))) { const k = /task/.test(t) ? 'newtask' : /vision/.test(t) ? 'vision' : 'claude';
-      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. A few short answers is plenty.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
+    if ((m = RX.doStep.exec(t))) { const k = /task/.test(t) ? 'newtask' : /vision/.test(t) ? 'vision' : /repo/.test(t) ? 'repo' : 'claude';
+      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. Pick what it is and write the gist.' : k === 'repo' ? 'Making the repo: a home for the code, right on the host.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
     if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website', whiteboard: 'whiteboard', 'white board': 'whiteboard' }, v = map[m[1]];
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
       const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
@@ -306,7 +306,7 @@
   const statusLine = () => (model.online ? `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}` : 'basic mode · no model');
   const privLine = () => (model.online && model.cloud ? `Flint uses ${model.via || model.model} through the host's key. The key never leaves the host.` : model.online && model.browser ? 'Flint runs in your browser. Nothing you type here leaves it.' : 'Flint runs on this computer. Nothing you type here leaves it.');
   // Early on Flint keeps it simple: a short hello and the next setup steps as nudges. He shows more as the tribe grows.
-  const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], friend: ['👋 Invite a friend', 'invite'], agent: ['🤖 Connect my AI', 'claude'] };
+  const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the repo', 'repo'] };   // feat/setup-flow: the four setup steps
   function emptyHtml() {
     const S = window.TribeStage, lv = S ? S.level() : 'going', st = S ? S.steps() : null;
     if (lv !== 'going' && st) {   // the next steps are big cards at the top of the panel; Flint just says hi

@@ -311,12 +311,15 @@
   function quickTask(prefill = '') {
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">New</span><h3>Task</h3></div>
       <form class="m2-quick" id="m2-qt"><input id="m2-qt-in" maxlength="140" placeholder="What needs doing?" enterkeyhint="done" autocomplete="off" value="${esc(prefill)}"><button class="m2-go" aria-label="Add task">${ic('up', 20)}</button></form>
+      ${window.TribeTasks && window.TribeTasks.typeChips ? window.TribeTasks.typeChips('', 'm2-types') : ''}
       <p class="m2-fine">Lands in Backlog. Anyone (or their Claude) can take it.</p>`, { id: 'm2-task-sheet', label: 'New task' });
     const inp = el.querySelector('#m2-qt-in'); setTimeout(() => inp.focus(), 60);
+    let qtType = '';   // feat/setup-flow: task type chips
+    el.querySelectorAll('[data-type]').forEach(b => b.onclick = () => { qtType = qtType === b.dataset.type ? '' : b.dataset.type; el.querySelectorAll('[data-type]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.type === qtType))); });
     if (window.TribeAssist) window.TribeAssist.ideas(el, { compact: true, force: true });   // feat/assist: suggested tasks
     el.querySelector('#m2-qt').onsubmit = async e => {
       e.preventDefault(); const v = inp.value.trim(); if (!v) return;
-      try { await window.TribeTasks.create(v, 'backlog'); closeSheet(); toast('Task added'); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } catch (err) { toast(err.message); }
+      try { await window.TribeTasks.create(v, 'backlog', { type: qtType }); closeSheet(); toast('Task added'); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } catch (err) { toast(err.message); }
     };
   }
 

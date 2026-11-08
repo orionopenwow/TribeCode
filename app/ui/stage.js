@@ -1,23 +1,27 @@
 // How far along the current project is, so the room panel and Flint can start simple and grow with the tribe.
-//   new      nothing yet (no vision, no task, no friend): the panel shows just people and Flint's nudges
-//   growing  something has started: notes and Connect your AI appear
-//   going    most steps done (or helpers already on): everything shows
+//   new      nothing yet (no vision, no task): the panel shows just people and Flint's nudges
+//   growing  something has started (a vision or a task): notes and Connect your AI appear
+//   going    3 of the 4 setup steps done (vision, task, AI, repo): everything shows, the Task Board gets its tabs
+// body[data-vision] says whether the vision exists (the sidebar's "+ Add" waits for it).
 // projects.js reports the checklist after each Dashboard render; elsewhere we read /pulse once per project.
 (function () {
   'use strict';
   const C = window.TribeClient;
   const pid = () => (window.TribeProjects && window.TribeProjects.current()) || '';
-  const by = {};   // project id -> { vision, task, friend, agent, repo }
+  const by = {};   // project id -> { vision, task, agent, repo }
+  const KEYS = ['vision', 'task', 'agent', 'repo'];   // feat/setup-flow: the four setup steps (a friend joining is no longer one)
   let cur = null;
   function level(s) {
     if (!s) return 'going';   // unknown: show everything, as before
-    const n = ['vision', 'task', 'friend', 'agent'].filter(k => s[k]).length;
-    if (!s.vision && !s.task && !s.friend) return 'new';
+    const n = KEYS.filter(k => s[k]).length;
+    if (!s.vision && !s.task) return 'new';
     return n >= 3 ? 'going' : 'growing';
   }
   function apply() {
     const s = by[pid()], lv = level(s);
     if (document.body.dataset.stage !== lv) document.body.dataset.stage = lv;
+    const vs = s ? (s.vision ? '1' : '0') : '1';
+    if (document.body.dataset.vision !== vs) document.body.dataset.vision = vs;
     const key = JSON.stringify([pid(), s]);
     if (key !== cur) { cur = key; try { window.dispatchEvent(new CustomEvent('tribe:stage', { detail: { level: lv, steps: s || null } })); } catch {} }
   }
@@ -29,8 +33,8 @@
   const NEXT = {
     vision: ['✨', 'Write the vision', 'What you’re making and who it’s for.', 'vision'],
     task: ['📝', 'Add a first task', 'One small thing to build first.', 'newtask'],
-    friend: ['👋', 'Invite a friend', 'Share one link. No account needed.', 'invite'],
     agent: ['🤖', 'Connect your AI', 'Claude Code, Codex, Gemini or Cursor.', 'claude'],
+    repo: ['🌿', 'Create the repo', 'A home for the code, in one click.', 'repo'],
   };
   const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function drawNext() {
@@ -39,7 +43,7 @@
     const s = by[pid()], lv = level(s), show = s && lv !== 'going' && !document.body.classList.contains('global');
     if (!show) { if (box) box.remove(); return; }
     if (!box) { box = document.createElement('section'); box.id = 'room-next'; box.className = 'room-next'; pane.prepend(box); }
-    const todo = ['vision', 'task', 'friend', 'agent'].filter(k => !s[k]);
+    const todo = KEYS.filter(k => !s[k]);
     const n = 4 - todo.length;
     box.innerHTML = `<div class="rn-head"><span class="eyebrow">Next steps</span><span class="rn-n">${n} of 4 done</span></div>
       ${todo.map((k, i) => `<button class="rn-card ${i === 0 ? 'first' : ''}" data-rn="${NEXT[k][3]}"><span class="rn-e" aria-hidden="true">${NEXT[k][0]}</span><span class="rn-t"><b>${esc(NEXT[k][1])}</b><small>${esc(NEXT[k][2])}</small></span></button>`).join('')}`;
@@ -55,14 +59,14 @@
       const d = await C.api(`/projects/${encodeURIComponent(id)}/pulse`);
       const meId = (C.state().me || {}).id, members = C.state().members || [];
       by[id] = { vision: !!(d.vision && d.vision.has), task: (d.taskCount || 0) > 0, friend: (d.team || []).some(m => m.kind !== 'agent' && m.id !== meId),
-        agent: (d.agents || []).length > 0 || members.some(m => m.role === 'agent' && m.owner === meId), repo: !!d.repo };
+        agent: (d.agents || []).length > 0 || members.some(m => m.role === 'agent' && m.owner === meId), repo: !!(d.repo || ((window.TribeProjects && window.TribeProjects.cur()) || {}).hasRepo) };
     } catch {}
     busy = false; apply();
   }
   let t = null; const soon = (ms = 800) => { clearTimeout(t); t = setTimeout(load, ms); };
   if (C && C.on) {
     C.on('hello', () => soon(200)); C.on('project', () => soon(200)); C.on('projects', () => soon(400));
-    C.on('ws', m => { if (m && /^(task|tasks|vision|doc|docs|presence|members|join)/.test(m.type || '')) soon(1500); });
+    C.on('ws', m => { if (m && /^(task|tasks|vision|doc|docs|presence|members|join|repo|projects)/.test(m.type || '')) soon(1500); });
   }
   window.TribeStage = { set, level: () => level(by[pid()]), steps: () => by[pid()] || null, refresh: () => soon(0) };
 })();

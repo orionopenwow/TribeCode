@@ -68,13 +68,13 @@ def main():
             assert "basic mode" in host.text_content("#flint [data-flst]")
             assert host.locator("#room-list").is_visible(), "the people list stays"
             # ---- a new project: big Next steps cards at the top of the panel, Flint just says hi, Helpers wait
-            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:false, task:false, friend:false, agent:false, repo:true})")
+            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:false, task:false, agent:false, repo:false})")
             host.wait_for_selector("#room-next .rn-card", timeout=5000)
             assert host.locator("#room-next .rn-card").count() == 4 and host.locator("#flint .fl-chip").count() == 0
             assert host.evaluate("document.querySelector('#room-next').getBoundingClientRect().top < document.querySelector('#room-list').getBoundingClientRect().top"), "next steps sit at the top"
             assert host.locator("#room-helpers").is_hidden()
             # ---- once the tribe is going: the full chips and the privacy line on an empty thread
-            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:false, repo:true}, {pin:true})")
+            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:false, repo:true}, {pin:true})")
             host.wait_for_selector("#room-next", state="detached", timeout=5000)
             chips = host.locator("#flint .fl-chip").all_text_contents()
             assert chips == ["Connect my AI", "Capture a note", "What's happening?", "How do invites work?"], chips
@@ -135,7 +135,7 @@ def main():
             ph.evaluate("TribeMobile.talkTo()")   # Talk to… (opened from the side panel, Agents, or here)
             ph.wait_for_selector("#m2-talk-sheet [data-talk='flint']", state="visible")
             assert "Qwen" not in ph.text_content("#m2-talk-sheet")
-            ph.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:false, repo:true}, {pin:true})")
+            ph.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:false, repo:true}, {pin:true})")
             ph.click("#m2-talk-sheet [data-talk='flint']")
             ph.wait_for_selector("#flint-full:not(.hidden) #ff-input", state="visible")
             assert ph.locator("#flint-full .fl-chip").count() == 4

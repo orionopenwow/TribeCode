@@ -58,11 +58,14 @@
       <button class="sx-chip ${cur ? '' : 'on'}" data-kind="" aria-pressed="${!cur}">✨ Sense it</button>
       <label class="sx-notes"><input type="checkbox" id="sx-notes" ${st.notes ? 'checked' : ''}> Flint drops ideas in chat</label></div>`;
   }
+  // feat/setup-flow: a colored thumbnail strip on the left (tinted by type; a palette shows its swatches), a bold
+  // title, one line of body, and "Make it a task" at the bottom right.
   function item(it) {
-    const sw = it.colors ? `<span class="sx-sw" aria-label="Colors: ${esc(it.colors.join(', '))}">${it.colors.map(c => `<i style="background:${esc(c)}" title="${esc(c)}"></i>`).join('')}</span>` : '';
     const added = done.has(it.id);
-    return `<div class="sx-item" data-sx="${esc(it.id)}" data-type="${esc(it.type)}"><span class="sx-emo" aria-hidden="true">${esc(it.emoji || '💡')}</span>
-      <div class="sx-body"><b>${esc(it.title)}</b><p>${esc(it.text || '')}</p>${sw}
+    const thumb = it.colors ? `<span class="sx-thumb sx-pal" aria-label="Colors: ${esc(it.colors.join(', '))}">${it.colors.map(c => `<i style="background:${esc(c)}" title="${esc(c)}"></i>`).join('')}</span>`
+      : `<span class="sx-thumb" aria-hidden="true"><span class="sx-emo">${esc(it.emoji || '💡')}</span></span>`;
+    return `<div class="sx-item" data-sx="${esc(it.id)}" data-type="${esc(it.type)}">${thumb}
+      <div class="sx-body"><b>${esc(it.title)}</b><p title="${esc(it.text || '')}">${esc(it.text || '')}</p>
         ${it.task && C.state && (C.state().me || {}).role !== 'spectator' ? `<div class="sx-acts"><button class="btn sm sx-task" data-task="${esc(it.id)}" ${added ? 'disabled' : ''}>${added ? 'Added to tasks' : 'Make it a task'}</button></div>` : ''}</div>
       <button class="sx-x" data-dismiss="${esc(it.id)}" title="Hide this idea" aria-label="Hide this idea">×</button></div>`;
   }

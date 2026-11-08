@@ -1,0 +1,121 @@
+/* Setup flow (feat/setup-flow): the streamlined vision composer, inline header edits, the "Shape it" role cards and
+   their one-screen choosers, Make the starter, task type chips and the "Who does it?" row. Flat matte: 1px borders,
+   depth from luminance steps only, no gradients, glows or shadows. Phones at 390px: everything wraps, nothing overflows. */
+.av-cat .emo, .tk-type .emo, .tk-do .emo, .tk-who-chip .emo, .tk-tchip .emo { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+
+/* ---------- vision composer: category chips + the gist ---------- */
+.av2 .av-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.av-cat { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.av-cat .emo { font-size: 15px; filter: saturate(.85); }
+.av-cat:hover { border-color: var(--edge-pop); }
+.av-cat[aria-checked="true"] { background: var(--rust-soft); border-color: color-mix(in srgb, var(--action) 55%, var(--edge)); }
+.av-gist-l { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+textarea.av-gist { width: 100%; min-height: 64px; resize: vertical; font-size: 14.5px; line-height: 1.55; margin-bottom: 14px; }
+.av-draft-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.av-improve { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--faint); flex-wrap: wrap; }
+.av2 textarea.av-text { height: 210px; font-family: var(--mono); font-size: 13px; }
+
+/* ---------- Dashboard header: name, face and description edit in place ---------- */
+.pj-title { position: relative; }
+.pj-inl { border-radius: 8px; outline: 1px solid transparent; outline-offset: 3px; transition: outline-color .12s; }
+.pj-inl:not(:disabled):hover, .pj-inl:focus-visible { outline-color: var(--edge-pop); }
+.pj-name-btn { font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; padding: 0 2px; margin: 0 -2px; cursor: text; text-align: left; max-width: 100%; overflow-wrap: anywhere; }
+.pj-name-in { font-size: 26px; font-weight: 700; height: 44px; width: min(420px, 100%); }
+.pj-face-pop { position: fixed; z-index: 60; width: min(312px, calc(100vw - 32px)); padding: 10px; border: 1px solid var(--edge-pop); border-radius: 12px; background: var(--surface); }
+.pfp-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
+.pfp-e { aspect-ratio: 1; border-radius: 8px; border: 1px solid transparent; background: none; font-size: 20px; cursor: pointer; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+.pfp-e:hover, .pfp-e:focus-visible { background: var(--surface-2); }
+.pfp-e.on { border-color: var(--edge-pop); background: var(--surface-2); }
+.pfp-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--edge); flex-wrap: wrap; }
+
+/* ---------- "Shape it": role cards + Make the starter ---------- */
+.su-card { margin: 0 0 18px; padding: 16px; }
+.su-head { display: flex; align-items: flex-start; gap: 12px; }
+.su-head > div { flex: 1; min-width: 0; }
+.su-head .eyebrow { display: block; margin-bottom: 3px; }
+.su-head h3 { margin: 0; font-size: 17px; }
+.su-hide { font-size: 13px; flex: none; }
+.su-sub { margin: 6px 0 12px; font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+.su-roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.su-role { position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised, var(--surface-2)); color: var(--text); text-align: left; cursor: pointer; }
+.su-role:hover { border-color: var(--edge-pop); }
+.su-role.on { background: var(--surface); }
+.su-e { flex: none; font-size: 24px; line-height: 1; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; filter: saturate(.85); }
+.su-rt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.su-rt b { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.su-rt small { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.su-role.on small { color: var(--live-ink); }
+.su-ok { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--live, #38C6B1); }
+.su-ok svg.i { width: 12px; height: 12px; fill: none; stroke: var(--on-live, #0B0C10); stroke-width: 2.5; }
+.su-starter { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 12px; border: 1px solid color-mix(in srgb, var(--action) 45%, var(--edge)); border-radius: 10px; background: var(--rust-soft); }
+.su-st-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.su-st-t b { font-size: 15px; }
+.su-st-t small { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.su-starter .btn { flex: none; }
+.su-made { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 13.5px; color: var(--muted); flex-wrap: wrap; }
+.su-made svg.i { width: 16px; height: 16px; fill: none; stroke: var(--live-ink); stroke-width: 2.5; }
+
+/* the one-screen chooser (in the shared modal; a sheet on phones) */
+.modal-card:has(.su-flow) { width: min(620px, calc(100vw - 32px)); }
+.su-flow { display: flex; flex-direction: column; min-width: 0; }
+.su-flow .lead { margin-bottom: 14px; }
+.su-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.su-opt { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); color: var(--text); text-align: left; cursor: pointer; }
+.su-opt:hover:not(:disabled) { border-color: var(--edge-pop); background: var(--surface); }
+.su-opt.on { border-color: color-mix(in srgb, var(--action) 55%, var(--edge)); background: var(--rust-soft); }
+.su-opt:disabled { opacity: .6; cursor: default; }
+.su-ot { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.su-ot b { font-size: 14px; font-weight: 600; }
+.su-ot small { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.su-sw { flex: none; display: flex; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; }
+.su-sw i { display: block; width: 14px; height: 34px; }
+.su-note { font-size: 12.5px; }
+
+/* ---------- Task Board: type chips and "Who does it?" ---------- */
+.tk-types { display: flex; flex-wrap: wrap; gap: 4px; }
+.tk-type { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 9px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--muted); font-size: 12.5px; cursor: pointer; }
+.tk-type .emo { font-size: 13px; }
+.tk-type:hover { color: var(--text); border-color: var(--edge-pop); }
+.tk-type[aria-checked="true"] { color: var(--text); background: var(--rust-soft); border-color: color-mix(in srgb, var(--action) 55%, var(--edge)); }
+.quick-wrap { display: flex; flex-direction: column; gap: 6px; margin: 0 0 8px; }
+.quick-wrap .quick-add { margin: 0; }
+.tk-types.sm .tk-type { height: 24px; padding: 0 7px; font-size: 11.5px; }
+.tk-types.m2-types { margin: 10px 0 0; }
+.tk-types.m2-types .tk-type { height: 34px; padding: 0 12px; font-size: 13.5px; }
+.chip.tk-tchip { display: inline-flex; align-items: center; gap: 3px; }
+.chip.tk-tchip .emo { font-size: 11px; }
+.tk-who { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; }
+.tk-who-l { font-size: 11.5px; color: var(--faint); margin-right: 2px; }
+.tk-do { display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--edge); background: var(--surface-2); color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.tk-do .emo { font-size: 11.5px; }
+.tk-do:hover { color: var(--text); border-color: var(--edge-pop); background: var(--surface); }
+.tk-who-chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; margin: 6px 0 2px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font-size: 11.5px; cursor: pointer; }
+.tk-who-chip:hover { border-color: var(--edge-pop); }
+.tk-friend { height: 28px; max-width: 100%; font-size: 12.5px; }
+
+/* the Suggested box: compact, above the board, only while there are fewer than 3 tasks */
+#as-tasks .as-ideas.compact { border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); padding: 10px 12px; margin: 0; }
+#as-tasks .as-ideas.compact .as-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+#as-tasks .as-ideas.compact .as-it small { display: none; }
+
+/* the sidebar's "+ Add" waits for the vision */
+body[data-vision="0"] #nest-add { display: none; }
+
+@media (max-width: 1100px) { .su-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 820px) {
+  .su-card { padding: 12px; margin-bottom: 12px; }
+  .su-roles { gap: 6px; }
+  .su-role { padding: 10px; gap: 8px; }
+  .su-e { font-size: 20px; }
+  .su-rt b { font-size: 13px; }
+  .su-starter { flex-wrap: wrap; }
+  .su-starter .btn { width: 100%; justify-content: center; }
+  .su-opts { grid-template-columns: minmax(0, 1fr); }
+  .av-cat { height: 38px; }
+  .av-improve { margin-left: 0; }
+  .pj-name-in { font-size: 22px; height: 40px; }
+  .tk-do { height: 30px; padding: 0 9px; font-size: 12.5px; }
+  .sx-item { min-height: 92px; }
+  .sx-thumb { flex-basis: 48px; }
+  .sx-body b { font-size: 16px; }
+}
