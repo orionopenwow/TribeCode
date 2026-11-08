@@ -66,7 +66,7 @@
   let t = null; const soon = (ms = 800) => { clearTimeout(t); t = setTimeout(load, ms); };
   if (C && C.on) {
     C.on('hello', () => soon(200)); C.on('project', () => soon(200)); C.on('projects', () => soon(400));
-    C.on('ws', m => { if (m && /^(task|tasks|vision|doc|docs|presence|members|join|repo|projects)/.test(m.type || '')) soon(1500); });
+    C.on('ws', m => { if (m && /^(task|tasks|vision|doc|docs|presence|members|join|repo|setup)/.test(m.type || '')) soon(1500); });
   }
   window.TribeStage = { set, level: () => level(by[pid()]), steps: () => by[pid()] || null, refresh: () => soon(0) };
 })();

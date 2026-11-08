@@ -90,7 +90,8 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
       if (m === 'PUT') {
         if (!can(me, 'settings.edit')) return fail(res, 403, 'only the host or an admin edits VISION.md directly; propose a change instead');
         const body = await readBody(req); fs.writeFileSync(store.p('VISION.md'), str(body.text, 20000) + '\n');
-        postChat('general', 'tribecode', 'VISION.md was updated'); return send(res, 200, { ok: true });
+        postChat('general', 'tribecode', 'VISION.md was updated'); broadcast({ type: 'vision' });   // feat/setup-flow: the checklist and stage.js tick live
+        return send(res, 200, { ok: true });
       }
     }
     if (a === 'milestones') {

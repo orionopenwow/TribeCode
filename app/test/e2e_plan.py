@@ -212,7 +212,7 @@ def main():
                 wait_for(lambda: [e for e in bus(host_tok, "reminder") if e.get("ref") == todays["id"]], what="task-due reminder")
 
             # ---------- 3. task due chips + overdue color ----------
-            host.click('[data-nav="tasks"]:visible'); host.click("#wt-tasks")   # Tasks & Board opens on its last tab: pick Board
+            host.click('[data-nav="tasks"]:visible'); host.evaluate("TribeShell.go('tasks')")   # Tasks & Board opens on its last tab: pick Board (no tab row until the project is going)
             host.wait_for_selector(f".task[data-id='{late['id']}'] .due-chip.overdue")
             color = host.evaluate(f"getComputedStyle(document.querySelector(\".task[data-id='{late['id']}'] .due-chip\")).color")
             ember = host.evaluate("getComputedStyle(document.body).getPropertyValue('--ember-ink').trim()")

@@ -117,6 +117,8 @@ def main():
         assert api(f"/projects/{pid}/widgets", "PUT", {"widgets": [{"kind": "builtin", "key": "nope"}]}, token=orion)[0] == 400
         assert api(f"/projects/{pid}/widgets", "PUT", {"widgets": [{"kind": "link", "name": "X", "url": "javascript:alert(1)"}]}, token=orion)[0] == 400, "only http(s) links"
 
+        ok(api("/vision", "PUT", {"text": "# Game\n\nA small platformer."}, token=orion, project=pid))   # + Add waits for the vision (feat/setup-flow)
+        ok(api("/tasks", "POST", {"title": "First level"}, token=orion, project=pid))   # vision + task + repo: "going", so the helpers show
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             hctx = b.new_context(viewport={"width": 1440, "height": 900})
