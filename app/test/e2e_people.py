@@ -215,8 +215,9 @@ def main():
                 err, txt = mcp(ma, "check_messages"); assert "Is the pause key done?" in txt, txt
                 # status line: uptime + commit counter, quiet and mono (bottom of the room pane until the shell mounts it)
                 page.keyboard.press("Escape"); page.wait_for_selector("#person-panel", state="hidden")
-                page.wait_for_function("(document.querySelector('.pp-status') || {}).innerText?.includes('up ')")
-                st = page.inner_text(".pp-status"); assert "2 commits today" in st, st
+                page.evaluate("TribePeople.statusLine(document.body.appendChild(Object.assign(document.createElement('div'), { id: 'pp-test' })))")   # desktop shows no uptime line; the helper still works
+                page.wait_for_function("(document.querySelector('#pp-test') || {}).innerText?.includes('up ')")
+                st = page.inner_text("#pp-test"); assert "2 commits today" in st, st
                 page.evaluate("TribePeople.statusLine(document.body.appendChild(document.createElement('div')))")
                 page.close()
 

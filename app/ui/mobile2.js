@@ -956,7 +956,8 @@
     // Host uptime + commits today (people.js) belongs in the sidebar footer.
     // Desktop: it's a global fact, so it sits small at the bottom of the left rail, not in a project's tools.
     const desk = matchMedia('(min-width: 821px)').matches, foot = desk ? $('#tour-rail') : $('.nest-foot');
-    if (foot && window.TribePeople && window.TribePeople.statusLine && !$('#nest-status')) {
+    if (desk) { const d = $('#people-status'); if (d) d.remove(); }   // desktop: no uptime line ("up 0m") anywhere
+    else if (foot && window.TribePeople && window.TribePeople.statusLine && !$('#nest-status')) {
       const el = document.createElement('div'); el.id = 'nest-status'; if (desk) el.className = 'rail-status'; foot.appendChild(el); window.TribePeople.statusLine(el);
       const d = $('#people-status'); if (d) d.remove();
     }
