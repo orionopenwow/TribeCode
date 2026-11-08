@@ -14,7 +14,10 @@ http.createServer((req, res) => {
       const { prompt = '', model } = JSON.parse(body || '{}');
       calls.push({ model, kind: prompt.includes('Meeting transcript:') ? 'meeting' : prompt.includes('Clean up this note') ? 'refine' : prompt.includes('Suggest a first project') ? 'start' : prompt.includes('Question from') ? 'brain' : prompt.includes('TL;DR') ? 'summary' : prompt.includes('standup') ? 'standup' : 'vision' });
       let response = 'ok';
-      if (prompt.includes('Clean up this note')) response = 'Lantern flicker: randomize the glow a little every frame.';
+      const sys = JSON.parse(body || '{}').system || '';
+      if (sys.includes('You are Flint')) response = '<think>hmm</think>Hi, Flint here. The room looks calm.';   // feat/flint
+      if (response !== 'ok') {}
+      else if (prompt.includes('Clean up this note')) response = 'Lantern flicker: randomize the glow a little every frame.';
       else if (prompt.includes('Suggest a first project')) response = 'Lantern Garden\n- Sketch the garden map\n- Make lanterns glow at night\n- Invite a friend to plant one';
       else if (prompt.includes('Question from')) response = 'Maya is building the campfire save point.';
       else if (prompt.includes('Meeting transcript:')) response = '<think>notes</think>## Summary\nThe crew planned the campfire save points and the fishing mini-game.\n\n## Decisions\n- Save points use campfires, not menus.\n\n## Action items\n- [ ] Maya: Build the campfire save point\n- [ ] Orion: Write the fishing mini-game spec\n- [ ] Unassigned: Pick a soundtrack';

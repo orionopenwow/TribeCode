@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="t"><title id="t">Two friends and a small robot agent talking in one speech bubble</title>
+<rect x="34" y="8" width="92" height="40" rx="10" fill="#32302F"/>
+<path d="M72 48l8 10 6-10z" fill="#32302F"/>
+<rect x="44" y="18" width="44" height="6" rx="3" fill="#FFFFFF"/>
+<rect x="44" y="30" width="64" height="6" rx="3" fill="#B9B9B9"/>
+<circle cx="114" cy="21" r="5" fill="#8EC07C"/>
+<path d="M14 116c0-28 6-42 20-42s20 14 20 42z" fill="#83A598"/>
+<circle cx="34" cy="62" r="12" fill="#E8B48A"/>
+<path d="M21 62c-2-12 7-18 15-16 9 2 11 8 9 13-7-4-16-4-24 3z" fill="#1D2021"/>
+<rect x="66" y="94" width="28" height="22" rx="6" fill="#45403D"/>
+<rect x="62" y="66" width="36" height="28" rx="8" fill="#E4E4E4"/>
+<rect x="68" y="72" width="24" height="14" rx="4" fill="#1D2021"/>
+<rect x="73" y="76" width="4" height="5" rx="1" fill="#8EC07C"/><rect x="83" y="76" width="4" height="5" rx="1" fill="#8EC07C"/>
+<path d="M80 66v-6" stroke="#E4E4E4" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="58" r="3.5" fill="#8EC07C"/>
+<path d="M106 116c0-28 6-42 20-42s20 14 20 42z" fill="#F26B1D"/>
+<circle cx="126" cy="62" r="12" fill="#A86B4A"/>
+<path d="M113 64c-3-15 6-21 14-21s16 6 11 24c-2-6-5-11-10-13-5 3-9 6-15 10z" fill="#FABD2F"/>
+</svg>

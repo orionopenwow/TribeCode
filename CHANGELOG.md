@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.9.5
+
+- **A cleaner project Overview**, laid out like your mockup:
+  - **Living update**: a status pill and four tiles (Lately · Chat · Way forward · Coming up)
+  - **Onboarding Checklist**: a green progress bar and five steps that tick themselves (write the vision, the first task, a friend joins, connect your Claude Code, pin the repo). Each step has its button, and the checklist folds or shrinks to "All set" when done. It replaces the "No vision yet" banner and the "Start here" card
+  - **Tribe & Agents**: Who is here and your agents
+  - **Project Stream**: recent changes and upcoming items
+  - **Repo & Tools**: the shared repo, plus today's standup and a drop zone for files
+  - **Toolbox picks**: smaller, at the bottom
+- **Phones**: the same sections in one column with tight spacing
+
+## v0.9.4
+
+- **Meet Flint**: TribeCode's built-in helper now has a name and its own "Ask Flint…" bar at the bottom of the room panel. Even with no local model it can connect your Claude Code, answer how-to questions from the Guide, capture a note ("note: …"), add a task ("task …"), invite a friend, start or stop hosting, open any section, find docs and tasks, tell you what's happening, and switch the Secretary and repo autopilot. With a local model on, it also answers anything else, streaming its reply. It runs on this computer and nothing you type leaves it. The thread is remembered and folds away; the Helpers row and the ? menu both open it
+- **Phones**: Flint is the first row in Talk to…, with a full-screen thread and the same composer
+
+## v0.9.3
+
+- **Hosting lives top left**: the "Hi, you're hosting" banner is gone. While this computer hosts the tribe, a small green **Hosting** pill sits at the top left; when you're not hosting there's nothing. Click it for who can reach you (Wi-Fi, Tailscale or anyone), who's online, the address with a copy button, the Host switch (desktop app), Invite a friend, Share beyond my Wi-Fi and Host settings
+- **Phones**: unchanged (Home's identity card already says you're hosting)
+
+## v0.9.2
+
+- **Chat fills from the bottom**: messages stack up from just above the chat bar, like Discord, and the newest is always in view. The "you're hosting" banner no longer pushes the chat under the bar
+- **A cleaner chat header**: the channel is a plain bold "# general" with a quiet chevron to switch conversations (no box), the member line under it, and quieter call, screen and info buttons in a single 64px row
+- **Phones**: unchanged (the phone chat already filled from the bottom)
+
+## v0.9.1
+
+- **Campfire is the default look**: warm greys with white text. The other 8 themes are still in Settings › Theme. If you never picked a theme you get Campfire; if you picked one, it stays
+- **Thicker icons on desktop**: the sidebar, user bar and title bar icons use the same heavier weight as the phone rack, slightly bigger, and the selected row's icon is bolder
+- **Help, top right**: a filled ? right of the window buttons opens the Guide (Start here, Connect Claude Code, Phones and friends, Troubleshooting), Keyboard shortcuts (also Ctrl /), Report a bug, Check for updates, What's new, the docs and TribeCode on GitHub, and the version you're on
+- **New download site**: modeled on cursor.com, in the Campfire palette. A left-aligned headline, Download for your OS and Try the live demo, then a live TribeCode window that plays on a loop (a friend asks, an agent streams its work, the game builds in the preview, a plan ticks off) over a flat campfire night scene with our characters. Four feature sections with small live mocks, real GitHub stats, and a final download block
+- **Phones**: the site keeps the live window's proportions at 390px and collapses the nav to Download and a menu. In the app, phones get Campfire by default too
+
 ## v0.9.0
 
 - **A real document editor**: on desktop, Google Docs meets Notion. A top bar with the title, where it lives, save status and who's editing. A sticky toolbar: undo/redo, text styles (Title, Subtitle, Heading 1–3, Quote, Code), bold, italic, underline, strike, code, text color, highlight, link, align, bullet/numbered/check lists, divider, table, clear formatting. Keyboard shortcuts like Google Docs. A left panel with your docs and a live outline of the headings, and a centered page about 720px wide. Ask AI and Share (a link that opens the doc) are in the top bar

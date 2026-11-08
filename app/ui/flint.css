@@ -1,0 +1,72 @@
+/* Flint (app/ui/flint.js): the built-in helper. Desktop: a dock pinned at the bottom of the right panel.
+   Phones: a full-screen thread. Flat matte, theme variables only, 1px borders. */
+.flint { flex: none; display: flex; flex-direction: column; max-height: 45%; min-height: 0; padding: 8px 12px 12px; border-top: 1px solid var(--edge); background: var(--right, var(--surface)); }
+.panel.previewing .flint { display: none; }
+.fl-head { display: flex; align-items: center; gap: 4px; flex: none; }
+.fl-fold { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 4px; border-radius: 6px; color: var(--faint); text-align: left; }
+.fl-fold:hover { background: var(--hover); }
+.fl-fold svg.i { margin-left: auto; transform: none; transition: transform .15s var(--ease); flex: none; }
+.flint.folded .fl-fold svg.i { transform: rotate(180deg); }
+.fl-eyebrow { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); flex: none; }
+.fl-st { font-size: 11.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.fl-st.ok { color: var(--live-ink); }
+.fl-x { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: var(--faint); flex: none; }
+.fl-x:hover { background: var(--hover); color: var(--text); }
+.fl-x[hidden] { display: none; }
+
+.fl-thread { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 6px 2px 8px; overscroll-behavior: contain; }
+.flint.folded .fl-thread { display: none; }
+.flint.folded { padding-top: 6px; }
+
+.fl-empty { display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 0; }
+.fl-hi { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.fl-hi b { color: var(--text); font-weight: 600; }
+.fl-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fl-chip { height: 28px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 14px; font-size: 12.5px; color: var(--text); background: var(--surface); }
+.fl-chip:hover { background: var(--hover); border-color: var(--edge-pop); }
+.fl-priv { margin: 0; font-size: 11.5px; color: var(--faint); line-height: 1.45; }
+
+.fl-msg { display: flex; gap: 6px; align-items: flex-start; max-width: 100%; }
+.fl-msg.me { justify-content: flex-end; }
+.fl-b { min-width: 0; max-width: calc(100% - 26px); }
+.fl-msg.me .fl-b { max-width: 88%; }
+.fl-t { font-size: 13px; line-height: 1.5; color: var(--text); overflow-wrap: anywhere; white-space: pre-wrap; }
+.fl-msg.me .fl-t { padding: 6px 10px; border-radius: 12px 12px 4px 12px; background: var(--surface-3); }
+.fl-msg.fl .fl-t { padding: 2px 0; }
+.fl-msg.streaming .fl-t { color: var(--muted); }
+.fl-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.fl-act { min-height: 26px; padding: 3px 10px; border: 1px solid var(--edge); border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--accent-ink); background: var(--surface); text-align: left; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fl-act:hover { background: var(--hover); }
+
+.fl-av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--chip); color: var(--accent-ink); }
+.fl-av.sm { width: 20px; height: 20px; margin-top: 2px; }
+.fl-glyph { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the composer: the main chat bar's shape, smaller */
+.fl-bar { flex: none; display: flex; align-items: center; gap: 2px; height: 40px; padding: 0 4px 0 6px; border: 1px solid var(--edge); border-radius: 20px; background: var(--raised, var(--surface-2)); }
+.fl-bar:focus-within { border-color: var(--edge-pop); }
+.fl-in { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 13.5px; padding: 0 6px; }
+.fl-in::placeholder { color: var(--faint); }
+.fl-ic { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--faint); flex: none; }
+.fl-ic:hover { background: var(--hover); color: var(--text); }
+.fl-send { background: var(--accent); color: #fff; }
+.fl-send:hover { background: var(--accent); color: #fff; filter: none; opacity: .9; }
+
+/* phones: the full-screen thread */
+.flint-full { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--canvas); color: var(--text); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+.flint-full.hidden { display: none; }
+.ff-head { flex: none; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 12px; border-bottom: 1px solid var(--edge); }
+.ff-back { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--text); flex: none; }
+.ff-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ff-id .fl-eyebrow { color: var(--muted); }
+.ff-thread { padding: 14px 16px; gap: 12px; }
+.ff-thread .fl-t { font-size: 15px; }
+.ff-thread .fl-hi { font-size: 15px; }
+.ff-thread .fl-chip { height: 34px; font-size: 14px; padding: 0 14px; border-radius: 17px; }
+.ff-thread .fl-act { min-height: 32px; font-size: 14px; }
+.ff-foot { flex: none; padding: 8px 12px 10px; border-top: 1px solid var(--edge); }
+.ff-foot .fl-bar { height: 46px; border-radius: 23px; }
+.ff-foot .fl-in { font-size: 16px; }
+.ff-foot .fl-ic { width: 36px; height: 36px; }
+body.flint-open { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .fl-fold svg.i { transition: none; } }

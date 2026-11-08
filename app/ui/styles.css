@@ -49,7 +49,7 @@ input, select { font: inherit; color: inherit; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-track { background: transparent; }
-svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2;   /* the thicker phone-rack weight, on desktop too */ stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .hidden { display: none !important; }
 kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; padding: 0 5px; border-radius: 4px; border: 1px solid var(--edge); color: var(--muted); background: var(--surface-2); }
 

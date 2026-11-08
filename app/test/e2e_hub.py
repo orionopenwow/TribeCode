@@ -201,7 +201,7 @@ def main():
             host.wait_for_selector("#pj-rail [data-pj-open]", state="visible")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
             host.wait_for_selector("#room-agents .ra-row, #room-agents [data-agent]")
-            wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Local model")
+            wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Flint")   # the built-in helper (was "Local model")
             host.wait_for_selector("#hub-note-new")
             assert host.locator("#room-scratch").is_hidden(), "Home has Start a note in the page, not the panel"
             # right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
@@ -362,7 +362,7 @@ def main():
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
             # desktop: the header keeps only the update button; you, the bell and Friends sit in the bottom-left user bar
-            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn"]
+            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn", "tb-help"]
             assert host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].every(s => document.querySelector(s).closest('#userbar'))"), "user bar holds profile, bell, friends"
             order = host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order

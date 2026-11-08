@@ -124,16 +124,16 @@ def main():
             assert host.evaluate("TribeProjects.current()") != fresh, "another fresh project"
             host.click(".modal-card.ii [data-close]")
 
-            # ---- the fresh project's overview: bio, living update, "no vision yet" ----
-            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-living .pl-sum", timeout=15000)
+            # ---- the fresh project's overview: bio, living update, onboarding checklist ----
+            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-living .pl-cell", timeout=15000)
             assert host.query_selector_all("#pj-living .pl-cell").__len__() == 4, "Lately · Chat · Way forward · Coming up"
-            host.wait_for_selector("#pj-vnudge #pj-vwrite")
+            host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
             host.click("#pj-bio"); host.fill(".pj-bio-in", "A tiny game for friends"); host.keyboard.press("Enter")
             wait_text(host, "#pj-bio", "A tiny game for friends")
             cur = host.evaluate("TribeProjects.current()")
             assert any(x["id"] == cur and x.get("bio") == "A tiny game for friends" for x in api("/projects", token=tok)[1]["projects"]), "bio saved"
-            host.click("#pj-vwrite"); host.fill("#pj-vtext", "A cozy platformer.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
-            host.wait_for_selector("#pj-vnudge", state="detached", timeout=10000)
+            host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vtext", "A cozy platformer.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
+            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
 
             # ---- ?invite=1 (tribecode://invite, Invite-A-Friend.bat) ----
             n = len(api("/projects", token=tok)[1]["projects"])

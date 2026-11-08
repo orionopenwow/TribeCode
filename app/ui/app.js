@@ -583,7 +583,7 @@
   if ($('#folder-item')) $('#folder-item').addEventListener('click', () => window.TribeOnboarding.open({ fromSettings: true }).then(() => window.TribeOnboarding.goTo(3)));
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
-      const st = S.get(), next = document.body.classList.contains('dark') ? (st.themeLight || 'light') : (st.themeDark || 'dark');   // flips between your light and dark theme
+      const st = S.get(), next = document.body.classList.contains('dark') ? (st.themeLight || 'light') : (st.themePicked && st.themeDark ? st.themeDark : (st.themeDark && st.themeDark !== 'dark' ? st.themeDark : 'campfire'));   // flips between your light and dark theme
       S.set(window.TribeThemes ? { ...window.TribeThemes.pick(next), themeSystem: false } : { theme: next }); refresh(); e.preventDefault();
     }
   });

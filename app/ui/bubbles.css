@@ -229,3 +229,28 @@ body.light .mt .tk.read { color: var(--live-ink); }
 .chat-more { display: block; margin: 6px auto 14px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--body); font: 500 12px/1.4 var(--mono); cursor: pointer; }
 .chat-more:hover, .chat-more:focus-visible { color: var(--white); border-color: var(--brand); }
 .chat-more:disabled { opacity: .6; cursor: default; }
+
+/* ---------- desktop chat header, cleaner: one 64px row, the channel as a plain title, quiet icon buttons ---------- */
+.chat-col .chat-title.cb { min-height: 64px; gap: 12px; margin: 0 0 6px; padding: 8px 4px 12px; }
+.cb-av { width: 40px; height: 40px; border-radius: 12px; }
+.cb-av.cb-tribe { background: var(--surface-2); border: 1px solid var(--edge); }
+.cb-tt { gap: 2px; }
+.cb-tt .chan-switch, .cb-tt .dm-back { height: 26px; padding: 0 8px; margin-left: -8px; border: 0; border-radius: 8px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+.cb-tt .chan-switch:hover, .cb-tt .chan-switch[aria-expanded="true"], .cb-tt .dm-back:hover { background: var(--surface-2); border: 0; }
+.cb-tt .chan-switch:focus { outline: none; } .cb-tt .chan-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cb-tt .chan-switch svg.i { width: 14px; height: 14px; color: var(--faint); margin-left: 2px; }
+.cs-hash { color: var(--faint); font-weight: 600; margin-right: 1px; }
+.cb-sub { font-size: 12.5px; color: var(--faint); }
+.cb-acts { gap: 2px; padding-left: 12px; }
+.cb-btn { width: 38px; height: 38px; }
+.cb-btn svg.i { width: 20px; height: 20px; }
+
+/* messages stack from the bottom up, like Discord: a short conversation sits right above the composer */
+#chat-list, #dm-list { display: flex; flex-direction: column; }
+#chat-list > :first-child, #dm-list > :first-child { margin-top: auto; }
+/* the "you're hosting" banner sits above the chat: the chat takes the rest of the height, so the composer never covers messages */
+@media (min-width: 821px) {
+  .main:has(> #view-chat:not(.hidden)) { display: flex; flex-direction: column; }
+  .main:has(> #view-chat:not(.hidden)) > * { flex: none; width: 100%; }
+  .main > #view-chat:not(.hidden) { flex: 1 1 0; min-height: 0; height: auto; width: 100%; }
+}

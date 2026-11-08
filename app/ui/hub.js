@@ -10,7 +10,7 @@
 // from GET /api/insights with a fallback to suggestions + the Secretary's inspirations), the helpers (Secretary, local
 // model, autopilot listed as present entities) and the private global scratchpad (server/scratch.js; localStorage
 // until you are in a tribe).
-// Public: window.TribeHub = { open(mode), mode(), last(), remember(), scratch, refresh, data }.
+// Public: window.TribeHub = { open(mode), mode(), last(), remember(), scratch, refresh, data, openNote(id), jump(item) }.
 (function () {
   const $ = s => document.querySelector(s);
   const C = window.TribeClient;
@@ -883,12 +883,12 @@
       const row = (key, glyph, name, what, on) => `<div class="person helper ${on ? 'on' : ''}" data-helper="${key}" title="${esc(name)}"><div class="avatar helper-av">${ico(glyph, 14)}<span class="st"></span></div><div><span>${esc(name)}</span><div class="what">${what}</div></div></div>`;
       const rows = [
         sec2 ? row('secretary', 'i-quill', 'Secretary', `${sec2.on ? `<span class="ok">${esc(sec2.state)}</span>` : 'off'}${sec2.last ? ` · ${esc(ago(sec2.last))}` : ''}`, sec2.on) : '',
-        row('models', 'i-net', m.online ? `Local model · ${m.model}` : 'Local model', m.online ? '<span class="ok">ready</span> · Ollama' : 'off · Ollama not running', m.online),
+        row('flint', 'i-flint', 'Flint', m.online ? '<span class="ok">ready</span> · local model on' : 'basic mode · no local model', true),   // feat/flint: the built-in helper (was "Local model")
         auto ? row('autopilot', 'i-git', 'Repo autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
         computeRow(row),
       ].join('');
       box.innerHTML = `<h6><span class="emo" aria-hidden="true">🤝</span>Helpers</h6>${rows}`;
-      box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : fleetGo(r.dataset.helper));
+      box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : r.dataset.helper === 'flint' && window.TribeFlint ? window.TribeFlint.focus() : fleetGo(r.dataset.helper));
     }
     let pad = $('#room-scratch');   // the scratchpad is gone: one quiet "Start a note" that lands in your docs
     if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'room-note'; const cc = $('#cc-connect'); cc.after(pad);
@@ -1063,5 +1063,6 @@
 
   setTimeout(() => { panel(); scratch.sync(); fromHash(); }, 0);
   if (document.body.dataset.view === 'hub') setTimeout(onShow, 0);   // app.js may have shown the hub before this file loaded
-  window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel };
+  window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel,
+    openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump };   // feat/flint: Flint opens the note it captured
 })();
