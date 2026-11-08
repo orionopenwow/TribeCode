@@ -28,7 +28,7 @@
     if (key !== cur) { cur = key; try { window.dispatchEvent(new CustomEvent('tribe:stage', { detail: { level: lv, steps: s || null } })); } catch {} }
   }
   const pinned = {};   // set(id, steps, { pin: true }) keeps a stage until the page reloads (tests, demos)
-  function set(id, steps, o) { if (pinned[id] && !(o && o.pin)) return; by[id] = steps; if (o && o.pin) pinned[id] = 1; apply(); }
+  function set(id, steps, o) { if (pinned[id] && !(o && o.pin)) return; by[id] = steps; if (o && o.pin) pinned[id] = 1; apply(); drawNext(); }
 
   // Next steps: big cards at the top of the right panel while a project is new or growing.
   // Clicking one runs the step, and Flint flies over to show where it happens.
@@ -36,15 +36,17 @@
     vision: ['✨', 'Write the vision', 'What you’re making and who it’s for.', 'vision'],
     task: ['📝', 'Add a first task', 'One small thing to build first.', 'newtask'],
     agent: ['🤖', 'Connect your AI', 'Claude Code, Codex, Gemini or Cursor.', 'claude'],
-    repo: ['🌿', 'Create the repo', 'A home for the code, in one click.', 'repo'],
+    repo: ['🌿', 'Create the repo', 'The shared folder for your code, in one click.', 'repo'],
   };
   const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function drawNext() {
     const pane = document.getElementById('room-pane'); if (!pane) return;
     let box = document.getElementById('room-next');
-    const s = by[pid()], lv = level(s), show = s && lv !== 'going' && !document.body.classList.contains('global');
+    // qa-qol-2: on the Dashboard the Camp setup card already lists these same steps: no second copy in the panel
+    const camp = document.body.dataset.view === 'home' && !!document.querySelector('#view-home:not(.hidden) #pj-check.hero');
+    const s = by[pid()], lv = level(s), show = s && lv !== 'going' && !camp && !document.body.classList.contains('global');
     if (!show) { if (box) box.remove(); return; }
-    if (!box) { box = document.createElement('section'); box.id = 'room-next'; box.className = 'room-next'; pane.prepend(box); }
+    if (!box) { box = document.createElement('section'); box.id = 'room-next'; box.className = 'room-next'; const head = pane.querySelector(':scope > .room-head'); if (head) head.after(box); else pane.prepend(box); }   // qa-qol-2: under the head, so its × sits on the cards' row (it floated alone below them)
     const todo = KEYS.filter(k => !s[k]);
     const n = 4 - todo.length;
     box.innerHTML = `<div class="rn-head"><span class="eyebrow">Next steps</span><span class="rn-n">${n} of 4 done</span></div>
@@ -52,7 +54,7 @@
     box.querySelectorAll('[data-rn]').forEach(b => b.onclick = () => window.TribeProjects && window.TribeProjects.step(b.dataset.rn));
   }
   window.addEventListener('tribe:stage', drawNext);
-  new MutationObserver(() => drawNext()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(() => drawNext()).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-view'] });
   let busy = false;
   async function load() {
     const id = pid(); if (!id || !C || !C.connected() || busy || pinned[id]) return apply();

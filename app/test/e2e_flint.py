@@ -68,6 +68,7 @@ def main():
             assert "basic mode" in host.text_content("#flint [data-flst]")
             assert not host.locator("#room-list").is_visible(), "the right panel has no people list on desktop"
             # ---- a new project: big Next steps cards at the top of the panel, Flint just says hi, Helpers wait
+            host.evaluate("TribeApp.show('chat')")   # qa-qol-2: on the Dashboard the Camp setup card lists the steps instead
             host.evaluate("TribeStage.set(TribeProjects.current(), {vision:false, task:false, agent:false, repo:false})")
             host.wait_for_selector("#room-next .rn-card", timeout=5000)
             assert host.locator("#room-next .rn-card").count() == 4 and host.locator("#flint .fl-chip").count() == 0

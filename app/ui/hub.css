@@ -603,3 +603,9 @@ body:not(.global) .dc-fab { display: none; }
   .fv-dl, .fv-del { flex: 1; justify-content: center; }
 }
 .hub-gs .gs-ic.gs-face .pj-face, .hub-gs .gs-ic.gs-face .pj-face.sm { width: 40px !important; min-width: 40px; height: 40px !important; flex: none; justify-self: stretch; align-self: stretch; }   /* a sized box, so the emoji face (container-sized) shows */
+
+/* qa-qol-2: the test robot's notes about TribeCode itself fold away at the end of AI Insights */
+.ai-dev { margin-top: 2px; }
+.ai-dev > summary { cursor: pointer; font-size: 12.5px; color: var(--muted); padding: 6px 2px; list-style-position: inside; }
+.ai-dev > summary:hover { color: var(--text); }
+.ai-dev[open] > .ai-cards { margin-top: 6px; }

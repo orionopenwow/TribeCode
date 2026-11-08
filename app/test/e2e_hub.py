@@ -196,7 +196,7 @@ def main():
             assert "lantern" in chips and "Sketches" in chips, chips   # a folder project is named after its folder
             # the sidebar: the four rows are the Global ones, plus a way into the project
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
-            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All repos", "Agent fleet"]
+            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All code", "Agent fleet"]
             assert host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#pj-rail [data-pj-open]", state="attached")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad

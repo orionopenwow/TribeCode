@@ -215,6 +215,7 @@
     };
     draw();
   }
+  const CC_WHERE = { anywhere: 'For Claude Code on any computer, anywhere (uses the tribe\'s public link)', wifi: 'For a computer on the same Wi-Fi as the host', here: 'For Claude Code on this computer' };   // qa-qol-2
   async function connectClaude(opts) {
     if (!C.connected()) return openInvite();
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
@@ -248,9 +249,10 @@
       const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => k !== 'wifi' || r.commands.wifi);
       body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span>` : ''}<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2>${aiChips('claude-code')}
         <p class="lead">One line connects your Claude Code. Run it once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
-        <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>
+        <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}" title="${esc(CC_WHERE[k] || '')}">${l}</button>`).join('')}</div>
         ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
           : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
+        <details class="cc-what"><summary>What's a terminal?</summary><p>The window where you type commands. On Windows, open the Start menu, type <b>PowerShell</b> and press Enter. On a Mac, open <b>Terminal</b> (Applications › Utilities). Paste the line, press Enter, and Claude Code joins. No Claude Code yet? Install it first, then come back to this line.</p></details>
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
         ${opts && opts.welcome ? '<p class="cc-skip">No AI of your own? Skip this: ask Flint, or type <b>@ai</b> in the chat and the tribe\'s agents help.</p>' : ''}
         <p class="faint" style="font-size:13px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and models →</a>' : ''}</p>
@@ -388,15 +390,15 @@
           <div class="modal-foot"><button class="btn ghost" id="join-instead">Join a friend instead</button><span style="flex:1"></span><button class="btn" data-close>Close</button><button class="btn primary" id="host-here">${window.__hostError ? 'Try again' : 'Host on this computer'}</button></div>`
         : `<h2>Join a tribe</h2>
           <div class="field"><label for="join-link">Invite link</label><div class="folder"><input class="input" id="join-link" placeholder="https://…/join/k7Qx2"><button class="btn primary" id="join-go">Join</button></div></div>
-          <p class="faint" style="font-size:12.5px">To host your own, open the desktop app or run <span class="code" style="display:inline;padding:2px 6px">npm start</span>.</p>
+          <p class="faint" style="font-size:12.5px">To host your own tribe, open the TribeCode desktop app (developers can also run <span class="code" style="display:inline;padding:2px 6px">npm start</span>).</p>
           <div class="modal-foot"><button class="btn" data-close>Close</button></div>`;
       if (desktop) { $('#host-here').onclick = hostHere; $('#join-instead').onclick = () => window.TribeSettings.joinPrompt(); }
       else { $('#join-go').onclick = () => joinLink($('#join-link').value); $('#join-link').onkeydown = e => { if (e.key === 'Enter') joinLink($('#join-link').value); }; }
     } else {
       body.innerHTML = `<h2>Invite friends</h2>
-        <div class="opts"><select id="inv-hours" title="Link expires after"><option value="24">24 hours</option><option value="168">7 days</option><option value="1">1 hour</option></select>
-          <select id="inv-uses" title="How many people can use it"><option value="5">5 people</option><option value="1">1 person</option><option value="20">20 people</option></select>
-          <select id="inv-role" title="Builders can edit; spectators can only watch"><option value="builder">Builder</option><option value="spectator">Spectator</option></select></div>
+        <div class="opts"><select id="inv-hours" title="Link expires after" aria-label="Link expires after"><option value="24">Lasts 24 hours</option><option value="168">Lasts 7 days</option><option value="1">Lasts 1 hour</option></select>
+          <select id="inv-uses" title="How many people can use it" aria-label="How many people can use it"><option value="5">Up to 5 people</option><option value="1">Just 1 person</option><option value="20">Up to 20 people</option></select>
+          <select id="inv-role" title="Builders can edit; spectators can only watch" aria-label="What they can do"><option value="builder">They can build</option><option value="spectator">They can only watch</option></select></div>
         ${window.TribeProjects ? window.TribeProjects.invitePicker() : ''}
         <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
         <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p>Scan to join from a phone.<br><span class="faint" id="inv-net"></span></p></div>

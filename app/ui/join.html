@@ -154,7 +154,7 @@
       const busy = /slow down/i.test(e.message || ''), offline = e instanceof TypeError;
       $('#eyebrow').innerHTML = '<span class="dot" style="background:var(--alert)"></span>Invite unavailable';
       $('#title').textContent = busy ? 'Too many tries' : offline ? "Can't reach the tribe" : 'This invite has expired';
-      $('#lead').textContent = busy ? 'Wait a minute, then reload this page.' : offline ? "Your friend's computer may be asleep or offline. Try again in a bit." : 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
+      $('#lead').textContent = busy ? 'Wait a minute, then reload this page.' : offline ? "The computer that keeps your tribe online may be asleep or offline. Try again in a bit." : 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
     }
   }
 

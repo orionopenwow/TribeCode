@@ -40,11 +40,11 @@
     if (!empty) { el.dataset.nav = 'repo'; el.setAttribute('role', 'button'); el.setAttribute('tabindex', '0'); el.setAttribute('aria-label', 'Open the repo ' + name); }
     el.innerHTML = `<div class="rhx-art">${art(thumb)}</div>
       <div class="rhx-band">
-        <span class="eyebrow">Pinned repo</span>
-        ${empty ? `<h2>No repo pinned yet</h2><p>Point this project at a git folder or a GitHub repo, and it lives here: its picture, branch, last commit, what changed.</p><div class="hero-acts"><button class="btn" data-nav="repo">Set up the repo</button></div>`
+        <span class="eyebrow" title="The repo is the shared folder that holds your project's code">Pinned repo</span>
+        ${empty ? `<h2>No repo pinned yet</h2><p>A repo is the shared folder that holds your project's code. Set one up and it lives here: its picture, the last change and who made it.</p><div class="hero-acts"><button class="btn" data-nav="repo">Set up the repo</button></div>`
         : `<div class="rhx-n"><span class="rhx-ic">${ico(GIT, 18)}</span><span class="rhx-t"><b>${esc(name)}</b><small>${esc(s ? (s.upstream || 'local') : 'reading the repo…')}</small></span>${ico(RIGHT, 18)}</div>
         ${c ? `<div class="rhx-c"><code>${esc(c.sha)}</code><span><b>${esc(c.subject)}</b><small>${esc(c.author)} · ${esc(ago(c.at))}</small></span></div>` : ''}
-        ${s ? `<div class="rhx-chips"><span class="rhx-chip live">${esc(s.branch || 'main')}</span><span class="rhx-chip">↑${s.ahead || 0} ↓${s.behind || 0}</span><span class="rhx-chip ${s.dirtyCount ? 'warn' : ''}">${s.dirtyCount ? `${s.dirtyCount} changed` : 'clean'}</span></div>` : ''}`}
+        ${s ? `<div class="rhx-chips"><span class="rhx-chip live" title="The branch: the version of the code shown here">${esc(s.branch || 'main')}</span>${s.ahead || s.behind ? `<span class="rhx-chip" title="Saved changes not yet sent (↑) or not yet fetched (↓)">↑${s.ahead || 0} ↓${s.behind || 0}</span>` : ''}<span class="rhx-chip ${s.dirtyCount ? 'warn' : ''}" title="${s.dirtyCount ? 'Files changed since the last save (commit)' : 'Every change is saved (committed)'}">${s.dirtyCount ? `${s.dirtyCount} changed` : 'all saved'}</span></div>` : ''}`}
       </div>`;
     const img = el.querySelector('.rhx-art img');
     hooks.forEach(fn => { try { fn(el, { project, status, empty }); } catch (e) { console.error(e); } });

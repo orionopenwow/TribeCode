@@ -60,7 +60,8 @@
     if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(r.flow.project, 'chat'); }
     flow = r.flow; minimized = false; popOpen = true; draw();
     App().show('chat');
-    toast(`${r.flow.name} is live. Share the link.`);
+    // qa-qol-2: not while a sheet is up (the invite sheet already says it, and on phones the toast covered its buttons)
+    setTimeout(() => { const m = $("#invite-modal"); if (!m || m.classList.contains("hidden")) toast(`${r.flow.name} is live. Share the link.`); }, 600);
     return r.flow;
   }
   function suggestName() {
@@ -73,11 +74,12 @@
 
   // ---------- kickoff card / running bar (docked at the top of Chat) ----------
   const STEP = [['room', 'Room'], ['link', 'Link'], ['repo', 'Repo'], ['github', 'GitHub']];
+  const STEP_HINT = { room: 'The chat room for this project', link: 'An invite link for your friends', repo: 'The repo: the shared folder that holds your code, with a starter in it', github: 'A private copy on GitHub, so everyone works on the same code' };   // qa-qol-2: plain words on hover
   function steps(f) {
     return `<ol class="fk-steps" aria-label="Setup">${STEP.map(([k, label]) => {
       const s = (f.steps[k] || {}).s || 'run';
       if (k === 'github' && (s === 'todo' || s === 'fail')) return `<li class="todo"><button class="fk-gh" id="flow-gh" title="${esc((f.steps.github || {}).note || 'Create a private GitHub repo and push')}">${ico('i-git')}Connect GitHub</button></li>`;
-      return `<li class="${s}" title="${esc((f.steps[k] || {}).note || '')}">${s === 'ok' ? ico('i-tick') : s === 'fail' ? ico('i-x') : '<span class="spin" aria-hidden="true"></span>'}${label}</li>`;
+      return `<li class="${s}" title="${esc((f.steps[k] || {}).note || STEP_HINT[k] || '')}">${s === 'ok' ? ico('i-tick') : s === 'fail' ? ico('i-x') : '<span class="spin" aria-hidden="true"></span>'}${label}</li>`;
     }).join('<li class="sep" aria-hidden="true">·</li>')}</ol>`;
   }
   function dockEl() {
@@ -125,7 +127,7 @@
       return;
     }
     d.innerHTML = `<section class="fk" id="flow-kick" aria-label="Getting started">
-      <div class="fk-head"><div><span class="eyebrow">Getting started</span><h2>${esc(f.name || 'Your project')}</h2></div>${steps(f)}<button class="tb-icon fk-min" id="flow-min" title="Fold" aria-label="Fold the card">${ico('i-x')}</button></div>
+      <div class="fk-head"><div><span class="eyebrow">Getting started</span><h2>${esc(f.name || 'Your project')}</h2></div>${desk ? '' : steps(f)}<button class="tb-icon fk-min" id="flow-min" title="Fold" aria-label="Fold the card">${ico('i-x')}</button></div>
       <div class="fk-block">
         <div class="fk-label"><span>Invite</span><span class="faint">${f.invite ? ({ public: 'works from anywhere', tailscale: 'Tailscale address', wifi: 'same Wi-Fi', local: 'this computer only' }[f.invite.kind] || '') : ''}</span></div>
         <div class="linkbox fk-link"><code id="flow-link" title="${esc(f.invite ? f.invite.link : '')}">${esc(f.invite ? f.invite.link : 'Making a link…')}</code>
@@ -147,7 +149,7 @@
     </section>`;
     if (desk) {   // tucked away: a slim bar stays in the chat, the card pops out over the messages
       d.className = 'flow-dock bar popped';
-      d.innerHTML = `<div class="fbar"><span class="eyebrow">Getting started</span><span class="fbar-t">${steps(f)}</span><button class="fbar-go" id="flow-close">Close</button></div><div class="fk-pop" role="dialog" aria-label="Getting started">${d.innerHTML}</div>`;
+      d.innerHTML = `<div class="fbar"><span class="eyebrow">Getting started</span><span class="fbar-t">${steps(f)}</span><button class="fbar-go" id="flow-close">Close</button></div><div class="fk-pop" role="dialog" aria-label="Getting started">${d.innerHTML}</div>`;   // qa-qol-2: the bar above already shows the steps (and owns #flow-gh): the card has no second copy on desktop
     }
     wire(d);
   }

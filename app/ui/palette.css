@@ -179,6 +179,10 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .room-next { margin: 0 0 18px; display: grid; gap: 8px; }
 .rn-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2px; }
 .rn-head .eyebrow { color: var(--accent-ink, #E58A5E); }
+/* qa-qol-2: the panel × sits on the Next steps row instead of floating alone under the cards */
+.room-head:has(+ .room-next) { margin-bottom: -26px; position: relative; z-index: 2; pointer-events: none; }
+.room-head:has(+ .room-next) .panel-x { pointer-events: auto; }
+.room-head + .room-next .rn-head { padding-right: 34px; }
 .rn-n { font-size: 13px; color: var(--faint); }
 .rn-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); color: var(--text); }
 .rn-card:hover { background: var(--hover); border-color: var(--edge-pop, var(--edge)); }
