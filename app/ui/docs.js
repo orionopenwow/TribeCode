@@ -202,7 +202,7 @@
   function renderTldr() {
     const box = $('#doc-tldr'); if (!box) return;
     if (cur && cur.summary) { box.classList.remove('empty'); setTldr(esc(cur.summary).replace(/\n/g, '<br>')); }
-    else { box.classList.add('empty'); setTldr(`No TL;DR yet. ${remote() ? '<button class="linkish" id="doc-sum">Summarize with AI</button>' : 'Summaries run on the tribe\'s AI.'}`); const b = $('#doc-sum'); if (b) b.onclick = summarize; }
+    else { box.classList.add('empty'); box.classList.toggle('blank', !String((cur && cur.body) || '').trim()); setTldr(`No TL;DR yet. ${remote() ? '<button class="linkish" id="doc-sum">Summarize with AI</button>' : 'Summaries run on the tribe\'s AI.'}`); const b = $('#doc-sum'); if (b) b.onclick = summarize; }
   }
 
   function renderList() {

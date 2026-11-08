@@ -125,17 +125,25 @@
   const canSteer = a => a.yours || me().role === 'host';
   const ctlLabel = c => (c ? `${c.action === 'stop' ? 'Stop' : 'Pause'} requested${c.seen ? ' · seen' : ' · not seen yet'}` : '');
 
-  async function render(el) {
+  async function render(el, tries = 0) {
     const n = ++seq;
-    const [ag, rv, ho, dl, own, ch] = await Promise.all([
+    if (!el.querySelector('#ad-dash') && !el.querySelector('.ad-wait')) el.insertAdjacentHTML('afterbegin', '<p class="faint ad-wait">Loading the agents…</p>');
+    let res;
+    try { res = await Promise.all([
       C.api('/coord/agents'),
       C.api('/coord/reviews').catch(() => ({ reviews: [] })),
       C.api('/coord/handoffs').catch(() => ({ handoffs: [] })),
       C.api('/coord/delegations').catch(() => ({ delegations: [] })),
       C.api('/coord/ownership').catch(() => ({ owners: [], warnings: [] })),
       C.api('/agents/channel?limit=20').catch(() => ({ messages: [] })),
-    ]);
+    ]); } catch (e) {   // the first call can fail while a tribe (or the demo) is still starting: try again, never leave it blank
+      if (n === seq && tries < 8 && el.isConnected) setTimeout(() => { if (n === seq) render(el, tries + 1); }, 500 + tries * 300);
+      else if (n === seq) { const w = el.querySelector('.ad-wait'); if (w) w.textContent = 'The agents dashboard could not load. ' + (e && e.message ? e.message : ''); }
+      return;
+    }
+    const [ag, rv, ho, dl, own, ch] = res;
     if (n !== seq) return;
+    { const w = el.querySelector('.ad-wait'); if (w) w.remove(); }
     const d = { agents: ag.agents || [], reviews: rv.reviews || [], handoffs: ho.handoffs || [], delegations: dl.delegations || [], owners: own.owners || [], messages: ch.messages || [], conflicts: cfCache.pid === pid() ? cfCache.d : null, plan: null };
     paint(el, d);
     const still = () => n === seq && el.isConnected && onView();

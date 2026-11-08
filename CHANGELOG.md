@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.17.15
+
+- **Live cursors**: see your friends' pointers, with their names, when you're on the same screen of the same project (like in Figma). Only people in that project see them; agents and spectators don't send any; switch them off with `TribeCursors.set(false)` (a Settings switch is coming)
+- **Fixed**: the Agents Hub chapter of the demo tour could stay blank if its first load failed; it now retries
+- **Fixed**: "Summarize with AI" in a doc was hidden by the Files tidy-up; the TL;DR box now hides only while the doc is empty
+- **Phones**: no live cursors on phones (no pointer); the Summarize fix applies there too
+
 ## v0.17.14
 
 - **Clearer about where your work lives**: TribeCode no longer says it "runs on one friend's computer". Your tribe's code lives in your shared GitHub repo; someone can host the tribe on their own computer or a server to make it quicker. Updated in Flint's welcome, Home, New project, the phone drawer, the demo, the website and the docs
