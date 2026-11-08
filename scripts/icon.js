@@ -39,13 +39,39 @@ function svg({ bg = 'square', size = 512, inset = 0 } = {}) {
   const vb = `${-inset} ${-inset} ${N + 2 * inset} ${N + 2 * inset}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${size}" height="${size}" shape-rendering="crispEdges"><title>TribeCode</title>${back}${art}</svg>`;
 }
-module.exports = { svg, N };
+// ---- the flicker (since v0.10.0): four frames of the same solid flame, shifted a pixel at the tip and the tongues ----
+const shift = (map, rows, dx) => Object.fromEntries(Object.entries(map).map(([r, rs]) => [r, rows.includes(+r) ? rs.map(([a2, b2]) => [a2 + dx, b2 + dx]) : rs]));
+const add = (map, extra) => { const m = JSON.parse(JSON.stringify(map)); for (const [r, rs] of Object.entries(extra)) m[r] = [...(m[r] || []), ...rs]; return m; };
+const FRAMES = [
+  FLAME,                                                          // rest
+  add(shift(FLAME, [11, 12, 13], 1), { 17: [[16, 16]] }),        // tip leans right, the left tongue reaches up
+  add(FLAME, { 10: [[22, 22]], 18: [[28, 28]] }),                 // tip stretches, the right tongue reaches up
+  shift(FLAME, [11, 12, 13], -1),                                 // tip leans left
+];
+// An SVG that flickers by itself (CSS steps, no script), so it animates even inside <img>. Reduced motion: the rest frame.
+function animated({ bg = 'square', size = 512, speed = 0.72 } = {}) {
+  const st = `<style>.f{opacity:0;animation:tcf ${speed}s steps(1,end) infinite}.f0{opacity:1}${FRAMES.map((_, i) => `.f${i}{animation-delay:${(-speed + i * speed / FRAMES.length).toFixed(3)}s}`).join('')}@keyframes tcf{0%{opacity:1}${(100 / FRAMES.length).toFixed(2)}%{opacity:0}100%{opacity:0}}@media (prefers-reduced-motion:reduce){.f{animation:none;opacity:0}.f0{opacity:1}}</style>`;
+  const back = bg === 'square' ? `<rect x="0" y="0" width="${N}" height="${N}" rx="10" fill="${NAVY}"/>` : '';
+  const flames = FRAMES.map((m, i) => `<g class="f f${i}">${rects(m, EMBER)}</g>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${N} ${N}" width="${size}" height="${size}" shape-rendering="crispEdges"><title>TribeCode</title>${st}${back}${rects(LEFT, WHITE)}${rects(RIGHT, WHITE)}${flames}</svg>`;
+}
+// one frame as a static SVG (for the GIF renderer)
+function frame(i, { bg = 'square', size = 512 } = {}) {
+  const back = bg === 'square' ? `<rect x="0" y="0" width="${N}" height="${N}" rx="10" fill="${NAVY}"/>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${N} ${N}" width="${size}" height="${size}" shape-rendering="crispEdges">${back}${rects(LEFT, WHITE)}${rects(RIGHT, WHITE)}${rects(FRAMES[i], EMBER)}</svg>`;
+}
+module.exports = { svg, animated, frame, FRAMES, N };
 
 if (require.main === module) {
+  fs.mkdirSync(path.join(root, 'assets/brand/frames'), { recursive: true });
   const w = (f, s) => { fs.writeFileSync(path.join(root, f), s + '\n'); console.log('wrote', f); };
   w('assets/brand/icon.svg', svg());
   w('site/assets/brand/icon.svg', svg());
   w('app/ui/assets/icon.svg', svg());
   w('assets/brand/icon-maskable.svg', svg({ bg: 'full', inset: 6 }));   // safe zone: the art sits inside the middle 80%
   w('assets/brand/icon-mark.svg', svg({ bg: 'none' }));                   // the mark alone, for lockups on any background
+  w('app/ui/assets/icon-animated.svg', animated());                      // loading: the navy tile, flickering
+  w('app/ui/assets/icon-mark-animated.svg', animated({ bg: 'none' }));   // loading inline: the mark alone
+  w('site/assets/brand/icon-animated.svg', animated());
+  for (let i = 0; i < FRAMES.length; i++) w(`assets/brand/frames/icon-${i}.svg`, frame(i));
 }

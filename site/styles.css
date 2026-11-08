@@ -422,3 +422,13 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
   .get__ctas .btn { flex: 1 1 100%; }
   .ph { width: 260px; height: 500px; }
 }
+
+/* the flickering logo (assets/brand/logo-flame*.gif, scripts/render-logo-gif.py) */
+.nav__logo { display: inline-flex; align-items: center; gap: 10px; }
+.nav__logo img.nav__mark { width: 28px; height: 28px; border-radius: 7px; image-rendering: pixelated; }
+.hero__mark { display: block; width: 72px; height: 72px; margin: 0 0 22px; border-radius: 16px; image-rendering: pixelated; }
+.get__mark { display: block; width: 56px; height: 56px; margin: 0 0 16px; border-radius: 13px; image-rendering: pixelated; }
+.footer__lock { display: inline-flex; align-items: center; gap: 10px; }
+.footer__lock img:first-child { width: 24px; height: 24px; border-radius: 6px; image-rendering: pixelated; }
+@media (max-width: 640px) { .hero__mark { width: 56px; height: 56px; margin-bottom: 16px; border-radius: 13px; } }
+@media (prefers-reduced-motion: reduce) { .hero__mark, .get__mark, .nav__mark { content: url('assets/brand/icon.svg'); } }

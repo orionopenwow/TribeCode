@@ -1,0 +1,51 @@
+"""The logo's flicker: the top-left logo animates while something is working (a prompt in flight, an agent at work)
+and rests otherwise; "Loading…" placeholders get the small flame. Usage: python app/test/e2e_logo.py
+"""
+import json, os, signal, subprocess, tempfile, time, urllib.request
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+ROOT = Path(__file__).resolve().parents[2]
+PORT = 4989 + int(os.environ.get('TRIBE_PORT_OFFSET', '0'))
+BASE = f"http://localhost:{PORT}"
+
+def main():
+    tmp = Path(tempfile.mkdtemp(prefix="tribe-logo-", dir="/tmp")); errors = []
+    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1"}
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(tmp / "tribe"), "--ollama", "http://localhost:9"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, env=env)
+    try:
+        for _ in range(60):
+            try: urllib.request.urlopen(BASE + "/api/health", timeout=2); break
+            except Exception: time.sleep(0.25)
+        with sync_playwright() as p:
+            b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
+            pg = b.new_page(viewport={"width": 1440, "height": 900}); pg.on("pageerror", lambda e: errors.append(str(e)))
+            pg.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Orion'}))")
+            pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected()", timeout=30000)
+            src = lambda: pg.get_attribute("#rail-logo img.logo", "src")
+            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon.svg')", timeout=10000)   # resting once connected
+            # a prompt in flight: the logo flickers until the reply is in
+            pg.route("**/api/hub/ask", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps({"answer": "ok"})))
+            st = pg.evaluate("""(() => { window.__p = TribeClient.api('/hub/ask', { method: 'POST', body: { prompt: 'hi' } }).catch(() => {});
+              return [document.querySelector('#rail-logo img.logo').src, document.querySelector('#rail-logo').title]; })()""")
+            assert st[0].endswith("icon-animated.svg") and "Thinking" in st[1], st
+            pg.evaluate("window.__p"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon.svg')", timeout=8000)
+            # an agent at work: what an agent does over the socket starts a 20 s spell (same handler, fed directly)
+            pg.evaluate("TribeLogo.agentPulse({ id: 'claude-x', name: \"Orion's Claude\", role: 'agent' })")
+            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-animated.svg')", timeout=3000)
+            assert "Orion's Claude is working" in pg.get_attribute("#rail-logo", "title")
+            # "Loading…" placeholders get the flame
+            pg.evaluate("const d = document.createElement('div'); d.id = 'lt'; d.textContent = 'Loading…'; document.body.appendChild(d)")
+            pg.wait_for_function("document.querySelector('#lt').classList.contains('tc-loading')", timeout=3000)
+            # hover flickers
+            pg.hover("#rail-logo"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-animated.svg')", timeout=3000)
+            b.close()
+        assert not errors, errors
+        print("e2e_logo: OK (rests when idle, flickers for prompts in flight and on hover, Loading… gets the flame)")
+    finally:
+        srv.send_signal(signal.SIGTERM)
+        try: srv.wait(10)
+        except subprocess.TimeoutExpired: srv.kill()
+
+if __name__ == "__main__":
+    main()
