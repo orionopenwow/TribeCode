@@ -1,5 +1,6 @@
 // Sidebar widgets: the extra rows a tribe adds under a project's core rows (Dashboard · Messages · Files · Task Board ·
-// Agents Hub), and the two rows that show by themselves when they apply (Preview game / app, Website).
+// Agents Hub), and the two rows that show by themselves when they apply (Preview game / app / site…, labelled by what
+// the project is: server/sense.js, then the shelf's types; and Website).
 //
 //   GET /api/projects/:id/widgets   { widgets, canEdit, preview: { show, label }, website: { show } }
 //   PUT /api/projects/:id/widgets   { widgets: [...] }   the whole list (add, remove, re-order); host and builders only
@@ -14,7 +15,7 @@ const crypto = require('node:crypto');
 const BUILTIN = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary'];
 const MAX = 24;
 
-module.exports = function widgets({ P, store, broadcast, preview, showcase, shelf }) {
+module.exports = function widgets({ P, store, broadcast, preview, showcase, shelf, sense }) {
   const FILE = '.tribe/widgets.json';
   let all = store.readJSON(FILE, {});
   if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
@@ -63,9 +64,11 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
       if (s.hasRepo && s.hasIndex) {
         let types = []; try { types = shelf.view(p).types || []; } catch {}
         // what the crew is making, sensed from the project (shelf: template, bio, name, what the repo uses)
-        const kind = types.includes('3d') ? '3d' : types.includes('game') || types.includes('platformer') || types.includes('rpg') ? 'game'
+        // project sense (server/sense.js) wins when it is sure (name, bio, vision, repo, tasks, chat; or the host's pick)
+        const sensed = sense ? sense.kindFor(pid) : '';
+        const kind = sensed ? sensed : types.includes('3d') ? '3d' : types.includes('game') || types.includes('platformer') || types.includes('rpg') ? 'game'
           : types.includes('app') ? 'app' : types.includes('site') ? 'site' : types.includes('tool') ? 'tool' : types.includes('notes') ? 'notes' : '';
-        const LABEL = { game: 'Preview game', '3d': 'Preview 3D scene', app: 'Preview app', site: 'Preview site', tool: 'Try the tool', notes: 'Preview' };
+        const LABEL = { game: 'Preview game', '3d': 'Preview 3D scene', app: 'Preview app', site: 'Preview site', tool: 'Try the tool', bot: 'Try the bot', api: 'Preview API', notes: 'Preview' };
         pv = { show: true, kind, label: LABEL[kind] || 'Preview' };
       }
     } catch {}

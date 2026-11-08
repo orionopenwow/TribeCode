@@ -332,6 +332,38 @@
     return out.join('\n').trim();
   }
 
+  // ---------- project sense (app/ui/sense.js): a few of server/sense.js's templates, picked from the name and bio ----------
+  function senseMock(p, e) {
+    const text = `${p.name} ${p.bio || ''} ${((db.tasks || {})[p.id] || []).map(t => t.title).join(' ')}`.toLowerCase();
+    const has = re => re.test(text);
+    const sensed = has(/\b3d|tavern|three/) ? '3d' : has(/game|platformer|level|jump|quest/) ? 'game' : has(/site|landing|page|portfolio|pricing/) ? 'site' : has(/app|mobile|screen/) ? 'app' : 'other';
+    const kind = e.override || sensed;
+    const NOUN = { game: 'game', '3d': '3D scene', app: 'app', site: 'website', tool: 'tool', bot: 'bot', api: 'API', notes: 'notes', other: 'project' };
+    const tags = [has(/platformer|jump/) && 'platformer', has(/cozy|candle|hearth|warm/) && 'cozy', has(/pixel|sprite/) && 'pixel art', has(/multiplayer|co-?op|crew/) && 'multiplayer'].filter(Boolean).slice(0, 3);
+    const L = {
+      game: [{ id: 'game-title', type: 'task', emoji: '📝', title: 'Add a title screen', text: 'Name, a "Press start" and the controls. It makes it feel like a real game.', task: 'Add a title screen' },
+        { id: 'plat-coyote', type: 'idea', emoji: '🦘', title: 'Coyote time and jump buffering', text: 'Let a jump work a few frames after leaving a ledge. It feels fair.', task: 'Add coyote time and jump buffering' },
+        { id: 'pal-cozy', type: 'palette', emoji: '🎨', title: 'Palette: Campfire cozy', text: 'Flat colors that fit. Use them as CSS variables so agents keep to them.', colors: ['#3E4A3D', '#8FB996', '#E8C9A0', '#C97C5D', '#F4EBD9'], task: 'Set up the campfire cozy palette' },
+        { id: 'cozy-ref', type: 'reference', emoji: '👀', title: 'Look at: Stardew Valley, A Short Hike', text: 'Slow pace, warm colors, nothing punishes you for wandering.' },
+        { id: 'plat-checkpoints', type: 'idea', emoji: '🚩', title: 'Checkpoints', text: 'A flag mid-level so a fall costs ten seconds, not the whole run.', task: 'Add checkpoints' }],
+      '3d': [{ id: '3d-orbit', type: 'task', emoji: '📝', title: 'Add orbit controls and a ground plane', text: 'So everyone can look around the scene from the first commit.', task: 'Add orbit controls and a ground plane' },
+        { id: '3d-light', type: 'idea', emoji: '💡', title: 'One warm light, one cool fill', text: 'Two lights make a scene read as 3D. Add soft fog for depth.', task: 'Light the scene: warm key, cool fill, fog' },
+        { id: 'cozy-sound', type: 'idea', emoji: '🎶', title: 'Soft ambient sound', text: 'A quiet loop (fire, rain) with a mute button. Cozy is half sound.', task: 'Soft ambient sound' }],
+      site: [{ id: 'site-hero', type: 'task', emoji: '📝', title: 'Write the hero headline and one call to action', text: 'Short, specific, one button.', task: 'Write the hero headline and one call to action' },
+        { id: 'site-meta', type: 'idea', emoji: '🔗', title: 'Share previews', text: 'A title, description and image for link previews.', task: 'Add share previews' },
+        { id: 'pal-site', type: 'palette', emoji: '🎨', title: 'Palette: Clean paper', text: 'Flat colors that fit.', colors: ['#FFFFFF', '#111827', '#6B7280', '#2563EB', '#F3F4F6'], task: 'Set up the clean paper palette' }],
+      app: [{ id: 'app-screens', type: 'task', emoji: '📝', title: 'Sketch the first three screens', text: 'Home, the main thing, settings.', task: 'Sketch the first three screens' },
+        { id: 'app-offline', type: 'idea', emoji: '📶', title: 'Works offline', text: 'Keep the last data so it opens instantly with no signal.', task: 'Make it open offline' }],
+      other: [{ id: 'any-vision', type: 'idea', emoji: '🧭', title: 'Write the vision in three lines', text: 'Who it is for, what it does, what it will never do.', task: 'Write the vision in three lines' }],
+    };
+    const desc = tags.filter(t => t !== 'multiplayer').slice(0, 2).join(', ');
+    return { kind, label: NOUN[kind] || 'project', preview: { game: 'Preview game', '3d': 'Preview 3D scene', site: 'Preview site', app: 'Preview app' }[kind] || 'Preview', tags,
+      audience: kind === 'site' ? 'visitors' : kind === 'app' ? 'everyday users' : 'players', tone: tags.includes('cozy') ? 'cozy and warm' : 'friendly',
+      summary: kind === 'other' ? `${p.name}: still taking shape. Talk about it in chat and this fills in.` : `${p.name} looks like a ${desc ? desc + ' ' : ''}${NOUN[kind]} for ${kind === 'site' ? 'visitors' : kind === 'app' ? 'everyday users' : 'players'}.`,
+      confidence: kind === 'other' ? 0 : 0.8, by: e.override ? 'host' : 'words', override: e.override, notes: e.notes, canEdit: true,
+      kinds: ['game', '3d', 'app', 'site', 'tool', 'bot', 'api', 'notes'].map(id => ({ id, label: NOUN[id] })),
+      signals: p.bio ? [{ from: 'bio', text: p.bio.slice(0, 90) }] : [], inspiration: (L[kind] || L.other).filter(x => !e.gone.includes(x.id)) };
+  }
   async function route(method, path, q, body, headers) {
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = parts;
     const pid = (headers['x-project'] && proj(headers['x-project'])) ? headers['x-project'] : cur();
@@ -365,6 +397,12 @@
           db.widgets = db.widgets || {};
           if (PUT && Array.isArray(body.widgets)) { db.widgets[p.id] = body.widgets.slice(0, 24); save(); push({ type: 'widgets', project: p.id }); }
           if (GET || PUT) return ok({ widgets: db.widgets[p.id] || [], canEdit: true, preview: { show: false, label: '' }, website: { show: false } });
+        }
+        if (c === 'sense') {   // app/ui/sense.js: what the project is + the Inspiration card (server/sense.js, simplified)
+          db.sense = db.sense || {}; const e = db.sense[p.id] = db.sense[p.id] || { override: '', notes: true, gone: [] };
+          if (PUT) { if (body.kind !== undefined) e.override = String(body.kind || ''); if (body.notes !== undefined) e.notes = !!body.notes; save(); push({ type: 'sense', project: p.id }); }
+          if (POST && parts[3] === 'dismiss') { e.gone.push(String(body.id || '')); save(); }
+          if (GET || PUT || POST) return ok(senseMock(p, e));
         }
         if (c === 'workspace' && GET) return ok({ repo: null, github: { installed: false, signedIn: false, user: null }, branch: null, identity: { name: me().name, email: '', custom: false, hasToken: false } });
         break;

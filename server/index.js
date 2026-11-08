@@ -180,6 +180,7 @@ function broadcast(msg, except) {
     if (type === 'approval' && !msg.project && !(msg.approval && msg.approval.project)) pid = P.defaultId();
   }
   if (dashboard) dashboard.onEvent(type, pid);   // the Global Hub recomputes for whoever can see pid (server/hub.js)
+  if (sense) sense.onEvent(type, pid);   // feat/project-sense: recompute what the project is (debounced, server/sense.js)
   const asGeneral = typeof msg.channel === 'string' && pid && msg.channel === P.channelOf(pid) && msg.channel !== 'general' ? { ...msg, channel: 'general' } : msg;
   for (const [mid, o] of online) {
     const mem = memberById(mid); if (!mem) continue;
@@ -193,6 +194,7 @@ function broadcast(msg, except) {
   }
 }
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
+let sense = null;   // feat/project-sense (server/sense.js, made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
@@ -403,7 +405,8 @@ flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
 dashboard.setFlow(flow);
 const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str });   // per-project Website (server/showcase.js)
-const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf });   // feat/sidebar-widgets (server/widgets.js)
+sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
+const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense });   // feat/sidebar-widgets (server/widgets.js)
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -624,6 +627,7 @@ async function apiInProject(req, res, url) {
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
   if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
