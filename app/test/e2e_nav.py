@@ -112,7 +112,7 @@ def main():
             pid = host.evaluate("TribeClient.project()")
 
             # ---- the rail: logo, circles, +, Workshop; no gear, "?" or avatar any more
-            for sel in ["#rail-logo", "#side-switch"]: host.wait_for_selector(sel, state="visible")   # the project rail became the side dropdown
+            for sel in ["#rail-logo", "#pj-rail", "#pj-plus", "#rail-workshop"]: host.wait_for_selector(sel, state="visible")
             for gone in ["#help-btn", "#settings-btn", "#me-avatar", "#nest-new", "#nest-search", "#nest-more", "#nest-updates", "#grp-hub", "#grp-ops"]:
                 assert host.locator(gone).count() == 0, gone
 
