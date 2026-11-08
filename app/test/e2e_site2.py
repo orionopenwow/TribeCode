@@ -195,6 +195,25 @@ def main():
             assert pg.evaluate("[...document.querySelectorAll('[data-loop]')].every(l => l.dataset.state === 'done')")
             assert pg.evaluate("[...document.querySelectorAll('.reveal')].every(e => getComputedStyle(e).opacity === '1')")
             assert pg.evaluate("getComputedStyle(document.querySelector('#pv-lantern')).animationName") == "none"
+            # pixel art (scripts/pixel-art.js): the hero scene and the feature/download art are crisp-edged <rect> SVGs on a
+            # small grid, and their FX (fire flicker, embers, twinkle, blink) stop under reduced motion
+            arts = pg.evaluate("[...document.querySelectorAll('img[src*=\"assets/art/\"]')].map(i => i.getAttribute('src'))")
+            assert "assets/art/stage-night.svg" in arts and len(arts) >= 6, arts
+            for src in arts:
+                txt = pg.evaluate("u => fetch(u).then(r => r.text())", src)
+                assert 'shape-rendering="crispEdges"' in txt and "<rect" in txt, src
+                assert not any(t in txt for t in ("<path", "<circle", "<ellipse", "Gradient", "filter")), f"{src}: not flat pixel art"
+                vb = [float(v) for v in txt.split('viewBox="')[1].split('"')[0].split()]
+                assert vb[2] <= 300 and all(v == int(v) for v in vb), (src, vb)
+            assert pg.evaluate("document.querySelector('.stage__art').complete && document.querySelector('.stage__art').naturalWidth > 0")
+            sv = ctx.new_page(); sv.goto(BASE + "assets/art/stage-night.svg"); sv.wait_for_timeout(300)
+            assert sv.evaluate("document.getAnimations().length") == 0, "reduced motion: the scene is still"
+            assert sv.evaluate("[...document.querySelectorAll('.f')].filter(e => getComputedStyle(e).opacity === '1').length") == 1, "one fire frame shows"
+            sv.close()
+            mv = b.new_context(reduced_motion="no-preference"); route(mv); sv = mv.new_page(); sv.goto(BASE + "assets/art/stage-night.svg"); sv.wait_for_timeout(300)
+            names = sv.evaluate("[...new Set(document.getAnimations().map(a => a.animationName))]")
+            assert {"pf", "tw", "eo"} <= set(names), f"the fire flickers, stars twinkle, the robot blinks: {names}"
+            mv.close()
             assert not errs, errs
             ctx.close()
 

@@ -19,6 +19,12 @@ A solid orange **pixel-art flame** between two white pixel brackets `( )`, on a 
 | `assets/brand/logo-wordmark.svg` / `.png` | Wordmark on light backgrounds |
 | `assets/brand/logo-wordmark-dark.svg` / `.png` | Wordmark on dark backgrounds |
 
+## Illustrations
+
+The site and app illustrations (the campfire night scene behind the hero, the feature art, the download card, the app's intro art) are **pixel art in the same style as the mark**: original drawings on a small grid per piece, written as crisp-edged SVG `<rect>`s by `scripts/pixel-art.js` (zero dependencies) from compact sprite maps (people with varied skin tones and hair, the robot agent, the fire, pines, tent, moon). Edit the maps there and run `node scripts/pixel-art.js`; it writes `site/assets/art/*.svg` and `app/ui/assets/illustrations/*.svg` (plus the site mirror).
+
+FX are subtle CSS inside each SVG, so they work in `<img>`: the fire flickers through four frames like the logo, a few ember pixels rise, stars twinkle slowly, robot eye LEDs blink now and then. No glow, blur or gradients, and everything stops under `prefers-reduced-motion`.
+
 ## Color
 
 The full system (style rules, tokens, component pairings) is in **[DESIGN-SYSTEM.md](DESIGN-SYSTEM.md)**: "Warm Hearth in a Dark Terminal".
