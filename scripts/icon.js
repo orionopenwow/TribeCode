@@ -49,8 +49,9 @@ const FRAMES = [
   shift(FLAME, [11, 12, 13], -1),                                 // tip leans left
 ];
 // An SVG that flickers by itself (CSS steps, no script), so it animates even inside <img>. Reduced motion: the rest frame.
-function animated({ bg = 'square', size = 512, speed = 0.72 } = {}) {
-  const st = `<style>.f{opacity:0;animation:tcf ${speed}s steps(1,end) infinite}.f0{opacity:1}${FRAMES.map((_, i) => `.f${i}{animation-delay:${(-speed + i * speed / FRAMES.length).toFixed(3)}s}`).join('')}@keyframes tcf{0%{opacity:1}${(100 / FRAMES.length).toFixed(2)}%{opacity:0}100%{opacity:0}}@media (prefers-reduced-motion:reduce){.f{animation:none;opacity:0}.f0{opacity:1}}</style>`;
+// once: plays the flicker a couple of times and settles on the rest frame (the top-left logo on hover).
+function animated({ bg = 'square', size = 512, speed = 0.72, once = 0 } = {}) {
+  const st = `<style>.f{opacity:0;animation:tcf ${speed}s steps(1,end) ${once || 'infinite'}}.f0{opacity:1}${FRAMES.map((_, i) => `.f${i}{animation-delay:${(once ? i * speed / FRAMES.length : -speed + i * speed / FRAMES.length).toFixed(3)}s}`).join('')}@keyframes tcf{0%{opacity:1}${(100 / FRAMES.length).toFixed(2)}%{opacity:0}100%{opacity:0}}@media (prefers-reduced-motion:reduce){.f{animation:none;opacity:0}.f0{opacity:1}}</style>`;
   const back = bg === 'square' ? `<rect x="0" y="0" width="${N}" height="${N}" rx="10" fill="${NAVY}"/>` : '';
   const flames = FRAMES.map((m, i) => `<g class="f f${i}">${rects(m, EMBER)}</g>`).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${N} ${N}" width="${size}" height="${size}" shape-rendering="crispEdges"><title>TribeCode</title>${st}${back}${rects(LEFT, WHITE)}${rects(RIGHT, WHITE)}${flames}</svg>`;
@@ -86,6 +87,8 @@ if (require.main === module) {
   w('assets/brand/icon-mark.svg', svg({ bg: 'none' }));                   // the mark alone, for lockups on any background
   w('app/ui/assets/icon-animated.svg', animated());                      // loading: the slate tile, flickering
   w('app/ui/assets/icon-mark-animated.svg', animated({ bg: 'none' }));   // loading inline: the mark alone
+  w('app/ui/assets/icon-mark.svg', svg({ bg: 'none' }));                  // the top-left logo at rest (its button is the tile)
+  w('app/ui/assets/icon-mark-once.svg', animated({ bg: 'none', once: 2 })); // the top-left logo on hover: one short flicker
   w('site/assets/brand/icon-animated.svg', animated());
   for (let i = 0; i < FRAMES.length; i++) w(`assets/brand/frames/icon-${i}.svg`, frame(i));
   w('app/ui/assets/flint.svg', flint());                               // Flint, the mascot: flickering, blinking

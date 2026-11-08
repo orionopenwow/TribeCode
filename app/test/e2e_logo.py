@@ -23,22 +23,24 @@ def main():
             pg.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Orion'}))")
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected()", timeout=30000)
             src = lambda: pg.get_attribute("#rail-logo img.logo", "src")
-            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon.svg')", timeout=10000)   # resting once connected
+            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon-mark.svg')", timeout=10000)   # resting once connected
             # a prompt in flight: the logo flickers until the reply is in
             pg.route("**/api/hub/ask", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps({"answer": "ok"})))
             st = pg.evaluate("""(() => { window.__p = TribeClient.api('/hub/ask', { method: 'POST', body: { prompt: 'hi' } }).catch(() => {});
               return [document.querySelector('#rail-logo img.logo').src, document.querySelector('#rail-logo').title]; })()""")
-            assert st[0].endswith("icon-animated.svg") and "Thinking" in st[1], st
-            pg.evaluate("window.__p"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon.svg')", timeout=8000)
+            assert st[0].endswith("icon-mark-animated.svg") and "Thinking" in st[1], st
+            pg.evaluate("window.__p"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon-mark.svg')", timeout=8000)
             # an agent at work: what an agent does over the socket starts a 20 s spell (same handler, fed directly)
             pg.evaluate("TribeLogo.agentPulse({ id: 'claude-x', name: \"Orion's Claude\", role: 'agent' })")
-            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-animated.svg')", timeout=3000)
+            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-mark-animated.svg')", timeout=3000)
             assert "Orion's Claude is working" in pg.get_attribute("#rail-logo", "title")
             # "Loading…" placeholders get the flame
             pg.evaluate("const d = document.createElement('div'); d.id = 'lt'; d.textContent = 'Loading…'; document.body.appendChild(d)")
             pg.wait_for_function("document.querySelector('#lt').classList.contains('tc-loading')", timeout=3000)
             # hover flickers
-            pg.hover("#rail-logo"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-animated.svg')", timeout=3000)
+            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('assets/icon-mark.svg')", timeout=25000)
+            pg.hover("#rail-logo"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.startsWith('blob:')", timeout=3000)   # one short flicker
+            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "50px"
             b.close()
         assert not errors, errors
         print("e2e_logo: OK (rests when idle, flickers for prompts in flight and on hover, Loading… gets the flame)")

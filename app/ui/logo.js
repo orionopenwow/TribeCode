@@ -6,6 +6,15 @@
 (function () {
   'use strict';
   const STILL = 'assets/icon.svg', LIVE = 'assets/icon-animated.svg';
+  // the top-left logo is the bare mark on its button's tile: still at rest, a short flicker on hover, looping while busy
+  const RAIL_STILL = 'assets/icon-mark.svg', RAIL_LIVE = 'assets/icon-mark-animated.svg', RAIL_ONCE = 'assets/icon-mark-once.svg';
+  let onceText = null, onceUrl = null;
+  fetch(RAIL_ONCE).then(r => r.ok ? r.text() : null).then(t => { onceText = t; }).catch(() => {});
+  function playOnce(img) {   // a fresh blob URL restarts the SVG's animation on every hover
+    if (!onceText) return;
+    if (onceUrl) URL.revokeObjectURL(onceUrl);
+    onceUrl = URL.createObjectURL(new Blob([onceText], { type: 'image/svg+xml' })); img.src = onceUrl;
+  }
   const logo = () => document.querySelector('#rail-logo img.logo');
   let hover = false, inflight = 0, agentAt = 0, agentName = '', timer = null;
   const AGENT_MS = 20000;
@@ -20,8 +29,10 @@
   }
   function sync() {
     const img = logo() || document.createElement('img');
-    const why = reason(), want = why || hover ? LIVE : STILL;
-    if (!img.src.endsWith(want)) img.src = want;
+    const why = reason();
+    if (why) { if (!img.src.endsWith(RAIL_LIVE)) img.src = RAIL_LIVE; }
+    else if (hover) { if (!img.src.startsWith('blob:')) playOnce(img); }
+    else if (!img.src.endsWith(RAIL_STILL) && !img.src.startsWith('blob:')) img.src = RAIL_STILL;
     document.querySelectorAll('img.tc-mark').forEach(m => { const w = why ? LIVE : STILL; if (!m.src.endsWith(w)) m.src = w; });   // the phone Home logo too
     const btn = img.closest('#rail-logo'); if (btn) { btn.classList.toggle('is-busy', !!why);
     btn.title = why ? `${why} · Home` : 'Home: your overview of everything'; }
@@ -56,7 +67,7 @@
     for (const m of ms || []) { if (m.role !== 'agent') continue; const w = m.online ? (m.where || '') : ''; if (lastWhere.has(m.id) && lastWhere.get(m.id) !== w && w) pulse(m); lastWhere.set(m.id, w); }
   }
   const btn = document.querySelector('#rail-logo');
-  if (btn) { btn.addEventListener('mouseenter', () => { hover = true; sync(); }); btn.addEventListener('mouseleave', () => { hover = false; sync(); }); }
+  if (btn) { btn.addEventListener('mouseenter', () => { hover = true; const i = logo(); if (i && !reason()) playOnce(i); sync(); }); btn.addEventListener('mouseleave', () => { hover = false; sync(); }); }
   const hook = () => { const C = window.TribeClient; if (!C || !C.on) return setTimeout(hook, 200); C.on('status', sync); C.on('ws', onWs); C.on('presence', onPresence); sync(); };
   hook();
 
