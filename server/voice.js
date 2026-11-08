@@ -12,7 +12,7 @@ const pad = n => String(n).padStart(2, '0');
 const day = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask, getMembers, nameOf, brain, docs, bus, P = null, summary = null }) {
+module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask, getMembers, nameOf, brain, docs, bus, P = null, summary = null, canSeeHuddle = () => true }) {
   fs.mkdirSync(store.p('meetings'), { recursive: true });
   let cap = null;                 // { id, file, on, by, started, sharing:Set, people:Set, lines:number }
   const notes = new Set();        // members capturing their own speech to notes right now (shown to the huddle)
@@ -46,7 +46,7 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
 
   function handle(sock, me, msg) {
     switch (msg.type) {
-      case 'voice-sync': sock.send(state()); return true;
+      case 'voice-sync': sock.send(canSeeHuddle(me) ? state() : { type: 'captions', on: false, by: null, meeting: null, sharing: [], notes: [], lines: 0 }); return true;   // fix/security-2: another project's huddle stays private
       case 'captions':
         if (!inHuddle(me) || me.role === 'spectator') return true;
         if (msg.on) start(me);

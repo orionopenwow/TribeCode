@@ -213,6 +213,7 @@
     body.innerHTML = `<h2>Devices &amp; app</h2>
       <p class="lead">${connected ? 'Phones and tablets signed in to your account with a private link. Turn one off and it is signed out right away.' : 'Join or start a tribe to sign in on your phone.'}</p>
       ${connected ? `<div class="web-sec"><div class="web-sec-h">Signed-in devices</div><div id="dev-list" class="dev-list"><div class="faint">Loading…</div></div>
+        <label class="dev-days faint">Link lasts <select class="input" id="dev-days" aria-label="How long the new link lasts"><option value="0">until 90 days unused</option><option value="30">30 days</option><option value="7">7 days</option><option value="1">1 day</option></select></label>
         <button class="btn" id="dev-add">${dlIcon.replace('M12 4v11M7 10l5 5 5-5M5 20h14', 'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2')}Sign in on your phone</button><div id="dev-qr"></div></div>` : ''}
       ${desktopApp ? '' : `<div class="web-sec"><div class="web-sec-h">Desktop app</div><p class="faint web-sec-p">Host your tribe, get the tray icon and notifications, and keep working offline.</p>
         <a class="btn" id="get-desktop" href="${RELEASES}" target="_blank" rel="noopener">${dlIcon}${mobile ? 'See desktop downloads' : `Download for ${esc(OS_NAME)}`}</a></div>`}
@@ -223,8 +224,8 @@
       try {
         const { devices } = await C.api('/devices');
         $('#dev-list').innerHTML = devices.length ? devices.map(d => `<div class="dev" data-dev="${esc(d.id)}"><svg class="i" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>
-            <div><b>${esc(d.label)}</b>${d.current ? ' <span class="chip">this device</span>' : ''}<small>linked ${when(d.created)}${d.lastUsed ? ' · signed in ' + when(d.lastUsed) : ' · not opened yet'}</small></div>
-            <button class="btn ghost dev-off" data-revoke="${esc(d.id)}" data-current="${d.current ? 1 : ''}">Sign out</button></div>`).join('')
+            <div><b>${esc(d.label)}</b>${d.current ? ' <span class="chip">this device</span>' : ''}<small>linked ${when(d.created)}${d.lastUsed ? ' · last used ' + when(d.lastUsed) : ' · not opened yet'}</small><small class="dev-ends">${d.expires ? 'ends ' + new Date(d.expires).toLocaleDateString() : `turns off after ${d.idleDays || 90} days unused`}</small></div>
+            <button class="btn ghost dev-off" data-revoke="${esc(d.id)}" data-current="${d.current ? 1 : ''}">Revoke</button></div>`).join('')
           : '<div class="faint dev-empty">No other devices yet.</div>';
         $('#dev-list').querySelectorAll('[data-revoke]').forEach(b => b.onclick = async () => {
           b.disabled = true;
@@ -239,7 +240,7 @@
     };
     $('#dev-add').onclick = async () => {
       try {
-        const r = await C.api('/device-link', { method: 'POST', body: { label: 'Phone' } });
+        const r = await C.api('/device-link', { method: 'POST', body: { label: 'Phone', days: Number(($('#dev-days') || {}).value) || 0 } });   // fix/security-2: optional end
         const link = (await shareBase()) + r.path;
         $('#dev-qr').innerHTML = `<div class="qr-wrap"><div class="qr">${window.TribeQR.svg(link)}</div><p><b>Scan with your phone's camera.</b> It opens signed in as you, then add it to your Home Screen. Keep this code private: it's a key to your account.</p></div>`;
         load();

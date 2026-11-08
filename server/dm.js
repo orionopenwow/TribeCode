@@ -3,7 +3,7 @@
 // it (REST) or receive it (WebSocket). Mentions in #general and every DM are announced on the bus.
 'use strict';
 
-module.exports = function dm({ store, getMembers, sendTo, broadcast, bus }) {
+module.exports = function dm({ store, getMembers, sendTo, broadcast, bus, canSeeChannel = () => true }) {
   const isDm = ch => typeof ch === 'string' && ch.startsWith('dm-');
   const nameFor = (a, b) => 'dm-' + [a, b].sort().join('-');
   const member = mid => getMembers().find(m => m.id === mid);
@@ -65,7 +65,7 @@ module.exports = function dm({ store, getMembers, sendTo, broadcast, bus }) {
     if (me.role === 'spectator' || me.role === 'agent') return true;
     const ch = msg.channel.slice(0, 120), out = { type: 'typing', channel: ch, by: me.id, name: me.name, stop: !!msg.stop };
     if (isDm(ch)) { const p = pair(ch); if (p && p.includes(me.id)) sendTo(p.find(x => x !== me.id), out); }
-    else if (/^[a-z0-9][a-z0-9-]{0,31}$/.test(ch)) broadcast(out, sock);
+    else if (/^[a-z0-9][a-z0-9-]{0,31}$/.test(ch) && canSeeChannel(me, ch)) broadcast(out, sock);   // fix/security-2: not into another project's channel
     return true;
   }
 

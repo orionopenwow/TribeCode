@@ -11,8 +11,9 @@
   const token = () => (S.get().server && S.get().server.token) || '';
   const cur = () => (window.TribeDM ? window.TribeDM.current() : 'general');
   const phone = () => matchMedia('(max-width: 820px)').matches;
-  const proxy = u => `${C.base()}/api/embeds/img?u=${encodeURIComponent(u)}&token=${encodeURIComponent(token())}`;
-  const media = (ch, f) => `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}`;
+  const signed = u => (window.TribeMedia ? window.TribeMedia.url(u) : u);   // fix/security-2: signed media links, not the sign-in key
+  const proxy = u => signed(`${C.base()}/api/embeds/img?u=${encodeURIComponent(u)}`);
+  const media = (ch, f) => signed(`${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}`);
 
   // ---------- links ----------
   // http(s) links in plain text, without trailing punctuation (and a closing paren only when it opened inside).
@@ -196,7 +197,7 @@
       const v = c.dataset.send; closeGif();
       if (v.startsWith('file:')) {   // a GIF file from this project: send it again as a picture
         const [, ch, f] = v.split(':');
-        try { const blob = await (await fetch(media(ch, f))).blob(); await sendImages([new File([blob], 'gif.gif', { type: 'image/gif' })]); } catch (err) { toast(err.message); }
+        try { const blob = await (await fetch(window.TribeMedia ? await window.TribeMedia.urlAsync(media(ch, f)) : media(ch, f))).blob(); await sendImages([new File([blob], 'gif.gif', { type: 'image/gif' })]); } catch (err) { toast(err.message); }
       } else sendText(v);
     });
     const q = p.querySelector('#gp-q'); if (q) { q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => search(q.value.trim()), 300); }); }

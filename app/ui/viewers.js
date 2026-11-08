@@ -28,7 +28,8 @@
   const kindOf = name => (MODEL.test(name || '') ? 'model' : SPRITE.test(name || '') ? 'sprite' : null);
 
   const token = () => (((window.TribeStore && window.TribeStore.get().server) || {}).token || '');
-  const q = () => `token=${encodeURIComponent(token())}${C.project && C.project() ? `&project=${encodeURIComponent(C.project())}` : ''}`;
+  const q = () => (C.project && C.project() ? `project=${encodeURIComponent(C.project())}` : '');   // fix/security-2: no sign-in key in URLs (bytes() sends it as a header)
+  const signed = u => (window.TribeMedia ? window.TribeMedia.url(u) : u);
   const repoUrl = p => `${C.base()}/api/files/raw/${String(p).split('/').map(encodeURIComponent).join('/')}?${q()}`;
   async function bytes(url) {
     const r = await fetch(url, { headers: token() ? { Authorization: 'Bearer ' + token() } : {} });
@@ -73,18 +74,38 @@
   // =====================================================================
   // 3D: GLB / glTF with three.js (lazy import map, pinned version)
   // =====================================================================
+  // fix/security-2: subresource integrity for dynamic imports. Browsers can't put integrity="" on import(), and import-map
+  // integrity isn't everywhere yet, so each file is fetched, its SHA-384 checked against the npm package's file (jsDelivr
+  // serves /npm/three@0.170.0/... byte for byte from npm), and only then imported from a blob: URL. The few imports between
+  // these files ('three', '../utils/BufferGeometryUtils.js') are pointed at the verified blobs. A changed file never runs.
+  const THREE_FILES = {
+    three: ['build/three.module.js', 'sha384-GY5FqjttLCFRt/McQbyaVdCk2O1IQtOeX8Py6NfD89BIAsIyJFRl4UgSXrk2vXAk'],
+    bgu: ['examples/jsm/utils/BufferGeometryUtils.js', 'sha384-wOjwauvHlJO7K6APr7FmMGH2nupQa3Ndzas9bJZhsAMOK055efJud8ns4aYmASKv'],
+    gltf: ['examples/jsm/loaders/GLTFLoader.js', 'sha384-Lq1Wl94so5JCKGDvezrdVMJhdeKQkwb8iwRo59QrPPd61CnrCJZLxYmFlQ8ZuOKR'],
+    orbit: ['examples/jsm/controls/OrbitControls.js', 'sha384-aJoe4qqS/DgF2jh9njAuvA6QIveJYoCuYOfYjdFY8P3eawzmc9bEQ40jq2TvOyuP'],
+  };
+  async function verified(key) {
+    const [file, sri] = THREE_FILES[key];
+    const r = await fetch(THREE_CDN + file, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+    if (!r.ok) throw new Error(`HTTP ${r.status} for ${file}`);
+    const buf = await r.arrayBuffer();
+    const got = 'sha384-' + btoa(String.fromCharCode.apply(null, new Uint8Array(await crypto.subtle.digest('SHA-384', buf))));
+    if (got !== sri) throw Object.assign(new Error(`${file} failed its integrity check, so it was not run`), { integrity: true });
+    return new TextDecoder().decode(buf);
+  }
+  const blobOf = src => URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+  const point = (src, map) => Object.entries(map).reduce((s, [from, to]) => s.split(`from '${from}'`).join(`from '${to}'`), src);
   let threeP = null;
   function three() {
     if (threeP) return threeP;
-    const has = [...document.querySelectorAll('script[type="importmap"]')].some(s => /"three"/.test(s.textContent));
-    if (!has) {
-      const m = document.createElement('script'); m.type = 'importmap';
-      m.textContent = JSON.stringify({ imports: { three: THREE_CDN + 'build/three.module.js', 'three/addons/': THREE_CDN + 'examples/jsm/' } });
-      document.head.appendChild(m);
-    }
-    threeP = Promise.all([import('three'), import('three/addons/loaders/GLTFLoader.js'), import('three/addons/controls/OrbitControls.js')])
-      .then(([T, G, O]) => ({ T, GLTFLoader: G.GLTFLoader, OrbitControls: O.OrbitControls }))
-      .catch(e => { threeP = null; throw new Error(`Couldn't load three.js ${THREE_VER} from the CDN (${e.message || e}). Check the internet connection.`); });
+    threeP = (async () => {
+      const [t, bgu, gltf, orbit] = await Promise.all(['three', 'bgu', 'gltf', 'orbit'].map(verified));
+      const tUrl = blobOf(t), bUrl = blobOf(point(bgu, { three: tUrl }));
+      const gUrl = blobOf(point(gltf, { three: tUrl, '../utils/BufferGeometryUtils.js': bUrl })), oUrl = blobOf(point(orbit, { three: tUrl }));
+      const [T, G, O] = await Promise.all([import(tUrl), import(gUrl), import(oUrl)]);
+      window.TribeViewers.threeVerified = THREE_VER;   // tests: three.js ran from the checked files
+      return { T, GLTFLoader: G.GLTFLoader, OrbitControls: O.OrbitControls };
+    })().catch(e => { threeP = null; throw new Error(e.integrity ? `three.js ${THREE_VER} from the CDN ${e.message}.` : `Couldn't load three.js ${THREE_VER} from the CDN (${e.message || e}). Check the internet connection.`); });
     return threeP;
   }
 
@@ -107,7 +128,7 @@
 
     // parse in the page: GLB bytes or glTF JSON; external buffers/textures resolve next to the file (repo files only)
     const manager = new T.LoadingManager();
-    manager.setURLModifier(u => (/\/api\/files\/raw\//.test(u) && !/[?&]token=/.test(u) ? `${u}${u.includes('?') ? '&' : '?'}${q()}` : u));
+    manager.setURLModifier(u => (/\/api\/files\/raw\//.test(u) && !/[?&]mt=/.test(u) ? signed(q() && !/[?&]project=/.test(u) ? `${u}${u.includes('?') ? '&' : '?'}${q()}` : u) : u));   // fix/security-2: textures and buffers next to the model load with a signed link
     const loader = new GLTFLoader(manager);
     const base = o.path ? o.src.split('?')[0].replace(/[^/]*$/, '') : '';
     const data = /\.gltf$/i.test(o.name) ? new TextDecoder().decode(buf) : buf;

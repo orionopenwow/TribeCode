@@ -73,7 +73,7 @@ function addGistRules(dir) {
 }
 
 module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat, bus, getMembers, nameOf, docs, brain, coord, createTask, loadTasks, saveTask,
-  rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal }) {
+  rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal, perms = null, approvals = null }) {
   const NOGH = !!process.env.TRIBE_NO_GH;
   const GH_API = () => String(process.env.TRIBE_GITHUB_API || 'https://api.github.com').replace(/\/+$/, '');
   fs.mkdirSync(base.p('.tribe/flow'), { recursive: true });
@@ -216,15 +216,31 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
       return { status: res.status, data };
     } finally { clearTimeout(t); }
   }
-  const tokenOwner = mid => (W.readSecret(mid).githubToken ? mid : (getMembers().find(m => m.role === 'host' && W.hasToken(m.id)) || {}).id || null);
-  async function github(pid, me) {
+  // fix/security-2: a member's "Connect GitHub" uses their own token. The host's GitHub (the host's saved token or the gh CLI
+  // signed in on the host computer) is only for people with 'github.use_host' (host + admins by default), or for a member
+  // the host approved for this project (an approval of kind github-host, asked on their explicit Connect GitHub).
+  const hostTokenOwner = () => (getMembers().find(m => m.role === 'host' && W.hasToken(m.id)) || {}).id || null;
+  const mayUseHost = (me, pid) => (perms ? perms.can(me, 'github.use_host', pid) : me.role === 'host')
+    || (!!approvals && approvals.list().some(a => a.kind === 'github-host' && a.project === pid && a.by === me.id && a.status === 'approved'));
+  function askHost(pid, me) {
+    if (!approvals || !human(me)) return null;
+    const open = approvals.list().find(a => a.kind === 'github-host' && a.project === pid && a.by === me.id && a.status === 'pending');
+    if (open) return open;
+    const p = P.get(pid) || { name: pid };
+    const to = getMembers().filter(m => m.role !== 'agent' && m.id !== me.id && (perms ? perms.can(m, 'github.use_host', pid) : m.role === 'host')).map(m => m.id);
+    return P.inProject(pid, () => approvals.create({ title: `Put ${p.name} on GitHub with your account`, risk: 'medium', kind: 'github-host', to,
+      details: `${me.name} pressed Connect GitHub but has no GitHub token saved. Approve and TribeCode creates a private repo for ${p.name} with the host's GitHub when they press Connect GitHub again. Deny and they can paste their own token.` }, me));
+  }
+  async function github(pid, me, { ask = false } = {}) {
     const st = load(pid), p = P.get(pid);
     if (!p || !p.repo || !W.isRepo(p.repo)) { st.steps.github = { s: 'todo' }; save(st); push(st); return st.steps.github; }
     st.steps.github = { s: 'run' }; save(st); push(st);
     const repoName = slug(p.name).slice(0, 90) || pid;
     const git = (args, opts = {}) => W.git(args, p.repo, opts);
     try {
-      const owner = tokenOwner(me.id);
+      const own = W.readSecret(me.id).githubToken ? me.id : null;
+      const hostOk = !own && mayUseHost(me, pid);
+      const owner = own || (hostOk ? hostTokenOwner() : null);
       if ((await W.remoteOf(p.repo)) && st.github && st.github.url) { st.steps.github = { s: 'ok', note: st.github.via }; save(st); push(st); return st.steps.github; }
       if (owner) {
         const token = W.readSecret(owner).githubToken;
@@ -238,6 +254,10 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
         const pr = await git([...args, 'push', '--quiet', '-u', 'origin', 'HEAD:main'], { env, timeout: 120_000 });
         if (pr.code) throw err(422, `push failed: ${one(pr.err || pr.out, 160)}`);
         st.github = { url: r.data.html_url || null, name: r.data.full_name || repoName, via: 'token', private: r.data.private !== false };
+      } else if (!own && !hostOk) {   // fix/security-2: not on the host's account without the host's OK
+        const ap = ask ? askHost(pid, me) : null;
+        st.steps.github = { s: 'todo', note: ap ? 'Asked the host to approve using their GitHub. Or paste your own token.' : 'Paste your own GitHub token, or ask the host.' };
+        save(st); push(st); return st.steps.github;
       } else if (!NOGH && (await W.ghStatus()).signedIn) {
         const r = await run('gh', ['repo', 'create', repoName, '--private', '--source', p.repo, '--remote', 'origin', '--push'], { cwd: p.repo, timeout: 120_000, env: W.NOPROMPT });
         if (r.code) throw err(422, `gh repo create failed: ${one(r.err || r.out, 160)}`);
@@ -629,7 +649,7 @@ module.exports = function flow({ P, W, base, id, str, slug, broadcast, postChat,
         if (!human(me)) return fail(res, 403, 'people connect GitHub');
         const x = await readBody(req); const t = str(x.token, 400);
         if (t) { if (!/^[\w-]{20,400}$/.test(t)) return fail(res, 400, 'that token does not look right'); W.writeSecret(me.id, { ...W.readSecret(me.id), githubToken: t }); }
-        must(pid); return send(res, 200, { step: await github(pid, me), flow: view(load(pid)) });
+        must(pid); return send(res, 200, { step: await github(pid, me, { ask: true }), flow: view(load(pid)) });
       }
       if (b === 'invite' && m === 'POST') {   // a fresh link (old one used up or expired)
         const st = must(pid); const inv = makeInvite({ by: me.id, project: pid });

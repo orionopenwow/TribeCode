@@ -34,7 +34,7 @@
   const cur = () => (window.TribeDM ? window.TribeDM.current() : 'general');
   const listFor = ch => (ch === 'general' ? $('#chat-list') : $('#dm-list'));
   const token = () => (S.get().server && S.get().server.token) || '';
-  const mediaUrl = (ch, f) => `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}`;
+  const mediaUrl = (ch, f) => { const u = `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
   const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : m.media.kind === 'file' ? `File: ${m.media.name || 'file'}` : 'Image') : Array.isArray(m.images) ? `${m.images.length} pictures` : '');  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
 
   // ---------- icons (added to the page's sprite) ----------

@@ -10,7 +10,7 @@
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; return s < 45 ? 'just now' : s < 3600 ? `${Math.round(s / 60)}m ago` : s < 86400 ? `${Math.round(s / 3600)}h ago` : new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
   const TOL = 24, EMBER = [242, 107, 29];
   const st = { screens: [], screen: localStorage.getItem('tribecode.visScreen') || null, versions: [], a: null, b: null, mode: localStorage.getItem('tribecode.visMode') || 'swipe', swipe: 50, pct: null, loaded: false };
-  const imgUrl = v => `${C.base()}/api/visuals/${v.screen}/${v.ts}.png?token=${encodeURIComponent(((window.TribeStore.get().server) || {}).token || '')}`;
+  const imgUrl = v => { const u = `${C.base()}/api/visuals/${v.screen}/${v.ts}.png`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
 
   function ensureView() {
     let v = $('#view-visuals');
@@ -127,7 +127,7 @@
   const imgCache = new Map();
   function loadImg(v) {
     if (imgCache.has(v.ts)) return imgCache.get(v.ts);
-    const p = new Promise((res, rej) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => rej(new Error('image failed to load')); i.src = imgUrl(v); });
+    const p = new Promise((res, rej) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => rej(new Error('image failed to load')); const go = () => { i.src = imgUrl(v); }; if (window.TribeMedia && !window.TribeMedia.ready()) window.TribeMedia.urlAsync(imgUrl(v)).then(u => { i.src = u; }); else go(); });
     imgCache.set(v.ts, p); return p;
   }
   function pixels(img, w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0); return x.getImageData(0, 0, w, h); }

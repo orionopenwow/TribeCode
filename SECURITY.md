@@ -26,7 +26,12 @@ TribeCode is young and moves fast. Security fixes go into the latest release onl
   refused.
 - **Secrets.** AI keys, the GIPHY key and GitHub tokens live in `.tribe/secrets/` (file mode 0600 where the OS supports
   it). They are never sent to a browser, over the WebSocket, to agents, or into a backup. Sign-in client secrets
-  (`.tribe/oauth.json`) are left out of backups too.
+  (`.tribe/oauth.json`) are left out of backups too. A friend's "Connect GitHub" uses their own token: the host's GitHub
+  account is only used for the host and admins, or after the host approves it for that project.
+- **Devices.** Device links (phones, the Home Screen app) turn off after 90 days unused, can be given an end date, and show
+  when they were last used in Settings › Devices, where you can revoke them.
+- **The desktop app.** Its page runs under a Content Security Policy (no inline or injected scripts), and only its own
+  bundled page can call into the app.
 - **Previews and uploads.** The app preview runs in a sandbox with its own opaque origin, behind short-lived signed links,
   so code in a project can't read your TribeCode session. Uploaded files are served with `nosniff` and a sandbox policy;
   SVGs and unknown types download instead of rendering.
@@ -55,17 +60,21 @@ TribeCode is young and moves fast. Security fixes go into the latest release onl
   host and the in-browser model keep it on the device.
 - **Other services you turn on.** Link previews make the host's server visit the linked site. GIF search goes to GIPHY.
   The Workshop's community shelf comes from GitHub through jsDelivr. The in-browser AI model and the 3D viewer download
-  pinned code from jsDelivr when you first use them. ntfy notifications (off until you set them up) go through the ntfy
+  pinned code from jsDelivr when you first use them; it is checked against a SHA-384 hash before it runs (a changed file
+  is refused), and the AI model's code runs in a worker that can't see your sign-in key. ntfy notifications (off until you set them up) go through the ntfy
   server you pick. Web Push goes through your browser maker's push service, encrypted. Live captions and voice-note
   transcripts use your browser's speech recognition, which in Chrome and Edge runs on Google's or Microsoft's servers.
   Huddle audio flows peer to peer, using Google's public STUN servers to find a route.
-- **Media links carry your key.** Pictures, voice notes and downloads in the app load with your sign-in key in the link.
-  Don't paste those links elsewhere. If one leaks, sign that device out in Settings.
+- **Media links are short-lived.** Pictures, voice notes, screenshots and downloads load through signed links that open
+  only that one file, read-only, for about an hour, and stop working when that device is signed out. They never carry your
+  sign-in key. Still, anyone who has a copied link can open that one file until it expires.
 - **The host's computer is the tribe.** Anyone with access to the host's account or tribe folder has the whole tribe.
   Backups contain all chat, files and project history: keep them as private as the folder itself.
 
 ## For developers
 
-`app/test/security_test.py` and `app/test/security2_test.py` are the regression tests for past security fixes; both run in
-`npm test`. The server and web app have zero npm dependencies. The desktop app is a Tauri v2 wrapper; its updates are
+`app/test/security_test.py`, `app/test/security2_test.py` and `app/test/security3_test.py` are the regression tests for past
+security fixes; all run in `npm test`. The cloudflared download is checked against the SHA-256 Cloudflare publishes for the
+release before it is kept or run. Media links: `server/media.js` and `app/ui/media.js`. Pinned CDN code:
+`app/ui/brainworker.js` and `app/ui/viewers.js` (when a version changes, update its SHA-384 there). The server and web app have zero npm dependencies. The desktop app is a Tauri v2 wrapper; its updates are
 signed and checked against the public key built into the app.

@@ -37,7 +37,7 @@
   const members = () => (C.state().members || []);
   const nameOf = id => (members().find(m => m.id === id) || {}).name || '';
   const me = () => (C.state().me || {}).id;
-  const fileUrl = (b, a) => `${C.base()}/api/bugs/${encodeURIComponent(b.id)}/files/${encodeURIComponent(a.name)}?token=${encodeURIComponent((window.TribeStore.get().server || {}).token || '')}&project=${encodeURIComponent(C.project() || '')}`;
+  const fileUrl = (b, a) => { const u = `${C.base()}/api/bugs/${encodeURIComponent(b.id)}/files/${encodeURIComponent(a.name)}?project=${encodeURIComponent(C.project() || '')}`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
   function card(b) {
     const img = (b.attachments || []).find(a => /^image\//.test(a.type));
     return `<article class="bug" data-bid="${esc(b.id)}" tabindex="0">
