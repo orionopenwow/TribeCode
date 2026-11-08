@@ -150,6 +150,9 @@ def main():
 
             # ---- + Add: the picker, Calendar
             host.click("#nest-add"); host.wait_for_selector("#wg-picker")
+            # the gallery: search narrows the cards, starter packs are there
+            host.fill("#wgx-q", "bug"); assert host.is_visible("#wg-picker [data-wadd='bugs']") and host.is_hidden("#wg-picker [data-wadd='repo']")
+            host.fill("#wgx-q", ""); assert host.locator("#wg-picker [data-wpack]").count() == 3
             assert host.is_disabled("#wg-picker [data-wadd='website']") and host.is_disabled("#wg-picker [data-wadd='preview']"), "already rows of their own"
             shot(host, "picker")
             host.click("#wg-picker [data-wadd='calendar']")
