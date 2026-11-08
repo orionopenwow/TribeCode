@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.17.20
+
+- **New pricing, said plainly**: TribeCode is free today with everything in it, and what's free stays free. Planned hosted plans are priced per tribe: Campfire $6 (always-on hosting), Tribe $24 (AI included for up to 8 people, 14-day free trial at launch), Tribe Pro $79 (overnight agents). School & club is free; Studio is $12 a person. Each says "Planned" with a waitlist; nothing is for sale before it works
+- **Our promises**, at the top of the pricing page: free stays free, your code is yours (your repo, MIT), we charge only for what costs us money, no surprise bills, no ads or data selling
+- **Need a hand right now?** Ask the maker of TribeCode to jump into your tribe (Hire Camp, the start of Triber): a short GitHub form, and you get a time and a quote before any work
+- **AI credits in plain cents**: 1 credit is $0.01, shared by the tribe, with a cap
+- **Phones**: the promises and plan cards stack in one column; every plan button is full width
+
 ## v0.17.19
 
 - **Rate TribeCode**: a small card in Flint's flame menu and the ? menu: pick 1 to 5 stars, say how it went, choose the name to show and whether we may quote you. Sending opens your review on GitHub, so every review is public, real and linked. Flint asks once, gently, after you've used TribeCode on five different days

@@ -17,8 +17,8 @@ review issue (thank them, and link the fix or the task it became).
 
 ## Free trial (planned with hosted plans)
 
-- **14-day Team trial** per tribe, no card. Hosted tribe, managed link, backups and the shared AI credits (a smaller
+- **14-day Tribe trial** per tribe, no card. Hosted tribe, managed link, backups and the shared AI credits (a smaller
   trial pool). On day 12 Flint mentions it's ending; on day 15 the tribe falls back to Free (nothing is deleted; the
   tribe keeps running wherever it's self-hosted).
-- **Jam Pass**: Team features for one weekend, free for jam organizers' teams.
+- **Jam Pass**: Tribe features for one weekend, free for jam organizers' teams.
 - One trial per GitHub account and per tribe. Shown on the pricing page as "14-day free trial at launch".

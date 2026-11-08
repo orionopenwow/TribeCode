@@ -31,7 +31,7 @@ def main():
             # ---- site, no reviews yet ----
             pg = b.new_page(viewport={"width": 1280, "height": 900}); pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.goto(f"http://127.0.0.1:{SPORT}/pricing.html"); pg.wait_for_load_state("load")
-            assert "14-day free trial" in pg.inner_text("[data-tier=team]") and pg.is_visible("[data-tier=trial]")
+            assert "14-day free trial" in pg.inner_text("[data-tier=tribe]") and pg.is_visible("[data-tier=trial]")
             assert pg.is_visible("#reviews") and pg.is_visible("#rv-empty") and pg.locator(".rv").count() == 0
             assert "template=review.yml" in pg.get_attribute(".rv-cta a", "href")
             pg.goto(f"http://127.0.0.1:{SPORT}/index.html"); pg.wait_for_timeout(800)

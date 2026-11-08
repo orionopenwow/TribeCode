@@ -1,0 +1,22 @@
+name: Ask for help in your tribe (Hire Camp)
+description: Book the maker of TribeCode to jump into your tribe and help. You'll get a reply with a time and a quote before any work starts.
+title: "Help: "
+labels: ["hire"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What do you need?
+      options: ["Get unstuck (a bug, a build, a deploy)", "Set up hosting and connect our AI", "Build a feature with us", "Teach a session (club, class, family)", "Something else"]
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes:
+      label: Tell us about it
+      description: What you're making, what's in the way, and roughly when you'd like help. Don't paste passwords or keys.
+    validations: { required: true }
+  - type: input
+    id: contact
+    attributes:
+      label: Best way to reach you (optional)
+      description: Leave blank to talk right here in this issue.
