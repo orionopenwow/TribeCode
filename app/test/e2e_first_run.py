@@ -403,6 +403,8 @@ def main():
             spg = sctx.new_page(); watch(spg, "spectator")
             spg.goto(BASE + "/?skipIntro=1"); spg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000)
             spg.evaluate("pid => TribeProjects.switchTo(pid, 'home')", pid); spg.wait_for_timeout(800)
+            spg.wait_for_selector("#pj-overview .pj-title", timeout=10000)
+            assert spg.locator("#pj-invite").count() == 0 and spg.locator("#pj-context").count() == 0, "a spectator gets no Invite or drop zone they can't use"
             shot(spg, "25-spectator"); audit(spg, "spectator dashboard"); no_dead_end(spg, "spectator dashboard")
             sctx.close()
             # the server restarts: the client reconnects by itself

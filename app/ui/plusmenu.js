@@ -22,7 +22,7 @@
 
   const ITEMS = () => [
     { group: 'Add' },
-    { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Docs' },
+    { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Files' },
     { k: 'gif', icon: 'i-gif', t: 'GIF', s: 'Search, your GIFs, or paste a link', hide: !window.TribeChatRich || me().role === 'spectator' },   // feat/chat2
     { group: 'Decide together' },
     { k: 'propose', icon: 'i-flag', t: 'Propose to the tribe', s: 'Everyone votes; approved ideas go to the Board', hide: me().role === 'spectator' },
@@ -121,7 +121,7 @@
             await C.api(`/chat/${chan()}/image`, { method: 'POST', body: { data: await toB64(f), mime: f.type, text: draft() } }); clearDraft();
           } else if (TEXTY.test(f.name) && f.size < 2_000_000 && window.TribeDocs) {   // text stays editable: it becomes a doc
             await window.TribeDocs.importFiles([f]);
-            await C.api(`/chat/${chan()}`, { method: 'POST', body: { text: `📎 Shared **${f.name}** in Docs` } });
+            await C.api(`/chat/${chan()}`, { method: 'POST', body: { text: `📎 Shared **${f.name}** in Files` } });
           } else if (f.size <= 8 * 1024 * 1024) {   // anything else (PDF, zip, big photo…) is kept as a file to download
             await C.api(`/chat/${chan()}/file`, { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type, text: draft() } }); clearDraft();
           } else toast(`${f.name} is over 8 MB: put it in the repo instead`);

@@ -193,7 +193,7 @@
         await create(title, `> Imported from **${f.name}** (${Math.round(f.size / 1024)} KB).\n>\n> Rich formats (PDF, Word, slides) are converted to Markdown by the desktop app's converter, coming in a later sprint. For now, paste the text here.\n`, f.name); made++;
       }
     }
-    if (made) { window.TribeStore.set({ checklist: { drop: true } }); window.TribeApp.refresh(); window.TribeApp.toast(`${made} file${made > 1 ? 's' : ''} added to Docs`); }
+    if (made) { window.TribeStore.set({ checklist: { drop: true } }); window.TribeApp.refresh(); window.TribeApp.toast(`${made} file${made > 1 ? 's' : ''} added to Files`); }
   }
 
   // ---------- rendering ----------

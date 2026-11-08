@@ -206,7 +206,7 @@
         n++;
       } catch (e) { toast(e.message); }
     }
-    if (n) { toast(n === 1 ? 'Added to Docs' : `${n} files added to Docs`); load(); }
+    if (n) { toast(n === 1 ? 'Added to Files' : `${n} files added to Files`); load(); }
   }
   async function note(name, text) {
     try { const r = await C.api('/flow/notes', { method: 'POST', body: { name, text } }); setFlow(r.flow); } catch (e) { toast(e.message); }

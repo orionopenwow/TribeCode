@@ -78,7 +78,7 @@
     if (sb) sb.onclick = () => C.send({ type: 'caption-share', on: !sharingMe() });
     const sum = strip.querySelector('#h-summary');
     if (sum) sum.onchange = () => setSummary(sum.checked, sum);
-    strip.querySelector('#cap-end').onclick = () => { C.send({ type: 'meeting-end' }); window.TribeApp && window.TribeApp.toast('Writing meeting notes… they show up in Docs.'); };
+    strip.querySelector('#cap-end').onclick = () => { C.send({ type: 'meeting-end' }); window.TribeApp && window.TribeApp.toast('Writing meeting notes… they show up in Files.'); };
   }
   // "Post a summary after each huddle" (server/huddlesum.js): a project setting the host or the project's lead switches
   // here; everyone else sees that it is on. The summary and the mood go to the project's chat and, with a repo, notes/huddles/.

@@ -304,7 +304,12 @@
   // ---------- view ----------
   const CHIPS = ['Connect my AI', 'Capture a note', 'What\'s happening?', 'How do invites work?'];
   const statusLine = () => (model.online ? `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}` : 'basic mode · no model');
-  const privLine = () => (model.online && model.cloud ? `Flint uses ${model.via || model.model} through the host's key. The key never leaves the host.` : model.online && model.browser ? 'Flint runs in your browser. Nothing you type here leaves it.' : 'Flint runs on this computer. Nothing you type here leaves it.');
+  const privLine = () => {   // qa-pass: say where words actually go (a friend's words go to the host; a cloud model sees what you ask)
+    const host = !(window.TribeClient && window.TribeClient.state && window.TribeClient.state().me) || window.TribeClient.state().me.role === 'host';
+    if (model.online && model.cloud) return `Flint uses ${model.via || model.model} through the host's key, so what you ask goes to that service. The key never leaves the host.`;
+    if (model.online && model.browser) return 'Flint runs in your browser. Nothing you type here leaves it.';
+    return host ? 'Flint runs on this computer. Nothing you type here leaves it.' : 'Flint runs on the host\'s computer. What you type stays in this tribe.';
+  };
   // Early on Flint keeps it simple: a short hello and the next setup steps as nudges. He shows more as the tribe grows.
   const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the repo', 'repo'] };   // feat/setup-flow: the four setup steps
   function emptyHtml() {

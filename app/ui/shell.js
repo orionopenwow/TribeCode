@@ -281,7 +281,7 @@
   }
   function upload() {
     const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
-    inp.onchange = () => { const fs = [...inp.files]; if (!fs.length) return; App().show('docs'); window.TribeDocs.importFiles(fs).then(() => toast(`Added ${fs.length} file${fs.length > 1 ? 's' : ''} to Docs`)).catch(e => toast(e.message)); };
+    inp.onchange = () => { const fs = [...inp.files]; if (!fs.length) return; App().show('docs'); window.TribeDocs.importFiles(fs).then(() => toast(`Added ${fs.length} file${fs.length > 1 ? 's' : ''} to Files`)).catch(e => toast(e.message)); };
     inp.click();
   }
   // Ask Claude: your own Claude Code's private chat if it is connected, else the local brain in chat.
