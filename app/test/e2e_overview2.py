@@ -54,8 +54,20 @@ def main():
             pid = host.evaluate("TribeProjects.current()")
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-sec-repo", timeout=15000)
 
+            # 0. a brand-new project: the checklist is the hero and there's no Living update yet
+            host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
+            assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
+            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 5 and host.locator("#pj-check.hero .ock-fold").is_hidden()
+            assert host.evaluate("parseFloat(getComputedStyle(document.querySelector('#pj-check .ock-hero-t')).fontSize)") >= 24
+            n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
+            host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]")
+            assert host.locator("#pj-check .ock-next .btn.primary").count() == 1 and host.locator("#pj-check .btn.primary").count() == 1, "one solid button: the next step"
+            st, _ = api("/tasks", "POST", {"title": "Draw the title screen"}, token=tok, headers={"X-Project": pid}); assert st in (200, 201), st
+            host.wait_for_selector("#pj-living", timeout=10000)   # started: the Living update appears, the checklist calms down
+            assert host.locator("#pj-check.hero").count() == 0
+
             # 1-2. identity row, then the Living update: a pill and 4 equal tiles, no long sentence
-            assert "Add a one-line bio" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
+            assert "Add a short description" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
             assert "Invite to My Tribe" in host.text_content("#pj-invite")
             assert "Living update" in host.text_content("#pj-living .eyebrow") and host.text_content("#pj-living .pl-mood").strip() in ("Brand new", "Steady", "Quiet", "Buzzing")
             labels = host.eval_on_selector_all("#pj-living .pl-cell small", "els => els.map(e => e.textContent.trim().toUpperCase())")
@@ -75,10 +87,6 @@ def main():
             # 3. Onboarding checklist: ticks itself
             assert "Onboarding Checklist" in host.text_content("#pj-check h3")
             host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
-            host.wait_for_selector("#pj-check [data-step=task]:not(.on) .ock-below [data-ck=newtask].primary")
-            assert host.locator("#pj-check [data-step=task] [data-ck=invite]").count() == 1
-            n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
-            st, _ = api("/tasks", "POST", {"title": "Draw the title screen"}, token=tok, headers={"X-Project": pid}); assert st in (200, 201), st
             host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000)
             assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1
             assert host.get_attribute("#pj-check [data-step=task] .ock-box", "aria-checked") == "true"

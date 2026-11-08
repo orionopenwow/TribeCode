@@ -87,3 +87,63 @@ button.claude[data-give]::before { content: '✨'; }
 #pj-check .ock-row[data-step="repo"] .ock-l::before { content: '🌿'; }
 #pj-check .ock-row.on .ock-l::before { filter: grayscale(1); opacity: .5; }
 #pj-check.done .ock-allset::before { content: '🎉'; margin-right: 6px; }
+
+/* ---- the onboarding checklist as the page's hero, until the tribe has begun (projects.js `hero`): one card per step
+   with a big emoji, the step and one line of help, and its buttons on the right. The next step is softly highlighted. ---- */
+#pj-check.hero { padding: 28px 30px 26px 33px; margin-bottom: 26px; border-color: color-mix(in srgb, var(--action, #B4512A) 35%, var(--edge)); }
+#pj-check.hero::before { width: 4px; background: var(--action, #B4512A); }
+#pj-check.hero .ock-eyebrow { display: block; margin-bottom: 6px; color: var(--accent-ink, #E58A5E); }
+#pj-check.hero .ock-hero-t { margin: 0 0 6px; font-family: var(--display, inherit); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+#pj-check.hero .ock-hero-p { margin: 0 0 18px; color: var(--muted); font-size: 15.5px; line-height: 1.5; }
+#pj-check.hero .ock-head h3 { font-size: 13.5px; color: var(--muted); font-weight: 600; }
+#pj-check.hero .ock-head h3::before { content: none; }
+#pj-check.hero .ock-fold { display: none; }
+#pj-check.hero .ock-bar { height: 6px; margin: 10px 0 16px; } #pj-check.hero .ock-bar span { background: var(--action, #B4512A); }
+.ock-cards { display: grid; gap: 10px; }
+#pj-check.hero .ock-card { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); }
+#pj-check.hero .ock-card .ock-box { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; margin: 0; }
+#pj-check.hero .ock-card.ock-next { border-color: color-mix(in srgb, var(--action, #B4512A) 55%, var(--edge)); background: color-mix(in srgb, var(--action, #B4512A) 8%, var(--raised)); }
+#pj-check.hero .ock-card.on { background: transparent; }
+.ock-emo { position: relative; width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; line-height: 1; background: var(--surface-2, var(--surface)); border: 1px solid var(--edge); }
+.ock-card.on .ock-emo { filter: grayscale(.7); opacity: .6; }
+.ock-emo-ok { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ov-green); color: var(--canvas); border: 2px solid var(--surface); filter: none; }
+.ock-emo-ok svg.i { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 3; }
+#pj-check.hero .ock-card .ock-l { font-size: 17px; font-weight: 650; text-decoration: none; }
+#pj-check.hero .ock-card .ock-l::before { content: none !important; }
+#pj-check.hero .ock-card.on .ock-l { color: var(--muted); }
+#pj-check.hero .ock-sub { margin: 3px 0 0; color: var(--muted); font-size: 14.5px; line-height: 1.45; }
+#pj-check.hero .ock-card .ock-acts { display: flex; gap: 8px; margin: 0; }
+#pj-check.hero .btn.sm { height: 40px; min-width: 104px; padding: 0 18px; font-size: 14.5px; border-radius: 10px; justify-content: center; }
+@media (max-width: 820px) {
+  #pj-check.hero { padding: 20px 14px 16px 17px; margin-bottom: 16px; }
+  #pj-check.hero .ock-hero-t { font-size: 22px; }
+  #pj-check.hero .ock-hero-p { font-size: 14.5px; margin-bottom: 12px; }
+  #pj-check.hero .ock-card { grid-template-columns: 46px 1fr; gap: 12px; padding: 12px; }
+  .ock-emo { width: 46px; height: 46px; font-size: 24px; border-radius: 12px; }
+  #pj-check.hero .ock-card .ock-acts { grid-column: 1 / -1; }
+  #pj-check.hero .ock-card .ock-acts .btn { flex: 1; }
+  #pj-check.hero .ock-card .ock-l { font-size: 15.5px; }
+  #pj-check.hero .ock-sub { font-size: 13.5px; }
+}
+
+/* ---- the project's title row: bigger picture and name, a quiet description line, plain metadata ---- */
+.pj-title2 { gap: 18px !important; margin-bottom: 22px; }
+.pj-title2 .pj-face.lg { width: 60px !important; height: 60px !important; border-radius: 16px !important; font-size: 20px; }
+.pj-title2 .pj-id { gap: 4px; }
+.pj-title2 .pj-id h1 { font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; }
+.pj-title2 .pj-bio { font-size: 15px; color: var(--muted); }
+.pj-title2 .pj-bio.empty { font-style: normal; color: var(--faint); display: inline-flex; align-items: center; gap: 6px; }
+.pj-title2 .pj-bio.empty:not(:disabled):hover { color: var(--text); }
+.pj-title2 .pj-meta { font-family: inherit; font-size: 13.5px; color: var(--faint); }
+.pj-title2 .pj-dot { margin: 0 6px; opacity: .7; }
+.pj-title2 #pj-invite { height: 42px; padding: 0 18px; font-size: 14.5px; border-radius: 10px; gap: 8px; }
+@media (max-width: 820px) {
+  .pj-title2 .pj-face.lg { width: 52px !important; height: 52px !important; }
+  .pj-title2 .pj-id h1 { font-size: 26px; }
+  .pj-title2 #pj-invite { width: 100%; justify-content: center; margin-left: 0 !important; }
+}
+
+/* Invite friends (sidebar foot): emoji and label centred as one unit, a touch bigger */
+.nest-foot #tour-invite, #tour-invite { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 44px; font-size: 14.5px; line-height: 1; }
+#tour-invite::before { display: block; font-size: 18px; line-height: 1; margin: 0; filter: none; transform: translateY(-1px); }
+.nest-foot #tour-invite:hover { border-color: color-mix(in srgb, var(--action, #B4512A) 60%, var(--edge)); }
