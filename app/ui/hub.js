@@ -376,32 +376,96 @@
     open('docs'); setTimeout(() => noteEditor(id, true), 60);
   }
   // A plain note editor (first line is the title); saves as you type.
+  // feat/doc-editor: two layouts over the same commands and menus (doclayout.js).
+  //   Desktop: Google Docs desktop + Notion — top bar (title, Only you · Saved, Ask AI, ⋮, Done), sticky formatting
+  //   toolbar, Outline panel, centered page. Phone: Google Docs mobile — 64px header (✓ Done pill; undo, redo, +,
+  //   comment, sparkle, ⋮) and a format bar riding on the keyboard. Ids kept: #note-title #note-text #note-done
+  //   #note-undo #note-redo; #note-del lives in the ⋮ menu.
   function noteEditor(id, fresh) {
     const n = scratch.notes().find(x => x.id === id); if (!n) return;
     let ov = $('#note-ed'); if (ov) ov.remove();
     const lines = fresh ? ['', ''] : String(n.text).split('\n'), title = lines[0] === 'New note' && fresh ? '' : lines[0], body = lines.slice(1).join('\n');
-    ov = document.createElement('div'); ov.id = 'note-ed'; ov.className = 'note-ed-wrap' + (isPhone() ? ' sheet' : '');
-    ov.innerHTML = `<div class="note-ed" role="dialog" aria-label="Note">
-      <header><button class="ne-done" id="note-done" aria-label="Done">${ico('i-tick', 20)}</button><span class="ne-where">Only you</span><span style="flex:1"></span>
-        <button class="ne-btn" id="note-undo" aria-label="Undo" title="Undo">↶</button><button class="ne-btn" id="note-redo" aria-label="Redo" title="Redo">↷</button>
-        <button class="ne-btn" id="note-del" aria-label="Delete note" title="Delete">${ico('i-x', 18)}</button></header>
-      <div class="ne-body"><input id="note-title" class="ne-title" placeholder="Title" value="${esc(title)}" autocomplete="off"><textarea id="note-text" spellcheck="true" placeholder="Start typing…">${esc(body)}</textarea></div></div>`;
+    const L = window.TribeDocLayout, desk = !!(L && L.isDesk());
+    ov = document.createElement('div'); ov.id = 'note-ed'; ov.className = 'note-ed-wrap' + (L ? (desk ? ' dl-full' : ' sheet gd-wrap') : isPhone() ? ' sheet' : '');
+    const fields = cls => `<input id="note-title" class="${cls}" placeholder="Title" value="${esc(title)}" autocomplete="off" aria-label="Title"><textarea id="note-text" class="dl-text" spellcheck="true" placeholder="Start typing, or type / for blocks…" aria-label="Note text">${esc(body)}</textarea>`;
+    if (L && desk) {
+      const acts = `<div class="ne-acts"><button class="ne-btn" data-act="sparkle" id="note-ai" aria-label="Ask AI" title="Ask AI">${L.ico('sparkle', 20)}</button>
+        <button class="ne-btn" data-act="more" id="note-more" aria-label="More" title="More">${L.ico('more', 20)}</button>
+        <button class="ne-done" id="note-done" aria-label="Done" title="Done (Esc)">${ico('i-tick', 18)}<span>Done</span></button></div>`;
+      ov.innerHTML = `<div class="note-ed dl-shell" role="dialog" aria-modal="true" aria-label="Note">
+        <div class="dl-head">${L.top({ kind: 'note', nameId: 'note-name', title, where: 'Only you', statusId: 'note-status', status: fresh ? 'New note' : 'Saved', acts })}
+          ${L.toolbar({ ids: { undo: 'note-undo', redo: 'note-redo' } })}</div>
+        <div class="dl-body">
+          <aside class="dl-side" aria-label="Outline"><section class="dl-outline" style="margin:0;padding:0;border:0"><div class="dl-side-h"><span class="dl-eyebrow">Outline</span></div><nav class="dl-ol" id="note-outline" aria-label="Outline"></nav></section></aside>
+          <div class="dl-canvas"><div class="dl-page ne-body">${fields('ne-title')}</div></div>
+        </div></div>`;
+    } else if (L) {
+      ov.innerHTML = `<div class="note-ed gd-ed" role="dialog" aria-modal="true" aria-label="Note">
+        ${L.gdHeader({ ids: { done: 'note-done', undo: 'note-undo', redo: 'note-redo' } })}
+        <div class="ne-body gd-body">${fields('gd-title')}<span class="gd-status" id="note-status" aria-live="polite"></span></div>
+        <div class="gd-fmt-wrap docked">${L.gdBar()}</div></div>`;
+    } else {
+      ov.innerHTML = `<div class="note-ed" role="dialog" aria-label="Note">
+        <header><button class="ne-done" id="note-done" aria-label="Done">${ico('i-tick', 20)}</button><span class="ne-where">Only you</span><span style="flex:1"></span>
+          <button class="ne-btn" id="note-undo" aria-label="Undo" title="Undo">↶</button><button class="ne-btn" id="note-redo" aria-label="Redo" title="Redo">↷</button>
+          <button class="ne-btn" id="note-del" aria-label="Delete note" title="Delete">${ico('i-x', 18)}</button></header>
+        <div class="ne-body">${fields('ne-title')}</div></div>`;
+    }
     document.body.appendChild(ov);
     const ti = $('#note-title'), ta = $('#note-text');
     (fresh || !title ? ti : ta).focus();
-    const save = () => scratch.quiet(id, `${ti.value.trim() || 'Untitled note'}\n${ta.value}`);
-    ti.oninput = save; ta.oninput = save;
+    const status = $('#note-status'); let st = null;
+    const grow = () => { if (L) { ta.style.height = 'auto'; ta.style.height = Math.max(desk ? ta.parentNode.clientHeight * 0.5 : 240, ta.scrollHeight + 4) + 'px'; } };
+    const save = () => {
+      scratch.quiet(id, `${ti.value.trim() || 'Untitled note'}\n${ta.value}`);
+      if (status) { status.textContent = 'Saving…'; clearTimeout(st); st = setTimeout(async () => { try { await scratch.flush(); } catch {} if (status.isConnected) status.textContent = 'Saved'; }, 700); }
+    };
+    ti.oninput = save;
     ti.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } });
-    $('#note-undo').onclick = () => { (document.activeElement === ti ? ti : ta).focus(); document.execCommand('undo'); save(); };
-    $('#note-redo').onclick = () => { (document.activeElement === ti ? ti : ta).focus(); document.execCommand('redo'); save(); };
+    const hist = cmd => { (document.activeElement === ti ? ti : ta).focus(); document.execCommand(cmd); save(); };
+    $('#note-undo').onclick = () => hist('undo');
+    $('#note-redo').onclick = () => hist('redo');
+    const close = () => { ov.remove(); if (mode === 'docs') drawDocs(); else if (document.body.dataset.view === 'hub') render(); };
+    const del = () => { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); else render(); toast('Note deleted'); };
+    let ol = null, sl = null;
+    if (L) {
+      sl = L.slash(ta, ta.parentNode);
+      const sync = () => L.sync(ov, ta);
+      if (desk) { L.mirror($('#note-name'), ti, () => ta.focus()); ol = L.outline({ el: $('#note-outline'), ta: () => ta }); }
+      L.bind(ov, () => ta);
+      if (!desk) L.dockAboveKeyboard(ov.querySelector('.gd-fmt-wrap'), ta, { always: true });
+      ta.addEventListener('keydown', e => { if (sl.key(e)) return; if (L.key(e, ta)) return; L.enterList(e, ta); });
+      const words = () => (ta.value.match(/\S+/g) || []).length;
+      const more = anchor => L.menuSheet({ title: 'More', anchor, items: [
+        { label: 'Find and replace', icon: 'find', run: () => L.findSheet(ta, { anchor }) },
+        { label: 'Share & export', icon: 'share', run: () => L.menuSheet({ title: 'Share & export', anchor, items: [
+          { label: 'Copy text', icon: 'copy', run: async () => { try { await navigator.clipboard.writeText(`# ${ti.value.trim() || 'Untitled note'}\n\n${ta.value}`); toast('Note copied'); } catch { toast('Could not copy'); } } },
+          { label: 'Download .md', icon: 'download', run: () => L.download(ti.value.trim() || 'note', `# ${ti.value.trim() || 'Untitled note'}\n\n${ta.value}\n`) },
+        ] }) },
+        { label: 'Outline', icon: 'outline', run: () => L.outlineSheet({ ta: () => ta }) },
+        { label: 'Details', icon: 'info', run: () => { const s = L.sheet({ title: 'Details', anchor, html: `<dl class="dl-details"><dt>Words</dt><dd>${words()}</dd><dt>Characters</dt><dd>${ta.value.length}</dd><dt>Last edited</dt><dd>${esc(ago((scratch.notes().find(x => x.id === id) || {}).updated || n.updated || n.at) || 'just now')}</dd><dt>Owner</dt><dd>${esc(me().name || 'You')} · only you</dd></dl>` }); return s; } },
+        { label: 'Rename', icon: 'rename', run: () => { ti.focus(); ti.select(); } },
+        '-',
+        { label: 'Delete', icon: 'trash', id: 'note-del', danger: true, run: del },
+      ] });
+      ov.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
+        const k = b.dataset.act;
+        if (k === 'plus') return L.insertSheet(ta, { anchor: b, after: sync });
+        if (k === 'comment') return toast('Comments live on project docs. Move this note into a project to discuss it with your tribe.');
+        if (k === 'sparkle') return L.aiSheet(ta, { anchor: b, title: 'this note', after: sync });
+        if (k === 'more') return more(b);
+      });
+    }
+    ta.oninput = () => { save(); grow(); if (sl) sl.check(); if (ol) ol.refresh(); };
+    grow();
     const done = async () => {
       if (!ti.value.trim() && !ta.value.trim()) { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); return; }   // nothing written: no empty note left behind
-      save(); await scratch.flush(); ov.remove(); if (mode === 'docs') drawDocs(); else if (document.body.dataset.view === 'hub') render();
+      save(); await scratch.flush(); close();
     };
     $('#note-done').onclick = done;
-    $('#note-del').onclick = () => { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); else render(); toast('Note deleted'); };
+    const nd = $('#note-del'); if (nd) nd.onclick = del;
     ov.addEventListener('click', e => { if (e.target === ov) done(); });
-    ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(); });
+    ov.addEventListener('keydown', e => { if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('.dl-menu, .dl-sheet-wrap')) done(); });
   }
 
   async function refineGo() {
