@@ -3,7 +3,7 @@
 //   - No header outside Chat: a bare project line, then the screen. A distinct bottom rack:
 //     avatar · Chat · Docs · Updates · Tasks · orange action. In Chat the rack moves into a compact top bar.
 //   - Composer: "+" menu (photo, file, task, vote), a one-tap voice recorder (pause / stop / delete), the send arrow.
-//   - "Talk to…" picker: my Claude, Qwen brain, my desktop, #agents, #general and DMs.
+//   - "Talk to…" picker: Flint (the built-in helper), my Claude, my desktop, #agents, #general and DMs.
 //   - Updates: one-tap approvals with an optional comment, then what happened.
 //   - Docs hub: the pinned repo as the hero, the living notes journal, files, screenshots.
 //   - Suggested tasks on Tasks and Home. Profile sheets (add friend, network, DM, ask their Claude).
@@ -586,7 +586,7 @@
   })();
 
   // =====================================================================
-  // "Talk to…": my Claude, Qwen brain, my desktop, #agents, #general and DMs (friends first)
+  // "Talk to…": Flint, my Claude, my desktop, #agents, #general and DMs (friends first)
   // =====================================================================
   function talkTo() {
     const ag = myAgent(), f = friends(), ch = chan();
@@ -596,6 +596,7 @@
     const row = (k, iconHtml, t, s, on = false, extra = '') => `<button class="m2-mi ${on ? 'on' : ''}" data-talk="${esc(k)}">${iconHtml}<span class="m2-mt"><b>${t}</b><small>${s}</small></span>${extra}</button>`;
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Talk to your Claude, the AI or the tribe</span></div>
       <div class="m2-menu">
+        ${window.TribeFlint ? row('flint', `<span class="m2-mic live"><svg class="i m2i" style="width:18px;height:18px" aria-hidden="true"><use href="#i-flint"/></svg></span>`, 'Flint', `The built-in helper · ${window.TribeFlint.status().online ? 'local model on' : 'basic mode'}`) : ''}
         ${row('ai', `<span class="m2-mic live">${ic('spark', 18)}</span>`, 'Ask AI', '<span id="m2-ai-sub">The tribe\'s AI answers in #general</span>')}
         ${ag ? row('claude', `<span class="m2-mic live">${ic('robot', 18)}</span>`, 'My Claude', `${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}`, ch === DM().channelWith(ag.id)) : ''}
         ${ag ? row('desktop', `<span class="m2-mic">${ic('desk', 18)}</span>`, 'My desktop', 'Hand a change to a computer that can push') : ''}
@@ -623,6 +624,7 @@
   function talk(k) {
     const inp = () => $('#chat-input');
     if (k === 'ai') return askAi();
+    if (k === 'flint') return window.TribeFlint && window.TribeFlint.openFull();   // feat/flint
     if (k === 'claude') { const ag = myAgent(); if (ag && DM()) return DM().open(ag.id); App().connectClaude ? App().connectClaude() : ($('#cc-connect') && $('#cc-connect').click()); return; }
     if (k === 'general') { if (DM() && DM().current() !== 'general') DM().back(); App().show('chat'); return setTimeout(talkLabel, 0); }
     if (k === 'brain') { if (DM() && DM().current() !== 'general') DM().back(); App().show('chat'); setTimeout(() => { const i = inp(); if (i) { if (!/^@brain\b/.test(i.value)) i.value = '@brain ' + i.value.replace(/^@brain\s*/, ''); i.dispatchEvent(new Event('input')); i.focus(); } talkLabel(); }, 60); return; }

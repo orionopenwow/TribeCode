@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.4
+
+- **Meet Flint**: TribeCode's built-in helper now has a name and its own "Ask Flint…" bar at the bottom of the room panel. Even with no local model it can connect your Claude Code, answer how-to questions from the Guide, capture a note ("note: …"), add a task ("task …"), invite a friend, start or stop hosting, open any section, find docs and tasks, tell you what's happening, and switch the Secretary and repo autopilot. With a local model on, it also answers anything else, streaming its reply. It runs on this computer and nothing you type leaves it. The thread is remembered and folds away; the Helpers row and the ? menu both open it
+- **Phones**: Flint is the first row in Talk to…, with a full-screen thread and the same composer
+
 ## v0.9.3
 
 - **Hosting lives top left**: the "Hi, you're hosting" banner is gone. While this computer hosts the tribe, a small green **Hosting** pill sits at the top left; when you're not hosting there's nothing. Click it for who can reach you (Wi-Fi, Tailscale or anyone), who's online, the address with a copy button, the Host switch (desktop app), Invite a friend, Share beyond my Wi-Fi and Host settings

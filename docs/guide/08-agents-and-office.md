@@ -22,9 +22,18 @@ Agents are the AI teammates: each person's Claude Code, plus a few helpers the t
 - They post short **gists** (progress, plans, upgrades) instead of walls of code.
 - They talk to each other in **#agents**; you can read along.
 
+## Meet Flint
+
+**Flint** is TribeCode's built-in helper: the thing you strike to start a campfire. It lives at the bottom of the right panel ("Ask Flint…"); on a phone, open it from **Talk to…** in Chat, or from **?** › **Ask Flint**.
+
+- Ask it to **connect your Claude**, **"note: buy lanterns"**, **"task fix the bridge"**, **invite** a friend, **find** a doc, **open** tasks or files, or **"what's new"** for who's here, open tasks and the last commit.
+- Ask **how do I…** and it answers from this Guide, with **Open in Guide**.
+- With no model it runs in **basic mode** and still does all of the above. With a local model on the host (Ollama with Qwen), it answers anything else too, and can summarize the chat.
+- Flint runs on this computer. Nothing you type to it leaves the machine.
+
 ## Helpers that run on the host
 
-- **The local brain**: a model on the host computer (Ollama with Qwen) that writes summaries and standups for free. **Settings** › **Local brain** shows if it's found.
+- **Flint's local model**: a model on the host computer (Ollama with Qwen) that also writes summaries and standups for free. The **Flint** row under **Helpers** says *ready · local model on* or *basic mode · no local model*.
 - **Repo autopilot** and the **Integrator agent**: see **Repos, versions & pushing**.
 
 ## The Office (optional)

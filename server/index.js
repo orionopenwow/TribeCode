@@ -40,6 +40,7 @@ const makeMcpFlow = require('./mcp-flow');
 const makeWorkshop = require('./workshop');
 const makeWorkshopMcp = require('./mcp-workshop');
 const makeGuide = require('./guide');   // feat/vision-guide: the Guide's pages (docs/guide/*.md), read-only
+const makeFlint = require('./flint');   // feat/flint: Flint's optional local-model step (server/flint.js)
 const makeSecretary = require('./secretary');
 const makeAgentsHub = require('./agentshub');
 const makePreview = require('./preview');
@@ -276,6 +277,7 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
+const flint = makeFlint({ brain, str });   // feat/flint
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via Ollama` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
 const projectRepo = () => (P.get(P.current() || P.defaultId()) || {}).repo || null;
@@ -691,6 +693,7 @@ async function apiInProject(req, res, url) {
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
   }
 
+  if (a === 'flint') return flint.route(req, res, ctx());   // feat/flint: GET status, POST /ask streams the local model's reply
   if (a === 'brain') {
     if (m === 'GET') return send(res, 200, { brain: await brain.refresh() });
     if (m === 'POST' && b === 'standup') {
