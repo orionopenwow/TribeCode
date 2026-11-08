@@ -142,9 +142,9 @@ def main():
             assert set(msg("Level 2 is ready")["reactions"]["👍"]) == {oid, mid}
             # the picker has the rest
             maya.hover(bubble(lvl) + " .mb p"); maya.click(f"{bubble(lvl)} .rx-add")
-            maya.wait_for_selector("#rx-picker [data-pick='🚀']")
-            assert maya.locator("#rx-picker [data-pick]").count() == 24
-            maya.click("#rx-picker [data-pick='🚀']")
+            maya.wait_for_selector("#emoji-pick .ep-c[data-e='🚀']")   # feat/chat2: the full picker (app/ui/emojipick.js)
+            assert maya.locator("#emoji-pick .ep-c").count() > 300
+            maya.click("#emoji-pick .ep-c[data-e='🚀']")
             wait_text(orion, f"{bubble(lvl)} .reacts", "🚀")
             # tap a chip to toggle yours
             orion.click(f"{bubble(lvl)} .rx[data-rx='🚀']")

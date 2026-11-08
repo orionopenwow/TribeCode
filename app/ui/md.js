@@ -13,7 +13,14 @@
       .replace(/==(?:\{(ember|teal|indigo|amber|rose|green)\})?([^=]+?)==/g, (_, c, x) => `<mark class="hl hl-${c || 'amber'}">${x}</mark>`)
       .replace(/\{(ember|teal|indigo|amber|rose|green)\}(.*?)\{\/\}/g, '<span class="tc tc-$1">$2</span>')
       .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-      .replace(/(^|\s)(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
+      .replace(/(^|\s|\()(https?:\/\/[^\s<]+)/g, (all, pre, u) => {   // feat/chat2: trailing punctuation (and an unmatched ")") stays outside the link
+        let tail = '';
+        for (;;) {
+          const m = /(&quot;|&#39;|[.,;:!?\]}*_~])$/.exec(u) || (u.endsWith(')') && (u.match(/\(/g) || []).length < (u.match(/\)/g) || []).length ? [')'] : null);
+          if (!m) break; tail = m[0] + tail; u = u.slice(0, -m[0].length);
+        }
+        return /^https?:\/\/[^/?#]/.test(u) ? `${pre}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>${tail}` : all;
+      });
     return t.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
   }
   const align = t => { const m = /^\{(left|center|right|justify)\} (.*)$/.exec(t); return m ? [m[1] === 'left' ? '' : ` class="md-al-${m[1]}"`, m[2]] : ['', t]; };

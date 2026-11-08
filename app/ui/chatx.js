@@ -35,7 +35,7 @@
   const listFor = ch => (ch === 'general' ? $('#chat-list') : $('#dm-list'));
   const token = () => (S.get().server && S.get().server.token) || '';
   const mediaUrl = (ch, f) => `${C.base()}/api/chat/${encodeURIComponent(ch)}/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}`;
-  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : m.media.kind === 'file' ? `File: ${m.media.name || 'file'}` : 'Image') : '');  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+  const textOf = m => m.text || (m.media ? (m.media.kind === 'voice' ? 'Voice note' : m.media.kind === 'file' ? `File: ${m.media.name || 'file'}` : 'Image') : Array.isArray(m.images) ? `${m.images.length} pictures` : '');  const dur = s => { s = Math.round(Number(s) || 0); return `${Math.floor(s / 60)}:${pad(s % 60)}`; };
 
   // ---------- icons (added to the page's sprite) ----------
   const ICONS = {
@@ -59,12 +59,16 @@
     'i-info': '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
     'i-smile': '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>',
     'i-image': '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/>',
+    'i-gif': '<rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 10.2a2.2 2.2 0 1 0 0 3.6V12H9M13 9.5v5M16 14.5v-5h2.5M16 12h2"/>',
   };
   function addIcons() {
     const sprite = document.querySelector('svg[aria-hidden="true"]'); if (!sprite || sprite.querySelector('#i-reply')) return;
     sprite.insertAdjacentHTML('beforeend', Object.entries(ICONS).map(([k, v]) => `<symbol id="${k}" viewBox="0 0 24 24">${v}</symbol>`).join(''));
   }
   const icon = (k, cls = '') => `<svg class="i ${cls}"><use href="#${k}"/></svg>`;
+  const R = () => window.TribeChatRich;   // feat/chat2: pictures grid, previews, GIFs (app/ui/chatrich.js)
+  const CHN = () => window.TribeChannels;   // feat/chat2: channels (app/ui/channels.js)
+  const canPin = () => { const r = (C.state().me || {}).role; return !!r && r !== 'spectator'; };
 
   // ---------- rendering: Telegram-style bubbles (app/ui/bubbles.css) ----------
   // One message = one row: avatar (others only; shown on the last bubble of a group) + the bubble (.mb).
@@ -137,6 +141,7 @@
       : `<div class="avatar" style="background:${esc(colorOf(m.by))};color:${ink(colorOf(m.by))}">${esc(initials(nameOf(m.by)))}</div>`;
     const meta = `<span class="mt">${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}<time datetime="${esc(m.at)}">${when}</time>${mine ? `<span class="tk">${TICK1}</span>` : ''}</span>`;
     let body = '';
+    const rich = !sys && !m.deleted && !m.media && R() ? R().parts(m, ch) : null;
     if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>`;
     else if (m.deleted) body = `<p class="gone">message deleted${META}</p>`;
     else {
@@ -146,8 +151,10 @@
       else if (m.media && m.media.kind === 'voice') body += voiceHtml(m, ch) + (m.text ? `<p class="vn-tx">${esc(m.text)}${META}</p>` : '');
       else if (m.media && m.media.kind === 'image') body += `<button class="thumb" data-full="${esc(mediaUrl(ch, m.media.file))}"><img src="${esc(mediaUrl(ch, m.media.file))}" alt="Image from ${esc(nameOf(m.by))}" loading="lazy">${m.text ? '' : META}</button>${m.text ? `<p>${md(m.text)}${META}</p>` : ''}`;
       else if (m.media && m.media.kind === 'file') body += `<a class="fchip-dl" href="${esc(mediaUrl(ch, m.media.file))}" download="${esc(m.media.name || 'file')}" title="Download ${esc(m.media.name || 'file')}">${icon('i-down')}<span class="fd-t"><b>${esc(m.media.name || 'file')}</b><small>${esc(kb(m.media.size))}</small></span></a>${window.TribeViewers && window.TribeViewers.kindOf(m.media.name) ? `<button class="btn sm fchip-view" data-view-src="${esc(mediaUrl(ch, m.media.file))}" data-view-name="${esc(m.media.name)}" data-view-size="${Number(m.media.size) || 0}">View</button>` : ''}${m.text ? `<p>${md(m.text)}${META}</p>` : META}`;
+      else if (Array.isArray(m.images) && m.images.length && R()) body += R().grid(m, ch) + (m.text ? `<p>${md(m.text)}${META}</p>` : META);   // feat/chat2: several pictures
+      else if (rich && rich.only) body += rich.html + META;   // feat/chat2: a message that is just a picture / GIF link
       else body += `<p>${md(m.text || '')}${m.gist ? '' : META}</p>`;   // gists.js swaps a gist's <p> for its card, so its time sits below
-      if (!m.vote) body += linkChips(m.text);
+      if (!m.vote) body += rich ? (rich.only ? '' : rich.html) : linkChips(m.text);   // feat/chat2: previews + videos + linked pictures (chatrich.js)
       body += reactsHtml(m);
       if (window.TribeVotes) body += window.TribeVotes.hint(m);
     }
@@ -159,7 +166,8 @@
     const stamp = `${today ? 'Today' : yest ? 'Yesterday' : day.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${when}`;
     const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}<time class="nm-t">${esc(stamp)}</time></b>`;
     const gut = `<time class="gut-t" aria-hidden="true">${esc(when)}</time>`;   // continuation lines: the time shows in the gutter on hover
-    const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo') : m.gist ? 'gist-msg' : '';
+    const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo')
+      : Array.isArray(m.images) && m.images.length ? 'has-img has-grid' : rich && rich.only ? 'has-img img-solo has-gif' : m.gist ? 'gist-msg' : '';
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
     return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}${sys ? '' : gut}
       <div class="mb">${nm}${body}</div>${more}</div>`;
@@ -285,7 +293,7 @@
     const open = el.classList.contains('open');
     el.innerHTML = `<button class="pin-head" aria-expanded="${open}">${icon('i-pin')}<b>${list.length} pinned</b><span>${esc(textOf(list[0]))}</span>${icon('i-chev', 'chev')}</button>
       <div class="pin-items">${list.map(m => `<button data-jump="${esc(m.id)}"><b>${esc(nameOf(m.by))}</b><span>${esc(textOf(m))}</span></button>`).join('')}</div>`;
-    el.querySelector('.pin-head').onclick = () => { el.classList.toggle('open'); drawPins(); };
+    el.querySelector('.pin-head').onclick = () => { if (matchMedia('(max-width: 820px)').matches) return pinsPanel(el); el.classList.toggle('open'); drawPins(); };
   }
   async function loadPins(ch) {
     try { const { pins } = await C.api(`/chat/${ch}/pins`); pinsBy.set(ch, pins); } catch { pinsBy.delete(ch); }
@@ -303,6 +311,7 @@
   function targets(ch) {
     const out = [];
     if (ch !== 'general') out.push({ to: 'general', label: '#general' });
+    if (CHN()) for (const c of CHN().list()) if (!c.main && !c.archived) out.push({ to: c.id, label: '#' + c.name, chan: true });   // feat/chat2
     const mine = (C.state().members || []).find(x => x.role === 'agent' && x.owner === me());
     if (mine) out.push({ to: window.TribeDM.channelWith(mine.id), label: mine.name, agent: true });
     for (const x of C.state().members || []) if (x.role !== 'agent' && x.id !== me()) out.push({ to: window.TribeDM.channelWith(x.id), label: x.name });
@@ -320,7 +329,7 @@
         <button role="menuitem" data-act="reply">${icon('i-reply')}Reply</button>
         <button role="menuitem" data-act="forward">${icon('i-fwd')}Forward…</button>
         ${m.text ? `<button role="menuitem" data-act="copy">${icon('i-copy')}Copy text</button>` : ''}
-        <button role="menuitem" data-act="pin">${icon('i-pin')}${pinned ? 'Unpin' : 'Pin'}</button>
+        ${canPin() ? `<button role="menuitem" data-act="pin">${icon('i-pin')}${pinned ? 'Unpin' : 'Pin'}</button>` : ''}
         ${m.text && !m.vote ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
         ${m.text && !m.vote && window.TribeVotes ? `<button role="menuitem" data-act="vote">${icon('i-vote')}Make it a vote</button>` : ''}
         ${m.media && m.media.kind === 'voice' ? `<button role="menuitem" data-act="notes">${icon('i-doc')}Add to my notes</button>` : ''}
@@ -329,7 +338,7 @@
       bind();
     };
     const fwd = () => {
-      menu.innerHTML = `<div class="menu-label">Forward to</div>${targets(ch).map(t => `<button role="menuitem" data-to="${esc(t.to)}">${t.agent ? icon('i-sparkle') : t.to === 'general' ? icon('i-chat') : icon('i-users')}${esc(t.label)}</button>`).join('')}
+      menu.innerHTML = `<div class="menu-label">Forward to</div>${targets(ch).map(t => `<button role="menuitem" data-to="${esc(t.to)}">${t.agent ? icon('i-sparkle') : t.to === 'general' || t.chan ? icon('i-chat') : icon('i-users')}${esc(t.label)}</button>`).join('')}
         <button role="menuitem" data-to="notes">${icon('i-doc')}My notes</button>`;
       menu.querySelectorAll('[data-to]').forEach(b => b.onclick = async () => {
         closeMenu();
@@ -400,7 +409,11 @@
     const r = (el.querySelector('.mb') || el).getBoundingClientRect(), w = b.offsetWidth, h = b.offsetHeight;
     let top, left;
     if (touch) { top = r.top - h - 8; left = r.left; if (top < 8) top = r.bottom + 8; }
-    else { top = r.top - h + 4; left = el.getBoundingClientRect().right - w - 30; const list = el.closest('.chat'); if (list && top < list.getBoundingClientRect().top) top = r.top + 2; }
+    else {   // feat/chat2: inside the hovered row's top-right, beside its "..." button
+      const row = el.getBoundingClientRect(), more = el.querySelector('.msg-more'), mr = more && more.getBoundingClientRect();
+      top = row.top - Math.round(h / 2) + 4; left = (mr && mr.width ? mr.left - 4 : row.right - 8) - w;
+      const list = el.closest('.chat'); if (list && top < list.getBoundingClientRect().top) top = row.top + 2;
+    }
     b.style.top = Math.max(8, Math.min(innerHeight - h - 8, top)) + 'px';
     b.style.left = Math.max(8, Math.min(innerWidth - w - 8, left)) + 'px';
     if (focus) b.querySelector('button').focus();
@@ -414,6 +427,11 @@
   function openPicker(id, anchor) {
     closePicker();
     const e = msgs.get(id); if (!e) return;
+    if (window.TribeEmoji) {   // feat/chat2: the full picker (app/ui/emojipick.js), anchored to the message
+      const row = document.querySelector(`.chat:not(.hidden) .msg[data-id="${CSS.escape(id)}"]`), mb = row && row.querySelector('.mb');
+      const mine = Object.entries(e.m.reactions || {}).filter(([, w]) => w.includes(me())).map(([x]) => x);
+      return window.TribeEmoji.open({ anchor: mb || anchor, title: 'React with an emoji', selected: mine, onPick: x => react(e.ch, id, x) });
+    }
     const mine = e.m.reactions || {};
     const p = document.createElement('div'); p.id = 'rx-picker'; p.className = 'rx-picker'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Pick a reaction');
     p.innerHTML = `<div class="rx-grid">${EMOJI.map(x => `<button type="button" data-pick="${x}" class="${(mine[x] || []).includes(me()) ? 'on' : ''}" aria-label="React ${x}">${x}</button>`).join('')}</div>
@@ -434,6 +452,7 @@
   });
   document.addEventListener('click', e => {
     if (lpAt && Date.now() - lpAt < 1200 && !(e.target.closest && e.target.closest('#qr-bar, #msg-menu'))) { lpAt = 0; e.preventDefault(); e.stopImmediatePropagation(); return; }
+    if (lpAt && e.target.closest && e.target.closest('#qr-bar, #msg-menu')) lpAt = 0;   // feat/chat2: a pick in the bar or menu ends the long-press, so the next tap counts
     const q = e.target.closest && e.target.closest('#qr-bar [data-q]');
     if (q) {
       e.preventDefault(); e.stopPropagation();
@@ -573,7 +592,9 @@
   const toB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(blob); });
   document.addEventListener('paste', async e => {
     if (e.target.id !== 'chat-input') return;
-    const item = [...((e.clipboardData && e.clipboardData.items) || [])].find(i => i.kind === 'file' && /^image\//.test(i.type));
+    const items = [...((e.clipboardData && e.clipboardData.items) || [])].filter(i => i.kind === 'file' && /^image\//.test(i.type));
+    if (items.length && R()) { e.preventDefault(); return R().sendImages(items.map(i => i.getAsFile()).filter(Boolean)); }   // feat/chat2: one or several pictures
+    const item = items[0];
     if (!item) return;
     e.preventDefault();
     const f = item.getAsFile(); if (!f) return;
@@ -664,7 +685,7 @@
     const rx = t.closest('.rx'); if (rx) { const x = msgs.get(el.dataset.id); if (x) react(x.ch, x.m.id, rx.dataset.rx); return; }
     const q = t.closest('.quote[data-jump]'); if (q) return jump(q.dataset.jump);
     const play = t.closest('.vn-play'); if (play) return togglePlay(play.closest('.vn'));
-    const th = t.closest('.thumb[data-full]'); if (th) return lightbox(th.dataset.full);
+    const th = t.closest('.thumb[data-full]'); if (th) return R() ? R().open(th) : lightbox(th.dataset.full);
   });
   let press = null;
   document.addEventListener('pointerdown', e => {
@@ -683,7 +704,7 @@
       const p = pinsBy.get(m.channel); if (p) pinsBy.set(m.channel, p.map(x => (x.id === m.message.id ? m.message : x)));
       rerender(m.message.id);
     }
-    if (m.type === 'chat-pins') { pinsBy.set(m.channel, m.pins || []); if (m.channel === cur()) drawPins(); }
+    if (m.type === 'chat-pins') { pinsBy.set(m.channel, m.pins || []); if (m.channel === cur()) { drawPins(); redrawHead(); if ($('#pins-panel')) pinsPanel(); } }
     if (m.type === 'chat-read') { const r = receipts.get(m.channel) || {}; receipts.set(m.channel, { ...r, at: m.at }); drawReceipt(); }
   });
   C.on('chat', ({ channel, message }) => {
@@ -722,15 +743,18 @@
   function decorateHead() {
     const h = $('#chat-head') || ($('.chat-col > .chat-title')); if (!h || h.querySelector('.cb-av')) return;
     const ch = cur(), peer = ch === 'general' ? null : dmPeer(ch), mem = C.state().members || [];
-    const av = !peer ? `<span class="cb-av cb-tribe">${icon('i-chat')}</span>`
+    const chan = !peer && CHN() ? CHN().get(ch) : null;   // feat/chat2: the channel's emoji (default 💬) instead of an icon tile
+    const av = !peer ? `<span class="cb-av cb-emo" aria-hidden="true">${esc((chan && chan.emoji) || '💬')}</span>`
       : peer.role === 'agent' ? `<span class="cb-av av-agent">${icon('i-sparkle')}</span>`
       : `<span class="cb-av" style="background:${esc(peer.color || '#6C7CFF')};color:${ink(peer.color || '#6C7CFF')}">${esc(initials(peer.name))}</span>`;
     const humans = mem.filter(x => x.role !== 'agent'), on = humans.filter(x => x.online).length;
-    const sub = !peer ? `${humans.length} ${humans.length === 1 ? 'member' : 'members'} · ${on} online`
+    const sub = !peer ? (chan && chan.topic ? chan.topic : `${humans.length} ${humans.length === 1 ? 'member' : 'members'} · ${on} online`)
       : peer.role === 'agent' ? 'Your Claude · private' : peer.online ? 'online' : 'offline';
     const kids = [...h.childNodes];
     h.classList.add('cb');
+    const np = (pinsBy.get(ch) || []).length;
     h.innerHTML = `${av}<span class="cb-tt"></span><span class="cb-acts">
+      <button type="button" class="cb-btn cb-pins ${np ? 'has' : ''}" data-cb="pins" title="Pinned messages" aria-label="Pinned messages${np ? `, ${np}` : ''}" aria-haspopup="dialog">${icon('i-pin')}${np ? `<span class="cb-n">${np}</span>` : ''}</button>
       <button type="button" class="cb-btn" data-cb="huddle" title="Start or join the huddle" aria-label="Huddle">${icon('i-phone')}</button>
       <button type="button" class="cb-btn" data-cb="share" title="Share your screen in the huddle" aria-label="Share screen">${icon('i-screen')}</button>
       <button type="button" class="cb-btn" data-cb="info" title="${peer ? 'Profile' : 'Who is here'}" aria-label="Details">${icon('i-info')}</button></span>`;
@@ -741,6 +765,7 @@
     const b = e.target.closest && e.target.closest('.cb-btn[data-cb]'); if (!b) return;
     const H = window.TribeHuddle, ch = cur(), peer = ch === 'general' ? null : dmPeer(ch);
     try {
+      if (b.dataset.cb === 'pins') return pinsPanel(b);   // feat/chat2
       if (b.dataset.cb === 'huddle' && H) return H.inCall() ? H.leave() : H.join();
       if (b.dataset.cb === 'share' && H) { if (!H.inCall()) await H.join(); return H.share(); }
       if (b.dataset.cb === 'info') {
@@ -749,6 +774,30 @@
       }
     } catch (err) { toast(err.message); }
   });
+  // feat/chat2: redraw the decorated header (channel emoji, topic, pinned count)
+  function redrawHead() { const h = $('#chat-head'); if (!h) return; const s = h.querySelector('.cb-av'); if (!s) return decorateHead(); s.remove(); const kids = [...(h.querySelector('.cb-tt') || h).childNodes].filter(n => !(n.classList && n.classList.contains('cb-sub'))); h.innerHTML = ''; kids.forEach(k => h.appendChild(k)); }
+  document.addEventListener('tribe-channels', () => setTimeout(redrawHead, 0));
+  // feat/chat2: Pinned: a panel from the header (a sheet on phones): jump to a message, unpin (host / builders).
+  function pinsPanel(anchor) {
+    const old = $('#pins-panel'); if (old && anchor) { old.remove(); return; }
+    const ch = cur(), list = pinsBy.get(ch) || [], can = canPin();
+    const p = old || document.createElement('div'); p.id = 'pins-panel'; p.className = 'pins-panel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Pinned messages');
+    p.innerHTML = `<div class="pp-h"><span class="pp-e" aria-hidden="true">📌</span><b>${list.length ? `${list.length} pinned` : 'Nothing pinned yet'}</b><button class="pp-x" aria-label="Close">${icon('i-x')}</button></div>
+      ${list.length ? `<div class="pp-list">${list.map(m => `<div class="pp-row" data-pid="${esc(m.id)}"><button class="pp-jump" data-jump="${esc(m.id)}"><b style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}</b><span>${esc(textOf(m))}</span></button>${can ? `<button class="pp-un" data-unpin="${esc(m.id)}" title="Unpin" aria-label="Unpin">${icon('i-x')}</button>` : ''}</div>`).join('')}</div>`
+        : `<p class="pp-empty">${can ? 'Pin a message from its menu (… or a long-press) to keep it here.' : 'The host and builders can pin messages here.'}</p>`}`;
+    if (!old) {
+      document.body.appendChild(p);
+      p.addEventListener('click', async e => {
+        if (e.target.closest('.pp-x')) return p.remove();
+        const j = e.target.closest('[data-jump]'); if (j) { p.remove(); return jump(j.dataset.jump); }
+        const u = e.target.closest('[data-unpin]'); if (u) { try { await C.api(`/chat/${cur()}/pin`, { method: 'POST', body: { id: u.dataset.unpin, on: false } }); } catch (err) { toast(err.message); } }
+      });
+    }
+    const a = anchor || $('.cb-btn[data-cb="pins"]');
+    if (a && !matchMedia('(max-width: 820px)').matches) { const r = a.getBoundingClientRect(); p.style.top = (r.bottom + 6) + 'px'; p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.right - p.offsetWidth)) + 'px'; }
+  }
+  document.addEventListener('mousedown', e => { const p = $('#pins-panel'); if (p && !(e.target.closest && (e.target.closest('#pins-panel') || e.target.closest('[data-cb="pins"]') || e.target.closest('#pin-strip')))) p.remove(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { const p = $('#pins-panel'); if (p) p.remove(); } });
   function watchHead() {
     const h = $('#chat-head') || $('.chat-col > .chat-title'); if (!h || h.dataset.cbw) return;
     h.dataset.cbw = '1';
@@ -761,10 +810,11 @@
   function composerKit() {
     const f = $('#chat-form'); if (!f || f.querySelector('.cx-emo')) return;
     f.insertAdjacentHTML('afterbegin', `<button type="button" class="cx-btn cx-emo" aria-label="Emoji" title="Emoji">${icon('i-smile')}</button>`);
-    f.insertAdjacentHTML('beforeend', `<button type="button" class="cx-btn cx-img" aria-label="Send an image" title="Send an image">${icon('i-image')}</button>
+    f.insertAdjacentHTML('beforeend', `<button type="button" class="cx-btn cx-gif" aria-label="Send a GIF" title="GIF">${icon('i-gif')}</button><button type="button" class="cx-btn cx-img" aria-label="Send an image" title="Send pictures">${icon('i-image')}</button>
       <button type="button" class="cx-btn cx-plus" aria-label="Add: file, proposal, poll, task and more" title="Add a file, propose to the tribe, start a poll, make a task…" aria-haspopup="menu" aria-expanded="false">${icon('i-plus')}</button>`);
   }
   async function sendImage(file) {
+    if (R() && file) return R().sendImages([file]);   // feat/chat2
     if (!/^image\//.test(file.type)) return toast('That is not an image.');
     if (file.size > 3 * 1024 * 1024) return toast('Images up to 3 MB.');
     const inp = $('#chat-input'), text = inp.value.trim();
@@ -775,6 +825,10 @@
     const t = e.target.closest ? e.target : null; if (!t) return;
     if (t.closest('.cx-emo')) {
       e.preventDefault(); const a = t.closest('.cx-emo'); closePicker();
+      if (window.TribeEmoji) {   // feat/chat2: the same picker as reactions
+        if (window.TribeEmoji.isOpen()) return window.TribeEmoji.close();
+        return window.TribeEmoji.open({ anchor: a, align: 'left', title: 'Insert an emoji', onPick: x => { const i = $('#chat-input'); const s = i.selectionStart ?? i.value.length; i.value = i.value.slice(0, s) + x + i.value.slice(i.selectionEnd ?? s); i.focus(); i.setSelectionRange(s + x.length, s + x.length); i.dispatchEvent(new Event('input', { bubbles: true })); } });
+      }
       const p = document.createElement('div'); p.id = 'rx-picker'; p.className = 'rx-picker cx-emoji'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Insert an emoji');
       p.innerHTML = `<div class="rx-grid">${EMOJI.map(x => `<button type="button" data-ins="${x}" aria-label="${x}">${x}</button>`).join('')}</div>`;
       document.body.appendChild(p);
@@ -784,9 +838,10 @@
       setTimeout(() => { if (p.isConnected) p.querySelector('button').focus({ preventScroll: true }); }, 0);
       return;
     }
+    if (t.closest('.cx-gif') && R()) { e.preventDefault(); e.stopPropagation(); return R().gifPicker(t.closest('.cx-gif')); }   // feat/chat2
     if (t.closest('.cx-img')) {
-      e.preventDefault(); const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
-      i.onchange = () => { const f = i.files && i.files[0]; if (f) sendImage(f); }; i.click(); return;
+      e.preventDefault(); const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.multiple = true;
+      i.onchange = () => { const fs = [...(i.files || [])]; if (fs.length > 1 && R()) R().sendImages(fs); else if (fs[0]) sendImage(fs[0]); }; i.click(); return;
     }
     if (t.closest('.cx-plus') && window.TribePlus) { e.preventDefault(); e.stopPropagation(); closeMenu(); return window.TribePlus.open(t.closest('.cx-plus')); }
     if (t.closest('.cx-plus')) {
@@ -823,7 +878,7 @@
     async channelChanged(ch, { list, since } = {}) {
       if (ch !== 'general') remember('general');   // so #general shows "New since you left" next time
       if (reply && reply.ch !== ch) { reply = null; }
-      drawReply(); drawPins(); watchScroll(list || listFor(ch)); newBelow = 0; drawJump();
+      drawReply(); drawPins(); watchScroll(list || listFor(ch)); newBelow = 0; drawJump(); setTimeout(redrawHead, 0); { const pp = $('#pins-panel'); if (pp) pp.remove(); }
       if (ch !== 'general') watchList(list || listFor(ch)); regroup(list || listFor(ch));
       if (list && since !== undefined) divider(list, since);
       if (ch !== 'general' && !pinsBy.has(ch)) loadPins(ch);
