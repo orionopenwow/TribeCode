@@ -191,7 +191,7 @@
     'Hi! I\'m a pretend Claude in this offline demo. In a real tribe I read the board, claim files before I edit and push commits. Make a task and watch me pick it up.',
     'Good idea. In a real tribe I\'d claim the folder first so nobody\'s agent collides with mine, then post a short gist when it\'s done.',
     'I\'d split that into one task per lane (Player, Levels, Art). Add them on the Tasks board and I\'ll grab one.',
-    'Noted. A real Claude Code connects with one command from Connect your Claude, then it shows up right here.',
+    'Noted. A real coding agent (Claude Code, Codex, Gemini CLI…) connects from Connect your AI, then it shows up right here.',
   ];
   let said = 0;
   function onChat(pid, text) {
@@ -475,6 +475,7 @@
         break;
       }
       case 'flint': if (GET && !b) return ok({ model: { online: false, model: '' } }); break;
+      case 'llm': if (GET && !b) return ok({ provider: 'none', label: 'None (basic mode)', model: '', via: '', online: false, cloud: false, ready: false, friends: false, cap: 0, ollama: { online: false, model: '' }, you: { host: false, block: '', used: 0 } }); return no(403, 'The offline demo has no tribe brain: pick Built in to try a model in your browser.');   // feat/any-llm
       case 'hub': {
         if (!b && GET) return ok(hubData());
         if (b === 'prefs') { if (GET) return ok(db.prefs); db.prefs = { pins: Array.isArray(body.pins) ? body.pins.slice(0, 40) : db.prefs.pins }; save(); return ok(db.prefs); }
@@ -503,7 +504,8 @@
       case 'coord':
         if (GET && b === 'summary') return ok({ reviews: 0, handoffs: 0, agents: 0 });
         if (GET && b === 'plan') return ok({ plan: { date: iso().slice(0, 10), focus: '', by: 'rules', items: [], crew: [] }, availability: null });
-        if (GET && ['agents', 'reviews', 'handoffs', 'conflicts', 'ownership', 'delegations'].includes(b)) return ok({ [b]: [] });
+        if (GET && ['agents', 'reviews', 'handoffs', 'conflicts', 'ownership', 'delegations', 'asks'].includes(b)) return ok({ [b]: [] });
+        if (POST && b === 'asks') return ok({ ask: { id: 'h-' + rid(6), title: String(body.text || 'A request').split('\n')[0].slice(0, 160), status: 'open', fromName: me().name, created: iso() } });   // feat/any-llm: the pretend Claude would pick it up
         break;
       case 'dms': if (GET) return ok({ conversations: [] }); break;
       case 'notify':

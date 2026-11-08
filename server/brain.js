@@ -37,28 +37,36 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
 
   const clip = (s, n) => (s.length > n ? s.slice(0, n) + '\n…' : s);
 
+  // server/llm.js routes generate/status through the tribe's chosen provider (cloud key, Ollama, or off) with
+  // `route({ generate, status })`; the helpers below and every module holding `brain` then use it. ollama* stay raw.
+  let routed = null;
+  const gen = (p, o) => (routed ? routed.generate(p, o) : generate(p, o));
   return {
-    status: () => status,
-    refresh,
+    status: () => (routed ? routed.status() : status),
+    refresh: async () => { await refresh(); return routed ? routed.status() : status; },
     models: () => installed.slice(),   // installed Ollama models (agents hub, the Secretary's model picker)
     host,
-    generate,
+    generate: gen,
+    ollamaGenerate: generate,
+    ollamaStatus: () => status,
+    ollamaRefresh: refresh,
+    route(r) { routed = r; },
     async summarize(title, text) {
       if (!text || text.trim().length < 80) return null;
-      return generate(`Document: "${title}"\n\n${clip(text, 12000)}\n\nWrite a TL;DR of this document in at most 3 short lines. Plain text, no preamble.`,
+      return gen(`Document: "${title}"\n\n${clip(text, 12000)}\n\nWrite a TL;DR of this document in at most 3 short lines. Plain text, no preamble.`,
         { system: 'You summarize documents for a small team of friends building software together. Be concrete and brief.', maxTokens: 160 });
     },
     async standup({ chat, tasks, members }) {
       const people = members.map(m => m.name).join(', ');
       const log = chat.map(m => `${m.who}: ${m.text}`).join('\n');
       const board = tasks.map(t => `[${t.status}] ${t.title}${t.assignee ? ' (' + t.assignee + ')' : ''}`).join('\n');
-      return generate(`Team: ${people}\n\nChat from the last 24 hours:\n${clip(log, 6000)}\n\nTask board:\n${clip(board, 3000)}\n\nWrite a short daily standup: one bullet per person (what they did / are doing), then one line "Blocked:" (or "Blocked: nothing").`,
+      return gen(`Team: ${people}\n\nChat from the last 24 hours:\n${clip(log, 6000)}\n\nTask board:\n${clip(board, 3000)}\n\nWrite a short daily standup: one bullet per person (what they did / are doing), then one line "Blocked:" (or "Blocked: nothing").`,
         { system: 'You write friendly, factual standups. Only use facts from the input. Never invent work.', maxTokens: 350 });
     },
     // A chat message that reads like a decision -> a short vote draft { question, options } (chatx.js offers
     // it to the author as a "Turn this into a vote?" chip; never posted by itself). null when off or unsure.
     async voteDraft(text) {
-      const out = await generate(`Chat message: ${clip(String(text || ''), 600)}\n\nTurn it into a team vote. Reply with exactly one line of JSON: {"question": "<short question ending with ?>", "options": []}. Leave options empty for a yes/no approval; list 2-4 short options only if the message names alternatives.`,
+      const out = await gen(`Chat message: ${clip(String(text || ''), 600)}\n\nTurn it into a team vote. Reply with exactly one line of JSON: {"question": "<short question ending with ?>", "options": []}. Leave options empty for a yes/no approval; list 2-4 short options only if the message names alternatives.`,
         { system: 'You turn chat messages into short, neutral team votes. JSON only.', maxTokens: 120 });
       if (!out) return null;
       try {
@@ -70,7 +78,7 @@ module.exports = function brain({ host = 'http://localhost:11434', model = '' } 
     },
     async visionCheck({ vision, title, body }) {
       if (!vision || !vision.trim()) return null;
-      const out = await generate(`VISION.md:\n${clip(vision, 3000)}\n\nProposal: ${title}\n${clip(body || '', 4000)}\n\nDoes this proposal fit the vision? Answer on the first line with exactly FITS or CONFLICTS, then one short sentence explaining why.`,
+      const out = await gen(`VISION.md:\n${clip(vision, 3000)}\n\nProposal: ${title}\n${clip(body || '', 4000)}\n\nDoes this proposal fit the vision? Answer on the first line with exactly FITS or CONFLICTS, then one short sentence explaining why.`,
         { system: 'You check whether proposals match a project vision. Be strict about explicit statements in the vision.', maxTokens: 80 });
       if (!out) return null;
       const first = out.split('\n')[0].toUpperCase();

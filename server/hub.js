@@ -286,7 +286,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
           { system: 'You help a small group of friends pick a first software project. Ground it in their own notes; if the notes are empty, suggest something small and fun. Be concrete and brief.', maxTokens: 220, timeoutMs: 45_000 })
         : await brain.generate(`${ctx}\n\nQuestion from ${me.name}: ${prompt}\n\nAnswer in at most 4 short sentences. Plain text.`,
           { system: `You are the local assistant on ${me.name}'s TribeCode home: a self-hosted app where friends and their Claude Code agents build apps together. Use the context when it helps; never invent facts about their projects.`, maxTokens: 320, timeoutMs: 45_000 });
-      if (!answer) throw err(503, (brain.status().error ? `The local model is off: ${brain.status().error}.` : 'The local model is off.') + ' Start Ollama, or connect your Claude Code and ask it instead.');
+      if (!answer) throw err(503, (brain.status().error ? `The local model is off: ${brain.status().error}.` : 'The local model is off.') + ' Start Ollama or pick a brain in Settings › Flint’s brain, or connect your AI (Claude Code, Codex, Gemini CLI…) and ask it instead.');
       return { answer: String(answer).slice(0, 4000), model: brain.status().model || '', kind };
     } catch (e) {
       if (e.status) throw e;

@@ -69,7 +69,7 @@ def main():
             assert host.locator("#room-list").is_visible(), "the people list stays"
             # ---- the chips and the privacy line on an empty thread
             chips = host.locator("#flint .fl-chip").all_text_contents()
-            assert chips == ["Connect my Claude", "Capture a note", "What's happening?", "How do invites work?"], chips
+            assert chips == ["Connect my AI", "Capture a note", "What's happening?", "How do invites work?"], chips
             assert "leaves it" in host.text_content("#flint .fl-priv")
             # ---- the Helpers row is Flint now
             host.wait_for_selector("#room-helpers [data-helper='flint']", timeout=40000)
@@ -100,7 +100,7 @@ def main():
             host.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
             # ---- no model: a helpful fallback
             last = ask(host, "tell me a joke about dragons", "basic mode")
-            assert host.locator("#flint .fl-msg.fl").last.locator(".fl-act", has_text="Set up a local model").count() == 1
+            assert host.locator("#flint .fl-msg.fl").last.locator(".fl-act", has_text="Give Flint a brain").count() == 1
             # ---- the ? menu has Ask Flint, which focuses the bar
             host.evaluate("document.querySelector('#fl-fold').click()")   # fold
             assert host.evaluate("document.querySelector('#flint').classList.contains('folded')")

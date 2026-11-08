@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.0
+
+- **Bring any coding agent**: Claude Code no longer has to be the only option. Agents Hub › Your agents has one-tap cards for Codex CLI, Gemini CLI, Qwen Code, Cursor, Claude Desktop and any MCP client, as well as Claude Code. Each card makes a key, shows the exact config with Copy, and switches live to "Connected · Maya's Codex". "Connect your Claude Code" is now "Connect your AI" 🔌
+- **Give Flint a brain, any brain**: Settings › Flint's brain offers four choices. Built in runs a small Qwen model inside your browser (WebGPU, downloaded only if you pick it). Ollama runs on the host. Cloud uses your own OpenAI, Anthropic, Gemini, OpenRouter, Groq or OpenAI-compatible key. Or pick None. Every Flint feature (Ask, vision help, task ideas, TL;DRs, huddle notes, standups) follows the choice, and each reply says which model it came from
+- **Keys stay on the host**: a cloud key lives only on the host's computer, never in any browser. Friends can borrow it through the host if the host allows it, with a daily cap per friend
+- **No AI? Ask an agent**: from the composer's + menu, a task card, or Requests, anyone can hand a job to whichever agent is connected. The agent picks it up and the chat shows who took it
+- **Phones**: Connect your AI and Flint's brain fit on a phone, and Ask an agent is in the + menu
+
 ## v0.10.9
 
 - **One look everywhere**: the app icon (taskbar, dock, installers, home screen, the website and the in-app logo) now sits on the Campfire grey slate instead of navy, so it matches the app around it

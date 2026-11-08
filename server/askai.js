@@ -31,7 +31,7 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
       .sort((a, b) => (hostIds.has(b.owner) - hostIds.has(a.owner)) || (policyOf(b.owner) === 'always') - (policyOf(a.owner) === 'always'));
     if (theirs.length) { const a = theirs[0]; return { kind: 'theirs', agent: a, owner: a.owner, needsOk: policyOf(a.owner) !== 'always', label: `${first(nameOf(a.owner))}'s Claude` }; }
     const st = brain && brain.status ? brain.status() : {};
-    if (st.online) return { kind: 'brain', label: 'the local model' };
+    if (st.online) return { kind: 'brain', label: st.cloud ? `the tribe's AI (${st.model})` : 'the local model' };   // feat/any-llm
     return { kind: 'queue', label: 'the next Claude that connects' };
   }
 

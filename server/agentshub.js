@@ -17,12 +17,58 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+// short: how the agent is named ("Maya's Codex"). TribeCode works with these tools; it isn't made by their vendors.
 const KINDS = {
-  'claude-code': { label: 'Claude Code', color: '#38C6B1' },
-  'claude-desktop': { label: 'Claude Desktop', color: '#FFB86B' },
-  mcp: { label: 'MCP agent', color: '#E86A92' },
+  'claude-code': { label: 'Claude Code', short: 'Claude', color: '#38C6B1' },
+  codex: { label: 'Codex CLI', short: 'Codex', color: '#10A37F', tool: true },
+  gemini: { label: 'Gemini CLI', short: 'Gemini', color: '#4C8DF6', tool: true },
+  qwen: { label: 'Qwen Code', short: 'Qwen', color: '#7C5CFF', tool: true },
+  cursor: { label: 'Cursor', short: 'Cursor', color: '#8A8F98', tool: true },
+  'claude-desktop': { label: 'Claude Desktop', short: 'Claude Desktop', color: '#FFB86B' },
+  mcp: { label: 'MCP agent', short: 'agent', color: '#E86A92' },
 };
 const kindOf = m => (m && KINDS[m.kind] ? m.kind : 'claude-code');
+
+// How to connect each tool: 2-3 steps and copy-ready blocks with the real URL and key. Formats checked against each
+// tool's own docs on 2026-11-07 (docs/guide/03-connect-claude-code.md lists the links):
+//   Codex CLI   ~/.codex/config.toml [mcp_servers.<name>] url + http_headers / bearer_token_env_var;
+//               `codex mcp add <name> --url <url> --bearer-token-env-var <VAR>`
+//   Gemini CLI  `gemini mcp add -s user -t http -H "Authorization: Bearer …" <name> <url>`; settings.json httpUrl + headers
+//   Qwen Code   `qwen mcp add --scope user --transport http <name> <url> --header "…"`; settings.json httpUrl + headers
+//   Cursor      .cursor/mcp.json (project) or ~/.cursor/mcp.json: mcpServers.<name>.url + headers
+function setupFor(kind, url, token, name = 'tribecode') {
+  const key = token || '<key>', auth = `Bearer ${key}`;
+  const json = o => JSON.stringify(o, null, 2);
+  const httpJson = field => json({ mcpServers: { [name]: { [field]: url, headers: { Authorization: auth } } } });
+  switch (kind) {
+    case 'codex': return {
+      steps: ['Open ~/.codex/config.toml (on Windows: %USERPROFILE%\\.codex\\config.toml). Create it if it is not there.', 'Paste this at the end and save.', 'Start codex: it joins the tribe. Type /mcp to check that tribecode is listed.'],
+      blocks: [{ label: 'config.toml', lang: 'toml', text: `[mcp_servers.${name}]\nurl = "${url}"\nhttp_headers = { "Authorization" = "${auth}" }\n` },
+        { label: 'Or keep the key in an environment variable', lang: 'sh', alt: true, text: `export TRIBECODE_KEY=${key}\ncodex mcp add ${name} --url ${url} --bearer-token-env-var TRIBECODE_KEY` }],
+      docs: 'https://developers.openai.com/codex/mcp' };
+    case 'gemini': return {
+      steps: ['Run this once in a terminal (it saves to ~/.gemini/settings.json).', 'Start gemini: it joins the tribe.', 'Type /mcp to check that tribecode is connected.'],
+      blocks: [{ label: 'Terminal', lang: 'sh', text: `gemini mcp add -s user -t http -H "Authorization: ${auth}" ${name} ${url}` },
+        { label: 'Or add it to ~/.gemini/settings.json', lang: 'json', alt: true, text: httpJson('httpUrl') }],
+      docs: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md' };
+    case 'qwen': return {
+      steps: ['Run this once in a terminal (it saves to ~/.qwen/settings.json).', 'Start qwen: it joins the tribe.', 'Type /mcp to check that tribecode is connected.'],
+      blocks: [{ label: 'Terminal', lang: 'sh', text: `qwen mcp add --scope user --transport http ${name} ${url} --header "Authorization: ${auth}"` },
+        { label: 'Or add it to ~/.qwen/settings.json', lang: 'json', alt: true, text: httpJson('httpUrl') }],
+      docs: 'https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/mcp.md' };
+    case 'cursor': return {
+      steps: ['In your project, create .cursor/mcp.json (or ~/.cursor/mcp.json for every project).', 'Paste this and save. Already have servers there? Add the tribecode entry inside mcpServers.', 'Open Cursor Settings › MCP: tribecode turns green, and the agent can use it.'],
+      blocks: [{ label: '.cursor/mcp.json', lang: 'json', text: httpJson('url') }],
+      docs: 'https://cursor.com/docs/context/mcp' };
+    case 'mcp': return {
+      steps: ['Add an MCP server named tribecode in your tool: Streamable HTTP, this URL, this header.', 'Field names differ between tools (Windsurf, VS Code Copilot, Goose, OpenCode…): check its MCP docs. Many accept the JSON below.', 'Restart the tool or reload its MCP servers: it joins the tribe.'],
+      blocks: [{ label: 'URL', lang: 'text', text: url }, { label: 'Header', lang: 'text', text: `Authorization: ${auth}` },
+        { label: 'Typical JSON', lang: 'json', alt: true, text: json({ mcpServers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } }) }] };
+    default: return {
+      steps: ['Run this once in a terminal, on any computer.', 'Start claude: it joins the tribe, sees the board, docs and chat, and claims files before editing.'],
+      blocks: [{ label: 'Terminal', lang: 'sh', text: `claude mcp add --transport http ${name} ${url} --header "Authorization: ${auth}"` }] };
+  }
+}
 
 // ---------- the stdio <-> HTTP bridge (self-contained: it is also written out as its own file) ----------
 function runBridge() {
@@ -116,7 +162,7 @@ module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, 
   }
 
   async function hub(req, me) {
-    const st = await brain.refresh().catch(() => brain.status());
+    const st = await (brain.ollamaRefresh || brain.refresh)().catch(() => (brain.ollamaStatus || brain.status)());   // the local models list (the tribe's cloud brain is in Settings › Flint's brain)
     const host = me.role === 'host';
     return {
       you: { id: me.id, host },
@@ -139,7 +185,13 @@ module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, 
     return null;
   }
 
-  return { route, desktopConfig, kindOf, KINDS, bridgePath, bridgeSource };
+  // Setup blocks for every place the tool can reach this tribe from (Anywhere / Same Wi-Fi / This computer).
+  const setups = (kind, ep, token) => Object.fromEntries(Object.entries(ep.urls || { here: ep.url }).filter(([, u]) => u).map(([w, u]) => [w, setupFor(kind, u, token)]));
+  return { route, desktopConfig, kindOf, KINDS, bridgePath, bridgeSource, setups, setupFor };
 };
 module.exports.runBridge = runBridge;
 module.exports.KINDS = KINDS;
+module.exports.setupFor = setupFor;
+// How to take the server out of each tool after its key is revoked.
+module.exports.removeFor = kind => ({ 'claude-desktop': 'Remove "tribecode" from claude_desktop_config.json', codex: 'codex mcp remove tribecode', gemini: 'gemini mcp remove -s user tribecode',
+  qwen: 'qwen mcp remove --scope user tribecode', cursor: 'Remove "tribecode" from .cursor/mcp.json', mcp: 'Remove the tribecode server from your tool\'s MCP settings' }[kind] || 'claude mcp remove tribecode');

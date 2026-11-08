@@ -28,6 +28,7 @@
     { k: 'poll', icon: 'i-vote', t: 'Quick poll', s: 'Ask everyone to pick', hide: !window.TribeVotes || inDm() },
     { group: 'Get it done' },
     { k: 'task', icon: 'i-check', t: 'Task', s: draft() ? `“${draft().slice(0, 40)}”` : 'Add it to the board' },
+    { k: 'askagent', icon: 'i-robot', t: 'Ask an agent', s: 'The next connected agent picks it up, no AI of your own needed', hide: inDm() || me().role === 'spectator' || !window.TribeAskAgent },   // feat/any-llm
     myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my Claude', s: 'Opens your private chat with it' }
       : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no Claude of your own needed', hide: inDm() || me().role === 'spectator' },
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
@@ -77,6 +78,7 @@
       try { const { task } = await C.api('/tasks', { method: 'POST', body: { title: title.slice(0, 200) } }); if (text) clearDraft(); toast(`Task added: ${task.title}`); } catch (e) { toast(e.message); }
       return;
     }
+    if (k === 'askagent') return window.TribeAskAgent.open({ text });   // feat/any-llm
     if (k === 'ai') {   // @ai (server/askai.js): a teammate's Claude, the local model, or the board
       const i = input(); if (i) { i.value = '@ai ' + text.replace(/^@ai\s*/i, ''); i.dispatchEvent(new Event('input', { bubbles: true })); i.focus(); }   // they press send; the question shows in chat
       return;

@@ -10,7 +10,7 @@
   const SLASH = [
     ['h1', 'Heading 1', '## '], ['h2', 'Heading 2', '### '], ['h3', 'Heading 3', '#### '], ['todo', 'To-do', '- [ ] '], ['bullet', 'Bulleted list', '- '],
     ['num', 'Numbered list', '1. '], ['quote', 'Quote', '> '], ['code', 'Code block', '```\n\n```'], ['hr', 'Divider', '---\n'],
-    ['table', 'Table', '| Column | Column |\n| --- | --- |\n|  |  |\n'], ['date', 'Today\'s date', null], ['brain', 'Summarize with local brain', null],
+    ['table', 'Table', '| Column | Column |\n| --- | --- |\n|  |  |\n'], ['date', 'Today\'s date', null], ['brain', 'Summarize with AI', null],
     ['template', 'Template…', null], ['link', 'Link to page [[…]]', null], ['mention', 'Mention @…', null],   // handled by docsx.js
   ];
   let list = [], cur = null, dirty = false, saving = false, saveTimer = null, mode = 'write', filter = '', slash = null, loaded = false;
@@ -171,11 +171,11 @@
 
   async function summarize() {
     if (!cur) return;
-    if (!remote()) return window.TribeApp.toast('Summaries run on the host\'s local brain. Connect to a tribe first.');
+    if (!remote()) return window.TribeApp.toast('Summaries run on the tribe\'s AI. Connect to a tribe first.');
     if (dirty) await save();
     setTldr('<span class="faint">Thinking…</span>');
     try { const r = await C.api(`/docs/${cur.slug}/summarize`, { method: 'POST' }); cur.summary = r.summary; renderTldr(); }
-    catch (e) { cur.summary = ''; renderTldr(); window.TribeApp.toast(e.status === 503 ? 'The local brain is off. Install Ollama and a Qwen model on the host.' : e.message); }
+    catch (e) { cur.summary = ''; renderTldr(); window.TribeApp.toast(e.status === 503 ? 'No AI is on for the tribe. The host can pick one in Settings › Flint\'s brain.' : e.message); }
   }
 
   // ---------- import ----------
@@ -200,7 +200,7 @@
   function renderTldr() {
     const box = $('#doc-tldr'); if (!box) return;
     if (cur && cur.summary) { box.classList.remove('empty'); setTldr(esc(cur.summary).replace(/\n/g, '<br>')); }
-    else { box.classList.add('empty'); setTldr(`No TL;DR yet. ${remote() ? '<button class="linkish" id="doc-sum">Summarize with local brain</button>' : 'Summaries run on the host\'s local brain.'}`); const b = $('#doc-sum'); if (b) b.onclick = summarize; }
+    else { box.classList.add('empty'); setTldr(`No TL;DR yet. ${remote() ? '<button class="linkish" id="doc-sum">Summarize with AI</button>' : 'Summaries run on the tribe\'s AI.'}`); const b = $('#doc-sum'); if (b) b.onclick = summarize; }
   }
 
   function renderList() {
@@ -260,7 +260,7 @@
     const page = `
       <input class="doc-title" id="doc-title" value="${esc(cur.title)}" maxlength="120" placeholder="Untitled" aria-label="Title">
       <div class="doc-meta">${cur.source ? `Imported from ${esc(cur.source)} · ` : ''}${words} words · <span class="faint">${remote() ? 'shared with your tribe' : 'saved on this device'}</span></div>
-      <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · local brain, 0 tokens</div><div id="doc-tldr-text"></div></div>
+      <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · the tribe\'s AI</div><div id="doc-tldr-text"></div></div>
       ${desk() ? '' : DL() ? `<div class="gd-fmt-wrap ${mode === 'write' ? '' : 'hidden'}">${DL().gdBar()}</div>` : ''}
       <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" aria-label="Document text" placeholder="Start writing, or type / for blocks…">${esc(inLive() ? sess.text() : cur.body || '')}</textarea></div>
       <article class="md ${mode === 'read' ? '' : 'hidden'}" id="doc-read"></article>

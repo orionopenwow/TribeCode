@@ -1,39 +1,37 @@
-# Connect your Claude Code
+# Connect your AI
 
-Your Claude Code joins the project as a teammate called **Claude · your name**. It can read the board, docs and chat, claim files before it edits them, hand work off and ask for reviews. It can't vote, approve or invite people.
+Bring the coding agent you already use: **Claude Code**, **Codex CLI**, **Gemini CLI**, **Qwen Code**, **Cursor** or any other MCP client (Windsurf, VS Code Copilot, Goose, OpenCode…). It joins as a teammate named after you, like **Maya's Codex**. It reads the board, docs and chat, claims files before editing and posts gists. It can't vote, approve or invite people. TribeCode works with these tools; it isn't made by their vendors.
 
-## Connect in one line
+## Connect
 
-1. Open your profile (your avatar, top right) and choose **Connect your Claude Code**. It's also in **Ctrl K** and on the invite sheet as **Connect my Claude Code**.
-2. Pick where your Claude Code runs:
-   - **Anywhere**: home, work or a remote session. Needs the tribe's public link.
-   - **Same Wi-Fi**: another computer on your network.
-   - **This computer**: the host itself.
-3. Tap **Copy** and paste the line into a terminal.
-4. Wait a few seconds. **Waiting for Claude Code…** turns into **Connected**.
+1. Open your profile (your avatar) and choose **Connect your AI**, or **Agents Hub** › **Your agents**.
+2. Pick your tool. You get a key and the exact command or config with that key in it.
+3. Pick where it runs: **Anywhere** (needs the public link), **Same Wi-Fi** or **This computer**.
+4. Tap **Copy**, then follow the two or three steps shown. **Waiting for it to connect…** turns into **Connected**.
 
-If **Anywhere** says it needs the public link, the host taps **Turn on the public link**.
+What each tool gets:
 
-## You don't have to know the terminal
+- **Claude Code**: one `claude mcp add …` line in a terminal.
+- **Codex CLI**: a `[mcp_servers.tribecode]` block in `~/.codex/config.toml` (or `codex mcp add … --bearer-token-env-var`).
+- **Gemini CLI** and **Qwen Code**: one `gemini mcp add` / `qwen mcp add` line, or a `settings.json` entry with `httpUrl` and headers.
+- **Cursor**: a `.cursor/mcp.json` file with `url` and headers.
+- **Anything else**: the URL and an `Authorization: Bearer` header. Field names differ per tool, so check its MCP docs.
 
-The line is a single `claude mcp add …` command. Open any terminal (on Windows: Start, type "Terminal"), paste, press Enter. Then start Claude Code in your project folder with `claude` and talk to it as usual. It now sees the tribe.
-
-Things to say to it:
-
-- "Check the board and take a task."
-- "What did the others change today?"
-- "Hand this off to Sam when you're done."
+Formats checked against each tool's docs on 2026-11-07: [Codex](https://developers.openai.com/codex/mcp), [Gemini CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md), [Qwen Code](https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/mcp.md), [Cursor](https://cursor.com/docs/context/mcp).
 
 ## Disconnect or move it
 
-Open **Connect your Claude Code** again. You'll see **Disconnect** (the key stops working at once) and **New command** (a fresh key for another computer; the old one stops).
+Open **Connect your AI** again, or revoke any key in **Your agents**. The key stops working at once.
 
-## More agents
+## No AI of your own? You can still build
 
-Claude Desktop, a second Claude Code, Codex or a local model: **Agents Hub** › **Your agents**. Each gets its own key you can revoke.
+- **Flint**, the built-in helper, can think with a model in your browser, the host's Ollama, or the host's cloud key (**Settings** › **Flint's brain**).
+- **Ask an agent**: in the chat's **+** menu, or the robot on a task. The next connected agent takes it and answers in chat. It waits in **Requests** until then.
+- **@ai** in the chat asks a teammate's agent (if they allow it) or the tribe's AI.
 
-## No Claude Code? Use @ai
+## Flint's brain
 
-Friends without their own Claude can type **@ai** in the chat, or use **Ask AI** in the chat's **+** menu. TribeCode asks, in order: your own Claude, a teammate's Claude (if they allow it), the local model, or leaves it on the board for later.
-
-Hosts and members decide whether friends may use their Claude in **Settings** › **Friends can ask my Claude**: **Ask me each time**, **Always** or **Never**. It uses your subscription, so it's your call.
+- **Built in**: Qwen3 runs in your browser with WebGPU (Chrome, Edge). A one-time download of about 500 MB (or 1 GB on bigger GPUs), cached. The WebLLM script loads from a CDN only when you pick it. No WebGPU (Safari, iPhone, Firefox)? Use the host's model or a key.
+- **This computer**: Ollama on the host.
+- **A cloud model with your own key**: OpenAI, Anthropic, Google Gemini, OpenRouter, Groq, or any OpenAI-compatible URL. The key stays on the host, never in a friend's browser. The host decides whether friends may use it, with a daily limit.
+- **None**: basic mode.
