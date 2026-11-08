@@ -41,7 +41,7 @@ def api(path, method="GET", body=None, token=None, project=None):
 
 
 def watch(page, who):
-    page.on("pageerror", lambda e: errors.append(f"{who}: {e}"))
+    page.on("pageerror", lambda e: errors.append(f"{who}: {e} @ {(e.stack or '')[:300]}"))
     page.on("console", lambda m: errors.append(f"{who} console: {m.text}") if m.type == "error" and "Failed to load resource" not in m.text else None)
 
 
@@ -192,10 +192,16 @@ def main():
 
             # 8. Inspiration cards
             host.wait_for_selector("#pj-insp .sx-item .sx-thumb", timeout=15000)
-            it = host.evaluate("""() => { const i = document.querySelector('#pj-insp .sx-item'), b = i.querySelector('.sx-body b'), p = i.querySelector('.sx-body p'), btn = i.querySelector('.sx-task'), th = i.querySelector('.sx-thumb');
-              const ib = i.getBoundingClientRect(); return { fs: getComputedStyle(b).fontSize, fw: getComputedStyle(b).fontWeight, ws: getComputedStyle(p).whiteSpace,
-                thumbLeft: Math.round(th.getBoundingClientRect().left - ib.left), shadow: getComputedStyle(i).boxShadow, bg: getComputedStyle(i).backgroundImage,
-                btnRight: btn ? Math.round(ib.right - btn.getBoundingClientRect().right) : 0, btnBottom: btn ? Math.round(ib.bottom - btn.getBoundingClientRect().bottom) : 0 }; }""")
+            for _try in range(5):   # the card can redraw as sense updates: retry the read
+                try:
+                    it = host.evaluate("""() => { const i = document.querySelector('#pj-insp .sx-item'), b = i.querySelector('.sx-body b'), p = i.querySelector('.sx-body p'), btn = i.querySelector('.sx-task'), th = i.querySelector('.sx-thumb');
+                  const ib = i.getBoundingClientRect(); return { fs: getComputedStyle(b).fontSize, fw: getComputedStyle(b).fontWeight, ws: getComputedStyle(p).whiteSpace,
+                    thumbLeft: Math.round(th.getBoundingClientRect().left - ib.left), shadow: getComputedStyle(i).boxShadow, bg: getComputedStyle(i).backgroundImage,
+                    btnRight: btn ? Math.round(ib.right - btn.getBoundingClientRect().right) : 0, btnBottom: btn ? Math.round(ib.bottom - btn.getBoundingClientRect().bottom) : 0 }; }""")
+                    break
+                except Exception:
+                    host.wait_for_timeout(400)
+
             assert it["fs"] == "17px" and it["fw"] == "700" and it["ws"] == "nowrap", it
             assert it["thumbLeft"] <= 1 and it["shadow"] == "none" and it["bg"] == "none", it
             assert it["btnRight"] <= 20 and it["btnBottom"] <= 20, f"Make it a task sits bottom right {it}"
