@@ -169,7 +169,7 @@ def main():
 
             # ---- 5. direct messages ----
             dm = "dm-" + "-".join(sorted([ids["Orion"], ids["Maya"]]))
-            orion.click(f"#room-list .person[data-follow='{ids['Maya']}']")
+            orion.locator(f"#room-list .person[data-follow='{ids['Maya']}']").dispatch_event("click")   # hidden on desktop (feat: no people list in the right panel)
             chat(orion).click("#dm-menu [data-act='message']")
             wait_text(orion, "#chat-head", "Maya")
             chat(orion).fill("#chat-input", "secret plan: surprise party for Jay")

@@ -66,12 +66,12 @@ def main():
             assert abs((panel["y"] + panel["height"]) - (bar["y"] + bar["height"])) < 20, (panel, bar)
             assert host.locator("#flint .fl-eyebrow").first.text_content().strip().lower() == "flint"
             assert "basic mode" in host.text_content("#flint [data-flst]")
-            assert host.locator("#room-list").is_visible(), "the people list stays"
+            assert not host.locator("#room-list").is_visible(), "the right panel has no people list on desktop"
             # ---- a new project: big Next steps cards at the top of the panel, Flint just says hi, Helpers wait
             host.evaluate("TribeStage.set(TribeProjects.current(), {vision:false, task:false, agent:false, repo:false})")
             host.wait_for_selector("#room-next .rn-card", timeout=5000)
             assert host.locator("#room-next .rn-card").count() == 4 and host.locator("#flint .fl-chip").count() == 0
-            assert host.evaluate("document.querySelector('#room-next').getBoundingClientRect().top < document.querySelector('#room-list').getBoundingClientRect().top"), "next steps sit at the top"
+            assert host.evaluate("document.querySelector('#room-next').getBoundingClientRect().top - document.querySelector('#room-pane').getBoundingClientRect().top < 80"), "next steps sit at the top"
             assert host.locator("#room-helpers").is_hidden()
             # ---- once the tribe is going: the full chips and the privacy line on an empty thread
             host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:false, repo:true}, {pin:true})")
