@@ -198,7 +198,7 @@ def main():
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
             assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All repos", "Agent fleet"]
             assert host.evaluate("document.body.classList.contains('global')")
-            host.wait_for_selector("#pj-rail [data-pj-open]", state="visible")   # projects are the rail bubbles
+            host.wait_for_selector("#pj-rail [data-pj-open]", state="attached")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
             host.wait_for_selector("#room-agents .ra-row, #room-agents [data-agent]")
             wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Flint")   # the built-in helper (was "Local model")
@@ -263,7 +263,7 @@ def main():
             host.wait_for_function("t => document.querySelector('#doc-title') && document.querySelector('#doc-title').value === t", arg="Glow shader notes", timeout=10000)
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
             wait_text(host, "#hub-resume", "lantern"); wait_text(host, "#hub-resume", "Files")
-            host.click("#pj-rail .pj-circle.on"); host.wait_for_selector("#view-home:not(.hidden)")
+            host.locator("#pj-rail .pj-circle.on").first.dispatch_event("click"); host.wait_for_selector("#view-home:not(.hidden)")
             assert not host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#nest-ws-tasks", state="visible")   # back in a project: its four rows
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tasks:not(.hidden)")
@@ -296,7 +296,7 @@ def main():
             assert host.query_selector("#nest-switch") is None, "no switcher dropdown at the top of the sidebar"
             assert host.locator("#ws-name").is_hidden(), "no tribe name in the breadcrumb"
             assert not host.inner_text("#nest-enter").strip(), "Home lists no projects in the sidebar: the rail bubbles are the projects"
-            host.click(f"#pj-rail [data-pj-open='{sk}']", button="right"); host.wait_for_selector("#rail-menu [data-rc='pin']")
+            host.locator(f"#pj-rail [data-pj-open='{sk}']").first.dispatch_event("contextmenu"); host.wait_for_selector("#rail-menu [data-rc='pin']")
             host.click("#rail-menu [data-rc='pin']")
             for _ in range(40):
                 if ok(api("/hub/prefs", token=orion))["pins"] == [sk]: break
@@ -304,7 +304,7 @@ def main():
             assert ok(api("/hub/prefs", token=orion))["pins"] == [sk], "pin saved"
             host.reload(); host.wait_for_selector("#view-hub:not(.hidden)")
             host.wait_for_function("sk => { const b = document.querySelector('#pj-rail [data-pj-open]'); return b && b.dataset.pjOpen === sk; }", arg=sk)   # pinned first
-            host.click(f"#pj-rail [data-pj-open='{lan}']")
+            host.locator(f"#pj-rail [data-pj-open='{lan}']").first.dispatch_event("click")
             host.wait_for_selector("#view-home:not(.hidden)")
             host.wait_for_function("lan => TribeClient.project() === lan", arg=lan)
 

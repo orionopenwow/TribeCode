@@ -602,3 +602,4 @@ body:not(.global) .dc-fab { display: none; }
   .fv-t { flex-basis: calc(100% - 60px); }
   .fv-dl, .fv-del { flex: 1; justify-content: center; }
 }
+.hub-gs .gs-ic.gs-face .pj-face, .hub-gs .gs-ic.gs-face .pj-face.sm { width: 40px !important; min-width: 40px; height: 40px !important; flex: none; justify-self: stretch; align-self: stretch; }   /* a sized box, so the emoji face (container-sized) shows */

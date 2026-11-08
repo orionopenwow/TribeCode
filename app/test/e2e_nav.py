@@ -112,7 +112,7 @@ def main():
             pid = host.evaluate("TribeClient.project()")
 
             # ---- the rail: logo, circles, +, Workshop; no gear, "?" or avatar any more
-            for sel in ["#rail-logo", "#pj-rail", "#pj-plus", "#rail-workshop"]: host.wait_for_selector(sel, state="visible")
+            for sel in ["#rail-logo", "#side-switch"]: host.wait_for_selector(sel, state="visible")   # the project rail became the side dropdown
             for gone in ["#help-btn", "#settings-btn", "#me-avatar", "#nest-new", "#nest-search", "#nest-more", "#nest-updates", "#grp-hub", "#grp-ops"]:
                 assert host.locator(gone).count() == 0, gone
 
@@ -211,7 +211,7 @@ def main():
             host.keyboard.press("Escape")
             # right-click the project's bubble: overview, chat, pin, invite, project settings (no dropdown in the sidebar)
             host.evaluate("TribeShell.go('repo')"); host.wait_for_selector("#view-repo:not(.hidden)")
-            host.click("#pj-rail .pj-circle.on", button="right"); host.wait_for_selector("#rail-menu [data-rc='settings']")
+            host.locator("#pj-rail .pj-circle.on").first.dispatch_event("contextmenu"); host.wait_for_selector("#rail-menu [data-rc='settings']")
             host.click("#rail-menu [data-rc='settings']"); wait_text(host, "#invite-body", "settings")
             host.keyboard.press("Escape")
 
@@ -230,7 +230,7 @@ def main():
             host.keyboard.press("Escape")
 
             # ---- Roles: only for flow projects, a tab in Tasks & Board
-            host.click("#pj-plus"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
+            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")
             host.wait_for_selector("#view-chat:not(.hidden)", timeout=20000)
             host.click("#nest-ws-tasks"); host.wait_for_selector("#wt-roles", timeout=15000)

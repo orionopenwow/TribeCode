@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.17.6
+
+- **Project dropdown**: the column of project circles is gone on desktop. A thick rounded dropdown at the top of the side column shows where you are (Home or a project) and opens the list: Home, every project, Workshop, your scratchpad, New project, Paste invite link
+- **Fixed**: the Quick start tile on Home showed an empty box for projects with an emoji face
+- **Phones**: unchanged (the drawer still lists your projects)
+
 ## v0.17.5
 
 - **Cleaner updates**: "Restart to update" now installs the same per-user Windows installer as the Download button, so it updates the app in place instead of adding a second copy. The first time, it removes any older copy that came from the .msi (Windows may ask once, since that copy was installed for all users)

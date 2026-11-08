@@ -146,7 +146,7 @@ def main():
             host.evaluate("TribeShell.switcher(document.querySelector('#pj-rail [data-pj-open]'))")
             assert host.locator("#project-menu [data-dest='customize']").count() == 1, "the project menu has Customize"
             host.keyboard.press("Escape"); host.mouse.click(700, 500)
-            host.click(f"#pj-rail [data-pj-open='{pid}']", button="right")
+            host.locator(f"#pj-rail [data-pj-open='{pid}']").first.dispatch_event("contextmenu")
             host.click("#rail-menu [data-rc='customize']")
             host.wait_for_selector("#look-modal:not(.hidden) .lk-tab.on")
             assert host.evaluate("document.querySelector('.lk-tab.on').dataset.ltab") == "project"

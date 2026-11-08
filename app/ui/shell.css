@@ -506,3 +506,21 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 @media (max-width: 820px) {
   .window > .side > .userbar { position: static; flex: none; width: auto; }
 }
+
+/* ---------- feat/side-switch: one project dropdown instead of the circle rail (desktop) ---------- */
+.side-switch { display: none; }
+@media (min-width: 821px) {
+  .shell .window, body.panel-off .shell .window { grid-template-columns: 0 var(--side-w, 260px) minmax(0, 1fr) var(--right-w, 320px); }
+  body.panel-off .shell .window { grid-template-columns: 0 var(--side-w, 260px) minmax(0, 1fr) 0; }
+  .window > .rail { display: none; }
+  .side-switch { display: flex; align-items: center; gap: 10px; width: auto; min-height: 56px; margin: 12px 12px 2px; padding: 8px 12px 8px 10px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; flex: none; }
+  .side-switch:hover, .side-switch[aria-expanded="true"] { background: var(--raised); border-color: var(--edge-pop, #3A4350); }
+  .side-switch .ss-face .pj-face { width: 36px; height: 36px; border-radius: 10px; font-size: 13px; }
+  .side-switch .ss-camp { display: grid; place-items: center; background: var(--raised); font-size: 20px !important; }
+  .side-switch .ss-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .side-switch .ss-t b { font-size: 15px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side-switch .ss-t small { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side-switch .ss-chev { width: 16px; height: 16px; color: var(--muted); flex: none; transition: transform .15s; }
+  .side-switch[aria-expanded="true"] .ss-chev { transform: rotate(180deg); }
+  .sh-pop.sh-under-switch { min-width: 300px; }
+}

@@ -133,7 +133,7 @@ def main():
             host.goto(BASE + "/?skipIntro=1")
             wait_text(host, "#sync-status", "connected")
             token = host.evaluate("TribeStore.get().server.token")
-            host.wait_for_selector("#pj-rail .pj-circle")
+            host.wait_for_selector("#pj-rail .pj-circle", state="attached")
             # first launch: zero steps, straight into the first project, one dismissible line
             assert host.locator("#onboard").count() == 0
             host.wait_for_selector("#host-pill:not(.hidden)")   # hosting shows as the pill top left (no banner)
@@ -149,7 +149,7 @@ def main():
             assert len(r["projects"]) == 1 and r["projects"][0]["default"], r
 
             # ---- project from a local path that is already a git repo (host machine only)
-            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.wait_for_selector("#np-input")
+            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='code']"); host.wait_for_selector("#np-input")
             host.fill("#np-input", lantern); wait_text(host, "#np-hint", "Opens that folder"); host.click("#np-create")
             host.wait_for_selector("#view-home:not(.hidden) .pj-title")
             wait_text(host, "#pj-overview h1", "lantern")
@@ -162,7 +162,7 @@ def main():
             except urllib.error.HTTPError as e: assert e.code == 403, e.code
 
             # ---- a plain folder: "Make it a git repo" (gitignore for node_modules, first commit as Orion)
-            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.fill("#np-input", sketches); host.press("#np-input", "Enter")
+            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='code']"); host.fill("#np-input", sketches); host.press("#np-input", "Enter")
             host.wait_for_selector("#np-git"); host.click("#np-git")
             host.wait_for_selector("#view-home:not(.hidden)"); wait_text(host, "#pj-overview h1", "sketches")
             wait_until(lambda: Path(sketches, ".git").exists(), what="git init")
@@ -172,7 +172,7 @@ def main():
             assert sh("git", "-C", sketches, "log", "-1", "--format=%an").strip() == "Orion"
 
             # ---- browser upload of a folder (the drop zone's code path) + the 25 MB cap
-            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.click("#np-more"); host.wait_for_selector("#np-drop")
+            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='code']"); host.click("#np-more"); host.wait_for_selector("#np-drop")
             # a synthetic drop of a single file explains that a folder is needed
             host.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'one.txt')); const dz = document.querySelector('#np-drop');
                 dz.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }""")
@@ -191,7 +191,7 @@ def main():
             assert st == 200 and not Path(tmp, "workspaces", "escape.txt").exists() and r["uploaded"]["skipped"] == 1, r
 
             # ---- a dropped folder whose .git/config has a remote: offer "Clone it into TribeCode"
-            host.click("#pj-plus"); host.click(".np-setup [data-ns='code']"); host.click("#np-more"); host.wait_for_selector("#np-drop")
+            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='code']"); host.click("#np-more"); host.wait_for_selector("#np-drop")
             host.evaluate("""(url) => window.TribeProjects.analyze('quest-engine', [
                 { path: '.git/config', gitConfig: true, file: new File(['[core]\\n\\tbare = false\\n[remote "origin"]\\n\\turl = ' + url + '\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n'], 'config') },
                 { path: 'engine.js', file: new File(['export const tick = 1\\n'], 'engine.js') }])""", bare)
@@ -205,7 +205,7 @@ def main():
             assert st == 400, r
 
             # ---- per-project chat + tasks isolation
-            host.click("#pj-rail [data-pj-open='pixel-quest']")
+            host.locator("#pj-rail [data-pj-open='pixel-quest']").first.dispatch_event("click")
             wait_until(lambda: host.evaluate("TribeClient.project()") == "pixel-quest", what="switch to pixel quest")
             host.wait_for_function("!document.querySelector('#chat-list').innerText.includes('legacy hello')")
             chat(host).fill("#chat-input", "pixel only: sprites are 16px"); chat(host).press("#chat-input", "Enter")
@@ -245,7 +245,7 @@ def main():
             friend.add_init_script("try{localStorage.removeItem('tribecode.afterJoin')}catch(e){}")   # this test is not about the after-join Claude Code sheet (e2e_instant is)
             friend.fill("#name", "Maya"); friend.click("#go")
             wait_text(friend, "#sync-status", "connected")
-            friend.wait_for_selector("#pj-rail .pj-circle")
+            friend.wait_for_selector("#pj-rail .pj-circle", state="attached")
             assert friend.locator("#pj-rail .pj-circle").count() == 1 and "Pixel Quest" in friend.inner_text("#nest-head")
             assert friend.is_hidden("#pj-plus")
             wait_text(friend, "#chat-list", "pixel only")
@@ -256,12 +256,12 @@ def main():
             assert api("/chat/general", token=ftoken)[0] == 200
             st, r = api("/invites", "POST", {"project": "tribe"}, token=ftoken); assert st == 403, r
             # presence shows where each person is: the host leaves for Campfire Crew
-            host.click("#pj-rail [data-pj-open='campfire-crew']")
+            host.locator("#pj-rail [data-pj-open='campfire-crew']").first.dispatch_event("click")
             wait_until(lambda: host.evaluate("TribeClient.project()") == "campfire-crew", what="host back to campfire")
             wait_text(host, "#room-list", "Pixel Quest ·")      # Maya is in Pixel Quest
             wait_text(friend, "#room-list", "another project")  # Maya can't see where Orion went
             assert "Campfire" not in friend.inner_text("#room-list")
-            host.click("#pj-rail [data-pj-open='pixel-quest']")
+            host.locator("#pj-rail [data-pj-open='pixel-quest']").first.dispatch_event("click")
             wait_until(lambda: host.evaluate("TribeClient.project()") == "pixel-quest", what="host back to pixel quest")
             wait_text(host, "#chat-list", "pixel only")
 
@@ -306,15 +306,15 @@ def main():
 
             # ---- desktop screenshot: the cascade with More open, on the Pixel Quest overview
             # other projects' circles carry a badge (Pixel Quest's change request shows on its circle from elsewhere)
-            host.click("#pj-rail [data-pj-open='lantern']")
+            host.locator("#pj-rail [data-pj-open='lantern']").first.dispatch_event("click")
             wait_until(lambda: host.evaluate("TribeClient.project()") == "lantern", what="host to lantern")
-            host.wait_for_selector("#pj-rail [data-pj-open='pixel-quest'] .pj-badge")
-            host.click("#pj-rail [data-pj-open='pixel-quest']")
+            host.wait_for_selector("#pj-rail [data-pj-open='pixel-quest'] .pj-badge", state="attached")
+            host.locator("#pj-rail [data-pj-open='pixel-quest']").first.dispatch_event("click")
             wait_until(lambda: host.evaluate("TribeClient.project()") == "pixel-quest", what="host to pixel quest")
             # a project picture
             host.evaluate("""() => { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.fillStyle = '#6C7CFF'; x.fillRect(0, 0, 8, 8);
                 return TribeClient.api('/projects/pixel-quest', { method: 'PATCH', body: { image: c.toDataURL('image/png') } }); }""")
-            host.wait_for_selector("#pj-rail [data-pj-open='pixel-quest'] .pj-face.img img")
+            host.wait_for_selector("#pj-rail [data-pj-open='pixel-quest'] .pj-face.img img", state="attached")
             host.click("#nest-overview"); host.wait_for_selector("#pj-ws .pj-branch")
             shot(host, "project-cascade")
 
