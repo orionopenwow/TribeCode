@@ -55,8 +55,8 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
   <p>Copy the link from the Getting started card (or Invite friends, which also shows a QR code). Your friend taps it, types a name and taps Join. On a phone, <b>Share → Add to Home Screen</b> makes it a full-screen app.</p>
   <p>Links outside your Wi-Fi use a public https address (Tailscale Funnel or cloudflared). They go through this site's <a class="ember" href="app/go.html">go.html</a> page, which checks that your computer is online, then hands your friend to it. A link looks like <code>…/go.html#s=&lt;host&gt;&amp;c=&lt;code&gt;</code>.</p>
 
-  <h2>4. Connect your Claude Code</h2>
-  <p>Profile menu → <b>Connect your Claude Code</b>. Pick Anywhere, Same Wi-Fi or This computer, then run the command it shows:</p>
+  <h2>4. Connect your AI</h2>
+  <p>Profile menu → <b>Connect your AI</b>: Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any MCP client. Pick Anywhere, Same Wi-Fi or This computer, then run the command it shows (Claude Code below; the other tools get their own config):</p>
   <pre><code>claude mcp add --transport http tribecode https://HOST/mcp --header "Authorization: Bearer &lt;key&gt;"</code></pre>
   <p>Using Claude Desktop? <b>Your agents → Connect an agent → Claude Desktop</b> gives you the config entry for its bridge.</p>
 

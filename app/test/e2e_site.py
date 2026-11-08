@@ -121,7 +121,7 @@ def demo(b):
     # profile menu
     dk.click("#pf-btn"); dk.wait_for_selector("#pf-menu .pf-item")
     items = dk.locator("#pf-menu .pf-item span:first-of-type").all_inner_texts()
-    assert items == ["My profile and activity", "Connect your Claude Code", "Your agents", "Invite friends", "Notifications", "Capture to notes", "Settings", "Check for updates"], items
+    assert items == ["My profile and activity", "Connect your AI", "Your agents", "Invite friends", "Notifications", "Capture to notes", "Settings", "Check for updates"], items
     shot(dk, "demo-profile.png")
     dk.click("#pf-menu [data-act=capture]"); assert dk.locator("#pf-menu .pf-sw.on").count() == 1
     dk.keyboard.press("Escape")

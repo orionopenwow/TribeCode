@@ -165,7 +165,7 @@
       { id: 'vision', label: 'Write the vision', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
       { id: 'task', label: `Give ${esc(p.name)} its first task`, done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button><button class="btn sm" data-ck="invite">Invite a friend</button>' : '' },
       { id: 'friend', label: 'A friend joins', done: others },
-      { id: 'claude', label: 'Connect your Claude Code', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
+      { id: 'claude', label: 'Connect your AI', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
       { id: 'repo', label: 'Pin the repo', done: !!(d.repo || p.hasRepo), acts: canEdit ? '<button class="btn sm" data-ck="repo">Set up</button>' : '' },
     ];
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length, folded = lsg('ckFold') === '1';
@@ -191,7 +191,7 @@
         <section class="card" id="pj-who"><h3>${ico('i-users', 16)}Who is here</h3>
           ${team.length ? team.sort((a, b) => b.here - a.here || b.online - a.online).map(who).join('') : '<div class="pj-none">Just you so far. Invite a friend to this project.</div>'}</section>
         <section class="card" id="pj-agents"><h3><span class="pj-live"></span>Agents</h3>
-          ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : '<div class="pj-none">No agent is working here right now.</div><button class="linkish pj-cc" id="pj-cc">Connect your Claude Code</button>'}</section></div>`)}
+          ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : '<div class="pj-none">No agent is working here right now.</div><button class="linkish pj-cc" id="pj-cc">Connect your AI</button>'}</section></div>`)}
       ${sec('pj-sec-stream', 'Project Stream', `<div class="pj-grid">
         <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
           ${d.recent.length ? d.recent.map(x => `<div class="pj-row-line" ${x.kind === 'doc' ? `data-doc="${esc(x.ref)}"` : x.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[x.kind] || 'i-doc', 14)}<span class="t">${esc(x.text)}</span><span class="faint">${esc(x.sub)} · ${ago(x.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Commits, doc edits and task moves show up here.</div>'}</section>
@@ -347,6 +347,7 @@
       ${sec('Change requests', d.changes.slice(0, 12).map(c => `<div class="pj-req-row" data-go="repo"><div><b>${esc(c.title)}</b><div class="faint">${esc(c.byName)}${c.claimedByName ? ' · taken by ' + esc(c.claimedByName) : ''} · ${ago(c.created)}</div></div>${chip(c.status, c.status === 'open')}</div>`), 'No “needs a desktop” requests.')}
       ${sec('Proposals', d.proposals.slice(0, 12).map(x => `<div class="pj-req-row" data-go="board"><div><b>${esc(x.title)}</b><div class="faint">${ago(x.created)}</div></div>${chip(x.status, x.status === 'open')}</div>`), 'No proposals. Propose a scope change from the Board.')}
     </div>`;
+    if (window.TribeAskAgent) window.TribeAskAgent.mountRequests(el.querySelector('.pj-req'));   // feat/any-llm: Ask an agent requests
     el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => App().show(x.dataset.go));
     el.querySelectorAll('[data-ap-do]').forEach(btn => btn.onclick = async e => {
       e.stopPropagation(); const aid = btn.closest('[data-ap]').dataset.ap;

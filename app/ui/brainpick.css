@@ -1,0 +1,61 @@
+/* Flint's brain (brainpick.js) and Ask an agent (askagent.js). Flat matte, theme variables only. */
+.bp-card { width: min(600px, 100%); max-height: min(88vh, 900px); overflow: auto; }
+.bp-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.bp-ht { flex: 1; min-width: 0; }
+.bp-ht h2 { margin: 2px 0 0; }
+.bp-face { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
+.bp-lead { margin: 4px 0 14px; font-size: 13.5px; line-height: 1.55; color: var(--muted); max-width: 65ch; }
+.bp-opts { display: grid; gap: 8px; }
+.bp-opt { border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); min-width: 0; }
+.bp-opt.on { border-color: var(--accent); background: var(--raised); }
+.bp-pick { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; }
+.bp-pick[data-off] .bp-t small { color: var(--faint); }
+.bp-dot { width: 16px; height: 16px; flex: none; margin-top: 2px; border-radius: 50%; border: 1.5px solid var(--edge-pop); background: var(--canvas); }
+.bp-opt.on .bp-dot { border-color: var(--accent); box-shadow: inset 0 0 0 4px var(--canvas); background: var(--accent); }
+.bp-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bp-t b { font-size: 14px; font-weight: 650; }
+.bp-t small { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.bp-t code { font-family: var(--mono); font-size: 11.5px; color: var(--text); }
+.bp-body { padding: 0 14px 14px 42px; display: grid; gap: 10px; }
+.bp-note { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); max-width: 62ch; }
+.bp-note a { color: var(--accent-ink); }
+.bp-nogpu { margin: 0 14px 12px 42px; padding: 8px 10px; font-size: 12.5px; line-height: 1.5; color: var(--muted); border: 1px dashed var(--edge-pop); border-radius: var(--r-sm); }
+.bp-bar { height: 6px; border-radius: 3px; background: var(--canvas); border: 1px solid var(--edge); overflow: hidden; }
+.bp-bar i { display: block; height: 100%; background: var(--accent); transition: width .2s var(--ease, ease); }
+.bp-prog small { display: block; margin-top: 4px; font-size: 11.5px; }
+.bp-err { margin: 0; font-size: 12.5px; color: var(--deny-ink, var(--text)); }
+.bp-body > .btn { justify-self: start; }
+.bp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.bp-f { display: grid; gap: 4px; min-width: 0; }
+.bp-f.bp-wide { grid-column: 1 / -1; }
+.bp-f .input { height: 36px; font-size: 13.5px; width: 100%; min-width: 0; }
+.bp-friends { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--edge); }
+.bp-friends > div { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.bp-friends b { font-size: 13.5px; }
+.bp-friends small { font-size: 12px; line-height: 1.45; color: var(--muted); }
+.bp-cap { width: 72px !important; height: 32px; font-size: 13px; }
+.bp-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bp-res { font-size: 12.5px; }
+.bp-res.ok { color: var(--live-ink, var(--text)); }
+.bp-row-l { display: inline-flex; align-items: center; gap: 8px; margin-right: 8px; }
+#set-flintbrain { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.fl-via { display: block; margin-top: 4px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--faint); }
+
+/* Ask an agent */
+.aa-card { width: min(520px, 100%); }
+.aa-card textarea { width: 100%; min-height: 110px; resize: vertical; font: inherit; font-size: 14px; line-height: 1.5; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); color: var(--text); }
+.aa-note { font-size: 12.5px; line-height: 1.55; color: var(--muted); margin: 8px 0 0; }
+.task .ask-ag { position: absolute; right: 26px; top: 6px; width: 20px; height: 20px; display: none; place-items: center; border: 0; background: none; color: var(--faint); cursor: pointer; border-radius: 5px; }
+.task:hover .ask-ag, .task:focus-within .ask-ag { display: grid; }
+.task .ask-ag:hover { color: var(--live-ink, var(--text)); background: var(--surface-2); }
+.pj-asks .pj-req-row b { font-weight: 600; }
+
+@media (max-width: 820px) {
+  .bp-card { max-height: 92vh; }
+  .bp-body { padding: 0 12px 12px 12px; }
+  .bp-nogpu { margin: 0 12px 12px 12px; }
+  .bp-grid { grid-template-columns: minmax(0, 1fr); }
+  .bp-pick { padding: 11px 12px; gap: 10px; }
+  .bp-friends { flex-wrap: wrap; }
+  .task .ask-ag { display: grid; position: static; flex: none; width: 26px; height: 26px; order: 3; }
+}

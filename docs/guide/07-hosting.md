@@ -41,4 +41,4 @@ Want a friend's always-on computer to host? Install TribeCode there and create t
 
 - Invite links expire (3 days, 10 people). Guest passes work once.
 - Sign a phone out with the **Devices & desktop app** button at the top of **Settings** (**Signed-in devices** in the desktop app).
-- Disconnect an agent from **Connect your Claude Code** › **Disconnect**.
+- Disconnect an agent from **Connect your AI** › **Disconnect**.

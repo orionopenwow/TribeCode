@@ -94,7 +94,7 @@ def main():
             wait_text("#pj-who", "Campw"); wait_text("#pj-who", "host")
             assert "Who is here" in host.text_content("#pj-who h3")
             assert host.locator("#pj-agents .pj-live").count() >= 1, "teal dot"
-            assert "Connect your Claude Code" in host.text_content("#pj-agents #pj-cc")
+            assert "Connect your AI" in host.text_content("#pj-agents #pj-cc")
             # 5. Project Stream: the task shows in Recent changes; Upcoming has a clean empty state
             wait_text("#pj-recent", "Draw the title screen")
             assert "Nothing scheduled" in host.text_content("#pj-upcoming")

@@ -184,48 +184,77 @@
       <code title="${esc(c.note || '')}">${esc(c.path)}</code><span class="faint">${esc(c.name)}</span>${c.by === meId ? `<button class="linkish" data-unclaim="${esc(c.id)}">release</button>` : ''}</div>`).join('');
     $('#claims-list').querySelectorAll('[data-unclaim]').forEach(b => b.onclick = () => C.api('/claims/' + b.dataset.unclaim, { method: 'DELETE' }).catch(e => toast(e.message)));
   }
-  // Connect Claude Code from anywhere (this computer, same Wi-Fi, or a remote session at home via the public link),
-  // see whether it's connected, and disconnect in one click.
+  // Connect your AI (feat/any-llm): Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any MCP client, from
+  // anywhere (this computer, same Wi-Fi, or a remote session at home via the public link); see whether it's connected,
+  // and disconnect in one click. Claude Code keeps its one-line flow; the other tools get their exact setup (connectai.js).
+  const CAI = () => window.TribeConnectAI;
+  const aiChips = (sel) => (CAI() ? CAI().chipsHtml(sel) : '');
+  function wireChips(opts) { $('#invite-body').querySelectorAll('[data-cai-tool]').forEach(b => b.onclick = () => connectClaude({ ...(opts || {}), fresh: true, tool: b.dataset.caiTool })); }
+  async function connectTool(kind, opts) {
+    const body = $('#invite-body'), T = CAI().tool(kind);
+    body.innerHTML = `<h2>Connect your AI</h2>${aiChips(kind)}<p class="lead">Creating a key for ${esc(T[1])}…</p>`; wireChips(opts);
+    let r, where, stop = null;
+    try { r = await C.api('/agents', { method: 'POST', body: { kind } }); } catch (e) { body.innerHTML = `<h2>Couldn't create a key</h2><p class="lead">${esc(e.message)}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; return; }
+    const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => r.setup && r.setup[k]);
+    where = r.setup.anywhere ? 'anywhere' : (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'here' : (r.setup.wifi ? 'wifi' : 'here');
+    const draw = () => {
+      const s = r.setup[where] || {};
+      body.innerHTML = `${opts && opts.welcome ? '<span class="eyebrow">You\'re in</span>' : ''}<h2>Connect your AI</h2>${aiChips(kind)}
+        <p class="lead">${esc(T[1])} joins as <b>${esc(r.agent.name)}</b>: it sees the board, docs and chat, claims files before editing and posts gists, like any agent here.</p>
+        ${tabs.length > 1 ? `<div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>` : ''}
+        <div id="cc-setup" data-kind="${esc(kind)}">${CAI().setupHtml(s)}</div>
+        <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for it to connect…</div>
+        <p class="faint" style="font-size:12px;line-height:1.5">TribeCode works with ${esc(T[1])}; it isn't made by its vendor. A new key replaces the old one. Agents can't vote, approve or invite people.</p>
+        <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>${opts && opts.welcome ? 'Later' : 'Done'}</button></div>`;
+      wireChips(opts); CAI().wire($('#cc-setup'), s, toast);
+      body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
+      body.querySelector('[data-close]').onclick = () => { if (stop) stop(); closeInvite(); };
+      if (stop) stop(); stop = CAI().watch(r.agent.id, $('#cc-status'), () => !$('#invite-modal').classList.contains('hidden'));
+    };
+    draw();
+  }
   async function connectClaude(opts) {
     if (!C.connected()) return openInvite();
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
+    if (opts && opts.tool && opts.tool !== 'claude-code' && CAI()) return connectTool(opts.tool, opts);
     // Opening this used to mint a new key at once, which silently cut off a Claude Code that was already working.
     // When yours is online, say so first; a new command (and key) is one deliberate tap away.
     if (!(opts && opts.fresh)) {
-      body.innerHTML = '<h2>Connect your Claude Code</h2><p class="lead">Checking…</p>';
+      body.innerHTML = '<h2>Connect your AI</h2><p class="lead">Checking…</p>';
       let mine = null; try { mine = await C.api('/agents/mine'); } catch {}
       if (mine && mine.online && mine.agent) {
-        body.innerHTML = `<h2>Your Claude Code is connected</h2>
+        body.innerHTML = `<h2>Your Claude Code is connected</h2>${aiChips('claude-code')}
           <div class="cc-status"><span class="cc-dot on"></span>Connected · ${esc(mine.agent.name)}</div>
           <p class="faint" style="font-size:13px;line-height:1.5">To connect it from another computer, make a new command. The new key replaces this one, so the session that is running now stops until you paste the new command there.</p>
           <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><span style="flex:1"></span><button class="btn" data-close>Done</button><button class="btn primary" id="cc-new">New command</button></div>`;
-        body.querySelector('[data-close]').onclick = closeInvite;
+        body.querySelector('[data-close]').onclick = closeInvite; wireChips(opts);
         $('#cc-new').onclick = () => connectClaude({ fresh: true });
         $('#cc-out').onclick = async () => { try { await C.api('/agents/mine', { method: 'DELETE' }); toast('Disconnected. The key stopped working.'); closeInvite(); } catch (err) { toast(err.message); } };
         return;
       }
     }
-    body.innerHTML = '<h2>Connect your Claude Code</h2><p class="lead">Creating a key…</p>';
+    body.innerHTML = '<h2>Connect your AI</h2><p class="lead">Creating a key…</p>';
     let r, where, timer;
     const isHost = (C.state().me || {}).role === 'host';
     const copy = async (t, msg) => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the command and copy it.'); } };
     const status = async () => {
-      const el = $('#cc-status'); if (!el || $('#invite-modal').classList.contains('hidden')) return clearInterval(timer);   // closed with Esc or the backdrop
+      const el = $('#cc-status'); if (!el || $('#cc-setup') || $('#invite-modal').classList.contains('hidden')) return clearInterval(timer);   // closed with Esc or the backdrop
       try { const s = await C.api('/agents/mine'); el.innerHTML = s.online ? `<span class="cc-dot on"></span>Connected · ${esc(s.agent.name)}` : `<span class="cc-dot"></span>Waiting for Claude Code…`; } catch {}
     };
     const draw = () => {
       const cmd = r.commands[where];
       const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => k !== 'wifi' || r.commands.wifi);
-      body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span><h2>One line connects your Claude Code</h2>` : '<h2>Connect your Claude Code</h2>'}
-        <p class="lead">Run this once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
+      body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span>` : ''}<h2>Connect your AI</h2>${aiChips('claude-code')}
+        <p class="lead">One line connects your Claude Code. Run it once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
         <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>
         ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
           : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
-        ${opts && opts.welcome ? '<p class="cc-skip">No Claude Code? Skip this: type <b>@ai</b> in the chat and the tribe\'s AI answers.</p>' : ''}
-        <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and local models →</a>' : ''}</p>
+        ${opts && opts.welcome ? '<p class="cc-skip">No AI of your own? Skip this: ask Flint, or type <b>@ai</b> in the chat and the tribe\'s agents help.</p>' : ''}
+        <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and models →</a>' : ''}</p>
         <div class="modal-foot">${opts && opts.welcome ? '<span style="flex:1"></span><button class="btn" data-close>Later</button>' : '<button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button>'}</div>`;
       body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
+      wireChips(opts);
       if ($('#cc-hub')) $('#cc-hub').onclick = e => { e.preventDefault(); clearInterval(timer); closeInvite(); window.TribeAgentsHub.open(); };
       if ($('#cc-copy')) $('#cc-copy').onclick = () => copy(cmd, 'Command copied. Paste it in your terminal.');
       if ($('#cc-public')) $('#cc-public').onclick = async e => {

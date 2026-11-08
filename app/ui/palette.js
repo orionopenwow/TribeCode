@@ -16,7 +16,7 @@
       { kind: 'Action', label: 'New proposal', keys: 'vote board idea', run: () => { A.show('board'); setTimeout(() => document.querySelector('#prop-new').click(), 50); } },
       { kind: 'Action', label: 'Share my screen', keys: 'present screenshare', run: () => window.TribeHuddle.share() },
       { kind: 'Action', label: 'Dictate into chat', keys: 'voice speech mic talk type', hint: 'Ctrl Shift D', run: () => window.TribeSpeech && window.TribeSpeech.dictate(document.querySelector('#chat-input')) },
-      { kind: 'Action', label: 'Connect Claude Code', keys: 'agent mcp ai claude', run: () => A.connectClaude() },
+      { kind: 'Action', label: 'Connect your AI', keys: 'agent mcp ai claude codex gemini cursor qwen', run: () => A.connectClaude() },
       { kind: 'Action', label: 'Report a bug', keys: 'issue problem crash', hint: 'Ctrl Shift B', run: () => window.TribeBugs.capture() },
       { kind: 'Action', label: "Write today's standup", keys: 'brain recap summary', run: () => { A.show('home'); document.querySelector('#standup-go').click(); } },
       { kind: 'Action', label: 'Toggle dark / light', keys: 'theme mode', hint: 'Ctrl Shift L', run: () => { const st = S.get(), next = document.body.classList.contains('dark') ? (st.themeLight || 'light') : (st.themePicked && st.themeDark ? st.themeDark : (st.themeDark && st.themeDark !== 'dark' ? st.themeDark : 'campfire')); S.set(window.TribeThemes ? { ...window.TribeThemes.pick(next), themeSystem: false } : { theme: next }); A.refresh(); } },

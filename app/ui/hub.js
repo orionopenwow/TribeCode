@@ -6,7 +6,7 @@
 //   Scratchpad (Refine with AI: POST /api/scratch/refine, then Replace / Keep) | Recent activity (the global stream,
 //   condensed) · Agents & models. Reference: design/inspiration/home-ref.png, translated to the flat palette.
 //   Sub-pages from the sidebar's Global group: All repos (#/hub/repos), Global docs (#/hub/docs).
-// Also owns the right panel's Home mode (you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
+// Also owns the right panel's Home mode (you, Connect your AI, Share my hub link, Invite friends, AI Insights
 // from GET /api/insights with a fallback to suggestions + the Secretary's inspirations), the helpers (Secretary, local
 // model, autopilot listed as present entities) and the private global scratchpad (server/scratch.js; localStorage
 // until you are in a tribe).
@@ -85,7 +85,7 @@
   // ---------- render ----------
   // Home is the command center (reference: design/inspiration/home-ref.png, translated to the flat palette):
   //   header · the hero (Suggestions | Ask | Join or start) · Get started (dismissible) · Scratchpad | Recent activity ·
-  //   Agents & models. The right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends,
+  //   Agents & models. The right panel on Home: you, Connect your AI, Share my hub link, Invite friends,
   //   AI Insights (GET /api/insights, else the hub's suggestions + the Secretary's inspirations). Phones: one column.
   const sec = (eyebrow, title, inner, extra = '', aside = '') => `<section class="sec hub-sec" ${extra}><div class="sec-head ${aside ? 'hs-row' : ''}"><div><span class="eyebrow">${esc(eyebrow)}</span><h2>${title}</h2></div>${aside}</div>${inner}</section>`;
   const SEND = '<svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
@@ -224,7 +224,7 @@
       <div class="ask-out" id="hub-answer" aria-live="polite">${answerHtml()}</div></div>`;
   }
   function answerHtml() {
-    if (ask.error) return `<div class="ask-ans err"><p>${esc(ask.error)}</p>${ask.offerConnect ? '<div class="aa-acts"><button class="btn" id="hub-ask-cc">Connect your Claude Code</button></div>' : ''}</div>`;
+    if (ask.error) return `<div class="ask-ans err"><p>${esc(ask.error)}</p>${ask.offerConnect ? '<div class="aa-acts"><button class="btn" id="hub-ask-cc">Connect your AI</button></div>' : ''}</div>`;
     if (!ask.status) return '';
     const who = ask.via === 'claude' ? esc((ask.agent && ask.agent.name) || 'Your Claude') : `Local model${ask.model ? ` · ${esc(ask.model)}` : ''}`;
     const body = ask.status === 'thinking' || ask.status === 'sending' ? '<p class="aa-wait">Thinking…</p>'
@@ -302,7 +302,7 @@
     const pv = (f.loops || []).find(l => l.id === 'preview');
     return [
       { id: 'tribe', label: 'Start or join a tribe', done: on },
-      { id: 'claude', label: 'Connect your Claude Code', done: on && (!!myAgent() || (f.agents || []).length > 0) },
+      { id: 'claude', label: 'Connect your AI', done: on && (!!myAgent() || (f.agents || []).length > 0) },
       { id: 'project', label: 'Create a project', done: on && list.some(p => !p.default || p.hasRepo) },
       { id: 'invite', label: 'Invite a friend', done: on && (C.state().members || []).some(m => m.role !== 'agent' && m.id !== meId) },
       { id: 'preview', label: 'Preview your app', done: on && (!!(pv && pv.on) || !!lsGet('tribecode.home.previewed')) },
@@ -527,7 +527,7 @@
     const tok = n => n === null || n === undefined ? '' : `<span class="hf-num" title="Tokens reported through my_lane">${n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1000 ? Math.round(n / 1000) + 'k' : n} tok</span>`;
     const agents = f.agents.length ? f.agents.map(a => `<button class="hf-row" data-fleet="agent" data-id="${esc(a.id)}"><span class="hf-dot ${a.online ? 'on' : ''}"></span><span class="hf-name">${esc(a.name)}</span>
         <span class="hf-what">${a.online ? '' : '<span class="faint">idle · </span>'}${esc(a.doing || (a.online ? 'online' : 'no task'))}</span>${a.project ? chip(a.project) : ''}${meter(a)}${tok(a.tokens)}</button>`).join('')
-      : `<div class="hf-row static"><span class="hf-dot"></span><span class="hf-name">No agents yet</span><span class="hf-what faint">Connect Claude Code and it shows up here with its task and context.</span><button class="btn" id="hub-cc">Connect your Claude Code</button></div>`;
+      : `<div class="hf-row static"><span class="hf-dot"></span><span class="hf-name">No agents yet</span><span class="hf-what faint">Connect your AI (Claude Code, Codex, Gemini CLI, Cursor…) and it shows up here with its task and context.</span><button class="btn" id="hub-cc">Connect your AI</button></div>`;
     const m = f.models || {};
     const model = `<button class="hf-row" data-fleet="models"><span class="hf-dot ${m.online ? 'on' : ''}"></span><span class="hf-name">Local model</span><span class="hf-what">${m.online ? `Ollama · ${esc(m.model)}${m.list && m.list.length > 1 ? ` <span class="faint">+${m.list.length - 1} more</span>` : ''}` : `<span class="faint">${esc(m.error || 'Ollama is off')}</span>`}</span></button>`;
     const loops = (f.loops || []).map(l => `<button class="hf-row" data-fleet="${esc(l.id)}"><span class="hf-dot ${l.on ? 'on' : ''}"></span><span class="hf-name">${esc(l.name)}</span><span class="hf-what">${esc(l.state)}${l.last ? ` <span class="faint">· last ${esc(ago(l.last))}</span>` : ''}</span></button>`).join('');
@@ -552,7 +552,7 @@
     const out = [], f = (data && data.fleet) || {}, m = f.models || {};
     if (!connected()) return [{ id: 'off:tribe', kind: 'suggestion', title: 'Start or join a tribe', body: 'Insights come from your projects, your agents and the local model on the tribe\'s host.', source: 'Home', run: () => stepGo('tribe'), label: window.TribeHost && window.TribeHost.isDesktop ? 'Start hosting' : 'Join' }];
     if (data && m.online === false) out.push({ id: 'h:model', kind: 'health', title: 'The local model is off', body: `${m.error || 'Ollama is not running'}. Start it for answers on Home, note cleanup and the Secretary.`, source: 'Agents & models' });
-    if (data && !(f.agents || []).length && !myAgent()) out.push({ id: 's:cc', kind: 'suggestion', title: 'Connect your Claude Code', body: 'It shows up in the room with its task and context, and Ask on Home can go straight to it.', source: 'Home', run: () => App().connectClaude(), label: 'Connect' });
+    if (data && !(f.agents || []).length && !myAgent()) out.push({ id: 's:cc', kind: 'suggestion', title: 'Connect your AI', body: 'It shows up in the room with its task and context, and Ask on Home can go straight to it.', source: 'Home', run: () => App().connectClaude(), label: 'Connect' });
     for (const x of sugItems()) out.push({ id: 'sug:' + x.id, kind: x.need ? 'issue' : 'suggestion', title: x.title, body: x.why || x.sub || '', source: (projOf(x.project) || {}).name || 'Your projects', run: () => sugGo(x.id), label: x.need ? (x.kind === 'approval' ? 'Review' : x.kind === 'vote' ? 'Vote' : 'Open') : x.action ? x.action.label : 'Open' });
     for (const i of (data && data.ideas) || []) out.push({ id: i.id, kind: 'suggestion', title: i.title, body: i.body, source: 'Secretary', run: () => go(i.project, () => window.TribeSecretary && window.TribeSecretary.open()), label: 'Look' });
     return out.slice(0, 6);
@@ -870,7 +870,7 @@
 
   // =====================================================================
   // Right panel: helpers as present entities (under people and agents), and the global scratchpad.
-  // On Home (body.global) it is yours: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
+  // On Home (body.global) it is yours: you, Connect your AI, Share my hub link, Invite friends, AI Insights
   // (the room's people and the scratchpad step aside: Home shows the scratchpad itself).
   // =====================================================================
   const HKEY = 'tribecode.room.helpersOpen';

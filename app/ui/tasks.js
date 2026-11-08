@@ -58,7 +58,7 @@
       return `<div class="col" data-col="${key}">
         <h5><span class="dot" style="background:${dot}"></span>${label} <span class="n">${list.length}</span><button class="add" data-add="${key}" title="Add task">+</button></h5>
         ${list.map(t => `<div class="task" draggable="true" data-id="${esc(t.id)}">
-            <button class="del" data-del title="Delete"><svg class="i" style="width:13px;height:13px"><use href="#i-x"/></svg></button>
+            <button class="del" data-del title="Delete"><svg class="i" style="width:13px;height:13px"><use href="#i-x"/></svg></button>${remote() && window.TribeAskAgent && t.status !== 'done' ? `<button class="ask-ag" data-askag title="Ask an agent" aria-label="Ask an agent to do this"><svg class="i" style="width:13px;height:13px"><use href="#i-robot"/></svg></button>` : ''}
             <div class="t" data-title>${esc(t.title)}</div>
             <div class="meta">${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}${window.TribePlan ? window.TribePlan.dueChip(t) : ''}<select class="mv" data-move title="Move to">${COLS.map(([k, l]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${l}</option>`).join('')}</select>${memberOptions(t.assignee)}</div>
           </div>`).join('')}
@@ -94,6 +94,7 @@
       title.addEventListener('blur', commit);
       title.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } if (e.key === 'Escape') { const t = tasks.find(x => x.id === id); title.textContent = t ? t.title : ''; title.blur(); } });
       el.querySelector('[data-del]').addEventListener('click', () => remove(id));
+      const aa = el.querySelector('[data-askag]'); if (aa) aa.addEventListener('click', e => { e.stopPropagation(); const t = tasks.find(x => x.id === id); window.TribeAskAgent.open({ task: t }); });   // feat/any-llm
       const mv = el.querySelector('[data-move]'); mv.addEventListener('change', () => patch(id, { status: mv.value, order: Date.now() }));
       mv.addEventListener('pointerdown', e => e.stopPropagation());
       const sel = el.querySelector('[data-assign]'); if (sel) sel.addEventListener('change', () => patch(id, { assignee: sel.value || null }));
