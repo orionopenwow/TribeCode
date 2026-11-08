@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.17.12
+
+- **Rail**: the "up 0m" uptime line at the bottom of the rail is gone (desktop)
+- **Phones**: the uptime and commits line stays in the drawer's footer
+
 ## v0.17.11
 
 - **Rail**: the divider under the flame lines up with the top bar's bottom edge, and the project squares sit just below it, a little bigger (44px)
