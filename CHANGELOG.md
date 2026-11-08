@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.17.2
+
+- **Safer media links**: pictures, voice notes, screenshots and downloads load through short-lived signed links (about an hour, one file each, read-only) instead of carrying your sign-in key. Signing a device out turns its links off
+- **GitHub**: a friend's "Connect GitHub" uses their own token. The host's GitHub account is used only by the host and admins, or after the host approves it for a project
+- **Checked outside code**: the in-browser AI model and the 3D viewer's three.js are checked against pinned fingerprints before they run, and the AI model runs in a worker that can't see your sign-in key
+- **Stays in its project**: huddles, captions and typing indicators reach only people who can see that project; agents can only check approvals in their own projects. Admins and mods can change the tribe's look
+- **Downloads and devices**: the automatic cloudflared download is checked against Cloudflare's published checksum. Device links can have an end date, turn off after 90 days unused, and show when they were last used, with Revoke in Settings › Devices
+- **Desktop app**: a strict content security policy, and only the app's own page can call into the app (the Working version needs `Start-Working.bat` run once)
+- **App top bar**: the pixel TribeCode wordmark sits at the start of the top bar and goes Home
+- **Phones**: the top-bar wordmark stays desktop-only (phones keep their compact header); Settings › Devices with end dates and Revoke fits the phone
+
 ## v0.17.1
 
 - **Flint's welcome**: "Open in your browser" on the website now starts with Flint. He helps you make a pretend tribe (kind, emoji, name), shows four things you'll find inside, then asks how you want to see it: the 3-minute auto demo, exploring on your own, or starting your real tribe. The name you pick carries into the demo
