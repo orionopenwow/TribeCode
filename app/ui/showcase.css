@@ -11,6 +11,7 @@
 .od-pill.sc .sc-state { color: var(--muted); font-weight: 500; }
 .od-pill.sc .od-dot { animation: sc-blink 2.4s ease-in-out infinite; }
 @keyframes sc-blink { 50% { opacity: .35; } }
+.od-pill.sc.paused .od-dot { animation: none; background: var(--faint); }
 
 /* the popout's controls */
 .sc-pop .sc-prog { display: grid; gap: 6px; padding: 10px 14px 12px; border-bottom: 1px solid var(--edge); font-size: 12.5px; }
@@ -48,7 +49,9 @@
 @keyframes sc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .sc-cele, .od-pill.sc .od-dot { animation: none; } .sc-bar span { transition: none; } }
 @media (max-width: 820px) {
-  .sc-cele { left: 16px; right: 16px; width: auto; bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 12px); flex-wrap: wrap; }
-  .sc-cele .btn { order: 3; }
+  .sc-cele { left: 16px; right: 16px; width: auto; bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 12px); flex-wrap: wrap; row-gap: 10px; align-items: flex-start; }
+  .sc-cele-mark { display: none; }
+  .sc-cele-t { flex: 1 1 calc(100% - 40px); }
+  .sc-cele .btn { order: 3; flex: 1 1 100%; }
   .sc-mile { margin: 0 0 14px; padding: 14px; }
 }

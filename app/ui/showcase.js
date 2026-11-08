@@ -420,6 +420,7 @@
   function paintState() {
     const st = document.querySelector('#sc-pill-state'); if (!st || !on()) return;
     const s = sc(); st.textContent = s.paused ? ' · paused' : s.speed > 1 ? ` · ${s.speed}×` : '';
+    const pill = st.closest('.od-pill'); if (pill) pill.classList.toggle('paused', !!s.paused);
     const pop = document.querySelector('#demo-pop.sc-pop'); if (pop) fillPop(pop);
   }
   let popOpts = null;

@@ -50,6 +50,7 @@ def flow(page, tag, phone, tmp):
     if "--shots" in sys.argv:
         page.locator("#hub-demo").scroll_into_view_if_needed(); page.screenshot(path=str(SHOTS / f"offline-demo-{'phone' if phone else 'desktop'}-start.png"))
     page.click("#hub-demo")
+    page.click("#od-pick-quiet")   # the chooser: Explore quietly (Watch it come alive is e2e_showcase_demo.py)
     page.wait_for_function("TribeOffline.active() && window.TribeClient && TribeClient.connected()", timeout=10000)
     assert page.evaluate("document.body.classList.contains('offline-demo')")
     page.wait_for_selector("#demo-pill", state="visible")
@@ -165,7 +166,8 @@ def main():
             pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=demo]"); pg.keyboard.press("Escape")
             pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-demo"); assert "Leave" in pg.text_content("#set-demo"); pg.evaluate("TribeSettings.close()")
             leave_and_reset(pg, "desktop")
-            pg.click("#tb-help"); pg.click("#help-menu [data-help=demo]")   # Help starts it too
+            pg.click("#tb-help"); pg.click("#help-menu [data-help=demo]")   # Help starts it too (through the chooser)
+            pg.click("#od-pick-quiet")
             pg.wait_for_function("TribeOffline.active() && window.TribeClient && TribeClient.connected()", timeout=10000)
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             assert settings(pg)["server"] == REAL["server"]
