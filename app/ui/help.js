@@ -38,7 +38,7 @@
   // a filled circle with the ? cut out of it (currentColor fill, the ? in the canvas color)
   btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4.1" fill="none" stroke="var(--help-ink, #12151A)" stroke-width="2.3" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.35" fill="var(--help-ink, #12151A)"/></svg>';
   const wc = $('#win-ctl'), right = wc ? wc.parentElement : $('.titlebar .tb-right');
-  if (wc) wc.after(btn); else if (right) right.appendChild(btn); else ($('.titlebar') || document.body).appendChild(btn);
+  if (wc) wc.before(btn); else if (right) right.appendChild(btn); else ($('.titlebar') || document.body).appendChild(btn);
 
   let menu = null;
   function close() { if (menu) { menu.remove(); menu = null; btn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }

@@ -1,5 +1,5 @@
 /* Help: the filled ? at the far right of the title bar, its menu and the shortcuts sheet (help.js) */
-.tb-help { --help-ink: var(--canvas); order: 100; width: 32px; height: 32px; margin-left: 10px; display: grid; place-items: center; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; flex: none; transition: color .15s; }
+.tb-help { --help-ink: var(--canvas); order: 3; width: 32px; height: 32px; margin-left: 6px; display: grid; place-items: center; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; flex: none; transition: color .15s; }
 .tb-help svg { width: 22px; height: 22px; display: block; }
 .tb-help:hover, .tb-help[aria-expanded="true"] { color: var(--text); }
 .tb-help:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
