@@ -110,8 +110,8 @@
       team: people.filter(m => (p.members || {})[m.id] || m.role === 'agent').map(m => ({ id: m.id, name: m.name, color: m.color, role: (p.members || {})[m.id] || m.role, online: m.online, here: m.online, kind: m.role === 'agent' ? 'agent' : 'person' })),
       recent, taskCount: tasks.length, upcoming: [], repo: (db.repo || {})[pid] || null, bio: p.bio || '',
       vision: { has: !!db.vision[pid], excerpt: String(db.vision[pid] || '').replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 160) },
-      living: { mood: db.mode === 'showcase' ? 'buzzing' : chat.length ? 'steady' : 'fresh', by: 'tribecode',
-        summary: `${p.name} is a pretend project in the ${db.mode === 'showcase' ? 'showcase' : 'offline demo'}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
+      living: { mood: db?.mode === 'showcase' ? 'buzzing' : chat.length ? 'steady' : 'fresh', by: 'tribecode',
+        summary: `${p.name} is a pretend project in the ${db?.mode === 'showcase' ? 'showcase' : 'offline demo'}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
         lines: { lately: recent[0] ? `Last: ${recent[0].text}` : 'Nothing yet', chat: chat.length ? `${chat.length} message${chat.length === 1 ? '' : 's'}` : 'No messages yet',
           next: doing.length ? `In progress: ${doing[0].title}` : todo.length ? `Up next: ${todo[0].title}` : 'No tasks yet', soon: 'Nothing on the calendar' } } };
   }
@@ -630,7 +630,7 @@
   function start(mode) {
     if (mode !== 'quiet' && mode !== 'showcase') return choose();
     closeChooser();
-    if (active() && (db.mode || 'quiet') === mode) { enterUi(); return; }
+    if (active() && (db?.mode || 'quiet') === mode) { enterUi(); return; }
     const wasReal = !!(C() && C().hasToken()), wasDemo = active();
     if (!ls.get(BKEY)) ls.set(BKEY, backup());
     db = seed(mode); save(); blobClear();
@@ -641,7 +641,7 @@
   }
   // Before tribe.js has loaded (showcase.js handles ?demo=showcase): set the demo up so the app boots straight into it.
   function boot(mode) {
-    if (active() && (db.mode || 'quiet') === mode) return;
+    if (active() && (db?.mode || 'quiet') === mode) return;
     if (!ls.get(BKEY)) ls.set(BKEY, backup());
     db = seed(mode); save(); blobClear();
     S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
@@ -662,7 +662,7 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db.mode === 'showcase' ? 'Campfire Crew is live. Sit back and watch, or join in.' : 'Demo Tribe is ready. Nothing leaves this device.'); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? 'Campfire Crew is live. Sit back and watch, or join in.' : 'Demo Tribe is ready. Nothing leaves this device.'); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }
@@ -682,7 +682,7 @@
   }
   function reset() {
     closePop(); if (!active()) return;
-    db = seed(db.mode); save(); blobClear();
+    db = seed(db?.mode); save(); blobClear();
     try { sessionStorage.setItem('tribecode.view', 'home'); } catch {}
     location.reload();
   }
@@ -697,7 +697,7 @@
     if (!on) { if (pill) pill.remove(); pill = null; return; }
     if (pill && pill.isConnected) return;
     pill = document.createElement('button'); pill.id = 'demo-pill'; pill.className = 'od-pill'; pill.setAttribute('aria-haspopup', 'dialog');
-    const sc = db.mode === 'showcase';
+    const sc = db?.mode === 'showcase';
     if (sc) pill.classList.add('sc');
     pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : 'Offline demo: nothing leaves this device';
     pill.innerHTML = sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
@@ -718,7 +718,7 @@
   const outside = e => { if (pop && !pop.contains(e.target) && !(pill && pill.contains(e.target))) closePop(); };
   function openPop() {
     closePop();
-    if (db.mode === 'showcase' && window.TribeShowcase) {
+    if (db?.mode === 'showcase' && window.TribeShowcase) {
       pop = window.TribeShowcase.pop({ leave, close: closePop, quiet: () => { closePop(); db.mode = 'quiet'; save(); location.reload(); } });
       if (!pop) return;
       document.body.appendChild(pop); placePop(); return;
@@ -770,7 +770,7 @@
     active, start, choose, boot, leave, reset, hostForReal,
     socket: url => new FakeSocket(url),
     state: () => db,
-    mode: () => (active() ? db.mode || 'quiet' : null),
+    mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use
     _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, closePop: () => closePop(), placePop: () => pop && placePop() },
     // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".

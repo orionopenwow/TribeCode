@@ -1,7 +1,7 @@
 {
   "name": "tribecode",
   "private": true,
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Code with friends. One link to join, one shared brain, one vision.",
   "license": "MIT",
   "engines": {
