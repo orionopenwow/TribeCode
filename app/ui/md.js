@@ -8,10 +8,15 @@
     t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, '$1<em>$2</em>')
       .replace(/~~(.+?)~~/g, '<del>$1</del>')
+      // feat/doc-editor: ++underline++, ==highlight== / =={teal}highlight==, {teal}colored text{/}
+      .replace(/\+\+(?=\S)(.*?\S)\+\+/g, '<u>$1</u>')
+      .replace(/==(?:\{(ember|teal|indigo|amber|rose|green)\})?([^=]+?)==/g, (_, c, x) => `<mark class="hl hl-${c || 'amber'}">${x}</mark>`)
+      .replace(/\{(ember|teal|indigo|amber|rose|green)\}(.*?)\{\/\}/g, '<span class="tc tc-$1">$2</span>')
       .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       .replace(/(^|\s)(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
     return t.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
   }
+  const align = t => { const m = /^\{(left|center|right|justify)\} (.*)$/.exec(t); return m ? [m[1] === 'left' ? '' : ` class="md-al-${m[1]}"`, m[2]] : ['', t]; };
   function render(src) {
     const lines = String(src || '').replace(/\r/g, '').split('\n');
     const out = []; let i = 0;
@@ -23,7 +28,7 @@
         i++; out.push(`<pre><code>${esc(buf.join('\n'))}</code></pre>`); continue;
       }
       let m;
-      if ((m = l.match(/^(#{1,4})\s+(.*)$/))) { out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); i++; continue; }
+      if ((m = l.match(/^(#{1,5})\s+(.*)$/))) { const n = m[1].length, [al, rest] = align(m[2]); out.push(n === 5 ? `<p class="md-sub"${al}>${inline(rest)}</p>` : `<h${n}${al}>${inline(rest)}</h${n}>`); i++; continue; }
       if (/^\s*(---|\*\*\*|___)\s*$/.test(l)) { out.push('<hr>'); i++; continue; }
       if (/^>\s?/.test(l)) { const buf = []; while (i < lines.length && /^>\s?/.test(lines[i])) buf.push(lines[i++].replace(/^>\s?/, '')); out.push(`<blockquote>${inline(buf.join(' '))}</blockquote>`); continue; }
       if (/^\|.*\|\s*$/.test(l) && i + 1 < lines.length && /^\|?\s*:?-{2,}/.test(lines[i + 1])) {
@@ -45,9 +50,10 @@
       }
       if (!l.trim()) { i++; continue; }
       const buf = [];
-      while (i < lines.length && lines[i].trim() && !/^(#{1,4}\s|```|>|\s*[-*]\s|\s*\d+[.)]\s|\|)/.test(lines[i])) buf.push(lines[i++]);
+      while (i < lines.length && lines[i].trim() && !/^(#{1,5}\s|```|>|\s*[-*]\s|\s*\d+[.)]\s|\|)/.test(lines[i])) buf.push(lines[i++]);
       if (!buf.length) buf.push(lines[i++]);
-      out.push(`<p>${buf.map(inline).join('<br>')}</p>`);
+      const [al] = align(buf[0]);   // feat/doc-editor: {center} / {right} / {justify} at the start of a paragraph
+      out.push(`<p${al}>${buf.map(x => inline(align(x)[1])).join('<br>')}</p>`);
     }
     return out.join('\n');
   }

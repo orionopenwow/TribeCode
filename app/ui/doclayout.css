@@ -1,0 +1,264 @@
+/* The shared document editor layout (doclayout.js): project docs + personal notes.
+   Flat matte per docs/DESIGN-SYSTEM.md: 1px borders, depth only from luminance steps (canvas < page),
+   no glows, blur, gradients or drop shadows. */
+.dl-i { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.dl-eyebrow { font: 500 10.5px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+
+/* ---------- desktop: the Docs view becomes the editor ---------- */
+.docs-grid.dl-on { display: block; }
+.docs-grid.dl-on > .doc-pane { max-width: none; }
+/* The room panel stays as the person left it (hide it with its × for the full-width editor); the side panel folds away on narrow panes. */
+body.dl-wide .main > #view-docs { max-width: 1480px; }
+body.dl-wide .window .main { padding-top: 24px; }
+
+.dl-head { position: sticky; top: -24px; z-index: 9; background: var(--main, var(--canvas)); padding: 4px 0 12px; }
+.dl-top { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 0 10px; }
+.dl-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--surface); border: 1px solid var(--edge); color: var(--live-ink); }
+.dl-ic.note { color: var(--accent-ink); }
+.dl-id { flex: 1; min-width: 0; }
+.dl-name { display: block; width: 100%; max-width: 620px; margin-left: -7px; padding: 2px 6px; border: 1px solid transparent; border-radius: 6px; background: none; outline: none;
+  font: 650 19px/1.3 var(--display); letter-spacing: -0.01em; color: var(--text); text-overflow: ellipsis; }
+.dl-name:hover { border-color: var(--edge); }
+.dl-name:focus { border-color: var(--accent); }
+.dl-meta { display: flex; align-items: center; gap: 7px; min-width: 0; margin-top: 2px; font: 11.5px/1.5 var(--mono); color: var(--faint); white-space: nowrap; }
+.dl-where { overflow: hidden; text-overflow: ellipsis; max-width: 260px; color: var(--muted); }
+.dl-status { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.dl-meta .doc-peers { margin-left: 6px; font-family: var(--font); }
+.dl-meta .co-av { box-shadow: 0 0 0 2px var(--main, var(--canvas)); }
+.doc-toolbar.dl-acts { flex: none; margin: 0; gap: 4px; font-size: 13px; }
+.dl-acts .btn { height: 34px; }
+.dl-acts .dx-tool { width: 34px; padding: 0; }
+.dl-acts .dx-tool:has(#dx-ccount:not(:empty)) { width: auto; padding: 0 8px; }
+.dl-acts .seg { margin-right: 6px; }
+.dl-acts .dl-act { border-color: var(--edge); color: var(--text); padding: 0 12px; margin-left: 4px; }
+.dl-acts .dx-tools ~ #doc-del { display: none; }   /* More (…) has Delete doc when the doc tools are there */
+.dl-acts .btn:focus-visible, .dl-acts .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* the formatting toolbar: one row, icons only */
+.dl-fmt { display: flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 8px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); overflow-x: auto; scrollbar-width: none; }
+.dl-fmt::-webkit-scrollbar { display: none; }
+.dl-tb { flex: none; display: inline-grid; place-items: center; min-width: 32px; height: 32px; padding: 0; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; }
+.dl-tb:hover { background: var(--surface-2); color: var(--text); }
+.dl-tb.on, .dl-tb[aria-pressed="true"], .dl-tb[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
+.dl-tb:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dl-sep { flex: none; width: 1px; height: 20px; margin: 0 6px; background: var(--edge); }
+.dl-style { display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; width: 138px; padding: 0 6px 0 10px; font: 500 13px var(--font); color: var(--text); }
+.dl-style-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-menu { position: fixed; z-index: 95; min-width: 230px; padding: 6px; background: var(--surface); border: 1px solid var(--edge-pop); border-radius: 12px; }
+.dl-mi { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: 100%; min-height: 34px; padding: 6px 10px; border: 0; border-radius: 8px; background: none; color: var(--muted); text-align: left; cursor: pointer; font: 14px var(--font); }
+.dl-mi:hover, .dl-mi:focus, .dl-mi.on { background: var(--surface-2); color: var(--text); outline: none; }
+.dl-mi:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.dl-mi small { font: 11px var(--mono); color: var(--faint); }
+.dl-mi.st-title span { font: 750 20px/1.2 var(--display); }
+.dl-mi.st-h1 span { font: 700 17px/1.2 var(--display); }
+.dl-mi.st-h2 span { font: 650 15px/1.2 var(--font); }
+.dl-mi.st-h3 span { font: 600 14px/1.2 var(--font); color: var(--muted); }
+.dl-mi.st-quote span { padding-left: 8px; border-left: 2px solid var(--edge-pop); }
+.dl-mi.st-codeblock span { font: 13px var(--mono); }
+
+/* body: left panel + canvas with the page */
+.dl-body { position: relative; display: grid; grid-template-columns: 252px minmax(0, 1fr); align-items: start; min-height: calc(100vh - 250px); background: var(--canvas); border: 1px solid var(--edge); border-radius: 12px; }
+.dl-body.side-off { grid-template-columns: minmax(0, 1fr); }
+.dl-body.side-off .dl-side { display: none; }
+.dl-side { position: sticky; top: calc(var(--dl-head, 132px) - 24px); align-self: start; max-height: calc(100vh - var(--dl-head, 132px) - 60px); overflow: auto; padding: 14px 12px 16px; border-right: 1px solid var(--edge); scrollbar-width: thin; }
+.dl-side-h { display: flex; align-items: center; justify-content: space-between; margin: 0 0 8px 2px; }
+.dl-x { width: 30px; height: 30px; display: grid; place-items: center; flex: none; border: 0; border-radius: 8px; background: none; color: var(--faint); cursor: pointer; }
+.dl-x:hover { background: var(--surface-2); color: var(--text); }
+.dl-x:focus-visible, .dl-side-open:focus-visible, .dl-ol-head:focus-visible, .dl-ol-i:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dl-side-open { display: none; }
+.dl-body.side-off .dl-side-open { display: grid; place-items: center; position: absolute; z-index: 3; left: 10px; top: 10px; width: 34px; height: 34px; border: 1px solid var(--edge); border-radius: 9px; background: var(--surface); color: var(--muted); cursor: pointer; }
+.dl-body.side-off .dl-side-open:hover { color: var(--text); background: var(--surface-2); }
+/* the Docs list as "Document tabs": calm, no card around it, the repo hero compact */
+.dl-tabs .doc-side { position: static; padding: 0; border: 0; background: none; border-radius: 0; }
+.dl-tabs .doc-side.over { background: var(--live-tint); }
+.dl-tabs #doc-list { max-height: 36vh; }
+.dl-tabs .doc-item { padding: 7px 8px; }
+.dl-tabs .doc-item .m { display: none; }
+.dl-tabs .doc-drop-hint { padding: 8px 4px 0; }
+.dl-tabs .doc-hero.hero-card.rhx { margin-bottom: 10px; }
+.dl-tabs .doc-hero .rhx-art, .dl-tabs .doc-hero .rhx-band p, .dl-tabs .doc-hero .rhx-c { display: none; }
+.dl-outline { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--edge); }
+.dl-ol-head { display: flex; align-items: center; gap: 6px; width: 100%; padding: 5px 4px; border: 0; border-radius: 6px; background: none; color: var(--faint); cursor: pointer; text-align: left; }
+.dl-ol-head:hover { background: var(--surface-2); }
+.dl-ol-head .dl-i { transition: transform .15s var(--ease); }
+.dl-outline.folded .dl-ol-head .dl-i { transform: rotate(-90deg); }
+.dl-outline.folded .dl-ol { display: none; }
+.dl-ol-list { list-style: none; margin: 6px 0 0; padding: 0; }
+.dl-ol-i { display: block; width: 100%; padding: 6px 8px 6px calc(10px + var(--lv, 0) * 14px); border: 0; border-radius: 6px; background: none; color: var(--muted); text-align: left; font: 13px/1.4 var(--font);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.dl-ol-i:hover { background: var(--surface-2); color: var(--text); }
+.dl-ol-i.on { background: var(--surface-2); color: var(--text); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent-2); }
+.dl-ol-empty { margin: 6px 0 0; padding: 6px 8px; font-size: 12.5px; line-height: 1.5; color: var(--faint); }
+
+.dl-canvas { position: relative; min-width: 0; padding: 32px 32px 72px; }
+.dl-page { position: relative; max-width: 816px; margin: 0 auto; min-height: 70vh; padding: 56px 48px 80px; background: var(--surface); border: 1px solid var(--edge); border-radius: 12px; }
+.dl-page .doc-title { font-size: 36px; line-height: 1.15; padding: 0 0 4px; }
+.dl-page .doc-meta { margin: 6px 0 22px; }
+.dl-page .doc-edit textarea, .dl-page textarea.dl-text { font: 16px/1.6 var(--font); color: var(--text); }
+.dl-page .md { font-size: 16px; line-height: 1.6; }
+.dl-page .doc-tldr { background: var(--canvas); }
+.dl-page .doc-backlinks { margin-top: 40px; }
+.dl-page .slash { z-index: 12; }
+/* comments beside the page (docsx.js decides inline vs drawer) */
+.docs-grid.dl-on .doc-pane.has-margin { max-width: none; padding-right: 0; }
+.docs-grid.dl-on .doc-pane.has-margin .dl-canvas { padding-right: 312px; }
+.dl-canvas > .doc-margin { top: 32px; right: 20px; }
+.dl-canvas > .doc-margin.drawer { top: 0; right: 0; background: var(--canvas); border-left: 1px solid var(--edge); padding: 12px; border-radius: 0 12px 12px 0; }
+
+/* ---------- personal notes on desktop: the same layout, full window ---------- */
+.note-ed-wrap.dl-full { place-items: stretch; background: var(--canvas); }
+.note-ed-wrap.dl-full .note-ed.dl-shell { width: 100%; height: 100%; border: 0; border-radius: 0; background: var(--main, var(--canvas)); display: flex; flex-direction: column; }
+.note-ed.dl-shell .dl-head { position: static; padding: 14px 28px 12px; }
+.note-ed.dl-shell header.dl-top { padding: 0 0 10px; border: 0; gap: 12px; }
+.note-ed.dl-shell .dl-body { flex: 1; min-height: 0; margin: 0 28px 24px; overflow: auto; }
+.note-ed.dl-shell .dl-side { top: 0; max-height: none; min-height: 100%; }
+.note-ed.dl-shell input.ne-title { font-size: 36px !important; line-height: 1.15; padding: 0 0 18px; }
+.note-ed.dl-shell .dl-page textarea { flex: none; display: block; width: 100%; min-height: 50vh; padding: 0; overflow: hidden; resize: none; border: 0; outline: none; background: none; }
+.note-ed.dl-shell .ne-done { width: auto; padding: 0 14px 0 10px; gap: 6px; display: inline-flex; align-items: center; font: 600 13.5px var(--font); }
+.note-ed.dl-shell .ne-btn.dl-del { width: 34px; height: 34px; }
+.ne-acts { display: flex; align-items: center; gap: 6px; flex: none; }
+.ne-done:focus-visible, .ne-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* line spacing: a per-device view setting (Paragraph > Line spacing) */
+.dl-page .doc-edit textarea, .dl-page textarea.dl-text, .gd-body textarea, .dl-page .md, .doc-edit textarea { line-height: var(--dl-lh, 1.6); }
+
+/* Markdown extensions (md.js): underline, highlight, text color, alignment, subtitle */
+.md u { text-underline-offset: 3px; }
+.md mark.hl { color: inherit; border-radius: 3px; padding: 0 2px; }
+.md .hl-amber { background: var(--amber-tint); } .md .hl-ember { background: var(--chip); } .md .hl-teal { background: var(--live-tint); }
+.md .hl-indigo { background: var(--peer-tint); } .md .hl-rose { background: var(--ember-tint); } .md .hl-green { background: rgba(59,209,111,0.16); }
+.md .tc-ember { color: var(--accent-ink); } .md .tc-teal { color: var(--live-ink); } .md .tc-indigo { color: var(--peer-ink); }
+.md .tc-amber { color: var(--amber-ink); } .md .tc-rose { color: var(--ember-ink); } .md .tc-green { color: #3BD16F; }
+body.light .md .tc-green { color: #1E7F43; }
+.md .md-al-center { text-align: center; } .md .md-al-right { text-align: right; } .md .md-al-justify { text-align: justify; }
+.md .md-sub { font-size: 1.15em; color: var(--muted); margin: .2em 0 .8em; }
+
+/* desktop toolbar extras: text color "A" with its color bar, align with a caret */
+.gd-a { position: relative; display: inline-block; font: 600 17px/1 var(--font); padding-bottom: 5px; }
+.gd-bar { position: absolute; left: 50%; bottom: 0; width: 18px; height: 3px; margin-left: -9px; border-radius: 1px; background: var(--text); }
+.dl-fmt .dl-alignb { display: inline-flex; align-items: center; gap: 0; padding: 0 2px 0 5px; }
+
+/* ---------- sheets, popovers, menus (shared by both layouts) ---------- */
+.dl-sheet-wrap { position: fixed; inset: 0; z-index: 96; display: flex; align-items: flex-end; background: var(--scrim); }
+.dl-sheet { width: 100%; max-height: 78dvh; overflow: auto; padding: 10px 14px calc(18px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--edge-pop); border-radius: 16px 16px 0 0; color: var(--text); }
+.dl-sheet-h { display: flex; align-items: center; justify-content: space-between; min-height: 36px; margin-bottom: 4px; }
+.dl-sheet .dl-ol-i { padding-top: 10px; padding-bottom: 10px; font-size: 15px; white-space: normal; }
+.dl-sheet-wrap.pop { background: none; display: block; }
+.dl-sheet-wrap.pop .dl-sheet { position: fixed; width: 300px; max-height: min(70vh, 520px); border: 1px solid var(--edge-pop); border-radius: 12px; padding: 8px 10px 10px; }
+@media (min-width: 821px) { .dl-sheet-wrap:not(.pop) { align-items: center; justify-content: center; } .dl-sheet-wrap:not(.pop) .dl-sheet { width: 440px; border-radius: 16px; border: 1px solid var(--edge-pop); padding-bottom: 16px; } }
+.dl-list { display: flex; flex-direction: column; }
+.dl-li { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 48px; padding: 0 10px; border: 0; border-radius: 10px; background: none; color: var(--text); font: 15px var(--font); text-align: left; cursor: pointer; }
+.dl-li .dl-i { color: var(--muted); }
+.dl-li small { margin-left: auto; font: 12px var(--mono); color: var(--faint); }
+.dl-li:hover, .dl-li:focus-visible, .dl-li.on { background: var(--surface-2); outline: none; }
+.dl-li:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.dl-li.danger, .dl-li.danger .dl-i { color: var(--ember-ink); }
+.dl-list-sep { height: 1px; margin: 6px 4px; background: var(--edge); }
+.dl-sheet-wrap.pop .dl-li { min-height: 38px; font-size: 14px; }
+.dl-swatches { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 6px 2px 4px; }
+.dl-sw { aspect-ratio: 1; min-width: 36px; border: 1px solid var(--edge); border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; cursor: pointer; padding: 3px; }
+.dl-sw span { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font: 700 16px var(--font); color: var(--muted); }
+.dl-sw.color span { background: var(--canvas); }
+.dl-sw.on { border: 2px solid var(--text); }
+.dl-sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dl-in { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--canvas); color: var(--text); font: 15px var(--font); outline: none; }
+.dl-in:focus { border-color: var(--accent); }
+.dl-find { display: grid; gap: 8px; }
+.dl-find-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dl-find-n { flex: 1; font: 12px var(--mono); color: var(--faint); }
+.dl-ai { display: grid; gap: 10px; }
+.dl-ai-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.dl-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface-2); color: var(--text); font: 500 14px var(--font); cursor: pointer; }
+.dl-chip:hover { border-color: var(--edge-pop); }
+.dl-chip .dl-i { color: var(--live-ink); }
+.dl-ai-row { display: flex; gap: 8px; }
+.dl-ai-row .btn { height: 44px; }
+.dl-ai-note { font-size: 13.5px; color: var(--faint); margin: 2px; }
+.dl-ai-ans { max-height: 36vh; overflow: auto; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--canvas); font-size: 14.5px; }
+.dl-ai-acts { display: flex; gap: 8px; margin-top: 8px; }
+.dl-details { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 4px 2px; font-size: 14px; }
+.dl-details dt { color: var(--faint); font: 12px/1.9 var(--mono); }
+/* the A≡ Text / Paragraph panel */
+.dl-sheet-wrap.fp .dl-sheet { padding-top: 6px; }
+.dl-tabs2 { display: flex; border-bottom: 1px solid var(--edge); margin: 0 -14px 10px; }
+.dl-tabs2 button { flex: 1; height: 46px; border: 0; background: none; color: var(--muted); font: 600 14.5px var(--font); border-bottom: 2px solid transparent; cursor: pointer; }
+.dl-tabs2 button.on { color: var(--text); border-bottom-color: var(--accent); }
+.dl-tabs2 button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dl-styles { display: flex; flex-direction: column; margin-bottom: 8px; }
+.dl-styles .dl-mi { min-height: 44px; }
+.dl-styles .dl-mi .dl-i { color: var(--accent-ink); }
+.dl-sub { margin: 12px 2px 6px; font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.dl-sub small { text-transform: none; letter-spacing: 0; }
+.dl-row4, .dl-row2 { display: flex; gap: 6px; margin-bottom: 8px; }
+.dl-pb { flex: 1; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); color: var(--text); font: 600 14px var(--font); cursor: pointer; }
+.dl-pb.on { background: var(--text); color: var(--canvas); border-color: var(--text); }
+.dl-pb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- phone: Google Docs mobile header + the format bar on the keyboard ---------- */
+/* Theme variables only (every theme, light included): the ✓ pill and the active state are var(--text) on var(--canvas).
+   Measured from Docs at 390px: header 64px; ✓ pill left 11px, 49x38; icons 44px targets, centers 139…366 (45.5px apart). */
+.note-ed-wrap.gd-wrap { place-items: stretch; background: var(--surface); }
+.note-ed-wrap.gd-wrap .note-ed.gd-ed { width: 100%; height: 100dvh; border: 0; border-radius: 0; background: var(--surface); display: flex; flex-direction: column; }
+.note-ed header.gd-head, .gd-head { position: relative; flex: none; height: 64px; padding: 0; gap: 0; border: 0; background: var(--surface); }
+.gd-done { position: absolute; left: 11px; top: 13px; width: 49px; height: 38px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: var(--text); color: var(--canvas); opacity: 1; cursor: pointer; }
+.gd-done .dl-i { stroke-width: 2.4; }
+.gd-icons { position: absolute; right: 2px; top: 10px; display: flex; gap: 1.5px; }
+.gd-ib { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--muted); opacity: 1; cursor: pointer; }
+.gd-ib .dl-i { stroke-width: 2; }
+.gd-ib:active, .gd-ib:hover { background: var(--surface-2); }
+.gd-done:focus-visible, .gd-ib:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.note-ed .gd-body { flex: 1; min-height: 0; overflow: auto; padding: 8px 23px calc(52px + 40px + env(safe-area-inset-bottom)) !important; }
+.note-ed .gd-body .gd-title { display: block; width: 100%; height: auto; margin: 0; padding: 6px 0 12px; border: 0; outline: none; background: none; font: 700 34px/1.2 var(--display); letter-spacing: -0.015em; color: var(--text); font-size: 34px !important; }
+.note-ed .gd-body textarea { display: block; width: 100%; min-height: 240px; padding: 0; border: 0; outline: none; resize: none; overflow: hidden; background: none; color: var(--text); font: 16px var(--font); flex: none; }
+.gd-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* the format bar: 52px, raised; B 23 · I 68 · U 114 · A 160 · highlighter 206 · | 234 · align 260 · | 299 · list 323; A≡ pinned 329→right */
+.gd-fmt { position: relative; height: 52px; background: var(--raised, var(--surface-2)); color: var(--muted); }
+.gd-scroll { display: flex; align-items: center; height: 52px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding-right: 61px; }
+.gd-scroll::-webkit-scrollbar { display: none; }
+.gd-b { flex: none; width: 44px; height: 52px; display: grid; place-items: center; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; color: inherit; opacity: 1; cursor: pointer; }
+.gd-g { width: 30px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: inherit; }
+.gd-b.on .gd-g { background: var(--text); color: var(--canvas); }
+.gd-b:focus-visible { outline: none; }
+.gd-b:focus-visible .gd-g { box-shadow: inset 0 0 0 2px var(--accent); }
+.gd-b .dl-i { stroke-width: 2; }
+.gd-t { font: 700 21px/1 var(--font); }
+.gd-ti { font: italic 500 22px/1 Georgia, 'Times New Roman', serif; }
+.gd-tu { font: 500 20px/1 var(--font); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.gd-1 { margin-left: 1px; } .gd-2 { margin-left: 1px; } .gd-3, .gd-4, .gd-5 { margin-left: 2px; }
+.gd-b .gd-a { font-size: 20px; }
+.gd-b.on .gd-bar { opacity: 1; }
+.gd-div { flex: none; width: 1px; height: 24px; background: var(--edge-pop); }
+.gd-d1 { margin-left: 5.5px; } .gd-d2 { margin-left: 12px; }
+.gd-al { width: 52px; }
+.gd-al .gd-g { width: 44px; display: flex; align-items: center; justify-content: center; gap: 0; }
+.gd-6 { margin-left: 1.5px; }
+.gd-pin { position: absolute; top: 0; right: 0; width: 61px; height: 52px; padding-right: 6px; display: grid; place-items: center; background: var(--surface-2); }
+.gd-pin .gd-b { width: 44px; }
+/* where it sits: the note editor keeps it fixed at the bottom (on the keyboard); docs dock it while typing */
+.gd-fmt-wrap.docked { position: fixed; left: 0; right: 0; bottom: var(--kb, 0px); z-index: 75; padding-bottom: 0; }
+.note-ed .gd-fmt-wrap.docked { padding-bottom: env(safe-area-inset-bottom); background: var(--raised, var(--surface-2)); }
+.doc-edit + .gd-fmt-wrap, .gd-fmt-wrap:not(.docked) { margin: 2px 0 10px; }
+.gd-fmt-wrap:not(.docked) .gd-fmt { border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; }
+.gd-fmt-wrap:not(.docked) .gd-pin { border-left: 1px solid var(--edge); }
+.doc-toolbar .dl-olb { width: 34px; height: 34px; padding: 0; }
+.note-ed .ne-body { position: relative; }
+
+@media (max-width: 820px) {
+  .dl-fmt, .dl-side, .dl-side-open { display: none !important; }
+}
+@media (max-width: 1180px) and (min-width: 821px) {
+  .dl-page { padding: 44px 36px 64px; }
+  .dl-canvas { padding: 24px 20px 56px; }
+  .dl-acts .seg button { padding: 4px 9px; }
+  .dl-acts .dl-act span { display: none; }
+  .dl-acts .dl-act { width: 34px; padding: 0; }
+}
+/* a squeezed pane (the room panel is open): slimmer side panel, tighter page margins */
+.dl-body.narrow { grid-template-columns: 208px minmax(0, 1fr); }
+.dl-body.narrow.side-off { grid-template-columns: minmax(0, 1fr); }
+.dl-body.narrow .dl-side { padding: 12px 10px 14px; }
+.dl-body.narrow .dl-canvas { padding: 14px 12px 48px; }
+.dl-body.narrow .dl-page { padding: 32px 26px 56px; min-height: 60vh; }
+.dl-body.narrow .dl-page .doc-title { font-size: 30px; }
+@media (prefers-reduced-motion: reduce) { .dl-ol-head .dl-i { transition: none; } }
