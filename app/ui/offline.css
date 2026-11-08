@@ -30,7 +30,7 @@ body.offline-demo #host-pill { display: none !important; }
 .od-tt b { font-size: 15px; font-weight: 700; }
 .od-tt small { font-size: 13px; line-height: 1.45; color: var(--muted); }
 .od-tile .gs-go { flex: none; }
-@media (max-width: 720px) { .od-tile { padding: 14px 16px; align-items: flex-start; } .od-tile .gs-go { display: none; } }
+@media (max-width: 720px) { .od-tile { padding: 14px 16px; align-items: flex-start; } .hub-gs .od-tile .gs-go { display: none; } }
 
 /* Phones: no title bar outside Chat, so the pill floats small at the bottom left, just above the bottom rack. */
 @media (max-width: 820px) {

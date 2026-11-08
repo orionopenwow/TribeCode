@@ -47,6 +47,8 @@ def flow(page, tag, phone, tmp):
     if not page.evaluate("document.body.dataset.view === 'hub'"): page.evaluate("TribeHub.open('home')")
     page.wait_for_selector("#hub-demo", state="visible", timeout=10000)
     sideways(page, tag + " home")
+    if "--shots" in sys.argv:
+        page.locator("#hub-demo").scroll_into_view_if_needed(); page.screenshot(path=str(SHOTS / f"offline-demo-{'phone' if phone else 'desktop'}-start.png"))
     page.click("#hub-demo")
     page.wait_for_function("TribeOffline.active() && window.TribeClient && TribeClient.connected()", timeout=10000)
     assert page.evaluate("document.body.classList.contains('offline-demo')")
@@ -74,8 +76,12 @@ def flow(page, tag, phone, tmp):
 
     # tasks: add one; the pretend Claude picks it up
     page.evaluate("TribeApp.show('tasks')")
-    if page.locator("#task-new").is_visible(): page.click("#task-new")
-    else: page.evaluate("document.querySelector('#task-new').click()")
+    if phone: page.evaluate("document.querySelector('#task-new').click()")   # phones: the quick task sheet
+    else:
+        page.click("#task-new")   # desktop: New task opens suggested tasks (assist.js; the demo answers with the game starters)
+        page.wait_for_selector("#as-tasks", timeout=5000)
+        wait_text(page, "#as-tasks", "title screen", 8000)
+        page.click("#board [data-add=backlog]")
     box = "#m2-qt-in" if phone else ".quick-add"   # phones add tasks from a sheet (mobile2.js), desktop inline on the board
     page.wait_for_selector(box, state="visible", timeout=5000)
     page.fill(box, "Add a lantern flicker")
