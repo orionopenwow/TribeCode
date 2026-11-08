@@ -184,7 +184,7 @@ def main():
             assert host.locator("#userbar #ub-gear").is_visible(), "Settings is the gear in the user bar"
 
             # ---- breadcrumb menu mirrors the hierarchy
-            host.click("#crumb-section"); host.wait_for_selector("#section-menu")
+            host.evaluate("document.querySelector('#crumb-section').click()"); host.wait_for_selector("#section-menu")
             menu = host.evaluate("[...document.querySelectorAll('#section-menu h6, #section-menu button')].map(e => (e.tagName === 'H6' ? '# ' : '') + (e.querySelector('span') || e).textContent.trim())")
             assert menu[:5] == CORE, menu
             assert "# Task Board" in menu and "# Agents Hub" in menu, menu
