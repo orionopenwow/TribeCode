@@ -1,0 +1,41 @@
+/* The offline demo tribe (offline.js): the slim "Offline demo" pill where the Hosting pill sits, its popout, the
+   pretend-link note in the invite sheet and the Host this for real steps. Theme variables only. */
+body.offline-demo #host-pill { display: none !important; }
+.od-pill { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px 0 9px; margin-right: 12px; border: 1px solid var(--edge); border-radius: 999px;
+  background: var(--surface); color: var(--text); font: 600 12.5px var(--font); cursor: pointer; flex: none; white-space: nowrap; -webkit-app-region: no-drag; }
+.od-pill .od-s { color: var(--muted); font-weight: 500; }
+.od-pill:hover, .od-pill[aria-expanded="true"] { background: var(--surface-2); }
+.od-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.od-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); flex: none; }
+.od-pop { position: fixed; z-index: 130; width: 300px; max-width: calc(100vw - 16px); border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); color: var(--text); overflow: hidden; }
+.od-pop header { display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px; }
+.od-pop header div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.od-pop header b { font-size: 14px; }
+.od-pop p { margin: 0; padding: 0 14px 12px; font-size: 13px; line-height: 1.5; color: var(--muted); border-bottom: 1px solid var(--edge); }
+.od-acts { padding: 6px; }
+.od-acts button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; }
+.od-acts button:hover { background: var(--surface); }
+.od-acts svg.i { width: 17px; height: 17px; color: var(--muted); }
+.od-note { margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.od-note b { color: var(--text); }
+.od-steps { margin: 12px 0 8px; padding-left: 20px; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; color: var(--text); }
+.od-steps b { font-weight: 600; }
+.od-fine { font-size: 12.5px; line-height: 1.5; }
+/* Home's Getting started card: a full-width row under Create / Join */
+.od-tile { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 24px; border: 0; border-top: 1px solid var(--edge); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.od-tile:hover, .od-tile:focus-visible { background: var(--raised); outline: none; }
+.od-tic { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border: 1px solid var(--edge); border-radius: 10px; color: var(--accent-2); background: var(--surface); }
+.od-tic .i { width: 17px; height: 17px; }
+.od-tt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.od-tt b { font-size: 15px; font-weight: 700; }
+.od-tt small { font-size: 13px; line-height: 1.45; color: var(--muted); }
+.od-tile .gs-go { flex: none; }
+@media (max-width: 720px) { .od-tile { padding: 14px 16px; align-items: flex-start; } .hub-gs .od-tile .gs-go { display: none; } }
+
+/* Phones: no title bar outside Chat, so the pill floats small at the bottom left, just above the bottom rack. */
+@media (max-width: 820px) {
+  .od-pill { position: fixed; z-index: 70; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 72px); height: 26px; margin: 0; padding: 0 10px 0 8px; font-size: 11.5px; }
+  .od-pill .od-s { display: none; }
+  body[data-view="chat"] .od-pill, body.mobile-chat .od-pill { display: none; }   /* the chat opens with "lives only in this browser"; the pill would sit on the composer */
+  .od-pop { left: 8px !important; right: 8px; width: auto; }
+}

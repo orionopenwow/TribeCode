@@ -41,7 +41,8 @@
     setStatus('connecting');
     let want = ''; try { want = localStorage.getItem(projKey()) || ''; } catch {}
     const url = base().replace(/^http/, 'ws') + '/ws?token=' + encodeURIComponent(token()) + (want ? '&project=' + encodeURIComponent(want) : '');
-    const me = sock = new WebSocket(url);
+    // feat/offline-demo: in the offline demo tribe the socket is a pretend one (app/ui/offline.js)
+    const me = sock = (window.TribeOffline && window.TribeOffline.active() ? window.TribeOffline.socket(url) : new WebSocket(url));
     sock.onopen = () => { retry = 0; setStatus('online'); sendActivity(); };
     sock.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
