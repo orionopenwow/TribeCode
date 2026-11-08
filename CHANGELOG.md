@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.7
+
+- **Resize the panes**: drag the line between the sidebar and the page, or between the page and the right panel (or the app preview), to make either wider or narrower. Sizes are remembered on this computer. Double-click a line to reset it, or focus it and use ← →. The bottom-left user bar follows the sidebar
+- **Phones**: unchanged (the side panes are drawers there)
+
 ## v0.9.6
 
 - **Docs edit like Google Docs**: you see real headings, bold, italic, underline, colors, highlights, bullet and numbered lists, clickable checkboxes, quotes, code blocks, tables and dividers while you type, instead of Markdown symbols. Typing shortcuts format as you go (`# ` heading, `- ` bullet, `1. ` numbered, `[] ` checklist, `> ` quote, ``` code, `---` divider, `**bold**`). Enter continues a list, and Enter on an empty item ends it. Live co-editing, comments, history, dictation and Claude's tools all keep working, because docs are still saved as Markdown underneath. Paste brings formatting in safely. Undo never removes a teammate's text. **View Markdown** in the ⋯ / ⋮ menu shows the raw text

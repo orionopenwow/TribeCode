@@ -1,0 +1,9 @@
+/* Resizable panes (panes.js): a thin hit area on each pane edge, a 2px Ember line while hovered or dragged */
+.pane-handle { position: absolute; top: 68px; bottom: 0; width: 7px; z-index: 25; cursor: col-resize; touch-action: none; }
+.pane-handle::after { content: ''; position: absolute; top: 0; bottom: 0; left: 2.5px; width: 2px; background: transparent; transition: background .12s; }
+.pane-handle:hover::after, .pane-handle.on::after, .pane-handle:focus-visible::after { background: var(--accent); }
+.pane-handle:focus-visible { outline: none; }
+.pane-handle[hidden] { display: none; }
+body.pane-resizing, body.pane-resizing * { cursor: col-resize !important; user-select: none !important; }
+body.pane-resizing iframe { pointer-events: none; }   /* the preview iframe would swallow the drag */
+@media (max-width: 820px) { .pane-handle { display: none !important; } }

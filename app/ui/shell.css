@@ -4,8 +4,8 @@ body.dark { --raised: #1E242D; --rail: #0D1014; --nest: #12151A; --main: #161A20
 body.light { --raised: #FFFFFF; --rail: #E9ECF0; --nest: #F4F5F7; --main: #FFFFFF; --right: #F4F5F7; --hover: #E9ECF0; --sel: #E1E5EA; }
 
 /* ---------- grid ---------- */
-.shell .window { position: relative; display: grid; grid-template-columns: 76px 260px minmax(0, 1fr) 320px; grid-template-rows: 68px minmax(0, 1fr); background: var(--main); }
-body.panel-off .shell .window { grid-template-columns: 76px 260px minmax(0, 1fr) 0; }
+.shell .window { position: relative; display: grid; grid-template-columns: 76px var(--side-w, 260px) minmax(0, 1fr) var(--right-w, 320px); grid-template-rows: 68px minmax(0, 1fr); background: var(--main); }
+body.panel-off .shell .window { grid-template-columns: 76px var(--side-w, 260px) minmax(0, 1fr) 0; }
 body.panel-off .panel { display: none; }
 .window > .rail { grid-column: 1; grid-row: 1 / -1; }
 .window > .titlebar { grid-column: 2 / -1; grid-row: 1; }
