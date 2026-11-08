@@ -124,31 +124,89 @@
     el.querySelector('[data-wm="remove"]').onclick = async () => { closePop(); if (await save(st.widgets.filter(x => x.id !== id))) toast('Removed'); };
   }
 
-  // ---------- + Add: built in · a custom link or doc ----------
+  // ---------- + Add: a gallery, like a "new page" picker, in TribeCode's own style ----------
+  // Search on top; two quick starts (a link, a pinned doc); "Built into TribeCode" as tinted cards with a small flat
+  // preview of what each one looks like; then starter packs that add a few at once. A full-screen sheet on phones.
+  const LOOK = {   // each card's tint, emoji, and the mini preview's columns + rows (flat, no data)
+    calendar: { tint: 'indigo', emo: '🗓️', blurb: 'Plans, playtests and deadlines', cols: ['Event', 'When', 'Who'], pills: ['Playtest', 'Demo day', 'Jam'] },
+    bugs: { tint: 'rose', emo: '🐞', blurb: 'Report it once, fix it once', cols: ['Bug', 'Severity', 'Owner'], pills: ['High', 'Medium', 'Low'] },
+    board: { tint: 'amber', emo: '🗳️', blurb: 'Ideas the tribe votes on', cols: ['Proposal', 'Votes', 'Status'], pills: ['Yes 3', 'Open', 'Passed'] },
+    milestones: { tint: 'teal', emo: '🚩', blurb: 'The big steps, with progress', cols: ['Milestone', 'Progress', 'Due'], pills: ['v0.1', 'v0.2', 'Launch'] },
+    repo: { tint: 'green', emo: '🌿', blurb: 'Branches, commits, the code', cols: ['Branch', 'Last commit', 'By'], pills: ['main', 'feat/ui', 'fix/jump'] },
+    visuals: { tint: 'violet', emo: '📸', blurb: 'Screenshots of what got built', cols: ['Shot', 'From', 'When'], pills: ['Title', 'Level 2', 'Menu'] },
+    website: { tint: 'blue', emo: '🌐', blurb: 'A public page for the project', cols: ['Page', 'Status', 'Link'], pills: ['Home', 'Live', 'Press'] },
+    preview: { tint: 'ember', emo: '▶️', blurb: 'Run it and see it here', cols: ['Build', 'Status', 'Port'], pills: ['Ready', 'Running', 'Live'] },
+    workshop: { tint: 'amber', emo: '🧰', blurb: 'Starters, assets and tools', cols: ['Item', 'Kind', 'License'], pills: ['Sprites', 'Template', 'MIT'] },
+    plan: { tint: 'teal', emo: '☀️', blurb: "Today's focus for everyone", cols: ['Today', 'Who', 'Done'], pills: ['Focus', 'Next', 'Done'] },
+    secretary: { tint: 'violet', emo: '🪶', blurb: 'Notes, recaps and follow-ups', cols: ['Note', 'From', 'When'], pills: ['Recap', 'Action', 'Idea'] },
+  };
+  const PACKS = [
+    { id: 'jam', emo: '🎮', name: 'Game jam', blurb: 'Calendar, Bugs, Milestones and Visuals', keys: ['calendar', 'bugs', 'milestones', 'visuals'] },
+    { id: 'launch', emo: '🚀', name: 'Ship a site', blurb: 'Website, Milestones and the Board', keys: ['website', 'milestones', 'board'] },
+    { id: 'crew', emo: '🔥', name: 'Weekly crew', blurb: 'Daily plan, Calendar and Secretary', keys: ['plan', 'calendar', 'secretary'] },
+  ];
+  function mini(k) {
+    const L = LOOK[k], dot = '<i class="wgx-av"></i>';
+    const row = i => `<div class="wgx-tr"><span class="wgx-bar" style="width:${[62, 48, 70][i]}%"></span><span class="wgx-pill p${i}">${esc(L.pills[i])}</span><span>${dot}<span class="wgx-bar s"></span></span></div>`;
+    return `<div class="wgx-mini" aria-hidden="true"><b>${L.emo} ${esc(BUILT[k].label)}</b><div class="wgx-th">${L.cols.map(c => `<span>${esc(c)}</span>`).join('')}</div>${[0, 1, 2].map(row).join('')}</div>`;
+  }
+  function closeGallery() { const g = $('#wg-picker'); if (g) { g.closest('.wgx-scrim').remove(); document.removeEventListener('keydown', galleryKey, true); } }
+  function galleryKey(e) { if (e.key === 'Escape') { e.stopPropagation(); closeGallery(); } }
   function openPicker(anchor) {
     if (!st.canEdit) return;
-    anchor = anchor || $('#nest-add');
+    closePop(); closeGallery();
     const have = new Set((st.widgets || []).filter(w => w.kind === 'builtin').map(w => w.key));
     if (autoSite()) have.add('website'); if (autoPreview()) have.add('preview');
-    const el = pop(anchor, `<div class="sh-menu wg-pick">
-        <h6>Add to this project</h6>
-        ${ORDER.map(k => `<button data-wadd="${k}" ${have.has(k) ? 'disabled aria-disabled="true"' : ''}>${ico(BUILT[k].icon, 16)}<span>${esc(BUILT[k].label)}</span>${have.has(k) ? '<small>Added</small>' : ''}</button>`).join('')}
-        <hr><button data-wcustom>${ico('i-link', 16)}<span>Custom link or doc…</span></button></div>`, 'wg-picker');
-    el.querySelectorAll('[data-wadd]:not([disabled])').forEach(b => b.onclick = async () => {
-      closePop();
-      if (await save([...(st.widgets || []), { kind: 'builtin', key: b.dataset.wadd }])) toast(`${BUILT[b.dataset.wadd].label} added`);
+    const P = ((window.TribeProjects && window.TribeProjects.list()) || []).find(x => x.id === pid()) || {};
+    const scrim = document.createElement('div'); scrim.className = 'wgx-scrim';
+    scrim.innerHTML = `<div class="wgx ${isPhone() ? 'sheet' : ''}" id="wg-picker" role="dialog" aria-modal="true" aria-label="Add to this project">
+      <header class="wgx-head"><button class="wgx-x" data-wclose aria-label="Close">${ico('i-x', 16)}</button><span class="wgx-to">Add to <b>${esc(P.emoji ? P.emoji + ' ' : '')}${esc(P.name || 'this project')}</b></span>
+        <label class="wgx-search">${ico('i-search', 16)}<input id="wgx-q" placeholder="Search" autocomplete="off" aria-label="Search widgets"></label></header>
+      <div class="wgx-body">
+        <div class="wgx-quick">
+          <button class="wgx-q" data-wcustom data-k="link custom url website">${ico('i-link', 18)}<b>A link</b><small>Any page, opened right here</small></button>
+          <button class="wgx-q" data-wcustom data-doc data-k="doc pin file notes">${ico('i-doc', 18)}<b>Pin a doc</b><small>One of the project's files</small></button>
+        </div>
+        <h6 class="wgx-h">↗ Built into TribeCode</h6>
+        <div class="wgx-grid">${ORDER.map(k => `<button class="wgx-card t-${LOOK[k].tint}" data-wadd="${k}" data-k="${esc((BUILT[k].label + ' ' + LOOK[k].blurb + ' ' + k).toLowerCase())}" ${have.has(k) ? 'disabled aria-disabled="true"' : ''}>
+            <span class="wgx-top"><b>${esc(BUILT[k].label)}</b>${have.has(k) ? '<em>Added</em>' : ''}</span><small>${esc(LOOK[k].blurb)}</small>${mini(k)}</button>`).join('')}</div>
+        <h6 class="wgx-h">🧩 Starter packs</h6>
+        <div class="wgx-packs">${PACKS.map(p => { const left = p.keys.filter(k => !have.has(k)); return `<button class="wgx-pack" data-wpack="${p.id}" data-k="${esc((p.name + ' ' + p.blurb).toLowerCase())}" ${left.length ? '' : 'disabled'}><span class="wgx-pe">${p.emo}</span><span><b>${esc(p.name)}</b><small>${left.length ? esc(p.blurb) : 'All added'}</small></span></button>`; }).join('')}</div>
+        <p class="wgx-none" hidden>Nothing matches. Try “calendar”, “bugs” or add <button class="linkish" data-wcustom>a link</button>.</p>
+      </div></div>`;
+    document.body.appendChild(scrim);
+    const g = scrim.querySelector('#wg-picker'), q = g.querySelector('#wgx-q');
+    if (!isPhone()) setTimeout(() => q.focus(), 30);
+    document.addEventListener('keydown', galleryKey, true);
+    scrim.addEventListener('mousedown', e => { if (e.target === scrim) closeGallery(); });
+    g.querySelector('[data-wclose]').onclick = closeGallery;
+    q.oninput = () => {
+      const t = q.value.trim().toLowerCase(); let n = 0;
+      g.querySelectorAll('[data-k]').forEach(el => { const on = !t || el.dataset.k.includes(t); el.hidden = !on; n += on; });
+      g.querySelectorAll('.wgx-h').forEach(h => { const box = h.nextElementSibling; h.hidden = ![...box.children].some(c => !c.hidden); });
+      g.querySelector('.wgx-none').hidden = n > 0;
+    };
+    q.onkeydown = e => { if (e.key === 'Enter') { const f = g.querySelector('[data-wadd]:not([hidden]):not([disabled]), [data-wpack]:not([hidden]):not([disabled])'); if (f) f.click(); } };
+    g.querySelectorAll('[data-wadd]:not([disabled])').forEach(b => b.onclick = async () => {
+      closeGallery();
+      if (await save([...(st.widgets || []), { kind: 'builtin', key: b.dataset.wadd }])) toast(`${LOOK[b.dataset.wadd].emo} ${BUILT[b.dataset.wadd].label} added`);
     });
-    el.querySelector('[data-wcustom]').onclick = () => custom(anchor);
+    g.querySelectorAll('[data-wpack]:not([disabled])').forEach(b => b.onclick = async () => {
+      const p = PACKS.find(x => x.id === b.dataset.wpack), add = p.keys.filter(k => !have.has(k)).map(k => ({ kind: 'builtin', key: k }));
+      closeGallery();
+      if (await save([...(st.widgets || []), ...add])) toast(`${p.emo} ${p.name}: ${add.length} added`);
+    });
+    g.querySelectorAll('[data-wcustom]').forEach(b => b.onclick = () => { const doc = b.hasAttribute('data-doc'); closeGallery(); custom($('#nest-add') || anchor, doc); });
   }
-  async function custom(anchor) {
+  async function custom(anchor, preferDoc) {
     const el = pop(anchor, `<form class="wg-form" id="wg-form" autocomplete="off">
-        <h6>Custom widget</h6>
+        <h6>${preferDoc ? 'Pin a doc' : 'Add a link'}</h6>
         <div class="wg-two"><input class="input wg-emoji" id="wg-emoji" maxlength="4" placeholder="🔗" aria-label="Emoji"><input class="input" id="wg-name" maxlength="40" placeholder="Name" aria-label="Name" required></div>
         <input class="input" id="wg-url" placeholder="https://…" aria-label="Link" inputmode="url">
         <select class="input" id="wg-doc" aria-label="Or pin a doc"><option value="">…or pin a doc</option></select>
         <div class="wg-acts"><button type="button" class="btn" id="wg-cancel">Cancel</button><button class="btn primary" id="wg-save">Add</button></div></form>`, 'wg-custom');
     const f = el.querySelector('form'), name = el.querySelector('#wg-name'), url = el.querySelector('#wg-url'), doc = el.querySelector('#wg-doc');
-    if (!isPhone()) name.focus();
+    if (!isPhone()) (preferDoc ? doc : name).focus();
     C.api('/docs').then(({ docs }) => { doc.innerHTML += (docs || []).slice(0, 60).map(d => `<option value="${esc(d.slug)}">${esc(d.title)}</option>`).join(''); }).catch(() => {});
     doc.onchange = () => { if (doc.value && !name.value.trim()) name.value = doc.selectedOptions[0].textContent.slice(0, 40); };
     el.querySelector('#wg-cancel').onclick = closePop;
