@@ -236,7 +236,7 @@
 
   // ---------- keep in step ----------
   C.on('hello', soon); C.on('project', soon); C.on('projects', soon);
-  C.on('ws', m => { if (m && ['widgets', 'website', 'preview', 'project'].includes(m.type) && (!m.project || m.project === pid())) soon(); });
+  C.on('ws', m => { if (m && ['widgets', 'website', 'preview', 'project', 'sense'].includes(m.type) && (!m.project || m.project === pid())) soon(); });
   setTimeout(refresh, 0);
   window.TribeWidgets = { refresh, state: () => ({ ...st, project: forPid }), openPicker };
 })();

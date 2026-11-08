@@ -9,7 +9,7 @@
   // the top-left logo is the bare mark on its button's tile: still at rest, a short flicker on hover, looping while busy
   const RAIL_STILL = 'assets/icon-mark.svg', RAIL_LIVE = 'assets/icon-mark-animated.svg', RAIL_ONCE = 'assets/icon-mark-once.svg';
   let onceText = null, onceUrl = null;
-  fetch(RAIL_ONCE).then(r => r.ok ? r.text() : null).then(t => { onceText = t; }).catch(() => {});
+  if (/^https?:/.test(location.protocol)) fetch(RAIL_ONCE).then(r => r.ok ? r.text() : null).then(t => { onceText = t; }).catch(() => {});   // not under file:// (tests, previews)
   function playOnce(img) {   // a fresh blob URL restarts the SVG's animation on every hover
     if (!onceText) return;
     if (onceUrl) URL.revokeObjectURL(onceUrl);

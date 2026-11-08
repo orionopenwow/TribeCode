@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.0
+
+- **TribeCode senses what you're making**: it reads the name, bio, vision, repo, tasks and chat, and works out whether it's a game, app, website, tool, bot, API or notes. It keeps updating as people talk. Preview follows it ("Preview site", "Preview game"…), and the host can correct it with "This is a: game · app · site · …"
+- **💡 Inspiration**: a small card on the Dashboard with ideas that fit the project: a flat palette, feature ideas, a reference to look at, and a starter task. Use More for others, "Make it a task" to add one, or × to hide it. When the chat settles on something new (say, multiplayer), Flint drops one quiet note with ideas, at most once every few hours, and you can turn that off per project. A brain makes it smarter but is never required
+- **+ Add is a gallery now**: search, add a link or pin a doc, tinted "Built into TribeCode" cards with a small preview of each, and starter packs (Game jam, Ship a site, Weekly crew) that add a few at once
+- **Bigger top-left logo**: the mark fills its own slate tile, flickers once and grows a touch on hover
+- **Flint's spotlight**: whatever Flint points at stays bright while the rest of the screen dims a little
+- **Phones**: the Inspiration card shows 2 ideas with the same buttons, and + Add opens as a full-screen sheet
+
 ## v0.11.0
 
 - **Bring any coding agent**: Claude Code no longer has to be the only option. Agents Hub › Your agents has one-tap cards for Codex CLI, Gemini CLI, Qwen Code, Cursor, Claude Desktop and any MCP client, as well as Claude Code. Each card makes a key, shows the exact config with Copy, and switches live to "Connected · Maya's Codex". "Connect your Claude Code" is now "Connect your AI" 🔌
