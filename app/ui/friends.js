@@ -66,7 +66,7 @@
       // localhost only works here: share the public (or network) address, and the friendly Pages link when public
       let base = C().base(), site = null;
       try { const h = await C().api('/health'); const pick = (h.lan || [])[0]; site = h.site || null; if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) base = pick.url; } catch {}
-      const share = site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(r.invite.code)}` : `${base}/join/${r.invite.code}`;
+      const share = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(r.invite.code)}` : `${base}/join/${r.invite.code}`;
       box.classList.remove('hidden');
       box.innerHTML = `<span class="eyebrow">${guest ? 'Guest pass · one use · 24 h' : 'Invite link · 3 days'}</span><div class="fr-lrow"><input class="input" readonly value="${esc(share)}" aria-label="Link"><button class="btn primary sm" id="fr-copy">Copy</button></div>`;
       const copy = async () => { try { await navigator.clipboard.writeText(share); toast('Link copied.'); } catch { box.querySelector('input').select(); } };

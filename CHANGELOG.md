@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.3
+
+- **The website is the front page**, and it's ready for **tribecode.org**. The web app moved to **/app/**, one tap away from every page: an "Open the app" button in the bar, "Open in your browser" next to Download, and a "Welcome back. Continue to your tribe" strip for anyone who's used it before. Old links keep working: friend invite links, the demo, /about/, bookmarks to the app, and Home Screen installs (they open straight into the app)
+- **A typing line in the hero**: next to the flickering logo, things people ask their tribe type themselves out one after another ("make a website for my game and invite my friends", "connect my Claude and fix the jump physics", "host our tribe from my laptop"…)
+- **Friend links** now point at tribecode.org/app/go.html once the domain answers (a fork keeps its github.io address)
+- **Phones**: on the site, "Open the app" is the first, biggest button and stays in the top bar; the desktop download comes second
+
 ## v0.10.2
 
 - **Write the vision with help**: the checklist's Write button opens a composer. Five short prompts come pre-filled with good guesses from the project's name, bio, README and template (what it is, who it's for, what makes it fun, done for v1, out of scope). Then **Draft with** Flint (on this computer: the local model if it's on, or a solid draft from your answers), **My Claude** (asks your Claude in your private chat; the reply fills the editor, with the logo flickering while it works) or another connected model. Small suggestion chips appear while you type ("Name a first milestone", "Say what's out of scope"). Save writes VISION.md as before

@@ -2517,7 +2517,7 @@ Rules: anything that changes main needs a human OK.</pre>`, 'ctxp').style.width 
     m.querySelector('[data-ccopy]').onclick = () => { closePops(); toast('Copied (demo command)'); };
   }
   function inviteLink() {
-    const link = `https://orionopenwow.github.io/TribeCode/go.html#demo-${encodeURIComponent(me.name.toLowerCase())}`, done = () => toast('Invite link copied (demo link)');
+    const link = `https://tribecode.org/app/go.html#demo-${encodeURIComponent(me.name.toLowerCase())}`, done = () => toast('Invite link copied (demo link)');
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done); else done();
   }
   $('#nest-invite').onclick = inviteLink;

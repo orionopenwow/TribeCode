@@ -90,7 +90,7 @@ def main():
             dl = pg.locator(".hero [data-dl-main]")
             pg.wait_for_function("document.querySelector('.hero [data-dl-main]').href.endsWith('_x64-setup.exe')", timeout=8000)
             assert "Download for Windows" in dl.inner_text(), dl.inner_text()
-            assert pg.get_attribute(".hero a:has-text('Try the live demo')", "href") == "../demo.html"
+            assert pg.get_attribute(".hero a:has-text('Try the live demo')", "href") == "app/demo.html"
             assert pg.evaluate("document.querySelector('#menu-download [data-os=windows]').classList.contains('is-mine')")
             # the stage animates: text grows over ~3 s
             pg.wait_for_function("document.querySelector('[data-loop=stage]').dataset.state === 'running'", timeout=5000)
@@ -159,7 +159,7 @@ def main():
             assert "Desktop app" in ph.inner_text(".hero [data-dl-label]")
             # nav collapses to wordmark + Download + menu
             assert ph.is_visible(".nav__logo") and ph.is_visible(".nav__end .btn") and ph.is_visible(".nav__toggle")
-            assert not ph.is_visible("#nav-links") and not ph.is_visible(".nav__end a:has-text('Open the app')")
+            assert not ph.is_visible("#nav-links") and ph.is_visible(".nav__end a:has-text('Open the app')"), "phones: Open the app stays in the bar"
             # the stage keeps its proportions
             w, h = ph.evaluate("(() => { const r = document.querySelector('.stage').getBoundingClientRect(); return [r.width, r.height]; })()")
             assert w <= 390 and abs(w / h - 1.6) < 0.03, (w, h)

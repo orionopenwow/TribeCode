@@ -380,7 +380,7 @@
             if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) { base = pick.url; note = pick.kind === 'public' ? 'Public https address: works from anywhere, and voice works on phones.' : pick.kind === 'tailscale' ? 'Tailscale address: works from anywhere your friend is signed in to Tailscale.' : 'Wi-Fi address: your friend needs to be on the same network (or use Tailscale).'; } }
           catch {}
           // Public hosts get the friendly GitHub Pages link (device-aware, says when the host is offline).
-          const link = site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
+          const link = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
           $('#inv-link').textContent = link; $('#inv-copy').disabled = false;
           $('#inv-qr').innerHTML = window.TribeQR.svg(link); $('#inv-net').textContent = note;
           S.set({ checklist: { invite: true } }); refresh();

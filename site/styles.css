@@ -432,3 +432,44 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
 .footer__lock img:first-child { width: 24px; height: 24px; border-radius: 6px; image-rendering: pixelated; }
 @media (max-width: 640px) { .hero__mark { width: 56px; height: 56px; margin-bottom: 16px; border-radius: 13px; } }
 @media (prefers-reduced-motion: reduce) { .hero__mark, .get__mark, .nav__mark { content: url('assets/brand/icon.svg'); } }
+
+/* ---------- into the app (the site is the front page; the app lives at app/) ---------- */
+.nav__open { white-space: nowrap; }
+.hero__more { margin: 14px 0 0; display: flex; gap: 8px; align-items: center; font-size: 14.5px; color: var(--muted, #E4E4E4); }
+.hero__more a { color: var(--text, #fff); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--edge, #45403D); }
+.hero__more a:hover { text-decoration-color: currentColor; }
+.hero__more-note { color: var(--faint, #B9B9B9); }
+.continue { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px 16px; background: var(--surface-2, #32302F); border-bottom: 1px solid var(--edge, #45403D); color: var(--text, #fff); font-weight: 600; font-size: 14.5px; text-decoration: none; }
+.continue[hidden] { display: none; }
+.continue:hover { background: var(--surface-3, #3C3836); }
+.continue__dot { width: 8px; height: 8px; border-radius: 50%; background: #3BD16F; }
+/* phones: Open the app first (big and light), the desktop download second */
+.is-phone .hero__ctas { display: flex; flex-direction: column; }
+.is-phone .hero__ctas .hero__open { order: -1; background: #fff; color: #1D2021; border-color: #fff; }
+.is-phone .hero__ctas [data-dl-main] { background: transparent; color: var(--text, #fff); border: 1px solid var(--edge, #45403D); }
+.is-phone .nav__end [data-dl-main] { display: none; }
+.is-phone .nav__end .nav__open { background: #fff; color: #1D2021; border-color: #fff; }
+@media (max-width: 900px) { .nav__end .nav__open { padding: 0 14px; } }
+
+/* the hero's typing line, next to the flickering logo */
+.hero__top { display: flex; align-items: center; gap: 16px; margin: 0 0 22px; min-width: 0; }
+.hero__top .hero__mark { margin: 0; flex: none; }
+.hero__ask { display: flex; align-items: center; gap: 10px; min-width: 0; max-width: 560px; height: 48px; margin: 0; padding: 0 16px 0 12px; border: 1px solid var(--edge, #45403D); border-radius: 999px; background: var(--surface, #282828); font-size: 16px; color: var(--text, #fff); }
+.hero__ask-k { flex: none; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: #1D2021; background: #F26B1D; padding: 3px 8px; border-radius: 999px; }
+.hero__ask-t { white-space: nowrap; overflow: hidden; text-overflow: clip; min-width: 0; }
+.hero__caret { flex: none; width: 2px; height: 20px; background: #F26B1D; animation: tc-caret 1s steps(1) infinite; }
+@keyframes tc-caret { 50% { opacity: 0; } }
+@media (max-width: 640px) {
+  .hero__top { gap: 12px; margin-bottom: 16px; }
+  .hero__ask { height: 42px; font-size: 14px; padding: 0 12px 0 8px; gap: 8px; }
+  .hero__ask-k { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .hero__caret { animation: none; } }
+/* narrow screens (any device): Open the app stays in the bar, Download moves to the hero; the demo line wraps cleanly */
+@media (max-width: 640px) {
+  .nav__end [data-dl-main] { display: none; }
+  .nav__end .nav__open { background: #fff; color: #1D2021; border-color: #fff; }
+  .hero__more { flex-wrap: wrap; row-gap: 2px; }
+  .hero__more > span[aria-hidden] { display: none; }
+  .hero__more-note { flex-basis: 100%; font-size: 13.5px; }
+}

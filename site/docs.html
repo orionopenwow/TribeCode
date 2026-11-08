@@ -9,7 +9,7 @@
 <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <meta property="og:title" content="Quick start · TribeCode">
-<meta property="og:image" content="https://orionopenwow.github.io/TribeCode/about/assets/og-image.png">
+<meta property="og:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css">
 <style>
   .doc { max-width: 760px; padding: 72px 24px 40px; margin: 0 auto; }
@@ -29,7 +29,7 @@
     <a class="nav__logo" href="index.html" aria-label="TribeCode home"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="150" height="26"></a>
     <div class="nav__end">
       <a class="nav__text" href="index.html">Home</a>
-      <a class="nav__text" href="../">Open the app</a>
+      <a class="nav__text" href="app/">Open the app</a>
       <a class="btn btn--light btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest">Download</a>
     </div>
   </div>
@@ -53,7 +53,7 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
 
   <h2>3. Send a friend the link</h2>
   <p>Copy the link from the Getting started card (or Invite friends, which also shows a QR code). Your friend taps it, types a name and taps Join. On a phone, <b>Share → Add to Home Screen</b> makes it a full-screen app.</p>
-  <p>Links outside your Wi-Fi use a public https address (Tailscale Funnel or cloudflared). They go through this site's <a class="ember" href="../go.html">go.html</a> page, which checks that your computer is online, then hands your friend to it. A link looks like <code>…/go.html#s=&lt;host&gt;&amp;c=&lt;code&gt;</code>.</p>
+  <p>Links outside your Wi-Fi use a public https address (Tailscale Funnel or cloudflared). They go through this site's <a class="ember" href="app/go.html">go.html</a> page, which checks that your computer is online, then hands your friend to it. A link looks like <code>…/go.html#s=&lt;host&gt;&amp;c=&lt;code&gt;</code>.</p>
 
   <h2>4. Connect your Claude Code</h2>
   <p>Profile menu → <b>Connect your Claude Code</b>. Pick Anywhere, Same Wi-Fi or This computer, then run the command it shows:</p>
@@ -68,7 +68,7 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
     <li>Open <b>Preview</b> (Ctrl K) to run the app in the right panel.</li>
   </ul>
 
-  <p class="note">Just looking? The <a class="ember" href="../demo.html">demo</a> runs the same UI with a simulated tribe. Something wrong here? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
+  <p class="note">Just looking? The <a class="ember" href="app/demo.html">demo</a> runs the same UI with a simulated tribe. Something wrong here? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
 </main>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
 </body>

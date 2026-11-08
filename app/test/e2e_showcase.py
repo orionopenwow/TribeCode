@@ -1,6 +1,6 @@
-"""The showcase site at /about/ (site/ in the repo, published by .github/workflows/pages.yml).
+"""The showcase site, the front page (site/ in the repo, published by .github/workflows/pages.yml; the app is at /app/).
 
-Assembles the Pages layout like the workflow (app/ui at the root, site/ under /about/) on a static server, then checks:
+Assembles the Pages layout like the workflow (site/ at the root, app/ui under /app/, old addresses redirected) on a static server, then checks:
 no console errors, every link has a real target (in-page anchors exist, local pages answer 200), every image loads,
 the demo video and GIF the README uses exist, no sideways scroll at 390px (menu open too), the download button picks the visitor's
 OS from the latest release, live GitHub numbers render from the API, the fallback renders when the API is unreachable,
@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OFF = int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 PORT = 4941 + OFF
 BASE = f"http://localhost:{PORT}"
-ABOUT = BASE + "/about/"
+ABOUT = BASE + "/"
 SHOTS = "--shots" in sys.argv
 IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -32,10 +32,11 @@ PNG = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000"
 
 
 def assemble():
-    """Like the Pages workflow: app/ui at the root, site/ at /about/."""
+    """Like the Pages workflow: site/ at the root, app/ui at /app/, the compat stubs (go.html, demo.html, about/, sw.js)."""
     out = Path(tempfile.mkdtemp(prefix="tc-pages-"))
-    shutil.copytree(ROOT / "app" / "ui", out, dirs_exist_ok=True)
-    shutil.copytree(ROOT / "site", out / "about")
+    shutil.copytree(ROOT / "site", out, dirs_exist_ok=True)
+    shutil.copytree(ROOT / "app" / "ui", out / "app")
+    shutil.copytree(ROOT / "scripts" / "pages-compat", out, dirs_exist_ok=True)
     return out
 
 
@@ -107,7 +108,7 @@ def main():
             pg.goto(ABOUT); pg.wait_for_load_state("load")
             assert pg.title().startswith("TribeCode"), pg.title()
             assert "Claude agents" in pg.inner_text("h1")
-            assert pg.locator('meta[property="og:image"]').get_attribute("content").endswith("/about/assets/og-image.png")
+            assert pg.locator('meta[property="og:image"]').get_attribute("content")== "https://tribecode.org/assets/og-image.png"
             # live GitHub numbers, release line and downloads from the release (headless Chrome here reports Linux)
             pg.wait_for_function("document.querySelector('[data-gh=forks]').textContent === '56' && document.querySelector('.stats [data-gh=version]').textContent === 'v9.9.9'", timeout=8000)
             assert pg.inner_text(".stats [data-gh=stars]") == "1.2k" and pg.inner_text(".nav [data-gh=stars]") == "1.2k" and pg.is_visible(".nav [data-gh=stars]")
@@ -133,8 +134,12 @@ def main():
                     assert status(l["abs"].split("#")[0]) == 200, l
                 else:
                     assert l["abs"].startswith("https://"), l
-            assert pg.locator(".hero a:has-text('Try the live demo')").get_attribute("href") == "../demo.html"
-            assert pg.locator(".nav__end a:has-text('Open the app')").get_attribute("href") == "../"
+            assert pg.locator(".hero a:has-text('Try the live demo')").get_attribute("href") == "app/demo.html"
+            assert pg.locator(".nav__end a:has-text('Open the app')").get_attribute("href") == "app/"
+            assert pg.locator(".hero a:has-text('Open in your browser')").get_attribute("href") == "app/"
+            # old addresses still land in the right place
+            for old, want in [("/go.html#s=x&c=y", "/app/go.html#s=x&c=y"), ("/demo.html", "/app/demo.html"), ("/about/", "/"), ("/#/hub", "/app/#/hub")]:
+                op = ctx.new_page(); op.goto(BASE + old); op.wait_for_url(BASE + want, timeout=8000); op.close()
             # images load (lazy ones after scrolling), the live stage mock runs, mocks and reveals follow the scroll
             scroll_through(pg)
             bad = pg.evaluate("[...document.images].filter(i => !i.naturalWidth).map(i => i.src)")
@@ -157,11 +162,11 @@ def main():
             dp = ctx.new_page(); derrs = []; watch(dp, derrs); dp.goto(ABOUT + "docs.html"); dp.wait_for_load_state("load")
             assert "Your first project" in dp.inner_text("h1") and dp.evaluate("document.querySelector('.nav__logo img').naturalWidth > 0")
             assert not derrs, derrs
-            # the app at the root (as on Pages, with no tribe) links back here from its not-connected Home
-            ap = ctx.new_page(); ap.goto(BASE + "/?skipIntro=1")
+            # the app at /app/ (as on Pages, with no tribe) links back here from its not-connected Home
+            ap = ctx.new_page(); ap.goto(BASE + "/app/?skipIntro=1")
             ap.wait_for_function("window.TribeHub", timeout=15000); ap.evaluate("TribeHub.open('home')")
             ap.wait_for_selector("#hub-about", timeout=15000)
-            assert ap.get_attribute("#hub-about", "href") == "https://orionopenwow.github.io/TribeCode/about/" and "About TribeCode" in ap.inner_text("#hub-about")
+            assert ap.get_attribute("#hub-about", "href") == "https://tribecode.org/" and "About TribeCode" in ap.inner_text("#hub-about")
             ctx.close()
 
             # ---------------- phone 390px, GitHub unreachable ----------------
@@ -175,6 +180,10 @@ def main():
             assert ph.inner_text(".stats [data-gh=stars]") == "–" and not ph.is_visible(".nav [data-gh=stars]")
             assert ph.locator(".hero [data-dl-main]").get_attribute("href") == "https://github.com/orionopenwow/TribeCode/releases/latest", "falls back to the releases page"
             assert "Desktop app" in ph.inner_text(".hero [data-dl-label]"), "a phone isn't offered an installer as if it could run it"
+            # phones: Open the app comes first (a phone can't install the desktop app)
+            first = ph.evaluate("(() => { const bs = [...document.querySelectorAll('.hero__ctas .btn')].filter(b => b.offsetParent); bs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top); return bs[0].getAttribute('href'); })()")
+            assert first == "app/", first
+            assert ph.is_visible(".nav__end a[data-open-app]") and not ph.is_visible(".nav__end [data-dl-main]")
             no_overflow(ph, "phone top")
             scroll_through(ph)
             for y in [0.25, 0.5, 0.75, 1.0]:
