@@ -92,5 +92,21 @@ module.exports = function uploads({ store, P, nameOf, broadcast }) {
     }
     return fail(res, 405, 'not allowed');
   }
-  return { route, MAX_BYTES };
+  // feat/mcp-directory (server/connections.js): copy a file from the host's disk into a project's Files. The caller
+  // has already checked the source (inside a host-picked folder, a plain file, not a symlink).
+  function addLocal(pid, src, name, by, byName) {
+    const owner = pjOwner(pid), list = read(owner);
+    if (list.length >= MAX_FILES) return null;
+    let size; try { size = fs.statSync(src).size; } catch { return null; }
+    if (!size || size > MAX_BYTES) return null;
+    const nm = safeName(name), ext = (path.extname(nm).slice(1) || '').toLowerCase();
+    const id = crypto.randomBytes(8).toString('hex'), dir = path.join(dirOf(owner), id);
+    fs.mkdirSync(dir, { recursive: true });
+    try { fs.copyFileSync(src, path.join(dir, nm)); } catch { fs.rmSync(dir, { recursive: true, force: true }); return null; }
+    const f = { id, name: nm, size, type: TYPES[ext] || 'application/octet-stream', kind: KIND(ext), by, byName, at: new Date().toISOString(), scope: 'project', project: pid };
+    list.push(f); write(owner, list);
+    if (broadcast) broadcast({ type: 'uploads', project: pid });
+    return f;
+  }
+  return { route, MAX_BYTES, addLocal };
 };

@@ -3,7 +3,7 @@
 // Each tool gets its own key from POST /api/agents { kind } and comes back with `setup`: per place (anywhere / wifi /
 // here) 2-3 steps and copy-ready blocks with the real URL and key (server/agentshub.js setupFor). TribeCode works with
 // these tools; it isn't made by their vendors.
-//   window.TribeConnectAI = { TOOLS, tool(kind), chipsHtml(sel), setupHtml(setup), wire(root, setup, toast), watch(agentId, el, alive) }
+//   window.TribeConnectAI = { TOOLS, MORE, ALL, tool(kind), chipsHtml(sel), setupHtml(setup), wire(root, setup, toast), watch(agentId, el, alive) }
 (function () {
   'use strict';
   const C = window.TribeClient;
@@ -17,8 +17,25 @@
     ['cursor', 'Cursor', 'The AI code editor'],
     ['mcp', 'Any MCP client', 'Windsurf, VS Code Copilot, Goose, OpenCode…'],
   ];
-  const tool = k => TOOLS.find(t => t[0] === k) || TOOLS[0];
-  const chipsHtml = sel => `<div class="cai-chips" role="tablist" aria-label="Which AI">${TOOLS.map(([k, n]) => `<button type="button" role="tab" class="cai-chip${k === sel ? ' on' : ''}" aria-selected="${k === sel}" data-cai-tool="${k}">${esc(n)}</button>`).join('')}</div>`;
+  // feat/mcp-directory: the rest of the clients on the TribeCode MCP page (mcpdir.js). Not chips: the sheet keeps six,
+  // plus the one picked on the page, and a "See all" chip that opens the page.
+  const MORE = [
+    ['claude-desktop', 'Claude Desktop', 'Anthropic\'s desktop app, through a tiny bridge'],
+    ['vscode', 'VS Code', 'GitHub Copilot in Agent mode'],
+    ['windsurf', 'Windsurf', 'The agentic editor'],
+    ['zed', 'Zed', 'The fast editor\'s Agent Panel'],
+    ['cline', 'Cline', 'The open-source coding agent'],
+    ['goose', 'Goose', 'The open-source local agent'],
+    ['continue', 'Continue', 'The open-source IDE assistant'],
+    ['claude-ai', 'Claude.ai', 'Claude chat, as a custom connector'],
+    ['chatgpt', 'ChatGPT', 'ChatGPT chat, in developer mode'],
+  ];
+  const ALL = [...TOOLS, ...MORE];
+  const tool = k => ALL.find(t => t[0] === k) || TOOLS[0];
+  const chipsHtml = sel => {
+    const extra = MORE.find(t => t[0] === sel);
+    return `<div class="cai-chips" role="tablist" aria-label="Which AI">${[...TOOLS, ...(extra ? [extra] : [])].map(([k, n]) => `<button type="button" role="tab" class="cai-chip${k === sel ? ' on' : ''}" aria-selected="${k === sel}" data-cai-tool="${k}">${esc(n)}</button>`).join('')}${window.TribeMcpDir ? '<button type="button" class="cai-chip cai-all" data-mcpdir-open>See all</button>' : ''}</div>`;
+  };
 
   function setupHtml(s) {
     if (!s) return '';
@@ -51,5 +68,5 @@
     const onP = () => tick(); if (C.on) C.on('presence', onP);
     return () => { stop = true; clearInterval(t); };
   }
-  window.TribeConnectAI = { TOOLS, tool, chipsHtml, setupHtml, wire, watch };
+  window.TribeConnectAI = { TOOLS, MORE, ALL, tool, chipsHtml, setupHtml, wire, watch };
 })();

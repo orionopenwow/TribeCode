@@ -56,6 +56,7 @@
     { key: 'requests', label: 'Requests', tab: 'Requests', slug: 'requests', icon: 'i-inbox', group: 'tasks', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
     { key: 'agents', label: 'Agents', tab: 'Agents', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
     { key: 'agents-hub', label: 'Your agents', tab: 'Your agents', slug: 'yours', icon: 'i-plug', group: 'agents', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'mcp-directory', label: 'TribeCode MCP', tab: 'MCP', slug: 'mcp', icon: 'i-plug', group: 'agents', keys: 'mcp clients connect claude.ai chatgpt vs code cursor windsurf zed cline goose continue codex gemini artcraft apps connections', run: () => window.TribeMcpDir && window.TribeMcpDir.open() },   // feat/mcp-directory (app/ui/mcpdir.js)
     { key: 'ownership', label: 'Ownership map', tab: 'Ownership', slug: 'ownership', icon: 'i-map', group: 'agents', keys: 'claims files owners', run: () => coord('ownership') },
     { key: 'conflicts', label: 'Conflict radar', tab: 'Conflicts', slug: 'conflicts', icon: 'i-merge', group: 'agents', keys: 'merge overlap branches', run: () => coord('conflicts') },
     { key: 'handoffs', label: 'Hand-offs', tab: 'Hand-offs', slug: 'handoffs', icon: 'i-hand', group: 'agents', keys: 'handoff park take', run: () => coord('handoffs') },
