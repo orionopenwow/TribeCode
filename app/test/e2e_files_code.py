@@ -225,9 +225,8 @@ def main():
             wait_text(phone, "#sync-status", "connected")
             phone.evaluate("localStorage.setItem('tribecode.iosHint', '1'); document.querySelector('.ios-hint') && document.querySelector('.ios-hint').remove()")
             phone.evaluate("TribeApp.show('docs')")
-            phone.wait_for_selector("#cf-switch [data-seg=code]")
-            box = phone.locator("#cf-switch").bounding_box(); assert box["width"] > 300, box
-            phone.click("#cf-switch [data-seg=code]")
+            phone.wait_for_selector("#view-tabs [data-cfseg=code]")   # phones: the same emoji tab row as desktop
+            phone.click("#view-tabs [data-cfseg=code]")
             phone.wait_for_selector('#cf-tree .cf-row[data-path="src"]')
             wait_text(phone, "#cf-readme", "A tiny platformer")
             shot(phone, "files-code-phone-tree")
@@ -246,7 +245,7 @@ def main():
             phone.click("#cf-close"); phone.wait_for_selector("#cf-view:not(.open)")
             phone.click('#cf-tree .cf-row[data-up]'); phone.click('#cf-tree .cf-row[data-up]')
             phone.wait_for_selector('#cf-tree .cf-row[data-path="README.md"]')
-            phone.click("#cf-switch [data-seg=docs]")
+            phone.locator("#view-tabs [data-cfseg=docs]").scroll_into_view_if_needed(); phone.click("#view-tabs [data-cfseg=docs]")
             phone.wait_for_selector('#cf-dlist [data-doc-kind="vision"]')
             ov = phone.evaluate("Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)")
             assert ov <= 390, ov
