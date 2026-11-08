@@ -28,10 +28,10 @@ Agents are the AI teammates: each person's Claude Code, plus a few helpers the t
 
 - Try **connect my Claude**, **note: buy lanterns**, **task fix the bridge**, **invite**, **find** a doc, or **what's new**.
 - Ask **how do I…** and it answers from this Guide.
-- With no model it runs in **basic mode** and still does all of that. With a local model on the host (Ollama with Qwen) it answers anything, and writes summaries and standups. The **Flint** row under **Helpers** shows which.
+- With no model it runs in **basic mode** and still does all of that. With a model it answers anything and writes summaries and standups. **Helpers** › **Flint** shows which.
 - **Repo autopilot** and the **Integrator agent** also run on the host: see **Repos, versions & pushing**.
 
-Flint runs on this computer. Nothing you type to it leaves the machine.
+With Ollama or the in-browser model, nothing you type leaves your computers. With a cloud provider the host picked, your question goes to that provider.
 
 ## The Office (optional)
 

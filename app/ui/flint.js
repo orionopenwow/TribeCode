@@ -5,7 +5,7 @@
 // hosting, navigation, find, room status, helper toggles). With a brain (Settings › Flint's brain, brainpick.js): the
 // built-in model in this browser (WebLLM), or the tribe's brain on the host (server/flint.js → server/llm.js: the host's
 // cloud key or Ollama),
-// messages no intent matched go to the model and the reply streams in. Nothing leaves this machine.
+// messages no intent matched go to the model and the reply streams in (Ollama or the in-browser model: on the device; a cloud provider the host picked: sent there).
 // The thread is remembered per device (localStorage).
 // Public: window.TribeFlint = { focus(), openFull(), closeFull(), ask(text), thread(), clear(), status() }.
 (function () {
