@@ -1,0 +1,31 @@
+{
+  "id": "meeting-boss",
+  "recipe": "meeting",
+  "people": ["Maya", "Orion", "Sam"],
+  "note": "Original sample transcript written for TribeCode's tests (CC0).",
+  "lines": [
+    { "t": 0, "who": "Orion", "text": "Okay, let's start. The boss fight is the main thing today." },
+    { "t": 6, "who": "Maya", "text": "Playtesters said the boss is too hard on the first try. Most people died in under a minute." },
+    { "t": 15, "who": "Sam", "text": "I think the problem is the second attack. It has no warning sound, so you can't dodge it." },
+    { "t": 24, "who": "Orion", "text": "Right. We decided the boss gets two phases instead of three, and the second attack gets a wind-up." },
+    { "t": 33, "who": "Maya", "text": "I'll record a creak sound for the wind-up tonight." },
+    { "t": 40, "who": "Sam", "text": "Sam will tune the boss health down by twenty percent." },
+    { "t": 47, "who": "Orion", "text": "Also the checkpoint before the boss room is missing, which makes every death cost five minutes." },
+    { "t": 55, "who": "Orion", "text": "We need to add a checkpoint flag right before the boss door." },
+    { "t": 62, "who": "Maya", "text": "Cool. Playtest again on Friday evening with the same three friends." },
+    { "t": 70, "who": "Sam", "text": "Sounds good, thanks everyone." }
+  ],
+  "reference": {
+    "summary": [
+      "The boss is too hard because the second attack has no warning.",
+      "The team decided on two boss phases and a wind-up for the second attack.",
+      "A checkpoint before the boss door is missing."
+    ],
+    "actions": [
+      "Maya: record a creak sound for the wind-up",
+      "Sam: tune the boss health down by twenty percent",
+      "add a checkpoint flag right before the boss door"
+    ],
+    "decisions": ["the boss gets two phases instead of three"]
+  }
+}

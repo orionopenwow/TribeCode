@@ -184,7 +184,7 @@ const online = new Map(); // memberId -> { sockets:Set, where, since, project }
 // Project rooms: data events reach only sockets that are in the event's project (and can see it); other
 // sockets of the same person get a tiny 'project-pulse' so the sidebar badges stay live. Project chat
 // channels are delivered as `general`, which is what the chat UI shows for the current project.
-const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello', 'workshop', 'perms']);   // perms: feat/roles
+const UNSCOPED = new Set(['presence', 'huddle', 'captions', 'dev-reload', 'projects', 'hello', 'workshop', 'perms', 'packs']);   // perms: feat/roles; packs: feat/captures
 const SOFT = new Set(['approval', 'claims']);   // everyone who can see the project, whatever room they are in
 const PULSE = new Set(['chat', 'task', 'proposal', 'change', 'approval', 'doc', 'bug']);
 const memberById = mid => members.find(x => x.id === mid);
@@ -372,6 +372,10 @@ const embeds = require('./embeds')({ store: baseStore });
 const gifs = require('./gifs')({ store: baseStore, pstore: store, P, channels: chans });
 // comms-smoke: meetings belong to the project where captions were turned on; optional after-huddle summary (server/huddlesum.js)
 const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m => console.error('  ' + m) });
+// feat/captures: the link reader, voice notes and summaries (server/captures.js), optional packs (server/packs.js)
+const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });
+const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m) });
+huddleSum.setSink(x => captures.fromHuddle(x));
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
@@ -471,7 +475,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -675,6 +679,8 @@ async function apiInProject(req, res, url) {
   if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
   if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
   if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
+  if (a === 'captures') return captures.route(req, res, ctx());   // feat/captures
+  if (a === 'packs') return packs.route(req, res, ctx());   // feat/captures: Settings › Packs (host only)
   if (a === 'gifs') return gifs.route(req, res, ctx());        // feat/chat2
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
@@ -736,6 +742,7 @@ async function apiInProject(req, res, url) {
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
       const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
+      captures.onChat(b, me, text, msg);   // feat/captures: a pasted link becomes a capture card
       return send(res, 200, { message: msg });
     }
   }

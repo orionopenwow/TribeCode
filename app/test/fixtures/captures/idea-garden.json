@@ -1,0 +1,25 @@
+{
+  "id": "idea-garden",
+  "recipe": "idea",
+  "people": ["Ada"],
+  "note": "Original sample voice note written for TribeCode's tests (CC0).",
+  "lines": [
+    { "t": 0, "who": "Ada", "text": "Quick idea while walking home." },
+    { "t": 4, "who": "Ada", "text": "What if the garden grows while you are offline, so coming back feels like a gift?" },
+    { "t": 11, "who": "Ada", "text": "The core loop would be plant, wait, harvest, and trade seeds with friends." },
+    { "t": 19, "who": "Ada", "text": "The hook is that rare seeds only come from a friend's garden, so people invite each other." },
+    { "t": 27, "who": "Ada", "text": "It should feel cozy, no timers that punish you." },
+    { "t": 33, "who": "Ada", "text": "First step, I'll sketch three plant sprites and a seed trading screen." },
+    { "t": 40, "who": "Ada", "text": "Then we need to write down how offline growth is saved." }
+  ],
+  "reference": {
+    "summary": [
+      "A cozy garden game where plants grow while you are offline.",
+      "The loop is plant, wait, harvest and trade seeds; rare seeds only come from friends."
+    ],
+    "actions": [
+      "Ada: sketch three plant sprites and a seed trading screen",
+      "write down how offline growth is saved"
+    ]
+  }
+}

@@ -89,16 +89,16 @@ module.exports = function embeds({ store, isHost = me => me && me.role === 'host
     return addrs[0];
   }
   // One GET to a checked address; resolves { status, headers, body (Buffer, capped), url }.
-  function getOnce(u, addr, cap, accept, deadline) {
+  function getOnce(u, addr, cap, accept, deadline, opts = {}) {
     return new Promise((resolve, reject) => {
       const lib = u.protocol === 'https:' ? https : http;
       const lookup = (h, o, cb) => (o && o.all ? cb(null, [{ address: addr.address, family: addr.family }]) : cb(null, addr.address, addr.family));
       const req = lib.request(u, { method: 'GET', lookup, agent: false, timeout: Math.max(200, deadline - Date.now()),
-        headers: { 'User-Agent': 'TribeCodeLinkPreview/1.0 (+https://github.com/orionopenwow/TribeCode)', Accept: accept, 'Accept-Language': 'en', 'Accept-Encoding': 'identity' } }, res => {
+        headers: { 'User-Agent': opts.ua || 'TribeCodeLinkPreview/1.0 (+https://github.com/orionopenwow/TribeCode)', Accept: accept, 'Accept-Language': 'en', 'Accept-Encoding': 'identity' } }, res => {
         if (res.statusCode >= 300 && res.statusCode < 400) { res.resume(); return resolve({ status: res.statusCode, headers: res.headers, body: Buffer.alloc(0) }); }
         const chunks = []; let size = 0, done = false;
         const finish = () => { if (done) return; done = true; resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) }); };
-        res.on('data', c => { if (done) return; size += c.length; if (size > cap) { if (cap === PAGE_CAP) { chunks.push(c.slice(0, c.length - (size - cap))); finish(); req.destroy(); } else { done = true; req.destroy(); reject(blocked('too big')); } return; } chunks.push(c); });
+        res.on('data', c => { if (done) return; size += c.length; if (size > cap) { if (cap === PAGE_CAP || opts.truncate) { chunks.push(c.slice(0, c.length - (size - cap))); finish(); req.destroy(); } else { done = true; req.destroy(); reject(blocked('too big')); } return; } chunks.push(c); });
         res.on('end', finish); res.on('error', e => (done ? null : reject(e)));
       });
       const t = setTimeout(() => { req.destroy(blocked('timed out')); }, Math.max(100, deadline - Date.now()));
@@ -108,12 +108,14 @@ module.exports = function embeds({ store, isHost = me => me && me.role === 'host
       req.end();
     });
   }
-  async function safeGet(raw, cap, accept) {
-    const deadline = Date.now() + TIMEOUT;
+  // opts (feat/captures, the link reader): { timeout (ms, max 15 s), truncate (keep the first `cap` bytes instead of failing), ua }.
+  // The address checks, DNS pinning and redirect re-checks are the same for every caller.
+  async function safeGet(raw, cap, accept, opts = {}) {
+    const deadline = Date.now() + Math.min(Math.max(Number(opts.timeout) || TIMEOUT, 500), 15000);
     let u = checkUrl(raw);
     for (let hop = 0; hop <= HOPS; hop++) {
       const addr = await safeAddress(u);
-      const r = await getOnce(u, addr, cap, accept, deadline);
+      const r = await getOnce(u, addr, cap, accept, deadline, opts);
       if (r.status >= 300 && r.status < 400) {
         if (!r.headers.location || hop === HOPS) throw blocked('too many redirects');
         u = checkUrl(new URL(r.headers.location, u).href); continue;
