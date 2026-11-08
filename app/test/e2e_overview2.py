@@ -109,14 +109,14 @@ def main():
             # 6. Repo & Tools: repo empty state + standup button top right + the drop zone, wired as before
             wait_text("#pj-repo", "Shared repo"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
             assert host.locator("#pj-sf h3 #standup-go").is_visible(), "standup button in the card head"
-            assert host.locator("#pj-sf #dropzone").is_visible(), "drop zone moved in"
-            assert host.evaluate("getComputedStyle(document.querySelector('#pj-sf #dropzone')).borderStyle") == "dashed"
+            assert host.locator("#pj-context #dropzone").is_visible(), "drop zone moved in"
+            assert host.evaluate("getComputedStyle(document.querySelector('#pj-context #dropzone')).borderStyle") == "dashed"
             # a redraw keeps the live nodes (they are moved, not copied)
             host.evaluate("document.querySelector('#dropzone').dataset.mark = 'x'")
             host.evaluate("TribeProjects.overview ? TribeProjects.overview() : TribeApp.show('home')")
             api("/tasks", "POST", {"title": "Second task"}, token=tok, headers={"X-Project": pid})
             wait_text("#pj-recent", "Second task")
-            assert host.evaluate("document.querySelectorAll('#dropzone').length === 1 && document.querySelector('#pj-sf #dropzone').dataset.mark === 'x'")
+            assert host.evaluate("document.querySelectorAll('#dropzone').length === 1 && document.querySelector('#pj-context #dropzone').dataset.mark === 'x'")
             # two columns on desktop
             xs = host.eval_on_selector_all("#pj-sec-tribe .pj-grid > .card", "els => els.map(e => Math.round(e.getBoundingClientRect().left))")
             assert len(set(xs)) == 2, f"two columns {xs}"

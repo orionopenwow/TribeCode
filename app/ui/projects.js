@@ -195,6 +195,7 @@
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span>${esc(r.name)}<span class="pj-dot">·</span>${esc(r.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
       ${hero ? checklist : ''}
+      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add context</h3><p>Drop docs, PDFs, images or notes. Flint and your agents read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>
       ${L && started ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
           <div class="pl-grid">${tiles.map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
       ${hero ? '' : checklist}
@@ -214,14 +215,15 @@
           ${r ? `<div class="pj-repo-sum"><b>${esc(r.name)}</b><span class="pj-chip live">${esc(r.branch || 'main')}</span><span class="pj-chip">↑${r.ahead || 0} ↓${r.behind || 0}</span><span class="pj-chip">${r.dirty ? `${r.dirty} changed` : 'clean'}</span></div>`
             : p.hasRepo ? '' : `<div class="pj-none">No repo pinned yet. Point ${esc(p.name)} at a git folder or a GitHub repo and it lives here.</div><div class="pj-actions"><button class="btn" data-go="repo">Set up the repo</button></div>`}
           <div id="pj-ws" ${r ? '' : 'data-quiet="1"'}></div></section>
-        <section class="card" id="pj-sf"><h3>${ico('i-upload', 16)}Daily standup &amp; Files<span class="pj-h-act" id="pj-sf-btn"></span></h3>
+        <section class="card" id="pj-sf"><h3>${ico('i-upload', 16)}Daily standup<span class="pj-h-act" id="pj-sf-btn"></span></h3>
           <div id="pj-sf-body"></div></section></div>
         <div class="pj-tools-row"><button class="linkish pj-tools-link" id="pj-tools-link">${ico('i-box', 14)}Tools for ${esc(p.name)}</button></div>
         <div id="pj-tools-slot"></div>`)}`;
     // The standup button/text and the drop zone are wired in app.js: move the live nodes in (stash() moves them back before a redraw).
     const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
-    const sfBody = $('#pj-sf-body'); [sfText, dzn, drops].forEach(n => n && sfBody.appendChild(n));
+    const sfBody = $('#pj-sf-body'); if (sfText) sfBody.appendChild(sfText);
+    const ctx = $('#pj-ctx-body'); [dzn, drops].forEach(n => n && ctx.appendChild(n));   // the drop zone is a main point of the page: it gives everyone context
     el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => { const k = x.dataset.ck;
       if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude(); else if (k === 'repo') App().show('repo');
       else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); } });
