@@ -142,7 +142,7 @@
     const meta = `<span class="mt">${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}<time datetime="${esc(m.at)}">${when}</time>${mine ? `<span class="tk">${TICK1}</span>` : ''}</span>`;
     let body = '';
     const rich = !sys && !m.deleted && !m.media && R() ? R().parts(m, ch) : null;
-    if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>`;
+    if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>` + (m.capture && window.TribeCaptures ? window.TribeCaptures.card(m.capture, ch) : '');   // feat/captures: the capture card
     else if (m.deleted) body = `<p class="gone">${m.removedBy ? 'removed by a moderator' : 'message deleted'}${META}</p>`;
     else {
       if (m.fwd) body += `<div class="fwd">${icon('i-fwd')}Forwarded from <b>${esc(nameOf(m.fwd.by))}</b> · ${esc(m.fwd.from || '')}</div>`;
@@ -333,6 +333,7 @@
         ${m.text && !m.vote ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
         ${m.text && !m.vote && window.TribeVotes ? `<button role="menuitem" data-act="vote">${icon('i-vote')}Make it a vote</button>` : ''}
         ${m.media && m.media.kind === 'voice' ? `<button role="menuitem" data-act="notes">${icon('i-doc')}Add to my notes</button>` : ''}
+        ${window.TribeCaptures ? window.TribeCaptures.menuItems(m, ch) : ''}
         ${own && !m.media && !m.vote ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
         ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}
         ${window.TribeRoles ? window.TribeRoles.msgMenuItems(m, ch) : ''}`;   // feat/roles: mod tools (roles.js)
@@ -359,6 +360,7 @@
         if (act === 'forward') return fwd();
         if (act === 'delete' && !armed) { armed = true; b.innerHTML = `${icon('i-trash')}Click again to delete`; return; }
         if (act === 'mod-del' && !armed) { armed = true; b.innerHTML = `${icon('i-trash')}Tap again: delete for everyone`; return; }
+        if (act.startsWith('cap-')) { closeMenu(); return window.TribeCaptures && window.TribeCaptures.menuAct(act, m, ch); }   // feat/captures
         if (act.startsWith('mod-')) { closeMenu(); try { await window.TribeRoles.onMsgAct(b, m, ch); } catch (err) { toast(err.message); } return; }   // feat/roles
         closeMenu();
         try {

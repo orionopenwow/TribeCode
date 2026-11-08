@@ -1,6 +1,6 @@
 # Link reader, voice notes and summaries (plan)
 
-Status: planned, not built. Written 2026-11-08.
+Status: built on `feat/captures` (all four phases), 2026-11-08. See **As built** at the end.
 
 Goal: drop any link (TikTok, Instagram, YouTube, a web page) or record a voice note, and TribeCode turns it into **data the tribe can use**: a clean transcript or article, a short summary, key points, action items and tags, saved in Files and readable by Flint and every agent. It should feel like Notion's AI meeting notes: record or paste, get tidy notes back, edit them.
 
@@ -100,3 +100,36 @@ Each layer keeps the transcript as the source of truth; summaries link back to t
 - yt-dlp subtitles: https://wiki.gentoo.org/wiki/Yt-dlp
 - Mozilla Readability (Apache-2.0): https://openapps.pro/packages/mozilla-readability
 - whisper.cpp licensing (MIT/Expat): https://dfsg-new-queue.debian.org/reviews/whisper.cpp
+
+## As built (feat/captures)
+
+- **Server:** `server/captures.js` (routes `/api/captures…`, chat cards, auto-read of a pasted link, voice notes, huddle
+  notes, search, "what did we decide", MCP tools), `server/capture-html.js` (our own small HTML parser and
+  Readability-style article finder, charset detection; no third-party code), `server/capture-sum.js` (the
+  deterministic summarizer, keep/discard learning, the evaluation scorer), `server/capture-recipes.js` (built-in
+  recipes: Article, Video, Voice note, Meeting, Idea, Playtest feedback, Interview, Lecture), `server/packs.js` (the
+  download manager, Settings › Packs). The built-in recipes live in JS because the desktop server is bundled into one
+  file; a tribe's own recipes are JSON files in `.tribe/recipes/` (agent proposals wait in `.tribe/recipes/pending/`).
+- **Files:** `files/captures/<date>-<slug>.md` + `.json` in the project folder; thumbnails in `files/captures/thumbs/`
+  (PNG/JPEG/GIF/WebP/AVIF only, magic bytes checked), voice audio in `files/captures/audio/`. Learned weights in
+  `.tribe/captures-weights.json` (reset in Captures › Capture settings), settings in `.tribe/captures-settings.json`.
+- **Fetching:** every page, oEmbed answer and thumbnail goes through `server/embeds.js` `safeGet` (SSRF checks, DNS
+  pinning, redirect re-checks; captures use a 3 MB truncating cap and a 9 s timeout, with two retries and backoff for
+  timeouts and 5xx). `noarchive`/`noai` robots rules and `isAccessibleForFree: false` keep only the title and
+  description; 401/402/403 keep only the link. Same URL per project (tracking params stripped) is deduped. Per-member
+  limit: 30 new captures per 5 minutes (agents 12).
+- **oEmbed endpoints:** YouTube `youtube.com/oembed`, TikTok `tiktok.com/oembed`, Instagram
+  `graph.facebook.com/v25.0/instagram_oembed`, Facebook `graph.facebook.com/v26.0/oembed_post` / `oembed_video`,
+  Threads `graph.threads.net/v1.0/oembed` (Meta's are tokenless for public content since June 2026, 1,000 calls per
+  hour per endpoint). Meta returns embed HTML only: we read its text, never render it.
+- **Packs:** yt-dlp 2026.10.21 (sha256 from its SHA2-256SUMS) and whisper.cpp models from Hugging Face (sha256 = LFS
+  object id). The whisper.cpp program itself is found on PATH or in `.tribe/packs/<pack>/bin/` (people install it their
+  own way). ffmpeg, when on PATH, converts audio to 16 kHz WAV and splits it into 10-minute chunks. Not yet: resumable
+  downloads (HTTP Range), a disk budget.
+- **Privacy and permissions:** DM captures (links and voice notes) are visible only to that DM's members, including
+  search, Flint and MCP. Spectators read only. Agents can capture, read and search, and propose recipes; only people
+  make tasks and approve recipes. Video captions are host-only and off by default.
+- **Tests:** `node app/test/captures_test.js` (extractor, charsets, the summarizer against `app/test/fixtures/captures/`,
+  learning, parsers, huddle notes, the rewrite format) and `python3 app/test/e2e_captures.py` (a local fake site, fake
+  oEmbed, mock yt-dlp and whisper packs). Test-only switches, honored only with `TRIBE_TEST=1`:
+  `TRIBE_TEST_OEMBED`, `TRIBE_TEST_PACKS_INDEX`, `TRIBE_TEST_PACKS_ALLOW`, `TRIBE_TEST_NO_PATH`.

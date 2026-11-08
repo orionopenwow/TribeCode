@@ -90,6 +90,7 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
       try { out.summary = await summary.post({ project: m.project, started: m.started, lines, docTitle: out.doc && out.doc.title }); }
       catch (e) { console.error('huddle summary', e); }
     }
+    if (summary && summary.toCapture) { try { summary.toCapture({ project: m.project, started: m.started, lines, docTitle: out && out.doc && out.doc.title, summary: out && out.summary }); } catch (e) { console.error('huddle capture', e); } }   // feat/captures
     return out;
   }
 

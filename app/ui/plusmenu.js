@@ -34,6 +34,8 @@
       : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no Claude of your own needed', hide: inDm() || me().role === 'spectator' },
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
     { k: 'note', icon: 'i-doc', t: 'Note', s: 'Into the living notes' },
+    { k: 'capture', icon: 'i-link', t: 'Read a link', s: draft() && /^https?:\/\//.test(draft()) ? 'Summarize the link you typed' : 'Short notes from an article or video', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
+    { k: 'voicenote', icon: 'i-mic', t: 'Voice note to notes', s: 'Record, get a summary and action items', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
     { k: 'bug', icon: 'i-bug', t: 'Report a bug', s: 'With the recent logs attached', hide: !window.TribeBugs },
   ].filter(x => !x.hide);
 
@@ -72,6 +74,8 @@
     if (k === 'propose') return propose({ title: text });
     close();
     if (k === 'attach') return pick();
+    if (k === 'capture') { close(); const u = /^https?:\/\/\S+$/.test(text) ? text : ''; if (u) clearDraft(); return window.TribeCaptures.addLink({ channel: chan(), url: u }); }   // feat/captures
+    if (k === 'voicenote') { close(); return window.TribeCaptures.recorder({ channel: chan() }); }   // feat/captures
     if (k === 'gif') return window.TribeChatRich.gifPicker(anchorBtn);   // feat/chat2
     if (k === 'poll') return window.TribeVotes.openComposer({ question: text.slice(0, 200), channel: 'general' });
     if (k === 'task') {

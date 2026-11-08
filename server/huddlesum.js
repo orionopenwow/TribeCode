@@ -103,7 +103,10 @@ module.exports = function huddleSum({ P, brain, postChat, nameOf, log = () => {}
     });
   }
 
-  return { enabled, post, summarize };
+  // feat/captures: every captioned meeting is also saved as a capture (files/captures/), set by server/index.js
+  let sink = null;
+  const toCapture = x => (sink ? sink(x) : null);
+  return { enabled, post, summarize, toCapture, setSink: fn => { sink = fn; } };
 };
 module.exports.sentimentOf = sentimentOf;
 module.exports.extractive = extractive;

@@ -1,0 +1,23 @@
+{
+  "id": "lecture-physics",
+  "recipe": "lecture",
+  "people": [],
+  "note": "Original sample lecture written for TribeCode's tests (CC0).",
+  "lines": [
+    { "t": 0, "who": "", "text": "Today we look at how games fake gravity." },
+    { "t": 6, "who": "", "text": "Velocity is defined as how far something moves each frame." },
+    { "t": 13, "who": "", "text": "Gravity is just a number added to the vertical velocity every frame." },
+    { "t": 20, "who": "", "text": "For example, if gravity is half a pixel, a falling player speeds up smoothly." },
+    { "t": 28, "who": "", "text": "Remember to cap the falling speed, or players will pass through thin floors." },
+    { "t": 36, "who": "", "text": "In other words, terminal velocity keeps collisions reliable." },
+    { "t": 43, "who": "", "text": "Finally, many games lower gravity at the top of a jump so it feels floaty and fair." }
+  ],
+  "reference": {
+    "summary": [
+      "Gravity in games is a number added to vertical velocity each frame.",
+      "Cap the falling speed so collisions stay reliable.",
+      "Lower gravity at the top of a jump feels fair."
+    ],
+    "actions": []
+  }
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.17.0
+
+- **Paste a link, get notes**: paste a link in chat, use Files › Captures, + › Read a link, or ask Flint to "summarize <url>". The host reads the page safely, pulls out the article and writes a quick summary with key points, action items, decisions and tags, no AI needed. Each capture is saved in Files › Captures and shows as a card in chat with Make tasks
+- **Video and social links**: YouTube, TikTok, Instagram, Threads, Facebook and Vimeo get official embed cards; captions and local transcripts are optional extras the host can add in Settings › Packs
+- **Voice notes like Notion**: record from Files › Captures or + › Voice note to notes, with pause and a live transcript, then Summary · Key points · Action items · Decisions · Full transcript, all editable. Templates for meetings, ideas, playtests, interviews and lectures. Any chat voice note can become notes, and captioned huddles are saved too
+- **Smarter over time**: an optional plain-words rewrite with your AI, a summarizer that learns from what your tribe keeps and deletes, agent tools to read and search captures, and Flint answering "what did we decide about X?" with the quote
+- **Packs**: a small download manager in Settings for optional tools, with sizes shown first and checksums checked
+- **Phones**: the Captures list, notes, chat cards and recorder fit the phone; Files gets a 📎 Captures section with Record
+
 ## v0.16.1
 
 - **Security**: "only from this computer" actions now accept only TribeCode's own page and the desktop app, so a project's preview, a file:// page or another program on your computer can't create invites or agent keys or turn on sharing. Spectators, agents and muted members can't post through the live connection, and an expired guest's agents stop with the guest. Rate limits behind tunnels apply per visitor. ntfy phone pings are off until you set them up. Backups no longer include sign-in client secrets. Approvals stay inside their project, network addresses are hidden from visitors, and other sites can't frame the app

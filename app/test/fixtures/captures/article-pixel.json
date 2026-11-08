@@ -1,0 +1,22 @@
+{
+  "id": "article-pixel",
+  "recipe": "article",
+  "html": "article-pixel.html",
+  "people": [],
+  "note": "Original sample article written for TribeCode's tests (CC0).",
+  "expect": {
+    "title": "Why pixel art needs whole-number scaling",
+    "author": "Rin Okafor",
+    "contains": ["whole number like 2, 3 or 4", "image-rendering to pixelated", "320 by 180"],
+    "excludes": ["cookies", "SHINY KEYBOARD", "Popular posts", "Share on Facebook", "newsletter", "tracking", "Great post"]
+  },
+  "reference": {
+    "summary": [
+      "Pixel art looks crisp only when every source pixel becomes the same number of screen pixels.",
+      "Draw at a small base resolution and scale by a whole number.",
+      "Set image-rendering to pixelated so edges stay sharp."
+    ],
+    "actions": ["test the scaling on phones"],
+    "decisions": ["lock our game at 320 by 180 pixels"]
+  }
+}
