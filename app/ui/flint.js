@@ -62,6 +62,7 @@
     website: () => (window.TribeShell ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open()),   // feat/customize
     customize: tab => window.TribeLook && window.TribeLook.open(tab || 'tribe'),
     capture: id => window.TribeCaptures && window.TribeCaptures.open(id || undefined),   // feat/captures
+    feedback: () => window.TribeFeedback && window.TribeFeedback.open(),   // feat/reviews
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
 
@@ -380,6 +381,7 @@
       ['🧭', 'Show me around', 'A 30-second tour of the app', () => window.TribeFlintGuide && window.TribeFlintGuide.tour()],
       ['✨', 'What can Flint do?', 'His guide, in one screen', () => window.TribeFlintGuide && window.TribeFlintGuide.intro(input)],
       ['🧠', "Pick Flint's brain", 'Choose the model he thinks with', () => window.TribeBrain && window.TribeBrain.open()],
+      ['⭐', 'Rate TribeCode', 'Tell us how it went, good or bad', () => window.TribeFeedback && window.TribeFeedback.open()],
     ];
     const m = document.createElement('div'); m.id = 'fl-menu'; m.className = 'fl-menu'; m.setAttribute('role', 'menu');
     m.innerHTML = `<div class="fl-menu-h">${flintIco(16)}<b>Flint</b><small>${esc(statusLine())}</small></div>` + items.map(([e, t, s], i) => `<button type="button" role="menuitem" data-fm="${i}"><span class="fm-e" aria-hidden="true">${e}</span><span><b>${esc(t)}</b><small>${esc(s)}</small></span></button>`).join('');
@@ -446,5 +448,7 @@
   mountDock(); refreshModel();
   if (C && C.on) { C.on('hello', () => { mountDock(); refreshModel(); }); C.on('status', () => drawStatus()); }
   setInterval(() => { if (document.visibilityState === 'visible' && connected()) refreshModel(); }, 60000);
-  window.TribeFlint = { focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }) };
+  // a quiet message from Flint with one button (feedback.js asks for a review this way, once)
+  const nudge = (text, label, actName, arg) => say(text, [act(label, actName, arg)]);
+  window.TribeFlint = { focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge };
 })();

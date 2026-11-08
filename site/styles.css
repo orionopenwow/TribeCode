@@ -965,3 +965,21 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .flint-hello { font-size: 14px; max-width: none; width: calc(100vw - 24px); padding: 14px 14px 12px; gap: 10px; }
   .flint-hello::after { right: 17px; }
 }
+
+/* ---------- trial and reviews (pricing page; a quiet line on the home page) ---------- */
+.pr-trial { margin: 2px 0 0; font: 12px/1.3 var(--mono, monospace); color: #F2A65A; }
+.pr-try { margin-top: 18px; }
+.pr-try + .pr-credits { margin-top: 10px; }
+.pr-reviews { padding: 24px 0 72px; }
+.pr-reviews h2 { margin: 6px 0 18px; color: var(--text); font: 700 28px/1.2 'Inter Display', Inter, sans-serif; letter-spacing: -.01em; }
+.rv-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.rv-list:empty { display: none; }
+.rv { margin: 0; padding: 18px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.rv-stars { color: #F2A65A; letter-spacing: 2px; font-size: 15px; }
+.rv blockquote { margin: 10px 0 12px; color: var(--text); font-size: 15px; line-height: 1.55; }
+.rv figcaption { color: var(--muted); font-size: 13px; } .rv figcaption b { color: var(--text); } .rv figcaption a { margin-left: 6px; color: var(--faint); font-size: 12px; }
+.rv-empty { max-width: 640px; padding: 18px; border: 1px dashed var(--edge-pop); border-radius: 14px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.rv-empty[hidden] { display: none; } .rv-empty p { margin: 0; }
+.rv-cta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 18px 0 0; } .rv-cta span { color: var(--faint); font-size: 13px; }
+.hero__reviews { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); } .hero__reviews a { color: #F2A65A; }
+.hero__reviews[hidden] { display: none; }

@@ -1,0 +1,4 @@
+{
+  "_how": "Only real reviews, added by a maintainer from GitHub issues labelled 'review' whose author ticked the quote box. Never write reviews here yourself. Fields: stars (1-5), text, name, what (optional, what they built), date (YYYY-MM-DD), link (the GitHub issue).",
+  "reviews": []
+}

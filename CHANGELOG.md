@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.17.19
+
+- **Rate TribeCode**: a small card in Flint's flame menu and the ? menu: pick 1 to 5 stars, say how it went, choose the name to show and whether we may quote you. Sending opens your review on GitHub, so every review is public, real and linked. Flint asks once, gently, after you've used TribeCode on five different days
+- **Reviews on the pricing page**: "What tribes say" lists real reviews only, each linked to where it was written (site/reviews.json, docs/REVIEWS.md). Until there are some, it invites the first one. The home page shows one quiet line once there are reviews
+- **Free trial, announced**: the pricing page notes a 14-day Team trial with no card when hosted plans open, and a weekend Jam Pass for game jams
+- **Phones**: the review card fits a phone screen with big star buttons
+
 ## v0.17.18
 
 - **A calmer demo, guided by Flint**: the auto demo now runs at a gentler pace (about four and a half minutes instead of three), and before each chapter Flint flies to the part of the screen it's about, rings it while the rest dims a little, and says in a sentence what it is and what you'd do there. The clock waits while he talks; press "Show me" when you're ready
