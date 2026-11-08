@@ -31,7 +31,7 @@ const CAPS = [
   { id: 'roles.assign', group: 'Community', label: 'Change roles below their own', roles: ['admin'] },
   { id: 'roles.manage_admins', group: 'Community', label: 'Promote or demote admins', roles: [], cols: ['admin'] },
   { id: 'tasks.triage', group: 'Work', label: 'Move, assign and close any task or bug', roles: ['admin', 'mod', 'builder'] },
-  { id: 'board.manage', group: 'Work', label: 'Release milestones, close any proposal', roles: ['admin', 'mod'] },
+  { id: 'board.manage', group: 'Work', label: 'Close any proposal', roles: ['admin', 'mod'] },
   { id: 'approvals.approve_low', group: 'Work', label: 'Decide any low-risk approval', roles: ['admin', 'mod'] },
   { id: 'approvals.approve', group: 'Work', label: 'Decide any approval', roles: ['admin'] },
   { id: 'files.delete', group: 'Work', label: 'Delete anyone\'s files', roles: ['admin'] },

@@ -87,3 +87,7 @@
   .rl-pick { min-width: 0; max-width: 128px; }
   .rl-log time { width: 84px; }
 }
+
+/* the room pane keeps 13px text (e2e_sidebar_widgets), like the old "host" pill */
+#room-pane .role-pill, #room-list .role-pill { height: 19px; font-size: 13px; font-weight: 500; padding: 0 7px; margin-left: 4px; }
+#room-pane .role-pill .rp-e { font-size: 12px; }

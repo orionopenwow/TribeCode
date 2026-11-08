@@ -45,7 +45,7 @@
     loading = C.api('/perms').then(r => {
       st = { me: r.me, matrix: r.matrix || null, members: r.members || null, canReset: !!r.canReset };
       const cm = C.state().me; if (cm && r.me && r.me.tribeRole) cm.role = r.me.tribeRole;
-      muteNote(); drawModal();
+      muteNote(); drawModal(); repaint();
       return st;
     }).catch(() => st).finally(() => { loading = null; });
     return loading;
@@ -237,6 +237,9 @@
   C.on('project', () => refresh());
   C.on('ws', m => { if (m && m.type === 'perms') refresh(); });
   if (C.connected && C.connected()) refresh();
+  setTimeout(repaint, 0);
 
+  // Lists drawn before this file loaded (or before a role changed) get their badges.
+  function repaint() { try { if (window.TribeApp && window.TribeApp.refreshRoom) window.TribeApp.refreshRoom(); } catch {} }
   window.TribeRoles = { badge, label, can, outranks, msgMenuItems, onMsgAct, memberActions, open, refresh, state: () => st, myRole };
 })();
