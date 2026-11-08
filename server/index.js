@@ -78,7 +78,7 @@ function agentEndpoints(req, token) {
   const cmd = u => u && `claude mcp add --transport http tribecode ${u} --header "Authorization: Bearer ${token || '<key>'}"`;
   const urls = { anywhere: mcpUrl(pub), wifi: mcpUrl(lan), here: mcpUrl(`http://localhost:${PORT}`) };
   const best = urls.anywhere || (isLocal(req) ? urls.here : urls.wifi || urls.here);
-  return { url: best, command: cmd(best), commands: { anywhere: cmd(urls.anywhere), wifi: cmd(urls.wifi), here: cmd(urls.here) }, public: !!pub, remove: 'claude mcp remove tribecode' };
+  return { url: best, command: cmd(best), commands: { anywhere: cmd(urls.anywhere), wifi: cmd(urls.wifi), here: cmd(urls.here) }, urls, public: !!pub, remove: 'claude mcp remove tribecode' };
 }
 function lanUrls() {
   const out = [];
@@ -721,7 +721,8 @@ async function apiInProject(req, res, url) {
     const kind = makeAgentsHub.KINDS[body.kind] ? body.kind : null, label = str(body.label, 24);
     const multi = !!(label || (kind && kind !== 'claude-code'));
     const kindName = kind ? makeAgentsHub.KINDS[kind].label : 'Claude Code';
-    const name = (multi ? `${label || kindName} · ${me.name}` : `Claude · ${me.name}`).slice(0, 32);
+    const tool = kind && makeAgentsHub.KINDS[kind].tool;   // feat/any-llm: Codex, Gemini CLI, Qwen Code, Cursor -> "Maya's Codex"
+    const name = (tool ? (label ? `${label} · ${me.name}` : `${me.name}'s ${makeAgentsHub.KINDS[kind].short}`) : multi ? `${label || kindName} · ${me.name}` : `Claude · ${me.name}`).slice(0, 32);
     const mineAll = members.filter(x => x.role === 'agent' && x.owner === me.id);
     if (multi && mineAll.filter(x => x.tokenHash).length >= 8) return fail(res, 429, 'up to 8 connected agents per person: revoke one first');
     let ag = multi ? mineAll.find(x => x.label && x.label.toLowerCase() === (label || kindName).toLowerCase()) : mineAll.find(x => !x.label);
@@ -732,7 +733,7 @@ async function apiInProject(req, res, url) {
     saveMembers();
     const ep = agentEndpoints(req, token);
     const desktop = kind === 'claude-desktop' || kind === 'mcp' ? agentsHub.desktopConfig(ep.url, token) : undefined;
-    return send(res, 200, { agent: { ...publicMember(ag), kind: agentsHub.kindOf(ag), label: ag.label || null }, token, ...ep, tools: mcp.tools, ...(desktop ? { desktop } : {}) });
+    return send(res, 200, { agent: { ...publicMember(ag), kind: agentsHub.kindOf(ag), label: ag.label || null }, token, ...ep, tools: mcp.tools, ...(desktop ? { desktop } : {}), setup: agentsHub.setups(agentsHub.kindOf(ag), ep, token) });   // setup: steps + copy blocks per place (feat/any-llm)
   }
   // Easy in and out for Claude Code anywhere: status, and disconnect (the key stops working at once).
   if (a === 'agents' && b === 'mine' && m === 'GET') {
@@ -747,7 +748,7 @@ async function apiInProject(req, res, url) {
     const ag = want ? members.find(x => x.role === 'agent' && x.owner === me.id && x.id === want) : (members.find(x => x.role === 'agent' && x.owner === me.id && !x.label) || members.find(x => x.role === 'agent' && x.owner === me.id));
     if (want && !ag) return fail(res, 404, 'not one of your agents');
     if (ag) { ag.tokenHash = null; agentSeen.delete(ag.id); saveMembers(); pushPresence(); }
-    return send(res, 200, { ok: true, remove: ag && ag.kind === 'claude-desktop' ? 'Remove "tribecode" from claude_desktop_config.json' : 'claude mcp remove tribecode' });
+    return send(res, 200, { ok: true, remove: makeAgentsHub.removeFor(ag && ag.kind) });   // per tool (feat/any-llm)
   }
   if (a === 'claims') {
     if (m === 'GET') return send(res, 200, { claims: claims.list() });
