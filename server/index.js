@@ -360,6 +360,7 @@ const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, po
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
+const codeFiles = require('./codefiles')({ P });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast });   // the Files center: any file type, yours or the project's
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
 const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
@@ -625,6 +626,7 @@ async function apiInProject(req, res, url) {
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
+  if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
