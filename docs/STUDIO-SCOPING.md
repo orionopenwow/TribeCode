@@ -328,7 +328,7 @@ What [spawn.co](https://spawn.co) says publicly (read 2026-11-07):
 
 | | Spawn | TribeCode Studio (this plan) |
 | --- | --- | --- |
-| Where it runs | Spawn's cloud and engine | One friend's computer; any engine |
+| Where it runs | Spawn's cloud and engine | Your shared GitHub repo (and your own computer or server, optionally); any engine |
 | Who builds | Savi (Spawn's AI) + you | You, your friends, each person's own agents, Flint locally |
 | Multiplayer | Built in from the start, massive shared spaces | Friends-scale relay on the host (GAME-STUDIO.md); Colyseus later |
 | Your code | Git repo, engine-specific; no Steam export | Plain repo you own; standard engines (KAPLAY, three.js, Godot) that export anywhere |

@@ -7,7 +7,7 @@ Last updated: 2026-11-07 16:45 (v0.8.5: full QA pass with 7 fixes, restart loops
 Latest: v0.17.1 (2026-11-08). Flint's welcome (app/ui/welcome.js) runs before first use when arriving from the site (app/?welcome=1): pretend tribe → features → auto demo / explore / real. Desktop installers fixed (tauri resources copy app/ui as a folder). See CHANGELOG.md for v0.9–v0.17.
 
 ## The vision
-Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. One friend's computer hosts everything (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
+Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. The work lives in the tribe's shared GitHub repo; someone's desktop app or own server keeps it online for speed (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
 
 Pillars: **one link to join · one shared brain (local Qwen + TRIBE_CONTEXT.md) · one vision (VISION.md + Board votes) · agents that coordinate without stepping on each other**.
 

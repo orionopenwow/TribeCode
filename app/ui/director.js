@@ -702,7 +702,7 @@
     const e = document.createElement('div'); e.className = 'dt-end'; e.id = 'dt-end'; e.setAttribute('role', 'dialog'); e.setAttribute('aria-label', 'Make your own tribe');
     const web = /^https?:/.test(location.protocol);
     e.innerHTML = `<div class="dt-end-card"><img src="assets/flint.svg" alt="" width="48" height="48" class="dt-end-flint"><span class="eyebrow">Your turn</span><h2>Make your own tribe</h2>
-      <p>Host it on your computer, invite friends with one link, connect your AI. Free and open source.</p>
+      <p>Share one GitHub repo, invite friends with one link, connect your AI. Free and open source.</p>
       <div class="dt-end-acts"><a class="btn primary" id="dt-download" href="${RELEASES}" target="_blank" rel="noopener">Download TribeCode</a>${web ? '<button class="btn" id="dt-browser">Open in browser</button>' : ''}</div>
       <div class="dt-end-more"><button class="linkish" id="dt-again">Watch again</button><span>·</span><button class="linkish" id="dt-explore">Explore this tribe</button></div></div>`;
     document.body.appendChild(e);

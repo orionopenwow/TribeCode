@@ -8,7 +8,7 @@ Create it as a scheduled task in Claude (claude.ai → Code → Scheduled tasks,
 
 ---
 
-Nightly self-upgrade run for TribeCode (the owner, Campton, asked for this on 2026-11-07). TribeCode is a self-hosted "multiplayer vibecoding" app: friends, each with their own Claude Code agents, build one app together; one friend's computer hosts; zero-npm-dependency Node server + plain browser JS + a Tauri desktop wrapper. Repo: github.com/orionopenwow/TribeCode.
+Nightly self-upgrade run for TribeCode (the owner, Campton, asked for this on 2026-11-07). TribeCode is a self-hosted "multiplayer vibecoding" app: friends, each with their own Claude Code agents, build one app together; the work lives in a shared GitHub repo (optionally hosted on someone's computer or server); zero-npm-dependency Node server + plain browser JS + a Tauri desktop wrapper. Repo: github.com/orionopenwow/TribeCode.
 
 THE OWNER'S INTENT (optimize for this): "test the main features and upgrade them by understanding the user intent of collaborating easily with other people using LLMs and not disrupt code by working on the same thing, and the automatic Claude Code generator and autopilot GitHub upload, with high-fidelity chat and notification systems, to create a successful app; compare and screenshot your milestone results too."
 

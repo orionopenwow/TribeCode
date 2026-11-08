@@ -477,7 +477,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
     if (!on || scoped) {
-      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your computer runs the tribe; friends join with one link.' : 'TribeCode runs on one friend\'s computer. Get the app to start one, or join a friend.'}</p></div>
+      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repo; friends join with one link.' : 'Your work lives in a shared GitHub repo. Get the app to start a tribe, or join a friend.'}</p></div>
         ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>${desk ? 'Host on this computer' : 'Get the desktop app'}</b><small>${desk ? 'Start a tribe here, then make your first project' : 'Windows, Mac and Linux'}</small></span>${ico('i-chev', 16)}</button></div>`}
         ${joinFoot()}`;
       wireStart(); return;
@@ -560,7 +560,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
       : `<div class="np-card np-new">
           <span class="eyebrow">Start a new tribe</span>
           <h3>${desk ? 'Host it on this computer' : 'Host it with the desktop app'}</h3>
-          <p class="faint">${desk ? 'Your computer runs the tribe; friends join with a link.' : 'TribeCode runs on one friend\'s computer. Get the app to start a tribe.'}</p>
+          <p class="faint">${desk ? 'Your work lives in a shared GitHub repo; friends join with a link.' : 'Your work lives in a shared GitHub repo. Get the app to start a tribe.'}</p>
           <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start hosting</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
         </div>`;
     body().innerHTML = `<div class="np-stack">${top}

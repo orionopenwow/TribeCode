@@ -56,7 +56,7 @@ Researched 2026-11-07 with web search and direct fetches. spawn.co was read from
 | --- | --- | --- |
 | A few friends, each with their own agent, building one thing live | Zed Delta (pros), Replit (one cloud IDE), spawn (one engine) | The tribe: one link, lanes, approvals, #agents |
 | Phones as full members | Nobody for coding; Remote Control is one person's session | Phone rack, voice notes, one-tap approvals, @ai |
-| No cloud bill, no hosted copy of your code | Dyad/bolt.diy (solo) | Host on one friend's computer; plain files plus git |
+| No cloud bill, no hosted copy of your code | Dyad/bolt.diy (solo) | Your shared GitHub repo; plain files plus git, optionally hosted on your own computer or server |
 | Claude Code without the terminal and git pain | Claude desktop app (solo) | One line to connect; folders, repos, push and versions done for you |
 | Jam-sized game crews on any engine | spawn (own engine), itch.io (no tools) | Game Studio on three.js/Phaser/KAPLAY/Godot, with jam mode |
 | Turning open source into reusable know-how | Skill Seekers (CLI), plugin marketplaces | Workshop + importer with license checks, recipes that replay |

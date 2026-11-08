@@ -5,7 +5,7 @@ Read this to pick up the work in a new session (a new Claude chat, Claude Code, 
 Last updated: 2026-11-07, v0.8.0. The living vision and request log are in docs/CONTEXT.md (also the project doc claude/TribeCode-Context.md); update both at every release.
 
 ## What TribeCode is
-A self-hosted "multiplayer vibecoding" app. Friends, each with their own Claude Code agents, build one app together. Everything runs on one friend's computer. The server and web app have zero npm dependencies (plain Node and browser JS), and a Tauri v2 desktop wrapper bundles the server as a sidecar. GitHub holds the code, the releases and a website (Pages).
+A self-hosted "multiplayer vibecoding" app. Friends, each with their own Claude Code agents, build one app together. The work lives in the tribe's shared GitHub repo; someone's desktop app or own server keeps it online for speed. The server and web app have zero npm dependencies (plain Node and browser JS), and a Tauri v2 desktop wrapper bundles the server as a sidecar. GitHub holds the code, the releases and a website (Pages).
 
 - Repo: https://github.com/orionopenwow/TribeCode. MIT. `main` = stable/released, `dev` = working lane (feature branches merge into `dev` first; the user tests it with Desktop\TribeCode\Working\Start-Working.bat at :4848, then it's merged to `main` and released).
 - Releases: one is published automatically when the version in `app/src-tauri/tauri.conf.json` changes on main. That builds Windows, Apple Silicon Mac and Linux installers plus signed `latest.json`, and the in-app updater picks it up. Bump it in 4 files: `package.json`, `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml`. Add an entry to `CHANGELOG.md`.

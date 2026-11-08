@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.17.14
+
+- **Clearer about where your work lives**: TribeCode no longer says it "runs on one friend's computer". Your tribe's code lives in your shared GitHub repo; someone can host the tribe on their own computer or a server to make it quicker. Updated in Flint's welcome, Home, New project, the phone drawer, the demo, the website and the docs
+- **Flint's welcome**: the hello facts are bigger, plain lines with no boxes
+- **Phones**: the same wording in the phone drawer and New project; the welcome's facts scale down on small screens
+
 ## v0.17.13
 
 - **Phone apps planned**: docs/PHONE-APPS.md lays out the Android APK (first), push notifications, then the iPhone app via TestFlight, built from the same app with Tauri

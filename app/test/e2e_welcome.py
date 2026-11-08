@@ -25,7 +25,7 @@ def main():
             pg.goto(BASE + "/?welcome=1"); pg.wait_for_selector("#wl")
             assert pg.locator("#intro").count() == 0, "Flint's welcome replaces the slide intro"
             pg.wait_for_function("document.querySelector('#wl-line').textContent.includes('pretend tribe')")
-            assert pg.get_attribute("#wl", "data-step") == "0" and pg.locator(".wl-facts li").count() == 3
+            assert pg.get_attribute("#wl", "data-step") == "0" and pg.locator(".wl-facts li").count() == 2
             pg.wait_for_timeout(500); pg.screenshot(path=str(SHOTS / "welcome-1.png"))
             pg.click("#wl-next")
             # 1: make the pretend tribe
