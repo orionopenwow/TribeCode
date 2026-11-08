@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.17.1
+
+- **Flint's welcome**: "Open in your browser" on the website now starts with Flint. He helps you make a pretend tribe (kind, emoji, name), shows four things you'll find inside, then asks how you want to see it: the 3-minute auto demo, exploring on your own, or starting your real tribe. The name you pick carries into the demo
+- **Desktop installers fixed**: the Windows and Linux builds had been failing since v0.15.0 because the app's files were being flattened into one folder (two files had the same name). The app's folder is now copied as is
+- **Website**: a bigger logo and wordmark in the top bar (the menu folds into ☰ a little earlier so it never overflows), and the "Small apps that help" gallery is gone from the Mission page
+- **Phones**: Flint's welcome is a full-screen card with the buttons pinned to the bottom; the site's top bar uses a smaller lockup
+
 ## v0.17.0
 
 - **Paste a link, get notes**: paste a link in chat, use Files › Captures, + › Read a link, or ask Flint to "summarize <url>". The host reads the page safely, pulls out the article and writes a quick summary with key points, action items, decisions and tags, no AI needed. Each capture is saved in Files › Captures and shows as a card in chat with Make tasks

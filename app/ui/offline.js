@@ -27,6 +27,8 @@
   const iso = (t = Date.now()) => new Date(t).toISOString();
   const C = () => window.TribeClient, A = () => window.TribeApp;
   const toast = m => A() && A().toast(m);
+  // feat/welcome: the pretend tribe someone named in Flint's welcome (welcome.js), else the default
+  const wtribe = dflt => { const w = ls.get('tribecode.welcome.tribe'); return w && w.name ? { name: String(w.name).slice(0, 40), emoji: w.emoji || '🔥' } : { name: dflt, emoji: '🔥' }; };
 
   let db = ls.get(KEY);
   const active = () => !!(db && db.on && ((S.get().server || {}).token === TOKEN));
@@ -42,7 +44,7 @@
     const t = (title, status, assignee, ago) => ({ id: 't-' + rid(6), title, status, assignee: assignee || null, by: 'maya', created: iso(now - ago), updated: iso(now - ago), order: now - ago, source: 'board', body: '', project: pid });
     return {
       on: true, v: 1, created: iso(now), seq: 0,
-      tribe: { name: 'Demo Tribe', created: iso(now) },
+      tribe: { name: wtribe('Demo Tribe').name, created: iso(now) },
       members: [
         { id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) },
         { id: 'maya', name: 'Maya', color: '#6C7CFF', role: 'builder', joined: iso(now - 86400e3), online: true, where: 'Chat' },
@@ -53,7 +55,7 @@
       projects: [{ id: pid, name: 'Lantern Run', emoji: '🏮', image: null, bio: 'A cozy night platformer: carry a little flame through three short levels and light the lanterns.',
         color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host', maya: 'builder', jay: 'builder' } }],
       chat: { [pid]: [
-        { id: 'm-' + rid(), at: iso(now - 60e3), by: 'tribecode', text: `${first} started **Demo Tribe** 🔥 It lives only in this browser: nothing leaves this device.` },
+        { id: 'm-' + rid(), at: iso(now - 60e3), by: 'tribecode', text: `${first} started **${wtribe('Demo Tribe').name}** ${wtribe('Demo Tribe').emoji} It lives only in this browser: nothing leaves this device.` },
         { id: 'm-' + rid(), at: iso(now - 40e3), by: 'maya', text: 'Hey! I\'m Maya, a pretend friend. Say hi, or try **@claude** in a message 👋' },
       ] },
       tasks: { [pid]: [
@@ -295,7 +297,7 @@
       if (!db.members.some(m => m.id === 'rio')) db.members.push({ id: 'rio', name: 'Rio', color: '#9AE66E', role: 'builder', joined: iso(), online: true, where: 'Chat' });
       for (const p of db.projects) p.members.rio = 'builder';
       save(); pushPresence(); push({ type: 'projects' });
-      post(cur(), 'tribecode', 'Rio joined **Demo Tribe** with your pretend link 👋');
+      post(cur(), 'tribecode', `Rio joined **${(db && db.tribe && db.tribe.name) || 'Demo Tribe'}** with your pretend link 👋`);
       later(1500, () => post(cur(), 'rio', 'Hi all! I\'m Rio, a pretend friend who just tapped your link 😄'));
     });
   }
@@ -676,7 +678,7 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? 'Campfire Crew is live. Sit back and watch, or join in.' : 'Demo Tribe is ready. Nothing leaves this device.'); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }
