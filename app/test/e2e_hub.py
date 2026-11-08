@@ -362,7 +362,7 @@ def main():
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
             # desktop: the header keeps only the update button; you, the bell and Friends sit in the bottom-left user bar
-            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn"]
+            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn", "tb-help"]
             assert host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].every(s => document.querySelector(s).closest('#userbar'))"), "user bar holds profile, bell, friends"
             order = host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
