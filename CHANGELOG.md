@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.8
+
+- **Docs is now Files, and it takes any kind of file**: pictures, audio, video, PDFs, code, 3D models, zips, anything up to 50 MB. Upload to your own files (only you) or to a project (everyone in it), or drag files onto the page on desktop. Chips filter by All, Notes, Docs, Pictures and Other files (remembered). Opening a file shows it right there: pictures, video, audio, PDFs and code, and 3D models open in the 3D viewer. Download and Delete (tap twice) are top right. The sidebar says **All files** next to **All repos**, and a project's section is **Files**
+- **Every theme checked on phones**: all 9 themes on 10 phone screens, with a new test that measures text contrast on each one. Fixed the logo on light themes (it was white on white) and Home's small "Open" and "Copy a link" links on Light, Solar Light and Nordic
+- **Phones**: the Files + opens a sheet like a files app: New note, Upload a file, or Upload to the project you're in. The rack icon stays the same
+
 ## v0.8.7
 
 - **Messages, all in one list**: the speech-bubble button opens every conversation, not Friends. Your Claude, each project's chat (marked in the project's color, unread first) and your direct messages (in each person's color, with a friend tag and unread count). Tap one to jump straight in

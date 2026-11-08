@@ -20,7 +20,7 @@ SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
-CORE = ["Overview", "Chat & Streams", "Docs & Files", "Tasks & Board", "Agents Hub"]
+CORE = ["Overview", "Chat & Streams", "Files", "Tasks & Board", "Agents Hub"]
 TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]
 AGENT_TABS = ["Agents", "Your agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary"]
 # tab key -> how to tell its view is on screen
@@ -155,7 +155,7 @@ def main():
             host.mouse.move(720, 600); shot(host, "nav-tabs-bugs")
             # remembered: away and back lands on Bugs
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
-            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Docs", "Website"], tabs(host)   # Docs & Files: Docs · Website
+            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Files", "Website"], tabs(host)   # Docs & Files: Docs · Website
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-bugs:not(.hidden)")
             # Requests shows up as a tab only while something waits
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project=pid); assert st == 200, r

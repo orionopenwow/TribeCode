@@ -196,7 +196,7 @@ def main():
             assert "lantern" in chips and "Sketches" in chips, chips   # a folder project is named after its folder
             # the sidebar: the four rows are the Global ones, plus a way into the project
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
-            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Global docs", "All repos", "Agent fleet"]
+            assert [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All repos", "Agent fleet"]
             assert host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#pj-rail [data-pj-open]", state="visible")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
@@ -262,7 +262,7 @@ def main():
             host.wait_for_function("lan => TribeClient.project() === lan", arg=lan, timeout=8000)
             host.wait_for_function("t => document.querySelector('#doc-title') && document.querySelector('#doc-title').value === t", arg="Glow shader notes", timeout=10000)
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
-            wait_text(host, "#hub-resume", "lantern"); wait_text(host, "#hub-resume", "Docs")
+            wait_text(host, "#hub-resume", "lantern"); wait_text(host, "#hub-resume", "Files")
             host.click("#pj-rail .pj-circle.on"); host.wait_for_selector("#view-home:not(.hidden)")
             assert not host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#nest-ws-tasks", state="visible")   # back in a project: its four rows
@@ -322,6 +322,25 @@ def main():
             # your notes sit above the project docs
             # one docs center: your notes and project docs as cards, newest first; list/grid is remembered
             host.click("[data-dv=list]"); host.wait_for_selector("#hub-docs.list"); host.reload(); host.evaluate("TribeHub.open('docs')"); host.wait_for_selector("#hub-docs.list"); host.click("[data-dv=grid]")
+            # ---------------- Files: upload any kind of file (a picture, an odd type), filter, open, delete ----------------
+            pic = Path(tempfile.mkdtemp(prefix="tribe-up-", dir="/tmp"))
+            import struct, zlib; ch = lambda t, d: struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
+            (pic / "dot.png").write_bytes(b"\x89PNG\r\n\x1a\n" + ch(b"IHDR", struct.pack(">IIBBBBB", 8, 8, 8, 2, 0, 0, 0)) + ch(b"IDAT", zlib.compress(b"".join(b"\x00" + b"\xf2\x6b\x1d" * 8 for _ in range(8)))) + ch(b"IEND", b""))
+            (pic / "level.tmx").write_text("<map/>")
+            host.wait_for_selector("#dc-up", state="visible")
+            with host.expect_file_chooser() as fc:
+                host.click("#dc-up"); host.click("#dc-upmenu [data-scope=me]")
+            fc.value.set_files([str(pic / "dot.png"), str(pic / "level.tmx")])
+            host.wait_for_selector("#hub-docs [data-up] img.dc-thumb[src^='blob:']", timeout=15000)
+            wait_text(host, "#hub-docs", "level.tmx")
+            host.click("[data-dk=pics]"); host.wait_for_function("() => !document.querySelector('#hub-docs').innerText.includes('level.tmx') && document.querySelector('#hub-docs').innerText.includes('dot.png')")
+            host.click("[data-dk=other]"); wait_text(host, "#hub-docs", "level.tmx")
+            host.click("#hub-docs [data-up]"); host.wait_for_selector("#fv .fv-none"); assert host.get_attribute("#fv-dl", "href").startswith("blob:")
+            host.click("#fv-del"); host.click("#fv-del"); host.wait_for_selector("#fv", state="detached")
+            host.wait_for_function("() => !document.querySelector('#hub-docs').innerText.includes('level.tmx')")
+            ups = ok(api("/uploads", token=orion)); assert [f["name"] for f in ups["mine"]] == ["dot.png"], ups
+            assert ok(api("/uploads", token=zed))["mine"] == [], "your files are only yours"
+            host.click("[data-dk=all]")
             # reopen and edit autosaves
             host.click("#hub-docs [data-mynote]"); host.wait_for_selector("#note-text")
             host.fill("#note-text", "New, waxing, full, waning, gibbous"); host.wait_for_timeout(900); host.click("#note-done")
