@@ -35,4 +35,4 @@
 .window .rail .logo-btn#rail-logo { background: none; border: 0; }
 /* almost twice as big: the mark has a lot of empty margin, so the image overflows its button (still centered) */
 .window .rail .logo-btn#rail-logo { overflow: visible; }
-.window .rail #rail-logo img.logo { width: 76px; height: 76px; margin: -13px -11px; max-width: none; }
+.window .rail #rail-logo img.logo { width: 66px; height: 66px; margin: -8px -6px; max-width: none; }

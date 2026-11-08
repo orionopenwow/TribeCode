@@ -541,4 +541,4 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 .window .rail #rail-logo img.logo { width: 46px; height: 46px; image-rendering: pixelated; transition: transform .18s var(--ease, ease); }
 .window .rail #rail-logo:hover img.logo { transform: scale(1.08); }
 .window .rail #rail-logo.is-busy::after { content: ''; position: absolute; right: 6px; bottom: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--live, #38C6B1); }
-.tb-brand .tb-wm { margin-left: 4px; }
+.tb-brand .tb-wm { margin-left: -10px; }
