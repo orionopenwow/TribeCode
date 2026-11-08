@@ -139,8 +139,9 @@
   // offered once, a little after a first real session starts (never during tests or the showcase autoplay)
   function maybeOffer() {
     let done = null; try { done = localStorage.getItem(KEY); } catch {}
-    if (done || /[?&](skipIntro|demo=showcase|notour)/.test(location.search) || navigator.webdriver) return;
+    if (done || /[?&](skipIntro|demo=showcase|notour|welcome)/.test(location.search) || navigator.webdriver) return;
     setTimeout(async () => {
+      if (document.getElementById('wl')) return;   // feat/welcome: Flint is already showing them around
       const r = await point('#rail-logo, #hpt-brand', "Hi, I'm Flint, your tribe's helper. Want a 30-second tour?", { next: 'Show me', skip: true, keep: true });
       if (r === 'next') tour(); else { try { localStorage.setItem(KEY, 'skipped'); } catch {} close(); }
     }, 2500);

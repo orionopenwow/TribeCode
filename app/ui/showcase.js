@@ -20,6 +20,8 @@
   function seed({ iso, rid, st }) {
     const now = Date.now(), H = 3600e3;
     const name = st.name && st.name !== 'Me' ? st.name : 'Orion', first = name.split(' ')[0];
+    let wt = null; try { wt = JSON.parse(localStorage.getItem('tribecode.welcome.tribe') || 'null'); } catch {}   // feat/welcome: the name from Flint's welcome
+    const TRIBE = (wt && wt.name ? String(wt.name).slice(0, 40) : 'Campfire Crew'), TEMO = (wt && wt.emoji) || '🔥';
     let order = now - 30 * H;
     const t = (key, title, status, assignee, by, agoH, pid = PID) => ({ id: 't-' + key + '-' + rid(4), key, title, status, assignee: assignee || null, by, created: iso(now - agoH * H - H), updated: iso(now - agoH * H),
       updatedBy: assignee || by, order: order += 1000, source: 'board', body: '', project: pid });
@@ -47,7 +49,7 @@
     const msg = (by, text, agoMin) => ({ id: 'm-' + rid(), at: iso(now - agoMin * 60e3), by, text });
     return {
       on: true, v: 1, mode: 'showcase', created: iso(now - 30 * H), seq: 0,
-      tribe: { name: 'Campfire Crew', created: iso(now - 30 * H) },
+      tribe: { name: TRIBE, created: iso(now - 30 * H) },
       members: [
         { id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now - 30 * H) },
         { id: 'maya', name: 'Maya', color: '#6C7CFF', role: 'builder', joined: iso(now - 29 * H), online: true, where: 'Tasks' },
@@ -67,7 +69,7 @@
       ],
       chat: {
         [PID]: [
-          msg('tribecode', `${first} started **Campfire Crew** 🔥 This is a showcase: a pretend tribe that runs by itself in this browser. Nothing leaves this device.`, 60),
+          msg('tribecode', `${first} started **${TRIBE}** ${TEMO} This is a showcase: a pretend tribe that runs by itself in this browser. Nothing leaves this device.`, 60),
           msg('maya', 'Level 2 is coming along. The marsh fog finally looks right 🌫️', 42),
           msg('claude-maya', '📈 **Title screen is ready for review**\n- Start button, flickering logo, a soft fade in\n- Works with keys and touch', 70),
           msg('jay', 'Art direction doc is updated: warmer oranges, fewer blues. Have a look when you can.', 30),

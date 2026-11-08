@@ -329,7 +329,8 @@
     decorateSettings(); decorateInvite();
     if (C.state().status === 'offline' && !C.hasToken()) soloChat();
     if (deviceKey) deviceBoot();
-    if (introNow) openIntro();
+    if (window.TribeWelcome && window.TribeWelcome.shouldShow()) window.TribeWelcome.open();   // feat/welcome: Flint's guided welcome
+    else if (introNow) openIntro();
   }, 0);
 
   window.TribeWeb = { os: OS, mobile, openIntro, openDevices, showInstallSheet, deviceKey, RELEASES };

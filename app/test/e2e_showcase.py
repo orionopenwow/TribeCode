@@ -135,8 +135,8 @@ def main():
                 else:
                     assert l["abs"].startswith("https://"), l
             assert pg.locator(".hero a:has-text('Watch a demo tribe')").get_attribute("href") == "app/?demo=showcase"
-            assert pg.locator(".nav__end a:has-text('Open the app')").get_attribute("href") == "app/"
-            assert pg.locator(".hero a:has-text('Open in your browser')").get_attribute("href") == "app/"
+            assert pg.locator(".nav__end a:has-text('Open the app')").get_attribute("href") == "app/?welcome=1"
+            assert pg.locator(".hero a:has-text('Open in your browser')").get_attribute("href") == "app/?welcome=1"
             # old addresses still land in the right place
             for old, want in [("/go.html#s=x&c=y", "/app/go.html#s=x&c=y"), ("/demo.html", "/app/demo.html"), ("/about/", "/"), ("/#/hub", "/app/#/hub")]:
                 op = ctx.new_page(); op.goto(BASE + old); op.wait_for_url(BASE + want, timeout=8000); op.close()
@@ -188,7 +188,7 @@ def main():
             assert "Desktop app" in ph.inner_text(".hero [data-dl-label]"), "a phone isn't offered an installer as if it could run it"
             # phones: Open the app comes first (a phone can't install the desktop app)
             first = ph.evaluate("(() => { const bs = [...document.querySelectorAll('.hero__ctas .btn')].filter(b => b.offsetParent); bs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top); return bs[0].getAttribute('href'); })()")
-            assert first == "app/", first
+            assert first == "app/?welcome=1", first
             assert ph.is_visible(".nav__end a[data-open-app]") and not ph.is_visible(".nav__end [data-dl-main]")
             no_overflow(ph, "phone top")
             scroll_through(ph)
