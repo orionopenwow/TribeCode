@@ -100,8 +100,8 @@
   function pulse(pid) {
     const p = proj(pid), tasks = db.tasks[pid] || [], docs = db.docs[pid] || [], people = presence();
     const here = people.filter(m => m.online && m.project === pid);
-    const recent = [...tasks.map(t => ({ kind: 'task', at: t.updated, text: t.title, sub: `${t.status}${t.updatedBy ? ' · ' + nameOf(t.updatedBy) : ''}`, ref: t.id })),
-      ...docs.map(d => ({ kind: 'doc', at: d.updated, text: d.title, sub: `doc · ${nameOf(d.updatedBy)}`, ref: d.slug })),
+    const recent = [...tasks.map(t => ({ kind: 'task', at: t.updated, text: t.title, sub: `${t.status}${t.updatedBy ? ' · ' + nameOf(t.updatedBy) : ''}`, ref: t.id, by: t.updatedBy || t.by })),
+      ...docs.map(d => ({ kind: 'doc', at: d.updated, text: d.title, sub: `doc · ${nameOf(d.updatedBy)}`, ref: d.slug, by: d.updatedBy })),
       ...((db.commits || {})[pid] || []).map(c => ({ kind: 'commit', at: c.at, text: c.subject, sub: `${c.sha} · ${nameOf(c.by)}${c.add != null ? ` · +${c.add} −${c.del}` : ''}`, ref: c.sha, by: c.by }))].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 10);
     const doing = tasks.filter(t => t.status === 'doing'), todo = tasks.filter(t => t.status === 'backlog' || t.status === 'review');
     const chat = (db.chat[pid] || []).filter(m => m.by !== 'tribecode');
@@ -116,7 +116,7 @@
           next: doing.length ? `In progress: ${doing[0].title}` : todo.length ? `Up next: ${todo[0].title}` : 'No tasks yet', soon: 'Nothing on the calendar' } } };
   }
   function hubData() {
-    const feed = db.projects.flatMap(p => pulse(p.id).recent.map(r => ({ project: p.id, id: `${r.kind}:${r.ref}`, kind: r.kind, at: r.at, title: r.text, by: r.by || 'me', byName: r.by ? nameOf(r.by) : me().name, sub: r.sub, ref: { type: r.kind, id: r.ref } })))
+    const feed = db.projects.flatMap(p => pulse(p.id).recent.map(r => ({ project: p.id, id: `${r.kind}:${r.ref}`, kind: r.kind, at: r.at, title: r.text, by: r.by && db.members.some(m => m.id === r.by) ? r.by : 'me', byName: r.by && db.members.some(m => m.id === r.by) ? nameOf(r.by) : me().name, sub: r.sub, ref: { type: r.kind, id: r.ref } })))
       .sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 20);
     return { me: { id: 'me', name: me().name, role: 'host' }, hero: [], more: [], waiting: (db.approvals || []).filter(a => a.status === 'pending').length, feed, notes: [], suggestions: [],
       status: { activeToday: presence().filter(m => m.online && m.role !== 'agent').length, projects: db.projects.length, agents: [] },

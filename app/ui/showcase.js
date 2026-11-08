@@ -309,6 +309,9 @@
       db().milestones[PID].push(m); K().save(); K().push({ type: 'milestones', milestones: db().milestones[PID] });
     }
     s.order = m.tasks.filter(id => task(id) && task(id).status !== 'done');
+    // keep the board tidy over a long watch: only the 12 newest done tasks stay
+    const done = tasks().filter(t => t.status === 'done').sort((x, y) => String(y.updated).localeCompare(String(x.updated)));
+    for (const t of done.slice(12)) { db().tasks[PID] = tasks().filter(x => x !== t); K().push({ type: 'task-removed', id: t.id }); }
     if (def.next && !((db().proposals[PID] || []).some(p => p.id === def.next.id))) {
       const pr = { ...def.next, kind: 'feature', status: 'open', created: iso(), votes: { [def.next.by]: 'yes' } };
       db().proposals[PID].unshift(pr); K().save();
