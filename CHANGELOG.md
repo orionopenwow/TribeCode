@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.7
+
+- **Messages, all in one list**: the speech-bubble button opens every conversation, not Friends. Your Claude, each project's chat (marked in the project's color, unread first) and your direct messages (in each person's color, with a friend tag and unread count). Tap one to jump straight in
+- **Phones**: the first rack button is **Home** again, so you can always get back to the dashboard from Docs. Your profile moved to your avatar, top left of Home and inside the docs search pill (like Google Docs), where it opens your profile sheet
+
 ## v0.8.6
 
 - **Docs center, docs-app style**: a search pill, sort by last updated or A–Z, list or grid (remembered), and cards with a preview of each doc. Your own notes and your projects' docs sit together, newest first. **New note** (desktop) or the **+** (phones) starts a note

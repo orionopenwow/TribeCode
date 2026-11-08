@@ -118,8 +118,10 @@ def main():
 
             # phone Home: its own rack (Home · Projects · Notes · Activity · +), hidden in a project, slides away on scroll down
             assert ph.locator("#m2-homebar").count() == 0 or ph.locator("#m2-homebar").is_hidden(), "no Home rack inside a project"
-            ph.evaluate("TribeHub.open('home')"); ph.wait_for_selector("#m2-homebar:not(.hidden) [data-hb='me']", timeout=10000)
+            ph.evaluate("TribeHub.open('home')"); ph.wait_for_selector("#m2-homebar:not(.hidden) [data-hb='home']", timeout=10000)
             assert ph.locator("#tabbar").is_hidden(), "the project rack hides on Home"
+            ph.click("#m2-homebar [data-hb='notes']"); ph.wait_for_function("TribeHub.mode() === 'docs'", timeout=5000)
+            ph.click("#m2-homebar [data-hb='home']"); ph.wait_for_function("TribeHub.mode() === 'home'", timeout=5000)   # back to the dashboard from docs
             ph.wait_for_selector("#hub-pjs [data-pj-go]")
             ph.evaluate("(() => { const m = document.querySelector('#main'); const s = m && m.scrollHeight > m.clientHeight + 4 ? m : document.scrollingElement; s.scrollTo(0, 400); })()")
             ph.wait_for_timeout(400)

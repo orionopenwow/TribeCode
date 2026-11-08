@@ -113,7 +113,7 @@
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
-      el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn" id="hpt-plus" aria-label="Start or join a tribe">${ico('i-plus', 26)}</button>
+      el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
@@ -135,6 +135,12 @@
   // ---------- the one hero: two big choices (Getting started, or Quick start once you're in) ----------
   // Suggestions, Ask and the agents fleet moved out of the way: AI Insights (right panel), @ai in chat, Agent fleet row.
   // The top of Home: who you are and where your tribe stands, with the campfire as the identity (flat matte card).
+  // Your avatar (your color + initial), for Home's top bar and the docs search pill on phones
+  function meFace() {
+    const st = (window.TribeStore && TribeStore.get()) || {}, m = (C.state() || {}).me || {};
+    const n = (m.name || st.name || '?').trim(), color = m.color || st.color || '#F26B1D';
+    return `<span class="me-face" style="background:${esc(color)}">${esc(n.charAt(0).toUpperCase())}</span>`;
+  }
   function idCard(on, tribe, pj, live, sub) {
     const st = (window.TribeStore && TribeStore.get()) || {}, me = (C.state() || {}).me || {};
     const name = (me.name || st.name || 'You').split(' ')[0], color = me.color || st.color || '#F26B1D';
@@ -537,7 +543,7 @@
   let docsCache = [];
   function renderDocs(el) {
     el.innerHTML = `<div class="hub dc">
-      <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your docs" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your docs"></div>
+      <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your docs" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your docs">${isPhone() ? `<button class="dc-me" id="dc-me" aria-label="Your profile">${meFace()}</button>` : ''}</div>
       <div class="dc-bar"><button class="dc-sort" id="dc-sort">${docsSort === 'name' ? 'Name A–Z' : 'Last updated'}<span class="dc-arrow">${ico('i-chev', 16)}</span></button><span style="flex:1"></span>
         <button class="btn primary dc-new" id="dc-new">${ico('i-plus', 15)}New note</button>
         <div class="dc-seg" role="group" aria-label="View"><button data-dv="list" class="${docsView === 'list' ? 'on' : ''}" aria-label="List">${ico('i-list', 18)}</button><button data-dv="grid" class="${docsView === 'grid' ? 'on' : ''}" aria-label="Grid">${ico('i-grid', 18)}</button></div></div>
@@ -547,6 +553,7 @@
     $('#dc-sort').onclick = () => { docsSort = docsSort === 'name' ? 'updated' : 'name'; try { localStorage.setItem('tribecode.docs.sort', docsSort); } catch {} $('#dc-sort').firstChild.textContent = docsSort === 'name' ? 'Name A–Z' : 'Last updated'; drawDocs(); };
     el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { docsView = b.dataset.dv; try { localStorage.setItem('tribecode.docs.view', docsView); } catch {} el.querySelectorAll('[data-dv]').forEach(x => x.classList.toggle('on', x === b)); $('#hub-docs').className = 'dc-items ' + docsView; });
     $('#hub-note-new').onclick = startNote; $('#dc-new').onclick = startNote;
+    const dm = $('#dc-me'); if (dm) dm.onclick = () => window.TribeMobile && window.TribeMobile.myProfile && window.TribeMobile.myProfile();
     drawDocs(); docsList();
   }
   function drawDocs() {
@@ -664,7 +671,7 @@
     el.querySelectorAll('[data-fleet]').forEach(b => b.onclick = () => fleetGo(b.dataset.fleet, b.dataset.id));
     wireNotes(el);
     const tb = el.querySelector('#hub-ptop'); if (tb) {   // phone Home's own top bar: + · TribeCode ⌄ · bell
-      tb.querySelector('#hpt-plus').onclick = () => window.TribeMobile && window.TribeMobile.startTribe ? window.TribeMobile.startTribe() : newProject();
+      tb.querySelector('#hpt-me').onclick = () => window.TribeMobile && window.TribeMobile.myProfile && window.TribeMobile.myProfile();   // you: top left of Home (start/join lives in the projects list)
       tb.querySelector('#hpt-brand').onclick = () => window.TribeMobile && window.TribeMobile.projectsSheet ? window.TribeMobile.projectsSheet() : document.body.classList.add('drawer-open');   // a list of your projects
       tb.querySelector('#hpt-bell').onclick = () => window.TribeNotify && window.TribeNotify.openInbox && window.TribeNotify.openInbox();
     }
