@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.10.7
+
+- **Watch a demo tribe**: one tap from the website ("Watch a demo tribe"), the demo page or the app, and "Campfire Crew" plays out the whole workflow by itself in your browser. It has two projects, four friends, Claudes and Flint, a vision, a board, docs, a milestone and a vote. Every few seconds something happens: friends chat, an agent claims a task and the logo flickers, a progress note and a commit land, tasks move Doing → Review → Done, approvals reach your inbox, the vote passes and the milestone fills, then a "v0.2 shipped 🎉" card, and a new season starts. A small pill has Pause, 2×, Restart, Explore quietly and Leave (your real setup comes back exactly). The "Try a demo tribe" entries now offer "Watch it come alive" or "Explore quietly"
+- **Phones**: the showcase plays in Chat and on Tasks, with the pill above the rack
+
 ## v0.10.6
 
 - **Meet Flint, for real**: Flint is now the logo's own flame, flickering, with two black pixel eyes that blink now and then (the logo itself stays a solid flame). His face is in his chat bar, his replies, the Helpers row, the ? menu and the phone Talk to… row

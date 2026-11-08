@@ -6,7 +6,9 @@
 // Claude agent that answers @mentions, picks up new tasks and posts a gist. Inviting someone makes a pretend link and
 // a third friend (Rio) "joins" a few seconds later. Anything not built here answers "Not in the offline demo".
 // Leaving restores your real settings exactly (server URL and token, hosting); the demo survives reloads until reset.
-//   window.TribeOffline = { active(), start(), leave(), reset(), hostForReal(), socket(url), state() }
+// Showcase mode (app/ui/showcase.js): the same backend seeded with a lively "Campfire Crew" tribe and a script that
+// plays out by itself (db.mode === 'showcase'). start() with no mode asks which one you want.
+//   window.TribeOffline = { active(), start(mode), choose(), leave(), reset(), hostForReal(), socket(url), state(), _k }
 (function () {
   'use strict';
   const S = window.TribeStore;
@@ -32,7 +34,8 @@
 
   // ---------- the pretend tribe ----------
   const AGENT = 'claude';
-  function seed() {
+  function seed(mode) {
+    if (mode === 'showcase' && window.TribeShowcase) return window.TribeShowcase.seed({ iso, rid, st: S.get() });
     const st = S.get(), now = Date.now();
     const name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
     const pid = 'lantern-run';
@@ -97,24 +100,25 @@
   function pulse(pid) {
     const p = proj(pid), tasks = db.tasks[pid] || [], docs = db.docs[pid] || [], people = presence();
     const here = people.filter(m => m.online && m.project === pid);
-    const recent = [...tasks.map(t => ({ kind: 'task', at: t.updated, text: t.title, sub: `${t.status}${t.updatedBy ? ' · ' + nameOf(t.updatedBy) : ''}`, ref: t.id })),
-      ...docs.map(d => ({ kind: 'doc', at: d.updated, text: d.title, sub: `doc · ${nameOf(d.updatedBy)}`, ref: d.slug }))].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 10);
+    const recent = [...tasks.map(t => ({ kind: 'task', at: t.updated, text: t.title, sub: `${t.status}${t.updatedBy ? ' · ' + nameOf(t.updatedBy) : ''}`, ref: t.id, by: t.updatedBy || t.by })),
+      ...docs.map(d => ({ kind: 'doc', at: d.updated, text: d.title, sub: `doc · ${nameOf(d.updatedBy)}`, ref: d.slug, by: d.updatedBy })),
+      ...((db.commits || {})[pid] || []).map(c => ({ kind: 'commit', at: c.at, text: c.subject, sub: `${c.sha} · ${nameOf(c.by)}${c.add != null ? ` · +${c.add} −${c.del}` : ''}`, ref: c.sha, by: c.by }))].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 10);
     const doing = tasks.filter(t => t.status === 'doing'), todo = tasks.filter(t => t.status === 'backlog' || t.status === 'review');
     const chat = (db.chat[pid] || []).filter(m => m.by !== 'tribecode');
     return { project: view(p), here: here.map(m => ({ id: m.id, name: m.name, color: m.color, where: m.where, role: m.role })),
       agents: people.filter(m => m.role === 'agent' && m.online).map(a => ({ id: a.id, name: a.name, where: a.where, since: a.since })),
       team: people.filter(m => (p.members || {})[m.id] || m.role === 'agent').map(m => ({ id: m.id, name: m.name, color: m.color, role: (p.members || {})[m.id] || m.role, online: m.online, here: m.online, kind: m.role === 'agent' ? 'agent' : 'person' })),
-      recent, taskCount: tasks.length, upcoming: [], repo: null, bio: p.bio || '',
+      recent, taskCount: tasks.length, upcoming: [], repo: (db.repo || {})[pid] || null, bio: p.bio || '',
       vision: { has: !!db.vision[pid], excerpt: String(db.vision[pid] || '').replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 160) },
-      living: { mood: chat.length ? 'steady' : 'fresh', by: 'tribecode',
-        summary: `${p.name} is a pretend project in the offline demo. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
+      living: { mood: db.mode === 'showcase' ? 'buzzing' : chat.length ? 'steady' : 'fresh', by: 'tribecode',
+        summary: `${p.name} is a pretend project in the ${db.mode === 'showcase' ? 'showcase' : 'offline demo'}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
         lines: { lately: recent[0] ? `Last: ${recent[0].text}` : 'Nothing yet', chat: chat.length ? `${chat.length} message${chat.length === 1 ? '' : 's'}` : 'No messages yet',
           next: doing.length ? `In progress: ${doing[0].title}` : todo.length ? `Up next: ${todo[0].title}` : 'No tasks yet', soon: 'Nothing on the calendar' } } };
   }
   function hubData() {
-    const feed = db.projects.flatMap(p => pulse(p.id).recent.map(r => ({ project: p.id, id: `${r.kind}:${r.ref}`, kind: r.kind, at: r.at, title: r.text, by: 'me', byName: me().name, sub: r.sub, ref: { type: r.kind, id: r.ref } })))
+    const feed = db.projects.flatMap(p => pulse(p.id).recent.map(r => ({ project: p.id, id: `${r.kind}:${r.ref}`, kind: r.kind, at: r.at, title: r.text, by: r.by && db.members.some(m => m.id === r.by) ? r.by : 'me', byName: r.by && db.members.some(m => m.id === r.by) ? nameOf(r.by) : me().name, sub: r.sub, ref: { type: r.kind, id: r.ref } })))
       .sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 20);
-    return { me: { id: 'me', name: me().name, role: 'host' }, hero: [], more: [], waiting: 0, feed, notes: [], suggestions: [],
+    return { me: { id: 'me', name: me().name, role: 'host' }, hero: [], more: [], waiting: (db.approvals || []).filter(a => a.status === 'pending').length, feed, notes: [], suggestions: [],
       status: { activeToday: presence().filter(m => m.online && m.role !== 'agent').length, projects: db.projects.length, agents: [] },
       projects: db.projects.map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', color: p.color, image: p.image || null, last: db.created, here: p.id === cur() ? 1 : 0 })),
       people: [], lastProject: cur(), fleet: { agents: [], models: { online: false, model: '', list: [] }, loops: [], secretary: { enabled: false, quiet: false, model: '', lastRun: null, running: false } },
@@ -213,6 +217,45 @@
     (db.tasks[pid] = db.tasks[pid] || []).push(t); save();
     if (pid === cur()) push({ type: 'task', task: t }); else push({ type: 'project-pulse', project: pid, kind: 'task' });
     return t;
+  }
+  // ---------- votes, approvals and the inbox (empty in the quiet demo; showcase.js fills them) ----------
+  function tally(p) {
+    const voters = db.members.filter(m => m.role !== 'agent' && m.role !== 'spectator').length || 1;
+    const vs = Object.values(p.votes || {}), yes = vs.filter(v => v === 'yes').length, no2 = vs.filter(v => v === 'no').length;
+    return { yes, no: no2, voters, pending: Math.max(0, voters - yes - no2), needed: Math.floor(voters / 2) + 1 };
+  }
+  function nextVersion(ms) {
+    const last = (ms || []).map(m => String(m.version).replace(/^v/, '').split('.').map(Number)).sort((a, b) => b[0] - a[0] || b[1] - a[1])[0] || [0, 0];
+    return `v${last[0]}.${(last[1] || 0) + 1}`;
+  }
+  const hooks = { approved: [], decided: [] };
+  function vote(pid, pr, who, v) {
+    if (pr.status !== 'open') return pr;
+    (pr.votes = pr.votes || {})[who] = v; save();
+    const t = tally(pr);
+    if (t.yes >= t.needed) {
+      const ms = (db.milestones = db.milestones || {})[pid] = db.milestones[pid] || [];
+      const version = pr.version || nextVersion(ms);
+      pr.status = 'approved'; pr.closed = iso(); pr.milestone = version;
+      const items = (String(pr.body || '').match(/^\s*[-*]\s+\[ \]\s+(.+)$/gm) || []).map(l => l.replace(/^\s*[-*]\s+\[ \]\s+/, '').trim()).slice(0, 12);
+      pr.tasks = items.map(title => addTask(pid, { title, by: pr.by, body: `From proposal **${pr.title}** (${version}).` }).id);
+      ms.push({ version, title: pr.short || pr.title, proposal: pr.id, created: pr.closed, status: 'planned', tasks: pr.tasks }); save();
+      post(pid, 'tribecode', `Approved: **${pr.title}** → milestone **${version}**${items.length ? `, ${items.length} tasks created` : ''} 🎉`);
+      push({ type: 'milestones', milestones: ms });
+      hooks.approved.forEach(fn => { try { fn(pid, pr); } catch (e) { console.warn(e); } });
+    } else if (t.no >= t.needed) { pr.status = 'parked'; pr.closed = iso(); save(); post(pid, 'tribecode', `Proposal parked: **${pr.title}**`); }
+    push({ type: 'proposal', proposal: { ...pr, tally: tally(pr) } });
+    return pr;
+  }
+  function decide(ap, what, who, note) {
+    ap.status = what === 'approve' ? 'approved' : 'denied'; ap.decidedBy = who; ap.decidedByName = nameOf(who); ap.decided = iso(); if (note) ap.note = note; save();
+    push({ type: 'approval', approval: ap });
+    hooks.decided.forEach(fn => { try { fn(ap); } catch (e) { console.warn(e); } });
+  }
+  function notify(item) {
+    const it = { id: 'n-' + rid(8), at: iso(), priority: 'normal', ...item };
+    (db.inbox = db.inbox || []).unshift(it); db.inbox = db.inbox.slice(0, 120); save();
+    push({ type: 'notification', item: it }); return it;
   }
   function pickUp(pid, tid, wait = 2500) {
     if (db.busy) return; db.busy = tid; save();
@@ -317,7 +360,7 @@
           push({ type: 'projects' }); push({ type: 'project-removed', id: p.id }); pushHub(); return ok({ ok: true, removed: p.id });
         }
         if (c === 'pulse' && GET) return ok(pulse(p.id));
-        if (c === 'requests' && GET) return ok({ approvals: [], changes: [], proposals: [] });
+        if (c === 'requests' && GET) return ok({ approvals: (db.approvals || []).filter(x => x.status === 'pending'), changes: [], proposals: [] });
         if (c === 'widgets') {   // app/ui/widgets.js: extra sidebar rows (none to start)
           db.widgets = db.widgets || {};
           if (PUT && Array.isArray(body.widgets)) { db.widgets[p.id] = body.widgets.slice(0, 24); save(); push({ type: 'widgets', project: p.id }); }
@@ -379,8 +422,16 @@
       }
       case 'templates': return ok({ templates: [] });
       case 'vision': if (GET) return ok({ text: db.vision[pid] || '' }); if (PUT) { db.vision[pid] = String(body.text || '').slice(0, 20000); save(); post(pid, 'tribecode', 'VISION.md was updated'); return ok({ ok: true }); } break;
-      case 'proposals': if (GET && !b) return ok({ proposals: [] }); break;
-      case 'milestones': if (GET && !b) return ok({ milestones: [] }); break;
+      case 'proposals': {   // the approval board (board.js): showcase.js seeds one and votes on it
+        const list = (db.proposals = db.proposals || {})[pid] = db.proposals[pid] || [];
+        if (GET && !b) return ok({ proposals: list.map(x => ({ ...x, tally: tally(x) })) });
+        const pr = list.find(x => x.id === b); if (!pr) break;
+        if (POST && c === 'vote') { vote(pid, pr, 'me', body.vote === 'no' ? 'no' : 'yes'); return ok({ proposal: { ...pr, tally: tally(pr) } }); }
+        break;
+      }
+      case 'milestones': if (GET && !b) { const ms = ((db.milestones || {})[pid] || []); return ok({ milestones: ms, next: nextVersion(ms), repo: false }); }
+        if (POST && c === 'release') { const m = ((db.milestones || {})[pid] || []).find(x => x.version === b); if (!m) return no(404, 'milestone not found'); m.status = 'released'; m.released = iso(); save(); push({ type: 'milestones', milestones: db.milestones[pid] }); return ok({ milestone: m, tagged: false, pushed: false, note: 'Released in the demo (no real git tag).' }); }
+        break;
       case 'scratch': {
         if (!b && GET) return ok({ notes: db.scratch.slice() });
         if (!b && (PUT || POST)) return ok({ notes: scratchPut(body.notes) });
@@ -435,7 +486,17 @@
       case 'insights': return ok({ items: [] });
       case 'gists': return ok({ gists: (db.gists[pid] || []).slice(0, Number(q.get('limit')) || 100) });
       case 'flow': if (GET && !b) return ok({ flow: null }); break;
-      case 'approvals': if (GET && !b) return ok({ approvals: [], pending: 0 }); if (GET && b === 'rules') return ok({ rules: [] }); break;
+      case 'approvals': {
+        const list = db.approvals = db.approvals || [];
+        if (GET && !b) return ok({ approvals: list, pending: list.filter(x => x.status === 'pending').length });
+        if (GET && b === 'rules') return ok({ rules: [] });
+        if (POST && b === 'bulk') { const out = list.filter(x => x.status === 'pending' && x.risk === 'low'); out.forEach(x => decide(x, 'approve', 'me', '')); return ok({ approved: out }); }
+        const ap = list.find(x => x.id === b); if (!ap) break;
+        if (GET && !c) return ok({ approval: ap });
+        if (POST && (c === 'approve' || c === 'deny')) { if (ap.status !== 'pending') return no(409, 'already decided'); decide(ap, c, 'me', String(body.note || '').slice(0, 500)); return ok({ approval: ap }); }
+        if (POST && c === 'question') { (ap.questions = ap.questions || []).push({ name: me().name, text: String(body.text || '').slice(0, 500) }); save(); return ok({ approval: ap }); }
+        break;
+      }
       case 'brain': if (GET) return ok({ brain: { online: false, model: '', error: 'No local model in the offline demo' } }); break;
       case 'calendar': if (GET) return ok(b === 'upcoming' ? { items: [] } : { events: [], items: [] }); break;
       case 'claims': if (GET) return ok({ claims: [] }); break;
@@ -446,9 +507,10 @@
         break;
       case 'dms': if (GET) return ok({ conversations: [] }); break;
       case 'notify':
-        if (GET && b === 'inbox') return ok({ items: [], unread: 0, lastRead: null, marks: {} });
+        if (GET && b === 'inbox') { const items = db.inbox || []; return ok({ items, unread: items.filter(i => !db.lastRead || i.at > db.lastRead).length, lastRead: db.lastRead || null, marks: db.marks || {} }); }
         if (GET && b === 'prefs') return ok({ prefs: {} });
-        if (POST && b === 'read') return ok({ ok: true });
+        if (POST && b === 'read') { db.lastRead = iso(); db.marks = {}; save(); return ok({ ok: true }); }
+        if (b === 'items' && c) { const it = (db.inbox || []).find(i => i.id === c); if (!it) break; if (GET) return ok({ item: it }); if (POST) { const mk = (db.marks = db.marks || {})[c] = { ...(db.marks[c] || {}), ...body }; save(); return ok({ mark: mk }); } }
         break;
       case 'people': if (GET && !b) return ok({ status: { startedAt: db.created, uptimeSec: 0, commitsToday: 0, commitsTotal: 0, repo: false } }); break;
       case 'shelf': if (GET && !b) return ok({ types: [], picks: [] }); break;
@@ -524,18 +586,43 @@
     let pkv = null; try { pkv = localStorage.getItem(pk); } catch {}
     return { server: { ...(st.server || {}) }, hosting: st.hosting, hostOff: st.hostOff, projKey: pk, projVal: pkv, at: iso() };
   }
-  function start() {
-    if (active()) { enterUi(); return; }
-    const wasReal = !!(C() && C().hasToken());
+  // start(): ask which demo (Explore quietly / Watch it come alive). start('quiet' | 'showcase') starts that one.
+  function start(mode) {
+    if (mode !== 'quiet' && mode !== 'showcase') return choose();
+    closeChooser();
+    if (active() && (db.mode || 'quiet') === mode) { enterUi(); return; }
+    const wasReal = !!(C() && C().hasToken()), wasDemo = active();
     if (!ls.get(BKEY)) ls.set(BKEY, backup());
-    db = seed(); save(); blobClear();
+    db = seed(mode); save(); blobClear();
     S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
-    if (wasReal) { try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} location.reload(); return; }
+    if (wasReal || wasDemo) { try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} location.reload(); return; }
     paint(); C().connect();
     enterUi();
   }
+  // Before tribe.js has loaded (showcase.js handles ?demo=showcase): set the demo up so the app boots straight into it.
+  function boot(mode) {
+    if (active() && (db.mode || 'quiet') === mode) return;
+    if (!ls.get(BKEY)) ls.set(BKEY, backup());
+    db = seed(mode); save(); blobClear();
+    S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
+  }
+  function choose() {
+    if (active()) return enterUi();
+    const modal = document.querySelector('#invite-modal'), body = document.querySelector('#invite-body'); if (!modal || !body) return start('quiet');
+    modal.classList.remove('hidden');
+    body.innerHTML = `<span class="eyebrow">Demo tribe · offline</span><h2>How do you want to try it?</h2>
+      <div class="od-choice">
+        <button class="od-opt" id="od-pick-alive" data-mode="showcase"><span class="od-tic"><svg class="i"><use href="#i-play"/></svg></span><span class="od-tt"><b>Watch it come alive</b><small>A busy pretend tribe runs by itself: friends chat, agents pick up tasks, a milestone ships. Join in any time.</small></span></button>
+        <button class="od-opt" id="od-pick-quiet" data-mode="quiet"><span class="od-tic"><svg class="i"><use href="#i-zap"/></svg></span><span class="od-tt"><b>Explore quietly</b><small>Host a calm pretend tribe and try things yourself. Little happens until you act.</small></span></button>
+      </div>
+      <p class="faint od-fine">Both live only in this browser. Leaving puts your own settings back exactly.</p>
+      <div class="modal-foot"><button class="btn" data-close>Cancel</button></div>`;
+    body.querySelector('[data-close]').onclick = closeChooser;
+    body.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => start(b.dataset.mode));
+  }
+  function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast('Demo Tribe is ready. Nothing leaves this device.'); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db.mode === 'showcase' ? 'Campfire Crew is live. Sit back and watch, or join in.' : 'Demo Tribe is ready. Nothing leaves this device.'); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }
@@ -555,7 +642,7 @@
   }
   function reset() {
     closePop(); if (!active()) return;
-    db = seed(); save(); blobClear();
+    db = seed(db.mode); save(); blobClear();
     try { sessionStorage.setItem('tribecode.view', 'home'); } catch {}
     location.reload();
   }
@@ -570,8 +657,11 @@
     if (!on) { if (pill) pill.remove(); pill = null; return; }
     if (pill && pill.isConnected) return;
     pill = document.createElement('button'); pill.id = 'demo-pill'; pill.className = 'od-pill'; pill.setAttribute('aria-haspopup', 'dialog');
-    pill.title = 'Offline demo: nothing leaves this device';
-    pill.innerHTML = '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
+    const sc = db.mode === 'showcase';
+    if (sc) pill.classList.add('sc');
+    pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : 'Offline demo: nothing leaves this device';
+    pill.innerHTML = sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
+      : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();
     pill.onclick = e => { e.stopPropagation(); pop ? closePop() : openPop(); };
   }
@@ -588,6 +678,11 @@
   const outside = e => { if (pop && !pop.contains(e.target) && !(pill && pill.contains(e.target))) closePop(); };
   function openPop() {
     closePop();
+    if (db.mode === 'showcase' && window.TribeShowcase) {
+      pop = window.TribeShowcase.pop({ leave, close: closePop, quiet: () => { closePop(); db.mode = 'quiet'; save(); location.reload(); } });
+      if (!pop) return;
+      document.body.appendChild(pop); placePop(); return;
+    }
     pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Offline demo');
     pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Offline demo</span><b>${esc(db.tribe.name)} lives in this browser</b></div></header>
       <p>You're the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it stays until you reset it.</p>
@@ -597,11 +692,14 @@
         <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave demo</span></button>
       </div>`;
     document.body.appendChild(pop);
+    pop.querySelector('#od-reset').onclick = reset;
+    pop.querySelector('#od-leave').onclick = leave;
+    placePop();
+  }
+  function placePop() {
     const r = pill.getBoundingClientRect();
     pop.style.top = (r.bottom + 8 + pop.offsetHeight > innerHeight ? Math.max(8, r.top - 8 - pop.offsetHeight) : r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
     pill.setAttribute('aria-expanded', 'true');
-    pop.querySelector('#od-reset').onclick = reset;
-    pop.querySelector('#od-leave').onclick = leave;
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }
   function hostForReal() {
@@ -622,16 +720,19 @@
   document.addEventListener('click', e => {
     const t = e.target.closest && e.target.closest('[data-od]'); if (!t) return;
     if (t.dataset.od === 'real') { e.preventDefault(); hostForReal(); }
-    if (t.dataset.od === 'start') { e.preventDefault(); start(); }
+    if (t.dataset.od === 'start') { e.preventDefault(); start(t.dataset.mode); }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop) closePop(); });
   const ready = () => { paint(); try { if (sessionStorage.getItem('tribecode.openJoin')) { sessionStorage.removeItem('tribecode.openJoin'); setTimeout(() => window.TribeSettings && window.TribeSettings.joinPrompt(), 400); } } catch {} };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
 
   window.TribeOffline = {
-    active, start, leave, reset, hostForReal,
+    active, start, choose, boot, leave, reset, hostForReal,
     socket: url => new FakeSocket(url),
     state: () => db,
+    mode: () => (active() ? db.mode || 'quiet' : null),
+    // for showcase.js: the same building blocks the pretend people above use
+    _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, closePop: () => closePop(), placePop: () => pop && placePop() },
     // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".
     label: () => (active() ? 'Leave the offline demo' : 'Try a demo tribe (offline)'),
     toggle: () => (active() ? leave() : start()),
