@@ -1,6 +1,6 @@
 """Assist (server/assist.js, app/ui/assist.js): write the vision with help, and suggested tasks in New task.
-- The vision composer opens from the Overview checklist, its guided prompts are pre-filled from the project's name and
-  template, Flint drafts it in basic mode (no local model), suggestion chips appear while typing, Save ticks the row.
+- The vision composer opens from the Overview checklist: category chips (pre-picked from project sense) and one gist
+  box fill the draft locally; "Improve with" Flint drafts it in basic mode (no local model); Save ticks the row.
 - My Claude: the ask lands in your private chat with your agent; the agent's reply (simulated via the API) fills the editor.
 - New task shows 3-5 suggestions; one tap adds a task, ✕ dismisses it (remembered), no duplicates of open tasks.
 - Phone at 390px: the New task sheet, Up next and the composer, with no sideways scroll; no console errors.
@@ -91,24 +91,18 @@ def main():
             host.evaluate("TribeApp.show('home')")
             host.wait_for_selector("#pj-check [data-ck=vision]")
             host.click("#pj-check [data-ck=vision]")
-            host.wait_for_selector(".av-wrap [data-q=what]")
-            what = host.input_value(".av-wrap [data-q=what]")
+            host.wait_for_selector(".av-wrap #av-gist")
+            what = host.input_value("#av-gist")
             assert pname in what, what
-            assert "short levels" in host.input_value(".av-wrap [data-q=who]")
-            assert host.get_attribute(".av-opt[data-helper=flint]", "aria-checked") == "true"
-            assert host.locator(".av-opt[data-helper=claude]").is_disabled(), "no Claude connected yet"
-            assert host.locator(".av-opt[data-helper=other]").count() == 0, "no other models: the option is hidden"
-            # chips before typing anything, then while typing
-            host.wait_for_selector("#av-chips .av-chip")
-            host.fill("#pj-vtext", "")
-            host.type("#pj-vtext", "A cozy game", delay=15)
-            host.wait_for_function("[...document.querySelectorAll('#av-chips .av-chip')].some(c => c.textContent.includes(\"who it's for\"))")
-            n = host.locator("#av-chips .av-chip").count(); assert 2 <= n <= 3, n
-            host.click("#av-chips .av-chip:has-text(\"who it's for\")")
-            assert "For Friends who like short levels" in host.input_value("#pj-vtext"), host.input_value("#pj-vtext")
-            host.wait_for_function("![...document.querySelectorAll('#av-chips .av-chip')].some(c => c.textContent.includes(\"who it's for\"))")
-            # Flint drafts it (basic mode: no local model)
-            host.click("#av-go")
+            assert host.get_attribute(".av-cat[data-cat=game]", "aria-checked") == "true", "sense says game"
+            assert "## Done for v1" in host.input_value("#pj-vtext"), "the local draft is there at once"
+            assert host.locator(".av-imp[data-helper=claude]").is_disabled(), "no Claude connected yet"
+            # the draft follows the gist
+            host.fill("#av-gist", "A cozy game")
+            assert host.input_value("#pj-vtext").startswith("## What\nA cozy game."), host.input_value("#pj-vtext")
+            # Flint improves it (basic mode: no local model)
+            host.fill("#av-gist", what)
+            host.click(".av-imp[data-helper=flint]")
             wait_text(host, "#pj-vtext", "## Done for v1")
             wait_text(host, "#av-status", "from your answers")
             assert pname in host.input_value("#pj-vtext"), (pname, host.input_value("#pj-vtext"))
@@ -120,9 +114,8 @@ def main():
             atok, aid = ag["token"], ag["agent"]["id"]
             host.wait_for_function("(TribeClient.state().members || []).some(m => m.role === 'agent')")
             host.click("#pj-check [data-ck=vision]")
-            host.wait_for_selector(".av-opt[data-helper=claude]:not([disabled])")
-            host.click(".av-opt[data-helper=claude]")
-            host.click("#av-go")
+            host.wait_for_selector(".av-imp[data-helper=claude]:not([disabled])")
+            host.click(".av-imp[data-helper=claude]")
             wait_text(host, "#av-status", "Waiting for your Claude")
             ch = "dm-" + "-".join(sorted([orion, aid]))
             msgs = ok(api(f"/chat/{ch}", token=htok, project=pid))["messages"]
@@ -202,12 +195,10 @@ def main():
             else: raise AssertionError("phone: tapping a suggestion did not create the task")
             phone.evaluate("TribeMobile.closeSheet()")
             phone.evaluate("TribeApp.show('home'); TribeAssist.vision(TribeProjects.cur(), { host: false })")
-            phone.wait_for_selector(".av-wrap #av-qs summary")
-            assert phone.evaluate("!document.querySelector('#av-qs').open"), "with a vision already saved, the prompts start folded"
-            phone.click("#av-qs summary"); phone.wait_for_selector(".av-wrap [data-q=what]", state="visible")
+            phone.wait_for_selector(".av-wrap #av-cats .av-cat")
+            assert "Three levels" in phone.input_value("#pj-vtext"), "with a vision already saved, it starts from it"
             assert phone.locator("#pj-vsave").inner_text().strip() == "Send to chat"
-            phone.click("#av-go"); wait_text(phone, "#av-status", "Drafted by Flint")
-            phone.fill("#pj-vtext", "Tiny game"); phone.wait_for_selector("#av-chips .av-chip")
+            phone.click(".av-imp[data-helper=flint]"); wait_text(phone, "#av-status", "Drafted by Flint")
             no_overflow(phone, "phone vision composer")
             shot(phone, "phone-assist-vision")
             # spectators/agents: assist is for people

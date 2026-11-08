@@ -61,10 +61,12 @@ def main():
             assert stored and stored.startswith("data:image/") and len(stored) < 300_000
             # change it from the overview: Cancel keeps the old one, Apply replaces it
             pg.evaluate("TribeApp.show('home')"); pg.wait_for_selector("#pj-face", timeout=10000)
-            with pg.expect_file_chooser() as fc: pg.click("#pj-face")
+            pg.click("#pj-face"); pg.wait_for_selector("#pfp-upload")   # the face opens the emoji grid; Upload a picture opens the picker (feat/setup-flow)
+            with pg.expect_file_chooser() as fc: pg.click("#pfp-upload")
             fc.value.set_files(str(big)); pg.wait_for_selector("#crop-wrap"); pg.click("#crop-cancel")
             assert [x for x in api("/projects", tok)["projects"] if x["id"] == pid][0]["image"] == stored
-            with pg.expect_file_chooser() as fc: pg.click("#pj-face")
+            pg.click("#pj-face"); pg.wait_for_selector("#pfp-upload")   # the face opens the emoji grid; Upload a picture opens the picker (feat/setup-flow)
+            with pg.expect_file_chooser() as fc: pg.click("#pfp-upload")
             fc.value.set_files(str(big)); pg.wait_for_selector("#crop-wrap"); pg.fill("#crop-z", "3.5"); pg.dispatch_event("#crop-z", "input"); pg.click("#crop-apply")
             pg.wait_for_selector(".toast:has-text('Picture updated')", timeout=8000)
             assert [x for x in api("/projects", tok)["projects"] if x["id"] == pid][0]["image"] != stored

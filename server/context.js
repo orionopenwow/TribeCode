@@ -179,8 +179,8 @@ module.exports = function context({ store, repo, settings, tribe, readVision, pr
     let out; try { out = build(); } catch (e) { console.error('context:', e.message); return last; }
     if (last && body(out.md) === body(last)) return last;
     last = out.md;
-    store.writeJSON('.tribe/context-state.json', out.state);
-    store._atomic(store.p(file), out.md);
+    try { store.writeJSON('.tribe/context-state.json', out.state); store._atomic(store.p(file), out.md); }
+    catch (e) { console.error('context:', e.message); return last; }   // the project was deleted (moved to trash) while a regen was pending
     const r = repo(); const s = settings();
     if (r && s.contextInRepo && path.resolve(r) !== store.root) { try { fs.writeFileSync(path.join(r, file), out.md); } catch (e) { console.error('context: repo write failed:', e.message); } }
     broadcast({ type: 'context', updated: new Date().toISOString() });

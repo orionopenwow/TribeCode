@@ -68,7 +68,7 @@
     const cs = getComputedStyle(document.body), ink = (cs.getPropertyValue('--text') || '').trim() || '#F8FAFC', acc = (cs.getPropertyValue('--accent') || '').trim() || '#F26B1D';
     const key = ink + acc;
     const go = () => {
-      const svg = wmSrc.replace(/#F8FAFC/gi, ink).replace(/#F26B1D/gi, acc), url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      const svg = wmSrc /* the pixel wordmark has its own outline, so it reads on every theme as drawn */, url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       imgs.forEach(img => { if (force || img.dataset.wm !== key) { img.src = url; img.dataset.wm = key; } });
     };
     if (wmSrc) { wmKey = key; return go(); }

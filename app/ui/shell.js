@@ -85,8 +85,11 @@
   const wsOf = key => { const d = byKey(key); return d && WS[d.group] ? d.group : null; };
   const TKEY = w => `tribecode.tab.${w}`;
   // A workspace opens on its last tab (if it is still there).
+  // feat/setup-flow: until the project is "going" (stage.js), the Task Board is just the Board (deep links still work)
+  const gated = w => w === 'tasks' && !!document.body.dataset.stage && document.body.dataset.stage !== 'going';
+  window.addEventListener('tribe:stage', () => { tabsSig = ''; drawTabs(); });
   function openWs(w) {
-    const last = lsGet(TKEY(w)), list = adTabs(w, tabsOf(w), null);
+    const last = gated(w) ? 'tasks' : lsGet(TKEY(w)), list = adTabs(w, tabsOf(w), null);
     const d = list.find(x => x.key === last) || list[0];
     if (d) { lastDest = d.key; d.run(); }
   }
@@ -151,6 +154,7 @@
     if (cur === undefined) cur = document.body.classList.contains('ws-open') || document.body.classList.contains('gd-open') ? '' : current();
     const bar = $('#view-tabs'); if (!bar) return;
     const w = wsOf(cur);
+    if (gated(w) && cur === 'tasks') { if (document.body.classList.contains('ws-tabbed')) document.body.classList.remove('ws-tabbed'); if (!bar.classList.contains('hidden')) bar.classList.add('hidden'); tabsSig = ''; return; }   // feat/setup-flow
     document.body.classList.toggle('ws-tabbed', !!w);
     if (!w) {
       if (!bar.classList.contains('hidden')) bar.classList.add('hidden');
@@ -158,7 +162,7 @@
       return;
     }
     lsSet(TKEY(w), cur);
-    const ad = AD(w), list = adTabs(w, tabsOf(w), cur), d = byKey(cur);
+    const ad = AD(w), list = adTabs(w, tabsOf(w), cur).filter(t => !gated(w) || t.key === 'tasks' || t.key === cur), d = byKey(cur);
     const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',') + (ad ? '|' + ad.sig() : '');
     if (sig !== tabsSig) {
       tabsSig = sig;

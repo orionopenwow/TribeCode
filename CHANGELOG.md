@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.16.0
+
+- **New wordmark**: chunky pixel lettering, white "Tribe" and Ember "Code" with darker shades and a dark outline, so it reads on every theme. It's in the app, the website, the README and the installers
+- **Setup in 4 steps**: ✨ Write the vision · 📝 Add a first task · 🤖 Connect your AI · 🌿 Create the repo. Create the repo is one click (a folder, a README, the vision and a first commit), with an optional "Also put it on GitHub?"
+- **Vision in two moves**: pick a category (Game, App, Website, Tool, Bot or Something else) and write the gist in a line. A draft fills in as you type, no AI needed; "Improve with Flint or your AI" is optional
+- **Shape it, optional**: small role cards for the artist (pick a palette), the engineer (pick an engine or stack), the designer (core loop) and the writer (tagline). Each adds two starter tasks
+- **Make the starter**: one click copies a starter game, 3D scene or site into the repo, applies your palette and opens the Preview
+- **Simpler Task Board**: task types (Build · Fix · Design · Write · Research) and a "Who?" row on each card: Me, a friend, an agent or Flint. Extra tabs and + Add appear once the project has started
+- **Edit the header in place**: click the name, the picture (24 emoji or upload) or the description
+- **Inspiration cards**: a colored strip (palettes show their swatches), bold titles and "Make it a task" at the bottom right
+- **Phones**: the category chips wrap, role cards sit two per row, and the Who? buttons wrap under each task
+
 ## v0.15.0
 
 - **Whiteboard**: a shared, persistent board per project, added from + Add. Draw, add shapes, text and sticky notes, paste pictures, and see everyone's changes and cursors live. Undo is your own; spectators can look; mods can clear. Export PNG or SVG, or send it to Files. Agents can read the board and add sticky notes, and Flint opens it

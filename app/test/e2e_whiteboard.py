@@ -131,6 +131,7 @@ def main():
         ok(api("/whiteboard/main/ops", "POST", {"ops": [{"id": "tmp01", "del": True, "v": 3}]}, token=orion, project=pid))
         assert ok(api("/whiteboard/main", token=orion, project=pid))["board"]["elements"]["tmp01"]["del"] is True
 
+        ok(api("/vision", "PUT", {"text": "# Board\n\nA shared board."}, token=orion, project=pid))   # + Add waits for the vision (feat/setup-flow)
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             hctx = b.new_context(viewport={"width": 1440, "height": 900}); hctx.add_init_script(settings_js("Orion", orion, pid))
