@@ -51,7 +51,7 @@
       ${upd && upd.ready ? `<button role="menuitem" class="pf-item pf-update" data-act="restart"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg><span>Update ready · v${esc(upd.version)}</span><b class="pf-restart">Restart</b></button>` : ''}
       <div class="pf-sep"></div>
       ${m ? item('profile', 'i-users', 'My profile and activity') : ''}
-      ${item('claude', 'i-sparkle', 'Connect your Claude Code')}
+      ${item('claude', 'i-sparkle', 'Connect your AI')}
       ${window.TribeAgentsHub ? item('agents', 'i-robot', 'Your agents') : ''}
       ${item('invite', 'i-link', 'Invite friends')}
       <div class="pf-sep"></div>

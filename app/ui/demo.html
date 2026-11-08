@@ -2415,7 +2415,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     const hum = [['Orion', 'online · Chat · host'], ['Maya', 'online · slime art'], ['Jay', 'away'], ['me', 'online · Chat · you']];
     $('#side').innerHTML = `<div class="sd-sec"><div class="sd-l">In the room · <em>4 online</em></div>${hum.map(([w, s]) => `<button type="button" class="sd-p" data-p="${w}"><span class="avw">${av(w)}<i class="${w === 'Jay' ? 'off' : ''}"></i></span><span class="t"><b>${esc(nameOf(w))}${w === 'me' ? ' <span style="color:var(--m);font-weight:400">(you)</span>' : ''}</b><small>${w === 'Jay' ? 'away' : `<span class="on">online</span>${esc(s.slice(6))}`}</small></span></button>`).join('')}</div>
       <div class="sd-sec"><div class="sd-l">Agents</div><button type="button" class="sd-p" data-p="Claude"><span class="avw">${av('Claude')}<i></i></span><span class="t"><b>Claude · Orion</b><small>on feat/double-jump</small></span></button></div>
-      <button type="button" class="sd-cc" data-cc>${ic('spark', 18)}Connect your Claude Code</button>
+      <button type="button" class="sd-cc" data-cc>${ic('spark', 18)}Connect your AI</button>
       <div class="sd-foot">up 3h 12m · 4 commits today</div>`;
   }
   const PPTABS = ['All', 'Commits', 'Prompts', 'Chat', 'Notes'], PPK = { Commits: 'commit', Prompts: 'prompt', Chat: 'chat', Notes: 'note' };
@@ -2495,7 +2495,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     e.stopPropagation(); if ($('#pf-menu')) { closePops(); return; }
     const m = menuAt($('#pf-btn'), `<div class="pf-head"><span class="pf-face lg" style="background:${me.color}">${esc(me.name[0].toUpperCase())}</span><div><b>${esc(me.name)}</b><small>Builder</small></div></div>
       <div class="pf-status"><span class="pf-dot"></span>Connected to Orion's tribe</div><div class="pf-sep"></div>
-      ${pfItem('profile', 'users', 'My profile and activity')}${pfItem('claude', 'spark', 'Connect your Claude Code')}${pfItem('agents', 'robot', 'Your agents')}${pfItem('invite', 'link', 'Invite friends')}
+      ${pfItem('profile', 'users', 'My profile and activity')}${pfItem('claude', 'spark', 'Connect your AI')}${pfItem('agents', 'robot', 'Your agents')}${pfItem('invite', 'link', 'Invite friends')}
       <div class="pf-sep"></div>${pfItem('notify', 'bell', 'Notifications')}${pfItem('capture', 'mic', 'Capture to notes', `<span class="pf-sw ${S.capture ? 'on' : ''}"><i></i></span>`)}${pfItem('settings', 'gear', 'Settings')}${pfItem('update', 'refresh', 'Check for updates')}`);
     m.id = 'pf-menu'; $('#pf-btn').setAttribute('aria-expanded', 'true'); m.querySelector('.pf-item').focus({ preventScroll: true });
   };

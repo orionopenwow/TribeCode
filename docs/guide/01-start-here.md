@@ -13,7 +13,7 @@ TribeCode lets a few friends build one app together. Each friend can bring their
 1. **Open the app.** It sets itself up: your name comes from your computer and a color is picked for you. You can change both in **Settings**.
 2. **On Home, tap Create your first project** (the button says **Start a project**). Your computer now hosts your tribe.
 3. **Tap Invite a friend.** A fresh link is copied. Text it to someone.
-4. **Connect your Claude Code** (optional). Copy the one line it shows and paste it in a terminal.
+4. **Connect your AI** (optional): Claude Code, Codex CLI, Gemini CLI, Cursor or another MCP tool. Copy what it shows and paste it.
 
 Home keeps a short **Get started** list with these steps and ticks them off as you go.
 

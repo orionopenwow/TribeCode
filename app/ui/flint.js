@@ -2,7 +2,9 @@
 // Desktop: a compact "Ask Flint…" bar pinned at the bottom of the right panel, with a short thread above it that opens
 // upward (at most ~45% of the panel) and folds. Phones: a full-screen thread, opened from "Talk to…" (mobile2.js).
 // With no model at all it runs a deterministic intent router (connect Claude, guide answers, notes, tasks, invites,
-// hosting, navigation, find, room status, helper toggles). With the host's local model on (server/flint.js, Ollama),
+// hosting, navigation, find, room status, helper toggles). With a brain (Settings › Flint's brain, brainpick.js): the
+// built-in model in this browser (WebLLM), or the tribe's brain on the host (server/flint.js → server/llm.js: the host's
+// cloud key or Ollama),
 // messages no intent matched go to the model and the reply streams in. Nothing leaves this machine.
 // The thread is remembered per device (localStorage).
 // Public: window.TribeFlint = { focus(), openFull(), closeFull(), ask(text), thread(), clear(), status() }.
@@ -34,13 +36,15 @@
   // ---------- state ----------
   let thread = (ls.get(KEY, []) || []).filter(m => m && m.text != null).slice(-MAX);
   let model = { online: false, model: '' }, busy = false;
-  const save = () => ls.set(KEY, thread.slice(-MAX).map(m => ({ who: m.who, text: m.text, acts: m.acts || [], at: m.at, link: m.link })));
+  const save = () => ls.set(KEY, thread.slice(-MAX).map(m => ({ who: m.who, text: m.text, acts: m.acts || [], at: m.at, link: m.link, ...(m.via ? { via: m.via } : {}) })));
+  const B = () => window.TribeBrain;   // feat/any-llm: Flint's brain (built in / host / none)
   function push(who, text, acts, extra) { const m = { who, text: String(text || ''), acts: acts || [], at: new Date().toISOString(), ...(extra || {}) }; thread.push(m); thread = thread.slice(-MAX); save(); draw(); return m; }
   const say = (text, acts, extra) => push('flint', text, acts, extra);
 
   // ---------- actions (stored by name so buttons still work after a reload) ----------
   const ACTS = {
     connect: () => App() && App().connectClaude && App().connectClaude(),
+    brain: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
     guide: slug => window.TribeGuide && window.TribeGuide.open(slug || undefined),
     note: id => { if (Hub() && Hub().openNote) Hub().openNote(id); else if (Hub()) Hub().open('docs'); },
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
@@ -50,7 +54,7 @@
     stophost: () => App() && App().setHosting && App().setHosting(false),
     secretary: () => window.TribeSecretary && window.TribeSecretary.open(),
     repo: () => App().show('repo'),
-    model: () => ACTS.guide('agents-and-office'),
+    model: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
     agents: () => window.TribeAgentsHub && window.TribeAgentsHub.open(),
     doc: ref => { const [pid, slug] = String(ref).split('|'); const open = () => { App().show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open && window.TribeDocs.open(slug), 120); }; if (pid && PJ() && PJ().current && PJ().current() !== pid && PJ().switchTo) { PJ().switchTo(pid, 'docs'); setTimeout(open, 400); } else open(); },
     search: q => { if (!window.TribePalette) return; window.TribePalette.open(); const i = $('#pal-input'); if (i) { i.value = q || ''; i.dispatchEvent(new Event('input', { bubbles: true })); } },
@@ -110,7 +114,7 @@
     status: /^(what'?s|whats|what is)\s+(new|up|happening|going on)\b|^(status|catch me up|any news|news)\b|\bwho'?s (online|here|around)\b|^what('?s| is) the status/,
     summarize: /\bsummar(y|ise|ize)\b.*\b(chat|conversation|messages|today)\b|^summar(y|ise|ize)$|^tl;?dr\b/,
     helper: /\b(turn|switch|start|stop|enable|disable)\b.*\b(secretary|local model|ollama|brain|qwen|autopilot|auto-pilot)\b|\b(secretary|local model|autopilot)\s+(on|off)\b/,
-    connect: /\b(connect|turn on|hook up|link|set ?up|add)\b.*\bclaude\b|^claude( code)?$/,
+    connect: /\b(connect|turn on|hook up|link|set ?up|add)\b.*\b(claude|codex|gemini|cursor|my ai|an agent|agent)\b|^claude( code)?$/,
     hosting: /\b(start|stop|turn (on|off)|begin|end)\s+(the\s+)?host(ing)?\b|^host( here| a tribe| on this computer)?$/,
     note: /^(?:please\s+)?(?:capture|note|remember|jot(?:\s+down)?|write down|save)(?:\s+(?:a|this|the|that))?(?:\s+note)?(?:\s*(?::|-|,|that)\s*|\s+|$)([\s\S]*)$/,
     task: /^(?:please\s+)?(?:add|new|make|create)?\s*(?:a\s+)?(?:task|todo|to-do)(?:\s*(?::|-|,)\s*|\s+)([\s\S]+)$/,
@@ -127,7 +131,7 @@
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);
-    if (RX.connect.test(t)) { ACTS.connect(); return say('Let\'s get your Claude Code into the room. I opened the connect steps: one command on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
+    if (RX.connect.test(t)) { ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
     if (RX.hosting.test(t)) return hosting(t);
     if ((m = RX.task.exec(t)) && m[1].trim()) return task(text.slice(text.length - m[1].length).trim());
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
@@ -181,8 +185,8 @@
       catch (e) { return say(e.status === 403 ? 'Only the host can switch repo autopilot.' : 'Repo autopilot needs a project with a repo: ' + e.message, [act('Open the repo', 'repo')]); }
     }
     await refreshModel();
-    if (model.online) return say(off ? `The local model (${model.model}) runs in Ollama on the host. Quit Ollama to turn it off; I'll drop back to basic mode.` : `The local model is already on (${model.model}). I use it for anything I don't know by heart.`);
-    return say('A local model makes me smarter, and it stays on this computer. Install Ollama (ollama.com), then run "ollama pull qwen3". I pick it up by myself.', [act('Show me how', 'model')]);
+    if (model.online) return say(off ? `I think with ${model.via || model.model}. Pick None in Flint's brain to drop back to basic mode.` : `I already think with ${model.via || model.model}. I use it for anything I don't know by heart.`, [act('Flint\'s brain', 'brain')]);
+    return say('A brain makes me smarter: the built-in model in your browser, Ollama on the host, or a cloud model with the host\'s own key. Pick one in Flint\'s brain.', [act('Give Flint a brain', 'brain')]);
   }
   async function status() {
     const r = await room();
@@ -196,7 +200,7 @@
   }
   async function summarize() {
     await refreshModel();
-    if (!model.online) return say('Summaries need a local model, and that stays on this computer. Want to set one up? It takes one download.', [act('Set up a local model', 'model')]);
+    if (!model.online) return say('Summaries need a brain: the built-in one in your browser, Ollama on the host, or the host\'s cloud key.', [act('Give Flint a brain', 'brain')]);
     if (!connected()) return say('There\'s no chat yet: host or join a tribe first.');
     let msgs = [];
     try { msgs = ((await C.api('/chat/general')).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-60); } catch {}
@@ -220,12 +224,24 @@
     if (model.online && !noModel) return modelReply(text);
     const g = triedGuide ? null : await guideSearch(text);
     if (g) return say(`I'm in basic mode, but the Guide might help. ${g.title}: ${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
-    return say('I\'m in basic mode, so I only know a few things by heart: connect your Claude, "note: …", "task …", invites, "find …", "what\'s new", and how-to questions from the Guide. A local model lets me answer anything else, right on this computer.',
-      [act('Set up a local model', 'model'), act('What\'s happening?', 'ask', 'What\'s happening?'), act('Open the Guide', 'guide')]);
+    return say('I\'m in basic mode, so I only know a few things by heart: connect your AI, "note: …", "task …", invites, "find …", "what\'s new", and how-to questions from the Guide. Give me a brain (built in, Ollama, or a cloud key) and I can answer anything else.',
+      [act('Give Flint a brain', 'brain'), act('What\'s happening?', 'ask', 'What\'s happening?'), act('Open the Guide', 'guide')]);
   }
 
-  // ---------- the local model (server/flint.js), streamed ----------
+  // ---------- a brain: built in (this browser, WebLLM) or the tribe's (server/flint.js → server/llm.js), streamed ----------
+  async function browserReply(text, extra) {
+    const r = connected() ? await room().catch(() => null) : null;
+    const history = thread.slice(-9, -1).map(m => ({ role: m.who === 'flint' ? 'assistant' : 'user', content: String(m.text).slice(0, 400) }));
+    const msg = say(B().browserReady() ? '…' : 'Waking up the built-in model (the first time downloads it)…', [], { streaming: true });
+    try {
+      const out = await B().askBrowser([{ role: 'system', content: SYSTEM + (r ? `\n\nRoom facts:\n${roomText(r)}` : '') + (extra ? `\n\nRecent chat:\n${extra}` : '') }, ...history, { role: 'user', content: text }],
+        t => { msg.text = t || '…'; drawLast(); });
+      msg.text = out.text || 'I had nothing to add there.'; msg.via = out.via; delete msg.streaming; save(); draw();
+    } catch (e) { msg.text = 'The built-in model could not answer: ' + e.message; delete msg.streaming; msg.acts = [act('Flint\'s brain', 'brain')]; save(); draw(); }
+  }
+  const SYSTEM = 'You are Flint, the small built-in helper of TribeCode, where friends and their AI coding agents build one app together. Answer in one to three short, friendly sentences, plain text. Use only the room facts you are given; if you do not know, say so and suggest the Guide.';
   async function modelReply(text, extra) {
+    if (B() && B().choice() === 'browser') return browserReply(text, extra);
     if (!connected()) return fallback(text, true, true);
     const r = await room().catch(() => null);
     const history = thread.slice(-9, -1).map(m => ({ who: m.who, text: m.text }));
@@ -234,18 +250,24 @@
       const S = window.TribeStore, tok = (S.get().server || {}).token || '', pid = C.project && C.project();
       const res = await fetch(C.base() + '/api/flint/ask', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(pid ? { 'X-Project': pid } : {}) },
         body: JSON.stringify({ text, history, room: (r ? roomText(r) : '') + (extra ? `\n\nRecent chat:\n${extra}` : '') }) });
+      if (res.status === 403 || res.status === 429) { const j = await res.json().catch(() => ({})); msg.text = (j.error || 'The host\'s AI is not available to you right now.') + ' I can still do notes, tasks and the Guide, or use the built-in model.'; msg.acts = [act('Flint\'s brain', 'brain')]; delete msg.streaming; save(); draw(); return; }
       if (!res.ok || !res.body) { thread = thread.filter(m => m !== msg); draw(); return fallback(text, true, true); }
+      try { msg.via = decodeURIComponent(res.headers.get('X-Flint-Via') || ''); } catch {}
       const rd = res.body.getReader(), dec = new TextDecoder(); let out = '';
       for (;;) { const { value, done } = await rd.read(); if (done) break; out += dec.decode(value, { stream: true }); msg.text = out.trimStart() || '…'; drawLast(); }
       msg.text = out.trim() || 'I had nothing to add there.'; delete msg.streaming; save(); draw();
-    } catch (e) { msg.text = 'The local model did not answer. ' + e.message; delete msg.streaming; save(); draw(); }
+    } catch (e) { msg.text = 'The model did not answer. ' + e.message; delete msg.streaming; save(); draw(); }
   }
   async function refreshModel() {
+    const ch = B() ? B().choice() : 'host';
+    if (ch === 'none') { model = { online: false, model: '' }; drawStatus(); return model; }
+    if (ch === 'browser') { const g = await B().gpu(); model = g.ok ? { online: true, model: g.label, via: `${g.label} in your browser`, browser: true } : { online: false, model: '' }; drawStatus(); return model; }
     if (!connected()) { model = { online: false, model: '' }; return model; }
     try { model = (await C.api('/flint')).model || model; } catch {}
     drawStatus(); return model;
   }
 
+  window.addEventListener('tribe-brain', () => refreshModel());
   async function send(text) {
     text = String(text || '').trim(); if (!text || busy) return;
     busy = true; push('me', text);
@@ -254,18 +276,19 @@
   }
 
   // ---------- view ----------
-  const CHIPS = ['Connect my Claude', 'Capture a note', 'What\'s happening?', 'How do invites work?'];
-  const statusLine = () => (model.online ? `ready · local model on` : 'basic mode · no local model');
+  const CHIPS = ['Connect my AI', 'Capture a note', 'What\'s happening?', 'How do invites work?'];
+  const statusLine = () => (model.online ? `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}` : 'basic mode · no model');
+  const privLine = () => (model.online && model.cloud ? `Flint uses ${model.via || model.model} through the host's key. The key never leaves the host.` : model.online && model.browser ? 'Flint runs in your browser. Nothing you type here leaves it.' : 'Flint runs on this computer. Nothing you type here leaves it.');
   function emptyHtml() {
     return `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> I live in this room and get things going.</p>
       <div class="fl-chips">${CHIPS.map(c => `<button class="fl-chip" data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
-      <p class="fl-priv">Flint runs on this computer. Nothing you type here leaves it.</p></div>`;
+      <p class="fl-priv">${esc(privLine())}</p></div>`;
   }
   const linkify = s => esc(s).replace(/“([^”]{1,120})”/g, '“<b>$1</b>”');
   function msgHtml(m, i) {
     const mine = m.who === 'me';
     return `<div class="fl-msg ${mine ? 'me' : 'fl'}${m.streaming ? ' streaming' : ''}" data-i="${i}">${mine ? '' : `<span class="fl-av sm">${flintIco(12)}</span>`}
-      <div class="fl-b"><div class="fl-t">${linkify(m.text)}</div>${(m.acts || []).length ? `<div class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act" data-act="${i}:${j}">${esc(a.label)}</button>`).join('')}</div>` : ''}</div></div>`;
+      <div class="fl-b"><div class="fl-t">${linkify(m.text)}</div>${m.via && !m.streaming ? `<small class="fl-via">via ${esc(m.via)}</small>` : ''}${(m.acts || []).length ? `<div class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act" data-act="${i}:${j}">${esc(a.label)}</button>`).join('')}</div>` : ''}</div></div>`;
   }
   function threadHtml() { return thread.length ? thread.map(msgHtml).join('') : emptyHtml(); }
   function barHtml(id) {

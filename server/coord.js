@@ -178,6 +178,20 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
     if (h.to) { const m = member(h.to); if (isAgent(m)) tell(h.to, 'handoff', `${me.name} handed you "${title}". ${h.context}`.trim(), me.id); else bus.notify({ type: 'handoff', to: [h.to], from: me.id, title: `${me.name} handed you: ${title}`, body: h.context.slice(0, 200), view: 'coord', ref: h.id }); }
     return hview(h);
   }
+  // "Ask an agent" (feat/any-llm): someone without an AI of their own asks the tribe's agents. It is an open hand-off
+  // to anyone (ask: true) that the next connected agent takes with take_handoff (MCP) and answers in chat.
+  function ask({ text, task }, me) {
+    text = str(text, 4000); if (!text) throw err(400, 'say what you need');
+    if (me.role === 'agent') throw err(403, 'agents use handoff or delegate');
+    const t = task && tasksNow().find(x => x.id === task);
+    const h = { id: 'h-' + id(6).toLowerCase(), ask: true, title: str(t ? `${t.title}` : text.split('\n')[0], 160), context: t ? `${text}\n\nTask ${t.id}: ${t.title}${t.body ? '\n' + str(t.body, 1500) : ''}` : text,
+      from: me.id, to: null, task: t ? t.id : null, branch: null, files: [], status: 'open', created: now(), project: pid() };
+    db.handoffs.push(h); save(); push('handoffs');
+    postChat('general', 'tribecode', `🙋 ${me.name} asked the tribe's agents: **${h.title}**. The next agent that connects picks it up.`);
+    const live = presenceFor({ role: 'host' }).filter(m => m.role === 'agent' && m.online);
+    for (const a of live) tell(a.id, 'ask', `${me.name} asks the tribe's agents (request ${h.id}): "${str(text, 400)}". If you can do it, call take_handoff with id ${h.id}, then answer in chat (post_chat).`, me.id);
+    return hview(h);
+  }
   function take(hid, me) {
     const h = db.handoffs.find(x => x.id === hid && inPid(x)); if (!h) throw err(404, 'hand-off not found');
     if (h.status !== 'open') throw err(409, `already ${h.status}`);
@@ -359,6 +373,16 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
         inputSchema: S({ title: sDesc('What is being handed off'), context: sDesc('What is done, what is left, how to continue'), to: sDesc('Member name or id (optional)'), task: sDesc('Task id (optional)'), branch: sDesc('Branch with the work (optional)'), files: sDesc('Comma-separated paths (optional)') }, ['title', 'context']),
         run: wrap((a, me) => { const h = handoff(a, me); return text(`Handed off ${h.id} to ${h.toName}.`); }),
       },
+      take_handoff: {
+        description: 'Take an open hand-off or an "Ask an agent" request (my_lane lists them under handoffsForYou). It becomes yours: do it, answer the person in chat (post_chat), then call take_handoff again with done: true.',
+        inputSchema: S({ id: sDesc('Hand-off or request id, e.g. h-abc123'), done: { type: 'boolean', description: 'Mark it done (after you answered or finished)' } }, ['id']),
+        run: wrap((a, me) => {
+          if (a.done) { const h = finishHandoff(a.id, me); return text(`Done: ${h.title}.`); }
+          const h = take(a.id, me);
+          if (h.ask) postChat('general', 'tribecode', `🤖 ${me.name} picked up ${h.fromName}'s request: **${h.title}**`);
+          return text({ took: h.id, title: h.title, from: h.fromName, context: h.context, next: h.ask ? `Do what ${h.fromName} asked, answer in chat with post_chat, then take_handoff id=${h.id} done=true.` : 'Continue the work, then request_review.' });
+        }),
+      },
       request_review: {
         description: 'Ask a human to review a branch before it merges. It shows in the Review queue with one-tap approve/deny; poll check_approval with the returned approval id. Moves the linked task to Review.',
         inputSchema: S({ branch: sDesc('Branch name, e.g. task/t-abc or tribe/you'), title: sDesc('One line: what changed'), summary: sDesc('Markdown: what, why, how to test'), task: sDesc('Task id (optional)') }, ['title']),
@@ -384,6 +408,8 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
       if (b === 'conflicts' && c === 'sync' && m === 'POST' && !ro) { const x = await body(); return send(res, 200, await askSync(str(x.a, 200), str(x.b, 200), me)); }
       if (b === 'handoffs' && m === 'GET' && !c) return send(res, 200, { handoffs: db.handoffs.filter(inPid).slice().reverse().map(hview) });
       if (b === 'handoffs' && m === 'POST' && !c && !ro) return send(res, 200, { handoff: handoff(await body(), me) });
+      if (b === 'asks' && m === 'POST' && !c && !ro) return send(res, 200, { ask: ask(await body(), me) });   // feat/any-llm: Ask an agent
+      if (b === 'asks' && m === 'GET' && !c) return send(res, 200, { asks: db.handoffs.filter(h => inPid(h) && h.ask).slice().reverse().slice(0, 40).map(hview) });
       if (b === 'handoffs' && c && m === 'POST' && !ro) return send(res, 200, { handoff: parts[3] === 'take' ? take(c, me) : finishHandoff(c, me) });
       if (b === 'reviews' && m === 'GET' && !c) return send(res, 200, { reviews: reviews(me) });
       if (b === 'reviews' && m === 'POST' && !c && !ro) return send(res, 200, { review: requestReview(await body(), me) });

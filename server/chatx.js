@@ -138,7 +138,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       answer = await brain.generate(`Recent chat:\n${recent}\n\nTask board:\n${tasks || '(empty)'}\n\nDocs: ${titles || '(none)'}\n\nQuestion from ${me.name}: ${q}\n\nAnswer in at most 3 short sentences. Plain text.`,
         { system: 'You are the local brain of a small team of friends building software. Answer briefly and only from the context given. If you do not know, say so.', maxTokens: 220 });
     } catch { answer = null; }
-    postChat(ch, 'brain', answer || "The local brain is off on the host, so I can't answer. To turn it on: install Ollama (ollama.com), run `ollama pull qwen3`, then restart TribeCode on the host.");
+    postChat(ch, 'brain', answer || "No AI is on for the tribe right now, so I can't answer. The host can pick one in Settings › Flint's brain: Ollama on their computer, or a cloud model with their own key.");
   }
 
   // "Should we…?" -> a gentle "Turn this into a vote?" hint for the author only (never posted by itself).
