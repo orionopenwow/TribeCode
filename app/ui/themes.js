@@ -72,6 +72,7 @@
       imgs.forEach(img => { if (force || img.dataset.wm !== key) { img.src = url; img.dataset.wm = key; } });
     };
     if (wmSrc) { wmKey = key; return go(); }
+    if (!/^https?:/.test(location.protocol)) return;   // file:// (tests, previews): keep the drawn wordmark
     fetch(wmBase() + 'assets/wordmark.svg').then(r => r.ok ? r.text() : Promise.reject()).then(t => { wmSrc = t; go(); }).catch(() => {});
   }
   const _apply = apply;

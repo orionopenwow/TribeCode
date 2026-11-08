@@ -40,6 +40,7 @@ const CAPS = [
   { id: 'settings.edit', group: 'Projects', label: 'Project settings and vision', roles: ['admin'] },
   { id: 'widgets.edit', group: 'Projects', label: 'Change the sidebar widgets', roles: ['admin', 'builder'] },
   { id: 'repo.merge', group: 'Projects', label: 'Merge into main', roles: ['admin'] },
+  { id: 'github.use_host', group: 'Projects', label: 'Put projects on the host\'s GitHub', roles: ['admin'] },   // fix/security-2 (server/flow.js)
   { id: 'ai.use_host_brain', group: 'Projects', label: 'Use the host\'s AI brain', roles: ['admin', 'mod', 'builder'] },
   // Host only, hard-coded where they are checked, never overridable.
   { id: 'tribe.hosting', group: 'Host only', label: 'Hosting, sharing and tunnels', locked: true },

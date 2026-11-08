@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const https = require('node:https');
+const crypto = require('node:crypto');
 
 const BIN_DIR = path.join(os.homedir(), '.tribecode', 'bin');
 const WIN = process.platform === 'win32';
@@ -25,15 +26,68 @@ function cloudflaredAsset() {
   if (process.platform === 'darwin') return { name: `cloudflared-darwin-${arch === 'arm64' ? 'arm64' : 'amd64'}.tgz`, tgz: true };
   return { name: `cloudflared-linux-${arch}`, tgz: false };
 }
+// fix/security-2: the download is checked against the SHA-256 Cloudflare publishes for the same release before anything is
+// unpacked, made executable or run. The release (tag, notes, assets) comes from GitHub's API over https; the checksum is the
+// "<asset>: <sha256>" line under "SHA256 Checksums:" in the release notes, and GitHub's own asset digest when it has one.
+// Every published value must match the bytes; with none, or on any mismatch, the file is deleted and nothing runs.
+const RELEASE_API = () => String(process.env.TRIBE_CLOUDFLARED_API || 'https://api.github.com/repos/cloudflare/cloudflared/releases/latest');
+function clientFor(url) {
+  if (url.startsWith('https://')) return https;
+  if (process.env.TRIBE_TEST && url.startsWith('http://127.0.0.1:')) return require('node:http');   // tests only: a local fake release
+  throw new Error(`refusing a download that is not https (${url.slice(0, 80)})`);
+}
+function getJSON(url, hops = 0) {
+  return new Promise((resolve, reject) => {
+    clientFor(url).get(url, { headers: { 'user-agent': 'TribeCode', accept: 'application/vnd.github+json' }, timeout: 30_000 }, res => {
+      if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hops < 4) { res.resume(); return resolve(getJSON(new URL(res.headers.location, url).href, hops + 1)); }
+      if (res.statusCode !== 200) { res.resume(); return reject(new Error(`could not read the cloudflared release (HTTP ${res.statusCode})`)); }
+      let d = ''; res.setEncoding('utf8');
+      res.on('data', c => { d += c; if (d.length > 4e6) res.destroy(new Error('release info too large')); });
+      res.on('end', () => { try { resolve(JSON.parse(d)); } catch { reject(new Error('the cloudflared release info was not JSON')); } });
+    }).on('error', reject).on('timeout', function () { this.destroy(new Error('release info timed out')); });
+  });
+}
+// Saves to dest + '.part' and resolves with the SHA-256 (hex) of the bytes; the caller renames it only after checking.
 function download(url, dest, hops = 0) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'user-agent': 'TribeCode' }, timeout: 60_000 }, res => {
+    clientFor(url).get(url, { headers: { 'user-agent': 'TribeCode' }, timeout: 60_000 }, res => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hops < 6) { res.resume(); return resolve(download(new URL(res.headers.location, url).href, dest, hops + 1)); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error(`download failed (HTTP ${res.statusCode})`)); }
-      const tmp = dest + '.part'; const f = fs.createWriteStream(tmp);
-      res.pipe(f); f.on('finish', () => f.close(() => { fs.renameSync(tmp, dest); resolve(dest); })); f.on('error', reject);
+      const f = fs.createWriteStream(dest + '.part', { mode: 0o600 }), h = crypto.createHash('sha256');
+      res.on('data', c => h.update(c));
+      res.pipe(f); f.on('finish', () => f.close(() => resolve(h.digest('hex')))); f.on('error', reject);
     }).on('error', reject).on('timeout', function () { this.destroy(new Error('download timed out')); });
   });
+}
+// The SHA-256 values a GitHub release object publishes for one asset (release notes line + asset digest).
+function publishedSha(rel, name) {
+  const out = new Set();
+  for (const line of String(rel.body || '').split(/\r?\n/)) {
+    const m = /^\s*[-*]?\s*([\w.-]+)\s*:\s*([0-9a-fA-F]{64})\s*$/.exec(line);
+    if (m && m[1] === name) out.add(m[2].toLowerCase());
+  }
+  const asset = (rel.assets || []).find(a => a && a.name === name) || null;
+  if (asset && /^sha256:[0-9a-f]{64}$/i.test(String(asset.digest || ''))) out.add(String(asset.digest).slice(7).toLowerCase());
+  return { shas: [...out], asset };
+}
+async function verifiedDownload(name, dest) {
+  const rel = await getJSON(RELEASE_API());
+  const tag = String(rel.tag_name || '');
+  if (!/^[\w.-]{1,40}$/.test(tag)) throw new Error('the cloudflared release has no usable version tag');
+  const { shas, asset } = publishedSha(rel, name);
+  if (!shas.length) throw new Error(`Cloudflare's release ${tag} lists no SHA-256 for ${name}, so TribeCode did not download it. Install cloudflared yourself.`);
+  if (shas.length > 1) throw new Error(`Cloudflare's release ${tag} lists two different SHA-256 values for ${name}, so TribeCode did not download it.`);
+  // the exact release the checksum came from (not "latest", which could move in between)
+  const url = process.env.TRIBE_TEST && asset && asset.browser_download_url ? asset.browser_download_url
+    : `https://github.com/cloudflare/cloudflared/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(name)}`;
+  let got;
+  try { got = await download(url, dest); } catch (e) { try { fs.unlinkSync(dest + '.part'); } catch {} throw e; }
+  if (got !== shas[0]) {
+    try { fs.unlinkSync(dest + '.part'); } catch {}
+    throw new Error(`the downloaded cloudflared (${name}, ${tag}) does not match the SHA-256 Cloudflare published (got ${got.slice(0, 12)}…, expected ${shas[0].slice(0, 12)}…). It was deleted and not run.`);
+  }
+  fs.renameSync(dest + '.part', dest);
+  return { tag, sha: got };
 }
 
 const INSTALL = {
@@ -59,11 +113,13 @@ module.exports = function makeShare({ port, log = console.log }) {
     if (fetching) return fetching;
     fetching = (async () => {
       const a = cloudflaredAsset(); fs.mkdirSync(BIN_DIR, { recursive: true });
-      const url = `https://github.com/cloudflare/cloudflared/releases/latest/download/${a.name}`;
       log(`  Public:   downloading cloudflared (${a.name})...`);
       const exe = path.join(BIN_DIR, WIN ? 'cloudflared.exe' : 'cloudflared');
-      if (a.tgz) { const t = path.join(BIN_DIR, a.name); await download(url, t); spawnSync('tar', ['-xzf', t, '-C', BIN_DIR]); try { fs.unlinkSync(t); } catch {} }
-      else await download(url, exe);
+      // fix/security-2: checked against Cloudflare's published SHA-256 before it is unpacked, made executable or run
+      const t = a.tgz ? path.join(BIN_DIR, a.name) : exe;
+      const v = await verifiedDownload(a.name, t);
+      if (a.tgz) { spawnSync('tar', ['-xzf', t, '-C', BIN_DIR]); try { fs.unlinkSync(t); } catch {} }
+      log(`  Public:   cloudflared ${v.tag} verified against Cloudflare's SHA-256`);
       if (!WIN) fs.chmodSync(exe, 0o755);
       return bin('cloudflared', true);
     })().finally(() => { fetching = null; });
@@ -212,3 +268,5 @@ module.exports = function makeShare({ port, log = console.log }) {
   const publicUrl = () => (state.status === 'on' && state.url) || null;   // cheap: no CLI calls
   return { route, status, start, stop, lanEntry, publicUrl, INSTALL };
 };
+module.exports.verifiedDownload = verifiedDownload;   // fix/security-2: tests (app/test/security3_test.py)
+module.exports.publishedSha = publishedSha;

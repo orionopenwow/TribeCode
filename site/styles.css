@@ -897,9 +897,9 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .nav__in { height: 76px; }
 .nav__logo { gap: 6px; }
 .nav__logo img:not(.nav__mark) { width: 248px; height: auto; }
-.nav__logo img.nav__mark { width: 72px; height: 72px; margin: -18px -10px -18px -12px; border-radius: 0; clip-path: inset(21% 17% 21% 17% round 6px); }
+.nav__logo img.nav__mark { width: 72px; height: 72px; margin: -18px -2px -18px -6px; border-radius: 0; clip-path: inset(19% 9% 20% 8% round 6px); }
 @media (max-width: 640px) {
   .nav__in { height: 60px; }
   .nav__logo img:not(.nav__mark) { width: 168px; }
-  .nav__logo img.nav__mark { width: 50px; height: 50px; margin: -13px -9px -13px -10px; }
+  .nav__logo img.nav__mark { width: 50px; height: 50px; margin: -13px -1px -13px -4px; }
 }

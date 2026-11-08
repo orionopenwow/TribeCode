@@ -873,10 +873,10 @@
     const mb = $('#m2-notes-more'); if (mb) mb.onclick = () => { hub.more = !hub.more; renderHub(); };
     const sh = $('#m2-shots');
     if (sh) {
-      const tok = encodeURIComponent(((window.TribeStore.get().server) || {}).token || '');
+      const shot = x => { const u = `${C.base()}/api/visuals/${x.screen}/${x.ts}.png`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
       const list = hub.shots || [];
       sh.innerHTML = `<div class="sec-head"><span class="eyebrow">Screenshots</span><h2>How it looks</h2></div>
-        ${list.length ? `<div class="m2-shots m2-hscroll">${list.map(s => `<button class="m2-shot" data-preview-img="${esc(`${C.base()}/api/visuals/${s.latest.screen}/${s.latest.ts}.png?token=${tok}`)}" data-preview-title="${esc(s.name)}"><img alt="" loading="lazy" src="${esc(`${C.base()}/api/visuals/${s.latest.screen}/${s.latest.ts}.png?token=${tok}`)}"><span><b>${esc(s.name)}</b><small>${s.count} version${s.count === 1 ? '' : 's'}</small></span></button>`).join('')}</div>`
+        ${list.length ? `<div class="m2-shots m2-hscroll">${list.map(s => `<button class="m2-shot" data-preview-img="${esc(shot(s.latest))}" data-preview-title="${esc(s.name)}"><img alt="" loading="lazy" src="${esc(shot(s.latest))}"><span><b>${esc(s.name)}</b><small>${s.count} version${s.count === 1 ? '' : 's'}</small></span></button>`).join('')}</div>`
         : `<p class="m2-empty">${hub.shots ? 'No screenshots yet. Claude adds them as the app changes, or tap below.' : 'Loading…'}</p>`}
         <button class="btn m2-wide" data-nav="visuals">Open screenshots</button>`;
     }

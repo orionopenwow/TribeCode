@@ -126,10 +126,13 @@ const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.soc
     : LOCAL_ORIGIN.test(String(req.headers.origin)));
 function authed(req) {
   const h = req.headers.authorization || '';
-  const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
-  if (!t) return null;
+  const u = new URL(req.url, 'http://x');
+  const t = h.startsWith('Bearer ') ? h.slice(7) : u.searchParams.get('token');   // ?token= is deprecated for media (fix/security-2), still needed by /ws
+  if (!t) return u.searchParams.get('mt') && media ? stillValid(media.verify(req, u, u.searchParams.get('mt'))) : null;   // fix/security-2: signed media link
   const th = hash(t);
-  const m = members.find(x => x.tokenHash === th) || (devices && devices.memberForToken(th)) || null;
+  return stillValid(members.find(x => x.tokenHash === th) || (devices && devices.memberForToken(th)) || null);
+}
+function stillValid(m) {
   if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out (any of its keys)
   if (m && m.role === 'agent') { const o = members.find(x => x.id === m.owner); if (o && o.guestUntil && Date.parse(o.guestUntil) < Date.now()) return null; }   // fix/security-review: …and its agents
   return m;
@@ -203,6 +206,7 @@ function broadcast(msg, except) {
   for (const [mid, o] of online) {
     const mem = memberById(mid); if (!mem) continue;
     if (pid && !P.canSee(mem, pid)) continue;
+    if ((type === 'huddle' || type === 'captions') && huddleProject && !P.canSee(mem, huddleProject)) continue;   // fix/security-2: the huddle's project only
     const out = type === 'presence' ? { type: 'presence', members: presenceFor(mem) } : asGeneral;
     for (const s of o.sockets) {
       if (s === except) continue;
@@ -254,8 +258,9 @@ const pushPresence = () => broadcast({ type: 'presence', members: presence() });
 
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
+let huddleProject = null;   // fix/security-2: the project the huddle started in; only people who can see it get its state, captions and audio
 const huddleState = () => [...huddle].map(([mid, h]) => ({ id: mid, muted: h.muted, sharing: h.sharing, joined: h.joined }));
-const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState() }); voice.huddleChanged(); };
+const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState() }); voice.huddleChanged(); if (!huddle.size) huddleProject = null; };
 function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.sockets) s.send(msg); }
 
 // ---------- chat ----------
@@ -322,6 +327,7 @@ const claims = makeClaims({ store, id, broadcast, nameOf, project: () => P.curre
 // with the running server's version, so a page cached before an update (service worker, an old tab) knows it is stale.
 const stampHtml = (file, data) => (path.extname(file) === '.html' ? Buffer.from(String(data).replace('<meta name="tribe-version" content="">', `<meta name="tribe-version" content="${VERSION}">`)) : data);
 const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe, stamp: stampHtml });
+const media = require('./media')({ dir: DIR, getMembers: () => members, deviceTokens: mid => devices.list().filter(d => d.member === mid).flatMap(d => d.tokens) });   // fix/security-2: signed media links
 const share = makeShare({ port: PORT });
 const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m => console.log(m) });
 // Repo autopilot, change requests, TRIBE_CONTEXT.md and the master integrator (server/repo.js): one hub
@@ -360,7 +366,12 @@ const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postC
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
-const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus });
+const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: (me, ch) => {   // fix/security-2: typing only in channels you can read
+  if (ch === 'general') return true;
+  const pj = P.byChannel(ch); if (pj) return P.canSee(me, pj.id);
+  if (chans.isCustom(ch)) return chans.canRead(me, ch);
+  const ag = /^agents-(.+)$/.exec(ch); return !!(ag && P.get(ag[1]) && P.canSee(me, ag[1]));
+} });
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
 const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
@@ -379,7 +390,7 @@ const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m
 const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m) });
 huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
-const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
+const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
@@ -445,12 +456,12 @@ function linkFor(c) {
   return { link: site.joinLink(base, c), kind: pub ? 'public' : lan ? (lan.kind === 'tailscale' ? 'tailscale' : 'wifi') : 'local' };
 }
 flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus, getMembers: () => members, nameOf, docs, brain, coord, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
-  rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal });
+  rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal, perms, approvals });   // fix/security-2: perms + approvals for Connect GitHub
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
 dashboard.setFlow(flow);
 const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str , ui: UI, llm, sense: () => sense });   // per-project Website (server/showcase.js)
 sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
-const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W });   // feat/customize: tribe + project look (server/look.js)
+const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W, perms });   // feat/customize: tribe + project look (server/look.js)
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members });   // feat/setup-flow: role flows, Create the repo, Make the starter
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
@@ -533,6 +544,7 @@ async function apiInProject(req, res, url) {
     ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
+  if (a === 'media' && b === 'key' && m === 'GET') { const th = tokenHashOf(req); return me && th ? send(res, 200, media.issue(me, th)) : fail(res, 401, 'not a member of this tribe'); }   // fix/security-2: key for signed media links (app/ui/media.js)
   if (a === 'guide') return guide.route(req, res, ctx());   // feat/vision-guide: public, read-only how-to pages (server/guide.js)
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
@@ -918,7 +930,7 @@ server.on('upgrade', (req, sock) => {
   o.sockets.add(s); online.set(me.id, o);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
-  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleState(), project: s.project, projects: rooms.listFor(me) });
+  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me) });
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
@@ -937,8 +949,10 @@ server.on('upgrade', (req, sock) => {
     if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting
-    if (msg.type === 'huddle-join' && me.role !== 'agent') {
+    if (msg.type === 'huddle-join' && me.role !== 'agent' && huddle.size && huddleProject && !P.canSee(me, huddleProject)) s.send({ type: 'huddle-error', error: 'A huddle is on in another project.' });   // fix/security-2
+    else if (msg.type === 'huddle-join' && me.role !== 'agent') {
       const first = huddle.size === 0;
+      if (first || !huddleProject) huddleProject = s.project || P.current() || P.defaultId();   // fix/security-2
       huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
       pushHuddle(); if (first) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
       if (first) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });

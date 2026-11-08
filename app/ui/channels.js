@@ -49,7 +49,7 @@
     col.style.removeProperty('--cbg-img');
     if (!want) return;
     col.classList.add('cbg', 'cbg-' + want, 'cbg-on');   // cbg-on: the legibility rules in chat2.css (dimmed layer, solid message rows on hover)
-    if (want === 'image') col.style.setProperty('--cbg-img', `url("${C.base()}/api/channels/${encodeURIComponent(meta.id)}/bg/${encodeURIComponent(bg.value)}?token=${encodeURIComponent(token())}")`);
+    if (want === 'image') col.style.setProperty('--cbg-img', `url("${(u => (window.TribeMedia ? window.TribeMedia.url(u) : u))(`${C.base()}/api/channels/${encodeURIComponent(meta.id)}/bg/${encodeURIComponent(bg.value)}`)}")`);
   }
 
   // ---------- dialogs ----------

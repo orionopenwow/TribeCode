@@ -73,7 +73,8 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     check_approval: {
       description: 'Check an approval you requested: pending, approved or denied, plus the human\'s note and any questions they asked you (answer questions in chat, then keep polling).',
       inputSchema: S({ id: str('Approval id from request_approval') }, ['id']),
-      run: ({ id }) => { const ap = approvals && approvals.get(id); return ap ? text({ id: ap.id, status: ap.status, note: ap.note || '', questions: ap.questions.map(q => ({ from: q.name, at: q.at, text: q.text })), decidedBy: ap.decidedByName, decidedAt: ap.decidedAt || null }) : err(`No approval with id ${id}`); },
+      run: ({ id }, me) => { let ap = approvals && approvals.get(id); if (ap && !(ap.project ? projects(me).some(p => p.id === ap.project) : ap.by === (me && me.id))) ap = null;   // fix/security-2: only approvals in your projects
+        return ap ? text({ id: ap.id, status: ap.status, note: ap.note || '', questions: ap.questions.map(q => ({ from: q.name, at: q.at, text: q.text })), decidedBy: ap.decidedByName, decidedAt: ap.decidedAt || null }) : err(`No approval with id ${id}`); },
     },
     ...extraTools,   // e.g. check_messages / reply (chatx.js)
     ...require('./mcp-people').tools({ text, err, S, str }),   // share_prompt, report_context (server/mcp-people.js)

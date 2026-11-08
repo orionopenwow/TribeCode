@@ -18,7 +18,7 @@
   const hooks = [];   // onRender(fn): features add to the hero (preview.js: "Preview app")
 
   const token = () => encodeURIComponent(((window.TribeStore && window.TribeStore.get().server) || {}).token || '');
-  const srcOf = t => (/^\//.test(t.src) ? `${C.base()}${t.src}${t.src.includes('?') ? '&' : '?'}token=${token()}` : t.src);
+  const srcOf = t => { if (!/^\//.test(t.src)) return t.src; const u = `${C.base()}${t.src}`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
   const tile = t => `<div class="rhx-tile" style="background:${esc(t.color)};color:${ink(t.color)}"><span>${esc(t.initials || '?')}</span></div>`;
   function art(t) {
     if (!t) return '<div class="rhx-tile rhx-wait"></div>';

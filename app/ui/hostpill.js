@@ -58,3 +58,5 @@
   hook(); if (S() && S().on) S().on(refresh);
   window.TribeHostPill = { refresh, open, close };
 })();
+// The pixel wordmark at the start of the top bar goes Home, like the rail logo (no inline handler: the desktop CSP forbids them)
+(function () { const b = document.getElementById('tb-brand'); if (b) b.addEventListener('click', () => { const r = document.getElementById('rail-logo'); if (r) r.click(); }); })();

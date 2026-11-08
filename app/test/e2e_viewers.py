@@ -144,7 +144,7 @@ def main():
             host = ctx.new_page(); watch(host, "host")
             host.goto(BASE + "/?skipIntro=1")
             host.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % pid, timeout=15000)
-            assert not host.evaluate("[...document.querySelectorAll('script[type=importmap]')].length"), "three.js is not loaded until a viewer opens"
+            assert not host.evaluate("!!TribeViewers.threeVerified"), "three.js is not loaded until a viewer opens"
 
             # ---------- desktop Docs: the assets list under the pinned repo hero ----------
             host.evaluate("TribeApp.show('docs')")
@@ -206,7 +206,6 @@ def main():
             # ---------- 3D: the GLB ----------
             host.evaluate("TribeApp.show('docs')"); host.wait_for_selector("#vw-assets-desk [data-view-path='models/cube.glb']", timeout=10000)
             host.click("#vw-assets-desk [data-view-path='models/cube.glb']")
-            assert host.evaluate("[...document.querySelectorAll('script[type=importmap]')].some(s => s.textContent.includes('three@%s'))" % THREE_VER), "the import map is added when the viewer opens"
             three_ok = how != "unreachable"
             if not three_ok:
                 host.wait_for_selector("#vw .vw-err", timeout=20000)
@@ -215,6 +214,7 @@ def main():
                 errors[:] = [e for e in errors if "three" not in e.lower() and "import" not in e.lower()]
             else:
                 host.wait_for_selector("#vw-body[data-ready='1']", timeout=30000)
+                assert host.evaluate("TribeViewers.threeVerified") == THREE_VER, "fix/security-2: three.js ran from the SHA-384-checked files"
                 info = host.evaluate("({ t: __tribeViewer.tris, m: __tribeViewer.meshes, mat: __tribeViewer.materials, a: __tribeViewer.animations })")
                 assert info == {"t": 12, "m": 1, "mat": 1, "a": 1}, info
                 assert host.text_content("#vw-s-tris b") == "12" and host.text_content("#vw-s-meshes b") == "1" and host.text_content("#vw-s-mats b") == "1" and host.text_content("#vw-s-anims b") == "1"

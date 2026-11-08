@@ -56,14 +56,16 @@ function githubOf(remote) {
   return null;
 }
 
-module.exports = function look({ base, P, tribe, saveTribe, broadcast, getMembers, W = null }) {
+module.exports = function look({ base, P, tribe, saveTribe, broadcast, getMembers, W = null, perms = null }) {
   const FILE = '.tribe/look.json';
   const blank = () => ({ tribe: { accent: null, bg: { kind: 'none' }, emoji: '', icon: '', density: '', fontSize: '' }, projects: {} });
   let st = (() => { const s = base.readJSON(FILE, null); return s ? { ...blank(), ...s, tribe: { ...blank().tribe, ...(s.tribe || {}) }, projects: s.projects || {} } : blank(); })();
   const save = () => base.writeJSON(FILE, st);
   const err = (status, msg) => Object.assign(new Error(msg), { status });
-  const canTribe = me => !!me && (me.role === 'host' || me.role === 'builder');
-  const canProject = (me, pid) => canTribe(me) && P.canSee(me, pid);
+  // fix/security-2: by rank, so admins and mods can too (before, only host and builder could: an admin could do less than a builder).
+  // Agents and spectators can't. A guest's role counts as its own role.
+  const canTribe = me => !!me && me.role !== 'agent' && (perms ? perms.atLeast(me, 'builder', null) : ['host', 'admin', 'mod', 'builder'].includes(me.role));
+  const canProject = (me, pid) => !!me && me.role !== 'agent' && P.canSee(me, pid) && (perms ? perms.atLeast(me, 'builder', pid) : canTribe(me));
 
   // ---------- covers ----------
   const fs = require('node:fs'), path = require('node:path');
@@ -103,7 +105,7 @@ module.exports = function look({ base, P, tribe, saveTribe, broadcast, getMember
   }
 
   function setTribe(b, me) {
-    if (!canTribe(me)) throw err(403, 'only the host and builders change the tribe\'s look');
+    if (!canTribe(me)) throw err(403, 'spectators can\'t change the tribe\'s look');
     const t = st.tribe;
     if (b.accent !== undefined) {
       if (b.accent === null || b.accent === '') t.accent = null;
@@ -136,7 +138,7 @@ module.exports = function look({ base, P, tribe, saveTribe, broadcast, getMember
   async function setProject(b, me) {
     const pid = String(b.id || '');
     if (!P.get(pid)) throw err(404, 'project not found');
-    if (!canProject(me, pid)) throw err(403, 'only the host and builders change a project\'s look');
+    if (!canProject(me, pid)) throw err(403, 'spectators can\'t change a project\'s look');
     const v = { ...(st.projects[pid] || {}) };
     if (b.theme !== undefined) { if (b.theme && !okTheme(b.theme)) throw err(400, 'unknown theme'); if (b.theme) v.theme = b.theme; else delete v.theme; }
     if (b.banner !== undefined) b.cover = b.banner ? { kind: 'image', image: b.banner } : null;   // older callers

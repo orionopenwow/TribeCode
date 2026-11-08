@@ -11,6 +11,9 @@ const path = require('node:path');
 const KEY_RE = /^[A-Za-z0-9_-]{32,64}$/;
 const MAX_TOKENS = 6;          // one per redeem (Safari tab, Home Screen app, reinstall…), oldest dropped
 const MAX_DEVICES = 20;        // per member
+// fix/security-2: a device link turns itself off after 90 days unused (idleDays), and can also have a fixed end (expires).
+const IDLE_DAYS = 90, DAY = 86400_000, MAX_DAYS = 365;
+const TOUCH_MS = 3600_000;     // "last used" is saved at most once an hour per device
 
 module.exports = function makeDevices({ store, id, hash, str, getMembers, publicMember, tribe, stamp = (f, d) => d }) {
   let devices = store.readJSON('.tribe/devices.json', []);
@@ -24,10 +27,17 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
     return str(given, 40) || auto;
   }
 
-  function create(member, req, given) {
+  // fix/security-2: expired = past its fixed end, or unused for idleDays (counted from the last use, else from when it was made)
+  const lastAt = d => Date.parse(d.lastUsed || d.created) || 0;
+  const endsAt = d => Math.min(d.expires ? Date.parse(d.expires) || Infinity : Infinity, lastAt(d) + (d.idleDays || IDLE_DAYS) * DAY);
+  const expired = d => Date.now() > endsAt(d);
+  function sweep() { const before = devices.length; devices = devices.filter(d => !expired(d)); if (devices.length !== before) save(); }
+
+  function create(member, req, given, days) {
     const key = id(40);
+    const n = Math.round(Number(days) || 0);
     const d = { id: 'd-' + id(8), member: member.id, keyHash: hash(key), tokens: [], label: label(req, given),
-      created: new Date().toISOString(), lastUsed: null };
+      created: new Date().toISOString(), lastUsed: null, idleDays: IDLE_DAYS, ...(n > 0 ? { expires: new Date(Date.now() + Math.min(n, MAX_DAYS) * DAY).toISOString() } : {}) };
     devices.push(d);
     const mine = devices.filter(x => x.member === member.id);
     if (mine.length > MAX_DEVICES) { const drop = new Set(mine.slice(0, mine.length - MAX_DEVICES)); devices = devices.filter(x => !drop.has(x)); }
@@ -38,7 +48,7 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
   function redeem(key, req) {
     if (!KEY_RE.test(key || '')) return null;
     const kh = hash(key);
-    const d = devices.find(x => x.keyHash === kh);
+    const d = devices.find(x => x.keyHash === kh && !expired(x));
     const m = d && memberById(d.member);
     if (!m) return null;
     const token = id(32);
@@ -52,13 +62,15 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
   function memberForToken(th) {
     const d = devices.find(x => x.tokens.includes(th));
     if (!d) return null;
+    if (expired(d)) { sweep(); return null; }   // fix/security-2
     const m = memberById(d.member);
-    if (m) d.seen = Date.now();
+    if (m) { d.seen = Date.now(); if (Date.now() - lastAt(d) > TOUCH_MS) { d.lastUsed = new Date().toISOString(); save(); } }   // keeps an app in daily use signed in
     return m;
   }
   const deviceForToken = th => devices.find(x => x.tokens.includes(th)) || null;
 
-  const view = (d, th) => ({ id: d.id, label: d.label, created: d.created, lastUsed: d.lastUsed, redeemed: d.tokens.length > 0, current: !!th && d.tokens.includes(th) });
+  const view = (d, th) => ({ id: d.id, label: d.label, created: d.created, lastUsed: d.lastUsed, redeemed: d.tokens.length > 0, current: !!th && d.tokens.includes(th),
+    expires: d.expires || null, idleDays: d.idleDays || IDLE_DAYS, endsAt: new Date(endsAt(d)).toISOString() });   // fix/security-2
 
   // ---- API: returns null when the route isn't ours ----
   async function route(req, res, { a, b, m, me, tokenHash, readBody, send, fail, limited }) {
@@ -73,12 +85,12 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
       if (!me) return fail(res, 401, 'not a member of this tribe');
       if (me.role === 'agent') return fail(res, 403, 'agents cannot link devices');
       const body = await readBody(req);
-      const { key, device } = create(me, req, body.label);
+      const { key, device } = create(me, req, body.label, body.days);
       return send(res, 200, { key, path: `/m/${key}/`, device: view(device) });
     }
     if (a === 'devices') {
       if (!me) return fail(res, 401, 'not a member of this tribe');
-      if (m === 'GET' && !b) return send(res, 200, { devices: devices.filter(d => d.member === me.id).map(d => view(d, tokenHash)).reverse() });
+      if (m === 'GET' && !b) { sweep(); return send(res, 200, { devices: devices.filter(d => d.member === me.id).map(d => view(d, tokenHash)).reverse() }); }
       if (m === 'DELETE' && b) {
         const d = devices.find(x => x.id === b && x.member === me.id);
         if (!d) return fail(res, 404, 'device not found');

@@ -332,7 +332,8 @@
     if (imgs.has(src)) return imgs.get(src);
     const im = new Image(); im.decoding = 'async';
     im.onload = () => paint(); im.onerror = () => { im.failed = true; paint(); };
-    im.src = `${C.base()}/api/uploads/${encodeURIComponent(src)}/raw?token=${encodeURIComponent(token())}`;
+    const u = `${C.base()}/api/uploads/${encodeURIComponent(src)}/raw`;   // fix/security-2: signed link, not the sign-in key
+    if (window.TribeMedia) window.TribeMedia.urlAsync(u).then(x => { im.src = x; }); else im.src = u;
     imgs.set(src, im); return im;
   }
   function arrowHead(c, a, b, size) {
