@@ -73,3 +73,15 @@ body.flint-open { overflow: hidden; }
 /* Flint's face (the mascot) wherever his avatar shows */
 .fl-av .fl-face { display: block; image-rendering: pixelated; }
 .fl-av { overflow: visible; }
+
+/* the flame in the Ask bar is a button: a small menu of what Flint does */
+.fl-me { border: 0; padding: 0; cursor: pointer; transition: transform .15s; }
+.fl-me:hover { transform: scale(1.08); background: color-mix(in srgb, var(--accent, #F26B1D) 18%, var(--chip)); }
+.fl-me:focus-visible { outline: 2px solid var(--accent, #F26B1D); outline-offset: 2px; }
+.fl-menu { position: fixed; z-index: 2000; width: 280px; padding: 6px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.fl-menu-h { display: flex; align-items: center; gap: 8px; padding: 8px 10px 10px; border-bottom: 1px solid var(--edge); margin-bottom: 4px; }
+.fl-menu-h .fl-face { image-rendering: pixelated; } .fl-menu-h b { font-size: 14px; } .fl-menu-h small { margin-left: auto; font-size: 11px; color: var(--faint); font-family: var(--mono); }
+.fl-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 9px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.fl-menu button:hover, .fl-menu button:focus-visible { background: var(--surface-2); outline: none; }
+.fl-menu .fm-e { font-size: 18px; width: 24px; text-align: center; }
+.fl-menu b { display: block; font-size: 13.5px; font-weight: 600; } .fl-menu small { display: block; font-size: 12px; color: var(--faint); }

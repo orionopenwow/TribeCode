@@ -331,7 +331,7 @@
   }
   function threadHtml() { return thread.length ? thread.map(msgHtml).join('') : emptyHtml(); }
   function barHtml(id) {
-    return `<form class="fl-bar" data-flbar autocomplete="off"><span class="fl-av" aria-hidden="true">${flintIco(14)}</span>
+    return `<form class="fl-bar" data-flbar autocomplete="off"><button type="button" class="fl-av fl-me" data-flme title="What Flint can do" aria-label="What Flint can do" aria-haspopup="menu">${flintIco(14)}</button>
       <input class="fl-in" ${id ? `id="${id}"` : ''} placeholder="Ask Flint…" aria-label="Ask Flint" maxlength="2000" enterkeyhint="send">
       <button type="button" class="fl-ic fl-mic" data-flmic title="Dictate" aria-label="Dictate">${ico('i-mic', 16)}</button>
       <button type="submit" class="fl-ic fl-send" title="Send" aria-label="Send">${SEND}</button></form>`;
@@ -347,11 +347,39 @@
     threads().forEach(el => { const n = el.querySelector(`.fl-msg[data-i="${i}"] .fl-t`); if (n) { n.innerHTML = linkify(m.text); el.scrollTop = el.scrollHeight; } else { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; } });
   }
   function drawStatus() { document.querySelectorAll('[data-flst]').forEach(e => { e.textContent = statusLine(); e.classList.toggle('ok', model.online); }); }
+  // The flame in the Ask bar: a small menu of what Flint does (feat: clickable Flint)
+  function flintMenu(btn, root) {
+    const old = document.getElementById('fl-menu'); if (old) { old.remove(); return; }
+    const input = root.querySelector('.fl-in');
+    const fill = t => { if (input) { input.value = t; input.focus(); input.setSelectionRange(t.length, t.length); } };
+    const items = [
+      ['📰', "What's new?", 'A quick catch-up on the project', () => { setOpen(true); send("what's new?"); }],
+      ['📝', 'Take a note', 'Saved for the whole tribe', () => fill('note: ')],
+      ['✅', 'Make a task', 'Straight onto the Task Board', () => fill('task: ')],
+      ['🔎', 'What did we decide?', 'Searches chat, notes and captures', () => fill('what did we decide about ')],
+      ['🧭', 'Show me around', 'A 30-second tour of the app', () => window.TribeFlintGuide && window.TribeFlintGuide.tour()],
+      ['✨', 'What can Flint do?', 'His guide, in one screen', () => window.TribeFlintGuide && window.TribeFlintGuide.intro(input)],
+      ['🧠', "Pick Flint's brain", 'Choose the model he thinks with', () => window.TribeBrain && window.TribeBrain.open()],
+    ];
+    const m = document.createElement('div'); m.id = 'fl-menu'; m.className = 'fl-menu'; m.setAttribute('role', 'menu');
+    m.innerHTML = `<div class="fl-menu-h">${flintIco(16)}<b>Flint</b><small>${esc(statusLine())}</small></div>` + items.map(([e, t, s], i) => `<button type="button" role="menuitem" data-fm="${i}"><span class="fm-e" aria-hidden="true">${e}</span><span><b>${esc(t)}</b><small>${esc(s)}</small></span></button>`).join('');
+    document.body.appendChild(m);
+    const r = btn.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth;
+    m.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+    m.style.top = (r.top - h - 8 > 8 ? r.top - h - 8 : r.bottom + 8) + 'px';
+    const close = () => { m.remove(); removeEventListener('mousedown', out, true); removeEventListener('keydown', esc_, true); };
+    const out = ev => { if (!m.contains(ev.target) && !btn.contains(ev.target)) close(); };
+    const esc_ = ev => { if (ev.key === 'Escape') { close(); btn.focus(); } };
+    addEventListener('mousedown', out, true); addEventListener('keydown', esc_, true);
+    m.querySelectorAll('[data-fm]').forEach(b => b.onclick = () => { close(); items[+b.dataset.fm][3](); });
+    const first = m.querySelector('[data-fm]'); if (first) first.focus();
+  }
   function wire(root) {
     root.addEventListener('click', e => {
       const ns = e.target.closest('[data-step]'); if (ns && ns.closest('.fl-empty')) { if (window.TribeProjects && window.TribeProjects.step) window.TribeProjects.step(ns.dataset.step); return; }
       const c = e.target.closest('[data-chip]'); if (c) { const v = c.dataset.chip; if (v === 'Capture a note') { const i = root.querySelector('.fl-in'); if (i) { i.value = 'note: '; i.focus(); } return; } return send(v); }
       const a = e.target.closest('[data-act]'); if (a) { const [i, j] = a.dataset.act.split(':').map(Number), x = thread[i] && thread[i].acts[j]; if (x && ACTS[x.act]) { if (x.act !== 'ask' && phone()) closeFull(); ACTS[x.act](x.arg); } return; }
+      const me = e.target.closest('[data-flme]'); if (me) { e.preventDefault(); flintMenu(me, root); return; }
       const mic = e.target.closest('[data-flmic]'); if (mic) { const i = root.querySelector('.fl-in'); if (window.TribeSpeech && window.TribeSpeech.supported && window.TribeSpeech.supported()) window.TribeSpeech.dictate(i); else toast((window.TribeSpeech && window.TribeSpeech.HINT) || 'Dictation is not available in this browser.'); }
     });
     root.querySelectorAll('[data-flbar]').forEach(f => f.addEventListener('submit', e => { e.preventDefault(); const i = f.querySelector('.fl-in'); const v = i.value; i.value = ''; if (window.TribeSpeech && window.TribeSpeech.stopDictation) try { window.TribeSpeech.stopDictation(); } catch {} setOpen(true); send(v); }));
