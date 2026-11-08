@@ -2,8 +2,14 @@
 .fg-root { position: fixed; inset: 0; z-index: 140; pointer-events: none; display: none; }
 .fg-root.on { display: block; }
 .fg-scrim { position: absolute; inset: 0; background: transparent; pointer-events: none; }
-.fg-root.dim .fg-scrim { background: color-mix(in srgb, var(--canvas) 55%, transparent); pointer-events: auto; }
-.fg-ring { position: absolute; border: 2px solid var(--accent); border-radius: 12px; opacity: 0; transition: opacity .2s, left .35s, top .35s, width .35s, height .35s; }
+.fg-root.dim .fg-scrim { pointer-events: auto; }
+/* whenever Flint points at something, everything around it dims a little (a spotlight: the ring's spread is the dim,
+   the hole is the target), so the eye lands on the right place. With no target, the scrim itself dims. */
+.fg-root.dim:not(:has(.fg-ring.on)) .fg-scrim { background: color-mix(in srgb, #000 38%, transparent); }
+.fg-ring { position: absolute; border: 2px solid var(--accent); border-radius: 12px; opacity: 0; pointer-events: none;
+  box-shadow: 0 0 0 200vmax color-mix(in srgb, #000 38%, transparent);
+  transition: opacity .25s, left .35s, top .35s, width .35s, height .35s; }
+@media (prefers-reduced-motion: reduce) { .fg-ring { transition: opacity .15s; } }
 .fg-ring.on { opacity: 1; }
 .fg-sprite { position: absolute; left: 0; top: 0; width: 44px; height: 44px; image-rendering: pixelated; will-change: transform; animation: fg-bob 1.6s steps(4, end) infinite alternate; }
 @keyframes fg-bob { from { translate: 0 0; } to { translate: 0 -4px; } }
