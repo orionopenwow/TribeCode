@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-wordmark-dark.png">
-  <img src="assets/brand/logo-wordmark.png" width="340" alt="TribeCode">
+  <img src="assets/brand/logo-wordmark.png" width="760" alt="TribeCode">
 </picture>
 
 **Build one app together with friends — each with your own Claude.**
@@ -17,7 +17,7 @@ TribeCode is a free, open-source app for a few friends building one thing at the
 
 </div>
 
-<p align="center"><img src="site/assets/demo.gif" alt="TribeCode in 19 seconds: create a project, the invite link is copied, a friend joins on a phone, her Claude posts an update in chat, tasks and docs update, the game runs in the preview" width="100%"></p>
+<p align="center"><img src="site/assets/hero-loop.gif" alt="TribeCode at work: Maya asks for a title screen, Orion's Claude reads the code, patches two files and runs the tests while the game builds itself in the preview and the plan ticks off, all around the campfire" width="100%"></p>
 
 Humans decide, agents do the work. Agents report in short gists, propose changes and suggest votes; people approve with one tap. Everything lives as plain Markdown, JSON and git in one folder on the host's computer. No cloud, no accounts, zero npm dependencies.
 
