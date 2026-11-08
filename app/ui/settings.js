@@ -152,8 +152,10 @@
   }
 
   // ---------- first-launch banner: one line, dismissible ----------
+  // Retired in v0.9.3: hosting shows as the "Hosting" pill top left (hostpill.js). Clear the first-run flag quietly.
   function banner() {
-    const st = S.get(); if (!st.firstRun || $('#hi-banner') || !C().connected()) return;
+    const st = S.get(); if (st.firstRun && C().connected()) S.set({ firstRun: false }); return;
+    if (!st.firstRun || $('#hi-banner') || !C().connected()) return;   // eslint-disable-line no-unreachable
     const me = C().state().me || {}, host = me.role === 'host', tribe = (C().state().tribe || {}).name || 'your tribe';
     const el = document.createElement('div'); el.className = 'hi-banner'; el.id = 'hi-banner';
     el.innerHTML = `<span>${host ? '<span class="emo" aria-hidden="true">🔥</span>' : '<span class="emo" aria-hidden="true">👋</span>'}Hi ${esc((st.name || '').split(' ')[0] || 'there')}, ${host ? "you're hosting." : `welcome to ${esc(tribe)}.`}</span>${host ? '<button class="linkish" id="hi-invite">Invite a friend →</button>' : ''}<span class="spacer"></span><button class="hi-x" id="hi-x" aria-label="Dismiss">✕</button>`;

@@ -136,10 +136,11 @@ def main():
             host.wait_for_selector("#pj-rail .pj-circle")
             # first launch: zero steps, straight into the first project, one dismissible line
             assert host.locator("#onboard").count() == 0
-            wait_text(host, "#hi-banner", "you're hosting")
+            host.wait_for_selector("#host-pill:not(.hidden)")   # hosting shows as the pill top left (no banner)
+            assert host.locator("#hi-banner").count() == 0
             host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
             shot(host, "first-launch")
-            host.click("#hi-x"); host.wait_for_selector("#hi-banner", state="detached")
+            host.click("#host-pill"); host.wait_for_selector("#host-pop #hpo-invite"); host.keyboard.press("Escape")
             assert host.evaluate("TribeStore.get().firstRun") is False
             wait_text(host, "#chat-list", "legacy hello from the campfire")
             st, r = api("/tasks", token=token)
