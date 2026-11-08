@@ -143,8 +143,7 @@ def main():
             host.mouse.move(720, 600); shot(host, "nav-desktop")
 
             # ---- Tasks & Board: one tabbed workspace
-            api("/tasks", "POST", {"title": "Nav check"}, token=host.evaluate("TribeStore.get().server.token"), project=pid)   # vision + task + repo: "going", so the Task Board shows its tabs (feat/setup-flow)
-            host.wait_for_function("document.body.dataset.stage === 'going'", timeout=10000)
+            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:true, repo:true}, {pin:true})")   # past setup: the Task Board shows its tabs (feat/setup-flow)
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
             assert tabs(host) == TASK_TABS, tabs(host)
             assert host.text_content("#view-tabs .wt-eye") == "Task Board"

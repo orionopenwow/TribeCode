@@ -88,7 +88,7 @@
       return `<button type="button" class="tk-who-chip" data-who-change title="Change who does it"><span class="emo" aria-hidden="true">${d[1]}</span>${esc(name)}</button>`;
     }
     const list = DOERS.filter(([k]) => k !== 'flint' || textTask(t));
-    return `<div class="tk-who" role="group" aria-label="Who does it?"><span class="tk-who-l">Who?</span>${list.map(([k, e, l]) => `<button type="button" class="tk-do" data-do="${k}" ${k === 'agent' ? 'data-askag' : ''}><span class="emo" aria-hidden="true">${e}</span>${l}</button>`).join('')}</div>`;
+    return `<div class="tk-who" role="group" aria-label="Who does it?"><span class="tk-who-l">Who?</span>${list.map(([k, e, l]) => `<button type="button" class="tk-do" data-do="${k}" ${k === 'agent' ? 'data-askag' : ''} title="${l}" aria-label="${l}"><span class="emo" aria-hidden="true">${e}</span><span class="tk-dl">${l}</span></button>`).join('')}</div>`;
   }
   async function delegate(t, k, el) {
     t._pick = false;

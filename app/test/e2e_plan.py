@@ -429,6 +429,7 @@ def main():
 
             # ---------- phone: comments sheet + calendar fit ----------
             phone = open_as(b, "Maya", maya_tok, viewport=(390, 844))
+            phone.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:true, repo:true}, {pin:true})")   # past setup: the tab row shows (feat/setup-flow)
             phone.click('#menu-btn'); phone.click("#nest-ws-tasks"); phone.click("#wt-calendar"); phone.wait_for_selector("#view-calendar:not(.hidden) .cal-week")   # phones: Project Hub lives in the panel
             b.close()
 

@@ -10,7 +10,7 @@
 .av-cat:hover { border-color: var(--edge-pop); }
 .av-cat[aria-checked="true"] { background: var(--rust-soft); border-color: color-mix(in srgb, var(--action) 55%, var(--edge)); }
 .av-gist-l { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-textarea.av-gist { width: 100%; min-height: 64px; resize: vertical; font-size: 14.5px; line-height: 1.55; margin-bottom: 14px; }
+.av2 textarea.av-gist { width: 100%; height: 72px; min-height: 56px; resize: vertical; font-family: inherit; font-size: 14.5px; line-height: 1.55; margin-bottom: 14px; }
 .av-draft-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
 .av-improve { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--faint); flex-wrap: wrap; }
 .av2 textarea.av-text { height: 210px; font-family: var(--mono); font-size: 13px; }
@@ -45,6 +45,8 @@ textarea.av-gist { width: 100%; min-height: 64px; resize: vertical; font-size: 1
 .su-rt b { font-size: 14px; font-weight: 600; line-height: 1.3; }
 .su-rt small { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .su-role.on small { color: var(--live-ink); }
+.su-role.on { padding-right: 26px; }
+.su-rt b { overflow-wrap: anywhere; }
 .su-ok { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--live, #38C6B1); }
 .su-ok svg.i { width: 12px; height: 12px; fill: none; stroke: var(--on-live, #0B0C10); stroke-width: 2.5; }
 .su-starter { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 12px; border: 1px solid color-mix(in srgb, var(--action) 45%, var(--edge)); border-radius: 10px; background: var(--rust-soft); }
@@ -84,6 +86,9 @@ textarea.av-gist { width: 100%; min-height: 64px; resize: vertical; font-size: 1
 .tk-types.m2-types .tk-type { height: 34px; padding: 0 12px; font-size: 13.5px; }
 .chip.tk-tchip { display: inline-flex; align-items: center; gap: 3px; }
 .chip.tk-tchip .emo { font-size: 11px; }
+#board .task { container-type: inline-size; }
+.tk-dl { display: none; }
+@container (min-width: 250px) { .tk-dl { display: inline; } }
 .tk-who { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; }
 .tk-who-l { font-size: 11.5px; color: var(--faint); margin-right: 2px; }
 .tk-do { display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--edge); background: var(--surface-2); color: var(--muted); font-size: 11.5px; cursor: pointer; }
@@ -115,6 +120,10 @@ body[data-vision="0"] #nest-add { display: none; }
   .av-improve { margin-left: 0; }
   .pj-name-in { font-size: 22px; height: 40px; }
   .tk-do { height: 30px; padding: 0 9px; font-size: 12.5px; }
+  /* phones: task rows stay one line; "Who does it?" wraps under the title */
+  #board .task:has(.tk-who) { flex-wrap: wrap; }
+  #board .task .tk-who { order: 4; flex: 1 0 100%; margin: 2px 0 0; }
+  #board .task .tk-who-chip { order: 2; flex: none; margin: 0; }
   .sx-item { min-height: 92px; }
   .sx-thumb { flex-basis: 48px; }
   .sx-body b { font-size: 16px; }

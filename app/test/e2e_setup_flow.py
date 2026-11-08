@@ -23,6 +23,11 @@ ROOT = Path(__file__).resolve().parents[2]
 PORT = 5170 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 BASE = f"http://localhost:{PORT}"
 errors = []
+SHOTS = os.environ.get("SETUP_SHOTS")   # a folder: save a few screenshots there to look at
+
+
+def shot(pg, name):
+    if SHOTS: pg.wait_for_timeout(300); pg.screenshot(path=os.path.join(SHOTS, name + ".png"))
 
 
 def api(path, method="GET", body=None, token=None, project=None):
@@ -99,7 +104,7 @@ def main():
             for part in ["## What", "light lanterns", "## For whom", "## Done for v1", "One level you can play", "## Out of scope"]:
                 assert part in draft, (part, draft)
             host.click("#av-cats [data-cat=site]"); assert "Visitors who should get it" in host.input_value("#pj-vtext"), "the draft follows the chip"
-            host.click("#av-cats [data-cat=game]")
+            host.click("#av-cats [data-cat=game]"); shot(host, "vision")
             assert host.locator(".av-imp[data-helper=flint]").count() == 1 and host.locator("[data-close]").first.text_content().strip() == "Later"
             host.click("#pj-vsave")
             host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
@@ -114,7 +119,7 @@ def main():
             assert host.evaluate("document.body.dataset.vision") == "1"
             host.click("#pj-setup [data-role=artist]"); host.wait_for_selector(".su-flow .su-opt")
             assert host.locator(".su-flow .su-opt").count() == 6 and host.locator(".su-flow .su-opt .su-sw").count() == 6
-            pal = host.text_content(".su-flow .su-opt b")
+            pal = host.text_content(".su-flow .su-opt b"); shot(host, "artist")
             host.click(".su-flow .su-opt >> nth=0")
             host.wait_for_selector("#pj-setup [data-role=artist].on", timeout=10000)
             tasks = api("/tasks", token=tok, project=pid)[1]["tasks"]
@@ -138,7 +143,7 @@ def main():
             host.evaluate("TribeApp.show('tasks')"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-calendar", timeout=5000)
 
             # 5. Make the starter
-            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#su-starter", timeout=10000)
+            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#su-starter", timeout=10000); shot(host, "dashboard")
             host.wait_for_timeout(500)
             host.click("#su-starter")
             try: host.wait_for_selector("#su-preview, #pj-setup:not(:has(#su-starter))", timeout=20000)
@@ -160,6 +165,7 @@ def main():
             host.keyboard.press("Escape")
             card = host.locator(f"#board .task[data-id='{t5['id']}']")
             card.locator(".tk-tchip").wait_for(timeout=5000)
+            shot(host, "board")
             labels = card.locator(".tk-do").all_text_contents()
             assert [l.strip() for l in labels] == ["🙋Me", "👋A friend", "🤖An agent", "🔥Flint"], labels
             build = next(t for t in api("/tasks", token=tok, project=pid)[1]["tasks"] if t["title"] == "Set up KAPLAY")
@@ -178,6 +184,7 @@ def main():
             host.click("#pj-name"); host.wait_for_selector(".pj-name-in"); host.fill(".pj-name-in", "Nope"); host.keyboard.press("Escape")
             host.wait_for_selector("#pj-name", timeout=5000); assert host.text_content("#pj-name") == "Lantern Grove"
             host.click("#pj-face"); host.wait_for_selector("#pj-face-pop .pfp-e")
+            shot(host, "face")
             assert host.locator("#pj-face-pop .pfp-e").count() == 24 and "Upload a picture" in host.text_content("#pfp-upload")
             host.click("#pj-face-pop [data-face='🐉']")
             host.wait_for_function("pid => (TribeProjects.list().find(p => p.id === pid) || {}).emoji === '🐉'", arg=pid, timeout=10000)
@@ -192,6 +199,7 @@ def main():
             assert it["fs"] == "17px" and it["fw"] == "700" and it["ws"] == "nowrap", it
             assert it["thumbLeft"] <= 1 and it["shadow"] == "none" and it["bg"] == "none", it
             assert it["btnRight"] <= 20 and it["btnBottom"] <= 20, f"Make it a task sits bottom right {it}"
+            host.evaluate("document.querySelector('#pj-insp').scrollIntoView()"); shot(host, "inspiration")
             pal_card = host.locator("#pj-insp .sx-item[data-type=palette] .sx-pal i")
             if pal_card.count(): assert pal_card.count() >= 3
 
@@ -205,15 +213,15 @@ def main():
             if ph.locator("#install-sheet:not(.hidden) #ins-later").count(): ph.click("#ins-later")
             ph.evaluate("TribeApp.show('home')"); ph.wait_for_selector("#pj-setup .su-role", timeout=15000)
             ph.wait_for_selector("#pj-insp .sx-item", timeout=15000); ph.wait_for_timeout(300)
-            no_overflow(ph, "phone dashboard")
+            no_overflow(ph, "phone dashboard"); ph.evaluate("document.querySelector('#pj-setup').scrollIntoView()"); shot(ph, "phone-dashboard")
             ph.click("#pj-setup [data-role=writer]"); ph.wait_for_selector(".su-flow .su-opt"); no_overflow(ph, "phone role chooser")
             ph.click(".su-flow .su-opt >> nth=0"); ph.wait_for_selector("#pj-setup [data-role=writer].on", timeout=10000)
-            ph.evaluate("TribeProjects.step('vision')"); ph.wait_for_selector("#av-cats .av-cat"); ph.wait_for_timeout(200); no_overflow(ph, "phone vision composer")
+            ph.evaluate("TribeProjects.step('vision')"); ph.wait_for_selector("#av-cats .av-cat"); ph.wait_for_timeout(200); no_overflow(ph, "phone vision composer"); shot(ph, "phone-vision")
             assert len(set(ph.eval_on_selector_all("#av-cats .av-cat", "els => els.map(e => Math.round(e.getBoundingClientRect().top))"))) >= 2, "chips wrap"
             ph.click("[data-close]"); ph.wait_for_timeout(200)
             ph.evaluate("TribeApp.show('tasks')"); ph.wait_for_selector("#task-new", timeout=10000)
             ph.evaluate("document.querySelector('#task-new').click()"); ph.wait_for_selector("#m2-task-sheet .tk-type", timeout=5000)
-            ph.click("#m2-task-sheet [data-type=research]"); ph.fill("#m2-qt-in", "Look at three lantern games"); ph.wait_for_timeout(150); no_overflow(ph, "phone task sheet")
+            ph.click("#m2-task-sheet [data-type=research]"); ph.fill("#m2-qt-in", "Look at three lantern games"); ph.wait_for_timeout(150); no_overflow(ph, "phone task sheet"); shot(ph, "phone-task")
             ph.press("#m2-qt-in", "Enter")
             ph.wait_for_function("TribeTasks.all().some(t => t.title === 'Look at three lantern games' && t.type === 'research')", timeout=10000)
             b.close()
