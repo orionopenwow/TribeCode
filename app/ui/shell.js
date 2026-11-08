@@ -54,7 +54,7 @@
     { key: 'visuals', label: 'Visuals & screenshots', tab: 'Visuals', slug: 'visuals', icon: 'i-photo', group: 'tasks', keys: 'screenshots compare diff images', run: () => App().show('visuals') },
     { key: 'roles', label: 'Roles', tab: 'Roles', slug: 'roles', icon: 'i-users', group: 'tasks', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
     { key: 'requests', label: 'Requests', tab: 'Requests', slug: 'requests', icon: 'i-inbox', group: 'tasks', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
-    { key: 'agents', label: 'Agents', tab: 'Agents', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
+    { key: 'agents', label: 'Agents dashboard', tab: 'Dashboard', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
     { key: 'agents-hub', label: 'Your agents', tab: 'Your agents', slug: 'yours', icon: 'i-plug', group: 'agents', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
     { key: 'mcp-directory', label: 'TribeCode MCP', tab: 'MCP', slug: 'mcp', icon: 'i-plug', group: 'agents', keys: 'mcp clients connect claude.ai chatgpt vs code cursor windsurf zed cline goose continue codex gemini artcraft apps connections', run: () => window.TribeMcpDir && window.TribeMcpDir.open() },   // feat/mcp-directory (app/ui/mcpdir.js)
     { key: 'ownership', label: 'Ownership map', tab: 'Ownership', slug: 'ownership', icon: 'i-map', group: 'agents', keys: 'claims files owners', run: () => coord('ownership') },
@@ -85,10 +85,13 @@
   const TKEY = w => `tribecode.tab.${w}`;
   // A workspace opens on its last tab (if it is still there).
   function openWs(w) {
-    const last = lsGet(TKEY(w)), list = tabsOf(w);
+    const last = lsGet(TKEY(w)), list = adTabs(w, tabsOf(w), null);
     const d = list.find(x => x.key === last) || list[0];
     if (d) { lastDest = d.key; d.run(); }
   }
+  // feat/agents-dash: the Agents Hub's top line shows only Dashboard, pinned tabs and the view on screen (app/ui/agentsdash.js)
+  const AD = w => (w === 'agents' && window.TribeAgentsDash) || null;
+  const adTabs = (w, list, cur) => (AD(w) ? AD(w).tabs(list, cur) : list);
   // No project selected: the Global Hub is on screen (its sub-pages too).
   const isGlobal = () => document.body.dataset.view === 'hub' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global');
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
@@ -154,12 +157,12 @@
       return;
     }
     lsSet(TKEY(w), cur);
-    const list = tabsOf(w), d = byKey(cur);
-    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',');
+    const ad = AD(w), list = adTabs(w, tabsOf(w), cur), d = byKey(cur);
+    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',') + (ad ? '|' + ad.sig() : '');
     if (sig !== tabsSig) {
       tabsSig = sig;
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
-        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}</button>`; }).join('')}</div>`;
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`;
     }
     bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
@@ -636,5 +639,5 @@
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
+  window.TribeShell = { tabs: () => { tabsSig = ''; drawTabs(); }, pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();

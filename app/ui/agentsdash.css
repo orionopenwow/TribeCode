@@ -1,0 +1,116 @@
+/* Agents dashboard (app/ui/agentsdash.js, feat/agents-dash): a few big text cards and the Agents Hub's pinned-tab line.
+   Flat matte: 1px borders, depth only from luminance steps, no gradients, glows or shadows. Teal = agents. */
+
+/* ---------- the top line: Dashboard, pinned tabs, a temporary tab, + ---------- */
+.wt .wt-x { display: inline-grid; place-items: center; width: 18px; height: 18px; margin: 0 -4px 0 0; border-radius: 5px; font-size: 15px; line-height: 1; color: var(--faint); opacity: 0; cursor: pointer; }
+.wt:hover .wt-x, .wt:focus-visible .wt-x, .wt .wt-x.temp { opacity: 1; }
+.wt .wt-x:hover { color: var(--text); background: var(--surface-3); }
+.wt:has(.wt-x.temp) { font-style: italic; }   /* a temporary tab (a deep link to a view that isn't pinned) */
+.wt.wt-plus { width: 34px; padding: 0; justify-content: center; color: var(--faint); flex: none; }
+.wt.wt-plus:hover, .wt.wt-plus[aria-expanded="true"] { color: var(--text); }
+.sh-pop.ad-menu { min-width: 280px; }
+.ad-menu .sh-menu button { min-height: 48px; justify-content: space-between; }
+.ad-menu .ad-m-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ad-menu .ad-m-t b { font-size: 14px; font-weight: 600; color: var(--text); }
+.ad-menu .ad-m-t small { font-size: 12px; color: var(--faint); }
+.ad-menu .ad-m-ck { width: 18px; text-align: center; color: var(--agents-ink); font-weight: 700; flex: none; }
+.ad-scrim { position: fixed; inset: 0; z-index: 69; background: var(--scrim); }
+
+/* ---------- the dashboard ---------- */
+.ad-dash { display: flex; flex-direction: column; gap: 22px; max-width: 1120px; }
+.ad-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
+.ad-cols.two { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.ad-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.ad-card { border: 1px solid var(--edge); border-radius: var(--r-lg, 16px); background: var(--surface); padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; font-size: 15px; line-height: 1.55; text-align: left; }
+.ad-hero { background: var(--surface-2); }
+.ad-head { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0; text-align: left; }
+.ad-eyerow { display: flex; align-items: center; gap: 12px; min-height: 22px; }
+.ad-eyerow .eyebrow { flex: 1; min-width: 0; }
+.ad-title { font-family: var(--display, var(--font)); font-size: 20px; font-weight: 650; line-height: 1.3; margin: 0; color: var(--text); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.ad-hero .ad-title { font-size: 24px; }
+.ad-hero .ad-title::before { content: '🤖'; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: .8em; margin-right: .4em; filter: saturate(.8) contrast(.95); }
+.ad-open { flex: none; font-size: 14px; padding: 2px 0; white-space: nowrap; }
+.ad-lead { margin: 0; max-width: 62ch; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.ad-acts { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ad-acts .btn.primary { height: 44px; padding: 0 20px; font-size: 15px; }
+.ad-tools { font-size: 14px; }
+.ad-rows { display: flex; flex-direction: column; }
+.ad-rows > * + * { border-top: 1px solid var(--stroke); }
+.ad-more { align-self: flex-start; font-size: 14px; }
+.ad-foot { margin: 0; font-size: 13px; color: var(--faint); }
+.ad-card code { font-family: var(--mono); font-size: 12.5px; color: var(--peer-ink); overflow-wrap: anywhere; }
+
+/* tonal buttons for repeated actions (burnt rust stays for the one main action) */
+.ad-btn { height: 36px; padding: 0 14px; font-size: 14px; flex: none; }
+.ad-btn.agent { background: var(--agents-soft); border-color: color-mix(in srgb, var(--agents) 38%, var(--edge)); color: var(--text); }
+.ad-btn.ok { background: color-mix(in srgb, #3BD16F 15%, var(--surface)); border-color: color-mix(in srgb, #3BD16F 40%, var(--edge)); color: var(--text); }
+.ad-btn.no { background: color-mix(in srgb, #FF6F8E 12%, var(--surface)); border-color: color-mix(in srgb, #FF6F8E 36%, var(--edge)); color: var(--text); }
+
+/* hero: live agent rows */
+.ad-agent { display: flex; align-items: center; gap: 14px; padding: 12px 2px; cursor: pointer; border-radius: 8px; }
+.ad-agent:hover .ad-a-main b { text-decoration: underline; text-decoration-color: var(--edge-pop); text-underline-offset: 3px; }
+.ad-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-3); flex: none; }
+.ad-agent.on .ad-dot { background: var(--agents); }
+.ad-a-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ad-a-main b { font-size: 16px; font-weight: 600; color: var(--text); }
+.ad-agent.on .ad-a-main b { color: var(--agents-ink); }
+.ad-a-doing { font-size: 15px; color: var(--muted); overflow-wrap: anywhere; }
+.ad-a-meta { font-size: 13px; color: var(--faint); }
+.ad-warn { color: var(--amber-ink); }
+
+/* needs you */
+.ad-need { display: flex; align-items: center; gap: 14px; padding: 13px 0; transition: opacity .18s var(--ease); }
+.ad-need.done { opacity: 0; }
+.ad-kind { flex: none; min-width: 84px; text-align: center; font-family: var(--mono); font-size: 11.5px; letter-spacing: .02em; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--edge); color: var(--muted); background: var(--surface-2); }
+.ad-kind.k-review { color: var(--people-ink); background: var(--people-soft); border-color: color-mix(in srgb, var(--people) 35%, var(--edge)); }
+.ad-kind.k-handoff, .ad-kind.k-approval { color: var(--agents-ink); background: var(--agents-soft); border-color: color-mix(in srgb, var(--agents) 35%, var(--edge)); }
+.ad-kind.k-conflict, .ad-kind.k-budget { color: var(--amber-ink); background: var(--amber-soft); border-color: color-mix(in srgb, #FABD2F 35%, var(--edge)); }
+.ad-n-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ad-n-main b { font-size: 16px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.ad-n-main span { font-size: 14px; color: var(--faint); overflow-wrap: anywhere; }
+.ad-n-acts { display: flex; gap: 8px; flex: none; }
+
+/* who owns what */
+.ad-lane { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+.ad-av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 600; font-size: 14px; color: #fff; background: var(--c, var(--people)); }
+.ad-av.agent { background: var(--agents-soft); font-size: 15px; }
+.ad-l-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.ad-l-main b { font-size: 15px; font-weight: 600; }
+.ad-l-areas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ad-l-areas code { padding: 1px 6px; border: 1px solid var(--edge); border-radius: 5px; background: var(--surface-2); }
+.ad-l-n { font-size: 12.5px; color: var(--faint); font-family: var(--mono); }
+
+/* #agents */
+.ad-talk.talk { max-height: 320px; background: var(--surface-2); }
+.ad-talk .talk-row { font-size: 14.5px; }
+.ad-quiet { margin: 10px 0; color: var(--faint); font-size: 14.5px; }
+.ad-compose { display: flex; gap: 8px; }
+.ad-compose .input { flex: 1; min-width: 0; height: 42px; font-size: 15px; }
+.ad-compose .btn { height: 42px; }
+
+/* today */
+.ad-today .ad-title { font-size: 18px; }
+.ad-plan { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
+.ad-plan > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ad-plan b { font-size: 15px; font-weight: 600; }
+.ad-plan span { font-size: 13px; color: var(--faint); }
+.ad-p-ck { width: 18px; text-align: center; color: var(--faint); flex: none; font-weight: 700; }
+.ad-plan.ok .ad-p-ck { color: var(--agents-ink); }
+
+/* ---------- phones: the same cards stacked, tight spacing, nothing wider than the screen ---------- */
+@media (max-width: 820px) {
+  .ad-dash, .ad-col, .ad-cols { gap: 12px; }
+  .ad-cols.two { grid-template-columns: minmax(0, 1fr); }
+  .ad-card { padding: 16px 14px; gap: 12px; border-radius: 14px; }
+  .ad-title { font-size: 18px; }
+  .ad-hero .ad-title { font-size: 21px; }
+  .ad-need { flex-wrap: wrap; gap: 8px 12px; padding: 12px 0; }
+  .ad-n-main { flex-basis: calc(100% - 90px); }
+  .ad-n-acts { width: 100%; justify-content: flex-end; }
+  .ad-n-acts .ad-btn { height: 40px; }
+  .ad-agent { gap: 12px; padding: 10px 0; }
+  .ad-acts .btn.primary { height: 46px; flex: 1; }
+  .ad-compose .input { font-size: 16px; }   /* no zoom on focus */
+  .wt .wt-x { opacity: 1; }                  /* no hover on phones */
+  .sh-pop.ad-menu.sheet { z-index: 70; }
+}
