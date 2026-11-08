@@ -64,7 +64,7 @@
   }
   function showRevoked() {
     const el = document.createElement('div'); el.className = 'web-cover'; el.id = 'device-revoked';
-    el.innerHTML = `<div class="web-cover-card"><img src="assets/icon-512.png" alt="" class="web-cover-icon">
+    el.innerHTML = `<div class="web-cover-card"><img src="assets/icon.svg" alt="" class="web-cover-icon">
       <h1>This sign-in link was turned off</h1>
       <p>Someone signed this device out of the tribe. Ask a friend for a fresh invite link and open it here.</p>
       <div class="web-join"><input class="input" id="rv-link" placeholder="Paste an invite link" autocomplete="off"><button class="btn primary" id="rv-go">Join</button></div>
@@ -135,7 +135,7 @@
     el.className = 'intro'; el.id = 'intro'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Welcome to TribeCode');
     const total = PANELS.length + 1;
     el.innerHTML = `
-      <header class="intro-top"><img src="assets/icon-512.png" alt="" class="intro-logo"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode"><span class="intro-tag">The multiplayer vibecoding platform</span>
+      <header class="intro-top"><img src="assets/icon.svg" alt="" class="intro-logo"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode"><span class="intro-tag">The multiplayer vibecoding platform</span>
         <button class="btn ghost intro-skip" id="intro-skip">Skip intro</button></header>
       <div class="intro-stage" id="intro-stage"><div class="intro-track" id="intro-track">
         ${PANELS.map((p, i) => `<section class="intro-panel" data-i="${i}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">

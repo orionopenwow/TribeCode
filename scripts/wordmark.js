@@ -13,9 +13,9 @@ function wordmark({ tribe, code }) {
   return { body: `<path fill="${tribe}" d="${G.tribe}"/><path fill="${code}" d="${G.code}"/>`, width: G.width };
 }
 
-const ICON = `<rect x="28" y="30" width="492" height="492" rx="112" fill="#171B26"/>
-  <g fill="#F8FAFC"><polygon points="158,160 60,272 158,384 158,330 106,272 158,214"/><polygon points="378,160 476,272 378,384 378,330 430,272 378,214"/></g>
-  <polygon fill="#F26B1D" points="268,110 302,182 303,250 342,218 366,290 352,358 268,410 186,360 172,290 203,203 226,240 226,182"/>`;
+// the icon: the pixel flame between brackets on navy (scripts/icon.js)
+const ICONSVG = require('./icon').svg({ size: 0 });
+const ICON_INNER = ICONSVG.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').replace(/<title>[^<]*<\/title>/, '');
 
 function write(file, svg) { fs.writeFileSync(path.join(root, file), svg + '\n'); console.log('wrote', file); }
 const ORANGE = '#F26B1D';
@@ -26,7 +26,7 @@ for (const [suffix, tribe] of [['', '#171B26'], ['-dark', '#F8FAFC']]) {
   // icon + text lockup
   const s = 0.255, iconW = 496 * s, gap = 34, tx = iconW + gap;
   write(`assets/brand/logo-wordmark${suffix}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.ceil(tx + wm.width + 8)} ${Math.ceil(iconW)}" width="${Math.ceil((tx + wm.width + 8) * 1.6)}" height="${Math.ceil(iconW * 1.6)}"><title>TribeCode</title>
-  <g transform="scale(${s}) translate(-26 -28)">${ICON}</g>
+  <svg x="0" y="0" width="${iconW}" height="${iconW}" viewBox="0 0 45 45" shape-rendering="crispEdges">${ICON_INNER}</svg>
   <g transform="translate(${tx} ${(iconW - 100) / 2})">${wm.body}</g></svg>`);
 }
 // for the app UI (always on dark/glass surfaces it inherits currentColor for "Tribe")

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.9
+
+- **A new logo everywhere**: a solid orange pixel-art flame between two white pixel brackets, on deep navy. It's the app icon (Windows, Mac, Linux), the installer art, the top-left logo, the browser tab icon, the phone Home Screen icon, the invite and sign-in pages, the website, the README and the infographic. It's drawn on a pixel grid (scripts/icon.js) so it stays crisp at every size, and the app shows it as a vector
+- **Phones**: the Home Screen icon and the project picture fallback use the new logo
+
 ## v0.9.8
 
 - **New logo lettering everywhere**: "TribeCode" is now set in Inter Bold, tightly spaced, "Tribe" in the theme's text color and "Code" in Ember. It's in the app, the invite and sign-in pages, the website, the README and every brand file. The letters are traced from the font once (scripts/wordmark-glyphs.py), so no font is needed to show them
