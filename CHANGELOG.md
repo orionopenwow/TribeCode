@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.16.1
+
+- **Security**: "only from this computer" actions now accept only TribeCode's own page and the desktop app, so a project's preview, a file:// page or another program on your computer can't create invites or agent keys or turn on sharing. Spectators, agents and muted members can't post through the live connection, and an expired guest's agents stop with the guest. Rate limits behind tunnels apply per visitor. ntfy phone pings are off until you set them up. Backups no longer include sign-in client secrets. Approvals stay inside their project, network addresses are hidden from visitors, and other sites can't frame the app
+- **Honest promises**: a new SECURITY.md and a Security & privacy section on the site and README; "no cloud", Flint privacy and tunnel wording now match what the app really does
+- **Website**: click into the app window's areas (Dashboard, Files, Task Board, Agents Hub…), a Start from something section, and Flint as a small guide in the corner
+- **Phones**: the same security fixes apply to phone links and device pages
+
 ## v0.16.0
 
 - **New wordmark**: chunky pixel lettering, white "Tribe" and Ember "Code" with darker shades and a dark outline, so it reads on every theme. It's in the app, the website, the README and the installers
