@@ -198,10 +198,11 @@
       return `<button class="m2-mi ${p.id === cur && !document.body.classList.contains('global') ? 'on' : ''}" data-pj="${esc(p.id)}"><span class="m2-pjf">${PJ().face(p, 'sm')}</span><span class="m2-mt"><b>${esc(p.name)}</b><small>${here ? `${here} here now` : esc(p.bio || 'Open the project')}</small></span>${ic('chev', 16)}</button>`; }).join('');
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Your projects</span></div>
       ${list.length ? `<div class="m2-menu m2-pjlist">${rows}</div>` : '<p class="m2-fine left">No projects yet.</p>'}
-      <div class="m2-menu"><button class="m2-mi" data-pj="new"><span class="m2-mic live">${ic('plus', 18)}</span><span class="m2-mt"><b>New project</b><small>Start one, or join with a link</small></span></button></div>`, { id: 'm2-projects-sheet', label: 'Your projects' });
+      <div class="m2-menu"><button class="m2-mi" data-pj="new"><span class="m2-mic live">${ic('plus', 18)}</span><span class="m2-mt"><b>New project</b><small>Start one, or join with a link</small></span></button>${window.TribeOffline && !C.connected() ? `<button class="m2-mi" data-pj="demo" id="m2-demo"><span class="m2-mic">${ic('spark', 18)}</span><span class="m2-mt"><b>Try a demo tribe (offline)</b><small>Host a pretend tribe on this phone. Nothing leaves it.</small></span></button>` : ''}</div>`, { id: 'm2-projects-sheet', label: 'Your projects' });
     el.addEventListener('click', async e => {
       const b = e.target.closest('[data-pj]'); if (!b) return; closeSheet();
       if (b.dataset.pj === 'new') return startTribe();
+      if (b.dataset.pj === 'demo') return window.TribeOffline.start();   // feat/offline-demo
       try { await PJ().switchTo(b.dataset.pj); } catch {}
       setTimeout(() => App().show('home'), 200);
     });
@@ -216,10 +217,12 @@
         <button class="m2-mi" data-st="mine"><span class="m2-mic live">${ic('desk', 18)}</span><span class="m2-mt"><b>My own computer</b><small>Send yourself the link, install, it starts hosting</small></span></button>
         <button class="m2-mi" data-st="friend"><span class="m2-mic">${ic('users', 18)}</span><span class="m2-mt"><b>A friend's computer</b><small>Ask someone with a PC or Mac to host for the group</small></span></button>
         <button class="m2-mi" data-st="join"><span class="m2-mic">${ic('link', 18)}</span><span class="m2-mt"><b>I have an invite link</b><small>Join a tribe someone already started</small></span></button>
+        ${window.TribeOffline ? `<button class="m2-mi" data-st="demo"><span class="m2-mic">${ic('spark', 18)}</span><span class="m2-mt"><b>Try a demo tribe first</b><small>Offline, on this phone: you host a pretend tribe</small></span></button>` : ''}
       </div>`, { id: 'm2-start-sheet', label: 'Start a tribe' });
     el.querySelector('.m2-menu').addEventListener('click', async e => {
       const b = e.target.closest('[data-st]'); if (!b) return; const k = b.dataset.st;
       if (k === 'join') { closeSheet(); return window.TribeSettings && window.TribeSettings.joinPrompt(); }
+      if (k === 'demo') { closeSheet(); return window.TribeOffline.start(); }   // feat/offline-demo
       const text = k === 'mine' ? `Install TribeCode on my computer (it hosts our tribe): ${dl}` : `Can you host our TribeCode tribe? Install the app, open it, tap Invite a friend and send me the link: ${dl}`;
       try { if (navigator.share) await navigator.share({ title: 'TribeCode', text }); else { await navigator.clipboard.writeText(text); toast('Copied. Paste it in a message.'); } } catch {}
       closeSheet();

@@ -1,0 +1,635 @@
+// Offline demo tribe: a pretend tribe that lives only in this browser, so anyone can try hosting (on a computer or a
+// phone) with no server and no network. When it is on, the real app UI talks to a small backend in this file:
+//   * window.fetch to <base>/api/* is answered here from localStorage (state) and IndexedDB (uploaded files);
+//   * tribe.js's connect() asks TribeOffline.socket(url) for a fake WebSocket (one marked line in tribe.js).
+// You are the host of "Demo Tribe" with one project (Lantern Run), two pretend friends (Maya, Jay) and a pretend
+// Claude agent that answers @mentions, picks up new tasks and posts a gist. Inviting someone makes a pretend link and
+// a third friend (Rio) "joins" a few seconds later. Anything not built here answers "Not in the offline demo".
+// Leaving restores your real settings exactly (server URL and token, hosting); the demo survives reloads until reset.
+//   window.TribeOffline = { active(), start(), leave(), reset(), hostForReal(), socket(url), state() }
+(function () {
+  'use strict';
+  const S = window.TribeStore;
+  const KEY = 'tribecode.offlineDemo.v1', BKEY = 'tribecode.offlineDemo.backup';
+  const ORIGIN = 'https://offline-demo.tribecode.invalid';   // server.url while in the demo (what the desktop app's base() returns)
+  const TOKEN = 'offline-demo';
+  const NOPE = 'Not in the offline demo';
+  const RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
+  const ls = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    del(k) { try { localStorage.removeItem(k); } catch {} },
+  };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const rid = (n = 8) => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+  const iso = (t = Date.now()) => new Date(t).toISOString();
+  const C = () => window.TribeClient, A = () => window.TribeApp;
+  const toast = m => A() && A().toast(m);
+
+  let db = ls.get(KEY);
+  const active = () => !!(db && db.on && ((S.get().server || {}).token === TOKEN));
+  const save = () => { if (db) ls.set(KEY, db); };
+
+  // ---------- the pretend tribe ----------
+  const AGENT = 'claude';
+  function seed() {
+    const st = S.get(), now = Date.now();
+    const name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
+    const pid = 'lantern-run';
+    const t = (title, status, assignee, ago) => ({ id: 't-' + rid(6), title, status, assignee: assignee || null, by: 'maya', created: iso(now - ago), updated: iso(now - ago), order: now - ago, source: 'board', body: '', project: pid });
+    return {
+      on: true, v: 1, created: iso(now), seq: 0,
+      tribe: { name: 'Demo Tribe', created: iso(now) },
+      members: [
+        { id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) },
+        { id: 'maya', name: 'Maya', color: '#6C7CFF', role: 'builder', joined: iso(now - 86400e3), online: true, where: 'Chat' },
+        { id: 'jay', name: 'Jay', color: '#FFB86B', role: 'builder', joined: iso(now - 86400e3), online: false },
+        { id: AGENT, name: `Claude · ${first}`.slice(0, 32), color: '#38C6B1', role: 'agent', owner: 'me', joined: iso(now), online: true, where: 'Tasks' },
+      ],
+      current: pid,
+      projects: [{ id: pid, name: 'Lantern Run', emoji: '🏮', image: null, bio: 'A cozy night platformer: carry a little flame through three short levels and light the lanterns.',
+        color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host', maya: 'builder', jay: 'builder' } }],
+      chat: { [pid]: [
+        { id: 'm-' + rid(), at: iso(now - 60e3), by: 'tribecode', text: `${first} started **Demo Tribe** 🔥 It lives only in this browser: nothing leaves this device.` },
+        { id: 'm-' + rid(), at: iso(now - 40e3), by: 'maya', text: 'Hey! I\'m Maya, a pretend friend. Say hi, or try **@claude** in a message 👋' },
+      ] },
+      tasks: { [pid]: [
+        t('[Player] Add a tiny dust puff when Wick lands from a big fall', 'backlog', null, 50e3),
+        t('[Levels] Add a checkpoint flag halfway through Lantern Hill', 'doing', 'maya', 45e3),
+        t('[Art] Give the lit lantern a warm halo ring', 'backlog', null, 40e3),
+        t('[UI] Show the best time per level on the Lantern lit screen', 'review', 'jay', 35e3),
+      ] },
+      docs: { [pid]: [
+        { slug: 'level-design-notes', title: 'Level design notes', pinned: true, by: 'maya', created: iso(now - 30e3), updated: iso(now - 30e3), updatedBy: 'maya', version: 1, project: pid,
+          body: '# Level design notes\n\nA living doc: edit it together and keep it short.\n\n## The grid\n- Tiles are 10x10 pixels, 18 rows tall.\n- Wick jumps about 5 tiles high and 7 tiles far.\n\n## Rules of thumb\n- Teach one idea per level.\n- An ember before every hard part.\n' },
+        { slug: 'kickoff-notes', title: 'Kickoff notes', by: 'me', created: iso(now - 20e3), updated: iso(now - 20e3), updatedBy: 'me', version: 1, project: pid,
+          body: '# Kickoff notes\n\n- Goal for tonight: everyone plays all three levels, then each lane ships one small polish.\n- Claim a role first (Player, Levels, Art, Audio, UI).\n- Playtest rule: if a jump feels unfair, it is unfair.\n' },
+      ] },
+      vision: { [pid]: '# Vision · Lantern Run\n\nA cozy, two-minute platformer about a small flame lighting up the night, built by a few friends and their agents in one evening.\n' },
+      gists: { [pid]: [] },
+      scratch: [], uploads: [], invites: [], friends: [], prefs: { pins: [] }, joinedRio: false,
+    };
+  }
+
+  // ---------- views of the state (the same shapes the real server sends) ----------
+  const me = () => db.members.find(m => m.id === 'me');
+  const nameOf = id => id === 'tribecode' ? 'TribeCode' : ((db.members.find(m => m.id === id) || {}).name || 'someone');
+  const proj = id => db.projects.find(p => p.id === id);
+  const cur = () => proj(db.current) ? db.current : db.projects[0].id;
+  let where = 'Home';
+  function presence() {
+    return db.members.map(m => {
+      const on = m.id === 'me' ? true : !!m.online;
+      const { online, where: w, ...rest } = m;
+      return { ...rest, online: on, where: m.id === 'me' ? where : on ? (w || 'Home') : null, since: on ? db.created : null, project: on ? cur() : null };
+    });
+  }
+  function counts(pid) {
+    return { tasks: (db.tasks[pid] || []).filter(t => t.status !== 'done').length, docs: (db.docs[pid] || []).length, requests: 0, bugs: 0 };
+  }
+  function view(p) {
+    const here = presence().filter(m => m.online && m.project === p.id).map(m => m.id);
+    return { id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: false, workspace: false, huddleSummary: false,
+      members: Object.entries(p.members || {}).map(([id, role]) => ({ id, role })), created: p.created, default: !!p.default, counts: counts(p.id), here, role: 'host' };
+  }
+  const projects = () => db.projects.map(view);
+  const docMeta = ({ body, ...d }) => ({ ...d, summary: '', words: String(body || '').split(/\s+/).filter(Boolean).length });
+  function pulse(pid) {
+    const p = proj(pid), tasks = db.tasks[pid] || [], docs = db.docs[pid] || [], people = presence();
+    const here = people.filter(m => m.online && m.project === pid);
+    const recent = [...tasks.map(t => ({ kind: 'task', at: t.updated, text: t.title, sub: `${t.status}${t.updatedBy ? ' · ' + nameOf(t.updatedBy) : ''}`, ref: t.id })),
+      ...docs.map(d => ({ kind: 'doc', at: d.updated, text: d.title, sub: `doc · ${nameOf(d.updatedBy)}`, ref: d.slug }))].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 10);
+    const doing = tasks.filter(t => t.status === 'doing'), todo = tasks.filter(t => t.status === 'backlog' || t.status === 'review');
+    const chat = (db.chat[pid] || []).filter(m => m.by !== 'tribecode');
+    return { project: view(p), here: here.map(m => ({ id: m.id, name: m.name, color: m.color, where: m.where, role: m.role })),
+      agents: people.filter(m => m.role === 'agent' && m.online).map(a => ({ id: a.id, name: a.name, where: a.where, since: a.since })),
+      team: people.filter(m => (p.members || {})[m.id] || m.role === 'agent').map(m => ({ id: m.id, name: m.name, color: m.color, role: (p.members || {})[m.id] || m.role, online: m.online, here: m.online, kind: m.role === 'agent' ? 'agent' : 'person' })),
+      recent, taskCount: tasks.length, upcoming: [], repo: null, bio: p.bio || '',
+      vision: { has: !!db.vision[pid], excerpt: String(db.vision[pid] || '').replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 160) },
+      living: { mood: chat.length ? 'steady' : 'fresh', by: 'tribecode',
+        summary: `${p.name} is a pretend project in the offline demo. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
+        lines: { lately: recent[0] ? `Last: ${recent[0].text}` : 'Nothing yet', chat: chat.length ? `${chat.length} message${chat.length === 1 ? '' : 's'}` : 'No messages yet',
+          next: doing.length ? `In progress: ${doing[0].title}` : todo.length ? `Up next: ${todo[0].title}` : 'No tasks yet', soon: 'Nothing on the calendar' } } };
+  }
+  function hubData() {
+    const feed = db.projects.flatMap(p => pulse(p.id).recent.map(r => ({ project: p.id, id: `${r.kind}:${r.ref}`, kind: r.kind, at: r.at, title: r.text, by: 'me', byName: me().name, sub: r.sub, ref: { type: r.kind, id: r.ref } })))
+      .sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 20);
+    return { me: { id: 'me', name: me().name, role: 'host' }, hero: [], more: [], waiting: 0, feed, notes: [], suggestions: [],
+      status: { activeToday: presence().filter(m => m.online && m.role !== 'agent').length, projects: db.projects.length, agents: [] },
+      projects: db.projects.map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', color: p.color, image: p.image || null, last: db.created, here: p.id === cur() ? 1 : 0 })),
+      people: [], lastProject: cur(), fleet: { agents: [], models: { online: false, model: '', list: [] }, loops: [], secretary: { enabled: false, quiet: false, model: '', lastRun: null, running: false } },
+      ideas: [], prefs: db.prefs, notesApi: false, insightsApi: false, rev: 'demo-' + db.seq, at: iso() };
+  }
+  function hello() {
+    return { type: 'hello', member: presence().find(m => m.id === 'me'), tribe: db.tribe, members: presence(), version: (document.querySelector('meta[name="tribe-version"]') || {}).content || '',
+      huddle: [], project: cur(), projects: projects(), offlineDemo: true };
+  }
+
+  // ---------- the fake socket ----------
+  const sockets = new Set();
+  function push(msg) { db.seq++; for (const s of sockets) s._recv(msg); }
+  const pushPresence = () => push({ type: 'presence', members: presence() });
+  const pushHub = () => push({ type: 'hub', rev: 'demo-' + db.seq });
+  function chatPush(pid, msg) { push(pid === cur() ? { type: 'chat', channel: 'general', message: msg } : { type: 'project-pulse', project: pid, kind: 'chat' }); }
+  class FakeSocket {
+    constructor(url) {
+      this.url = url; this.readyState = 0; this.onopen = this.onmessage = this.onclose = this.onerror = null;
+      let want = ''; try { want = new URL(url.replace(/^ws/, 'http')).searchParams.get('project') || ''; } catch {}
+      if (want && proj(want)) db.current = want;
+      sockets.add(this);
+      setTimeout(() => { if (this.readyState !== 0) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }, 20);
+    }
+    _recv(msg) { if (this.readyState !== 1) return; const data = JSON.stringify(msg); setTimeout(() => { if (this.readyState === 1 && this.onmessage) this.onmessage({ data }); }, 0); }
+    send(raw) { let m; try { m = JSON.parse(raw); } catch { return; } if (active()) onSocket(this, m); }
+    close() { if (this.readyState === 3) return; this.readyState = 3; sockets.delete(this); setTimeout(() => this.onclose && this.onclose({}), 0); }
+  }
+  let presT = null;
+  function onSocket(sock, m) {
+    if (m.type === 'activity' && typeof m.where === 'string') { where = m.where.slice(0, 80); clearTimeout(presT); presT = setTimeout(pushPresence, 300); return; }
+    if (m.type === 'project' && proj(m.id)) { db.current = m.id; save(); sock._recv({ type: 'project-switched', project: m.id }); pushPresence(); return; }
+    if (m.type === 'ping') return sock._recv({ type: 'pong', t: m.t });
+    if (m.type === 'announce' && m.text) return post(cur(), 'me', String(m.text).slice(0, 400));
+    if (m.type === 'huddle-join') return toast('Huddles are ' + NOPE.toLowerCase().replace('not in', 'not in') + '.');
+    if (String(m.type).startsWith('doc-')) return live(sock, m);
+  }
+
+  // Live docs for one person: a tiny version of server/live.js (no one else edits, so every op lands at the current rev).
+  const sessions = new Map();
+  function live(sock, m) {
+    const OT = window.TribeOT, slug = String(m.slug || ''), list = db.docs[cur()] || [], d = list.find(x => x.slug === slug);
+    const state = (s, extra) => ({ type: 'doc-state', slug, sid: 'demo', rev: s.rev, title: s.title, version: d ? d.version : 1, you: 'me~1', peers: [{ peer: 'me~1', id: 'me', name: me().name, color: me().color }], ...extra });
+    if (m.type === 'doc-join') {
+      if (!d) return sock._recv({ type: 'doc-state', slug, error: 'doc not found' });
+      const s = { rev: 0, text: d.body || '', title: d.title, timer: null }; sessions.set(slug, s);
+      return sock._recv(state(s, { text: s.text }));
+    }
+    const s = sessions.get(slug); if (!s || !d) return;
+    const persist = () => { clearTimeout(s.timer); s.timer = null; if (d.body === s.text && d.title === s.title) return; d.body = s.text; d.title = s.title; d.version = (d.version || 1) + 1; d.updated = iso(); d.updatedBy = 'me'; save(); push({ type: 'doc', doc: { slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); };
+    if (m.type === 'doc-op') {
+      if (!OT || m.rev !== s.rev || !OT.valid(m.op)) return sock._recv(state(s, { text: s.text, resync: 'out of step' }));
+      try { s.text = OT.apply(s.text, m.op); } catch { return sock._recv(state(s, { text: s.text, resync: 'bad op' })); }
+      s.rev++; sock._recv({ type: 'doc-ack', slug, rev: s.rev, cid: m.cid });
+      clearTimeout(s.timer); s.timer = setTimeout(persist, 400); return;
+    }
+    if (m.type === 'doc-title') { s.title = String(m.title || '').slice(0, 120) || 'Untitled'; clearTimeout(s.timer); s.timer = setTimeout(persist, 400); return; }
+    if (m.type === 'doc-flush') return persist();
+    if (m.type === 'doc-leave') { persist(); sessions.delete(slug); }
+  }
+
+  // ---------- the pretend people ----------
+  const later = (ms, fn) => setTimeout(() => { if (active()) { try { fn(); } catch (e) { console.warn('offline demo:', e); } } }, ms);
+  function post(pid, by, text, extra) {
+    const msg = { id: 'm-' + rid(), at: iso(), by, text: String(text).slice(0, 4000), ...(extra || {}) };
+    (db.chat[pid] = db.chat[pid] || []).push(msg); if (db.chat[pid].length > 400) db.chat[pid].splice(0, db.chat[pid].length - 400);
+    save(); chatPush(pid, msg); return msg;
+  }
+  const LINES = [
+    'Hi! I\'m a pretend Claude in this offline demo. In a real tribe I read the board, claim files before I edit and push commits. Make a task and watch me pick it up.',
+    'Good idea. In a real tribe I\'d claim the folder first so nobody\'s agent collides with mine, then post a short gist when it\'s done.',
+    'I\'d split that into one task per lane (Player, Levels, Art). Add them on the Tasks board and I\'ll grab one.',
+    'Noted. A real Claude Code connects with one command from Connect your Claude, then it shows up right here.',
+  ];
+  let said = 0;
+  function onChat(pid, text) {
+    const t = String(text);
+    if (/@(claude|ai|agent)\b/i.test(t) || /\bclaude\b/i.test(t)) {
+      const ask = t.replace(/@\w+/g, '').trim();
+      later(900, () => {
+        if (/\b(task|todo|to-do)\b/i.test(ask) && ask.length > 8) {
+          const title = ask.replace(/^(please|can you|could you)\s+/i, '').replace(/\b(make|add|create)\s+(a\s+)?(task|todo)\s*(to|for|:)?\s*/i, '').slice(0, 120) || 'A task from chat';
+          const task = addTask(pid, { title: title[0].toUpperCase() + title.slice(1), by: AGENT });
+          post(pid, AGENT, `On it: I added **${task.title}** to Tasks and I'll take it.`);
+          pickUp(pid, task.id, 1200);
+        } else post(pid, AGENT, LINES[said++ % LINES.length]);
+      });
+    }
+    if (/@maya\b/i.test(t)) later(1400, () => post(pid, 'maya', 'Ha, I\'m a pretend friend, but I\'d totally playtest that 😄'));
+    else if (!db.mayaHi && !/@/.test(t)) { db.mayaHi = true; save(); later(1600, () => post(pid, 'maya', 'Welcome to the demo! Try **@claude** in a message, or add a task and see what happens.')); }
+  }
+  function addTask(pid, { title, by, status = 'backlog', body = '', assignee = null }) {
+    const now = Date.now();
+    const t = { id: `t-${now.toString(36)}-${rid(3)}`, title: String(title || '').slice(0, 200) || 'Untitled task', status: ['backlog', 'doing', 'review', 'done'].includes(status) ? status : 'backlog',
+      assignee, by, created: iso(now), updated: iso(now), order: now, source: 'board', body: String(body || '').slice(0, 20000), project: pid };
+    (db.tasks[pid] = db.tasks[pid] || []).push(t); save();
+    if (pid === cur()) push({ type: 'task', task: t }); else push({ type: 'project-pulse', project: pid, kind: 'task' });
+    return t;
+  }
+  function pickUp(pid, tid, wait = 2500) {
+    if (db.busy) return; db.busy = tid; save();
+    later(wait, () => {
+      const t = (db.tasks[pid] || []).find(x => x.id === tid); if (!t || t.status === 'done') { db.busy = null; save(); return; }
+      Object.assign(t, { assignee: AGENT, status: 'doing', updated: iso(), updatedBy: AGENT }); save();
+      if (pid === cur()) push({ type: 'task', task: t });
+      post(pid, AGENT, `Picking up **${t.title}**. I'll post a gist when it's done.`);
+      later(5000, () => {
+        const t2 = (db.tasks[pid] || []).find(x => x.id === tid); db.busy = null; save(); if (!t2) return;
+        Object.assign(t2, { status: 'review', updated: iso(), updatedBy: AGENT });
+        if (pid === cur()) push({ type: 'task', task: t2 });
+        const g = { id: 'g-' + rid(8), kind: 'progress', title: `Done: ${t2.title}`.slice(0, 90), bullets: ['Made the change in a pretend branch (nothing is really built in the demo)', 'Moved the task to Review', 'Next: a friend checks it, then it ships'],
+          files: [], link: null, task: t2.id, by: AGENT, byName: nameOf(AGENT), agent: true, role: null, at: iso(), project: pid, auto: false };
+        const msg = post(pid, AGENT, `📈 **${g.title}**\n${g.bullets.map(b => `- ${b}`).join('\n')}`, { gist: g });
+        g.msg = msg.id; (db.gists[pid] = db.gists[pid] || []).unshift(g); save();
+        push({ type: 'gist', gist: g, project: pid }); pushHub();
+      });
+    });
+  }
+  function friendJoins() {
+    if (db.joinedRio) return; db.joinedRio = true; save();
+    later(6000, () => {
+      if (!db.members.some(m => m.id === 'rio')) db.members.push({ id: 'rio', name: 'Rio', color: '#9AE66E', role: 'builder', joined: iso(), online: true, where: 'Chat' });
+      for (const p of db.projects) p.members.rio = 'builder';
+      save(); pushPresence(); push({ type: 'projects' });
+      post(cur(), 'tribecode', 'Rio joined **Demo Tribe** with your pretend link 👋');
+      later(1500, () => post(cur(), 'rio', 'Hi all! I\'m Rio, a pretend friend who just tapped your link 😄'));
+    });
+  }
+
+  // ---------- uploads: small files kept as blobs in IndexedDB (memory if IndexedDB is unavailable) ----------
+  const mem = new Map(); let idb = null;
+  function store() {
+    if (idb) return idb;
+    idb = new Promise(res => {
+      try { const r = indexedDB.open('tribecode-offline-demo', 1); r.onupgradeneeded = () => r.result.createObjectStore('blobs'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); }
+      catch { res(null); }
+    });
+    return idb;
+  }
+  async function blobPut(id, blob) { const d = await store(); if (!d) return mem.set(id, blob); await new Promise(res => { const tx = d.transaction('blobs', 'readwrite'); tx.objectStore('blobs').put(blob, id); tx.oncomplete = tx.onerror = () => res(); }); }
+  async function blobGet(id) { if (mem.has(id)) return mem.get(id); const d = await store(); if (!d) return null; return new Promise(res => { const r = d.transaction('blobs').objectStore('blobs').get(id); r.onsuccess = () => res(r.result || null); r.onerror = () => res(null); }); }
+  async function blobDel(id) { mem.delete(id); const d = await store(); if (d) d.transaction('blobs', 'readwrite').objectStore('blobs').delete(id); }
+  async function blobClear() { mem.clear(); const d = await store(); if (d) d.transaction('blobs', 'readwrite').objectStore('blobs').clear(); }
+  const KIND = n => { const e = (String(n).split('.').pop() || '').toLowerCase(); return /^(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(e) ? 'image' : /^(mp3|wav|ogg|m4a|flac)$/.test(e) ? 'audio' : /^(webm|mp4|mov)$/.test(e) ? 'video' : e === 'pdf' ? 'pdf' : /^(md|txt|csv|log)$/.test(e) ? 'text' : /^(js|ts|py|json|html|css)$/.test(e) ? 'code' : 'file'; };
+  const MAX_UPLOAD = 8 * 1024 * 1024;
+
+  // ---------- the API ----------
+  const ok = d => [200, d];
+  const no = (status = 404, error = NOPE) => [status, { error }];
+  const slugify = s => (String(s).toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 48) || 'doc').replace(/^-+/, '') || 'doc';
+  function scratchPut(list) {
+    const prev = new Map(db.scratch.map(n => [n.id, n])), now = iso(), seen = new Set(), out = [];
+    for (const raw of (Array.isArray(list) ? list : []).slice(0, 200)) {
+      const text = typeof (raw && raw.text) === 'string' ? raw.text.slice(0, 20000) : '';
+      let key = raw && typeof raw.id === 'string' && /^n-[a-z0-9_-]{4,16}$/.test(raw.id) ? raw.id : 'n-' + rid(8);
+      if (seen.has(key)) key = 'n-' + rid(8); seen.add(key);
+      const old = prev.get(key); if (!text.trim() && !old) continue;
+      out.push({ id: key, text, at: old ? old.at : now, updated: old && old.text === text ? old.updated : now });
+    }
+    db.scratch = out; save(); return out;
+  }
+
+  const ASSIST_Q = [{ k: 'what', q: 'What are you making?' }, { k: 'who', q: 'Who is it for?' }, { k: 'fun', q: 'What makes it fun or useful?' }, { k: 'done', q: 'What does "done" look like for v1?' }, { k: 'out', q: 'What is out of scope?' }];
+  const ASSIST_TASKS = [['Add a title screen with a Start button', 'every game needs a front door'], ['Show a score and lives on screen', 'players like to see progress'], ['Add jump and coin sounds', 'sound makes it feel alive'],
+    ['Build a second level', 'more to play'], ['Add a simple boss at the end', 'a goal for the first world'], ['Add touch controls for phones', 'friends will open it on their phones']];
+  function visionDraft(a) {
+    const one = s => String(s || '').replace(/\s+/g, ' ').trim().replace(/\.$/, ''), list = s => String(s || '').split(/\s*(?:,|;|\n|\band\b)\s*/i).map(one).filter(Boolean), cap = s => s[0].toUpperCase() + s.slice(1);
+    const out = [];
+    if (a.what) out.push(`${one(a.what)}.`); if (a.who) out.push(`For ${one(a.who).replace(/^for\s+/i, '')}.`); if (a.fun) out.push(`What makes it good: ${one(a.fun)}.`);
+    if (list(a.done).length) out.push('', '## Done for v1', ...list(a.done).slice(0, 8).map(x => `- ${cap(x)}`));
+    if (list(a.out).length) out.push('', '## Out of scope', ...list(a.out).slice(0, 6).map(x => `- ${cap(x)}`));
+    return out.join('\n').trim();
+  }
+
+  async function route(method, path, q, body, headers) {
+    const parts = path.split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = parts;
+    const pid = (headers['x-project'] && proj(headers['x-project'])) ? headers['x-project'] : cur();
+    const GET = method === 'GET', POST = method === 'POST', PUT = method === 'PUT', PATCH = method === 'PATCH', DEL = method === 'DELETE';
+    switch (a) {
+      case 'health': return ok({ ok: true, version: hello().version, tribe: db.tribe.name, members: db.members.length, lan: [], site: null, offlineDemo: true });
+      case 'guide': return ok({ pages: [] });
+      case 'me': if (GET && !b) return ok({ member: presence().find(m => m.id === 'me') });
+        if (PATCH && !b) { const m = me(); if (body.name) m.name = String(body.name).slice(0, 32); if (body.color) m.color = String(body.color); save(); pushPresence(); return ok({ member: m }); } break;
+      case 'projects': {
+        if (!b && GET) return ok({ projects: projects(), current: cur() });
+        if (!b && POST) {
+          if (body.path || body.url || body.files) return no(400, 'Folders and repos are ' + NOPE.toLowerCase() + '. Start an empty project instead.');
+          const name = String(body.name || 'New project').slice(0, 48); let id = slugify(name), n = 2; while (proj(id)) id = `${slugify(name)}-${n++}`;
+          const p = { id, name, emoji: body.emoji || '', image: null, bio: '', color: ['#38C6B1', '#6C7CFF', '#FFB86B', '#FF6F8E'][db.projects.length % 4], channel: 'p-' + id, default: false, created: iso(), members: { me: 'host', maya: 'builder' } };
+          db.projects.push(p); db.tasks[id] = []; db.docs[id] = []; db.chat[id] = []; db.gists[id] = []; save();
+          post(id, 'tribecode', `${me().name} started **${name}**`);
+          push({ type: 'projects' }); pushHub(); return ok({ project: view(p) });
+        }
+        const p = proj(b); if (!p) return no(404, 'project not found');
+        if (!c && PATCH) { for (const k of ['name', 'emoji', 'color', 'bio']) if (typeof body[k] === 'string' && body[k] !== '') p[k] = body[k].slice(0, k === 'bio' ? 400 : 48); if (body.image !== undefined) p.image = body.image || null; save(); push({ type: 'projects' }); pushHub(); return ok({ project: view(p) }); }
+        if (!c && DEL) {
+          if (p.default) return no(400, 'the first project stays: rename it instead');
+          if (String(body.confirm || '') !== p.name) return no(400, 'type the project name to confirm');
+          db.projects = db.projects.filter(x => x !== p); if (db.current === p.id) db.current = db.projects[0].id; save();
+          push({ type: 'projects' }); push({ type: 'project-removed', id: p.id }); pushHub(); return ok({ ok: true, removed: p.id });
+        }
+        if (c === 'pulse' && GET) return ok(pulse(p.id));
+        if (c === 'requests' && GET) return ok({ approvals: [], changes: [], proposals: [] });
+        if (c === 'workspace' && GET) return ok({ repo: null, github: { installed: false, signedIn: false, user: null }, branch: null, identity: { name: me().name, email: '', custom: false, hasToken: false } });
+        break;
+      }
+      case 'chat': {
+        if (!b) break;
+        const chPid = b === 'general' ? pid : (db.projects.find(p => p.channel === b) || {}).id;
+        if (!chPid) return no(404, 'Direct messages are ' + NOPE.toLowerCase());
+        if (!c && GET) { const lim = Math.min(Number(q.get('limit')) || 100, 500), before = q.get('before'); let list = db.chat[chPid] || []; if (before) { const i = list.findIndex(m => m.id === before); list = i >= 0 ? list.slice(0, i) : []; } return ok({ messages: list.slice(-lim) }); }
+        if ((!c && POST) || (c === 'send' && POST)) { const text = String(body.text || '').trim(); if (!text) return no(400, 'empty message'); const msg = post(chPid, 'me', text); onChat(chPid, text); return ok({ message: msg }); }
+        if (c === 'pins' && GET) return ok({ pins: [] });
+        if (c === 'receipt' && GET) return ok({ receipts: {} });
+        break;
+      }
+      case 'tasks': {
+        const list = db.tasks[pid] = db.tasks[pid] || [];
+        if (!b && GET) return ok({ tasks: list });
+        if (!b && POST) { const t = addTask(pid, { ...body, by: 'me' }); if (!body.assignee) pickUp(pid, t.id); return ok({ task: t }); }
+        const t = list.find(x => x.id === b); if (!t) return no(404, 'task not found');
+        if (PATCH) {
+          if (body.title !== undefined) t.title = String(body.title).slice(0, 200) || t.title;
+          if (body.status !== undefined) { if (!['backlog', 'doing', 'review', 'done'].includes(body.status)) return no(400, 'bad status'); t.status = body.status; }
+          if (body.assignee !== undefined) t.assignee = body.assignee && db.members.some(x => x.id === body.assignee) ? body.assignee : null;
+          if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
+          if (body.body !== undefined) t.body = String(body.body).slice(0, 20000);
+          if (body.due !== undefined) t.due = body.due || null;
+          t.updated = iso(); t.updatedBy = 'me'; save(); push({ type: 'task', task: t }); return ok({ task: t });
+        }
+        if (DEL) { db.tasks[pid] = list.filter(x => x !== t); save(); push({ type: 'task-removed', id: t.id }); return ok({ ok: true }); }
+        break;
+      }
+      case 'docs': {
+        const list = db.docs[pid] = db.docs[pid] || [];
+        if (!b && GET) return ok({ docs: list.map(docMeta).sort((x, y) => String(y.updated).localeCompare(String(x.updated))) });
+        if (!b && POST) {
+          const title = String(body.title || 'Untitled').slice(0, 120); let s = slugify(title), n = 2; while (list.some(d => d.slug === s)) s = `${slugify(title)}-${n++}`;
+          const now = iso(), d = { slug: s, title, by: 'me', created: now, updated: now, updatedBy: 'me', version: 1, project: pid, body: String(body.body || '').slice(0, 400000) };
+          list.push(d); save(); push({ type: 'doc', doc: { slug: s, title, version: 1, updated: now, updatedBy: 'me' } }); return ok({ doc: { ...d, summary: '' } });
+        }
+        const d = list.find(x => x.slug === b); if (!d) return no(404, 'doc not found');
+        if (!c && GET) { const s = sessions.get(b); return ok({ doc: { ...d, body: s ? s.text : d.body, summary: '' } }); }
+        if (!c && PUT) {
+          if (!body.force && body.baseVersion !== undefined && Number(body.baseVersion) !== Number(d.version)) return [409, { error: 'conflict', doc: { ...d, summary: '' } }];
+          if (body.title !== undefined) d.title = String(body.title).slice(0, 120) || d.title;
+          if (typeof body.body === 'string') d.body = body.body.slice(0, 400000);
+          d.version = (d.version || 1) + 1; d.updated = iso(); d.updatedBy = 'me'; save();
+          push({ type: 'doc', doc: { slug: d.slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); return ok({ doc: { ...d, summary: '' } });
+        }
+        if (!c && DEL) { db.docs[pid] = list.filter(x => x !== d); sessions.delete(b); save(); push({ type: 'doc-removed', slug: b }); return ok({ ok: true }); }
+        if (c === 'comments' && GET) return ok({ comments: [] });
+        if (c === 'backlinks' && GET) return ok({ backlinks: [] });
+        if (c === 'history' && GET && !parts[3]) return ok({ history: [] });
+        if (c === 'meta' && (PUT || POST || PATCH)) { if (body.pinned !== undefined) d.pinned = !!body.pinned; save(); return ok({ meta: { pinned: !!d.pinned } }); }
+        break;
+      }
+      case 'templates': return ok({ templates: [] });
+      case 'vision': if (GET) return ok({ text: db.vision[pid] || '' }); if (PUT) { db.vision[pid] = String(body.text || '').slice(0, 20000); save(); post(pid, 'tribecode', 'VISION.md was updated'); return ok({ ok: true }); } break;
+      case 'proposals': if (GET && !b) return ok({ proposals: [] }); break;
+      case 'milestones': if (GET && !b) return ok({ milestones: [] }); break;
+      case 'scratch': {
+        if (!b && GET) return ok({ notes: db.scratch.slice() });
+        if (!b && (PUT || POST)) return ok({ notes: scratchPut(body.notes) });
+        const n = db.scratch.find(x => x.id === b);
+        if (b && !c && DEL) { db.scratch = db.scratch.filter(x => x !== n); save(); return ok({ notes: db.scratch }); }
+        if (n && (c === 'move' || c === 'task') && POST) {
+          const to = proj(body.project) ? body.project : pid; db.scratch = db.scratch.filter(x => x !== n); save();
+          const [title, ...rest] = n.text.split('\n');
+          if (c === 'task') return ok({ task: addTask(to, { title: title.replace(/^#+\s*/, '') || 'A note', body: rest.join('\n'), by: 'me' }), notes: db.scratch });
+          const r = await route('POST', '/docs', q, { title: title.replace(/^#+\s*/, '') || 'A note', body: rest.join('\n') }, { 'x-project': to });
+          return ok({ doc: r[1].doc, notes: db.scratch });
+        }
+        break;
+      }
+      case 'invites': {
+        if (!b && POST) {
+          const inv = { code: 'DEMO' + rid(4).toUpperCase(), by: 'me', role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Number(body.maxUses) || 5, uses: 0, created: iso(), expires: iso(Date.now() + (Number(body.hours) || 24) * 3600e3), demo: true, ...(body.project && body.project !== 'tribe' ? { project: body.project } : {}) };
+          db.invites.push(inv); save(); friendJoins(); noteInvite();
+          return ok({ invite: inv });
+        }
+        if (!b && GET) return ok({ invites: db.invites });
+        if (b && GET) { const inv = db.invites.find(i => i.code === b); return inv ? ok({ tribe: db.tribe.name, invitedBy: me().name, role: inv.role, expires: inv.expires, project: null, members: [] }) : no(404, 'invite not found'); }
+        if (b && DEL) { db.invites = db.invites.filter(i => i.code !== b); save(); return ok({ ok: true }); }
+        break;
+      }
+      case 'join': return no(410, 'This is a pretend link from the offline demo: it only works in the browser that made it.');
+      case 'friends': if (GET) return ok({ friends: db.friends }); if (PUT) { const s = new Set(db.friends); body.on ? s.add(body.id) : s.delete(body.id); db.friends = [...s]; save(); return ok({ friends: db.friends }); } break;
+      case 'uploads': {
+        if (!b && GET) { const mine = db.uploads.filter(f => f.scope === 'me').slice().reverse(), project = db.uploads.filter(f => f.scope === 'project').slice().reverse(); return ok({ mine, project, max: MAX_UPLOAD }); }
+        if (!b && POST) {
+          const blob = body instanceof Blob ? body : new Blob([body || '']);
+          if (!blob.size) return no(400, 'That file is empty.');
+          if (blob.size > MAX_UPLOAD) return no(413, 'The offline demo keeps files up to 8 MB.');
+          const name = String(q.get('name') || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120), scope = q.get('scope') === 'project' ? 'project' : 'me';
+          const f = { id: 'u-' + rid(10), name, size: blob.size, type: blob.type || (KIND(name) === 'image' ? 'image/' + (name.split('.').pop().toLowerCase().replace('jpg', 'jpeg')) : 'application/octet-stream'), kind: KIND(name), by: 'me', byName: me().name, at: iso(), scope, ...(scope === 'project' ? { project: pid } : {}) };
+          await blobPut(f.id, blob.type ? blob : new Blob([blob], { type: f.type })); db.uploads.push(f); save(); return ok({ file: f });
+        }
+        const f = db.uploads.find(x => x.id === b); if (!f) return no(404, 'file not found');
+        if (c === 'raw' && GET) { const blob = await blobGet(f.id); return blob ? new Response(blob, { status: 200, headers: { 'Content-Type': f.type } }) : no(404, 'That file is gone from this browser.'); }
+        if (!c && DEL) { db.uploads = db.uploads.filter(x => x !== f); await blobDel(f.id); save(); return ok({ ok: true }); }
+        break;
+      }
+      case 'flint': if (GET && !b) return ok({ model: { online: false, model: '' } }); break;
+      case 'hub': {
+        if (!b && GET) return ok(hubData());
+        if (b === 'prefs') { if (GET) return ok(db.prefs); db.prefs = { pins: Array.isArray(body.pins) ? body.pins.slice(0, 40) : db.prefs.pins }; save(); return ok(db.prefs); }
+        if (b === 'docs' && GET) { const qq = String(q.get('q') || '').toLowerCase(); return ok({ docs: db.projects.flatMap(p => (db.docs[p.id] || []).filter(d => !qq || (d.title + ' ' + d.body).toLowerCase().includes(qq)).map(d => ({ project: p.id, projectName: p.name, color: p.color, slug: d.slug, title: d.title, at: d.updated, by: d.by, byName: nameOf(d.by), snippet: '', preview: String(d.body || '').replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 240) }))) }); }
+        if (b === 'repos' && GET) return ok({ repos: [] });
+        if (b === 'dismiss') return ok({ ok: true });
+        break;
+      }
+      case 'insights': return ok({ items: [] });
+      case 'gists': return ok({ gists: (db.gists[pid] || []).slice(0, Number(q.get('limit')) || 100) });
+      case 'flow': if (GET && !b) return ok({ flow: null }); break;
+      case 'approvals': if (GET && !b) return ok({ approvals: [], pending: 0 }); if (GET && b === 'rules') return ok({ rules: [] }); break;
+      case 'brain': if (GET) return ok({ brain: { online: false, model: '', error: 'No local model in the offline demo' } }); break;
+      case 'calendar': if (GET) return ok(b === 'upcoming' ? { items: [] } : { events: [], items: [] }); break;
+      case 'claims': if (GET) return ok({ claims: [] }); break;
+      case 'coord':
+        if (GET && b === 'summary') return ok({ reviews: 0, handoffs: 0, agents: 0 });
+        if (GET && b === 'plan') return ok({ plan: { date: iso().slice(0, 10), focus: '', by: 'rules', items: [], crew: [] }, availability: null });
+        if (GET && ['agents', 'reviews', 'handoffs', 'conflicts', 'ownership', 'delegations'].includes(b)) return ok({ [b]: [] });
+        break;
+      case 'dms': if (GET) return ok({ conversations: [] }); break;
+      case 'notify':
+        if (GET && b === 'inbox') return ok({ items: [], unread: 0, lastRead: null, marks: {} });
+        if (GET && b === 'prefs') return ok({ prefs: {} });
+        if (POST && b === 'read') return ok({ ok: true });
+        break;
+      case 'people': if (GET && !b) return ok({ status: { startedAt: db.created, uptimeSec: 0, commitsToday: 0, commitsTotal: 0, repo: false } }); break;
+      case 'shelf': if (GET && !b) return ok({ types: [], picks: [] }); break;
+      case 'thumb': { const p = proj(pid); return ok({ thumb: { name: p.name, initials: p.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(), color: p.color, kind: 'tile', at: db.created } }); }
+      case 'visuals': if (GET && !b) return ok({ screens: [] }); break;
+      case 'agents':
+        if (b === 'mine' && GET) { const ag = presence().find(m => m.id === AGENT); return ok({ agent: ag, online: true, since: db.created, url: '', command: '', commands: { anywhere: null, wifi: null, here: null }, public: false, remove: '', agents: [{ ...ag, kind: 'claude-code', label: null, online: true }] }); }
+        if (b === 'channel' && GET) return ok({ messages: [] });
+        break;
+      case 'bugs': if (GET && !b) return ok({ bugs: [] }); if (POST && !b) return ok({ bug: { id: 'b-' + rid(6), deduped: false } }); break;
+      case 'ask': if (GET && !b) return ok({ policy: 'never' }); break;
+      case 'assist': {   // app/ui/assist.js: the vision composer's basic draft and the game template's starter tasks
+        const p = proj(pid), name = p.name;
+        if (b === 'vision' && GET) return ok({ name, bio: p.bio, types: ['game'], kind: 'game', readme: '', docs: [], tasks: [], chat: '', questions: ASSIST_Q, vision: db.vision[pid] || '', model: { online: false, model: '' }, helpers: { claude: null, others: [] },
+          answers: { what: p.bio ? `${name}: ${p.bio}` : `${name}: a small browser game we build together`, who: 'Friends who like short levels and silly bosses', fun: 'Quick to pick up, easy to share, a little bit silly', done: '3 levels, a boss and a score, playable in the browser', out: 'Online play and accounts (for now)' } });
+        if (b === 'vision' && POST) { if ((body.helper || 'flint') !== 'flint') return no(); return ok({ draft: visionDraft(body.answers || {}), by: 'basic' }); }
+        if (b === 'complete' && POST) return ok({ phrases: [] });
+        if (b === 'tasks' && !c && GET) {
+          const have = new Set((db.tasks[pid] || []).map(t => t.title.toLowerCase())), gone = new Set(db.dismissed || []);
+          return ok({ model: { online: false }, suggestions: ASSIST_TASKS.filter(([t]) => !have.has(t.toLowerCase()) && !gone.has(t)).slice(0, q.get('more') ? 8 : 4).map(([title, why], i) => ({ id: 's-demo' + i, title, why, src: 'template' })) });
+        }
+        if (b === 'tasks' && c === 'dismiss' && POST) { (db.dismissed = db.dismissed || []).push(String(body.title || '')); save(); return ok({ ok: true }); }
+        break;
+      }
+    }
+    return no();
+  }
+
+  let lastNope = 0;
+  const realFetch = window.fetch.bind(window);
+  function ours(u) {
+    if (!/^\/api\//.test(u.pathname)) return false;
+    return u.origin === location.origin || u.origin === ORIGIN || u.origin === new URL(C() ? C().base() : location.origin, location.href).origin;
+  }
+  window.fetch = function (input, init) {
+    if (!active()) return realFetch(input, init);
+    let u; try { u = new URL(typeof input === 'string' || input instanceof URL ? String(input) : input.url, location.href); } catch { return realFetch(input, init); }
+    // Settings looks for Ollama on this device; the demo has no local model, so answer that quietly too.
+    if (u.pathname === '/api/tags' && u.origin === new URL(S.get().brain.host || 'http://localhost:11434').origin) return Promise.resolve(new Response('{"models":[]}', { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    if (!ours(u)) return realFetch(input, init);
+    const req = input instanceof Request ? input : null, o = init || {};
+    const method = String(o.method || (req && req.method) || 'GET').toUpperCase();
+    const hdr = {}; new Headers(o.headers || (req && req.headers) || {}).forEach((v, k) => { hdr[k] = v; });
+    return (async () => {
+      let body = o.body;
+      if (body === undefined && req && method !== 'GET') body = await req.blob();
+      if (typeof body === 'string') { try { body = JSON.parse(body || '{}'); } catch { body = {}; } }
+      else if (body == null) body = {};
+      let out;
+      try { out = await route(method, u.pathname.replace(/^\/api/, ''), u.searchParams, body, hdr); }
+      catch (e) { console.warn('offline demo:', e); out = [500, { error: 'The offline demo hit a snag: ' + (e && e.message || e) }]; }
+      if (out instanceof Response) return out;
+      const [status, data] = out;
+      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => toast('Not in the offline demo. Host for real to use it.'), 50); }
+      return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
+    })();
+  };
+
+  // The invite modal: say plainly that the link is pretend.
+  function noteInvite() {
+    setTimeout(() => {
+      const body = document.querySelector('#invite-modal:not(.hidden) #invite-body') || document.querySelector('.ii, #fl-instant');
+      if (!body || body.querySelector('.od-note')) return;
+      const n = document.createElement('p'); n.className = 'od-note';
+      n.innerHTML = '<b>Pretend link.</b> The offline demo lives only in this browser, so nobody else can open it. A pretend friend will "join" in a few seconds. <button class="linkish" data-od="real">Host for real</button>';
+      const foot = body.querySelector('.modal-foot'); foot ? foot.before(n) : body.appendChild(n);
+    }, 120);
+  }
+
+  // ---------- start, leave, reset ----------
+  function backup() {
+    const st = S.get(), pk = 'tribecode.project:' + (C() ? C().base() : location.origin);
+    let pkv = null; try { pkv = localStorage.getItem(pk); } catch {}
+    return { server: { ...(st.server || {}) }, hosting: st.hosting, hostOff: st.hostOff, projKey: pk, projVal: pkv, at: iso() };
+  }
+  function start() {
+    if (active()) { enterUi(); return; }
+    const wasReal = !!(C() && C().hasToken());
+    if (!ls.get(BKEY)) ls.set(BKEY, backup());
+    db = seed(); save(); blobClear();
+    S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
+    if (wasReal) { try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} location.reload(); return; }
+    paint(); C().connect();
+    enterUi();
+  }
+  function enterUi() {
+    const go = () => { if (A() && A().show) A().show('home'); toast('Demo Tribe is ready. Nothing leaves this device.'); };
+    if (C().connected()) return go();
+    let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
+  }
+  function restore() {
+    const bk = ls.get(BKEY);
+    if (bk) {
+      S.set({ server: { url: (bk.server || {}).url || '', token: (bk.server || {}).token || '' }, hosting: bk.hosting, hostOff: bk.hostOff });
+      try { if (bk.projVal == null) localStorage.removeItem(bk.projKey); else localStorage.setItem(bk.projKey, bk.projVal); } catch {}
+    } else S.set({ server: { url: '', token: '' } });
+    ls.del(BKEY);
+  }
+  function leave() {
+    closePop(); for (const s of [...sockets]) s.close();
+    restore(); ls.del(KEY); db = null; blobClear();
+    try { sessionStorage.removeItem('tribecode.view'); } catch {}
+    location.reload();
+  }
+  function reset() {
+    closePop(); if (!active()) return;
+    db = seed(); save(); blobClear();
+    try { sessionStorage.setItem('tribecode.view', 'home'); } catch {}
+    location.reload();
+  }
+  // A demo whose token was replaced (you joined a real tribe meanwhile) is over: forget it, keep the new sign-in.
+  if (db && db.on && (S.get().server || {}).token !== TOKEN) { ls.del(KEY); ls.del(BKEY); db = null; }
+
+  // ---------- the pill (where the Hosting pill sits) and its popout ----------
+  let pill = null, pop = null;
+  function paint() {
+    const on = active();
+    document.body.classList.toggle('offline-demo', on);
+    if (!on) { if (pill) pill.remove(); pill = null; return; }
+    if (pill && pill.isConnected) return;
+    pill = document.createElement('button'); pill.id = 'demo-pill'; pill.className = 'od-pill'; pill.setAttribute('aria-haspopup', 'dialog');
+    pill.title = 'Offline demo: nothing leaves this device';
+    pill.innerHTML = '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
+    place();
+    pill.onclick = e => { e.stopPropagation(); pop ? closePop() : openPop(); };
+  }
+  // Desktop: in the title bar where the Hosting pill sits. Phones have no title bar outside Chat: the pill floats (offline.css).
+  const phoneMq = matchMedia('(max-width: 820px)');
+  function place() {
+    if (!pill) return;
+    const crumbs = document.querySelector('#crumbs');
+    if (!phoneMq.matches && crumbs) { if (pill.nextElementSibling !== crumbs) crumbs.parentNode.insertBefore(pill, crumbs); }
+    else if (pill.parentNode !== document.body) document.body.appendChild(pill);
+  }
+  phoneMq.addEventListener('change', () => { closePop(); place(); });
+  function closePop() { if (pop) { pop.remove(); pop = null; if (pill) pill.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }
+  const outside = e => { if (pop && !pop.contains(e.target) && !(pill && pill.contains(e.target))) closePop(); };
+  function openPop() {
+    closePop();
+    pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Offline demo');
+    pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Offline demo</span><b>${esc(db.tribe.name)} lives in this browser</b></div></header>
+      <p>You're the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it stays until you reset it.</p>
+      <div class="od-acts">
+        <button id="od-real" data-od="real"><svg class="i"><use href="#i-zap"/></svg><span>Host this for real</span></button>
+        <button id="od-reset"><svg class="i"><use href="#i-refresh"/></svg><span>Reset demo</span></button>
+        <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave demo</span></button>
+      </div>`;
+    document.body.appendChild(pop);
+    const r = pill.getBoundingClientRect();
+    pop.style.top = (r.bottom + 8 + pop.offsetHeight > innerHeight ? Math.max(8, r.top - 8 - pop.offsetHeight) : r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
+    pill.setAttribute('aria-expanded', 'true');
+    pop.querySelector('#od-reset').onclick = reset;
+    pop.querySelector('#od-leave').onclick = leave;
+    setTimeout(() => document.addEventListener('click', outside, true), 0);
+  }
+  function hostForReal() {
+    closePop();
+    const modal = document.querySelector('#invite-modal'), body = document.querySelector('#invite-body'); if (!modal || !body) return;
+    modal.classList.remove('hidden');
+    body.innerHTML = `<span class="eyebrow">Host this for real</span><h2>A real tribe runs on a computer</h2>
+      <ol class="od-steps">
+        <li><b>On a PC or Mac:</b> install the TribeCode desktop app. It hosts your tribe by itself when you create your first project.</li>
+        <li><b>Already have a computer running TribeCode?</b> Link it: open Settings there and send yourself a device link, or join it with an invite link.</li>
+        <li><b>Then your phone joins</b> from anywhere with the link, and friends do too.</li>
+      </ol>
+      <p class="faint od-fine">Leaving the demo puts your own settings back exactly as they were. The demo itself stays in this browser only.</p>
+      <div class="modal-foot"><button class="btn" data-close>Back to the demo</button><span style="flex:1"></span><button class="btn" id="od-join">Join with a link</button><a class="btn primary" id="od-get" href="${RELEASES}" target="_blank" rel="noopener">Get the desktop app</a></div>`;
+    body.querySelector('[data-close]').onclick = () => modal.classList.add('hidden');
+    body.querySelector('#od-join').onclick = () => { modal.classList.add('hidden'); if (active()) { restore(); ls.del(KEY); db = null; try { sessionStorage.setItem('tribecode.openJoin', '1'); } catch {} location.reload(); } else if (window.TribeSettings) window.TribeSettings.joinPrompt(); };
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('[data-od]'); if (!t) return;
+    if (t.dataset.od === 'real') { e.preventDefault(); hostForReal(); }
+    if (t.dataset.od === 'start') { e.preventDefault(); start(); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop) closePop(); });
+  const ready = () => { paint(); try { if (sessionStorage.getItem('tribecode.openJoin')) { sessionStorage.removeItem('tribecode.openJoin'); setTimeout(() => window.TribeSettings && window.TribeSettings.joinPrompt(), 400); } } catch {} };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
+
+  window.TribeOffline = {
+    active, start, leave, reset, hostForReal,
+    socket: url => new FakeSocket(url),
+    state: () => db,
+    // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".
+    label: () => (active() ? 'Leave the offline demo' : 'Try a demo tribe (offline)'),
+    toggle: () => (active() ? leave() : start()),
+    tile: () => `<button class="od-tile" id="hub-demo" data-od="start"><span class="od-tic"><svg class="i"><use href="#i-play"/></svg></span><span class="od-tt"><b>Try a demo tribe (offline)</b><small>Be the host of a pretend tribe right here: a project, two friends and a Claude. No setup, no network, nothing leaves this device.</small></span><em class="gs-go">Start demo<svg class="i"><use href="#i-chev"/></svg></em></button>`,
+  };
+})();
