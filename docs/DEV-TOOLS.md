@@ -11,7 +11,7 @@ clean up, refresh screenshots, get a release ready. All plain Node or Python, no
 | `npm run dev:test` | The whole `npm test` suite, 4 suites at a time, each on its own ports. Failures re-run once alone (flaky vs real). Prints a table and writes [TEST-REPORT.md](TEST-REPORT.md) | ~10 min |
 | `npm run dev:loop` | Reset/restart soak test of the server (below) | 15 s |
 | `npm run dev:reset` | Cleans test leftovers. Dry run unless you add `--yes` | 2 s |
-| `npm run dev:shots` | Regenerates the README, website and docs screenshots and keeps only the ones that really changed | ~5 min |
+| `npm run dev:shots` | Regenerates every screenshot the README, the website and the docs use, and keeps only the ones that really changed | ~8 min |
 | `npm run dev:release` | Gets a release ready without pushing: checks the CHANGELOG, bumps versions, runs the checks, prints the git commands | ~2 min |
 | `npm run dev:infographic` | Renders [infographic/index.html](infographic/index.html) to `infographic/tribecode-infographic.png` at 2x | 5 s |
 
@@ -99,11 +99,25 @@ A real tribe folder is only touched with `--tribe <folder>`, it must contain `.t
 ## dev:shots
 
 ```
-npm run dev:shots                       # README + website + docs screenshots
-npm run dev:shots -- --readme-only      # scripts/readme-shots.py only
-npm run dev:shots -- --docs-only        # ui_smoke --shots and e2e_tribe --shots only
+npm run dev:shots                       # everything below
+npm run dev:shots -- --readme-only      # scripts/readme-shots.py only: docs/screenshots/readme-*.png + site/assets/og-image.png
+npm run dev:shots -- --docs-only        # e2e_website --shots (docs/WEBSITE.md), ui_smoke --shots, e2e_tribe --shots
 npm run dev:shots -- --threshold 0.5    # percent of pixels that must change to keep a new PNG
+python3 scripts/readme-shots.py --only dashboard,phone-doc   # just some README screens (names without readme-)
 ```
+
+`scripts/readme-shots.py` starts a throwaway server (temp folder, a mock GitHub and a mock local model) and seeds a
+realistic tribe through the API and MCP: Orion hosting, Maya and Jay, Orion's Claude and Maya's Claude, Pixel Quest
+(the starter game, so Preview runs a real game) and Lantern Run, the vision, chat with replies, reactions, a picture,
+a voice note, agent gists, a suggested vote and a proposal, tasks, docs, a personal note, uploaded files, Workshop
+items and the Secretary. Then it captures every README screen in the default Campfire theme: desktop at 1440×900
+(2× pixels, stored 1600px wide) and phones at 390×844 (3×, stored 780px wide), plus the offline demo tribe in a fresh
+browser. PNGs are quantized to 256 colours. The Dashboard shot also becomes the website's social card
+(`site/assets/og-image.png`, 1200×630). A screen that fails is retried once and then reported; set
+`SHOTS_DEBUG=<folder>` to keep a screenshot of the page at the moment it failed.
+
+Adding a README screen: add a `shoot(page, "<name>", prep)` call in `run()` (prep opens the screen), reference
+`docs/screenshots/readme-<name>.png` in README.md, and run it with `--only <name>`.
 
 Every run uses a fixed time zone (UTC), locale and a throwaway seeded tribe. Afterwards each regenerated image is
 compared with the committed one; when less than the threshold of its pixels moved (a clock, a caret, anti-aliasing),

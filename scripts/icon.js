@@ -60,7 +60,21 @@ function frame(i, { bg = 'square', size = 512 } = {}) {
   const back = bg === 'square' ? `<rect x="0" y="0" width="${N}" height="${N}" rx="10" fill="${NAVY}"/>` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${N} ${N}" width="${size}" height="${size}" shape-rendering="crispEdges">${back}${rects(LEFT, WHITE)}${rects(RIGHT, WHITE)}${rects(FRAMES[i], EMBER)}</svg>`;
 }
-module.exports = { svg, animated, frame, FRAMES, N };
+// ---- Flint, the mascot (since v0.10.6): the logo's flame alone, flickering like the logo, with two black pixel
+// eyes that blink now and then. The logo itself never has eyes; Flint does, wherever he shows up.
+const INK = '#12151A';
+const EYES = { 23: [[20, 20], [24, 24]], 24: [[20, 20], [24, 24]] };      // two eyes, 1 × 2 pixels, a pixel apart from the middle
+const BLINK = { 24: [[20, 20], [24, 24]] };                                // half-closed: 1 × 1
+const FB = [14, 10, 31, 34];                                               // the flame's box on the grid: x, y, w, h (with room for the flicker)
+function flint({ size = 64, speed = 0.72, blink = true } = {}) {
+  const vb = `${FB[0] - 1} ${FB[1] - 1} ${FB[2] - FB[0] + 3} ${FB[3] - FB[1] + 2}`;
+  const st = `<style>.f{opacity:0;animation:tcf ${speed}s steps(1,end) infinite}.f0{opacity:1}${FRAMES.map((_, i) => `.f${i}{animation-delay:${(-speed + i * speed / FRAMES.length).toFixed(3)}s}`).join('')}@keyframes tcf{0%{opacity:1}${(100 / FRAMES.length).toFixed(2)}%{opacity:0}100%{opacity:0}}`
+    + (blink ? `.eo{animation:tce 4.2s steps(1,end) infinite}.ec{opacity:0;animation:tcb 4.2s steps(1,end) infinite}@keyframes tce{0%{opacity:1}94%{opacity:0}97%{opacity:1}}@keyframes tcb{0%{opacity:0}94%{opacity:1}97%{opacity:0}}` : '')
+    + `@media (prefers-reduced-motion:reduce){.f,.eo,.ec{animation:none}.f{opacity:0}.f0,.eo{opacity:1}.ec{opacity:0}}</style>`;
+  const flames = FRAMES.map((m, i) => `<g class="f f${i}">${rects(m, EMBER)}</g>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${size}" height="${Math.round(size * (FB[3] - FB[1] + 2) / (FB[2] - FB[0] + 3))}" shape-rendering="crispEdges"><title>Flint</title>${st}${flames}<g class="eo">${rects(EYES, INK)}</g><g class="ec">${rects(BLINK, INK)}</g></svg>`;
+}
+module.exports = { svg, animated, frame, flint, FRAMES, N };
 
 if (require.main === module) {
   fs.mkdirSync(path.join(root, 'assets/brand/frames'), { recursive: true });
@@ -74,4 +88,7 @@ if (require.main === module) {
   w('app/ui/assets/icon-mark-animated.svg', animated({ bg: 'none' }));   // loading inline: the mark alone
   w('site/assets/brand/icon-animated.svg', animated());
   for (let i = 0; i < FRAMES.length; i++) w(`assets/brand/frames/icon-${i}.svg`, frame(i));
+  w('app/ui/assets/flint.svg', flint());                               // Flint, the mascot: flickering, blinking
+  w('assets/brand/flint.svg', flint());
+  w('site/assets/brand/flint.svg', flint());
 }

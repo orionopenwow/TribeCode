@@ -25,29 +25,37 @@ Humans decide, agents do the work. Agents report in short gists, propose changes
 
 | | |
 |---|---|
+| **In your browser** | [tribecode.org/app](https://tribecode.org/app/) opens the app. The website, [tribecode.org](https://tribecode.org), is the front page. |
 | **Desktop app** | Installers for Windows, Apple Silicon Mac and Linux on [Releases](https://github.com/orionopenwow/TribeCode/releases/latest). The app hosts your tribe by itself (no setup wizard) and updates itself: new versions download in the background and install when you close it. |
-| **Windows toolkit** | Three files for your Desktop, in [`scripts/desktop`](scripts/desktop): `TribeCode.bat` installs or updates the app and opens it · `Try-New-Work.bat` runs the newest work (the `dev` branch) live in the app window · `New-Project-For-A-Friend.bat` makes a Pixel Quest project, a public link with a QR page and the command for your Claude Code. |
+| **Windows toolkit** | Double-click files in [`scripts/desktop`](scripts/desktop) ([README](scripts/desktop/README.txt)): **Stable** › `Update-and-Open-TribeCode.bat` updates the installed app and opens it with your real tribe · **Working** › `Start-Working.bat` runs the newest work (the `dev` branch) in its own window and reloads as new work lands · `Invite-A-Friend.bat` makes a project and a link that works from anywhere · `Start-Demo-Tribe.bat` sets up a ready-made tribe to test with friends · **Tools** › auto-update on or off, reset. |
 | **From source** | Node 20+ and git: `npm start`, then open http://localhost:4747 (tribe folder `~/TribeCode`). See [Develop and test](#develop-and-test). |
 
 ## How it flows
 
 1. **Create a project.** One click on the rail's **+**: a room, an invite link, the chat, a private GitHub repo with a starter, and roles with colors and folders.
-2. **Send the link.** Your friend taps it on their phone, types a name, taps Join, then Add to Home Screen. No accounts.
-3. **Talk, propose, vote.** Claim roles and drop notes on the Getting started card, then press **Start the flow**. The **+** menu has *Propose to the tribe*: everyone votes, and an approved proposal goes to the Board with its checklist as tasks.
-4. **Agents post gists.** Each Claude reports a title and a few short bullets with the files it touched, never a code dump.
-5. **The plan updates itself.** `PLAN.md` checks items off as tasks finish. Plan changes an agent proposes wait for a human.
-6. **Preview the app** in the right panel, a browser tab or a friend's phone, then **release** a milestone: it is tagged and pushed to GitHub.
+2. **Write the vision.** The Dashboard's Onboarding Checklist opens the vision composer: five short prompts with good guesses filled in, then a draft from Flint or your own Claude. It becomes `VISION.md`, which the plan, the board and every agent read.
+3. **Send the link.** Your friend taps it on their phone, types a name, taps Join, then Add to Home Screen. No accounts.
+4. **Talk, propose, vote.** In **Messages**, claim roles and drop notes on the Getting started card, then press **Start the flow**. The **+** menu has *Propose to the tribe*: everyone votes, and an approved proposal goes to the Task Board with its checklist as tasks.
+5. **Agents post gists.** Each Claude connects with one line, claims files and reports a title and a few short bullets with the files it touched, never a code dump. It can suggest a vote; only people vote.
+6. **The plan updates itself.** `PLAN.md` checks items off as tasks finish, and the Dashboard's living update shows what changed. Plan changes an agent proposes wait for a human.
+7. **Preview the app** from the sidebar's Preview button (the right panel, a browser tab or a friend's phone), then **release** a milestone: it is tagged and pushed to GitHub.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/readme-create.png" alt="Create project: name it and go"><br><sub><b>Create project:</b> type a name and press Create, or drop a folder or repo to bring existing code.</sub></td>
-    <td width="50%"><img src="docs/screenshots/readme-kickoff.png" alt="Getting started card"><br><sub><b>Getting started:</b> room, link, repo and GitHub done; claim roles, drop notes, Start the flow.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-create.png" alt="Create project: name it and go"><br><sub><b>Create project:</b> a picture, a name and a line about it, or drop a folder or repo to bring existing code.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-vision.png" alt="The vision composer with a draft"><br><sub><b>Write the vision:</b> guided prompts, then Draft with Flint or My Claude. Edit it, then save.</sub></td>
   </tr>
 </table>
 
 ## Features
 
-The sidebar has four pillars: **Chat & Streams**, **Docs & Files**, **Tasks & Board** and **Agents Hub**. Depth lives in tabs and the right panel, not in long lists. The app opens at **Home**, your command center across every project.
+Each project's sidebar has five sections: **Dashboard**, **Messages**, **Files**, **Task Board** and **Agents Hub**. Below them sit the Website once it's built, any widgets you've added, the repo, and **+ Add** for more (Calendar, Bugs, Proposals, Milestones, Visuals, Workshop, Daily plan, Secretary, a link or a pinned doc). **Preview game** and **Invite friends** sit at the bottom. The app opens at **Home**, your command center across every project.
+
+### Dashboard
+
+The project at a glance. A **living update** with a status pill and four tiles (Lately · Chat · Way forward · Coming up), an **Onboarding Checklist** that ticks itself (vision, first task, a friend joins, Claude Code connected, repo pinned) and folds to "All set", **Tribe & Agents**, the **Project Stream** of recent changes and upcoming items, and **Repo & Tools**.
+
+<p align="center"><img src="docs/screenshots/readme-dashboard.png" alt="The project Dashboard: living update, checklist, tribe and agents" width="100%"></p>
 
 ### Invite a friend in one tap
 
@@ -57,39 +65,52 @@ Home → **Invite a friend** (or double-click `Invite-A-Friend.bat`): a fresh pr
 
 No TribeCode at home, no Claude Code subscription. They tap the link, type a name and land on **"You're in"**: Ask AI, Voice note, Add an idea, Pick a role. `@ai` answers from whatever AI the tribe has: their own Claude, a teammate's Claude (the owner decides: ask each time, always or never), the host's local model, or the board for the next Claude. [docs/MOBILE.md](docs/MOBILE.md)
 
-### Home
+### Messages and decisions
 
-Your command center, and where the app opens. Suggestions for what to do next, **Ask** (your Claude or the local model), join with a link or start a project, a Get started checklist, a scratchpad with "Refine with AI" and recent activity across your projects. The right panel has you, Connect your Claude Code, Share my hub link, Invite friends and **AI Insights**: your next steps plus what the host notices (Explorer findings, disk, backups, a newer release, the local model being down) and the Secretary's ideas.
+The chat fills from the bottom, like Discord, under a plain `# general` header. Bubbles with replies, reactions, voice notes with transcripts, images and any file. Agents post short gists, and votes and polls live in the chat: Claude can suggest one (`suggest_vote`) but only humans vote. A decisions log keeps the outcome. The speech-bubble button lists every conversation: your Claude, each project's chat and your direct messages.
 
-<p align="center"><img src="docs/screenshots/readme-home.png" alt="Home: the command center" width="100%"></p>
-
-### Chat and decisions
-
-Bubbles with replies, reactions, voice notes with transcripts, images and any file. Votes and polls live in the chat; Claude can suggest one (`suggest_vote`) but only humans vote. A decisions log keeps the outcome. ↑ edits your last message, drafts survive a reload, and the unread count shows in the tab title.
+<p align="center"><img src="docs/screenshots/readme-chat.png" alt="Messages: Orion's Claude posts a gist and suggests a vote" width="100%"></p>
 
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/readme-plus.png" alt="The + menu"><br><sub><b>The + menu:</b> photo or file, Propose to the tribe, quick poll, task, ask my Claude, reminder, note, bug.</sub></td>
-    <td width="50%"><img src="docs/screenshots/readme-proposal.png" alt="A suggested vote and a proposal to the tribe"><br><sub><b>Votes in chat:</b> a vote Orion's Claude suggested, and Maya's proposal with its checklist.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-proposal.png" alt="A proposal to the tribe"><br><sub><b>Propose to the tribe:</b> Maya's level select with its checklist; once approved, it goes to the Task Board.</sub></td>
   </tr>
 </table>
 
-### Docs & Files, Tasks & Board
+### Files and the doc editor
 
-Docs (with a TL;DR from the local model). **Tasks & Board** is one view with tabs: Board, Bugs, Proposals, Milestones, Calendar, the live Repo, Visuals and Roles. The bell holds Updates: the living plan and the gist feed.
+**Files** takes any kind of file up to 50 MB: notes, docs, pictures, audio, video, PDFs, code, 3D models. Your own files and your projects' sit together, newest first, with filters, list or grid, and a viewer for each kind. Docs edit like Google Docs meets Notion: real headings, lists, checkboxes, tables and colors as you type, a toolbar, an outline and a centered page, with live co-editing, comments, history, dictation and a TL;DR from the local model. They're still saved as Markdown, so every Claude can read and edit them.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/readme-plan.png" alt="Updates: the living plan and the gist feed"><br><sub><b>Plan and updates:</b> the current milestone with role chips, then progress, plan, upgrade, blocker and assessment gists.</sub></td>
-    <td width="50%"><img src="docs/screenshots/readme-docs.png" alt="Docs with a local-brain TL;DR"><br><sub><b>Docs:</b> live co-editing, comments, history, dictation, and a TL;DR that costs no Claude tokens.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-files.png" alt="Files: notes, docs, pictures, audio and PDFs together"><br><sub><b>Files:</b> a note, a PDF, a sound, sprites and the project's docs, newest first.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-doc.png" alt="The doc editor with toolbar and outline"><br><sub><b>The editor:</b> formatted while you type, with a TL;DR that costs no Claude tokens.</sub></td>
+  </tr>
+</table>
+
+### Task Board
+
+A board with tabs: Board, Bugs, Proposals, Milestones, Calendar, the live Repo, Visuals and Roles. **New task** suggests 3–5 next tasks from the vision, the repo and recent chat. The bell holds Updates: the living plan and the gist feed.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/readme-tasks.png" alt="The Task Board"><br><sub><b>Task Board:</b> backlog, in progress, review and done, with an owner on each card.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-plan.png" alt="Updates: the living plan and the gist feed"><br><sub><b>Plan and updates:</b> the current milestone with role chips, then progress, plan, blocker and assessment gists.</sub></td>
   </tr>
 </table>
 
 ### Agents Hub
 
-Many humans and many agents without collisions, in one tabbed view: an agents panel with pause and stop, your agents, an ownership map, a conflict radar, hand-offs, a review queue, a daily plan, file claims and a per-project **#agents** channel where Claudes delegate to each other.
+Many humans and many agents without collisions, in one tabbed view: the agents in the room with pause and stop, your agents, an ownership map, a conflict radar, hand-offs, a review queue, a daily plan and the Secretary, plus a per-project **#agents** channel where Claudes delegate to each other.
 
-<p align="center"><img src="docs/screenshots/readme-tasks.png" alt="Tasks & Board with the four-pillar sidebar and agents in the room" width="100%"></p>
+<p align="center"><img src="docs/screenshots/readme-agents.png" alt="Agents Hub: your agents" width="100%"></p>
+
+### Flint, the built-in helper
+
+**Flint** lives at the bottom of the room panel ("Ask Flint…") and runs on this computer: nothing you type leaves it. Even with no local model it connects your Claude Code, answers how-to questions from the Guide, captures notes ("note: …"), adds tasks ("task …"), invites a friend, starts or stops hosting and tells you what's happening. With a local model on, it answers anything else too. On phones it's the first row in *Talk to…*.
+
+<p align="center"><img src="docs/screenshots/readme-flint.png" alt="Flint answering in the room panel" width="100%"></p>
 
 ### People
 
@@ -103,6 +124,12 @@ The app you're building runs in the right panel (desktop, tablet and phone width
 
 <p align="center"><img src="docs/screenshots/readme-preview.png" alt="Pixel Quest running in the preview panel" width="100%"></p>
 
+### Home
+
+Your command center across projects, and where the app opens: pick up where you left off, invite a friend, your notes, recent activity across your projects, and **AI Insights** on the right: votes waiting on you, idle agents you could hand a task, and what the host notices (a newer release, disk, backups, the local model being down).
+
+<p align="center"><img src="docs/screenshots/readme-home.png" alt="Home: the command center" width="100%"></p>
+
 ### Workshop
 
 A library of skills, recipes, templates, assets and scripts, shared across the tribe's projects, with a community shelf served from an open GitHub index through jsDelivr. Items need an open license and sha256 checks, and nothing in them ever runs. See [docs/WORKSHOP.md](docs/WORKSHOP.md).
@@ -113,29 +140,40 @@ A library of skills, recipes, templates, assets and scripts, shared across the t
 
 **Your agents** gathers everything that works with you: Claude Code, Claude Desktop (through a stdio bridge), other MCP agents and local models. The **Secretary** runs in the background on a local model: it keeps a journal, writes a "what matters now" digest, files research, and turns realizations into tasks or votes. See [docs/SOLO.md](docs/SOLO.md).
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/readme-agents.png" alt="Your agents"><br><sub><b>Your agents:</b> who is live, what they're on, their last gist.</sub></td>
-    <td width="50%"><img src="docs/screenshots/readme-secretary.png" alt="The Secretary digest"><br><sub><b>Secretary:</b> decisions, findings, open questions and ideas in one digest.</sub></td>
-  </tr>
-</table>
+<p align="center"><img src="docs/screenshots/readme-secretary.png" alt="The Secretary digest" width="100%"></p>
+
+### Try it offline
+
+**Try a demo tribe** (on Home, the projects list, the ? menu or Settings) starts a pretend tribe that lives only on this device: no host, no network. You're the host of "Demo Tribe" with a game project, two pretend friends and a pretend Claude who answers `@claude` and picks up tasks. Chat, tasks, docs, files and the vision all work; leaving puts your real setup back exactly.
+
+<p align="center"><img src="docs/screenshots/readme-demo.png" alt="The offline demo tribe: a pretend Claude answers in chat" width="100%"></p>
 
 ### Phones
 
-The same tribe, laid out for a phone (an installable web app on iPhone and Android). Outside Chat, a bottom rack (you · Chat · Docs · Updates · Tasks · the orange action); in Chat, the sections sit in a compact top bar. Swipe from the left for the project circles and the sections. Tap the mic to record a voice note (pause, stop, delete), approve agents with one tap, and pick who to talk to: your Claude, the local brain, your desktop or #agents. See [docs/MOBILE.md](docs/MOBILE.md).
+The same tribe, laid out for a phone (an installable web app on iPhone and Android). A bottom rack (Home · Chat · Files · Tasks · Agents); swipe from the left for the project circles and the sections. **Messages** lists every conversation, Files opens like a files app, and notes edit like Google Docs mobile, with a format bar that rides on the keyboard. Tap the mic to record a voice note, approve agents with one tap, and pick who to talk to: Flint, your Claude, the local model, your desktop or #agents. See [docs/MOBILE.md](docs/MOBILE.md).
 
 <p align="center">
+  <img src="docs/screenshots/readme-phone-dashboard.png" width="24%" alt="Phone Dashboard">
   <img src="docs/screenshots/readme-phone-chat.png" width="24%" alt="Phone chat">
+  <img src="docs/screenshots/readme-phone-messages.png" width="24%" alt="Phone Messages: every conversation">
+  <img src="docs/screenshots/readme-phone-doc.png" width="24%" alt="Phone note editor">
+</p>
+<p align="center">
+  <img src="docs/screenshots/readme-phone-files.png" width="24%" alt="Phone Files">
   <img src="docs/screenshots/readme-phone-plus.png" width="24%" alt="Phone + menu">
-  <img src="docs/screenshots/readme-phone-panel.png" width="24%" alt="Phone panel">
-  <img src="docs/screenshots/readme-phone-docs.png" width="24%" alt="Phone Docs hub with the pinned repo">
+  <img src="docs/screenshots/readme-phone-panel.png" width="24%" alt="Phone side panel">
 </p>
 
 ### Desktop
 
-A frameless window with real window buttons, project circles, a calm sidebar, breadcrumbs, `Ctrl K` to jump anywhere and a right panel that turns into a preview. The top right holds the panel toggle, Context, your profile menu and the bell. `tribecode://` links open invites in the app. The profile menu can also show the Working version (newest code, live) in its own window.
+A frameless window with real window buttons, project circles, a calm sidebar, breadcrumbs, `Ctrl K` to jump anywhere and a right panel that turns into a preview. Drag the lines between panes to resize them. While your computer hosts the tribe, a green **Hosting** pill at the top left shows who can reach you and has the Host switch; the **?** opens the Guide, keyboard shortcuts, Report a bug and What's new. The top-left flame flickers while something is working. `tribecode://` links open invites in the app, and the profile menu can show the Working version (newest code, live) in its own window.
 
-<p align="center"><img src="docs/screenshots/readme-profile.png" alt="The profile menu" width="100%"></p>
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/readme-kickoff.png" alt="Getting started card"><br><sub><b>Getting started:</b> room, link, repo and GitHub done; claim roles, drop notes, Start the flow.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-profile.png" alt="The profile menu"><br><sub><b>The profile menu:</b> your profile, Connect your Claude Code, your agents, notifications, settings.</sub></td>
+  </tr>
+</table>
 
 ## Connect Claude Code
 
@@ -185,7 +223,7 @@ npm run live                      # auto-pull + restart + UI live reload
 npm run invite                    # one-click public invite + QR
 node scripts/start-test-project.js   # Pixel Quest test project + invite + Claude Code command
 npm test                          # the full suite (Python Playwright + Chrome)
-npm run readme-shots              # refresh the README and website screenshots
+npm run dev:shots                 # regenerate every README, website and docs screenshot (docs/DEV-TOOLS.md)
 npm run explore                   # the Explorer: clicks through the whole app, writes docs/EXPLORE-REPORT.md
 npm run milestone-report          # before/after screenshots and findings against the last release
 cd app && npm install && npm run dev   # the desktop app (Tauri v2, needs Rust)

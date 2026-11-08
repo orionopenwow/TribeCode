@@ -15,6 +15,7 @@
   const SECTIONS = [
     ['Learn', [
       ['flint', 'i-flint', 'Ask Flint', 'The built-in helper, right in the room', () => window.TribeFlint && window.TribeFlint.focus()],
+      ['tour', 'i-flint', 'Take the tour with Flint', 'He flies you around the main places', () => window.TribeFlintGuide && window.TribeFlintGuide.tour()],
       ['guide', 'i-doc', 'Guide', 'How TribeCode works, in short pages', () => guide()],
       ['start', 'i-play', 'Start here', 'Your first project in two minutes', () => guide('01-start-here')],
       ['demo', 'i-zap', 'Try a demo tribe', 'Host a pretend tribe offline, right here', () => window.TribeOffline && window.TribeOffline.start()],   // feat/offline-demo
