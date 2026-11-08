@@ -66,7 +66,11 @@ def main():
             token = pg.evaluate("TribeStore.get().server.token")
             themes = pg.evaluate("TribeThemes.list.map(t => ({ id: t.id, name: t.name, mode: t.mode, sw: t.sw }))")
             assert len(themes) >= 8, themes
-            assert pg.evaluate("document.body.dataset.theme") == "dark", "TribeCode Dark is the default"
+            assert pg.evaluate("document.body.dataset.theme") == "campfire", "Campfire is the default"
+            # a device from before v0.9.1 has theme 'dark' saved by default (never picked): it gets Campfire too...
+            assert pg.evaluate("TribeThemes.resolve({ theme: 'dark', themeDark: 'dark' })") == "campfire"
+            # ...but someone who picked TribeCode Dark keeps it
+            assert pg.evaluate("TribeThemes.resolve({ ...TribeThemes.pick('dark') })") == "dark"
 
             pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#settings-modal:not(.hidden) .th-chip")
             assert pg.locator(".th-chip").count() == len(themes)

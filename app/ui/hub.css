@@ -279,7 +279,7 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .sh-switch .sw-row > button[data-pj-open] { flex: 1; min-width: 0; }
 .sh-switch .sw-pin { width: 30px; height: 30px; min-height: 30px !important; padding: 0 !important; display: grid !important; place-items: center; border-radius: 8px; flex: none; color: var(--muted); opacity: 0; }
 .sh-switch .sw-row:hover .sw-pin, .sh-switch .sw-pin:focus-visible, .sh-switch .sw-pin.on { opacity: 1; }
-.sh-switch .sw-pin svg.i { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; color: inherit !important; }
+.sh-switch .sw-pin svg.i { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; color: inherit !important; }
 .sh-switch .sw-pin.on { color: var(--amber-ink); }
 .sh-switch .sw-pin.on svg.i { fill: currentColor; }
 .sh-switch .tribe-face { width: 22px; height: 22px; border-radius: 6px; font-size: 11px; display: grid; place-items: center; flex: none; }
