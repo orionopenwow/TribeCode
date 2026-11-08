@@ -48,3 +48,4 @@
 .fg-repo > #doc-repo-hero .rhx-pv { position: static; }
 .fg-repo > #doc-repo-hero .rhx-tile span { font-size: 44px; }
 .fg-repo > #doc-repo-hero:empty, .fg-repo > #doc-repo-hero:has(.hero-acts) { display: none; }   /* no repo yet: nothing to show here */
+body:has(#view-tabs.wt-files:not(.hidden)) #view-docs > #cf-switch { display: none; }   /* phones too: the emoji tab row already has Notes · Code · Docs */

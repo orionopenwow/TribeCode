@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.17.13
+
+- **Phone apps planned**: docs/PHONE-APPS.md lays out the Android APK (first), push notifications, then the iPhone app via TestFlight, built from the same app with Tauri
+- **Phones**: Files shows one emoji tab row (Notes · Code · Docs · Website · Captures) instead of two switches
+
 ## v0.17.12
 
 - **Rail**: the "up 0m" uptime line at the bottom of the rail is gone (desktop)
