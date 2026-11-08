@@ -155,8 +155,7 @@ module.exports = function embeds({ store, isHost = me => me && me.role === 'host
       const type = String(r.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
       if (IMG_TYPES.test(type)) return remember(raw, { url: r.url, kind: 'image', title: '', description: '', site: new URL(r.url).hostname.replace(/^www\./, ''), image: raw });
       if (!/^(text\/html|application\/xhtml\+xml)$/.test(type)) return remember(raw, { url: r.url, kind: 'none' });
-      const charset = /charset=([\w-]+)/i.exec(String(r.headers['content-type'] || '')); let html;
-      try { html = new TextDecoder(charset ? charset[1] : 'utf-8').decode(r.body); } catch { html = r.body.toString('utf8'); }
+      const html = require('./capture-html').decodeBody(r.body, r.headers['content-type']);   // feat/captures: header, BOM, <meta charset>, or a windows-1252 guess
       const p = parse(html, r.url);
       return remember(raw, { url: r.url, kind: p.title || p.description ? 'page' : 'none', ...p });
     } catch (e) {

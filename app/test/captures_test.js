@@ -101,4 +101,26 @@ ok(avg('actionRecall') >= 0.6, 'average action recall ' + avg('actionRecall'));
   ok(REC.validate({ title: 'Stand Up!', cues: { key: ['blocked', 42] }, sections: ['summary', 'evil'] }).sections.join() === 'summary', 'recipe validation');
   assert.throws(() => REC.validate({}), /name/); n++;
 }
+// ---------- huddle meeting notes become captures (huddlesum.toCapture -> captures.fromHuddle) ----------
+{
+  const os = require('node:os');
+  const { Store } = require(path.join(root, 'server', 'store'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tc-cap-unit-')), st = new Store(dir);
+  const sent = [];
+  const P = { current: () => 'p1', defaultId: () => 'p1', inProject: (pid, fn) => fn(), channelOf: () => 'general' };
+  const cap = CAP({ P, store: st, base: st, embeds: {}, packs: { ytdlp: () => null, whisper: () => null }, llm: {}, docs: { list: () => [], read: () => null }, dms: { isDm: () => false, canRead: () => true },
+    perms: { can: () => false }, postChat: () => null, broadcast: m => sent.push(m), createTask: () => ({}), getMembers: () => [{ id: 'maya-1', name: 'Maya', role: 'builder' }, { id: 'sam-1', name: 'Sam', role: 'builder' }], nameOf: () => '' });
+  const hs = require(path.join(root, 'server', 'huddlesum'))({ P: { get: () => ({}) }, brain: {}, postChat: () => null, nameOf: () => '' });
+  hs.setSink(x => cap.fromHuddle(x));
+  const t0 = Date.parse('2026-11-08T18:00:00Z');
+  const c = hs.toCapture({ project: 'p1', started: new Date(t0).toISOString(), lines: [
+    { at: new Date(t0 + 4000).toISOString(), name: 'Maya Lee', text: 'We decided the boss gets two phases.' },
+    { at: new Date(t0 + 65000).toISOString(), name: 'Sam', text: 'Sam will tune the boss health tonight.' }] });
+  ok(c && c.kind === 'voice' && c.site === 'Huddle' && c.recipe === 'meeting', 'huddle capture made');
+  ok(c.transcript[0].t === 4 && c.transcript[0].who === 'Maya' && c.transcript[1].t === 65, 'huddle timestamps relative to the start');
+  ok(c.decisions.some(d => /two phases/.test(d.text)) && c.actions.some(a => /^Sam: tune the boss health/.test(a.text)), 'huddle notes: decisions + actions');
+  ok(fs.existsSync(st.p('files', 'captures', c.id + '.md')) && fs.existsSync(st.p('files', 'captures', c.id + '.json')), 'huddle capture files');
+  ok(sent.some(m => m.type === 'capture' && m.id === c.id), 'broadcast');
+  fs.rmSync(dir, { recursive: true, force: true });
+}
 console.log(`captures_test: OK (${n} checks)`);

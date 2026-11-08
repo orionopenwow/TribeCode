@@ -23,6 +23,8 @@
   const ITEMS = () => [
     { group: 'Add' },
     { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Docs' },
+    { k: 'capture', icon: 'i-link', t: 'Read a link', s: draft() && /^https?:\/\//.test(draft()) ? 'Summarize the link you typed' : 'Short notes from an article or video', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
+    { k: 'voicenote', icon: 'i-mic', t: 'Voice note to notes', s: 'Record, get a summary and action items', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
     { k: 'gif', icon: 'i-gif', t: 'GIF', s: 'Search, your GIFs, or paste a link', hide: !window.TribeChatRich || me().role === 'spectator' },   // feat/chat2
     { group: 'Decide together' },
     { k: 'propose', icon: 'i-flag', t: 'Propose to the tribe', s: 'Everyone votes; approved ideas go to the Board', hide: me().role === 'spectator' },
@@ -72,6 +74,8 @@
     if (k === 'propose') return propose({ title: text });
     close();
     if (k === 'attach') return pick();
+    if (k === 'capture') { close(); const u = /^https?:\/\/\S+$/.test(text) ? text : ''; if (u) clearDraft(); return window.TribeCaptures.addLink({ channel: chan(), url: u }); }   // feat/captures
+    if (k === 'voicenote') { close(); return window.TribeCaptures.recorder({ channel: chan() }); }   // feat/captures
     if (k === 'gif') return window.TribeChatRich.gifPicker(anchorBtn);   // feat/chat2
     if (k === 'poll') return window.TribeVotes.openComposer({ question: text.slice(0, 200), channel: 'general' });
     if (k === 'task') {

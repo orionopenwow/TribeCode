@@ -154,6 +154,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
   }
   function save(c) {
     c.updated = new Date().toISOString();
+    fs.mkdirSync(store.p(DIR), { recursive: true });
     store.writeJSON(rel(c.id, 'json'), c);
     const { transcript, text, points, actions, decisions, summaryItems, ...meta } = c;
     store.writeMd(rel(c.id, 'md'), { id: c.id, source: c.url || (c.kind === 'voice' ? 'voice note' : ''), kind: c.kind, title: c.title, author: c.author || '', published: c.published || '', duration: c.duration || null, thumbnail: c.thumbnail || null, tags: c.tags || [], created: c.created, by: c.byName || '' }, markdown(c));
@@ -262,7 +263,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
   // ---------- limits ----------
   const recent = new Map();
   function tooFast(me) {
-    const now = Date.now(), win = 5 * 60_000, max = me.role === 'agent' ? 8 : 15;
+    const now = Date.now(), win = 5 * 60_000, max = me.role === 'agent' ? 12 : 30;
     const h = (recent.get(me.id) || []).filter(t => now - t < win); if (h.length >= max) { recent.set(me.id, h); return true; }
     h.push(now); recent.set(me.id, h); return false;
   }
@@ -282,6 +283,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     if (existing) return { capture: existing, duplicate: true };
     const fk = `${pid}|${dm || ''}|${key}`;
     if (inflight.has(fk)) return inflight.get(fk);
+    if (tooFast(me)) throw Object.assign(new Error('That\'s a lot of links at once. Give it a few minutes.'), { status: 429 });
     const job = (async () => {
       const plat = platformOf(url);
       const c = { id: uniqueId(u.hostname.replace(/^www\./, '') + ' ' + (u.pathname.split('/').filter(Boolean).pop() || '')), key, url, source: url, kind: plat ? plat.kind : 'page', site: plat ? plat.site : u.hostname.replace(/^www\./, ''),
@@ -443,7 +445,6 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     if (!settings().auto || !me || me.role === 'spectator' || me.role === 'agent') return;
     const t = String(text || '').trim();
     if (!BARE.test(t) || IMG.test(t) || /giphy\.com|tenor\.com/i.test(t)) return;
-    if (tooFast(me)) return;
     const pid = projectId();
     P.inProject(pid, () => captureLink(me, t, { channel, message: msg && msg.id })).then(r => {
       if (r && r.capture && !r.error) P.inProject(pid, () => postCard(r.capture, channel, r.duplicate));
@@ -504,8 +505,9 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
   function ask(me, q) {
     const topic = String(q || '').replace(/^.*?\b(?:decide|decided|agree|agreed|say|said|plan|planned|settle|settled)\b\s*(?:on|about|for|with|regarding)?\s*/i, '').replace(/[?.!]+$/, '').trim() || String(q || '');
     const want = [...new Set(T(topic))]; if (!want.length) return { topic, quotes: [] };
+    const exact = [...new Set(String(topic).toLowerCase().match(/[\p{L}\p{N}']+/gu) || [])].filter(w => w.length > 2);
     const quotes = [];
-    const consider = (text, meta, boost) => { const ts = new Set(T(text)); const hits = want.filter(w => ts.has(w)).length; if (!hits) return; const dec = /\b(decid|agree|settled|going with|go with|we'll|we will|plan is|lock)/i.test(text); quotes.push({ text: clip(text, 280), score: hits * 3 + (dec ? 5 : 0) + boost, ...meta }); };
+    const consider = (text, meta, boost) => { const ts = new Set(T(text)); const hits = want.filter(w => ts.has(w)).length; if (!hits) return; const raw = new Set(String(text).toLowerCase().match(/[\p{L}\p{N}']+/gu) || []); boost += exact.filter(w => raw.has(w)).length + (meta.title && T(meta.title).some(w => want.includes(w)) ? 1 : 0); const dec = /\b(decid|agree|settled|going with|go with|we'll|we will|plan is|lock)/i.test(text); quotes.push({ text: clip(text, 280), score: hits * 3 + (dec ? 5 : 0) + boost, ...meta }); };
     for (const c of listAll().filter(x => visible(x, me))) {
       const meta = l => ({ capture: c.id, title: c.title, when: c.published || c.created, kind: c.kind, t: l && Number.isFinite(l.t) ? l.t : null, at: l && Number.isFinite(l.t) ? mmss(l.t) : '', who: (l && l.who) || '' });
       for (const d of c.decisions || []) consider(d.text, meta(d), 4);
@@ -542,7 +544,6 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
         if (m === 'POST') {
           if (!canWrite(me)) return fail(res, 403, 'Spectators can read captures but not add them.');
           const body = await readBody(req);
-          if (tooFast(me)) return fail(res, 429, 'That\'s a lot of links at once. Give it a few minutes.');
           let channel = body.channel ? String(body.channel) : null; if (channel === 'general') channel = P.channelOf(projectId());
           if (channel && dms.isDm(channel) && !dms.canRead(channel, me)) return fail(res, 403, 'This conversation is private.');
           const r = await captureLink(me, body.url, { channel, message: body.message ? String(body.message).slice(0, 40) : null, recipe: String(body.recipe || ''), refresh: !!body.refresh });
@@ -653,7 +654,6 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
         inputSchema: S({ url: str('An http(s) link'), recipe: str('Optional recipe id: article, video, meeting, idea, playtest, interview, lecture') }, ['url']),
         run: async ({ url: u, recipe }, me) => {
           if (me.role === 'spectator') return mErr('Spectators are read-only.');
-          if (tooFast(me)) return mErr('Too many captures at once. Wait a few minutes.');
           try { const r = await captureLink(me, u, { recipe: recipe || '' }); if (r.error) return mErr(r.error); const c = r.capture; return text({ id: c.id, title: c.title, kind: c.kind, status: c.status, note: c.note || undefined, duplicate: !!r.duplicate, summary: c.summary, points: (c.points || []).map(p => p.text), actions: (c.actions || []).map(a => a.text), tags: c.tags, next: 'capture_read for the full text. Action items become tasks only when a person taps Make tasks in Captures.' }); }
           catch (e) { return mErr(e.message); }
         },

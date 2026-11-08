@@ -260,7 +260,8 @@ function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.
 
 // ---------- chat ----------
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
-let chatHook = null;   // the secretary hears @secretary (server/secretary.js)
+let chatHook = null;
+let captureHook = null;   // feat/captures (server/captures.js onChat)   // the secretary hears @secretary (server/secretary.js)
 function postChat(channel, by, text, extra) {
   if (channel === 'general') channel = P.channelOf(P.current() || P.defaultId());   // project rooms: each project has its own channel
   const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js)
@@ -268,6 +269,7 @@ function postChat(channel, by, text, extra) {
   if (!dms.deliver(channel, msg)) broadcast({ type: 'chat', channel, message: msg });   // DMs reach only their two members
   if (by !== 'tribecode' && !channel.startsWith('dm-')) pocket.chat(channel, by, text);   // @mentions -> notification hub
   if (chatHook) try { chatHook(channel, by, text, msg); } catch (e) { console.error(e); }
+  if (captureHook && by !== 'tribecode' && !(extra && (extra.media || extra.images || extra.vote))) try { captureHook(channel, memberById(by), text, msg); } catch (e) { console.error(e); }   // feat/captures: a pasted link becomes a capture card
   return msg;
 }
 function handleCommands(channel, member, text) {
@@ -376,6 +378,7 @@ const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m =>
 const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });
 const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m) });
 huddleSum.setSink(x => captures.fromHuddle(x));
+captureHook = (...x) => captures.onChat(...x);
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
@@ -742,7 +745,6 @@ async function apiInProject(req, res, url) {
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
       const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
-      captures.onChat(b, me, text, msg);   // feat/captures: a pasted link becomes a capture card
       return send(res, 200, { message: msg });
     }
   }

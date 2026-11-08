@@ -98,7 +98,7 @@ function parse(html) {
 // ---------- helpers on the tree ----------
 function walk(node, fn, depth = 0) { if (!node || depth > MAX_DEPTH) return; if (fn(node, depth) === false) return; for (const c of node.children || []) walk(c, fn, depth + 1); }
 function all(node, pred) { const out = []; walk(node, n => { if (n.tag && pred(n)) out.push(n); }); return out; }
-function textOf(node) { let t = ''; walk(node, n => { if (n.text !== undefined) t += n.text; else if (n.tag === 'br') t += '\n'; else if (SKIP.has(n.tag)) return false; }); return t; }
+function textOf(node) { let t = ''; walk(node, n => { if (n.text !== undefined) t += n.text; else if (n.tag === 'br') t += '\n'; else if (n !== node && SKIP.has(n.tag)) return false; }); return t; }
 const squash = s => String(s || '').replace(/[ \s]+/g, ' ').trim();
 const SKIP = new Set(['script', 'style', 'noscript', 'template', 'svg', 'math', 'iframe', 'object', 'embed', 'canvas', 'video', 'audio', 'select', 'button', 'input', 'textarea', 'form', 'head', 'title', 'meta', 'link']);
 const NOISE_TAG = new Set(['nav', 'footer', 'aside', 'header', 'menu', 'dialog']);
