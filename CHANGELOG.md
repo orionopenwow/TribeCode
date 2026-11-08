@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.9
+
+- **The logo follows your theme**: "Tribe" is drawn in the theme's text color and "Code" in its accent, everywhere the logo shows (the app, invite and join pages), so it never gets lost white on white
+- **Campfire**: pure white text, with neutral greys for secondary text (it was cream). The warm backgrounds stay
+- **Phones**: the theme test now also checks that the logo is in each theme's text color, on all 9 themes
+
 ## v0.8.8
 
 - **Docs is now Files, and it takes any kind of file**: pictures, audio, video, PDFs, code, 3D models, zips, anything up to 50 MB. Upload to your own files (only you) or to a project (everyone in it), or drag files onto the page on desktop. Chips filter by All, Notes, Docs, Pictures and Other files (remembered). Opening a file shows it right there: pictures, video, audio, PDFs and code, and 3D models open in the 3D viewer. Download and Delete (tap twice) are top right. The sidebar says **All files** next to **All repos**, and a project's section is **Files**
