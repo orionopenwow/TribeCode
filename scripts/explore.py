@@ -667,8 +667,8 @@ JOURNEYS = [
                ("expect", "document.querySelector('#view-board') && document.querySelector('#view-board').innerText.includes('photo mode') || [...document.querySelectorAll('#chat-list *')].some(e => /photo mode/.test(e.textContent || ''))")]},
     {"id": "connect-claude", "title": "Connect Claude Code",
      # phones (v0.8.3): your profile lives in the side panel; the rack's Agents button leads to Connect an agent
-     "steps_phone": [("click", [{"css": "#tabbar [data-m2nav=agents]"}, {"role": "button", "name": r"^agents$"}], "Agents (rack)"),
-                     ("click", [{"role": "button", "name": r"^connect an agent|connect.*(claude|ai)"}], "Connect an agent"),
+     "steps_phone": [("click", [{"role": "tab", "name": r"^agents$"}, {"role": "button", "name": r"^agents$"}, {"css": "#tabbar [data-m2nav=agents]"}], "Agents (rack)"),
+                     ("click", [{"role": "button", "name": r"^connect an agent|connect.*(claude|ai)|connect it too"}], "Connect an agent"),
                      ("click?", [{"role": "button", "name": r"^create key|^new command"}], "Create key"),
                      ("expect", "[...document.querySelectorAll('code, pre, input, textarea, .code, span, div')].some(e => window.__ex.visible(e) && /claude mcp add/.test(e.value || (e.children.length ? '' : e.textContent)))")], "goal": "a `claude mcp add` command is on screen", "max": 2,
      "steps": [("click", [{"role": "button", "name": r"connect.*(claude|your ai|my ai)|claude code|add (an )?agent"}, {"text": r"connect (your |my )?(claude|ai)"}, {"css": "#cc-connect button, #cc-connect"}], "Connect Claude"),
@@ -787,7 +787,7 @@ def core_connect(browser):
         page.evaluate(f"TribeClient.switchProject({json.dumps(p)})"); settle(page, 600)
         page.evaluate("TribeApp.show('home')"); settle(page)
         mcp(S["a2"], "my_lane", {})   # Maya's Claude is working right now
-        loc, how = find_affordance(page, [{"role": "button", "name": r"connect.*claude|claude code"}, {"text": r"connect (your )?claude"}, {"css": "#cc-connect button"}])
+        loc, how = find_affordance(page, [{"role": "button", "name": r"connect.*(claude|your ai|my ai)|claude code"}, {"text": r"connect (your |my )?(claude|ai)"}, {"css": "#cc-connect button, [data-ck=claude], #pj-cc"}])
         cmd = None
         if ck("a visible 'Connect Claude' affordance", loc, "none found"):
             loc.click(); clicks += 1; settle(page, 600)

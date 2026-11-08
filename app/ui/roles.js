@@ -169,7 +169,7 @@
     const cols = ['host', 'admin', 'mod', 'builder'];
     const people = (st.members || []).slice().sort((a, b) => (RANK[b.role] || 0) - (RANK[a.role] || 0) || a.name.localeCompare(b.name));
     const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
-    const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase();
     const rows = people.map(p => {
       const opts = [...new Set([p.role, ...(p.options || [])])];
       const picker = p.role === 'host' ? '<span class="rl-fixed">Owner</span>'

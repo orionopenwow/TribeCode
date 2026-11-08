@@ -22,7 +22,7 @@
   const member = id => members().find(m => m.id === id);
   const myAgent = () => members().find(m => m.role === 'agent' && m.owner === me().id);
   const agentOf = id => members().find(m => m.role === 'agent' && m.owner === id);
-  const initials = n => String(n || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initials = n => String(n || '?').split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase();
   const ink = hex => { const h = String(hex || '#6C7CFF').replace('#', ''); const n = parseInt(h.length === 3 ? h.replace(/./g, '$&$&') : h, 16); return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150 ? '#12151A' : '#FFFFFF'; };
   const ago = at => { const s = (Date.now() - Date.parse(at)) / 1000; if (!isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return Math.round(s / 60) + 'm ago'; if (s < 86400) return Math.round(s / 3600) + 'h ago'; return Math.round(s / 86400) + 'd ago'; };
   const dur = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -163,7 +163,7 @@
     const on = window.TribeHub && window.TribeHub.mode && window.TribeHub.mode() === 'docs' ? 'notes' : 'home';
     bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === on));
     const av = $('#hpt-av') || $('#m2-hb-av'), m = me() || {};
-    if (av) { let sn = ''; try { sn = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name || ''; } catch {} const n = (m.name || sn || '?').trim(); av.textContent = n.charAt(0).toUpperCase(); av.style.background = m.color || 'var(--accent)'; }
+    if (av) { let sn = ''; try { sn = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name || ''; } catch {} const n = (m.name || sn || '?').trim(); av.textContent = ([...n][0] || '').toUpperCase(); av.style.background = m.color || 'var(--accent)'; }
   }
   // Messages: every conversation in one list — each project's chat (in its color) and your direct messages (in
   // each person's color), unread first. Tap one to open it.
@@ -613,7 +613,7 @@
         ${chanRows(ch)}
         ${row('manage', `<span class="m2-mic">${ic('gear', 18)}</span>`, 'Manage agents', 'Connect your AI, the fleet, the Office')}
       </div>
-      ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have an AI on a computer (Claude Code, Codex…)? Connect it too</button>'}
+      ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have an AI on a computer? Connect it too</button>'}
       ${people.length ? `<div class="m2-sh-sub eyebrow">Direct messages</div><div class="m2-menu">${people.map(m => { const n = unread[DM().channelWith(m.id)] || 0;
         return row('dm:' + m.id, `<span class="m2-avw">${avatar(m)}<i class="m2-on ${m.online ? 'y' : ''}"></i></span>`, esc(m.name) + (f.has(m.id) ? ' <span class="m2-tag">friend</span>' : ''), m.online ? 'online' : 'away', ch === DM().channelWith(m.id),
           `${n ? `<span class="m2-n">${n}</span>` : ''}<span class="m2-info" data-prof="${esc(m.id)}" role="button" aria-label="${esc(m.name)}'s profile">${ic('user', 16)}</span>`); }).join('')}</div>` : '<p class="m2-fine">Invite friends to message them here.</p>'}`, { id: 'm2-talk-sheet', label: 'Talk to' });

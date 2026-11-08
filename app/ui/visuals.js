@@ -50,7 +50,7 @@
     if (cur && st.versions.length) drawStage();
   }
   const emptyHtml = () => `<div class="doc-empty vis-empty"><svg class="i"><use href="#i-image"/></svg><h2>Track how your screens change</h2>
-    <p>Drop screenshots here, grouped by screen name. Pick two versions to compare them side by side, with a swipe slider or a pixel diff.</p><button class="btn primary" id="vis-first">Add a screenshot</button></div>`;
+    <p>Drop screenshots here, grouped by screen name. Pick two versions to compare them side by side, with a swipe slider or a pixel diff.</p><button class="btn" id="vis-first">Add a screenshot</button></div>`;
   function verLabel(ts) { const i = st.versions.findIndex(v => v.ts === ts); const v = st.versions[i]; return v ? `v${i + 1} · ${when(v.at)}` : ''; }
   function mainHtml(cur) {
     const opts = sel => st.versions.map((v, i) => `<option value="${v.ts}" ${v.ts === sel ? 'selected' : ''}>v${i + 1} · ${esc(when(v.at))} · ${esc(nameOf(v.by))}</option>`).join('');

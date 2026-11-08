@@ -8,7 +8,7 @@
   const C = window.TribeClient;
   const App = () => window.TribeApp;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
   const toast = m => App() && App().toast(m);
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
@@ -44,7 +44,7 @@
 
   // ---------- project circles (rail) + the project's nest (second column) ----------
   // A project's face: its image, else its emoji, else its initials on its color.
-  const pinit = n => String(n || '?').trim().split(/[\s_-]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const pinit = n => String(n || '?').trim().split(/[\s_-]+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   function face(p, cls = '') {
     if (p.image) return `<span class="pj-face ${cls} img" style="--pc:${esc(p.color)}"><img src="${esc(p.image)}" alt=""></span>`;
     if (p.emoji) return `<span class="pj-face ${cls} emo" style="--pc:${esc(p.color)}"><i class="pj-emo">${esc(p.emoji)}</i></span>`;

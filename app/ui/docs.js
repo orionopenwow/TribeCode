@@ -45,6 +45,8 @@
     return local.all().find(d => d.slug === slug) || null;
   }
 
+  let making = null;   // qa-pass: a double click on + / New doc makes one doc, not two
+  const createOnce = () => making || (making = create().finally(() => { making = null; }));
   async function create(title = 'Untitled', body = '', source) {
     let doc;
     if (remote()) doc = (await C.api('/docs', { method: 'POST', body: { title, body, source } })).doc;
@@ -210,7 +212,7 @@
     const items = list.filter(d => !f || d.title.toLowerCase().includes(f));
     el.innerHTML = items.length ? items.map(d => `<button class="doc-item ${cur && cur.slug === d.slug ? 'on' : ''}" data-slug="${esc(d.slug)}">
         <span class="t">${esc(d.title)}</span><span class="m">${ago(d.updated)}${d.updatedBy ? ' · ' + esc(nameOf(d.updatedBy)) : ''}</span></button>`).join('')
-      : `<div class="faint" style="padding:12px;font-size:13px">${list.length ? 'No matches' : 'No docs yet. Create one or drop files here.'}</div>`;
+      : `<div class="faint" style="padding:12px;font-size:13px">${list.length ? 'No matches' : 'Nothing here yet. Make a doc or drop any file here.'}</div>`;
     el.querySelectorAll('[data-slug]').forEach(b => b.onclick = () => open(b.dataset.slug));
   }
 
@@ -250,10 +252,10 @@
     parkAside(); outlineCtl = null; wasDesk = desk();
     if (!cur) {
       wideMode(false);
-      pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>${list.length ? 'Pick a doc to open' : 'Your tribe\'s docs live here'}</h2>
-        <p>Plain Markdown files in the tribe folder: design docs, notes, plans. Type <span class="kbd">/</span> in a doc for blocks.</p>
-        <button class="btn primary" id="doc-first">New doc</button></div>`;
-      $('#doc-first').onclick = () => create(); return;
+      pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>${list.length ? 'Pick a doc to open' : 'Your tribe\'s files live here'}</h2>
+        <p>Notes, docs, pictures, PDFs: any file, kept in the tribe folder. Docs are plain Markdown; type <span class="kbd">/</span> in one for blocks.</p>
+        <button class="btn" id="doc-first">New doc</button></div>`;
+      $('#doc-first').onclick = () => createOnce(); return;
     }
     const words = (cur.body || '').split(/\s+/).filter(Boolean).length;
     const seg = `<div class="seg" role="group" aria-label="Mode"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}" aria-pressed="${mode === 'write'}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}" aria-pressed="${mode === 'read'}">Read</button></div>`;
@@ -504,7 +506,7 @@
   addEventListener('beforeunload', e => { if (dirty || (sess && sess.pending())) { if (dirty) save(); e.preventDefault(); e.returnValue = ''; } });
 
   document.addEventListener('input', e => { if (e.target.id === 'doc-search') { filter = e.target.value; renderList(); } });
-  document.addEventListener('click', e => { if (e.target.closest('#doc-new')) create(); });
+  document.addEventListener('click', e => { if (e.target.closest('#doc-new')) createOnce(); });
   document.addEventListener('dragover', e => { if (e.target.closest('#doc-list-wrap')) { e.preventDefault(); $('#doc-list-wrap').classList.add('over'); } });
   document.addEventListener('dragleave', e => { if (e.target.closest && e.target.closest('#doc-list-wrap') && !e.target.closest('#doc-list-wrap').contains(e.relatedTarget)) $('#doc-list-wrap').classList.remove('over'); });
   document.addEventListener('drop', e => { const w = e.target.closest && e.target.closest('#doc-list-wrap'); if (w) { e.preventDefault(); w.classList.remove('over'); importFiles([...e.dataTransfer.files]); } });

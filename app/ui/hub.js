@@ -140,7 +140,7 @@
   function meFace() {
     const st = (window.TribeStore && TribeStore.get()) || {}, m = (C.state() || {}).me || {};
     const n = (m.name || st.name || '?').trim(), color = m.color || st.color || '#F26B1D';
-    return `<span class="me-face" style="background:${esc(color)}">${esc(n.charAt(0).toUpperCase())}</span>`;
+    return `<span class="me-face" style="background:${esc(color)}">${esc(([...n][0] || '').toUpperCase())}</span>`;
   }
   function idCard(on, tribe, pj, live, sub) {
     const st = (window.TribeStore && TribeStore.get()) || {}, me = (C.state() || {}).me || {};
@@ -153,7 +153,7 @@
     return `<header class="hub-head hub-id">
       <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
       <div class="hid-t"><span class="eyebrow">Your command center${on && tribe ? ` · ${esc(tribe)}` : ''}</span>
-        <h1><span class="hid-av" style="background:${esc(color)}">${esc(name.charAt(0).toUpperCase())}</span><span>${greeting()}</span></h1>
+        <h1><span class="hid-av" style="background:${esc(color)}">${esc(([...name][0] || '').toUpperCase())}</span><span>${greeting()}</span></h1>
         <div class="hid-chips">${chips}</div></div>
     </header>`;
   }
@@ -500,13 +500,13 @@
     if (it.agent || (m && m.role === 'agent') || it.kind === 'gist') return `<span class="ha-av agent">${ico('i-sparkle', 13)}</span>`;
     if (it.kind === 'plan' || it.by === 'tribecode') return `<span class="ha-av sys">${ico((KIND[it.kind] || ['i-flag'])[0], 13)}</span>`;
     const name = (m && m.name) || it.byName || '?';
-    return `<span class="ha-av" style="background:${esc((m && m.color) || (it.kind === 'commit' ? '#6C7CFF' : '#2A313C'))}">${esc(name.trim().charAt(0).toUpperCase() || '?')}</span>`;
+    return `<span class="ha-av" style="background:${esc((m && m.color) || (it.kind === 'commit' ? '#6C7CFF' : '#2A313C'))}">${esc(([...name.trim()][0] || '').toUpperCase() || '?')}</span>`;
   }
   function activitySec(on) {
     const head = inner => sec('Across your projects', '<span class="emo" aria-hidden="true">🧭</span>Recent activity', inner, 'id="hub-stream"');
     if (!on) {
       const local = scratch.notes().slice(0, 4), nm = ((window.TribeStore && window.TribeStore.get().name) || 'Me');
-      return head(local.length ? `<div class="hub-act" id="hub-feed">${local.map(n => `<div class="ha-row static"><span class="ha-av" style="background:var(--accent)">${esc(nm.charAt(0).toUpperCase())}</span><span class="ha-t"><span class="ha-l1"><b>You</b><span class="ha-at">${esc(ago(n.updated || n.at))}</span></span><span class="ha-text">${esc(n.text.split('\n')[0])}</span><span class="ha-l3"><small>Scratchpad note</small><span class="ha-tag">On this device</span></span></span></div>`).join('')}</div>`
+      return head(local.length ? `<div class="hub-act" id="hub-feed">${local.map(n => `<div class="ha-row static"><span class="ha-av" style="background:var(--accent)">${esc(([...nm][0] || '').toUpperCase())}</span><span class="ha-t"><span class="ha-l1"><b>You</b><span class="ha-at">${esc(ago(n.updated || n.at))}</span></span><span class="ha-text">${esc(n.text.split('\n')[0])}</span><span class="ha-l3"><small>Scratchpad note</small><span class="ha-tag">On this device</span></span></span></div>`).join('')}</div>`
         : '<div class="hub-empty">Quiet so far. Notes you jot show up here; once you are in a tribe, so do commits, agent gists, decisions and people joining.</div>');
     }
     if (data && data.error) return head(`<div class="hub-empty">${esc(data.error)}</div>`);
@@ -940,7 +940,7 @@
     const on = connected(), m = me();
     let nm = m.name; if (!nm) try { nm = (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name); } catch {}
     nm = nm || 'You';
-    meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(nm.trim().charAt(0).toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home` : 'on this device · not in a tribe yet'}</div></div></div>`;
+    meBox.innerHTML = `<h6>Your home</h6><div class="person on"><div class="avatar" style="width:30px;height:30px;font-size:12px;background:${esc(m.color || 'var(--accent)')};color:#fff">${esc(([...nm.trim()][0] || '').toUpperCase())}<span class="st"></span></div><div><span>${esc(nm)} <span class="faint">(you)</span></span><div class="what">${on ? `<span class="ok">online</span> · Home` : 'on this device · not in a tribe yet'}</div></div></div>`;
     share.innerHTML = '';   // Share my hub link / Invite a friend moved out of the panel: the hero's Invite a friend does it
     const open = lsGet(IKEY, true) !== false;
     if (!insBox.dataset.built) {

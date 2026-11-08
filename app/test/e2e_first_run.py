@@ -211,7 +211,7 @@ def main():
             names = [x["name"] for x in projects]
             assert names.count("Lantern Garden") == 1, f"a double click made {names.count('Lantern Garden')} projects: {names}"
             pid = next(x["id"] for x in projects if x["name"] == "Lantern Garden")
-            link = re.search(r"https?://\S+/join/[A-Za-z0-9_-]+", host.inner_text("#invite-body")).group(0)
+            link = BASE + "/join/" + re.search(r"https?://\S+/join/([A-Za-z0-9_-]+)", host.inner_text("#invite-body")).group(1)   # the sheet may show a public address; the test joins locally
             host.keyboard.press("Escape"); host.wait_for_timeout(200)
             if host.locator("#invite-modal:not(.hidden)").count(): host.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
 
@@ -252,7 +252,7 @@ def main():
             step = "3 friend joins"
             pctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA)
             ph = pctx.new_page(); watch(ph, "phone")
-            ph.goto(link.replace("http://127.0.0.1", "http://localhost")); ph.wait_for_selector("#form:not(.hidden)")
+            ph.goto(link); ph.wait_for_selector("#form:not(.hidden)")
             shot(ph, "08-join"); audit(ph, "join page 390")
             ph.fill("#name", "Maya"); ph.click("#go")
             ph.wait_for_url("**/m/*/", timeout=20000); ph.wait_for_selector("#install-sheet", timeout=15000)
@@ -356,6 +356,10 @@ def main():
             host.evaluate("document.querySelectorAll('.modal:not(.hidden) [data-close], .lk-close').forEach(b => b.click())")
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
             shot(host, "20-files"); audit(host, "files")
+            d0 = len(api("/docs", token=tok, project=pid)[1].get("docs", []))
+            host.dblclick("#doc-new"); host.wait_for_timeout(1500)
+            d1 = len(api("/docs", token=tok, project=pid)[1].get("docs", []))
+            assert d1 == d0 + 1, f"a double click on + made {d1 - d0} docs"
             host.click("#wt-website"); host.wait_for_selector("#wb-root")
             host.fill("#wb-headline", "Lantern Garden: light the way home"); host.dblclick("#wb-build")
             host.wait_for_function("!!document.querySelector('#wb-root iframe, #wb-root .wb-live, #wb-root [data-built]') || /Live|Built|Updated|Published/i.test(document.querySelector('#wb-root').innerText)", timeout=20000)
