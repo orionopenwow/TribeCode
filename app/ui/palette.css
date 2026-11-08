@@ -186,3 +186,10 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .rn-e { width: 40px; height: 40px; flex: none; border-radius: 10px; display: grid; place-items: center; font-size: 21px; line-height: 1; background: var(--surface); border: 1px solid var(--edge); }
 .rn-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .rn-t b { font-size: 15px; font-weight: 650; } .rn-t small { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+/* The top-bar breadcrumb (Project / Section) repeated the sidebar, so it's gone; the Hosting pill and search stay */
+.titlebar #crumbs, #crumbs { display: none !important; }
+/* Flint's bar matches the chat composer: a rounded rectangle, not a pill */
+.fl-bar { border-radius: 12px; height: 44px; }
+.ff-foot .fl-bar { border-radius: 14px; height: 48px; }
+.fl-bar .fl-send { border-radius: 9px; }
