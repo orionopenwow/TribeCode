@@ -74,7 +74,7 @@ def main():
             # nav
             assert pg.is_visible(".nav__logo img")
             labels = pg.evaluate("[...document.querySelectorAll('.nav__links > .nav__item > button, .nav__links > a')].map(e => e.textContent.trim())")
-            assert labels == ["Features", "Download", "Pricing", "Docs", "Guide", "GitHub"], labels
+            assert labels == ["Features", "Download", "Pricing", "Mission", "Docs", "Guide", "GitHub"], labels
             assert pg.is_visible(".nav__end a:has-text('Open the app')") and pg.is_visible(".nav__end .btn:has-text('Download')")
             pg.wait_for_function("document.querySelector('.nav [data-gh=stars]').textContent === '2.3k'", timeout=8000)
             assert pg.is_visible(".nav [data-gh=stars]")
@@ -106,7 +106,12 @@ def main():
             assert pg.evaluate("document.querySelector('.mk-logo img').naturalWidth > 0")
             assert pg.evaluate("document.querySelectorAll('.mk-rail .mk-circle').length") >= 3 and pg.is_visible(".mk-bar__end .mk-lights")
             assert "# general" in pg.inner_text(".mk-head")
-            assert "Preview" in pg.inner_text(".mk-pv-bar") and "in the room" in pg.inner_text(".mk-room").lower() and "Ask Flint" in pg.inner_text(".mk-flint")
+            assert "Preview" in pg.inner_text(".mk-pv-bar") and "in the room" in pg.inner_text(".mk-room").lower() and pg.get_attribute(".mk-flint .mk-in", "placeholder") == "Ask Flint…"
+            # try it: typing in the stage's chat box pauses the story and an agent answers (nothing is sent anywhere)
+            tp = pg.context.new_page(); tp.set_viewport_size({"width": 1440, "height": 900}); tp.goto(BASE); tp.wait_for_load_state("load")
+            tp.click("[data-try=chat] .mk-in"); tp.keyboard.type("add a boss on level 3"); tp.keyboard.press("Enter")
+            tp.wait_for_function("[...document.querySelectorAll('.mk-convo .mk-try')].length >= 2 && document.querySelector('.mk-convo .mk-try:last-child .mk-txt')?.textContent.length > 10", timeout=8000)
+            assert tp.evaluate("document.querySelector('[data-loop=stage]').dataset.paused") == "1"; tp.close()
             room = pg.inner_text(".mk-room")
             assert all(n in room for n in ["Orion's Claude", "Maya's Codex", "Jay's Gemini"]), room
             # the little game keeps playing in the preview while the loop runs
@@ -129,9 +134,9 @@ def main():
             assert pg.evaluate("document.querySelectorAll('#lanes [data-step].on').length") >= 2
             # host: share the network, honest about 24/7
             host = pg.inner_text("#host .feature__copy")
-            assert "Share the network." in host and "24/7" in host and "no paid TribeCode cloud yet" in host, host
+            assert "Share the network." in host and "GitHub repo" in host and "pass the job" in host, host
             assert all(c in host for c in ["Zero npm dependencies", "Plain files + git", "MIT licensed"])
-            assert "Tailscale Funnel" in host and "Cloudflare tunnel" in host
+            assert "one link" in host
             # pricing lives on its own page (pricing.html), not the front page: Individual / Teams tabs, paid buttons say Coming soon
             assert pg.locator("#pricing, .tier").count() == 0 and pg.locator(".nav__links a[href='pricing.html']").count() == 1
             pp = pg.context.new_page(); pp.goto(BASE + "pricing.html"); pp.wait_for_load_state("load")
@@ -147,6 +152,10 @@ def main():
             assert pp.locator("[data-panel=teams]").is_visible() and "$25" in pp.inner_text("[data-tier=business]")
             assert "$10" in pp.inner_text("[data-tier=credits]") and "own key" in pp.inner_text("[data-tier=credits]")
             assert "Anthropic" not in pp.inner_text("body"); pp.close()
+            # mission: its own page from the top menu, styled like the rest of the site
+            assert pg.locator(".nav__links a[href='mission.html']").count() == 1
+            mp = pg.context.new_page(); mp.goto(BASE + "mission.html"); mp.wait_for_load_state("load")
+            assert "Code that helps people." in mp.inner_text("h1") and mp.locator(".ms-card").count() == 4 and "open-source maintainers" in mp.inner_text("body"); mp.close()
             assert "Anthropic" not in pg.inner_text("body")
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 6
             if SHOTS:

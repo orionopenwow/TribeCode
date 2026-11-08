@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, and it runs on one friend's computer.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.14.1">
+<link rel="stylesheet" href="styles.css?v=0.14.2">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -78,6 +78,7 @@
         </ul>
       </div>
       <a class="nav__link" href="pricing.html">Pricing</a>
+      <a class="nav__link" href="mission.html">Mission</a>
       <a class="nav__link" href="docs.html">Docs</a>
       <a class="nav__link" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/01-start-here.md">Guide</a>
       <a class="nav__link" href="https://github.com/orionopenwow/TribeCode">GitHub</a>
@@ -173,7 +174,7 @@
                 <div class="mk-msg" data-step id="mk-m2"><i class="mk-av" style="--c:#6C7CFF;--ink:#FFFFFF">M</i><div><p class="mk-who" style="--n:#9AA6FF">Maya<time>9:43</time></p><p>love it, ship it 🚀</p><span class="mk-react">👍 <b>2</b></span></div></div>
                 <div class="mk-msg mk-msg--agent" data-step id="mk-c1"><i class="mk-av mk-av--agent mk-av--codex"><span>◎</span></i><div><p class="mk-who">Maya's Codex <em>Codex</em><time>9:43</time></p><p data-type id="mk-c1t">I'll add a soft creak when the lantern swings. 🔔</p></div></div>
               </div>
-              <div class="mk-composer"><span class="mk-plus">+</span><span>Message the tribe…</span><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><i class="mk-send"></i></div>
+              <form class="mk-composer" data-try="chat"><span class="mk-plus">+</span><input class="mk-in" type="text" maxlength="200" placeholder="Message the tribe…" aria-label="Try it: message the tribe" autocomplete="off"><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><button class="mk-send" type="submit" aria-label="Send"></button></form>
             </div>
             <!-- right panel: the preview, In the room, Flint -->
             <div class="mk-right">
@@ -220,7 +221,7 @@
               </div>
               <div class="mk-flint">
                 <p class="mk-eyebrow">Flint <span>lives in this room</span></p>
-                <div class="mk-flint__bar"><img src="assets/brand/flint.svg" alt="" width="18" height="18"><span>Ask Flint…</span><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><i class="mk-send"></i></div>
+                <form class="mk-flint__bar" data-try="flint"><img src="assets/brand/flint.svg" alt="" width="18" height="18"><input class="mk-in" type="text" maxlength="200" placeholder="Ask Flint…" aria-label="Try it: ask Flint" autocomplete="off"><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><button class="mk-send" type="submit" aria-label="Send"></button></form>
               </div>
             </div>
           </div>
@@ -277,22 +278,24 @@
         <p class="feature__text">Tap a friend's link, type a name, add it to your Home Screen. From there you approve what your agent asks with one tap, send a voice note, or start the next task while you're away from the desk.</p>
         <ul class="facts mono"><li>No app store</li><li>One-tap approvals</li><li>Web Push</li></ul>
       </div>
-      <div class="mini mini--phone reveal" data-loop="phone" role="img" aria-label="A phone mock: Orion's Claude asks to add the howler audio package, the Approve button is tapped, the card says approved from your phone, and the agent replies that footsteps now have sound.">
-        <div class="ph" aria-hidden="true">
+      <div class="mini mini--phone reveal" data-loop="phone" aria-label="A phone mock: Orion's Claude asks to add the howler audio package, the Approve button is tapped, the card says approved from your phone, and the agent replies that footsteps now have sound.">
+        <div class="ph ph2">
           <div class="ph__notch"></div>
-          <div class="ph__top"><span class="ph__pic">PQ</span><b>Pixel Quest</b><span class="ph__bell"></span></div>
-          <div class="ph__body">
-            <div class="mk-msg" data-step><i class="mk-av" style="--c:#F26B1D">O</i><div><p class="mk-who">You</p><p>Footsteps need sound. Can you add it?</p></div></div>
+          <div class="ph2__top"><img src="assets/brand/icon.svg" alt="" width="22" height="22"><b>Pixel Quest</b><span class="ph2__chev">▾</span><span class="ph2__bell"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/></svg><i>1</i></span></div>
+          <div class="ph2__chan"><span>💬</span><b># general</b><small>4 online</small></div>
+          <div class="ph__body ph2__body">
+            <div class="mk-msg" data-step><i class="mk-av" style="--c:#6C7CFF;--ink:#FFFFFF">M</i><div><p class="mk-who" style="--n:#9AA6FF">Maya<time>9:40</time></p><p>Footsteps need sound. Can someone add it?</p></div></div>
             <div class="ask" data-step>
-              <p class="mk-who">Orion's Claude asks</p>
+              <p class="mk-who"><i class="mk-av mk-av--agent mk-av--claude ph2__mini"><span>✦</span></i>Orion's Claude asks you</p>
               <b>Add a package: howler 2.2.4</b>
               <p class="ask__why">Plays the footstep sounds. 7 kB, MIT.</p>
               <div class="ask__btns" id="ph-btns"><span class="ask__ok" id="ph-ok">Approve</span><span class="ask__no">Deny</span></div>
               <p class="ask__done" data-step id="ph-done">Approved from your phone · 9:41</p>
             </div>
-            <div class="mk-msg mk-msg--agent" data-step><i class="mk-av mk-av--agent mk-av--claude"><span>✦</span></i><div><p class="mk-who">Orion's Claude</p><p data-type>Installed. Footsteps play on grass and stone now.</p></div></div>
+            <div class="mk-msg mk-msg--agent" data-step><i class="mk-av mk-av--agent mk-av--claude"><span>✦</span></i><div><p class="mk-who">Orion's Claude <em>Claude Code</em></p><p data-type>Installed. Footsteps play on grass and stone now. 🎵</p></div></div>
           </div>
-          <div class="ph__rack"><span class="ph__me">O</span><span class="is-on">Chat</span><span>Docs</span><span>Updates</span><span>Tasks</span><span class="ph__act">+</span></div>
+          <form class="ph2__comp" data-try="phone"><span class="mk-plus">+</span><input class="mk-in" type="text" maxlength="160" placeholder="Message #general" aria-label="Try it: message from the phone" autocomplete="off"><button class="mk-send" type="submit" aria-label="Send"></button></form>
+          <nav class="ph2__rack" aria-hidden="true"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg></span><span class="is-on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18.5 4 21l3.2-1.2A8 8 0 1 0 4 12a8 8 0 0 0 1 6.5z"/></svg></span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7zM14 3v4h4M8 13h8M8 17h5"/></svg></span><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/></svg></span></nav>
         </div>
       </div>
     </div>
@@ -334,8 +337,8 @@
         <img class="feature__art" src="assets/art/host.svg" alt="" width="120" height="90" loading="lazy">
         <p class="eyebrow mono">// share the network</p>
         <h2 id="host-title">Share the network.</h2>
-        <p class="feature__text">One friend's computer hosts the tribe. Friends join from anywhere with a link, on a laptop or a phone, through Tailscale Funnel or a Cloudflare tunnel.</p>
-        <p class="feature__text">Want it up all the time? Keep a spare computer or a small home server on, and your tribe is there 24/7. There's no paid TribeCode cloud yet; your chat, docs and code stay in plain files on the host.</p>
+        <p class="feature__text">Your tribe lives in one shared place: a GitHub repo, or a computer someone in the group offers as the host. Everyone works on the same files, from a laptop or a phone.</p>
+        <p class="feature__text">Whoever has a spare computer or a small server can host, or pass the job to someone who does. Friends join with one link. Chat, docs and code stay as plain files you can take anywhere.</p>
         <ul class="facts mono"><li>Zero npm dependencies</li><li>Plain files + git</li><li>MIT licensed</li></ul>
       </div>
       <div class="mini mini--term reveal" data-loop="host" role="img" aria-label="A terminal on the host, a small home server: TribeCode starts, shares a public link through Tailscale Funnel, Maya joins from an iPhone, Jay from a laptop and Rio from a phone. Later it is still up after 12 days with 4 friends connected and 3 agents working.">
@@ -412,6 +415,7 @@
       <a href="app/">Open the app</a>
       <a href="app/?demo=showcase">Demo tribe</a>
       <a href="pricing.html">Pricing</a>
+      <a href="mission.html">Mission</a>
       <a href="docs.html">Quick start</a>
       <a href="https://github.com/orionopenwow/TribeCode">GitHub</a>
       <a href="https://github.com/orionopenwow/TribeCode/releases">Releases</a>
@@ -425,6 +429,6 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.14.1" defer></script>
+<script src="main.js?v=0.14.2" defer></script>
 </body>
 </html>
