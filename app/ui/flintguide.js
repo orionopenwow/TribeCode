@@ -24,7 +24,7 @@
     document.body.appendChild(root);
     sprite = $('#fg-sprite'); bubble = $('#fg-bubble');
     $('#fg-scrim').onclick = () => close();
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root.classList.contains('on')) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root.classList.contains('on')) { const c = document.getElementById('fg-intro'); if (c) { c.remove(); try { localStorage.setItem('tribecode.flint.intro', 'done'); } catch {} root.classList.remove('touring'); } close(); } });
   }
   const elOf = t => typeof t === 'string' ? document.querySelector(t) : t;
   const visible = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight; };
@@ -145,8 +145,47 @@
       if (r === 'next') tour(); else { try { localStorage.setItem(KEY, 'skipped'); } catch {} close(); }
     }, 2500);
   }
+  // ---------- Flint's own intro: the first time someone clicks into "Ask Flint…" ----------
+  // A dimmed, skippable one-screen guide: what Flint does, how to talk to him, how he learns. Shown once.
+  const INTRO = 'tribecode.flint.intro';
+  const TILES = [
+    ['💬', 'Ask anything', 'What’s new, who’s doing what, how do I…'],
+    ['📝', 'Take notes', 'Start with “note:” and he saves it for the tribe.'],
+    ['✅', 'Make tasks', 'Say “task: add a title screen” and it’s on the board.'],
+    ['🙋', 'He asks too', 'When something’s unclear, he asks a short question first.'],
+    ['🧠', 'He learns', 'Reads your vision, tasks and chat, and picks up skills your AI teaches him.'],
+    ['🔒', 'Stays here', 'Runs on this computer. Pick his brain in Settings.'],
+  ];
+  function intro(input) {
+    if (document.getElementById('fg-intro')) return;
+    ensure(); root.classList.add('on', 'dim', 'touring');
+    const card = document.createElement('div'); card.className = 'fg-intro'; card.id = 'fg-intro'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Meet Flint');
+    card.innerHTML = `<img class="fg-intro-face" src="assets/flint.svg" alt="" width="64" height="64">
+      <span class="eyebrow">Meet Flint</span><h2>Your tribe’s helper</h2><p class="fg-intro-p">Type to him like a friend. Here’s what he’s good at.</p>
+      <div class="fg-intro-grid">${TILES.map(([e, t, d]) => `<div class="fg-tile"><span class="fg-tile-e">${e}</span><b>${esc(t)}</b><small>${esc(d)}</small></div>`).join('')}</div>
+      <div class="fg-intro-try"><span class="faint">Try:</span>${['What’s new?', 'note: playtest Friday', 'task: fix the jump'].map(x => `<button class="fg-try" data-try="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+      <div class="fg-acts"><button class="fg-skip" id="fg-intro-skip">Skip</button><span style="flex:1"></span><button class="btn primary" id="fg-intro-go">Got it</button></div>`;
+    root.appendChild(card);
+    if (!calm()) { const r = card.getBoundingClientRect(); burst(r.left + 48, r.top + 48, 18); }
+    const done = (fill) => {
+      try { localStorage.setItem(INTRO, 'done'); } catch {}
+      card.remove(); root.classList.remove('touring'); close();
+      if (input) { if (fill) input.value = fill; input.focus(); }
+    };
+    card.querySelector('#fg-intro-skip').onclick = () => done();
+    card.querySelector('#fg-intro-go').onclick = () => done();
+    card.querySelectorAll('[data-try]').forEach(b => b.onclick = () => done(b.dataset.try));
+    setTimeout(() => { const g = card.querySelector('#fg-intro-go'); if (g) g.focus(); }, 60);
+  }
+  document.addEventListener('focusin', e => {
+    const i = e.target.closest && e.target.closest('.fl-in'); if (!i) return;
+    let seen = null; try { seen = localStorage.getItem(INTRO); } catch {}
+    if (seen || /[?&](skipIntro|demo=showcase|notour)/.test(location.search) || navigator.webdriver) return;
+    i.blur(); intro(i);
+  });
+
   const hook = () => { const C = window.TribeClient; if (!C || !C.on) return setTimeout(hook, 300); C.on('hello', () => maybeOffer()); };
   hook();
 
-  window.TribeFlintGuide = { point, tour, hide: () => close(), _burst: burst };
+  window.TribeFlintGuide = { point, tour, intro, hide: () => { const c = document.getElementById('fg-intro'); if (c) c.remove(); close(); }, _burst: burst };
 })();
