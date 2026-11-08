@@ -46,6 +46,12 @@ def main():
             pg.fill("[data-flbar] input, [data-flbar] textarea", "open files"); pg.keyboard.press("Enter")
             pg.wait_for_selector("#fg-bubble.on", timeout=6000); assert "Files" in pg.inner_text("#fg-bubble")
             pg.click("#fg-next")
+            # Flint's own intro: dimmed, six tiles, a Try chip fills the box and it's remembered
+            pg.evaluate("TribeFlintGuide.intro(document.querySelector('[data-flbar] .fl-in'))"); pg.wait_for_selector("#fg-intro .fg-tile", timeout=4000)
+            assert pg.locator("#fg-intro .fg-tile").count() == 6 and pg.evaluate("document.querySelector('#flint-guide').classList.contains('dim')")
+            pg.click("#fg-intro [data-try='task: fix the jump']"); pg.wait_for_selector("#fg-intro", state="detached")
+            assert pg.input_value("[data-flbar] .fl-in") == "task: fix the jump" and pg.evaluate("localStorage.getItem('tribecode.flint.intro')") == "done"
+            pg.fill("[data-flbar] .fl-in", "")
             # Flint's face is the mascot everywhere
             assert pg.locator(".fl-av img.fl-face[src$='flint.svg']").count() >= 1
             # phone: the tour fits
@@ -56,7 +62,7 @@ def main():
             assert ph.evaluate("(() => { const r = document.querySelector('#fg-bubble').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth + 1; })()")
             b.close()
         assert not errors, errors
-        print("e2e_flint_guide: OK (points with a ring + bubble, embers, tour Next/Skip remembered, ? replays, 'open files' points, phone fits)")
+        print("e2e_flint_guide: OK (intro card, points with a ring + bubble, embers, tour Next/Skip remembered, ? replays, 'open files' points, phone fits)")
     finally:
         srv.send_signal(signal.SIGTERM)
         try: srv.wait(10)

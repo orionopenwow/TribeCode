@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.13.0
+
+- **Set up comes first**: a new project opens with one big "Set up" card. Each step has its own card with a big emoji, one line of help and its buttons, and the next step is highlighted. The Living update appears once the tribe has started (a vision, a task or a friend)
+- **Cleaner project header**: a bigger picture and name, a quiet "Add a short description", plain details, and a bigger Invite button
+- **Meet Flint**: the first time you click into Ask Flint, a short dimmed guide shows what he does (questions, notes, tasks, asking back), how he learns, and three things to try. Skip any time
+- **TribeCode MCP page**: "Use TribeCode inside your tools" lists 15 clients, including VS Code, Windsurf, Zed, Cline, Goose, Continue, and Claude.ai and ChatGPT through your public link, each with a one-tap Connect, plus a Connected tab to remove keys
+- **Apps on this computer**: the host can open ArtCraft from TribeCode and watch its export folder, so new renders land in Files with a 🎨 note in chat. "Add a special connection" works for any app
+- **Phones**: the Set up cards stack with full-width buttons, Flint's guide fits the screen, and the MCP page is one column
+
 ## v0.12.0
 
 - **TribeCode senses what you're making**: it reads the name, bio, vision, repo, tasks and chat, and works out whether it's a game, app, website, tool, bot, API or notes. It keeps updating as people talk. Preview follows it ("Preview site", "Preview game"…), and the host can correct it with "This is a: game · app · site · …"

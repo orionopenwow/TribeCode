@@ -25,3 +25,20 @@
 .fg-ember { position: absolute; display: block; image-rendering: pixelated; animation: fg-ember 1s steps(6, end) forwards; }
 @keyframes fg-ember { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
 @media (prefers-reduced-motion: reduce) { .fg-sprite { animation: none; } .fg-ember { display: none; } }
+
+/* Flint's intro (first click into Ask Flint): one dimmed, skippable card */
+.fg-intro { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; z-index: 3; padding: 26px 28px 20px; background: var(--surface); border: 1px solid var(--edge); border-radius: 16px; pointer-events: auto; }
+.fg-intro-face { display: block; width: 64px; height: 64px; image-rendering: pixelated; margin-bottom: 10px; }
+.fg-intro .eyebrow { color: var(--accent-ink, #E58A5E); }
+.fg-intro h2 { margin: 4px 0 4px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+.fg-intro-p { margin: 0 0 16px; color: var(--muted); font-size: 15px; }
+.fg-intro-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.fg-tile { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); }
+.fg-tile-e { font-size: 26px; line-height: 1; margin-bottom: 4px; }
+.fg-tile b { font-size: 14.5px; } .fg-tile small { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.fg-intro-try { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 6px; }
+.fg-try { height: 32px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--text); font-size: 13.5px; }
+.fg-try:hover { background: var(--hover); border-color: var(--edge-pop, var(--edge)); }
+.fg-intro .fg-acts { display: flex; align-items: center; margin-top: 12px; }
+@media (max-width: 640px) { .fg-intro { padding: 20px 16px 16px; } .fg-intro-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fg-intro h2 { font-size: 21px; } }
+.fg-root:has(#fg-intro) .fg-sprite, .fg-root:has(#fg-intro) .fg-bubble, .fg-root:has(#fg-intro) .fg-ring { display: none; }
