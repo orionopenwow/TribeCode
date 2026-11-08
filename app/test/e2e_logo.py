@@ -25,7 +25,7 @@ def main():
             src = lambda: pg.get_attribute("#rail-logo img.logo", "src")
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=10000)   # resting once connected
             assert pg.get_attribute("#rail-logo img.logo", "src").endswith("icon-mark-animated.svg"), "the flame idles (always flickers) in the top bar"
-            assert pg.locator(".titlebar #tb-brand #rail-logo").count() == 1 and pg.locator(".rail #rail-camp").count() == 1, "flame next to the wordmark; Camp setup in the rail"
+            assert pg.locator(".titlebar #tb-brand #rail-logo").count() == 1 and pg.locator(".rail #rail-camp").count() == 1, "flame next to the wordmark; the camp (Home) in the rail"
             # a prompt in flight: the logo flickers until the reply is in
             pg.route("**/api/hub/ask", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps({"answer": "ok"})))
             st = pg.evaluate("""(() => { window.__p = TribeClient.api('/hub/ask', { method: 'POST', body: { prompt: 'hi' } }).catch(() => {});

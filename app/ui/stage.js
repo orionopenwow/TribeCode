@@ -72,26 +72,8 @@
   }
   window.TribeStage = { set, level: () => level(by[pid()]), steps: () => by[pid()] || null, refresh: () => soon(0) };
 })();
-// ---------- the rail's top slot: Camp setup (feat: the flame moved next to the wordmark) ----------
-// ⛺ with "2/4" while the project is being set up, a ✓ once it's done. Opens the project's Dashboard at Camp setup.
+// ---------- the rail's top slot: Home (the camp). The flame moved next to the wordmark; both go Home. ----------
 (function () {
-  const btn = document.getElementById('rail-camp'), n = document.getElementById('rail-camp-n'); if (!btn) return;
-  function paint() {
-    const C = window.TribeClient, pid = C && C.project && C.project(), s = window.TribeStage && window.TribeStage.steps();
-    if (!pid) { n.textContent = ''; btn.classList.remove('done'); btn.title = 'Camp setup: start a project first'; return; }
-    const keys = ['vision', 'task', 'agent', 'repo'], done = s ? keys.filter(k => s[k]).length : 0;
-    n.textContent = done >= 4 ? '✓' : `${done}/4`; btn.classList.toggle('done', done >= 4);
-    btn.title = done >= 4 ? 'Camp setup: all done' : `Camp setup: ${done} of 4 steps done`;
-    btn.setAttribute('aria-label', btn.title);
-  }
-  btn.addEventListener('click', () => {
-    const C = window.TribeClient, A = window.TribeApp;
-    if (!(C && C.project && C.project())) { const plus = document.getElementById('pj-plus'); if (plus) plus.click(); return; }
-    if (A && A.show) A.show('home');
-    let tries = 0; const go = () => { const el = document.getElementById('pj-check'); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); el.classList.remove('folded'); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200); } else if (++tries < 20) setTimeout(go, 100); };
-    setTimeout(go, 60);
-  });
-  window.addEventListener('tribe:stage', paint);
-  const hook = () => { const C = window.TribeClient; if (!C || !C.on) return setTimeout(hook, 200); C.on('project', () => setTimeout(paint, 80)); C.on('hello', () => setTimeout(paint, 80)); paint(); };
-  hook();
+  const btn = document.getElementById('rail-camp'); if (!btn) return;
+  btn.addEventListener('click', () => { const r = document.getElementById('rail-logo'); if (r) r.click(); });
 })();
