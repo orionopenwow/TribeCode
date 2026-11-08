@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.9
+
+- **One look everywhere**: the app icon (taskbar, dock, installers, home screen, the website and the in-app logo) now sits on the Campfire grey slate instead of navy, so it matches the app around it
+- **Preview follows what you're making**: the Preview button says Preview game, Preview 3D scene, Preview app, Preview site or Try the tool, with a matching emoji (🎮 🧊 📱 🌐 🛠️), sensed from the project
+- **Project emoji fill their tile**: a project's emoji is now centred and big on a soft tint of its color, with no frame, instead of a small glyph near the top
+- **Gentle emoji**: 🤖 by Your agents, and the onboarding checklist gets ✨ vision, 📝 first task, 👋 a friend, 🤖 Claude Code, 🌿 repo (faded once done) and 🎉 when all set
+- **Phones**: the same slate icon on the home screen, the filled emoji faces, and the new Preview labels
+
 ## v0.10.8
 
 - **Calmer color**: bright orange is now the brand (the logo, Flint, thin "you are here" markers), not every button. Main actions use a deeper burnt rust, which is also easier to read (white on it is 4.9:1, up from 3.05:1). Repeated actions in lists are soft tinted buttons in colors that mean something: indigo for people ("Take it"), teal for agents ("Give to Claude"). Counts and badges are quieter, and links use a warm rust

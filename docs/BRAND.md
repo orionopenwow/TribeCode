@@ -4,7 +4,7 @@
 
 ## The mark
 
-A solid orange **pixel-art flame** between two white pixel brackets `( )`, on a deep navy rounded square (since v0.9.9). It is drawn on a 45 × 45 pixel grid by `scripts/icon.js` (flat, no gradients, crisp edges), and `scripts/render-icons.py` writes every PNG, ICO and ICNS from it, so it stays sharp from a 16 px taskbar icon up to a store listing. The flame is always one solid Ember; nothing is drawn on it.
+A solid orange **pixel-art flame** between two white pixel brackets `( )`, on a grey slate rounded square (#282828, the Campfire surface; navy until v0.10.8). It is drawn on a 45 × 45 pixel grid by `scripts/icon.js` (flat, no gradients, crisp edges), and `scripts/render-icons.py` writes every PNG, ICO and ICNS from it, so it stays sharp from a 16 px taskbar icon up to a store listing. The flame is always one solid Ember; nothing is drawn on it.
 
 - **The fire** is the campfire the tribe gathers around: warm and casual, not an enterprise dashboard.
 - **The brackets** say *code* at a glance.
@@ -47,6 +47,6 @@ Flat matte surfaces, depth through luminance steps and 1px borders only. No glow
 
 ## Don'ts
 
-- Don't recolor the flame or add gradients; keep the brackets white on navy.
+- Don't recolor the flame or add gradients; keep the brackets white on the slate.
 - Don't put the icon on a busy photo; use the Graphite or Paper backgrounds.
 - Don't stretch the wordmark, set it in all caps, or color "Code" anything but the flame orange.

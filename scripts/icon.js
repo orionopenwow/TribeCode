@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The TribeCode icon (since v0.9.9): a solid orange pixel-art flame between two white pixel brackets, on a deep navy
+// The TribeCode icon (since v0.9.9): a solid orange pixel-art flame between two white pixel brackets, on the Campfire grey slate (#282828, since v0.10.9)
 // rounded square. Drawn from the pixel map below on a 45 × 45 grid, so it stays crisp at every size (shape-rendering
 // crispEdges). Writes the SVGs; scripts/render-icons.py turns them into every PNG / ICO / ICNS.
 //   node scripts/icon.js            (then: python3 scripts/render-icons.py)
@@ -10,7 +10,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 
 const N = 45;                              // grid size
-const NAVY = '#171B26', WHITE = '#F8FAFC', EMBER = '#F26B1D';
+const NAVY = '#282828', WHITE = '#F8FAFC', EMBER = '#F26B1D';
 // Rows of [from, to] column runs (inclusive), keyed by grid row. Flame: a centre tongue, a left tongue that starts a
 // row higher than the right one (the flame leans a little, on purpose), a round belly. Brackets: mirrored ( ).
 const FLAME = {
@@ -32,7 +32,7 @@ function rects(map, fill) {
   for (const [r, runs] of Object.entries(map)) for (const [a, b] of runs) out += `<rect x="${a}" y="${r}" width="${b - a + 1}" height="1"/>`;
   return `<g fill="${fill}">${out}</g>`;
 }
-// bg: 'square' (navy rounded square, the app icon), 'full' (navy edge to edge: maskable / Apple), 'none' (transparent)
+// bg: 'square' (slate rounded square, the app icon), 'full' (slate edge to edge: maskable / Apple), 'none' (transparent)
 function svg({ bg = 'square', size = 512, inset = 0 } = {}) {
   const art = `${rects(LEFT, WHITE)}${rects(RIGHT, WHITE)}${rects(FLAME, EMBER)}`;
   const back = bg === 'square' ? `<rect x="0" y="0" width="${N}" height="${N}" rx="10" fill="${NAVY}"/>` : bg === 'full' ? `<rect x="-${inset}" y="-${inset}" width="${N + 2 * inset}" height="${N + 2 * inset}" fill="${NAVY}"/>` : '';
@@ -84,7 +84,7 @@ if (require.main === module) {
   w('app/ui/assets/icon.svg', svg());
   w('assets/brand/icon-maskable.svg', svg({ bg: 'full', inset: 6 }));   // safe zone: the art sits inside the middle 80%
   w('assets/brand/icon-mark.svg', svg({ bg: 'none' }));                   // the mark alone, for lockups on any background
-  w('app/ui/assets/icon-animated.svg', animated());                      // loading: the navy tile, flickering
+  w('app/ui/assets/icon-animated.svg', animated());                      // loading: the slate tile, flickering
   w('app/ui/assets/icon-mark-animated.svg', animated({ bg: 'none' }));   // loading inline: the mark alone
   w('site/assets/brand/icon-animated.svg', animated());
   for (let i = 0; i < FRAMES.length; i++) w(`assets/brand/frames/icon-${i}.svg`, frame(i));

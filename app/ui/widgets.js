@@ -67,7 +67,7 @@
     if (box.innerHTML !== html) box.innerHTML = html;
     box.classList.toggle('empty', !rows.length);
     // Preview game / app: its own button at the bottom of the pane, above Invite friends (not among the rows)
-    const pslot = $('#nest-preview-slot'), prev = autoPreview() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" title="Run it and see it here">${ico('i-play')}<span>${esc(st.preview.label || 'Preview')}</span></button>` : '';
+    const pslot = $('#nest-preview-slot'), prev = autoPreview() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(st.preview.kind || '')}" title="Run it and see it here">${ico('i-play')}<span>${esc(st.preview.label || 'Preview')}</span></button>` : '';
     if (pslot && pslot.innerHTML !== prev) pslot.innerHTML = prev;
     // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows
     const slot = $('#nest-add-slot') || box, add = st.canEdit ? `<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>` : '';

@@ -62,7 +62,11 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
       const s = preview.status(pid, me);
       if (s.hasRepo && s.hasIndex) {
         let types = []; try { types = shelf.view(p).types || []; } catch {}
-        pv = { show: true, label: types.includes('game') ? 'Preview game' : types.includes('app') ? 'Preview app' : 'Preview' };
+        // what the crew is making, sensed from the project (shelf: template, bio, name, what the repo uses)
+        const kind = types.includes('3d') ? '3d' : types.includes('game') || types.includes('platformer') || types.includes('rpg') ? 'game'
+          : types.includes('app') ? 'app' : types.includes('site') ? 'site' : types.includes('tool') ? 'tool' : types.includes('notes') ? 'notes' : '';
+        const LABEL = { game: 'Preview game', '3d': 'Preview 3D scene', app: 'Preview app', site: 'Preview site', tool: 'Try the tool', notes: 'Preview' };
+        pv = { show: true, kind, label: LABEL[kind] || 'Preview' };
       }
     } catch {}
     let site = false;

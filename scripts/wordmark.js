@@ -19,7 +19,7 @@ const ICON_INNER = ICONSVG.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '').re
 
 function write(file, svg) { fs.writeFileSync(path.join(root, file), svg + '\n'); console.log('wrote', file); }
 const ORANGE = '#F26B1D';
-for (const [suffix, tribe] of [['', '#171B26'], ['-dark', '#F8FAFC']]) {
+for (const [suffix, tribe] of [['', '#1D2021'], ['-dark', '#F8FAFC']]) {
   const wm = wordmark({ tribe, code: ORANGE });
   // text only
   write(`assets/brand/logo-text${suffix}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ${wm.width + 8} 108" width="${Math.round((wm.width + 8) * 0.6)}" height="${Math.round(108 * 0.6)}"><title>TribeCode</title>${wm.body}</svg>`);
