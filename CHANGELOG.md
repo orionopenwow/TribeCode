@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.10.8
+
+- **Calmer color**: bright orange is now the brand (the logo, Flint, thin "you are here" markers), not every button. Main actions use a deeper burnt rust, which is also easier to read (white on it is 4.9:1, up from 3.05:1). Repeated actions in lists are soft tinted buttons in colors that mean something: indigo for people ("Take it"), teal for agents ("Give to Claude"). Counts and badges are quieter, and links use a warm rust
+- **Small pops of color**: a few flat emoji where they help. ✋ Take it, ✨ Give to Claude, 👋 Invite friends, 🎮 Preview game, and 📝 Tasks, 🐞 Bug inbox, 🗳️ Approval board, 🗓️ Calendar and 🌿 Repo by their titles. Gentle, not everywhere
+- **Phones**: the same calmer buttons, the ✋ on Take it, and the rust Send button
+
 ## v0.10.7
 
 - **Watch a demo tribe**: one tap from the website ("Watch a demo tribe"), the demo page or the app, and "Campfire Crew" plays out the whole workflow by itself in your browser. It has two projects, four friends, Claudes and Flint, a vision, a board, docs, a milestone and a vote. Every few seconds something happens: friends chat, an agent claims a task and the logo flickers, a progress note and a commit land, tasks move Doing → Review → Done, approvals reach your inbox, the vote passes and the milestone fills, then a "v0.2 shipped 🎉" card, and a new season starts. A small pill has Pause, 2×, Restart, Explore quietly and Leave (your real setup comes back exactly). The "Try a demo tribe" entries now offer "Watch it come alive" or "Explore quietly"

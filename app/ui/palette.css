@@ -1,0 +1,63 @@
+/* Calmer color (v0.10.8): bright Ember is the brand (the logo, Flint, thin "you are here" markers), not every
+   button. Main actions use a deeper burnt rust; repeated actions in lists are soft tonal buttons in colors that mean
+   something (indigo = people, teal = agents/live, green = approve, amber = attention). Loaded last on purpose. */
+:root, body.dark, body.light {
+  --action: #B4512A;          /* burnt rust: white text on it is 4.9:1 (bright Ember was 3.05:1) */
+  --action-hover: #A04724;
+  --on-action: #FFF6F0;
+  --rust-soft: color-mix(in srgb, #B4512A 18%, var(--surface));
+  --rust-ink: #E58A5E;
+  --people: #6C7CFF;  --people-soft: color-mix(in srgb, #6C7CFF 16%, var(--surface));  --people-ink: var(--peer-ink, #9AA6FF);
+  --agents: #38C6B1;  --agents-soft: color-mix(in srgb, #38C6B1 15%, var(--surface));  --agents-ink: var(--live-ink, #5DD6C3);
+  --amber-soft: color-mix(in srgb, #FABD2F 15%, var(--surface));
+}
+body.light { --rust-ink: #9C4220; --people-ink: var(--peer-ink, #4A58D9); --agents-ink: var(--live-ink, #127A6C); }
+
+/* main actions: burnt rust, not bright orange */
+.btn.primary, .join .jc .btn.big, .cap-btn.primary { background: var(--action); border-color: var(--action); color: var(--on-action); }
+.btn.primary:hover, .join .jc .btn.big:hover, .cap-btn.primary:hover { background: var(--action-hover); border-color: var(--action-hover); }
+.fl-send, .fl-send:hover, .dc-fab, .update-btn.ready:hover { background: var(--action); color: var(--on-action); border-color: var(--action); }
+.vn-play, .msg.dx .vn-play { background: var(--action); color: var(--on-action); }
+.np-setup .ns-own .ns-ic, .np-setup .ns-pic i { background: var(--action); border-color: var(--action); color: var(--on-action); }
+.tribe-face { background: var(--action) !important; color: var(--on-action); }
+
+/* counts and badges: a quieter rust instead of shouting orange */
+.nf-count, .pj-badge, .dm-badge, .hh-n, .nest-row .n.hot, .nest-fold-head .n.hot, .sh-menu .n.hot, .wt .n.hot { background: var(--action); color: var(--on-action); }
+.pj-n.hot { background: var(--action); border-color: var(--action); }
+
+/* repeated actions in lists: tonal, colored by meaning */
+button.take, .btn.take, .take { background: var(--people-soft) !important; border: 1px solid color-mix(in srgb, var(--people) 40%, var(--edge)) !important; color: var(--text) !important; }
+button.take svg.i, .take svg.i { color: var(--people-ink) !important; }
+button.take:hover, .take:hover { background: color-mix(in srgb, var(--people) 24%, var(--surface)) !important; }
+
+@media (max-width: 820px) {
+  .m2-rack .m2-act, .m2-hb-plus, .m2-homebar .m2-seg .m2-hb-plus, .m2-go { background: var(--action); color: var(--on-action); }
+  .m2-send, .composer-dock.m2-composer:not(.rec) .m2-send { background: var(--action); border-color: var(--action); color: var(--on-action); }
+  .m2-n, .m2-seg .bd, .m2-bell .bd { background: var(--action); color: var(--on-action); }
+  .m2-si-b .take { background: var(--people-soft) !important; border-color: color-mix(in srgb, var(--people) 40%, var(--edge)) !important; color: var(--text) !important; }
+}
+
+/* softer accent text (links, small labels): a warm rust ink instead of bright orange; themes can still override */
+:root, body.dark { --accent-ink: #E58A5E; }
+.as-add svg.i { stroke: var(--rust-ink); }
+
+/* pops of color: small flat emoji on the actions people use most (a light matte filter takes the gloss off) */
+button[data-take]::before, .take[data-take]::before,
+button.claude[data-give]::before,
+#tour-invite::before, .wg-preview::before { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 15px; line-height: 1; filter: saturate(.8) contrast(.95); margin-right: 2px; }
+button[data-take]::before, .take[data-take]::before { content: '✋'; }
+button.claude[data-give]::before { content: '✨'; }
+.m2-si-b .take[data-take] svg, .m2-si-b .claude[data-give] svg { display: none; }
+#tour-invite::before { content: '👋'; }
+#tour-invite > span:first-child { display: none; }          /* the 👋 replaces the orange "+" */
+.wg-preview::before { content: '🎮'; }
+.wg-preview svg.i { display: none; }
+
+/* gentle emoji before a few page titles (just these: the pages people live in, not every heading) */
+#view-tasks .view-head h1::before { content: '📝'; }
+#view-bugs .view-head h1::before { content: '🐞'; }
+#view-board .view-head h1::before { content: '🗳️'; }
+.cal-headbar h1::before { content: '🗓️'; }
+.repo-view .view-head h1::before, #view-repo .view-head h1::before { content: '🌿'; }
+#view-tasks .view-head h1::before, #view-bugs .view-head h1::before, #view-board .view-head h1::before, .cal-headbar h1::before, .repo-view .view-head h1::before, #view-repo .view-head h1::before {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: .78em; margin-right: .38em; vertical-align: .06em; filter: saturate(.8) contrast(.95); }
