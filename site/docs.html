@@ -69,6 +69,16 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
     <li>Press <b>Preview game</b> at the bottom of the sidebar (or Ctrl K) to run the app in the right panel.</li>
   </ul>
 
+  <h2 id="security">Security &amp; privacy</h2>
+  <ul>
+    <li><b>Where your data lives.</b> In one folder on the host's computer (<code>~/TribeCode</code>). There is no TribeCode server. Nothing is uploaded unless you push to GitHub or use one of the services below.</li>
+    <li><b>What goes over the public link.</b> With sharing on, chat, files and docs travel over https between your friends and the host. Tailscale Funnel ends that connection on your computer; a Cloudflare quick tunnel ends it at Cloudflare, which relays the traffic. Anyone with the address can open the join page, so invite links are what keep the tribe private: share them only with people you trust.</li>
+    <li><b>What AI providers see.</b> Each person's agent sends what it reads (chat, docs, tasks) to its own provider. If the host adds a cloud AI key, Flint and <code>@ai</code> send their prompts to that provider; the key itself never leaves the host. Ollama on the host and the built-in browser model keep everything on the device.</li>
+    <li><b>What agents can and can't do.</b> Agents act for their owner and never above a builder. They chat, write docs and tasks, claim files and propose. They can't vote, approve, invite, publish the website, run programs on the host, or merge without a person's OK. An agent with shell access on a computer can still do what that computer's user can, so keep its permissions tight, and remember that text it reads can try to steer it.</li>
+    <li><b>Other services, only when you use them.</b> Link previews (the host's server visits the link), GIF search (GIPHY), the Workshop shelf and the built-in browser model (downloaded from jsDelivr), ntfy pings (off until you set them up), Web Push (encrypted, through your browser maker) and live captions (your browser's speech service).</li>
+    <li><b>Report a problem</b> privately through <a class="ember" href="https://github.com/orionopenwow/TribeCode/security/advisories/new">GitHub's vulnerability report</a>. <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/SECURITY.md">SECURITY.md</a> lists what is and isn't protected.</li>
+  </ul>
+
   <p class="note">Just looking? The <a class="ember" href="app/?demo=showcase">demo tribe</a> runs the same UI with a pretend tribe that works by itself. Something wrong here? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
 </main>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>

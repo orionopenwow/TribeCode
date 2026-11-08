@@ -117,9 +117,13 @@ const PROXY_HEADERS = ['x-forwarded-for', 'x-forwarded-host', 'x-real-ip', 'forw
 // Tunnels (Tailscale Funnel, cloudflared) connect from 127.0.0.1, so the socket address alone proves nothing:
 // also require a localhost Host header (tunnels carry the public host name) and a local Origin when one is sent.
 const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
-const LOCAL_ORIGIN = /^(https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?|tauri:\/\/localhost|https?:\/\/tauri\.localhost|null)$/i;
+// fix/security-review: the Origin must be this server's own page or the desktop app. Not "null" (sandboxed previews, file://
+// pages) and not other localhost ports (a project's dev server): those could otherwise mint invites, host agent keys or tunnels.
+const LOCAL_ORIGIN = new RegExp(`^(http:\\/\\/(localhost|127\\.0\\.0\\.1|\\[::1\\]):${PORT}|tauri:\\/\\/localhost|https?:\\/\\/tauri\\.localhost)$`, 'i');
 const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress) && !PROXY_HEADERS.some(h => req.headers[h] !== undefined)
-  && LOCAL_HOST.test(String(req.headers.host || '')) && (req.headers.origin === undefined || LOCAL_ORIGIN.test(String(req.headers.origin)));
+  && LOCAL_HOST.test(String(req.headers.host || '')) && (req.headers.origin === undefined
+    ? !['cross-site', 'same-site'].includes(String(req.headers['sec-fetch-site'] || ''))   // no Origin (a GET from an <img>, a form): not from another site
+    : LOCAL_ORIGIN.test(String(req.headers.origin)));
 function authed(req) {
   const h = req.headers.authorization || '';
   const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token');
@@ -127,6 +131,7 @@ function authed(req) {
   const th = hash(t);
   const m = members.find(x => x.tokenHash === th) || (devices && devices.memberForToken(th)) || null;
   if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out (any of its keys)
+  if (m && m.role === 'agent') { const o = members.find(x => x.id === m.owner); if (o && o.guestUntil && Date.parse(o.guestUntil) < Date.now()) return null; }   // fix/security-review: …and its agents
   return m;
 }
 const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
@@ -159,8 +164,16 @@ function joinByInvite(inv, { name, color: c, extra }) {
 
 // simple per-IP limiter for public endpoints
 const hits = new Map();
+// fix/security-review: behind a tunnel every request comes from 127.0.0.1, so key on the address the tunnel reports
+// (cloudflared: CF-Connecting-IP; Tailscale Funnel and others: the last X-Forwarded-For hop, which the tunnel appends).
+function clientKey(req) {
+  const ra = req.socket.remoteAddress;
+  if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(ra)) return ra;
+  const cf = req.headers['cf-connecting-ip'], xff = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop();
+  return String(cf || xff || ra).slice(0, 64);
+}
 function limited(req, max = 20, windowMs = 60_000) {
-  const k = req.socket.remoteAddress, now = Date.now();
+  const k = clientKey(req), now = Date.now();
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
@@ -416,7 +429,7 @@ const agentTools = { ...chatx.mcpTools, check_messages: { ...checkMessages, run:
 } } };
 // One-click project flow (server/flow.js): invites and links reuse the quick-invite logic.
 function makeInvite({ by, project, hours = 72, maxUses = 10 }) {
-  const inv = { code: code(5), by, role: 'builder', maxUses, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}) };
+  const inv = { code: code(8), by, role: 'builder', maxUses, uses: 0, created: new Date().toISOString(), expires: new Date(Date.now() + hours * 3600_000).toISOString(), ...(project ? { project } : {}) };
   invites.push(inv); saveInvites(); return inv;
 }
 function linkFor(c) {
@@ -509,7 +522,8 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), lan: [...share.lanEntry(), ...lanUrls()], site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
+    ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
   if (a === 'guide') return guide.route(req, res, ctx());   // feat/vision-guide: public, read-only how-to pages (server/guide.js)
@@ -844,6 +858,10 @@ async function apiInProject(req, res, url) {
   return fail(res, 404, 'not found');
 }
 
+// fix/security-review: the app's own pages can't be framed by other sites (clickjacking), aren't type-sniffed, and don't
+// send their URL (join codes, device keys) to other sites as a Referer.
+const SAFE_HEADERS = file => ({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin',
+  ...(path.extname(file) === '.html' ? { 'Content-Security-Policy': "frame-ancestors 'self' tauri://localhost http://tauri.localhost https://tauri.localhost" } : {}) });
 function serveStatic(req, res, url) {
   if (applink.serve(req, res, url)) return;   // /app/<key>/: a project's app for the Home Screen (server/applink.js)
   if (devices.serveApp(req, res, url, UI)) return;
@@ -854,7 +872,7 @@ function serveStatic(req, res, url) {
   if (!file.startsWith(UI + path.sep)) return fail(res, 403, 'forbidden');
   fs.readFile(file, (err, data) => {
     if (err) return fail(res, 404, 'not found');
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', ...SAFE_HEADERS(file) });
     res.end(stampHtml(file, data));
   });
 }
@@ -909,7 +927,7 @@ server.on('upgrade', (req, sock) => {
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
     if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
-    if (msg.type === 'announce' && typeof msg.text === 'string') postChat('general', me.id, msg.text.slice(0, 400));
+    if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting
     if (msg.type === 'huddle-join' && me.role !== 'agent') {
       const first = huddle.size === 0;
       huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
