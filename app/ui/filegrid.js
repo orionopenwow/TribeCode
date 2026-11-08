@@ -10,6 +10,7 @@
   const CODE_EXT = /\.(js|ts|tsx|jsx|py|rs|go|c|cpp|h|cs|java|rb|php|lua|gd|json|css|html|sh|toml|yaml|yml)$/i;
   // the file's type: drives the icon chip and the thumbnail style
   function typeOf(d) {
+    if (d.kind === 'sheet' || d.kind === 'deck') return d.kind;   // feat/crafts
     const src = String(d.source || '').toLowerCase(), ex = String(d.excerpt || '');
     if (/\.pdf$/.test(src)) return 'pdf';
     if (/\.(png|jpe?g|gif|webp|avif|svg)$/.test(src) || (d.img && ex.replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim().length < 40)) return 'image';
@@ -23,9 +24,16 @@
     doc: { ico: '📝', chip: 'DOC', label: 'Doc' }, image: { ico: '🖼️', chip: 'IMG', label: 'Picture' }, pdf: { ico: '📕', chip: 'PDF', label: 'PDF' },
     code: { ico: '💻', chip: '</>', label: 'Code' }, sheet: { ico: '📊', chip: 'CSV', label: 'Table' }, audio: { ico: '🎧', chip: 'AUD', label: 'Audio' },
     video: { ico: '🎬', chip: 'VID', label: 'Video' }, shot: { ico: '📸', chip: 'PNG', label: 'Screenshot' },
+    deck: { ico: '🎞️', chip: 'PPT', label: 'Slides' },
   };
   const strip = t => String(t || '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`>#]+/g, '').trim();
   function thumb(d, type) {
+    if (type === 'sheet' && d.kind === 'sheet' && window.TribeSheet) {   // feat/crafts: the first rows, with formulas worked out
+      const S = window.TribeSheet, g = S.parse(d.excerpt || '').grid.slice(0, 7), at = S.evaluate(g), cells = [];
+      for (let r = 0; r < Math.max(g.length, 1); r++) for (let c = 0; c < 4; c++) cells.push(`<span class="${r === 0 ? 'h' : ''}">${esc(at(r, c))}</span>`);
+      return `<div class="fg-th fg-th-sheet">${cells.join('')}</div>`;
+    }
+    if (type === 'deck' && window.TribeDeck) { const D = window.TribeDeck, k = D.parse(d.excerpt || ''), MDr = window.TribeMD; return `<div class="fg-th fg-th-deck"><section class="sd th-${k.theme}"><div class="sd-in md">${MDr ? MDr.render(k.slides[0].md) : esc(k.slides[0].md)}</div></section></div>`; }
     if (type === 'image' && d.img) return `<div class="fg-th fg-th-img"><img alt="" loading="lazy" src="${esc(media(d.img))}"></div>`;
     if (type === 'code') { const code = String(d.excerpt || '').replace(/^\s*```[^\n]*\n?/, '').replace(/\n?```[\s\S]*$/, '').split('\n').slice(0, 14).join('\n'); return `<div class="fg-th fg-th-code"><pre>${esc(code)}</pre></div>`; }
     const lines = String(d.excerpt || '').split('\n').filter(l => l.trim()).slice(0, 14);
@@ -49,7 +57,7 @@
       const items = list.filter(d => folderOf(d) === at || (!at && !folderOf(d)));
       { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the repo strip alive across redraws
       pane.innerHTML = `<div class="fg">
-        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><button class="btn" id="doc-first">＋ New doc</button></div>
+        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn" id="doc-first">＋ New doc</button><button class="btn ghost" id="fg-new-sheet" title="A spreadsheet with formulas">📊 Sheet</button><button class="btn ghost" id="fg-new-deck" title="A slide deck you can present">🎞️ Slides</button></span></div>
         ${!at ? '<div class="fg-repo"></div>' : ''}
         ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button class="fg-folder" data-folder="${esc(f)}"><span aria-hidden="true">📁</span><span>${esc(f.split('/').pop())}</span><span class="fg-more" aria-hidden="true">⋮</span></button>`).join('')}</div>` : ''}
         ${items.length ? `<div class="fg-grid">${items.map(d => card(d, o)).join('')}</div>`
@@ -60,6 +68,8 @@
       const slot = pane.querySelector('.fg-repo'), hero = document.getElementById('doc-repo-hero');
       if (slot && hero) { const extra = hero.nextElementSibling && hero.nextElementSibling.classList.contains('vw-assets') ? hero.nextElementSibling : null; slot.append(hero); if (extra) slot.append(extra); }
       pane.querySelector('#doc-first').onclick = () => o.create();
+      pane.querySelector('#fg-new-sheet').onclick = () => o.create('sheet');
+      pane.querySelector('#fg-new-deck').onclick = () => o.create('deck');
       pane.querySelectorAll('[data-slug]').forEach(b => b.onclick = () => o.open(b.dataset.slug));
       pane.querySelectorAll('[data-folder]').forEach(b => b.onclick = () => { at = pane.dataset.fgFolder = b.dataset.folder; draw(shots); });
       const up = pane.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };

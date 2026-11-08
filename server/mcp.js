@@ -36,17 +36,17 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
       inputSchema: S({ id: str('Task id'), status: { type: 'string', enum: ['backlog', 'doing', 'review', 'done'] }, title: str('New title'), take: { type: 'boolean', description: 'Assign the task to yourself' }, note: str('Progress note appended to the task') }, ['id']),
       run: (a, me) => { const t = tasks.update(a.id, a, me); return t ? text(`Updated ${t.id}: [${t.status}] ${t.title}`) : err(`No task with id ${a.id}`); },
     },
-    list_docs: { description: 'List shared docs (Markdown pages) with their TL;DRs.', inputSchema: S({}), run: () => text(docs.list().map(d => ({ name: d.slug, title: d.title, updated: d.updated, tldr: d.summary || undefined }))) },
+    list_docs: { description: 'List shared files: docs (Markdown pages), sheets (kind "sheet") and slide decks (kind "deck"), with their TL;DRs.', inputSchema: S({}), run: () => text(docs.list().map(d => ({ name: d.slug, title: d.title, kind: d.kind || 'doc', updated: d.updated, tldr: d.summary || undefined }))) },
     read_doc: {
       description: 'Read a shared doc by name (from list_docs) or title.',
       inputSchema: S({ name: str('Doc name or title') }, ['name']),
-      run: ({ name }) => { const d = docs.find(name); return d ? text(`# ${d.title}\n(version ${d.version}, name ${d.slug})\n\n${d.body}`) : err(`No doc called "${name}". Use list_docs.`); },
+      run: ({ name }) => { const d = docs.find(name); return d ? text(`# ${d.title}\n(${d.kind || 'doc'}, version ${d.version}, name ${d.slug})${d.kind === 'sheet' ? '\nSheet format: one Markdown table; row 1 is the first row; cells starting with = are formulas (A1 refs, SUM, AVERAGE, IF…).' : d.kind === 'deck' ? '\nDeck format: Markdown slides split by a line "---"; "Notes:" starts speaker notes; first line <!-- theme: campfire|paper|ember -->.' : ''}\n\n${d.body}`) : err(`No doc called "${name}". Use list_docs.`); },
     },
     write_doc: {
-      description: 'Create a doc, or replace a doc\'s body. Pass base_version from read_doc when editing so you never overwrite a teammate\'s newer changes.',
-      inputSchema: S({ name: str('Existing doc name, or a new title'), body: str('Full Markdown body'), base_version: { type: 'number', description: 'Version you read; required when editing an existing doc' } }, ['name', 'body']),
-      run: ({ name, body, base_version }, me) => {
-        const r = docs.upsert({ name, body, baseVersion: base_version, by: me.id });
+      description: 'Create a doc, sheet or slide deck, or replace its body. Pass base_version from read_doc when editing so you never overwrite a teammate\'s newer changes. Sheets: one Markdown table, cells starting with = are formulas (=SUM(B2:B9)). Decks: Markdown slides split by a line "---", "Notes:" for speaker notes.',
+      inputSchema: S({ name: str('Existing doc name, or a new title'), body: str('Full Markdown body'), kind: { type: 'string', enum: ['doc', 'sheet', 'deck'], description: 'For a new file: doc (default), sheet or deck' }, base_version: { type: 'number', description: 'Version you read; required when editing an existing doc' } }, ['name', 'body']),
+      run: ({ name, body, base_version, kind }, me) => {
+        const r = docs.upsert({ name, body, baseVersion: base_version, by: me.id, kind });
         return r.conflict ? err(`Not saved: ${r.conflict}. Read the doc again, merge, and retry with the new base_version.`) : text(`Saved "${r.doc.title}" (name ${r.doc.slug}, version ${r.doc.version}).`);
       },
     },

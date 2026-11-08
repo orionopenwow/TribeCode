@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.17.17
+
+- **Sheets in Files**: 📊 Sheet next to ＋ New doc. A light spreadsheet with formulas (=SUM, =AVERAGE, =IF, =SUMIF and more, A1 refs and ranges), a formula bar, a Sum / Average / Count line for what you select, paste straight from Excel or Google Sheets, CSV in and out. Saved as a plain Markdown table, so it reads well on GitHub and agents can edit it
+- **Slides in Files**: 🎞️ Slides. Themes (Campfire, Paper, Ember), a slide strip you can drag to reorder, speaker notes, Present full screen with a timer, and download as one web page, as Markdown, or print to PDF. Saved as Markdown split by ---
+- **Flint writes docs, sheets and slides**: "make a sheet for our snack budget", "make slides about the jam", "write a doc about the art style", or the new items in his flame menu. Inside a sheet or deck, ✨ Ask Flint changes what's there. With no brain he starts you from a good template
+- **Agents too**: `write_doc` takes `kind: sheet` or `deck`; `list_docs` and `read_doc` show the kind and the format
+- **Full power when you need it**: docs/CRAFTS.md shows how to link WordCraft, GridCraft and DeckCraft (open source, .docx/.xlsx/.pptx) to your agents and Files, without making the TribeCode download any bigger
+- **Phones**: sheets and slides open full width with no sideways scroll; the slide strip scrolls sideways; swipe to move between slides while presenting
+
 ## v0.17.16
 
 - **Plainer first run**: Home's AI Insights speak plainly ("Flint is in basic mode" with a Pick a brain button; "Connect GitHub so your code is shared"), and the test robot's notes about TribeCode itself fold away under one line. "All repos" is now "All code"

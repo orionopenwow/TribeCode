@@ -129,6 +129,7 @@
     hello: /^(hi|hey|hello|yo|hiya|good (morning|afternoon|evening))\b|^(thanks|thank you|thx|cheers)\b/,
     website: /\b(make|build|generate|create|design|redo|refresh|write|shuffle)\b.*\b(web ?site|home ?page|landing page|site)\b|^(our |the )?web ?site$/,   // feat/customize
     customize: /\b(customi[sz]e|change|pick|set)\b.*\b(background|accent|look|banner|font size|density)\b|^customi[sz]e\b/,
+    make: /^(?:please\s+|can you\s+|could you\s+)?(?:make|write|create|draft|build|start|put together|give me|do)\s+(?:me\s+|us\s+)?(?:a|an|some|the|our)?\s*(?:new\s+|quick\s+|short\s+|simple\s+)?(?:[a-z-]+\s+)?(doc|document|write-?up|sheet|spreadsheet|table|budget|tracker|slides?|slide deck|deck|presentation)\b/,   // feat/crafts
   };
 
   async function route(raw) {
@@ -140,7 +141,8 @@
     if (RX.helper.test(t)) return helper(t);
     if (RX.connect.test(t)) { ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
     if (RX.hosting.test(t)) return hosting(t);
-    if (RX.website.test(t)) return website(t);   // feat/customize: "make our website"
+    if (RX.website.test(t)) return website(t);
+    if ((m = RX.make.exec(t))) return makeFile(/sheet|table|budget|tracker/.test(m[1]) ? 'sheet' : /slide|deck|presentation/.test(m[1]) ? 'deck' : 'doc', text);   // feat/crafts   // feat/customize: "make our website"
     if (RX.customize.test(t)) { ACTS.customize(/\b(banner|this project)\b/.test(t) ? 'project' : 'tribe'); return say('I opened Customize: accent, background, spacing, font size and the tribe\'s name and icon. "Just me" changes only your view.', [act('Open Customize again', 'customize')]); }
     if ((m = RX.task.exec(t)) && m[1].trim()) return task(text.slice(text.length - m[1].length).trim());
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
@@ -191,6 +193,21 @@
       return say(`Here's a draft in the ${L} layout, filled from the bio, vision, screenshots, commits and team. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
         [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
     } catch (e) { return say('I could not make the draft: ' + e.message); }
+  }
+  // feat/crafts: Flint writes a doc, a sheet or slides into Files (server/flint.js /api/flint/make)
+  async function makeFile(kind, text) {
+    const D = window.TribeDocs, name = { doc: 'doc', sheet: 'sheet', deck: 'slides' }[kind];
+    if (!D) return say('Files are not ready yet. Try again in a moment.');
+    if (!connected()) return say(`I write ${name} with the tribe's brain. Host or join a tribe first.`, [act('Host or join', 'invite')]);
+    const msg = say(`Writing the ${name}…`, [], { streaming: true });
+    try {
+      const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask: text } });
+      const doc = await D.create(r.title || 'Untitled', r.body || '', undefined, kind === 'doc' ? undefined : kind);
+      App().show('docs'); setTimeout(() => D.open(doc.slug), 60);
+      msg.text = `${r.basic ? (r.note || 'Basic mode: I started you from a template.') : `Done: “${doc.title}” is in Files.`} ${kind === 'sheet' ? 'Click a cell to change it; = starts a formula.' : kind === 'deck' ? 'Press Present when it looks right.' : 'Edit away, the tribe sees it live.'}`;
+      msg.acts = [act(`Open the ${name}`, 'doc', `${(PJ() && PJ().current && PJ().current()) || ''}|${doc.slug}`), ...(r.basic ? [act('Give Flint a brain', 'brain')] : [])];
+    } catch (e) { msg.text = `I could not write that ${name}: ${e.message}`; }
+    delete msg.streaming; save(); draw(); return msg;
   }
   function invite() { ACTS.invite(); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {
@@ -356,6 +373,9 @@
       ['📰', "What's new?", 'A quick catch-up on the project', () => { setOpen(true); send("what's new?"); }],
       ['📝', 'Take a note', 'Saved for the whole tribe', () => fill('note: ')],
       ['✅', 'Make a task', 'Straight onto the Task Board', () => fill('task: ')],
+      ['📄', 'Write a doc', 'A page, plan or write-up in Files', () => fill('write a doc about ')],
+      ['📊', 'Make a sheet', 'A table with working formulas', () => fill('make a sheet for ')],
+      ['🎞️', 'Make slides', 'A deck you can present', () => fill('make slides about ')],
       ['🔎', 'What did we decide?', 'Searches chat, notes and captures', () => fill('what did we decide about ')],
       ['🧭', 'Show me around', 'A 30-second tour of the app', () => window.TribeFlintGuide && window.TribeFlintGuide.tour()],
       ['✨', 'What can Flint do?', 'His guide, in one screen', () => window.TribeFlintGuide && window.TribeFlintGuide.intro(input)],

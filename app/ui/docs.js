@@ -47,12 +47,12 @@
 
   let making = null;   // qa-pass: a double click on + / New doc makes one doc, not two
   const createOnce = () => making || (making = create().finally(() => { making = null; }));
-  async function create(title = 'Untitled', body = '', source) {
+  async function create(title = 'Untitled', body = '', source, kind) {
     let doc;
-    if (remote()) doc = (await C.api('/docs', { method: 'POST', body: { title, body, source } })).doc;
+    if (remote()) doc = (await C.api('/docs', { method: 'POST', body: { title, body, source, kind } })).doc;
     else {
       const all = local.all(); let s = slugify(title), n = 2; while (all.some(d => d.slug === s)) s = `${slugify(title)}-${n++}`;
-      const now = new Date().toISOString(); doc = { slug: s, title, body, version: 1, created: now, updated: now, source };
+      const now = new Date().toISOString(); doc = { slug: s, title, body, version: 1, created: now, updated: now, source, ...(kind ? { kind } : {}) };
       all.push(doc); local.save(all);
     }
     await load(doc.slug);
@@ -69,7 +69,8 @@
     const keep = !!(fresh && sess && sess.slug === slug && cur && cur.slug === slug && $('#doc-body'));
     const prevBody = cur && cur.slug === slug ? cur.body : null;
     cur = fresh;
-    if (cur && remote() && liveOn) {
+    if (craft && (!cur || craft.slug !== cur.slug)) { craft.ctl.destroy(); craft = null; }
+    if (cur && remote() && liveOn && !isCraft(cur)) {
       if (!sess) sess = window.TribeCoedit.open(slug, liveHooks());
       const ok = await sess.join();
       if (my !== openSeq) return;
@@ -243,22 +244,63 @@
   }
   function closeDoc() {
     if (dirty) save();
+    if (craft) { craft.ctl.flush(); craft.ctl.destroy(); craft = null; }
     if (sess) { sess.leave(); sess = null; peersNow = []; }
     cur = null; dirty = false; renderList(); renderEditor(); activity();
   }
 
+  // ---------- Sheets and Slides (feat/crafts): sheet.js and deck.js edit docs whose kind is sheet or deck ----------
+  let craft = null;   // { slug, ctl }
+  const isCraft = d => !!(d && (d.kind === 'sheet' || d.kind === 'deck'));
+  async function craftSave({ body, title, baseVersion }) {
+    if (!cur) return null;
+    if (!remote()) {
+      const all = local.all(), i = all.findIndex(x => x.slug === cur.slug);
+      cur = { ...cur, title, body, version: (cur.version || 1) + 1, updated: new Date().toISOString() }; if (i >= 0) all[i] = cur; local.save(all);
+      const li = list.find(x => x.slug === cur.slug); if (li) Object.assign(li, { title, version: cur.version, updated: cur.updated }); return { doc: cur };
+    }
+    try {
+      const r = await fetch(C.base() + '/api/docs/' + cur.slug, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (window.TribeStore.get().server || {}).token, ...(C.project && C.project() ? { 'X-Project': C.project() } : {}) },
+        body: JSON.stringify({ title, body, baseVersion }) });
+      const d = await r.json();
+      if (r.status === 409) return { conflict: d.doc };
+      if (!r.ok) return null;
+      cur = { ...cur, ...d.doc }; const li = list.find(x => x.slug === cur.slug); if (li) Object.assign(li, { title: cur.title, version: cur.version, updated: cur.updated }); renderList();
+      return { doc: d.doc };
+    } catch { return null; }
+  }
+  // "Ask Flint" inside a sheet or deck: the tribe's brain rewrites the body (server/flint.js /api/flint/make)
+  async function craftAsk(kind, ask, body) {
+    if (!remote()) { window.TribeApp.toast('Flint writes sheets and slides with the tribe\'s brain. Join or host a tribe first.'); return null; }
+    try { const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask, body, title: cur && cur.title } }); if (r.basic) window.TribeApp.toast(r.note || 'Flint is in basic mode, so he used a template. Give him a brain for smarter results.'); return r.body; }
+    catch (e) { window.TribeApp.toast(e.status === 503 ? 'Flint needs a brain for that. Pick one in Settings › Flint\'s brain.' : 'Flint could not do that: ' + e.message); return null; }
+  }
+  const newCraft = k => create(k === 'sheet' ? 'Untitled sheet' : 'Untitled slides', k === 'sheet' ? '| Name | Amount |\n| --- | --- |\n|  |  |\n' : '<!-- theme: campfire -->\n\n# Untitled slides\n\nA one-line subtitle\n\n---\n\n## First point\n\n- \n', undefined, k);
+  function renderCraft(pane) {
+    wideMode(false);
+    const M = cur.kind === 'sheet' ? window.TribeSheet : window.TribeDeck; if (!M) { pane.innerHTML = '<p class="faint">This editor did not load. Reload the app.</p>'; return; }
+    if (craft) craft.ctl.destroy();
+    pane.classList.add('craft-on'); { const g = $('#view-docs .docs-grid'); if (g) g.classList.add('craft-grid'); }
+    craft = { slug: cur.slug, ctl: M.mount(pane, { doc: cur, save: craftSave, close: () => { pane.classList.remove('craft-on'); closeDoc(); }, del: () => { if (confirmDelete()) { pane.classList.remove('craft-on'); if (craft) { craft.ctl.destroy(); craft = null; } remove(); } }, nameOf,
+      askFlint: (ask, body) => craftAsk(cur.kind, ask, body) }) };
+    activity();
+  }
+
   function renderEditor() {
+    { const p = $('#doc-pane'), g = $('#view-docs .docs-grid'); if (p && !(cur && isCraft(cur))) { p.classList.remove('craft-on'); if (g) g.classList.remove('craft-grid'); } }
     const pane = $('#doc-pane'); if (!pane) return;
     { const h = $('#doc-repo-hero'), w = $('#doc-list-wrap'); if (h && w && !w.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // feat/file-grid: the repo strip lives in the grid while it shows
     parkAside(); outlineCtl = null; wasDesk = desk();
     if (!cur) {
       wideMode(false);
-      if (window.TribeFileGrid && desk()) { window.TribeFileGrid.render(pane, list, { open, create: () => createOnce(), nameOf, ago }); return; }   // feat/file-grid: files as a drive-like grid
+      if (window.TribeFileGrid && desk()) { window.TribeFileGrid.render(pane, list, { open, create: k => (k ? newCraft(k) : createOnce()), nameOf, ago }); return; }   // feat/file-grid: files as a drive-like grid
       pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>${list.length ? 'Pick a doc to open' : 'Your tribe\'s files live here'}</h2>
         <p>Notes, docs, pictures, PDFs: any file, kept in the tribe folder. Docs are plain Markdown; type <span class="kbd">/</span> in one for blocks.</p>
         <button class="btn" id="doc-first">New doc</button></div>`;
       $('#doc-first').onclick = () => createOnce(); return;
     }
+    if (isCraft(cur)) return renderCraft(pane);
+    if (craft) { craft.ctl.destroy(); craft = null; }
     const words = (cur.body || '').split(/\s+/).filter(Boolean).length;
     const seg = `<div class="seg" role="group" aria-label="Mode"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}" aria-pressed="${mode === 'write'}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}" aria-pressed="${mode === 'read'}">Read</button></div>`;
     const page = `
@@ -494,6 +536,7 @@
       if (!sess.pending() && !dirty) setStatus(`Saved · v${d.version}${sess.joined ? ' · live' : ''}`);
       return;
     }
+    if (craft && cur && cur.slug === d.slug && d.updatedBy !== (C.state().me || {}).id) { fetchDoc(d.slug).then(f => { if (f && craft && craft.slug === f.slug) { cur = f; craft.ctl.update(f); } }); return; }
     if (cur && cur.slug === d.slug && d.version > cur.version && d.updatedBy !== (C.state().me || {}).id) {
       if (dirty) fetchDoc(d.slug).then(showConflict);
       else fetchDoc(d.slug).then(fresh => { const ta = $('#doc-body'), pos = ta ? ta.selectionStart : 0, focused = document.activeElement === ta;
@@ -515,5 +558,6 @@
 
   async function refreshList() { if (remote()) { try { list = (await C.api('/docs')).docs; } catch {} } renderList(); }
   window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
+    newSheet: () => newCraft('sheet'), newDeck: () => newCraft('deck'),
     current: () => cur, list: () => list, refreshList, renderList, changed, caretXY, mode: () => mode, setMode: m => { mode = m; renderEditor(); } };
 })();

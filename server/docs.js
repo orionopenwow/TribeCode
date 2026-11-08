@@ -8,6 +8,7 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
   const rel = s => `docs/${s}.md`;
   const sumRel = s => `docs/${s}.summary.md`;
   const okSlug = s => /^[a-z0-9][a-z0-9-]{0,63}$/.test(s);
+  const KINDS = new Set(['sheet', 'deck']);   // feat/crafts: a doc can be a sheet (a Markdown table) or slides (Markdown split by ---)
   const pending = new Map(); // slug -> timer for debounced summaries
 
   function read(s) {
@@ -63,7 +64,7 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
     if (m === 'POST' && !b) {
       const body = await readBody(req); const title = str(body.title, 120) || 'Untitled';
       const now = new Date().toISOString();
-      const d = write({ slug: uniqueSlug(title), title, by: me.id, created: now, updated: now, updatedBy: me.id, version: 1, source: str(body.source, 200) || undefined, body: str(body.body, 400_000) });
+      const d = write({ slug: uniqueSlug(title), title, by: me.id, created: now, updated: now, updatedBy: me.id, version: 1, source: str(body.source, 200) || undefined, kind: KINDS.has(body.kind) ? body.kind : undefined, body: str(body.body, 400_000) });
       if (body.source) postChat('general', 'tribecode', `${me.name} added **${title}** to Files`);
       return send(res, 200, { doc: d });
     }
@@ -104,9 +105,9 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
     const hit = list().find(d => d.title.toLowerCase() === n.toLowerCase()) || list().find(d => d.slug === slug(n));
     return hit ? readFresh(hit.slug) : null;
   }
-  function upsert({ name, body, baseVersion, by }) {
+  function upsert({ name, body, baseVersion, by, kind }) {
     const d = find(name), now = new Date().toISOString();
-    if (!d) return { doc: write({ slug: uniqueSlug(name), title: str(name, 120) || 'Untitled', by, created: now, updated: now, updatedBy: by, version: 1, body: String(body || '').slice(0, 400_000) }) };
+    if (!d) return { doc: write({ slug: uniqueSlug(name), title: str(name, 120) || 'Untitled', by, created: now, updated: now, updatedBy: by, version: 1, kind: KINDS.has(kind) ? kind : undefined, body: String(body || '').slice(0, 400_000) }) };
     if (baseVersion === undefined || baseVersion === null) return { conflict: `"${d.title}" already exists (version ${d.version}); pass base_version to edit it` };
     const merged = live.external(d.slug, { body: String(body || ''), baseVersion, by });
     if (merged) return merged.conflict ? { conflict: `"${d.title}" changed since you read it (now version ${readFresh(d.slug).version})` } : { doc: merged.doc };
@@ -116,5 +117,5 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
   }
 
   const live = makeLive({ read, write, str });
-  return { route, list, read, find, upsert, live, save: write };
+  return { route, list, read, find, upsert, live, save: write, create: o => { const now = new Date().toISOString(); const title = str(o.title, 120) || 'Untitled'; return write({ slug: uniqueSlug(title), title, by: o.by, created: now, updated: now, updatedBy: o.by, version: 1, kind: KINDS.has(o.kind) ? o.kind : undefined, body: String(o.body || '').slice(0, 400_000) }); } };
 };
