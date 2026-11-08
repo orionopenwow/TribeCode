@@ -86,13 +86,12 @@ jobs:
 
       # Tauri downloads its bundling tools from GitHub release links, which sometimes answer 504 for a while.
       # Keep them between runs, and fetch the Windows ones through the API (a different path) before building.
-      - name: Cache Tauri's bundling tools
+      - name: Cache Tauri's bundling tools (Windows)
+        if: matrix.platform == 'windows-latest'
         uses: actions/cache@v4
         with:
-          path: |
-            ~/AppData/Local/tauri
-            ~/.cache/tauri
-          key: tauri-tools-${{ matrix.platform }}-v1
+          path: ~/AppData/Local/tauri
+          key: tauri-tools-${{ matrix.platform }}-v2
 
       - name: Pre-fetch the Windows installer tools
         if: matrix.platform == 'windows-latest'
