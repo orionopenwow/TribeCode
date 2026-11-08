@@ -15,9 +15,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMembers, isLocal, presenceFor, loadTasks, hubFor, resetHub, plan, approvals, docs, broadcast, postChat, nameOf, str }) {
+module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMembers, isLocal, presenceFor, loadTasks, hubFor, resetHub, plan, approvals, docs, broadcast, postChat, nameOf, str, perms = null }) {
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const host = me => me && me.role === 'host';
+  const can = (me, cap, pid) => (perms ? perms.can(me, cap, pid) : host(me));   // feat/roles (server/perms.js)
 
   function counts(pid) {
     return P.inProject(pid, () => {
@@ -37,6 +38,7 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
 
   async function create(req, body, me) {
     if (me.role === 'spectator' || me.role === 'agent' || P.scoped(me)) throw err(403, 'only tribe members can start projects');
+    if (perms && !perms.can(me, 'project.create')) throw err(403, 'your role cannot start projects');
     const wantsRepo = body.path || body.url || body.files;
     if (wantsRepo && !host(me)) throw err(403, 'only the host can bring a repo or folder in (git runs on the host machine)');
     const name = str(body.name, 48);
@@ -176,11 +178,11 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
       const shared = { image: body.image, bio: typeof body.bio === 'string' ? body.bio : undefined };   // any builder: picture and bio
       // "Post a summary after each huddle" (server/huddlesum.js): the tribe host or the project's lead.
       if (typeof body.huddleSummary === 'boolean') { if (!host(me) && p.members[me.id] !== 'host') return fail(res, 403, 'only the host or the project lead can change this'); shared.huddleSummary = body.huddleSummary; }
-      P.update(b, host(me) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, ...shared } : shared);
+      P.update(b, can(me, 'settings.edit', b) ? { name: str(body.name, 48), emoji: body.emoji, color: body.color, ...shared } : shared);
       pushProjects(); return send(res, 200, { project: P.view(P.get(b)) });
     }
     if (!c && m === 'DELETE') {   // the host deletes a project: it leaves the list; its tribe data goes to .tribe/trash (the code folder is never touched)
-      if (!host(me)) return fail(res, 403, 'only the host can delete a project');
+      if (!can(me, 'project.delete', b)) return fail(res, 403, 'only the host or an admin can delete a project');
       if (p.id === P.defaultId()) return fail(res, 400, 'the first project stays: rename it instead');
       const body = await readBody(req).catch(() => ({}));
       if (str(body.confirm, 48) !== p.name) return fail(res, 400, 'type the project name to confirm');
@@ -197,8 +199,16 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
       return send(res, 200, { ...r, workspace: await workspaceInfo(p, me) });
     }
     if (c === 'members' && m === 'POST') {
-      if (!host(me)) return fail(res, 403, 'only the host');
       const body = await readBody(req); const who = getMembers().find(x => x.id === body.member); if (!who) return fail(res, 400, 'unknown member');
+      // feat/roles: mods remove (members.remove), admins/mods raise per-project roles (roles.assign) under the rank rules in server/perms.js
+      if (perms && !host(me)) {
+        try {
+          if (body.role === null) return send(res, 200, { ...perms.removeFromProject(me, who.id, b), project: P.view(P.get(b)) });
+          if (body.role === 'admin' || body.role === 'mod') return send(res, 200, { ...perms.assign(me, who.id, body.role, b), project: P.view(P.get(b)) });
+        } catch (e) { return fail(res, e.status || 400, e.message); }
+      }
+      if (perms && host(me) && (body.role === 'admin' || body.role === 'mod')) { try { perms.assign(me, who.id, body.role, b); } catch (e) { return fail(res, e.status || 400, e.message); } return send(res, 200, { project: P.view(P.get(b)) }); }
+      if (!host(me)) return fail(res, 403, 'only the host');
       if (body.role === null) { delete p.members[who.id]; if (Array.isArray(who.projects)) { who.projects = who.projects.filter(x => x !== b); saveMembers(); } P.update(b, {}); }
       else { P.addMember(b, who.id, ['builder', 'spectator', 'host'].includes(body.role) ? body.role : 'builder'); if (Array.isArray(who.projects) && !who.projects.includes(b)) { who.projects.push(b); saveMembers(); } }
       pushProjects(); return send(res, 200, { project: P.view(P.get(b)) });

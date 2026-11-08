@@ -9,7 +9,8 @@
 const RISKS = ['low', 'medium', 'high'];
 const REMIND_H = Number(process.env.TRIBE_APPROVAL_REMIND_HOURS) || 4;   // re-notify once after this; escalate to the host after twice this
 
-module.exports = function approvals({ store, id, str, bus, getMembers, postChat, broadcast, hub, project = () => undefined, canSee = () => true, now = () => Date.now(), remindHours = REMIND_H, tick = true }) {
+module.exports = function approvals({ store, id, str, bus, getMembers, postChat, broadcast, hub, project = () => undefined, canSee = () => true, now = () => Date.now(), remindHours = REMIND_H, tick = true,
+  canDecideAny = (who) => who.role === 'host' }) {   // feat/roles: approvals.approve (any risk) / approvals.approve_low (server/perms.js)
   let list = store.readJSON('.tribe/approvals.json', []);
   let rules = store.readJSON('.tribe/approval-rules.json', []);   // { id, owner, agent, kind, created }
   const save = () => { list = list.slice(-500); store.writeJSON('.tribe/approvals.json', list); };
@@ -53,7 +54,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     if (!a) fail(404, 'approval not found');
     if (who.role === 'agent') fail(403, 'agents never decide approvals, not even each other\'s');
     if (!['approve', 'deny'].includes(decision)) fail(400, 'decision must be approve or deny');
-    if (!a.to.includes(who.id) && who.role !== 'host') fail(403, 'this request was not addressed to you');
+    if (!a.to.includes(who.id) && !canDecideAny(who, a)) fail(403, a.risk === 'low' ? 'this request was not addressed to you' : 'this request was not addressed to you (your role decides low-risk requests only)');
     if (a.status !== 'pending') fail(409, `already ${a.status}`);
     a.status = decision === 'approve' ? 'approved' : 'denied';
     a.decidedBy = who.id; a.decidedAt = new Date(now()).toISOString(); a.note = str(note, 500);
@@ -72,7 +73,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
   function question(aid, who, text) {
     const a = get(aid); if (!a) fail(404, 'approval not found');
     text = str(text, 500); if (!text) fail(400, 'question text required');
-    if (!a.to.includes(who.id) && who.role !== 'host' && who.id !== a.by) fail(403, 'not your request');
+    if (!a.to.includes(who.id) && !canDecideAny(who, a) && who.id !== a.by) fail(403, 'not your request');
     a.questions = [...(a.questions || []), { by: who.id, name: who.name, at: new Date(now()).toISOString(), text }];
     save(); broadcast({ type: 'approval', approval: view(a) });
     const req = member(a.by);
@@ -103,7 +104,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
   }
   if (tick) setInterval(sweep, 60_000).unref();
 
-  const forMember = me => list.filter(a => a.to.includes(me.id) || a.by === me.id || me.role === 'host').slice(-80).reverse().map(view);
+  const forMember = me => list.filter(a => a.to.includes(me.id) || a.by === me.id || me.role === 'host' || (a.status === 'pending' && canDecideAny(me, a))).slice(-80).reverse().map(view);
 
   // /api/approvals[...]. Runs before the bearer-token check: decisions may carry a signed link instead.
   async function route(req, res, { m, b, c, me, url, readBody, send, fail: f }) {

@@ -647,7 +647,7 @@
     const where = (members().find(x => x.id === m.id) || {}).what || (m.online ? 'online' : 'away');
     const projects = (PJ() && PJ().list ? PJ().list() : []);
     const shared = projects.filter(p => PJ().here && PJ().here(p.id).some(x => (x.id || x) === m.id));
-    const head = `<div class="m2-pf-top">${avatar(m, 'xl')}<div class="m2-pf-id"><b>${esc(m.name)}</b><small><i class="m2-on ${m.online || mine ? 'y' : ''}"></i>${mine ? 'You' : esc(m.online ? 'online' : 'away')}${m.role === 'host' ? ' · host' : ''}${m.role === 'spectator' ? ' · watching' : ''}</small></div></div>`;
+    const head = `<div class="m2-pf-top">${avatar(m, 'xl')}<div class="m2-pf-id"><b>${esc(m.name)}</b><small><i class="m2-on ${m.online || mine ? 'y' : ''}"></i>${mine ? 'You' : esc(m.online ? 'online' : 'away')}${m.role === 'host' && !window.TribeRoles ? ' · host' : ''}${m.role === 'spectator' ? ' · watching' : ''}${window.TribeRoles ? window.TribeRoles.badge(m) : ''}</small></div></div>`;   // feat/roles: role badge
     let body;
     if (pane === 'net') {
       body = `<div class="m2-pf-h"><button class="m2-back" data-pf="main" aria-label="Back">${ic('back', 18)}</button>${mine ? 'Your network' : esc(m.name) + "'s network"}</div>
@@ -675,6 +675,7 @@
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
           <button data-pf="ask" ${ag ? '' : 'disabled'}>${ic('spark', 20)}<span>Ask Claude</span></button>
         </div>
+        ${window.TribeRoles ? window.TribeRoles.memberActions(m, { cls: 'btn soft' }) : ''}
         ${window.TribePeople ? `<button class="m2-pf-agent m2-pf-activity" data-pf="activity">${ic('net', 18)}<span><b>Activity</b><small>Commits, prompts, chat and notes</small></span>${ic('right', 16)}</button>` : ''}
         ${ag ? '' : `<p class="m2-fine">${esc(m.name)} hasn't connected a Claude Code yet.</p>`}`;
     }

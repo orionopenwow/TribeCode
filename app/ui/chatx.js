@@ -138,7 +138,7 @@
     const meta = `<span class="mt">${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}<time datetime="${esc(m.at)}">${when}</time>${mine ? `<span class="tk">${TICK1}</span>` : ''}</span>`;
     let body = '';
     if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>`;
-    else if (m.deleted) body = `<p class="gone">message deleted${META}</p>`;
+    else if (m.deleted) body = `<p class="gone">${m.removedBy ? 'removed by a moderator' : 'message deleted'}${META}</p>`;
     else {
       if (m.fwd) body += `<div class="fwd">${icon('i-fwd')}Forwarded from <b>${esc(nameOf(m.fwd.by))}</b> · ${esc(m.fwd.from || '')}</div>`;
       if (m.replyTo) body += `<button class="quote" data-jump="${esc(m.replyTo.id)}" title="Jump to the original" style="--qc:${esc(nameInk(tintOf(m.replyTo.by)))}"><b>${esc(nameOf(m.replyTo.by))}</b><span>${esc(m.replyTo.text)}</span></button>`;
@@ -157,7 +157,7 @@
     }
     const day = new Date(m.at), today = new Date().toDateString() === day.toDateString(), yest = new Date(Date.now() - 864e5).toDateString() === day.toDateString();
     const stamp = `${today ? 'Today' : yest ? 'Yesterday' : day.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${when}`;
-    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}<time class="nm-t">${esc(stamp)}</time></b>`;
+    const nm = `<b class="nm" style="--nc:${esc(nameInk(tintOf(m.by)))}">${esc(nameOf(m.by))}${agent ? icon('i-sparkle', 'nm-g') : ''}${window.TribeRoles && !sys ? window.TribeRoles.badge(m.by) : ''}<time class="nm-t">${esc(stamp)}</time></b>`;
     const gut = `<time class="gut-t" aria-hidden="true">${esc(when)}</time>`;   // continuation lines: the time shows in the gutter on hover
     const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo') : m.gist ? 'gist-msg' : '';
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
@@ -325,7 +325,8 @@
         ${m.text && !m.vote && window.TribeVotes ? `<button role="menuitem" data-act="vote">${icon('i-vote')}Make it a vote</button>` : ''}
         ${m.media && m.media.kind === 'voice' ? `<button role="menuitem" data-act="notes">${icon('i-doc')}Add to my notes</button>` : ''}
         ${own && !m.media && !m.vote ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
-        ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}`;
+        ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}
+        ${window.TribeRoles ? window.TribeRoles.msgMenuItems(m, ch) : ''}`;   // feat/roles: mod tools (roles.js)
       bind();
     };
     const fwd = () => {
@@ -348,6 +349,8 @@
         const act = b.dataset.act;
         if (act === 'forward') return fwd();
         if (act === 'delete' && !armed) { armed = true; b.innerHTML = `${icon('i-trash')}Click again to delete`; return; }
+        if (act === 'mod-del' && !armed) { armed = true; b.innerHTML = `${icon('i-trash')}Tap again: delete for everyone`; return; }
+        if (act.startsWith('mod-')) { closeMenu(); try { await window.TribeRoles.onMsgAct(b, m, ch); } catch (err) { toast(err.message); } return; }   // feat/roles
         closeMenu();
         try {
           if (act === 'reply') startReply(m, ch);

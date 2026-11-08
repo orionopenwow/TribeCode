@@ -15,7 +15,7 @@ const crypto = require('node:crypto');
 const BUILTIN = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary'];
 const MAX = 24;
 
-module.exports = function widgets({ P, store, broadcast, preview, showcase, shelf, sense }) {
+module.exports = function widgets({ P, store, broadcast, preview, showcase, shelf, sense, can = null }) {   // can(me, cap, pid): feat/roles
   const FILE = '.tribe/widgets.json';
   let all = store.readJSON(FILE, {});
   if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
@@ -24,7 +24,7 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
   const str = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
 
   const roleIn = (me, pid) => ((P.get(pid) || {}).members || {})[me.id] || me.role;
-  const canEdit = (me, pid) => !!me && me.role !== 'agent' && me.role !== 'spectator' && roleIn(me, pid) !== 'spectator';
+  const canEdit = (me, pid) => !!me && me.role !== 'agent' && me.role !== 'spectator' && roleIn(me, pid) !== 'spectator' && (!can || can(me, 'widgets.edit', pid));
 
   function clean(list) {
     if (!Array.isArray(list)) throw err(400, 'widgets must be a list');
