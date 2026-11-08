@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.10.2
+
+- **Write the vision with help**: the checklist's Write button opens a composer. Five short prompts come pre-filled with good guesses from the project's name, bio, README and template (what it is, who it's for, what makes it fun, done for v1, out of scope). Then **Draft with** Flint (on this computer: the local model if it's on, or a solid draft from your answers), **My Claude** (asks your Claude in your private chat; the reply fills the editor, with the logo flickering while it works) or another connected model. Small suggestion chips appear while you type ("Name a first milestone", "Say what's out of scope"). Save writes VISION.md as before
+- **Suggested tasks under New task**: 3–5 ideas from the vision's "Done for v1", the repo (no README, no tests, TODOs), recent chat ("we should…") and the project type. Tap to add one, ✕ to dismiss (remembered), More ideas for another batch. They never repeat a task you already have
+- **Phones**: the same suggestions in the New task sheet and under Up next on Tasks, and the vision composer full screen
+
+## v0.10.1
+
+- **The ? help** sits left of the window buttons
+- **Phones**: the new pixel logo sits beside "TribeCode ⌄" in Home's top bar, and flickers while something is working, like the desktop logo
+
 ## v0.10.0
 
 - **The logo comes alive**: the pixel flame flickers, a pixel at the tip and the tongues, still solid orange. The top-left logo flickers whenever something is working (a prompt in flight to Flint, Ask AI, the Secretary or the local model, or an agent in the room at work in the last 20 seconds) and rests otherwise. Hover it to see what's working. Every "Loading…" gets the little flame
