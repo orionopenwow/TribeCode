@@ -1,6 +1,6 @@
 # Starting a tribe from a phone, and sharing hosting
 
-A tribe lives on one computer that stays on: the server, the chat, the docs, the repo and the agents' endpoint all run
+A tribe's code lives in its shared GitHub repo. To keep the tribe online and quick, someone runs it on a computer or server that stays on: the server, the chat, the docs, the repo and the agents' endpoint all run
 there. Phones can't do that job (iOS and Android stop background apps, and there's no Node on a phone). So the plan is
 not "host on the phone"; it's "a phone can start everything, and the hosting lives with whoever has a computer, and
 can move".

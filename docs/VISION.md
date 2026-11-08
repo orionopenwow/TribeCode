@@ -2,7 +2,7 @@
 
 *The product's vision (not a tribe's own `VISION.md`, which the Board votes on). Written 2026-11-07 from [RESEARCH-2026-11.md](RESEARCH-2026-11.md). [CONTEXT.md](CONTEXT.md) keeps what's in flight; this doc says where we're going and what we won't do.*
 
-**TribeCode is the campfire where a few friends and their Claudes build one thing together, on one friend's computer.**
+**TribeCode is the campfire where a few friends and their Claudes build one thing together, around one shared GitHub repo.**
 
 Not another hosted app builder. A room: one link to join, phones welcome, your own agents, your files, any engine.
 

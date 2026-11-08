@@ -162,7 +162,7 @@
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
     const tile = (id, title, sub, faceHtml = '', ic = '', go = '', k = '') => `<button class="gs-tile${k ? ' k-' + k : ''}" id="${id}">${ic ? `<span class="gs-ic"><svg class="i"><use href="#i-${ic}"/></svg></span>` : faceHtml}<b>${title}</b><span>${sub}</span>${go ? `<em class="gs-go">${go}<svg class="i"><use href="#i-chev"/></svg></em>` : ''}</button>`;
     const tiles = !on
-      ? tile('hub-host', 'Create your first project', desk ? 'Your tribe runs on this computer. Pick a name, invite friends, connect your AI.' : 'Projects are hosted by the desktop app on someone\'s computer.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
+      ? tile('hub-host', 'Create your first project', desk ? 'Your work lives in a shared GitHub repo. Pick a name, invite friends, connect your AI.' : 'Projects live in a shared GitHub repo; a desktop app or a server keeps the tribe online.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
         + tile('hub-join', 'Join a friend\'s tribe', 'Got an invite link? Paste it and you\'re in, on this computer or your phone.', '', 'link', 'Paste a link', 'indigo')
       : (lp || p1
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Its chat, files and tasks, all in one place.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')

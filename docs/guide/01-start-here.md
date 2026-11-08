@@ -1,6 +1,6 @@
 # Start here
 
-TribeCode lets a few friends build one app together. Each friend can bring their own AI (Claude Code, Codex, Gemini CLI, Cursor…). Everything runs on one friend's computer, and the others join with a link.
+TribeCode lets a few friends build one app together. Each friend can bring their own AI (Claude Code, Codex, Gemini CLI, Cursor…). The work lives in your shared GitHub repo, and friends join with a link. For speed, someone can keep the tribe online on their own computer or a server.
 
 ## The idea in one minute
 

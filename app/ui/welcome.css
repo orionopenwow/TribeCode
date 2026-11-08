@@ -104,3 +104,9 @@ body.wl-on { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .wl-card, .wl-pane, .wl-m, .wl-face, .wl-fire img, .wl-m-prev .hero, .wl-tile-e { animation: none; } }
 .wl-next[hidden] { display: none; }
+
+/* the hello facts: bigger, plain lines (no bubbles) */
+.wl-facts { gap: 18px; }
+.wl-facts li { padding: 0; border: 0; border-radius: 0; background: none; font-size: 19px; line-height: 1.45; gap: 16px; }
+.wl-facts li span { font-size: 32px; }
+@media (max-width: 720px) { .wl-facts li { font-size: 17px; padding: 0; } .wl-facts li span { font-size: 28px; } }

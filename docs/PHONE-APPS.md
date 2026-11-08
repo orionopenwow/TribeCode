@@ -5,7 +5,7 @@ This plan turns that into a real Android APK first, then an iPhone app, without 
 
 ## What a phone app is (and isn't)
 
-- **A client, not a host.** The tribe still runs on one friend's computer (the desktop app). The phone app joins it
+- **A client, not a host.** The tribe's work lives in its shared GitHub repo, kept online by someone's desktop app or a server. The phone app joins it
   through an invite link, exactly like the web app does today. Nothing is hosted on the phone.
 - **The same UI.** `app/ui` already has the phone layout (Discord-mobile flow, bottom rack, one-tap approvals, voice
   notes). The app bundles that folder, so every release of the desktop app ships the phone UI too.

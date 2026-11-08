@@ -74,7 +74,7 @@
       { // 0: hello
         line: 'Hi, I’m Flint 👋 I help your tribe keep track of things. Let me show you around with a pretend tribe. It takes about a minute.',
         html: () => `<div class="wl-hello"><div class="wl-fire" aria-hidden="true"><img src="assets/flint.svg" alt="" width="120" height="120"></div>
-          <ul class="wl-facts"><li><span>👥</span>Friends, each with their own AI, build one thing together.</li><li><span>🏠</span>It runs on one friend’s computer. Your files stay there.</li><li><span>🔒</span>This tour is pretend and stays in your browser.</li></ul></div>`,
+          <ul class="wl-facts"><li><span>👥</span>Friends, each with their own AI, build one thing together.</li><li><span>🔒</span>This tour is pretend and stays in your browser.</li></ul></div>`,
         next: 'Let’s go',
       },
       { // 1: make a pretend tribe
