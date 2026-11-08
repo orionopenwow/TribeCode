@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.5
+
+- **A cleaner project Overview**, laid out like your mockup:
+  - **Living update**: a status pill and four tiles (Lately · Chat · Way forward · Coming up)
+  - **Onboarding Checklist**: a green progress bar and five steps that tick themselves (write the vision, the first task, a friend joins, connect your Claude Code, pin the repo). Each step has its button, and the checklist folds or shrinks to "All set" when done. It replaces the "No vision yet" banner and the "Start here" card
+  - **Tribe & Agents**: Who is here and your agents
+  - **Project Stream**: recent changes and upcoming items
+  - **Repo & Tools**: the shared repo, plus today's standup and a drop zone for files
+  - **Toolbox picks**: smaller, at the bottom
+- **Phones**: the same sections in one column with tight spacing
+
 ## v0.9.4
 
 - **Meet Flint**: TribeCode's built-in helper now has a name and its own "Ask Flint…" bar at the bottom of the room panel. Even with no local model it can connect your Claude Code, answer how-to questions from the Guide, capture a note ("note: …"), add a task ("task …"), invite a friend, start or stop hosting, open any section, find docs and tasks, tell you what's happening, and switch the Secretary and repo autopilot. With a local model on, it also answers anything else, streaming its reply. It runs on this computer and nothing you type leaves it. The thread is remembered and folds away; the Helpers row and the ? menu both open it
