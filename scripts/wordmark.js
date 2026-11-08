@@ -8,9 +8,12 @@ const root = path.resolve(__dirname, '..');
 
 // The letters come from Inter Bold, traced once into scripts/wordmark-glyphs.json (scripts/wordmark-glyphs.py):
 // top of the tallest letter at y=0, baseline at y=100. "Tribe" takes the ink color, "Code" is Ember.
-const G = JSON.parse(fs.readFileSync(path.join(__dirname, 'wordmark-glyphs.json'), 'utf8'));
-function wordmark({ tribe, code }) {
-  return { body: `<path fill="${tribe}" d="${G.tribe}"/><path fill="${code}" d="${G.code}"/>`, width: G.width };
+// Since v0.15.1 the wordmark is pixel lettering (scripts/wordmark-pixel.js): white "Tribe", Ember "Code", darker
+// bottom shades and a near-black outline, so one version reads on light and dark backgrounds. Scaled to 100 units tall.
+const PX = require('./wordmark-pixel');
+function wordmark() {
+  const w = PX.wordmark(), k = 100 / w.height;
+  return { body: `<g transform="scale(${k.toFixed(5)})" shape-rendering="crispEdges">${w.body}</g>`, width: Math.round(w.width * k * 10) / 10 };
 }
 
 // the icon: the pixel flame between brackets on navy (scripts/icon.js)

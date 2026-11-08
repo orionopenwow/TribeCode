@@ -96,8 +96,9 @@ def main():
                 # Home
                 ph.evaluate("TribeHub.open('home')"); ph.wait_for_selector("#m2-homebar", state="visible", timeout=10000); check("home")
                 ph.wait_for_function("() => { const i = document.querySelector('#hpt-brand img.brand-wm'); return i && i.dataset.wm && i.src.startsWith('data:image/svg'); }", timeout=8000)
-                wm = ph.evaluate("(() => { const i = document.querySelector('#hpt-brand img.brand-wm'), t = getComputedStyle(document.body).getPropertyValue('--text').trim(); return [decodeURIComponent(i.src).includes(t), getComputedStyle(i).content, t]; })()")
-                assert wm[0] and wm[1] in ("normal", "none"), f"{th}: the wordmark should be drawn in the theme's text color {wm}"
+                # the pixel wordmark carries its own dark outline, so it is drawn as-is on every theme
+                wm = ph.evaluate("(() => { const i = document.querySelector('#hpt-brand img.brand-wm'), s = decodeURIComponent(i.src); return [s.includes('#12151A') && s.includes('#F26B1D'), i.getBoundingClientRect().width > 40]; })()")
+                assert wm[0] and wm[1], f"{th}: the outlined pixel wordmark should show {wm}"
 
                 # Files
                 ph.evaluate("TribeHub.open('docs')"); ph.wait_for_selector("#hub-docs .dc-card", timeout=10000); check("files")
