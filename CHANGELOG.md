@@ -4,7 +4,6 @@
 
 - **Flint's flame is a button**: click the flame in the Ask Flint bar for a small menu: What's new?, Take a note, Make a task, What did we decide?, Show me around, What can Flint do?, and Pick Flint's brain
 - **Getting started, tucked away**: in Messages it's a slim bar now. Open shows the card as a pop-out over the chat (invite link, roles, notes, Start the flow) instead of pushing your messages down; it opens by itself right after you create a project
-- **Home button**: the camp in the rail is pixel art now, like the logo (same tent and moon)
 - **Phones**: the friend's "You're in" card on a phone is unchanged; the Flint menu works there too
 
 ## v0.17.7
