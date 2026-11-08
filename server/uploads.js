@@ -30,7 +30,7 @@ const KIND = ext => /^(png|jpe?g|gif|webp|avif|bmp|svg)$/.test(ext) ? 'image' : 
   : ext === 'pdf' ? 'pdf' : /^(glb|gltf|fbx|obj|blend)$/.test(ext) ? 'model' : /^(zip|7z|rar|tar|gz)$/.test(ext) ? 'archive'
   : /^(js|mjs|ts|py|rs|go|c|cpp|h|cs|java|rb|lua|gd|tscn|html|css|json|sh|yml|yaml|toml|xml|tmx|ini)$/.test(ext) ? 'code' : /^(md|txt|csv|log|rtf|docx?|odt)$/.test(ext) ? 'text' : 'file';
 
-module.exports = function uploads({ store, P, nameOf, broadcast }) {
+module.exports = function uploads({ store, P, nameOf, broadcast, can = (me) => me.role === 'host' }) {   // can(me, cap): feat/roles
   const dirOf = owner => path.join(store.root, '.tribe', 'uploads', owner);
   const idxOf = owner => `.tribe/uploads/${owner}/index.json`;
   const read = owner => { const v = store.readJSON(idxOf(owner), []); return Array.isArray(v) ? v : []; };
@@ -85,7 +85,7 @@ module.exports = function uploads({ store, P, nameOf, broadcast }) {
     }
     if (b && !c && m === 'DELETE') {
       const hit = find(me, b); if (!hit) return fail(res, 404, 'not found');
-      if (hit.f.by !== me.id && me.role !== 'host') return fail(res, 403, 'only the uploader or the host can delete this');
+      if (hit.f.by !== me.id && !can(me, 'files.delete')) return fail(res, 403, 'only the uploader, an admin or the host can delete this');
       write(hit.o, read(hit.o).filter(x => x.id !== b)); fs.rmSync(path.join(dirOf(hit.o), hit.f.id), { recursive: true, force: true });
       if (hit.f.scope === 'project' && broadcast) broadcast({ type: 'uploads', project: hit.f.project });
       return send(res, 200, { ok: true });

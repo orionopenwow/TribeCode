@@ -69,7 +69,7 @@ async function eachLine(body, fn) {
 }
 const sseData = line => (line.startsWith('data:') ? line.slice(5).trim() : null);
 
-module.exports = function makeLLM({ brain, store, log = () => {} }) {
+module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = () => true }) {   // canUseHost(me): feat/roles ai.use_host_brain
   const als = new AsyncLocalStorage();
   const CFG = '.tribe/llm.json', SECRET = '.tribe/secrets/llm.json';
   let cfg = Object.assign({ provider: 'ollama', model: '', baseUrl: '', friends: true, cap: 50 }, store.readJSON(CFG, {}) || {});
@@ -107,6 +107,7 @@ module.exports = function makeLLM({ brain, store, log = () => {} }) {
   // May this person use the host's cloud provider right now? '' = yes, else the reason.
   function cloudBlock(me) {
     if (!isFriend(me)) return '';
+    if (!canUseHost(me)) return 'Your role in this tribe doesn\'t include the host\'s AI brain.';
     if (!cfg.friends) return 'The host keeps the shared AI for themselves right now.';
     if (cfg.cap > 0 && used(me.id) >= cfg.cap) return `You reached today's limit of ${cfg.cap} questions on the host's AI. It resets tomorrow.`;
     return '';

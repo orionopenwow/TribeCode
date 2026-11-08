@@ -27,7 +27,7 @@ const POLL_MS = Number(process.env.TRIBE_REPO_POLL_MS) || 20_000;
 const FETCH_MS = Number(process.env.TRIBE_REPO_FETCH_MS) || 120_000;
 const COMMIT_EVERY_MS = Number(process.env.TRIBE_CONTEXT_COMMIT_MS) || 15 * 60_000;
 
-module.exports = function repoHub({ repo, store, str, broadcast, postChat, createTask, loadTasks, saveTask, getMembers, nameOf, drift, board, presence, readVision, tribe, claims, onHead = null, contextExtra = null, pushAuth = null }) {
+module.exports = function repoHub({ repo, store, str, broadcast, postChat, createTask, loadTasks, saveTask, getMembers, nameOf, drift, board, presence, readVision, tribe, claims, onHead = null, contextExtra = null, pushAuth = null, can = (me) => me.role === 'host' }) {   // can(me, cap): feat/roles
   const auth = () => { try { return (pushAuth && pushAuth()) || { args: [], env: {} }; } catch { return { args: [], env: {} }; } };   // the host's GitHub sign-in (server/github-auth.js), else git's own credentials
   let lastHead = null;   // onHead (server/flow.js): new commits on the checked-out branch become a gist
   const enabled = () => !!repo && fs.existsSync(path.join(repo, '.git'));
@@ -312,7 +312,7 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
     if (a === 'integrations') {
       if (m === 'GET' && !b) return send(res, 200, { integrations: integrator.list() });
       if (m === 'POST' && c === 'integrate') {
-        if (me.role !== 'host') return fail(res, 403, 'only the host or the integrator agent can integrate');
+        if (!can(me, 'repo.merge')) return fail(res, 403, 'only the host, an admin or the integrator agent can integrate');
         return send(res, 200, await integrator.integrate(b, me));
       }
     }

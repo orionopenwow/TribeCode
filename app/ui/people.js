@@ -55,7 +55,7 @@
     }
     const r = map.by[m.agent ? m.owner : m.id] || map.by[m.id];
     if (r && r.name && typeof r.name === 'string') return { name: r.name, color: r.color || m.color };
-    return { name: m.agent ? `${m.ownerName ? m.ownerName + "'s" : 'An'} Claude` : m.host ? 'Host' : m.role === 'spectator' ? 'Spectator' : 'Builder', color: m.agent ? '#38C6B1' : m.color };
+    return { name: m.agent ? `${m.ownerName ? m.ownerName + "'s" : 'An'} Claude` : m.host ? 'Host' : m.role === 'admin' ? 'Admin' : m.role === 'mod' ? 'Mod' : m.role === 'spectator' ? 'Spectator' : 'Builder', color: m.agent ? '#38C6B1' : m.color };
   }
 
   // ---------- panel ----------
@@ -136,7 +136,7 @@
     const m = d.member, role = d.role || { name: '', color: m.color };
     const av = m.agent ? `<div class="pp-av agent" style="--ring:${esc(role.color || '#38C6B1')}">${ico('i-sparkle')}</div>`
       : `<div class="pp-av" style="--ring:${esc(role.color || m.color)};background:${esc(m.color)};color:${ink(m.color)}">${esc(initials(m.name))}</div>`;
-    return `<header class="pp-head">${av}<div class="pp-id"><h2>${esc(m.name)}${m.you ? ' <span class="pp-you">you</span>' : ''}</h2>
+    return `<header class="pp-head">${av}<div class="pp-id"><h2>${esc(m.name)}${window.TribeRoles && !m.agent ? window.TribeRoles.badge(m) : ''}${m.you ? ' <span class="pp-you">you</span>' : ''}</h2>
       <div class="pp-sub"><span class="pp-role" style="--rc:${esc(role.color || 'var(--muted)')}">${esc(role.name)}</span><span class="pp-sep">·</span><span class="pp-where ${d.presence.online ? 'on' : ''}">${presenceLine(d)}</span></div>
       ${agentLine(d)}</div><button class="pp-close tb-icon" aria-label="Close">${ico('i-x')}</button></header>`;
   }
@@ -147,7 +147,9 @@
     const askable = me.role !== 'spectator' && me.role !== 'agent' && (m.agent ? m.id : m.agentOf && m.agentOf.id);
     if (askable) out.push(`<button class="btn" data-pp="ask">${ico('i-sparkle')}Ask ${m.agent ? 'Claude' : 'their Claude'}</button>`);
     if (!m.you && !m.agent && d.presence.online) out.push(`<button class="btn ghost" data-pp="follow">${ico('i-eye')}Follow</button>`);
-    return out.length ? `<div class="pp-acts">${out.join('')}</div><form class="pp-ask hidden" id="pp-ask"><input class="input" maxlength="1500" placeholder="Ask ${esc(m.agent ? m.name : m.agentOf ? m.agentOf.name : '')}…" autocomplete="off"><button class="btn primary">Send</button></form>` : '';
+    const mod = window.TribeRoles && !m.agent ? window.TribeRoles.memberActions(m) : '';   // feat/roles: Mute, Remove from project
+    if (!out.length && mod) return mod;
+    return out.length ? `<div class="pp-acts">${out.join('')}</div>${mod}<form class="pp-ask hidden" id="pp-ask"><input class="input" maxlength="1500" placeholder="Ask ${esc(m.agent ? m.name : m.agentOf ? m.agentOf.name : '')}…" autocomplete="off"><button class="btn primary">Send</button></form>` : '';
   }
   function now(d) {
     const n = d.now, m = d.member;

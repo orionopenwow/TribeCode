@@ -21,7 +21,8 @@ const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return
 module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands, ask = null,
   approvals = null, board = null, createTask = null, bus = { notify() {} }, slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
   voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true,
-  channelProject = () => null, canSeeProject = () => false }) {   // project-scoped access for writes into other channels (forward)
+  channelProject = () => null, canSeeProject = () => false,
+  canModerate = () => false, muteBlock = () => '', audit = () => {} }) {   // feat/roles (server/perms.js): delete anyone's message, mutes, audit log   // project-scoped access for writes into other channels (forward)
   fs.mkdirSync(store.p('chat', 'media'), { recursive: true });
   const member = mid => getMembers().find(m => m.id === mid);
   const file = ch => `chat/${ch}.jsonl`;
@@ -206,6 +207,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     if (action === 'receipt' && m === 'GET') return send(res, 200, { receipt: receipt(ch) });
     if (action === 'votes' && m === 'GET') { votes.sweep(); return send(res, 200, { votes: votes.list(ch) }); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
+    if (m === 'POST' && !['notes', 'react'].includes(action)) { const muted = muteBlock(me); if (muted) return fail(res, 403, muted); }   // feat/roles: muted people read along
     const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, action === 'file' ? 12 * 1024 * 1024 : 6 * 1024 * 1024);
 
     if (m === 'POST' && action === 'file') {
@@ -302,7 +304,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       return send(res, 200, { doc: { slug: d.slug, title: d.title } });
     }
     if (action === 'msg' && (m === 'PATCH' || m === 'DELETE')) {
-      if (target.by !== me.id) return fail(res, 403, 'you can only change your own messages');
+      const mod = target.by !== me.id && m === 'DELETE' && !dms.isDm(ch) && canModerate(me, target, ch);   // feat/roles: "Delete for everyone" by a mod/admin/host
+      if (target.by !== me.id && !mod) return fail(res, 403, 'you can only change your own messages');
       if (target.deleted) return fail(res, 400, 'message was deleted');
       if (m === 'PATCH') {
         const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
@@ -311,8 +314,9 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       if (target.media && target.media.file && !otherUses(target.media.file, target.id)) {
         try { fs.unlinkSync(store.p('chat', 'media', target.media.file)); } catch {}
       }
-      const msg = update(ch, target.id, x => ({ id: x.id, at: x.at, by: x.by, text: '', deleted: new Date().toISOString() }));
+      const msg = update(ch, target.id, x => ({ id: x.id, at: x.at, by: x.by, text: '', deleted: new Date().toISOString(), ...(mod ? { removedBy: me.id } : {}) }));
       if (pinIds(ch).includes(target.id)) { store.writeJSON(pinsFile(ch), pinIds(ch).filter(i => i !== target.id)); pushPins(ch); }
+      if (mod) audit(me, 'message-delete', member(target.by) || { id: target.by }, { channel: ch, message: target.id, excerpt: clip(target.text || '', 80) });
       return send(res, 200, { message: msg });
     }
     return fail(res, 404, 'not found');
