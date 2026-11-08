@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.17.11
+
+- **Rail**: the divider under the flame lines up with the top bar's bottom edge, and the project squares sit just below it, a little bigger (44px)
+- **Phones**: unchanged (the rail is desktop-only)
+
 ## v0.17.10
 
 - **Updates apply by themselves**: when the server updates while TribeCode is open, the page now reloads into the new version on its own (it waits if you're mid-sentence), instead of asking you to click Reload. Your work is saved first
