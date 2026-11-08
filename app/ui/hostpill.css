@@ -1,5 +1,5 @@
 /* Hosting status, top left of the title bar, and its popout (hostpill.js) */
-.host-pill { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px 0 9px; margin-right: 12px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--text); font: 600 12.5px var(--font); cursor: pointer; flex: none; -webkit-app-region: no-drag; }
+.host-pill { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 14px 0 11px; margin-right: 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: var(--text); font: 600 12.5px var(--font); cursor: pointer; flex: none; -webkit-app-region: no-drag; }
 .host-pill:hover, .host-pill[aria-expanded="true"] { background: var(--surface-2); }
 .host-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--online, #3BD16F); flex: none; }

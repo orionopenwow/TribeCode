@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.17.4
+
+- **Top bar**: the flame and the wordmark sit closer together, the flame a little bigger; the Hosting pill is a rounded rectangle
+- Everything from v0.17.3 (its installers didn't build because of a temporary download error on the build servers)
+- **Phones**: no change on phones (the top-bar logo is desktop-only)
+
 ## v0.17.3
 
 - **Files, tidied**: one emoji tab row (📝 Notes · 💻 Code · 📚 Docs · 🌐 Website · 📎 Captures) instead of two rows of tabs. Files opens on a drive-like grid: each file gets a type chip (DOC, CSV, </>, PDF, IMG) and a thumbnail (the start of the page, the code, or its first picture), with the pinned repo as a strip on top and app screenshots below. In a doc, the side panel starts hidden
