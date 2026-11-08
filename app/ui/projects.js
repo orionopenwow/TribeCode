@@ -138,6 +138,12 @@
     const t = $('#standup-text'); if (t && !sc.contains(t)) sc.insertBefore(t, b && sc.contains(b) ? b : null);
     ['#dropzone', '#drops'].forEach(q => { const n = $(q); if (n && !td.contains(n)) td.appendChild(n); });
   }
+  // One setup step, from the checklist, Flint's nudges or anywhere else
+  function step(k) {
+    const p = curP(); if (!p) return;
+    if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude(); else if (k === 'repo') App().show('repo');
+    else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
+  }
   async function overview() {
     const el = $('#pj-overview'); if (!el) return;
     const p = curP();
@@ -224,9 +230,9 @@
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
     const sfBody = $('#pj-sf-body'); if (sfText) sfBody.appendChild(sfText);
     const ctx = $('#pj-ctx-body'); [dzn, drops].forEach(n => n && ctx.appendChild(n));   // the drop zone is a main point of the page: it gives everyone context
-    el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => { const k = x.dataset.ck;
-      if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude(); else if (k === 'repo') App().show('repo');
-      else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); } });
+    el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => step(x.dataset.ck));
+    // tell the room panel and Flint how far along this project is, so they can stay simple early on
+    window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, friend: steps[2].done, agent: steps[3].done, repo: steps[4].done });
     const fold = $('#pj-check-fold');
     // the hero checklist: the next step gets the one solid button and a soft highlight; the rest stay calm
     const chk = $('#pj-check.hero');
@@ -676,5 +682,5 @@
 
   // A project deleted (here or by the host elsewhere): leave it and go Home.
   C.on('ws', m => { if (m.type !== 'project-removed') return; const was = cur() === m.id; refresh().then(async () => { if (!was) return; const d = projects[0]; if (d) await switchTo(d.id, 'home').catch(() => {}); if (window.TribeHub) window.TribeHub.open('home'); }); });
-  window.TribeProjects = { refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  window.TribeProjects = { step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
 })();
