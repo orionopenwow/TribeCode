@@ -107,7 +107,7 @@ def main():
             pg = ctx.new_page(); watch(pg, errs)
             pg.goto(ABOUT); pg.wait_for_load_state("load")
             assert pg.title().startswith("TribeCode"), pg.title()
-            assert "Claude agents" in pg.inner_text("h1")
+            assert "their Agents" in pg.inner_text("h1")
             assert pg.locator('meta[property="og:image"]').get_attribute("content")== "https://tribecode.org/assets/og-image.png"
             # live GitHub numbers, release line and downloads from the release (headless Chrome here reports Linux)
             pg.wait_for_function("document.querySelector('[data-gh=forks]').textContent === '56' && document.querySelector('.stats [data-gh=version]').textContent === 'v9.9.9'", timeout=8000)

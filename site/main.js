@@ -80,6 +80,18 @@
     $$('[data-dl-main]').forEach(a => { if (href) a.href = href; const l = $('[data-dl-label]', a); if (l && label) l.textContent = label; });
     if (meta) $$('[data-dl-meta]').forEach(m => { m.textContent = meta; });
   }
+  // small flat platform marks on the download buttons and lists (color where the platform has one)
+  const OSI = {
+    windows: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/><rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/><rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/><rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/></svg>',
+    mac: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.5 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.9-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.8zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.7-1.3z"/></svg>',
+    linux: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12.2" rx="6.6" ry="9" fill="#282828" stroke="#7C6F64" stroke-width=".8"/><ellipse cx="12" cy="14.8" rx="4.2" ry="5.8" fill="#FFF"/><circle cx="10.2" cy="7.8" r="1.2" fill="#FFF"/><circle cx="13.8" cy="7.8" r="1.2" fill="#FFF"/><circle cx="10.4" cy="8" r=".55" fill="#1D2021"/><circle cx="13.6" cy="8" r=".55" fill="#1D2021"/><path d="M10.5 9.8h3L12 11.7z" fill="#FABD2F"/><ellipse cx="8.5" cy="21.3" rx="2.7" ry="1.3" fill="#FABD2F"/><ellipse cx="15.5" cy="21.3" rx="2.7" ry="1.3" fill="#FABD2F"/></svg>',
+    web: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
+  };
+  OSI.deb = OSI.linux;
+  const osIco = k => OSI[k] ? `<span class="os-ico os-ico--${k}">${OSI[k]}</span>` : '';
+  $$('[data-os]').forEach(a => { if (!a.querySelector('.os-ico')) a.insertAdjacentHTML('afterbegin', osIco(a.dataset.os)); });
+  $$('[data-open-app].hero__open').forEach(a => { if (!a.querySelector('.os-ico')) a.insertAdjacentHTML('afterbegin', osIco('web')); });
+  if (OSI[os]) $$('[data-dl-main]').forEach(a => { if (!a.querySelector('.os-ico')) a.insertAdjacentHTML('afterbegin', osIco(os)); });
   document.documentElement.dataset.os = os || 'unknown';
   if (os === 'phone') setMain('Desktop app (Windows, Mac, Linux)', null);
   else if (NAMES[os]) {
@@ -99,7 +111,7 @@
   gh('/releases/latest').then(rel => {
     const v = rel.tag_name || rel.name; if (!v) return;
     set('version', v); set('released', 'released ' + ago(rel.published_at));
-    set('release-line', `${v} · free and open source · MIT · works with Claude Code`);
+    set('release-line', `${v} · free and open source · MIT · works with Claude Code, Codex, Gemini CLI and more`);
     const assets = rel.assets || [];
     $$('[data-os]').forEach(a => {
       const x = find(assets, a.dataset.os); if (!x) return;

@@ -84,7 +84,7 @@ def main():
             assert not pg.evaluate("document.querySelector('.nav').classList.contains('is-scrolled')")
             # hero
             h1 = pg.inner_text("h1")
-            assert "friends" in h1 and "Claude agents" in h1, h1
+            assert "friends" in h1 and "Agents" in h1, h1
             assert pg.evaluate("parseFloat(getComputedStyle(document.querySelector('h1')).fontSize)") >= 40
             assert pg.evaluate("document.querySelector('h1').getBoundingClientRect().left < 200"), "the hero is left-aligned"
             dl = pg.locator(".hero [data-dl-main]")
