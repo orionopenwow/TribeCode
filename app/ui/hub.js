@@ -33,7 +33,7 @@
   // ---------- resume last session (client side, per server) ----------
   const LKEY = () => `tribecode.lastSession:${C.base()}`;
   const last = () => lsGet(LKEY());
-  const LABEL = { home: 'Project home', chat: 'Chat', docs: 'Files', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
+  const LABEL = { home: 'Dashboard', chat: 'Messages', docs: 'Files', tasks: 'Task Board', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
   function remember(view) {
     if (!connected() || !LABEL[view]) return;
     const p = PJ() && PJ().cur(); if (!p) return;
@@ -872,6 +872,7 @@
   // On Home (body.global) it is yours: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
   // (the room's people and the scratchpad step aside: Home shows the scratchpad itself).
   // =====================================================================
+  const HKEY = 'tribecode.room.helpersOpen';
   function panel() {
     const pane = $('#room-pane'); if (!pane) return;
     let box = $('#room-helpers');
@@ -880,19 +881,23 @@
     if (!connected() || !f) { box.innerHTML = ''; }
     else {
       const m = f.models || {}, loops = f.loops || [], sec2 = loops.find(l => l.id === 'secretary'), auto = loops.find(l => l.id === 'autopilot');
-      const row = (key, glyph, name, what, on) => `<div class="person helper ${on ? 'on' : ''}" data-helper="${key}" title="${esc(name)}"><div class="avatar helper-av">${ico(glyph, 14)}<span class="st"></span></div><div><span>${esc(name)}</span><div class="what">${what}</div></div></div>`;
+      // One compact row of pills (feat/sidebar-widgets): a dot says on / off, the detail is in the tooltip (and for screen readers).
+      const row = (key, glyph, name, what, on) => { const plain = String(what).replace(/<[^>]+>/g, ''); return `<button class="hp-pill ${on ? 'on' : ''}" data-helper="${key}" title="${esc(name)} · ${esc(plain)}"><span class="hp-dot" aria-hidden="true"></span>${ico(glyph, 15)}<span class="hp-n">${esc(name)}</span><span class="sr-only">: ${esc(plain)}</span></button>`; };
       const rows = [
         sec2 ? row('secretary', 'i-quill', 'Secretary', `${sec2.on ? `<span class="ok">${esc(sec2.state)}</span>` : 'off'}${sec2.last ? ` · ${esc(ago(sec2.last))}` : ''}`, sec2.on) : '',
-        row('flint', 'i-flint', 'Flint', m.online ? '<span class="ok">ready</span> · local model on' : 'basic mode · no local model', true),   // feat/flint: the built-in helper (was "Local model")
-        auto ? row('autopilot', 'i-git', 'Repo autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
+        row('flint', 'i-flint', 'Flint', m.online ? '<span class="ok">ready</span> · local model on' : 'basic mode · no local model', !!m.online),   // feat/flint: the built-in helper (was "Local model")
+        auto ? row('autopilot', 'i-git', 'Autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
         computeRow(row),
       ].join('');
-      box.innerHTML = `<h6><span class="emo" aria-hidden="true">🤝</span>Helpers</h6>${rows}`;
+      const open = lsGet(HKEY, true) !== false, nOn = (rows.match(/class="hp-pill on"/g) || []).length;   // collapsible, remembered
+      box.innerHTML = `<button class="hp-head" id="helpers-toggle" aria-expanded="${open}" aria-controls="hp-pills"><span class="hp-t">Helpers</span><span class="hp-sum">${nOn ? `${nOn} on` : 'all off'}</span>${ico('i-chev', 14)}</button><div class="hp-pills" id="hp-pills">${rows}</div>`;
+      box.classList.toggle('closed', !open);
+      box.querySelector('#helpers-toggle').onclick = () => { const o = box.classList.contains('closed'); lsSet(HKEY, o); box.classList.toggle('closed', !o); box.querySelector('#helpers-toggle').setAttribute('aria-expanded', String(o)); };
       box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : r.dataset.helper === 'flint' && window.TribeFlint ? window.TribeFlint.focus() : fleetGo(r.dataset.helper));
     }
     let pad = $('#room-scratch');   // the scratchpad is gone: one quiet "Start a note" that lands in your docs
     if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'room-note'; const cc = $('#cc-connect'); cc.after(pad);
-      pad.innerHTML = `<button class="note-start sm" id="room-note-new">${ico('i-plus', 16)}<span><b>Start a note</b><small>Goes to your docs</small></span></button>`;
+      pad.innerHTML = `<button class="room-slim" id="room-note-new" title="A new note in your docs">${ico('i-plus', 16)}<span>Start a note</span></button>`;
       pad.querySelector('#room-note-new').onclick = startNote; }
     pad.classList.toggle('hidden', document.body.dataset.view === 'hub');
     homePanel();

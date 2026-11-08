@@ -401,6 +401,7 @@ flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
 dashboard.setFlow(flow);
 const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str });   // per-project Website (server/showcase.js)
+const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf });   // feat/sidebar-widgets (server/widgets.js)
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -620,6 +621,7 @@ async function apiInProject(req, res, url) {
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'invites' && !b && m === 'POST') {

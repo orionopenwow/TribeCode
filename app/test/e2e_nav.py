@@ -20,7 +20,7 @@ SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
-CORE = ["Overview", "Chat & Streams", "Files", "Tasks & Board", "Agents Hub"]
+CORE = ["Dashboard", "Messages", "Files", "Task Board", "Agents Hub"]
 TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]
 AGENT_TABS = ["Agents", "Your agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary"]
 # tab key -> how to tell its view is on screen
@@ -118,7 +118,8 @@ def main():
 
             # ---- four rows, exactly, in order; nothing else between them and Settings
             assert rows(host, "#pj-nav .nest-row.core") == CORE, rows(host, "#pj-nav .nest-row.core")
-            assert rows(host, "#pj-nav .nest-row") == CORE, rows(host, "#pj-nav .nest-row")
+            host.wait_for_selector("#nest-add", state="visible")   # the + row (widgets.js) closes the list for the host
+            assert rows(host, "#pj-nav .nest-row") == CORE + ["Add"], rows(host, "#pj-nav .nest-row")
             assert host.locator("#nest-huddle").is_hidden() and host.locator("#capture-toggle").is_hidden(), "huddle and capture have no rows"
             for t in ["One", "Two"]: assert api("/tasks", "POST", {"title": f"Task {t}"}, token=token, project=pid)[0] == 200
             host.wait_for_function("document.querySelector('#nn-tasks').textContent === '2'", timeout=8000)
@@ -143,7 +144,7 @@ def main():
             # ---- Tasks & Board: one tabbed workspace
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
             assert tabs(host) == TASK_TABS, tabs(host)
-            assert host.text_content("#view-tabs .wt-eye") == "Tasks & Board"
+            assert host.text_content("#view-tabs .wt-eye") == "Task Board"
             for key in ["tasks", "bugs", "board", "milestones", "calendar", "repo", "visuals"]:
                 host.click(f"#wt-{key}"); host.wait_for_selector(OPENS[key], timeout=8000)
                 host.wait_for_function("k => document.querySelector(`#wt-${k}`).classList.contains('on')", arg=key)
@@ -151,7 +152,7 @@ def main():
                 assert host.evaluate("document.querySelector('#nest-ws-tasks').classList.contains('on')"), key
                 assert host.evaluate("location.hash") == f"#/tasks/{SLUG.get(key, key)}", (key, host.evaluate("location.hash"))
             host.click("#wt-bugs"); host.wait_for_selector("#view-bugs:not(.hidden)")
-            wait_text(host, "#crumb-label", "Tasks & Board › Bugs")
+            wait_text(host, "#crumb-label", "Task Board › Bugs")
             host.mouse.move(720, 600); shot(host, "nav-tabs-bugs")
             # remembered: away and back lands on Bugs
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
@@ -185,7 +186,7 @@ def main():
             host.click("#crumb-section"); host.wait_for_selector("#section-menu")
             menu = host.evaluate("[...document.querySelectorAll('#section-menu h6, #section-menu button')].map(e => (e.tagName === 'H6' ? '# ' : '') + (e.querySelector('span') || e).textContent.trim())")
             assert menu[:5] == CORE, menu
-            assert "# Tasks & Board" in menu and "# Agents Hub" in menu, menu
+            assert "# Task Board" in menu and "# Agents Hub" in menu, menu
             assert menu[menu.index("# Agents Hub") + 1:] == ["Agents", "Your agents", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
             host.click("#section-menu [data-dest='calendar']"); host.wait_for_selector("#view-calendar:not(.hidden)")
 

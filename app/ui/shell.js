@@ -1,7 +1,7 @@
 // The shell around every view (the mix of Discord and the Claude desktop app):
 //   far-left circle rail (projects.js draws the circles) | the project's nest | main | right panel.
-// The nest is communication and core only: Chat & Streams (with #general, #agents and DMs under it), Docs & Files,
-// Tasks & Board and Agents Hub, then Settings and Invite friends. Tasks & Board and Agents Hub are tabbed workspaces:
+// The nest is communication and core only: Dashboard, Messages (with #general, #agents and DMs under it), Files,
+// Task Board and Agents Hub (then Preview / Website / added widgets / + Add: widgets.js), then Settings and Invite friends. Task Board and Agents Hub are tabbed workspaces:
 // a tab bar (#view-tabs) at the top of main holds what used to be the Project Hub and Coordinate & Ops groups
 // (Board · Bugs · Proposals · Milestones · Calendar · Repo · Visuals · Roles · Requests, and Agents · Your agents ·
 // Ownership · Conflicts · Hand-offs · Reviews · Daily plan · Secretary). The last tab per workspace is remembered,
@@ -38,14 +38,14 @@
   let counts = {};   // badges: bugs, requests, reviews, handoffs
   let lastDest = '';
   const DEST = [
-    { key: 'home', label: 'Overview', icon: 'i-home', group: 'core', keys: 'home overview project dashboard living update', run: () => App().show('home') },
-    { key: 'chat', label: 'Chat & Streams', icon: 'i-chat', group: 'core', keys: 'messages general talk channels streams dm', run: () => { if (window.TribeDM && window.TribeDM.current && window.TribeDM.current() !== 'general' && window.TribeDM.back) window.TribeDM.back(); App().show('chat'); } },
+    { key: 'home', label: 'Dashboard', icon: 'i-home', group: 'core', keys: 'home overview project dashboard living update', run: () => App().show('home') },
+    { key: 'chat', label: 'Messages', icon: 'i-chat', group: 'core', keys: 'messages general talk channels streams dm', run: () => { if (window.TribeDM && window.TribeDM.current && window.TribeDM.current() !== 'general' && window.TribeDM.back) window.TribeDM.back(); App().show('chat'); } },
     { key: 'docs', label: 'Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
-    { key: 'ws-tasks', label: 'Tasks & Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
+    { key: 'ws-tasks', label: 'Task Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
     { key: 'ws-agents', label: 'Agents Hub', icon: 'i-robot', group: 'core', keys: 'agents coordinate ops claude workspace', run: () => openWs('agents') },
     { key: 'docs-files', label: 'Project files', tab: 'Files', slug: 'files', icon: 'i-doc', group: 'docs', keys: 'documents notes files pages journal', run: () => App().show('docs') },
     { key: 'website', label: 'Website', tab: 'Website', slug: 'website', icon: 'i-link', group: 'docs', keys: 'site page public showcase landing credits github pages', run: () => { const o = () => window.TribeWebsite && window.TribeWebsite.open(); if (window.TribeWebsite) o(); else addEventListener('load', o, { once: true }); } },   // app/ui/website.js (a deep link can run before it loads)
-    { key: 'tasks', label: 'Task board', tab: 'Board', slug: 'board', icon: 'i-check', group: 'tasks', keys: 'tasks todo kanban', run: () => App().show('tasks') },
+    { key: 'tasks', label: 'Board', tab: 'Board', slug: 'board', icon: 'i-check', group: 'tasks', keys: 'tasks todo kanban', run: () => App().show('tasks') },
     { key: 'bugs', label: 'Bugs', tab: 'Bugs', slug: 'bugs', icon: 'i-bug', group: 'tasks', keys: 'bug inbox issues', run: () => App().show('bugs') },
     { key: 'board', label: 'Proposals & board', tab: 'Proposals', slug: 'proposals', icon: 'i-vote', group: 'tasks', keys: 'approval board vote vision', run: () => App().show('board') },
     { key: 'milestones', label: 'Milestones', tab: 'Milestones', slug: 'milestones', icon: 'i-flag', group: 'tasks', keys: 'roadmap goals', run: () => { App().show('board'); setTimeout(() => { const m = $('#ms-list'); m && m.closest('.card').scrollIntoView({ block: 'center' }); }, 120); } },
@@ -78,7 +78,7 @@
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
   ];
   const byKey = k => DEST.find(d => d.key === k);
-  const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Tasks & Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
+  const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Task Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
   const tabsOf = w => DEST.filter(d => d.group === w && (!d.when || d.when()));
   const wsOf = key => { const d = byKey(key); return d && WS[d.group] ? d.group : null; };
   const TKEY = w => `tribecode.tab.${w}`;
@@ -319,7 +319,7 @@
     const groupH = (label, items) => items.length ? `<h6>${esc(label)}</h6>${items.map(row).join('')}` : '';
     const el = pop(anchor, `<div class="sh-menu sh-projects sh-switch">
         <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Home · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
-        ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Overview', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
+        ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
         <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`,
@@ -344,7 +344,7 @@
     const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || '';
     $('#nest-face').innerHTML = h ? h.face(p, 'sm') : '';
     $('#nest-name').textContent = p.name;
-    $('#nest-sub').textContent = here > 1 ? `${here} here · Overview` : 'Overview';
+    $('#nest-sub').textContent = here > 1 ? `${here} here · Dashboard` : 'Dashboard';
     const set = (id, v, hot) => { const el = $(id); if (!el) return; el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!(v && hot)); };
     const pulse = h ? (h.pulses[p.id] || 0) : 0;
     set('#nn-chat', pulse, true); set('#nn-tasks', k.tasks);
@@ -358,7 +358,7 @@
   document.addEventListener('contextmenu', e => {
     const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
     e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
-    const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open overview</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Chat</span></button>
+    const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open dashboard</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Messages</span></button>
       <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button></div>`, { id: 'rail-menu', side: 'right' });
     el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
       const k = x.dataset.rc; closePop();
@@ -440,9 +440,9 @@
   // ---------- Pinned: the repo, pinned docs (docsx.js fills #side-pins-list), pinned chat messages ----------
   function pinned(p) {
     const repo = $('#pin-repo');
-    // Pinned links sit in the tool list as plain rows (no separate card): the repo, and Preview app when there's a repo.
-    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="nest-row pin-row" data-nav="repo" data-pnav="repo" title="The project's repo: branch, commits, autopilot">${ico('i-git')}<span>Repo <code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span><span class="pin-tag" title="Pinned">${ico('i-pin', 12)}</span></button>${window.TribePreview ? `<button class="nest-row pin-row" id="pin-preview" title="Run the app and see it here">${ico('i-play')}<span>Preview app</span><span class="pin-tag" title="Pinned">${ico('i-pin', 12)}</span></button>` : ''}` : '';
-    const pv = $('#pin-preview'); if (pv) pv.onclick = () => window.TribePreview.open ? window.TribePreview.open() : null;
+    // Pinned links sit in the tool list as plain rows (no separate card): the repo. Preview game / app and Website are
+    // rows under the core ones now, shown only when they apply (feat/sidebar-widgets, app/ui/widgets.js).
+    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="nest-row pin-row" data-nav="repo" data-pnav="repo" title="The project's repo: branch, commits, autopilot">${ico('i-git')}<span>Repo <code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span></button>` : '';
     setTimeout(markActive, 0);   // re-drawn rows keep the lit state
     if (p && p.hasRepo && repoBranch[p.id] === undefined) { repoBranch[p.id] = ''; C.api(`/projects/${encodeURIComponent(p.id)}/workspace`).then(w => { const b = w.branch && w.branch.exists ? w.branch.branch : (w.repo ? (w.repo.remote ? w.repo.remote.replace(/^https?:\/\/(www\.)?/, '').replace(/\.git$/, '') : 'local repo') : ''); repoBranch[p.id] = b; const el = $('#pin-repo-branch'); if (el) el.textContent = b; }).catch(() => {}); }
     const chats = $('#pin-chats'), strip = $('#pin-strip'), m = strip && !strip.classList.contains('hidden') && /(\d+) pinned/.exec(strip.textContent);

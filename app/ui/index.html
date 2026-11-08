@@ -57,6 +57,7 @@
 <link rel="stylesheet" href="hub.css">
 <link rel="stylesheet" href="folders.css">
 <link rel="stylesheet" href="website.css">
+<link rel="stylesheet" href="widgets.css"><!-- feat/sidebar-widgets: sidebar widgets + the calmer right panel -->
 <link rel="stylesheet" href="oauth.css">
 <link rel="stylesheet" href="themes.css"><!-- themes (themes.js); keep last -->
 <link rel="stylesheet" href="viewers.css"><!-- feat/viewers -->
@@ -154,12 +155,13 @@
           <button class="nest-title" id="nest-title" data-nav="home" title="Project home"><span id="nest-face" class="nest-face"></span><span class="nt"><b id="nest-name">Home</b><span class="nest-sub" id="nest-sub"></span></span></button>
         </div>
         <div class="nest-group nest-core" id="pj-nav" role="navigation" aria-label="Project sections">
-          <button class="nest-row core" data-nav="home" data-pnav="home" id="nest-overview"><svg class="i"><use href="#i-home"/></svg><span>Overview</span></button>
-          <div class="nest-line"><button class="nest-row core" data-nav="chat" data-pnav="chat" id="nest-chat"><svg class="i"><use href="#i-chat"/></svg><span>Chat &amp; Streams</span><span class="n" id="nn-chat"></span></button><button class="nest-sub-toggle" id="streams-toggle" aria-expanded="false" aria-controls="nest-streams" title="Channels and direct messages" aria-label="Show channels"><svg class="i"><use href="#i-chev"/></svg></button></div>
+          <button class="nest-row core" data-nav="home" data-pnav="home" id="nest-overview"><svg class="i"><use href="#i-home"/></svg><span>Dashboard</span></button>
+          <div class="nest-line"><button class="nest-row core" data-nav="chat" data-pnav="chat" id="nest-chat"><svg class="i"><use href="#i-chat"/></svg><span>Messages</span><span class="n" id="nn-chat"></span></button><button class="nest-sub-toggle" id="streams-toggle" aria-expanded="false" aria-controls="nest-streams" title="Channels and direct messages" aria-label="Show channels"><svg class="i"><use href="#i-chev"/></svg></button></div>
           <div class="nest-streams" id="nest-streams" role="group" aria-label="Channels and direct messages"></div>
           <button class="nest-row core" data-nav="docs" data-pnav="docs" id="nest-docs"><svg class="i"><use href="#i-doc"/></svg><span>Files</span></button>
-          <button class="nest-row core" data-nav="tasks" data-pnav="ws-tasks" id="nest-ws-tasks"><svg class="i"><use href="#i-check"/></svg><span>Tasks &amp; Board</span><span class="n" id="nn-tasks"></span></button>
+          <button class="nest-row core" data-nav="tasks" data-pnav="ws-tasks" id="nest-ws-tasks"><svg class="i"><use href="#i-check"/></svg><span>Task Board</span><span class="n" id="nn-tasks"></span></button>
           <button class="nest-row core" data-pnav="ws-agents" id="nest-ws-agents"><svg class="i"><use href="#i-robot"/></svg><span>Agents Hub</span><span class="n" id="nn-agents"></span></button>
+          <div class="nest-extra" id="nest-extra" role="group" aria-label="More for this project"></div><!-- feat/sidebar-widgets: Preview · Website · added widgets · + Add (widgets.js) -->
           <!-- Huddle and Capture to notes have no rows: the huddle starts from the chat header's call button and shows
                here only while it is live; Capture to notes lives in the profile menu and shows here only while on. -->
           <div class="nest-huddle" id="nest-huddle">
@@ -265,7 +267,7 @@
         </div>
         <div class="empty-room" id="room-hint">Invite friends to see them here.</div>
         <div id="room-agents" class="room-agents"></div>
-        <button class="cc-link" id="cc-connect"><svg class="i" style="width:16px;height:16px;color:var(--accent)"><use href="#i-sparkle"/></svg>Connect your Claude Code</button>
+        <button class="cc-link cc-card" id="cc-connect"><span class="cc-ico"><svg class="i"><use href="#i-sparkle"/></svg></span><span class="cc-t"><b>Connect your Claude Code</b><small>It builds here with the tribe</small></span></button>
         <div id="claims-box" class="hidden"><h6 style="margin-bottom:8px">Claimed files</h6><div id="claims-list"></div></div>
       </div>
       <div class="preview-pane" id="preview-pane" aria-live="polite">
@@ -358,6 +360,7 @@
 <script src="hub.js"></script>
 <script src="flint.js"></script><!-- feat/flint: the built-in helper -->
 <script src="website.js"></script>
+<script src="widgets.js"></script><!-- feat/sidebar-widgets -->
 <script src="viewers.js"></script><!-- feat/viewers: 3D + pixel-art viewers -->
 <script src="phoneapp.js"></script><!-- feat/viewers: phone app mode -->
 </body>
