@@ -84,6 +84,40 @@ jobs:
             else { c.bundle.createUpdaterArtifacts = false; console.log('No signing key yet: building installers without auto-update files. Run node scripts/setup-release.js'); }
             require('fs').writeFileSync(f, JSON.stringify(c, null, 2));"
 
+      # Tauri downloads its bundling tools from GitHub release links, which sometimes answer 504 for a while.
+      # Keep them between runs, and fetch the Windows ones through the API (a different path) before building.
+      - name: Cache Tauri's bundling tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/tauri
+            ~/.cache/tauri
+          key: tauri-tools-${{ matrix.platform }}-v1
+
+      - name: Pre-fetch the Windows installer tools
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          function Fetch($tag, $repo, $pattern, $dir) {
+            for ($i = 0; $i -lt 5; $i++) { gh release download $tag --repo $repo --pattern $pattern --dir $dir --clobber; if ($LASTEXITCODE -eq 0) { return $true }; Start-Sleep -Seconds 20 }
+            return $false
+          }
+          $t = Join-Path $env:LOCALAPPDATA 'tauri'; $n = Join-Path $t 'NSIS'
+          New-Item -ItemType Directory -Force $t | Out-Null
+          if (-not (Test-Path (Join-Path $n 'makensis.exe'))) {
+            if (Fetch 'nsis-3.13' 'tauri-apps/binary-releases' 'nsis-3.13.zip' $env:RUNNER_TEMP) {
+              Expand-Archive (Join-Path $env:RUNNER_TEMP 'nsis-3.13.zip') -DestinationPath $t -Force
+              if (Test-Path (Join-Path $t 'nsis-3.13')) { if (Test-Path $n) { Remove-Item $n -Recurse -Force }; Rename-Item (Join-Path $t 'nsis-3.13') 'NSIS' }
+            }
+          }
+          $d = Join-Path $n 'Plugins\x86-unicode\additional'
+          New-Item -ItemType Directory -Force $d | Out-Null
+          if (-not (Test-Path (Join-Path $d 'nsis_tauri_utils.dll'))) { Fetch 'nsis_tauri_utils-v0.5.3' 'tauri-apps/nsis-tauri-utils' 'nsis_tauri_utils.dll' $d | Out-Null }
+          Get-ChildItem $n -Recurse -Filter 'nsis_tauri_utils.dll' | ForEach-Object { $_.FullName }
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
