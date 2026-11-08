@@ -77,6 +77,7 @@
   document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#hub-host-retry') && App().hostHere) { e.target.disabled = true; e.target.textContent = 'Starting…'; App().hostHere(); } });
   C.on('ws', m => { if (m && (m.type === 'hub' || m.type === 'dashboard') && (!data || m.rev !== data.rev)) load(true); });
   C.on('hello', () => { load(true); scratch.sync(); setTimeout(fromHash, 30); });
+  setTimeout(() => { if (connected() && !data) load(true); }, 0);   // the hello can come before this script runs (a fast reload): the helpers still need the data
   C.on('status', () => { if (document.body.dataset.view === 'hub') render(); panel(); });
   C.on('projects', () => { if (document.body.dataset.view === 'hub') setTimeout(render, 300); });
   setInterval(() => { if (!document.hidden && connected()) load(true); }, 90_000);

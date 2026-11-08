@@ -6,7 +6,8 @@
 .nest-extra.empty { display: none; }
 body.global #nest-extra { display: none; }
 .nest-extra .wg-row { position: relative; }
-.nest-extra .wg-emo { width: 20px; height: 20px; display: grid; place-items: center; font-size: 16px; line-height: 1; flex: none; }
+.nest-extra .wg-row > .wg-emo { width: 20px; height: 20px; display: grid; place-items: center; font-size: 16px; line-height: 1; flex: none; overflow: visible; }
+.nest-extra .wg-row > .wg-emo + span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nest-extra .wg-more { margin-left: auto; width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 16px; line-height: 1; color: var(--faint); opacity: 0; flex: none; }
 .nest-extra .wg-row:hover .wg-more, .nest-extra .wg-row:focus-visible .wg-more { opacity: 1; }
 .nest-extra .wg-more:hover { background: var(--hover); color: var(--text); }
