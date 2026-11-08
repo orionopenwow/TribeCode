@@ -2,7 +2,7 @@
 .cai-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
 .cai-chip { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--muted); cursor: pointer; }
 .cai-chip:hover { border-color: var(--edge-pop); color: var(--text); }
-.cai-chip.on { border-color: var(--accent); background: var(--raised); color: var(--text); }
+.cai-chip.on { border-color: color-mix(in srgb, var(--agents, var(--live)) 45%, var(--edge)); background: var(--agents-soft, var(--raised)); color: var(--text); }
 .cai-steps { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 4px; font-size: 13.5px; line-height: 1.55; color: var(--text); max-width: 68ch; }
 .cai-block { margin: 0 0 10px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); min-width: 0; }
 .cai-bl { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 12px; border-bottom: 1px solid var(--edge); }
@@ -19,3 +19,5 @@
   .cai-chip { font-size: 12.5px; padding: 5px 10px; }
   .cai-pre { font-size: 11.5px; }
 }
+.cai-copy { background: var(--agents-soft, var(--surface-2)) !important; border: 1px solid color-mix(in srgb, var(--agents, var(--live)) 40%, var(--edge)) !important; color: var(--text) !important; }
+.cai-copy:hover { border-color: var(--agents-ink, var(--live-ink)) !important; }

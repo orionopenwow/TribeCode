@@ -192,14 +192,14 @@
   function wireChips(opts) { $('#invite-body').querySelectorAll('[data-cai-tool]').forEach(b => b.onclick = () => connectClaude({ ...(opts || {}), fresh: true, tool: b.dataset.caiTool })); }
   async function connectTool(kind, opts) {
     const body = $('#invite-body'), T = CAI().tool(kind);
-    body.innerHTML = `<h2>Connect your AI</h2>${aiChips(kind)}<p class="lead">Creating a key for ${esc(T[1])}…</p>`; wireChips(opts);
+    body.innerHTML = `<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2>${aiChips(kind)}<p class="lead">Creating a key for ${esc(T[1])}…</p>`; wireChips(opts);
     let r, where, stop = null;
     try { r = await C.api('/agents', { method: 'POST', body: { kind } }); } catch (e) { body.innerHTML = `<h2>Couldn't create a key</h2><p class="lead">${esc(e.message)}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; return; }
     const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => r.setup && r.setup[k]);
     where = r.setup.anywhere ? 'anywhere' : (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'here' : (r.setup.wifi ? 'wifi' : 'here');
     const draw = () => {
       const s = r.setup[where] || {};
-      body.innerHTML = `${opts && opts.welcome ? '<span class="eyebrow">You\'re in</span>' : ''}<h2>Connect your AI</h2>${aiChips(kind)}
+      body.innerHTML = `${opts && opts.welcome ? '<span class="eyebrow">You\'re in</span>' : ''}<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2>${aiChips(kind)}
         <p class="lead">${esc(T[1])} joins as <b>${esc(r.agent.name)}</b>: it sees the board, docs and chat, claims files before editing and posts gists, like any agent here.</p>
         ${tabs.length > 1 ? `<div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>` : ''}
         <div id="cc-setup" data-kind="${esc(kind)}">${CAI().setupHtml(s)}</div>
@@ -220,7 +220,7 @@
     // Opening this used to mint a new key at once, which silently cut off a Claude Code that was already working.
     // When yours is online, say so first; a new command (and key) is one deliberate tap away.
     if (!(opts && opts.fresh)) {
-      body.innerHTML = '<h2>Connect your AI</h2><p class="lead">Checking…</p>';
+      body.innerHTML = '<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2><p class="lead">Checking…</p>';
       let mine = null; try { mine = await C.api('/agents/mine'); } catch {}
       if (mine && mine.online && mine.agent) {
         body.innerHTML = `<h2>Your Claude Code is connected</h2>${aiChips('claude-code')}
@@ -233,7 +233,7 @@
         return;
       }
     }
-    body.innerHTML = '<h2>Connect your AI</h2><p class="lead">Creating a key…</p>';
+    body.innerHTML = '<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2><p class="lead">Creating a key…</p>';
     let r, where, timer;
     const isHost = (C.state().me || {}).role === 'host';
     const copy = async (t, msg) => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the command and copy it.'); } };
@@ -244,7 +244,7 @@
     const draw = () => {
       const cmd = r.commands[where];
       const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => k !== 'wifi' || r.commands.wifi);
-      body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span>` : ''}<h2>Connect your AI</h2>${aiChips('claude-code')}
+      body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span>` : ''}<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2>${aiChips('claude-code')}
         <p class="lead">One line connects your Claude Code. Run it once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
         <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>
         ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`

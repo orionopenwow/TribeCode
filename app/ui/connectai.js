@@ -23,7 +23,7 @@
   function setupHtml(s) {
     if (!s) return '';
     const main = (s.blocks || []).filter(b => !b.alt), alt = (s.blocks || []).filter(b => b.alt);
-    const block = (b, i) => `<div class="cai-block"><div class="cai-bl"><span class="eyebrow">${esc(b.label)}</span><button type="button" class="btn ${b.alt ? '' : 'primary'} cai-copy" data-cai-copy="${i}">Copy</button></div><pre class="cai-pre" data-cai-text="${i}">${esc(b.text)}</pre></div>`;
+    const block = (b, i) => `<div class="cai-block"><div class="cai-bl"><span class="eyebrow">${esc(b.label)}</span><button type="button" class="btn cai-copy" data-cai-copy="${i}">Copy</button></div><pre class="cai-pre" data-cai-text="${i}">${esc(b.text)}</pre></div>`;
     const all = s.blocks || [];
     return `<ol class="cai-steps">${(s.steps || []).map(t => `<li>${esc(t)}</li>`).join('')}</ol>
       ${main.map(b => block(b, all.indexOf(b))).join('')}

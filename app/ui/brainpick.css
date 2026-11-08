@@ -7,11 +7,11 @@
 .bp-lead { margin: 4px 0 14px; font-size: 13.5px; line-height: 1.55; color: var(--muted); max-width: 65ch; }
 .bp-opts { display: grid; gap: 8px; }
 .bp-opt { border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); min-width: 0; }
-.bp-opt.on { border-color: var(--accent); background: var(--raised); }
+.bp-opt.on { border-color: color-mix(in srgb, var(--agents, var(--live)) 45%, var(--edge)); background: var(--agents-soft, var(--raised)); }
 .bp-pick { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; }
 .bp-pick[data-off] .bp-t small { color: var(--faint); }
 .bp-dot { width: 16px; height: 16px; flex: none; margin-top: 2px; border-radius: 50%; border: 1.5px solid var(--edge-pop); background: var(--canvas); }
-.bp-opt.on .bp-dot { border-color: var(--accent); box-shadow: inset 0 0 0 4px var(--canvas); background: var(--accent); }
+.bp-opt.on .bp-dot { border-color: var(--agents-ink, var(--live-ink)); box-shadow: inset 0 0 0 4px var(--canvas); background: var(--agents-ink, var(--live-ink)); }
 .bp-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .bp-t b { font-size: 14px; font-weight: 650; }
 .bp-t small { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
@@ -21,7 +21,7 @@
 .bp-note a { color: var(--accent-ink); }
 .bp-nogpu { margin: 0 14px 12px 42px; padding: 8px 10px; font-size: 12.5px; line-height: 1.5; color: var(--muted); border: 1px dashed var(--edge-pop); border-radius: var(--r-sm); }
 .bp-bar { height: 6px; border-radius: 3px; background: var(--canvas); border: 1px solid var(--edge); overflow: hidden; }
-.bp-bar i { display: block; height: 100%; background: var(--accent); transition: width .2s var(--ease, ease); }
+.bp-bar i { display: block; height: 100%; background: var(--agents, var(--live)); transition: width .2s var(--ease, ease); }
 .bp-prog small { display: block; margin-top: 4px; font-size: 11.5px; }
 .bp-err { margin: 0; font-size: 12.5px; color: var(--deny-ink, var(--text)); }
 .bp-body > .btn { justify-self: start; }
