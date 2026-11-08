@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="t"><title id="t">Three friends and a robot agent around a campfire under the stars</title>
+<g fill="#FFFFFF"><circle cx="30" cy="20" r="1.6"/><circle cx="96" cy="40" r="1.4"/><circle cx="214" cy="18" r="1.6"/><circle cx="292" cy="44" r="1.4"/></g>
+<path d="M150 10l2.4 6.6 6.6 2.4-6.6 2.4L150 28l-2.4-6.6-6.6-2.4 6.6-2.4z" fill="#FABD2F"/>
+<path d="M0 170c60-14 120-12 160-6s110 10 160 0v30H0z" fill="#32302F"/>
+<ellipse cx="160" cy="178" rx="70" ry="9" fill="#3C3836"/>
+<g stroke-linecap="round"><path d="M126 182l68-18" stroke="#5A3E30" stroke-width="11"/><path d="M126 164l68 18" stroke="#6E4C39" stroke-width="11"/></g>
+<path d="M160 70l14 30v28l14-12 10 30-4 24-34 20-34-20-4-24 12-34 10 14v-22z" fill="#F26B1D"/>
+<path d="M160 124l8 16v12l7-5 4 14-19 14-18-13 3-14 6 4v-12z" fill="#FABD2F"/>
+<rect x="56" y="168" width="52" height="11" rx="5.5" fill="#5A3E30"/>
+<path d="M64 172c0-30 6-44 20-44s20 14 20 44z" fill="#83A598"/>
+<path d="M100 150c8-2 12-6 14-12" stroke="#83A598" stroke-width="8" stroke-linecap="round" fill="none"/>
+<circle cx="84" cy="112" r="14" fill="#E8B48A"/>
+<path d="M69 112c-2-14 8-21 17-19 10 2 13 9 11 15-8-4-19-4-28 4z" fill="#1D2021"/>
+<rect x="212" y="168" width="52" height="11" rx="5.5" fill="#5A3E30"/>
+<path d="M216 172c0-30 6-44 20-44s20 14 20 44z" fill="#F26B1D"/>
+<path d="M220 150c-8 0-14-4-16-10" stroke="#F26B1D" stroke-width="8" stroke-linecap="round" fill="none"/>
+<circle cx="236" cy="112" r="14" fill="#A86B4A"/>
+<path d="M221 114c-4-17 7-24 16-24s19 7 13 28c-2-7-6-13-11-15-6 4-11 7-18 11z" fill="#FABD2F"/>
+<rect x="278" y="150" width="8" height="26" rx="3" fill="#1D2021"/><rect x="290" y="150" width="8" height="26" rx="3" fill="#1D2021"/>
+<path d="M274 158c0-32 6-44 14-44s14 12 14 44z" fill="#FABD2F"/>
+<circle cx="288" cy="100" r="12" fill="#E8B48A"/>
+<path d="M276 98c0-11 6-16 13-16s13 6 11 13c-6-5-15-5-24 3z" fill="#5A3E30"/>
+<rect x="8" y="166" width="38" height="9" rx="4.5" fill="#5A3E30"/>
+<rect x="14" y="144" width="26" height="24" rx="6" fill="#45403D"/>
+<rect x="11" y="114" width="32" height="28" rx="7" fill="#E4E4E4"/>
+<rect x="16" y="119" width="22" height="15" rx="4" fill="#1D2021"/>
+<rect x="20" y="124" width="4" height="5" rx="1" fill="#8EC07C"/><rect x="30" y="124" width="4" height="5" rx="1" fill="#8EC07C"/>
+<path d="M27 114v-8" stroke="#E4E4E4" stroke-width="3" stroke-linecap="round"/><circle cx="27" cy="104" r="3.5" fill="#8EC07C"/>
+</svg>

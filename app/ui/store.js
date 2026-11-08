@@ -6,9 +6,10 @@
     onboarded: false,
     name: '',
     color: '#F26B1D',
-    theme: 'dark',            // a theme id from themes.js (dark = TribeCode Dark); 'system' is the old "follow the OS"
+    theme: 'campfire',        // a theme id from themes.js (Campfire is the default since v0.9.1); 'system' is the old "follow the OS"
     themeSystem: false,       // follow the OS light/dark setting with themeLight / themeDark
-    themeDark: 'dark', themeLight: 'light',
+    themeDark: 'campfire', themeLight: 'light',
+    themePicked: false,       // true once you pick a theme yourself (before v0.9.1 everyone had 'dark' saved by default)
     density: 'comfortable',   // comfortable | compact
     folder: '',
     brain: { enabled: false, model: '', host: 'http://localhost:11434' },

@@ -81,7 +81,7 @@ def main():
             host.close()
             for th in THEMES:
                 ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2 if shots else 1)
-                ctx.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', theme: '{th}', server: {{url: '{BASE}', token: '{tok}'}}}}))")
+                ctx.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', theme: '{th}', themePicked: true, server: {{url: '{BASE}', token: '{tok}'}}}}))")
                 ph = ctx.new_page(); ph.on("pageerror", lambda e, th=th: errors.append(f"{th}: {e}"))
                 ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("TribeClient.connected()", timeout=15000)
                 assert ph.evaluate("document.body.dataset.theme") == th, (th, ph.evaluate("document.body.dataset.theme"))

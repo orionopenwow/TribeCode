@@ -6,36 +6,39 @@
 // last light theme (themeLight) and the last dark theme (themeDark) you picked. The old value 'system' still works.
 (function () {
   const LIST = [
+    { id: 'campfire',    name: 'Campfire',       mode: 'dark',  sw: ['#1D2021', '#282828', '#8EC07C'] },   // the default
     { id: 'dark',        name: 'TribeCode Dark', mode: 'dark',  sw: ['#12151A', '#1B2028', '#F26B1D'] },
     { id: 'light',       name: 'Light',          mode: 'light', sw: ['#F4F5F7', '#FFFFFF', '#F26B1D'] },
     { id: 'midnight',    name: 'Midnight',       mode: 'dark',  sw: ['#0B0E14', '#11151D', '#F26B1D'] },
     { id: 'nordic',      name: 'Nordic',         mode: 'dark',  sw: ['#2A2F3A', '#323845', '#88C0D0'] },
     { id: 'nightshade',  name: 'Nightshade',     mode: 'dark',  sw: ['#21222C', '#2A2C39', '#BD93F9'] },
-    { id: 'campfire',    name: 'Campfire',       mode: 'dark',  sw: ['#1D2021', '#282828', '#8EC07C'] },
     { id: 'solar-dark',  name: 'Solar Dark',     mode: 'dark',  sw: ['#00232B', '#032F39', '#2AA198'] },
     { id: 'solar-light', name: 'Solar Light',    mode: 'light', sw: ['#EEE8D5', '#FDF6E3', '#2AA198'] },
     { id: 'contrast',    name: 'High contrast',  mode: 'dark',  sw: ['#000000', '#0A0A0A', '#FFFFFF'] },
   ];
+  const DEFAULT = 'campfire';
   const byId = id => LIST.find(t => t.id === id);
   const mq = window.matchMedia ? matchMedia('(prefers-color-scheme: light)') : { matches: false, addEventListener() {} };
 
   // Which theme id these settings show right now.
   function resolve(st) {
     st = st || {};
+    // Before v0.9.1 every device had theme 'dark' saved by default: unless you picked it yourself, that now means Campfire.
+    const fix = id => (id === 'dark' && !st.themePicked) ? DEFAULT : id;
     const sys = st.themeSystem || st.theme === 'system';
     if (sys) {
       if (mq.matches) return byId(st.themeLight) && byId(st.themeLight).mode === 'light' ? st.themeLight : 'light';
-      return byId(st.themeDark) && byId(st.themeDark).mode === 'dark' ? st.themeDark : 'dark';
+      return byId(fix(st.themeDark)) && byId(fix(st.themeDark)).mode === 'dark' ? fix(st.themeDark) : DEFAULT;
     }
-    return byId(st.theme) ? st.theme : 'dark';
+    return byId(fix(st.theme)) ? fix(st.theme) : DEFAULT;
   }
   // The settings patch for picking a theme in the picker (keeps "match system" in step).
   function pick(id) {
     const t = byId(id) || LIST[0];
-    return { theme: t.id, [t.mode === 'light' ? 'themeLight' : 'themeDark']: t.id };
+    return { theme: t.id, themePicked: true, [t.mode === 'light' ? 'themeLight' : 'themeDark']: t.id };
   }
   let apply = function apply(arg) {
-    const id = typeof arg === 'string' ? (arg === 'system' ? resolve({ theme: 'system' }) : (byId(arg) ? arg : 'dark')) : resolve(arg);
+    const id = typeof arg === 'string' ? (arg === 'system' ? resolve({ theme: 'system' }) : (byId(arg) ? arg : DEFAULT)) : resolve(arg);
     const t = byId(id), b = document.body;
     if (!b) return id;
     b.classList.toggle('dark', t.mode === 'dark');
@@ -75,6 +78,6 @@
   apply = function (arg) { const id = _apply(arg); paintWordmarks(); return id; };
   if (window.MutationObserver) new MutationObserver(muts => { if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches('img.brand-wm') || n.querySelector('img.brand-wm'))))) paintWordmarks(); })
     .observe(document.documentElement, { childList: true, subtree: true });
-  window.TribeThemes = { list: LIST, byId, resolve, pick, apply, saved, onSystemChange: f => listeners.add(f), paintWordmarks };
+  window.TribeThemes = { list: LIST, DEFAULT, byId, resolve, pick, apply, saved, onSystemChange: f => listeners.add(f), paintWordmarks };
   if (document.body) apply(saved());   // loaded at the end of <body>: paint the saved theme straight away
 })();

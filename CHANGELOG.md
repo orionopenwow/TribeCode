@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9.1
+
+- **Campfire is the default look**: warm greys with white text. The other 8 themes are still in Settings › Theme. If you never picked a theme you get Campfire; if you picked one, it stays
+- **Thicker icons on desktop**: the sidebar, user bar and title bar icons use the same heavier weight as the phone rack, slightly bigger, and the selected row's icon is bolder
+- **Help, top right**: a filled ? right of the window buttons opens the Guide (Start here, Connect Claude Code, Phones and friends, Troubleshooting), Keyboard shortcuts (also Ctrl /), Report a bug, Check for updates, What's new, the docs and TribeCode on GitHub, and the version you're on
+- **New download site**: modeled on cursor.com, in the Campfire palette. A left-aligned headline, Download for your OS and Try the live demo, then a live TribeCode window that plays on a loop (a friend asks, an agent streams its work, the game builds in the preview, a plan ticks off) over a flat campfire night scene with our characters. Four feature sections with small live mocks, real GitHub stats, and a final download block
+- **Phones**: the site keeps the live window's proportions at 390px and collapses the nav to Download and a menu. In the app, phones get Campfire by default too
+
 ## v0.9.0
 
 - **A real document editor**: on desktop, Google Docs meets Notion. A top bar with the title, where it lives, save status and who's editing. A sticky toolbar: undo/redo, text styles (Title, Subtitle, Heading 1–3, Quote, Code), bold, italic, underline, strike, code, text color, highlight, link, align, bullet/numbered/check lists, divider, table, clear formatting. Keyboard shortcuts like Google Docs. A left panel with your docs and a live outline of the headings, and a centered page about 720px wide. Ask AI and Share (a link that opens the doc) are in the top bar
