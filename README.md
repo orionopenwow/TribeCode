@@ -13,7 +13,7 @@ TribeCode is a free, open-source app for a few friends building one thing at the
 [![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)
 ![Desktop](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-6C7CFF.svg)
 
-**[Website](https://orionopenwow.github.io/TribeCode/about/)** · **[Open the app](https://orionopenwow.github.io/TribeCode/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect Claude Code](#connect-claude-code) · [Demo tribe](https://orionopenwow.github.io/TribeCode/demo.html)
+**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect Claude Code](#connect-claude-code) · [Demo tribe](https://tribecode.org/app/demo.html)
 
 </div>
 

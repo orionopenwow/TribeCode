@@ -169,7 +169,7 @@
         + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.', '', 'link', 'Copy a link', 'teal');
     // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
     const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`
-      : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://orionopenwow.github.io/TribeCode/about/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
+      : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://tribecode.org/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
     const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span><span class="gs-band-r">${on ? 'Pick up, or bring someone in' : 'Two ways in · about a minute'}</span></div>
@@ -955,7 +955,7 @@
       const { invite } = await C.api('/invites', { method: 'POST', body: { hours: 24, maxUses: 5, role: 'builder' } });
       let base = C.base(), site = null;
       try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null; if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) base = pick.url; } catch {}
-      const link = site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
+      const link = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
       shareState.link = link; homePanel();
       try { await navigator.clipboard.writeText(link); toast('Hub link copied. It works for 24 hours, for up to 5 friends.'); } catch { toast('Hub link ready: copy it from the panel.'); }
     } catch (e) { toast(e.message); }

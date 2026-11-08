@@ -211,3 +211,48 @@
   }
   $$('[data-loop]').forEach(root => { const ops = SCRIPTS[root.dataset.loop]; if (ops) runLoop(root, ops); });
 })();
+
+/* ---------- getting into the app: phones open it first; returning people get "Continue to your tribe" ---------- */
+(function () {
+  const root = document.documentElement;
+  // phones can't install the desktop app: "Open the app" leads, the desktop download follows
+  if (root.dataset.os === 'phone') root.classList.add('is-phone');
+  // the app and the site share this origin, so the app's saved settings tell us you've been in before
+  let st = null; try { st = JSON.parse(localStorage.getItem('tribecode.settings.v1') || 'null'); } catch (e) {}
+  const back = st && (st.name || (st.server && st.server.token));
+  const bar = document.getElementById('continue');
+  if (back && bar) {
+    const first = String(st.name || '').trim().split(/\s+/)[0];
+    const label = bar.querySelector('[data-continue-label]'); if (label) label.textContent = first ? `Welcome back, ${first}. Continue to your tribe` : 'Continue to your tribe';
+    bar.hidden = false;
+    document.querySelectorAll('[data-open-app]').forEach(a => { a.firstChild && a.firstChild.nodeType === 3 && (a.firstChild.textContent = a.classList.contains('nav__open') ? 'Open your tribe' : 'Continue in your browser'); });
+  }
+})();
+
+/* ---------- the hero's typing line: things people ask their tribe, typed out one after another ---------- */
+(function () {
+  const el = document.querySelector('[data-typer]'); if (!el) return;
+  const ASKS = [
+    'make a website for my game and invite my friends',
+    'connect my Claude and fix the jump physics',
+    'plan the boss fight with Maya’s Claude',
+    'add a title screen, then ship v0.2',
+    'turn tonight’s huddle into notes and tasks',
+    'split the levels so nobody steps on each other',
+    'host our tribe from my laptop',
+    'preview the game on my phone',
+  ];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = ASKS[0]; return; }
+  let i = 0, n = ASKS[0].length, dir = -1, visible = true;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(el);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  (async function loop() {
+    await wait(2200);                     // the first line sits there as the page loads
+    for (;;) {
+      if (!visible || document.hidden) { await wait(400); continue; }
+      const t = ASKS[i];
+      if (dir < 0) { n--; el.textContent = t.slice(0, n); el.scrollLeft = el.scrollWidth; await wait(18); if (n <= 0) { dir = 1; i = (i + 1) % ASKS.length; await wait(260); } }
+      else { n++; el.textContent = ASKS[i].slice(0, n); el.scrollLeft = el.scrollWidth; await wait(34 + Math.random() * 40); if (n >= ASKS[i].length) { dir = -1; await wait(2300); } }
+    }
+  })();
+})();
