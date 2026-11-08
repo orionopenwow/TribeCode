@@ -154,7 +154,7 @@ def main():
             host.select_option('[data-col="doing"] .task select[data-assign]', label="Maya")
             friend.wait_for_function("document.querySelector('[data-col=\"doing\"] select[data-assign]').selectedOptions[0].text === 'Maya'", timeout=5000)
             # presence shows where people are
-            host.wait_for_function("document.querySelector('#room-list').innerText.includes('Tasks')", timeout=5000)
+            host.wait_for_function("document.querySelector('#room-list').innerText.includes('Task Board')", timeout=5000)
             shot(host, "tasks-live")
 
             # stored as markdown on disk
