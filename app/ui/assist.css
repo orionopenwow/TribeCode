@@ -35,7 +35,7 @@
 @keyframes av-blink { to { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .av-spin { animation: none; } }
 
-.av-text { width: 100%; min-height: 150px; resize: vertical; font-size: 14px; line-height: 1.6; }
+textarea.av-text { width: 100%; height: 200px; min-height: 120px; resize: vertical; font-size: 14px; line-height: 1.6; }
 .av-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; margin: 8px 0 4px; }
 .av-chip { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 14px; font-size: 12.5px; color: var(--text); background: var(--surface); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .av-chip svg.i { width: 12px; height: 12px; fill: none; stroke: var(--accent-ink); stroke-width: 2; flex: none; }
@@ -70,7 +70,7 @@
   .av-seg { flex-basis: 100%; order: 2; }
   .av-row #av-go { margin-left: auto; order: 1; }
   .av-row .av-agent { order: 3; flex-basis: 100%; }
-  .av-text { min-height: 120px; height: 150px; }
+  textarea.av-text { height: 150px; }
   .av-opt { padding: 6px 8px; }
   .as-idea { min-height: 44px; }
   .as-x { width: 44px; }
