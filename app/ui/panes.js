@@ -31,8 +31,9 @@
     h.addEventListener('pointerdown', e => {
       if (e.button !== 0) return; e.preventDefault(); h.setPointerCapture(e.pointerId);
       const k = which === 'side' ? 'side' : rightKey(), wr = win.getBoundingClientRect();
+      const sideEl = document.querySelector('#tour-side'), sideLeft = sideEl ? sideEl.getBoundingClientRect().left : wr.left + RAIL;   // qa-qol-2: measured (the rail got narrower than RAIL), so the edge follows the pointer exactly
       document.body.classList.add('pane-resizing'); h.classList.add('on');
-      const move = ev => { const v = k === 'side' ? ev.clientX - wr.left - RAIL : wr.right - ev.clientX; saved[k] = clamp(k, v); win.style.setProperty(varOf(k), saved[k] + 'px'); place(); dispatchEvent(new Event('resize')); };
+      const move = ev => { const v = k === 'side' ? ev.clientX - sideLeft : wr.right - ev.clientX; saved[k] = clamp(k, v); win.style.setProperty(varOf(k), saved[k] + 'px'); place(); dispatchEvent(new Event('resize')); };
       const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); document.body.classList.remove('pane-resizing'); h.classList.remove('on'); save(); };
       h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
     });

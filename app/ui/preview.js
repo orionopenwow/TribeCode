@@ -128,8 +128,8 @@
     if (empty) {
       frame = null; helperAlive = false;
       holder.innerHTML = !info.hasRepo
-        ? `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No repo yet</h3><p>Point this project at a folder or a GitHub repo, and the app it builds shows up here, live.</p><button class="btn primary" data-act="repo">Set up the repo</button></div>`
-        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No index.html yet — ask your AI to start one</h3><p>The preview shows the repo's <code>index.html</code> (or one in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>) and reloads as files change.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my AI to start one</button></div>`;
+        ? `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>Nothing to show yet</h3><p>Your app appears here once the project has a repo: the shared folder that holds its code. Make one, and the app shows up here, live.</p><button class="btn primary" data-act="repo">Set up the repo</button></div>`
+        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No page to show yet</h3><p>When your app has a first page, you see it here, and it refreshes by itself as your tribe changes it. Ask your AI to make that first page.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my AI to start one</button><details class="pvw-what"><summary>What does it look for?</summary><p>A file called <code>index.html</code> in the repo (or in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>).</p></details></div>`;
       layout(); return;
     }
     if (!frame || !frame.isConnected) {

@@ -318,7 +318,7 @@ def main():
             host.wait_for_function("TribeClient.project() === %r" % ep, timeout=8000)
             host.evaluate("TribePreview.open()")
             host.wait_for_selector("#pvw.is-empty .pvw-empty", timeout=10000)
-            wait_text(host, "#pvw", "No index.html yet")
+            wait_text(host, "#pvw", "No page to show yet")
             assert host.locator("#pvw [data-act='tab']").is_disabled()
             host.click("#pvw [data-act='ask']")
             wait_text(host, ".toast", "Asked", timeout=5000)

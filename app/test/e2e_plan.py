@@ -268,8 +268,8 @@ def main():
 
             # ---------- 6. comments: add, reply, resolve ----------
             friend.click('[data-nav="docs"]:visible')
-            friend.wait_for_selector(".doc-item:has-text('Roadmap')"); friend.click(".doc-item:has-text('Roadmap')")
-            friend.wait_for_function("document.querySelector('#doc-title').value === 'Roadmap'")
+            friend.locator(".fg-card[title='Roadmap'], .doc-item:has-text('Roadmap')").locator("visible=true").first.click(timeout=15000)   # desktop Files opens on the file grid
+            friend.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Roadmap'")
             host.click("[data-mode='read']") if host.locator("[data-mode='read'].on").count() == 0 else None
             host.evaluate("""() => { const el = document.querySelector('#doc-read'); const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n;
                 while ((n = w.nextNode())) { const i = n.nodeValue.indexOf('fishing mini-game'); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + 'fishing mini-game'.length);
@@ -336,6 +336,7 @@ def main():
             # ---------- 8. pinning + nesting ----------
             host.click("[data-mode='write']")
             host.click("#dx-pin")
+            if host.locator("#dl-side-open").is_visible(): host.click("#dl-side-open")   # the doc's side panel starts hidden (Files tidy)
             host.wait_for_selector("#doc-list .dx-sec:has-text('Pinned')")
             host.wait_for_selector("#side-pins:not(.hidden) .item:has-text('Roadmap')")
             assert api("/docs/roadmap", token=host_tok)["doc"].get("pinned") is True
@@ -390,8 +391,8 @@ def main():
             assert vd[-1]["priority"] == "low", vd
 
             # ---------- 10. floating windows survive view switches and reloads ----------
-            host.click('[data-nav="docs"]:visible'); host.click(".doc-item:has-text('Roadmap')")
-            host.wait_for_function("document.querySelector('#doc-title').value === 'Roadmap'")
+            host.click('[data-nav="docs"]:visible'); host.locator(".fg-card[title='Roadmap'], .doc-item:has-text('Roadmap')").locator("visible=true").first.click(timeout=15000)
+            host.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Roadmap'")
             host.click("#dx-float")
             host.wait_for_selector(".fwin[data-float='doc:roadmap'] .fwin-md h2:has-text('Now')")
             head = host.locator(".fwin[data-float='doc:roadmap'] .fwin-head").bounding_box()
@@ -423,9 +424,10 @@ def main():
             assert abs(pos2["x"] - pos["x"]) < 3 and abs(pos2["y"] - pos["y"]) < 3, (pos, pos2)
             host.click(".fwin[data-float='doc:roadmap'] [data-x]")
             assert host.locator(".fwin[data-float='doc:roadmap']").count() == 0
-            # person peek from the room list
-            host.locator("#room-list [data-follow]:has-text('Maya')").first.dispatch_event("mouseover"); host.locator("#room-list [data-follow]:has-text('Maya')").first.dispatch_event("mouseenter")
-            host.wait_for_selector(".tf-peek:has-text('Maya')", timeout=4000)
+            # person peek from the room list (desktop has no people list in the right panel since v0.17.3: only where it shows)
+            if host.locator("#room-list").is_visible():
+                host.locator("#room-list [data-follow]:has-text('Maya')").first.dispatch_event("mouseover"); host.locator("#room-list [data-follow]:has-text('Maya')").first.dispatch_event("mouseenter")
+                host.wait_for_selector(".tf-peek:has-text('Maya')", timeout=4000)
 
             # ---------- phone: comments sheet + calendar fit ----------
             phone = open_as(b, "Maya", maya_tok, viewport=(390, 844))

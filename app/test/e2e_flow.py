@@ -134,7 +134,7 @@ def main():
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")   # step 3: invite friends
             host.wait_for_selector("#view-chat:not(.hidden) #flow-kick")
             pid = host.evaluate("TribeClient.project()"); assert pid == "orion-s-studio", pid
-            host.wait_for_function("document.querySelectorAll('#flow-kick .fk-steps li.ok').length === 4", timeout=25000)
+            host.wait_for_function("document.querySelectorAll('#flow-dock .fk-steps li.ok').length === 4", timeout=25000)
             assert "started **Orion's Studio**" in json.dumps(api("/chat/general?limit=20", token=token, project=pid)[1])
             ws = Path(tmp, "workspaces", pid)
             for f in ["README.md", "VISION.md", "CLAUDE.md", "PLAN.md", "TRIBE_CONTEXT.md", "app/README.md", "design/README.md", "tests/README.md"]:
