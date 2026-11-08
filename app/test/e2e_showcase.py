@@ -2,9 +2,9 @@
 
 Assembles the Pages layout like the workflow (app/ui at the root, site/ under /about/) on a static server, then checks:
 no console errors, every link has a real target (in-page anchors exist, local pages answer 200), every image loads,
-the demo video and its GIF exist, no sideways scroll at 390px (menu open too), the download button picks the visitor's
+the demo video and GIF the README uses exist, no sideways scroll at 390px (menu open too), the download button picks the visitor's
 OS from the latest release, live GitHub numbers render from the API, the fallback renders when the API is unreachable,
-and reduced motion shows everything at once with the video paused. External requests never leave the test.
+and reduced motion shows everything at once with the live mocks on their finished frame. External requests never leave the test.
 
 Usage: python app/test/e2e_showcase.py [--shots]   (--shots saves docs/screenshots/showcase-*.png)
 """
@@ -106,22 +106,21 @@ def main():
             pg = ctx.new_page(); watch(pg, errs)
             pg.goto(ABOUT); pg.wait_for_load_state("load")
             assert pg.title().startswith("TribeCode"), pg.title()
-            assert "Build one app together with friends" in pg.inner_text("h1")
+            assert "Claude agents" in pg.inner_text("h1")
             assert pg.locator('meta[property="og:image"]').get_attribute("content").endswith("/about/assets/og-image.png")
             # live GitHub numbers, release line and downloads from the release (headless Chrome here reports Linux)
-            pg.wait_for_function("document.querySelector('[data-gh=forks]').textContent === '56' && document.querySelector('.gh [data-gh=version]').textContent === 'v9.9.9'", timeout=8000)
-            assert pg.inner_text(".gh [data-gh=stars]") == "1.2k" and pg.inner_text(".nav [data-gh=stars]") == "1.2k" and pg.is_visible(".nav [data-gh=stars]")
-            assert pg.inner_text(".gh [data-gh=issues]") == "7" and pg.inner_text(".gh [data-gh=version]") == V
-            eb = pg.text_content(".hero .eyebrow"); assert V in eb and "works with Claude Code" in eb, eb
-            pg.wait_for_selector(".gh__faces img")
+            pg.wait_for_function("document.querySelector('[data-gh=forks]').textContent === '56' && document.querySelector('.stats [data-gh=version]').textContent === 'v9.9.9'", timeout=8000)
+            assert pg.inner_text(".stats [data-gh=stars]") == "1.2k" and pg.inner_text(".nav [data-gh=stars]") == "1.2k" and pg.is_visible(".nav [data-gh=stars]")
+            assert pg.inner_text(".stats [data-gh=version]") == V
+            eb = pg.text_content(".hero__meta"); assert V in eb and "works with Claude Code" in eb, eb
             assert not pg.is_visible("[data-gh-fallback]")
             main_dl = pg.locator(".hero [data-dl-main]")
             assert main_dl.get_attribute("href").endswith("_amd64.AppImage") and "Download for Linux" in main_dl.inner_text(), main_dl.get_attribute("href")
             # the other platforms
-            pg.click(".dl__more"); assert pg.is_visible("#dl-menu")
-            hrefs = {a.get_attribute("data-os"): a.get_attribute("href") for a in pg.locator("#dl-menu [data-os]").all()}
+            pg.click("button[aria-controls=menu-download]"); assert pg.is_visible("#menu-download")
+            hrefs = {a.get_attribute("data-os"): a.get_attribute("href") for a in pg.locator(".plats [data-os]").all()}
             assert hrefs["windows"].endswith("_x64-setup.exe") and hrefs["mac"].endswith("_aarch64.dmg") and hrefs["deb"].endswith(".deb"), hrefs
-            pg.keyboard.press("Escape"); assert not pg.is_visible("#dl-menu")
+            pg.keyboard.press("Escape"); assert not pg.is_visible("#menu-download")
             # every link points somewhere real
             links = pg.evaluate("[...document.querySelectorAll('a')].map(a => ({ raw: a.getAttribute('href'), abs: a.href, text: a.textContent.trim() || a.getAttribute('aria-label') }))")
             assert len(links) > 30
@@ -134,25 +133,18 @@ def main():
                     assert status(l["abs"].split("#")[0]) == 200, l
                 else:
                     assert l["abs"].startswith("https://"), l
-            for t in ["Open the app", "On your phone"]:
-                assert pg.locator(f".hero a:has-text('{t}')").count() == 1, t
-            assert pg.locator(".hero a:has-text('Open the app')").get_attribute("href") == "../"
-            # images load (lazy ones after scrolling), the demo video has its sources and a GIF fallback
+            assert pg.locator(".hero a:has-text('Try the live demo')").get_attribute("href") == "../demo.html"
+            assert pg.locator(".nav__end a:has-text('Open the app')").get_attribute("href") == "../"
+            # images load (lazy ones after scrolling), the live stage mock runs, mocks and reveals follow the scroll
             scroll_through(pg)
-            bad = pg.evaluate("[...document.images].filter(i => !i.closest('video') && !i.naturalWidth).map(i => i.src)")
+            bad = pg.evaluate("[...document.images].filter(i => !i.naturalWidth).map(i => i.src)")
             assert not bad, bad
-            srcs = pg.evaluate("[...document.querySelectorAll('video source')].map(s => s.src).concat([document.querySelector('video').poster, document.querySelector('video img').src])")
-            assert len(srcs) == 4 and all(status(s) == 200 for s in srcs), srcs
-            pg.wait_for_function("!document.querySelector('video').paused && document.querySelector('video').readyState >= 2", timeout=10000)
-            pg.click("[data-video-toggle]"); assert pg.evaluate("document.querySelector('video').paused")
-            assert pg.get_attribute("[data-video-toggle]", "aria-label") == "Play the demo"
-            # scroll reveal, the typed command, the campfire
-            pg.locator("#claude").scroll_into_view_if_needed()
-            pg.wait_for_function("document.querySelector('.term').classList.contains('is-done')", timeout=10000)
-            assert pg.inner_text("#mcp-line").startswith("claude mcp add --transport http tribecode ")
+            for f in ["demo.gif", "demo.mp4", "demo.webm", "demo-poster.webp"]:   # still used by the README
+                assert status(ABOUT + "assets/" + f) == 200, f
+            pg.wait_for_function("document.querySelector('[data-loop=stage]').dataset.state === 'running'", timeout=8000)
+            pg.locator("#host .mini").scroll_into_view_if_needed(); pg.wait_for_timeout(1500)
+            assert pg.evaluate("document.querySelectorAll('#host [data-step].on').length") >= 1
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 5
-            pg.locator(".cta").scroll_into_view_if_needed(); pg.wait_for_timeout(1200)
-            assert pg.evaluate("(() => { const c = document.querySelector('.fire__embers'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; })()"), "embers are drawn"
             # never presented as Anthropic's: an independent project that works with Claude Code
             body = pg.inner_text("body")
             assert "© 2026 TribeCode contributors · MIT" in body and "independent project" in body
@@ -180,20 +172,20 @@ def main():
             ph.goto(ABOUT); ph.wait_for_load_state("load")
             ph.wait_for_selector("[data-gh-fallback]:not([hidden])", timeout=12000)
             assert "github.com/orionopenwow/TribeCode" in ph.inner_text("[data-gh-fallback]")
-            assert ph.inner_text(".gh [data-gh=stars]") == "–" and not ph.is_visible(".nav [data-gh=stars]")
+            assert ph.inner_text(".stats [data-gh=stars]") == "–" and not ph.is_visible(".nav [data-gh=stars]")
             assert ph.locator(".hero [data-dl-main]").get_attribute("href") == "https://github.com/orionopenwow/TribeCode/releases/latest", "falls back to the releases page"
             assert "Desktop app" in ph.inner_text(".hero [data-dl-label]"), "a phone isn't offered an installer as if it could run it"
             no_overflow(ph, "phone top")
             scroll_through(ph)
             for y in [0.25, 0.5, 0.75, 1.0]:
                 ph.evaluate(f"scrollTo({{top: document.body.scrollHeight * {y}, behavior: 'instant'}})"); ph.wait_for_timeout(120); no_overflow(ph, f"phone at {int(y * 100)}%")
-            assert not ph.evaluate("[...document.images].filter(i => !i.closest('video') && !i.naturalWidth).map(i => i.src)")
-            ph.evaluate("scrollTo(0, 0)"); ph.click(".nav__toggle"); assert ph.is_visible("#nav-links a[href='#phone']"); no_overflow(ph, "phone menu")
+            assert not ph.evaluate("[...document.images].filter(i => !i.naturalWidth).map(i => i.src)")
+            ph.evaluate("scrollTo(0, 0)"); ph.click(".nav__toggle"); assert ph.is_visible("#nav-links a[href='docs.html']"); no_overflow(ph, "phone menu")
+            ph.click("button[aria-controls=menu-features]"); assert ph.is_visible("#nav-links a[href='#phone']"); no_overflow(ph, "phone menu open")
             ph.click("#nav-links a[href='#phone']")
             ph.wait_for_function("Math.abs(document.querySelector('#phone').getBoundingClientRect().top) < 120", timeout=5000)
             assert not ph.is_visible("#nav-links a[href='#phone']"), "the menu closes after a pick"
-            assert ph.evaluate("document.querySelector('.qr img').naturalWidth > 0")
-            for sel in [".ctas .btn", ".flow__s", ".cmp__row", ".frame--phone"]:
+            for sel in [".hero__ctas .btn", ".get__ctas .btn", ".lane", ".plats a", ".ph", ".mk-win", ".mk-card"]:
                 w = ph.evaluate(f"Math.max(...[...document.querySelectorAll('{sel}')].map(e => e.getBoundingClientRect().right))")
                 assert w <= 390, (sel, w, ph.evaluate(f"[...document.querySelectorAll('{sel}')].filter(e => e.getBoundingClientRect().right > 390).map(e => e.outerHTML.slice(0, 160))"))
             if SHOTS:
@@ -208,13 +200,8 @@ def main():
             rm = ctx.new_page(); watch(rm, errs)
             rm.goto(ABOUT); rm.wait_for_load_state("load"); rm.wait_for_timeout(400)
             assert rm.evaluate("[...document.querySelectorAll('.reveal')].every(e => getComputedStyle(e).opacity === '1')"), "everything shows at once"
-            assert rm.evaluate("document.querySelector('video').paused"), "the demo waits for a click"
-            assert rm.get_attribute("[data-video-toggle]", "aria-label") == "Play the demo"
-            assert rm.inner_text("#mcp-line").startswith("claude mcp add") and rm.evaluate("document.querySelector('.term').classList.contains('is-done')")
-            assert rm.evaluate("getComputedStyle(document.querySelector('.flame--outer')).animationName") == "none"
-            rm.locator(".cta").scroll_into_view_if_needed(); rm.wait_for_timeout(500)
-            assert not rm.evaluate("(() => { const c = document.querySelector('.fire__embers'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; })()"), "no embers"
-            assert rm.evaluate("[...document.querySelectorAll('[data-parallax]')].every(e => !e.style.transform)")
+            assert rm.evaluate("[...document.querySelectorAll('[data-loop]')].every(l => l.dataset.state === 'done')"), "the mocks show their finished frame"
+            assert rm.evaluate("getComputedStyle(document.querySelector('#pv-lantern')).animationName") == "none"
             assert not errs, errs
             ctx.close()
             b.close()
