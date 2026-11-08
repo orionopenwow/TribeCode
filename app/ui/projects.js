@@ -47,7 +47,8 @@
   const pinit = n => String(n || '?').trim().split(/[\s_-]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
   function face(p, cls = '') {
     if (p.image) return `<span class="pj-face ${cls} img" style="--pc:${esc(p.color)}"><img src="${esc(p.image)}" alt=""></span>`;
-    return `<span class="pj-face ${cls} ${p.emoji ? 'emo' : ''}" style="--pc:${esc(p.color)};color:${ink(p.color)}">${esc(p.emoji || pinit(p.name))}</span>`;
+    if (p.emoji) return `<span class="pj-face ${cls} emo" style="--pc:${esc(p.color)}"><i class="pj-emo">${esc(p.emoji)}</i></span>`;
+    return `<span class="pj-face ${cls}" style="--pc:${esc(p.color)};color:${ink(p.color)}">${esc(pinit(p.name))}</span>`;
   }
   const label = p => `${p.emoji ? esc(p.emoji) + ' ' : ''}${esc(p.name)}`;
   // Discord-style: a white pill on the left edge for unread chat, a red count for things waiting on you.

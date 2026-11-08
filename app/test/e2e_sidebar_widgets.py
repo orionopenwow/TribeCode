@@ -110,7 +110,7 @@ def main():
 
         # ---- API: auto rows + permissions
         w = ok(api(f"/projects/{pid}/widgets", token=orion))
-        assert w["preview"] == {"show": True, "label": "Preview game"}, w["preview"]
+        assert w["preview"] == {"show": True, "kind": "game", "label": "Preview game"}, w["preview"]
         assert w["website"]["show"] is False and w["widgets"] == [] and w["canEdit"] is True, w
         assert ok(api(f"/projects/{pid}/widgets", token=sam))["canEdit"] is False
         assert api(f"/projects/{pid}/widgets", "PUT", {"widgets": [{"kind": "builtin", "key": "bugs"}]}, token=sam)[0] == 403, "spectators can't add"

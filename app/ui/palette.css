@@ -66,3 +66,24 @@ button.claude[data-give]::before { content: '✨'; }
 .repo-view .view-head h1::before, #view-repo .view-head h1::before { content: '🌿'; }
 #view-tasks .view-head h1::before, #view-bugs .view-head h1::before, #view-board .view-head h1::before, .cal-headbar h1::before, .repo-view .view-head h1::before, #view-repo .view-head h1::before {
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: .78em; margin-right: .38em; vertical-align: .06em; filter: saturate(.8) contrast(.95); }
+
+/* ---- project faces: an emoji fills its tile, centred, on a soft tint of the project's color (no frame, no bottom bar),
+   so the button takes the emoji's shape instead of boxing a small glyph in the top half. A picture (a transparent PNG
+   too) sits on the same tint. Sized from the tile itself, so every place a face shows (rail, nest, sheets, phone) matches. */
+.pj-face.emo, .pj-face.img { background: color-mix(in srgb, var(--pc, var(--accent)) 20%, var(--surface-2)) !important; box-shadow: none !important; }
+.pj-face.emo { container-type: size; font-size: 0 !important; }
+.pj-face .pj-emo { font-style: normal; display: block; font-size: 62cqmin; line-height: 1; text-align: center;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; transform: translateY(2%); }
+.pj-face-btn:hover .pj-face { box-shadow: inset 0 0 0 2px var(--edge-pop) !important; }
+
+/* ---- gentle emoji: Your agents, the onboarding checklist ---- */
+.ah-head h1::before { content: '🤖'; margin-right: 10px; font-size: .85em; }
+#pj-check .ock-head h3::before { content: '🧭'; margin-right: 8px; }
+#pj-check .ock-row .ock-l::before { margin-right: 8px; }
+#pj-check .ock-row[data-step="vision"] .ock-l::before { content: '✨'; }
+#pj-check .ock-row[data-step="task"] .ock-l::before { content: '📝'; }
+#pj-check .ock-row[data-step="friend"] .ock-l::before { content: '👋'; }
+#pj-check .ock-row[data-step="claude"] .ock-l::before { content: '🤖'; }
+#pj-check .ock-row[data-step="repo"] .ock-l::before { content: '🌿'; }
+#pj-check .ock-row.on .ock-l::before { filter: grayscale(1); opacity: .5; }
+#pj-check.done .ock-allset::before { content: '🎉'; margin-right: 6px; }
