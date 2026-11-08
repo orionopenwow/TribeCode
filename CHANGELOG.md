@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.6
+
+- **Docs edit like Google Docs**: you see real headings, bold, italic, underline, colors, highlights, bullet and numbered lists, clickable checkboxes, quotes, code blocks, tables and dividers while you type, instead of Markdown symbols. Typing shortcuts format as you go (`# ` heading, `- ` bullet, `1. ` numbered, `[] ` checklist, `> ` quote, ``` code, `---` divider, `**bold**`). Enter continues a list, and Enter on an empty item ends it. Live co-editing, comments, history, dictation and Claude's tools all keep working, because docs are still saved as Markdown underneath. Paste brings formatting in safely. Undo never removes a teammate's text. **View Markdown** in the ⋯ / ⋮ menu shows the raw text
+- **Phones**: the same rich editing. Tapping a checkbox ticks it without opening the keyboard, and the cursor stays above the format bar
+
 ## v0.9.5
 
 - **A cleaner project Overview**, laid out like your mockup:

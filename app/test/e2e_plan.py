@@ -252,7 +252,7 @@ def main():
             host.wait_for_selector("#doc-ac:not(.hidden) button:has-text('Maya')")
             host.keyboard.press("Enter")
             host.keyboard.type("for the fishing spec.", delay=10)
-            assert "See [[Roadmap]] for scope. Over to @Maya for the fishing spec." in host.input_value("#doc-body")
+            assert "See [[Roadmap]] for scope. Over to @Maya for the fishing spec." in host.evaluate("document.querySelector('#doc-body').value")
             wait_for(lambda: "@Maya for the fishing" in api(f"/docs/{meeting['slug']}", token=host_tok)["doc"]["body"], what="live edit persisted")
             m = wait_for(lambda: [e for e in bus(host_tok, "mention") if e["to"] == [maya_id] and e.get("ref") == meeting["slug"]], what="mention notification")
             assert "mentioned you" in m[0]["title"]
@@ -330,7 +330,7 @@ def main():
             old = api(f"/docs/roadmap/history/{v1}", token=host_tok)["version"]["body"]
             host.click("#hist-restore")
             friend.wait_for_function("([t]) => document.querySelector('#doc-body').value.trim() === t.trim()", arg=[old], timeout=8000)
-            assert "VR mode" not in friend.input_value("#doc-body")
+            assert "VR mode" not in friend.evaluate("document.querySelector('#doc-body').value")
             wait_for(lambda: api("/docs/roadmap", token=host_tok)["doc"]["body"].strip() == old.strip(), what="restore persisted")
 
             # ---------- 8. pinning + nesting ----------

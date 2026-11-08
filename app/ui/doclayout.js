@@ -135,6 +135,7 @@
 
   // ---------- markdown edits ----------
   function edit(ta, from, to, text, a, b) {
+    if (ta.rtEdit) return ta.rtEdit(from, to, text, a, b);   // feat/richtext: the rich surface edits its Markdown itself
     ta.focus({ preventScroll: true });
     ta.setSelectionRange(from, to);
     let ok = false;
@@ -288,7 +289,7 @@
     const min = Math.min(...hs.map(h => h.level));
     insertBlock(ta, '**Contents**\n' + hs.map(h => `${'  '.repeat(h.level - min)}- ${h.text}`).join('\n'));
   }
-  function history(ta, dir) { ta.focus({ preventScroll: true }); try { document.execCommand(dir); } catch {} }
+  function history(ta, dir) { if (ta.rtUndo) return dir === 'undo' ? ta.rtUndo() : ta.rtRedo(); ta.focus({ preventScroll: true }); try { document.execCommand(dir); } catch {} }
 
   function styleOf(ta) {
     const v = ta.value, pos = ta.selectionStart, [s, e] = lineRange(v, pos, pos), line = v.slice(s, e);
@@ -583,6 +584,7 @@
     return out;
   }
   function caretY(ta, pos) {
+    if (ta.rtCaretY) return ta.rtCaretY(pos);   // feat/richtext
     const m = document.createElement('div'), cs = getComputedStyle(ta);
     ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'padding', 'border', 'letterSpacing', 'wordSpacing', 'tabSize', 'width', 'boxSizing'].forEach(k => (m.style[k] = cs[k]));
     Object.assign(m.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre-wrap', overflowWrap: 'break-word', top: '0', left: '0', height: 'auto' });
