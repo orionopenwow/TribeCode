@@ -4,6 +4,9 @@
 
 - **Flint's flame is a button**: click the flame in the Ask Flint bar for a small menu: What's new?, Take a note, Make a task, What did we decide?, Show me around, What can Flint do?, and Pick Flint's brain
 - **Getting started, tucked away**: in Messages it's a slim bar now. Open shows the card as a pop-out over the chat (invite link, roles, notes, Start the flow) instead of pushing your messages down; it opens by itself right after you create a project
+- **Rail**: tighter, like Discord: 40px rounded squares, 8px apart; Home is a pixel tent and moon with no tile behind it
+- **Messages**: the composer runs nearly edge to edge and the avatars line up with its + button
+- **Window buttons**: minimize (yellow) now sits before maximize (green); your avatar's online dot sits on its edge
 - **Phones**: the friend's "You're in" card on a phone is unchanged; the Flint menu works there too
 
 ## v0.17.7
