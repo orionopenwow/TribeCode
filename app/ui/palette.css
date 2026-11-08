@@ -188,7 +188,7 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .rn-t b { font-size: 15px; font-weight: 650; } .rn-t small { font-size: 13px; color: var(--muted); line-height: 1.4; }
 
 /* The top-bar breadcrumb (Project / Section) repeated the sidebar, so it's gone; the Hosting pill and search stay */
-.titlebar #crumbs, #crumbs { display: none !important; }
+@media (min-width: 821px) { .titlebar #crumbs, #crumbs { display: none !important; } }
 /* Flint's bar matches the chat composer: a rounded rectangle, not a pill */
 .fl-bar { border-radius: 12px; height: 44px; }
 .ff-foot .fl-bar { border-radius: 14px; height: 48px; }

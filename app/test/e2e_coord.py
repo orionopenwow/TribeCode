@@ -304,7 +304,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         # the shell: circles, nest, breadcrumbs, right panel
         for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", "#nest-ws-tasks", "#nest-ws-agents", "#ub-gear", "#tour-invite", "#tour-search", "#tour-room"]:
             host.wait_for_selector(sel, state="visible")
-        assert host.locator("#crumbs").is_hidden(), "the breadcrumb is gone: the sidebar already says where you are"
+        assert host.locator("#crumbs").is_hidden(), "the breadcrumb is gone on desktop: the sidebar already says where you are"
         # the nest: four rows; the full feature set lives in the Tasks & Board and Agents Hub tabs (e2e_nav.py covers it in depth)
         for label in ["Messages", "Files", "Task Board", "Agents Hub"]:   # Settings: the gear in the bottom-left user bar
             wait_text(host, "#tour-side", label)
