@@ -1,0 +1,127 @@
+/* The demo tour (director.js). Flat matte: 1px borders, depth from luminance steps, no glows, blur or gradients.
+   Ghost cursors wear their owner's name color; click ripples are thin rings that grow and fade. */
+
+/* room for the chapter bar under the app (desktop) */
+body.dt-on .shell { height: calc(100vh - 58px); }
+
+/* the app's own floating bits move above the caption and the bar while the tour plays */
+body.dt-on .toast { bottom: auto; top: 84px; }
+body.dt-on .sc-cele { bottom: 132px; }
+
+/* ---------- ghost cursors ---------- */
+.dt-layer { position: fixed; inset: 0; pointer-events: none; z-index: 2147483000; overflow: hidden; }
+.dt-cur { position: absolute; left: 0; top: 0; will-change: transform; --c: #F26B1D; }
+.dt-arrow { width: 18px; height: 22px; display: block; fill: var(--c); stroke: #12151A; stroke-width: 1.2; stroke-linejoin: round; transition: transform .12s ease-out; transform-origin: 2px 2px; }
+.dt-cur.down .dt-arrow { transform: scale(.86); }
+.dt-name { position: absolute; left: 16px; top: 18px; padding: 2px 8px; border-radius: 6px; background: var(--c); color: #12151A; font: 700 11.5px/1.5 var(--font, Inter, system-ui, sans-serif); white-space: nowrap; border: 1px solid rgba(0, 0, 0, .25); }
+/* touch: a round fingertip instead of an arrow (phones, and the phone-approval moment) */
+.dt-cur.touch .dt-arrow { display: none; }
+.dt-dot, .dt-cur.touch::before { content: ''; position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--c); background: rgba(18, 21, 26, .35); box-sizing: border-box; }
+.dt-cur.touch .dt-dot + .dt-name, .dt-cur.touch .dt-name { left: 16px; top: 12px; }
+.dt-cur.touch.down .dt-dot, .dt-cur.touch.down::before { transform: scale(.85); }
+.dt-cur:has(.dt-dot)::before { content: none; }
+.dt-ripple { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 2px solid var(--c, #F26B1D); animation: dt-ring .6s ease-out forwards; }
+@keyframes dt-ring { from { transform: scale(1); opacity: .95; } to { transform: scale(5.2); opacity: 0; } }
+
+/* things carried by a cursor: a file, a task card */
+.dt-carry { position: absolute; left: 0; top: 0; will-change: transform; }
+.dt-carry.file { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--surface-2, #1E242D); border: 1px solid var(--edge, #2A313C); color: var(--text, #E8EAED); font: 600 13px var(--font, Inter, sans-serif); }
+.dt-file { font-size: 18px; }
+.dt-card { width: 200px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2, #1E242D); border: 1px solid var(--accent, #F26B1D); color: var(--text, #E8EAED); font: 600 13px/1.35 var(--font, Inter, sans-serif); }
+.task.dt-lifted { opacity: .35; }
+
+/* ---------- caption: one short line per chapter, above the bar ---------- */
+.dt-cap { position: fixed; left: 50%; bottom: 72px; transform: translate(-50%, 6px); z-index: 2147482990; display: grid; gap: 2px; max-width: min(640px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 12px;
+  background: var(--surface, #1B2028); border: 1px solid var(--edge, #2A313C); color: var(--text, #E8EAED); text-align: center; opacity: 0; pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+.dt-cap.in { opacity: 1; transform: translate(-50%, 0); }
+.dt-cap .eyebrow { color: var(--accent-2, #38C6B1); }
+.dt-cap-t { font: 600 15px/1.45 var(--font, Inter, sans-serif); }
+
+/* ---------- the chapter bar ---------- */
+.dt-bar { position: fixed; left: 0; right: 0; bottom: 0; height: 58px; z-index: 2147482995; display: flex; align-items: center; gap: 8px; padding: 0 14px; box-sizing: border-box;
+  background: var(--canvas, #12151A); border-top: 1px solid var(--edge, #2A313C); color: var(--text, #E8EAED); font: 500 13px var(--font, Inter, sans-serif); }
+.dt-b { flex: none; height: 34px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--edge, #2A313C); background: var(--surface, #1B2028); color: var(--text, #E8EAED); font: 600 13px var(--font, Inter, sans-serif); cursor: pointer; white-space: nowrap; }
+.dt-b:hover, .dt-b:focus-visible { background: var(--surface-2, #1E242D); outline: none; }
+.dt-b:focus-visible { border-color: var(--accent, #F26B1D); }
+.dt-play { width: 38px; padding: 0; font-size: 12px; }
+.dt-speed.on { color: var(--accent-2, #38C6B1); border-color: var(--accent-2, #38C6B1); }
+.dt-try { background: var(--accent, #F26B1D); border-color: var(--accent, #F26B1D); color: #12151A; }
+.dt-try:hover, .dt-try:focus-visible { background: #FF7F33; }
+.dt-x { width: 34px; padding: 0; color: var(--muted, #9AA4B2); }
+.dt-mid { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.dt-chaps { display: flex; gap: 3px; height: 8px; }
+.dt-seg { flex: 1 1 0; min-width: 4px; height: 8px; padding: 0; border: 1px solid var(--edge, #2A313C); border-radius: 3px; background: var(--surface, #1B2028); cursor: pointer; overflow: hidden; position: relative; }
+.dt-seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent, #F26B1D); }
+.dt-seg.past i { width: 100% !important; background: var(--accent-2, #38C6B1); }
+.dt-seg.on { border-color: var(--accent, #F26B1D); }
+.dt-seg:hover, .dt-seg:focus-visible { border-color: var(--muted, #9AA4B2); outline: none; }
+.dt-meta { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.dt-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-time { margin-left: auto; font: 500 12px var(--mono, ui-monospace, monospace); color: var(--muted, #9AA4B2); flex: none; }
+.dt-bar.paused .dt-title::after { content: ' · paused'; color: var(--muted, #9AA4B2); font-weight: 500; }
+
+/* ---------- the game's key caps (Preview) ---------- */
+.dt-keys { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 5; pointer-events: none; }
+.dt-keys kbd { min-width: 34px; height: 30px; display: grid; place-items: center; padding: 0 8px; border-radius: 7px; border: 1px solid var(--edge, #2A313C); border-bottom-width: 3px; background: var(--surface, #1B2028); color: var(--muted, #9AA4B2); font: 700 12px var(--mono, ui-monospace, monospace); box-sizing: border-box; }
+.dt-keys kbd.wide { min-width: 70px; }
+.dt-keys kbd.on { background: var(--accent, #F26B1D); border-color: #B84A0C; color: #12151A; transform: translateY(2px); border-bottom-width: 1px; }
+#pvw-stage { position: relative; }
+
+/* ---------- the phone moment: a small phone frame with an approval ---------- */
+.dt-phone { position: fixed; right: 32px; bottom: 80px; z-index: 2147482992; width: 250px; height: 500px; padding: 10px; border-radius: 36px; background: #0B0D10; border: 1px solid var(--edge, #2A313C); box-sizing: border-box;
+  transform: translateX(340px); transition: transform .5s cubic-bezier(.3, .7, .2, 1); }
+.dt-phone.in { transform: none; }
+.dt-ph-screen { height: 100%; border-radius: 28px; background: var(--canvas, #12151A); border: 1px solid var(--edge, #2A313C); overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 12px; box-sizing: border-box; color: var(--text, #E8EAED); font-family: var(--font, Inter, sans-serif); }
+.dt-ph-top { display: flex; align-items: center; justify-content: space-between; font: 700 11px var(--font, Inter, sans-serif); color: var(--muted, #9AA4B2); padding: 0 6px; }
+.dt-ph-isl { width: 64px; height: 18px; border-radius: 10px; background: #0B0D10; }
+.dt-ph-note { display: grid; gap: 3px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2, #1E242D); border: 1px solid var(--edge, #2A313C); font-size: 12px; line-height: 1.35; }
+.dt-ph-note small { color: var(--muted, #9AA4B2); }
+.dt-ph-card { margin-top: auto; display: grid; gap: 8px; padding: 14px; border-radius: 16px; background: var(--surface, #1B2028); border: 1px solid var(--edge, #2A313C); }
+.dt-ph-card h4 { margin: 0; font-size: 14px; line-height: 1.3; }
+.dt-ph-card p { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted, #9AA4B2); }
+.dt-ph-acts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.dt-ph-acts button { height: 40px; border-radius: 11px; font: 700 13px var(--font, Inter, sans-serif); border: 1px solid var(--edge, #2A313C); background: var(--surface-2, #1E242D); color: var(--text, #E8EAED); }
+.dt-ph-acts .dt-ph-no { color: #FF6F8E; }
+.dt-ph-acts .dt-ph-ok { background: #3BD16F; border-color: #3BD16F; color: #0B0D10; }
+.dt-ph-done { margin: 0; font-weight: 700; color: #3BD16F !important; font-size: 13px !important; }
+
+/* ---------- the end card ---------- */
+.dt-end { position: fixed; inset: 0 0 58px 0; z-index: 2147482993; display: grid; place-items: center; padding: 16px; background: rgba(11, 13, 16, .72); }
+.dt-end-card { width: min(460px, 100%); display: grid; justify-items: center; gap: 10px; padding: 28px 24px; border-radius: 18px; background: var(--surface, #1B2028); border: 1px solid var(--edge, #2A313C); text-align: center; color: var(--text, #E8EAED); box-sizing: border-box; }
+.dt-end-card h2 { margin: 0; font-size: 26px; line-height: 1.15; }
+.dt-end-card p { margin: 0; color: var(--muted, #9AA4B2); line-height: 1.6; max-width: 36ch; }
+.dt-end-acts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.dt-end-acts .btn { text-decoration: none; }
+.dt-end-more { display: flex; gap: 8px; align-items: center; color: var(--faint, #6B7480); font-size: 13px; }
+.dt-end-flint { animation: dt-bob 2.4s ease-in-out infinite; }
+@keyframes dt-bob { 50% { transform: translateY(-4px); } }
+
+/* ---------- phones: a compact bar at the bottom, over the rack ---------- */
+@media (max-width: 820px) {
+  body.dt-on .shell { height: auto; }
+  /* one row (52 px); the chapter strip runs along its top edge; the app's rack and composer sit just above it */
+  .dt-bar { height: calc(52px + env(safe-area-inset-bottom)); padding: 4px 10px env(safe-area-inset-bottom); gap: 6px; }
+  .dt-chaps { position: absolute; left: 0; right: 0; top: -1px; height: 4px; gap: 2px; }
+  .dt-seg { height: 4px; border: 0; border-radius: 0; background: var(--surface-2, #1E242D); }
+  .dt-mid { gap: 0; }
+  .dt-meta { flex-direction: column; align-items: flex-start; gap: 0; }
+  .dt-time { margin-left: 0; font-size: 11px; }
+  .dt-title { font-size: 13px; max-width: 100%; }
+  .dt-wide, .dt-speed { display: none; }
+  .dt-b { height: 34px; padding: 0 11px; font-size: 13px; }
+  body.dt-on:not(.m2-in-chat) .tabbar { bottom: calc(52px + env(safe-area-inset-bottom)); padding-bottom: 0; height: 62px; }
+  body.dt-on #chat-form { margin-bottom: 52px; }
+  .dt-cap { bottom: 126px; padding: 7px 12px; max-width: calc(100vw - 32px); }
+  body.m2-in-chat .dt-cap { bottom: 132px; }
+  .dt-cap .eyebrow { font-size: 10px; }
+  .dt-cap-t { font-size: 13.5px; }
+  .dt-end { inset: 0 0 52px 0; }
+  body.dt-on .sc-cele { bottom: auto; }
+  .dt-name { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-cap, .dt-phone, .dt-arrow { transition: none; }
+  .dt-end-flint { animation: none; }
+  .dt-ripple { display: none; }
+}
