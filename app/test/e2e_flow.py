@@ -160,7 +160,9 @@ def main():
             wait_text(friend, "#sync-status", "connected")
             ftoken = friend.evaluate("TribeStore.get().server.token")
             assert friend.evaluate("TribeClient.project()") == pid
-            chat(friend); friend.wait_for_selector("#flow-kick")
+            chat(friend); friend.wait_for_selector("#flow-kick, #flow-expand")
+            if friend.locator("#flow-expand").count(): friend.click("#flow-expand")   # desktop: the card is a pop-out, opened from the bar
+            friend.wait_for_selector("#flow-kick")
             maya = api("/me", token=ftoken)[1]["member"]["id"]
 
             # ---- roles: Maya takes Frontend; Orion gives Design to Maya; lanes follow the folders

@@ -23,7 +23,7 @@
   const memberOf = id => (C.state().members || []).find(m => m.id === id) || null;
   const nameOf = id => (memberOf(id) || {}).name || 'someone';
 
-  let flow = null, minimized = false, filter = 'all';
+  let flow = null, minimized = false, filter = 'all', popOpen = false;   // popOpen: desktop shows the card as a pop-out over chat, only when asked
   const pid = () => C.project();
   const role = rid => flow && flow.roles.find(r => r.id === rid) || null;
   const roleOfMember = mid => { if (!flow) return null; const m = memberOf(mid); const who = m && m.role === 'agent' && m.owner ? m.owner : mid; return flow.roles.find(r => r.members.includes(who)) || null; };
@@ -58,7 +58,7 @@
   async function create(name, extra = {}) {
     const r = await C.api('/flow/create', { method: 'POST', body: { name, emoji: extra.emoji, wait: extra.wait } });
     if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(r.flow.project, 'chat'); }
-    flow = r.flow; minimized = false; draw();
+    flow = r.flow; minimized = false; popOpen = true; draw();
     App().show('chat');
     toast(`${r.flow.name} is live. Share the link.`);
     return r.flow;
@@ -89,8 +89,8 @@
   function dock() {
     const d = dockEl(); if (!d) return;
     if (!flow) { d.innerHTML = ''; d.className = 'flow-dock'; return; }
-    const f = flow;
-    if (f.status === 'running' || minimized) {
+    const f = flow, desk = !matchMedia('(max-width: 820px)').matches;
+    if (f.status === 'running' || (desk ? !popOpen : minimized)) {
       const pct = f.plan && f.plan.total ? Math.round(f.plan.done / f.plan.total * 100) : 0;
       const cm = f.plan && f.plan.milestones.find(m => m.id === f.plan.current);
       const waiting = f.changes.length && human() ? `<button class="fbar-wait" data-flow-go="updates">${f.changes.length === 1 ? 'A plan change' : `${f.changes.length} plan changes`} waiting</button>` : '';
@@ -145,6 +145,10 @@
       </div>
       <div class="fk-foot"><span class="faint">${f.notes.length ? 'Notes become the first plan, with tasks per role.' : 'Drop notes first, or start from the vision.'}</span><button class="btn primary" id="flow-start" ${canEdit ? '' : 'disabled'}>${ico('i-zap')}Start the flow</button></div>
     </section>`;
+    if (desk) {   // tucked away: a slim bar stays in the chat, the card pops out over the messages
+      d.className = 'flow-dock bar popped';
+      d.innerHTML = `<div class="fbar"><span class="eyebrow">Getting started</span><span class="fbar-t">${steps(f)}</span><button class="fbar-go" id="flow-close">Close</button></div><div class="fk-pop" role="dialog" aria-label="Getting started">${d.innerHTML}</div>`;
+    }
     wire(d);
   }
   function roleBtn(r) {
@@ -171,8 +175,9 @@
   }
   function wire(d) {
     const on = (sel, fn) => { const el = d.querySelector(sel); if (el) el.onclick = fn; };
-    on('#flow-min', () => { minimized = true; try { localStorage.setItem('tribecode.flowMin.' + flow.project, '1'); } catch {} dock(); });
-    on('#flow-expand', () => { minimized = false; try { localStorage.removeItem('tribecode.flowMin.' + flow.project); } catch {} dock(); });
+    on('#flow-min', () => { minimized = true; popOpen = false; try { localStorage.setItem('tribecode.flowMin.' + flow.project, '1'); } catch {} dock(); });
+    on('#flow-close', () => { popOpen = false; dock(); });
+    on('#flow-expand', () => { minimized = false; popOpen = true; try { localStorage.removeItem('tribecode.flowMin.' + flow.project); } catch {} dock(); });
     on('#flow-copy', async () => { try { await navigator.clipboard.writeText(flow.invite.link); toast('Invite link copied'); } catch { getSelection().selectAllChildren($('#flow-link')); toast('Press Ctrl+C to copy'); } });
     on('#flow-share', () => navigator.share({ title: `Join ${flow.name} on TribeCode`, text: `Build ${flow.name} with me:`, url: flow.invite.link }).catch(() => {}));
     on('#flow-qr', () => { const b = $('#flow-qrbox'); if (b.classList.toggle('hidden')) return; b.innerHTML = `<div class="qr">${window.TribeQR.svg(flow.invite.link)}</div><p>Scan with a phone camera to join.</p>`; });
@@ -399,7 +404,7 @@
     try {
       const r = await C.api('/flow/create', { method: 'POST', body: { name, wait: 12000 } }); f = r.flow;
       if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(f.project, 'chat'); }
-      flow = f; minimized = false; draw(); App().show('chat');
+      flow = f; minimized = false; popOpen = true; draw(); App().show('chat');
     } catch (e) { body.innerHTML = `<span class="eyebrow">Instant invite</span><h2>That didn't work</h2><div class="np-err">${esc(e.message)}</div><div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = close; return; }
     return inviteSheet(f);
   }

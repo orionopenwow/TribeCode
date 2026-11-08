@@ -229,3 +229,10 @@
 .fk-phone .fk-act b { font-size: 14px; font-weight: 650; }
 .fk-phone .fk-act small { font-size: 11.5px; line-height: 1.35; color: var(--muted); }
 .fk-phone .fk-note { margin-top: 10px; }
+
+/* desktop: the Getting started card pops out over the chat instead of pushing the messages down */
+.flow-dock.popped { position: relative; z-index: 20; }
+.flow-dock.popped .fk-pop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; max-height: min(66vh, 620px); overflow-y: auto; border-radius: 14px; border: 1px solid var(--edge-pop, #3A4350); background: var(--surface); animation: fk-pop .18s ease-out both; }
+.flow-dock.popped .fk-pop .fk { border: 0; margin: 0; }
+@keyframes fk-pop { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .flow-dock.popped .fk-pop { animation: none; } }
