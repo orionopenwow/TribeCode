@@ -490,6 +490,7 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
   .hpt-btn .i { stroke-width: 2; }
   .hpt-brand { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 6px; border: 0; background: none; color: var(--text); }
   .hpt-brand img { height: 24px; width: auto; display: block; }
+  .hpt-brand img.hpt-mark { width: 26px; height: 26px; border-radius: 7px; image-rendering: pixelated; margin-right: 2px; }
   .hpt-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: #FF6F8E; box-shadow: 0 0 0 2px var(--canvas); }
   body.global .main { padding-top: calc(4px + env(safe-area-inset-top)); }
 }

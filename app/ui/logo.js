@@ -19,11 +19,12 @@
     return '';
   }
   function sync() {
-    const img = logo(); if (!img) return;
+    const img = logo() || document.createElement('img');
     const why = reason(), want = why || hover ? LIVE : STILL;
     if (!img.src.endsWith(want)) img.src = want;
-    const btn = img.closest('#rail-logo'); btn.classList.toggle('is-busy', !!why);
-    btn.title = why ? `${why} · Home` : 'Home: your overview of everything';
+    document.querySelectorAll('img.tc-mark').forEach(m => { const w = why ? LIVE : STILL; if (!m.src.endsWith(w)) m.src = w; });   // the phone Home logo too
+    const btn = img.closest('#rail-logo'); if (btn) { btn.classList.toggle('is-busy', !!why);
+    btn.title = why ? `${why} · Home` : 'Home: your overview of everything'; }
     clearTimeout(timer); if (why && inflight === 0) timer = setTimeout(sync, 2000);   // let an agent's spell run out
   }
   // prompts in flight
@@ -68,7 +69,7 @@
       const t = el.textContent.trim(); if (t === 'Loading…' || t === 'Loading...') el.classList.add('tc-loading');
     }
   }
-  new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) mark(n); else if (n.nodeType === 3 && n.parentElement) mark(n.parentElement); })
+  new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { mark(n); if (n.matches('img.tc-mark') || n.querySelector('img.tc-mark')) sync(); } else if (n.nodeType === 3 && n.parentElement) mark(n.parentElement); })
     .observe(document.body, { childList: true, subtree: true });
   mark(document.body);
   window.TribeLogo = { busy: () => !!reason(), reason, agentPulse: pulse, loader: (size = 20) => `<img class="tc-loader" src="assets/icon-mark-animated.svg" width="${size}" height="${size}" alt="" aria-hidden="true">` };

@@ -95,8 +95,8 @@ def main():
                     if r["sideways"]: fails.append(f"{th}/{name}: sideways scroll")
                 # Home
                 ph.evaluate("TribeHub.open('home')"); ph.wait_for_selector("#m2-homebar", state="visible", timeout=10000); check("home")
-                ph.wait_for_function("() => { const i = document.querySelector('#hpt-brand img'); return i && i.dataset.wm && i.src.startsWith('data:image/svg'); }", timeout=8000)
-                wm = ph.evaluate("(() => { const i = document.querySelector('#hpt-brand img'), t = getComputedStyle(document.body).getPropertyValue('--text').trim(); return [decodeURIComponent(i.src).includes(t), getComputedStyle(i).content, t]; })()")
+                ph.wait_for_function("() => { const i = document.querySelector('#hpt-brand img.brand-wm'); return i && i.dataset.wm && i.src.startsWith('data:image/svg'); }", timeout=8000)
+                wm = ph.evaluate("(() => { const i = document.querySelector('#hpt-brand img.brand-wm'), t = getComputedStyle(document.body).getPropertyValue('--text').trim(); return [decodeURIComponent(i.src).includes(t), getComputedStyle(i).content, t]; })()")
                 assert wm[0] and wm[1] in ("normal", "none"), f"{th}: the wordmark should be drawn in the theme's text color {wm}"
 
                 # Files
