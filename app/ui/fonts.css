@@ -4,7 +4,7 @@
 @font-face { font-family: 'Inter'; font-weight: 600; font-display: swap; src: url('assets/fonts/Inter-SemiBold.otf') format('opentype'); }
 @font-face { font-family: 'Inter'; font-weight: 700; font-display: swap; src: url('assets/fonts/Inter-Bold.otf') format('opentype'); }
 @font-face { font-family: 'Inter Display'; font-weight: 800; font-display: swap; src: url('assets/fonts/InterDisplay-ExtraBold.otf') format('opentype'); }
-.wordmark { font-family: 'Inter Display', 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: .95; }
+.wordmark { font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.005em; line-height: .95; }   /* the wordmark's typeface: Inter Bold (see scripts/wordmark-glyphs.py) */
 .wordmark .c { color: var(--accent); }
 .wordmark.stack span { display: block; }
 img.brand-wm { height: 17px; width: auto; display: block; }

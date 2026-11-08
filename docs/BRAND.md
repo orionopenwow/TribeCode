@@ -36,7 +36,7 @@ The full system (style rules, tokens, component pairings) is in **[DESIGN-SYSTEM
 
 ## Type
 
-- **Wordmark:** "TribeCode" on one line in squared, geometric heavy letters. "Tribe" is white on dark (navy on light); "Code" is always the flame orange. The letters are drawn as vector shapes by `scripts/wordmark.js`, so no font is needed: `assets/brand/logo-wordmark*.svg`/`.png` (icon + text) and `logo-text*.svg`/`.png` (text only).
+- **Wordmark:** "TribeCode" on one line in **Inter Bold**, tightly spaced (since v0.9.8). "Tribe" takes the theme's text color (white on dark, near-black on light); "Code" is always the flame orange. The letters are Inter Bold outlines traced once by `scripts/wordmark-glyphs.py` into `scripts/wordmark-glyphs.json`, and `scripts/wordmark.js` writes every file from them, so no font is needed: `assets/brand/logo-wordmark*.svg`/`.png` (icon + text) and `logo-text*.svg`/`.png` (text only).
 - Interface text is Inter, bundled with the app (`app/ui/assets/fonts`, SIL OFL), so every computer and phone renders the same.
 - **Inter** for UI text, 13–15 px.
 - A monospace (JetBrains Mono or system mono) for branches, tags and code.

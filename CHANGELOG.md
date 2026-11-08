@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.8
+
+- **New logo lettering everywhere**: "TribeCode" is now set in Inter Bold, tightly spaced, "Tribe" in the theme's text color and "Code" in Ember. It's in the app, the invite and sign-in pages, the website, the README and every brand file. The letters are traced from the font once (scripts/wordmark-glyphs.py), so no font is needed to show them
+- **Phones**: Home's top bar uses the new lettering
+
 ## v0.9.7
 
 - **Resize the panes**: drag the line between the sidebar and the page, or between the page and the right panel (or the app preview), to make either wider or narrower. Sizes are remembered on this computer. Double-click a line to reset it, or focus it and use ← →. The bottom-left user bar follows the sidebar
