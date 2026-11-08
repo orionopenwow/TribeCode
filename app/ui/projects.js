@@ -108,6 +108,7 @@
   C.on('projects', () => soon(50));
   C.on('project-pulse', m => { if (m.kind === 'chat') pulses[m.project] = (pulses[m.project] || 0) + 1; soon(400); });
   ['task', 'proposal', 'change', 'approval', 'bug', 'doc'].forEach(t => C.on(t, () => soon(800)));
+  ['task', 'doc', 'vision', 'repo'].forEach(t => C.on(t, () => { if (App() && App().view && App().view() === 'home') overviewSoon(); }));   // the checklist ticks live
   C.on('presence', () => { render(); const v = App() && App().view(); if (v === 'home') overviewSoon(); });
 
   function onShow(view) {
@@ -129,57 +130,98 @@
 
   // ---------- Overview (pulse) ----------
   let ot; const overviewSoon = () => { clearTimeout(ot); ot = setTimeout(overview, 400); };
+  // Put the standup/drop nodes (wired in app.js) back in #home-start, hidden, before a redraw wipes the overview.
+  function stash() {
+    const sc = $('#standup-card'), td = $('#tour-drop'); if (!sc || !td) return;
+    const b = $('#standup-go'); if (b && !sc.contains(b)) { b.classList.remove('sm'); sc.appendChild(b); }
+    const t = $('#standup-text'); if (t && !sc.contains(t)) sc.insertBefore(t, b && sc.contains(b) ? b : null);
+    ['#dropzone', '#drops'].forEach(q => { const n = $(q); if (n && !td.contains(n)) td.appendChild(n); });
+  }
   async function overview() {
     const el = $('#pj-overview'); if (!el) return;
     const p = curP();
-    if (!p) { el.innerHTML = ''; return; }
-    let d; try { d = await C.api(`/projects/${encodeURIComponent(p.id)}/pulse`); } catch (e) { el.innerHTML = `<div class="pj-empty">${esc(e.message)}</div>`; return; }
-    const who = m => `<div class="pj-person"><span class="avatar" style="background:${m.kind === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.kind === 'agent' ? '🤖' : esc(initials(m.name))}</span><span>${esc(m.name)}</span><span class="faint">${m.here ? 'here' : m.online ? 'elsewhere' : 'away'}${m.role === 'host' ? ' · host' : m.role === 'spectator' ? ' · watching' : ''}</span></div>`;
-    const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
+    if (!p) { stash(); el.innerHTML = ''; return; }
+    let d; try { d = await C.api(`/projects/${encodeURIComponent(p.id)}/pulse`); } catch (e) { stash(); el.innerHTML = `<div class="pj-empty">${esc(e.message)}</div>`; return; }
     const team = d.team.filter(m => m.kind !== 'agent');
+    const meId = me().id, members = C.state().members || [];
+    const myAgent = members.some(m => m.role === 'agent' && m.owner === meId);
+    const whereOf = m => (m.here ? 'here' : m.online ? 'elsewhere' : 'away') + (m.role === 'host' ? ' · host' : m.role === 'spectator' ? ' · watching' : '');
+    const who = m => `<div class="pj-person"><span class="avatar" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(initials(m.name))}</span><span>${esc(m.name)}${m.id === meId ? ' <span class="faint">(you)</span>' : ''}</span><span class="faint">${whereOf(m)}</span></div>`;
+    const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
     let plan = null; try { plan = (await C.api('/coord/plan')).plan; } catch {}
-    const mine = plan ? plan.items.filter(i => i.member === me().id || (C.state().members || []).some(m => m.id === i.member && m.owner === me().id)) : [];
-    const hero = plan && plan.items.length
-      ? `<section class="hero-card" id="pj-hero"><span class="eyebrow">Today's focus</span><h2>${esc(plan.focus || plan.items[0].title)}</h2>
-          <p>${mine.length ? `Yours today: ${mine.slice(0, 3).map(i => esc(i.title)).join(', ')}${mine.length > 3 ? ` and ${mine.length - 3} more` : ''}.` : 'Nothing is planned for you yet. The daily plan suggests who does what.'}</p>
-          <div class="hero-acts"><button class="btn primary" data-hero="plan">Open the daily plan</button><button class="btn" data-hero="tasks">Tasks</button></div></section>`
-      : `<section class="hero-card" id="pj-hero"><span class="eyebrow">Start here</span><h2>Give ${esc(p.name)} its first task</h2><p>Add a task, or invite a friend and connect your Claude Code. The daily plan then suggests who does what.</p>
-          <div class="hero-acts"><button class="btn primary" data-hero="newtask">New task</button><button class="btn" data-hero="invite">Invite a friend</button></div></section>`;
-    const sec = (eyebrow, title, inner) => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2></div>${inner}</section>`;
+    if (!$('#pj-overview') || curP() !== p) return;   // switched away while loading
+    stash();
+    const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
     const L = d.living, canEdit = me().role !== 'spectator' && me().role !== 'agent';
-    const MOOD = { buzzing: '<span class="emo" aria-hidden="true">🔥</span>Buzzing', steady: '<span class="emo" aria-hidden="true">🌿</span>Steady', quiet: '<span class="emo" aria-hidden="true">🌙</span>Quiet', fresh: '<span class="emo" aria-hidden="true">✨</span>Brand new' };
+    const MOOD = { buzzing: 'Buzzing', steady: 'Steady', quiet: 'Quiet', fresh: 'Brand new' };
+    // Way forward: today's plan focus when there is one (the old "Today's focus" card), else the next task.
+    const planned = !!(plan && plan.items && plan.items.length);
+    const next = planned ? `Today: ${plan.focus || plan.items[0].title}` : L && L.lines.next;
+    // Onboarding checklist: ticks itself from what the project already has (replaces "No vision yet" and "Start here").
+    const pk = `tribecode.ov.${p.id}.`, lsg = k => { try { return localStorage.getItem(pk + k); } catch { return null; } };
+    const lss = (k, v) => { try { v == null ? localStorage.removeItem(pk + k) : localStorage.setItem(pk + k, v); } catch {} };
+    const others = team.some(m => m.id !== meId);
+    const steps = [
+      { id: 'vision', label: 'Write the vision', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
+      { id: 'task', label: `Give ${esc(p.name)} its first task`, done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button><button class="btn sm" data-ck="invite">Invite a friend</button>' : '' },
+      { id: 'friend', label: 'A friend joins', done: others },
+      { id: 'claude', label: 'Connect your Claude Code', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
+      { id: 'repo', label: 'Pin the repo', done: !!(d.repo || p.hasRepo), acts: canEdit ? '<button class="btn sm" data-ck="repo">Set up</button>' : '' },
+    ];
+    const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length, folded = lsg('ckFold') === '1';
+    const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
+    const checklist = allDone && lsg('ckGone') === '1' ? ''
+      : allDone ? `<section class="pj-check done" id="pj-check"><span class="pc-allset">${tick}All set</span><span class="faint pc-allsub">${esc(p.name)} has a vision, a task, friends, Claude and a repo.</span><button class="pc-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
+      : `<section class="pj-check ${folded ? 'folded' : ''}" id="pj-check">
+          <div class="pc-head"><h3>Onboarding Checklist</h3><span class="pc-n">${nDone}/${steps.length}</span><button class="pc-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
+          <div class="pc-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
+          <div class="pc-list">${steps.map(x => `<div class="pc-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="pc-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
+            <div class="pc-main"><div class="pc-line"><span class="pc-l">${x.label}</span>${!x.done && x.acts ? `<span class="pc-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="pc-below">${x.below}</div>` : ''}</div></div>`).join('')}</div></section>`;
+    const tiles = L ? [['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', next, planned ? 'plan' : 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']] : [];
+    const r = d.repo;
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${esc(p.name)}</h1>
           <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? 'Add a one-line bio: what is this?' : ''}</button>
-          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${d.repo ? ` · ${esc(d.repo.name)} on ${esc(d.repo.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
+          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? ` · ${esc(r.name)} on ${esc(r.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
-      ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? '<span class="pl-by">local model</span>' : ''}</div>
-          <p class="pl-sum">${esc(L.summary)}</p>
-          <div class="pl-grid">${[['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', L.lines.next, 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']]
-            .map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
-      ${d.vision && !d.vision.has ? `<section class="pj-vision-nudge" id="pj-vnudge">${ico('i-flag', 16)}<span><b>No vision yet.</b> A few lines on what ${esc(p.name)} is and who it's for keeps people and agents pointed the same way.</span><button class="btn sm primary" id="pj-vwrite">${isHost() ? 'Write the vision' : 'Suggest a vision'}</button></section>` : ''}
-      <div id="pj-tools-slot"></div>
-      ${hero}
-      ${sec('People', 'Who\'s building', `<div class="pj-grid">
-        <section class="card"><h3>${ico('i-users', 16)}Who is here</h3>
+      ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
+          <div class="pl-grid">${tiles.map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
+      ${checklist}
+      ${sec('pj-sec-tribe', 'Tribe &amp; Agents', `<div class="pj-grid">
+        <section class="card" id="pj-who"><h3>${ico('i-users', 16)}Who is here</h3>
           ${team.length ? team.sort((a, b) => b.here - a.here || b.online - a.online).map(who).join('') : '<div class="pj-none">Just you so far. Invite a friend to this project.</div>'}</section>
-        <section class="card"><h3><span class="pj-live"></span>Agents</h3>
-          ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : `<div class="pj-none">No agent is working here right now. <button class="linkish" id="pj-cc">Connect your Claude Code</button></div>`}</section></div>`)}
-      ${sec('Activity', 'What changed', `<div class="pj-grid">
-        <section class="card"><h3>${ico('i-refresh', 16)}Recent changes</h3>
-          ${d.recent.length ? d.recent.map(r => `<div class="pj-row-line" ${r.kind === 'doc' ? `data-doc="${esc(r.ref)}"` : r.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[r.kind] || 'i-doc', 14)}<span class="t">${esc(r.text)}</span><span class="faint">${esc(r.sub)} · ${ago(r.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Drop a doc, add a task or start a branch.</div>'}</section>
-        <section class="card"><h3>${ico('i-calendar', 16)}Upcoming</h3>
-          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-calendar', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled.</div>'}</section></div>`)}
-      ${sec('Workspace', 'Shared repo', `<section class="card pj-ws-card"><h3>${ico('i-git', 16)}Your branch</h3><div id="pj-ws">Loading…</div></section>`)}`;
-    el.querySelectorAll('[data-hero]').forEach(x => x.onclick = () => { const k = x.dataset.hero;
-      if (k === 'plan') window.TribeCoord.open('plan'); else if (k === 'tasks') App().show('tasks'); else if (k === 'invite') App().openInvite();
+        <section class="card" id="pj-agents"><h3><span class="pj-live"></span>Agents</h3>
+          ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : '<div class="pj-none">No agent is working here right now.</div><button class="linkish pj-cc" id="pj-cc">Connect your Claude Code</button>'}</section></div>`)}
+      ${sec('pj-sec-stream', 'Project Stream', `<div class="pj-grid">
+        <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
+          ${d.recent.length ? d.recent.map(x => `<div class="pj-row-line" ${x.kind === 'doc' ? `data-doc="${esc(x.ref)}"` : x.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[x.kind] || 'i-doc', 14)}<span class="t">${esc(x.text)}</span><span class="faint">${esc(x.sub)} · ${ago(x.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Commits, doc edits and task moves show up here.</div>'}</section>
+        <section class="card" id="pj-upcoming"><h3>${ico('i-calendar', 16)}Upcoming</h3>
+          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-calendar', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled. Calendar items and due tasks show up here.</div>'}</section></div>`)}
+      ${sec('pj-sec-repo', 'Repo &amp; Tools', `<div class="pj-grid">
+        <section class="card" id="pj-repo"><h3>${ico('i-git', 16)}Shared repo${r ? '<button class="linkish pj-h-act" data-go="repo">Open</button>' : ''}</h3>
+          ${r ? `<div class="pj-repo-sum"><b>${esc(r.name)}</b><span class="pj-chip live">${esc(r.branch || 'main')}</span><span class="pj-chip">↑${r.ahead || 0} ↓${r.behind || 0}</span><span class="pj-chip">${r.dirty ? `${r.dirty} changed` : 'clean'}</span></div>`
+            : p.hasRepo ? '' : `<div class="pj-none">No repo pinned yet. Point ${esc(p.name)} at a git folder or a GitHub repo and it lives here.</div><div class="pj-actions"><button class="btn" data-go="repo">Set up the repo</button></div>`}
+          <div id="pj-ws" ${r ? '' : 'data-quiet="1"'}></div></section>
+        <section class="card" id="pj-sf"><h3>${ico('i-upload', 16)}Daily standup &amp; Files<span class="pj-h-act" id="pj-sf-btn"></span></h3>
+          <div id="pj-sf-body"></div></section></div>
+        <div class="pj-tools-row"><button class="linkish pj-tools-link" id="pj-tools-link">${ico('i-box', 14)}Tools for ${esc(p.name)}</button></div>
+        <div id="pj-tools-slot"></div>`)}`;
+    // The standup button/text and the drop zone are wired in app.js: move the live nodes in (stash() moves them back before a redraw).
+    const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
+    if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
+    const sfBody = $('#pj-sf-body'); [sfText, dzn, drops].forEach(n => n && sfBody.appendChild(n));
+    el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => { const k = x.dataset.ck;
+      if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude(); else if (k === 'repo') App().show('repo');
       else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); } });
+    const fold = $('#pj-check-fold');
+    if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
+    const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     $('#pj-invite').onclick = () => App().openInvite();
     $('#pj-face').onclick = () => pickImage(p);
     const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);
-    const vw = $('#pj-vwrite'); if (vw) vw.onclick = () => writeVision(p);
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
-    el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => App().show(x.dataset.go));
+    $('#pj-tools-link').onclick = () => (window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : App().show('repo'));
+    el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : App().show(x.dataset.go)));
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
     toolbox(p);
@@ -256,6 +298,7 @@
     const ghLine = gh.signedIn ? `<div class="pj-gh ok">${ico('i-tick', 14)}Signed in to GitHub as <b>${esc(gh.user)}</b> on the host</div>`
       : `<div class="pj-gh">${gh.installed ? 'GitHub CLI is not signed in on the host' : 'No GitHub CLI on the host'}: pushes use the host's git credentials. GitHub is optional; everything works with plain git.</div>`;
     let html = '';
+    if (!r && box.dataset.quiet) { box.innerHTML = ''; return; }
     if (!r) html = `<div class="pj-none">No repo yet. ${isHost() ? 'Start a project from a folder or a GitHub URL with <b>+</b> in the sidebar.' : 'The host can attach one.'}</div>`;
     else if (!r.git) html = `<div class="pj-none">The folder <b>${esc(r.name)}</b> is not a git repo yet.</div>${isHost() ? '<button class="btn primary" id="pj-gitinit">Make it a git repo</button><div class="faint pj-small">Runs git init with a .gitignore for node_modules, build folders and .env, then makes a first commit.</div>' : ''}`;
     else {

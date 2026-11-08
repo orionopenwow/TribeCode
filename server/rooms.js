@@ -85,7 +85,7 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
       const team = [...new Set([...memberIds, ...here.map(m => m.id)])].map(id => people.find(m => m.id === id)).filter(Boolean)
         .map(m => ({ id: m.id, name: m.name, color: m.color, role: p.members[m.id] || m.role, online: m.online, here: m.online && m.project === pid, kind: m.role === 'agent' ? 'agent' : 'person' }));
       return { project: P.view(p, { counts: counts(pid) }), here: here.map(m => ({ id: m.id, name: m.name, color: m.color, where: m.where, role: m.role })),
-        agents: agents.map(a => ({ id: a.id, name: a.name, where: a.where, since: a.since })), team, recent,
+        agents: agents.map(a => ({ id: a.id, name: a.name, where: a.where, since: a.since })), team, recent, taskCount: tasks.length,
         upcoming: plan.upcoming(5, me), repo: st.enabled ? { name: st.name, branch: st.branch, ahead: st.ahead, behind: st.behind, dirty: st.dirtyCount } : null,
         ...living(pid, p, tasks, st, recent) };
     });
