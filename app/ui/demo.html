@@ -64,6 +64,14 @@ svg.i { flex: none; display: block; }
 .btn.primary { background: var(--o); border-color: var(--o); color: #fff; }
 .btn.block { width: 100%; }
 .btn:disabled { opacity: .45; cursor: default; }
+/* the showcase entry: Host a demo tribe (app/?demo=showcase) */
+.host-demo { width: min(380px, 100%); margin-top: 12px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--b); border-radius: 14px; background: var(--s); color: var(--w); text-decoration: none; }
+.host-demo:hover, .host-demo:focus-visible { background: var(--s2); }
+.host-demo .hd-ic { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 1px solid var(--b); border-radius: 10px; color: var(--t); background: var(--c); }
+.host-demo .hd-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.host-demo b { font-size: 15px; }
+.host-demo small { font-size: 13px; color: var(--m); line-height: 1.35; }
+.host-demo .hd-go { color: var(--m); flex: none; }
 .demo-note { margin: 18px 0 0; font: 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--m); opacity: .55; text-align: center; }
 h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; }
 .steps { list-style: none; padding: 0; margin: 14px 0 0; }
@@ -1095,6 +1103,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     <input class="in" id="name" autocomplete="nickname" autocapitalize="words" maxlength="24" placeholder="Your name" aria-label="Your name" enterkeyhint="go">
     <button class="btn primary block" id="join" disabled>Join</button>
   </div>
+  <a class="host-demo" id="host-demo" href="./?demo=showcase"><span class="hd-ic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5v14l11-7z"/></svg></span><span class="hd-t"><b>Host a demo tribe</b><small>Or just watch: a pretend tribe builds a game by itself</small></span><svg class="i hd-go" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
   <p class="demo-note">Demo · nothing is sent anywhere</p>
 </section>
 

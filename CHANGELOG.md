@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.10.7
+
+- **Watch a demo tribe**: one tap from the website ("Watch a demo tribe"), the demo page or the app, and "Campfire Crew" plays out the whole workflow by itself in your browser. It has two projects, four friends, Claudes and Flint, a vision, a board, docs, a milestone and a vote. Every few seconds something happens: friends chat, an agent claims a task and the logo flickers, a progress note and a commit land, tasks move Doing → Review → Done, approvals reach your inbox, the vote passes and the milestone fills, then a "v0.2 shipped 🎉" card, and a new season starts. A small pill has Pause, 2×, Restart, Explore quietly and Leave (your real setup comes back exactly). The "Try a demo tribe" entries now offer "Watch it come alive" or "Explore quietly"
+- **Phones**: the showcase plays in Chat and on Tasks, with the pill above the rack
+
+## v0.10.6
+
+- **Meet Flint, for real**: Flint is now the logo's own flame, flickering, with two black pixel eyes that blink now and then (the logo itself stays a solid flame). His face is in his chat bar, his replies, the Helpers row, the ? menu and the phone Talk to… row
+- **Flint shows you around**: he flies across the screen to what he's explaining, rings it in Ember, says it in a short bubble and leaves a trail of rising pixel embers. A 30-second first-run tour (offered once; replay it from ? › Take the tour with Flint) covers your project's places, invites, connecting your AI, + Add, Ask Flint and the ? menu. Ask him to "open files" and he flies to the Files row first. With reduced motion on he jumps instead, with no embers
+- **Fresh screenshots everywhere**: every README and site image was redone from a seeded tribe in the Campfire theme, with new ones for the Dashboard, Files, the doc editor, Flint, the vision helper, the offline demo and phone Messages. The README and Guide use today's names. `npm run dev:shots` regenerates them all
+- **Phones**: Flint's own short tour (the rack, switching projects, the bell)
+
 ## v0.10.5
 
 - **Try a demo tribe, offline**: from Home, the projects list, the ? menu or Settings, start a pretend tribe that lives only on this device. No host, no network, nothing leaves it. You're the host of "Demo Tribe" with a game project, two pretend friends and a pretend Claude, who answers @claude and picks up the tasks you make. Chat, tasks, docs (with live editing), notes, files, the vision and suggested tasks all work. An invite makes a pretend link, and a pretend friend joins. A small "Offline demo" pill has Reset and Leave; leaving puts your real setup back exactly. It keeps working in airplane mode after the first visit
