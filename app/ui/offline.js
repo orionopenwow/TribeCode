@@ -336,7 +336,7 @@
   function senseMock(p, e) {
     const text = `${p.name} ${p.bio || ''} ${((db.tasks || {})[p.id] || []).map(t => t.title).join(' ')}`.toLowerCase();
     const has = re => re.test(text);
-    const sensed = has(/\b3d|tavern|three/) ? '3d' : has(/game|platformer|level|jump|quest/) ? 'game' : has(/site|landing|page|portfolio|pricing/) ? 'site' : has(/app|mobile|screen/) ? 'app' : 'other';
+    const sensed = has(/\b3d\b|tavern|three\.?js/) ? '3d' : has(/game|platformer|level|jump|quest/) ? 'game' : has(/site|landing|page|portfolio|pricing/) ? 'site' : has(/app|mobile|screen/) ? 'app' : 'other';
     const kind = e.override || sensed;
     const NOUN = { game: 'game', '3d': '3D scene', app: 'app', site: 'website', tool: 'tool', bot: 'bot', api: 'API', notes: 'notes', other: 'project' };
     const tags = [has(/platformer|jump/) && 'platformer', has(/cozy|candle|hearth|warm/) && 'cozy', has(/pixel|sprite/) && 'pixel art', has(/multiplayer|co-?op|crew/) && 'multiplayer'].filter(Boolean).slice(0, 3);
