@@ -6,8 +6,8 @@ ownership map with an overlap warning and a claim hand-off; conflict radar over 
 same file and "ask both to sync"; hand-off queue (MCP handoff, take); review queue (MCP request_review,
 one-tap approve moves the task to done); daily plan + accept; bug triage, assign, give to agent,
 attachments, duplicates, Markdown for Claude.
-UI: the new shell (circle rail, nest, More menu, breadcrumbs, right panel, preview), the Coordinate view
-tabs, the bug board with its ⋯ menu, the "+" new project dialog, and the phone drawer.
+UI: the new shell (circle rail, nest, More menu, breadcrumbs, right panel, preview), the Agents dashboard and
+its deep views, the bug board with its ⋯ menu, the "+" new project dialog, and the phone drawer.
 Usage: python app/test/e2e_coord.py [--shots]
 """
 import base64, json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
@@ -310,20 +310,20 @@ def ui_host(b, host, orion, maya, pq, b1):
             wait_text(host, "#tour-side", label)
         host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
         for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]: wait_text(host, "#view-tabs", label)
+        # Agents Hub: one dashboard (feat/agents-dash); deep views open as temporary tabs or pinned from "+"
         host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-agents")
-        for label in ["Agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan"]: wait_text(host, "#view-tabs", label)
-        host.click("#wt-agents")
-        host.wait_for_selector("#view-coord:not(.hidden)")
-        wait_text(host, "#coord-body", "Claude · Orion")
-        wait_text(host, "#coord-body", "12k")
+        wait_text(host, "#view-tabs", "Dashboard"); host.wait_for_selector("#view-tabs #wt-plus")
+        host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
+        wait_text(host, "#ad-hero", "Claude · Orion")
+        wait_text(host, "#ad-hero", "12k")
         wait_text(host, "#coord-body", "What the agents are saying"); wait_text(host, "#coord-body", "Polish bridge sprites")
         host.fill("#talk-input", "@agents nice work"); host.press("#talk-input", "Enter"); wait_text(host, "#coord-body .talk", "nice work")
-        host.click("#coord-body [data-ctl='pause']")
-        wait_text(host, "#coord-body", "Pause requested")
+        host.click("#ad-hero [data-ad-ctl='pause']")
+        wait_text(host, "#ad-hero", "Pause requested")
         shot(host, "coord-agents")
-        host.click("#coord-body [data-ctl='resume']")
+        host.click("#ad-hero [data-ad-ctl='resume']")
         for tab, text in [("ownership", "src/ui/"), ("conflicts", "src/game.js"), ("handoffs", "Campfire save points"), ("reviews", "Speed boots"), ("plan", "Title screen music")]:
-            host.click(f"#wt-{tab}"); wait_text(host, "#coord-body", text)
+            host.evaluate("t => TribeShell.go(t)", tab); host.wait_for_selector(f"#wt-{tab}.on"); wait_text(host, "#coord-body", text)
         # agents also show in the right panel
         wait_text(host, "#room-agents", "Claude · Orion")
         # bugs board: columns, ⋯ menu, copy as Markdown, preview of the attachment

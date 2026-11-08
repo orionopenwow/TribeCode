@@ -1,4 +1,4 @@
-// Coordinate (More → Agents, Ownership map, Conflict radar, Hand-offs, Reviews, Daily plan) plus the
+// Coordinate (Agents Hub: the Agents dashboard (agentsdash.js), Ownership map, Conflict radar, Hand-offs, Reviews, Daily plan) plus the
 // agents list in the right panel. Server: server/coord.js (/api/coord/*). Agents see the same things
 // through MCP: my_lane, suggest_task, handoff, request_review, check_messages.
 (function () {
@@ -9,10 +9,9 @@
   const ico = (id, sz = 15) => `<svg class="i" style="width:${sz}px;height:${sz}px"><use href="#${id}"/></svg>`;
   const toast = m => App() && App().toast(m);
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; return `${Math.floor(s / 86400)}d ago`; };
-  const k = n => (n === null || n === undefined ? '' : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
   const me = () => C.state().me || {};
   const members = () => C.state().members || [];
-  const TABS = [['agents', 'Agents', 'i-robot'], ['ownership', 'Ownership', 'i-map'], ['conflicts', 'Conflicts', 'i-merge'], ['handoffs', 'Hand-offs', 'i-hand'], ['reviews', 'Reviews', 'i-eye'], ['plan', 'Daily plan', 'i-sun']];
+  const TABS = [['agents', 'Dashboard', 'i-robot'], ['ownership', 'Ownership', 'i-map'], ['conflicts', 'Conflicts', 'i-merge'], ['handoffs', 'Hand-offs', 'i-hand'], ['reviews', 'Reviews', 'i-eye'], ['plan', 'Daily plan', 'i-sun']];
   let tab = 'agents';
   try { tab = sessionStorage.getItem('tribecode.coordTab') || localStorage.getItem('tribecode.coordTab') || 'agents'; } catch {}   // remembered across restarts
 
@@ -36,6 +35,7 @@
   async function draw() {
     const el = body(); if (!el) return;
     if (!C.connected()) { el.innerHTML = empty('Needs a tribe', 'Coordination is shared, so it lives on the tribe host.') + '<div class="coord-empty-acts"><button class="btn primary" data-coord-join>Host or join a tribe</button></div>'; el.querySelector('[data-coord-join]').onclick = () => window.TribeApp.openInvite(); return; }
+    el.onclick = null; el.onkeydown = null;   // the dashboard delegates clicks on the body
     try { await ({ agents, ownership, conflicts, handoffs, reviews, plan })[tab](el); }
     catch (e) { el.innerHTML = empty('Could not load this', esc(e.message)); }
   }
@@ -43,51 +43,14 @@
 
   // ---------- agents ----------
   const ctlLabel = c => (c ? `${c.action === 'stop' ? 'Stop' : 'Pause'} requested${c.seen ? ' · seen' : ' · not seen yet'}` : '');
-  function agentCard(a, compact) {
-    const pct = a.tokens && a.budget ? Math.min(100, Math.round(a.tokens / a.budget * 100)) : null;
-    const canSteer = a.yours || me().role === 'host';
-    if (compact) return `<div class="ra-row ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}"><span class="ra-dot"></span><div><b>${esc(a.name)}</b><span>${esc(a.control ? ctlLabel(a.control) : `${a.online ? (a.where || 'working') : 'idle'}${a.task ? ' · ' + a.task.title : ''}`)}</span></div></div>`;
-    return `<article class="ag-card ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}">
-      <header><span class="ag-ico">${ico('i-robot', 18)}</span><div class="ag-t"><b>${esc(a.name)}</b><span class="faint">${a.yours ? 'yours' : `${esc(a.ownerName)}'s`} · ${a.online ? `<span class="ok">active</span> ${esc(ago(a.lastActive))}` : a.lastActive ? `last seen ${esc(ago(a.lastActive))}` : 'never connected'}</span></div>
-</header>${a.control ? `<div class="ag-ctl">${ico('i-zap', 13)}${esc(ctlLabel(a.control))}</div>` : ''}
-      <dl>
-        <dt>Task</dt><dd>${a.task ? `${esc(a.task.title)} <span class="faint">· ${esc(a.task.status)}</span>` : '<span class="faint">none</span>'}</dd>
-        <dt>Branch</dt><dd>${a.branch ? `<code>${esc(a.branch)}</code>` : '<span class="faint">none</span>'}</dd>
-        <dt>Files</dt><dd>${a.files.length ? a.files.slice(0, 4).map(f => `<code>${esc(f)}</code>`).join(' ') + (a.files.length > 4 ? ` <span class="faint">+${a.files.length - 4}</span>` : '') : '<span class="faint">none claimed</span>'}</dd>
-        <dt>Doing</dt><dd>${esc(a.online ? a.where || 'working' : 'idle')}</dd>
-        <dt>Tokens</dt><dd>${a.tokens !== null ? `${k(a.tokens)}${a.budget ? ` of ${k(a.budget)}` : ''}${pct !== null ? `<span class="ag-bar"><i style="width:${pct}%" class="${pct > 85 ? 'hot' : ''}"></i></span>` : ''}` : '<span class="faint">not reported</span>'}</dd>
-      </dl>
-      ${canSteer ? `<footer>${a.control && a.control.action !== 'resume' ? '<button class="btn" data-ctl="resume">Resume</button>' : '<button class="btn" data-ctl="pause">Pause</button><button class="btn" data-ctl="stop">Stop</button>'}${a.yours ? '<button class="btn ghost" data-msg>Message</button>' : ''}</footer>` : ''}
-    </article>`;
+  function agentCard(a) {
+    return `<div class="ra-row ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}"><span class="ra-dot"></span><div><b>${esc(a.name)}</b><span>${esc(a.control ? ctlLabel(a.control) : `${a.online ? (a.where || 'working') : 'idle'}${a.task ? ' · ' + a.task.title : ''}`)}</span></div></div>`;
   }
-  const sec = (eyebrow, title, inner, extra = '') => `<section class="sec"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${title}</h2>${extra}</div>${inner}</section>`;
+  // The default tab is the Agents dashboard (app/ui/agentsdash.js, feat/agents-dash): a few big cards, each only when it has something to say.
   async function agents(el) {
-    const [{ agents: list }, dl, ch] = await Promise.all([C.api('/coord/agents'), C.api('/coord/delegations').catch(() => ({ delegations: [] })), C.api('/agents/channel?limit=20').catch(() => ({ messages: [] }))]);
-    const nameOf = id => ((members().find(m => m.id === id) || {}).name) || 'someone';
-    // Needs attention: the single most important thing here, as the hero card.
-    const attn = [
-      ...list.filter(a => a.control).map(a => ({ who: a.name, what: ctlLabel(a.control), id: a.id })),
-      ...list.filter(a => a.tokens && a.budget && a.tokens / a.budget > 0.85).map(a => ({ who: a.name, what: `${Math.round(a.tokens / a.budget * 100)}% of its token budget`, id: a.id })),
-      ...dl.delegations.filter(d => d.status === 'awaiting-approval').map(d => ({ who: `${d.fromName} → ${d.toName}`, what: `wants to hand over "${d.taskTitle}"`, ap: d.approval })),
-      ...list.filter(a => a.unread > 2 && !a.online).map(a => ({ who: a.name, what: `${a.unread} unread messages while idle`, id: a.id })),
-    ];
-    const hero = attn.length ? `<section class="hero-card ag-attn"><span class="eyebrow">Needs attention</span><h2>${attn.length === 1 ? esc(`${attn[0].who}: ${attn[0].what}`) : `${attn.length} things need a human`}</h2>
-        ${attn.length > 1 ? attn.slice(0, 5).map(x => `<div class="hero-row"><b>${esc(x.who)}</b><span>${esc(x.what)}</span>${x.ap ? `<button class="btn primary" data-ap-yes="${esc(x.ap)}">Approve</button><button class="btn" data-ap-no="${esc(x.ap)}">Deny</button>` : ''}</div>`).join('') : attn[0].ap ? `<div class="hero-acts"><button class="btn primary" data-ap-yes="${esc(attn[0].ap)}">Approve</button><button class="btn" data-ap-no="${esc(attn[0].ap)}">Deny</button></div>` : ''}</section>` : '';
-    const talk = ch.messages.slice(-15).map(m => `<div class="talk-row ${m.human ? 'human' : ''}"><b>${esc(nameOf(m.by))}</b>${m.to ? `<span class="faint">→ ${esc(nameOf(m.to))}</span>` : ''}<span class="talk-t">${esc(m.text)}</span><span class="faint">${esc(ago(m.at))}</span></div>`).join('');
-    el.innerHTML = `${hero}
-      ${sec('Agents', `${list.filter(a => a.online).length} working now`, list.length ? `<div class="ag-grid">${list.map(a => agentCard(a)).join('')}</div>` : empty('No agents yet', 'Connect your AI (Claude Code, Codex, Gemini CLI, Cursor…) from the right panel. Teammates\' agents show up here too.'))}
-      ${sec('#agents', 'What the agents are saying', `<div class="talk">${talk || '<div class="pj-none">Quiet so far. Agents post here with agents_post, message_agent and delegate.</div>'}</div>
-        <form class="coord-form talk-form" id="talk-form"><input class="input" id="talk-input" placeholder="@maya's-claude or @agents …" maxlength="2000" autocomplete="off"><button class="btn">Send</button></form>`)}
-      ${dl.delegations.length ? sec('Delegations', 'Who handed what to whom', dl.delegations.slice(0, 12).map(d => `<div class="dl-row"><b>${esc(d.fromName)}</b><span class="faint">→</span><b>${esc(d.toName)}</b><span class="dl-t">${esc(d.taskTitle)}</span><span class="pj-chip ${d.status === 'accepted' ? 'ok' : d.status === 'awaiting-approval' ? 'hot' : ''}">${esc(d.status.replace('-', ' '))}</span></div>`).join('')) : ''}`;
-    act(el, '[data-ctl]', async b => {
-      const id = b.closest('[data-agent]').dataset.agent, action = b.dataset.ctl;
-      await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action } });
-      toast(action === 'resume' ? 'Resumed' : `${action === 'stop' ? 'Stop' : 'Pause'} requested`); draw(); side();
-    });
-    act(el, '[data-msg]', async b => window.TribeDM && window.TribeDM.open(b.closest('[data-agent]').dataset.agent));
-    act(el, '[data-ap-yes]', async b => { await C.api(`/approvals/${b.dataset.apYes}/approve`, { method: 'POST', body: {} }); toast('Approved'); setTimeout(draw, 3200); });
-    act(el, '[data-ap-no]', async b => { await C.api(`/approvals/${b.dataset.apNo}/deny`, { method: 'POST', body: {} }); toast('Denied'); setTimeout(draw, 3200); });
-    el.querySelector('#talk-form').onsubmit = async e => { e.preventDefault(); const t = $('#talk-input').value.trim(); if (!t) return; try { await C.api('/agents/channel', { method: 'POST', body: { text: t } }); $('#talk-input').value = ''; draw(); } catch (err) { toast(err.message); } };
+    if (window.TribeAgentsDash) return window.TribeAgentsDash.render(el);
+    const { agents: list } = await C.api('/coord/agents');
+    el.innerHTML = list.length ? list.map(a => agentCard(a, true)).join('') : empty('No agents yet', 'Connect your AI from the right panel.');
   }
 
   // ---------- ownership ----------
