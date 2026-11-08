@@ -21,15 +21,22 @@
 .sx-chip .emo { margin-right: 5px; }
 .sx-notes { flex-basis: 100%; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 4px; cursor: pointer; }
 .sx-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.sx-item { position: relative; display: flex; gap: 10px; padding: 11px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised, var(--surface-2)); min-width: 0; transition: opacity .2s; }
+/* feat/setup-flow: livelier cards. A tinted thumbnail strip on the left (a palette shows its swatches; feature ideas
+   teal, references indigo, starter tasks rust), a bold title, one line of body, the button bottom right. Still flat. */
+.sx-item { --tint: var(--surface-2); position: relative; display: flex; align-items: stretch; gap: 0; padding: 0; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised, var(--surface-2)); min-width: 0; overflow: hidden; min-height: 104px; transition: opacity .2s; }
+.sx-item[data-type="idea"] { --tint: color-mix(in srgb, #38C6B1 22%, var(--surface)); }
+.sx-item[data-type="reference"] { --tint: color-mix(in srgb, #6C7CFF 22%, var(--surface)); }
+.sx-item[data-type="task"] { --tint: color-mix(in srgb, #B4512A 26%, var(--surface)); }
+.sx-item[data-type="tool"] { --tint: color-mix(in srgb, #FFB86B 18%, var(--surface)); }
 .sx-item.gone { opacity: 0; }
-.sx-emo { flex: none; font-size: 18px; line-height: 1.2; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; filter: saturate(.8) contrast(.95); }
-.sx-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; padding-right: 14px; }
-.sx-body b { font-size: 14px; line-height: 1.35; }
-.sx-body p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
-.sx-sw { display: flex; gap: 0; margin-top: 2px; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; width: max-content; max-width: 100%; }
-.sx-sw i { display: block; width: 22px; height: 16px; }
-.sx-acts { margin-top: auto; padding-top: 6px; }
+.sx-thumb { flex: 0 0 56px; display: grid; place-items: center; background: var(--tint); border-right: 1px solid var(--edge); }
+.sx-pal { display: flex; flex-direction: column; }
+.sx-pal i { display: block; flex: 1; width: 100%; }
+.sx-emo { font-size: 24px; line-height: 1; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; filter: saturate(.85) contrast(.95); }
+.sx-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 12px 12px; }
+.sx-body b { font-size: 17px; font-weight: 700; line-height: 1.3; padding-right: 18px; }
+.sx-body p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sx-acts { margin-top: auto; padding-top: 8px; display: flex; justify-content: flex-end; }
 .sx-task { background: var(--rust-soft); border: 1px solid color-mix(in srgb, var(--action) 40%, var(--edge)); color: var(--text); }
 .sx-task:hover:not(:disabled) { background: color-mix(in srgb, var(--action) 26%, var(--surface)); }
 .sx-task:disabled { opacity: .7; cursor: default; }

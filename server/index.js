@@ -54,6 +54,8 @@ const HOST = args.host || process.env.TRIBE_HOST || '0.0.0.0';
 const DIR = args.dir || process.env.TRIBE_DIR || path.join(os.homedir(), 'TribeCode');
 const UI = path.resolve(args.ui || process.env.TRIBE_UI || path.join(__dirname, '..', 'app', 'ui'));
 const STATUSES = ['backlog', 'doing', 'review', 'done'];
+const TASK_TYPES = ['build', 'fix', 'design', 'write', 'research'], TASK_DOERS = ['me', 'friend', 'agent', 'flint'];   // feat/setup-flow: task type chips + "Who does it?"
+
 const REPO = args.repo ? path.resolve(args.repo) : (process.env.TRIBE_REPO || null);
 
 const baseStore = new Store(DIR);
@@ -199,6 +201,7 @@ function broadcast(msg, except) {
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
+let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
@@ -278,10 +281,11 @@ function saveTask(t) {
   if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
   return t;
 }
-function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due }) {
+function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due, type }) {
   const now = new Date().toISOString();
   const t = { id: `t-${Date.now().toString(36)}-${id(3).toLowerCase()}`, title: str(title, 200) || 'Untitled task', status: STATUSES.includes(status) ? status : 'backlog',
     assignee, by, created: now, updated: now, order: Date.now(), source, body: str(body, 20000), due: dueOk(due), project: P.current() || P.defaultId() };
+  if (TASK_TYPES.includes(type)) t.type = type;   // feat/setup-flow
   return saveTask(t);
 }
 
@@ -427,6 +431,7 @@ dashboard.setFlow(flow);
 const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str , ui: UI, llm, sense: () => sense });   // per-project Website (server/showcase.js)
 sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
 const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W });   // feat/customize: tribe + project look (server/look.js)
+setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members });   // feat/setup-flow: role flows, Create the repo, Make the starter
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
 mcpFlow = makeMcpFlow({ flow, P });
@@ -661,6 +666,7 @@ async function apiInProject(req, res, url) {
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'projects' && c === 'setup') return setupFlow.route(req, res, ctx());   // feat/setup-flow (server/setup.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
   if (a === 'whiteboard') return whiteboard.route(req, res, ctx());   // feat/whiteboard (server/whiteboard.js)
   if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
@@ -737,6 +743,8 @@ async function apiInProject(req, res, url) {
       if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
       if (body.body !== undefined) t.body = str(body.body, 20000);
       if (body.due !== undefined) t.due = dueOk(body.due);
+      if (body.type !== undefined) { if (TASK_TYPES.includes(body.type)) t.type = body.type; else delete t.type; }   // feat/setup-flow
+      if (body.doer !== undefined) { if (TASK_DOERS.includes(body.doer)) t.doer = body.doer; else delete t.doer; }
       t.updated = new Date().toISOString(); t.updatedBy = me.id;
       return send(res, 200, { task: saveTask(t) });
     }

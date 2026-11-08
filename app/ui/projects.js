@@ -141,7 +141,8 @@
   // One setup step, from the checklist, Flint's nudges or anywhere else
   function step(k) {
     const p = curP(); if (!p) return;
-    if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude(); else if (k === 'repo') App().show('repo');
+    if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude();
+    else if (k === 'repo') { if (p.hasRepo || !isHost()) App().show('repo'); else createRepo(p); }   // feat/setup-flow: one click makes the repo
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
   async function overview() {
@@ -160,6 +161,7 @@
     stash();
     const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
     const L = d.living, canEdit = me().role !== 'spectator' && me().role !== 'agent';
+    const canName = isHost() || p.role === 'host';   // feat/setup-flow: rename and the emoji are for the host and project leads (the server checks too)
     const MOOD = { buzzing: 'Buzzing', steady: 'Steady', quiet: 'Quiet', fresh: 'Brand new' };
     // Way forward: today's plan focus when there is one (the old "Today's focus" card), else the next task.
     const planned = !!(plan && plan.items && plan.items.length);
@@ -167,24 +169,22 @@
     // Onboarding checklist: ticks itself from what the project already has (replaces "No vision yet" and "Start here").
     const pk = `tribecode.ov.${p.id}.`, lsg = k => { try { return localStorage.getItem(pk + k); } catch { return null; } };
     const lss = (k, v) => { try { v == null ? localStorage.removeItem(pk + k) : localStorage.setItem(pk + k, v); } catch {} };
-    const others = team.some(m => m.id !== meId);
     const steps = [
       { id: 'vision', emo: '✨', label: 'Write the vision', sub: 'Say what you’re making and who it’s for. Everyone reads it.', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
-      { id: 'task', emo: '📝', label: `Give ${esc(p.name)} its first task`, sub: 'Pick one small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button><button class="btn sm" data-ck="invite">Invite a friend</button>' : '' },
-      { id: 'friend', emo: '👋', label: 'A friend joins', sub: 'Share one link. No account needed.', done: others },
+      { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '' },
       { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'repo', emo: '🌿', label: 'Pin the repo', sub: 'Where the code lives.', done: !!(d.repo || p.hasRepo), acts: canEdit ? '<button class="btn sm" data-ck="repo">Set up</button>' : '' },
-    ];
+      { id: 'repo', emo: '🌿', label: 'Create the repo', sub: 'A home for the code. One click makes a local git repo.', done: !!(d.repo || p.hasRepo), acts: isHost() ? '<button class="btn sm" data-ck="repo">Create</button>' : '' },
+    ];   // feat/setup-flow: four steps (a friend joining is no longer one); the repo comes last
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
     // the hero of the page and the Living update stays hidden: there is nothing to report yet.
-    const started = steps.some(x => x.done && x.id !== 'repo' && x.id !== 'claude'), hero = !started && !allDone;
+    const started = steps.some(x => x.done && (x.id === 'vision' || x.id === 'task')), hero = !started && !allDone;
     const folded = !hero && lsg('ckFold') === '1';
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
     const checklist = allDone && lsg('ckGone') === '1' ? ''
-      : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, friends, Claude and a repo.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
+      : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI and a repo.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
       : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''}" id="pj-check">
-          ${hero ? `<span class="eyebrow ock-eyebrow">Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)}</h2><p class="ock-hero-p">Five quick steps. The dashboard fills in as you go.</p>` : ''}
+          ${hero ? `<span class="eyebrow ock-eyebrow">Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)}</h2><p class="ock-hero-p">Four quick steps. The dashboard fills in as you go.</p>` : ''}
           <div class="ock-head"><h3>Onboarding Checklist</h3><span class="ock-n">${nDone}/${steps.length}</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
           <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
           ${hero ? `<div class="ock-list ock-cards">${steps.map(x => `<div class="ock-row ock-card ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
@@ -196,8 +196,8 @@
     const tiles = L ? [['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', next, planned ? 'plan' : 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']] : [];
     const r = d.repo;
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
-        <div class="pj-id"><h1>${esc(p.name)}</h1>
-          <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
+        <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
+          <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span>${esc(r.name)}<span class="pj-dot">·</span>${esc(r.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
       ${hero ? checklist : ''}
@@ -205,6 +205,7 @@
       ${L && started ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
           <div class="pl-grid">${tiles.map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
       ${hero ? '' : checklist}
+      <div id="pj-setup-slot"></div><!-- feat/setup-flow: role flows + Make the starter (setup.js) -->
       <div id="pj-insp-slot"></div>
       ${sec('pj-sec-tribe', 'Tribe &amp; Agents', `<div class="pj-grid">
         <section class="card" id="pj-who"><h3>${ico('i-users', 16)}Who is here</h3>
@@ -232,7 +233,7 @@
     const ctx = $('#pj-ctx-body'); [dzn, drops].forEach(n => n && ctx.appendChild(n));   // the drop zone is a main point of the page: it gives everyone context
     el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => step(x.dataset.ck));
     // tell the room panel and Flint how far along this project is, so they can stay simple early on
-    window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, friend: steps[2].done, agent: steps[3].done, repo: steps[4].done });
+    window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, agent: steps[2].done, repo: steps[3].done });
     const fold = $('#pj-check-fold');
     // the hero checklist: the next step gets the one solid button and a soft highlight; the rest stay calm
     const chk = $('#pj-check.hero');
@@ -240,7 +241,8 @@
     if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     $('#pj-invite').onclick = () => App().openInvite();
-    $('#pj-face').onclick = () => pickImage(p);
+    $('#pj-face').onclick = () => (canName ? pickFace(p) : pickImage(p));   // feat/setup-flow: emoji grid + Upload a picture
+    const nm = $('#pj-name'); if (nm) nm.onclick = () => editName(p);
     const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
     $('#pj-tools-link').onclick = () => (window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : App().show('repo'));
@@ -249,6 +251,7 @@
     workspacePanel($('#pj-ws'));
     toolbox(p);
     if (window.TribeSense) window.TribeSense.card(p);   // feat/project-sense: the Inspiration card (sense.js)
+    if (window.TribeSetup) window.TribeSetup.card(p, d);   // feat/setup-flow: role flows + Make the starter (setup.js)
     if (window.TribeWebsite) window.TribeWebsite.overviewLink(p);   // "· Website" once the page exists (app/ui/website.js)
   }
   // Toolbox: a few checked tools, libraries and Claude skills that fit this project (server/shelf.js). Tucked in: only picks, one row.
@@ -281,6 +284,61 @@
       overview(); };
     inp.onkeydown = e => { if (e.key === 'Enter') save(true); if (e.key === 'Escape') save(false); };
     inp.onblur = () => save(true);
+  }
+  // ---------- feat/setup-flow: inline header edits (name, face) and Create the repo ----------
+  // All three header fields behave the same: a hover outline, click to edit, Enter saves, Esc cancels.
+  function editName(p) {
+    const b = $('#pj-name'); if (!b) return;
+    const inp = document.createElement('input'); inp.className = 'input pj-name-in'; inp.maxLength = 48; inp.value = p.name; inp.setAttribute('aria-label', 'Project name');
+    b.replaceWith(inp); inp.focus(); inp.select();
+    let done = false;
+    const save = async keep => { if (done) return; done = true;
+      const v = inp.value.trim();
+      if (keep && v && v !== p.name) { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: v } }); await refresh(); toast('Renamed'); } catch (e) { toast(e.message); } }
+      overview(); };
+    inp.onkeydown = e => { if (e.key === 'Enter') save(true); if (e.key === 'Escape') save(false); };
+    inp.onblur = () => save(true);
+  }
+  const FACES = ['🎮', '🕹️', '👾', '🐉', '🚀', '🌙', '🔥', '🌿', '🍄', '🦊', '🐙', '🌊', '⚡', '🎨', '📱', '🌐', '🛠️', '🤖', '📚', '🎵', '🧩', '🏰', '🧪', '✨'];
+  function pickFace(p) {
+    const btn = $('#pj-face'); if (!btn) return;
+    let pop = $('#pj-face-pop'); if (pop) { pop.remove(); return; }
+    pop = document.createElement('div'); pop.id = 'pj-face-pop'; pop.className = 'pj-face-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Pick a face');
+    pop.innerHTML = `<div class="pfp-grid">${FACES.map(e => `<button class="pfp-e ${p.emoji === e && !p.image ? 'on' : ''}" data-face="${e}" aria-label="${e}">${e}</button>`).join('')}</div>
+      <div class="pfp-foot"><button class="btn sm" id="pfp-upload">${ico('i-photo', 14)}Upload a picture</button>${p.image ? '<button class="linkish" id="pfp-clear">Remove picture</button>' : ''}</div>`;
+    document.body.appendChild(pop);   // on the body, so a Dashboard redraw doesn't close it
+    const r = btn.getBoundingClientRect(); pop.style.top = `${Math.round(r.bottom + 6)}px`; pop.style.left = `${Math.round(Math.max(16, Math.min(r.left, innerWidth - pop.offsetWidth - 16)))}px`;
+    const close = () => { pop.remove(); document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc1, true); };
+    const away = e => { if (!pop.contains(e.target) && !(e.target.closest && e.target.closest('#pj-face'))) close(); };
+    const esc1 = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+    setTimeout(() => { document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc1, true); }, 0);
+    const patch = async body => { close(); try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body }); await refresh(); overview(); } catch (e) { toast(e.message); } };
+    pop.querySelectorAll('[data-face]').forEach(b => b.onclick = () => patch({ emoji: b.dataset.face, image: '' }));
+    pop.querySelector('#pfp-upload').onclick = () => { close(); pickImage(p); };
+    const cl = pop.querySelector('#pfp-clear'); if (cl) cl.onclick = () => patch({ image: '' });
+    const first = pop.querySelector('.pfp-e'); if (first) first.focus();
+  }
+  async function createRepo(p) {
+    const b = document.querySelector('#pj-check [data-ck=repo], #room-next [data-rn=repo]'); if (b) { b.disabled = true; b.textContent = 'Creating…'; }
+    try {
+      await C.api(`/projects/${encodeURIComponent(p.id)}/setup/repo`, { method: 'POST' });
+      toast('🌿 Repo ready: a local git repo with a first commit'); await refresh(); overview();
+      // GitHub only when it is already set up on the host (a signed-in gh CLI or a saved token)
+      let w = null; try { w = await C.api(`/projects/${encodeURIComponent(p.id)}/workspace`); } catch {}
+      if (w && w.repo && !w.repo.remote && ((w.github || {}).signedIn || (w.identity || {}).hasToken)) offerGithub(p);
+    } catch (e) { toast(e.message); if (b) { b.disabled = false; b.textContent = 'Create'; } }
+  }
+  function offerGithub(p) {
+    const m = $('#invite-modal'), body = $('#invite-body'); if (!m || !body) return;
+    m.classList.remove('hidden');
+    body.innerHTML = `<span class="eyebrow">Repo · ${esc(p.name)}</span><h2>Also put it on GitHub?</h2>
+      <p class="lead">GitHub is set up on this computer, so ${esc(p.name)} can get a private GitHub repo too. Everything works locally either way.</p>
+      <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Not now</button><button class="btn primary" id="pj-gh-go">Push to GitHub</button></div>`;
+    const close = () => m.classList.add('hidden');
+    body.querySelector('[data-close]').onclick = close;
+    $('#pj-gh-go').onclick = async () => { const g = $('#pj-gh-go'); g.disabled = true; g.textContent = 'Pushing…';
+      try { const r = await C.api('/flow/github', { method: 'POST', body: {} }); toast(r.step && r.step.s === 'ok' ? 'On GitHub now' : 'GitHub: ' + ((r.step && r.step.note) || 'not done yet')); } catch (e) { toast(e.message); }
+      close(); overview(); };
   }
   // No vision yet: the host writes it (VISION.md, read by the plan, the board and the agents); others suggest one in chat.
   function writeVision(p) {

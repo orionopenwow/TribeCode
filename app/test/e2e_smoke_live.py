@@ -134,6 +134,7 @@ def main():
             ph.wait_for_selector("#tabbar", state="visible")
 
             # ---- shared compute: a quiet helper once the project has a repo and two people ----
+            api("/tasks", "POST", {"title": "Light the first lantern"}, token=tok, headers={"X-Project": pid})   # vision + task + repo: the project is going (stage.js)
             host.click("#nest-overview"); host.wait_for_selector("#room-helpers [data-helper='compute']", timeout=20000)
             host.click("#room-helpers [data-helper='compute']"); host.wait_for_selector("#cmp-toggle")
             host.click("#cmp-toggle"); wait_text(host, ".cmp-list", "Orion")

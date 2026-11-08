@@ -222,6 +222,8 @@ def main():
 
             # ---- nest badges: only non-empty sections show a count; requests surface in Project Hub
             wait_text(host, "#nn-tasks", "1")
+            api("/vision", "PUT", {"text": "# Pixel Quest\n\nA tiny platformer."}, token=token, project="pixel-quest")   # vision + tasks + repo: "going", so the tab row shows (feat/setup-flow)
+            host.wait_for_function("document.body.dataset.stage === 'going'", timeout=10000)
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
             assert host.locator("#wt-requests").count() == 0
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project="pixel-quest")
