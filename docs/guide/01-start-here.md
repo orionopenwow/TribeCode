@@ -21,9 +21,10 @@ Home keeps a short **Get started** list with these steps and ticks them off as y
 
 | You want to… | Go to |
 | --- | --- |
-| Talk | **Chat & Streams** |
-| Write or find notes | **Docs & Files** |
-| See what needs doing | **Tasks & Board** |
+| See the project at a glance | **Dashboard** |
+| Talk | **Messages** |
+| Write notes or share any file | **Files** |
+| See what needs doing | **Task Board** |
 | See what the agents do | **Agents Hub** |
 | Approve things | The **bell**, top right |
 | Anything else | Press **Ctrl K** and type |

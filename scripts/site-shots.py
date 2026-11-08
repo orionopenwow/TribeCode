@@ -5,7 +5,7 @@ lively chat, tasks, docs, a vote, the Secretary), then adds the screens the show
 Agent fleet + Office, Website, pixel viewer, themes, more phone screens). Everything is the real app; nothing is
 mocked except Ollama and GitHub (local stand-ins, as in readme-shots).
 
-Output: site/assets/shots/<name>.webp (desktop 1440x900 @2x stored 2000px wide, phone 390x844 @2x stored 780px wide).
+Output: site/assets/shots/<name>.webp (not used by the current site/index.html; kept for a future gallery) (desktop 1440x900 @2x stored 2000px wide, phone 390x844 @2x stored 780px wide).
 
 The demo (--demo): a fresh tribe, driven step by step (create a project -> copy the invite link -> a friend joins on
 a phone -> a Claude agent connects over MCP and posts in chat -> tasks and the plan update -> the preview), captured
@@ -27,8 +27,8 @@ rs = importlib.util.module_from_spec(spec); spec.loader.exec_module(rs)
 OUT = ROOT / "site" / "assets" / "shots"
 ONLY = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
 # readme-shots screens we keep for the site (the rest of its run still seeds data)
-FROM_README = {"kickoff", "plus", "proposal", "chat", "person", "tasks", "docs-desk", "preview", "phone-chat", "phone-plus",
-               "phone-panel", "phone-docs", "agents", "secretary", "home"}
+FROM_README = {"kickoff", "plus", "proposal", "chat", "person", "tasks", "files", "doc", "dashboard", "flint", "preview", "phone-chat", "phone-plus",
+               "phone-panel", "phone-files", "phone-doc", "agents", "secretary", "home"}
 TMP = Path(tempfile.mkdtemp(prefix="site-shots-"))
 done, failed = [], []
 
@@ -310,32 +310,9 @@ def run_demo():
 
 # ======================================================================== the social card
 def make_og():
-    """site/assets/og-image.png (1200x630): wordmark, the pitch and the overview screenshot, flat."""
-    from playwright.sync_api import sync_playwright
-    a = (ROOT / "site" / "assets").as_uri()
-    html = f"""<!doctype html><meta charset=utf-8><style>
-    @font-face {{ font-family: Inter; font-weight: 400; src: url({a}/fonts/Inter-Regular.woff); }}
-    @font-face {{ font-family: Inter; font-weight: 600; src: url({a}/fonts/Inter-SemiBold.woff); }}
-    @font-face {{ font-family: 'Inter Display'; font-weight: 800; src: url({a}/fonts/InterDisplay-ExtraBold.woff); }}
-    body {{ margin: 0; width: 1200px; height: 630px; background: #12151A; font-family: Inter; overflow: hidden; position: relative; }}
-    .l {{ position: absolute; left: 64px; top: 72px; width: 470px; }}
-    .wm {{ height: 40px; }} h1 {{ font: 800 50px/1.06 'Inter Display'; letter-spacing: -0.025em; color: #F8FAFC; margin: 44px 0 0; }}
-    h1 span {{ color: #94A3B8; }} p {{ font: 400 15px/1 ui-monospace, monospace; color: #F26B1D; letter-spacing: .06em; text-transform: uppercase; position: absolute; left: 64px; bottom: 64px; margin: 0; }}
-    .f {{ position: absolute; left: 590px; top: 72px; width: 900px; border: 1px solid #2A313C; border-radius: 16px; overflow: hidden; background: #1B2028; }}
-    .b {{ height: 30px; background: #1E242D; border-bottom: 1px solid #2A313C; display: flex; gap: 7px; align-items: center; padding-left: 14px; }}
-    .b i {{ width: 10px; height: 10px; border-radius: 50%; background: #FF5F57; }} .b i:nth-child(2) {{ background: #FEBC2E; }} .b i:nth-child(3) {{ background: #28C840; }}
-    .f img {{ display: block; width: 100%; }}
-    </style><div class=l><img class=wm src="{a}/brand/wordmark.svg"><h1>Build one app together with friends. <span>Each with your own Claude.</span></h1></div>
-    <p>Open source · MIT · works with Claude Code</p>
-    <div class=f><div class=b><i></i><i></i><i></i></div><img src="{a}/shots/overview.webp"></div>"""
-    f = TMP / "og.html"; f.write_text(html)
-    with sync_playwright() as p:
-        b = p.chromium.launch(executable_path=rs.CHROME, args=["--no-proxy-server", "--allow-file-access-from-files"])
-        pg = b.new_page(viewport={"width": 1200, "height": 630}); pg.goto(f.as_uri()); pg.wait_for_timeout(600)
-        raw = TMP / "og.png"; pg.screenshot(path=str(raw)); b.close()
-    from PIL import Image
-    Image.open(raw).convert("RGB").quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(ROOT / "site" / "assets" / "og-image.png", optimize=True)
-    print("  og-image.png", (ROOT / "site" / "assets" / "og-image.png").stat().st_size // 1024, "KB")
+    """site/assets/og-image.png: made by scripts/readme-shots.py from its Dashboard shot (npm run dev:shots)."""
+    src = ROOT / "docs" / "screenshots" / "readme-dashboard.png"
+    rs.make_og(src)
 
 
 if __name__ == "__main__":

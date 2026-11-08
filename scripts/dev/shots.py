@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""npm run dev:shots — regenerate the README/docs screenshots, keeping only real changes.
+"""npm run dev:shots — regenerate every screenshot the README, the website and the docs use, keeping only real changes.
 
-  python3 scripts/dev/shots.py                 README shots (scripts/readme-shots.py) + docs shots (npm run screenshots)
-  python3 scripts/dev/shots.py --readme-only   just the README / website shots
-  python3 scripts/dev/shots.py --docs-only     just the docs shots (ui_smoke --shots, e2e_tribe --shots)
+  python3 scripts/dev/shots.py                 README shots + the website's social card (scripts/readme-shots.py), then the docs shots
+  python3 scripts/dev/shots.py --readme-only   just docs/screenshots/readme-*.png and site/assets/og-image.png
+  python3 scripts/dev/shots.py --docs-only     just the docs shots (e2e_website --shots for docs/WEBSITE.md, ui_smoke --shots, e2e_tribe --shots)
   python3 scripts/dev/shots.py --threshold 0.5 percent of pixels that must differ to count as a change (default 0.3)
 
 Deterministic: every run uses a fixed time zone (UTC), locale (en-US) and a throwaway seeded tribe, and afterwards
@@ -18,7 +18,7 @@ args = sys.argv[1:]
 THRESH = float(args[args.index("--threshold") + 1]) if "--threshold" in args else 0.3
 env = {**os.environ, "TZ": "UTC", "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_TEST": "1",
        "TRIBE_PORT_OFFSET": os.environ.get("TRIBE_PORT_OFFSET", "6900"), "NO_PROXY": "127.0.0.1,localhost"}
-WATCH = ["docs/screenshots", "site/assets/shots"]
+WATCH = ["docs/screenshots", "site/assets/og-image.png"]
 
 def git(*a):
     return subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True).stdout
@@ -46,6 +46,7 @@ def diff_pct(path):
 ok = True
 if "--docs-only" not in args: ok &= run([sys.executable, "scripts/readme-shots.py"])
 if "--readme-only" not in args:
+    ok &= run([sys.executable, "app/test/e2e_website.py", "--shots"])
     ok &= run([sys.executable, "app/test/ui_smoke.py", "--shots"])
     ok &= run([sys.executable, "app/test/e2e_tribe.py", "--shots"])
 
