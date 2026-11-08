@@ -33,7 +33,7 @@
   // ---------- resume last session (client side, per server) ----------
   const LKEY = () => `tribecode.lastSession:${C.base()}`;
   const last = () => lsGet(LKEY());
-  const LABEL = { home: 'Project home', chat: 'Chat', docs: 'Files', tasks: 'Tasks', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
+  const LABEL = { home: 'Dashboard', chat: 'Messages', docs: 'Files', tasks: 'Task Board', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
   function remember(view) {
     if (!connected() || !LABEL[view]) return;
     const p = PJ() && PJ().cur(); if (!p) return;
@@ -77,6 +77,7 @@
   document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#hub-host-retry') && App().hostHere) { e.target.disabled = true; e.target.textContent = 'Starting…'; App().hostHere(); } });
   C.on('ws', m => { if (m && (m.type === 'hub' || m.type === 'dashboard') && (!data || m.rev !== data.rev)) load(true); });
   C.on('hello', () => { load(true); scratch.sync(); setTimeout(fromHash, 30); });
+  setTimeout(() => { if (connected() && !data) load(true); }, 0);   // the hello can come before this script runs (a fast reload): the helpers still need the data
   C.on('status', () => { if (document.body.dataset.view === 'hub') render(); panel(); });
   C.on('projects', () => { if (document.body.dataset.view === 'hub') setTimeout(render, 300); });
   setInterval(() => { if (!document.hidden && connected()) load(true); }, 90_000);
@@ -169,7 +170,7 @@
         + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.', '', 'link', 'Copy a link', 'teal');
     // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
     const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`
-      : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://orionopenwow.github.io/TribeCode/about/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
+      : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://tribecode.org/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
     const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span><span class="gs-band-r">${on ? 'Pick up, or bring someone in' : 'Two ways in · about a minute'}</span></div>
@@ -872,6 +873,7 @@
   // On Home (body.global) it is yours: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
   // (the room's people and the scratchpad step aside: Home shows the scratchpad itself).
   // =====================================================================
+  const HKEY = 'tribecode.room.helpersOpen';
   function panel() {
     const pane = $('#room-pane'); if (!pane) return;
     let box = $('#room-helpers');
@@ -880,19 +882,23 @@
     if (!connected() || !f) { box.innerHTML = ''; }
     else {
       const m = f.models || {}, loops = f.loops || [], sec2 = loops.find(l => l.id === 'secretary'), auto = loops.find(l => l.id === 'autopilot');
-      const row = (key, glyph, name, what, on) => `<div class="person helper ${on ? 'on' : ''}" data-helper="${key}" title="${esc(name)}"><div class="avatar helper-av">${ico(glyph, 14)}<span class="st"></span></div><div><span>${esc(name)}</span><div class="what">${what}</div></div></div>`;
+      // One compact row of pills (feat/sidebar-widgets): a dot says on / off, the detail is in the tooltip (and for screen readers).
+      const row = (key, glyph, name, what, on) => { const plain = String(what).replace(/<[^>]+>/g, ''); return `<button class="hp-pill ${on ? 'on' : ''}" data-helper="${key}" title="${esc(name)} · ${esc(plain)}"><span class="hp-dot" aria-hidden="true"></span>${ico(glyph, 15)}<span class="hp-n">${esc(name)}</span><span class="sr-only">: ${esc(plain)}</span></button>`; };
       const rows = [
         sec2 ? row('secretary', 'i-quill', 'Secretary', `${sec2.on ? `<span class="ok">${esc(sec2.state)}</span>` : 'off'}${sec2.last ? ` · ${esc(ago(sec2.last))}` : ''}`, sec2.on) : '',
-        row('flint', 'i-flint', 'Flint', m.online ? '<span class="ok">ready</span> · local model on' : 'basic mode · no local model', true),   // feat/flint: the built-in helper (was "Local model")
-        auto ? row('autopilot', 'i-git', 'Repo autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
+        row('flint', 'i-flint', 'Flint', m.online ? '<span class="ok">ready</span> · local model on' : 'basic mode · no local model', !!m.online),   // feat/flint: the built-in helper (was "Local model")
+        auto ? row('autopilot', 'i-git', 'Autopilot', auto.on ? `<span class="ok">on</span> · ${esc(auto.state.replace(/^on /, ''))}` : 'off', auto.on) : '',
         computeRow(row),
       ].join('');
-      box.innerHTML = `<h6><span class="emo" aria-hidden="true">🤝</span>Helpers</h6>${rows}`;
+      const open = lsGet(HKEY, true) !== false, nOn = (rows.match(/class="hp-pill on"/g) || []).length;   // collapsible, remembered
+      box.innerHTML = `<button class="hp-head" id="helpers-toggle" aria-expanded="${open}" aria-controls="hp-pills"><span class="hp-t">Helpers</span><span class="hp-sum">${nOn ? `${nOn} on` : 'all off'}</span>${ico('i-chev', 14)}</button><div class="hp-pills" id="hp-pills">${rows}</div>`;
+      box.classList.toggle('closed', !open);
+      box.querySelector('#helpers-toggle').onclick = () => { const o = box.classList.contains('closed'); lsSet(HKEY, o); box.classList.toggle('closed', !o); box.querySelector('#helpers-toggle').setAttribute('aria-expanded', String(o)); };
       box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : r.dataset.helper === 'flint' && window.TribeFlint ? window.TribeFlint.focus() : fleetGo(r.dataset.helper));
     }
     let pad = $('#room-scratch');   // the scratchpad is gone: one quiet "Start a note" that lands in your docs
     if (!pad) { pad = document.createElement('div'); pad.id = 'room-scratch'; pad.className = 'room-note'; const cc = $('#cc-connect'); cc.after(pad);
-      pad.innerHTML = `<button class="note-start sm" id="room-note-new">${ico('i-plus', 16)}<span><b>Start a note</b><small>Goes to your docs</small></span></button>`;
+      pad.innerHTML = `<button class="room-slim" id="room-note-new" title="A new note in your docs">${ico('i-plus', 16)}<span>Start a note</span></button>`;
       pad.querySelector('#room-note-new').onclick = startNote; }
     pad.classList.toggle('hidden', document.body.dataset.view === 'hub');
     homePanel();
@@ -955,7 +961,7 @@
       const { invite } = await C.api('/invites', { method: 'POST', body: { hours: 24, maxUses: 5, role: 'builder' } });
       let base = C.base(), site = null;
       try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null; if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) base = pick.url; } catch {}
-      const link = site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
+      const link = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
       shareState.link = link; homePanel();
       try { await navigator.clipboard.writeText(link); toast('Hub link copied. It works for 24 hours, for up to 5 friends.'); } catch { toast('Hub link ready: copy it from the panel.'); }
     } catch (e) { toast(e.message); }

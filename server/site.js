@@ -1,5 +1,5 @@
 // The TribeCode website on GitHub Pages as the friend entry point.
-// Invite links look like https://<owner>.github.io/TribeCode/go.html#s=<host address>&c=<code>: a stable,
+// Invite links look like https://tribecode.org/app/go.html#s=<host address>&c=<code> (a fork: https://<owner>.github.io/<repo>/app/go.html…): a stable,
 // recognizable address that detects the device, explains what's happening, says clearly when the host's
 // computer is offline, and then hands off to the host's own server (where the account, the Home Screen
 // app and notifications live). Used only once the Pages site actually answers, so links never break.
@@ -22,21 +22,28 @@ module.exports = function makeSite({ args = {}, root, log = () => {} }) {
     } catch {}
     return 'https://orionopenwow.github.io/TribeCode';
   }
-  const candidate = guess();
-  function probe() {
+  // TribeCode's own repo has its own domain (tribecode.org, the same Pages site); a fork uses its github.io address.
+  const own = c => c && /^https:\/\/orionopenwow\.github\.io\/TribeCode$/i.test(c);
+  const candidates = configured ? [guess()] : own(guess()) ? ['https://tribecode.org', guess()] : [guess()];
+  const candidate = candidates[0];
+  function check(base, path) {
+    return new Promise(done => {
+      const req = https.get(`${base}${path}`, { timeout: 8000, headers: { 'user-agent': 'TribeCode' } }, res => { res.resume(); done(res.statusCode === 200); });
+      req.on('error', () => done(false)); req.on('timeout', () => { req.destroy(); done(false); });
+    });
+  }
+  async function probe() {
     if (!candidate) return;
     checked = Date.now();
-    const req = https.get(`${candidate}/go.html`, { timeout: 8000, headers: { 'user-agent': 'TribeCode' } }, res => {
-      res.resume();
-      const ok = res.statusCode === 200;
-      if (ok && !site) log(`  Site:     ${candidate} (friend links go through it)`);
-      site = ok ? candidate : null;
-    });
-    req.on('error', () => { site = null; }); req.on('timeout', () => req.destroy());
+    for (const c of candidates) {
+      // the app (and its go.html) lives at /app/ since v0.10.3; older deployments had it at the root
+      if (await check(c, '/app/go.html') || await check(c, '/go.html')) { if (site !== c) log(`  Site:     ${c} (friend links go through it)`); site = c; return; }
+    }
+    site = null;
   }
   if (process.env.TRIBE_TEST_SITE) site = process.env.TRIBE_TEST_SITE;   // tests point at a local copy
   else if (candidate && !process.env.TRIBE_TEST) { probe(); setInterval(probe, 10 * 60_000).unref(); }
   // Only public https hosts go through the site: a Wi-Fi address gains nothing from the extra hop.
-  const joinLink = (base, code) => (site && /^https:/.test(base) ? `${site}/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(code)}` : `${base}/join/${code}`);
+  const joinLink = (base, code) => (site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(code)}` : `${base}/join/${code}`);
   return { url: () => site, candidate, joinLink };
 };

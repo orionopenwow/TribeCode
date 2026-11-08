@@ -1,0 +1,116 @@
+/* feat/sidebar-widgets (app/ui/widgets.js): the project sidebar's extra rows (Preview game / app, Website, added
+   widgets, + Add) and the calmer right panel ("In the room"). Flat matte, 1px borders, theme variables only. */
+
+/* ---------- sidebar: rows under the core ones ---------- */
+.nest-extra { display: flex; flex-direction: column; gap: inherit; }
+.nest-extra.empty { display: none; }
+body.global #nest-extra { display: none; }
+.nest-extra .wg-row { position: relative; }
+.nest-extra .wg-row > .wg-emo { width: 20px; height: 20px; display: grid; place-items: center; font-size: 16px; line-height: 1; flex: none; overflow: visible; }
+.nest-extra .wg-row > .wg-emo + span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nest-extra .wg-more { margin-left: auto; width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 16px; line-height: 1; color: var(--faint); opacity: 0; flex: none; }
+.nest-extra .wg-row:hover .wg-more, .nest-extra .wg-row:focus-visible .wg-more { opacity: 1; }
+.nest-extra .wg-more:hover { background: var(--hover); color: var(--text); }
+.nest-extra .wg-add, .nest-extra .wg-add svg.i { color: var(--faint); }
+.nest-extra .wg-add:hover, .nest-extra .wg-add:hover svg.i { color: var(--text); }
+.nest-extra .wg-row.dragging { opacity: .5; }
+.nest-extra .wg-row.drop { box-shadow: inset 0 2px 0 var(--accent); }
+@media (hover: none) { .nest-extra .wg-more { opacity: 1; } }
+
+/* the picker, the custom form, the ⋯ menu */
+.wg-pop { min-width: 260px; }
+.wg-pick button[disabled] { opacity: .55; cursor: default; }
+.wg-pick button[disabled]:hover { background: none; color: var(--muted); }
+.wg-pick small { font-size: 13px; color: var(--faint); }
+.wg-form { display: flex; flex-direction: column; gap: 8px; padding: 6px; min-width: 260px; }
+.wg-form h6 { font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--text); margin: 2px 2px 2px; letter-spacing: 0; text-transform: none; }
+.wg-form .input { width: 100%; min-width: 0; height: 36px; font-size: 14px; }
+.wg-two { display: flex; gap: 8px; }
+.wg-two .wg-emoji { width: 52px; flex: none; text-align: center; }
+.wg-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px; }
+.sh-pop.sheet .wg-form .input { height: 44px; font-size: 16px; }
+
+/* a custom link in the preview pane */
+.wg-frame { position: absolute; inset: 0; display: flex; }
+.wg-frame iframe { flex: 1; width: 100%; height: 100%; border: 0; background: var(--surface); }
+#preview-body:has(.wg-frame) { position: relative; padding: 0; overflow: hidden; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- right panel: calmer, readable (secondary text 13px, primary 14px) ---------- */
+#tour-room .room-pane { gap: 16px; }
+#tour-room .room-head h6 { display: flex; align-items: center; gap: 8px; }
+#tour-room #room-count:not(:empty) { font-family: var(--font); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--live-ink); background: var(--live-tint); border-radius: 999px; padding: 1px 9px; }
+#tour-room .room-list .person { padding: 6px 8px; gap: 11px; }
+#tour-room .room-list .person > div:last-child { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#tour-room .room-list .person > div:last-child > span:first-child { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#tour-room .person .what { font-size: 13px; line-height: 1.35; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#tour-room .person .what .ok { color: inherit; }
+#tour-room .rm-pill { display: inline-block; margin-left: 4px; padding: 0 7px; border: 1px solid var(--edge); border-radius: 999px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--muted); vertical-align: 1px; }
+#tour-room .room-list .faint { font-size: 13px; }
+#tour-room .empty-room { font-size: 13px; color: var(--muted); margin-top: -8px; padding: 0 8px; }
+
+/* agents at a glance (coord.js) */
+#tour-room .ra-row b { font-size: 14px; font-weight: 500; }
+#tour-room .ra-row span:not(.ra-dot) { font-size: 13px; color: var(--muted); }
+
+/* Helpers: one collapsible row of pills (hub.js) */
+#tour-room .room-helpers { gap: 8px; }
+#tour-room .hp-head { display: flex; align-items: center; gap: 8px; width: 100%; height: 28px; padding: 0 4px; border-radius: 7px; color: var(--muted); text-align: left; }
+#tour-room .hp-head:hover { background: var(--hover); color: var(--text); }
+#tour-room .hp-t { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+#tour-room .hp-sum { font-size: 13px; color: var(--faint); }
+#tour-room .hp-head svg.i { margin-left: auto; transition: transform .15s var(--ease); }
+#tour-room .room-helpers.closed .hp-head svg.i { transform: rotate(180deg); }
+#tour-room .room-helpers.closed .hp-pills { display: none; }
+#tour-room .hp-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+#tour-room .hp-pill { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px 0 10px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); font-size: 13.5px; font-weight: 500; color: var(--text); }
+#tour-room .hp-pill:hover { background: var(--hover); border-color: var(--edge-pop); }
+#tour-room .hp-pill svg.i { color: var(--muted); }
+#tour-room .hp-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--edge-pop); flex: none; }
+#tour-room .hp-pill.on .hp-dot { background: var(--live); }
+#tour-room .hp-pill.on svg.i { color: var(--live-ink); }
+
+/* Connect your Claude Code: one clear card, only while it isn't connected */
+#tour-room .cc-card { height: auto; min-height: 56px; padding: 10px 12px; gap: 12px; align-items: center; text-align: left; background: var(--raised, var(--surface)); }
+#tour-room .cc-card .cc-ico { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--chip, var(--surface-3)); color: var(--accent-ink, var(--accent)); flex: none; }
+#tour-room .cc-card .cc-ico svg.i { width: 17px; height: 17px; }
+#tour-room .cc-card .cc-t { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+#tour-room .cc-card b { font-size: 14px; font-weight: 600; color: var(--text); }
+#tour-room .cc-card small { font-size: 13px; font-weight: 400; color: var(--muted); }
+
+/* Start a note: a slim row */
+#tour-room .room-note { margin: -6px 0 0; }
+#tour-room .room-slim { display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 8px; border-radius: 9px; font-size: 14px; color: var(--muted); text-align: left; }
+#tour-room .room-slim:hover { background: var(--hover); color: var(--text); }
+#tour-room .room-slim svg.i { color: var(--faint); }
+
+/* claimed files */
+#tour-room .claim { font-size: 13px; }
+
+/* Flint: a clear divider, readable status, chips in one scrolling row */
+#tour-room .flint { border-top: 1px solid var(--edge); padding-top: 10px; }
+#tour-room .fl-st { font-size: 13px; }
+#tour-room .fl-hi { font-size: 14px; }
+#tour-room .fl-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px 2px; }
+#tour-room .fl-chips::-webkit-scrollbar { display: none; }
+#tour-room .fl-chip { flex: none; height: 30px; font-size: 13px; white-space: nowrap; }
+#tour-room .fl-priv { font-size: 13px; color: var(--faint); }
+#tour-room .fl-t { font-size: 14px; }
+#tour-room .fl-act { font-size: 13px; }
+
+/* Home's panel shares the readable sizes */
+#tour-room .home-me .what { font-size: 13px; }
+/* + Add: below the Repo row, a bordered rounded rectangle */
+.nest-add-slot { padding: 4px 10px 6px; }
+.nest-add-slot:empty { display: none; }
+.nest-add-slot .wg-add { width: 100%; justify-content: flex-start; border: 1px solid var(--edge); border-radius: 10px; background: transparent; color: var(--muted); }
+.nest-add-slot .wg-add svg.i { color: var(--muted); }
+.nest-add-slot .wg-add:hover { border-color: var(--edge-pop, var(--edge)); background: var(--hover, var(--surface)); color: var(--text); }
+.nest-add-slot .wg-add:hover svg.i { color: var(--text); }
+/* Preview game / app: a clear button at the bottom of the sidebar, above Invite friends */
+.nest-preview-slot:empty { display: none; }
+.nest-preview-slot { margin-bottom: 8px; }
+.wg-preview { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; height: 40px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2, var(--raised)); color: var(--text); font: 600 14px var(--font); cursor: pointer; }
+.wg-preview svg.i { width: 16px; height: 16px; color: var(--accent); fill: currentColor; }
+.wg-preview:hover { background: var(--surface-3, var(--hover)); border-color: var(--edge-pop, var(--edge)); }
