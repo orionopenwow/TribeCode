@@ -535,4 +535,10 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 .userbar .ub-acts > button, .userbar .ub-acts .nf-bell, .userbar .ub-acts .fr-btn, .userbar .ub-acts .ub-gear { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 9px; position: relative; flex: none; }
 .userbar .ub-acts > button:hover { background: var(--hover); }
 .userbar .ub-acts svg.i, .userbar .ub-acts .i { width: 20px !important; height: 20px !important; stroke-width: 2; }
-.userbar .ub-acts .nf-count { top: 1px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; line-height: 16px; border: 2px solid var(--nest, #1B2028); box-sizing: content-box; }
+.userbar .ub-acts .nf-count { top: -1px; right: -3px; min-width: 14px; height: 14px; padding: 0 3px; font-size: 9.5px; font-weight: 700; line-height: 14px; border-radius: 8px; border: 2px solid var(--nest, #1B2028); box-sizing: content-box; text-align: center; }
+/* the flame is back at the top of the rail (no tile behind it), level with the wordmark in the top bar */
+.window .rail .logo-btn#rail-logo { width: 54px; height: 50px; flex: 0 0 50px; margin: 3px 0 19px; background: none !important; border: 0 !important; border-radius: 12px; position: relative; }
+.window .rail #rail-logo img.logo { width: 46px; height: 46px; image-rendering: pixelated; transition: transform .18s var(--ease, ease); }
+.window .rail #rail-logo:hover img.logo { transform: scale(1.08); }
+.window .rail #rail-logo.is-busy::after { content: ''; position: absolute; right: 6px; bottom: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--live, #38C6B1); }
+.tb-brand .tb-wm { margin-left: 4px; }

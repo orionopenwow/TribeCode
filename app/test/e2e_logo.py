@@ -25,7 +25,7 @@ def main():
             src = lambda: pg.get_attribute("#rail-logo img.logo", "src")
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=10000)   # resting once connected
             assert pg.get_attribute("#rail-logo img.logo", "src").endswith("icon-mark-animated.svg"), "the flame idles (always flickers) in the top bar"
-            assert pg.locator(".titlebar #tb-brand #rail-logo").count() == 1 and pg.locator(".rail #rail-camp").count() == 1, "flame next to the wordmark; the camp (Home) in the rail"
+            assert pg.locator(".rail #rail-logo").count() == 1 and pg.locator("#rail-camp").count() == 0, "the flame tops the rail (Home); the wordmark is in the top bar"
             # a prompt in flight: the logo flickers until the reply is in
             pg.route("**/api/hub/ask", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps({"answer": "ok"})))
             st = pg.evaluate("""(() => { window.__p = TribeClient.api('/hub/ask', { method: 'POST', body: { prompt: 'hi' } }).catch(() => {});
@@ -41,7 +41,7 @@ def main():
             pg.wait_for_function("document.querySelector('#lt').classList.contains('tc-loading')", timeout=3000)
             # hover flickers
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=25000)
-            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "50px"
+            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "46px"
             b.close()
         assert not errors, errors
         print("e2e_logo: OK (rests when idle, flickers for prompts in flight and on hover, Loading… gets the flame)")

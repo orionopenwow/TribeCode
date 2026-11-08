@@ -152,7 +152,7 @@ def main():
             wait_text(off, "#hub-hero .gs-band", "GETTING STARTED")
             wait_text(off, "#hub-hero", "Create your first project"); wait_text(off, "#hub-hero", "Join a friend")
             for gone in ["#hub-suggest", "#hub-ask-in", "#hub-start", "#hub-fleet"]: assert off.locator(gone).count() == 0, f"{gone} is gone from Home"
-            for sel in ["#hub-join", "#hub-host", "#hub-note-new", "#hub-stream", "#grp-global", "#home-me"]: off.wait_for_selector(sel, state="visible")
+            for sel in ["#hub-join", "#hub-host", "#hub-note-new", "#hub-stream", "#grp-global"]: off.wait_for_selector(sel, state="visible")   # no "Your home" card: you are in the bar
             wait_text(off, ".hub-head .eyebrow", "YOUR COMMAND CENTER")   # eyebrows render uppercase
             assert off.locator("#home-share-btn").count() == 0 and off.locator("#home-invite").count() == 0, "no Share / Invite buttons in the Home panel"
             wait_text(off, "#home-ai-cards", "Start or join a tribe")
