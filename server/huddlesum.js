@@ -56,7 +56,8 @@ module.exports = function huddleSum({ P, brain, postChat, nameOf, log = () => {}
         { system: 'You summarize short voice huddles for a small team of friends building software. Be concrete, brief and kind.', maxTokens: 260 }));
     } catch { model = null; }
     const sentiment = (model && MOODS.includes(model.sentiment)) ? model.sentiment : sentimentOf(transcript);
-    if (model) return { summary: model.summary, sentiment, why: model.why, by: `local model (${(brain.status && brain.status().model) || 'Ollama'})` };
+    const bst = (brain.status && brain.status()) || {};
+    if (model) return { summary: model.summary, sentiment, why: model.why, by: bst.cloud ? `${bst.model} (the host's AI)` : `local model (${bst.model || 'Ollama'})` };   // feat/any-llm
     return { summary: extractive(lines), sentiment, why: '', by: 'TribeCode (extractive; local model off)' };
   }
 

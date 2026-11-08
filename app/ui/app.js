@@ -302,10 +302,10 @@
   }
   $('#standup-go').addEventListener('click', async () => {
     const b = $('#standup-go'), out = $('#standup-text');
-    if (!C.connected()) { toast('Standups use the host\'s local brain. Start or join a tribe first.'); return; }
+    if (!C.connected()) { toast('Standups use the tribe\'s AI. Start or join a tribe first.'); return; }
     b.disabled = true; b.textContent = 'Writing…'; out.innerHTML = '';
     try { const { text } = await C.api('/brain/standup', { method: 'POST' }); out.innerHTML = window.TribeMD.render(text); b.textContent = 'Rewrite standup'; }
-    catch (e) { out.innerHTML = `<p class="faint">${esc(e.status === 503 ? 'The local brain is off on the host. Install Ollama and run: ollama pull qwen3' : e.message)}</p>`; b.textContent = "Write today's standup"; }
+    catch (e) { out.innerHTML = `<p class="faint">${esc(e.status === 503 ? 'No AI is on for the tribe. The host can pick one in Settings › Flint\'s brain (Ollama or a cloud key).' : e.message)}</p>`; b.textContent = "Write today's standup"; }
     b.disabled = false;
   });
   C.on('presence', renderRoom);

@@ -116,7 +116,7 @@ module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, 
   }
 
   async function hub(req, me) {
-    const st = await brain.refresh().catch(() => brain.status());
+    const st = await (brain.ollamaRefresh || brain.refresh)().catch(() => (brain.ollamaStatus || brain.status)());   // the local models list (the tribe's cloud brain is in Settings › Flint's brain)
     const host = me.role === 'host';
     return {
       you: { id: me.id, host },

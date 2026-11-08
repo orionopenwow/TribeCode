@@ -277,8 +277,9 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
-const flint = makeFlint({ brain, str });   // feat/flint
-brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} via Ollama` : `  Brain:    off (${st.error})`));
+const llm = require('./llm')({ brain, store: baseStore, log: m => console.error('  ' + m) });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
+const flint = makeFlint({ brain, str, llm });   // feat/flint
+brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} ${st.cloud ? "(the host's key)" : "via Ollama"}` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
 const projectRepo = () => (P.get(P.current() || P.defaultId()) || {}).repo || null;
 const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: projectRepo, brain, readVision });
@@ -464,7 +465,7 @@ async function api(req, res, url) {
     if (!pid && /^\/api\/(hub|scratch|projects|me|github|oauth)(\/|$)/.test(url.pathname)) pid = P.defaultId();   // these need no project of yours (the list can be empty: every project you were in was deleted)
     if (!pid) return fail(res, wanted ? 403 : 404, wanted ? 'you are not in that project' : 'you are not in any project yet');
   }
-  return P.inProject(pid, () => apiInProject(req, res, url));
+  return llm.asCaller(who, () => P.inProject(pid, () => apiInProject(req, res, url)));   // feat/any-llm: friend rules for the shared AI
 }
 async function apiInProject(req, res, url) {
   const parts = url.pathname.split('/').filter(Boolean).slice(1); // after /api
@@ -698,6 +699,7 @@ async function apiInProject(req, res, url) {
   }
 
   if (a === 'flint') return flint.route(req, res, ctx());   // feat/flint: GET status, POST /ask streams the local model's reply
+  if (a === 'llm') return llm.route(req, res, ctx());   // feat/any-llm: Settings › Flint's brain (host sets provider + key; key never leaves the host)
   if (a === 'brain') {
     if (m === 'GET') return send(res, 200, { brain: await brain.refresh() });
     if (m === 'POST' && b === 'standup') {

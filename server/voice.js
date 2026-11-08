@@ -146,7 +146,7 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
     for (const l of lines) { const last = turns[turns.length - 1]; if (last && last.by === l.by) last.text += ' ' + l.text; else turns.push({ by: l.by, name: l.name, at: l.at, text: l.text }); }
     const turnsMd = turns.map(t => `**${t.name}** · ${hm(new Date(t.at))}\n${t.text}`).join('\n\n');
 
-    const head = `**When** ${day(start)} ${hm(start)} to ${hm(end)} · ${mins} min\n**Who spoke** ${speakers.join(', ')}\n**Notes by** ${notesMd ? 'local brain (' + (brain.status().model || 'Ollama') + ')' : 'TribeCode (brain off: raw transcript)'}`;
+    const head = `**When** ${day(start)} ${hm(start)} to ${hm(end)} · ${mins} min\n**Who spoke** ${speakers.join(', ')}\n**Notes by** ${notesMd ? (brain.status().cloud ? brain.status().model + ' (the host\'s AI)' : 'local brain (' + (brain.status().model || 'Ollama') + ')') : 'TribeCode (brain off: raw transcript)'}`;
     let body;
     if (sec && (sec.summary || sec.actions || sec.decisions)) {
       const actionsMd = made.length ? made.map((t, i) => `- [ ] ${items[i].owner ? items[i].owner.name + ': ' : ''}${t.title}`).join('\n') : (sec.actions || '- None');
