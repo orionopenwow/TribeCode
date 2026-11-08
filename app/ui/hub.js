@@ -373,19 +373,31 @@
   function noteEditor(id, fresh) {
     const n = scratch.notes().find(x => x.id === id); if (!n) return;
     let ov = $('#note-ed'); if (ov) ov.remove();
+    const lines = fresh ? ['', ''] : String(n.text).split('\n'), title = lines[0] === 'New note' && fresh ? '' : lines[0], body = lines.slice(1).join('\n');
     ov = document.createElement('div'); ov.id = 'note-ed'; ov.className = 'note-ed-wrap' + (isPhone() ? ' sheet' : '');
-    ov.innerHTML = `<div class="note-ed" role="dialog" aria-label="Note"><header><span class="eyebrow">Your note · only you see it</span><span style="flex:1"></span><button class="linkish" id="note-del">Delete</button><button class="btn primary sm" id="note-done">Done</button></header>
-      <textarea id="note-text" spellcheck="true" placeholder="Title on the first line, then anything">${esc(fresh ? '' : n.text)}</textarea></div>`;
+    ov.innerHTML = `<div class="note-ed" role="dialog" aria-label="Note">
+      <header><button class="ne-done" id="note-done" aria-label="Done">${ico('i-tick', 20)}</button><span class="ne-where">Only you</span><span style="flex:1"></span>
+        <button class="ne-btn" id="note-undo" aria-label="Undo" title="Undo">↶</button><button class="ne-btn" id="note-redo" aria-label="Redo" title="Redo">↷</button>
+        <button class="ne-btn" id="note-del" aria-label="Delete note" title="Delete">${ico('i-x', 18)}</button></header>
+      <div class="ne-body"><input id="note-title" class="ne-title" placeholder="Title" value="${esc(title)}" autocomplete="off"><textarea id="note-text" spellcheck="true" placeholder="Start typing…">${esc(body)}</textarea></div></div>`;
     document.body.appendChild(ov);
-    const ta = $('#note-text'); ta.focus();
-    ta.oninput = () => scratch.quiet(id, ta.value || 'New note');
-    // A note you started and left empty doesn't linger as "New note" in your docs.
-    const done = async () => { if (fresh && !ta.value.trim()) { scratch.remove(id); ov.remove(); render(); return; } await scratch.flush(); ov.remove(); if (mode === 'docs') render(); };
+    const ti = $('#note-title'), ta = $('#note-text');
+    (fresh || !title ? ti : ta).focus();
+    const save = () => scratch.quiet(id, `${ti.value.trim() || 'Untitled note'}\n${ta.value}`);
+    ti.oninput = save; ta.oninput = save;
+    ti.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } });
+    $('#note-undo').onclick = () => { (document.activeElement === ti ? ti : ta).focus(); document.execCommand('undo'); save(); };
+    $('#note-redo').onclick = () => { (document.activeElement === ti ? ti : ta).focus(); document.execCommand('redo'); save(); };
+    const done = async () => {
+      if (!ti.value.trim() && !ta.value.trim()) { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); return; }   // nothing written: no empty note left behind
+      save(); await scratch.flush(); ov.remove(); if (mode === 'docs') drawDocs(); else if (document.body.dataset.view === 'hub') render();
+    };
     $('#note-done').onclick = done;
-    $('#note-del').onclick = () => { scratch.remove(id); ov.remove(); render(); toast('Note deleted'); };
+    $('#note-del').onclick = () => { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); else render(); toast('Note deleted'); };
     ov.addEventListener('click', e => { if (e.target === ov) done(); });
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') done(); });
   }
+
   async function refineGo() {
     if (!connected() || !C.hasToken()) { refine.error = 'Refine uses the local model on the tribe\'s host: host or join a tribe first. Your notes stay on this device until then.'; return render(); }
     await scratch.flush();
@@ -518,18 +530,39 @@
 
   // ---------- Global docs ----------
   let docsT = null;
+  // ---------- the docs center: your notes and your projects' docs in one place (a docs-app layout) ----------
+  // Search pill · sort (last updated / A–Z) · list or grid (remembered) · cards with a preview · the + starts a note.
+  let docsView = (() => { try { return localStorage.getItem('tribecode.docs.view') || 'grid'; } catch { return 'grid'; } })();
+  let docsSort = (() => { try { return localStorage.getItem('tribecode.docs.sort') || 'updated'; } catch { return 'updated'; } })();
+  let docsCache = [];
   function renderDocs(el) {
-    const mine = scratch.notes().filter(n => n.text && n.text.trim());
-    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Your docs center</span><h1>Docs</h1><p class="faint">Your own notes first, then the newest docs from your projects.</p></header>
-      <section class="sec hub-sec" id="hub-mydocs"><div class="sec-head"><div><span class="eyebrow">Only you</span><h2><span class="emo" aria-hidden="true">📝</span>Your notes</h2></div></div>
-        <button class="note-start" id="hub-note-new">${ico('i-plus', 18)}<span><b>Start a note</b><small>Title on the first line, then anything</small></span></button>
-        ${mine.length ? `<div class="hub-list hub-mynotes">${mine.map(n => `<button class="hub-li" data-mynote="${esc(n.id || '')}">${ico('i-doc', 14)}<span><b>${esc(noteTitle(n.text))}</b><small>${esc(ago(n.updated || n.at))}</small></span>${ico('i-chev', 14)}</button>`).join('')}</div>` : ''}</section>
-      <div class="sec-head hub-pdocs-h"><div><span class="eyebrow">Your projects</span><h2>Recently updated</h2></div></div>
-      <div class="hub-docsearch">${ico('i-search', 16)}<input id="hub-dq" class="input" placeholder="Search titles and text across projects" autocomplete="off" value="${esc(docsQ)}"></div><div class="hub-list hub-docs" id="hub-docs"><div class="hub-empty faint">Loading…</div></div></div>`;
-    wireNotes(el);
+    el.innerHTML = `<div class="hub dc">
+      <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your docs" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your docs"></div>
+      <div class="dc-bar"><button class="dc-sort" id="dc-sort">${docsSort === 'name' ? 'Name A–Z' : 'Last updated'}<span class="dc-arrow">${ico('i-chev', 16)}</span></button><span style="flex:1"></span>
+        <button class="btn primary dc-new" id="dc-new">${ico('i-plus', 15)}New note</button>
+        <div class="dc-seg" role="group" aria-label="View"><button data-dv="list" class="${docsView === 'list' ? 'on' : ''}" aria-label="List">${ico('i-list', 18)}</button><button data-dv="grid" class="${docsView === 'grid' ? 'on' : ''}" aria-label="Grid">${ico('i-grid', 18)}</button></div></div>
+      <div class="dc-items ${docsView}" id="hub-docs"></div>
+      <button class="dc-fab" id="hub-note-new" aria-label="Start a note" title="Start a note">${ico('i-plus', 26)}</button></div>`;
     const inp = $('#hub-dq'); inp.oninput = () => { clearTimeout(docsT); docsT = setTimeout(() => { docsQ = inp.value.trim(); docsList(); }, 200); };
-    if (!isPhone()) inp.focus();
-    docsList();
+    $('#dc-sort').onclick = () => { docsSort = docsSort === 'name' ? 'updated' : 'name'; try { localStorage.setItem('tribecode.docs.sort', docsSort); } catch {} $('#dc-sort').firstChild.textContent = docsSort === 'name' ? 'Name A–Z' : 'Last updated'; drawDocs(); };
+    el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { docsView = b.dataset.dv; try { localStorage.setItem('tribecode.docs.view', docsView); } catch {} el.querySelectorAll('[data-dv]').forEach(x => x.classList.toggle('on', x === b)); $('#hub-docs').className = 'dc-items ' + docsView; });
+    $('#hub-note-new').onclick = startNote; $('#dc-new').onclick = startNote;
+    drawDocs(); docsList();
+  }
+  function drawDocs() {
+    const box = $('#hub-docs'); if (!box) return;
+    const q = docsQ.toLowerCase();
+    const notes = scratch.notes().filter(n => n.text && n.text.trim() && (!q || n.text.toLowerCase().includes(q)))
+      .map(n => ({ kind: 'note', id: n.id, title: noteTitle(n.text), preview: n.text.split('\n').slice(1).join(' ').trim(), at: n.updated || n.at, where: 'Only you' }));
+    const pdocs = docsCache.map(d => ({ kind: 'doc', id: `${d.project}|${d.slug}`, title: d.title, preview: d.snippet || d.preview || '', at: d.at, where: (projOf(d.project) || {}).name || d.projectName || '', color: d.color }));
+    let items = [...notes, ...pdocs];
+    items.sort(docsSort === 'name' ? (a, b) => String(a.title).localeCompare(String(b.title)) : (a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
+    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : 'No docs yet'}</b><span>${q ? 'Try another word.' : 'Tap + to start a note. It stays yours until you move it into a project.'}</span></div>`; return; }
+    box.innerHTML = items.map(it => `<button class="dc-card" ${it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : `data-gdoc="${esc(it.id)}"`}>
+        <span class="dc-head"><span class="dc-ic ${it.kind}">${ico(it.kind === 'note' ? 'i-quill' : 'i-doc', 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span></span>
+        <span class="dc-prev">${it.preview ? esc(it.preview.slice(0, 240)) : '<i>Empty</i>'}</span></button>`).join('');
+    box.querySelectorAll('[data-mynote]').forEach(b => b.onclick = () => noteEditor(b.dataset.mynote));
+    box.querySelectorAll('[data-gdoc]').forEach(b => b.onclick = () => { const [pid, slug] = b.dataset.gdoc.split('|'); go(pid, () => openDoc(slug)); });
   }
   function wireNotes(root) {
     root.querySelectorAll('#hub-note-new').forEach(b => b.onclick = startNote);
@@ -537,15 +570,10 @@
     const all = root.querySelector('#hub-notes-all'); if (all) all.onclick = () => open('docs');
   }
   async function docsList() {
-    const box = $('#hub-docs'); if (!box) return;
-    if (!connected()) { box.innerHTML = '<div class="hub-empty">Join or host a tribe to see its docs.</div>'; return; }
-    try {
-      const { docs } = await C.api('/hub/docs?q=' + encodeURIComponent(docsQ));
-      if (mode !== 'docs') return;
-      box.innerHTML = docs.length ? docs.map(d => `<button class="hub-li" data-gdoc="${esc(d.project)}|${esc(d.slug)}">${ico('i-doc', 14)}<span><b>${esc(d.title)}</b><small>${chip(d.project)} ${esc(d.byName || '')} · ${esc(ago(d.at))}${d.snippet ? ` · ${esc(d.snippet)}` : ''}</small></span></button>`).join('')
-        : `<div class="hub-empty">${docsQ ? 'No doc matches that.' : 'No docs yet.'}</div>`;
-      box.querySelectorAll('[data-gdoc]').forEach(b => b.onclick = () => { const [pid, slug] = b.dataset.gdoc.split('|'); go(pid, () => openDoc(slug)); });
-    } catch (e) { box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
+    if (!$('#hub-docs')) return;
+    if (!connected()) { docsCache = []; return drawDocs(); }
+    try { const { docs } = await C.api('/hub/docs?q=' + encodeURIComponent(docsQ)); if (mode !== 'docs') return; docsCache = docs; drawDocs(); }
+    catch (e) { const box = $('#hub-docs'); if (box && !docsCache.length) box.innerHTML = `<div class="dc-empty"><b>Couldn't load project docs</b><span>${esc(e.message)}</span></div>`; }
   }
 
   // ---------- actions ----------
@@ -637,7 +665,7 @@
     wireNotes(el);
     const tb = el.querySelector('#hub-ptop'); if (tb) {   // phone Home's own top bar: + · TribeCode ⌄ · bell
       tb.querySelector('#hpt-plus').onclick = () => window.TribeMobile && window.TribeMobile.startTribe ? window.TribeMobile.startTribe() : newProject();
-      tb.querySelector('#hpt-brand').onclick = () => document.body.classList.add('drawer-open');
+      tb.querySelector('#hpt-brand').onclick = () => window.TribeMobile && window.TribeMobile.projectsSheet ? window.TribeMobile.projectsSheet() : document.body.classList.add('drawer-open');   // a list of your projects
       tb.querySelector('#hpt-bell').onclick = () => window.TribeNotify && window.TribeNotify.openInbox && window.TribeNotify.openInbox();
     }
     const ins = el.querySelector('#hub-ins-phone'); if (ins) bindInsights(ins);

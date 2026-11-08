@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.6
+
+- **Docs center, docs-app style**: a search pill, sort by last updated or A–Z, list or grid (remembered), and cards with a preview of each doc. Your own notes and your projects' docs sit together, newest first. **New note** (desktop) or the **+** (phones) starts a note
+- **The note editor**: a big title, then the page; ✓ Done top left, undo and redo; an empty note you close disappears
+- **Phones**: Home's **Projects** button and the **TribeCode ⌄** header both open a list of your projects (tap one to open it, or start a new one). The docs grid fits two columns at 390px, and the editor is full screen
+
 ## v0.8.5
 
 - **A full check of the app**: every feature from v0.6.0 on was tried on desktop and phone, and 7 real bugs were fixed:

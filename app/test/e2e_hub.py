@@ -162,8 +162,8 @@ def main():
             assert off.is_hidden("#view-chat"), "chat without a tribe lands on the hub"
             # Start a note (no tribe yet: it stays on this device) -> the editor -> it's in your docs center
             off.click("#hub-note-new"); off.wait_for_selector("#note-ed #note-text")
-            off.fill("#note-text", "Offline idea: lanterns that hum"); off.click("#note-done")
-            off.wait_for_selector("#hub-mydocs [data-mynote]"); wait_text(off, "#hub-mydocs", "lanterns that hum")
+            off.fill("#note-title", "Offline idea: lanterns that hum"); off.click("#note-done")
+            off.wait_for_selector("#hub-docs [data-mynote]"); wait_text(off, "#hub-docs", "lanterns that hum")
             off.reload(); off.evaluate("TribeHub.open('home')"); off.wait_for_selector("#view-hub:not(.hidden)")
             wait_text(off, "#hub-notes", "lanterns that hum")
             wait_text(off, "#hub-feed", "On this device"); wait_text(off, "#hub-feed", "lanterns that hum")
@@ -312,18 +312,19 @@ def main():
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
             host.click("#hub-note-new"); host.wait_for_selector("#note-ed #note-text")
             assert host.evaluate("TribeHub.mode()") == "docs", "a new note opens in your docs center"
-            host.fill("#note-text", "Moon phases doc\nNew, waxing, full, waning"); host.click("#note-done")
-            host.wait_for_selector("#hub-mydocs [data-mynote]"); wait_text(host, "#hub-mydocs", "Moon phases doc")
+            host.fill("#note-title", "Moon phases doc"); host.fill("#note-text", "New, waxing, full, waning"); host.click("#note-done")
+            host.wait_for_selector("#hub-docs [data-mynote]"); wait_text(host, "#hub-docs", "Moon phases doc")
             for _ in range(30):
                 if "waxing" in json.dumps(ok(api("/scratch", token=orion))["notes"]): break
                 time.sleep(0.2)
             assert ok(api("/scratch", token=orion))["notes"][0]["text"].startswith("Moon phases doc")
             assert ok(api("/scratch", token=zed))["notes"][0]["text"] == "Zed's secret sketch idea", "Zed's own notes, untouched"
             # your notes sit above the project docs
-            ys = host.evaluate("['#hub-mydocs', '.hub-pdocs-h'].map(s => document.querySelector(s).getBoundingClientRect().top)"); assert ys[0] < ys[1], ys
+            # one docs center: your notes and project docs as cards, newest first; list/grid is remembered
+            host.click("[data-dv=list]"); host.wait_for_selector("#hub-docs.list"); host.reload(); host.evaluate("TribeHub.open('docs')"); host.wait_for_selector("#hub-docs.list"); host.click("[data-dv=grid]")
             # reopen and edit autosaves
-            host.click("#hub-mydocs [data-mynote]"); host.wait_for_selector("#note-text")
-            host.fill("#note-text", "Moon phases doc\nNew, waxing, full, waning, gibbous"); host.wait_for_timeout(900); host.click("#note-done")
+            host.click("#hub-docs [data-mynote]"); host.wait_for_selector("#note-text")
+            host.fill("#note-text", "New, waxing, full, waning, gibbous"); host.wait_for_timeout(900); host.click("#note-done")
             for _ in range(30):
                 if "gibbous" in json.dumps(ok(api("/scratch", token=orion))["notes"]): break
                 time.sleep(0.2)
