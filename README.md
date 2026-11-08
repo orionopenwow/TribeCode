@@ -5,9 +5,9 @@
   <img src="assets/brand/logo-wordmark.png" width="760" alt="TribeCode">
 </picture>
 
-**Build one app together with friends — each with your own Claude.**
+**Build one app together with friends — each with your own Agents.**
 
-TribeCode is a free, open-source app for a few friends building one thing at the same time. It runs on one friend's computer; everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Claude Code connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with Claude Code; it isn't made by Anthropic.
+TribeCode is a free, open-source app for a few friends building one thing at the same time. It runs on one friend's computer; everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Agent (Claude Code, Codex, Gemini CLI, Cursor…) connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with these tools; it isn't made by their makers.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-F26B1D.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)

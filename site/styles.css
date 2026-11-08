@@ -476,3 +476,10 @@ body { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org
 body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='760' height='760' shape-rendering='crispEdges'%3E%3Crect x='733' y='395' width='4' height='4' fill='%23fff' fill-opacity='0.3'/%3E%3Crect x='684' y='355' width='4' height='4' fill='%23fff' fill-opacity='0.3'/%3E%3Crect x='23' y='472' width='4' height='4' fill='%23fff' fill-opacity='0.22'/%3E%3Crect x='363' y='172' width='3' height='3' fill='%23fff' fill-opacity='0.3'/%3E%3Crect x='625' y='119' width='4' height='4' fill='%23fff' fill-opacity='0.22'/%3E%3Crect x='505' y='60' width='3' height='3' fill='%23fff' fill-opacity='0.3'/%3E%3Crect x='223' y='294' width='4' height='4' fill='%23fff' fill-opacity='0.3'/%3E%3C/svg%3E"); background-size: 760px 760px; animation: tc-twinkle 7s steps(4, end) infinite alternate; }
 @keyframes tc-twinkle { from { opacity: .35; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; opacity: .7; } }
+
+/* platform marks on download buttons and lists */
+.os-ico { display: inline-grid; place-items: center; width: 18px; height: 18px; flex: none; }
+.os-ico svg { width: 18px; height: 18px; display: block; }
+.btn .os-ico { margin-right: 2px; }
+[data-os] .os-ico { margin-right: 10px; vertical-align: -3px; }
+.btn--light .os-ico--mac { color: #1D2021; }
