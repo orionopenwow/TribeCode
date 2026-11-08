@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.0
+
+- **A real document editor**: on desktop, Google Docs meets Notion. A top bar with the title, where it lives, save status and who's editing. A sticky toolbar: undo/redo, text styles (Title, Subtitle, Heading 1–3, Quote, Code), bold, italic, underline, strike, code, text color, highlight, link, align, bullet/numbered/check lists, divider, table, clear formatting. Keyboard shortcuts like Google Docs. A left panel with your docs and a live outline of the headings, and a centered page about 720px wide. Ask AI and Share (a link that opens the doc) are in the top bar
+- **Breadcrumb**: no more "Files › Files"
+- **Phones**: the editor matches Google Docs mobile, to the pixel at 390px. Header: the white ✓ pill, undo, redo, +, comment, Ask AI and ⋮. A format bar that rides on the keyboard: B, I, U, text color, highlighter, align ▾ and list, with A≡ pinned right. A≡ opens Text and Paragraph tabs (styles, colors, indent, line spacing, lists). + inserts a link, table, line, checklist, code block or table of contents. Ask AI can summarize, help write, tidy up, or answer your own question. ⋮ has find and replace, share and export, outline, details, rename and delete. Icons are solid and full size, and it works in every theme
+
 ## v0.8.9
 
 - **The logo follows your theme**: "Tribe" is drawn in the theme's text color and "Code" in its accent, everywhere the logo shows (the app, invite and join pages), so it never gets lost white on white

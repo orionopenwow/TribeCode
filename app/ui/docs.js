@@ -8,7 +8,7 @@
   const LKEY = 'tribecode.localDocs';
   const TEXT_EXT = /\.(md|markdown|txt|json|csv|tsv|js|ts|jsx|tsx|py|rs|go|java|c|cpp|h|cs|rb|php|html|css|yml|yaml|toml|ini|sh|sql|log)$/i;
   const SLASH = [
-    ['h1', 'Heading 1', '# '], ['h2', 'Heading 2', '## '], ['todo', 'To-do', '- [ ] '], ['bullet', 'Bulleted list', '- '],
+    ['h1', 'Heading 1', '## '], ['h2', 'Heading 2', '### '], ['h3', 'Heading 3', '#### '], ['todo', 'To-do', '- [ ] '], ['bullet', 'Bulleted list', '- '],
     ['num', 'Numbered list', '1. '], ['quote', 'Quote', '> '], ['code', 'Code block', '```\n\n```'], ['hr', 'Divider', '---\n'],
     ['table', 'Table', '| Column | Column |\n| --- | --- |\n|  |  |\n'], ['date', 'Today\'s date', null], ['brain', 'Summarize with local brain', null],
     ['template', 'Template…', null], ['link', 'Link to page [[…]]', null], ['mention', 'Mention @…', null],   // handled by docsx.js
@@ -82,7 +82,7 @@
   // ---------- live co-editing glue ----------
   function liveHooks() {
     return {
-      onDom() { const ta = $('#doc-body'); if (ta) autosize(ta); },
+      onDom() { const ta = $('#doc-body'); if (ta) autosize(ta); if (outlineCtl) outlineCtl.refresh(); },
       onChange(text, isRemote) { if (!cur) return; cur.body = text; if (isRemote && mode === 'read') { clearTimeout(readTimer); readTimer = setTimeout(() => { if (mode === 'read' && $('#doc-read')) renderRead(); }, 150); } },
       onStatus(st) {
         if (!inLive()) return;
@@ -91,6 +91,7 @@
       onTitle(title, by) {
         if (!cur || !title) return; cur.title = title;
         const el = $('#doc-title'); if (el && document.activeElement !== el && el.value !== title) el.value = title;
+        const nm = $('#dl-name'); if (nm && document.activeElement !== nm && nm.value !== title) nm.value = title;   // feat/doc-editor: the top bar's title
         const li = list.find(x => x.slug === cur.slug); if (li && li.title !== title) { li.title = title; renderList(); }
       },
       onVersion(v) { if (cur && v) cur.version = v; },
@@ -213,45 +214,163 @@
     el.querySelectorAll('[data-slug]').forEach(b => b.onclick = () => open(b.dataset.slug));
   }
 
+  // feat/doc-editor: desktop gets the shared Google Docs + Notion layout (doclayout.js); phones keep this view's
+  // inline editor plus a compact format bar. Every id other modules and tests use (#doc-title, #doc-body,
+  // #doc-status, #doc-peers, #doc-del, .doc-toolbar, [data-mode], #doc-read, #doc-slash, #doc-tldr) stays.
+  const DL = () => window.TribeDocLayout;
+  let outlineCtl = null, wasDesk = null;
+  const desk = () => !!(DL() && DL().isDesk());
+  const projName = () => { try { const p = window.TribeProjects && window.TribeProjects.cur && window.TribeProjects.cur(); return (p && p.name) || 'Project'; } catch { return 'Project'; } };
+  // The docs list (#doc-list-wrap) becomes the left panel's "Document tabs" on desktop; it goes back to the grid otherwise.
+  function parkAside() {
+    const aside = $('#doc-list-wrap'), grid = $('#view-docs .docs-grid'), pane = $('#doc-pane');
+    if (aside && grid && pane && aside.parentNode !== grid) grid.insertBefore(aside, pane);
+  }
+  function wideMode(on) {
+    const grid = $('#view-docs .docs-grid'); if (grid) grid.classList.toggle('dl-on', !!on);
+    syncWide();
+  }
+  function syncWide() {
+    const grid = $('#view-docs .docs-grid');
+    document.body.classList.toggle('dl-wide', !!(grid && grid.classList.contains('dl-on') && onScreen() && desk()));
+  }
+  function statusText() { return cur && cur.updated ? `Saved · ${ago(cur.updated)}${cur.updatedBy ? ' by ' + nameOf(cur.updatedBy) : ''}` : ''; }
+  function docLink() {
+    const pid = C.project ? C.project() : '';
+    return `${location.origin}${location.pathname}#/doc/${encodeURIComponent(pid || '')}/${encodeURIComponent(cur.slug)}`;
+  }
+  function closeDoc() {
+    if (dirty) save();
+    if (sess) { sess.leave(); sess = null; peersNow = []; }
+    cur = null; dirty = false; renderList(); renderEditor(); activity();
+  }
+
   function renderEditor() {
     const pane = $('#doc-pane'); if (!pane) return;
+    parkAside(); outlineCtl = null; wasDesk = desk();
     if (!cur) {
-      pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>Your tribe's docs live here</h2>
+      wideMode(false);
+      pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>${list.length ? 'Pick a doc to open' : 'Your tribe\'s docs live here'}</h2>
         <p>Plain Markdown files in the tribe folder: design docs, notes, plans. Type <span class="kbd">/</span> in a doc for blocks.</p>
         <button class="btn primary" id="doc-first">New doc</button></div>`;
       $('#doc-first').onclick = () => create(); return;
     }
-    pane.innerHTML = `
+    const words = (cur.body || '').split(/\s+/).filter(Boolean).length;
+    const seg = `<div class="seg" role="group" aria-label="Mode"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}" aria-pressed="${mode === 'write'}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}" aria-pressed="${mode === 'read'}">Read</button></div>`;
+    const page = `
+      <input class="doc-title" id="doc-title" value="${esc(cur.title)}" maxlength="120" placeholder="Untitled" aria-label="Title">
+      <div class="doc-meta">${cur.source ? `Imported from ${esc(cur.source)} · ` : ''}${words} words · <span class="faint">${remote() ? 'shared with your tribe' : 'saved on this device'}</span></div>
+      <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · local brain, 0 tokens</div><div id="doc-tldr-text"></div></div>
+      ${desk() ? '' : DL() ? `<div class="gd-fmt-wrap ${mode === 'write' ? '' : 'hidden'}">${DL().gdBar()}</div>` : ''}
+      <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" aria-label="Document text" placeholder="Start writing, or type / for blocks…">${esc(inLive() ? sess.text() : cur.body || '')}</textarea></div>
+      <article class="md ${mode === 'read' ? '' : 'hidden'}" id="doc-read"></article>
+      <div class="slash hidden" id="doc-slash" role="listbox" aria-label="Insert block"></div>`;
+    if (desk() && DL()) {
+      const L = DL();
+      const acts = `<div class="doc-toolbar dl-acts">${seg}
+          <button class="btn ghost dx-tool" id="dl-ai" title="Ask AI about this doc" aria-label="Ask AI">${L.ico('sparkle', 18)}</button>
+          ${remote() ? `<button class="btn ghost dl-act" id="dl-link" title="Copy a link to this doc" aria-label="Copy link">${L.ico('share', 17)}<span>Share</span></button>` : ''}
+          <button class="btn ghost dx-tool" id="doc-del" title="Delete doc" aria-label="Delete doc">${L.ico('trash', 17)}</button>
+          <button class="btn ghost dx-tool" id="dl-close" title="Close doc" aria-label="Close doc">${L.ico('close', 17)}</button></div>`;
+      pane.innerHTML = `<div class="doc-banner hidden" id="doc-banner"></div>
+        <div class="dl-head">${L.top({ kind: 'doc', nameId: 'dl-name', title: cur.title, where: remote() ? projName() : 'On this device', statusId: 'doc-status', status: statusText(), peers: '<span class="doc-peers hidden" id="doc-peers" aria-live="polite"></span>', acts })}
+          ${L.toolbar()}</div>
+        <div class="dl-body">
+          <aside class="dl-side" id="dl-side" aria-label="Document tabs and outline">
+            <div class="dl-side-h"><span class="dl-eyebrow">Document tabs</span><button class="dl-x" id="dl-side-x" aria-label="Hide side panel" title="Hide side panel">${L.ico('side', 16)}</button></div>
+            <div class="dl-tabs" id="dl-tabs"></div>
+            <section class="dl-outline" id="dl-outline-sec"><button class="dl-ol-head" id="dl-ol-head" aria-expanded="true" aria-controls="dl-outline">${L.ico('chev', 14)}<span class="dl-eyebrow">Outline</span></button><nav class="dl-ol" id="dl-outline" aria-label="Outline"></nav></section>
+          </aside>
+          <button class="dl-side-open" id="dl-side-open" aria-label="Show side panel" title="Show side panel">${L.ico('side', 16)}</button>
+          <div class="dl-canvas" id="dl-canvas"><div class="dl-page" id="dl-page">${page}</div></div>
+        </div>`;
+      const aside = $('#doc-list-wrap'); if (aside) $('#dl-tabs').appendChild(aside);
+      wideMode(true);
+    } else {
+      wideMode(false);
+      pane.innerHTML = `
       <div class="doc-banner hidden" id="doc-banner"></div>
       <div class="doc-toolbar">
-        <div class="seg"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}">Read</button></div>
-        <span class="faint" id="doc-status">${cur.updated ? `Saved · ${ago(cur.updated)}${cur.updatedBy ? ' by ' + esc(nameOf(cur.updatedBy)) : ''}` : ''}</span>
+        ${seg}
+        <span class="faint" id="doc-status">${esc(statusText())}</span>
         <span class="doc-peers hidden" id="doc-peers" aria-live="polite"></span>
-        <button class="btn ghost" id="doc-del" title="Delete doc" style="margin-left:auto"><svg class="i"><use href="#i-x"/></svg>Delete</button>
-      </div>
-      <input class="doc-title" id="doc-title" value="${esc(cur.title)}" maxlength="120" placeholder="Untitled">
-      <div class="doc-meta">${cur.source ? `Imported from ${esc(cur.source)} · ` : ''}${(cur.body || '').split(/\s+/).filter(Boolean).length} words · <span class="faint">${remote() ? 'shared with your tribe' : 'saved on this device'}</span></div>
-      <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · local brain, 0 tokens</div><div id="doc-tldr-text"></div></div>
-      <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" placeholder="Start writing, or type / for blocks…">${esc(inLive() ? sess.text() : cur.body || '')}</textarea></div>
-      <article class="md ${mode === 'read' ? '' : 'hidden'}" id="doc-read"></article>
-      <div class="slash hidden" id="doc-slash" role="listbox"></div>`;
+        ${DL() ? `<button class="btn ghost dl-olb" id="dl-outline-btn" aria-label="Outline" title="Outline" style="margin-left:auto">${DL().ico('outline', 18)}</button><button class="btn ghost dl-olb" id="dl-ai" aria-label="Ask AI" title="Ask AI">${DL().ico('sparkle', 18)}</button>` : ''}
+        <button class="btn ghost" id="doc-del" title="Delete doc"${DL() ? '' : ' style="margin-left:auto"'}><svg class="i"><use href="#i-x"/></svg>Delete</button>
+      </div>${page}`;
+    }
     renderTldr();
     const ta = $('#doc-body'), title = $('#doc-title');
     if (inLive()) sess.attach(ta);
     autosize(ta); renderPeers();
     title.oninput = titleChanged;
     title.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } };
-    ta.oninput = () => { autosize(ta); changed(); checkSlash(); if (window.TribeDocsX) window.TribeDocsX.onInput(ta); };
+    ta.oninput = () => { autosize(ta); changed(); checkSlash(); if (window.TribeDocsX) window.TribeDocsX.onInput(ta); if (outlineCtl) outlineCtl.refresh(); };
     ta.onkeydown = onKey;
-    ta.onblur = () => setTimeout(hideSlash, 150);
+    ta.onblur = () => setTimeout(() => { if (document.activeElement !== ta) hideSlash(); }, 150);   // a late timer must not close a menu opened after refocusing
     ta.ondragover = e => e.preventDefault();
     ta.ondrop = async e => { if (e.dataTransfer.files.length) { e.preventDefault(); importFiles([...e.dataTransfer.files]); } };
     pane.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { mode = b.dataset.mode; renderEditor(); });
     if (inLive()) sess.status();
     $('#doc-del').onclick = () => { if (confirmDelete()) remove(); };
+    if (DL()) wireLayout(pane, ta, title);
     if (mode === 'read') renderRead();
     if (window.TribeDocsX) window.TribeDocsX.afterEditor(pane, cur, mode);   // breadcrumbs, backlinks, comments, history
+    // feat/doc-editor: on desktop the backlinks sit at the foot of the page and the comment margin beside it
+    const page2 = $('#dl-page'), canvas = $('#dl-canvas');
+    if (page2) { const bl = $('#doc-backlinks'); if (bl) page2.appendChild(bl); const mg = $('#doc-margin'); if (mg && canvas) canvas.appendChild(mg); }
   }
+  // Toolbar, outline, title mirror, side panel and share/close for the shared layout.
+  function wireLayout(pane, ta, title) {
+    const L = DL();
+    L.bind(pane, () => $('#doc-body'));
+    const olb = $('#dl-outline-btn'); if (olb) olb.onclick = () => L.outlineSheet({ ta: () => $('#doc-body'), read: () => $('#doc-read') });
+    const aib = $('#dl-ai'); if (aib) aib.onclick = () => L.aiSheet($('#doc-body'), { anchor: aib, title: cur ? cur.title : 'this doc' });
+    const name = $('#dl-name');
+    if (name) L.mirror(name, title, () => ta.focus());
+    const olEl = $('#dl-outline');
+    if (olEl) outlineCtl = L.outline({ el: olEl, ta: () => $('#doc-body'), read: () => $('#doc-read'), offset: () => { const h = pane.querySelector('.dl-head'); return h ? h.getBoundingClientRect().height : 0; } });
+    const hd = pane.querySelector('.dl-head'); if (hd) pane.style.setProperty('--dl-head', Math.round(hd.getBoundingClientRect().height) + 'px');   // the side panel sticks under it
+    const sideKey = 'tribecode.docs.side', olKey = 'tribecode.docs.outline';
+    const get = k => { try { return localStorage.getItem(k); } catch { return null; } }, set = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+    const body = pane.querySelector('.dl-body');
+    if (body) {
+      const fit = () => body.classList.toggle('narrow', pane.clientWidth < 1000);   // a squeezed pane (room panel open): a slimmer side panel and page margins
+      fit(); if (!pane.__dlFit && window.ResizeObserver) { pane.__dlFit = new ResizeObserver(() => { const b = pane.querySelector('.dl-body'); if (b) b.classList.toggle('narrow', pane.clientWidth < 1000); }); pane.__dlFit.observe(pane); }   // the room panel opening or closing resizes the pane
+      body.classList.toggle('side-off', get(sideKey) === 'off');
+      $('#dl-side-x').onclick = () => { body.classList.add('side-off'); set(sideKey, 'off'); $('#dl-side-open').focus(); };
+      $('#dl-side-open').onclick = () => { body.classList.remove('side-off'); set(sideKey, 'on'); $('#dl-side-x').focus(); if (outlineCtl) outlineCtl.render(); };
+    }
+    const sec = $('#dl-outline-sec'), head = $('#dl-ol-head');
+    if (sec && head) {
+      const fold = on => { sec.classList.toggle('folded', on); head.setAttribute('aria-expanded', String(!on)); };
+      fold(get(olKey) === 'folded');
+      head.onclick = () => { const on = !sec.classList.contains('folded'); fold(on); set(olKey, on ? 'folded' : 'open'); };
+    }
+    const lk = $('#dl-link');
+    if (lk) lk.onclick = async () => {
+      const url = docLink();
+      try { await navigator.clipboard.writeText(url); window.TribeApp.toast('Link copied. It opens this doc for anyone in the project.'); }
+      catch { window.TribeApp.toast(url); }
+    };
+    const cl = $('#dl-close'); if (cl) cl.onclick = closeDoc;
+    if (!L.isDesk()) { const bar = pane.querySelector('.gd-fmt-wrap'); L.dockAboveKeyboard(bar, ta); }
+  }
+  // Crossing the 820px line re-lays the editor out (desktop layout <-> phone layout).
+  addEventListener('resize', () => { if (wasDesk !== null && desk() !== wasDesk && onScreen()) renderEditor(); else syncWide(); });
+  setTimeout(() => { const v = $('#view-docs'); if (v) new MutationObserver(syncWide).observe(v, { attributes: true, attributeFilter: ['class'] }); }, 0);
+  // Copied links: #/doc/<project>/<slug> switches to the project and opens the doc.
+  const bootHash = location.hash;
+  let hashDone = false;
+  async function fromHash(h) {
+    const m = /^#\/doc\/([^/]*)\/([^/?#]+)$/.exec(h || location.hash); if (!m) return;
+    const pid = decodeURIComponent(m[1]), slug = decodeURIComponent(m[2]);
+    if (/^#\/doc\//.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+    const P = window.TribeProjects;
+    if (pid && P && P.current && P.current() !== pid && (P.list() || []).some(p => p.id === pid)) { await P.switchTo(pid); await new Promise(r => setTimeout(r, 250)); }
+    window.TribeApp.show('docs'); setTimeout(() => open(slug), 120);
+  }
+  addEventListener('hashchange', () => fromHash());
+  C.on('hello', () => { if (hashDone) return; hashDone = true; setTimeout(() => fromHash(/^#\/doc\//.test(location.hash) ? location.hash : bootHash), 200); });
 
   let delArmed = 0;
   function confirmDelete() {
@@ -296,6 +415,9 @@
     if (key === 'date') text = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     if (key === 'brain') { ta.setRangeText('', slash.start, end, 'end'); hideSlash(); changed(); summarize(); return; }
     if (window.TribeDocsX && window.TribeDocsX.slash(key, ta, slash.start, end)) { hideSlash(); return; }
+    // feat/doc-editor: block items go through the shared Markdown edits (undoable, same result as the toolbar)
+    const BLOCK = { h1: 'h1', h2: 'h2', h3: 'h3', todo: 'todo', bullet: 'bullet', num: 'num', quote: 'quote', code: 'codeblock', hr: 'hr', table: 'table' };
+    if (DL() && BLOCK[key]) { const st = slash.start; hideSlash(); DL().edit(ta, st, end, '', st); DL().run(BLOCK[key], ta); autosize(ta); return; }
     ta.setRangeText(text, slash.start, end, 'end');
     if (key === 'code') ta.selectionStart = ta.selectionEnd = slash.start + 4;
     hideSlash(); autosize(ta); changed(); ta.focus();
@@ -321,6 +443,7 @@
       if (e.key === 'Escape') { e.preventDefault(); return hideSlash(); }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (inLive()) window.TribeCoedit.flush(cur.slug); else save(); return; }
+    if (DL() && DL().key(e, ta)) return;   // feat/doc-editor: Ctrl+B/I/K/E, Ctrl+Alt+1-3, Ctrl+Shift+7-9, Ctrl+Z/Y
     if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'i')) { e.preventDefault(); wrap(ta, e.key === 'b' ? '**' : '*'); return; }
     if (e.key === 'Enter' && !e.shiftKey) {             // continue lists like Notion
       const pos = ta.selectionStart, lineStart = ta.value.lastIndexOf('\n', pos - 1) + 1, line = ta.value.slice(lineStart, pos);

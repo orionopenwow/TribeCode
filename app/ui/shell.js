@@ -165,7 +165,7 @@
     if (onTab && row && (onTab.offsetLeft < row.scrollLeft || onTab.offsetLeft + onTab.offsetWidth > row.scrollLeft + row.clientWidth)) row.scrollLeft = onTab.offsetLeft - 12;   // the current tab stays in view
     const want = `#/${w}/${d.slug}`;
     if (location.hash !== want && !/^#\/(agents-hub|secretary)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search + want);
-    const crumb = $('#crumb-label'), text = `${WS[w].label} › ${d.tab}`;
+    const crumb = $("#crumb-label"), text = WS[w].label === d.tab ? WS[w].label : `${WS[w].label} › ${d.tab}`;   // no "Files › Files"
     if (crumb && crumb.textContent !== text) crumb.textContent = text;
   }
   document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (t) { e.preventDefault(); go(t.dataset.tab); } });
