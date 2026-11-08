@@ -91,6 +91,7 @@ def landed(page, tag):
     assert page.evaluate("TribeClient.state().tribe.name") == "Campfire Crew", tag
     page.wait_for_function("window.TribeDirector && TribeDirector._test.state().running", timeout=10000)
     page.evaluate("TribeDirector.stop()")
+    time.sleep(1)   # let the first chapter's requests land before the caller leaves (else they go to this static server)
 
 
 def lively(page, tag):
