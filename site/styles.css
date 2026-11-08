@@ -301,7 +301,7 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
 .feature { padding: 128px 0 0; }
 .feature__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: center; }
 .feature--flip .feature__copy { order: 2; }
-.feature__art { width: 96px; height: auto; margin-bottom: 24px; }
+.feature__art { width: 120px; height: auto; margin-bottom: 24px; }   /* pixel art: 40 px grid, 3 screen px each */
 .feature__copy h2 { margin-top: 12px; }
 .feature__text { margin-top: 16px; font-size: 17px; line-height: 1.6; max-width: 52ch; color: var(--faint); }
 .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; padding: 0; list-style: none; }
@@ -437,7 +437,7 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
 .get__copy h2 { margin-top: 12px; font-size: clamp(30px, 3.6vw, 42px); }
 .get__ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .get__meta { margin-top: 16px; font-size: 12px; color: var(--faint); }
-.get__art { width: 100%; max-width: 420px; justify-self: center; }
+.get__art { width: 100%; max-width: 400px; justify-self: center; }   /* pixel art: 80 px grid, 5 screen px each */
 .plats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 32px 0 0; padding: 0; list-style: none; }
 .plats a { display: grid; gap: 2px; padding: 12px; border-radius: 10px; border: 1px solid var(--edge); background: var(--raised); transition: background-color .15s, border-color .15s; }
 .plats a:hover { background: var(--surface-2); border-color: var(--edge-pop); }
@@ -506,7 +506,7 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
   .stats, .get { padding-top: 88px; }
   .get { padding-bottom: 88px; }
   .get__card { grid-template-columns: minmax(0, 1fr); padding: 32px 24px; gap: 32px; }
-  .get__art { order: -1; max-width: 280px; justify-self: start; }
+  .get__art { order: -1; max-width: 240px; justify-self: start; }
   .plats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
