@@ -1,6 +1,8 @@
 """The download site's landing page (site/index.html), served on its own and fully offline.
 
-Checks: the nav (links, dropdowns, Download pill, live star count), the hero headline, the OS-aware download label
+Checks: the nav (links, dropdowns, Download pill, live star count), the hero headline, clicking into the mock's areas
+(Dashboard, Files, Task Board, Agents Hub, # agents, + Add) with Replay, the corner fire, Start from something (tabs, chips, an
+idea filling the hero box), the floating Flint (one-time bubble, panel, local answers, Esc, focus trap), the OS-aware download label
 (Windows and Mac user agents, linked to the right release asset), the stage mock advancing (its text grows over ~3 s),
 reduced motion showing the finished frame, the GitHub stats strip filled from a fixture, the fallback when the API is
 down, no console errors, and no sideways scroll at 390px (menu open too).
@@ -111,7 +113,42 @@ def main():
             tp = pg.context.new_page(); tp.set_viewport_size({"width": 1440, "height": 900}); tp.goto(BASE); tp.wait_for_load_state("load")
             tp.click("[data-try=chat] .mk-in"); tp.keyboard.type("add a boss on level 3"); tp.keyboard.press("Enter")
             tp.wait_for_function("[...document.querySelectorAll('.mk-convo .mk-try')].length >= 2 && document.querySelector('.mk-convo .mk-try:last-child .mk-txt')?.textContent.length > 10", timeout=8000)
-            assert tp.evaluate("document.querySelector('[data-loop=stage]').dataset.paused") == "1"; tp.close()
+            assert tp.evaluate("document.querySelector('[data-loop=stage]').dataset.paused") == "1"
+            assert tp.is_visible("#stage-replay"), "typing pauses the story, so Replay shows"
+            assert tp.evaluate("document.querySelector('.flint-float').classList.contains('is-away')"), "Flint steps aside while the hero box has focus"
+            tp.close()
+            # click into areas: sidebar rows swap the middle pane, pause the story; Replay puts it back and starts over
+            vp = pg.context.new_page(); vp.set_viewport_size({"width": 1440, "height": 900}); vw = []; watch(vp, vw); vp.goto(BASE); vp.wait_for_load_state("load")
+            vp.wait_for_function("document.querySelector('[data-loop=stage]').dataset.state === 'running'", timeout=5000)
+            assert not vp.is_visible("#stage-replay") and not vp.is_visible("#mk-pane")
+            vp.click(".mk-side [data-go=dashboard]")
+            assert vp.evaluate("document.querySelector('[data-loop=stage]').dataset.paused") == "1" and vp.is_visible("#stage-replay")
+            assert vp.is_visible("#mk-pane") and not vp.is_visible(".mk-convo") and vp.inner_text("#mk-head-t") == "Dashboard"
+            assert vp.locator("#mk-pane .mv-step").count() == 4 and "living update" in vp.inner_text("#mk-pane").lower()
+            assert vp.evaluate("document.querySelector('.mk-side [data-go=dashboard]').classList.contains('is-on')")
+            vp.click("#mk-pane .mv-step:not(.is-done)"); assert vp.locator("#mk-pane .mv-step.is-done").count() == 4
+            frozen = vp.evaluate("document.querySelector('.mk-convo').textContent.length"); vp.wait_for_timeout(1500)
+            assert vp.evaluate("document.querySelector('.mk-convo').textContent.length") == frozen, "the story stays paused"
+            vp.click(".mk-side [data-go=files]"); assert "src/scenes/title.js" in vp.inner_text("#mk-pane")
+            vp.click("#mk-pane [data-seg=docs]"); assert "Level design" in vp.inner_text("#mk-pane") and "src/" not in vp.inner_text("#mk-pane .mv-files")
+            vp.click(".mk-side [data-go=board]"); assert vp.locator("#mk-pane .mv-col").count() == 3
+            todo = "document.querySelectorAll('#mk-pane .mv-col')[0].querySelectorAll('.mv-task').length"
+            n0 = vp.evaluate(todo); vp.locator("#mk-pane .mv-col").nth(0).locator(".mv-task").nth(0).click()
+            assert vp.evaluate(todo) == n0 - 1, "a card moves forward"
+            vp.click(".mk-side [data-go=hub]"); assert vp.locator("#mk-pane .mv-agent").count() == 3 and "needs you" in vp.inner_text("#mk-pane").lower()
+            vp.click("#mk-pane [data-ask=ok]"); assert "Approved" in vp.inner_text("#mk-pane .mv-needs")
+            vp.click(".mk-side [data-go=agents]"); assert vp.locator("#mk-pane .mk-msg--agent").count() >= 4 and vp.inner_text("#mk-head-t") == "# agents"
+            vp.click(".mk-side [data-go=add]"); assert vp.locator("#mk-pane .mv-wid").count() >= 4
+            vp.locator("#mk-pane .mv-wid").nth(0).click(); assert "Added" in vp.locator("#mk-pane .mv-wid").nth(0).inner_text()
+            vp.click(".mk-side [data-go=level]"); assert "Level design" in vp.inner_text("#mk-pane")
+            assert "Preview" in vp.inner_text(".mk-pv-bar") and vp.is_visible(".mk-flint .mk-in"), "the right panel stays"
+            vp.click("#stage-replay")
+            assert not vp.is_visible("#stage-replay") and not vp.is_visible("#mk-pane") and vp.is_visible(".mk-convo") and vp.inner_text("#mk-head-t") == "# general"
+            assert vp.evaluate("document.querySelector('[data-loop=stage]').dataset.paused") is None
+            vp.wait_for_function("!document.querySelector('#mk-c1').classList.contains('on')", timeout=3000)   # back to the top of the story
+            vp.wait_for_selector("#mk-a1.on", timeout=15000)
+            vp.click(".mk-side [data-go=hub]"); assert vp.locator("#mk-pane [data-ask=ok]").count() == 1, "Replay resets the views too"
+            assert not vw, vw; vp.close()
             room = pg.inner_text(".mk-room")
             assert all(n in room for n in ["Orion's Claude", "Maya's Codex", "Jay's Gemini"]), room
             # the little game keeps playing in the preview while the loop runs
@@ -158,6 +195,34 @@ def main():
             assert "Code that helps people." in mp.inner_text("h1") and mp.locator(".ms-card").count() == 4 and "open-source maintainers" in mp.inner_text("body"); mp.close()
             assert "Anthropic" not in pg.inner_text("body")
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 6
+            # start from something: tabs switch, cards carry chips, an idea fills the hero's chat box
+            pg.locator("#starters .sw").scroll_into_view_if_needed()
+            assert "Start from something." in pg.inner_text("#starters h2")
+            assert pg.locator("#sw-panel .sw-card").count() == 4 and "Pixel platformer" in pg.inner_text("#sw-panel") and "KAPLAY" in pg.inner_text("#sw-panel")
+            assert pg.locator("#sw-panel .sw-card").nth(0).locator(".sw-chip").count() >= 2 and pg.locator("#sw-panel .sw-thumb").count() == 4
+            assert "what you get" in pg.locator("#sw-panel .sw-card").nth(0).inner_text().lower()
+            for kind, name in [("apps", "Habit tracker"), ("sites", "Portfolio"), ("tools", "Discord bot"), ("games", "Endless runner")]:
+                pg.click(f".sw__tab[data-kind={kind}]")
+                assert pg.get_attribute(f".sw__tab[data-kind={kind}]", "aria-selected") == "true" and name in pg.inner_text("#sw-panel"), kind
+                assert pg.locator("#sw-panel .sw-chip").count() >= 6
+            pg.locator("#sw-panel .sw-card").nth(2).click(); assert pg.locator("#sw-panel .sw-card").nth(2).get_attribute("aria-pressed") == "true"
+            assert pg.get_attribute("[data-sw-cta]", "href") == "app/" and "first versions" in pg.inner_text("#starters")
+            idea = pg.locator("#sw-panel .sw-idea").nth(0).get_attribute("data-idea")
+            pg.locator("#sw-panel .sw-idea").nth(0).click(); pg.wait_for_timeout(900)
+            assert pg.input_value("[data-try=chat] .mk-in") == idea
+            assert pg.evaluate("document.activeElement === document.querySelector('[data-try=chat] .mk-in')")
+            assert pg.evaluate("(() => { const r = document.querySelector('#stage').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; })()"), "scrolled up to the stage"
+            pg.evaluate("document.activeElement.blur()")
+            # the corner fire: flat pixel frames, flickering, just outside the frame
+            assert pg.locator(".stage-wrap .stage__fire").count() == 1 and pg.is_visible(".stage__fire")
+            assert pg.evaluate("document.querySelectorAll('.stage__fire .cf').length") == 4
+            assert pg.get_attribute(".stage__fire", "shape-rendering") == "crispEdges"
+            names = set(pg.evaluate("[...new Set(document.querySelector('.stage__fire').getAnimations({subtree: true}).map(a => a.animationName))]"))
+            assert {"cf", "cf-rise"} <= names, names
+            fills = set(pg.evaluate("[...document.querySelectorAll('.stage__fire [fill]')].map(e => e.getAttribute('fill').toUpperCase())"))
+            assert fills <= {"#F26B1D", "#FABD2F", "#B4512A"}, fills
+            fr, sr = pg.evaluate("[document.querySelector('.stage__fire').getBoundingClientRect().toJSON(), document.querySelector('.stage').getBoundingClientRect().toJSON()]")
+            assert fr["right"] > sr["right"] and fr["top"] < sr["top"] and fr["right"] - sr["right"] <= 24, (fr, sr)
             if SHOTS:
                 pg.evaluate("scrollTo(0, 0)"); pg.wait_for_timeout(9000)
                 pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "site-desktop.png"))
@@ -174,6 +239,36 @@ def main():
             assert "Download for macOS (Apple Silicon)" in pg.inner_text(".hero [data-dl-label]")
             assert pg.locator("#continue, .continue").count() == 0 and "Welcome back" not in pg.inner_text("body")
             assert pg.inner_text(".nav__end .nav__open").strip() == "Open the app"
+            # floating Flint: a one-time bubble after ~3 s, a panel with chips and local answers, Esc closes
+            assert pg.is_visible(".flint-fab") and not pg.is_visible("#flint-panel")
+            assert not pg.is_visible("#flint-bubble")
+            pg.wait_for_selector("#flint-bubble:not([hidden])", timeout=6000)
+            assert "Click me to learn more" in pg.inner_text("#flint-bubble")
+            assert pg.evaluate("getComputedStyle(document.querySelector('.flint-bubble')).fontFamily").startswith("Silkscreen")
+            pg.reload(); pg.wait_for_load_state("load"); pg.wait_for_timeout(4000)
+            assert not pg.is_visible("#flint-bubble"), "the bubble shows once"
+            assert not pg.is_visible("#flint-panel"), "Flint never opens by itself"
+            pg.click(".flint-fab"); assert pg.is_visible("#flint-panel") and pg.get_attribute(".flint-fab", "aria-expanded") == "true"
+            assert pg.locator("#flint-panel .flint-chip").count() == 6 and pg.get_attribute(".flint-panel__log", "aria-live") == "polite"
+            assert pg.evaluate("document.querySelector('#flint-panel').contains(document.activeElement)")
+            pg.click(".flint-chip[data-q=free]")
+            pg.wait_for_function("document.querySelectorAll('.flint-panel__log .flint-msg').length >= 3", timeout=3000)
+            last = pg.inner_text(".flint-panel__log .flint-msg:last-child")
+            assert "free" in last.lower() and "open source" in last.lower(), last
+            assert pg.get_attribute(".flint-panel__log .flint-msg:last-child .flint-act", "href") == "pricing.html"
+            pg.fill(".flint-form input", "can it make me a sandwich"); pg.press(".flint-form input", "Enter")
+            pg.wait_for_function("document.querySelector('.flint-panel__log .flint-msg:last-child').textContent.includes('simple guide')", timeout=3000)
+            assert pg.locator(".flint-panel__log .flint-msg:last-child a").nth(0).get_attribute("href") == "app/"
+            for _ in range(14): pg.keyboard.press("Tab")
+            assert pg.evaluate("document.querySelector('#flint-panel').contains(document.activeElement)"), "focus stays inside the panel"
+            pg.keyboard.press("Escape"); assert not pg.is_visible("#flint-panel")
+            assert pg.evaluate("document.activeElement === document.querySelector('.flint-fab')")
+            for page in ["pricing.html", "mission.html"]:
+                op = ctx.new_page(); watch(op, errs); op.goto(BASE + page); op.wait_for_load_state("load")
+                assert op.is_visible(".flint-fab"), page
+                op.click(".flint-fab"); op.click(".flint-chip[data-q=download]")
+                op.wait_for_function("document.querySelectorAll('.flint-panel__log .flint-msg').length >= 3", timeout=3000)
+                assert op.get_attribute(".flint-panel__log .flint-msg:last-child .flint-act", "href") == "index.html#download"; op.close()
             assert not errs, errs
             ctx.close()
 
@@ -204,6 +299,13 @@ def main():
             assert pg.evaluate("[...document.querySelectorAll('[data-loop]')].every(l => l.dataset.state === 'done')")
             assert pg.evaluate("[...document.querySelectorAll('.reveal')].every(e => getComputedStyle(e).opacity === '1')")
             assert pg.evaluate("getComputedStyle(document.querySelector('#pv-lantern')).animationName") == "none"
+            # the corner fire holds one frame and its embers sit still; Flint doesn't bob
+            assert pg.is_visible(".stage__fire") and pg.evaluate("document.querySelector('.stage__fire').getAnimations({subtree: true}).length") == 0
+            assert pg.evaluate("[...document.querySelectorAll('.stage__fire .cf')].filter(e => getComputedStyle(e).opacity === '1').length") == 1
+            assert pg.evaluate("document.querySelector('.flint-fab img').getAnimations().length") == 0
+            # clicking into an area still works; Replay brings back the finished frame
+            pg.click(".mk-side [data-go=board]"); assert pg.is_visible("#mk-pane") and pg.is_visible("#stage-replay")
+            pg.click("#stage-replay"); assert pg.is_visible("#mk-a2t") and not pg.is_visible("#mk-pane")
             # pixel art (scripts/pixel-art.js): the hero scene and the feature/download art are crisp-edged <rect> SVGs on a
             # small grid, and their FX (fire flicker, embers, twinkle, blink) stop under reduced motion
             arts = pg.evaluate("[...document.querySelectorAll('img[src*=\"assets/art/\"]')].map(i => i.getAttribute('src'))")
@@ -245,6 +347,14 @@ def main():
             win = ph.evaluate("document.querySelector('.mk-win').getBoundingClientRect().right")
             assert win <= 390, win
             no_overflow(ph, "phone top")
+            assert not ph.is_visible(".stage__fire"), "no fire on phones"
+            fab = ph.evaluate("document.querySelector('.flint-fab').getBoundingClientRect().toJSON()")
+            assert fab["width"] <= 48 and fab["right"] <= 390 and fab["bottom"] <= 844, fab
+            ph.click(".flint-fab"); pr = ph.evaluate("document.querySelector('#flint-panel').getBoundingClientRect().toJSON()")
+            assert pr["left"] >= 0 and pr["right"] <= 390 and pr["top"] >= 0, pr
+            no_overflow(ph, "phone Flint open"); ph.keyboard.press("Escape"); assert not ph.is_visible("#flint-panel")
+            ph.locator("#starters .sw").scroll_into_view_if_needed(); assert ph.locator("#sw-panel .sw-card").count() == 4; no_overflow(ph, "phone starters")
+            ph.click(".sw__tab[data-kind=tools]"); no_overflow(ph, "phone starters tools"); ph.evaluate("scrollTo(0, 0)")
             pq = ph.context.new_page(); pq.set_viewport_size({"width": 390, "height": 844}); pq.goto(BASE + "pricing.html"); pq.wait_for_load_state("load")
             lefts = pq.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-card')].map(t => Math.round(t.getBoundingClientRect().left))")
             assert len(lefts) == 4 and len(set(lefts)) == 1, f"pricing stacks on phones: {lefts}"
