@@ -143,7 +143,7 @@
 <div class="shell" id="shell">
   <div class="window">
     <nav class="rail" id="tour-rail" aria-label="Projects" data-tauri-drag-region>
-      <button class="logo-btn camp-btn" id="rail-camp" title="Home: your overview of everything" aria-label="Home"><span class="camp-e" aria-hidden="true">⛺</span></button>
+      <button class="logo-btn" id="rail-logo" title="Home: your overview of everything" aria-label="Home"><img class="logo" src="assets/icon-mark-animated.svg" alt="TribeCode"></button>
       <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
       <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
       <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-box"/></svg></button>
@@ -152,7 +152,7 @@
 
     <header class="titlebar" data-tauri-drag-region>
       <button class="menu-btn" id="menu-btn" aria-label="Projects and sections"><svg class="i"><use href="#i-list"/></svg></button>
-      <div class="tb-brand" id="tb-brand"><button class="logo-btn" id="rail-logo" title="Home: your overview of everything" aria-label="Home"><img class="logo" src="assets/icon-mark-animated.svg" alt="TribeCode"></button><button class="tb-wm" id="tb-wm" title="Home" aria-label="TribeCode home"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode" draggable="false"></button></div>
+      <div class="tb-brand" id="tb-brand"><button class="tb-wm" id="tb-wm" title="Home" aria-label="TribeCode home"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode" draggable="false"></button></div>
       <nav class="crumbs" id="crumbs" aria-label="Breadcrumbs" data-tauri-drag-region>
         <button class="crumb ws hidden" id="ws-name" title="Tribe">My Tribe</button><span class="sep ws-sep hidden">/</span>
         <button class="crumb pj-switch hidden" id="pj-switch" aria-haspopup="menu" title="Switch project"></button><span class="sep pj-sep hidden">/</span>
@@ -164,8 +164,8 @@
         <span class="status pill" id="sync-status"><span class="dot" style="background:var(--accent-2)"></span>local · ready</span>
         <span class="status pill" id="brain-status"><svg class="i" style="width:15px;height:15px;color:var(--accent)"><use href="#i-net"/></svg><span id="brain-label">brain off</span></span>
         <div class="win-ctl" id="win-ctl" aria-label="Window">
-          <button data-w="max" class="tl tl-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 12 12"><path d="M3.6 8.4V4.8l3.6 3.6zM8.4 3.6v3.6L4.8 3.6z" fill="currentColor" stroke="none"/></svg></button>
           <button data-w="min" class="tl tl-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M3 6h6"/></svg></button>
+          <button data-w="max" class="tl tl-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 12 12"><path d="M3.6 8.4V4.8l3.6 3.6zM8.4 3.6v3.6L4.8 3.6z" fill="currentColor" stroke="none"/></svg></button>
           <button data-w="close" class="tl tl-close" title="Close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/></svg></button>
         </div>
       </div>

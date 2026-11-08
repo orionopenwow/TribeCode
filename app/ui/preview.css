@@ -3,7 +3,7 @@
 
 /* The right panel widens while it shows the app (desktop). */
 @media (min-width: 821px) {
-  body.pvw-on .shell .window { grid-template-columns: 76px var(--side-w, 260px) minmax(0, 1fr) var(--pvw-w, clamp(380px, 40vw, 720px)); }
+  body.pvw-on .shell .window { grid-template-columns: 72px var(--side-w, 260px) minmax(0, 1fr) var(--pvw-w, clamp(380px, 40vw, 720px)); }
   body.pvw-on #preview-body { padding: 0; overflow: hidden; display: flex; }
 }
 @media (max-width: 820px) {

@@ -14,7 +14,7 @@
 .pp:focus { outline: none; }
 /* laptop widths: while a person is open, their panel stands in for the room panel so chat keeps its width */
 @media (min-width: 821px) and (max-width: 1599px) {
-  body.pp-on .shell .window { grid-template-columns: 76px var(--side-w, 260px) minmax(0, 1fr) 0; }
+  body.pp-on .shell .window { grid-template-columns: 72px var(--side-w, 260px) minmax(0, 1fr) 0; }
   body.pp-on .window > .panel { display: none; }
 }
 @keyframes pp-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }

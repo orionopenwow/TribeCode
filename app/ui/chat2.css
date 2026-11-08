@@ -245,3 +245,9 @@ body.chat-drop #view-chat .chat-col { outline: 2px dashed var(--edge-pop); outli
   .ep-grid { grid-template-columns: repeat(8, 1fr); }
   .ep-c { height: 42px; font-size: 26px; }
 }
+
+/* Messages: the composer runs nearly edge to edge (16px from each side), and the avatars line up with its + button */
+@media (min-width: 821px) {
+  .window .main:has(> #view-chat:not(.hidden)) { padding-left: 16px; padding-right: 16px; }
+  #view-chat .msg.dx { padding-left: 9px; }
+}

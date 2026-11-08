@@ -4,8 +4,8 @@ body.dark { --raised: #1E242D; --rail: #0D1014; --nest: #12151A; --main: #161A20
 body.light { --raised: #FFFFFF; --rail: #E9ECF0; --nest: #F4F5F7; --main: #FFFFFF; --right: #F4F5F7; --hover: #E9ECF0; --sel: #E1E5EA; }
 
 /* ---------- grid ---------- */
-.shell .window { position: relative; display: grid; grid-template-columns: 76px var(--side-w, 260px) minmax(0, 1fr) var(--right-w, 320px); grid-template-rows: 68px minmax(0, 1fr); background: var(--main); }
-body.panel-off .shell .window { grid-template-columns: 76px var(--side-w, 260px) minmax(0, 1fr) 0; }
+.shell .window { position: relative; display: grid; grid-template-columns: 72px var(--side-w, 260px) minmax(0, 1fr) var(--right-w, 320px); grid-template-rows: 68px minmax(0, 1fr); background: var(--main); }
+body.panel-off .shell .window { grid-template-columns: 72px var(--side-w, 260px) minmax(0, 1fr) 0; }
 body.panel-off .panel { display: none; }
 .window > .rail { grid-column: 1; grid-row: 1 / -1; }
 .window > .titlebar { grid-column: 2 / -1; grid-row: 1; }
@@ -509,3 +509,36 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 
 /* feat/side-switch was tried and rolled back: the circle rail stays. The dropdown button stays hidden. */
 .side-switch { display: none !important; }
+
+/* the rail, tighter (like Discord): 40px rounded squares, 8px apart */
+.window .rail { gap: 8px; padding: 6px 0 12px; }
+.window .rail .logo-btn { width: 44px; height: 44px; flex: 0 0 44px; margin: 6px 0 2px; }
+.window .rail .pj-rail { gap: 8px; width: 40px; padding-top: 8px; }
+.window .rail .pj-circle, .window .rail .pj-face { width: 40px; height: 40px; flex-basis: 40px; }
+.window .rail .pj-face, .window .rail .pj-circle:hover .pj-face, .window .rail .pj-circle.on .pj-face { border-radius: 12px; }
+.window .rail .pj-circle { border-radius: 12px; }
+.window .rail .pj-circle::before { left: -11px; }
+.window .rail .pj-plus, .window .rail .ws-nav { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 12px; }
+.window .rail .nav { border-radius: 12px; }
+.window .rail .pj-plus { font-size: 22px; border-radius: 12px; }
+.window .rail .pj-circle .pj-face { border-radius: 12px !important; }
+.window .rail .ws-nav { background: var(--surface); border: 1px solid var(--edge); }
+/* your avatar's online dot: small, tucked on the bottom-right edge with a ring, not over the letter */
+.userbar .ub-slot .pf-btn { position: relative; }
+.userbar .ub-slot .pf-btn .pf-face { width: 32px; height: 32px; }
+.userbar .ub-slot .pf-btn .pf-dot { width: 9px; height: 9px; right: -3px; bottom: -3px; border: 2.5px solid var(--nest, #1B2028); box-sizing: content-box; }
+/* the Home tent: bigger, with room above and below */
+.window .rail .logo-btn.camp-btn { width: 54px; height: 50px; flex: 0 0 50px; margin: 3px 0 19px; }   /* centered on the top bar (68px), level with the flame and the wordmark */
+.window .rail .camp-btn .camp-e { width: 46px; }
+/* the bar's icons: three equal buttons, evenly spaced, one size; the bell's count sits on its corner */
+.userbar .ub-acts { gap: 4px; }
+.userbar .ub-acts > button, .userbar .ub-acts .nf-bell, .userbar .ub-acts .fr-btn, .userbar .ub-acts .ub-gear { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 9px; position: relative; flex: none; }
+.userbar .ub-acts > button:hover { background: var(--hover); }
+.userbar .ub-acts svg.i, .userbar .ub-acts .i { width: 20px !important; height: 20px !important; stroke-width: 2; }
+.userbar .ub-acts .nf-count { top: -1px; right: -3px; min-width: 14px; height: 14px; padding: 0 3px; font-size: 9.5px; font-weight: 700; line-height: 14px; border-radius: 8px; border: 2px solid var(--nest, #1B2028); box-sizing: content-box; text-align: center; }
+/* the flame is back at the top of the rail (no tile behind it), level with the wordmark in the top bar */
+.window .rail .logo-btn#rail-logo { width: 54px; height: 50px; flex: 0 0 50px; margin: 3px 0 19px; background: none !important; border: 0 !important; border-radius: 12px; position: relative; }
+.window .rail #rail-logo img.logo { width: 46px; height: 46px; image-rendering: pixelated; transition: transform .18s var(--ease, ease); }
+.window .rail #rail-logo:hover img.logo { transform: scale(1.08); }
+.window .rail #rail-logo.is-busy::after { content: ''; position: absolute; right: 6px; bottom: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--live, #38C6B1); }
+.tb-brand .tb-wm { margin-left: -10px; }
