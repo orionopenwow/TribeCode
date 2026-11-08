@@ -1,0 +1,20 @@
+name: Join the hosted-plan waitlist
+description: Hear first when Campfire, Tribe, School and Studio plans open. The first 100 tribes keep their launch price for a year.
+title: "Waitlist: "
+labels: ["waitlist"]
+body:
+  - type: dropdown
+    id: plan
+    attributes:
+      label: Which plan interests you?
+      options: ["Campfire: always-on hosting", "Tribe: AI included for the whole tribe", "Tribe Pro: overnight agents", "School or club pilot", "Studio", "Enterprise", "Not sure yet"]
+    validations: { required: true }
+  - type: input
+    id: size
+    attributes:
+      label: How many people in your tribe?
+      placeholder: "4 friends, 2 with their own AI"
+  - type: textarea
+    id: what
+    attributes:
+      label: What are you building? (optional)

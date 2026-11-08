@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, built around your shared GitHub repo.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.17.18">
+<link rel="stylesheet" href="styles.css?v=0.17.20">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -89,52 +89,67 @@
   <section class="pr-hero">
     <div class="wrap">
       <h1 class="pr-title">Pricing</h1>
-      <p class="pr-note">Prices aren't final. TribeCode stays free and open source.</p>
+      <p class="pr-note">TribeCode is free today, with everything in it. Hosted plans are planned and not for sale yet.</p>
+      <ul class="pr-promises" aria-label="Our promises">
+        <li><b>Free stays free.</b> Everything free today stays free: self-hosting, unlimited friends and projects, bringing your own AI.</li>
+        <li><b>Your code is yours.</b> It lives in your GitHub repo, MIT licensed. Leave any time and take everything.</li>
+        <li><b>We charge only for what costs us money:</b> servers that stay on, backups, and AI we run for you.</li>
+        <li><b>No surprise bills.</b> You see the cost before a big AI job, and spending stops at the cap you set.</li>
+        <li><b>No ads, and we never sell your data.</b></li>
+      </ul>
       <div class="pr-tabs" role="tablist" aria-label="Plans">
-        <button role="tab" class="pr-tab on" aria-selected="true" data-tab="individual">Individual</button>
-        <button role="tab" class="pr-tab" aria-selected="false" data-tab="teams">Teams</button>
+        <button role="tab" class="pr-tab on" aria-selected="true" data-tab="individual">Tribes</button>
+        <button role="tab" class="pr-tab" aria-selected="false" data-tab="teams">Schools &amp; studios</button>
       </div>
       <div class="pr-grid" data-panel="individual"><article class="pr-card" data-tier="free">
-        <div class="pr-top"><p class="pr-name">Free</p></div>
-        <p class="pr-price"><b>$0</b><span>/month</span></p>
+        <div class="pr-top"><p class="pr-name">Free</p><span class="pr-now">Available now</span></div>
+        <p class="pr-price"><b>$0</b><span>forever</span></p>
         <a class="btn btn--light pr-btn" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a>
         <p class="pr-lead">Get started with:</p><p class="pr-big">Everything</p><p class="pr-sub">self-hosted, bring your own AI</p>
-        <p class="pr-g">App</p><ul class="pr-list"><li>Unlimited friends and projects</li><li>Chat, Files, Task Board, Agents Hub</li><li>Website builder and Preview</li></ul><p class="pr-g">AI · bring your own</p><ul class="pr-list"><li>Use your own Claude Code, Codex, Gemini CLI or Cursor</li><li>Or your own API key, Ollama, or the free built-in browser model</li><li>Flint in basic mode</li></ul><p class="pr-foot">Your repo, your files. <a href="app/">Open in browser</a></p>
-      </article><article class="pr-card" data-tier="personal">
-        <div class="pr-top"><p class="pr-name">Personal</p></div>
-        <p class="pr-price"><b>$8</b><span>/month per tribe</span></p>
-        <button class="btn btn--dark pr-btn" type="button" disabled>Coming soon</button>
-        <p class="pr-lead">Everything in Free, and:</p><p class="pr-big">24/7</p><p class="pr-sub">always-on hosting</p>
-        <p class="pr-g">Hosting</p><ul class="pr-list"><li>Your tribe stays up when your laptop sleeps</li><li>A stable yourtribe.tribecode.org link</li><li>Voice relay for huddles on cellular</li><li>Nightly backups</li></ul>
-      </article><article class="pr-card pop" data-tier="team">
-        <div class="pr-top"><p class="pr-name">Team</p><span class="pr-pop">Most popular</span></div>
+        <p class="pr-g">App</p><ul class="pr-list"><li>Unlimited friends, projects and agents</li><li>Chat, Files, Sheets, Slides, Task Board, Agents Hub</li><li>Website builder, Preview, phone app</li></ul><p class="pr-g">AI · bring your own</p><ul class="pr-list"><li>Your own Claude Code, Codex, Gemini or Antigravity CLI, Cursor</li><li>Or your own API key, Ollama, or the free built-in browser model</li><li>Flint in basic mode</li></ul><p class="pr-foot">Your repo, your files. <a href="app/">Open in browser</a></p>
+      </article><article class="pr-card" data-tier="campfire">
+        <div class="pr-top"><p class="pr-name">Campfire</p><span class="pr-soon">Planned</span></div>
+        <p class="pr-price"><b>$6</b><span>/month per tribe</span></p>
+        <a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a>
+        <p class="pr-lead">Everything in Free, and:</p><p class="pr-big">Always on</p><p class="pr-sub">we host your tribe</p>
+        <p class="pr-g">Hosting</p><ul class="pr-list"><li>Stays up when your laptop sleeps</li><li>A stable yourtribe.tribecode.org link, no setup</li><li>Voice relay for huddles on cellular</li><li>Nightly backups, 7-day restore</li></ul>
+      </article><article class="pr-card pop" data-tier="tribe">
+        <div class="pr-top"><p class="pr-name">Tribe</p><span class="pr-soon">Planned</span></div>
         <p class="pr-trial">14-day free trial at launch · no card</p>
-        <p class="pr-price"><b>$30</b><span>/month per tribe</span></p>
-        <button class="btn btn--light pr-btn" type="button" disabled>Coming soon</button>
-        <p class="pr-lead">Everything in Personal, and:</p><p class="pr-big">Shared</p><p class="pr-sub">AI for the whole tribe</p>
-        <p class="pr-g">AI included · no keys needed</p><ul class="pr-list"><li>Built-in AI for everyone in the tribe, even friends without their own AI</li><li>Shared credits that refill every 5 hours</li><li>Flint smart mode: writes, plans and builds for you</li><li>Priority models</li></ul><p class="pr-g">Still yours to bring</p><ul class="pr-list"><li>Keep using your own AI tools alongside</li></ul><p class="pr-foot">Bringing your own AI stays free on every plan.</p>
+        <p class="pr-price"><b>$24</b><span>/month per tribe</span></p>
+        <a class="btn btn--light pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a>
+        <p class="pr-lead">Everything in Campfire, and:</p><p class="pr-big">AI included</p><p class="pr-sub">for up to 8 people, keys or not</p>
+        <p class="pr-g">AI for the whole tribe</p><ul class="pr-list"><li>Built-in AI for everyone, no keys needed</li><li>A shared credit pool that refills weekly</li><li>Flint smart mode: writes docs, sheets, slides and plans</li><li>The cost shown before a big job; refunds when a change is rolled back</li></ul><p class="pr-foot">About $6 a friend. Bringing your own AI stays free.</p>
       </article><article class="pr-card" data-tier="pro">
-        <div class="pr-top"><p class="pr-name">Pro</p></div>
-        <p class="pr-price"><b>$100</b><span>/month per tribe</span></p>
-        <button class="btn btn--dark pr-btn" type="button" disabled>Coming soon</button>
-        <p class="pr-lead">Everything in Team, and:</p><p class="pr-big">5x</p><p class="pr-sub">more AI credits than Team</p>
-        <p class="pr-g">AI</p><ul class="pr-list"><li>Cloud agents that keep working overnight</li><li>Priority access at peak times</li><li>Larger models for big builds</li></ul>
+        <div class="pr-top"><p class="pr-name">Tribe Pro</p><span class="pr-soon">Planned</span></div>
+        <p class="pr-price"><b>$79</b><span>/month per tribe</span></p>
+        <a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a>
+        <p class="pr-lead">Everything in Tribe, and:</p><p class="pr-big">4x</p><p class="pr-sub">the AI credits of Tribe</p>
+        <p class="pr-g">For tribes that build every day</p><ul class="pr-list"><li>Cloud agents that keep working overnight, approvals still yours</li><li>Larger models for big builds</li><li>A bigger hosted server, 30-day restore</li></ul>
       </article></div>
-      <div class="pr-grid pr-grid--2" data-panel="teams" hidden><article class="pr-card" data-tier="business">
-        <div class="pr-top"><p class="pr-name">Business</p></div>
-        <p class="pr-price"><b>$25</b><span>/user/month</span></p>
-        <button class="btn btn--dark pr-btn" type="button" disabled>Contact us — coming soon</button>
-        <p class="pr-lead">For studios, schools and clubs:</p><p class="pr-big">Roles</p><p class="pr-sub">admin and privileges controls</p>
-        <p class="pr-g">Team</p><ul class="pr-list"><li>Everything in Team</li><li>Admin, Mod and per-project roles</li><li>Invoices and one bill</li><li>Priority help</li></ul>
+      <div class="pr-grid pr-grid--3" data-panel="teams" hidden><article class="pr-card" data-tier="school">
+        <div class="pr-top"><p class="pr-name">School &amp; club</p><span class="pr-soon">Planned</span></div>
+        <p class="pr-price"><b>Free</b><span>for verified schools, clubs and jams</span></p>
+        <a class="btn btn--light pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Ask for a pilot</a>
+        <p class="pr-lead">Up to 30 seats:</p><p class="pr-big">Safe</p><p class="pr-sub">kid-friendly defaults</p>
+        <p class="pr-g">Class</p><ul class="pr-list"><li>Teacher view, class templates</li><li>No public links or strangers for kids' tribes</li><li>Learn lessons and printable sheets</li></ul>
+      </article><article class="pr-card" data-tier="studio">
+        <div class="pr-top"><p class="pr-name">Studio</p><span class="pr-soon">Planned</span></div>
+        <p class="pr-price"><b>$12</b><span>/user/month · 5 or more</span></p>
+        <a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a>
+        <p class="pr-lead">For small studios:</p><p class="pr-big">Roles</p><p class="pr-sub">many tribes, one bill</p>
+        <p class="pr-g">Team</p><ul class="pr-list"><li>Admin, Mod and per-project roles</li><li>Per-person credit limits</li><li>Invoices, priority help</li></ul>
       </article><article class="pr-card" data-tier="enterprise">
-        <div class="pr-top"><p class="pr-name">Enterprise</p></div>
+        <div class="pr-top"><p class="pr-name">Enterprise</p><span class="pr-soon">Planned</span></div>
         <p class="pr-price"><b>Custom</b><span></span></p>
-        <button class="btn btn--dark pr-btn" type="button" disabled>Contact us — coming soon</button>
+        <a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Get in touch</a>
         <p class="pr-lead">For larger orgs:</p><p class="pr-big">Self-hosted</p><p class="pr-sub">with support</p>
-        <p class="pr-g">Org</p><ul class="pr-list"><li>Your servers, your models</li><li>Single sign-on</li><li>Support agreement</li></ul>
+        <p class="pr-g">Org</p><ul class="pr-list"><li>Your servers, your models</li><li>Single sign-on, audit export</li><li>Support agreement</li></ul>
       </article></div>
-      <div class="pr-credits pr-try" data-tier="trial"><span aria-hidden="true">🎟️</span><p><b>Try before you pay</b> When hosted plans open, every tribe can try Team free for 14 days, no card needed. Running a game jam? A <b>Jam Pass</b> gives your team Team features for one weekend.</p><a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode" rel="noopener">Watch on GitHub</a></div>
-      <div class="pr-credits" data-tier="credits"><span aria-hidden="true">⚡</span><p><b>AI credits</b> Top up when your tribe uses more: $10, $25 or $50. Bring your own key is always free.</p><button class="btn btn--dark pr-btn" type="button" disabled>Coming soon</button></div>
+      <div class="pr-credits pr-hire" data-tier="hire"><span aria-hidden="true">🛠️</span><p><b>Need a hand right now?</b> Book the maker of TribeCode to jump into your tribe: get unstuck, set up hosting and your AI, or build a feature together. This is the start of <b>Triber</b>, coders for hire inside your tribe.</p><a class="btn btn--light pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=hire.yml" rel="noopener">Ask for help</a></div>
+      <div class="pr-credits pr-try" data-tier="trial"><span aria-hidden="true">🎟️</span><p><b>Try before you pay</b> When hosted plans open, every tribe can try Tribe free for 14 days, no card needed. Running a game jam? A <b>Jam Pass</b> gives your team Tribe features for one weekend.</p><a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a></div>
+      <div class="pr-credits" data-tier="credits"><span aria-hidden="true">⚡</span><p><b>AI credits, in plain cents</b> 1 credit is $0.01 of AI. Top up $10, $25 or $50, shared by the tribe, good for 12 months, with a spending cap. Bringing your own key is always free.</p><span class="pr-soon">Planned</span></div>
+      <p class="pr-fine">Prices are what we plan to charge when hosted plans open. They may change before launch; if they do, people on the waitlist hear first, and the first 100 tribes keep their launch price for a year.</p>
     </div>
   </section>
   <!-- Reviews: only real ones, from site/reviews.json (docs/REVIEWS.md). Empty until people leave them. -->
@@ -180,6 +195,6 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.17.18" defer></script>
+<script src="main.js?v=0.17.20" defer></script>
 </body>
 </html>

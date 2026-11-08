@@ -553,7 +553,7 @@
       docs: ['Docs', 'docs.html'],
     };
     const QA = [
-      { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes, it’s free and open source (MIT). You bring your own AI. Paid plans for extras are planned, but prices aren’t final and nothing is for sale yet.', act: 'pricing' },
+      { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes. Everything in TribeCode is free and open source (MIT), and what’s free today stays free. You bring your own AI. Hosting and AI-included plans are planned (from $6 a month per tribe) but not for sale yet.', act: 'pricing' },
       { k: 'ai', re: /\bai\b|which|model|claude|codex|gemini|cursor|llm|agent|ollama|gpt/, a: 'Most coding agents work: Claude Code, Codex, Gemini CLI, Cursor and more. Each friend connects their own, so nobody pays for anyone else.', act: 'docs' },
       { k: 'join', re: /join|friend|invite|link|share|phone|mobile/, a: 'The host sends a link. A friend taps it, types a name and they’re in, from a phone or a laptop. On a phone they can add it to the Home Screen. No app store.', act: 'app' },
       { k: 'demo', re: /demo|show|see|try|example|look/, a: 'The demo tribe plays by itself in your browser with made-up friends and agents. Nothing is sent anywhere.', act: 'demo' },

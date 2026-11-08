@@ -983,3 +983,13 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .rv-cta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 18px 0 0; } .rv-cta span { color: var(--faint); font-size: 13px; }
 .hero__reviews { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); } .hero__reviews a { color: #F2A65A; }
 .hero__reviews[hidden] { display: none; }
+
+/* pricing: promises, plan status, help-now */
+.pr-promises { list-style: none; margin: 18px auto 22px; padding: 16px 20px; max-width: 860px; display: grid; gap: 8px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); text-align: left; }
+.pr-promises li { position: relative; padding-left: 24px; color: var(--muted); font-size: 14.5px; line-height: 1.5; }
+.pr-promises li::before { content: "✓"; position: absolute; left: 0; color: #3BD16F; font-weight: 700; }
+.pr-promises b { color: var(--text); }
+.pr-now, .pr-soon { font: 600 11px/1 var(--mono, monospace); padding: 5px 8px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
+.pr-now { color: #3BD16F; border-color: #2D5A3D; } .pr-soon { color: var(--faint); border-color: var(--edge-pop); }
+.pr-hire { margin-top: 22px; border-color: #5A3A26; }
+.pr-fine { max-width: 760px; margin: 16px auto 0; color: var(--faint); font-size: 13px; line-height: 1.5; text-align: center; }

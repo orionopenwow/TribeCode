@@ -173,20 +173,22 @@ def main():
             assert "Share the network." in host and "GitHub repo" in host and "pass the job" in host, host
             assert all(c in host for c in ["Zero npm dependencies", "Plain files + git", "MIT licensed"])
             assert "one link" in host
-            # pricing lives on its own page (pricing.html), not the front page: Individual / Teams tabs, paid buttons say Coming soon
+            # pricing lives on its own page (pricing.html): promises, Tribes / Schools & studios tabs, Free is available now, paid plans are planned with a waitlist
             assert pg.locator("#pricing, .tier").count() == 0 and pg.locator(".nav__links a[href='pricing.html']").count() == 1
             pp = pg.context.new_page(); pp.goto(BASE + "pricing.html"); pp.wait_for_load_state("load")
-            assert "Prices aren't final. TribeCode stays free and open source." in pp.inner_text(".pr-hero")
-            names = pp.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-name')].map(e => e.textContent.trim().split(' ').pop())")
-            assert names == ["Free", "Personal", "Team", "Pro"], names
-            assert "Most popular" in pp.inner_text("[data-tier=team]")
-            for t, price in [("free", "$0"), ("personal", "$8"), ("team", "$30"), ("pro", "$100")]:
+            assert "free today" in pp.inner_text(".pr-hero") and pp.locator(".pr-promises li").count() == 5
+            names = pp.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-name')].map(e => e.textContent.trim())")
+            assert names == ["Free", "Campfire", "Tribe", "Tribe Pro"], names
+            for t, price in [("free", "$0"), ("campfire", "$6"), ("tribe", "$24"), ("pro", "$79")]:
                 assert price in pp.inner_text(f"[data-tier={t}]"), t
-            assert pp.evaluate("[...document.querySelectorAll('.pr-page button.pr-btn')].every(b => b.disabled && /coming soon/i.test(b.textContent))")
+            assert "Available now" in pp.inner_text("[data-tier=free]") and all("Planned" in pp.inner_text(f"[data-tier={t}]") for t in ("campfire", "tribe", "pro"))
+            assert "Most popular" not in pp.inner_text(".pr-page"), "no popularity claims before anyone has bought"
+            assert pp.evaluate("[...document.querySelectorAll('[data-tier=campfire] a.pr-btn, [data-tier=tribe] a.pr-btn, [data-tier=pro] a.pr-btn')].every(a => a.href.includes('template=waitlist.yml'))")
             assert pp.locator("[data-tier=free] a.pr-btn").inner_text().strip() == "Download"
+            assert "template=hire.yml" in pp.get_attribute("[data-tier=hire] a", "href")
             assert pp.locator("[data-panel=teams]").is_hidden(); pp.click(".pr-tab[data-tab=teams]")
-            assert pp.locator("[data-panel=teams]").is_visible() and "$25" in pp.inner_text("[data-tier=business]")
-            assert "$10" in pp.inner_text("[data-tier=credits]") and "own key" in pp.inner_text("[data-tier=credits]")
+            assert pp.locator("[data-panel=teams]").is_visible() and "$12" in pp.inner_text("[data-tier=studio]") and "Free" in pp.inner_text("[data-tier=school]")
+            assert "$10" in pp.inner_text("[data-tier=credits]") and "own key" in pp.inner_text("[data-tier=credits]") and "$0.01" in pp.inner_text("[data-tier=credits]")
             assert "Anthropic" not in pp.inner_text("body"); pp.close()
             # mission: its own page from the top menu, styled like the rest of the site
             assert pg.locator(".nav__links a[href='mission.html']").count() == 1
