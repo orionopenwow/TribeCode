@@ -767,7 +767,13 @@
       const left = frag(A.b, contentStart(A.b), pointIn(A.b, Math.max(A.lo, head.length)));
       const right = frag(Z.b, pointIn(Z.b, Math.max(Z.lo, headMd(Z.b).length)), [Z.b, Z.b.childNodes.length]);
       const lines = text.split('\n');
-      if (!left && lines.length > 1 && parseLine(lines[0]).k !== 'p') head = '';   // pasting blocks onto an empty line: their own style wins
+      if (lines.length > 1) {
+        const d = parseLine(lines[0]);
+        if (d.k !== 'p' && d.k !== 'hr') {
+          if (!left && !right) head = '';                                   // pasting blocks onto an empty line: their own style wins
+          else lines[0] = lines[0].slice(lines[0].length - d.c.length);     // merging into a line: it keeps its own style
+        }
+      }
       const first = head + left + lines[0];
       const all = lines.length === 1 ? first + right : [first, ...lines.slice(1, -1), lines[lines.length - 1] + right].join('\n');
       this.replaceBlocks(A.b, Z.b, all, sA + all.length - right.length);
