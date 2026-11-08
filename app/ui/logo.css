@@ -13,8 +13,8 @@
 
 /* the flame now sits in the top bar, next to the pixel wordmark; it always idles (a gentle flicker) */
 .tb-brand { display: inline-flex; align-items: center; gap: 2px; margin: 0 12px 0 0; flex: none; -webkit-app-region: no-drag; }
-.titlebar #rail-logo { display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; position: relative; }
-.titlebar #rail-logo img.logo { width: 42px; height: 42px; image-rendering: pixelated; transition: transform .18s var(--ease, ease); }
+.titlebar #rail-logo { display: grid; place-items: center; width: 54px; height: 54px; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; position: relative; }
+.titlebar #rail-logo img.logo { width: 50px; height: 50px; image-rendering: pixelated; transition: transform .18s var(--ease, ease); }
 .titlebar #rail-logo:hover img.logo { transform: scale(1.08); }
 .titlebar #rail-logo.is-busy::after { content: ''; position: absolute; right: 4px; bottom: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--live, #38C6B1); }
 .tb-wm { display: inline-flex; align-items: center; height: 52px; padding: 0 4px; border: 0; background: none; cursor: pointer; }
