@@ -277,17 +277,19 @@
   addEventListener('resize', () => { if (pane) { const want = isPhone() ? 'fill' : device; if (pane.dataset.device !== want) render(); else layout(); } });
 
   // ---------- entry points ----------
+  // "Preview game" / "Preview site" / …: follows what the project is (server/sense.js via widgets.js, app/ui/sense.js)
+  const label = () => { const l = window.TribeSense && window.TribeSense.previewLabel ? window.TribeSense.previewLabel() : ''; return l && l !== 'Preview' ? l : 'Preview app'; };
   // Ctrl K
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => [
-    { kind: 'Action', label: 'Preview app', keys: 'preview run see live app browser game play view', run: open },
-    { kind: 'Action', label: 'Preview app in a new tab', keys: 'preview open browser tab window live app', run: openTab },
+    { kind: 'Action', label: label(), keys: 'preview run see live app browser game site play view', run: open },
+    { kind: 'Action', label: `${label()} in a new tab`, keys: 'preview open browser tab window live app', run: openTab },
   ]);
   // The pinned repo hero (desktop Docs, phone Docs hub): a "Preview app" button on its band.
   if (window.TribeRepoHero && window.TribeRepoHero.onRender) window.TribeRepoHero.onRender((el, o) => {
     if (o && o.empty) return;
     const band = el.querySelector('.rhx-band'); if (!band || band.querySelector('.rhx-pv')) return;
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'rhx-pv'; b.innerHTML = `${ico(I.play)}<span>Preview app</span>`;
+    b.type = 'button'; b.className = 'rhx-pv'; b.innerHTML = `${ico(I.play)}<span>${esc(label())}</span>`;
     b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); open(); });
     b.addEventListener('keydown', e => e.stopPropagation());
     band.appendChild(b);

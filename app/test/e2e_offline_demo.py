@@ -133,6 +133,10 @@ def flow(page, tag, phone, tmp):
     page.wait_for_function("TribeClient.api('/scratch').then(r => r.notes.length >= 1)", timeout=5000)
     page.wait_for_function("TribeClient.api('/uploads').then(r => r.mine.length === 1)", timeout=5000)
     page.wait_for_function("TribeClient.api('/chat/general').then(r => r.messages.some(m => m.text.includes('hello tribe')))", timeout=5000)
+    # project sense (app/ui/sense.js): the Dashboard's Inspiration card works offline too (offline.js mock)
+    page.evaluate("TribeApp.show('home')")
+    page.wait_for_selector("#pj-insp .sx-item", timeout=8000)
+    assert "game" in page.inner_text("#pj-insp h3").lower(), page.inner_text("#pj-insp h3")
     page.wait_for_selector("#demo-pill", state="visible")
 
 def leave_and_reset(page, tag):
