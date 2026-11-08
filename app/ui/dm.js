@@ -38,7 +38,7 @@
     const h = head(); if (!h) return;
     if (view === 'general') {
       const n = totalUnread();
-      h.innerHTML = `<button class="chan-switch" id="chan-switch" aria-haspopup="menu" title="Direct messages">Chat · #general${CHEV}${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`;
+      h.innerHTML = `<button class="chan-switch" id="chan-switch" aria-haspopup="menu" title="Switch conversation"><span class="cs-hash">#</span>general${CHEV}${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`;
       h.querySelector('#chan-switch').onclick = e => { e.stopPropagation(); switcher(h.querySelector('#chan-switch')); };
       return;
     }
