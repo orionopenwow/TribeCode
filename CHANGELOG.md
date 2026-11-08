@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.15.0
+
+- **Whiteboard**: a shared, persistent board per project, added from + Add. Draw, add shapes, text and sticky notes, paste pictures, and see everyone's changes and cursors live. Undo is your own; spectators can look; mods can clear. Export PNG or SVG, or send it to Files. Agents can read the board and add sticky notes, and Flint opens it
+- **A guided 3-minute tour**: the demo tribe now plays a tour of the real app. Named cursors click real buttons and type into real boxes across 15 chapters: setup, vision, files, chat, the Task Board, the Agents Hub, Flint, a game playing in the Preview, a doc written live, the website builder, a vote that ships a milestone, + Add, and approving from your phone. A chapter bar has Pause, Skip, 2×, Try it yourself and Leave
+- **Pixel-art illustrations**: the campfire scenes and the app's pictures are redrawn in the logo's pixel style, with a gently flickering fire, rising embers, twinkling stars and a blinking robot. They stay still with reduced motion
+- **Room panel**: Helpers show once a project has started; small text in the panel is now at least 13px
+- **Phones**: a 90-second tour with touch dots; the whiteboard draws with one finger and zooms with two
+
 ## v0.14.0
 
 - **Chat channels**: the "# general" menu creates and switches channels (emoji, topic, archive), with DMs below. The header is compact with an emoji, the hover highlight spans the whole line, and there's a 📌 Pinned panel

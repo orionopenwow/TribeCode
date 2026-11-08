@@ -350,11 +350,11 @@
   }
 
   // ---------- the clock ----------
-  let timer = null;
+  let timer = null, held = false;   // held: feat/demo-tour's director plays its own script meanwhile
   const on = () => !!(O() && O().mode && O().mode() === 'showcase');
   function schedule(first) {
     clearTimeout(timer); timer = null;
-    if (!on() || sc().paused || document.hidden || !(C() && C().connected())) return;
+    if (!on() || held || sc().paused || document.hidden || !(C() && C().connected())) return;
     const wait = first ? 1500 : 3500 + Math.random() * 3500;
     timer = setTimeout(tick, wait / (sc().speed || 1));
   }
@@ -438,6 +438,7 @@
         <button class="btn sm" id="sc-restart">Restart</button>
       </div>
       <div class="od-acts">
+        ${window.TribeDirector ? '<button id="sc-tour"><svg class="i"><use href="#i-play"/></svg><span>Play the 3-minute tour</span></button>' : ''}<!-- feat/demo-tour -->
         <button id="sc-quiet"><svg class="i"><use href="#i-zap"/></svg><span>Explore quietly</span></button>
         <button id="od-real" data-od="real"><svg class="i"><use href="#i-play"/></svg><span>Host this for real</span></button>
         <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave showcase</span></button>
@@ -445,6 +446,7 @@
     pop.querySelector('#sc-play').onclick = () => (sc().paused ? play() : pause());
     pop.querySelectorAll('[data-sc-speed]').forEach(b => b.onclick = () => speed(Number(b.dataset.scSpeed)));
     pop.querySelector('#sc-restart').onclick = () => O().reset();
+    const tour = pop.querySelector('#sc-tour'); if (tour) tour.onclick = () => { K().closePop(); window.TribeDirector.start(); };   // feat/demo-tour
     pop.querySelector('#sc-quiet').onclick = () => { clearTimeout(timer); popOpts.quiet(); };
     pop.querySelector('#od-leave').onclick = () => { clearTimeout(timer); popOpts.leave(); };
   }
@@ -459,6 +461,9 @@
 
   window.TribeShowcase = {  // API
     seed, pop, on, pause, play, speed,
+    // feat/demo-tour: director.js holds the clock while it plays its own script, and uses the same beats
+    hold(v) { held = !!v; if (held) clearTimeout(timer); else schedule(true); },
+    _dir: { say, where, claim, gist, commit, review, approve, finish, friendFinish, voteOn, release, journal, milestone, progress, task, tasks, celebrate, paintMile, PID, TAV },
     _test: {
       beat(n = 1) { for (let i = 0; i < n; i++) beat(); paintState(); },
       finish() { const s0 = sc().season; let guard = 200; while (sc().season === s0 && guard--) beat(); paintState(); },   // jump to the end of this season (release + celebration)
@@ -469,8 +474,10 @@
   // ?demo=showcase: set the demo up before tribe.js loads, then drop the parameter so a reload keeps going.
   const params = new URLSearchParams(location.search);
   if (params.get('demo') === 'showcase' && O()) {
-    O().boot('showcase');
-    params.delete('demo');
+    // feat/demo-tour: the guided 3-minute tour plays unless ?tour=off; it starts from a fresh tribe so every run is the same
+    const tour = params.get('tour') || 'on'; window.__tribeTour = tour === 'off' ? null : tour;
+    O().boot('showcase', !!window.__tribeTour);
+    params.delete('demo'); params.delete('tour');
     try { history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash); } catch {}
     try { sessionStorage.setItem('tribecode.view', 'home'); } catch {}
     window.__tribeRestoredView = true;   // app.js: open the project home, not the Global Hub

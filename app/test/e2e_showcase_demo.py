@@ -84,6 +84,16 @@ def started(page, tag):
     page.wait_for_selector("#demo-pill.sc", state="attached", timeout=5000)
 
 
+def landed(page, tag):
+    """The website and demo.html links land in the showcase, and its guided tour starts (director.js)."""
+    ready(page)
+    assert "demo=" not in page.evaluate("location.search"), f"{tag}: the parameter is dropped"
+    assert page.evaluate("TribeClient.state().tribe.name") == "Campfire Crew", tag
+    page.wait_for_function("window.TribeDirector && TribeDirector._test.state().running", timeout=10000)
+    page.evaluate("TribeDirector.stop()")
+    time.sleep(1)   # let the first chapter's requests land before the caller leaves (else they go to this static server)
+
+
 def lively(page, tag):
     """At 2x: within ~20 s, 3+ chat messages, a task changing column, a gist and the milestone advancing."""
     before = page.evaluate(SNAP)
@@ -113,7 +123,7 @@ def main():
             # ---- desktop: zero clicks from the URL ----
             ctx = b.new_context(viewport={"width": 1440, "height": 900}); ctx.add_init_script(seed); seen = []; route_external(ctx, "ok", seen)
             pg = ctx.new_page(); watch(pg, "desktop", errors)
-            pg.goto(APP + "?demo=showcase")
+            pg.goto(APP + "?demo=showcase&tour=off")   # the guided tour (director.js) is e2e_demo_tour.py
             started(pg, "desktop")
             assert pg.locator("#intro").count() == 0, "no intro"
             assert "Showcase" in pg.text_content("#demo-pill")
@@ -188,11 +198,11 @@ def main():
             link = pg.locator(".hero a:has-text('Watch a demo tribe')")
             assert link.get_attribute("href") == "app/?demo=showcase"
             for sel in ["footer a:has-text('Demo tribe')"]: assert pg.locator(sel).get_attribute("href") == "app/?demo=showcase", sel
-            link.click(); pg.wait_for_url("**/app/**", timeout=10000); started(pg, "site link")
+            link.click(); pg.wait_for_url("**/app/**", timeout=10000); landed(pg, "site link")
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             # demo.html: "Host a demo tribe"
             pg.goto(APP + "demo.html"); pg.wait_for_selector("#host-demo", state="visible")
-            pg.click("#host-demo"); started(pg, "demo.html card")
+            pg.click("#host-demo"); landed(pg, "demo.html card")
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             assert settings(pg)["server"] == REAL["server"]
             ctx.close()
@@ -200,7 +210,7 @@ def main():
             # ---- phone 390 ----
             ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2); ctx.add_init_script(seed); route_external(ctx, "ok", [])
             ph = ctx.new_page(); watch(ph, "phone", errors)
-            ph.goto(APP + "?demo=showcase"); started(ph, "phone")
+            ph.goto(APP + "?demo=showcase&tour=off"); started(ph, "phone")
             sideways(ph, "phone home")
             ph.evaluate("TribeShowcase.speed(2)")
             if shots: ph.wait_for_selector("#sc-mile", timeout=8000); time.sleep(0.5); ph.screenshot(path=str(SHOTS / "showcase-demo-phone.png"))

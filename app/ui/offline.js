@@ -179,6 +179,19 @@
     if (m.type === 'doc-flush') return persist();
     if (m.type === 'doc-leave') { persist(); sessions.delete(slug); }
   }
+  // feat/demo-tour: a pretend friend edits a live doc (director.js): the new text goes out as an op from their peer, with
+  // their caret, so coedit.js draws them like a real co-editor. all: everyone editing besides you [{ peer, id, name, color }].
+  function peerEdit(slug, who, text, pos, all) {
+    const OT = window.TribeOT, s = sessions.get(slug), d = (db.docs[cur()] || []).find(x => x.slug === slug); if (!d) return false;
+    const peers = [{ peer: 'me~1', id: 'me', name: me().name, color: me().color }, ...(all || [who]).map(({ peer, id, name, color }) => ({ peer, id, name, color }))];
+    if (!s || !OT) { d.body = text; save(); return false; }
+    const op = OT.diff(s.text, text);
+    if (op && !OT.isNoop(op)) { s.text = text; s.rev++; d.body = text; save(); push({ type: 'doc-op', slug, op, peer: who.peer, by: who.id }); }
+    push({ type: 'doc-peers', slug, peers });
+    if (pos != null) push({ type: 'doc-cursor', slug, peer: who.peer, id: who.id, name: who.name, color: who.color, pos, sel: pos });
+    return true;
+  }
+  const liveText = slug => { const s = sessions.get(slug); return s ? s.text : null; };
 
   // ---------- the pretend people ----------
   const later = (ms, fn) => setTimeout(() => { if (active()) { try { fn(); } catch (e) { console.warn('offline demo:', e); } } }, ms);
@@ -228,7 +241,7 @@
     const last = (ms || []).map(m => String(m.version).replace(/^v/, '').split('.').map(Number)).sort((a, b) => b[0] - a[0] || b[1] - a[1])[0] || [0, 0];
     return `v${last[0]}.${(last[1] || 0) + 1}`;
   }
-  const hooks = { approved: [], decided: [] };
+  const hooks = { approved: [], decided: [], route: [] };   // route: feat/demo-tour (director.js answers a few showcase-only paths first)
   function vote(pid, pr, who, v) {
     if (pr.status !== 'open') return pr;
     (pr.votes = pr.votes || {})[who] = v; save();
@@ -366,6 +379,7 @@
   }
   async function route(method, path, q, body, headers) {
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = parts;
+    for (const h of hooks.route) { const r = h(method, parts, q, body, headers); if (r) return r; }   // feat/demo-tour
     const pid = (headers['x-project'] && proj(headers['x-project'])) ? headers['x-project'] : cur();
     const GET = method === 'GET', POST = method === 'POST', PUT = method === 'PUT', PATCH = method === 'PATCH', DEL = method === 'DELETE';
     switch (a) {
@@ -452,7 +466,7 @@
           push({ type: 'doc', doc: { slug: d.slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); return ok({ doc: { ...d, summary: '' } });
         }
         if (!c && DEL) { db.docs[pid] = list.filter(x => x !== d); sessions.delete(b); save(); push({ type: 'doc-removed', slug: b }); return ok({ ok: true }); }
-        if (c === 'comments' && GET) return ok({ comments: [] });
+        if (c === 'comments' && GET) return ok({ comments: [], threads: [] });   // docsx.js reads threads
         if (c === 'backlinks' && GET) return ok({ backlinks: [] });
         if (c === 'history' && GET && !parts[3]) return ok({ history: [] });
         if (c === 'meta' && (PUT || POST || PATCH)) { if (body.pinned !== undefined) d.pinned = !!body.pinned; save(); return ok({ meta: { pinned: !!d.pinned } }); }
@@ -640,8 +654,8 @@
     enterUi();
   }
   // Before tribe.js has loaded (showcase.js handles ?demo=showcase): set the demo up so the app boots straight into it.
-  function boot(mode) {
-    if (active() && (db?.mode || 'quiet') === mode) return;
+  function boot(mode, fresh) {   // fresh: feat/demo-tour starts the tour from a new tribe
+    if (!fresh && active() && (db?.mode || 'quiet') === mode) return;
     if (!ls.get(BKEY)) ls.set(BKEY, backup());
     db = seed(mode); save(); blobClear();
     S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
@@ -772,7 +786,7 @@
     state: () => db,
     mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use
-    _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, closePop: () => closePop(), placePop: () => pop && placePop() },
+    _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },
     // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".
     label: () => (active() ? 'Leave the offline demo' : 'Try a demo tribe (offline)'),
     toggle: () => (active() ? leave() : start()),

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lantern Run</title>
+<!-- The showcase's pretend "app the tribe is building" (feat/demo-tour): a tiny night platformer in the spirit of
+     templates/starter-game. The offline demo's Preview pane runs it in its sandboxed iframe. Play it with ← → and
+     Space (or the on-screen buttons); the demo tour drives it with postMessage({ tour: 'keys', left, right, jump }).
+     It tells its parent { tour: 'game', lit, total, x } as lanterns light up. Flat shapes only: no gradients, no glow. -->
+<style>
+  html, body { margin: 0; height: 100%; background: #12151A; overflow: hidden; touch-action: none; font: 600 14px/1.2 Inter, system-ui, sans-serif; color: #E8EAED; }
+  canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .hud { position: fixed; left: 14px; top: 12px; display: flex; gap: 10px; align-items: center; pointer-events: none; }
+  .hud b { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .08em; color: #9AA4B2; text-transform: uppercase; }
+  .hud span { background: #1B2028; border: 1px solid #2A313C; border-radius: 8px; padding: 4px 9px; }
+  .pad { position: fixed; bottom: 14px; display: none; gap: 10px; }
+  .pad.l { left: 14px; } .pad.r { right: 14px; }
+  .pad button { width: 58px; height: 58px; border-radius: 14px; border: 1px solid #2A313C; background: #1B2028; color: #E8EAED; font-size: 22px; }
+  .pad button.on { background: #2A313C; }
+  @media (pointer: coarse) { .pad { display: flex; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><b>Lantern Run</b><span id="lit">0 / 6 lanterns</span></div>
+<div class="pad l"><button data-k="left" aria-label="Left">←</button><button data-k="right" aria-label="Right">→</button></div>
+<div class="pad r"><button data-k="jump" aria-label="Jump">⤒</button></div>
+<script>
+(function () {
+  'use strict';
+  const cv = document.getElementById('c'), g = cv.getContext('2d');
+  const T = 16, ROWS = 14;                       // the world is 14 tiles tall; it scales to the window
+  let W = 0, H = 0, S = 1;
+  function size() { W = cv.width = Math.round(innerWidth * devicePixelRatio); H = cv.height = Math.round(innerHeight * devicePixelRatio); S = H / (ROWS * T); }
+  addEventListener('resize', size); size();
+  // platforms [x, y, w] in tiles (y from the top), lanterns [x, y]
+  const PLAT = [[0, 12, 14], [16, 10, 5], [23, 8, 4], [29, 11, 7], [38, 9, 4], [44, 7, 4], [50, 10, 10], [62, 8, 5], [69, 11, 12]];
+  const LAN = [[6, 11], [18, 9], [25, 7], [33, 10], [46, 6], [56, 9]];
+  const END = 80 * T;
+  const keys = { left: false, right: false, jump: false };
+  let p, lit, camX, t = 0, jumpHeld = false, coyote = 0;
+  function reset() { p = { x: 2 * T, y: 9 * T, vx: 0, vy: 0, on: false, squash: 0 }; lit = new Set(); camX = 0; hud(); }
+  function hud() { document.getElementById('lit').textContent = `${lit.size} / ${LAN.length} lanterns`; }
+  reset();
+  const solid = (x, y) => PLAT.some(([px, py, pw]) => x >= px * T && x < (px + pw) * T && y >= py * T && y < py * T + T);
+  function step(dt) {
+    t += dt;
+    const acc = 900, max = 150;
+    if (keys.left) p.vx = Math.max(-max, p.vx - acc * dt); else if (keys.right) p.vx = Math.min(max, p.vx + acc * dt); else p.vx *= Math.pow(0.0005, dt);
+    coyote = p.on ? 0.1 : Math.max(0, coyote - dt);
+    if (keys.jump && !jumpHeld && coyote > 0) { p.vy = -330; coyote = 0; p.on = false; }
+    jumpHeld = keys.jump;
+    if (!keys.jump && p.vy < -120) p.vy = -120;     // short hop when you let go early
+    p.vy = Math.min(520, p.vy + 900 * dt);
+    p.x += p.vx * dt;
+    const ny = p.y + p.vy * dt, wasOn = p.on;
+    p.on = false;
+    if (p.vy >= 0 && (solid(p.x - 4, ny + 6) || solid(p.x + 4, ny + 6))) { p.y = Math.floor((ny + 6) / T) * T - 6; p.vy = 0; p.on = true; if (!wasOn) p.squash = 1; }
+    else p.y = ny;
+    p.squash = Math.max(0, p.squash - dt * 5);
+    LAN.forEach(([lx, ly], i) => { if (!lit.has(i) && Math.abs(p.x - (lx * T + 8)) < 14 && Math.abs(p.y - (ly * T)) < 22) { lit.add(i); hud(); tell(); } });
+    if (p.y > ROWS * T + 40 || p.x > END) reset();
+    if (p.x < 6) { p.x = 6; p.vx = 0; }
+    const view = W / S;
+    camX += ((p.x - view * 0.35) - camX) * Math.min(1, dt * 4); camX = Math.max(0, camX);
+  }
+  function tell() { try { parent.postMessage({ tour: 'game', lit: lit.size, total: LAN.length, x: Math.round(p.x / T) }, '*'); } catch {} }
+  function rect(x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round((x - camX) * S), Math.round(y * S), Math.ceil(w * S), Math.ceil(h * S)); }
+  function draw() {
+    g.fillStyle = '#12151A'; g.fillRect(0, 0, W, H);
+    // stars and two flat hill layers (parallax)
+    for (let i = 0; i < 40; i++) { const sx = ((i * 97) % 400) * 3 - camX * 0.1 % 1200, sy = (i * 53) % 90; g.fillStyle = i % 5 ? '#2A313C' : '#9AA4B2'; g.fillRect(Math.round(((sx % (W / S)) + W / S) % (W / S) * S), Math.round(sy * S), Math.ceil(S), Math.ceil(S)); }
+    g.fillStyle = '#1B2028';
+    for (let i = -1; i < 12; i++) { const hx = i * 140 - (camX * 0.3) % 140; g.beginPath(); g.moveTo(hx * S, 150 * S); g.lineTo((hx + 70) * S, 110 * S); g.lineTo((hx + 140) * S, 150 * S); g.lineTo((hx + 140) * S, H); g.lineTo(hx * S, H); g.fill(); }
+    // platforms
+    PLAT.forEach(([px, py, pw]) => { rect(px * T, py * T, pw * T, T * (ROWS - py), '#1E242D'); rect(px * T, py * T, pw * T, 3, '#38C6B1'); });
+    // lanterns: dark outline unlit; warm fill and a 1px halo ring when lit
+    LAN.forEach(([lx, ly], i) => {
+      const x = lx * T + 4, y = ly * T - 14, on = lit.has(i);
+      rect(x + 3, y - 4, 2, 4, '#9AA4B2');
+      rect(x, y, 8, 12, on ? '#F26B1D' : '#2A313C'); rect(x + 2, y + 2, 4, 8, on ? '#FABD2F' : '#12151A');
+      if (on) { const r = 13 + Math.sin(t * 3 + i) * 1.5; g.strokeStyle = '#F26B1D'; g.lineWidth = Math.max(1, S * 0.6); g.beginPath(); g.arc((x + 4 - camX) * S, (y + 6) * S, r * S, 0, Math.PI * 2); g.stroke(); }
+    });
+    // Wick: a small flame with two dot eyes; squash on landing
+    const sq = p.squash * 0.35, w = 12 * (1 + sq), h = 14 * (1 - sq), fx = p.x - w / 2, fy = p.y + 6 - h;
+    const flick = Math.sin(t * 18) * 1.2;
+    g.fillStyle = '#F26B1D'; g.beginPath();
+    g.moveTo((fx - camX) * S, (fy + h) * S); g.lineTo((fx + w - camX) * S, (fy + h) * S);
+    g.lineTo((fx + w - camX) * S, (fy + h * 0.45) * S); g.lineTo((fx + w / 2 + flick - camX) * S, (fy - 4) * S); g.lineTo((fx - camX) * S, (fy + h * 0.45) * S); g.closePath(); g.fill();
+    rect(fx + 3, fy + h * 0.45 + 2, w - 6, h * 0.55 - 2, '#FABD2F');
+    const look = p.vx > 10 ? 1.5 : p.vx < -10 ? -1.5 : 0;
+    rect(p.x - 3 + look, fy + h * 0.5, 2, 2, '#12151A'); rect(p.x + 1.5 + look, fy + h * 0.5, 2, 2, '#12151A');
+  }
+  let last = performance.now();
+  function frame(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); draw(); requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+  // keyboard
+  const map = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right', ' ': 'jump', ArrowUp: 'jump', w: 'jump', W: 'jump' };
+  addEventListener('keydown', e => { const k = map[e.key]; if (k) { keys[k] = true; e.preventDefault(); } });
+  addEventListener('keyup', e => { const k = map[e.key]; if (k) keys[k] = false; });
+  // touch buttons
+  document.querySelectorAll('[data-k]').forEach(b => {
+    const k = b.dataset.k, set = v => { keys[k] = v; b.classList.toggle('on', v); };
+    b.addEventListener('pointerdown', e => { e.preventDefault(); set(true); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => b.addEventListener(ev, () => set(false)));
+  });
+  // the demo tour's scripted input
+  addEventListener('message', e => {
+    const m = e.data; if (!m || m.tour !== 'keys') return;
+    for (const k of ['left', 'right', 'jump']) if (typeof m[k] === 'boolean') keys[k] = m[k];
+    if (m.reset) reset();
+  });
+  tell();
+})();
+</script>
+</body>
+</html>
