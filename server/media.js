@@ -22,7 +22,7 @@ const STEP = 10 * 60_000;         // expiries land on 10-minute steps, so links 
 const MAX_AHEAD = 2 * TTL;        // never accept an expiry further out than this (clock games)
 const MT_RE = /^mt1\.([A-Za-z0-9_-]{1,64})\.([0-9a-z]{1,12})\.([0-9a-f]{12})\.([A-Za-z0-9_-]{32,64})$/;
 // The routes a media link may open (read-only bytes). Anything else needs the real sign-in key.
-const MEDIA_PATH = /^\/api\/(chat\/[^/]+\/media\/[^/]+|profile\/media\/[^/]+|uploads\/[^/]+\/raw|visuals\/[^/]+\/[^/]+\.png|bugs\/[^/]+\/files\/[^/]+|embeds\/img|channels\/[^/]+\/bg\/[^/]+|files\/raw\/.+|flow\/plan|thumb\/file|captures\/[^?]+)$/;
+const MEDIA_PATH = /^\/api\/(chat\/[^/]+\/media\/[^/]+|profile\/media\/[^/]+|uploads\/[^/]+\/raw|visuals\/[^/]+\/[^/]+\.png|bugs\/[^/]+\/files\/[^/]+|embeds\/img|channels\/[^/]+\/bg\/[^/]+|files\/raw\/.+|flow\/plan|thumb\/file|captures\/[^/]+\/(thumb|audio))$/;
 
 module.exports = function makeMedia({ dir, getMembers, deviceTokens = () => [], now = () => Date.now() }) {
   const file = path.join(dir, '.tribe', 'media-secret');

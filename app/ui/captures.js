@@ -17,8 +17,10 @@
   const pad = n => String(n).padStart(2, '0');
   const mmss = t => (t === null || t === undefined || !isFinite(t) ? '' : (t >= 3600 ? Math.floor(t / 3600) + ':' : '') + pad(Math.floor(t / 60) % 60) + ':' + pad(Math.floor(t % 60)));
   const ago = iso => { if (!iso) return ''; const s = (Date.now() - Date.parse(iso)) / 1000; return s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
-  const thumbUrl = cid => `${C.base()}/api/captures/${encodeURIComponent(cid)}/thumb?token=${encodeURIComponent(token())}${pid() ? '&project=' + encodeURIComponent(pid()) : ''}`;
-  const audioUrl = cid => `${C.base()}/api/captures/${encodeURIComponent(cid)}/audio?token=${encodeURIComponent(token())}${pid() ? '&project=' + encodeURIComponent(pid()) : ''}`;
+  // fix/security-2: signed, short-lived media links (app/ui/media.js), not the sign-in key
+  const signed = u => (window.TribeMedia ? window.TribeMedia.url(u) : u);
+  const thumbUrl = cid => signed(`${C.base()}/api/captures/${encodeURIComponent(cid)}/thumb${pid() ? '?project=' + encodeURIComponent(pid()) : ''}`);
+  const audioUrl = cid => signed(`${C.base()}/api/captures/${encodeURIComponent(cid)}/audio${pid() ? '?project=' + encodeURIComponent(pid()) : ''}`);
   const KIND = { article: '📄', page: '📄', video: '🎬', short: '🎬', post: '💬', image: '🖼️', voice: '🎙️' };
   const dateOf = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s)); const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s); return isNaN(d) ? String(s).slice(0, 20) : d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); };
   const safeHref = u => { try { const x = new URL(u); return x.protocol === 'http:' || x.protocol === 'https:' ? x.href : ''; } catch { return ''; } };
