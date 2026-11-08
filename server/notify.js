@@ -19,7 +19,7 @@ const NTFY_TAGS = { approval: 'raising_hand', mention: 'speech_balloon', dm: 'en
 function defaultPrefs() {
   return {
     types: { approval: true, mention: true, dm: true, 'task-assigned': true, reminder: true, proposal: true, 'bug-critical': true, release: false, huddle: false, 'meeting-notes': false, repo: false, 'comment-reply': true, 'visual-diff': false },
-    channels: { ntfy: true, webpush: true, desktop: true },
+    channels: { ntfy: false, webpush: true, desktop: true },   // fix/security-review: ntfy (a third-party server, ntfy.sh by default) is opt-in
     ntfy: { server: 'https://ntfy.sh', topic: 'tribe-' + crypto.randomBytes(12).toString('base64url').replace(/[-_]/g, '').slice(0, 14).toLowerCase() },
     when: { mode: 'away', awayMinutes: 5, quiet: { on: false, from: '22:00', to: '08:00' } },
     digest: { on: true, everyHours: 4, at: '' },
@@ -45,6 +45,7 @@ function cleanPrefs(cur, body) {
   if (b.ntfy) {
     if (typeof b.ntfy.server === 'string' && /^https?:\/\/[^\s]+$/.test(b.ntfy.server.trim())) p.ntfy.server = b.ntfy.server.trim().replace(/\/+$/, '');
     if (typeof b.ntfy.topic === 'string' && /^[A-Za-z0-9_-]{6,64}$/.test(b.ntfy.topic.trim())) p.ntfy.topic = b.ntfy.topic.trim();
+    if (p.ntfy.server !== cur.ntfy.server || p.ntfy.topic !== cur.ntfy.topic || b.ntfy.enabled === true) p.channels.ntfy = true;   // setting up ntfy turns it on
   }
   const hm = v => typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
   if (b.when) {

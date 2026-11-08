@@ -1,7 +1,9 @@
 // Tribe backup: the whole tribe folder as one .tar.gz, streamed (zero dependencies).
 // What's in it: chat (JSONL + media), tasks, docs, proposals, decisions, calendar, bugs, brain notes, project
 // folders (workspaces/ with their git history), members/invites/devices (tokens only as SHA-256 hashes).
-// What's left out: .tribe/secrets/ (per-member GitHub tokens never leave the host), node_modules, temp files.
+// What's left out: .tribe/secrets/ (AI keys, the GIPHY key and per-member GitHub tokens never leave the host),
+// .tribe/oauth.json (the host's Discord/GitHub/Google sign-in client secrets: set them up again after a restore),
+// node_modules, temp files.
 // Restore: stop TribeCode, extract the archive into a folder, start with --dir <that folder> (docs/DATA.md).
 'use strict';
 const fs = require('node:fs');
@@ -9,7 +11,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 
 const SKIP_DIR = new Set(['node_modules', '.cache']);
-const skip = rel => rel === '.tribe/secrets' || rel.startsWith('.tribe/secrets/') || /\.\d+\.tmp$/.test(rel);
+const skip = rel => rel === '.tribe/secrets' || rel.startsWith('.tribe/secrets/') || rel === '.tribe/oauth.json' || /\.\d+\.tmp$/.test(rel);   // oauth.json: fix/security-review
 
 function octal(n, len) { return n.toString(8).padStart(len - 1, '0') + '\0'; }
 function header(name, size, mtime, type = '0', mode = 0o644) {
