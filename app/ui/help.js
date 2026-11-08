@@ -14,6 +14,7 @@
 
   const SECTIONS = [
     ['Learn', [
+      ['flint', 'i-flint', 'Ask Flint', 'The built-in helper, right in the room', () => window.TribeFlint && window.TribeFlint.focus()],
       ['guide', 'i-doc', 'Guide', 'How TribeCode works, in short pages', () => guide()],
       ['start', 'i-play', 'Start here', 'Your first project in two minutes', () => guide('01-start-here')],
       ['claude', 'i-sparkle', 'Connect Claude Code', 'Your agent joins the room', () => window.TribeApp && window.TribeApp.connectClaude ? window.TribeApp.connectClaude() : guide('03-connect-claude-code')],

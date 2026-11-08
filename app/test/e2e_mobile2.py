@@ -204,11 +204,11 @@ def main():
             phone.wait_for_selector("#chat-list .vn", timeout=8000)
             shot(phone, "chat")
 
-            # ---- Talk to…: my Claude, Qwen brain, my desktop, #agents, #general, DMs
+            # ---- Talk to…: Flint, Ask AI, my Claude, my desktop, #agents, #general, DMs
             phone.evaluate("TribeMobile.talkTo()"); phone.wait_for_selector("#m2-talk-sheet")
             keys = phone.eval_on_selector_all("#m2-talk-sheet [data-talk]", "els => els.map(e => e.dataset.talk)")
-            # Ask AI first (the tribe's AI, no Claude of your own needed); My Claude / My desktop only once you have a Claude
-            assert keys[0] == "ai" and "agents" in keys and "general" in keys and f"dm:{orion}" in keys, keys
+            # Flint (the built-in helper) then Ask AI (the tribe's AI, no Claude of your own needed); My Claude / My desktop only once you have a Claude
+            assert keys[:2] == ["flint", "ai"] and "agents" in keys and "general" in keys and f"dm:{orion}" in keys, keys
             shot(phone, "talk-to")
             phone.click("#m2-talk-sheet [data-talk='ai']")
             phone.wait_for_function("document.querySelector('#chat-input').value.startsWith('@ai')")

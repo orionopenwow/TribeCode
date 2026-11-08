@@ -201,7 +201,7 @@ def main():
             host.wait_for_selector("#pj-rail [data-pj-open]", state="visible")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
             host.wait_for_selector("#room-agents .ra-row, #room-agents [data-agent]")
-            wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Local model")
+            wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Flint")   # the built-in helper (was "Local model")
             host.wait_for_selector("#hub-note-new")
             assert host.locator("#room-scratch").is_hidden(), "Home has Start a note in the page, not the panel"
             # right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
