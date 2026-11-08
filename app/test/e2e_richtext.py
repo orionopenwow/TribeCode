@@ -57,12 +57,15 @@ async def open_as(browser, name, token, phone=False):
 async def open_doc(page, slug):
     await page.evaluate("TribeApp.show('docs')")
     await page.wait_for_function("([s]) => window.TribeDocs && TribeDocs.list().some(d => d.slug === s)", arg=[slug], timeout=10000)
-    await page.evaluate("([s]) => TribeDocs.open(s)", [slug])
-    try:
-        await page.wait_for_function("([s]) => TribeDocs.current() && TribeDocs.current().slug === s && TribeDocs.live() && document.querySelector('#doc-body.rt')", arg=[slug], timeout=10000)
-    except Exception:
-        print("open_doc state:", await page.evaluate("([s]) => ({ cur: TribeDocs.current() && TribeDocs.current().slug, live: TribeDocs.live(), el: document.querySelector('#doc-body') && document.querySelector('#doc-body').tagName, mode: TribeDocs.mode() })", [slug]))
-        raise
+    want = "([s]) => TribeDocs.current() && TribeDocs.current().slug === s && TribeDocs.live() && document.querySelector('#doc-body.rt')"
+    for attempt in range(3):   # a list reload in flight can supersede an open(): ask again
+        await page.evaluate("([s]) => TribeDocs.open(s)", [slug])
+        try:
+            await page.wait_for_function(want, arg=[slug], timeout=6000); return
+        except Exception:
+            if attempt == 2:
+                print("open_doc state:", await page.evaluate("([s]) => ({ cur: TribeDocs.current() && TribeDocs.current().slug, live: TribeDocs.live(), el: document.querySelector('#doc-body') && document.querySelector('#doc-body').tagName })", [slug]))
+                raise
 
 
 async def value(page, sel="#doc-body"):
