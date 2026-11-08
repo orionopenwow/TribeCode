@@ -127,7 +127,10 @@ jobs:
           if [ ! -s "$t/AppRun-x86_64" ]; then
             for i in 1 2 3 4 5; do gh release download apprun-old --repo tauri-apps/binary-releases --pattern AppRun-x86_64 --dir "$t" --clobber && break; sleep 20; done
           fi
-          chmod +x "$t"/AppRun-x86_64 2>/dev/null || true; ls -la "$t"
+          if [ ! -s "$t/linuxdeploy-x86_64.AppImage" ]; then
+            for i in 1 2 3 4 5; do gh release download linuxdeploy-07333c6 --repo tauri-apps/binary-releases --pattern linuxdeploy-x86_64.AppImage --dir "$t" --clobber && break; sleep 20; done
+          fi
+          chmod +x "$t"/AppRun-x86_64 "$t"/linuxdeploy-x86_64.AppImage 2>/dev/null || true; ls -la "$t"
 
       - uses: tauri-apps/tauri-action@v0
         env:

@@ -1,8 +1,8 @@
 # Changelog
 
-## v0.17.6
+## v0.17.7
 
-- **Project dropdown**: the column of project circles is gone on desktop. A thick rounded dropdown at the top of the side column shows where you are (Home or a project) and opens the list: Home, every project, Workshop, your scratchpad, New project, Paste invite link
+- **Project menu**: Workshop now has a row in the project menu (the circle rail stays as it was)
 - **Fixed**: the Quick start tile on Home showed an empty box for projects with an emoji face
 - **Phones**: unchanged (the drawer still lists your projects)
 
