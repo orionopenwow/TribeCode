@@ -7,13 +7,13 @@
 
 **Build one app together with friends — each with your own Agents.**
 
-TribeCode is a free, open-source app for a few friends building one thing at the same time. It runs on one friend's computer; everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Agent (Claude Code, Codex, Gemini CLI, Cursor…) connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with these tools; it isn't made by their makers.
+TribeCode is a free, open-source app for a few friends building one thing at the same time. The tribe lives in one shared place: a GitHub repo and a computer someone in the group hosts. Everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Agent (Claude Code, Codex, Gemini CLI, Cursor…) connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with these tools; it isn't made by their makers.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-F26B1D.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)
 ![Desktop](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-6C7CFF.svg)
 
-**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect Claude Code](#connect-claude-code) · [Demo tribe](https://tribecode.org/app/demo.html)
+**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect your AI](#connect-your-ai) · [Demo tribe](https://tribecode.org/app/demo.html)
 
 </div>
 
@@ -33,41 +33,41 @@ Humans decide, agents do the work. Agents report in short gists, propose changes
 ## How it flows
 
 1. **Create a project.** One click on the rail's **+**: a room, an invite link, the chat, a private GitHub repo with a starter, and roles with colors and folders.
-2. **Write the vision.** The Dashboard's Onboarding Checklist opens the vision composer: five short prompts with good guesses filled in, then a draft from Flint or your own Claude. It becomes `VISION.md`, which the plan, the board and every agent read.
+2. **Set it up in four steps.** The Dashboard opens with a big **Set up** card: ✨ write the vision (pick Game, App, Website, Tool or Bot and type the gist; a draft fills in as you type), 📝 add a first task, 🤖 connect your AI, 🌿 create the repo in one click. `VISION.md` is what the plan, the board and every agent read. Optional role cards help the artist pick a palette and the engineer pick an engine, and **Make the starter** drops a starter game or site into the repo.
 3. **Send the link.** Your friend taps it on their phone, types a name, taps Join, then Add to Home Screen. No accounts.
 4. **Talk, propose, vote.** In **Messages**, claim roles and drop notes on the Getting started card, then press **Start the flow**. The **+** menu has *Propose to the tribe*: everyone votes, and an approved proposal goes to the Task Board with its checklist as tasks.
-5. **Agents post gists.** Each Claude connects with one line, claims files and reports a title and a few short bullets with the files it touched, never a code dump. It can suggest a vote; only people vote.
+5. **Agents post gists.** Each agent (Claude Code, Codex, Gemini CLI, Cursor…) connects with one line, claims files and reports a title and a few short bullets with the files it touched, never a code dump. It can suggest a vote; only people vote.
 6. **The plan updates itself.** `PLAN.md` checks items off as tasks finish, and the Dashboard's living update shows what changed. Plan changes an agent proposes wait for a human.
 7. **Preview the app** from the sidebar's Preview button (the right panel, a browser tab or a friend's phone), then **release** a milestone: it is tagged and pushed to GitHub.
 
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/readme-create.png" alt="Create project: name it and go"><br><sub><b>Create project:</b> a picture, a name and a line about it, or drop a folder or repo to bring existing code.</sub></td>
-    <td width="50%"><img src="docs/screenshots/readme-vision.png" alt="The vision composer with a draft"><br><sub><b>Write the vision:</b> guided prompts, then Draft with Flint or My Claude. Edit it, then save.</sub></td>
+    <td width="50%"><img src="docs/screenshots/readme-vision.png" alt="The vision composer with a draft"><br><sub><b>Write the vision:</b> pick a category, type the gist, and the draft fills in. Improve it with Flint or your AI if you like.</sub></td>
   </tr>
 </table>
 
 ## Features
 
-Each project's sidebar has five sections: **Dashboard**, **Messages**, **Files**, **Task Board** and **Agents Hub**. Below them sit the Website once it's built, any widgets you've added, the repo, and **+ Add** for more (Calendar, Bugs, Proposals, Milestones, Visuals, Workshop, Daily plan, Secretary, a link or a pinned doc). **Preview game** and **Invite friends** sit at the bottom. The app opens at **Home**, your command center across every project.
+Each project's sidebar has five sections: **Dashboard**, **Messages**, **Files**, **Task Board** and **Agents Hub**. Below them sit the Website once it's built, any widgets you've added, the repo, and **+ Add**, a gallery of more (Whiteboard, Calendar, Bugs, Proposals, Milestones, Visuals, Workshop, Daily plan, Secretary, a link or a pinned doc) with starter packs. **Preview game** and **Invite friends** sit at the bottom. The app opens at **Home**, your command center across every project.
 
 ### Dashboard
 
-The project at a glance. A **living update** with a status pill and four tiles (Lately · Chat · Way forward · Coming up), an **Onboarding Checklist** that ticks itself (vision, first task, a friend joins, Claude Code connected, repo pinned) and folds to "All set", **Tribe & Agents**, the **Project Stream** of recent changes and upcoming items, and **Repo & Tools**.
+The project at a glance. A new project leads with the **Set up** card (one card per step, big emoji, the next step highlighted), then **Add context** (drop docs, PDFs and images for Flint and your agents), **💡 Inspiration** ideas that fit what you're making (TribeCode senses whether it's a game, app, site or tool), and once the tribe has started, a **living update** (Lately · Chat · Way forward · Coming up), **Tribe & Agents**, the **Project Stream** and **Repo & Tools**. Click the name, picture or description to edit them, and give the Dashboard a cover.
 
 <p align="center"><img src="docs/screenshots/readme-dashboard.png" alt="The project Dashboard: living update, checklist, tribe and agents" width="100%"></p>
 
 ### Invite a friend in one tap
 
-Home → **Invite a friend** (or double-click `Invite-A-Friend.bat`): a fresh project, a link that works from anywhere, already copied. Your friend taps it, types a name and is in that project; on a computer the same visit hands them the one line that connects their Claude Code.
+Home → **Invite a friend** (or double-click `Invite-A-Friend.bat`): a fresh project, a link that works from anywhere, already copied. Your friend taps it, types a name and is in that project; on a computer the same visit hands them the one line that connects their AI.
 
 ### A friend with only a phone
 
-No TribeCode at home, no Claude Code subscription. They tap the link, type a name and land on **"You're in"**: Ask AI, Voice note, Add an idea, Pick a role. `@ai` answers from whatever AI the tribe has: their own Claude, a teammate's Claude (the owner decides: ask each time, always or never), the host's local model, or the board for the next Claude. [docs/MOBILE.md](docs/MOBILE.md)
+No TribeCode at home, no AI subscription. They tap the link, type a name and land on **"You're in"**: Ask AI, Voice note, Add an idea, Pick a role. `@ai` answers from whatever AI the tribe has: their own Claude, a teammate's Claude (the owner decides: ask each time, always or never), the host's local model, or the board for the next Claude. [docs/MOBILE.md](docs/MOBILE.md)
 
 ### Messages and decisions
 
-The chat fills from the bottom, like Discord, under a plain `# general` header. Bubbles with replies, reactions, voice notes with transcripts, images and any file. Agents post short gists, and votes and polls live in the chat: Claude can suggest one (`suggest_vote`) but only humans vote. A decisions log keeps the outcome. The speech-bubble button lists every conversation: your Claude, each project's chat and your direct messages.
+The chat fills from the bottom, like Discord. Make **channels** (with an emoji and a topic) and switch them from the `# general ▾` menu; DMs sit below. Replies, reactions with a full emoji picker, voice notes with transcripts, picture grids, link previews, click-to-load videos, GIFs, 📌 pins and a background per channel. Agents post short gists, and votes and polls live in the chat: Claude can suggest one (`suggest_vote`) but only humans vote. A decisions log keeps the outcome. The speech-bubble button lists every conversation: your Claude, each project's chat and your direct messages.
 
 <p align="center"><img src="docs/screenshots/readme-chat.png" alt="Messages: Orion's Claude posts a gist and suggests a vote" width="100%"></p>
 
@@ -78,7 +78,21 @@ The chat fills from the bottom, like Discord, under a plain `# general` header. 
   </tr>
 </table>
 
+### Profiles, roles and channels
+
+Pick how you show up: an avatar (initials, an emoji, 24 pixel critters or a photo), a name color that stays readable on every theme, pronouns, an About me, a banner and a custom status with idle, do not disturb and invisible. Click any name for a profile card with Message, Add friend and Ask their AI. The host can make people **Admin** or **🛡️ Mod** and choose what each role may do in Settings › Roles & privileges; mods can remove messages, mute and triage, and everything is logged.
+
+<p align="center"><img src="docs/screenshots/chat2-desktop.png" alt="Channels, rich messages and the compact header" width="100%"></p>
+
+### Whiteboard
+
+A shared, persistent board for each project, added from **+ Add**: draw, add shapes, text and sticky notes, paste pictures, and see everyone's changes and cursors live. Agents can read it and add sticky notes.
+
+<p align="center"><img src="docs/screenshots/whiteboard-desktop.png" alt="The team whiteboard" width="100%"></p>
+
 ### Files and the doc editor
+
+Code projects get a **Files · Code · Docs** switch: a folder tree with a branch picker, a code viewer with line numbers, and one list of every doc. 
 
 **Files** takes any kind of file up to 50 MB: notes, docs, pictures, audio, video, PDFs, code, 3D models. Your own files and your projects' sit together, newest first, with filters, list or grid, and a viewer for each kind. Docs edit like Google Docs meets Notion: real headings, lists, checkboxes, tables and colors as you type, a toolbar, an outline and a centered page, with live co-editing, comments, history, dictation and a TL;DR from the local model. They're still saved as Markdown, so every Claude can read and edit them.
 
@@ -102,9 +116,9 @@ A board with tabs: Board, Bugs, Proposals, Milestones, Calendar, the live Repo, 
 
 ### Agents Hub
 
-Many humans and many agents without collisions, in one tabbed view: the agents in the room with pause and stop, your agents, an ownership map, a conflict radar, hand-offs, a review queue, a daily plan and the Secretary, plus a per-project **#agents** channel where Claudes delegate to each other.
+Many humans and many agents without collisions. The Hub opens on one dashboard of big cards that only show when they matter: agents working now, **Needs you** (reviews, hand-offs, conflicts with one-tap actions), who owns what, the **#agents** channel and today's plan. Pin deeper views (ownership, conflicts, reviews, the Secretary, the MCP page) as tabs with **+**.
 
-<p align="center"><img src="docs/screenshots/readme-agents.png" alt="Agents Hub: your agents" width="100%"></p>
+<p align="center"><img src="docs/screenshots/agents-dash.png" alt="Agents Hub: the dashboard of big cards" width="100%"></p>
 
 ### Flint, the built-in helper
 
@@ -123,6 +137,10 @@ Click anyone to see what they and their Claude are doing now, their context wind
 The app you're building runs in the right panel (desktop, tablet and phone widths), a browser tab or a friend's phone. Links are signed and the page is sandboxed; it reloads when files change, and a dev-server mode proxies your own server.
 
 <p align="center"><img src="docs/screenshots/readme-preview.png" alt="Pixel Quest running in the preview panel" width="100%"></p>
+
+### Customize and your website
+
+Settings › **Look**: a tribe accent, backgrounds (flat patterns, tints or a picture), spacing and font size, per-project themes, and a Dashboard cover (a color, a picture or your GitHub repo's preview). **Website › Design it for me** builds a project site from your own data (story, devlog from commits, roadmap from milestones, team, screenshots) in six editorial layouts, with Shuffle and an optional "Write it for me" from your AI or a local Qwen model.
 
 ### Home
 
@@ -175,9 +193,9 @@ A frameless window with real window buttons, project circles, a calm sidebar, br
   </tr>
 </table>
 
-## Connect Claude Code
+## Connect your AI
 
-Profile menu → **Connect your Claude Code** gives you one command. Pick where your Claude runs:
+Profile menu → **Connect your AI** (or the **TribeCode MCP** page, which lists 15 tools: Claude Code, Codex, Gemini CLI, Qwen Code, Cursor, VS Code, Windsurf, Zed, Cline, Goose, Continue, Claude Desktop, Claude.ai and ChatGPT through your public link, and any MCP client) gives you one command or config. For Claude Code, pick where it runs:
 
 - **Anywhere:** over the tribe's public https link (Tailscale Funnel or cloudflared).
 - **Same Wi-Fi:** over the host's network address.
