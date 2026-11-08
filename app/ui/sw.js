@@ -1,5 +1,5 @@
 // Offline shell for the installed app. API, MCP and WebSocket traffic always goes to the network.
-const CACHE = 'tribecode-shell-v34';
+const CACHE = 'tribecode-shell-v35';
 const SHELL = ['./', 'index.html', 'join.html', 'tokens.css', 'fonts.css', 'styles.css', 'updater.css', 'live.css', 'docs.css', 'mobile.css', 'coedit.css', 'web.css', 'repo.css', 'notify.css', 'friends.css', 'friends.js', 'userbar.js', 'cropper.js', 'cropper.css', 'chatlist.css', 'guide.js', 'guide.css', 'oauth.css', 'oauth.js', 'signin.html', 'go.html', 'demo.html', 'demo.webmanifest', 'voice.css', 'plan.css', 'projects.css', 'shell.css', 'coord.css',
   'selfheal.js', 'store.js', 'tribe.js', 'settings.js', 'tour.js', 'updater.js', 'md.js', 'tasks.js', 'ot.js', 'coedit.js', 'docs.js', 'board.js', 'bugs.js', 'palette.js', 'huddle.js', 'qr.js',
   'web.js', 'repo.js', 'notify.js', 'speech.js', 'captions.js', 'capture.js', 'dm.js', 'chatx.js', 'float.js', 'plan.js', 'docsx.js', 'visuals.js', 'app.js', 'projects.js', 'shell.js', 'coord.js', 'assets/icon-512.png', 'assets/wordmark.svg', 'manifest.webmanifest',

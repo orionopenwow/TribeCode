@@ -8,7 +8,7 @@
 //   - Docs hub: the pinned repo as the hero, the living notes journal, files, screenshots.
 //   - Suggested tasks on Tasks and Home. Profile sheets (add friend, network, DM, ask their Claude).
 // Desktop is untouched: everything here is gated on the phone media query (and mobile2.css on @media).
-// Public: window.TribeMobile = { show, onShow, profile, talkTo, startTribe, askAi, plusMenu, recorder, refresh }.
+// Public: window.TribeMobile = { show, onShow, profile, talkTo, startTribe, projectsSheet, askAi, plusMenu, recorder, refresh }.
 (function () {
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const C = window.TribeClient;
@@ -138,7 +138,7 @@
       if (e.target.closest('#m2-hb-plus')) return startTribe();
       const b = e.target.closest('[data-hb]'); if (!b) return;
       const k = b.dataset.hb;
-      if (k === 'pjs') { document.body.classList.add('drawer-open'); return; }
+      if (k === 'pjs') return projectsSheet();
       if (k === 'agents') return C.connected() ? talkTo() : window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // your Claude, the AI, Manage agents
       if (k === 'notes') return window.TribeHub && window.TribeHub.open('docs');   // your docs center: your notes, then project docs
       if (k === 'msgs') { if (C.connected()) return App().show('chat'); return window.TribeFriends && window.TribeFriends.open(); }
@@ -164,6 +164,22 @@
     bar.querySelectorAll('[data-hb]').forEach(b => b.classList.toggle('on', b.dataset.hb === on));
     const av = $('#m2-hb-av'), m = me() || {};
     if (av) { let sn = ''; try { sn = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name || ''; } catch {} const n = (m.name || sn || '?').trim(); av.textContent = n.charAt(0).toUpperCase(); av.style.background = m.color || 'var(--accent)'; }
+  }
+  // Your projects as a list sheet (Home's Projects button and the TribeCode ⌄ header): tap one to open it.
+  function projectsSheet() {
+    const list = (PJ() && PJ().list ? PJ().list() : []).slice().sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    const cur = PJ() && PJ().current ? PJ().current() : null;
+    const rows = list.map(p => { const here = PJ().here ? PJ().here(p.id).length : 0;
+      return `<button class="m2-mi ${p.id === cur && !document.body.classList.contains('global') ? 'on' : ''}" data-pj="${esc(p.id)}"><span class="m2-pjf">${PJ().face(p, 'sm')}</span><span class="m2-mt"><b>${esc(p.name)}</b><small>${here ? `${here} here now` : esc(p.bio || 'Open the project')}</small></span>${ic('chev', 16)}</button>`; }).join('');
+    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Your projects</span></div>
+      ${list.length ? `<div class="m2-menu m2-pjlist">${rows}</div>` : '<p class="m2-fine left">No projects yet.</p>'}
+      <div class="m2-menu"><button class="m2-mi" data-pj="new"><span class="m2-mic live">${ic('plus', 18)}</span><span class="m2-mt"><b>New project</b><small>Start one, or join with a link</small></span></button></div>`, { id: 'm2-projects-sheet', label: 'Your projects' });
+    el.addEventListener('click', async e => {
+      const b = e.target.closest('[data-pj]'); if (!b) return; closeSheet();
+      if (b.dataset.pj === 'new') return startTribe();
+      try { await PJ().switchTo(b.dataset.pj); } catch {}
+      setTimeout(() => App().show('home'), 200);
+    });
   }
   // "+" on Home: one sheet to start or join, even from a phone (phones can't run the tribe themselves).
   function startTribe() {
