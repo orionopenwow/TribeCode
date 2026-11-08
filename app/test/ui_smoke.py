@@ -37,7 +37,7 @@ def main():
         page.wait_for_function("TribeStore.get().onboarded === true")
         st = page.evaluate("TribeStore.get()")
         assert st["name"] and st["color"], st
-        page.wait_for_selector("#tour-rail .logo", state="visible")
+        page.wait_for_selector("#rail-logo .logo", state="visible")
 
         # ---- Settings: one calm page ----
         page.evaluate("TribeSettings.open()")   # Settings: the profile menu (and the sidebar inside a project)

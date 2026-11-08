@@ -10,3 +10,23 @@
 .window .rail #rail-logo img.logo { width: 50px; height: 50px; transition: transform .18s var(--ease, ease); }
 .window .rail #rail-logo:hover img.logo { transform: scale(1.08); }
 @media (prefers-reduced-motion: reduce) { .window .rail #rail-logo img.logo { transition: none; } .window .rail #rail-logo:hover img.logo { transform: none; } }
+
+/* the flame now sits in the top bar, next to the pixel wordmark; it always idles (a gentle flicker) */
+.tb-brand { display: inline-flex; align-items: center; gap: 2px; margin: 0 12px 0 0; flex: none; -webkit-app-region: no-drag; }
+.titlebar #rail-logo { display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; position: relative; }
+.titlebar #rail-logo img.logo { width: 42px; height: 42px; image-rendering: pixelated; transition: transform .18s var(--ease, ease); }
+.titlebar #rail-logo:hover img.logo { transform: scale(1.08); }
+.titlebar #rail-logo.is-busy::after { content: ''; position: absolute; right: 4px; bottom: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--live, #38C6B1); }
+.tb-wm { display: inline-flex; align-items: center; height: 52px; padding: 0 4px; border: 0; background: none; cursor: pointer; }
+.tb-wm img { height: 40px; width: auto; display: block; image-rendering: pixelated; }
+@media (max-width: 820px) { .tb-brand { display: none; } }
+@media (prefers-reduced-motion: reduce) { .titlebar #rail-logo img.logo { transition: none; } }
+
+/* the rail's top slot: Camp setup */
+.window .rail .camp-btn { position: relative; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--edge); }
+.window .rail .camp-btn:hover { background: var(--raised); }
+.camp-btn .camp-e { font-size: 28px; line-height: 1; }
+.camp-btn .camp-n { position: absolute; right: -4px; bottom: -4px; min-width: 22px; height: 18px; padding: 0 5px; border-radius: 9px; border: 1px solid var(--edge); background: var(--canvas); color: var(--text); font: 600 10.5px/16px var(--mono, monospace); text-align: center; }
+.camp-btn .camp-n:empty { display: none; }
+.camp-btn.done .camp-n { color: var(--online, #3BD16F); }
+#pj-check.flash { outline: 2px solid var(--brand, #F26B1D); outline-offset: 3px; transition: outline-color .6s; }

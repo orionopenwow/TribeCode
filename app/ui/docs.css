@@ -56,3 +56,18 @@
 .standup ul { margin-left: 18px; } .standup p { margin: 4px 0; }
 .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #tour-checklist { grid-row: span 2; }
+
+/* ---------- Files, tidied (desktop) ---------- */
+@media (min-width: 821px) {
+  /* the Notes · Code · Docs switch: a slim pill row, not a second big tab bar */
+  #view-docs .cf-switch { margin: 0 0 16px; padding: 2px; border-radius: 10px; }
+  #view-docs .cf-switch button { height: 30px; min-width: 0; padding: 0 14px; font-size: 13.5px; border-radius: 8px; }
+  /* the pinned repo lives in Code (and on the Dashboard): not squeezed into the doc list while a doc is open */
+  #view-docs .docs-grid:has(#doc-title) #doc-repo-hero { display: none; }
+  #doc-list-wrap .rhx-pv { position: static; margin: 0 0 6px; align-self: flex-start; }
+  /* an empty doc doesn't need the TL;DR box yet */
+  .doc-tldr.empty { display: none; }
+  /* the doc header: the title gets room, the tools wrap instead of squeezing it */
+  #view-docs .dl-top { flex-wrap: wrap; row-gap: 8px; }
+  #view-docs .dl-top .dl-id { flex: 1 1 220px; min-width: 220px; }
+}

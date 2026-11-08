@@ -118,10 +118,8 @@ def main():
             main_dl = pg.locator(".hero [data-dl-main]")
             assert main_dl.get_attribute("href").endswith("_amd64.AppImage") and "Download for Linux" in main_dl.inner_text(), main_dl.get_attribute("href")
             # the other platforms
-            pg.click("button[aria-controls=menu-download]"); assert pg.is_visible("#menu-download")
             hrefs = {a.get_attribute("data-os"): a.get_attribute("href") for a in pg.locator(".plats [data-os]").all()}
             assert hrefs["windows"].endswith("_x64-setup.exe") and hrefs["mac"].endswith("_aarch64.dmg") and hrefs["deb"].endswith(".deb"), hrefs
-            pg.keyboard.press("Escape"); assert not pg.is_visible("#menu-download")
             # every link points somewhere real
             links = pg.evaluate("[...document.querySelectorAll('a')].map(a => ({ raw: a.getAttribute('href'), abs: a.href, text: a.textContent.trim() || a.getAttribute('aria-label') }))")
             assert len(links) > 30

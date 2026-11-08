@@ -248,7 +248,7 @@ def main():
             host.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % hp, timeout=15000)
             # desktop Docs: the pinned repo hero at the top of the doc list carries a visible "Preview app" button
             host.evaluate("TribeApp.show('docs')")
-            host.wait_for_selector("#doc-repo-hero .rhx-pv", state="visible", timeout=10000)
+            host.wait_for_selector("#doc-pane .fg", timeout=10000)   # desktop Files opens on the file grid (the pinned repo lives in Code)
             shot(host, "desktop-docs-hero")
             host.evaluate("TribeApp.show('home')")
             # Ctrl K → Preview app
@@ -339,7 +339,7 @@ def main():
             phone.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % pp, timeout=15000)
             phone.click('#tabbar [data-nav="docs"]')
             phone.wait_for_selector("#m2-repo-hero .rhx-pv", timeout=10000)
-            phone.locator("#m2-repo-hero .rhx-pv").scroll_into_view_if_needed(); shot(phone, "phone-hero")
+            phone.wait_for_timeout(600); phone.evaluate("document.querySelector('#m2-repo-hero .rhx-pv')?.scrollIntoView({block: 'center'})"); shot(phone, "phone-hero")   # the hub re-renders as data lands
             phone.click("#m2-repo-hero .rhx-pv")
             phone.wait_for_selector("#pvw #pvw-iframe", timeout=10000)
             assert phone.evaluate("TribeApp.view()") == "docs", "the hero button opens the preview, not the repo view"

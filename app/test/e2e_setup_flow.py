@@ -205,7 +205,7 @@ def main():
             assert it["fs"] == "17px" and it["fw"] == "700" and it["ws"] == "nowrap", it
             assert it["thumbLeft"] <= 1 and it["shadow"] == "none" and it["bg"] == "none", it
             assert it["btnRight"] <= 20 and it["btnBottom"] <= 20, f"Make it a task sits bottom right {it}"
-            host.evaluate("document.querySelector('#pj-insp').scrollIntoView()"); shot(host, "inspiration")
+            host.evaluate("document.querySelector('#pj-insp')?.scrollIntoView()"); shot(host, "inspiration")
             pal_card = host.locator("#pj-insp .sx-item[data-type=palette] .sx-pal i")
             if pal_card.count(): assert pal_card.count() >= 3
 

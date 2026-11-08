@@ -99,14 +99,15 @@ async def main():
             await open_doc(host, "Lantern level")
             # with the room panel open the pane is narrower: a slimmer side panel (doc list still there), nothing overflows
             assert await host.locator(".panel").first.is_visible(), "the editor leaves the room panel as it was"
-            assert await host.locator(".dl-body.narrow:not(.side-off)").count() == 1 and await host.locator("#dl-tabs .doc-item").first.is_visible()
+            assert await host.locator(".dl-body.narrow.side-off").count() == 1, "the side panel starts hidden"
+            await host.click("#dl-side-open"); assert await host.locator("#dl-tabs .doc-item").first.is_visible()
             assert await host.evaluate("document.querySelector('main').scrollWidth <= document.querySelector('main').clientWidth")
             # hide the room panel (its ×): the full Google Docs-style layout
             await host.click("#panel-close")
             await host.wait_for_selector(".dl-body:not(.narrow)")
             # the side panel folds away and comes back
             await host.click("#dl-side-x"); assert await host.locator("#dl-side").is_hidden()
-            await host.click("#dl-side-open"); assert await host.locator("#dl-side").is_visible()
+            await host.click("#dl-side-open"); assert await host.locator("#dl-side").is_visible()   # left open for the layout checks below
 
             # ---------------- the layout ----------------
             for sel in [".dl-top .dl-ic", "#dl-name", ".dl-meta .dl-where", "#doc-status", ".dl-fmt[role=toolbar]", "#dl-side", "#dl-tabs #doc-list", "#dl-outline", ".dl-canvas .dl-page #doc-body", "#dl-link", "#dl-close"]:

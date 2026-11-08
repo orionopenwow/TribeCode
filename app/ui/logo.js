@@ -7,7 +7,7 @@
   'use strict';
   const STILL = 'assets/icon.svg', LIVE = 'assets/icon-animated.svg';
   // the top-left logo is the bare mark on its button's tile: still at rest, a short flicker on hover, looping while busy
-  const RAIL_STILL = 'assets/icon-mark.svg', RAIL_LIVE = 'assets/icon-mark-animated.svg', RAIL_ONCE = 'assets/icon-mark-once.svg';
+  const RAIL_STILL = 'assets/icon-mark-animated.svg' /* the flame idles: it always flickers (feat: logo in the top bar) */, RAIL_LIVE = 'assets/icon-mark-animated.svg', RAIL_ONCE = 'assets/icon-mark-once.svg';
   let onceText = null, onceUrl = null;
   if (/^https?:/.test(location.protocol)) fetch(RAIL_ONCE).then(r => r.ok ? r.text() : null).then(t => { onceText = t; }).catch(() => {});   // not under file:// (tests, previews)
   function playOnce(img) {   // a fresh blob URL restarts the SVG's animation on every hover
@@ -31,7 +31,6 @@
     const img = logo() || document.createElement('img');
     const why = reason();
     if (why) { if (!img.src.endsWith(RAIL_LIVE)) img.src = RAIL_LIVE; }
-    else if (hover) { if (!img.src.startsWith('blob:')) playOnce(img); }
     else if (!img.src.endsWith(RAIL_STILL) && !img.src.startsWith('blob:')) img.src = RAIL_STILL;
     document.querySelectorAll('img.tc-mark').forEach(m => { const w = why ? LIVE : STILL; if (!m.src.endsWith(w)) m.src = w; });   // the phone Home logo too
     const btn = img.closest('#rail-logo'); if (btn) { btn.classList.toggle('is-busy', !!why);
@@ -67,7 +66,7 @@
     for (const m of ms || []) { if (m.role !== 'agent') continue; const w = m.online ? (m.where || '') : ''; if (lastWhere.has(m.id) && lastWhere.get(m.id) !== w && w) pulse(m); lastWhere.set(m.id, w); }
   }
   const btn = document.querySelector('#rail-logo');
-  if (btn) { btn.addEventListener('mouseenter', () => { hover = true; const i = logo(); if (i && !reason()) playOnce(i); sync(); }); btn.addEventListener('mouseleave', () => { hover = false; sync(); }); }
+  if (btn) { btn.addEventListener('mouseenter', () => { hover = true; sync(); }); btn.addEventListener('mouseleave', () => { hover = false; sync(); }); }
   const hook = () => { const C = window.TribeClient; if (!C || !C.on) return setTimeout(hook, 200); C.on('status', sync); C.on('ws', onWs); C.on('presence', onPresence); sync(); };
   hook();
 

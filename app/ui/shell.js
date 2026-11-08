@@ -164,11 +164,18 @@
     }
     lsSet(TKEY(w), cur);
     const ad = AD(w), list = adTabs(w, tabsOf(w), cur).filter(t => !gated(w) || t.key === 'tasks' || t.key === cur), d = byKey(cur);
-    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',') + (ad ? '|' + ad.sig() : '');
+    const CF = window.TribeCodeFiles, code = w === 'docs' && !!document.getElementById('cf-switch'), cfm = code && CF ? CF.mode() : 'files';
+    const sig = w + '|' + cur + '|' + list.map(t => t.key + (counts[t.key] || 0)).join(',') + (ad ? '|' + ad.sig() : '') + (w === 'docs' ? '|' + code + cfm : '');
     if (sig !== tabsSig) {
       tabsSig = sig;
+      if (w === 'docs') {   // Files: one emoji row, no eyebrow (feat: tidy Files)
+        const items = [['docs-files', 'files', '📝 Notes'], ...(code ? [['docs-files', 'code', '💻 Code'], ['docs-files', 'docs', '📚 Docs']] : []), ['website', '', '🌐 Website'], ['captures', '', '📎 Captures']].filter(([k]) => list.some(t => t.key === k));
+        bar.innerHTML = `<div class="wt-row wt-pills" role="tablist" aria-label="Files">${items.map(([k, m, l]) => { const on = k === cur && (!m || m === cfm);
+          return `<button role="tab" class="wt ${on ? 'on' : ''}" id="wt-${esc(k)}${m && m !== 'files' ? '-' + m : ''}" data-tab="${esc(k)}"${m ? ` data-cfseg="${m}"` : ''} aria-selected="${on}" tabindex="${on ? 0 : -1}">${esc(l)}</button>`; }).join('')}</div>`;
+        bar.classList.add('wt-files');
+      } else { bar.classList.remove('wt-files');
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
-        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`;
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
     }
     bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
@@ -178,7 +185,8 @@
     const crumb = $("#crumb-label"), text = WS[w].label === d.tab ? WS[w].label : `${WS[w].label} › ${d.tab}`;   // no "Files › Files"
     if (crumb && crumb.textContent !== text) crumb.textContent = text;
   }
-  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (t) { e.preventDefault(); go(t.dataset.tab); } });
+  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (t) { e.preventDefault(); go(t.dataset.tab); if (t.dataset.cfseg && window.TribeCodeFiles) setTimeout(() => window.TribeCodeFiles.set(t.dataset.cfseg), 0); } });
+  window.addEventListener('tribe:cf', () => { tabsSig = ''; drawTabs(); });
   document.addEventListener('keydown', e => {   // arrow keys move along the tabs
     const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (!t || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
     const all = [...document.querySelectorAll('#view-tabs [data-tab]')], i = all.indexOf(t);

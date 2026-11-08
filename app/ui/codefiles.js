@@ -23,7 +23,7 @@
   const ago = at => { const s = (Date.now() - Date.parse(at)) / 1000; if (!isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; if (s < 30 * 86400) return `${Math.floor(s / 86400)}d ago`; return new Date(at).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
   const fsize = n => n < 1024 ? `${n} B` : n < 1048576 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`;
   const CODE_KINDS = new Set(['game', 'app', 'site', 'tool', 'bot', 'api', '3d']);
-  const SEGS = [['files', 'Files'], ['code', 'Code'], ['docs', 'Docs']];
+  const SEGS = [['files', '📝 Notes'], ['code', '💻 Code'], ['docs', '📚 Docs']];   // "Notes": the outer tab is already Files
 
   // ---------- icons (24px grid, stroke = currentColor) ----------
   const svg = (d, sz = 18) => `<svg class="cf-i" viewBox="0 0 24 24" style="width:${sz}px;height:${sz}px" aria-hidden="true">${d}</svg>`;
@@ -123,7 +123,7 @@
   function apply(code) {
     isCode = !!code;
     const v = view(); if (!v) return;
-    if (!isCode) { drawn = ''; const s = $('#cf-switch'), pane = $('#cf-pane'); if (s) s.remove(); if (pane) pane.remove(); if (v.classList.contains('cf-on')) v.classList.remove('cf-on'); delete v.dataset.cf; return; }
+    if (!isCode) { drawn = ''; const s = $('#cf-switch'), pane = $('#cf-pane'); if (s) s.remove(); if (pane) pane.remove(); if (v.classList.contains('cf-on')) v.classList.remove('cf-on'); delete v.dataset.cf; try { window.dispatchEvent(new Event('tribe:cf')); } catch {} return; }
     let s = $('#cf-switch');
     if (!s) {
       s = document.createElement('div'); s.id = 'cf-switch'; s.className = 'cf-switch'; s.setAttribute('role', 'tablist'); s.setAttribute('aria-label', 'Show');
@@ -146,6 +146,7 @@
     const v = view(); if (!v || !isCode) return;
     if (v.classList.contains('cf-on') !== (seg !== 'files')) v.classList.toggle('cf-on', seg !== 'files');
     v.dataset.cf = seg;
+    try { window.dispatchEvent(new Event('tribe:cf')); } catch {}   // the Files tab row shows Notes · Code · Docs
     document.querySelectorAll('#cf-switch [data-seg]').forEach(b => { const on = b.dataset.seg === seg; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
     if (seg === 'code') drawCode(); else if (seg === 'docs') drawDocs(); else { const pane = $('#cf-pane'); if (pane) pane.innerHTML = ''; }
   }

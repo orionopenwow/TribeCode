@@ -137,10 +137,10 @@ def main():
 
             # ---- desktop: the switch, the tree, the viewer ----
             host.evaluate("TribeApp.show('docs')")
-            host.wait_for_selector("#cf-switch [data-seg=code]")
+            host.wait_for_selector("#view-tabs [data-cfseg=code]")   # desktop: Notes · Code · Docs sit in the Files tab row
             assert host.evaluate("document.querySelector('#view-docs').firstElementChild.id") == "cf-switch"
             assert host.locator("#cf-switch [data-seg=files].on").count() == 1, "Files (today's view) by default"
-            host.click("#cf-switch [data-seg=code]")
+            host.click("#view-tabs [data-cfseg=code]")
             host.wait_for_selector('#cf-tree .cf-row[data-path="src"]')
             rows = host.eval_on_selector_all("#cf-tree .cf-row", "els => els.map(e => e.dataset.path)")
             assert "node_modules" not in rows and "build" not in rows, rows
@@ -191,7 +191,7 @@ def main():
             assert host.locator('#cf-tree .cf-row[data-path="src/game/boss.js"]').count() == 0
 
             # ---- Docs: vision, notes, repo docs in one list ----
-            host.click("#cf-switch [data-seg=docs]")
+            host.click("#view-tabs [data-cfseg=docs]")
             host.wait_for_selector('#cf-dlist [data-doc-kind="vision"]')
             host.wait_for_selector('#cf-dlist [data-doc="repo|docs/GUIDE.md"]')
             groups = host.eval_on_selector_all("#cf-dlist .cf-group", "els => els.map(e => e.textContent)")
@@ -207,14 +207,14 @@ def main():
             # remembered per project
             host.reload(); wait_text(host, "#sync-status", "connected")
             host.evaluate("TribeApp.show('docs')")
-            host.wait_for_selector("#cf-switch [data-seg=docs].on")
+            host.wait_for_selector("#cf-switch [data-seg=docs].on", state="attached")
             # the notes project keeps today's view
             host.evaluate(f"TribeProjects.switchTo({notes!r}, 'docs')")
             host.wait_for_function(f"TribeClient.project() === {notes!r}")
             host.wait_for_timeout(1200)
             assert host.locator("#cf-switch").count() == 0 and host.is_visible(".docs-grid"), "no switch for a notes project"
             host.evaluate(f"TribeProjects.switchTo({main_pid!r}, 'docs')")
-            host.wait_for_selector("#cf-switch [data-seg=docs].on")
+            host.wait_for_selector("#cf-switch [data-seg=docs].on", state="attached")
 
             # ---- phone: drill-down, full-screen viewer, no page overflow ----
             code = api("/invites", "POST", {"hours": 1, "maxUses": 2, "project": main_pid}, tok)[1]["invite"]["code"]
