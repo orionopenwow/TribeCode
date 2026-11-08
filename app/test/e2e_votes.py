@@ -153,7 +153,7 @@ def main():
             chat(maya).fill("#chat-input", "+fire"); maya.keyboard.press("Enter")
             wait_text(orion, f"{bubble(lvl)} .reacts", "🔥")
             assert not any(m.get("text") == "+fire" for m in general())
-            assert api("/chat/general/react", "POST", {"id": lvl, "emoji": "💩"}, token=mtok)[0] == 400
+            assert api("/chat/general/react", "POST", {"id": lvl, "emoji": "<b>x</b>"}, token=mtok)[0] == 400   # feat/chat2: any real emoji is a reaction now; markup never is
             # keyboard: Ctrl+Shift+\ opens the quick bar on the latest message
             chat(orion).click("#chat-input"); orion.keyboard.press("Control+Shift+Backslash")
             orion.wait_for_selector("#qr-bar:not(.hidden)")
