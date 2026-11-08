@@ -66,7 +66,7 @@
   #view-docs .docs-grid:has(#doc-title) #doc-repo-hero { display: none; }
   #doc-list-wrap .rhx-pv { position: static; margin: 0 0 6px; align-self: flex-start; }
   /* an empty doc doesn't need the TL;DR box yet */
-  .doc-tldr.empty { display: none; }
+  .doc-tldr.blank { display: none; }   /* only while the doc itself is empty */
   /* the doc header: the title gets room, the tools wrap instead of squeezing it */
   #view-docs .dl-top { flex-wrap: wrap; row-gap: 8px; }
   #view-docs .dl-top .dl-id { flex: 1 1 220px; min-width: 220px; }

@@ -215,6 +215,7 @@ def main():
             wait_text(host, "#doc-status", "Saved")
             friend.click('[data-nav="docs"]:visible')
             wait_text(friend, "#doc-list", "Game design doc")
+            if not friend.locator("#doc-title").count(): friend.click(".fg-card[title='Game design doc']")   # desktop Files opens on the file grid
             friend.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Game design doc'", timeout=8000)
             # live update reaches an idle reader
             host.click("#doc-body"); host.keyboard.press("Control+End"); host.keyboard.type("\n\nCombat rework parked until the vote.")

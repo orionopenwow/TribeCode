@@ -945,6 +945,16 @@ server.on('upgrade', (req, sock) => {
     if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
     if (msg.type === 'activity' && typeof msg.idle === 'boolean' && !!s.idle !== msg.idle) { const was = idleAll(me.id); s.idle = msg.idle; if (idleAll(me.id) !== was) pushPresence(); }   // feat/profiles: idle after inactivity
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
+    // feat/live-cursors: { type:'cursor', view, x, y } (x, y = 0..1 of the main pane) reaches the others in the same
+    // project; { type:'cursor', gone:true } hides it. People only (no agents, no spectators), at most ~20 a second each.
+    if (msg.type === 'cursor' && me.role !== 'agent' && me.role !== 'spectator') {
+      const now = Date.now(); if (!msg.gone && now - (s.curAt || 0) < 45) return; s.curAt = now;
+      const pid = s.project || P.current() || P.defaultId(); if (!P.canSee(me, pid)) return;
+      const num = v => Math.max(0, Math.min(1, Number(v) || 0));
+      const out = msg.gone ? { type: 'cursor', by: me.id, gone: true } : { type: 'cursor', by: me.id, name: me.name, color: me.color || null, view: String(msg.view || '').slice(0, 40), x: num(msg.x), y: num(msg.y) };
+      for (const [mid, o] of online) { if (mid === me.id) continue; const m2 = memberById(mid); if (!m2 || !P.canSee(m2, pid)) continue; for (const so of o.sockets) if (so !== s && (so.project || P.current() || P.defaultId()) === pid) so.send(out); }
+      return;
+    }
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
     if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
