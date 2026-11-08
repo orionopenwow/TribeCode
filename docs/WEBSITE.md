@@ -1,7 +1,7 @@
 # Website
 
 Every project (a game, an app, anything) gets its own public page, made from what the project already has.
-Open it from **Docs & Files › Website** (`#/docs/website`). The project overview shows a small **Website** link once the page exists.
+Open it from **Files › Website** (`#/docs/website`). Once the page exists, **Website** also gets its own row in the project sidebar.
 
 ![Website on desktop](screenshots/website-suggestion.png)
 
