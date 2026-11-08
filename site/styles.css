@@ -919,3 +919,4 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .flint-msg { font-size: 13.5px; }
 }
 @media (prefers-reduced-motion: reduce) { .flint-em { display: none; } }
+@media (max-width: 640px) { .flint-bubble { display: none !important; } }   /* phones: never cover the page; Flint is still one tap away */
