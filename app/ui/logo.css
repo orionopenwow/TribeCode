@@ -25,7 +25,7 @@
 /* the rail's top slot: Camp setup */
 .window .rail .camp-btn { position: relative; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--edge); }
 .window .rail .camp-btn:hover { background: var(--raised); }
-.camp-btn .camp-e { font-size: 28px; line-height: 1; }
+.camp-btn .camp-e { width: 34px; height: auto; display: block; image-rendering: pixelated; }
 .camp-btn .camp-n { position: absolute; right: -4px; bottom: -4px; min-width: 22px; height: 18px; padding: 0 5px; border-radius: 9px; border: 1px solid var(--edge); background: var(--canvas); color: var(--text); font: 600 10.5px/16px var(--mono, monospace); text-align: center; }
 .camp-btn .camp-n:empty { display: none; }
 .camp-btn.done .camp-n { color: var(--online, #3BD16F); }
