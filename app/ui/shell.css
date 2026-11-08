@@ -542,3 +542,7 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 .window .rail #rail-logo:hover img.logo { transform: scale(1.08); }
 .window .rail #rail-logo.is-busy::after { content: ''; position: absolute; right: 6px; bottom: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--live, #38C6B1); }
 .tb-brand .tb-wm { margin-left: -10px; }
+/* the rail's divider runs on the same line as the top bar's bottom edge; the projects sit just under it, a little bigger */
+.window .rail .logo-btn#rail-logo { margin-bottom: 0; }
+.window .rail .pj-rail { width: 44px; padding-top: 10px; }
+.window .rail .pj-circle, .window .rail .pj-face, .window .rail .pj-plus, .window .rail .ws-nav { width: 44px; height: 44px; flex-basis: 44px; }
