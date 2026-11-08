@@ -1,0 +1,5 @@
+/* The logo's flicker in loading states (logo.js) */
+.tc-loading { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.tc-loading::before { content: ''; width: 22px; height: 22px; flex: none; background: url('assets/icon-mark-animated.svg') center / contain no-repeat; image-rendering: pixelated; }
+.tc-loader { display: inline-block; vertical-align: middle; image-rendering: pixelated; }
+#rail-logo img.logo { image-rendering: pixelated; }

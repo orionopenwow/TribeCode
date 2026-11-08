@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.10.0
+
+- **The logo comes alive**: the pixel flame flickers, a pixel at the tip and the tongues, still solid orange. The top-left logo flickers whenever something is working (a prompt in flight to Flint, Ask AI, the Secretary or the local model, or an agent in the room at work in the last 20 seconds) and rests otherwise. Hover it to see what's working. Every "Loading…" gets the little flame
+- **On the website**: the flickering logo is in the nav, above the headline, in the download block and the footer (GIFs drawn on the site's background), and the browser tab icon flickers too. Reduced-motion settings show the still logo
+- **Phones**: "Loading…" spots get the flame too
+
 ## v0.9.9
 
 - **A new logo everywhere**: a solid orange pixel-art flame between two white pixel brackets, on deep navy. It's the app icon (Windows, Mac, Linux), the installer art, the top-left logo, the browser tab icon, the phone Home Screen icon, the invite and sign-in pages, the website, the README and the infographic. It's drawn on a pixel grid (scripts/icon.js) so it stays crisp at every size, and the app shows it as a vector

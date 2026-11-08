@@ -56,6 +56,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 | Open from the Explorer: low-contrast online green in the light theme, white on Ember buttons (3.05:1, design call), empty states without an action, two phone layout shifts | to do |
 
 ## User requests log (newest first)
+- 2026-11-07 19:28–19:32: Logo flicker for loading/working + GIF on the site ✅ v0.10.0 (scripts/icon.js frames, render-logo-gif.py, app/ui/logo.js: flickers for prompts in flight, agents at work, connecting). Next: Write-the-vision assist by Flint/Claude/LLMs + suggested tasks in New task; Preview app/game + Website always in the sidebar when relevant, and a + under Agents Hub to add widgets; declutter the room panel (bigger, fewer lines); then refresh all screenshots and READMEs (site + repo).
 - 2026-11-07 19:14–19:15: New logo everywhere: a pixel-art flame between pixel brackets, the flame solid orange (the dots in the sketch were a bug) ✅ v0.9.9 (scripts/icon.js → scripts/render-icons.py; wordmark lockups, installer BMPs, infographic regenerated).
 - 2026-11-07 18:58–18:59: Resizable panes ✅ v0.9.7 (panes.js: --side-w / --right-w / --pvw-w). New wordmark typography everywhere ✅ v0.9.8 (Inter Bold outlines: scripts/wordmark-glyphs.py → wordmark-glyphs.json → scripts/wordmark.js).
 - 2026-11-07 19:2x: Rich text while editing ✅ v0.9.6 (richtext.js: a contenteditable surface with the textarea API; Markdown is still stored; View Markdown toggle).
