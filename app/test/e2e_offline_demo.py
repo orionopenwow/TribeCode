@@ -31,7 +31,7 @@ def watch(page, tag, errors):
     page.on("pageerror", lambda e: errors.append(f"{tag} pageerror: {e}"))
     page.on("console", lambda m: m.type == "error" and errors.append(f"{tag} console: {m.text}"))
     page.on("response", lambda r: r.status >= 400 and errors.append(f"{tag} http {r.status}: {r.url}"))
-    page.on("requestfailed", lambda r: errors.append(f"{tag} failed: {r.url} {r.failure}"))
+    page.on("requestfailed", lambda r: "ERR_ABORTED" not in str(r.failure) and errors.append(f"{tag} failed: {r.url} {r.failure}"))   # a reload cancels requests in flight: not an error
 
 def wait_text(page, sel, text, timeout=15000):
     page.wait_for_function("([s, t]) => [...document.querySelectorAll(s)].some(e => e.textContent.includes(t))", arg=[sel, text], timeout=timeout)
@@ -184,7 +184,9 @@ def main():
             ph.evaluate("TribeApp.show('chat')"); ph.wait_for_selector("#chat-input", state="visible")
             ph.fill("#chat-input", "still here offline"); ph.press("#chat-input", "Enter"); wait_text(ph, "#chat-list", "still here offline")
             sideways(ph, "phone offline chat")
+            assert not ph.locator("#demo-pill").is_visible(), "phones: the pill steps aside in Chat (it would sit on the composer)"
             ctx.set_offline(False)
+            ph.evaluate("TribeApp.show('home')")
             leave_and_reset(ph, "phone")
             ctx.close()
             b.close()

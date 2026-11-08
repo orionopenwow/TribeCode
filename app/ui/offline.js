@@ -127,8 +127,8 @@
 
   // ---------- the fake socket ----------
   const sockets = new Set();
-  function push(msg) { db.seq++; for (const s of sockets) s._recv(msg); }
-  const pushPresence = () => push({ type: 'presence', members: presence() });
+  function push(msg) { if (!active()) return; db.seq++; for (const s of sockets) s._recv(msg); }
+  const pushPresence = () => active() && push({ type: 'presence', members: presence() });
   const pushHub = () => push({ type: 'hub', rev: 'demo-' + db.seq });
   function chatPush(pid, msg) { push(pid === cur() ? { type: 'chat', channel: 'general', message: msg } : { type: 'project-pulse', project: pid, kind: 'chat' }); }
   class FakeSocket {
@@ -137,7 +137,7 @@
       let want = ''; try { want = new URL(url.replace(/^ws/, 'http')).searchParams.get('project') || ''; } catch {}
       if (want && proj(want)) db.current = want;
       sockets.add(this);
-      setTimeout(() => { if (this.readyState !== 0) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }, 20);
+      setTimeout(() => { if (this.readyState !== 0 || !active()) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }, 20);
     }
     _recv(msg) { if (this.readyState !== 1) return; const data = JSON.stringify(msg); setTimeout(() => { if (this.readyState === 1 && this.onmessage) this.onmessage({ data }); }, 0); }
     send(raw) { let m; try { m = JSON.parse(raw); } catch { return; } if (active()) onSocket(this, m); }
@@ -164,7 +164,7 @@
       return sock._recv(state(s, { text: s.text }));
     }
     const s = sessions.get(slug); if (!s || !d) return;
-    const persist = () => { clearTimeout(s.timer); s.timer = null; if (d.body === s.text && d.title === s.title) return; d.body = s.text; d.title = s.title; d.version = (d.version || 1) + 1; d.updated = iso(); d.updatedBy = 'me'; save(); push({ type: 'doc', doc: { slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); };
+    const persist = () => { clearTimeout(s.timer); s.timer = null; if (!active()) return; if (d.body === s.text && d.title === s.title) return; d.body = s.text; d.title = s.title; d.version = (d.version || 1) + 1; d.updated = iso(); d.updatedBy = 'me'; save(); push({ type: 'doc', doc: { slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); };
     if (m.type === 'doc-op') {
       if (!OT || m.rev !== s.rev || !OT.valid(m.op)) return sock._recv(state(s, { text: s.text, resync: 'out of step' }));
       try { s.text = OT.apply(s.text, m.op); } catch { return sock._recv(state(s, { text: s.text, resync: 'bad op' })); }
@@ -318,6 +318,11 @@
         }
         if (c === 'pulse' && GET) return ok(pulse(p.id));
         if (c === 'requests' && GET) return ok({ approvals: [], changes: [], proposals: [] });
+        if (c === 'widgets') {   // app/ui/widgets.js: extra sidebar rows (none to start)
+          db.widgets = db.widgets || {};
+          if (PUT && Array.isArray(body.widgets)) { db.widgets[p.id] = body.widgets.slice(0, 24); save(); push({ type: 'widgets', project: p.id }); }
+          if (GET || PUT) return ok({ widgets: db.widgets[p.id] || [], canEdit: true, preview: { show: false, label: '' }, website: { show: false } });
+        }
         if (c === 'workspace' && GET) return ok({ repo: null, github: { installed: false, signedIn: false, user: null }, branch: null, identity: { name: me().name, email: '', custom: false, hasToken: false } });
         break;
       }
