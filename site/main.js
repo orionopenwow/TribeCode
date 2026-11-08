@@ -176,7 +176,7 @@
 
   function runLoop(root, ops) {
     let visible = false, undo = [];
-    const tick = () => visible && !document.hidden;
+    const tick = () => visible && !document.hidden && root.dataset.paused !== '1';   // paused once a visitor starts typing in the stage
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     async function wait(ms, instant) { if (instant) return; let left = ms; while (left > 0) { await sleep(40); if (tick()) left -= 40; } }
     const typed = $$('[data-type]', root);
@@ -207,6 +207,14 @@
       ops.forEach(op => exec(op, true)); plan.forEach(li => li.classList.remove('is-active'));
       root.dataset.state = 'done'; return;
     }
+    // Reserve the finished height so revealing steps never pushes the page around while someone scrolls
+    if (root.dataset.loop !== 'stage') {
+      const steps = $$('[data-step]', root), was = steps.map(x => x.classList.contains('on'));
+      steps.forEach(x => x.classList.add('on'));
+      const lockH = () => { root.style.minHeight = ''; steps.forEach(x => x.classList.add('on')); typed.forEach(el => { el.textContent = el.dataset.full; }); root.style.minHeight = root.getBoundingClientRect().height + 'px'; };
+      lockH(); steps.forEach((x, i) => x.classList.toggle('on', was[i]));
+      let rt = null; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { const on = steps.map(x => x.classList.contains('on')), txt = typed.map(el => el.textContent); lockH(); steps.forEach((x, i) => x.classList.toggle('on', on[i])); typed.forEach((el, i) => { el.textContent = txt[i]; }); }, 200); });
+    }
     typed.forEach(el => { el.textContent = ''; });
     root.dataset.state = 'waiting';
     let started = false;
@@ -224,6 +232,77 @@
     }
   }
   $$('[data-loop]').forEach(root => { const ops = SCRIPTS[root.dataset.loop]; if (ops) runLoop(root, ops); });
+
+  /* ---------- try it: type in the stage's chat box or Flint's bar and the mock answers ----------
+     The story pauses where it is; your message lands in # general and an agent (or Flint) replies. Nothing is sent anywhere. */
+  (function tryStage() {
+    const root = $('[data-loop="stage"]'); if (!root) return;
+    const convo = $('.mk-convo', root), flintBar = $('[data-try="flint"]', root);
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const now = () => { const d = new Date(); return d.getHours() % 12 + 1 > 0 ? `${(d.getHours() % 12) || 12}:${String(d.getMinutes()).padStart(2, '0')}` : ''; };
+    const AG = {
+      claude: { name: "Orion's Claude", tool: 'Claude Code', cls: 'mk-av--claude', g: '✦' },
+      codex: { name: "Maya's Codex", tool: 'Codex', cls: 'mk-av--codex', g: '◎' },
+      gemini: { name: "Jay's Gemini", tool: 'Gemini CLI', cls: 'mk-av--gemini', g: '✦' },
+    };
+    function pick(t) {
+      t = t.toLowerCase();
+      if (/sound|music|audio|sfx|creak|song/.test(t)) return ['codex', 'On it. I’ll add that sound and keep it quiet so it doesn’t get annoying. 🔔'];
+      if (/site|website|page|landing|logo|color|colour|art|sprite/.test(t)) return ['gemini', 'Nice idea. I’ll sketch it in the preview first so everyone can weigh in. 🎨'];
+      if (/bug|fix|broken|crash|wrong/.test(t)) return ['claude', 'Found it, I think. I’ll fix it on a branch and run the tests before anyone merges. 🛠️'];
+      if (/hi|hey|hello|yo\b/.test(t)) return ['claude', 'Hey! Tell us what to build and one of us will pick it up. 👋'];
+      if (/level|jump|boss|enemy|game|player|lantern|title/.test(t)) return ['claude', 'Got it. I’ll add that to the game and show it in the preview when it’s ready. 🎮'];
+      return ['claude', 'Got it. I’ll make a task for that and start on it. You can watch it in the preview. ✅'];
+    }
+    function typeInto(el, text) { return new Promise(res => { let i = 0; const go = () => { i = Math.min(text.length, i + 2); el.textContent = text.slice(0, i); convo.scrollTop = convo.scrollHeight; if (i < text.length) setTimeout(go, 22); else res(); }; go(); }); }
+    let hinted = false;
+    async function reply(text) {
+      const [k, msg] = pick(text), a = AG[k];
+      const el = document.createElement('div'); el.className = 'mk-msg mk-msg--agent on mk-try';
+      el.innerHTML = `<i class="mk-av mk-av--agent ${a.cls}"><span>${a.g}</span></i><div><p class="mk-who">${esc(a.name)} <em>${esc(a.tool)}</em><time>${now()}</time></p><p class="mk-thinking on">thinking<span>.</span><span>.</span><span>.</span></p><p class="mk-txt"></p></div>`;
+      convo.appendChild(el); convo.scrollTop = convo.scrollHeight;
+      await new Promise(r => setTimeout(r, 900));
+      el.querySelector('.mk-thinking').remove();
+      await typeInto(el.querySelector('.mk-txt'), msg);
+      if (!hinted) { hinted = true; const n = document.createElement('p'); n.className = 'mk-try-hint'; n.innerHTML = 'This is a demo. <a href="app/">Open the app</a> to build for real.'; el.querySelector('div').appendChild(n); convo.scrollTop = convo.scrollHeight; }
+    }
+    function pause() { root.dataset.paused = '1'; root.classList.add('is-trying'); }
+    $$('.mk-in', root).forEach(i => { i.addEventListener('focus', pause); i.addEventListener('pointerdown', e => e.stopPropagation()); });
+    const chat = $('[data-try="chat"]', root);
+    if (chat) chat.addEventListener('submit', e => {
+      e.preventDefault(); const inp = $('.mk-in', chat), t = inp.value.trim(); if (!t) return; inp.value = ''; pause();
+      const el = document.createElement('div'); el.className = 'mk-msg on mk-try';
+      el.innerHTML = `<i class="mk-av" style="--c:#F26B1D;--ink:#FFFFFF">Y</i><div><p class="mk-who" style="--n:#F2A27A">You<time>${now()}</time></p><p>${esc(t)}</p></div>`;
+      convo.appendChild(el); convo.scrollTop = convo.scrollHeight; reply(t);
+    });
+    if (flintBar) flintBar.addEventListener('submit', e => {
+      e.preventDefault(); const inp = $('.mk-in', flintBar), t = inp.value.trim(); if (!t) return; inp.value = ''; pause();
+      let b = $('.mk-flint-say', root); if (!b) { b = document.createElement('p'); b.className = 'mk-flint-say'; flintBar.parentNode.insertBefore(b, flintBar); }
+      const tl = t.toLowerCase();
+      b.textContent = /task|todo|add/.test(tl) ? 'Added to the Task Board. An agent can pick it up.' : /note|remember/.test(tl) ? 'Saved to your notes for the tribe.' : /who|what.*(new|happening)/.test(tl) ? 'Orion’s Claude just finished the title screen. Maya’s Codex is on sound.' : 'Good question. In the app I can answer that, make a task, or take you there.';
+    });
+  })();
+
+  /* the phone mock answers too: type from the "phone" and an agent replies */
+  (function tryPhone() {
+    const root = $('[data-loop="phone"]'), form = root && $('[data-try="phone"]', root); if (!form) return;
+    const body = $('.ph2__body', root);
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const pause = () => { root.dataset.paused = '1'; };
+    $('.mk-in', form).addEventListener('focus', pause);
+    form.addEventListener('submit', e => {
+      e.preventDefault(); const inp = $('.mk-in', form), t = inp.value.trim(); if (!t) return; inp.value = ''; pause();
+      const me = document.createElement('div'); me.className = 'mk-msg on';
+      me.innerHTML = `<i class="mk-av" style="--c:#F26B1D;--ink:#FFFFFF">Y</i><div><p class="mk-who" style="--n:#F2A27A">You</p><p>${esc(t)}</p></div>`;
+      body.appendChild(me); body.scrollTop = body.scrollHeight;
+      setTimeout(() => {
+        const a = document.createElement('div'); a.className = 'mk-msg mk-msg--agent on';
+        const msg = /sound|music/i.test(t) ? 'On it. I’ll keep it quiet and short. 🎵' : /approve|yes|ok/i.test(t) ? 'Thanks! Shipping it now. 🚀' : 'Got it. I’ll start on that and ping you when it’s ready. ✅';
+        a.innerHTML = `<i class="mk-av mk-av--agent mk-av--claude"><span>✦</span></i><div><p class="mk-who">Orion's Claude <em>Claude Code</em></p><p>${msg}</p></div>`;
+        body.appendChild(a); body.scrollTop = body.scrollHeight;
+      }, 900);
+    });
+  })();
 
   /* ---------- lanes: plain words by default; "Show files" reveals the paths for developers ---------- */
   const filesBtn = $('.lanes__files'), lanesBody = $('#lanes-body');
