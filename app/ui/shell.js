@@ -147,7 +147,7 @@
     const own = cur && document.querySelector(`.side .nest-row[data-pnav="${cur}"]:not(.hidden)`);   // a page with its own row (Overview, a pinned Repo) lights that row
     const lit = own ? cur : w ? WS[w].row : cur;   // inside a workspace its row is the lit one
     document.querySelectorAll('.side [data-pnav], #tabbar [data-pnav]').forEach(b => { const on = b.dataset.pnav === lit; if (b.classList.contains('on') !== on) b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    drawTabs(cur);
+    drawTabs(cur); paintSwitch();
   }
   // ---------- the tab bar of a workspace (Tasks & Board, Agents Hub) ----------
   let tabsSig = '';
@@ -246,7 +246,7 @@
 
   // ---------- a small popover we own (flat, 1px border, no shadow) ----------
   let popEl = null;
-  function closePop() { if (popEl) { popEl.remove(); popEl = null; document.querySelectorAll('#crumb-section, #pj-switch, #nest-switch, #ws-name, [data-nav-menu]').forEach(b => b.setAttribute('aria-expanded', 'false')); } }
+  function closePop() { if (popEl) { popEl.remove(); popEl = null; document.querySelectorAll('#crumb-section, #pj-switch, #nest-switch, #side-switch, #ws-name, [data-nav-menu]').forEach(b => b.setAttribute('aria-expanded', 'false')); } }
   function pop(anchor, html, { id, side = 'right', cls = '' } = {}) {
     closePop();
     const el = document.createElement('div'); el.className = `sh-pop ${cls} ${isPhone() ? 'sheet' : ''}`; if (id) el.id = id; el.setAttribute('role', 'menu');
@@ -262,7 +262,7 @@
     const f = el.querySelector('button'); if (f && !isPhone()) f.focus({ preventScroll: true });
     return el;
   }
-  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-switch, #ws-name, #crumb-section, #pj-switch, [data-nav-menu]')) closePop(); });
+  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-switch, #side-switch, #ws-name, #crumb-section, #pj-switch, [data-nav-menu]')) closePop(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && popEl) { closePop(); e.stopPropagation(); }
     if (popEl && ['ArrowDown', 'ArrowUp'].includes(e.key)) { const all = [...popEl.querySelectorAll('button:not([disabled])')]; const i = all.indexOf(document.activeElement); const n = all[(i + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length]; if (n) { n.focus(); e.preventDefault(); } }
@@ -342,24 +342,37 @@
         <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Home · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
         ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
+        <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-box')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
         <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
-      { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' });
+      { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' + (anchor.id === 'side-switch' ? ' sh-under-switch' : '') });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
     el.querySelectorAll('.sw-row [data-pj-open]').forEach(b => b.onclick = () => { const id = b.dataset.pjOpen; closePop(); closeDrawer(); if (id === (PJ() && PJ().current())) App().show('home'); else PJ().switchTo(id, 'home'); });
     el.querySelectorAll('[data-pin]').forEach(b => b.onclick = async e => { e.stopPropagation(); await togglePin(b.dataset.pin); switcher(anchor); });
     el.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => { const k = b.dataset.sw; closePop(); closeDrawer();
-      if (k === 'hub') hubOpen('home'); else if (k === 'scratch') openScratch(); else if (k === 'join') window.TribeSettings && window.TribeSettings.joinPrompt(); });
+      if (k === 'hub') hubOpen('home'); else if (k === 'workshop') { const w = document.getElementById('rail-workshop'); if (w) w.click(); } else if (k === 'scratch') openScratch(); else if (k === 'join') window.TribeSettings && window.TribeSettings.joinPrompt(); });
     return el;
   }
   $('#crumb-section').addEventListener('click', e => { e.stopPropagation(); popEl && popEl.id === 'section-menu' ? closePop() : sectionMenu(e.currentTarget); });
   $('#ws-name').addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); switcher(e.currentTarget); });
+  // feat/side-switch: the project rail becomes one thick dropdown at the top of the side column (desktop)
+  const ssBtn = $('#side-switch');
+  if (ssBtn) ssBtn.addEventListener('click', e => { e.stopPropagation(); if (popEl && popEl.id === 'project-menu') return closePop(); ssBtn.setAttribute('aria-expanded', 'true'); switcher(ssBtn); });
+  function paintSwitch() {
+    if (!ssBtn) return;
+    const g = isGlobal(), p = !g && PJ() && (PJ().list() || []).find(x => x.id === PJ().current());
+    const tribe = (C.state().tribe || {}).name || 'My Tribe';
+    $('#ss-face').innerHTML = p ? PJ().face(p, 'sm') : '<span class="pj-face sm ss-camp">⛺</span>';
+    $('#ss-name').textContent = p ? p.name : 'Home';
+    const n = (PJ() && PJ().list() || []).length;
+    $('#ss-sub').textContent = p ? `${tribe} · ${n} project${n === 1 ? '' : 's'}` : `${tribe} · every project`;
+  }
 
   // ---------- nest ----------
   let lastP = null, lastH = null;
   function render(p, h) {
     if (h) lastH = h;
-    if (!p) { lastP = null; globalHead(); return; }
+    if (!p) { lastP = null; globalHead(); paintSwitch(); return; }
     lastP = p;
     const k = p.counts || {}, here = h ? h.here(p.id).length : 0;
     const tribe = (C.state().tribe || {}).name || ($('#ws-name') && $('#ws-name').textContent) || '';
@@ -371,7 +384,7 @@
     set('#nn-chat', pulse, true); set('#nn-tasks', k.tasks);
     counts.bugs = k.bugs || 0; counts.requests = k.requests || 0;
     paintCounts();
-    pinned(p);
+    pinned(p); paintSwitch();
     recents();
     globalHead();
   }

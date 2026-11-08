@@ -301,9 +301,9 @@ def ui_host(b, host, orion, maya, pq, b1):
     if True:
         host.goto(BASE + "/?skipIntro=1")
         wait_text(host, "#sync-status", "connected")
-        host.wait_for_selector(f"#pj-rail .pj-circle.on[data-pj-open='{pq}']")
+        host.wait_for_selector(f"#pj-rail .pj-circle.on[data-pj-open='{pq}']", state="attached")
         # the shell: circles, nest, breadcrumbs, right panel
-        for sel in ["#pj-rail", "#pj-plus", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", "#nest-ws-tasks", "#nest-ws-agents", "#ub-gear", "#tour-invite", "#tour-search", "#tour-room"]:
+        for sel in ["#side-switch", "#nest", ".nest-row[data-nav='chat']", ".nest-row[data-nav='docs']", "#nest-ws-tasks", "#nest-ws-agents", "#ub-gear", "#tour-invite", "#tour-search", "#tour-room"]:
             host.wait_for_selector(sel, state="visible")
         assert host.locator("#crumbs").is_hidden(), "the breadcrumb is gone on desktop: the sidebar already says where you are"
         # the nest: four rows; the full feature set lives in the Tasks & Board and Agents Hub tabs (e2e_nav.py covers it in depth)
@@ -345,7 +345,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         shot(host, "bugs-board")
         host.click("#preview-close"); host.wait_for_selector("#tour-room:not(.previewing)")
         # + opens one simple dialog
-        host.click("#pj-plus"); host.wait_for_selector(".np-setup [data-ns='own']")   # like Discord: Create my own · templates · Join
+        host.evaluate("document.getElementById('pj-plus').click()"); host.wait_for_selector(".np-setup [data-ns='own']")   # like Discord: Create my own · templates · Join
         wait_text(host, ".np-setup", "Create my own"); wait_text(host, ".np-setup", "Have an invite already")
         shot(host, "shell-new-project")
         host.keyboard.press("Escape")

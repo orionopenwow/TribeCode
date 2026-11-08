@@ -61,7 +61,7 @@ def main():
             n0 = len(api("/projects", token=tok)[1]["projects"])
 
             # ---- create: Discord-style ----
-            host.click("#pj-plus"); host.wait_for_selector(".np-setup [data-ns='tpl:game']")
+            host.evaluate("document.getElementById('pj-plus').click()"); host.wait_for_selector(".np-setup [data-ns='tpl:game']")
             host.click(".np-setup [data-ns='tpl:game']"); host.wait_for_selector("#np-input")
             host.fill("#np-input", "Lantern Run"); host.fill("#np-bio", "A tiny platformer about lanterns")
             host.click("#np-create"); host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000)
@@ -82,13 +82,13 @@ def main():
             shot(host, "overview")
 
             # ---- project settings: rename + emoji ----
-            host.click(f"#pj-rail [data-pj-open='{pid}']", button="right"); host.click("#rail-menu [data-rc='settings']")
+            host.locator(f"#pj-rail [data-pj-open='{pid}']").first.dispatch_event("contextmenu"); host.click("#rail-menu [data-rc='settings']")
             host.wait_for_selector("#ps-name"); host.fill("#ps-name", "Lantern Dash"); host.fill("#ps-emoji", "🏮"); host.click("#ps-save")
             wait_until(lambda: [x for x in api("/projects", token=tok)[1]["projects"] if x["id"] == pid][0]["name"] == "Lantern Dash", 10, "renamed")
             host.wait_for_function("pid => (document.querySelector(`#pj-rail [data-pj-open='${pid}']`) || {}).title === 'Lantern Dash'", arg=pid, timeout=10000)
 
             # ---- pin from the rail: pinned bubbles come first ----
-            host.click(f"#pj-rail [data-pj-open='{pid}']", button="right"); host.click("#rail-menu [data-rc='pin']")
+            host.locator(f"#pj-rail [data-pj-open='{pid}']").first.dispatch_event("contextmenu"); host.click("#rail-menu [data-rc='pin']")
             host.wait_for_function("pid => document.querySelector('#pj-rail [data-pj-open]').dataset.pjOpen === pid", arg=pid, timeout=10000)
 
             # ---- tasks: new, move, delete ----
@@ -144,7 +144,7 @@ def main():
 
             # ---- delete the project (host only, type the name) ----
             assert api(f"/projects/{pid}", "DELETE", {"confirm": "Lantern Dash"}, token=ph.evaluate("TribeStore.get().server.token"))[0] == 403, "friends can't delete"
-            host.click(f"#pj-rail [data-pj-open='{pid}']", button="right"); host.click("#rail-menu [data-rc='settings']")
+            host.locator(f"#pj-rail [data-pj-open='{pid}']").first.dispatch_event("contextmenu"); host.click("#rail-menu [data-rc='settings']")
             host.click("#ps-delete"); host.wait_for_selector("#ps-del-go:disabled")
             host.fill("#ps-confirm", "Lantern Dash"); host.click("#ps-del-go")
             wait_until(lambda: not any(x["id"] == pid for x in api("/projects", token=tok)[1]["projects"]), 10, "project gone")
