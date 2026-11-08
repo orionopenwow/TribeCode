@@ -74,13 +74,13 @@ html body[data-theme="solar-light"] {
 html body[data-theme="campfire"] {
   --canvas: #1D2021; --page: #1D2021; --win: #282828; --surface: #282828; --surface-2: #32302F; --surface-3: #3C3836;
   --stroke: #34312F; --edge: #45403D; --border: #45403D; --edge-pop: #5C544E;
-  --text: #FBF1C7; --muted: #EBDBB2; --faint: #C2B396;
+  --text: #FFFFFF; --muted: #E4E4E4; --faint: #B9B9B9;
   --accent-2: #8EC07C; --live: #8EC07C; --peer: #83A598; --live-ink: #9BCB89; --peer-ink: #93B5A8; --amber-ink: #FABD2F; --on-live: #18240F;
   --live-tint: rgba(142,192,124,0.16); --peer-tint: rgba(131,165,152,0.18);
   --raised: #2E2C2B; --rail: #171A1A; --nest: #1D2021; --main: #232526; --right: #1D2021; --hover: #302E2D; --sel: #3A3634;
-  --bubble-other: #32302F; --bubble-other-edge: #45403D; --bubble-other-text: #FBF1C7; --bubble-other-meta: #C2B396;
-  --bubble-mine: #45291A; --bubble-mine-edge: #683A1E; --bubble-mine-text: #FBF0E4; --bubble-mine-meta: #E0B694; --bubble-mine-chip: #553322; --day-pill: #282828;
-  --white: #FBF1C7; --body: #C2B396; --scrim: rgba(12,13,13,0.76);
+  --bubble-other: #32302F; --bubble-other-edge: #45403D; --bubble-other-text: #FFFFFF; --bubble-other-meta: #B9B9B9;
+  --bubble-mine: #45291A; --bubble-mine-edge: #683A1E; --bubble-mine-text: #FFFFFF; --bubble-mine-meta: #E0B694; --bubble-mine-chip: #553322; --day-pill: #282828;
+  --white: #FFFFFF; --body: #B9B9B9; --scrim: rgba(12,13,13,0.76);
 }
 
 /* ---------- High contrast: pure black, white text, bright edges ---------- */

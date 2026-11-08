@@ -34,7 +34,7 @@
     const t = byId(id) || LIST[0];
     return { theme: t.id, [t.mode === 'light' ? 'themeLight' : 'themeDark']: t.id };
   }
-  function apply(arg) {
+  let apply = function apply(arg) {
     const id = typeof arg === 'string' ? (arg === 'system' ? resolve({ theme: 'system' }) : (byId(arg) ? arg : 'dark')) : resolve(arg);
     const t = byId(id), b = document.body;
     if (!b) return id;
@@ -56,6 +56,25 @@
   const listeners = new Set();
   mq.addEventListener && mq.addEventListener('change', () => { const st = saved(); if (st.themeSystem || st.theme === 'system') { apply(st); listeners.forEach(f => f()); } });
 
-  window.TribeThemes = { list: LIST, byId, resolve, pick, apply, saved, onSystemChange: f => listeners.add(f) };
+  // The wordmark follows the theme: "Tribe" in the theme's text color, "Code" in its accent. Every <img class="brand-wm">
+  // gets the same SVG redrawn with the live colors (a data URL), so layouts and sizes stay exactly as they are.
+  let wmSrc = null, wmKey = '';
+  const wmBase = () => { const s = document.querySelector('script[src$="themes.js"]'); return s ? s.src.replace(/themes\.js(\?.*)?$/, '') : ''; };
+  function paintWordmarks(force) {
+    const imgs = document.querySelectorAll('img.brand-wm'); if (!imgs.length || !document.body) return;
+    const cs = getComputedStyle(document.body), ink = (cs.getPropertyValue('--text') || '').trim() || '#F8FAFC', acc = (cs.getPropertyValue('--accent') || '').trim() || '#F26B1D';
+    const key = ink + acc;
+    const go = () => {
+      const svg = wmSrc.replace(/#F8FAFC/gi, ink).replace(/#F26B1D/gi, acc), url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      imgs.forEach(img => { if (force || img.dataset.wm !== key) { img.src = url; img.dataset.wm = key; } });
+    };
+    if (wmSrc) { wmKey = key; return go(); }
+    fetch(wmBase() + 'assets/wordmark.svg').then(r => r.ok ? r.text() : Promise.reject()).then(t => { wmSrc = t; go(); }).catch(() => {});
+  }
+  const _apply = apply;
+  apply = function (arg) { const id = _apply(arg); paintWordmarks(); return id; };
+  if (window.MutationObserver) new MutationObserver(muts => { if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches('img.brand-wm') || n.querySelector('img.brand-wm'))))) paintWordmarks(); })
+    .observe(document.documentElement, { childList: true, subtree: true });
+  window.TribeThemes = { list: LIST, byId, resolve, pick, apply, saved, onSystemChange: f => listeners.add(f), paintWordmarks };
   if (document.body) apply(saved());   // loaded at the end of <body>: paint the saved theme straight away
 })();

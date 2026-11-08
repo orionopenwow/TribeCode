@@ -335,7 +335,7 @@ def main():
             wait_text(host, "#hub-docs", "level.tmx")
             host.click("[data-dk=pics]"); host.wait_for_function("() => !document.querySelector('#hub-docs').innerText.includes('level.tmx') && document.querySelector('#hub-docs').innerText.includes('dot.png')")
             host.click("[data-dk=other]"); wait_text(host, "#hub-docs", "level.tmx")
-            host.click("#hub-docs [data-up]"); host.wait_for_selector("#fv .fv-none"); assert host.get_attribute("#fv-dl", "href").startswith("blob:")
+            host.click("#hub-docs [data-up]"); host.wait_for_selector("#fv .fv-pre:has-text(\"map\")"); assert host.get_attribute("#fv-dl", "href").startswith("blob:")
             host.click("#fv-del"); host.click("#fv-del"); host.wait_for_selector("#fv", state="detached")
             host.wait_for_function("() => !document.querySelector('#hub-docs').innerText.includes('level.tmx')")
             ups = ok(api("/uploads", token=orion)); assert [f["name"] for f in ups["mine"]] == ["dot.png"], ups
