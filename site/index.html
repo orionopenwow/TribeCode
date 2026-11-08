@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, and it runs on one friend's computer.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.14.4">
+<link rel="stylesheet" href="styles.css?v=0.15.4">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -66,6 +66,7 @@
           <li><a href="#phone"><b>Your phone as a remote</b><span>One-tap approvals, voice notes, tasks</span></a></li>
           <li><a href="#lanes"><b>Lanes</b><span>Every agent in its own lane, people approve</span></a></li>
           <li><a href="#host"><b>Share the network</b><span>One computer hosts, friends join from anywhere</span></a></li>
+          <li><a href="#starters"><b>Start from something</b><span>Starters for games, apps, sites and tools</span></a></li>
         </ul>
       </div>
       <div class="nav__item" data-menu>
@@ -118,7 +119,8 @@
 
     <!-- ================= STAGE: the app as it looks today (Campfire theme), scaled from a 1200x750 design ================= -->
     <div class="wrap">
-      <figure class="stage reveal" id="stage" aria-labelledby="stage-desc">
+      <div class="stage-wrap reveal">
+      <figure class="stage" id="stage" aria-labelledby="stage-desc">
         <div class="stage__scaler" data-loop="stage">
           <img class="stage__art" src="assets/art/stage-night.svg" alt="" width="1200" height="750">
           <div class="mk-win" aria-hidden="true">
@@ -140,15 +142,15 @@
             </div>
             <!-- the calm sidebar -->
             <div class="mk-side">
-              <span class="mk-row"><i class="mk-ic mk-ic--home"></i>Dashboard</span>
-              <span class="mk-row is-on"><i class="mk-ic mk-ic--chat"></i>Messages<em class="mk-chev">›</em></span>
-              <span class="mk-row mk-row--sub is-on"># general</span>
-              <span class="mk-row mk-row--sub"># agents <em>2</em></span>
-              <span class="mk-row"><i class="mk-ic mk-ic--file"></i>Files</span>
-              <span class="mk-row"><i class="mk-ic mk-ic--check"></i>Task Board<em>4</em></span>
-              <span class="mk-row"><i class="mk-ic mk-ic--bot"></i>Agents Hub<em>3</em></span>
-              <span class="mk-row mk-row--pin">📌 Level design</span>
-              <span class="mk-row mk-row--add">+ Add</span>
+              <button type="button" class="mk-row" data-go="dashboard"><i class="mk-ic mk-ic--home"></i>Dashboard</button>
+              <button type="button" class="mk-row is-on" data-go="general" data-group="chat"><i class="mk-ic mk-ic--chat"></i>Messages<em class="mk-chev">›</em></button>
+              <button type="button" class="mk-row mk-row--sub is-on" data-go="general"># general</button>
+              <button type="button" class="mk-row mk-row--sub" data-go="agents"># agents <em>2</em></button>
+              <button type="button" class="mk-row" data-go="files"><i class="mk-ic mk-ic--file"></i>Files</button>
+              <button type="button" class="mk-row" data-go="board"><i class="mk-ic mk-ic--check"></i>Task Board<em>4</em></button>
+              <button type="button" class="mk-row" data-go="hub"><i class="mk-ic mk-ic--bot"></i>Agents Hub<em>3</em></button>
+              <button type="button" class="mk-row mk-row--pin" data-go="level">📌 Level design</button>
+              <button type="button" class="mk-row mk-row--add" data-go="add">+ Add</button>
               <div class="mk-side__foot">
                 <span class="mk-invite">👋 Invite friends</span>
                 <div class="mk-me"><i class="mk-av mk-av--sm" style="--c:#F26B1D">O</i><div><b>Orion</b><span>Hosting</span></div></div>
@@ -156,7 +158,7 @@
             </div>
             <!-- # general -->
             <div class="mk-main">
-              <div class="mk-head"><span class="mk-head__ic"><i class="mk-ic mk-ic--chat"></i></span><div><b># general</b><span>5 members · 4 online</span></div><span class="mk-head__acts"><i></i><i></i><i></i></span></div>
+              <div class="mk-head"><span class="mk-head__ic"><i class="mk-ic mk-ic--chat" id="mk-head-ic"></i></span><div><b id="mk-head-t"># general</b><span id="mk-head-s">5 members · 4 online</span></div><span class="mk-head__acts"><i></i><i></i><i></i></span></div>
               <div class="mk-convo">
                 <div class="mk-msg mk-msg--agent"><i class="mk-av mk-av--agent mk-av--gemini"><span>✦</span></i><div><p class="mk-who">Jay's Gemini <em>Gemini CLI</em><time>9:38</time></p><p>Level 2 is laid out: three platforms and a secret door behind the waterfall. 🌊</p></div></div>
                 <div class="mk-msg" data-step id="mk-m1"><i class="mk-av" style="--c:#6C7CFF;--ink:#FFFFFF">M</i><div><p class="mk-who" style="--n:#9AA6FF">Maya<time>9:41</time></p><p>Can we get a title screen? And the lantern should swing when you jump.</p></div></div>
@@ -175,6 +177,7 @@
                 <div class="mk-msg mk-msg--agent" data-step id="mk-c1"><i class="mk-av mk-av--agent mk-av--codex"><span>◎</span></i><div><p class="mk-who">Maya's Codex <em>Codex</em><time>9:43</time></p><p data-type id="mk-c1t">I'll add a soft creak when the lantern swings. 🔔</p></div></div>
               </div>
               <form class="mk-composer" data-try="chat"><span class="mk-plus">+</span><input class="mk-in" type="text" maxlength="200" placeholder="Message the tribe…" aria-label="Try it: message the tribe" autocomplete="off"><svg class="mk-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><button class="mk-send" type="submit" aria-label="Send"></button></form>
+              <div class="mk-pane" id="mk-pane" hidden></div><!-- the other areas (Dashboard, Files, Task Board, …), drawn by main.js when a sidebar row is clicked -->
             </div>
             <!-- right panel: the preview, In the room, Flint -->
             <div class="mk-right">
@@ -239,9 +242,13 @@
             <div class="mk-follow"><span>+ Add a follow-up</span><i class="mk-send"></i></div>
           </div>
         </div>
+        <button type="button" class="stage__replay" id="stage-replay" hidden>↻ Replay</button>
         <script>(function(){var f=document.currentScript.parentNode;function k(){f.style.setProperty('--k',f.clientWidth/1200)}k();addEventListener('resize',k)})()</script>
         <figcaption class="sr-only" id="stage-desc">An animated mock of the TribeCode desktop app in the Pixel Quest project. In the # general channel, Jay's Gemini has laid out level 2. Maya asks for a title screen and a swinging lantern. Orion's Claude thinks, reads the scene setup, edits the title screen and the lantern and runs the tests, while the Preview builds the game's title screen and the little hero starts walking and jumping. A floating card checks off the agent's five-step plan. Maya says "ship it" and Maya's Codex offers to add a creak sound. The right panel shows who is in the room and Flint's ask bar.</figcaption>
       </figure>
+      <!-- the frame's corner is slightly on fire: 4 flat pixel frames + rising embers, still under reduced motion, hidden on phones -->
+      <svg class="stage__fire" viewBox="0 0 20 22" width="60" height="66" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><g class="cf cf0"><g fill="#F26B1D"><rect x="13" y="4" width="1" height="1"/><rect x="12" y="5" width="2" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="3" height="1"/><rect x="10" y="7" width="3" height="1"/><rect x="14" y="7" width="1" height="1"/><rect x="9" y="8" width="3" height="1"/><rect x="14" y="8" width="2" height="1"/><rect x="7" y="9" width="1" height="1"/><rect x="9" y="9" width="1" height="1"/><rect x="15" y="9" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="8" y="10" width="2" height="1"/><rect x="15" y="10" width="2" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="6" y="11" width="3" height="1"/><rect x="2" y="12" width="5" height="1"/><rect x="16" y="12" width="2" height="1"/><rect x="17" y="13" width="2" height="1"/><rect x="16" y="14" width="2" height="1"/><rect x="15" y="15" width="2" height="1"/><rect x="15" y="16" width="2" height="1"/><rect x="14" y="17" width="2" height="1"/><rect x="14" y="18" width="1" height="1"/><rect x="14" y="19" width="1" height="1"/></g><g fill="#FABD2F"><rect x="13" y="7" width="1" height="1"/><rect x="12" y="8" width="2" height="1"/><rect x="10" y="9" width="5" height="1"/><rect x="10" y="10" width="5" height="1"/><rect x="9" y="11" width="7" height="1"/><rect x="7" y="12" width="9" height="1"/><rect x="14" y="13" width="3" height="1"/><rect x="14" y="14" width="2" height="1"/><rect x="14" y="15" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/></g><g fill="#B4512A"><rect x="7" y="10" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="16" y="11" width="1" height="1"/></g></g><g class="cf cf1"><g fill="#F26B1D"><rect x="13" y="3" width="1" height="1"/><rect x="13" y="4" width="1" height="1"/><rect x="11" y="5" width="1" height="1"/><rect x="13" y="5" width="2" height="1"/><rect x="11" y="6" width="4" height="1"/><rect x="10" y="7" width="3" height="1"/><rect x="14" y="7" width="2" height="1"/><rect x="8" y="8" width="1" height="1"/><rect x="10" y="8" width="1" height="1"/><rect x="15" y="8" width="1" height="1"/><rect x="6" y="9" width="1" height="1"/><rect x="8" y="9" width="3" height="1"/><rect x="15" y="9" width="2" height="1"/><rect x="4" y="10" width="1" height="1"/><rect x="7" y="10" width="3" height="1"/><rect x="2" y="11" width="1" height="1"/><rect x="5" y="11" width="3" height="1"/><rect x="16" y="11" width="2" height="1"/><rect x="3" y="12" width="3" height="1"/><rect x="17" y="13" width="3" height="1"/><rect x="16" y="14" width="2" height="1"/><rect x="15" y="15" width="3" height="1"/><rect x="14" y="16" width="2" height="1"/><rect x="14" y="17" width="2" height="1"/><rect x="15" y="18" width="1" height="1"/></g><g fill="#FABD2F"><rect x="13" y="7" width="1" height="1"/><rect x="11" y="8" width="4" height="1"/><rect x="11" y="9" width="4" height="1"/><rect x="10" y="10" width="6" height="1"/><rect x="8" y="11" width="8" height="1"/><rect x="6" y="12" width="11" height="1"/><rect x="14" y="13" width="3" height="1"/><rect x="14" y="14" width="2" height="1"/><rect x="14" y="15" width="1" height="1"/></g><g fill="#B4512A"><rect x="6" y="10" width="1" height="1"/><rect x="16" y="10" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/><rect x="14" y="18" width="1" height="1"/></g></g><g class="cf cf2"><g fill="#F26B1D"><rect x="12" y="4" width="1" height="1"/><rect x="14" y="4" width="1" height="1"/><rect x="12" y="5" width="3" height="1"/><rect x="11" y="6" width="5" height="1"/><rect x="9" y="7" width="1" height="1"/><rect x="11" y="7" width="1" height="1"/><rect x="15" y="7" width="1" height="1"/><rect x="7" y="8" width="1" height="1"/><rect x="9" y="8" width="3" height="1"/><rect x="15" y="8" width="1" height="1"/><rect x="7" y="9" width="4" height="1"/><rect x="15" y="9" width="2" height="1"/><rect x="3" y="10" width="1" height="1"/><rect x="6" y="10" width="3" height="1"/><rect x="4" y="11" width="3" height="1"/><rect x="16" y="11" width="2" height="1"/><rect x="2" y="12" width="4" height="1"/><rect x="17" y="13" width="2" height="1"/><rect x="16" y="14" width="3" height="1"/><rect x="15" y="15" width="2" height="1"/><rect x="14" y="16" width="2" height="1"/><rect x="14" y="17" width="1" height="1"/><rect x="16" y="17" width="1" height="1"/><rect x="14" y="18" width="1" height="1"/><rect x="14" y="19" width="1" height="1"/></g><g fill="#FABD2F"><rect x="12" y="7" width="3" height="1"/><rect x="12" y="8" width="3" height="1"/><rect x="11" y="9" width="4" height="1"/><rect x="9" y="10" width="7" height="1"/><rect x="7" y="11" width="9" height="1"/><rect x="6" y="12" width="11" height="1"/><rect x="14" y="13" width="3" height="1"/><rect x="14" y="14" width="2" height="1"/><rect x="14" y="15" width="1" height="1"/></g><g fill="#B4512A"><rect x="16" y="10" width="1" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/><rect x="15" y="17" width="1" height="1"/></g></g><g class="cf cf3"><g fill="#F26B1D"><rect x="13" y="3" width="1" height="1"/><rect x="13" y="4" width="2" height="1"/><rect x="13" y="5" width="2" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="6" width="3" height="1"/><rect x="10" y="7" width="3" height="1"/><rect x="14" y="7" width="1" height="1"/><rect x="8" y="8" width="4" height="1"/><rect x="14" y="8" width="2" height="1"/><rect x="5" y="9" width="1" height="1"/><rect x="8" y="9" width="2" height="1"/><rect x="15" y="9" width="1" height="1"/><rect x="6" y="10" width="3" height="1"/><rect x="15" y="10" width="2" height="1"/><rect x="2" y="11" width="2" height="1"/><rect x="6" y="11" width="2" height="1"/><rect x="3" y="12" width="3" height="1"/><rect x="16" y="12" width="2" height="1"/><rect x="18" y="13" width="2" height="1"/><rect x="16" y="14" width="3" height="1"/><rect x="15" y="15" width="2" height="1"/><rect x="15" y="16" width="2" height="1"/><rect x="14" y="17" width="2" height="1"/><rect x="14" y="18" width="1" height="1"/></g><g fill="#FABD2F"><rect x="13" y="7" width="1" height="1"/><rect x="12" y="8" width="2" height="1"/><rect x="10" y="9" width="5" height="1"/><rect x="9" y="10" width="6" height="1"/><rect x="8" y="11" width="8" height="1"/><rect x="6" y="12" width="10" height="1"/><rect x="14" y="13" width="4" height="1"/><rect x="14" y="14" width="2" height="1"/><rect x="14" y="15" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/></g><g fill="#B4512A"><rect x="5" y="10" width="1" height="1"/><rect x="5" y="11" width="1" height="1"/><rect x="16" y="11" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/></g></g><rect class="cf-em cf-em1" x="9" y="5" width="1" height="1" fill="#FABD2F"/><rect class="cf-em cf-em2" x="15" y="3" width="1" height="1" fill="#F26B1D"/><rect class="cf-em cf-em3" x="19" y="10" width="1" height="1" fill="#FABD2F"/></svg>
+      </div>
     </div>
   </section>
 
@@ -359,6 +366,33 @@
     </div>
   </section>
 
+  <!-- ================= STARTERS: start from something ================= -->
+  <section class="starters" id="starters" aria-labelledby="starters-title">
+    <div class="wrap">
+      <div class="starters__head reveal">
+        <p class="eyebrow mono">// start from something</p>
+        <h2 id="starters-title">Start from something.</h2>
+        <p class="feature__text">Pick a starter and your tribe has a small first version to grow, with the right widgets already in the project. Or borrow an idea and make it yours.</p>
+      </div>
+      <div class="sw reveal" data-starters>
+        <div class="sw__bar"><span class="mk-lights" aria-hidden="true"><i></i><i></i><i></i></span><b>New project</b><span class="sw__tag mono">starters</span></div>
+        <div class="sw__tabs" role="tablist" aria-label="Kinds of starter">
+          <button class="sw__tab" type="button" role="tab" id="sw-tab-games" aria-controls="sw-panel" aria-selected="true" data-kind="games">🎮 Games</button>
+          <button class="sw__tab" type="button" role="tab" id="sw-tab-apps" aria-controls="sw-panel" aria-selected="false" tabindex="-1" data-kind="apps">📱 Apps</button>
+          <button class="sw__tab" type="button" role="tab" id="sw-tab-sites" aria-controls="sw-panel" aria-selected="false" tabindex="-1" data-kind="sites">🌐 Sites</button>
+          <button class="sw__tab" type="button" role="tab" id="sw-tab-tools" aria-controls="sw-panel" aria-selected="false" tabindex="-1" data-kind="tools">🛠️ Tools</button>
+        </div>
+        <div class="sw__panel" id="sw-panel" role="tabpanel" aria-labelledby="sw-tab-games" tabindex="0">
+          <p class="sw__fallback">Games, apps, sites and tools: open the app, start a project and ask your agent for a starter.</p>
+        </div>
+        <div class="sw__foot">
+          <p class="sw__note">Starters are small first versions, not finished products. Your tribe and its Agents build the rest.</p>
+          <a class="btn btn--light" href="app/" data-sw-cta>Start with this<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= GITHUB ================= -->
   <section class="stats" id="github" aria-labelledby="gh-title">
     <div class="wrap">
@@ -429,6 +463,6 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.14.3" defer></script>
+<script src="main.js?v=0.15.4" defer></script>
 </body>
 </html>
