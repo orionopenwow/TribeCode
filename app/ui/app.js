@@ -585,7 +585,9 @@
   if (onWorking()) document.body.classList.add('ui-working');
   // The window buttons also show in an app window without the desktop API: the Working version (Try New Work opens it
   // in an Edge app window when the desktop app can't show it) and an installed web app window.
-  if (!document.body.classList.contains('tauri') && (onWorking() || matchMedia('(display-mode: standalone), (display-mode: window-controls-overlay)').matches) && !matchMedia('(max-width: 820px)').matches) document.body.classList.add('app-window');
+  // Our window buttons only where nothing else draws them: the desktop app (frameless) and an installed app window whose
+  // title bar is ours (window-controls-overlay). A browser or Edge --app window has its own buttons, so ours stay hidden.
+  if (!document.body.classList.contains('tauri') && matchMedia('(display-mode: window-controls-overlay)').matches && !matchMedia('(max-width: 820px)').matches) document.body.classList.add('app-window');
 
   // tribecode:// links: on launch and while running (single-instance forwards them here)
   const deepLink = u => {
