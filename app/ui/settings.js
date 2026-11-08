@@ -66,6 +66,7 @@
     const st = S.get(), desk = window.TribeHost.isDesktop;
     const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
+      ${window.TribeProfiles && C() && C().connected() ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and presence.') : ''}
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
       ${themeRow(st)}
@@ -81,6 +82,7 @@
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
       <div class="set-links"><button class="linkish" id="set-tour">Take a quick tour</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
+    const sp = $('#set-profile'); if (sp) sp.onclick = () => { close(); window.TribeProfiles.edit(); };   // feat/profiles
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;
