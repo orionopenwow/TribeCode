@@ -26,7 +26,7 @@ def main():
             assert pg.evaluate("document.body.dataset.theme") == "campfire", "Campfire is the default"
             pg.evaluate("document.body.classList.add('tauri')")   # show the window buttons like the desktop app
             pg.wait_for_selector("#tb-help", state="visible")
-            assert pg.evaluate("document.querySelector('#tb-help').getBoundingClientRect().left > document.querySelector('#win-ctl .tl-close').getBoundingClientRect().right"), "? sits right of the window buttons"
+            assert pg.evaluate("document.querySelector('#tb-help').getBoundingClientRect().right <= document.querySelector('#win-ctl .tl-max').getBoundingClientRect().left"), "? sits left of the window buttons (left of the green one)"
             assert pg.evaluate("document.querySelector('#tb-help').getBoundingClientRect().top < 60"), "? is in the title bar"
             pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=guide]")
             for k in ["guide", "start", "claude", "keys", "bug", "update", "new", "docs", "gh"]: assert pg.locator(f"#help-menu [data-help={k}]").count() == 1, k
@@ -41,7 +41,7 @@ def main():
             old.reload(); old.wait_for_function("window.TribeThemes", timeout=15000); assert old.evaluate("document.body.dataset.theme") == "dark", "a picked theme sticks"
             b.close()
         assert not errors, errors
-        print("e2e_help: OK (? right of the window buttons, menu, shortcuts, Guide; Campfire default + migration)")
+        print("e2e_help: OK (? left of the window buttons, menu, shortcuts, Guide; Campfire default + migration)")
     finally:
         srv.send_signal(signal.SIGTERM)
         try: srv.wait(10)

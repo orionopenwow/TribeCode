@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.10.1
+
+- **The ? help** sits left of the window buttons
+- **Phones**: the new pixel logo sits beside "TribeCode ⌄" in Home's top bar, and flickers while something is working, like the desktop logo
+
 ## v0.10.0
 
 - **The logo comes alive**: the pixel flame flickers, a pixel at the tip and the tongues, still solid orange. The top-left logo flickers whenever something is working (a prompt in flight to Flint, Ask AI, the Secretary or the local model, or an agent in the room at work in the last 20 seconds) and rests otherwise. Hover it to see what's working. Every "Loading…" gets the little flame
