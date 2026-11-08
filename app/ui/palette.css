@@ -50,7 +50,12 @@ button.claude[data-give]::before { content: '✨'; }
 .m2-si-b .take[data-take] svg, .m2-si-b .claude[data-give] svg { display: none; }
 #tour-invite::before { content: '👋'; }
 #tour-invite > span:first-child { display: none; }          /* the 👋 replaces the orange "+" */
-.wg-preview::before { content: '🎮'; }
+.wg-preview::before { content: '▶️'; }                  /* the emoji follows what the crew is making */
+.wg-preview[data-kind="game"]::before { content: '🎮'; }
+.wg-preview[data-kind="3d"]::before { content: '🧊'; }
+.wg-preview[data-kind="app"]::before { content: '📱'; }
+.wg-preview[data-kind="site"]::before { content: '🌐'; }
+.wg-preview[data-kind="tool"]::before { content: '🛠️'; }
 .wg-preview svg.i { display: none; }
 
 /* gentle emoji before a few page titles (just these: the pages people live in, not every heading) */
