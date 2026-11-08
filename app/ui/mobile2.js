@@ -178,7 +178,7 @@
     const pRows = pjs.map(({ p, n, here }) => `<button class="m2-mi m2-conv" data-conv="pj:${esc(p.id)}" style="--cc:${esc(p.color || '#6C7CFF')}"><span class="m2-pjf">${PJ().face(p, 'sm')}</span><span class="m2-mt"><b># ${esc(p.name)}</b><small>${n ? 'New messages' : here ? `${here} here now` : 'Project chat'}</small></span>${n ? '<span class="m2-n">•</span>' : ''}</button>`).join('');
     const dRows = people.map(({ m, n }) => `<button class="m2-mi m2-conv" data-conv="dm:${esc(m.id)}" style="--cc:${esc(m.color || '#6C7CFF')}"><span class="m2-avw">${avatar(m)}<i class="m2-on ${m.online ? 'y' : ''}"></i></span><span class="m2-mt"><b>${esc(m.name)}${f.has(m.id) ? ' <span class="m2-tag">friend</span>' : ''}</b><small>${n ? `${n} new` : m.online ? 'online' : 'away'}</small></span>${n ? `<span class="m2-n">${n}</span>` : ''}</button>`).join('');
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Messages</span></div>
-      ${ag ? `<div class="m2-menu"><button class="m2-mi m2-conv" data-conv="claude" style="--cc:#38C6B1"><span class="m2-mic live">${ic('robot', 18)}</span><span class="m2-mt"><b>My Claude</b><small>${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}</small></span></button></div>` : ''}
+      ${ag ? `<div class="m2-menu"><button class="m2-mi m2-conv" data-conv="claude" style="--cc:#38C6B1"><span class="m2-mic live">${ic('robot', 18)}</span><span class="m2-mt"><b>My AI</b><small>${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}</small></span></button></div>` : ''}
       <div class="m2-sh-sub eyebrow">Project chats</div><div class="m2-menu">${pRows || '<p class="m2-fine left">No projects yet.</p>'}</div>
       <div class="m2-sh-sub eyebrow">Direct messages</div><div class="m2-menu">${dRows || '<p class="m2-fine left">Invite friends to message them here.</p>'}</div>`, { id: 'm2-messages-sheet', label: 'Messages' });
     el.addEventListener('click', async e => {
@@ -312,7 +312,7 @@
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">New</span><h3>Task</h3></div>
       <form class="m2-quick" id="m2-qt"><input id="m2-qt-in" maxlength="140" placeholder="What needs doing?" enterkeyhint="done" autocomplete="off" value="${esc(prefill)}"><button class="m2-go" aria-label="Add task">${ic('up', 20)}</button></form>
       ${window.TribeTasks && window.TribeTasks.typeChips ? window.TribeTasks.typeChips('', 'm2-types') : ''}
-      <p class="m2-fine">Lands in Backlog. Anyone (or their Claude) can take it.</p>`, { id: 'm2-task-sheet', label: 'New task' });
+      <p class="m2-fine">Lands in Backlog. Anyone (or their AI) can take it.</p>`, { id: 'm2-task-sheet', label: 'New task' });
     const inp = el.querySelector('#m2-qt-in'); setTimeout(() => inp.focus(), 60);
     let qtType = '';   // feat/setup-flow: task type chips
     el.querySelectorAll('[data-type]').forEach(b => b.onclick = () => { qtType = qtType === b.dataset.type ? '' : b.dataset.type; el.querySelectorAll('[data-type]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.type === qtType))); });
@@ -365,7 +365,7 @@
     if (ch === 'general') { l.textContent = '#general'; return; }
     if (/^c-/.test(ch)) { l.textContent = window.TribeChannels ? window.TribeChannels.label(ch) : '#channel'; return; }   // feat/chat2
     const rest = ch.replace(/^dm-/, ''), mid = me().id, other = rest.startsWith(mid + '-') ? rest.slice(mid.length + 1) : rest.slice(0, -(mid.length + 1));
-    const m = member(other); l.textContent = m ? (m.role === 'agent' ? 'My Claude' : m.name) : 'Direct message';
+    const m = member(other); l.textContent = m ? m.name : 'Direct message';
   }
 
   // =====================================================================
@@ -602,18 +602,18 @@
       .sort((a, b) => (f.has(b.id) - f.has(a.id)) || (b.online - a.online) || String(a.name).localeCompare(b.name));
     const unread = DM() && DM().unread ? DM().unread() : {};
     const row = (k, iconHtml, t, s, on = false, extra = '') => `<button class="m2-mi ${on ? 'on' : ''}" data-talk="${esc(k)}">${iconHtml}<span class="m2-mt"><b>${t}</b><small>${s}</small></span>${extra}</button>`;
-    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Talk to your Claude, the AI or the tribe</span></div>
+    const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Talk to your AI, Flint or the tribe</span></div>
       <div class="m2-menu">
         ${window.TribeFlint ? row('flint', `<span class="m2-mic live"><svg class="i m2i" style="width:18px;height:18px" aria-hidden="true"><use href="#i-flint"/></svg></span>`, 'Flint', `The built-in helper · ${window.TribeFlint.status().online ? 'local model on' : 'basic mode'}`) : ''}
         ${row('ai', `<span class="m2-mic live">${ic('spark', 18)}</span>`, 'Ask AI', '<span id="m2-ai-sub">The tribe\'s AI answers in #general</span>')}
-        ${ag ? row('claude', `<span class="m2-mic live">${ic('robot', 18)}</span>`, 'My Claude', `${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}`, ch === DM().channelWith(ag.id)) : ''}
+        ${ag ? row('claude', `<span class="m2-mic live">${ic('robot', 18)}</span>`, 'My AI', `${esc(ag.name)} · ${ag.online ? 'online' : 'reads it next time'}`, ch === DM().channelWith(ag.id)) : ''}
         ${ag ? row('desktop', `<span class="m2-mic">${ic('desk', 18)}</span>`, 'My desktop', 'Hand a change to a computer that can push') : ''}
         ${row('agents', `<span class="m2-mic">${ic('robot', 18)}</span>`, '#agents', 'Where the agents coordinate')}
         ${row('general', `<span class="m2-mic">${ic('hash', 18)}</span>`, '#general', 'Everyone in this project', ch === 'general')}
         ${chanRows(ch)}
         ${row('manage', `<span class="m2-mic">${ic('gear', 18)}</span>`, 'Manage agents', 'Connect your AI, the fleet, the Office')}
       </div>
-      ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have Claude Code on a computer? Connect it too</button>'}
+      ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have an AI on a computer (Claude Code, Codex…)? Connect it too</button>'}
       ${people.length ? `<div class="m2-sh-sub eyebrow">Direct messages</div><div class="m2-menu">${people.map(m => { const n = unread[DM().channelWith(m.id)] || 0;
         return row('dm:' + m.id, `<span class="m2-avw">${avatar(m)}<i class="m2-on ${m.online ? 'y' : ''}"></i></span>`, esc(m.name) + (f.has(m.id) ? ' <span class="m2-tag">friend</span>' : ''), m.online ? 'online' : 'away', ch === DM().channelWith(m.id),
           `${n ? `<span class="m2-n">${n}</span>` : ''}<span class="m2-info" data-prof="${esc(m.id)}" role="button" aria-label="${esc(m.name)}'s profile">${ic('user', 16)}</span>`); }).join('')}</div>` : '<p class="m2-fine">Invite friends to message them here.</p>'}`, { id: 'm2-talk-sheet', label: 'Talk to' });
@@ -633,7 +633,7 @@
     return rows + (T.canManage() ? `<button class="m2-mi" data-talk="newch"><span class="m2-mic">${ic('plus', 18)}</span><span class="m2-mt"><b>New channel</b><small>A place for one topic</small></span></button>` : '');
   }
   // Who answers "@ai" right now (server/askai.js decides when the question is sent)
-  const AI_SUB = { mine: r => `${r.label} answers`, theirs: r => `${r.label} answers${r.needsOk ? ' (they tap OK)' : ''}`, brain: () => 'The local model answers right away', queue: () => 'No AI on right now: it waits on the board for the next Claude' };
+  const AI_SUB = { mine: r => `${r.label} answers`, theirs: r => `${r.label} answers${r.needsOk ? ' (they tap OK)' : ''}`, brain: () => 'The local model answers right away', queue: () => 'No AI on right now: it waits on the board for the next agent' };
   function askAi() {
     if (DM() && DM().current() !== 'general') DM().back(); App().show('chat');
     setTimeout(() => { const i = $('#chat-input'); if (i) { if (!/^@ai\b/i.test(i.value)) i.value = '@ai ' + i.value.replace(/^@(ai|brain)\s*/i, ''); i.dispatchEvent(new Event('input')); i.focus(); } talkLabel(); }, 60);
@@ -667,13 +667,13 @@
     let body;
     if (pane === 'net') {
       body = `<div class="m2-pf-h"><button class="m2-back" data-pf="main" aria-label="Back">${ic('back', 18)}</button>${mine ? 'Your network' : esc(m.name) + "'s network"}</div>
-        <div class="m2-pf-sec"><div class="eyebrow">Agents</div>${ag ? `<div class="m2-pf-row">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · Claude Code</small></span></div>` : `<p class="m2-fine left">No Claude Code connected${mine ? ' yet.' : '.'}</p>`}</div>
+        <div class="m2-pf-sec"><div class="eyebrow">Agents</div>${ag ? `<div class="m2-pf-row">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · agent</small></span></div>` : `<p class="m2-fine left">No AI connected${mine ? ' yet.' : '.'}</p>`}</div>
         <div class="m2-pf-sec"><div class="eyebrow">Projects</div>${projects.length ? projects.map(p => `<div class="m2-pf-row">${PJ().face(p, 'sm')}<span><b>${esc(p.name)}</b><small>${PJ().here(p.id).length} here</small></span></div>`).join('') : '<p class="m2-fine left">Just this one.</p>'}</div>
         <div class="m2-pf-sec"><div class="eyebrow">People</div>${members().filter(x => x.role !== 'agent' && x.id !== m.id).map(x => `<div class="m2-pf-row">${avatar(x)}<span><b>${esc(x.name)}</b><small>${x.online ? 'online' : 'away'}${f.has(x.id) ? ' · friend' : ''}</small></span></div>`).join('') || '<p class="m2-fine left">Nobody else yet.</p>'}</div>`;
     } else if (mine) {
       body = `${head}
         ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Status</div><div class="m2-pf-st">${esc(where)}</div></div>`}
-        <div class="m2-pf-sec"><div class="eyebrow">Your Claude</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button><button class="m2-pf-more" data-pf="connect">Connect from another computer</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your AI</b><small>Claude Code, Codex, Gemini CLI, Cursor…</small></span>${ic('right', 16)}</button>`}</div>
+        <div class="m2-pf-sec"><div class="eyebrow">Your AI</div>${ag ? `<button class="m2-pf-agent" data-pf="claude">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'} · open your private chat</small></span>${ic('right', 16)}</button><button class="m2-pf-more" data-pf="connect">Connect from another computer</button>` : `<button class="m2-pf-agent" data-pf="connect"><span class="m2-av agent">${ic('spark', 14)}</span><span><b>Connect your AI</b><small>Claude Code, Codex, Gemini CLI, Cursor…</small></span>${ic('right', 16)}</button>`}</div>
         <div class="m2-pf-acts">
           <button data-pf="invite">${ic('userplus', 20)}<span>Invite</span></button>
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
@@ -685,17 +685,17 @@
     } else {
       body = `${head}
         ${/^(online|away)$/.test(where) ? '' : `<div class="m2-pf-sec"><div class="eyebrow">Now</div><div class="m2-pf-st">${esc(where)}</div></div>`}
-        ${ag ? `<div class="m2-pf-sec"><div class="eyebrow">Their Claude</div><div class="m2-pf-row">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'}</small></span></div></div>` : ''}
+        ${ag ? `<div class="m2-pf-sec"><div class="eyebrow">Their AI</div><div class="m2-pf-row">${avatar(ag)}<span><b>${esc(ag.name)}</b><small>${ag.online ? 'online' : 'offline'}</small></span></div></div>` : ''}
         <div class="m2-pf-acts">
           <button data-pf="dm">${ic('chat', 20)}<span>Message</span></button>
           <button data-pf="friend" class="${f.has(m.id) ? 'on' : ''}" aria-pressed="${f.has(m.id)}">${ic(f.has(m.id) ? 'usercheck' : 'userplus', 20)}<span>${f.has(m.id) ? 'Friends' : 'Add friend'}</span></button>
           <button data-pf="net">${ic('net', 20)}<span>Network</span></button>
-          <button data-pf="ask" ${ag ? '' : 'disabled'}>${ic('spark', 20)}<span>Ask Claude</span></button>
+          <button data-pf="ask" ${ag ? '' : 'disabled'}>${ic('spark', 20)}<span>Ask their AI</span></button>
         </div>
         ${window.TribeRoles ? window.TribeRoles.memberActions(m, { cls: 'btn soft' }) : ''}
         ${window.TribeProfiles ? '<button class="m2-pf-more" data-pf="fullprofile">Full profile</button>' : ''}
         ${window.TribePeople ? `<button class="m2-pf-agent m2-pf-activity" data-pf="activity">${ic('net', 18)}<span><b>Activity</b><small>Commits, prompts, chat and notes</small></span>${ic('right', 16)}</button>` : ''}
-        ${ag ? '' : `<p class="m2-fine">${esc(m.name)} hasn't connected a Claude Code yet.</p>`}`;
+        ${ag ? '' : `<p class="m2-fine">${esc(m.name)} hasn't connected an AI yet.</p>`}`;
     }
     const el = sheet(`<div class="m2-pf" data-who="${esc(m.id)}">${body}</div>`, { id: 'm2-profile', label: mine ? 'Your profile' : `${m.name}'s profile` });
     el.addEventListener('click', e => {
@@ -763,7 +763,7 @@
     v.innerHTML = `
       <section class="m2-sect">
         <div class="sec-head"><span class="eyebrow">Needs you</span><h2>${pend.length ? `${pend.length} approval${pend.length > 1 ? 's' : ''}` : 'Approvals'}</h2></div>
-        <div class="hero-card m2-needs">${pend.length ? pend.map(a => apCard(a, (kept.get(a.id) || {}).open)).join('') : `<p class="m2-empty">${upLoaded || !C.connected() ? 'Nothing waiting on you. When a Claude needs a human, it lands here.' : 'Loading…'}</p>`}</div>
+        <div class="hero-card m2-needs">${pend.length ? pend.map(a => apCard(a, (kept.get(a.id) || {}).open)).join('') : `<p class="m2-empty">${upLoaded || !C.connected() ? 'Nothing waiting on you. When an agent needs a person, it lands here.' : 'Loading…'}</p>`}</div>
       </section>
       <section class="m2-sect">
         <div class="sec-head"><span class="eyebrow">Recent</span><h2>What happened</h2></div>
@@ -877,7 +877,7 @@
       const list = hub.shots || [];
       sh.innerHTML = `<div class="sec-head"><span class="eyebrow">Screenshots</span><h2>How it looks</h2></div>
         ${list.length ? `<div class="m2-shots m2-hscroll">${list.map(s => `<button class="m2-shot" data-preview-img="${esc(`${C.base()}/api/visuals/${s.latest.screen}/${s.latest.ts}.png?token=${tok}`)}" data-preview-title="${esc(s.name)}"><img alt="" loading="lazy" src="${esc(`${C.base()}/api/visuals/${s.latest.screen}/${s.latest.ts}.png?token=${tok}`)}"><span><b>${esc(s.name)}</b><small>${s.count} version${s.count === 1 ? '' : 's'}</small></span></button>`).join('')}</div>`
-        : `<p class="m2-empty">${hub.shots ? 'No screenshots yet. Claude adds them as the app changes, or tap below.' : 'Loading…'}</p>`}
+        : `<p class="m2-empty">${hub.shots ? 'No screenshots yet. Agents add them as the app changes, or tap below.' : 'Loading…'}</p>`}
         <button class="btn m2-wide" data-nav="visuals">Open screenshots</button>`;
     }
   }
@@ -922,7 +922,7 @@
     const items = sugg.items || [], ag = myAgent();
     box.innerHTML = `<div class="sec-head"><span class="eyebrow">Suggested</span><h2>Up next</h2></div>
       <div class="m2-sl">${items.map(i => `<div class="m2-si" data-st="${esc(i.id)}"><div class="m2-si-t"><b>${esc(i.title)}</b><small>${esc(i.why)}</small></div>
-        <div class="m2-si-b"><button class="take" data-take>${ic('hand', 16)}Take it</button>${ag ? `<button class="claude" data-give>${ic('spark', 15)}Give to Claude</button>` : ''}</div></div>`).join('')
+        <div class="m2-si-b"><button class="take" data-take>${ic('hand', 16)}Take it</button>${ag ? `<button class="claude" data-give>${ic('spark', 15)}Give to my AI</button>` : ''}</div></div>`).join('')
         || `<p class="m2-empty">${sugg.items ? 'Nothing open. Suggest something below.' : 'Loading…'}</p>`}</div>
       <form class="m2-quick" data-sugg-form><input maxlength="140" placeholder="Suggest a task…" enterkeyhint="done" autocomplete="off" aria-label="Suggest a task"><button class="m2-go" aria-label="Add suggestion">${ic('up', 18)}</button></form>`;
     if (view === 'tasks' && window.TribeAssist) window.TribeAssist.ideas(box, { compact: true });   // feat/assist: ideas from the vision, template and repo

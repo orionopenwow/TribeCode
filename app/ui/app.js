@@ -206,7 +206,7 @@
         ${tabs.length > 1 ? `<div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}">${l}</button>`).join('')}</div>` : ''}
         <div id="cc-setup" data-kind="${esc(kind)}">${CAI().setupHtml(s)}</div>
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for it to connect…</div>
-        <p class="faint" style="font-size:12px;line-height:1.5">TribeCode works with ${esc(T[1])}; it isn't made by its vendor. A new key replaces the old one. Agents can't vote, approve or invite people.</p>
+        <p class="faint" style="font-size:13px;line-height:1.5">TribeCode works with ${esc(T[1])}; it isn't made by its vendor. A new key replaces the old one. Agents can't vote, approve or invite people.</p>
         <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>${opts && opts.welcome ? 'Later' : 'Done'}</button></div>`;
       wireChips(opts); CAI().wire($('#cc-setup'), s, toast);
       body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
@@ -225,7 +225,7 @@
       body.innerHTML = '<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2><p class="lead">Checking…</p>';
       let mine = null; try { mine = await C.api('/agents/mine'); } catch {}
       if (mine && mine.online && mine.agent) {
-        body.innerHTML = `<h2>Your Claude Code is connected</h2>${aiChips('claude-code')}
+        body.innerHTML = `<h2>Your AI is connected</h2>${aiChips('claude-code')}
           <div class="cc-status"><span class="cc-dot on"></span>Connected · ${esc(mine.agent.name)}</div>
           <p class="faint" style="font-size:13px;line-height:1.5">To connect it from another computer, make a new command. The new key replaces this one, so the session that is running now stops until you paste the new command there.</p>
           <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><span style="flex:1"></span><button class="btn" data-close>Done</button><button class="btn primary" id="cc-new">New command</button></div>`;
@@ -253,7 +253,7 @@
           : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
         <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
         ${opts && opts.welcome ? '<p class="cc-skip">No AI of your own? Skip this: ask Flint, or type <b>@ai</b> in the chat and the tribe\'s agents help.</p>' : ''}
-        <p class="faint" style="font-size:12px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and models →</a>' : ''}</p>
+        <p class="faint" style="font-size:13px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and models →</a>' : ''}</p>
         <div class="modal-foot">${opts && opts.welcome ? '<span style="flex:1"></span><button class="btn" data-close>Later</button>' : '<button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button>'}</div>`;
       body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
       wireChips(opts);
@@ -680,6 +680,9 @@
   // Zero-step setup (settings.js): name, folder and color fill themselves in; the desktop app hosts on its own.
   (async () => {
     await window.TribeSettings.autoSetup(); refresh();
+    // qa-pass: connect only once every module below has loaded, or the first "hello" can land before flow.js, gists.js…
+    // have subscribed (the friend's "You're in" card and gist cards then never showed after a reload).
+    if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
     // Every launch starts at your Home (the hub), apart from any tribe. Deep links (#/…) and automated tests keep their own start.
     if ((params.has('home') || !navigator.webdriver) && !location.hash && !window.__tribeRestoredView && window.TribeHub) setTimeout(() => window.TribeHub.open('home'), 0);
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);

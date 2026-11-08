@@ -752,7 +752,7 @@
       : `<span class="cb-av" style="background:${esc(peer.color || '#6C7CFF')};color:${ink(peer.color || '#6C7CFF')}">${esc(initials(peer.name))}</span>`;
     const humans = mem.filter(x => x.role !== 'agent'), on = humans.filter(x => x.online).length;
     const sub = !peer ? (chan && chan.topic ? chan.topic : `${humans.length} ${humans.length === 1 ? 'member' : 'members'} · ${on} online`)
-      : peer.role === 'agent' ? 'Your Claude · private' : peer.online ? 'online' : 'offline';
+      : peer.role === 'agent' ? 'Your AI · private' : peer.online ? 'online' : 'offline';
     const kids = [...h.childNodes];
     h.classList.add('cb');
     const np = (pinsBy.get(ch) || []).length;

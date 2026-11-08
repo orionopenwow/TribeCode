@@ -3,8 +3,8 @@
   const $ = s => document.querySelector(s);
   const S = window.TribeStore;
   const STEPS = [
-    { el: '#tour-rail', title: 'Your projects', body: 'Each circle is a project room with its own people, chat, docs and tasks. The orange bar marks where you are; + starts a new one or joins a friend.', place: 'right' },
-    { el: '#tour-side', title: 'Everything in this project', body: 'Chat, Docs & files, Updates, Tasks and the Huddle. More ⋯ has bugs, the board, calendar, repo, agents and the rest.', place: 'right' },
+    { el: '#tour-rail', title: 'Your projects', body: 'Each circle is a project room with its own people, chat, files and tasks. The orange bar marks where you are; + starts a new one or joins a friend.', place: 'right' },
+    { el: '#tour-side', title: 'Everything in this project', body: 'Dashboard, Messages, Files, Task Board and Agents Hub. + Add brings more (Calendar, Bugs…); Ctrl K finds the rest.', place: 'right' },
     { el: '#tour-search', title: 'Jump anywhere with Ctrl K', body: 'Search docs, tasks, people and actions from the keyboard.', place: 'below' },
     { el: '#tour-room', title: 'Who\'s here', body: 'People and agents in this project and what they are doing. Opening a doc or screenshot previews it here.', place: 'left' },
     { el: '#tour-invite', title: 'Bring your friends', body: 'One click makes an invite link. Friends pick a name and they\'re in.', place: 'right' },

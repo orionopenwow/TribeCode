@@ -81,6 +81,7 @@
     d.querySelector('[data-x]').onclick = close;
     const nm = d.querySelector('#ch-name');
     const save = async () => {
+      if (d.querySelector('#ch-save').disabled) return;   // qa-pass: a fast double Enter makes one channel
       const body = { emoji, topic: d.querySelector('#ch-topic').value.trim() };
       if (nm) { body.name = nm.value.trim(); if (!body.name) { nm.focus(); return toast('Give the channel a name.'); } }
       const btn = d.querySelector('#ch-save'); btn.disabled = true;

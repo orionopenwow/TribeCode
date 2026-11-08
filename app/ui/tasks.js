@@ -80,6 +80,7 @@
   // "Who does it?": one row of buttons until someone is picked, then a small chip (tap it to change).
   function who(t) {
     if (!remote() || t.status === 'done') return '';
+    if (t.status !== 'backlog' && !t.assignee && !t.doer && matchMedia('(max-width: 820px)').matches) return '';   // qa-pass: phones keep moving cards slim (Assign is right below)
     const ms = C.state().members || [], a = t.assignee && ms.find(m => m.id === t.assignee);
     const picked = t.doer || (a ? (a.id === meId() ? 'me' : a.role === 'agent' ? 'agent' : 'friend') : '');
     if (picked && !t._pick) {

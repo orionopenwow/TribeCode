@@ -157,10 +157,10 @@
     if ((m = RX.find.exec(t)) && !RX.help.test(t.replace(/^where('s| is)/, ''))) return find(text.slice(text.length - m[1].length).trim());
     if (RX.help.test(t) || /\b(guide|how do i|how to)\b/.test(t)) { const g = await guideSearch(text); if (g) return guideReply(g); if (RX.invite.test(t)) return invite(); return fallback(text, true); }
     if (RX.invite.test(t)) return invite();
-    if (RX.hello.test(t)) return /^(thanks|thank you|thx|cheers)/.test(t) ? say('Any time.') : say(`Hi${C && C.state().me ? ' ' + esc(first(C.state().me.name)) : ''}. I can connect your Claude, jot a note, add a task or tell you what's happening.`, chipsActs());
+    if (RX.hello.test(t)) return /^(thanks|thank you|thx|cheers)/.test(t) ? say('Any time.') : say(`Hi${C && C.state().me ? ' ' + esc(first(C.state().me.name)) : ''}. I can connect your AI, jot a note, add a task or tell you what's happening.`, chipsActs());
     return fallback(text);
   }
-  const chipsActs = () => [act('Connect my Claude', 'ask', 'Connect my Claude'), act('What\'s happening?', 'ask', 'What\'s happening?')];
+  const chipsActs = () => [act('Connect my AI', 'ask', 'Connect my AI'), act('What\'s happening?', 'ask', 'What\'s happening?')];
   const guideReply = g => say(`${g.heading && g.heading !== g.title ? `${g.title} › ${g.heading}: ` : `${g.title}: `}${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
 
   async function note(body) {

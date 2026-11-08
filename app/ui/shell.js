@@ -86,7 +86,7 @@
   const TKEY = w => `tribecode.tab.${w}`;
   // A workspace opens on its last tab (if it is still there).
   // feat/setup-flow: until the project is "going" (stage.js), the Task Board is just the Board (deep links still work)
-  const gated = w => w === 'tasks' && !!document.body.dataset.stage && document.body.dataset.stage !== 'going';
+  const gated = w => w === 'tasks' && !!document.body.dataset.stage && document.body.dataset.stage !== 'going' && document.body.dataset.repo !== '1';   // qa-pass: brought-in code keeps the tabs
   window.addEventListener('tribe:stage', () => { tabsSig = ''; drawTabs(); });
   function openWs(w) {
     const last = gated(w) ? 'tasks' : lsGet(TKEY(w)), list = adTabs(w, tabsOf(w), null);
@@ -219,7 +219,7 @@
     box.innerHTML = `<button class="nest-row small ${inChat && dmCur === 'general' ? 'on' : ''}" data-stream="general"><span class="hash">#</span><span>general</span></button>
       ${(window.TribeChannels ? window.TribeChannels.list().filter(c => !c.main && !c.archived) : []).map(c => `<button class="nest-row small ${inChat && dmCur === c.id ? 'on' : ''}" data-stream="ch:${esc(c.id)}"><span class="hash">${c.emoji ? esc(c.emoji) : '#'}</span><span>${esc(c.name)}</span></button>`).join('')}
       <button class="nest-row small" data-stream="agents"><span class="hash">#</span><span>agents</span></button>
-      ${ms.map(m => `<button class="nest-row small ${inChat && isDm(m.id) ? 'on' : ''}" data-stream="dm:${esc(m.id)}"><span class="dm-dot ${m.online ? 'on' : ''}" style="--mc:${esc(m.role === 'agent' ? '#38C6B1' : m.color)}"></span><span>${esc(m.role === 'agent' ? 'My Claude' : m.name)}</span></button>`).join('')}`;
+      ${ms.map(m => `<button class="nest-row small ${inChat && isDm(m.id) ? 'on' : ''}" data-stream="dm:${esc(m.id)}"><span class="dm-dot ${m.online ? 'on' : ''}" style="--mc:${esc(m.role === 'agent' ? '#38C6B1' : m.color)}"></span><span>${esc(m.name)}</span></button>`).join('')}`;
   }
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
@@ -273,7 +273,7 @@
       { label: 'Doc', icon: 'i-doc', run: () => { App().show('docs'); setTimeout(() => { const b = $('#doc-new'); b && b.click(); }, 120); } },
       { label: 'Upload a file', icon: 'i-upload', run: upload },
       { label: 'Start a huddle', icon: 'i-mic', run: () => { if (window.TribeHuddle) window.TribeHuddle.join(); } },
-      { label: 'Ask Claude', icon: 'i-sparkle', run: askClaude },
+      { label: 'Ask your AI', icon: 'i-sparkle', run: askClaude },
       { label: 'Report a bug', icon: 'i-bug', run: () => window.TribeBugs && window.TribeBugs.capture() },
     ];
     const el = pop(anchor, `<div class="sh-menu">${items.map((x, i) => `<button data-i="${i}">${ico(x.icon)}<span>${esc(x.label)}</span></button>`).join('')}</div>`, { id: 'new-menu' });

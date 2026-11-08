@@ -67,7 +67,7 @@
       <textarea class="input av-gist" id="av-gist" rows="2" maxlength="400" placeholder="One or two sentences. For example: a cozy platformer where you light lanterns to find your way home.">${esc(gist0)}</textarea>
       <div class="av-draft-h"><span class="av-lbl">Your vision</span><span class="av-improve">Improve with
         <button type="button" class="btn sm av-imp" data-helper="flint">Flint</button>
-        <button type="button" class="btn sm av-imp" data-helper="claude" ${hp.claude ? '' : 'disabled title="Connect your Claude Code first"'}>My Claude</button></span></div>
+        <button type="button" class="btn sm av-imp" data-helper="claude" ${hp.claude ? '' : 'disabled title="Connect your AI first"'}>My AI</button></span></div>
       <div class="av-status hidden" id="av-status" role="status"></div>
       <textarea class="input pj-vision-in av-text" id="pj-vtext" rows="9" aria-label="Your vision">${esc(existing)}</textarea>
       <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Later</button><button class="btn primary" id="pj-vsave">${h ? 'Save the vision' : 'Send to chat'}</button></div></div>`;
@@ -99,7 +99,7 @@
           finally { busy(false); }
         } else {
           const r = await C.api('/assist/vision', { method: 'POST', body: { helper, answers: answers() } });
-          const who = 'your Claude';
+          const who = 'your AI';
           status(`<span class="av-spin" aria-hidden="true"></span>Waiting for ${who}… <button type="button" class="linkish" id="av-cancel">Stop waiting</button>`, 'wait');
           busy(true);
           wait = { channel: r.channel, agent: r.agent.id, at: r.at, who, t: setTimeout(() => { if (wait) { stopWait(); status(`${cap(who)} hasn't answered yet. Its reply will be in your private chat with it.`); } }, 10 * 60_000) };

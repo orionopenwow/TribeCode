@@ -30,8 +30,8 @@
     { group: 'Get it done' },
     { k: 'task', icon: 'i-check', t: 'Task', s: draft() ? `“${draft().slice(0, 40)}”` : 'Add it to the board' },
     { k: 'askagent', icon: 'i-robot', t: 'Ask an agent', s: 'The next connected agent picks it up, no AI of your own needed', hide: inDm() || me().role === 'spectator' || !window.TribeAskAgent },   // feat/any-llm
-    myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my Claude', s: 'Opens your private chat with it' }
-      : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no Claude of your own needed', hide: inDm() || me().role === 'spectator' },
+    myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my AI', s: 'Opens your private chat with it' }
+      : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no AI of your own needed', hide: inDm() || me().role === 'spectator' },
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
     { k: 'note', icon: 'i-doc', t: 'Note', s: 'Into the living notes' },
     { k: 'bug', icon: 'i-bug', t: 'Report a bug', s: 'With the recent logs attached', hide: !window.TribeBugs },

@@ -162,10 +162,10 @@
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
     const tile = (id, title, sub, faceHtml = '', ic = '', go = '', k = '') => `<button class="gs-tile${k ? ' k-' + k : ''}" id="${id}">${ic ? `<span class="gs-ic"><svg class="i"><use href="#i-${ic}"/></svg></span>` : faceHtml}<b>${title}</b><span>${sub}</span>${go ? `<em class="gs-go">${go}<svg class="i"><use href="#i-chev"/></svg></em>` : ''}</button>`;
     const tiles = !on
-      ? tile('hub-host', 'Create your first project', desk ? 'Your tribe runs on this computer. Pick a name, invite friends, connect your Claude.' : 'Projects are hosted by the desktop app on someone\'s computer.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
+      ? tile('hub-host', 'Create your first project', desk ? 'Your tribe runs on this computer. Pick a name, invite friends, connect your AI.' : 'Projects are hosted by the desktop app on someone\'s computer.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
         + tile('hub-join', 'Join a friend\'s tribe', 'Got an invite link? Paste it and you\'re in, on this computer or your phone.', '', 'link', 'Paste a link', 'indigo')
       : (lp || p1
-          ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Your last session shows up here.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
+          ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Its chat, files and tasks, all in one place.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
           : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.', '', 'plus', 'Start a project', 'ember'))
         + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.', '', 'link', 'Copy a link', 'teal');
     // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
@@ -215,9 +215,9 @@
   const askTarget = () => (ask.to === 'claude' && myAgent() ? 'claude' : 'brain');
   function askPanel(on) {
     const ag = myAgent(), tgt = askTarget();
-    const to = ag ? `<div class="ask-to" role="group" aria-label="Ask who"><button type="button" data-ask-to="claude" class="${tgt === 'claude' ? 'on' : ''}" aria-pressed="${tgt === 'claude'}">${esc(ag.name || 'Your Claude')}</button><button type="button" data-ask-to="brain" class="${tgt === 'brain' ? 'on' : ''}" aria-pressed="${tgt === 'brain'}">Local model</button></div>`
+    const to = ag ? `<div class="ask-to" role="group" aria-label="Ask who"><button type="button" data-ask-to="claude" class="${tgt === 'claude' ? 'on' : ''}" aria-pressed="${tgt === 'claude'}">${esc(ag.name || 'Your AI')}</button><button type="button" data-ask-to="brain" class="${tgt === 'brain' ? 'on' : ''}" aria-pressed="${tgt === 'brain'}">Local model</button></div>`
       : `<span class="ask-who">${on ? 'Local model' : 'Not connected'}</span>`;
-    const ph = !on ? 'Host or join a tribe, then ask your agent or local model…' : tgt === 'claude' ? `Ask ${ag.name || 'your Claude'} anything, or give it a task…` : 'Ask your hub anything: what changed, what is next…';
+    const ph = !on ? 'Host or join a tribe, then ask your agent or local model…' : tgt === 'claude' ? `Ask ${ag.name || 'your AI'} anything, or give it a task…` : 'Ask your hub anything: what changed, what is next…';
     return `<div class="hh-panel hh-ask" id="hub-ask"><div class="hh-head"><span class="eyebrow">Ask</span>${to}</div>
       <form class="ask-box" id="hub-ask-form" autocomplete="off"><textarea id="hub-ask-in" rows="3" placeholder="${esc(ph)}" aria-label="Ask">${esc(ask.draft)}</textarea>
         <div class="ask-row"><span class="ask-hint">${on ? 'Enter to send · Shift Enter for a new line' : 'Answers come from the tribe\'s host'}</span><button class="ask-send" id="hub-ask-send" type="submit" aria-label="Send" title="Send">${SEND}</button></div></form>
@@ -226,7 +226,7 @@
   function answerHtml() {
     if (ask.error) return `<div class="ask-ans err"><p>${esc(ask.error)}</p>${ask.offerConnect ? '<div class="aa-acts"><button class="btn" id="hub-ask-cc">Connect your AI</button></div>' : ''}</div>`;
     if (!ask.status) return '';
-    const who = ask.via === 'claude' ? esc((ask.agent && ask.agent.name) || 'Your Claude') : `Local model${ask.model ? ` · ${esc(ask.model)}` : ''}`;
+    const who = ask.via === 'claude' ? esc((ask.agent && ask.agent.name) || 'Your AI') : `Local model${ask.model ? ` · ${esc(ask.model)}` : ''}`;
     const body = ask.status === 'thinking' || ask.status === 'sending' ? '<p class="aa-wait">Thinking…</p>'
       : ask.status === 'sent' ? `<p class="aa-wait">Sent to ${who}'s private chat. Its reply shows up here and in the chat.</p>`
       : `<div class="aa-text">${esc(ask.answer)}</div>`;
@@ -318,7 +318,7 @@
     return sec('Two ways in', 'Get started', `<div class="hub-start" id="hub-start">
         <button class="hst-x" id="hub-start-x" title="Dismiss" aria-label="Dismiss Get started">${ico('i-x', 15)}</button>
         <div class="hst-main">
-          <p class="hst-lead">Let the local model shape a first project from your notes, or hand it straight to your Claude Code.</p>
+          <p class="hst-lead">Let the local model shape a first project from your notes, or hand it straight to your AI.</p>
           <div class="hst-acts"><button class="btn ai" id="hub-start-ai">${ico('i-sparkle', 14)}Refine with AI</button><button class="btn ember-o" id="hub-start-agent">${ico('i-zap', 14)}Get started with your agent</button></div>
           <div class="hst-prog"><div class="hst-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${st.length}" aria-valuenow="${done}" aria-label="Get started progress"><i style="width:${pct}%"></i></div><span class="hst-num" id="hub-start-num">${done} of ${st.length} done</span></div>
           <ol class="hst-steps">${st.map((s, i) => `<li><button class="hst-step ${s.done ? 'done' : ''}" data-step="${s.id}" ${s.done ? 'aria-disabled="true"' : ''}><span class="hst-ck">${s.done ? ico('i-tick', 12) : i + 1}</span><span>${esc(s.label)}</span></button></li>`).join('')}</ol>
