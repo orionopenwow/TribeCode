@@ -412,6 +412,7 @@
         <div class="ne-body">${fields('ne-title')}</div></div>`;
     }
     document.body.appendChild(ov);
+    if (window.TribeRich) window.TribeRich.upgrade($('#note-text'));   // feat/richtext: formatted editing; #note-text keeps the textarea API
     const ti = $('#note-title'), ta = $('#note-text');
     (fresh || !title ? ti : ta).focus();
     const status = $('#note-status'); let st = null;
@@ -422,7 +423,7 @@
     };
     ti.oninput = save;
     ti.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } });
-    const hist = cmd => { (document.activeElement === ti ? ti : ta).focus(); document.execCommand(cmd); save(); };
+    const hist = cmd => { if (ta.rtUndo && document.activeElement !== ti) { if (cmd === 'undo') ta.rtUndo(); else ta.rtRedo(); save(); return; } (document.activeElement === ti ? ti : ta).focus(); document.execCommand(cmd); save(); };
     $('#note-undo').onclick = () => hist('undo');
     $('#note-redo').onclick = () => hist('redo');
     const close = () => { ov.remove(); if (mode === 'docs') drawDocs(); else if (document.body.dataset.view === 'hub') render(); };
@@ -443,6 +444,7 @@
           { label: 'Download .md', icon: 'download', run: () => L.download(ti.value.trim() || 'note', `# ${ti.value.trim() || 'Untitled note'}\n\n${ta.value}\n`) },
         ] }) },
         { label: 'Outline', icon: 'outline', run: () => L.outlineSheet({ ta: () => ta }) },
+        ...(window.TribeRich ? [window.TribeRich.menuItem(() => { save(); noteEditor(id); })] : []),   // feat/richtext: View Markdown / View formatted
         { label: 'Details', icon: 'info', run: () => { const s = L.sheet({ title: 'Details', anchor, html: `<dl class="dl-details"><dt>Words</dt><dd>${words()}</dd><dt>Characters</dt><dd>${ta.value.length}</dd><dt>Last edited</dt><dd>${esc(ago((scratch.notes().find(x => x.id === id) || {}).updated || n.updated || n.at) || 'just now')}</dd><dt>Owner</dt><dd>${esc(me().name || 'You')} · only you</dd></dl>` }); return s; } },
         { label: 'Rename', icon: 'rename', run: () => { ti.focus(); ti.select(); } },
         '-',

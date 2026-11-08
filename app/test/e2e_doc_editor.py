@@ -65,7 +65,7 @@ async def select(page, text, ta="#doc-body", collapse=None):
 
 
 async def value(page, sel="#doc-body"):
-    return await page.input_value(sel)
+    return await page.evaluate("([s]) => document.querySelector(s).value", [sel])   # the rich editor keeps the textarea's .value
 
 
 async def converged(pages, slug, timeout=10.0):
@@ -390,7 +390,7 @@ async def main():
             assert await ph.locator(".dl-sheet .dl-li").all_inner_texts() == ["Link", "Table", "Horizontal line", "Checklist", "Code block", "Table of contents"]
             await ph.click(".dl-sheet [data-close]")
             await ph.click("#note-ed .gd-head [data-act=more]")
-            assert await ph.locator(".dl-sheet .dl-li").all_inner_texts() == ["Find and replace", "Share & export", "Outline", "Details", "Rename", "Delete"]
+            assert await ph.locator(".dl-sheet .dl-li").all_inner_texts() == ["Find and replace", "Share & export", "Outline", "View Markdown", "Details", "Rename", "Delete"]
             assert await ph.locator(".dl-sheet #note-del").count() == 1
             await ph.click(".dl-sheet .dl-li:has-text('Find and replace')")
             await ph.fill("#dl-find-q", "sage"); await ph.fill("#dl-find-r", "thyme"); await ph.click("#dl-find-all")

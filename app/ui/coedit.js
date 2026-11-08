@@ -221,6 +221,7 @@
 
   // ---------- geometry (mirror-div technique, one mirror for many positions) ----------
   function measure(ta, positions) {
+    if (ta.rtMeasure) return ta.rtMeasure(positions);   // feat/richtext: the rich surface maps Markdown offsets to the screen
     const m = document.createElement('div'), cs = getComputedStyle(ta);
     ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'padding', 'border', 'letterSpacing', 'wordSpacing', 'tabSize', 'textIndent', 'textTransform', 'width', 'boxSizing']
       .forEach(k => (m.style[k] = cs[k]));
