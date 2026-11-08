@@ -174,10 +174,10 @@ def main():
                 # agent: teal name with the Claude glyph
                 assert page.locator(row(t4["id"]) + " .mb > b.nm .nm-g").count() == 1
                 # header + composer pill
-                page.wait_for_selector("#chat-head .cb-av"); assert page.locator("#chat-head .cb-btn").count() == 3
+                page.wait_for_selector("#chat-head .cb-av"); assert page.locator("#chat-head .cb-btn").count() == 4   # feat/chat2: + Pinned
                 assert "members" in page.inner_text("#chat-head .cb-sub")
                 assert page.locator("#chat-form .cx-emo").count() == 1 and page.locator("#chat-form .cx-plus").count() == 1
-                page.click("#chat-form .cx-emo"); page.click("#rx-picker [data-ins='🚀']")
+                page.click("#chat-form .cx-emo"); page.click("#emoji-pick .ep-c[data-e='🚀']")   # feat/chat2: the shared emoji picker
                 assert page.input_value("#chat-input") == "🚀"; page.fill("#chat-input", "")
                 # Maya's name opens her profile popout (feat/profiles), and View activity the people.js panel
                 page.click(row(t1["id"]) + " .mb > b.nm")

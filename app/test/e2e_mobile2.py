@@ -164,7 +164,7 @@ def main():
             # "+" menu (app/ui/plusmenu.js): attach, propose, poll, task, Claude, reminder, note, bug; "Quick poll" only when votes.js is loaded
             phone.click("#m2-plus"); phone.wait_for_selector(".pl-pop.sheet .pl-menu")
             items = phone.eval_on_selector_all(".pl-menu [data-pl]", "els => els.map(e => e.dataset.pl)")
-            assert items[:4] == ["attach", "propose", "poll", "task"] and ("claude" in items or "ai" in items), items
+            assert items[:5] == ["attach", "gif", "propose", "poll", "task"] and ("claude" in items or "ai" in items), items
             shot(phone, "plus")
             phone.click(".pl-menu [data-pl='poll']")
             phone.wait_for_function("TribeVotes.isOpen()")

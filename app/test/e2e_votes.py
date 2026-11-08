@@ -142,9 +142,9 @@ def main():
             assert set(msg("Level 2 is ready")["reactions"]["👍"]) == {oid, mid}
             # the picker has the rest
             maya.hover(bubble(lvl) + " .mb p"); maya.click(f"{bubble(lvl)} .rx-add")
-            maya.wait_for_selector("#rx-picker [data-pick='🚀']")
-            assert maya.locator("#rx-picker [data-pick]").count() == 24
-            maya.click("#rx-picker [data-pick='🚀']")
+            maya.wait_for_selector("#emoji-pick .ep-c[data-e='🚀']")   # feat/chat2: the full picker (app/ui/emojipick.js)
+            assert maya.locator("#emoji-pick .ep-c").count() > 300
+            maya.click("#emoji-pick .ep-c[data-e='🚀']")
             wait_text(orion, f"{bubble(lvl)} .reacts", "🚀")
             # tap a chip to toggle yours
             orion.click(f"{bubble(lvl)} .rx[data-rx='🚀']")
@@ -153,7 +153,7 @@ def main():
             chat(maya).fill("#chat-input", "+fire"); maya.keyboard.press("Enter")
             wait_text(orion, f"{bubble(lvl)} .reacts", "🔥")
             assert not any(m.get("text") == "+fire" for m in general())
-            assert api("/chat/general/react", "POST", {"id": lvl, "emoji": "💩"}, token=mtok)[0] == 400
+            assert api("/chat/general/react", "POST", {"id": lvl, "emoji": "<b>x</b>"}, token=mtok)[0] == 400   # feat/chat2: any real emoji is a reaction now; markup never is
             # keyboard: Ctrl+Shift+\ opens the quick bar on the latest message
             chat(orion).click("#chat-input"); orion.keyboard.press("Control+Shift+Backslash")
             orion.wait_for_selector("#qr-bar:not(.hidden)")

@@ -10,6 +10,12 @@
   const X = () => window.TribeChatX;
 
   let view = 'general', withId = null, generalUnread = 0;
+  // feat/chat2: created channels (c-xxxxxxxx, app/ui/channels.js) open in the same second list as DMs.
+  const isChan = ch => /^c-[a-f0-9]{8}$/.test(ch || '');
+  const CH = () => window.TribeChannels;
+  const chanOf = id => (CH() && CH().get(id)) || null;
+  const chanName = id => { const c = chanOf(id); return c ? c.name : 'channel'; };
+  let showArchived = false;
   const unread = new Map();            // channel -> count
   const typers = new Map();            // channel -> Map(by -> { name, until })
   let lastRead = {}; try { lastRead = JSON.parse(localStorage.getItem(READ) || '{}'); } catch {}
@@ -36,9 +42,9 @@
   const render = (m, ch) => X().html(m, ch);
   function drawHead() {
     const h = head(); if (!h) return;
-    if (view === 'general') {
-      const n = totalUnread();
-      h.innerHTML = `<button class="chan-switch" id="chan-switch" aria-haspopup="menu" title="Switch conversation"><span class="cs-hash">#</span>general${CHEV}${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`;
+    if (view === 'general' || isChan(view)) {
+      const n = totalUnread(view) + (view !== 'general' ? generalUnread : 0);
+      h.innerHTML = `<button class="chan-switch" id="chan-switch" aria-haspopup="menu" title="Switch channel or conversation"><span class="cs-hash">#</span>${esc(view === 'general' ? 'general' : chanName(view))}${CHEV}${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`;
       h.querySelector('#chan-switch').onclick = e => { e.stopPropagation(); switcher(h.querySelector('#chan-switch')); };
       return;
     }
@@ -54,8 +60,17 @@
     const people = (C.state().members || []).filter(m => m.role !== 'agent' && m.id !== me())
       .sort((a, b) => (unread.get(channelWith(b.id)) || 0) - (unread.get(channelWith(a.id)) || 0) || b.online - a.online || a.name.localeCompare(b.name));
     const ag = myAgent(), row = (m, iconHtml) => { const n = unread.get(channelWith(m.id)) || 0; return `<button role="menuitem" data-dm="${esc(m.id)}">${iconHtml}<span>${esc(m.name)}</span>${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`; };
-    const menu = document.createElement('div'); menu.id = 'dm-menu'; menu.className = 'dm-menu'; menu.setAttribute('role', 'menu');
-    menu.innerHTML = `<div class="menu-label">Direct messages</div>` +
+    const menu = document.createElement('div'); menu.id = 'dm-menu'; menu.className = 'dm-menu chan-menu'; menu.setAttribute('role', 'menu');
+    // feat/chat2: Channels (# general + created ones, unread dots, a "…" menu each), + New channel, then DMs.
+    const chans = CH() ? CH().list() : [{ id: 'general', name: 'general', main: true }], manage = CH() && CH().canManage();
+    const dot = id => (id === 'general' ? (view !== 'general' && generalUnread) : unread.get(id)) ? '<span class="ch-dot" aria-label="new messages"></span>' : '';
+    const crow = c => `<div class="ch-row ${c.id === view ? 'on' : ''} ${c.archived ? 'arch' : ''}"><button role="menuitem" data-ch="${esc(c.id)}"><span class="ch-ico" aria-hidden="true">${c.emoji ? esc(c.emoji) : '#'}</span><span class="ch-nm">${esc(c.name)}</span>${dot(c.id)}</button>`
+      + `<button class="ch-more" data-chm="${esc(c.id)}" aria-label="#${esc(c.name)} options" title="Channel options"><svg class="i"><use href="#i-more"/></svg></button></div>`;
+    const live = chans.filter(c => !c.archived), gone = chans.filter(c => c.archived);
+    menu.innerHTML = `<div class="menu-label">Channels</div>${live.map(crow).join('')}` +
+      (gone.length ? `<button class="ch-arch-t" data-arch-toggle aria-expanded="${showArchived}">${showArchived ? 'Hide' : 'Show'} archived (${gone.length})</button>${showArchived ? gone.map(crow).join('') : ''}` : '') +
+      (manage ? `<button role="menuitem" class="ch-new" data-ch-new><svg class="i"><use href="#i-plus"/></svg>New channel</button>` : '') +
+      `<div class="menu-label">Direct messages</div>` +
       (ag ? row(ag, '<svg class="i spark"><use href="#i-sparkle"/></svg>') : '') +
       (people.map(m => row(m, `<span class="mini-dot ${m.online ? 'on' : ''}"></span>`)).join('') || '<div class="menu-empty">Invite friends to message them.</div>');
     document.body.appendChild(menu);
@@ -63,6 +78,10 @@
     menu.style.top = Math.min(innerHeight - menu.offsetHeight - 8, r.bottom + 4) + 'px';
     menu.style.left = Math.max(8, Math.min(innerWidth - menu.offsetWidth - 8, r.left)) + 'px';
     menu.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => open(b.dataset.dm));
+    menu.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => openChannel(b.dataset.ch));
+    menu.querySelectorAll('[data-chm]').forEach(b => b.onclick = e => { e.stopPropagation(); CH() && CH().menu(b.dataset.chm, b); });
+    const nw = menu.querySelector('[data-ch-new]'); if (nw) nw.onclick = () => { closeMenu(); CH().create(); };
+    const at = menu.querySelector('[data-arch-toggle]'); if (at) at.onclick = e => { e.stopPropagation(); showArchived = !showArchived; switcher(anchor); };
     const f = menu.querySelector('button'); if (f) f.focus();
   }
 
@@ -71,12 +90,12 @@
     closeMenu();
     const ch = channelWith(id), since = lastRead[ch] || '';
     view = ch; withId = id;
-    document.body.classList.add('dm-open');
+    document.body.classList.add('dm-open'); document.body.classList.remove('chan-open');
     if (window.TribeApp && window.TribeApp.view && window.TribeApp.view() !== 'chat') window.TribeApp.show('chat');
     const list = dmList(); $('#chat-list').classList.add('hidden'); list.classList.remove('hidden');
     list.innerHTML = '<div class="empty-room">Loading…</div>';
     $('#chat-input').placeholder = m.role === 'agent' ? 'Message your Claude…' : `Message ${m.name}…`;
-    drawHead(); drawTyping(); decorateRoom(); X().channelChanged(ch);
+    drawHead(); drawTyping(); decorateRoom(); X().channelChanged(ch); if (CH()) CH().applyBg();
     try {
       const { messages } = await C.api('/chat/' + ch + '?limit=200');
       if (view !== ch) return;
@@ -89,12 +108,48 @@
     drawHead(); decorateRoom();
     $('#chat-input').focus();
   }
+  // feat/chat2: open a created channel (or #general) in the panel
+  async function openChannel(id) {
+    if (!id || id === 'general') { closeMenu(); return back(); }
+    if (!isChan(id)) return;
+    closeMenu();
+    const since = lastRead[id] || '', c = chanOf(id);
+    view = id; withId = null;
+    document.body.classList.remove('dm-open'); document.body.classList.add('chan-open');
+    if (window.TribeApp && window.TribeApp.view && window.TribeApp.view() !== 'chat') window.TribeApp.show('chat');
+    const list = dmList(); $('#chat-list').classList.add('hidden'); list.classList.remove('hidden');
+    list.innerHTML = '<div class="empty-room">Loading…</div>';
+    const inp = $('#chat-input'); inp.placeholder = c && c.archived ? `#${chanName(id)} is archived` : `Message #${chanName(id)}…`;
+    drawHead(); drawTyping(); X().channelChanged(id); if (CH()) CH().applyBg();
+    try {
+      const { messages } = await C.api('/chat/' + id + '?limit=200');
+      if (view !== id) return;
+      list.innerHTML = messages.length ? messages.map(x => render(x, id)).join('')
+        : `<div class="empty-room ch-start"><span class="ch-start-e" aria-hidden="true">${esc((c && c.emoji) || '💬')}</span><b>This is the start of #${esc(chanName(id))}</b>${c && c.topic ? `<span>${esc(c.topic)}</span>` : ''}</div>`;
+      list.scrollTop = list.scrollHeight;
+      markRead(id, messages.length ? messages[messages.length - 1].at : undefined);
+      X().channelChanged(id, { list, since });
+    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(e.message)}</div>`; }
+    drawHead();
+    if (!matchMedia('(max-width: 820px)').matches) inp.focus();
+  }
+  // channels.js: the project's channel list changed (or loaded): unread dots from each channel's last message
+  function syncChannels(chs) {
+    const now = new Date().toISOString();
+    for (const c of chs || []) {
+      if (c.main) continue;
+      if (!lastRead[c.id]) { lastRead[c.id] = c.last || now; continue; }   // a channel you have never opened starts read
+      if (c.id !== view && c.last && c.last > lastRead[c.id]) unread.set(c.id, Math.max(1, unread.get(c.id) || 0));
+    }
+    try { localStorage.setItem(READ, JSON.stringify(lastRead)); } catch {}
+    if (isChan(view) && !chanOf(view)) back(); else drawHead();
+  }
   function back() {
     view = 'general'; withId = null; generalUnread = 0;
-    document.body.classList.remove('dm-open');
+    document.body.classList.remove('dm-open', 'chan-open');
     dmList().classList.add('hidden'); $('#chat-list').classList.remove('hidden'); $('#chat-list').scrollTop = 1e9;
     $('#chat-input').placeholder = C.connected() ? 'Message the tribe…' : 'Connect to a tribe to chat';
-    drawHead(); drawTyping(); decorateRoom(); X().channelChanged('general');
+    drawHead(); drawTyping(); decorateRoom(); X().channelChanged('general'); if (CH()) CH().applyBg();
   }
 
   // ---------- people: badges + "Message" menu ----------
@@ -166,6 +221,16 @@
     const t = typers.get(channel); if (t && t.delete(message.by)) drawTyping();
     const mine = message.by === me();
     if (channel === 'general') { if (view !== 'general' && !mine) { generalUnread++; drawHead(); } return; }
+    if (isChan(channel)) {   // feat/chat2: a created channel: append when open, else an unread dot
+      if (channel === view) {
+        const list = dmList(); if (list.querySelector('.empty-room')) list.innerHTML = '';
+        const stick = list.scrollHeight - list.scrollTop - list.clientHeight < 160 || mine;
+        list.insertAdjacentHTML('beforeend', render(message, channel)); if (stick) list.scrollTop = list.scrollHeight;
+        markRead(channel, message.at);
+      } else if (!mine) { unread.set(channel, (unread.get(channel) || 0) + 1); drawHead(); }
+      else { lastRead[channel] = message.at; }
+      return;
+    }
     if (!channel.startsWith('dm-')) return;
     if (channel === view) {
       const list = dmList(); if (list.querySelector('.empty-room')) list.innerHTML = '';
@@ -190,10 +255,12 @@
       }
       decorateRoom(); drawHead();
       if (view !== 'general' && withId) open(withId);   // reconnected: reload the open thread
+      else if (isChan(view)) openChannel(view);
     } catch {}
   });
   function boot() { const r = $('#room-list'); if (r) new MutationObserver(decorateRoom).observe(r, { childList: true }); typingLine(); drawHead(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-  window.TribeDM = { open, back, current: () => view, unread: () => Object.fromEntries(unread), channelWith };
+  C.on('project', () => { if (isChan(view)) back(); });   // feat/chat2: channels belong to one project
+  window.TribeDM = { open, back, openChannel, syncChannels, isChannel: isChan, current: () => view, unread: () => Object.fromEntries(unread), channelWith };
 })();

@@ -213,6 +213,7 @@
     const dmCur = window.TribeDM && window.TribeDM.current ? window.TribeDM.current() : 'general', inChat = document.body.dataset.view === 'chat';
     const isDm = id => dmCur !== 'general' && String(dmCur).includes(id);
     box.innerHTML = `<button class="nest-row small ${inChat && dmCur === 'general' ? 'on' : ''}" data-stream="general"><span class="hash">#</span><span>general</span></button>
+      ${(window.TribeChannels ? window.TribeChannels.list().filter(c => !c.main && !c.archived) : []).map(c => `<button class="nest-row small ${inChat && dmCur === c.id ? 'on' : ''}" data-stream="ch:${esc(c.id)}"><span class="hash">${c.emoji ? esc(c.emoji) : '#'}</span><span>${esc(c.name)}</span></button>`).join('')}
       <button class="nest-row small" data-stream="agents"><span class="hash">#</span><span>agents</span></button>
       ${ms.map(m => `<button class="nest-row small ${inChat && isDm(m.id) ? 'on' : ''}" data-stream="dm:${esc(m.id)}"><span class="dm-dot ${m.online ? 'on' : ''}" style="--mc:${esc(m.role === 'agent' ? '#38C6B1' : m.color)}"></span><span>${esc(m.role === 'agent' ? 'My Claude' : m.name)}</span></button>`).join('')}`;
   }
@@ -224,7 +225,9 @@
     if (k === 'general') return go('chat');
     if (k === 'agents') { coord('agents'); setTimeout(() => { const t = $('#talk-input'); if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); } }, 400); return; }
     if (k.startsWith('dm:') && window.TribeDM) window.TribeDM.open(k.slice(3));
+    if (k.startsWith('ch:') && window.TribeDM) window.TribeDM.openChannel(k.slice(3));   // feat/chat2
   });
+  document.addEventListener('tribe-channels', () => { if (lsGet(SKEY) === '1') drawStreams(); });   // feat/chat2
   C.on('presence', () => { if (lsGet(SKEY) === '1') drawStreams(); }); C.on('hello', drawStreams);
   new MutationObserver(() => drawStreams()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 

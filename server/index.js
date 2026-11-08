@@ -178,7 +178,7 @@ function broadcast(msg, except) {
   let pid = null;
   if (!UNSCOPED.has(type)) {
     const ch = typeof msg.channel === 'string' ? msg.channel : null;
-    const chPid = ch ? (ch === 'general' ? (P.current() || P.defaultId()) : (P.byChannel(ch) || {}).id) : null;
+    const chPid = ch ? (ch === 'general' ? (P.current() || P.defaultId()) : (P.byChannel(ch) || {}).id || (chans && chans.projectOf(ch))) : null;   // feat/chat2: created channels
     pid = msg.project || (msg.approval && msg.approval.project) || chPid || (ch && !chPid ? null : P.current());
     if (type === 'approval' && !msg.project && !(msg.approval && msg.approval.project)) pid = P.defaultId();
   }
@@ -345,10 +345,14 @@ const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus })
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
 const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
-  channelProject: ch => (P.byChannel(ch) || {}).id || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
+  channelProject: ch => (P.byChannel(ch) || {}).id || (chans && chans.projectOf(ch)) || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
   canModerate: (mem, msg, ch) => { const pid = (P.byChannel(ch) || {}).id || P.current(); const by = memberById(msg.by); return perms.can(mem, 'chat.moderate', pid) && (!by || perms.outranks(mem, by, pid)); },   // feat/roles
   muteBlock: mem => perms.muteBlock(mem), audit: (...x) => perms.audit(...x),
   voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
+// feat/chat2: created channels, link previews (SSRF-safe fetch + picture proxy), GIF search (server/channels.js, embeds.js, gifs.js)
+const chans = require('./channels')({ store: baseStore, P, str, broadcast, getMembers: () => members });
+const embeds = require('./embeds')({ store: baseStore });
+const gifs = require('./gifs')({ store: baseStore, pstore: store, P, channels: chans });
 // comms-smoke: meetings belong to the project where captions were turned on; optional after-huddle summary (server/huddlesum.js)
 const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m => console.error('  ' + m) });
 const voice = makeVoice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
@@ -450,9 +454,14 @@ const mcp = makeMcp({
   },
   docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...showcase.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
   chat: {
-    post(me, text) { const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */ if (chatx.command('general', me, tx)) return; postChat('general', me.id, tx); handleCommands('general', me, tx); },
+    post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
+      const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
+      const ch = channel ? chans.resolve(P.current() || P.defaultId(), channel) : 'general';
+      if (!ch) throw new Error(`No channel ${String(channel).slice(0, 40)} in this project.`);
+      if (chatx.command(ch, me, tx)) return; postChat(ch, me.id, tx); handleCommands(ch, me, tx);
+    },
     approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
-    recent: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted).map(x => {
+    recent: (n, channel) => store.readJSONL(`chat/${(channel && chans.resolve(P.current() || P.defaultId(), channel)) || 'general'}.jsonl`, n).filter(x => !x.deleted).map(x => {
       const media = x.media ? (x.media.kind === 'voice' ? '[voice note] ' : x.media.kind === 'image' ? '[image] ' : x.media.kind === 'file' ? `[file: ${x.media.name || 'file'}] ` : '') : '';
       const vote = x.vote ? `[vote] ${x.vote.q || ''} ` : '';
       return `${x.at.slice(11, 16)} ${x.by === 'tribecode' ? 'TribeCode' : nameOf(x.by)}: ${media}${vote}${x.text || ''}`.trimEnd();
@@ -644,6 +653,9 @@ async function apiInProject(req, res, url) {
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
   if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
   if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
+  if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
+  if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
+  if (a === 'gifs') return gifs.route(req, res, ctx());        // feat/chat2
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
@@ -687,7 +699,9 @@ async function apiInProject(req, res, url) {
     // Only real conversations: a project's channel, a DM, or a project's #agents channel you can see.
     // (Before, any name worked, so a project-only friend could read another project's chat/agents-<id>.jsonl.)
     const agentsOf = /^agents-(.+)$/.exec(b);
-    if (!chProject && !dms.isDm(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
+    if (chans.isCustom(b) && !chans.canRead(me, b)) return fail(res, 403, 'you are not in that project');   // feat/chat2: created channels
+    if (!chProject && !dms.isDm(b) && !chans.isCustom(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
+    if (m !== 'GET' && chans.archived(b) && !(c === 'react' || c === 'pin')) return fail(res, 403, 'this channel is archived');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
     if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
     if (m === 'GET') {   // ?before=<message id> pages back through history

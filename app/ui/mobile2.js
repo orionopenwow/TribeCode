@@ -360,6 +360,7 @@
     const l = $('#m2-talk-l'); if (!l) return;
     const ch = chan();
     if (ch === 'general') { l.textContent = '#general'; return; }
+    if (/^c-/.test(ch)) { l.textContent = window.TribeChannels ? window.TribeChannels.label(ch) : '#channel'; return; }   // feat/chat2
     const rest = ch.replace(/^dm-/, ''), mid = me().id, other = rest.startsWith(mid + '-') ? rest.slice(mid.length + 1) : rest.slice(0, -(mid.length + 1));
     const m = member(other); l.textContent = m ? (m.role === 'agent' ? 'My Claude' : m.name) : 'Direct message';
   }
@@ -606,6 +607,7 @@
         ${ag ? row('desktop', `<span class="m2-mic">${ic('desk', 18)}</span>`, 'My desktop', 'Hand a change to a computer that can push') : ''}
         ${row('agents', `<span class="m2-mic">${ic('robot', 18)}</span>`, '#agents', 'Where the agents coordinate')}
         ${row('general', `<span class="m2-mic">${ic('hash', 18)}</span>`, '#general', 'Everyone in this project', ch === 'general')}
+        ${chanRows(ch)}
         ${row('manage', `<span class="m2-mic">${ic('gear', 18)}</span>`, 'Manage agents', 'Connect your AI, the fleet, the Office')}
       </div>
       ${ag ? '' : '<button class="m2-fine m2-byo" data-talk="claude">Have Claude Code on a computer? Connect it too</button>'}
@@ -615,9 +617,17 @@
     C.api('/ask').then(r => { const sub = $('#m2-ai-sub'); if (sub) sub.textContent = AI_SUB[r.kind](r); }).catch(() => {});
     el.addEventListener('click', e => {
       const pf = e.target.closest('[data-prof]'); if (pf) { e.stopPropagation(); return profile(pf.dataset.prof); }
+      const cm = e.target.closest('[data-chm]'); if (cm) { e.stopPropagation(); return window.TribeChannels.menu(cm.dataset.chm, cm); }   // feat/chat2
       const b = e.target.closest('[data-talk]'); if (!b) return;
       closeSheet(); talk(b.dataset.talk);
     });
+  }
+  // feat/chat2: the project's created channels in the Talk to sheet (a ... for each one's menu), and + New channel
+  function chanRows(ch) {
+    const T = window.TribeChannels; if (!T) return '';
+    const un = DM() && DM().unread ? DM().unread() : {};
+    const rows = T.list().filter(c => !c.main && !c.archived).map(c => `<button class="m2-mi ${ch === c.id ? 'on' : ''}" data-talk="ch:${esc(c.id)}"><span class="m2-mic m2-ch-e">${c.emoji ? esc(c.emoji) : ic('hash', 18)}</span><span class="m2-mt"><b>#${esc(c.name)}</b><small>${esc(c.topic || 'Channel')}</small></span>${un[c.id] ? '<span class="m2-n">•</span>' : ''}<span class="m2-info" data-chm="${esc(c.id)}" role="button" aria-label="#${esc(c.name)} options"><svg class="i" style="width:16px;height:16px" aria-hidden="true"><use href="#i-more"/></svg></span></button>`).join('');
+    return rows + (T.canManage() ? `<button class="m2-mi" data-talk="newch"><span class="m2-mic">${ic('plus', 18)}</span><span class="m2-mt"><b>New channel</b><small>A place for one topic</small></span></button>` : '');
   }
   // Who answers "@ai" right now (server/askai.js decides when the question is sent)
   const AI_SUB = { mine: r => `${r.label} answers`, theirs: r => `${r.label} answers${r.needsOk ? ' (they tap OK)' : ''}`, brain: () => 'The local model answers right away', queue: () => 'No AI on right now: it waits on the board for the next Claude' };
@@ -636,6 +646,8 @@
     if (k === 'desktop') { if (window.TribeRepo && window.TribeRepo.sendToDesktop) return window.TribeRepo.sendToDesktop({}); return App().show('repo'); }
     if (k === 'agents') { if (window.TribeCoord) window.TribeCoord.open('agents'); else App().show('coord'); setTimeout(() => { const t = $('#talk-input'); if (t) t.scrollIntoView({ block: 'center' }); }, 400); return; }
     if (k.startsWith('dm:') && DM()) { DM().open(k.slice(3)); setTimeout(talkLabel, 0); }
+    if (k.startsWith('ch:') && DM()) { DM().openChannel(k.slice(3)); setTimeout(talkLabel, 0); }   // feat/chat2
+    if (k === 'newch' && window.TribeChannels) window.TribeChannels.create();
   }
 
   // =====================================================================
