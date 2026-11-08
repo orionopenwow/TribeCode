@@ -77,6 +77,7 @@
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
     { key: 'guide', label: 'Guide', icon: 'i-help', kind: 'Go to', keys: 'help how to wiki manual faq docs guide start troubleshooting tutorial', run: () => window.TribeGuide && window.TribeGuide.open() },   // no group: no row (feat/vision-guide, app/ui/guide.js)
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
+    { key: 'customize', label: 'Customize', icon: 'i-sparkle', kind: 'Action', keys: 'look theme background accent banner cover density font size tribe name emoji icon', run: () => window.TribeLook && window.TribeLook.open(isGlobal() ? 'tribe' : 'project') },   // feat/customize (app/ui/look.js)
   ];
   const byKey = k => DEST.find(d => d.key === k);
   const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Task Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
@@ -326,7 +327,7 @@
         ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
-        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}</div>`,
+        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
       { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
     el.querySelectorAll('.sw-row [data-pj-open]').forEach(b => b.onclick = () => { const id = b.dataset.pjOpen; closePop(); closeDrawer(); if (id === (PJ() && PJ().current())) App().show('home'); else PJ().switchTo(id, 'home'); });
@@ -363,12 +364,12 @@
     const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
     e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
     const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open dashboard</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Messages</span></button>
-      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button></div>`, { id: 'rail-menu', side: 'right' });
+      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button><button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
     el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
       const k = x.dataset.rc; closePop();
       if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
       if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
-      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings();
+      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
     });
   });
   // The nest header and the core rows with no project selected: the tribe is the header, the rows dim and say

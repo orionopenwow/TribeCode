@@ -34,7 +34,8 @@ const COMMIT_MSG = 'TribeCode: update the website';
 const SECTIONS = ['about', 'shots', 'play', 'palette', 'news', 'credits', 'repo'];
 const FIELDS = { headline: 80, tagline: 160, about: 2000, footer: 160, playUrl: 300 };
 const SUGGESTABLE = { headline: 'headline', tagline: 'tagline', about: 'about text', footer: 'footer line' };
-const CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-popups allow-popups-to-escape-sandbox";
+const sitegen = require('./sitegen');   // feat/customize: the generator ("Design it for me"): layouts, copy, the brain pass
+const CSP = "default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-popups allow-popups-to-escape-sandbox";
 const SHOT_MAX = 3 * 1024 * 1024;
 
 // ---------- small helpers ----------
@@ -79,11 +80,12 @@ function prose(text) {
   return out.join('\n');
 }
 
-module.exports = function showcase({ P, base, W, getMembers, nameOf, visuals, hubFor, preview, flow = () => null, broadcast, postChat, bus, str }) {
+module.exports = function showcase({ P, base, W, getMembers, nameOf, visuals, hubFor, preview, flow = () => null, broadcast, postChat, bus, str, ui = '', llm = null, sense = () => null }) {
   fs.mkdirSync(base.p('.tribe/website'), { recursive: true });
   const rel = pid => `.tribe/website/${pid}.json`;
   const cache = new Map();
-  const blank = () => ({ auto: false, sections: Object.fromEntries(SECTIONS.map(k => [k, true])), fields: {}, shots: null, suggestions: [], built: null, sig: null, hash: null });
+  // gen: the generator's working draft; genLive: the draft as last published (the built page uses it when set)
+  const blank = () => ({ auto: false, sections: Object.fromEntries(SECTIONS.map(k => [k, true])), fields: {}, shots: null, suggestions: [], built: null, sig: null, hash: null, gen: null, genLive: null });
   function load(pid) {
     if (!cache.has(pid)) { const s = base.readJSON(rel(pid), null); cache.set(pid, s ? { ...blank(), ...s, sections: { ...blank().sections, ...(s.sections || {}) } } : blank()); }
     return cache.get(pid);
@@ -150,7 +152,10 @@ module.exports = function showcase({ P, base, W, getMembers, nameOf, visuals, hu
       } catch {}
     }
     const looksGame = /\b(game|play|level|quest|arcade|platformer|puzzle|rpg)\b/i.test(`${p.name} ${p.bio || ''} ${vision}`);
-    return { p, st, where, vision, people, agents, authors, news, repoUrl, play, looksGame, shots: featured(st) };
+    // feat/customize: what the generator also uses: milestones, project sense
+    let milestones = []; try { milestones = (P.scopedStore(() => pid).readJSON('milestones.json', []) || []).filter(m => m && m.title).map(m => ({ version: one(m.version, 20), title: one(m.title, 120), status: one(m.status, 20) })); } catch {}
+    let sn = null; try { const s = sense(); sn = s ? s.get(pid) : null; } catch {}
+    return { p, st, where, vision, people, agents, authors, news, commits, milestones, sense: sn, repoUrl, play, looksGame, shots: featured(st) };
   }
 
   // Values shown when a field is left empty.
@@ -254,15 +259,143 @@ ${blocks.join('\n')}
 `;
   }
 
+  // ---------- the generator (feat/customize, server/sitegen.js) ----------
+  // Fonts: self-hosted OFL files from <ui>/assets/site-fonts, copied to site/fonts (only the ones the layout uses).
+  const fontDir = () => (ui ? path.join(ui, 'assets', 'site-fonts') : '');
+  const fontBuf = f => { try { return fs.readFileSync(path.join(fontDir(), f)); } catch { return null; } };
+  function syncFonts(dir, files) {
+    const fd = path.join(dir, 'fonts'); let changed = false;
+    if (files.length) fs.mkdirSync(fd, { recursive: true });
+    for (const f of files) { const b = fontBuf(f); if (!b) continue; let same = false; try { same = fs.readFileSync(path.join(fd, f)).equals(b); } catch {} if (!same) { fs.writeFileSync(path.join(fd, f), b); changed = true; } }
+    try { for (const f of fs.readdirSync(fd)) if (/\.woff2$/.test(f) && !files.includes(f)) { fs.unlinkSync(path.join(fd, f)); changed = true; } } catch {}
+    return changed;
+  }
+  // Inline what a single file needs: screenshots (from Visuals) and fonts as data URLs; the play iframe becomes a note.
+  function inline(page, shots, { keepFrame = false } = {}) {
+    const files = new Map((shots || []).map(s => [s.slug, s.file]));
+    return page.replace(/src="shots\/([a-z0-9][a-z0-9-]*)\.png"/g, (all, slug) => {
+      try { const b = fs.readFileSync(files.get(slug)); return b.length <= SHOT_MAX ? `src="data:image/png;base64,${b.toString('base64')}"` : 'src=""'; } catch { return 'src=""'; }
+    }).replace(/url\('fonts\/([\w.-]+\.woff2)'\)/g, (all, f) => { const b = fontBuf(f); return b ? `url('data:font/woff2;base64,${b.toString('base64')}')` : "url('')"; })
+      .replace(keepFrame ? /$^/ : /<iframe [^>]*><\/iframe>/g, '<div class="frame-ph">It runs right here on the published page.</div>');
+  }
+  const canDraft = me => !!me && me.role !== 'spectator';
+  const brainOn = () => { try { return !!(llm && llm.status().online); } catch { return false; } };
+  // Start (or refresh) the draft. how: 'generate' (keep the layout if there is one) | 'shuffle' | 'regenerate'
+  async function generate(pid, how = 'generate', { layout, by } = {}) {
+    const st = load(pid), g = await gather(pid);
+    let gen = st.gen ? JSON.parse(JSON.stringify(st.gen)) : null;
+    if (!gen) gen = { layout: sitegen.pickLayout(g.sense, pid), seed: 0, copySeed: 0, off: {}, order: null, edited: {}, copy: null };
+    if (layout && sitegen.LAYOUTS[layout]) gen.layout = layout;
+    else if (how === 'shuffle') { gen.layout = sitegen.nextLayout(gen.layout); gen.seed = (gen.seed || 0) + 1; gen.order = null; }
+    if (how === 'regenerate') gen.copySeed = (gen.copySeed || 0) + 1;
+    gen.copy = sitegen.mergeCopy(sitegen.draftCopy(g, gen.copySeed || 0), gen.copy, gen.edited);
+    gen.updated = new Date().toISOString(); gen.by = by || null;
+    st.gen = gen; save(pid, st); push(pid);
+    return gen;
+  }
+  function editGen(pid, body, me) {
+    const st = load(pid); if (!st.gen) throw err(409, 'make a draft first');
+    const gen = st.gen;
+    if (body.layout !== undefined) { if (!sitegen.LAYOUTS[body.layout]) throw err(400, `layouts are: ${sitegen.LAYOUT_IDS.join(', ')}`); gen.layout = body.layout; gen.order = null; }
+    if (body.off && typeof body.off === 'object') for (const k of sitegen.SECTIONS) if (typeof body.off[k] === 'boolean') { if (body.off[k] && k !== 'hero') gen.off[k] = true; else delete gen.off[k]; }
+    if (Array.isArray(body.order)) gen.order = body.order.filter(k => sitegen.SECTIONS.includes(k)).filter((k, i, a) => a.indexOf(k) === i);
+    if (body.section) { const k = String(body.section); gen.copy[k] = sitegen.editSection(gen.copy, k, body.copy || {}); gen.edited = { ...(gen.edited || {}), [k]: true }; }
+    if (body.reset && sitegen.SECTIONS.includes(body.reset)) { delete gen.edited[body.reset]; }
+    gen.updated = new Date().toISOString(); gen.by = me.id;
+    save(pid, st);
+    if (body.reset) return generate(pid, 'generate', { by: me.id });
+    push(pid); return gen;
+  }
+  // "Write it for me": the tribe's brain, or a reply the person's own in-browser model already wrote.
+  async function polish(pid, me, reply) {
+    const st = load(pid); if (!st.gen) await generate(pid, 'generate', { by: me.id });
+    const g = await gather(pid), gen = load(pid).gen;
+    let text = typeof reply === 'string' ? reply : null, via = 'your browser';
+    if (text === null) {
+      if (!llm) throw err(503, 'No brain is set up');
+      const pr = sitegen.polishPrompt(g, gen);
+      try { const r = await llm.stream({ system: pr.system, prompt: pr.prompt, maxTokens: 1100, temperature: 0.4, timeoutMs: 120_000, me }); text = r.text; via = r.via; }
+      catch (e) { throw Object.assign(err(e.status || 503, e.message || 'No brain is on'), { basic: true }); }
+    }
+    const r = sitegen.applyPolish(gen, text);
+    if (r.error) throw err(502, r.error);
+    gen.copy = r.copy; gen.updated = new Date().toISOString(); gen.polished = { at: new Date().toISOString(), via, changed: r.changed.length, rejected: r.rejected.length };
+    save(pid, load(pid)); push(pid);
+    return { changed: r.changed, rejected: r.rejected, via };
+  }
+  async function draftHtml(pid, opts = {}) {
+    const st = load(pid); if (!st.gen) return null;
+    const g = await gather(pid);
+    return inline(sitegen.render(g, st.gen), g.shots, opts);
+  }
+  async function publish(pid, me) {
+    if (!canManage(pid, me)) throw err(403, 'only the host or the project lead publishes the website; ask them to');
+    const st = load(pid); if (!st.gen) throw err(409, 'make a draft first');
+    const { by, updated, ...rest } = st.gen;
+    st.genLive = JSON.parse(JSON.stringify(rest)); st.genLive.publishedAt = new Date().toISOString(); st.genLive.publishedBy = me.id;
+    save(pid, st);
+    const r = await build(pid, { by: me.id, auto: st.auto });
+    P.inProject(pid, () => postChat('general', 'tribecode', `🌐 ${me.name} published the new ${P.get(pid).name} website (${sitegen.LAYOUTS[st.genLive.layout].name} layout).`));
+    return r;
+  }
+  function genView(pid, me) {
+    const st = load(pid), gen = st.gen;
+    let draftUrl = null;
+    if (gen) { try { draftUrl = `/api/projects/${encodeURIComponent(pid)}/website/draft?pt=${encodeURIComponent(preview.mint(pid, me).pt)}`; } catch {} }
+    const live = st.genLive ? { layout: st.genLive.layout, at: st.genLive.publishedAt, byName: st.genLive.publishedBy ? nameOf(st.genLive.publishedBy) : null } : null;
+    const core = x => JSON.stringify({ layout: x.layout, seed: x.seed, off: x.off || {}, order: x.order || null, copy: x.copy });
+    const dirty = !!(gen && st.genLive && core(gen) !== core(st.genLive));
+    return { draft: gen ? { layout: gen.layout, off: gen.off || {}, order: gen.order, edited: gen.edited || {}, copy: gen.copy, polished: gen.polished || null, updated: gen.updated, seed: gen.seed } : null,
+      live, unpublished: !!gen && (!st.genLive || dirty), draftUrl, brain: brainOn(), canDraft: canDraft(me), canPublish: canManage(pid, me),
+      layouts: sitegen.LAYOUT_IDS.map(id => ({ id, name: sitegen.LAYOUTS[id].name, note: sitegen.LAYOUTS[id].note })), sections: sitegen.SECTIONS.map(id => ({ id, name: sitegen.SECTION_NAMES[id] })) };
+  }
+
+  // MCP: a connected Claude drafts and refines; publishing stays with the host or the project lead.
+  const mreply = (t, e) => ({ content: [{ type: 'text', text: t }], ...(e ? { isError: true } : {}) });
+  const curPid = () => P.current() || P.defaultId();
+  const summary = (pid, gen) => `Website draft for ${P.get(pid).name}: ${sitegen.LAYOUTS[gen.layout].name} layout. Sections: ${sitegen.SECTIONS.filter(k => !(gen.off || {})[k]).join(', ')}.\nCopy (JSON):\n${JSON.stringify(gen.copy, null, 1).slice(0, 6000)}`;
+  const mcpTools = {
+    website_draft: {
+      description: 'Make or refresh the project website draft (TribeCode\'s site generator: six editorial layouts, copy filled from the project\'s bio, VISION.md, sense, milestones, commits, screenshots and team). action: "generate" (default), "shuffle" (next layout), "regenerate" (fresh template copy, keeps hand edits), or "show". Returns the layout and the copy as JSON. Publishing needs the host or the project lead: use website_request_publish.',
+      inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['generate', 'shuffle', 'regenerate', 'show'] }, layout: { type: 'string', enum: sitegen.LAYOUT_IDS }, project: { type: 'string' } }, additionalProperties: false },
+      run: async ({ action = 'generate', layout } = {}, me) => {
+        const pid = curPid(); if (!P.get(pid)) return mreply('No project.', true);
+        const gen = action === 'show' && load(pid).gen ? load(pid).gen : await generate(pid, action === 'show' ? 'generate' : action, { layout, by: me.id });
+        return mreply(summary(pid, gen) + '\n\nEdit a section with website_edit_section. Keep the voice simple, direct and warm: no hype words, no exclamation marks, no emoji.');
+      },
+    },
+    website_edit_section: {
+      description: `Rewrite one section of the website draft. section: ${sitegen.SECTIONS.join(', ')}. Fields: title, body, kicker, dek, cta (hero), text (footer), items (features: [{title, body}], faq: [{q, a}]). Plain text only; hype words, exclamation runs and extra emoji are removed. Hand edits are kept when the copy is regenerated.`,
+      inputSchema: { type: 'object', properties: { section: { type: 'string', enum: sitegen.SECTIONS }, title: { type: 'string' }, body: { type: 'string' }, kicker: { type: 'string' }, dek: { type: 'string' }, cta: { type: 'string' }, text: { type: 'string' },
+        items: { type: 'array', items: { type: 'object' } }, project: { type: 'string' } }, required: ['section'], additionalProperties: false },
+      run: async (a = {}, me) => {
+        const pid = curPid(); if (!load(pid).gen) await generate(pid, 'generate', { by: me.id });
+        try { const { section, project, ...copy } = a; const gen = editGen(pid, { section, copy }, me); return mreply(`Updated the ${section} section.\n${JSON.stringify(gen.copy[section])}`); }
+        catch (e) { return mreply(e.message, true); }
+      },
+    },
+    website_request_publish: {
+      description: 'Ask the host or the project lead to publish the website draft (they get a notification and press Publish in Website). Agents cannot publish by themselves.',
+      inputSchema: { type: 'object', properties: { note: { type: 'string', description: 'One line for the humans: what changed' }, project: { type: 'string' } }, additionalProperties: false },
+      run: async ({ note } = {}, me) => {
+        const pid = curPid(), st = load(pid); if (!st.gen) return mreply('There is no draft yet. Call website_draft first.', true);
+        const to = managers(pid); const line = one(note, 200);
+        P.inProject(pid, () => postChat('general', 'tribecode', `🌐 ${me.name} has a website draft ready for review${line ? `: “${line}”` : ''}. The host or the project lead can publish it from Website.`));
+        if (to.length) try { bus.notify({ type: 'website-review', to, priority: 'normal', from: me.id, title: `${me.name} has a website draft ready`, body: line || 'Open Website to look at it and publish.', view: 'docs', project: pid }); } catch {}
+        return mreply(`Asked ${to.length ? to.map(nameOf).join(', ') : 'the host'} to review and publish it.`);
+      },
+    },
+  };
+
   // ---------- build ----------
   const busy = new Map();
   async function build(pid, { by = null, auto = false } = {}) {
     if (busy.get(pid)) return busy.get(pid);
     const job = (async () => {
-      const g = await gather(pid), st = g.st, out = html(g), where = g.where;
+      const g = await gather(pid), st = g.st, out = st.genLive ? sitegen.render(g, st.genLive) : html(g), where = g.where;
       fs.mkdirSync(path.join(where.dir, 'shots'), { recursive: true });
       const want = new Set(g.shots.map(s => `${s.slug}.png`));
-      let changed = false;
+      let changed = syncFonts(where.dir, st.genLive ? sitegen.fontFiles(st.genLive.layout) : []);
       for (const s of g.shots) {
         const dest = path.join(where.dir, 'shots', `${s.slug}.png`), buf = fs.readFileSync(s.file);
         let same = false; try { same = fs.readFileSync(dest).equals(buf); } catch {}
@@ -310,7 +443,7 @@ ${blocks.join('\n')}
     let gist = ''; try { const f = flow(); const g = f && f.gists ? f.gists.list(pid, 1)[0] : null; gist = g ? g.id || g.at : ''; } catch {}
     const ms = getMembers().filter(m => (p.members || {})[m.id] || m.project === pid || (m.role === 'agent' && (p.members || {})[m.owner])).map(m => `${m.id}:${m.name}`).sort().join(',');
     return sha(JSON.stringify([p.name, p.bio, p.color, p.emoji, p.image ? sha(p.image) : '', p.repo, vision, head, gist, ms, fl ? fl.roles.map(r => [r.name, r.members]) : null,
-      featured(st).map(s => s.slug + s.ts), st.fields, st.sections]));
+      featured(st).map(s => s.slug + s.ts), st.fields, st.sections, st.genLive || null]));
   }
   let ticking = false;
   async function tick() {
@@ -337,7 +470,7 @@ ${blocks.join('\n')}
       .map(s => ({ ...s, byName: nameOf(s.by), decidedByName: s.decidedBy ? nameOf(s.decidedBy) : null, label: SUGGESTABLE[s.field] || s.field }));
     return { project: pid, auto: !!st.auto, sections: st.sections, fields: st.fields, defaults: defaults(p, vision), shots: st.shots, screens: screens().map(s => ({ slug: s.slug, name: s.name })),
       built: st.built, exists: exists(pid), path: where.shown, inRepo: where.inRepo, autopilot: ap, previewUrl, suggestions: sug, open: sug.filter(s => s.status === 'open').length,
-      canManage: canManage(pid, me), canSuggest: canSuggest(me), suggestable: SUGGESTABLE, sectionList: SECTIONS,
+      canManage: canManage(pid, me), canSuggest: canSuggest(me), suggestable: SUGGESTABLE, sectionList: SECTIONS, gen: genView(pid, me),
       hint: where.inRepo ? 'Publish it with GitHub Pages: Settings › Pages › Deploy from a branch (root), then open /site/ on the Pages address. Or add a Pages workflow that uploads the site/ folder.' : 'This project has no repo yet, so the page stays in the tribe folder. Give it a repo to publish it with GitHub Pages.' };
   }
 
@@ -396,12 +529,12 @@ ${blocks.join('\n')}
   }
 
   // The built page with its screenshots inlined (iframes and new tabs: images need no second request).
-  function previewHtml(pid) {
+  function previewHtml(pid, opts = {}) {
     const dir = siteDir(pid).dir;
     let page; try { page = fs.readFileSync(path.join(dir, 'index.html'), 'utf8'); } catch { return null; }
-    return page.replace(/src="shots\/([a-z0-9][a-z0-9-]*)\.png"/g, (all, slug) => {
-      try { const b = fs.readFileSync(path.join(dir, 'shots', slug + '.png')); return b.length <= SHOT_MAX ? `src="data:image/png;base64,${b.toString('base64')}"` : 'src=""'; } catch { return 'src=""'; }
-    }).replace(/href="(?!https:|data:|#)[^"]*"/g, 'href="#"');   // relative links (Play) don't lead anywhere inside TribeCode's preview
+    const shots = [...page.matchAll(/src="shots\/([a-z0-9][a-z0-9-]*)\.png"/g)].map(m => ({ slug: m[1], file: path.join(dir, 'shots', m[1] + '.png') }));
+    const out = inline(page, shots, opts);
+    return opts.keepFrame ? out : out.replace(/href="(?!https:|data:|#)[^"]*"/g, 'href="#"');   // relative links (Play) don't lead anywhere inside TribeCode's preview
   }
 
   // ---------- HTTP ----------
@@ -409,13 +542,20 @@ ${blocks.join('\n')}
     const p = P.get(b);
     const sub = parts[3] || '', sid = parts[4], act = parts[5];
     // The preview: a member's key (header) or a signed preview token (iframes and tabs can't send headers).
-    if (sub === 'preview' && m === 'GET') {
+    // draft: the generator's draft, rendered live; export: the draft (or the built page) as one self-contained file.
+    if ((sub === 'preview' || sub === 'draft' || sub === 'export') && m === 'GET') {
       let who = me;
       if (!who && url.searchParams.get('pt')) { const v = preview.verify(url.searchParams.get('pt'), b); if (v.error) return fail(res, v.status || 403, v.error); who = v.member; }
       if (!who) return fail(res, 401, 'not a member of this tribe');
       if (!p || !P.canSee(who, b)) return fail(res, 404, 'project not found');
-      const page = previewHtml(b);
-      if (page === null) return fail(res, 404, 'the website is not built yet');
+      if (sub === 'export') {
+        const page = url.searchParams.get('which') === 'live' || !load(b).gen ? previewHtml(b, { keepFrame: true }) : await draftHtml(b, { keepFrame: true });
+        if (page === null) return fail(res, 404, 'nothing to export yet: make a draft or build the page');
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `attachment; filename="${String(p.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'site'}-website.html"`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
+        return res.end(page);
+      }
+      const page = sub === 'draft' ? await draftHtml(b) : previewHtml(b);
+      if (page === null) return fail(res, 404, sub === 'draft' ? 'there is no draft yet' : 'the website is not built yet');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': CSP, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store', 'X-Frame-Options': 'SAMEORIGIN' });
       return res.end(page);
     }
@@ -434,6 +574,30 @@ ${blocks.join('\n')}
         const r = await build(b, { by: me.id, auto: false });
         return send(res, 200, { ...r, website: await view(b, me, req) });
       }
+      // feat/customize: the generator
+      if (sub === 'gen' && !sid && (m === 'POST' || m === 'PUT')) {
+        if (!canDraft(me)) return fail(res, 403, 'spectators are read-only');
+        const body = await readBody(req, 128 * 1024);
+        if (m === 'POST') await generate(b, ['shuffle', 'regenerate'].includes(body.how) ? body.how : 'generate', { layout: body.layout, by: me.id });
+        else await editGen(b, body, me);
+        return send(res, 200, { website: await view(b, me, req) });
+      }
+      if (sub === 'gen' && sid === 'prompt' && m === 'GET') {   // for a browser model (WebLLM): ask it, then POST its raw reply to /write
+        if (!load(b).gen) await generate(b, 'generate', { by: me.id });
+        return send(res, 200, sitegen.polishPrompt(await gather(b), load(b).gen));
+      }
+      if (sub === 'write' && m === 'POST') {
+        if (!canDraft(me) || me.role === 'agent') return fail(res, 403, 'spectators are read-only');
+        const body = await readBody(req, 64 * 1024);
+        try { const r = await polish(b, me, typeof body.reply === 'string' ? body.reply : null); return send(res, 200, { ...r, website: await view(b, me, req) }); }
+        catch (e) { return send(res, e.status || 503, { error: e.message, basic: !!e.basic }); }
+      }
+      if (sub === 'publish' && m === 'POST') { const r = await publish(b, me); return send(res, 200, { ...r, website: await view(b, me, req) }); }
+      if (sub === 'classic' && m === 'POST') {   // back to the simple page
+        if (!canManage(b, me)) return fail(res, 403, 'only the host or the project lead changes the published page');
+        const st = load(b); st.genLive = null; save(b, st); await build(b, { by: me.id, auto: st.auto });
+        return send(res, 200, { website: await view(b, me, req) });
+      }
       if (sub === 'suggest' && m === 'POST') return send(res, 200, { suggestion: suggest(b, await readBody(req, 64 * 1024), me) });
       if (sub === 'suggestions' && sid && ['approve', 'decline'].includes(act) && m === 'POST') {
         const r = await decide(b, sid, act === 'approve', me);
@@ -443,7 +607,7 @@ ${blocks.join('\n')}
     return null;
   }
 
-  return { route, build, gather, html, signature, tick, exists, load, httpsRepo, siteDir };
+  return { route, build, gather, html, signature, tick, exists, load, httpsRepo, siteDir, generate, publish, draftHtml, mcpTools };
 };
 module.exports.httpsRepo = httpsRepo;
 module.exports.visionText = visionText;

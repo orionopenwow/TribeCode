@@ -47,7 +47,13 @@
     if (!quiet && drawnFor !== pid()) sec.innerHTML = '<div class="wb-wait">Loading…</div>';
     try { data = (await api('')).website; } catch (e) { sec.innerHTML = `<div class="wb-wait">${esc(e.message)}</div>`; return; }
     if (drawnFor !== pid() || !$('#wb-root')) { draw(); drawnFor = pid(); dirty = false; }
-    else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); drawPreview(); }
+    else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); if (!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#wb-gen .sg-ed'))) drawGen(); drawPreview(); }
+  }
+  // feat/customize: the generator panel (app/ui/sitegen.js) and the Draft / Live preview switch
+  let pvMode = null;
+  function drawGen() {
+    const box = $('#wb-gen'); if (!box || !window.TribeSiteGen) { if (box) box.remove(); return; }
+    window.TribeSiteGen.draw(box, data, { api, toast, set: w => { data = w; if (w.gen && w.gen.draft && w.gen.unpublished) pvMode = 'draft'; drawGen(); drawStatus(); drawPreview(); overviewLink(); } });
   }
 
   // ---------- drawing ----------
@@ -55,6 +61,7 @@
     const d = data, m = d.canManage;
     section().innerHTML = `<div class="wb" id="wb-root">
       <div class="wb-edit">
+        <section class="wb-sec wb-gen" id="wb-gen"></section>
         <section class="wb-sec">
           <div class="sec-head"><span class="eyebrow">Page text</span><h2>What it says</h2></div>
           ${m ? '' : '<p class="wb-note">The host or the project lead edits the page. Suggest a change below.</p>'}
@@ -85,13 +92,15 @@
       </div>
       <section class="hero-card wb-preview" aria-label="Preview">
         <div class="wb-pv-head"><span class="eyebrow">Preview</span>
+          <div class="wb-dev wb-pvm hidden" id="wb-pvm" role="group" aria-label="Which page"><button class="wb-devb" data-pvm="draft">Draft</button><button class="wb-devb" data-pvm="live">Live</button></div>
           <div class="wb-dev" role="group" aria-label="Preview width"><button class="wb-devb" data-dev="desktop">Desktop</button><button class="wb-devb" data-dev="phone">Phone</button></div>
           <a class="linkish wb-open hidden" id="wb-open" target="_blank" rel="noopener noreferrer">Open</a></div>
         <div class="wb-frame-box" id="wb-frame-box"></div>
       </section>
     </div>`;
-    fill(); drawToggles(); drawStatus(); drawSugs(); drawPreview();
+    fill(); drawToggles(); drawStatus(); drawSugs(); drawGen(); drawPreview();
     const root = $('#wb-root');
+    root.querySelectorAll('[data-pvm]').forEach(b => b.onclick = () => { pvMode = b.dataset.pvm; drawPreview(); });
     root.addEventListener('input', e => { if (e.target.closest('.wb-in')) dirty = true; });
     $('#wb-auto').onclick = async () => {
       const on = $('#wb-auto').getAttribute('aria-checked') !== 'true';
@@ -162,6 +171,21 @@
     const box = $('#wb-frame-box'); if (!box) return;
     document.querySelectorAll('.wb-devb').forEach(b => b.classList.toggle('on', b.dataset.dev === device));
     const open = $('#wb-open');
+    const G = data.gen || {}, hasDraft = !!(G.draft && G.draftUrl), hasLive = !!(data.exists && data.previewUrl);
+    if (!pvMode) pvMode = hasDraft && (G.unpublished || !hasLive) ? 'draft' : 'live';
+    if (pvMode === 'draft' && !hasDraft) pvMode = 'live';
+    if (pvMode === 'live' && !hasLive && hasDraft) pvMode = 'draft';
+    const pvm = $('#wb-pvm'); if (pvm) { pvm.classList.toggle('hidden', !(hasDraft && hasLive)); pvm.querySelectorAll('[data-pvm]').forEach(b => b.classList.toggle('on', b.dataset.pvm === pvMode)); }
+    if (pvMode === 'draft' && hasDraft) {
+      const src = `${G.draftUrl}&v=${encodeURIComponent(G.draft.updated || '')}`;
+      open.href = src; open.classList.remove('hidden');
+      let f = $('#wb-frame');
+      if (!f) { box.innerHTML = '<iframe id="wb-frame" class="wb-frame" title="Website preview" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" loading="lazy"></iframe>'; f = $('#wb-frame'); }
+      box.classList.toggle('phone', device === 'phone');
+      const key = 'draft:' + src.replace(/pt=[^&]+&?/, '');
+      if (f.dataset.key !== key) { f.dataset.key = key; f.src = src; }
+      return;
+    }
     if (!data.exists || !data.previewUrl) {
       box.innerHTML = `<div class="wb-empty"><b>No page yet</b><span>Press <i>Build the site</i>: it uses the name, bio, picture, vision, screenshots and the people who built it.</span></div>`;
       open.classList.add('hidden'); return;
