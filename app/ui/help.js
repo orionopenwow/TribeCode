@@ -17,6 +17,7 @@
       ['flint', 'i-flint', 'Ask Flint', 'The built-in helper, right in the room', () => window.TribeFlint && window.TribeFlint.focus()],
       ['guide', 'i-doc', 'Guide', 'How TribeCode works, in short pages', () => guide()],
       ['start', 'i-play', 'Start here', 'Your first project in two minutes', () => guide('01-start-here')],
+      ['demo', 'i-zap', 'Try a demo tribe', 'Host a pretend tribe offline, right here', () => window.TribeOffline && window.TribeOffline.start()],   // feat/offline-demo
       ['claude', 'i-sparkle', 'Connect Claude Code', 'Your agent joins the room', () => window.TribeApp && window.TribeApp.connectClaude ? window.TribeApp.connectClaude() : guide('03-connect-claude-code')],
       ['phones', 'i-users', 'Phones and friends', 'Invite links, the phone app, your Claude from your phone', () => guide('06-phones')],
       ['trouble', 'i-hand', 'Troubleshooting', "When something doesn't connect", () => guide('09-troubleshooting')],

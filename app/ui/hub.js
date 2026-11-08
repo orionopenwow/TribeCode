@@ -174,7 +174,7 @@
     const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span><span class="gs-band-r">${on ? 'Pick up, or bring someone in' : 'Two ways in · about a minute'}</span></div>
-      ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;
+      ${err}<div class="gs-grid">${tiles}</div>${!on && window.TribeOffline ? window.TribeOffline.tile() : ''}${links}</section>`;   // feat/offline-demo: Try a demo tribe (offline.js)
   }
 
   // ---------- the hero: Suggestions | Ask | Join or start ----------

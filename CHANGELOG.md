@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.5
+
+- **Try a demo tribe, offline**: from Home, the projects list, the ? menu or Settings, start a pretend tribe that lives only on this device. No host, no network, nothing leaves it. You're the host of "Demo Tribe" with a game project, two pretend friends and a pretend Claude, who answers @claude and picks up the tasks you make. Chat, tasks, docs (with live editing), notes, files, the vision and suggested tasks all work. An invite makes a pretend link, and a pretend friend joins. A small "Offline demo" pill has Reset and Leave; leaving puts your real setup back exactly. It keeps working in airplane mode after the first visit
+- **Works offline properly**: the app's offline cache now holds every file the app loads (40 were missing)
+- **Fix**: on Home, the right panel's headings no longer draw on top of each other
+- **Phones**: the demo starts from the projects sheet too, and its pill floats above the rack
+
 ## v0.10.4
 
 - **A clearer project sidebar**: **Dashboard · Messages · Files · Task Board · Agents Hub**, then **Website** once the site is built and any widgets you've added. **+ Add** sits below the Repo row in a bordered button and adds sections for the whole tribe: Calendar, Bugs, Proposals & Board, Milestones, Repo, Visuals, Workshop, Daily plan, Secretary, or a custom link or pinned doc. Remove one from its ⋯, or drag to re-order
