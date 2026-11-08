@@ -498,8 +498,8 @@
       const all = [jay, maya], edit = (who, t, pos) => K().peerEdit('level-design', who, t, pos, all);
       const text = () => K().liveText('level-design') || '';
       edit(maya, text(), 0); edit(jay, text(), 0);
-      const page = $('#doc-body').closest('.doc-edit') || $('#doc-body');
-      if (!phone()) await move('me', page, 700, { dx: 0.8, dy: 0.2 });
+      const page = $('#doc-body') && ($('#doc-body').closest('.doc-edit') || $('#doc-body'));
+      if (page && !phone()) await move('me', page, 700, { dx: 0.8, dy: 0.2 });
       // two friends type at once, near the top where you can see them: Jay adds to the intro, Maya adds a rule to Level 1
       const add1 = 'Every level ends at a big lantern you can see from the start. ';
       const add2 = '- A checkpoint flag halfway, so a fall costs one screen.\n';
@@ -519,7 +519,11 @@
         }
         const caret = who => document.querySelector(`.co-caret[data-peer="${who}~1"]`);
         if (a === 4 && caret('jay')) { if (phone()) caret('jay').scrollIntoView({ block: 'center', behavior: 'instant' }); else await move('me', caret('jay'), 600, { dx: 0, dy: 3 }); }
-        if (b === 4 && caret('maya')) { caret('maya').scrollIntoView({ block: 'center', behavior: calm() ? 'instant' : 'smooth' }); if (!phone()) await move('me', caret('maya'), 600, { dx: 0, dy: 3 }); }
+        if (b === 4 && caret('maya')) {
+          const h = [...document.querySelectorAll('.doc-edit h2, .doc-edit h3, .doc-edit [data-h], .doc-edit p, .doc-edit li')].find(e => /Level 1/.test(e.textContent) && e.getClientRects().length);
+          (h || caret('maya')).scrollIntoView({ block: 'start', behavior: 'instant' });
+          if (!phone()) await move('me', caret('maya'), 600, { dx: 0, dy: 3 });
+        }
         else if (!ed) await wait(1);
         await wait(calm() ? 200 : 60);
       }
@@ -633,6 +637,7 @@
       cur = list[idx]; jump = null; vt = offsets[idx]; sceneStart = vt;
       begin(cur);
       try {
+        if (!['start', 'vision', 'friends'].includes(cur.id) && C().project() !== PID) await inProject(PID);   // e.g. after a skip
         await cur.run();
         const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest);
       } catch (e) {
