@@ -21,7 +21,8 @@
     const key = JSON.stringify([pid(), s]);
     if (key !== cur) { cur = key; try { window.dispatchEvent(new CustomEvent('tribe:stage', { detail: { level: lv, steps: s || null } })); } catch {} }
   }
-  function set(id, steps) { by[id] = steps; apply(); }
+  const pinned = {};   // set(id, steps, { pin: true }) keeps a stage until the page reloads (tests, demos)
+  function set(id, steps, o) { if (pinned[id] && !(o && o.pin)) return; by[id] = steps; if (o && o.pin) pinned[id] = 1; apply(); }
 
   // Next steps: big cards at the top of the right panel while a project is new or growing.
   // Clicking one runs the step, and Flint flies over to show where it happens.
@@ -48,7 +49,7 @@
   new MutationObserver(() => drawNext()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   let busy = false;
   async function load() {
-    const id = pid(); if (!id || !C || !C.connected() || busy) return apply();
+    const id = pid(); if (!id || !C || !C.connected() || busy || pinned[id]) return apply();
     busy = true;
     try {
       const d = await C.api(`/projects/${encodeURIComponent(id)}/pulse`);
