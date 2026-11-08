@@ -46,6 +46,13 @@ The installer runs silently (`/S`): no wizard. `Tools\Turn-On-Auto-Update.bat` r
 | Server stop | `host_stop` and `host_kill_stale` in `app/src-tauri/src/main.rs` | A running `tribecode-server.exe` is locked on Windows, so it's stopped before installing. |
 | Windows helper | `scripts/desktop/Tools/tribecode-update.ps1`, `scripts/desktop/TribeCode.bat` | Install, update, tidy up, launch |
 
+### Keeping updates clean (v0.17.5)
+
+- **One Windows installer.** `bundle.targets` builds only the per-user NSIS setup on Windows (no `.msi`). Before, `latest.json` pointed Windows at the per-machine `.msi` while the Download button gave the setup `.exe`, so "Restart to update" could install a second copy beside the first.
+- **Old `.msi` copies are removed.** `app/src-tauri/installer/hooks.nsh` (`NSIS_HOOK_PREINSTALL`) finds a TribeCode installed by Windows Installer and uninstalls it (`msiexec /x … /passive`) before installing. Windows may ask once for permission, since that copy was installed for all users.
+- **No half-built releases.** The workflow creates the release as a draft; the `publish` job makes it the latest only after Windows, macOS and Linux all built, so `latest.json` always lists every platform. `tauri-action` retries the build up to 3 times when a tool download fails.
+- **The Windows helper** (`tribecode-update.ps1`) installs the newest published release that has the setup `.exe`.
+
 ### The flow in `updater.js`
 
 1. `check()` calls the plugin's `check()`. If there's a newer version, it keeps that `Update` object in `pending`.

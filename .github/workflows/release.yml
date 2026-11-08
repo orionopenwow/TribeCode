@@ -94,9 +94,24 @@ jobs:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: 'TribeCode v__VERSION__'
           releaseBody: 'See CHANGELOG.md for what changed. Already installed? TribeCode will show a "Restart to update" pill.'
-          releaseDraft: false
+          # a draft until every platform built (the publish job below): a half-built release never reaches the updater
+          releaseDraft: true
           prerelease: false
           includeUpdaterJson: ${{ vars.TAURI_UPDATER_PUBKEY != '' }}
           args: ${{ matrix.args }}
           # GitHub's release downloads (WiX, AppRun) sometimes answer 504: try the build again before giving up
           retryAttempts: 3
+
+  # Publish only when Windows, macOS and Linux all built, so latest.json always lists every platform.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=$(node -p "require('./app/src-tauri/tauri.conf.json').version")
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then V="${GITHUB_REF_NAME#v}"; fi
+          gh release edit "v$V" --repo "$GITHUB_REPOSITORY" --draft=false --latest
