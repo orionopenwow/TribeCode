@@ -205,8 +205,8 @@ def main():
             host.wait_for_selector("#hub-note-new")
             assert host.locator("#room-scratch").is_hidden(), "Home has Start a note in the page, not the panel"
             # right panel on Home: you, Connect your Claude Code, Share my hub link, Invite friends, AI Insights
-            wait_text(host, "#home-me", "Orion"); host.wait_for_selector("#cc-connect", state="visible")
-            order = host.evaluate("['#home-me', '#cc-connect', '#home-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top))")
+            wait_text(host, "#home-me", "Orion"); host.wait_for_selector("#cc-connect", state="hidden")   # Orion's Claude Code is connected (MCP above): no Connect card
+            order = host.evaluate("['#home-me', '#home-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top))")
             assert order == sorted(order), order
             wait_text(host, "#home-ai-cards", "Ink the moon")   # no /api/insights here: the hub's suggestions
             host.wait_for_selector("#home-ai-cards .ai-card .ai-tag")
@@ -268,7 +268,7 @@ def main():
             host.wait_for_selector("#nest-ws-tasks", state="visible")   # back in a project: its four rows
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tasks:not(.hidden)")
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden)")
-            wait_text(host, "#hub-resume", "Tasks")
+            wait_text(host, "#hub-resume", "Task Board")
             host.click("#hub-resume"); host.wait_for_selector("#view-tasks:not(.hidden)")
 
             # ---------------- Global group: All repos, Global docs, Agent fleet ----------------
