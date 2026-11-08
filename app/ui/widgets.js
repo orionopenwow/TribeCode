@@ -32,8 +32,9 @@
     workshop: { label: 'Workshop', icon: 'i-box', run: () => window.TribeWorkshop && window.TribeWorkshop.open() },
     plan: { label: 'Daily plan', icon: 'i-sun', go: 'plan' },
     secretary: { label: 'Secretary', icon: 'i-quill', go: 'secretary' },
+    whiteboard: { label: 'Whiteboard', icon: 'i-whiteboard', run: () => window.TribeWhiteboard && window.TribeWhiteboard.open() },   // feat/whiteboard (whiteboard.js)
   };
-  const ORDER = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary'];
+  const ORDER = ['whiteboard', 'calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary'];
 
   let st = { widgets: [], canEdit: false, preview: { show: false, label: 'Preview' }, website: { show: false } }, forPid = '', seq = 0;
   async function refresh() {
@@ -139,6 +140,7 @@
     workshop: { tint: 'amber', emo: '🧰', blurb: 'Starters, assets and tools', cols: ['Item', 'Kind', 'License'], pills: ['Sprites', 'Template', 'MIT'] },
     plan: { tint: 'teal', emo: '☀️', blurb: "Today's focus for everyone", cols: ['Today', 'Who', 'Done'], pills: ['Focus', 'Next', 'Done'] },
     secretary: { tint: 'violet', emo: '🪶', blurb: 'Notes, recaps and follow-ups', cols: ['Note', 'From', 'When'], pills: ['Recap', 'Action', 'Idea'] },
+    whiteboard: { tint: 'amber', emo: '🖍️', blurb: 'Draw, sketch and stick notes, together', art: 'board' },   // feat/whiteboard: its own mini preview
   };
   const PACKS = [
     { id: 'jam', emo: '🎮', name: 'Game jam', blurb: 'Calendar, Bugs, Milestones and Visuals', keys: ['calendar', 'bugs', 'milestones', 'visuals'] },
@@ -147,6 +149,7 @@
   ];
   function mini(k) {
     const L = LOOK[k], dot = '<i class="wgx-av"></i>';
+    if (L.art === 'board') return `<div class="wgx-mini wgx-board" aria-hidden="true"><b>${L.emo} ${esc(BUILT[k].label)}</b><svg viewBox="0 0 200 70" preserveAspectRatio="xMinYMin meet"><path d="M8 52c14-22 26-30 38-18s20 8 30-6" fill="none" stroke="#38C6B1" stroke-width="3" stroke-linecap="round"/><rect x="92" y="10" width="38" height="24" rx="3" fill="none" stroke="#6C7CFF" stroke-width="2"/><path d="M98 50h34M126 44l6 6-6 6" fill="none" stroke="#F8FAFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="6" width="40" height="40" rx="3" fill="#FFB86B"/><rect x="152" y="16" width="26" height="3" rx="1.5" fill="#12151A" opacity=".5"/><rect x="152" y="24" width="18" height="3" rx="1.5" fill="#12151A" opacity=".5"/></svg></div>`;   // feat/whiteboard
     const row = i => `<div class="wgx-tr"><span class="wgx-bar" style="width:${[62, 48, 70][i]}%"></span><span class="wgx-pill p${i}">${esc(L.pills[i])}</span><span>${dot}<span class="wgx-bar s"></span></span></div>`;
     return `<div class="wgx-mini" aria-hidden="true"><b>${L.emo} ${esc(BUILT[k].label)}</b><div class="wgx-th">${L.cols.map(c => `<span>${esc(c)}</span>`).join('')}</div>${[0, 1, 2].map(row).join('')}</div>`;
   }
