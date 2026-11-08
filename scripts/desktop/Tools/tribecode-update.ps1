@@ -55,7 +55,8 @@ if ($Clean) { Clear-WebCache }
 $installed = Installed
 $rel = $null
 Step 'Checking for updates'
-try { $rel = Invoke-RestMethod -Headers @{ 'User-Agent' = 'TribeCode-updater' } "https://api.github.com/repos/$repo/releases/latest" -TimeoutSec 20 } catch { Done "couldn't reach GitHub" 'Yellow' }
+# the newest published release that has the Windows installer (an older half-built release could lack it)
+try { $rel = (Invoke-RestMethod -Headers @{ 'User-Agent' = 'TribeCode-updater' } "https://api.github.com/repos/$repo/releases?per_page=10" -TimeoutSec 20) | Where-Object { -not $_.draft -and -not $_.prerelease -and ($_.assets | Where-Object { $_.name -like '*_x64-setup.exe' }) } | Select-Object -First 1 } catch { Done "couldn't reach GitHub" 'Yellow' }
 $final = $null
 if ($rel) {
   $latest = Ver $rel.tag_name

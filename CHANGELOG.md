@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.17.5
+
+- **Cleaner updates**: "Restart to update" now installs the same per-user Windows installer as the Download button, so it updates the app in place instead of adding a second copy. The first time, it removes any older copy that came from the .msi (Windows may ask once, since that copy was installed for all users)
+- **Complete releases only**: a release goes live only after the Windows, macOS and Linux builds all finish, so the updater never sees a release without your platform (v0.15.0 to v0.17.4 sometimes lacked Windows). Builds retry when a download from GitHub fails
+- **Phones**: no change (the web app updates itself on reload)
+
 ## v0.17.4
 
 - **Top bar**: the flame and the wordmark sit closer together, the flame a little bigger; the Hosting pill is a rounded rectangle
