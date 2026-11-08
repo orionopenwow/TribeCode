@@ -165,3 +165,4 @@ body.global #tour-room .room-head h6 { display: none; }
   .wgx-quick, .wgx-grid, .wgx-packs { grid-template-columns: 1fr; gap: 10px; }
   .wgx-card { height: 150px; }
 }
+.wgx [hidden] { display: none !important; }
