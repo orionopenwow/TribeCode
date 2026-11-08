@@ -47,6 +47,9 @@ async def open_as(browser, name, token):
 
 async def open_doc(page, title):
     await page.click('[data-nav="docs"]:visible')
+    await page.wait_for_timeout(400)
+    if not await page.locator("#doc-title").count() or await page.input_value("#doc-title") != title:   # desktop Files opens on the file grid
+        await page.locator(f".fg-card[title='{title}']").first.click(timeout=10000)
     await page.wait_for_function("([t]) => document.querySelector('#doc-title') && document.querySelector('#doc-title').value === t", arg=[title], timeout=10000)
     await page.wait_for_function("TribeDocs.live()", timeout=10000)
 

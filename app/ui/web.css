@@ -120,6 +120,8 @@ body.intro-on { overflow: hidden; }
 .share-msg.warn { color: var(--amber-ink); }
 .share-msg ul { margin: 6px 0 0 16px; color: var(--muted); }
 .share-msg li { margin-top: 4px; word-break: break-word; }
+.share-why { margin-top: 6px; color: var(--muted); word-break: break-word; }
+.share-why > summary { cursor: pointer; color: var(--amber-ink); width: max-content; max-width: 100%; }   /* qa-qol-2 */
 
 /* ---------- solo mode ---------- */
 .solo-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 20px 14px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--canvas); color: var(--muted); font-size: 12.5px; line-height: 1.5; }

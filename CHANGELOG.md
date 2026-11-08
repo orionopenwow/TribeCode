@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.17.16
+
+- **Plainer first run**: Home's AI Insights speak plainly ("Flint is in basic mode" with a Pick a brain button; "Connect GitHub so your code is shared"), and the test robot's notes about TribeCode itself fold away under one line. "All repos" is now "All code"
+- **Fewer repeats**: the Getting started pop-out no longer repeats the bar's steps; on the Dashboard, Camp setup is the only list of setup steps; one "Connect your AI" card on Home
+- **Empty screens say what to do**: Task Board, Files and Preview point to the next step; the Agents Hub explains what an agent is, and your AI that never connected gets a Connect button
+- **Connect your AI**: a short "What's a terminal?" hint (PowerShell or Terminal); MCP explained in one line
+- **Settings, tidied**: connections, sign-in, roles, packs and backups fold under "More settings"
+- **Invites**: plain choices ("Lasts 24 hours", "Up to 5 people", "They can build"); if a public link can't start, one plain line with the details under "How to fix it"
+- **Wording**: the join and friend-link pages no longer say TribeCode runs on a friend's computer; your work lives in the shared GitHub repo
+- **Fixed**: dragging the sidebar edge follows the pointer exactly
+- **Phones**: the pinned repo's Preview button no longer covers the repo name; "all saved" instead of "clean"; no toast over the invite sheet after you create a project
+
 ## v0.17.15
 
 - **Live cursors**: see your friends' pointers, with their names, when you're on the same screen of the same project (like in Figma). Only people in that project see them; agents and spectators don't send any; switch them off with `TribeCursors.set(false)` (a Settings switch is coming)

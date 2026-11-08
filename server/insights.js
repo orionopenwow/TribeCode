@@ -101,10 +101,10 @@ module.exports = function insights({ P, base, brain, getMembers, hasToken, secre
     const big = jsonlSizes().filter(f => f.size > 20 * 1024 ** 2);
     for (const f of big.slice(0, 3)) out.push(item({ id: `h:jsonl:${f.rel}`, kind: f.size > 50 * 1024 ** 2 ? 'issue' : 'optimization', source: 'health', at, title: `${f.rel} is ${mb(f.size)}`, body: 'Append-only files load slower as they grow. Archive old lines (keep the newest) or download a backup and trim.' }));
     // GitHub for pushes
-    if (host && !hasToken(host.id)) out.push(item({ id: 'h:github', kind: 'suggestion', source: 'health', at, title: 'Connect GitHub so projects can push', body: 'Without a GitHub token, new projects stay local and autopilot cannot push. Settings → GitHub, or + → Create.' }));
+    if (host && !hasToken(host.id)) out.push(item({ id: 'h:github', kind: 'suggestion', source: 'health', at, title: 'Connect GitHub so your code is shared', body: 'Until you do, new projects keep their code only on this computer. Once connected, each project gets a shared GitHub repo your friends and their AIs work from. Settings › GitHub.' }));   // qa-qol-2: plain words (was token / autopilot / push)
     // local model
     const b = brain && brain.status ? brain.status() : { online: false };
-    if (!b.online) out.push(item({ id: 'h:ollama', kind: 'health', source: 'health', at, public: true, title: 'The local model is off', body: `${b.error ? b.error + '. ' : ''}Summaries, triage and the Secretary fall back to simple rules. Install Ollama and run: ollama pull qwen3` }));
+    if (!b.online) out.push(item({ id: 'h:ollama', kind: 'health', source: 'health', at, public: true, title: 'Flint is in basic mode', body: `Summaries, triage and the Secretary use simple rules for now. Pick a brain in Settings › Flint's brain (for a local model: install Ollama, then run "ollama pull qwen3").${b.error ? ` Details: ${b.error}.` : ''}` }));   // qa-qol-2: plain words first
     // backups
     const last = (base.readJSON('.tribe/backup.json', {}) || {}).last;
     if (!last || now() - Date.parse(last) > 7 * DAY) out.push(item({ id: 'h:backup', kind: 'suggestion', source: 'health', at, title: last ? `No backup for ${Math.floor((now() - Date.parse(last)) / DAY)} days` : 'No backup yet', body: 'Settings → Download backup saves the whole tribe folder as one .tar.gz (GitHub keys stay on this computer).' }));

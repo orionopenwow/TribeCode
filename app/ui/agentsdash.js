@@ -160,16 +160,17 @@
   function heroCard(d) {
     const list = d.agents;
     if (!list.length) return `<section class="ad-card ad-hero ad-empty" id="ad-hero">${head('Agents', 'No agents yet')}
-        <p class="ad-lead">Connect Claude Code, Codex, Cursor or any MCP tool. It shows up here while it works, next to your friends' agents.</p>
+        <p class="ad-lead">An agent is an AI helper that writes code for you, like Claude Code, Codex or Cursor. Connect yours and it shows up here while it works, next to your friends' agents.</p>
         <div class="ad-acts"><button class="btn primary" id="ad-connect">Connect your AI</button><button class="linkish ad-tools" id="ad-tools">See all tools</button></div></section>`;
     const on = list.filter(a => a.online).length;
     const shown = moreAgents ? list : list.slice(0, 5);
     const row = a => {
       const doing = a.task ? a.task.title : a.files.length ? a.files[0] : a.online ? (a.where || 'Working') : 'Idle';
       const extra = a.task && a.files.length ? a.files[0] : '';
-      const when = a.online ? `active ${ago(a.lastActive)}` : a.lastActive ? `last seen ${ago(a.lastActive)}` : 'not connected yet';
+      const when = a.online ? `active ${ago(a.lastActive)}` : a.lastActive ? `last seen ${ago(a.lastActive)}` : a.yours && matchMedia('(max-width: 820px)').matches ? 'not connected yet: connect it from a computer' : 'not connected yet';
       const paused = a.control && a.control.action !== 'resume';
-      const steer = canSteer(a) && (a.online || paused) ? `<button class="btn ad-btn agent" data-ad-ctl="${paused ? 'resume' : 'pause'}" data-id="${esc(a.id)}">${paused ? 'Resume' : 'Pause'}</button>` : '';
+      const steer = canSteer(a) && (a.online || paused) ? `<button class="btn ad-btn agent" data-ad-ctl="${paused ? 'resume' : 'pause'}" data-id="${esc(a.id)}">${paused ? 'Resume' : 'Pause'}</button>`
+        : a.yours && !a.online && !a.lastActive && !matchMedia('(max-width: 820px)').matches ? '<button class="btn ad-btn" data-ad-cc>Connect</button>' : '';   // qa-qol-2: your AI that never connected gets a next step
       return `<div class="ad-agent ${a.online ? 'on' : ''}" data-ad-agent="${esc(a.id)}" tabindex="0"><span class="ad-dot"></span>
         <div class="ad-a-main"><b>${esc(a.name)}</b><span class="ad-a-doing">${esc(doing)}${extra ? ` <code>${esc(extra)}</code>` : ''}</span>
         <span class="ad-a-meta">${esc(a.yours ? 'yours' : `${a.ownerName}'s`)} · ${esc(when)}${a.tokens !== null && a.tokens !== undefined ? ` · ${esc(k(a.tokens))} tokens` : ''}${a.control ? ` · <span class="ad-warn">${esc(ctlLabel(a.control))}</span>` : ''}</span></div>${steer}</div>`;
@@ -214,6 +215,8 @@
       ${rows.length > 5 ? `<button class="linkish ad-more" data-ad-more="owners">${moreOwners ? 'Show fewer' : `Show all ${rows.length}`}</button>` : ''}</section>`;
   }
 
+  // qa-qol-2: the example names a real agent of this tribe (it said "@maya's-claude" to everyone)
+  function talkHint() { const a = (C.state().members || []).find(m => m.role === 'agent'); return a ? `@agents or @${String(a.name || '').toLowerCase().replace(/^claude · (.+)$/, "$1's-claude").replace(/\s+/g, '-')} …` : 'Write to @agents …'; }
   function channelCard(d) {
     if (!d.messages.length && !d.agents.length) return '';
     const members = C.state().members || [];
@@ -221,7 +224,7 @@
     const msgs = d.messages.slice(-8);
     return `<section class="ad-card ad-chan" id="ad-chan">${head('#agents', 'What the agents are saying')}
       <div class="ad-talk talk">${msgs.length ? msgs.map(m => `<div class="talk-row ${m.human ? 'human' : ''}"><b>${esc(nameOf(m.by))}</b>${m.to ? `<span class="faint">→ ${esc(nameOf(m.to))}</span>` : ''}<span class="talk-t">${esc(m.text)}</span><span class="faint">${esc(ago(m.at))}</span></div>`).join('') : '<p class="ad-quiet">Quiet so far. Mention @agents or one agent by name to talk to them here.</p>'}</div>
-      <form class="ad-compose" id="talk-form"><input class="input" id="talk-input" placeholder="@agents or @maya's-claude …" maxlength="2000" autocomplete="off" aria-label="Message the agents"><button class="btn">Send</button></form></section>`;
+      <form class="ad-compose" id="talk-form"><input class="input" id="talk-input" placeholder="${esc(talkHint())}" maxlength="2000" autocomplete="off" aria-label="Message the agents"><button class="btn">Send</button></form></section>`;
   }
 
   function todayCard(d) {
@@ -257,7 +260,7 @@
     const t = e.target.closest ? e.target : null; if (!t) return;
     const b = t.closest('button');
     const run = async fn => { if (!b) return; b.disabled = true; try { await fn(); } catch (err) { toast(err.message); b.disabled = false; } };
-    if (b && b.id === 'ad-connect') return App() && App().connectClaude && App().connectClaude();
+    if (b && (b.id === 'ad-connect' || 'adCc' in b.dataset)) return App() && App().connectClaude && App().connectClaude();
     if (b && b.id === 'ad-tools') return go('mcp-directory');
     if (b && b.dataset.adOpen) return go(b.dataset.adOpen);
     if (b && b.dataset.adMore) { if (b.dataset.adMore === 'agents') moreAgents = !moreAgents; else moreOwners = !moreOwners; return paint(el, d); }

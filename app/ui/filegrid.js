@@ -53,7 +53,7 @@
         ${!at ? '<div class="fg-repo"></div>' : ''}
         ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button class="fg-folder" data-folder="${esc(f)}"><span aria-hidden="true">📁</span><span>${esc(f.split('/').pop())}</span><span class="fg-more" aria-hidden="true">⋮</span></button>`).join('')}</div>` : ''}
         ${items.length ? `<div class="fg-grid">${items.map(d => card(d, o)).join('')}</div>`
-          : `<div class="fg-empty"><span aria-hidden="true">🗂️</span><b>${list.length ? 'Nothing in this folder yet' : 'Your tribe’s files live here'}</b><p>Notes, docs, pictures, PDFs, code: anything you drop here is kept in the tribe folder.</p></div>`}
+          : `<div class="fg-empty"><span aria-hidden="true">🗂️</span><b>${list.length ? 'Nothing in this folder yet' : 'Your tribe’s files live here'}</b><p>${list.length ? 'Pick another folder, or press ＋ New doc to add one here.' : 'Press <b>＋ New doc</b> to write the first one. Notes, pictures, PDFs and code your tribe adds show up here too.'}</p></div>`}
         ${!at && shots && shots.length ? `<h3 class="fg-sub">📸 Screenshots of the app</h3><div class="fg-grid">${shots.slice(0, 12).map(s => { const u = media(`/api/visuals/${s.latest.screen}/${s.latest.ts}.png`);
           return `<button class="fg-card" data-shot="${esc(u)}" data-title="${esc(s.name)}"><span class="fg-head"><span class="fg-ico fg-ico-shot" aria-hidden="true">PNG</span><span class="fg-name">${esc(s.name)}</span><span class="fg-more" aria-hidden="true">⋮</span></span><div class="fg-th fg-th-img"><img alt="" loading="lazy" src="${esc(u)}"></div><span class="fg-meta">📸 ${s.count} version${s.count === 1 ? '' : 's'}</span></button>`; }).join('')}</div>` : ''}
       </div>`;

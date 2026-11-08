@@ -72,7 +72,8 @@
             ${who(t)}
             <div class="meta">${typeOf(t.type) ? `<span class="chip tk-tchip" data-t="${t.type}"><span class="emo" aria-hidden="true">${typeOf(t.type)[1]}</span>${typeOf(t.type)[2]}</span>` : ''}${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}${window.TribePlan ? window.TribePlan.dueChip(t) : ''}<select class="mv" data-move title="Move to">${COLS.map(([k, l]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${l}</option>`).join('')}</select>${memberOptions(t.assignee)}</div>
           </div>`).join('')}
-      </div>`;
+        ${!total && key === 'backlog' ? '<p class="col-hint">No tasks yet. Press <b>New task</b> and write one small thing to build. Cards move right as the work goes.</p>' : ''}
+      </div>`;   // qa-qol-2: an empty board says what to do
     }).join('');
     bind();
   }

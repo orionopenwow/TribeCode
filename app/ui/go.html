@@ -72,8 +72,8 @@
   function show(html) { $('#view').innerHTML = html; }
 
   function offline(reason) {
-    show(`<div class="k">Can't reach the host</div><h1>Your friend's computer is offline</h1>
-      <p>TribeCode runs on your friend's computer, so it has to be on with TribeCode open. Ask them to open it, then try again.</p>
+    show(`<div class="k">Can't reach the host</div><h1>Your tribe's host computer is offline</h1>
+      <p>Your tribe's work is safe in its shared GitHub repo. To join, the computer or server that keeps the tribe online has to be on with TribeCode open. Ask your friend to open it, then try again.</p>
       <div class="row faint"><span class="dot bad"></span><span>${esc(reason)}</span></div>
       <button class="btn" id="retry">Try again</button>
       <a class="btn sec" href="${esc(target)}">Open the link anyway</a>`);

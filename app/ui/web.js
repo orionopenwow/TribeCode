@@ -271,7 +271,7 @@
       if (!me || me.role !== 'host') return;
       const foot = body.querySelector('.modal-foot'); if (!foot) return;
       const box = document.createElement('div'); box.id = 'share-pub'; box.className = 'share-pub';
-      box.innerHTML = `<button class="toggle" role="switch" aria-checked="false" id="share-pub-t"><span><span class="share-pub-l">Share beyond my Wi-Fi</span><small>Gives your tribe a public https address, so friends anywhere can join and voice works on phones. Your files stay on this computer.</small></span><span class="switch"></span></button><div class="share-msg" id="share-pub-msg"></div>`;
+      box.innerHTML = `<button class="toggle" role="switch" aria-checked="false" id="share-pub-t"><span><span class="share-pub-l">Share beyond my Wi-Fi</span><small>Gives your tribe a public https address, so friends anywhere can join and voice works on phones. Nothing is uploaded: it only opens a safe door to your tribe.</small></span><span class="switch"></span></button><div class="share-msg" id="share-pub-msg"></div>`;
       foot.before(box);
       const t = $('#share-pub-t'), msg = $('#share-pub-msg');
       const show = st => {
@@ -282,7 +282,9 @@
           : st.status === 'starting' ? 'Getting a public address… (the first time this can take a minute)'
           : st.status === 'unavailable' || st.status === 'error'
             ? (st.approveUrl ? `<a class="btn" href="${esc(st.approveUrl)}" target="_blank" rel="noopener">Allow Tailscale Funnel (one time)</a> then switch this on again for an address that never changes.<br>` : '') +
-              `${esc(st.message)}${st.install && !st.approveUrl ? `<ul><li>${esc(st.install.tailscale)}</li><li>${esc(st.install.cloudflared)}</li></ul>` : ''}` : '';
+              // qa-qol-2: a plain line first; the raw tool output and the install steps fold away under "How to fix it"
+              `<span class="share-plain">Couldn't get a public address right now. Friends on the same Wi-Fi can still join with the link above.</span>`
+              + `<details class="share-why"><summary>How to fix it</summary>${esc(st.message)}${st.install && !st.approveUrl ? `<ul><li>${esc(st.install.tailscale)}</li><li>${esc(st.install.cloudflared)}</li></ul>` : ''}</details>` : '';
       };
       // Invites should work from anywhere, so the public address turns on by itself unless the host switched it off.
       const OFF_KEY = 'tribecode.sharePublicOff';

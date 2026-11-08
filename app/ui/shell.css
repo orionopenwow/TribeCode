@@ -223,6 +223,14 @@ body.panel-off .panel { display: none; }
 .set-row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--stroke); }
 .set-l b { font-size: 13.5px; font-weight: 600; display: block; }
 .set-l small { display: block; font-size: 12px; color: var(--faint); margin-top: 2px; line-height: 1.4; }
+/* qa-qol-2: "More settings" folds the advanced rows away */
+.set-more > summary { display: flex; flex-direction: column; gap: 2px; padding: 14px 22px; cursor: pointer; border-bottom: 1px solid var(--stroke); list-style: none; }
+.set-more > summary::-webkit-details-marker { display: none; }
+.set-more > summary b { font-size: 13.5px; font-weight: 600; }
+.set-more > summary b::after { content: "  \25B8"; color: var(--faint); }
+.set-more[open] > summary b::after { content: "  \25BE"; }
+.set-more > summary small { font-size: 12px; color: var(--faint); line-height: 1.4; }
+.set-more > summary:hover b { color: var(--accent); }
 .set-c .input { height: 38px; font-size: 14px; }
 .set-c .swatches { gap: 10px; }
 .set-c .swatch { width: 24px; height: 24px; }

@@ -15,7 +15,7 @@
     ['gemini', 'Gemini CLI', 'Google\'s terminal agent'],
     ['qwen', 'Qwen Code', 'Qwen\'s terminal agent'],
     ['cursor', 'Cursor', 'The AI code editor'],
-    ['mcp', 'Any MCP client', 'Windsurf, VS Code Copilot, Goose, OpenCode…'],
+    ['mcp', 'Any MCP client', 'MCP is the plug AI tools use to talk to TribeCode: Windsurf, VS Code Copilot, Goose, OpenCode…'],
   ];
   // feat/mcp-directory: the rest of the clients on the TribeCode MCP page (mcpdir.js). Not chips: the sheet keeps six,
   // plus the one picked on the page, and a "See all" chip that opens the page.

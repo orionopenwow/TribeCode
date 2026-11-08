@@ -54,7 +54,7 @@
   function onShow() {   // app.js show('hub') calls this
     const want = mode === 'home' ? '#/hub' : `#/hub/${mode}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
-    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All repos' : mode === 'docs' ? 'All files' : 'Home';
+    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All code' : mode === 'docs' ? 'All files' : 'Home';
     render(); load(); panel();
   }
   function onHide() { setTimeout(panel, 0); if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
@@ -167,7 +167,7 @@
       : (lp || p1
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Its chat, files and tasks, all in one place.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
           : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.', '', 'plus', 'Start a project', 'ember'))
-        + tile('hub-instant', 'Invite a friend', 'A fresh project and a link that works anywhere, copied.', '', 'link', 'Copy a link', 'teal');
+        + tile('hub-instant', 'Invite a friend', 'Starts a new project for the two of you and copies a link they can open anywhere.', '', 'link', 'Copy a link', 'teal');
     // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
     const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`
       : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://tribecode.org/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
@@ -551,8 +551,10 @@
   function fallbackInsights() {
     const out = [], f = (data && data.fleet) || {}, m = f.models || {};
     if (!connected()) return [{ id: 'off:tribe', kind: 'suggestion', title: 'Start or join a tribe', body: 'Insights come from your projects, your agents and the local model on the tribe\'s host.', source: 'Home', run: () => stepGo('tribe'), label: window.TribeHost && window.TribeHost.isDesktop ? 'Start hosting' : 'Join' }];
-    if (data && m.online === false) out.push({ id: 'h:model', kind: 'health', title: 'The local model is off', body: `${m.error || 'Ollama is not running'}. Start it for answers on Home, note cleanup and the Secretary.`, source: 'Agents & models' });
-    if (data && !(f.agents || []).length && !myAgent()) out.push({ id: 's:cc', kind: 'suggestion', title: 'Connect your AI', body: 'It shows up in the room with its task and context, and Ask on Home can go straight to it.', source: 'Home', run: () => App().connectClaude(), label: 'Connect' });
+    // qa-qol-2: plain words for a beginner (no "Ollama not reachable at http://…"); the details stay in Settings › Flint's brain
+    if (data && m.online === false) out.push({ id: 'h:model', kind: 'health', title: 'Flint is in basic mode', body: 'Flint answers with simple rules for now. Give it a brain (built in, on this computer, or a cloud AI) for smarter answers, summaries and note cleanup.', source: 'Flint', run: () => (window.TribeBrain ? window.TribeBrain.open() : window.TribeSettings && window.TribeSettings.open()), label: 'Pick a brain' });
+    // the desktop right panel already has its own "Connect your AI" card above the insights: no second one there
+    if (data && !(f.agents || []).length && !myAgent() && isPhone()) out.push({ id: 's:cc', kind: 'suggestion', title: 'Connect your AI', body: 'It shows up in the room with its task and context, and Ask on Home can go straight to it.', source: 'Home', run: () => App().connectClaude(), label: 'Connect' });
     for (const x of sugItems()) out.push({ id: 'sug:' + x.id, kind: x.need ? 'issue' : 'suggestion', title: x.title, body: x.why || x.sub || '', source: (projOf(x.project) || {}).name || 'Your projects', run: () => sugGo(x.id), label: x.need ? (x.kind === 'approval' ? 'Review' : x.kind === 'vote' ? 'Vote' : 'Open') : x.action ? x.action.label : 'Open' });
     for (const i of (data && data.ideas) || []) out.push({ id: i.id, kind: 'suggestion', title: i.title, body: i.body, source: 'Secretary', run: () => go(i.project, () => window.TribeSecretary && window.TribeSecretary.open()), label: 'Look' });
     return out.slice(0, 6);
@@ -571,13 +573,21 @@
   }
   function insightCards() {
     // Your own next steps (suggestions, approvals, Secretary) first, then the host's insights (explorer, health).
-    const api = insights.src === 'api' && insights.items ? insights.items : [], seen = new Set();
+    // qa-qol-2: the Explorer test robot's findings about TribeCode itself (no project: the checkout's .explore/findings.json
+    // or an upload) are for the people who make TribeCode, not a beginner's Home: they fold away under one closed line.
+    const all = insights.src === 'api' && insights.items ? insights.items : [], seen = new Set();
+    const isDev = it => it.source === 'explorer' && !it.project;
+    const api = all.filter(it => !isDev(it) && !(it.id === 'h:ollama')), dev = all.filter(isDev);
     const list = [...fallbackInsights(), ...api].filter(it => { const k = String(it.title || '').toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
     insActs = {};
-    if (!list.length) return '<p class="ai-cards-empty">Nothing to flag right now.</p>';
-    return list.map((it, i) => { const [icon, label] = INS[it.kind] || INS.suggestion, run = insightRun(it), key = 'k' + i; if (run) insActs[key] = run;
+    const devHtml = dev.length ? `<details class="ai-dev"><summary>Test robot notes (${dev.length}) <span class="faint">· for TribeCode's makers</span></summary><div class="ai-cards">${dev.slice(0, 8).map((it, i) => card(it, 'd' + i)).join('')}</div></details>` : '';
+    if (!list.length) return '<p class="ai-cards-empty">Nothing to flag right now.</p>' + devHtml;
+    return list.map((it, i) => card(it, 'k' + i)).join('') + devHtml;
+  }
+  function card(it, key) {
+    const [icon, label] = INS[it.kind] || INS.suggestion, run = insightRun(it); if (run) insActs[key] = run;
       return `<div class="ai-card k-${esc(it.kind || 'suggestion')}" data-ins="${esc(it.id || key)}"><div class="ai-card-k">${ico(icon, 13)}<span>${esc(label)}</span></div><b>${esc(it.title)}</b>${it.body ? `<p>${esc(it.body)}</p>` : ''}
-        <div class="ai-card-foot">${aiTag()}<span class="ai-card-src">${esc(it.source || '')}${it.at ? ` · ${esc(ago(it.at))}` : ''}</span>${run ? `<button class="btn ai-card-go" data-ai-card-go="${key}">${esc(it.label || (it.action && it.action.label) || 'Open')}</button>` : ''}</div></div>`; }).join('');
+        <div class="ai-card-foot">${aiTag()}<span class="ai-card-src">${esc(it.source || '')}${it.at ? ` · ${esc(ago(it.at))}` : ''}</span>${run ? `<button class="btn ai-card-go" data-ai-card-go="${key}">${esc(it.label || (it.action && it.action.label) || 'Open')}</button>` : ''}</div></div>`;
   }
   function bindInsights(root) { root.querySelectorAll('[data-ai-card-go]').forEach(b => b.onclick = () => { const f = insActs[b.dataset.aiCardGo]; if (f) f(); }); }
   function drawInsights() {
@@ -587,7 +597,7 @@
 
   // ---------- All repos ----------
   async function renderRepos(el) {
-    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Global</span><h1>All repos</h1><p class="faint">Every project's code, branch and state. Click one to open its Repo.</p></header><div class="hub-repos" id="hub-repos">${reposCache ? reposHtml(reposCache) : '<div class="hub-empty faint">Loading…</div>'}</div></div>`;
+    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Global</span><h1>All code</h1><p class="faint">Each project's code lives in a shared folder on GitHub, called a <b>repo</b>. Here is what changed last in each one and whether everything is saved. Click one to open it.</p></header><div class="hub-repos" id="hub-repos">${reposCache ? reposHtml(reposCache) : '<div class="hub-empty faint">Loading…</div>'}</div></div>`;
     if (!connected()) { $('#hub-repos').innerHTML = '<div class="hub-empty">Join or host a tribe to see its repos.</div>'; return; }
     try { reposCache = (await C.api('/hub/repos')).repos; const box = $('#hub-repos'); if (box && mode === 'repos') { box.innerHTML = reposHtml(reposCache); bindRepos(box); } } catch (e) { const box = $('#hub-repos'); if (box) box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
   }
