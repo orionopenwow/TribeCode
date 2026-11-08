@@ -150,7 +150,6 @@ def main():
             assert "Inspiration" in host.text_content("#pj-insp .eyebrow") and "website" in host.inner_text("#pj-insp h3"), host.inner_text("#pj-insp h3")
             assert host.locator("#pj-insp .sx-item").count() == 3, "three ideas on desktop"
             assert host.evaluate("getComputedStyle(document.querySelector('#pj-insp')).boxShadow") == "none", "flat"
-            host.locator("#pj-insp").screenshot(path=str(Path(tmp) / "sense-desktop.png"))
             # the card sits under the checklist and above the Tribe section
             assert host.evaluate("(() => { const a = document.querySelector('#pj-insp').getBoundingClientRect().top, b = document.querySelector('#pj-sec-tribe').getBoundingClientRect().top; return a < b; })()")
             # Ctrl K follows the project too
