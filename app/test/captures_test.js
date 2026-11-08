@@ -121,6 +121,16 @@ ok(avg('actionRecall') >= 0.6, 'average action recall ' + avg('actionRecall'));
   ok(c.decisions.some(d => /two phases/.test(d.text)) && c.actions.some(a => /^Sam: tune the boss health/.test(a.text)), 'huddle notes: decisions + actions');
   ok(fs.existsSync(st.p('files', 'captures', c.id + '.md')) && fs.existsSync(st.p('files', 'captures', c.id + '.json')), 'huddle capture files');
   ok(sent.some(m => m.type === 'capture' && m.id === c.id), 'broadcast');
-  fs.rmSync(dir, { recursive: true, force: true });
+  // the plain-words rewrite (server/llm.js): a strict prompt, a strict format, the transcript stays the source
+  let asked = null;
+  const cap2 = CAP({ P, store: st, base: st, embeds: {}, packs: {}, docs: { list: () => [], read: () => null }, dms: { isDm: () => false, canRead: () => true }, perms: {}, postChat: () => null, broadcast: () => {}, createTask: () => ({}), getMembers: () => [{ id: 'maya-1', name: 'Maya', role: 'builder' }], nameOf: () => '',
+    llm: { generate: async (prompt, o) => { asked = { prompt, o }; return '<think>x</think>SUMMARY: The boss gets two phases. Sam tunes health.\nPOINTS:\n- Two phases, not three\n- Health down 20%\nACTIONS:\n- Sam: tune the boss health'; }, status: () => ({ via: 'qwen3 on the host' }) } });
+  const before = JSON.stringify(c.transcript);
+  return cap2.rewrite(c).then(out => {
+    ok(/Only use facts from the text/.test(asked.o.system) && /No hype|no hype|Never add facts/.test(asked.o.system + asked.prompt) && asked.prompt.includes('[00:04] Maya: We decided'), 'strict plain-words prompt with timestamps');
+    ok(out.summary === 'The boss gets two phases. Sam tunes health.' && out.points.length === 2 && out.actions[0].owner === 'Sam' && out.via === 'qwen3 on the host', 'model answer parsed');
+    ok(JSON.stringify(out.transcript) === before, 'the transcript stays the source');
+    const bad = CAP({ P, store: st, base: st, embeds: {}, packs: {}, docs: { list: () => [] }, dms: {}, perms: {}, postChat: () => null, broadcast: () => {}, createTask: () => ({}), getMembers: () => [], nameOf: () => '', llm: { generate: async () => 'I think it was great!!' } });
+    return bad.rewrite(JSON.parse(JSON.stringify(c))).then(() => ok(false, 'a wrong format is refused'), e => ok(e.status === 502, 'a wrong format is refused: ' + e.message));
+  }).then(() => { fs.rmSync(dir, { recursive: true, force: true }); console.log(`captures_test: OK (${n} checks)`); });
 }
-console.log(`captures_test: OK (${n} checks)`);

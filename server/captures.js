@@ -296,7 +296,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
           else if (!OE_TEST) { try { await readPage(c, url); } catch {} c.kind = plat.kind; c.text = ''; }   // page metadata through the safe fetcher; a video page's HTML is not an article
           c.status = 'metadata';
           c.note = settings().videoTools && packs.ytdlp() && YTDLP_HOSTS.includes(plat.id) ? 'Getting the captions…' : `Only the title and picture are public. ${packs.ytdlp() ? 'The host can turn on video captions in Captures.' : 'Paste the transcript, or the host can add the optional captions tool.'}`;
-          if (c.text) c.status = 'ready';
+          if (c.text) { c.status = 'ready'; if (!/Getting the captions/.test(c.note)) c.note = ''; }
         } else await readPage(c, url);
       } catch (e) {
         c.status = 'error'; c.note = say(e); c.title = c.title || url; c.blocked = !!e.blocked;
@@ -698,7 +698,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     };
   }
 
-  return { route, onChat, fromHuddle, mcpTools: mcpTools(), captureLink, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
+  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
 };
 module.exports.parseVtt = parseVtt;
 module.exports.parseWhisperJson = parseWhisperJson;
