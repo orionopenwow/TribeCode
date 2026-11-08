@@ -90,7 +90,7 @@ def main():
             dl = pg.locator(".hero [data-dl-main]")
             pg.wait_for_function("document.querySelector('.hero [data-dl-main]').href.endsWith('_x64-setup.exe')", timeout=8000)
             assert "Download for Windows" in dl.inner_text(), dl.inner_text()
-            assert pg.get_attribute(".hero a:has-text('Try the live demo')", "href") == "app/demo.html"
+            assert pg.get_attribute(".hero a:has-text('Watch a demo tribe')", "href") == "app/?demo=showcase"
             assert pg.evaluate("document.querySelector('#menu-download [data-os=windows]').classList.contains('is-mine')")
             # the stage animates: text grows over ~3 s
             pg.wait_for_function("document.querySelector('[data-loop=stage]').dataset.state === 'running'", timeout=5000)
