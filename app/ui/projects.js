@@ -260,6 +260,7 @@
   }
   // No vision yet: the host writes it (VISION.md, read by the plan, the board and the agents); others suggest one in chat.
   function writeVision(p) {
+    if (window.TribeAssist) return window.TribeAssist.vision(p, { host: isHost(), done: overview });   // feat/assist: guided prompts, Draft with Flint / my Claude, suggestion chips
     const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
     const h = isHost();
     body.innerHTML = `<span class="eyebrow">Vision · ${esc(p.name)}</span><h2>${h ? 'What are you building?' : 'Suggest a vision'}</h2>
