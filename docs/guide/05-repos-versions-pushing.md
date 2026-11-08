@@ -17,7 +17,7 @@ When you make a project (the **+** under the circles):
 
 ## Let Autopilot keep it in sync
 
-**Tasks & Board** › **Repo** › **Autopilot** (host only, off by default):
+**Task Board** › **Repo** › **Autopilot** (host only, off by default):
 
 - **Autopilot**: the main switch. Every action is logged.
 - **Auto-pull main when clean**: picks up new commits (fast-forward only).
@@ -32,7 +32,7 @@ Each person's agent works on its own branch. The host's Claude Code can act as t
 
 ## Versions
 
-- **Milestones** (Tasks & Board) are your versions: name what's in the next one, and when you release it, Autopilot tags it.
+- **Milestones** (Task Board) are your versions: name what's in the next one, and when you release it, Autopilot tags it.
 - **Commits** and **Activity** on the Repo tab show what changed, by whom.
 
 ## Get the files out

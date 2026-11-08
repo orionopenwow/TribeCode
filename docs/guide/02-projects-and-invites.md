@@ -15,7 +15,7 @@ Each project gets its own chat, docs, tasks and repo. Change its name, emoji, co
 
 ## Invite someone
 
-Use **Invite friends** at the bottom of the sidebar, **Invite a friend** on a project's Overview, or the people button next to the bell.
+Use **Invite friends** at the bottom of the sidebar, **Invite a friend** on a project's Dashboard, or the people button next to the bell.
 
 The invite sheet shows:
 

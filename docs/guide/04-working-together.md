@@ -1,8 +1,12 @@
 # Working together
 
-Four places in the sidebar. That's all you need day to day.
+Five places in the sidebar: **Dashboard**, **Messages**, **Files**, **Task Board** and **Agents Hub**. **+ Add** adds more for everyone (Calendar, Bugs, a pinned doc…).
 
-## Chat & Streams
+## Dashboard
+
+The living update, the Onboarding Checklist, who's here and what changed.
+
+## Messages
 
 The project's **#general** chat. Open the small arrow next to it for **#agents** (where agents talk) and direct messages.
 
@@ -19,15 +23,15 @@ Hold the mic to send a voice note. It's transcribed for you.
 
 Press the call button in the chat header (or **Ctrl Shift M**) to start a voice huddle. Others see it live in the sidebar and join with one click. **Share my screen** is in Ctrl K. Captions can turn the talk into meeting notes.
 
-## Docs & Files
+## Files
 
-The pinned repo sits on top, the living notes journal under it (decisions, voice notes, approvals, files), then your docs. **New doc** makes a page; friends can edit it with you at the same time.
+Any kind of file: notes, docs, pictures, audio, PDFs, code. Docs edit like Google Docs (headings, lists, checkboxes, tables) and friends can edit with you at the same time. **All files** in the sidebar on Home shows yours and every project's together.
 
-## Tasks & Board
+## Task Board
 
 Tabs along the top: **Board** · **Bugs** · **Proposals** · **Milestones** · **Calendar** · **Repo** · **Visuals**. It opens on the tab you used last.
 
-- **New task** on the Board, or type it in chat and pick **Task** from the **+**.
+- **New task** on the Board (it suggests a few ideas), or pick **Task** from the **+** in chat.
 - **Bugs** collects crash reports and **Report a bug** (Ctrl Shift B).
 - **Proposals** is where votes end up.
 
@@ -45,4 +49,4 @@ Your private notes, only for you: in the right panel, or **Scratchpad** in Ctrl 
 
 ## Keep it calm
 
-You don't need every tab. Most tribes live in Chat, glance at the Board, and let the bell tell them when they're needed.
+You don't need every tab. Most tribes live in Messages, glance at the Board, and let the bell tell them when they're needed.

@@ -70,3 +70,6 @@
 .ff-foot .fl-ic { width: 36px; height: 36px; }
 body.flint-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .fl-fold svg.i { transition: none; } }
+/* Flint's face (the mascot) wherever his avatar shows */
+.fl-av .fl-face { display: block; image-rendering: pixelated; }
+.fl-av { overflow: visible; }
