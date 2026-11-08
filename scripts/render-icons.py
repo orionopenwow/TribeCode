@@ -34,7 +34,7 @@ out = {
     'app/src-tauri/icons/128x128@2x.png': size(256), 'app/src-tauri/icons/icon.png': size(512),
 }
 for f, im in out.items(): im.save(ROOT / f); print('wrote', f)
-# Apple touch icon + maskable: full bleed navy, no transparency
+# Apple touch icon + maskable: full bleed slate, no transparency
 for f, n in [('app/ui/assets/apple-touch-icon.png', 180), ('site/assets/brand/apple-touch-icon.png', 180)]:
     mask.resize((n, n), Image.LANCZOS).convert('RGB').save(ROOT / f); print('wrote', f)
 mask.convert('RGB').save(ROOT / 'app/ui/assets/icon-512-maskable.png'); print('wrote app/ui/assets/icon-512-maskable.png')

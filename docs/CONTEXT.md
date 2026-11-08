@@ -135,6 +135,7 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 4. Security follow-ups (H5, M2–M5). Game Studio MVP. Then native iOS (needs a Mac), Intel Mac builds, a TURN relay.
 
 ## Decisions
+- 2026-11-07: The app icon tile is the Campfire grey slate #282828 (was navy #171B26); light-background wordmarks use #1D2021. Preview's label and emoji follow the sensed project kind (game/3d/app/site/tool).
 - 2026-11-07: Desktop kit: Working\Start-Working.bat (dev, :4848, its own test tribe, live reload) is the main folder; Stable\Update-and-Open-TribeCode.bat installs/updates the .exe only on click. The in-app updater may download in the background but installs only on Restart to update.
 - 2026-11-07: The Windows desktop page origin is http://tauri.localhost; TribeClient.base() must never use it as the server. WebView2 enforces Private Network Access preflights, so the server answers OPTIONS with Access-Control-Allow-Private-Network: true (app/test/e2e_friends.py models this). Newer Chromium's Local Network Access prompt would block it; disabling that check in the app window needs the user's OK (asked, pending).
 - 2026-11-07: The desktop server starts only when you have a tribe here (settings.hosting) and Host is on (not hostOff); a fresh install starts nothing.
