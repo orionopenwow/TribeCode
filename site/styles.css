@@ -773,7 +773,11 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 
 /* the stage's corner, slightly on fire (flat pixels: Ember, amber, rust; 4 frames like the logo) */
 .stage-wrap { position: relative; }
-.stage__fire { position: absolute; top: -39px; right: -18px; width: 60px; height: 66px; z-index: 1; overflow: visible; pointer-events: none; }
+.stage__fire { position: absolute; top: -54px; right: -48px; width: 216px; height: 156px; z-index: 3; overflow: visible; pointer-events: none; }
+/* the burnt corner: the glowing edge and the cracks breathe like coals */
+.stage__fire .cf-edge { animation: cf-coal 1.9s steps(3, end) infinite alternate; }
+.stage__fire .cf-crack { animation: cf-coal 1.3s steps(3, end) infinite alternate; }
+@keyframes cf-coal { from { opacity: .55; } to { opacity: 1; } }
 .stage__fire .cf { opacity: 0; animation: cf .72s steps(1, end) infinite; }
 .stage__fire .cf0 { opacity: 1; animation-delay: -.72s; }
 .stage__fire .cf1 { animation-delay: -.54s; }
@@ -784,9 +788,9 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .stage__fire .cf-em2 { animation-duration: 2.3s; animation-delay: -.9s; }
 .stage__fire .cf-em3 { animation-duration: 2s; animation-delay: -1.4s; }
 @keyframes cf-rise { 0% { transform: translate(0, 0); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(1px, -7px); opacity: 0; } }
-@media (max-width: 900px) { .stage__fire { top: -26px; right: -12px; width: 40px; height: 44px; } }
+@media (max-width: 900px) { .stage__fire { top: -36px; right: -32px; width: 144px; height: 104px; } }
 @media (max-width: 640px) { .stage__fire { display: none; } }
-@media (prefers-reduced-motion: reduce) { .stage__fire .cf0 { opacity: 1; } .stage__fire .cf:not(.cf0) { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .stage__fire .cf0 { opacity: 1; } .stage__fire .cf:not(.cf0) { opacity: 0; } .stage__fire .cf-edge, .stage__fire .cf-crack { animation: none; } }
 
 /* ---------- start from something: the starters widget ---------- */
 .starters { padding: 128px 0 0; }
@@ -903,3 +907,15 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .nav__logo img:not(.nav__mark) { width: 168px; }
   .nav__logo img.nav__mark { width: 50px; height: 50px; margin: -13px -1px -13px -4px; }
 }
+@media (max-width: 430px) {
+  .nav__logo img:not(.nav__mark) { width: 132px; }
+  .nav__logo img.nav__mark { width: 40px; height: 40px; margin: -10px -1px -10px -3px; }
+}
+
+/* starters: one of each kind, labelled */
+.sw-card__kind { align-self: flex-start; font: 600 11.5px/1 var(--mono, monospace); padding: 5px 8px; border-radius: 999px; border: 1px solid var(--edge); color: var(--text); background: var(--surface-2); }
+.sw__panel { padding-top: 16px; }
+
+/* feature pixel art: twice the size, centered over its column */
+.feature__art { display: block; width: 240px; margin: 0 auto 28px; }
+@media (max-width: 900px) { .feature__art { width: 160px; margin: 0 auto 20px; } }

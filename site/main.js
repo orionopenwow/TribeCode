@@ -465,12 +465,15 @@
         ideas: ['a bot that posts our game’s daily build in Discord', 'a script that renames my screenshots by date'],
       },
     };
+    // one of each kind: a game, an app, a site and a tool
+    KINDS.mix = { cards: [['games', '🎮 Game'], ['apps', '📱 App'], ['sites', '🌐 Site'], ['tools', '🛠️ Tool']].map(([k, tag]) => ({ ...KINDS[k].cards[0], tag })),
+      ideas: [KINDS.games.ideas[0], KINDS.apps.ideas[1], KINDS.sites.ideas[1], KINDS.tools.ideas[0]] };
     const thumb = px => `<svg class="sw-thumb" viewBox="0 0 32 20" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><rect width="32" height="20" fill="#282828"/>${px.map(([x, y, w, h, c]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`).join('')}</svg>`;
-    let kind = 'games', pick = 0;
+    let kind = 'mix', pick = 0;
     function render() {
       const k = KINDS[kind];
       panel.innerHTML = `<div class="sw-cards">${k.cards.map((c, i) => `<button type="button" class="sw-card${i === pick ? ' is-on' : ''}" data-pick="${i}" aria-pressed="${i === pick}">
-          ${thumb(c.px)}<span class="sw-card__t"><b>${esc(c.n)}</b><span class="mono">${esc(c.tech)}</span></span>
+          ${thumb(c.px)}${c.tag ? `<span class="sw-card__kind">${esc(c.tag)}</span>` : ''}<span class="sw-card__t"><b>${esc(c.n)}</b><span class="mono">${esc(c.tech)}</span></span>
           <span class="sw-card__get"><small>What you get</small>${esc(c.get)}</span>
           <span class="sw-chips">${c.w.map(w => `<span class="sw-chip">${esc(w)}</span>`).join('')}</span></button>`).join('')}</div>
         <div class="sw-ideas"><p class="eyebrow mono">Inspiration</p>${k.ideas.map(t => `<button type="button" class="sw-idea" data-idea="${esc(t)}">“${esc(t)}”</button>`).join('')}</div>`;

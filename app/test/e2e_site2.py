@@ -201,10 +201,9 @@ def main():
             assert pg.locator("#sw-panel .sw-card").count() == 4 and "Pixel platformer" in pg.inner_text("#sw-panel") and "KAPLAY" in pg.inner_text("#sw-panel")
             assert pg.locator("#sw-panel .sw-card").nth(0).locator(".sw-chip").count() >= 2 and pg.locator("#sw-panel .sw-thumb").count() == 4
             assert "what you get" in pg.locator("#sw-panel .sw-card").nth(0).inner_text().lower()
-            for kind, name in [("apps", "Habit tracker"), ("sites", "Portfolio"), ("tools", "Discord bot"), ("games", "Endless runner")]:
-                pg.click(f".sw__tab[data-kind={kind}]")
-                assert pg.get_attribute(f".sw__tab[data-kind={kind}]", "aria-selected") == "true" and name in pg.inner_text("#sw-panel"), kind
-                assert pg.locator("#sw-panel .sw-chip").count() >= 6
+            for tag, name in [("Game", "Pixel platformer"), ("App", "Habit tracker"), ("Site", "Portfolio"), ("Tool", "Discord bot")]:   # one of each kind, no tabs
+                assert tag in pg.inner_text("#sw-panel") and name in pg.inner_text("#sw-panel"), tag
+            assert pg.locator(".sw__tab").count() == 0 and pg.locator("#sw-panel .sw-card__kind").count() == 4
             pg.locator("#sw-panel .sw-card").nth(2).click(); assert pg.locator("#sw-panel .sw-card").nth(2).get_attribute("aria-pressed") == "true"
             assert pg.get_attribute("[data-sw-cta]", "href") == "app/" and "first versions" in pg.inner_text("#starters")
             idea = pg.locator("#sw-panel .sw-idea").nth(0).get_attribute("data-idea")
@@ -218,11 +217,11 @@ def main():
             assert pg.evaluate("document.querySelectorAll('.stage__fire .cf').length") == 4
             assert pg.get_attribute(".stage__fire", "shape-rendering") == "crispEdges"
             names = set(pg.evaluate("[...new Set(document.querySelector('.stage__fire').getAnimations({subtree: true}).map(a => a.animationName))]"))
-            assert {"cf", "cf-rise"} <= names, names
+            assert {"cf", "cf-rise", "cf-coal"} <= names, names   # flames, embers, and the burnt corner's coals
             fills = set(pg.evaluate("[...document.querySelectorAll('.stage__fire [fill]')].map(e => e.getAttribute('fill').toUpperCase())"))
-            assert fills <= {"#F26B1D", "#FABD2F", "#B4512A"}, fills
+            assert fills <= {"#F26B1D", "#FABD2F", "#B4512A", "#FFE08A", "#16110E", "#231A15", "#3A2A22"}, fills   # fire + char
             fr, sr = pg.evaluate("[document.querySelector('.stage__fire').getBoundingClientRect().toJSON(), document.querySelector('.stage').getBoundingClientRect().toJSON()]")
-            assert fr["right"] > sr["right"] and fr["top"] < sr["top"] and fr["right"] - sr["right"] <= 24, (fr, sr)
+            assert fr["right"] > sr["right"] and fr["top"] < sr["top"] and fr["right"] - sr["right"] <= 72 and fr["left"] < sr["right"] - 60, (fr, sr)   # spreads left along the top and burns in
             if SHOTS:
                 pg.evaluate("scrollTo(0, 0)"); pg.wait_for_timeout(9000)
                 pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "site-desktop.png"))
@@ -354,7 +353,7 @@ def main():
             assert pr["left"] >= 0 and pr["right"] <= 390 and pr["top"] >= 0, pr
             no_overflow(ph, "phone Flint open"); ph.keyboard.press("Escape"); assert not ph.is_visible("#flint-panel")
             ph.locator("#starters .sw").scroll_into_view_if_needed(); assert ph.locator("#sw-panel .sw-card").count() == 4; no_overflow(ph, "phone starters")
-            ph.click(".sw__tab[data-kind=tools]"); no_overflow(ph, "phone starters tools"); ph.evaluate("scrollTo(0, 0)")
+            no_overflow(ph, "phone starters"); ph.evaluate("scrollTo(0, 0)")
             pq = ph.context.new_page(); pq.set_viewport_size({"width": 390, "height": 844}); pq.goto(BASE + "pricing.html"); pq.wait_for_load_state("load")
             lefts = pq.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-card')].map(t => Math.round(t.getBoundingClientRect().left))")
             assert len(lefts) == 4 and len(set(lefts)) == 1, f"pricing stacks on phones: {lefts}"
