@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.17.18
+
+- **A calmer demo, guided by Flint**: the auto demo now runs at a gentler pace (about four and a half minutes instead of three), and before each chapter Flint flies to the part of the screen it's about, rings it while the rest dims a little, and says in a sentence what it is and what you'd do there. The clock waits while he talks; press "Show me" when you're ready
+- **The website page in the demo** stays on screen long enough to read before the tour moves on
+- **The website's moving demos are slower**: the Lanes, Room, Phone and Host mocks pause almost twice as long between steps, and text types out more gently
+- **Flint says hi on the website**: on a first visit, a bigger card ("Hi, I'm Flint, your guide") offers **Show me around**, a one-minute tour that rings each section of the page with a line about it (Next, Back, arrow keys, Esc). It's also the first chip in Flint's panel
+- **Wording**: Flint's website answer no longer says one friend's computer hosts TribeCode; the work lives in your shared GitHub repo
+- **Fixed**: stopping the demo and starting it again could leave the old run going in the background
+- **Phones**: the website hello shows on phones too (it tucks away after 20 seconds), the tour card sits at the bottom with big buttons, and the phone cut of the demo also gets Flint's introductions
+
 ## v0.17.17
 
 - **Sheets in Files**: 📊 Sheet next to ＋ New doc. A light spreadsheet with formulas (=SUM, =AVERAGE, =IF, =SUMIF and more, A1 refs and ranges), a formula bar, a Sum / Average / Count line for what you select, paste straight from Excel or Google Sheets, CSV in and out. Saved as a plain Markdown table, so it reads well on GitHub and agents can edit it

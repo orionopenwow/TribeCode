@@ -233,13 +233,19 @@ def main():
             assert pg.is_visible(".flint-fab") and not pg.is_visible("#flint-panel")
             assert not pg.is_visible("#flint-bubble")
             pg.wait_for_selector("#flint-bubble:not([hidden])", timeout=6000)
-            assert "Click me to learn more" in pg.inner_text("#flint-bubble")
-            assert pg.evaluate("getComputedStyle(document.querySelector('.flint-bubble')).fontFamily").startswith("Silkscreen")
+            assert "I’m Flint, your guide" in pg.inner_text("#flint-bubble") and pg.is_visible("[data-hello=tour]")
+            assert pg.evaluate("getComputedStyle(document.querySelector('.flint-hello__top b')).fontFamily").startswith("Silkscreen")
+            # Show me around: Flint rings one section at a time; Next / Back / Esc
+            pg.click("[data-hello=tour]"); pg.wait_for_selector(".ftour-ring.on")
+            assert "1 / 7" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
+            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 7')")
+            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 7')")
+            pg.keyboard.press("Escape"); assert pg.locator(".ftour-card, .ftour-ring").count() == 0
             pg.reload(); pg.wait_for_load_state("load"); pg.wait_for_timeout(4000)
             assert not pg.is_visible("#flint-bubble"), "the bubble shows once"
             assert not pg.is_visible("#flint-panel"), "Flint never opens by itself"
             pg.click(".flint-fab"); assert pg.is_visible("#flint-panel") and pg.get_attribute(".flint-fab", "aria-expanded") == "true"
-            assert pg.locator("#flint-panel .flint-chip").count() == 6 and pg.get_attribute(".flint-panel__log", "aria-live") == "polite"
+            assert pg.locator("#flint-panel .flint-chip").count() == 7 and pg.locator(".flint-chip[data-q=tour]").count() == 1 and pg.get_attribute(".flint-panel__log", "aria-live") == "polite"
             assert pg.evaluate("document.querySelector('#flint-panel').contains(document.activeElement)")
             pg.click(".flint-chip[data-q=free]")
             pg.wait_for_function("document.querySelectorAll('.flint-panel__log .flint-msg').length >= 3", timeout=3000)

@@ -132,11 +132,14 @@
   // ======================================================================================================
   // The clock: virtual time that runs at 1x / 2x (or very fast for tests) and stops while paused
   // ======================================================================================================
-  let vt = 0, lastReal = 0, speedN = 1, paused = false, running = false, token = 0, loopT = null, fast = false;
+  let vt = 0, lastReal = 0, speedN = 1, paused = false, running = false, token = 0, loopT = null, fast = false, narrating = false, quiet = false;
+  // feat/calm-tour: 1x is a calm pace (the scripted chapters run at 0.7 of their old speed), and the clock stops while
+  // Flint introduces a chapter, so nothing moves underneath him while you read
+  const PACE = 0.7;
   let waiters = [];
   function loop() {
     const now = performance.now();
-    if (running && !paused) vt += (now - lastReal) * speedN;
+    if (running && !paused && !narrating) vt += (now - lastReal) * speedN * (fast ? 1 : PACE);
     lastReal = now;
     if (waiters.length) { const due = waiters.filter(w => w.at <= vt); if (due.length) { waiters = waiters.filter(w => w.at > vt); due.forEach(w => w.res()); } }
     paintTime();
@@ -267,7 +270,7 @@
   // The scenes (dur: desktop ms; pdur: the phone cut, phones play only scenes that have one)
   // ======================================================================================================
   const SCENES = [
-    { id: 'start', title: 'Start a project', cap: 'Start a project. A short checklist sets it up with you.', dur: 12000, async run() {
+    { id: 'start', title: 'Start a project', flint: ["#pj-plus, #hpt-brand", "Hi, I'm Flint, your guide. Let's start a project together. This + makes one, and a short checklist sets it up with you."], cap: 'Start a project. A short checklist sets it up with you.', dur: 12000, async run() {
       closeModals();
       await wait(600);
       const plus = $('#pj-plus');
@@ -286,7 +289,7 @@
       const steps = document.querySelectorAll('#pj-check [data-step]');
       for (const s of steps) { await move('me', s, 500, { dx: 0.12 }); await wait(420); }
     } },
-    { id: 'vision', title: 'Write the vision', cap: 'Say what you’re making. Everyone, and every agent, reads it.', dur: 13000, async run() {
+    { id: 'vision', title: 'Write the vision', flint: ["#pj-check, #pj-overview", "First, say what you're making. Everyone, and every agent, reads the vision before they build."], cap: 'Say what you’re making. Everyone, and every agent, reads it.', dur: 13000, async run() {
       if (C().project() !== NEWID) await inProject(NEWID);
       if (view() !== 'home') A().show('home');
       const b = await waitFor('#pj-check [data-ck="vision"]', 3000);
@@ -304,7 +307,7 @@
       check('vision saved', !!(db().vision || {})[NEWID]);
       await settle('#pj-check [data-step="vision"].on', 'vision ticked', 3000);
     } },
-    { id: 'friends', title: 'Friends join', cap: 'Friends join with one link. Their agents bring the first tasks.', dur: 11000, async run() {
+    { id: 'friends', title: 'Friends join', flint: ["#pj-check, #pj-overview", "Friends join with one link, no account. Watch the checklist fill in as they arrive and bring the first tasks."], cap: 'Friends join with one link. Their agents bring the first tasks.', dur: 11000, async run() {
       if (C().project() !== NEWID) await inProject(NEWID);
       if (view() !== 'home') A().show('home');
       const p = db().projects.find(x => x.id === NEWID);
@@ -334,7 +337,7 @@
       where('maya', 'Tasks'); where('jay', 'Docs · Art direction');
       if (view() !== 'home') A().show('home');
     } },
-    { id: 'context', title: 'Add context', cap: 'Drop in docs, notes or images. Flint and the agents read them.', dur: 11000, async run() {
+    { id: 'context', title: 'Add context', flint: ["#dropzone", "Drop notes, docs or pictures here. They land in Files, and the agents and I read them."], cap: 'Drop in docs, notes or images. Flint and the agents read them.', dur: 11000, async run() {
       if (C().project() !== PID) await inProject(PID);
       if (view() !== 'home') A().show('home');
       const dz = await waitFor('#dropzone', 3000);
@@ -355,7 +358,7 @@
       await waitFor(() => view() === 'docs' && document.body, 3000);
       await settle(() => [...document.querySelectorAll('#view-docs *')].find(e => e.children.length === 0 && /playtest/i.test(e.textContent)), 'the doc is in Files', 3000);
     } },
-    { id: 'chat', title: 'Messages', cap: 'Chat with friends and agents in one place. @claude answers.', dur: 14000, pdur: 14000, async run() {
+    { id: 'chat', title: 'Messages', flint: ["#nest-chat, #tabbar [data-nav=\"chat\"]", "This is Messages: friends and their agents in one chat. Type @claude and an agent answers."], cap: 'Chat with friends and agents in one place. @claude answers.', dur: 14000, pdur: 14000, async run() {
       await go('chat');
       await settle('#chat-list', 'chat open');
       if (!phone()) { const m = cursor('maya'), j = cursor('jay'); m.x = innerWidth * 0.75; m.y = innerHeight * 0.3; j.x = innerWidth * 0.4; j.y = innerHeight + 30; place(m); place(j); }
@@ -380,7 +383,7 @@
       if (D()) { const t = (db().tasks[PID] || []).find(x => x.status === 'doing') || (db().tasks[PID] || [])[0]; if (t) D().gist(t.id, t.assignee && member(t.assignee) && member(t.assignee).role === 'agent' ? t.assignee : 'claude-maya', 1); }
       if (!phone()) await move('maya', $('#chat-list'), 800, { dx: 0.5, dy: 0.85 });
     } },
-    { id: 'tasks', title: 'Task Board', cap: 'Make a task. An agent picks it up, a friend reviews, it’s done.', dur: 14000, pdur: 14000, async run() {
+    { id: 'tasks', title: 'Task Board', flint: ["#nest-ws-tasks, #tabbar [data-nav=\"tasks\"]", "The Task Board. Make a task, an agent picks it up, a friend reviews it, and it moves to Done."], cap: 'Make a task. An agent picks it up, a friend reviews, it’s done.', dur: 14000, pdur: 14000, async run() {
       dropCursor('jay');
       await go('tasks');
       await settle('#board [data-col]', 'board open');
@@ -426,7 +429,7 @@
       check('card moved to Done', !!id2 && !!(await waitFor(`#board [data-col="done"] .task[data-id="${id2}"]`, 2500)));
       if (id2) say('maya', 'Reviewed and merged ✅');
     } },
-    { id: 'agents', title: 'Agents Hub', cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
+    { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents", "The Agents Hub shows every agent at work, each in its own lane, so nobody steps on anyone. Hand-offs take one click."], cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
       dropCursor('maya');
       await go('agents');
       await settle('#ad-hero .ad-agent', 'agents at work');
@@ -444,7 +447,7 @@
       T.channel.push({ id: 'c-' + K().rid(5), by: 'claude', to: 'claude-maya', text: 'Got it. Claiming src/levels/fog.js now.', at: iso() }); K().save();
       await wait(800); refresh();
     } },
-    { id: 'flint', title: 'Ask Flint', cap: 'Flint, the built-in helper, answers and shows you where things are.', dur: 11000, async run() {
+    { id: 'flint', title: 'Ask Flint', flint: ["#fl-input, #flint", "That's me down here. Ask me what's happening, or say \"task \u2026\" or \"note: \u2026\" and I'll do it."], cap: 'Flint, the built-in helper, answers and shows you where things are.', dur: 11000, async run() {
       if (view() !== 'tasks') A().show('tasks');
       const inp = await waitFor('#fl-input', 3000);
       if (!inp) { check('flint bar', false); return; }
@@ -464,7 +467,7 @@
         window.TribeFlintGuide.hide();
       }
     } },
-    { id: 'preview', title: 'Preview', cap: 'Run what you’re building right next to the work. Play it together.', dur: 14000, pdur: 14000, async run() {
+    { id: 'preview', title: 'Preview', flint: ["#nest-preview", "Preview runs what you're building right beside the work. Let's play the game the tribe made."], cap: 'Run what you’re building right next to the work. Play it together.', dur: 14000, pdur: 14000, async run() {
       if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
       if (view() !== 'tasks' && view() !== 'home') A().show('home');
       if (window.TribeWidgets) await window.TribeWidgets.refresh();
@@ -488,7 +491,7 @@
       check('the game is playing', !!$('#pvw-iframe'), { lit: gameLit });
       await wait(400);
     } },
-    { id: 'docs', title: 'Write together', cap: 'Docs are written live, together. Everyone’s cursor, in their color.', dur: 13000, pdur: 13000, async run() {
+    { id: 'docs', title: 'Write together', flint: ["#nest-docs, #tabbar [data-nav=\"docs\"]", "Docs are written together, live. Each friend's cursor shows in their own color."], cap: 'Docs are written live, together. Everyone’s cursor, in their color.', dur: 13000, pdur: 13000, async run() {
       if (window.TribePreview) window.TribePreview.close();
       await go('docs');
       if (window.TribeDocs) await window.TribeDocs.open('level-design');
@@ -531,7 +534,7 @@
       await settle(() => [...document.querySelectorAll('[class*="caret"], [class*="cursor"]')].find(e => /Jay|Maya/.test(e.textContent || '') || e.style.borderColor), 'remote carets drawn', 1500);
       await wait(1200);
     } },
-    { id: 'website', title: 'The website', cap: 'A public page for your project, built from what you already wrote.', dur: 12000, async run() {
+    { id: 'website', title: 'The website', flint: ["#wt-website, #nest-website", "Your project gets a public page, built from the vision, screenshots and team you already have. Take your time to look."], cap: 'A public page for your project, built from what you already wrote.', dur: 17000, async run() {
       if (window.TribeShell && window.TribeShell.go) window.TribeShell.go('website'); else if (window.TribeWebsite) window.TribeWebsite.open();
       const tab = $('#wt-website'); if (tab && !phone()) await click('me', tab, { noClick: true });
       const head = await settle('#wb-headline', 'website builder open', 4000);
@@ -544,11 +547,13 @@
       }
       const fr = await settle('#wb-frame', 'the built page in the preview', 4000);
       const pv = fr && fr.closest('.wb-preview'); if (pv) pv.scrollIntoView({ block: 'start', behavior: calm() ? 'instant' : 'smooth' });
-      await wait(700);
-      if (fr) await move('me', fr, 800, { dx: 0.55, dy: 0.4 });
-      await wait(900);
+      await real(fast ? 50 : 900);   // let the smooth scroll land before anything else moves
+      if (fr) await move('me', fr, 1200, { dx: 0.55, dy: 0.3 });
+      await wait(2200);   // time to read the built page
+      if (fr) await move('me', fr, 1600, { dx: 0.45, dy: 0.7 });
+      await wait(2600);
     } },
-    { id: 'ship', title: 'Vote and ship', cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
+    { id: 'ship', title: 'Vote and ship', flint: ["#wt-board, #nest-ws-tasks", "Big changes get a vote. When the milestone is done, it ships, and everyone gets the credit."], cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
       if (view() !== 'tasks') A().show('tasks');
       const tb = await waitFor('#wt-board', 2000);
       if (tb && !phone()) await click('me', tb); else A().show('board');
@@ -574,7 +579,7 @@
       if (!calm() && window.TribeFlintGuide && window.TribeFlintGuide._burst && card && $('#flint-guide')) { const r = card.getBoundingClientRect(); window.TribeFlintGuide._burst(r.left + 30, r.top + 20, 18); }
       await wait(2400);
     } },
-    { id: 'add', title: '+ Add', cap: 'Add what your project needs: a calendar, bugs, a link, a doc.', dur: 10000, async run() {
+    { id: 'add', title: '+ Add', flint: ["#nest-add", "Need more? Add a calendar, a bug list, links or a doc to the sidebar."], cap: 'Add what your project needs: a calendar, bugs, a link, a doc.', dur: 10000, async run() {
       document.querySelectorAll('.sc-cele').forEach(x => x.remove());
       if (view() !== 'home') A().show('home');
       const add = await waitFor('#nest-add', 2000);
@@ -589,7 +594,7 @@
       const row = key && $(`#wg-${key}`); if (row) await move('me', row, 600, { dx: 0.3 });
       await wait(700);
     } },
-    { id: 'phone', title: 'On your phone', cap: 'Away from your desk? Approve your agents’ work with one tap.', dur: 11000, async run() {
+    { id: 'phone', title: 'On your phone', flint: [null, "Away from your desk? When an agent wants to merge, your phone gets one tap: approve or deny."], cap: 'Away from your desk? Approve your agents’ work with one tap.', dur: 11000, async run() {
       if (view() !== 'home') A().show('home');
       const t = (db().tasks[PID] || []).find(x => x.status === 'doing') || (db().tasks[PID] || []).find(x => x.status === 'backlog');
       if (t && D()) { if (t.status !== 'doing') D().claim(t.id, 'claude-maya'); D().review(t.id, t.assignee || 'claude-maya'); }
@@ -631,24 +636,26 @@
   let list = [], idx = 0, cur = null, sceneStart = 0, offsets = [], total = 0, jump = null, done = false;
   const log = [];
   const dur = s => (phone() ? s.pdur || s.dur : s.dur);
+  let runId = 0;
   async function runFrom(i) {
-    idx = i;
-    while (running && idx < list.length) {
+    idx = i; const me = ++runId;   // a stopped run never carries on into a new one
+    while (running && me === runId && idx < list.length) {
       cur = list[idx]; jump = null; vt = offsets[idx]; sceneStart = vt;
       begin(cur);
       try {
         if (!['start', 'vision', 'friends'].includes(cur.id) && C().project() !== PID) await inProject(PID);   // e.g. after a skip
+        await narrate(cur, idx);
         await cur.run();
         const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest);
       } catch (e) {
         if (e !== ABORT) { console.warn('demo tour:', cur.id, e); check('scene ran', false, String(e && e.message || e)); }
-        if (!running) return;
+        if (!running || me !== runId) return;
       }
       drop();
       if (jump != null) { const to = jump; jump = null; vt = offsets[to] || 0; idx = to; continue; }
       idx++;
     }
-    if (running) finish();
+    if (running && me === runId) finish();
   }
   function begin(s) {
     const n = list.indexOf(s);
@@ -659,11 +666,31 @@
     document.querySelectorAll('#dt-chaps [data-i]').forEach(b => { const i = Number(b.dataset.i); b.classList.toggle('past', i < n); b.classList.toggle('on', i === n); b.setAttribute('aria-current', i === n ? 'step' : 'false'); });
     log.push({ scene: s.id, name: 'reached', ok: true, view: view(), at: Math.round(vt) });
   }
+  // Flint flies to the part of the screen this chapter is about, rings it (everything else dims a little) and says, in
+  // a sentence, what it is and what you'd do there. He waits about as long as it takes to read (pause holds him), or
+  // until you press "Show me".
+  async function narrate(s, n) {
+    const G = window.TribeFlintGuide;
+    if (fast || quiet || !G || !s.flint) return;
+    const [sel, text] = s.flint;
+    const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
+    const t = token; narrating = true; document.body.classList.add('dt-narr');
+    let done = false, left = Math.max(5200, text.split(/\s+/).length * 360);
+    G.point(el, text, { next: n === list.length - 1 ? 'Finish' : 'Show me', steps: list.length, step: n, dim: true }).then(() => { done = true; });
+    try {
+      while (!done && left > 0) {
+        await new Promise(r => setTimeout(r, 100));
+        if (t !== token || !running) throw ABORT;
+        if (!paused) left -= 100 * speedN;
+      }
+    } finally { if (!done) G.hide(); narrating = false; document.body.classList.remove('dt-narr'); }
+    await real(250);
+  }
   const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   function paintTime() {
     if (!bar) return;
     const t = done ? total : Math.min(total, vt);
-    const tm = $('#dt-time'); if (tm) tm.textContent = `${mmss(t)} / ${mmss(total)}`;
+    const k = fast ? 1 : PACE, tm = $('#dt-time'); if (tm) tm.textContent = `${mmss(t / k)} / ${mmss(total / k)}`;
     if (cur && !done) { const n = list.indexOf(cur), seg = document.querySelector(`#dt-chaps [data-i="${n}"] i`); if (seg) seg.style.width = Math.min(100, Math.max(0, (vt - offsets[n]) / dur(cur) * 100)) + '%'; }
   }
   let bar = null;
@@ -674,7 +701,7 @@
     bar = document.createElement('div'); bar.className = 'dt-bar'; bar.id = 'dt-bar'; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Demo tour');
     bar.innerHTML = `<button class="dt-b dt-play" id="dt-play" aria-label="Pause" title="Pause"><span class="dt-pp" aria-hidden="true">❚❚</span></button>
       <div class="dt-mid"><div class="dt-chaps" id="dt-chaps" role="group" aria-label="Chapters">${list.map((s, i) => `<button class="dt-seg" data-i="${i}" style="flex-grow:${dur(s)}" title="${i + 1}. ${esc(s.title)}" aria-label="Chapter ${i + 1}: ${esc(s.title)}"><i></i></button>`).join('')}</div>
-        <div class="dt-meta"><span class="dt-title" id="dt-title"></span><span class="dt-time" id="dt-time">0:00 / ${mmss(total)}</span></div></div>
+        <div class="dt-meta"><span class="dt-title" id="dt-title"></span><span class="dt-time" id="dt-time">0:00 / ${mmss(total / (fast ? 1 : PACE))}</span></div></div>
       <button class="dt-b" id="dt-skip" title="Skip chapter" aria-label="Skip chapter">Skip<span class="dt-wide"> chapter</span></button>
       <button class="dt-b dt-speed" id="dt-speed" aria-pressed="false" title="Speed">2×</button>
       <button class="dt-b dt-try" id="dt-try">Try it<span class="dt-wide"> yourself</span></button>
@@ -727,7 +754,7 @@
     if (!on()) return false;
     if (running) stop();
     hookRoutes();
-    fast = !!opts.fast; speedN = fast ? 30 : 1; paused = false; done = false; token++; vt = 0; lastReal = performance.now();
+    fast = !!opts.fast; quiet = opts.narrate === false; speedN = fast ? 30 : 1; paused = false; done = false; token++; vt = 0; lastReal = performance.now();
     list = SCENES.filter(s => !phone() || s.pdur);
     offsets = []; total = 0; list.forEach(s => { offsets.push(total); total += dur(s); });
     if (SC() && SC().hold) SC().hold(true);
@@ -759,11 +786,11 @@
     const n = to == null ? idx + 1 : to;
     if (n >= list.length) { jump = list.length - 1; } else jump = Math.max(0, n);
     if (paused) { paused = false; paintCtl(); }
-    token++; flush();
+    token++; flush(); if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
   }
   function speed(n) { if (!running) return; speedN = fast ? 30 : n === 2 ? 2 : 1; paintCtl(); }
   // You clicked into the app yourself: the tour waits for you
-  document.addEventListener('pointerdown', e => { if (running && !paused && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
+  document.addEventListener('pointerdown', e => { if (running && !paused && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
 
   window.TribeDirector = {
     start, stop, pause, play, skip, speed, tryIt, restart, active: () => running,
