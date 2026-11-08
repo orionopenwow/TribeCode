@@ -163,31 +163,41 @@
     const lss = (k, v) => { try { v == null ? localStorage.removeItem(pk + k) : localStorage.setItem(pk + k, v); } catch {} };
     const others = team.some(m => m.id !== meId);
     const steps = [
-      { id: 'vision', label: 'Write the vision', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
-      { id: 'task', label: `Give ${esc(p.name)} its first task`, done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button><button class="btn sm" data-ck="invite">Invite a friend</button>' : '' },
-      { id: 'friend', label: 'A friend joins', done: others },
-      { id: 'claude', label: 'Connect your AI', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'repo', label: 'Pin the repo', done: !!(d.repo || p.hasRepo), acts: canEdit ? '<button class="btn sm" data-ck="repo">Set up</button>' : '' },
+      { id: 'vision', emo: '✨', label: 'Write the vision', sub: 'Say what you’re making and who it’s for. Everyone reads it.', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
+      { id: 'task', emo: '📝', label: `Give ${esc(p.name)} its first task`, sub: 'Pick one small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button><button class="btn sm" data-ck="invite">Invite a friend</button>' : '' },
+      { id: 'friend', emo: '👋', label: 'A friend joins', sub: 'Share one link. No account needed.', done: others },
+      { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
+      { id: 'repo', emo: '🌿', label: 'Pin the repo', sub: 'Where the code lives.', done: !!(d.repo || p.hasRepo), acts: canEdit ? '<button class="btn sm" data-ck="repo">Set up</button>' : '' },
     ];
-    const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length, folded = lsg('ckFold') === '1';
+    const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
+    // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
+    // the hero of the page and the Living update stays hidden: there is nothing to report yet.
+    const started = steps.some(x => x.done && x.id !== 'repo' && x.id !== 'claude'), hero = !started && !allDone;
+    const folded = !hero && lsg('ckFold') === '1';
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
     const checklist = allDone && lsg('ckGone') === '1' ? ''
       : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, friends, Claude and a repo.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
-      : `<section class="pj-check ${folded ? 'folded' : ''}" id="pj-check">
+      : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''}" id="pj-check">
+          ${hero ? `<span class="eyebrow ock-eyebrow">Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)}</h2><p class="ock-hero-p">Five quick steps. The dashboard fills in as you go.</p>` : ''}
           <div class="ock-head"><h3>Onboarding Checklist</h3><span class="ock-n">${nDone}/${steps.length}</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
           <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
-          <div class="ock-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
-            <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}</div></div>`).join('')}</div></section>`;
+          ${hero ? `<div class="ock-list ock-cards">${steps.map(x => `<div class="ock-row ock-card ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
+            <span class="ock-emo" aria-hidden="true">${x.emo}${x.done ? `<i class="ock-emo-ok">${tick}</i>` : ''}</span>
+            <div class="ock-main"><span class="ock-l">${x.label}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>
+            ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}</div>`).join('')}</div>` : ''}
+          ${hero ? '' : `<div class="ock-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
+            <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}</div></div>`).join('')}</div>`}</section>`;
     const tiles = L ? [['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', next, planned ? 'plan' : 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']] : [];
     const r = d.repo;
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${esc(p.name)}</h1>
-          <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? 'Add a one-line bio: what is this?' : ''}</button>
-          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? ` · ${esc(r.name)} on ${esc(r.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
+          <button class="pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
+          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span>${esc(r.name)}<span class="pj-dot">·</span>${esc(r.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
         <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
-      ${L ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
+      ${hero ? checklist : ''}
+      ${L && started ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
           <div class="pl-grid">${tiles.map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
-      ${checklist}
+      ${hero ? '' : checklist}
       <div id="pj-insp-slot"></div>
       ${sec('pj-sec-tribe', 'Tribe &amp; Agents', `<div class="pj-grid">
         <section class="card" id="pj-who"><h3>${ico('i-users', 16)}Who is here</h3>
@@ -216,6 +226,9 @@
       if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude(); else if (k === 'repo') App().show('repo');
       else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); } });
     const fold = $('#pj-check-fold');
+    // the hero checklist: the next step gets the one solid button and a soft highlight; the rest stay calm
+    const chk = $('#pj-check.hero');
+    if (chk) { chk.querySelectorAll('.btn.primary').forEach(x => x.classList.remove('primary')); const nx = chk.querySelector('.ock-row:not(.on)'); if (nx) { nx.classList.add('ock-next'); const b1 = nx.querySelector('.ock-acts .btn, .ock-below .btn'); if (b1) b1.classList.add('primary'); } }
     if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     $('#pj-invite').onclick = () => App().openInvite();

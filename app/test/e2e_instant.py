@@ -125,8 +125,8 @@ def main():
             host.click(".modal-card.ii [data-close]")
 
             # ---- the fresh project's overview: bio, living update, onboarding checklist ----
-            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-living .pl-cell", timeout=15000)
-            assert host.query_selector_all("#pj-living .pl-cell").__len__() == 4, "Lately · Chat · Way forward · Coming up"
+            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.hero .ock-card", timeout=15000)
+            assert host.locator("#pj-living").count() == 0, "a fresh project leads with the checklist, no Living update yet"
             host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
             host.click("#pj-bio"); host.fill(".pj-bio-in", "A tiny game for friends"); host.keyboard.press("Enter")
             wait_text(host, "#pj-bio", "A tiny game for friends")

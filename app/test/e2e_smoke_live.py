@@ -74,10 +74,11 @@ def main():
             assert any("starting idea" in json.dumps(n).lower() for n in api("/flow", token=tok, headers={"X-Project": pid})[1]["flow"]["notes"]), "the template's starting idea is in the notes"
 
             # ---- overview: bio, vision, living update ----
-            host.click("#nest-overview"); host.wait_for_selector("#pj-living .pl-cell", timeout=15000)
+            host.click("#nest-overview"); host.wait_for_selector("#pj-check", timeout=15000)
             wait_text(host, "#pj-bio", "lanterns")
             host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vtext", "Run through the night lighting lanterns.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
             host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
+            host.wait_for_selector("#pj-living .pl-cell", timeout=10000)   # the tribe has begun: the Living update shows
             shot(host, "overview")
 
             # ---- project settings: rename + emoji ----
