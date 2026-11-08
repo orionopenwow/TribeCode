@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.3
+
+- **Hosting lives top left**: the "Hi, you're hosting" banner is gone. While this computer hosts the tribe, a small green **Hosting** pill sits at the top left; when you're not hosting there's nothing. Click it for who can reach you (Wi-Fi, Tailscale or anyone), who's online, the address with a copy button, the Host switch (desktop app), Invite a friend, Share beyond my Wi-Fi and Host settings
+- **Phones**: unchanged (Home's identity card already says you're hosting)
+
+## v0.9.2
+
+- **Chat fills from the bottom**: messages stack up from just above the chat bar, like Discord, and the newest is always in view. The "you're hosting" banner no longer pushes the chat under the bar
+- **A cleaner chat header**: the channel is a plain bold "# general" with a quiet chevron to switch conversations (no box), the member line under it, and quieter call, screen and info buttons in a single 64px row
+- **Phones**: unchanged (the phone chat already filled from the bottom)
+
 ## v0.9.1
 
 - **Campfire is the default look**: warm greys with white text. The other 8 themes are still in Settings › Theme. If you never picked a theme you get Campfire; if you picked one, it stays
