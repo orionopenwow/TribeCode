@@ -354,6 +354,7 @@ askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => mem
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
 const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
 const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
+const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast });   // the Files center: any file type, yours or the project's
@@ -615,6 +616,7 @@ async function apiInProject(req, res, url) {
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());
   if (a === 'shelf') return shelf.route(req, res, ctx());
+  if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
