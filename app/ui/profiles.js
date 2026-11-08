@@ -111,7 +111,7 @@
 
   // ---------- media URLs ----------
   const token = () => { try { return (window.TribeStore.get().server || {}).token || ''; } catch { return ''; } };
-  const media = f => f ? `${C.base()}/api/profile/media/${encodeURIComponent(f)}?token=${encodeURIComponent(token())}` : '';
+  const media = f => { if (!f) return ''; const u = `${C.base()}/api/profile/media/${encodeURIComponent(f)}`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
 
   // ---------- avatars ----------
   // Markup for the inside of an avatar (the caller keeps its own box size).

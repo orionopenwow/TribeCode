@@ -1,0 +1,31 @@
+{
+  "identifier": "working-lane",
+  "description": "fix/security-2: the Working dev lane (http://localhost:4848) gets IPC only when TRIBECODE_WORKING_LANE=1 or ~/.tribecode/working-lane exists (added at runtime in main.rs)",
+  "local": false,
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "updater:default",
+    "process:allow-restart",
+    "notification:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "deep-link:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-is-maximized"
+  ],
+  "remote": {
+    "urls": [
+      "http://localhost:4848/*",
+      "http://127.0.0.1:4848/*"
+    ]
+  }
+}

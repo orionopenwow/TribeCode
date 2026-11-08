@@ -2,7 +2,7 @@
 //   Built in (in your browser)  WebLLM runs Qwen3 on this device: one-time ~500 MB (0.6B) or ~1 GB (1.7B) download,
 //                               cached by the browser. Needs WebGPU; where it's missing (Safari, iPhone, Firefox) we say
 //                               so and suggest the host's model or a key. The script loads from the CDN only on opt-in,
-//                               pinned (the one exception to "zero deps", like three.js in viewers.js).
+//                               pinned and SHA-384 checked, in a worker without the sign-in key (app/ui/brainworker.js, fix/security-2).
 //   This computer (Ollama)      the host's local model (server/brain.js)
 //   A cloud model with your key OpenAI, Anthropic, Google Gemini, OpenRouter, Groq or any OpenAI-compatible URL. The
 //                               key is stored on the HOST only (server/llm.js, .tribe/secrets/llm.json, 0600) and never
@@ -16,7 +16,6 @@
   const C = window.TribeClient, $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
-  const WEBLLM = 'https://esm.run/@mlc-ai/web-llm@0.2.83';   // pinned; imported only when someone picks "Built in"
   const KEY = 'tribecode.flint.brain';
   const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
   const face = (sz = 28) => `<img class="fl-face" src="assets/flint.svg" alt="" width="${sz}" height="${sz}" aria-hidden="true">`;
@@ -36,13 +35,33 @@
     const big = f16 && (navigator.deviceMemory || 8) >= 8 && ((ad.limits && ad.limits.maxBufferSize) || 0) >= 2 ** 30;
     return (gpuInfo = { ok: true, model: big ? 'Qwen3-1.7B-q4f16_1-MLC' : f16 ? 'Qwen3-0.6B-q4f16_1-MLC' : 'Qwen3-0.6B-q4f32_1-MLC', size: big ? 'about 1 GB' : 'about 500 MB', label: big ? 'Qwen3 1.7B' : 'Qwen3 0.6B' });
   }
+  // fix/security-2: WebLLM runs in app/ui/brainworker.js, a module worker (no localStorage there, so it never sees the sign-in
+  // key), from the pinned npm file checked against its SHA-384 before it runs. The page only sends messages.
+  let seq = 0, onProg = null;
+  const waiting = new Map();   // request id -> { onDelta, resolve, reject }
+  function spawn() {
+    const w = new Worker('brainworker.js', { type: 'module', name: 'tribecode-brain' });
+    w.onmessage = e => {
+      const m = e.data || {};
+      if (m.type === 'progress') { progress = { p: m.p || 0, text: m.text || '' }; if (onProg) onProg(progress); drawProgress(); return; }
+      if (!m.id) { const l = waiting.get('load'); if (l && (m.type === 'ready' || m.type === 'error')) { waiting.delete('load'); m.type === 'ready' ? l.resolve() : l.reject(new Error(m.error)); } return; }
+      const r = waiting.get(m.id); if (!r) return;
+      if (m.type === 'delta') r.onDelta(m.text);
+      else { waiting.delete(m.id); m.type === 'done' ? r.resolve() : r.reject(new Error(m.error)); }
+    };
+    w.onerror = e => { const err = new Error((e && e.message) || 'The built-in model stopped.'); waiting.forEach(r => r.reject(err)); waiting.clear(); };
+    return w;
+  }
   async function loadBrowser(onProgress) {
     if (engine) return engine;
     if (loading) return loading;
     loading = (async () => {
       const g = await gpu(); if (!g.ok) throw new Error(g.why);
-      const mod = await import(/* webpackIgnore: true */ WEBLLM);
-      engine = await mod.CreateMLCEngine(g.model, { initProgressCallback: r => { progress = { p: r.progress || 0, text: r.text || '' }; onProgress && onProgress(progress); drawProgress(); } });
+      onProg = onProgress || null;
+      const w = spawn();
+      try { await new Promise((resolve, reject) => { waiting.set('load', { resolve, reject }); w.postMessage({ type: 'load', model: g.model }); }); }
+      catch (e) { w.terminate(); throw e; }
+      engine = { worker: w };
       progress = { p: 1, text: 'Ready' }; drawProgress();
       return engine;
     })();
@@ -51,13 +70,16 @@
   // Flint's ask path in the page: streams, nothing leaves this device.
   async function askBrowser(messages, onText) {
     const eng = await loadBrowser();
-    const chunks = await eng.chat.completions.create({ messages, stream: true, max_tokens: 300, temperature: 0.3, extra_body: { enable_thinking: false } });
     let out = '', thinking = false;
-    for await (const c of chunks) {
-      let t = (c.choices && c.choices[0] && c.choices[0].delta && c.choices[0].delta.content) || ''; if (!t) continue;
-      out += t; const clean = out.replace(/<think>[\s\S]*?(<\/think>|$)/g, ''); thinking = /<think>(?![\s\S]*<\/think>)/.test(out);
-      if (!thinking) onText(clean.trimStart());
-    }
+    const id = 'q' + (++seq);
+    await new Promise((resolve, reject) => {
+      waiting.set(id, { resolve, reject, onDelta: t => {
+        if (!t) return;
+        out += t; const clean = out.replace(/<think>[\s\S]*?(<\/think>|$)/g, ''); thinking = /<think>(?![\s\S]*<\/think>)/.test(out);
+        if (!thinking) onText(clean.trimStart());
+      } });
+      eng.worker.postMessage({ type: 'chat', id, request: { messages, max_tokens: 300, temperature: 0.3, extra_body: { enable_thinking: false } } });
+    });
     return { via: `${(gpuInfo && gpuInfo.label) || 'Qwen3'} in your browser`, text: out.replace(/<think>[\s\S]*?<\/think>/g, '').trim() };
   }
 
@@ -182,5 +204,5 @@
   function drawRow(el) { if (!el.isConnected) { rows.delete(el); return; } el.innerHTML = `<span class="set-brain bp-row-l">${face(16)}<span>${esc(label())}</span></span><button class="btn" data-bp-open>Choose</button>`; el.querySelector('[data-bp-open]').onclick = open; }
   function mountRow(el) { rows.add(el); drawRow(el); refresh().then(() => drawRow(el)); }
 
-  window.TribeBrain = { choice, setChoice, open, close, mountRow, gpu, browserReady: () => !!engine, loadBrowser, askBrowser, info: () => info, refresh, label, WEBLLM };
+  window.TribeBrain = { choice, setChoice, open, close, mountRow, gpu, browserReady: () => !!engine, loadBrowser, askBrowser, info: () => info, refresh, label, WEBLLM: 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.83/lib/index.js' };   // fix/security-2: loaded in brainworker.js
 })();

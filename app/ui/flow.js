@@ -289,7 +289,7 @@
         ${cm ? `<ul class="pis cur">${cm.items.map(itemRow).join('')}</ul>` : ''}
         ${plan.milestones.length > 1 ? `<div class="ph-ms"><span class="eyebrow">Milestones</span>${plan.milestones.filter(m => m.id !== plan.current).map(m => { const done = m.items.length && m.items.every(i => i.done);
           return `<details class="ms ${done ? 'done' : ''}"><summary><span class="ms-dot">${done ? ico('i-tick') : ''}</span><b>${esc(m.title)}</b><span class="faint">${done ? 'done' : 'later'}</span></summary><ul class="pis">${m.items.map(itemRow).join('')}</ul></details>`; }).join('')}</div>` : ''}
-        <div class="hero-acts"><button class="btn" id="flow-assess">${ico('i-eye')}Assess now</button><a class="btn ghost" href="${esc(C.base())}/api/flow/plan?project=${encodeURIComponent(f.project)}&token=${encodeURIComponent((window.TribeStore.get().server || {}).token || '')}" target="_blank" rel="noopener">PLAN.md</a></div>
+        <div class="hero-acts"><button class="btn" id="flow-assess">${ico('i-eye')}Assess now</button><a class="btn ghost" href="${esc((u => (window.TribeMedia ? window.TribeMedia.url(u) : u))(`${C.base()}/api/flow/plan?project=${encodeURIComponent(f.project)}`))}" target="_blank" rel="noopener">PLAN.md</a></div>
       </section>`
       : `<section class="hero-card plan-hero" id="plan-hero"><span class="eyebrow">Plan</span><h2>No plan yet</h2><p>Claim roles and drop notes in the chat's Getting started card, then press Start the flow.</p><div class="hero-acts"><button class="btn primary" id="flow-tochat">Open the chat</button></div></section>`;
     const changes = f.changes.length ? `<section class="sec"><div class="sec-head"><span class="eyebrow">Waiting for a human</span><h2>Plan changes</h2></div>

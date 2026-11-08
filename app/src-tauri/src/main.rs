@@ -8,6 +8,18 @@ use tauri_plugin_shell::{
     ShellExt,
 };
 
+/// fix/security-2: the Working dev lane gets IPC only with TRIBECODE_WORKING_LANE=1 or a ~/.tribecode/working-lane file
+/// (Working\Start-Working.bat makes that file).
+fn working_lane_enabled() -> bool {
+    if std::env::var("TRIBECODE_WORKING_LANE").map(|v| v == "1").unwrap_or(false) {
+        return true;
+    }
+    std::env::var_os("USERPROFILE")
+        .or_else(|| std::env::var_os("HOME"))
+        .map(|h| std::path::Path::new(&h).join(".tribecode").join("working-lane").is_file())
+        .unwrap_or(false)
+}
+
 /// The tribe server this app is hosting, if any (bundled as a sidecar binary).
 struct Host(Mutex<Option<(CommandChild, u16)>>);
 /// The last lines the server printed, so the app can show why it didn't start.
@@ -142,6 +154,11 @@ fn main() {
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let _ = app.deep_link().register_all();
+            }
+            // fix/security-2: only the bundled page gets IPC by default. The Working dev lane (http://localhost:4848, any
+            // program could listen there) gets it only when the developer turns it on.
+            if working_lane_enabled() {
+                let _ = app.add_capability(include_str!("../dev-capabilities/working-lane.json"));
             }
             Ok(())
         })

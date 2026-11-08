@@ -34,6 +34,10 @@ git checkout --quiet -B dev origin/dev
 git branch --quiet --set-upstream-to=origin/dev dev
 
 set "TRIBE_DIR=%~dp0tribe-data"
+rem Let the desktop app's "Working version" switch talk to the app (window buttons, hosting). Only the
+rem app's own page gets that by default; this marker file turns it on for :4848 on this computer.
+if not exist "%USERPROFILE%\.tribecode" mkdir "%USERPROFILE%\.tribecode"
+if not exist "%USERPROFILE%\.tribecode\working-lane" type nul > "%USERPROFILE%\.tribecode\working-lane"
 rem Stop anything already on 4848 (an older Working window).
 for /f "tokens=5" %%p in ('netstat -ano ^| findstr /r /c:":4848 .*LISTENING"') do taskkill /F /PID %%p >nul 2>nul
 echo.
