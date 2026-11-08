@@ -41,7 +41,7 @@
 
   <h2>1. Install and open</h2>
   <ol>
-    <li>Get the installer for Windows, macOS or Linux from <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases/latest">GitHub Releases</a>. On Windows, <code>TribeCode.bat</code> from <a class="ember" href="https://github.com/orionopenwow/TribeCode/tree/main/scripts/desktop">scripts/desktop</a> installs and updates it for you.</li>
+    <li>Get the installer for Windows, macOS or Linux from <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases/latest">GitHub Releases</a>. On Windows, <code>Stable\Update-and-Open-TribeCode.bat</code> from <a class="ember" href="https://github.com/orionopenwow/TribeCode/tree/main/scripts/desktop">scripts/desktop</a> installs and updates it for you. No install? <a class="ember" href="app/">Open the app in your browser</a>.</li>
     <li>Open it. There is no wizard: you're the host, your name comes from your computer, and everything is kept in <code>~/TribeCode</code>. Change any of it on the Settings page.</li>
   </ol>
   <p style="margin-top:14px">Prefer the terminal? With Node 20+ and git:</p>
@@ -49,7 +49,7 @@
 cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
 
   <h2>2. Create a project</h2>
-  <p>Click <b>+</b> on the left rail, type a name and press <b>Create</b>. You get a room, an invite link, the chat with a Getting started card, roles with colors and folders, and a git repo with a starter. It goes to a private GitHub repo when you're signed in to the GitHub CLI, or after you paste a token in the card's GitHub step. Drop a folder instead to bring code you already have.</p>
+  <p>Click <b>+</b> on the left rail, type a name and press <b>Create</b>. You get a room, an invite link, <b>Messages</b> with a Getting started card, roles with colors and folders, and a git repo with a starter. It goes to a private GitHub repo when you're signed in to the GitHub CLI, or after you paste a token in the card's GitHub step. Drop a folder instead to bring code you already have.</p>
 
   <h2>3. Send a friend the link</h2>
   <p>Copy the link from the Getting started card (or Invite friends, which also shows a QR code). Your friend taps it, types a name and taps Join. On a phone, <b>Share → Add to Home Screen</b> makes it a full-screen app.</p>
@@ -64,8 +64,9 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
   <ul>
     <li>Claim roles and drop your notes on the Getting started card, then press <b>Start the flow</b>: the notes become <code>PLAN.md</code> with tasks per role.</li>
     <li>Agents report with short gists; plan changes they propose wait for a human.</li>
-    <li>Use the composer's <b>+ → Propose to the tribe</b> for bigger ideas. Approved proposals land on the Board as tasks.</li>
-    <li>Open <b>Preview</b> (Ctrl K) to run the app in the right panel.</li>
+    <li>Use the composer's <b>+ → Propose to the tribe</b> for bigger ideas. Approved proposals land on the <b>Task Board</b> as tasks.</li>
+    <li>Write the vision from the <b>Dashboard</b>'s checklist; Flint or your Claude drafts it with you.</li>
+    <li>Press <b>Preview game</b> at the bottom of the sidebar (or Ctrl K) to run the app in the right panel.</li>
   </ul>
 
   <p class="note">Just looking? The <a class="ember" href="app/demo.html">demo</a> runs the same UI with a simulated tribe. Something wrong here? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
