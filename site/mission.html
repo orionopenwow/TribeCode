@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, and it runs on one friend's computer.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.14.1">
+<link rel="stylesheet" href="styles.css?v=0.14.3">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -112,6 +112,54 @@
       <article class="ms-card"><span class="ms-e" aria-hidden="true">🤝</span><h2>Give back</h2><p>When paid plans launch, we plan to give a share of the proceeds to open-source maintainers and to groups that teach people to code. We'll publish where it goes.</p></article>
     </div>
   </section>
+  <section class="ms-gallery">
+    <div class="wrap">
+      <div class="ms-gh"><p class="eyebrow mono">// ideas you could build</p><h2>Small apps that help</h2><p>Examples of what a few friends and their agents can make in a weekend. Try them: they're live mockups.</p></div>
+      <div class="ms-apps">
+        <article class="ms-app" data-app="pantry">
+          <div class="ms-win"><div class="ms-bar"><i></i><i></i><i></i><b>🥫 Food pantry</b><span class="ms-tag">stock</span></div>
+            <ul class="ms-stock">
+              <li><span>Rice</span><span class="ms-meter"><i style="width:70%"></i></span><button data-plus>+1</button></li>
+              <li><span>Beans</span><span class="ms-meter low"><i style="width:22%"></i></span><button data-plus>+1</button></li>
+              <li><span>Pasta</span><span class="ms-meter"><i style="width:55%"></i></span><button data-plus>+1</button></li>
+            </ul></div>
+          <h3>Pantry tracker</h3><p>Volunteers log what comes in. Low items turn rust so everyone knows what to bring.</p></article>
+        <article class="ms-app" data-app="signup">
+          <div class="ms-win"><div class="ms-bar"><i></i><i></i><i></i><b>🧹 Park cleanup</b><span class="ms-tag">Sat 9am</span></div>
+            <ul class="ms-slots">
+              <li class="on"><span>Bags &amp; gloves</span><b>Maya</b></li>
+              <li class="on"><span>Water</span><b>Jay</b></li>
+              <li><span>Snacks</span><button data-claim>I'll bring it</button></li>
+              <li><span>Photos</span><button data-claim>I'll bring it</button></li>
+            </ul></div>
+          <h3>Sign-up sheet</h3><p>One link, no accounts. People claim a job and the sheet fills itself in.</p></article>
+        <article class="ms-app" data-app="quiz">
+          <div class="ms-win"><div class="ms-bar"><i></i><i></i><i></i><b>🎮 Times tables</b><span class="ms-tag" data-score>0 ★</span></div>
+            <div class="ms-quiz"><p class="ms-q" data-q>7 × 8 = ?</p><div class="ms-opts" data-opts><button>54</button><button>56</button><button>63</button></div></div></div>
+          <h3>Classroom game</h3><p>A tiny pixel quiz a teacher and two students built together. Kids play it on any phone.</p></article>
+        <article class="ms-app" data-app="tools">
+          <div class="ms-win"><div class="ms-bar"><i></i><i></i><i></i><b>🔧 Tool library</b><span class="ms-tag">street</span></div>
+            <ul class="ms-tools">
+              <li><span>🪜 Ladder</span><button data-borrow class="free">Borrow</button></li>
+              <li><span>🌱 Lawn mower</span><button data-borrow class="out" disabled>Out · back Sun</button></li>
+              <li><span>🪚 Saw</span><button data-borrow class="free">Borrow</button></li>
+            </ul></div>
+          <h3>Lend &amp; borrow</h3><p>Neighbours share what they own. Borrow with one tap, return reminders included.</p></article>
+        <article class="ms-app" data-app="contrast">
+          <div class="ms-win"><div class="ms-bar"><i></i><i></i><i></i><b>♿ Contrast check</b><span class="ms-tag" data-ratio>4.9 : 1</span></div>
+            <div class="ms-contrast"><div class="ms-swatch" data-sample>Readable text</div>
+              <div class="ms-chips" data-colors><button style="--c:#B4512A" class="on"></button><button style="--c:#38C6B1"></button><button style="--c:#FABD2F"></button><button style="--c:#6C7CFF"></button></div>
+              <p class="ms-pass" data-pass>✓ Passes for body text</p></div></div>
+          <h3>Accessibility helper</h3><p>Check colors before you ship, so a site works for people with low vision too.</p></article>
+        <article class="ms-app" data-app="shifts">
+          <div class="ms-win"><div class="ms-bar"><i></i><i></i><i></i><b>🗓️ Shelter shifts</b><span class="ms-tag" data-open>3 open</span></div>
+            <div class="ms-cal"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span>
+              <button class="taken">MV</button><button data-shift></button><button class="taken">JR</button><button data-shift></button><button data-shift></button></div></div>
+          <h3>Volunteer shifts</h3><p>Pick an open shift, get a reminder, swap with a friend if plans change.</p></article>
+      </div>
+      <p class="ms-gnote">These are example ideas, not real deployments. <a href="app/">Start a tribe</a> and build your own.</p>
+    </div>
+  </section>
   <section class="ms-how">
     <div class="wrap ms-two">
       <div><h2>How you can help now</h2>
@@ -122,6 +170,23 @@
     </div>
   </section>
 </main>
+<script>
+(function () {
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  $$('[data-plus]').forEach(b => b.onclick = () => { const m = b.parentNode.querySelector('.ms-meter'), i = m.querySelector('i'); const w = Math.min(100, parseFloat(i.style.width) + 12); i.style.width = w + '%'; m.classList.toggle('low', w < 30); });
+  $$('[data-claim]').forEach(b => b.onclick = () => { const li = b.parentNode; li.classList.add('on'); b.outerHTML = '<b>You</b>'; });
+  $$('[data-borrow].free').forEach(b => b.onclick = () => { b.className = 'out'; b.disabled = true; b.textContent = 'Borrowed by you'; });
+  const Q = [['7 × 8 = ?', ['54', '56', '63'], 1], ['6 × 9 = ?', ['54', '56', '45'], 0], ['12 × 3 = ?', ['32', '38', '36'], 2]]; let qi = 0, score = 0;
+  const quiz = document.querySelector('[data-app=quiz]');
+  function drawQ() { const [q, o] = Q[qi % Q.length]; quiz.querySelector('[data-q]').textContent = q; quiz.querySelector('[data-opts]').innerHTML = o.map((x, i) => `<button data-i="${i}">${x}</button>`).join(''); }
+  if (quiz) { drawQ(); quiz.querySelector('[data-opts]').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const ok = +b.dataset.i === Q[qi % Q.length][2]; b.classList.add(ok ? 'ok' : 'no'); if (ok) score++; quiz.querySelector('[data-score]').textContent = score + ' ★'; setTimeout(() => { qi++; drawQ(); }, 650); }); }
+  const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const ct = document.querySelector('[data-app=contrast]');
+  if (ct) $$('[data-colors] button', ct).forEach(b => b.onclick = () => { $$('[data-colors] button', ct).forEach(x => x.classList.toggle('on', x === b)); const c = b.style.getPropertyValue('--c').trim(); const bg = '#1D2021'; const L1 = lum(c), L2 = lum(bg); const r = ((Math.max(L1, L2) + .05) / (Math.min(L1, L2) + .05)); const s = ct.querySelector('[data-sample]'); s.style.color = c; ct.querySelector('[data-ratio]').textContent = r.toFixed(1) + ' : 1'; const p = ct.querySelector('[data-pass]'); p.textContent = r >= 4.5 ? '✓ Passes for body text' : r >= 3 ? '◐ Large text only' : '✕ Too low'; p.className = 'ms-pass ' + (r >= 4.5 ? '' : 'warn'); });
+  const sh = document.querySelector('[data-app=shifts]');
+  if (sh) $$('[data-shift]', sh).forEach(b => b.onclick = () => { if (b.classList.contains('taken')) return; b.classList.add('taken', 'you'); b.textContent = 'You'; sh.querySelector('[data-open]').textContent = $$('[data-shift]:not(.taken)', sh).length + ' open'; });
+})();
+</script>
 
 
 
@@ -149,6 +214,6 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.14.1" defer></script>
+<script src="main.js?v=0.14.3" defer></script>
 </body>
 </html>
