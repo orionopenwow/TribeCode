@@ -22,7 +22,7 @@
 
   const ITEMS = () => [
     { group: 'Add' },
-    { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Docs' },
+    { k: 'attach', icon: 'i-clip', t: 'Photo or file', s: 'Photos and files go in the chat, notes go to Files' },
     { k: 'gif', icon: 'i-gif', t: 'GIF', s: 'Search, your GIFs, or paste a link', hide: !window.TribeChatRich || me().role === 'spectator' },   // feat/chat2
     { group: 'Decide together' },
     { k: 'propose', icon: 'i-flag', t: 'Propose to the tribe', s: 'Everyone votes; approved ideas go to the Board', hide: me().role === 'spectator' },
@@ -30,8 +30,8 @@
     { group: 'Get it done' },
     { k: 'task', icon: 'i-check', t: 'Task', s: draft() ? `“${draft().slice(0, 40)}”` : 'Add it to the board' },
     { k: 'askagent', icon: 'i-robot', t: 'Ask an agent', s: 'The next connected agent picks it up, no AI of your own needed', hide: inDm() || me().role === 'spectator' || !window.TribeAskAgent },   // feat/any-llm
-    myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my Claude', s: 'Opens your private chat with it' }
-      : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no Claude of your own needed', hide: inDm() || me().role === 'spectator' },
+    myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my AI', s: 'Opens your private chat with it' }
+      : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no AI of your own needed', hide: inDm() || me().role === 'spectator' },
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
     { k: 'note', icon: 'i-doc', t: 'Note', s: 'Into the living notes' },
     { k: 'capture', icon: 'i-link', t: 'Read a link', s: draft() && /^https?:\/\//.test(draft()) ? 'Summarize the link you typed' : 'Short notes from an article or video', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
@@ -125,7 +125,7 @@
             await C.api(`/chat/${chan()}/image`, { method: 'POST', body: { data: await toB64(f), mime: f.type, text: draft() } }); clearDraft();
           } else if (TEXTY.test(f.name) && f.size < 2_000_000 && window.TribeDocs) {   // text stays editable: it becomes a doc
             await window.TribeDocs.importFiles([f]);
-            await C.api(`/chat/${chan()}`, { method: 'POST', body: { text: `📎 Shared **${f.name}** in Docs` } });
+            await C.api(`/chat/${chan()}`, { method: 'POST', body: { text: `📎 Shared **${f.name}** in Files` } });
           } else if (f.size <= 8 * 1024 * 1024) {   // anything else (PDF, zip, big photo…) is kept as a file to download
             await C.api(`/chat/${chan()}/file`, { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type, text: draft() } }); clearDraft();
           } else toast(`${f.name} is over 8 MB: put it in the repo instead`);

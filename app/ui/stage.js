@@ -22,6 +22,8 @@
     if (document.body.dataset.stage !== lv) document.body.dataset.stage = lv;
     const vs = s ? (s.vision ? '1' : '0') : '1';
     if (document.body.dataset.vision !== vs) document.body.dataset.vision = vs;
+    const rs = s ? (s.repo ? '1' : '0') : '1';   // qa-pass: a project that already has code keeps its Repo tab (shell.js gated)
+    if (document.body.dataset.repo !== rs) document.body.dataset.repo = rs;
     const key = JSON.stringify([pid(), s]);
     if (key !== cur) { cur = key; try { window.dispatchEvent(new CustomEvent('tribe:stage', { detail: { level: lv, steps: s || null } })); } catch {} }
   }

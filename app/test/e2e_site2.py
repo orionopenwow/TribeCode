@@ -213,15 +213,7 @@ def main():
             assert pg.evaluate("(() => { const r = document.querySelector('#stage').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; })()"), "scrolled up to the stage"
             pg.evaluate("document.activeElement.blur()")
             # the corner fire: flat pixel frames, flickering, just outside the frame
-            assert pg.locator(".stage-wrap .stage__fire").count() == 1 and pg.is_visible(".stage__fire")
-            assert pg.evaluate("document.querySelectorAll('.stage__fire .cf').length") == 4
-            assert pg.get_attribute(".stage__fire", "shape-rendering") == "crispEdges"
-            names = set(pg.evaluate("[...new Set(document.querySelector('.stage__fire').getAnimations({subtree: true}).map(a => a.animationName))]"))
-            assert {"cf", "cf-rise", "cf-coal"} <= names, names   # flames, embers, and the burnt corner's coals
-            fills = set(pg.evaluate("[...document.querySelectorAll('.stage__fire [fill]')].map(e => e.getAttribute('fill').toUpperCase())"))
-            assert fills <= {"#F26B1D", "#FABD2F", "#B4512A", "#FFE08A", "#16110E", "#231A15", "#3A2A22"}, fills   # fire + char
-            fr, sr = pg.evaluate("[document.querySelector('.stage__fire').getBoundingClientRect().toJSON(), document.querySelector('.stage').getBoundingClientRect().toJSON()]")
-            assert fr["right"] > sr["right"] and fr["top"] < sr["top"] and fr["right"] - sr["right"] <= 72 and fr["left"] < sr["right"] - 60, (fr, sr)   # spreads left along the top and burns in
+            assert pg.locator(".stage__fire").count() == 0, "the corner fire is off for now (scripts/site-fire.py can bring it back)"
             if SHOTS:
                 pg.evaluate("scrollTo(0, 0)"); pg.wait_for_timeout(9000)
                 pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "site-desktop.png"))
@@ -298,9 +290,6 @@ def main():
             assert pg.evaluate("[...document.querySelectorAll('[data-loop]')].every(l => l.dataset.state === 'done')")
             assert pg.evaluate("[...document.querySelectorAll('.reveal')].every(e => getComputedStyle(e).opacity === '1')")
             assert pg.evaluate("getComputedStyle(document.querySelector('#pv-lantern')).animationName") == "none"
-            # the corner fire holds one frame and its embers sit still; Flint doesn't bob
-            assert pg.is_visible(".stage__fire") and pg.evaluate("document.querySelector('.stage__fire').getAnimations({subtree: true}).length") == 0
-            assert pg.evaluate("[...document.querySelectorAll('.stage__fire .cf')].filter(e => getComputedStyle(e).opacity === '1').length") == 1
             assert pg.evaluate("document.querySelector('.flint-fab img').getAnimations().length") == 0
             # clicking into an area still works; Replay brings back the finished frame
             pg.click(".mk-side [data-go=board]"); assert pg.is_visible("#mk-pane") and pg.is_visible("#stage-replay")

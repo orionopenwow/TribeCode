@@ -22,7 +22,7 @@
   const members = () => C.state().members || [];
   const meId = () => (C.state().me || {}).id;
   const memberOf = id => members().find(m => m.id === id) || null;
-  const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ico = k => `<svg class="i" aria-hidden="true"><use href="#${k}"/></svg>`;
 
   // ---------- palette (same ids as server/profiles.js) ----------

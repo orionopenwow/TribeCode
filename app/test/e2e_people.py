@@ -171,7 +171,7 @@ def main():
                 page.wait_for_selector("#pf-pop .pf-full"); page.click("#pf-pop .pf-full")   # feat/profiles: a name opens the profile popout; View activity opens the panel
                 page.wait_for_selector("#view-chat.pp-open #person-panel:not(.hidden)")
                 wait_text(page, "#person-panel", "Add a pause menu")
-                for t in ["Maya", "Build the pause menu with resume and quit", "Morning! Starting on the pause menu", "Pause menu notes", "src/menu.js", "wiring the pause key", "Ask their Claude"]:
+                for t in ["Maya", "Build the pause menu with resume and quit", "Morning! Starting on the pause menu", "Pause menu notes", "src/menu.js", "wiring the pause key", "Ask their AI"]:
                     wait_text(page, "#person-panel", t)
                 assert page.is_visible("#chat-list"), "chat stays visible beside the panel"
                 box = page.eval_on_selector("#person-panel", "e => e.getBoundingClientRect().toJSON()")
@@ -195,11 +195,11 @@ def main():
                 assert "Morning! Starting on the pause menu" in fl, fl
                 page.keyboard.press("Escape"); page.wait_for_selector("#person-panel", state="hidden")
                 # room list: the avatar opens the profile; the row menu gains "Profile"
-                page.click(f"#room-list .person[data-follow='{mid}'] .avatar")
+                page.locator(f"#room-list .person[data-follow='{mid}'] .avatar").dispatch_event("click")   # hidden on desktop (feat: no people list in the right panel)
                 page.wait_for_selector("#pf-pop .pf-full"); page.click("#pf-pop .pf-full")
                 wait_text(page, "#person-panel", "Add a pause menu")
                 page.click("#person-panel .pp-close"); page.wait_for_selector("#person-panel", state="hidden")
-                page.click(f"#room-list .person[data-follow='{mid}']")
+                page.locator(f"#room-list .person[data-follow='{mid}']").dispatch_event("click")   # hidden on desktop (feat: no people list in the right panel)
                 page.wait_for_selector("#dm-menu [data-act='profile']")
                 page.click("#dm-menu [data-act='profile']")
                 wait_text(page, "#person-panel", "Maya")

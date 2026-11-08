@@ -9,7 +9,7 @@
   const $ = s => document.querySelector(s);
   const C = window.TribeClient, S = window.TribeStore;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
   const EMOJI = ['👍', '❤️', '😂', '🎉', '👀', '✅', '🔥', '👎', '❌', '🙏', '💯', '🚀', '🤔', '😮', '😢', '👏', '🙌', '⭐', '💡', '🐛', '📌', '➕', '🎮', '✨'];   // same list as server/chatx.js
   const QUICK = EMOJI.slice(0, 6);
@@ -754,7 +754,7 @@
       : `<span class="cb-av" style="background:${esc(peer.color || '#6C7CFF')};color:${ink(peer.color || '#6C7CFF')}">${esc(initials(peer.name))}</span>`;
     const humans = mem.filter(x => x.role !== 'agent'), on = humans.filter(x => x.online).length;
     const sub = !peer ? (chan && chan.topic ? chan.topic : `${humans.length} ${humans.length === 1 ? 'member' : 'members'} · ${on} online`)
-      : peer.role === 'agent' ? 'Your Claude · private' : peer.online ? 'online' : 'offline';
+      : peer.role === 'agent' ? 'Your AI · private' : peer.online ? 'online' : 'offline';
     const kids = [...h.childNodes];
     h.classList.add('cb');
     const np = (pinsBy.get(ch) || []).length;

@@ -129,7 +129,7 @@
       frame = null; helperAlive = false;
       holder.innerHTML = !info.hasRepo
         ? `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No repo yet</h3><p>Point this project at a folder or a GitHub repo, and the app it builds shows up here, live.</p><button class="btn primary" data-act="repo">Set up the repo</button></div>`
-        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No index.html yet — ask your Claude to start one</h3><p>The preview shows the repo's <code>index.html</code> (or one in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>) and reloads as files change.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my Claude to start one</button></div>`;
+        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No index.html yet — ask your AI to start one</h3><p>The preview shows the repo's <code>index.html</code> (or one in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>) and reloads as files change.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my AI to start one</button></div>`;
       layout(); return;
     }
     if (!frame || !frame.isConnected) {
@@ -203,7 +203,7 @@
   function screenshot() {
     if (!frame || !frame.contentWindow) return toast('Nothing to capture yet.');
     const id = Math.random().toString(36).slice(2);
-    const done = new Promise((resolve, reject) => { shots.set(id, { resolve, reject }); setTimeout(() => { if (shots.has(id)) { shots.delete(id); reject(new Error('the page did not answer: ask your Claude to post one with add_visual')); } }, 9000); });
+    const done = new Promise((resolve, reject) => { shots.set(id, { resolve, reject }); setTimeout(() => { if (shots.has(id)) { shots.delete(id); reject(new Error('the page did not answer: ask your AI to post one with add_visual')); } }, 9000); });
     frame.contentWindow.postMessage({ tc: 'shot', id }, '*');
     const btn = pane.querySelector('[data-act="shot"]'); btn.disabled = true;
     done.then(async data => {

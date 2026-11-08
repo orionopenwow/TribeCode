@@ -204,8 +204,8 @@ def main():
             # muted Sam (for Orion only)
             page.wait_for_selector(f"#chat-list .msg.pf-muted[data-by='{sid}']")
             # member list: grouped, name color, avatar
-            page.wait_for_selector("#room-list .pf-grp")
-            page.wait_for_selector(f"#room-list .person[data-follow='{mid}'] .avatar.pf-k-emoji")
+            page.wait_for_selector("#room-list .pf-grp", state="attached")
+            page.wait_for_selector(f"#room-list .person[data-follow='{mid}'] .avatar.pf-k-emoji", state="attached")
             assert page.evaluate(f"getComputedStyle(document.querySelector(\"#room-list .person[data-follow='{mid}'] > div:not(.avatar) > span\")).color") == "rgb(154, 214, 92)"
             # hover the GIF -> animates
             page.hover(f"#chat-list .msg[data-by='{sid}'] > .avatar")

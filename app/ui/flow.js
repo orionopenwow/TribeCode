@@ -16,7 +16,7 @@
   const ico = (id, cls = '') => `<svg class="i ${cls}"><use href="#${id}"/></svg>`;
   const toast = m => App() && App().toast(m);
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
-  const initials = n => String(n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const initials = n => String(n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE', '#C9A66B', '#8FB39A', '#3BD16F'].includes(c) ? '#0B0C10' : '#fff');
   const me = () => C.state().me || {};
   const human = () => me().role && me().role !== 'agent' && me().role !== 'spectator';
@@ -129,7 +129,7 @@
       <div class="fk-block">
         <div class="fk-label"><span>Invite</span><span class="faint">${f.invite ? ({ public: 'works from anywhere', tailscale: 'Tailscale address', wifi: 'same Wi-Fi', local: 'this computer only' }[f.invite.kind] || '') : ''}</span></div>
         <div class="linkbox fk-link"><code id="flow-link" title="${esc(f.invite ? f.invite.link : '')}">${esc(f.invite ? f.invite.link : 'Making a link…')}</code>
-          <button class="btn sm" id="flow-qr" title="QR code" aria-label="Show QR code">QR</button>${navigator.share ? `<button class="btn sm" id="flow-share">Share</button>` : ''}<button class="btn sm primary" id="flow-copy">Copy</button></div>
+          <button class="btn sm" id="flow-qr" title="QR code" aria-label="Show QR code">QR</button>${navigator.share ? `<button class="btn sm" id="flow-share">Share</button>` : ''}<button class="btn sm" id="flow-copy">Copy</button></div>
         <div class="fk-qr hidden" id="flow-qrbox"></div>
       </div>
       <div class="fk-block">
@@ -206,7 +206,7 @@
         n++;
       } catch (e) { toast(e.message); }
     }
-    if (n) { toast(n === 1 ? 'Added to Docs' : `${n} files added to Docs`); load(); }
+    if (n) { toast(n === 1 ? 'Added to Files' : `${n} files added to Files`); load(); }
   }
   async function note(name, text) {
     try { const r = await C.api('/flow/notes', { method: 'POST', body: { name, text } }); setFlow(r.flow); } catch (e) { toast(e.message); }
@@ -338,7 +338,7 @@
           <div class="rc-colors" role="radiogroup" aria-label="Color">${Object.entries(f.palette).map(([k, hex]) => `<button class="rsw ${r.color === k || r.hex === hex ? "sel" : ""}" data-color="${k}" style="--sw:${hex}" title="${k}" aria-label="${k}" ${edit ? '' : 'disabled'}></button>`).join('')}</div>
           <div class="rc-sec"><span class="eyebrow">People</span>
             <div class="rc-people">${r.people.length ? r.people.map(p => `<span class="rc-person">${avatar(p.id, 24)}<span>${esc(p.name)}</span>${p.agents.length ? `<span class="rc-agent" title="${esc(p.agents.map(a => a.name).join(', '))}">${ico('i-robot')}</span>` : ''}</span>`).join('') : '<span class="faint">Open</span>'}</div>
-            ${edit ? `<div class="rc-acts">${r.members.includes(me().id) ? '<button class="btn sm" data-leave>Leave</button>' : '<button class="btn sm primary" data-take>Take it</button>'}
+            ${edit ? `<div class="rc-acts">${r.members.includes(me().id) ? '<button class="btn sm" data-leave>Leave</button>' : '<button class="btn sm" data-take>Take it</button>'}
               ${people.filter(p => p.id !== me().id && !r.members.includes(p.id)).length ? `<select class="fm-give" data-give aria-label="Give to"><option value="">Give to…</option>${people.filter(p => p.id !== me().id && !r.members.includes(p.id)).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select>` : ''}</div>` : ''}
             ${agents.length ? `<div class="faint rc-note">${agents.length === 1 ? `${esc(agents[0].name)} works in these folders too.` : 'Their agents work in these folders too.'}</div>` : ''}</div>
           <div class="rc-sec"><span class="eyebrow">Folders</span>
@@ -412,12 +412,12 @@
     const text = `Build ${f.name} with me on TribeCode: ${link}`;
     body.innerHTML = `<span class="eyebrow">Invite friends · ${esc(f.name)}</span>
       <h2>${copied ? 'Link copied. Text it to your friend.' : 'Send this link to your friend.'}</h2>
-      <p class="lead">They tap it, type a name and they're in, on a phone or a computer. On a computer it also hands them the one line that connects their Claude Code.</p>
+      <p class="lead">They tap it, type a name and they're in, on a phone or a computer. On a computer it also shows them how to connect their own AI.</p>
       <div class="linkbox ii-link"><code id="ii-link" title="${esc(link)}">${esc(link)}</code><button class="btn sm primary" id="ii-copy">${copied ? 'Copied' : 'Copy'}</button></div>
       <div class="ii-kind ${kind === 'public' ? 'ok' : 'warn'}">${esc(KIND[kind] || '')}${kind === 'public' ? '' : ' · <button class="linkish" id="ii-public">Make it work from anywhere</button>'}</div>
       <div class="ii-qr hidden" id="ii-qr"></div>
-      <div class="ii-acts">${navigator.share ? '<button class="btn" id="ii-share">Share…</button>' : ''}<button class="btn" id="ii-qrbtn">QR code</button><button class="btn" id="ii-claude">Connect my Claude Code</button></div>
-      <div class="modal-foot"><span class="faint">Good for 3 days · up to 10 people</span><span style="flex:1"></span><button class="btn primary" data-close>Done</button></div>`;
+      <div class="ii-acts">${navigator.share ? '<button class="btn" id="ii-share">Share…</button>' : ''}<button class="btn" id="ii-qrbtn">QR code</button><button class="btn" id="ii-claude">Connect my AI</button></div>
+      <div class="modal-foot"><span class="faint" style="font-size:13px;align-self:center">Good for 3 days · up to 10 people</span><span style="flex:1"></span><button class="btn primary" data-close>Done</button></div>`;
     body.querySelector('[data-close]').onclick = close;
     $('#ii-copy').onclick = async () => { if (await copyText(link)) { $('#ii-copy').textContent = 'Copied'; toast('Invite link copied'); } else { getSelection().selectAllChildren($('#ii-link')); toast('Press Ctrl+C to copy'); } };
     if ($('#ii-share')) $('#ii-share').onclick = () => navigator.share({ title: `Join ${f.name} on TribeCode`, text, url: link }).catch(() => {});

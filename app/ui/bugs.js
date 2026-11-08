@@ -85,7 +85,7 @@
   async function toTask(bid) { try { await C.api(`/bugs/${bid}/task`, { method: 'POST' }); window.TribeApp.toast('Task created in Backlog'); load(); } catch (e) { window.TribeApp.toast(e.message); } }
   async function patch(bid, body) { try { await C.api('/bugs/' + bid, { method: 'PATCH', body }); } catch (e) { window.TribeApp.toast(e.message); } }
   async function copyMd(bid) {
-    try { const { markdown } = await C.api(`/bugs/${bid}/markdown`); try { await navigator.clipboard.writeText(markdown); } catch { const t = document.createElement('textarea'); t.value = markdown; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); } window.TribeApp.toast('Copied as Markdown. Paste it into Claude.'); }
+    try { const { markdown } = await C.api(`/bugs/${bid}/markdown`); try { await navigator.clipboard.writeText(markdown); } catch { const t = document.createElement('textarea'); t.value = markdown; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); } window.TribeApp.toast('Copied as Markdown. Paste it into your AI.'); }
     catch (e) { window.TribeApp.toast(e.message); }
   }
   function menu(bid, anchor) {
@@ -101,7 +101,7 @@
       { label: 'Severity…', icon: 'i-zap', run: () => sevPick(bid, anchor) },
       CLOSED.includes(b.status) || b.status === 'resolved' ? { label: 'Reopen', icon: 'i-refresh', run: () => patch(bid, { status: 'confirmed' }) } : { label: 'Close', icon: 'i-x', run: () => patch(bid, { status: 'wontfix' }) },
       '-',
-      { label: 'Copy as Markdown for Claude', icon: 'i-sparkle', run: () => copyMd(bid) },
+      { label: 'Copy as Markdown for your AI', icon: 'i-sparkle', run: () => copyMd(bid) },
     ];
     window.TribeFloat.menu(anchor, items);
   }
@@ -123,7 +123,7 @@
         ${(b.attachments || []).length ? `<h4>Attachments</h4><div class="bug-atts">${b.attachments.map(a => /^image\//.test(a.type) ? `<button class="bug-att" data-preview-img="${esc(fileUrl(b, a))}" data-preview-title="${esc(a.name)}" data-preview-kind="Bug screenshot"><img alt="" src="${esc(fileUrl(b, a))}"></button>` : `<a href="${esc(fileUrl(b, a))}" target="_blank" rel="noopener">📎 ${esc(a.name)}</a>`).join('')}</div>` : ''}
         ${b.task ? `<p class="faint">Task <code>${esc(b.task)}</code>${b.branch ? ` · branch <code>${esc(b.branch)}</code>` : ''}</p>` : ''}${b.dupOf ? `<p class="faint">Duplicate of <code>${esc(b.dupOf)}</code></p>` : ''}
         <div class="md">${window.TribeMD.render(b.body || '')}</div></div>`,
-      actions: [{ label: 'Copy for Claude', run: () => copyMd(bid) }] });
+      actions: [{ label: 'Copy for your AI', run: () => copyMd(bid) }] });
   }
 
   function capture() {

@@ -375,7 +375,8 @@
     list.innerHTML = items.length ? items.map(it => it.kind === 'event'
       ? `<button class="up-item" data-peek="event:${esc(it.key)}" data-up-ev="${esc(it.start)}"><span class="up-when">${esc(relDay(new Date(it.start)))}<b>${esc(fmtT(it.start))}</b></span><span class="up-what"><span class="up-t">${it.huddle ? '<svg class="i"><use href="#i-mic"/></svg>' : ''}${esc(it.title)}</span>${avatars(it.attendees)}</span></button>`
       : `<button class="up-item" data-peek="task:${esc(it.id)}" data-up-task="1"><span class="up-when ${it.overdue ? 'overdue' : ''}">${it.overdue ? 'Overdue' : 'Due'}<b>${esc(relDay(fromYmd(it.due)))}</b></span><span class="up-what"><span class="up-t"><svg class="i up-task"><use href="#i-check"/></svg>${esc(it.title)}</span></span></button>`).join('')
-      : '<div class="faint up-empty">Nothing scheduled. Press <span class="kbd">Ctrl K</span> and type “huddle tomorrow 4pm”.</div>';
+      : (matchMedia('(max-width: 820px)').matches ? '<div class="faint up-empty">Nothing scheduled. Open the Calendar to add something, like “huddle tomorrow 4pm”.</div>'   // qa-pass: phones have no Ctrl K
+        : '<div class="faint up-empty">Nothing scheduled. Press <span class="kbd">Ctrl K</span> and type “huddle tomorrow 4pm”.</div>');
     list.querySelectorAll('[data-up-ev]').forEach(b => b.onclick = () => { cal.anchor = new Date(b.dataset.upEv); window.TribeApp.show('calendar'); });
     list.querySelectorAll('[data-up-task]').forEach(b => b.onclick = e => { if (!e.target.closest('[data-due]')) window.TribeApp.show('tasks'); });
   }

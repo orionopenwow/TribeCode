@@ -194,3 +194,9 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .ff-foot .fl-bar { border-radius: 14px; height: 48px; }
 .fl-bar .fl-send { border-radius: 9px; }
 #room-pane .pf-grp, #room-pane .pf-grp span { font-size: 13px !important; }
+
+/* Right panel (desktop): no "In the room" people list; people live in Members and on Home. The header keeps the close button. */
+@media (min-width: 821px) {
+  #room-pane .room-head h6, #room-pane #room-list, #room-pane #room-hint { display: none !important; }
+  #room-pane .room-head { justify-content: flex-end; }
+}

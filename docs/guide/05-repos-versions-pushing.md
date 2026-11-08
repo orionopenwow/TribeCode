@@ -28,7 +28,7 @@ Autopilot never force-pushes and never merges someone's branch without an approv
 
 ## Merging everyone's work safely
 
-Each person's agent works on its own branch. The host's Claude Code can act as the **Integrator agent**: it collects branches, runs your **Check command** (like `npm test`) in a separate copy, and proposes an integration. When it's approved, the host taps **Integrate now**. **Run checks** re-runs the tests at any time.
+Each person's agent works on its own branch. The host's AI agent can act as the **Integrator agent**: it collects branches, runs your **Check command** (like `npm test`) in a separate copy, and proposes an integration. When it's approved, the host taps **Integrate now**. **Run checks** re-runs the tests at any time.
 
 ## Versions
 

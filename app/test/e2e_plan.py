@@ -424,7 +424,7 @@ def main():
             host.click(".fwin[data-float='doc:roadmap'] [data-x]")
             assert host.locator(".fwin[data-float='doc:roadmap']").count() == 0
             # person peek from the room list
-            host.hover("#room-list [data-follow]:has-text('Maya')")
+            host.locator("#room-list [data-follow]:has-text('Maya')").first.dispatch_event("mouseover"); host.locator("#room-list [data-follow]:has-text('Maya')").first.dispatch_event("mouseenter")
             host.wait_for_selector(".tf-peek:has-text('Maya')", timeout=4000)
 
             # ---------- phone: comments sheet + calendar fit ----------

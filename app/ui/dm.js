@@ -94,13 +94,13 @@
     if (window.TribeApp && window.TribeApp.view && window.TribeApp.view() !== 'chat') window.TribeApp.show('chat');
     const list = dmList(); $('#chat-list').classList.add('hidden'); list.classList.remove('hidden');
     list.innerHTML = '<div class="empty-room">Loading…</div>';
-    $('#chat-input').placeholder = m.role === 'agent' ? 'Message your Claude…' : `Message ${m.name}…`;
+    $('#chat-input').placeholder = m.role === 'agent' ? `Message ${m.name}…` : `Message ${m.name}…`;
     drawHead(); drawTyping(); decorateRoom(); X().channelChanged(ch); if (CH()) CH().applyBg();
     try {
       const { messages } = await C.api('/chat/' + ch + '?limit=200');
       if (view !== ch) return;
       list.innerHTML = messages.length ? messages.map(x => render(x, ch)).join('')
-        : `<div class="empty-room">${m.role === 'agent' ? 'Your Claude Code reads this when it calls <b>check_messages</b> and answers with <b>reply</b>. Only you can see this chat.' : `This is the start of your conversation with ${esc(m.name)}. Only the two of you can see it.`}</div>`;
+        : `<div class="empty-room">${m.role === 'agent' ? 'Your AI reads this when it calls <b>check_messages</b> and answers with <b>reply</b>. Only you can see this chat.' : `This is the start of your conversation with ${esc(m.name)}. Only the two of you can see it.`}</div>`;
       list.scrollTop = list.scrollHeight;
       markRead(ch, messages.length ? messages[messages.length - 1].at : undefined);
       X().channelChanged(ch, { list, since });

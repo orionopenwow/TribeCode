@@ -61,7 +61,7 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
       const body = await readBody(req); const title = str(body.title, 120) || 'Untitled';
       const now = new Date().toISOString();
       const d = write({ slug: uniqueSlug(title), title, by: me.id, created: now, updated: now, updatedBy: me.id, version: 1, source: str(body.source, 200) || undefined, body: str(body.body, 400_000) });
-      if (body.source) postChat('general', 'tribecode', `${me.name} added **${title}** to Docs`);
+      if (body.source) postChat('general', 'tribecode', `${me.name} added **${title}** to Files`);
       return send(res, 200, { doc: d });
     }
     if (m === 'POST' && b && c === 'summarize') {

@@ -202,7 +202,7 @@
         ${sw('autopilot.reportTags', ap.reportTags, 'Report milestone tags', 'Released milestones are tagged and pushed', off)}
       </div>
       <div class="ap-sep"></div>
-      ${sw('integrator', s.integrator, 'Integrator agent', st.master ? `${esc(st.master.name)}${st.master.pending ? ' (connect your Claude Code first)' : ''} collects, checks and assembles branches` : 'The host\'s Claude Code becomes the master')}
+      ${sw('integrator', s.integrator, 'Integrator agent', st.master ? `${esc(st.master.name)}${st.master.pending ? ' (connect your AI first)' : ''} collects, checks and assembles branches` : 'The host\'s AI agent becomes the master')}
       ${sw('keepContextLocal', s.keepContextLocal, 'Keep TRIBE_CONTEXT.md local', 'Adds it to the repo\'s .gitignore')}
       <div class="ap-field"><label for="ap-cmd">Check command</label>
         <div class="ap-cmd"><input class="input" id="ap-cmd" placeholder="npm test (when package.json has a test script)" value="${esc(s.checkCommand)}" ${isHost() ? '' : 'disabled'} spellcheck="false">
@@ -236,7 +236,7 @@
     if (!m) { document.body.insertAdjacentHTML('beforeend', '<div class="modal hidden" id="repo-modal" role="dialog" aria-label="Send to a desktop"><div class="modal-card" id="repo-modal-body"></div></div>'); m = $('#repo-modal'); m.addEventListener('click', e => { if (e.target === m) close(); }); }
     const close = () => m.classList.add('hidden');
     $('#repo-modal-body').innerHTML = `<h2>Send to a desktop</h2>
-      <p class="lead">Can't push from here? Describe the change, paste code or a patch, and a teammate (or their Claude) on a desktop takes it from there.</p>
+      <p class="lead">Can't push from here? Describe the change, paste code or a patch, and a teammate (or their AI) on a desktop takes it from there.</p>
       <div class="field"><label for="sd-title">What should change</label><input class="input" id="sd-title" maxlength="160" placeholder="Fix the jump height on mobile" value="${esc(prefill.title || '')}"></div>
       <div class="field"><label for="sd-desc">Details</label><textarea class="input sd-desc" id="sd-desc" placeholder="Where, why, anything they should know">${esc(prefill.description || '')}</textarea></div>
       <div class="field"><label for="sd-files">Files (optional)</label><input class="input" id="sd-files" placeholder="src/player.ts, src/ui/hud.ts" value="${esc((prefill.files || []).join(', '))}"></div>

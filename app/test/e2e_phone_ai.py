@@ -113,7 +113,7 @@ def main():
 
             # ---- 3. Talk to… and the + menu ----
             ph.evaluate("TribeMobile.talkTo()"); ph.wait_for_selector("#m2-talk-sheet [data-talk='ai']")
-            wait_text(ph, "#m2-ai-sub", "next Claude")
+            wait_text(ph, "#m2-ai-sub", "next agent")
             assert ph.query_selector("#m2-talk-sheet [data-talk='desktop']") is None, "no 'My desktop' for a phone-only friend"
             assert ph.query_selector("#m2-talk-sheet .m2-byo"), "a quiet way to connect Claude Code later"
             shot(ph, "talk")

@@ -57,7 +57,8 @@ def shot(page, name):
 
 
 def wait_text(page, sel, text, timeout=10000):
-    page.wait_for_function("([s, t]) => { const e = document.querySelector(s); return e && e.innerText.includes(t); }", arg=[sel, text], timeout=timeout)
+    try: page.wait_for_function("([s, t]) => { const e = document.querySelector(s); return e && e.innerText.includes(t); }", arg=[sel, text], timeout=timeout)
+    except Exception: raise AssertionError(f"{sel} never showed {text!r}: " + str(page.evaluate("s => (document.querySelector(s) || {}).innerText", sel))[:600])
 
 
 def watch(page, who):
@@ -333,9 +334,9 @@ def ui_host(b, host, orion, maya, pq, b1):
         for col in ["New", "Confirmed", "In progress", "Fixed"]: wait_text(host, "#bug-list", col)
         card = f".bug[data-bid='{b1['id']}']"
         host.click(f"{card} [data-bug-menu]")
-        for label in ["Assign to me", "Give to agent", "linked task", "Mark duplicate", "Close", "Copy as Markdown for Claude"]:
+        for label in ["Assign to me", "Give to agent", "linked task", "Mark duplicate", "Close", "Copy as Markdown for your AI"]:
             wait_text(host, ".tf-menu", label)
-        host.click(".tf-menu button:has-text('Copy as Markdown for Claude')")
+        host.click(".tf-menu button:has-text('Copy as Markdown for your AI')")
         wait_text(host, ".toast", "Copied")
         host.click(f"{card} .bug-att")
         host.wait_for_selector("#tour-room.previewing #preview-body img")

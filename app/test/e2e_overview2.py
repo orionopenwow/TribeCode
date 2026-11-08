@@ -85,7 +85,7 @@ def main():
             assert host.locator("#home-start").is_hidden(), "the old Standup and files section is folded into Repo & Tools"
 
             # 3. Onboarding checklist: ticks itself
-            assert "Onboarding Checklist" in host.text_content("#pj-check h3")
+            assert host.text_content("#pj-check h3").strip() in ("Set up", "Steps")   # v0.16.x: "Set up", not "Onboarding Checklist"
             host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
             host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000)
             assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1

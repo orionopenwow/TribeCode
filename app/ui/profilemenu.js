@@ -30,7 +30,7 @@
   function paint() {
     const m = me(), name = (m && m.name) || settingsName() || '?', s = status();
     const face = $('#pf-face');
-    face.textContent = name.trim().charAt(0).toUpperCase() || '?';
+    face.textContent = ([...name.trim()][0] || '').toUpperCase() || '?';
     face.style.background = (m && m.color) || 'var(--surface-2, #262D38)';
     const P = window.TribeProfiles, pm = m && P && (C.state().members || []).find(x => x.id === m.id); if (pm) { P.fill(face, pm); $('#pf-dot').dataset.state = pm.state || ''; }   // feat/profiles: your avatar + presence
     $('#pf-dot').className = 'pf-dot' + (s.on ? ' on' : '');
@@ -46,7 +46,7 @@
     const capOn = !!(window.TribeCapture && window.TribeCapture.on());
     const upd = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
     menu.innerHTML = `
-      <div class="pf-head"><span class="pf-face lg" style="background:${esc((m && m.color) || 'var(--surface-2, #262D38)')}">${esc(name.charAt(0).toUpperCase())}</span>
+      <div class="pf-head"><span class="pf-face lg" style="background:${esc((m && m.color) || 'var(--surface-2, #262D38)')}">${esc(([...name][0] || '').toUpperCase())}</span>
         <div><b>${esc(name)}</b><small>${esc(role)}</small></div></div>
       <div class="pf-status"><span class="pf-dot ${s.on ? 'on' : ''}"></span>${esc(s.text)}</div>
       ${upd && upd.ready ? `<button role="menuitem" class="pf-item pf-update" data-act="restart"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg><span>Update ready · v${esc(upd.version)}</span><b class="pf-restart">Restart</b></button>` : ''}

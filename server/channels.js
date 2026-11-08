@@ -37,7 +37,7 @@ module.exports = function channels({ store, P, str, broadcast, getMembers }) {
   // Host, or a builder (not a spectator / agent) in the project. A roles module can tighten this later.
   const canManage = (me, pid) => !!me && P.canSee(me, pid) && (me.role === 'host' || (me.role === 'builder' && ((P.get(pid) || {}).members || {})[me.id] !== 'spectator'));
 
-  const cleanName = v => String(v || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+  const cleanName = v => String(v || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^\p{L}\p{N}\p{M}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 32);   // qa-pass: any script (Arabic, Japanese…), not only a-z
   const cleanEmoji = v => { const s = String(v || '').trim(); if (!s) return ''; const first = [...s].slice(0, 4).join(''); return /[<>&"'`\\]/.test(first) || /^[\w\s]+$/.test(first) ? '' : first; };
   const cleanBg = (v, pid, id) => {
     if (!v || typeof v !== 'object' || v.kind === 'none') return null;

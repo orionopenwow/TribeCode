@@ -203,7 +203,7 @@ module.exports = function assist({ P, store, brain, docs, loadTasks, getMembers,
       ...repoIdeas(repoDir(p)).map(x => [...x, 'repo']),
       ...chatIdeas().map(x => [...x, 'chat']),
       ...(kind !== 'any' ? TEMPLATE_TASKS[kind] : []).map(([t, w]) => [t, `${kind} starter · ${w}`, 'template']),
-      ...(!docs.list().length ? [['Write a short design note in Docs', 'no docs yet', 'docs']] : []),
+      ...(!docs.list().length ? [['Write a short design note in Files', 'no docs yet', 'docs']] : []),
       ...TEMPLATE_TASKS.any.map(([t, w]) => [t, w, 'starter']),
     ];
     const tasks = loadTasks().map(t => t.title), gone = dismissed(me), seen = [];

@@ -28,9 +28,9 @@ TribeCode reloads once by itself. If the card still shows, tap **Reload**. **Sen
 - Cloudflare's address changes every restart. Send a fresh invite after the host restarts.
 - Links expire after 3 days. Make a new one.
 
-## Claude Code says it can't reach the tribe
+## Your AI can't reach the tribe
 
-- Status stays on **Waiting for Claude Code…**: the command was for the wrong place. Pick **Anywhere**, **Same Wi-Fi** or **This computer** to match where Claude Code runs, copy again.
+- Status stays on **Waiting for Claude Code…** (or **Waiting for it to connect…**): the command was for the wrong place. Pick **Anywhere**, **Same Wi-Fi** or **This computer** to match where Claude Code runs, copy again.
 - Made a **New command**? The old one stopped. Paste the new one.
 - Remove an old connection with `claude mcp remove tribecode`.
 

@@ -4,7 +4,7 @@ Five places in the sidebar: **Dashboard**, **Messages**, **Files**, **Task Board
 
 ## Dashboard
 
-The living update, the Onboarding Checklist, who's here and what changed.
+The living update, the Set up steps, who's here and what changed.
 
 ## Messages
 
@@ -15,7 +15,7 @@ The **+** in the message box holds everything you can add:
 - **Photo or file**
 - **Propose to the tribe**: everyone votes; approved ideas go to the Board with a checklist of tasks.
 - **Quick poll**
-- **Task**, **Ask my Claude** (or **Ask AI**), **Reminder or event**, **Note**, **Report a bug**
+- **Task**, **Ask my AI** (or **Ask AI**), **Reminder or event**, **Note**, **Report a bug**
 
 Hold the mic to send a voice note. It's transcribed for you.
 
