@@ -179,8 +179,9 @@ def main():
                 assert page.locator("#chat-form .cx-emo").count() == 1 and page.locator("#chat-form .cx-plus").count() == 1
                 page.click("#chat-form .cx-emo"); page.click("#rx-picker [data-ins='🚀']")
                 assert page.input_value("#chat-input") == "🚀"; page.fill("#chat-input", "")
-                # people.js hooks still work on the bubbles: Maya's name opens her profile
+                # Maya's name opens her profile popout (feat/profiles), and View activity the people.js panel
                 page.click(row(t1["id"]) + " .mb > b.nm")
+                page.wait_for_selector("#pf-pop .pf-full"); page.click("#pf-pop .pf-full")
                 page.wait_for_selector("#person-panel:not(.hidden)"); page.keyboard.press("Escape")
                 page.wait_for_selector("#person-panel", state="hidden")
                 page.mouse.move(5, 5); page.evaluate("document.querySelector('#chat-list').scrollTop = 1e9"); page.wait_for_timeout(400)
