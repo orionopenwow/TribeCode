@@ -1,0 +1,23 @@
+{
+  "id": "interview-teacher",
+  "recipe": "interview",
+  "people": ["Priya", "Tom"],
+  "note": "Original sample interview written for TribeCode's tests (CC0).",
+  "lines": [
+    { "t": 0, "who": "Tom", "text": "Thanks for talking with us. What do you teach?" },
+    { "t": 4, "who": "Priya", "text": "I teach science to twelve year olds, about thirty kids per class." },
+    { "t": 11, "who": "Priya", "text": "The hardest part is grading lab reports, it takes my whole Sunday." },
+    { "t": 19, "who": "Priya", "text": "I use a spreadsheet for marks but it never matches the school system." },
+    { "t": 27, "who": "Tom", "text": "What would help most?" },
+    { "t": 30, "who": "Priya", "text": "I wish I could give quick voice feedback instead of writing the same comment thirty times." },
+    { "t": 38, "who": "Priya", "text": "My favorite tool is anything that works on my phone during break." },
+    { "t": 45, "who": "Tom", "text": "Great. Tom will send Priya a prototype of voice feedback next week." }
+  ],
+  "reference": {
+    "summary": [
+      "Priya teaches science and spends her Sunday grading lab reports.",
+      "She wishes she could give quick voice feedback and needs tools that work on her phone."
+    ],
+    "actions": ["Tom: send Priya a prototype of voice feedback"]
+  }
+}

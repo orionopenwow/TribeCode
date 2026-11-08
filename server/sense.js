@@ -412,3 +412,5 @@ module.exports = function sense({ P: Proj, store, base, broadcast, postChat, loa
 module.exports.infer = infer;
 module.exports.inspire = inspire;
 module.exports.KINDS = KINDS;
+module.exports.TAG_WORDS = TAG_WORDS;   // feat/captures: capture tags use the same keywords (server/captures.js)
+module.exports.KIND_WORDS = KIND_WORDS;

@@ -1,0 +1,29 @@
+{
+  "id": "playtest-cave",
+  "recipe": "playtest",
+  "people": ["Lena", "Kofi"],
+  "note": "Original sample transcript written for TribeCode's tests (CC0).",
+  "lines": [
+    { "t": 0, "who": "Lena", "text": "I played the cave level twice." },
+    { "t": 5, "who": "Lena", "text": "The lantern mechanic is really fun, I loved lighting the crystals one by one." },
+    { "t": 12, "who": "Lena", "text": "But the map was confusing because every tunnel looks the same color." },
+    { "t": 20, "who": "Lena", "text": "I got stuck at the bridge for a long time since the jump felt too short." },
+    { "t": 28, "who": "Kofi", "text": "Did anything break?" },
+    { "t": 31, "who": "Lena", "text": "Yes, the game crashed once when I paused during the waterfall." },
+    { "t": 38, "who": "Kofi", "text": "Okay. Kofi will give each tunnel its own color so the map reads better." },
+    { "t": 46, "who": "Kofi", "text": "Let's make the bridge jump a bit longer and fix the pause crash before the next build." },
+    { "t": 55, "who": "Lena", "text": "The music in the crystal room was beautiful, keep that." }
+  ],
+  "reference": {
+    "summary": [
+      "The lantern mechanic is fun and the crystal room music is loved.",
+      "The map is confusing because tunnels look the same.",
+      "The bridge jump feels too short and the game crashed when pausing at the waterfall."
+    ],
+    "actions": [
+      "Kofi: give each tunnel its own color",
+      "make the bridge jump a bit longer",
+      "fix the pause crash"
+    ]
+  }
+}

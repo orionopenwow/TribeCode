@@ -61,6 +61,7 @@
     ask: text => send(text),
     website: () => (window.TribeShell ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open()),   // feat/customize
     customize: tab => window.TribeLook && window.TribeLook.open(tab || 'tribe'),
+    capture: id => window.TribeCaptures && window.TribeCaptures.open(id || undefined),   // feat/captures
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
 
@@ -133,6 +134,7 @@
   async function route(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
+    if (window.TribeCaptures) { const cap = await window.TribeCaptures.flint(text); if (cap) return say(cap.text, cap.capture ? [act('Open notes', 'capture', cap.capture)] : []); }   // feat/captures: summarize <url>, what did we decide about X
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);

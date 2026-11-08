@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Why pixel art needs whole-number scaling | Campfire Dev Blog</title>
+<meta property="og:title" content="Why pixel art needs whole-number scaling">
+<meta property="og:site_name" content="Campfire Dev Blog">
+<meta name="author" content="Rin Okafor">
+<meta property="article:published_time" content="2026-10-02">
+<meta property="og:image" content="/thumb.png">
+<script>window.dataLayer = []; function track(){ document.write('<b>tracking</b>'); }</script>
+<style>.nav { color: red }</style>
+</head>
+<body>
+<header class="site-header"><nav class="main-nav"><a href="/">Home</a> <a href="/blog">Blog</a> <a href="/shop">Shop</a> <a href="/about">About us</a></nav></header>
+<div class="cookie-banner">We use cookies to improve your experience. Accept all cookies?</div>
+<aside class="sidebar"><h3>Popular posts</h3><ul><li><a href="/a">Ten tips for sprites</a></li><li><a href="/b">Our new office</a></li><li><a href="/c">Sale on stickers</a></li></ul></aside>
+<div class="ad-slot advert">BUY THE SHINY KEYBOARD NOW - 50% OFF - LIMITED TIME</div>
+<main>
+<article class="post-content">
+<h1>Why pixel art needs whole-number scaling</h1>
+<p>Pixel art looks crisp only when every source pixel becomes the same number of screen pixels. When a game scales by 2.5, some pixels become two wide and some become three, and the art starts to shimmer as the camera moves.</p>
+<p>The fix is simple: draw the game at a small base resolution, then scale it by a whole number like 2, 3 or 4. Add black bars, or a soft border, for the leftover space instead of stretching the picture.</p>
+<h2>Turn off smoothing</h2>
+<p>Browsers smooth images by default, which blurs pixel art into mush. Set image-rendering to pixelated on the canvas, and turn off image smoothing in the 2D context, so edges stay sharp at every size.</p>
+<p>We decided to lock our game at 320 by 180 pixels, because it scales cleanly to 1280 by 720 and 1920 by 1080, the two most common screens our players use.</p>
+<p>Next, we need to test the scaling on phones, where odd screen sizes make whole-number scaling leave larger borders.</p>
+<ul><li>Pick one base resolution early.</li><li>Scale by whole numbers only.</li><li>Keep text in the same pixel grid as the art.</li></ul>
+</article>
+<div class="share-bar social"><a href="#">Share on X</a> <a href="#">Share on Facebook</a> <a href="#">Copy link</a></div>
+<section class="comments"><h3>12 comments</h3><p>Great post, thanks for sharing this with everyone here!</p></section>
+</main>
+<footer class="site-footer"><p>Copyright 2026 Campfire Dev Blog. All rights reserved. Subscribe to our newsletter for weekly updates.</p></footer>
+<script>track();</script>
+</body>
+</html>
