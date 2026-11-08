@@ -10,7 +10,7 @@
   const C = window.TribeClient;
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
   const ico = (k, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#${k}"/></svg>`;
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -55,7 +55,7 @@
     }
     const r = map.by[m.agent ? m.owner : m.id] || map.by[m.id];
     if (r && r.name && typeof r.name === 'string') return { name: r.name, color: r.color || m.color };
-    return { name: m.agent ? `${m.ownerName ? m.ownerName + "'s" : 'An'} Claude` : m.host ? 'Host' : m.role === 'admin' ? 'Admin' : m.role === 'mod' ? 'Mod' : m.role === 'spectator' ? 'Spectator' : 'Builder', color: m.agent ? '#38C6B1' : m.color };
+    return { name: m.agent ? `${m.ownerName ? m.ownerName + "'s" : 'An'} AI` : m.host ? 'Host' : m.role === 'admin' ? 'Admin' : m.role === 'mod' ? 'Mod' : m.role === 'spectator' ? 'Spectator' : 'Builder', color: m.agent ? '#38C6B1' : m.color };
   }
 
   // ---------- panel ----------
@@ -130,7 +130,7 @@
   function agentLine(d) {
     const a = d.now.agent; if (!a) return '';
     const what = a.control ? `${a.control.action === 'stop' ? 'stop' : 'pause'} requested` : a.online ? (a.task ? a.task.title : 'active now') : 'idle';
-    return `<div class="pp-agent ${a.online ? 'on' : ''}" data-person="${esc(a.id)}" title="Open ${esc(a.name)}"><span class="pp-dot"></span><span class="pp-agent-n">Claude</span><span class="pp-agent-w">${esc(what)}</span></div>`;
+    return `<div class="pp-agent ${a.online ? 'on' : ''}" data-person="${esc(a.id)}" title="Open ${esc(a.name)}"><span class="pp-dot"></span><span class="pp-agent-n">AI</span><span class="pp-agent-w">${esc(what)}</span></div>`;
   }
   function header(d) {
     const m = d.member, role = d.role || { name: '', color: m.color };
@@ -145,7 +145,7 @@
     const mineAgent = m.agent && m.owner === me.id;
     if (!m.you && (!m.agent || mineAgent) && window.TribeDM) out.push(`<button class="btn" data-pp="dm">${ico('i-chat')}Message</button>`);
     const askable = me.role !== 'spectator' && me.role !== 'agent' && (m.agent ? m.id : m.agentOf && m.agentOf.id);
-    if (askable) out.push(`<button class="btn" data-pp="ask">${ico('i-sparkle')}Ask ${m.agent ? 'Claude' : 'their Claude'}</button>`);
+    if (askable) out.push(`<button class="btn" data-pp="ask">${ico('i-sparkle')}Ask ${m.agent ? 'it' : 'their AI'}</button>`);
     if (!m.you && !m.agent && d.presence.online) out.push(`<button class="btn ghost" data-pp="follow">${ico('i-eye')}Follow</button>`);
     const mod = window.TribeRoles && !m.agent ? window.TribeRoles.memberActions(m) : '';   // feat/roles: Mute, Remove from project
     if (!out.length && mod) return mod;
@@ -157,7 +157,7 @@
     const files = n.files.concat(n.agent ? n.agent.files.map(f => ({ ...f, agent: true })) : []);
     const title = task ? esc(task.title) : files.length ? `Editing ${esc(files[0].path.split('/').pop())}` : m.agent ? (d.presence.online ? 'Working' : 'Idle') : 'Nothing claimed';
     const chips = [
-      ...files.slice(0, 5).map(f => `<code class="pp-file ${f.agent ? 'agent' : ''}" title="${esc((f.agent ? 'Their Claude · ' : '') + (f.note || f.path))}">${esc(f.path)}</code>`),
+      ...files.slice(0, 5).map(f => `<code class="pp-file ${f.agent ? 'agent' : ''}" title="${esc((f.agent ? 'Their AI · ' : '') + (f.note || f.path))}">${esc(f.path)}</code>`),
       ...(files.length > 5 ? [`<span class="pp-more" title="${esc(files.slice(5).map(f => f.path).join('\n'))}">+ more</span>`] : []),
       ...n.lanes.map(l => `<span class="pp-lane" title="Lane: they own this area">${esc(l)}</span>`),
     ];
@@ -194,7 +194,7 @@
     const chips = KINDS.filter(([v]) => v === 'all' || k[v]).map(([v, l]) => `<button class="pp-chip ${kind === v ? 'on' : ''}" data-kind-f="${v}" aria-pressed="${kind === v}" title="${v === 'all' ? '' : `${k[v]} ${l.toLowerCase()}`}">${l}</button>`).join('');
     const items = d.timeline.items;
     return `<section class="pp-sec pp-tl"><span class="eyebrow">Timeline</span>${total ? `<div class="pp-filter" role="group" aria-label="Filter">${chips}</div>` : ''}
-      ${items.length ? `<ol class="pp-list">${items.map(item).join('')}</ol>` : `<p class="pp-empty">${total ? 'Nothing here yet.' : `Quiet so far. Commits, ${d.member.agent ? 'prompts' : 'their Claude’s prompts'}, chat and notes show up here.`}</p>`}
+      ${items.length ? `<ol class="pp-list">${items.map(item).join('')}</ol>` : `<p class="pp-empty">${total ? 'Nothing here yet.' : `Quiet so far. Commits, ${d.member.agent ? 'prompts' : 'their AI’s prompts'}, chat and notes show up here.`}</p>`}
       ${d.timeline.more ? '<button class="linkish pp-older" data-pp="older">Older</button>' : ''}</section>`;
   }
   function foot(d) {

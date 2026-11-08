@@ -2,16 +2,17 @@
 
 ## Make a project
 
-The fastest way: on Home, tap **Invite a friend**. That makes a fresh project, opens its chat and copies an invite link in one go.
+Tap **Create a project** on Home, or the **+** under the project circles. Then pick one:
 
-To name it yourself, tap the **+** at the bottom of the project circles. Under **Start a new tribe**:
+- **Create my own**: a blank project.
+- **A template**: Game, Website, App, Tool or Notes & research.
+- **Bring my code** (host): a folder on this computer or a GitHub repo.
 
-- Type a name and tap **Create**.
-- Or paste a GitHub URL into the same box to start from existing code.
-- Or tap **Bring existing code: a folder or repo** and drop a folder.
-- **Invite a friend now** does the one-tap version.
+Give it a name (and a picture or a one-line bio if you like) and tap **Create**. The invite sheet opens next.
 
-Each project gets its own chat, docs, tasks and repo. Change its name, emoji, color or picture in **Project settings** (Ctrl K, or the project menu at the top of the sidebar).
+In a hurry? **Invite a friend** on Home makes a fresh project and copies a link in one go.
+
+Each project gets its own chat, files, tasks and repo. Change its name, emoji, color or picture in **Project settings** (Ctrl K, or the project menu at the top of the sidebar).
 
 ## Invite someone
 
@@ -21,7 +22,7 @@ The invite sheet shows:
 
 - The link, already copied. Tap **Copy** again if you need to.
 - **Share…** (on phones) and **QR code** for someone sitting next to you.
-- **Connect my Claude Code**, so your own agent joins too.
+- **Connect my AI**, so your own agent joins too.
 
 A link is good for 3 days and up to 10 people. A one-time guest pass works once and stops after a day.
 
@@ -34,7 +35,7 @@ Under the link it says where it works: **Works from anywhere**, **Same Wi-Fi onl
 1. Taps the link.
 2. Types a name under **Your name** and taps **Join the tribe**.
 3. On a phone: taps **Share**, then **Add to Home Screen**, so it opens like an app. (**Not now** skips it.)
-4. On a computer: the app shows the one line that connects their Claude Code.
+4. On a computer: the app shows how to connect their own AI.
 
 No account, no password, no download needed to join.
 

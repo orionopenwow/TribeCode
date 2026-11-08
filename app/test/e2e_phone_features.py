@@ -101,7 +101,7 @@ def main():
                 wait_text(ph, "#chat-list", "First message from my phone"); wait_text(ph, "#chat-list", "A typo here")
                 assert "Delete me" not in ph.inner_text("#chat-list"), "deleted stays deleted"
                 wait_text(ph, "#chat-list", "👍")
-                ph.wait_for_selector("#pin-strip:not(.hidden)", timeout=10000); wait_text(ph, "#pin-strip", "1 pinned")
+                ph.wait_for_selector("#chat-head .cb-pins.has", timeout=10000); wait_text(ph, "#chat-head .cb-pins .cb-n", "1")   # chat2: the header's Pinned button replaced the strip
                 no_sideways(ph, "chat")
             feature("Chat: send, react, pin, edit, delete, all saved after a reload", chat)
 
@@ -146,7 +146,8 @@ def main():
             feature("Tasks: New task, move with the status chip (a slim slate), saved", tasks)
 
             def notes():
-                ph.click('#tabbar [data-nav="chat"]'); ph.wait_for_selector("#fk-idea", timeout=10000)
+                ph.click('#tabbar [data-nav="chat"]'); ph.wait_for_function("document.body.dataset.view === 'chat'", timeout=10000)
+                ph.wait_for_selector("#fk-idea", timeout=15000)
                 ph.click("#fk-idea"); ph.fill("#flow-note", "Fireflies as collectibles"); ph.press("#flow-note", "Enter")
                 wait_until(lambda: any("fireflies" in json.dumps(n).lower() for n in api("/flow", token=ftok, project=pid)[1]["flow"]["notes"]), 10, "idea saved")
             feature("Add an idea from the \"You're in\" card into the project notes", notes)

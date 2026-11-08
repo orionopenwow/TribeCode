@@ -18,7 +18,7 @@ Opened the link inside Messenger, Instagram or another app? A banner offers to o
 - **Home** shows your projects and what's new. The **+** starts or joins one.
 - In a project, the bottom bar has **Home** · **Chat** · **Files** · **Tasks** · **Agents**.
 - **Swipe from the left edge** (or tap the flame logo) for your project circles and the section list.
-- **Messages** on Home lists every chat and DM. **Talk to…** picks who you're talking to: Flint, your Claude, the tribe's AI, your desktop, or #agents.
+- **Messages** on Home lists every chat and DM. **Talk to…** picks who you're talking to: Flint, your AI, the tribe's AI, your desktop, or #agents.
 - Your avatar (top) opens your profile: invite, alerts, **Settings**, and this guide.
 
 ## Things phones are good at
@@ -26,7 +26,7 @@ Opened the link inside Messenger, Instagram or another app? A banner offers to o
 - **Voice notes**: tap the mic, talk, send. Pause and delete are right there. It's transcribed.
 - **Approvals**: tap **Approve** or **Deny** from the notification or the bell, with a comment if you like.
 - **Ideas and tasks**: the **+** in the message box, or **New task** on Tasks.
-- **Ask AI**: no Claude of your own needed.
+- **Ask AI**: no AI of your own needed.
 
 ## Voice and notifications need https
 
@@ -38,4 +38,4 @@ Each phone gets a private link that keeps it signed in. Treat it like a password
 
 ## Phone-only friends
 
-A friend with no computer and no Claude subscription can still join, vote, talk, file bugs and ask **@ai**. Their code changes turn into requests a desktop picks up.
+A friend with no computer and no AI subscription can still join, vote, talk, file bugs and ask **@ai**. Their code changes turn into requests a desktop picks up.

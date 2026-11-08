@@ -78,3 +78,6 @@
 /* link chips read as small embeds: a card with an accent edge */
 .msg.dx .lps { gap: 6px; margin-top: 6px; }
 .msg.dx .lps .lp { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px 6px 10px; border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: 6px; background: var(--surface); font-family: var(--font); font-size: 13px; color: var(--text); }
+
+/* qa-pass: right-to-left messages (Arabic, Hebrew…) read from the right, each paragraph on its own */
+.msg.dx .mb > p, #chat-input { unicode-bidi: plaintext; text-align: start; }

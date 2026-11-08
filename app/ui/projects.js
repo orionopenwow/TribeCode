@@ -8,7 +8,7 @@
   const C = window.TribeClient;
   const App = () => window.TribeApp;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const initials = n => (n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
   const toast = m => App() && App().toast(m);
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
@@ -44,7 +44,7 @@
 
   // ---------- project circles (rail) + the project's nest (second column) ----------
   // A project's face: its image, else its emoji, else its initials on its color.
-  const pinit = n => String(n || '?').trim().split(/[\s_-]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const pinit = n => String(n || '?').trim().split(/[\s_-]+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   function face(p, cls = '') {
     if (p.image) return `<span class="pj-face ${cls} img" style="--pc:${esc(p.color)}"><img src="${esc(p.image)}" alt=""></span>`;
     if (p.emoji) return `<span class="pj-face ${cls} emo" style="--pc:${esc(p.color)}"><i class="pj-emo">${esc(p.emoji)}</i></span>`;
@@ -185,7 +185,7 @@
       : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI and a repo.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
       : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''}" id="pj-check">
           ${hero ? `<span class="eyebrow ock-eyebrow">Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)}</h2><p class="ock-hero-p">Four quick steps. The dashboard fills in as you go.</p>` : ''}
-          <div class="ock-head"><h3>Onboarding Checklist</h3><span class="ock-n">${nDone}/${steps.length}</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
+          <div class="ock-head"><h3>${hero ? 'Steps' : 'Set up'}</h3><span class="ock-n">${nDone}/${steps.length}</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
           <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
           ${hero ? `<div class="ock-list ock-cards">${steps.map(x => `<div class="ock-row ock-card ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <span class="ock-emo" aria-hidden="true">${x.emo}${x.done ? `<i class="ock-emo-ok">${tick}</i>` : ''}</span>
@@ -199,9 +199,9 @@
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
           <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span>${esc(r.name)}<span class="pj-dot">·</span>${esc(r.branch)}` : ''}<span id="pj-site-slot"></span></span></div>
-        <button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button></div>
+        ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
       ${hero ? checklist : ''}
-      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add context</h3><p>Drop docs, PDFs, images or notes. Flint and your agents read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>
+${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add context</h3><p>Drop docs, PDFs, images or notes. Flint and your agents read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
       ${L && started ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
           <div class="pl-grid">${tiles.map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
       ${hero ? '' : checklist}
@@ -230,7 +230,7 @@
     const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
     const sfBody = $('#pj-sf-body'); if (sfText) sfBody.appendChild(sfText);
-    const ctx = $('#pj-ctx-body'); [dzn, drops].forEach(n => n && ctx.appendChild(n));   // the drop zone is a main point of the page: it gives everyone context
+    const ctx = $('#pj-ctx-body'); if (ctx) [dzn, drops].forEach(n => n && ctx.appendChild(n));   // qa-pass: spectators get no drop zone   // the drop zone is a main point of the page: it gives everyone context
     el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => step(x.dataset.ck));
     // tell the room panel and Flint how far along this project is, so they can stay simple early on
     window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, agent: steps[2].done, repo: steps[3].done });
@@ -240,7 +240,7 @@
     if (chk) { chk.querySelectorAll('.btn.primary').forEach(x => x.classList.remove('primary')); const nx = chk.querySelector('.ock-row:not(.on)'); if (nx) { nx.classList.add('ock-next'); const b1 = nx.querySelector('.ock-acts .btn, .ock-below .btn'); if (b1) b1.classList.add('primary'); } }
     if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
-    $('#pj-invite').onclick = () => App().openInvite();
+    const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite();
     $('#pj-face').onclick = () => (canName ? pickFace(p) : pickImage(p));   // feat/setup-flow: emoji grid + Upload a picture
     const nm = $('#pj-name'); if (nm) nm.onclick = () => editName(p);
     const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);

@@ -1,6 +1,6 @@
 # Agents & the Office
 
-Agents are the AI teammates: each person's Claude Code, plus a few helpers the tribe runs by itself. **Agents Hub** in the sidebar is where you watch them.
+Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a few helpers the tribe runs by itself. **Agents Hub** in the sidebar is where you watch them.
 
 ## The tabs
 
@@ -26,7 +26,7 @@ Agents are the AI teammates: each person's Claude Code, plus a few helpers the t
 
 **Flint** is TribeCode's built-in helper. Find it at the bottom of the right panel (**Ask Flint…**), in **?** › **Ask Flint**, or on a phone in **Talk to…**.
 
-- Try **connect my Claude**, **note: buy lanterns**, **task fix the bridge**, **invite**, **find** a doc, or **what's new**.
+- Try **connect my AI**, **note: buy lanterns**, **task fix the bridge**, **invite**, **find** a doc, or **what's new**.
 - Ask **how do I…** and it answers from this Guide.
 - With no model it runs in **basic mode** and still does all of that. With a model it answers anything and writes summaries and standups. **Helpers** › **Flint** shows which.
 - **Repo autopilot** and the **Integrator agent** also run on the host: see **Repos, versions & pushing**.

@@ -116,14 +116,14 @@ def main():
             host.click("#pj-check [data-ck=vision]")
             host.wait_for_selector(".av-imp[data-helper=claude]:not([disabled])")
             host.click(".av-imp[data-helper=claude]")
-            wait_text(host, "#av-status", "Waiting for your Claude")
+            wait_text(host, "#av-status", "Waiting for your AI")
             ch = "dm-" + "-".join(sorted([orion, aid]))
             msgs = ok(api(f"/chat/{ch}", token=htok, project=pid))["messages"]
             assert any("Help me write the vision" in m["text"] and m["by"] == orion for m in msgs), msgs
             ok(api(f"/chat/{ch}", "POST", {"text": "@Orion A cozy pixel platformer friends finish in one sitting.\nFor friends on a couch.\n\n## Done for v1\n- Three levels\n- A boss\n\n## Out of scope\n- Online play"}, token=atok, project=pid), "agent reply")
             wait_text(host, "#pj-vtext", "cozy pixel platformer friends finish")
             assert not host.input_value("#pj-vtext").startswith("@"), "the @mention is stripped"
-            wait_text(host, "#av-status", "Drafted by your Claude")
+            wait_text(host, "#av-status", "Drafted by your AI")
             # Save: VISION.md, the checklist ticks
             host.click("#pj-vsave")
             host.wait_for_selector("#invite-modal.hidden", state="attached")

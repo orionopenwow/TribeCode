@@ -44,13 +44,13 @@
       <div class="vis-grid">
         <aside class="vis-side" id="vis-side">${st.screens.map(s => `<button class="vis-screen ${s.slug === st.screen ? 'on' : ''}" data-screen="${esc(s.slug)}">
             <img alt="" loading="lazy" src="${esc(imgUrl(s.latest))}"><span><b>${esc(s.name)}</b><small>${s.count} version${s.count === 1 ? '' : 's'} · ${esc(ago(s.latest.at))}</small></span></button>`).join('')}
-          <div class="vis-drop" id="vis-drop"><svg class="i"><use href="#i-image"/></svg><span>Drop screenshots here</span><small>or let your Claude Code post them with <code>add_visual</code></small></div></aside>
+          <div class="vis-drop" id="vis-drop"><svg class="i"><use href="#i-image"/></svg><span>Drop screenshots here</span><small>or let your AI post them with <code>add_visual</code></small></div></aside>
         <div class="vis-main" id="vis-main">${cur ? mainHtml(cur) : emptyHtml()}</div></div>`;
     bind(v);
     if (cur && st.versions.length) drawStage();
   }
   const emptyHtml = () => `<div class="doc-empty vis-empty"><svg class="i"><use href="#i-image"/></svg><h2>Track how your screens change</h2>
-    <p>Drop screenshots here, grouped by screen name. Pick two versions to compare them side by side, with a swipe slider or a pixel diff.</p><button class="btn primary" id="vis-first">Add a screenshot</button></div>`;
+    <p>Drop screenshots here, grouped by screen name. Pick two versions to compare them side by side, with a swipe slider or a pixel diff.</p><button class="btn" id="vis-first">Add a screenshot</button></div>`;
   function verLabel(ts) { const i = st.versions.findIndex(v => v.ts === ts); const v = st.versions[i]; return v ? `v${i + 1} · ${when(v.at)}` : ''; }
   function mainHtml(cur) {
     const opts = sel => st.versions.map((v, i) => `<option value="${v.ts}" ${v.ts === sel ? 'selected' : ''}>v${i + 1} · ${esc(when(v.at))} · ${esc(nameOf(v.by))}</option>`).join('');

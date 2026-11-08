@@ -41,7 +41,7 @@ def token_of(page):
 
 def main():
     tmp = tempfile.mkdtemp(prefix="tribe-f-")
-    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--ollama", "http://localhost:9"], stdout=subprocess.DEVNULL)
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--name", "Campfire Crew", "--ollama", "http://localhost:9"], stdout=subprocess.DEVNULL, env={**os.environ, "HOME": tmp})   # qa-pass: a cloudflared in ~/.tribecode/bin must not leak in
     try:
         for _ in range(50):
             try: urllib.request.urlopen(BASE + "/api/health"); break

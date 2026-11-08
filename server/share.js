@@ -202,7 +202,7 @@ module.exports = function makeShare({ port, log = console.log }) {
       const t = setTimeout(() => { try { p.kill(); } catch {} finish({ ok: false, message: 'cloudflared did not report an address within 40 seconds.' }); }, 40_000);
       const onData = c => {
         buf = (buf + c.toString()).slice(-20000);
-        const m = buf.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+        const m = buf.match(/https:\/\/(?!api\.)[a-z0-9-]+\.trycloudflare\.com/);   // qa-pass: not api.trycloudflare.com from an error line
         if (m) { child = p; finish({ ok: true, url: m[0] }); }
       };
       p.stdout.on('data', onData); p.stderr.on('data', onData);
