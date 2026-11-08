@@ -98,3 +98,5 @@ jobs:
           prerelease: false
           includeUpdaterJson: ${{ vars.TAURI_UPDATER_PUBKEY != '' }}
           args: ${{ matrix.args }}
+          # GitHub's release downloads (WiX, AppRun) sometimes answer 504: try the build again before giving up
+          retryAttempts: 3
