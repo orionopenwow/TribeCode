@@ -6,13 +6,13 @@
 //   PUT /api/projects/:id/widgets   { widgets: [...] }   the whole list (add, remove, re-order); host and builders only
 //
 // A widget is { id, kind: 'builtin', key } (an existing view: calendar, bugs, board, milestones, repo, visuals, website,
-// preview, workshop, plan, secretary) or { id, kind: 'link', name, emoji, url } (opens in the preview pane) or
+// preview, workshop, plan, secretary, whiteboard) or { id, kind: 'link', name, emoji, url } (opens in the preview pane) or
 // { id, kind: 'doc', name, emoji, doc } (a pinned doc, also in the preview pane). Saved per project for the whole tribe
 // in .tribe/widgets.json; a change is broadcast as { type: 'widgets', project }.
 'use strict';
 const crypto = require('node:crypto');
 
-const BUILTIN = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary'];
+const BUILTIN = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'whiteboard'];
 const MAX = 24;
 
 module.exports = function widgets({ P, store, broadcast, preview, showcase, shelf, sense, can = null }) {   // can(me, cap, pid): feat/roles

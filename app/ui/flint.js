@@ -48,7 +48,7 @@
     guide: slug => window.TribeGuide && window.TribeGuide.open(slug || undefined),
     note: id => { if (Hub() && Hub().openNote) Hub().openNote(id); else if (Hub()) Hub().open('docs'); },
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
-    nav: v => { if (v === 'hub') return Hub() ? Hub().open('home') : App().show('hub'); if (v === 'guide') return ACTS.guide(); if (v === 'settings') return window.TribeSettings && window.TribeSettings.open(); App().show(v); },
+    nav: v => { if (v === 'hub') return Hub() ? Hub().open('home') : App().show('hub'); if (v === 'guide') return ACTS.guide(); if (v === 'settings') return window.TribeSettings && window.TribeSettings.open(); if (v === 'whiteboard') return window.TribeWhiteboard && window.TribeWhiteboard.open();   /* feat/whiteboard */ App().show(v); },
     invite: () => App() && App().openInvite(),
     host: () => App() && (App().hostHere ? App().hostHere() : App().openInvite()),
     stophost: () => App() && App().setHosting && App().setHosting(false),
@@ -118,7 +118,7 @@
     hosting: /\b(start|stop|turn (on|off)|begin|end)\s+(the\s+)?host(ing)?\b|^host( here| a tribe| on this computer)?$/,
     note: /^(?:please\s+)?(?:capture|note|remember|jot(?:\s+down)?|write down|save)(?:\s+(?:a|this|the|that))?(?:\s+note)?(?:\s*(?::|-|,|that)\s*|\s+|$)([\s\S]*)$/,
     task: /^(?:please\s+)?(?:add|new|make|create)?\s*(?:a\s+)?(?:task|todo|to-do)(?:\s*(?::|-|,)\s*|\s+)([\s\S]+)$/,
-    nav: /^(?:open|go to|goto|show(?: me)?|take me to|switch to|bring me to|where(?:'s| is| are| do i find)|how do i (?:get to|find))\s+(?:the\s+|my\s+|our\s+)?(files|docs|documents|tasks|task board|board|chat|messages|home|dashboard|overview|repo|code|guide|settings|calendar|agents hub|agents|mcp|bugs|website)\b/,
+    nav: /^(?:open|go to|goto|show(?: me)?|take me to|switch to|bring me to|where(?:'s| is| are| do i find)|how do i (?:get to|find))\s+(?:the\s+|my\s+|our\s+)?(files|docs|documents|tasks|task board|board|chat|messages|home|dashboard|overview|repo|code|guide|settings|calendar|agents hub|agents|mcp|bugs|website|whiteboard|white board)\b/,
     doStep: /^(?:how (?:do|can) i |help me |let'?s |i want to |)(?:add|make|create|start)(?: a| my| the)? (?:first )?task\b|^(?:how (?:do|can) i |help me |let'?s |)(write|start)(?: the| our)? vision\b|^(?:how (?:do|can) i |help me |)(?:connect|hook up|add)(?: my)? (?:ai|claude|codex|gemini|cursor|agent)\b/,
     find: /^(?:find|search(?: for)?|look for|where(?:'s| is))\s+(.+)$/,
     help: /^(how|what|why|where|when|can i|could i|help|guide|explain|is there|do i)\b|\?$/,
@@ -139,15 +139,15 @@
     // Setup steps by name: Flint does them (and shows where they live) instead of explaining
     if ((m = RX.doStep.exec(t))) { const k = /task/.test(t) ? 'newtask' : /vision/.test(t) ? 'vision' : 'claude';
       if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. A few short answers is plenty.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
-    if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website' }, v = map[m[1]];
+    if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website', whiteboard: 'whiteboard', 'white board': 'whiteboard' }, v = map[m[1]];
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
-      const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]' }, row = ROW[v] && document.querySelector(ROW[v]);
-      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Repo', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website' };
+      const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
+      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Repo', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
       if (v === 'agents' || v === 'mcp') { if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
         if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const r = document.querySelector('#nest-ws-agents'); if (r) r.click(); }
         return say(`Opened ${NAME[v].replace(/^The /, 'the ')}.`); }
       if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v] || m[1]} lives here. Opening it for you.`, { next: 'Thanks' });
-      ACTS.nav(v); return say(`Opened ${m[1] === 'home' ? 'Home' : m[1]}.`); }
+      ACTS.nav(v); return say(`Opened ${m[1] === 'home' ? 'Home' : v === 'whiteboard' ? 'the whiteboard' : m[1]}.`); }
     if ((m = RX.find.exec(t)) && !RX.help.test(t.replace(/^where('s| is)/, ''))) return find(text.slice(text.length - m[1].length).trim());
     if (RX.help.test(t) || /\b(guide|how do i|how to)\b/.test(t)) { const g = await guideSearch(text); if (g) return guideReply(g); if (RX.invite.test(t)) return invite(); return fallback(text, true); }
     if (RX.invite.test(t)) return invite();

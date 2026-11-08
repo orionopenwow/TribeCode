@@ -1,0 +1,109 @@
+/* Whiteboard (app/ui/whiteboard.js). Campfire flat matte: 1px borders, depth only from luminance steps, no glows,
+   blur, gradients or shadows. The board fills the main area; tools float on it as flat bordered strips. */
+.window .main:has(> #view-whiteboard:not(.hidden)) { padding: 0; overflow: hidden; }
+.main > #view-whiteboard:not(.hidden) { max-width: none; height: 100%; margin: 0; display: flex; flex-direction: column; min-height: 0; }
+.wbd { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; }
+
+/* header: eyebrow + the board's name (a menu of boards), who is here, export */
+.wbd-head { display: flex; align-items: center; gap: 14px; padding: 14px 20px 12px; border-bottom: 1px solid var(--edge); background: var(--surface); min-height: 64px; }
+.wbd-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wbd-title .eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.wbd-name { display: inline-flex; align-items: center; gap: 4px; padding: 0; background: none; border: 0; color: var(--text); font: 650 18px/1.2 var(--display, var(--font)); cursor: pointer; max-width: 46vw; }
+.wbd-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wbd-name .wbd-i { color: var(--faint); flex: none; }
+.wbd-name:hover .wbd-i { color: var(--text); }
+.wbd-peers { display: flex; gap: 0; margin-left: 4px; }
+.wbd-peer { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #12151A; background: var(--c); border: 2px solid var(--surface); margin-left: -6px; }
+.wbd-peer:first-child { margin-left: 0; }
+.wbd-ro { font-size: 13px; color: var(--muted); padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; white-space: nowrap; }
+.wbd-acts { margin-left: auto; display: flex; gap: 8px; }
+.wbd-btn { height: 34px; }
+
+/* the board */
+.wbd-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--canvas); touch-action: none; }
+.wbd-stage canvas { position: absolute; inset: 0; display: block; touch-action: none; cursor: crosshair; outline: none; -webkit-user-select: none; user-select: none; }
+.wbd-stage canvas[data-tool="select"] { cursor: default; }
+.wbd-stage canvas[data-tool="select"].grab { cursor: move; }
+.wbd-stage canvas[data-tool="select"].nwse { cursor: nwse-resize; }
+.wbd-stage canvas[data-tool="text"] { cursor: text; }
+.wbd-stage canvas[data-tool="sticky"] { cursor: copy; }
+.wbd-stage canvas.grab-all { cursor: grab; }
+.wbd-stage canvas.panning { cursor: grabbing; }
+.wbd.ro .wbd-stage canvas { cursor: default; }
+
+.wbd-cursors { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.wbd-cur { position: absolute; left: 0; top: 0; display: flex; align-items: flex-start; gap: 2px; transition: transform .08s linear; }
+.wbd-cur span { margin-top: 12px; font-size: 11.5px; font-weight: 600; color: #12151A; background: var(--c); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+
+.wbd-empty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; max-width: min(360px, 80vw); }
+.wbd-empty[hidden] { display: none; }
+.wbd-empty b { font-size: 16px; color: var(--text); }
+.wbd-empty span { font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+
+/* tools: a flat vertical strip on the left (desktop), a compact bottom bar (phones) */
+.wbd-tools { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 2px; padding: 5px; background: var(--surface); border: 1px solid var(--edge); border-radius: 12px; z-index: 2; }
+.wbd-tool { position: relative; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
+.wbd-tool:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+.wbd-tool.on { background: var(--chip); border-color: color-mix(in srgb, var(--accent) 45%, var(--edge)); color: var(--accent-ink); }
+.wbd-tool:disabled { opacity: .35; cursor: default; }
+.wbd-tool[hidden] { display: none; }
+.wbd-i { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.wbd-caret { position: absolute; right: 4px; bottom: 4px; width: 0; height: 0; border-left: 4px solid transparent; border-top: 4px solid currentColor; opacity: .6; transform: rotate(-45deg); }
+.wbd-sep { display: block; width: 24px; height: 1px; margin: 4px auto; background: var(--edge); flex: none; }
+.wbd-ph { display: none !important; }
+
+/* style: colors, widths, duplicate, delete (top center) */
+.wbd-style { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 5px 7px; background: var(--surface); border: 1px solid var(--edge); border-radius: 12px; z-index: 2; max-width: calc(100% - 24px); }
+.wbd-style[hidden] { display: none; }
+.wbd-style .wbd-sep { width: 1px; height: 22px; margin: 0 4px; }
+.wbd-sw { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface); background: var(--c); outline: 1px solid var(--edge); outline-offset: 0; cursor: pointer; padding: 0; flex: none; }
+.wbd-sw.on { outline: 2px solid var(--text); }
+.wbd-w { width: 30px; height: 28px; display: grid; place-items: center; border-radius: 7px; border: 1px solid transparent; background: none; cursor: pointer; flex: none; }
+.wbd-w i { display: block; width: 16px; border-radius: 4px; background: var(--muted); }
+.wbd-w.on { background: var(--surface-2); border-color: var(--edge); }
+.wbd-w.on i { background: var(--text); }
+.wbd-mini { width: 30px; height: 28px; display: grid; place-items: center; border-radius: 7px; border: 1px solid transparent; background: none; color: var(--muted); cursor: pointer; flex: none; }
+.wbd-mini:hover { color: var(--text); background: var(--surface-2); }
+#wbd-del:hover { color: var(--ember-ink); }
+
+/* zoom (bottom right) */
+.wbd-zoom { position: absolute; right: 14px; bottom: 14px; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 3px; z-index: 2; }
+.wbd-zoom button { height: 28px; min-width: 30px; padding: 0 6px; display: grid; place-items: center; border: 0; border-radius: 7px; background: none; color: var(--muted); font: 500 12px var(--mono); cursor: pointer; }
+.wbd-zoom button:hover { background: var(--surface-2); color: var(--text); }
+
+/* text editing: a plain textarea over the element */
+.wbd-edit { position: absolute; z-index: 3; margin: 0; border: 1px dashed var(--live); border-radius: 4px; background: transparent; resize: none; overflow: hidden; outline: none; white-space: pre-wrap; box-sizing: border-box; }
+.wbd-edit.text { white-space: pre; }
+.wbd-edit.sticky { border-style: solid; border-color: transparent; border-radius: 6px; }
+
+/* menus */
+.wbd-pop { min-width: 210px; }
+.wbd-pop .sh-menu button.on { color: var(--accent-ink); }
+.wbd-pop .sh-menu button[disabled] { opacity: .45; }
+.wbd-pop hr { border: 0; border-top: 1px solid var(--edge); margin: 4px 0; }
+.wbd-boards button { display: flex; align-items: center; gap: 8px; }
+.wbd-bn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.wbd-boards small { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.wbd-pop .wbd-i { width: 16px; height: 16px; flex: none; }
+
+/* + Add gallery: the whiteboard's mini preview */
+.wgx-board svg { display: block; width: 100%; height: auto; max-height: 76px; }
+
+/* ---------- phones ---------- */
+@media (max-width: 820px) {
+  .window .main:has(> #view-whiteboard:not(.hidden)) { padding: 0; }   /* whiteboard.js keeps the board above the bottom rack */
+  .wbd-head { padding: 10px 14px; min-height: 52px; gap: 10px; }
+  .wbd-title .eyebrow { display: none; }
+  .wbd-name { font-size: 16px; max-width: 52vw; }
+  .wbd-btn { height: 32px; padding: 0 11px; font-size: 13px; }
+  .wbd-acts { display: none; }
+  .wbd-desk { display: none !important; }
+  .wbd-ph { display: grid !important; }
+  .wbd-tools { left: 8px; right: 8px; top: auto; bottom: 8px; transform: none; flex-direction: row; justify-content: space-between; padding: 4px; }
+  .wbd-tool { width: 40px; height: 40px; flex: 1 1 0; max-width: 46px; }
+  .wbd-tools .wbd-sep { width: 1px; height: 24px; margin: auto 2px; }
+  .wbd-style { top: auto; bottom: 64px; left: 8px; right: 8px; transform: none; justify-content: center; gap: 3px; padding: 5px; overflow-x: auto; scrollbar-width: none; }
+  .wbd-style .wbd-sep { margin: 0 2px; }
+  .wbd-sw { width: 26px; height: 26px; }
+  .wbd-w, .wbd-mini { width: 30px; height: 30px; }
+}
