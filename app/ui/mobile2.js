@@ -310,6 +310,7 @@
       <form class="m2-quick" id="m2-qt"><input id="m2-qt-in" maxlength="140" placeholder="What needs doing?" enterkeyhint="done" autocomplete="off" value="${esc(prefill)}"><button class="m2-go" aria-label="Add task">${ic('up', 20)}</button></form>
       <p class="m2-fine">Lands in Backlog. Anyone (or their Claude) can take it.</p>`, { id: 'm2-task-sheet', label: 'New task' });
     const inp = el.querySelector('#m2-qt-in'); setTimeout(() => inp.focus(), 60);
+    if (window.TribeAssist) window.TribeAssist.ideas(el, { compact: true, force: true });   // feat/assist: suggested tasks
     el.querySelector('#m2-qt').onsubmit = async e => {
       e.preventDefault(); const v = inp.value.trim(); if (!v) return;
       try { await window.TribeTasks.create(v, 'backlog'); closeSheet(); toast('Task added'); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } catch (err) { toast(err.message); }
@@ -900,6 +901,7 @@
         <div class="m2-si-b"><button class="take" data-take>${ic('hand', 16)}Take it</button>${ag ? `<button class="claude" data-give>${ic('spark', 15)}Give to Claude</button>` : ''}</div></div>`).join('')
         || `<p class="m2-empty">${sugg.items ? 'Nothing open. Suggest something below.' : 'Loading…'}</p>`}</div>
       <form class="m2-quick" data-sugg-form><input maxlength="140" placeholder="Suggest a task…" enterkeyhint="done" autocomplete="off" aria-label="Suggest a task"><button class="m2-go" aria-label="Add suggestion">${ic('up', 18)}</button></form>`;
+    if (view === 'tasks' && window.TribeAssist) window.TribeAssist.ideas(box, { compact: true });   // feat/assist: ideas from the vision, template and repo
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest && e.target.closest('.m2-si [data-take], .m2-si [data-give]'); if (!b) return;
