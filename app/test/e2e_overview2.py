@@ -75,19 +75,19 @@ def main():
             # 3. Onboarding checklist: ticks itself
             assert "Onboarding Checklist" in host.text_content("#pj-check h3")
             host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
-            host.wait_for_selector("#pj-check [data-step=task]:not(.on) .pc-below [data-ck=newtask].primary")
+            host.wait_for_selector("#pj-check [data-step=task]:not(.on) .ock-below [data-ck=newtask].primary")
             assert host.locator("#pj-check [data-step=task] [data-ck=invite]").count() == 1
-            n0 = host.evaluate("+document.querySelector('#pj-check .pc-bar').getAttribute('aria-valuenow')")
+            n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
             st, _ = api("/tasks", "POST", {"title": "Draw the title screen"}, token=tok, headers={"X-Project": pid}); assert st in (200, 201), st
             host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000)
-            assert host.evaluate("+document.querySelector('#pj-check .pc-bar').getAttribute('aria-valuenow')") == n0 + 1
-            assert host.get_attribute("#pj-check [data-step=task] .pc-box", "aria-checked") == "true"
+            assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1
+            assert host.get_attribute("#pj-check [data-step=task] .ock-box", "aria-checked") == "true"
             # collapse, remembered across a reload
             host.click("#pj-check-fold"); host.wait_for_selector("#pj-check.folded")
-            assert host.locator("#pj-check .pc-list").is_hidden() and host.locator("#pj-check .pc-bar").is_visible()
+            assert host.locator("#pj-check .ock-list").is_hidden() and host.locator("#pj-check .ock-bar").is_visible()
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.folded", timeout=15000)
-            host.click("#pj-check-fold"); host.wait_for_selector("#pj-check:not(.folded) .pc-list", state="visible")
+            host.click("#pj-check-fold"); host.wait_for_selector("#pj-check:not(.folded) .ock-list", state="visible")
 
             # 4. Tribe & Agents
             wait_text = lambda sel, t: host.wait_for_function("([s, t]) => (document.querySelector(s) || {}).textContent?.includes(t)", arg=[sel, t], timeout=10000)

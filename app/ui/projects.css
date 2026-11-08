@@ -245,34 +245,34 @@
 /* Onboarding Checklist: 3px green accent, a thin progress bar, ticking rows */
 .pj-check { position: relative; margin: 0 0 16px; padding: 16px 20px 14px 23px; background: var(--surface); border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; }
 .pj-check::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ov-green); }
-.pc-head { display: flex; align-items: center; gap: 10px; }
-.pc-head h3 { margin: 0; font-size: 16px; font-weight: 650; }
-.pc-n { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
-.pc-fold { margin-left: auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); }
-.pc-fold:hover { background: var(--hover, var(--surface-2)); color: var(--text); }
-.pc-fold svg.i { transform: rotate(180deg); transition: transform .15s var(--ease); }
-.pj-check.folded .pc-fold svg.i { transform: none; }
-.pc-bar { height: 4px; margin: 10px 0 6px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
-.pc-bar span { display: block; height: 100%; background: var(--ov-green); border-radius: 2px; transition: width .3s var(--ease); }
-.pj-check.folded .pc-list { display: none; }
-.pj-check.folded .pc-bar { margin-bottom: 0; }
-.pc-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid var(--stroke); }
-.pc-row:first-child { border-top: 0; }
-.pc-box { flex: none; width: 20px; height: 20px; margin-top: 4px; border-radius: 6px; border: 1.5px solid var(--edge-pop); display: grid; place-items: center; }
-.pc-row.on .pc-box { background: var(--ov-green); border-color: var(--ov-green); color: var(--canvas); }
-.pc-box svg.i, .pc-allset svg.i { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.6; }
-.pc-main { flex: 1; min-width: 0; }
-.pc-line { display: flex; align-items: center; gap: 12px; min-height: 28px; }
-.pc-l { font-size: 14.5px; color: var(--text); }
-.pc-row.on .pc-l { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
-.pc-acts { margin-left: auto; display: flex; gap: 8px; flex: none; }
-.pc-below { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.ock-head { display: flex; align-items: center; gap: 10px; }
+.ock-head h3 { margin: 0; font-size: 16px; font-weight: 650; }
+.ock-n { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
+.ock-fold { margin-left: auto; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); }
+.ock-fold:hover { background: var(--hover, var(--surface-2)); color: var(--text); }
+.ock-fold svg.i { transform: rotate(180deg); transition: transform .15s var(--ease); }
+.pj-check.folded .ock-fold svg.i { transform: none; }
+.ock-bar { height: 4px; margin: 10px 0 6px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.ock-bar span { display: block; height: 100%; background: var(--ov-green); border-radius: 2px; transition: width .3s var(--ease); }
+.pj-check.folded .ock-list { display: none; }
+.pj-check.folded .ock-bar { margin-bottom: 0; }
+.ock-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid var(--stroke); }
+.ock-row:first-child { border-top: 0; }
+.ock-box { flex: none; width: 20px; height: 20px; margin-top: 4px; border-radius: 6px; border: 1.5px solid var(--edge-pop); display: grid; place-items: center; }
+.ock-row.on .ock-box { background: var(--ov-green); border-color: var(--ov-green); color: var(--canvas); }
+.ock-box svg.i, .ock-allset svg.i { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.6; }
+.ock-main { flex: 1; min-width: 0; }
+.ock-line { display: flex; align-items: center; gap: 12px; min-height: 28px; }
+.ock-l { font-size: 14.5px; color: var(--text); }
+.ock-row.on .ock-l { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+.ock-acts { margin-left: auto; display: flex; gap: 8px; flex: none; }
+.ock-below { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .pj-check .btn.sm { height: 30px; padding: 0 12px; font-size: 13px; }
 .pj-check.done { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 20px; }
-.pc-allset { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; color: var(--ov-green-ink); flex: none; }
-.pc-allsub { font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pc-x { margin-left: auto; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); flex: none; }
-.pc-x:hover { background: var(--hover, var(--surface-2)); color: var(--text); }
+.ock-allset { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; color: var(--ov-green-ink); flex: none; }
+.ock-allsub { font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ock-x { margin-left: auto; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); flex: none; }
+.ock-x:hover { background: var(--hover, var(--surface-2)); color: var(--text); }
 /* Sections: a plain 18px title, then a two-column grid of cards */
 .pj-overview .pj-sec { margin-top: 36px; }
 .pj-sec-t { font-family: var(--font); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 14px; color: var(--text); }
@@ -301,12 +301,12 @@ button.linkish.pj-h-act { font-size: 13px; }
 @media (max-width: 820px) {
   .pj-overview .pj-living { margin: 14px 0 12px; padding: 13px; }
   .pj-check { padding: 12px 14px 10px 17px; margin-bottom: 12px; }
-  .pc-line { gap: 8px; }
-  .pc-l { font-size: 14px; min-width: 0; }
-  .pc-acts .btn, .pc-below .btn { width: auto; flex: none; }
+  .ock-line { gap: 8px; }
+  .ock-l { font-size: 14px; min-width: 0; }
+  .ock-acts .btn, .ock-below .btn { width: auto; flex: none; }
   .pj-overview .pj-sec { margin-top: 22px; }
   .pj-sec-t { margin-bottom: 10px; }
   .pj-overview .pj-grid { gap: 12px; grid-template-columns: minmax(0, 1fr); }
   .pj-overview .pj-grid > .card { padding: 14px; }
-  .pj-check.done .pc-allsub { display: none; }
+  .pj-check.done .ock-allsub { display: none; }
 }
