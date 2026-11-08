@@ -137,14 +137,14 @@ def main():
             pp = pg.context.new_page(); pp.goto(BASE + "pricing.html"); pp.wait_for_load_state("load")
             assert "Prices aren't final. TribeCode stays free and open source." in pp.inner_text(".pr-hero")
             names = pp.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-name')].map(e => e.textContent.trim().split(' ').pop())")
-            assert names == ["Free", "Campfire", "Crew", "Bonfire"], names
-            assert "Most popular" in pp.inner_text("[data-tier=crew]")
-            for t, price in [("free", "$0"), ("campfire", "$8"), ("crew", "$30"), ("bonfire", "$100")]:
+            assert names == ["Free", "Personal", "Team", "Pro"], names
+            assert "Most popular" in pp.inner_text("[data-tier=team]")
+            for t, price in [("free", "$0"), ("personal", "$8"), ("team", "$30"), ("pro", "$100")]:
                 assert price in pp.inner_text(f"[data-tier={t}]"), t
             assert pp.evaluate("[...document.querySelectorAll('.pr-page button.pr-btn')].every(b => b.disabled && /coming soon/i.test(b.textContent))")
             assert pp.locator("[data-tier=free] a.pr-btn").inner_text().strip() == "Download"
             assert pp.locator("[data-panel=teams]").is_hidden(); pp.click(".pr-tab[data-tab=teams]")
-            assert pp.locator("[data-panel=teams]").is_visible() and "$25" in pp.inner_text("[data-tier=teams]")
+            assert pp.locator("[data-panel=teams]").is_visible() and "$25" in pp.inner_text("[data-tier=business]")
             assert "$10" in pp.inner_text("[data-tier=credits]") and "own key" in pp.inner_text("[data-tier=credits]")
             assert "Anthropic" not in pp.inner_text("body"); pp.close()
             assert "Anthropic" not in pg.inner_text("body")

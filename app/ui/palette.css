@@ -179,7 +179,7 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .room-next { margin: 0 0 18px; display: grid; gap: 8px; }
 .rn-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2px; }
 .rn-head .eyebrow { color: var(--accent-ink, #E58A5E); }
-.rn-n { font-size: 12.5px; color: var(--faint); }
+.rn-n { font-size: 13px; color: var(--faint); }
 .rn-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); color: var(--text); }
 .rn-card:hover { background: var(--hover); border-color: var(--edge-pop, var(--edge)); }
 .rn-card.first { border-color: color-mix(in srgb, var(--action, #B4512A) 55%, var(--edge)); background: color-mix(in srgb, var(--action, #B4512A) 9%, var(--raised)); }
@@ -193,3 +193,4 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .fl-bar { border-radius: 12px; height: 44px; }
 .ff-foot .fl-bar { border-radius: 14px; height: 48px; }
 .fl-bar .fl-send { border-radius: 9px; }
+#room-pane .pf-grp, #room-pane .pf-grp span { font-size: 13px !important; }

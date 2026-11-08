@@ -182,6 +182,7 @@ def main():
 
             # ---- the room panel: readable, fewer lines
             host.click("#nest-overview")
+            host.evaluate("TribeStage && TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:true, repo:true}, {pin:true})")   # past setup: the panel shows everything
             host.wait_for_selector("#room-helpers [data-helper='flint']", timeout=45000)
             host.wait_for_selector("#cc-connect", state="visible")
             assert host.locator("#room-helpers .hp-pill").count() >= 2, "helpers are pills"

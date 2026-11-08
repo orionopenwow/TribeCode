@@ -74,7 +74,7 @@ def main():
             assert host.evaluate("document.querySelector('#room-next').getBoundingClientRect().top < document.querySelector('#room-list').getBoundingClientRect().top"), "next steps sit at the top"
             assert host.locator("#room-helpers").is_hidden()
             # ---- once the tribe is going: the full chips and the privacy line on an empty thread
-            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:false, repo:true})")
+            host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:false, repo:true}, {pin:true})")
             host.wait_for_selector("#room-next", state="detached", timeout=5000)
             chips = host.locator("#flint .fl-chip").all_text_contents()
             assert chips == ["Connect my AI", "Capture a note", "What's happening?", "How do invites work?"], chips
@@ -135,7 +135,7 @@ def main():
             ph.evaluate("TribeMobile.talkTo()")   # Talk to… (opened from the side panel, Agents, or here)
             ph.wait_for_selector("#m2-talk-sheet [data-talk='flint']", state="visible")
             assert "Qwen" not in ph.text_content("#m2-talk-sheet")
-            ph.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:false, repo:true})")
+            ph.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:false, repo:true}, {pin:true})")
             ph.click("#m2-talk-sheet [data-talk='flint']")
             ph.wait_for_selector("#flint-full:not(.hidden) #ff-input", state="visible")
             assert ph.locator("#flint-full .fl-chip").count() == 4
