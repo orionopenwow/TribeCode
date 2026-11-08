@@ -102,6 +102,7 @@
         '-',
         { label: (bySlug.get(cur.slug) || cur).pinned ? 'Unpin' : 'Pin to the top', icon: 'i-pin', run: () => setMeta(cur.slug, { pinned: !(bySlug.get(cur.slug) || cur).pinned }) },
         { label: 'Page history', icon: 'i-history', run: () => history(cur.slug) },
+        ...(window.TribeRich ? [{ label: window.TribeRich.markdown() ? 'View formatted' : 'View Markdown', icon: 'i-doc', run: () => { window.TribeRich.setMarkdown(!window.TribeRich.markdown()); D().setMode('write'); } }] : []),   // feat/richtext
         '-',
         { label: 'Delete doc…', icon: 'i-x', run: () => confirmDelete(cur, pane.querySelector('#dx-more')) },
       ]);

@@ -269,6 +269,7 @@
       const L = DL();
       const acts = `<div class="doc-toolbar dl-acts">${seg}
           <button class="btn ghost dx-tool" id="dl-ai" title="Ask AI about this doc" aria-label="Ask AI">${L.ico('sparkle', 18)}</button>
+          ${remote() ? '' : `<button class="btn ghost dx-tool" id="dl-more" title="More" aria-label="More">${L.ico('more', 18)}</button>`}
           ${remote() ? `<button class="btn ghost dl-act" id="dl-link" title="Copy a link to this doc" aria-label="Copy link">${L.ico('share', 17)}<span>Share</span></button>` : ''}
           <button class="btn ghost dx-tool" id="doc-del" title="Delete doc" aria-label="Delete doc">${L.ico('trash', 17)}</button>
           <button class="btn ghost dx-tool" id="dl-close" title="Close doc" aria-label="Close doc">${L.ico('close', 17)}</button></div>`;
@@ -294,11 +295,12 @@
         ${seg}
         <span class="faint" id="doc-status">${esc(statusText())}</span>
         <span class="doc-peers hidden" id="doc-peers" aria-live="polite"></span>
-        ${DL() ? `<button class="btn ghost dl-olb" id="dl-outline-btn" aria-label="Outline" title="Outline" style="margin-left:auto">${DL().ico('outline', 18)}</button><button class="btn ghost dl-olb" id="dl-ai" aria-label="Ask AI" title="Ask AI">${DL().ico('sparkle', 18)}</button>` : ''}
+        ${DL() ? `<button class="btn ghost dl-olb" id="dl-outline-btn" aria-label="Outline" title="Outline" style="margin-left:auto">${DL().ico('outline', 18)}</button><button class="btn ghost dl-olb" id="dl-ai" aria-label="Ask AI" title="Ask AI">${DL().ico('sparkle', 18)}</button>${remote() ? '' : `<button class="btn ghost dl-olb" id="dl-more" aria-label="More" title="More">${DL().ico('more', 18)}</button>`}` : ''}
         <button class="btn ghost" id="doc-del" title="Delete doc"${DL() ? '' : ' style="margin-left:auto"'}><svg class="i"><use href="#i-x"/></svg>Delete</button>
       </div>${page}`;
     }
     renderTldr();
+    if (window.TribeRich && mode === 'write') window.TribeRich.upgrade($('#doc-body'));   // feat/richtext: formatted editing; #doc-body keeps the textarea API
     const ta = $('#doc-body'), title = $('#doc-title');
     if (inLive()) sess.attach(ta);
     autosize(ta); renderPeers();
@@ -325,6 +327,9 @@
     L.bind(pane, () => $('#doc-body'));
     const olb = $('#dl-outline-btn'); if (olb) olb.onclick = () => L.outlineSheet({ ta: () => $('#doc-body'), read: () => $('#doc-read') });
     const aib = $('#dl-ai'); if (aib) aib.onclick = () => L.aiSheet($('#doc-body'), { anchor: aib, title: cur ? cur.title : 'this doc' });
+    const mb = $('#dl-more');   // feat/richtext: ⋮ More when offline (docsx's ⋯ menu has View Markdown in a tribe)
+    if (mb) mb.onclick = () => L.menuSheet({ title: 'More', anchor: mb, items: [{ label: 'Find and replace', icon: 'find', run: () => L.findSheet($('#doc-body'), { anchor: mb }) },
+      ...(window.TribeRich ? [window.TribeRich.menuItem(() => { if (mode !== 'write') mode = 'write'; renderEditor(); })] : [])] });
     const name = $('#dl-name');
     if (name) L.mirror(name, title, () => ta.focus());
     const olEl = $('#dl-outline');
@@ -423,6 +428,7 @@
     hideSlash(); autosize(ta); changed(); ta.focus();
   }
   function caretXY(ta, pos) {
+    if (ta.rtMeasure) return ta.rtMeasure([pos])[0] || { x: 0, y: 0 };   // feat/richtext
     const m = document.createElement('div'), cs = getComputedStyle(ta);
     ['fontFamily', 'fontSize', 'lineHeight', 'padding', 'border', 'letterSpacing', 'whiteSpace', 'wordWrap', 'width', 'boxSizing'].forEach(k => (m.style[k] = cs[k]));
     Object.assign(m.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre-wrap', wordWrap: 'break-word', top: 0, left: 0 });

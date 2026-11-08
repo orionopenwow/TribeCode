@@ -211,7 +211,7 @@ def main():
             host.keyboard.type("Forest biome")
             host.keyboard.press("Enter")
             host.keyboard.type("Shared inventory")
-            assert "- [ ] Forest biome\n- [ ] Shared inventory" in host.input_value("#doc-body"), host.input_value("#doc-body")
+            assert "- [ ] Forest biome\n- [ ] Shared inventory" in host.evaluate("document.querySelector('#doc-body').value"), host.evaluate("document.querySelector('#doc-body').value")
             wait_text(host, "#doc-status", "Saved")
             friend.click('[data-nav="docs"]:visible')
             wait_text(friend, "#doc-list", "Game design doc")

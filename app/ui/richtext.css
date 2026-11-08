@@ -1,0 +1,47 @@
+/* Rich text editing surface (richtext.js) for project docs and personal notes. Flat matte per docs/DESIGN-SYSTEM.md:
+   theme variables only, 1px borders, depth from luminance steps; no glows, blur, gradients or shadows. */
+.rt { position: relative; display: block; width: 100%; min-height: 320px; height: auto !important; outline: none; color: var(--text);
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; caret-color: var(--accent); font: 15.5px/1.75 var(--font); cursor: text; -webkit-user-modify: read-write; }
+.rt:focus-visible { outline: none; }
+.dl-page .rt { font-size: 16px; line-height: var(--dl-lh, 1.6); min-height: 50vh; }
+.gd-body .rt, .note-ed .ne-body .rt { font-size: 16px; line-height: var(--dl-lh, 1.6); min-height: 240px; flex: none; }
+.rt.rt-empty::before { content: attr(data-ph); position: absolute; left: 0; top: 0; color: var(--faint); pointer-events: none; }
+
+/* blocks: one Markdown line each; blank lines are empty paragraphs, so paragraphs need no margins of their own */
+.rt > .rt-b { margin: 0; padding: 0; min-height: 1em; }
+.rt > .rt-p, .rt > .rt-li, .rt > .rt-ol, .rt > .rt-todo { margin: 0; }
+.rt > h1.rt-h, .rt > h2.rt-h, .rt > h3.rt-h, .rt > h4.rt-h { margin: .55em 0 .15em; line-height: 1.3; letter-spacing: -0.015em; font-weight: 700; color: var(--text); }
+.rt > h1.rt-h:first-child, .rt > h2.rt-h:first-child, .rt > h3.rt-h:first-child, .rt > h4.rt-h:first-child { margin-top: 0; }
+.rt > h1.rt-h { font-size: 1.95em; letter-spacing: -0.02em; }
+.rt > h2.rt-h { font-size: 1.45em; }
+.rt > h3.rt-h { font-size: 1.2em; }
+.rt > h4.rt-h { font-size: 1.05em; }
+.rt > .rt-sub { font-size: 1.15em; color: var(--muted); margin: .1em 0 .4em; }
+
+/* lists: one item per line; the bullet / number / checkbox sits in the left gutter (indent: --ind steps of 1.5em) */
+.rt > .rt-li, .rt > .rt-ol, .rt > .rt-todo { position: relative; padding-left: calc(1.6em + var(--ind, 0) * 1.5em); }
+.rt > .rt-li::before { content: '•'; position: absolute; left: calc(var(--ind, 0) * 1.5em + .45em); color: var(--muted); }
+.rt > .rt-ol::before { content: attr(data-n); position: absolute; left: calc(var(--ind, 0) * 1.5em); width: 1.35em; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rt .rt-cb { position: absolute; left: calc(var(--ind, 0) * 1.5em + .15em); top: calc((1lh - 16px) / 2); width: 16px; height: 16px; box-sizing: border-box; border: 1.5px solid var(--muted);
+  border-radius: 4px; background: var(--surface); cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.rt .rt-cb::before { content: ''; position: absolute; inset: -10px; }   /* a bigger tap target */
+.rt > .rt-todo.done .rt-cb { background: var(--accent-2); border-color: var(--accent-2); }
+.rt > .rt-todo.done .rt-cb::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid var(--canvas); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.rt > .rt-todo.done { color: var(--faint); text-decoration: line-through; text-decoration-color: var(--faint); }
+
+.rt > .rt-q { border-left: 2px solid var(--edge); padding-left: 14px; color: var(--muted); margin: 0; }
+.rt > .rt-hr { padding: .7em 0; cursor: default; user-select: none; }
+.rt > .rt-hr hr { margin: 0; border: 0; border-top: 1px solid var(--edge); }
+.rt > .rt-code { margin: .3em 0; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--edge); border-radius: 8px; font: 13.5px/1.6 var(--mono); color: var(--text);
+  white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.rt > .rt-table { margin: .3em 0; max-width: 100%; overflow-x: auto; }
+.rt > .rt-table table { margin: 0; border-collapse: collapse; font-size: 14px; }
+.rt > .rt-table th, .rt > .rt-table td { min-width: 4em; border: 1px solid var(--edge); padding: 6px 10px; text-align: left; vertical-align: top; white-space: pre-wrap; }
+.rt > .rt-table th { background: var(--surface-2); font-weight: 600; }
+.rt code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
+.rt a { color: var(--accent-ink); text-underline-offset: 2px; cursor: text; }
+.rt u { text-underline-offset: 3px; }
+@media (max-width: 820px) {
+  .rt { font-size: 16px; }   /* no iOS zoom on focus */
+  .rt > .rt-table th, .rt > .rt-table td { min-width: 3em; padding: 5px 8px; }
+}
