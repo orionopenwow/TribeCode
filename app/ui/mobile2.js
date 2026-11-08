@@ -74,7 +74,7 @@
     document.body.prepend(s);
   })();
   const ic = (id, sz = 20) => `<svg class="i m2i" style="width:${sz}px;height:${sz}px" aria-hidden="true"><use href="#m2i-${id}"/></svg>`;
-  const avatar = (m, cls = '') => m && m.role === 'agent'
+  const avatar = (m, cls = '') => window.TribeProfiles && m && m.profile && m.profile.avatar ? window.TribeProfiles.avatar(m, 'm2-av ' + cls) : m && m.role === 'agent'   // feat/profiles: emoji / pixel / photo avatars
     ? `<span class="m2-av agent ${cls}">${ic('spark', 14)}</span>`
     : `<span class="m2-av ${cls}" style="background:${esc((m && m.color) || '#6C7CFF')};color:${ink((m && m.color) || '#6C7CFF')}">${esc(initials(m && m.name))}</span>`;
 
@@ -647,7 +647,8 @@
     const where = (members().find(x => x.id === m.id) || {}).what || (m.online ? 'online' : 'away');
     const projects = (PJ() && PJ().list ? PJ().list() : []);
     const shared = projects.filter(p => PJ().here && PJ().here(p.id).some(x => (x.id || x) === m.id));
-    const head = `<div class="m2-pf-top">${avatar(m, 'xl')}<div class="m2-pf-id"><b>${esc(m.name)}</b><small><i class="m2-on ${m.online || mine ? 'y' : ''}"></i>${mine ? 'You' : esc(m.online ? 'online' : 'away')}${m.role === 'host' && !window.TribeRoles ? ' · host' : ''}${m.role === 'spectator' ? ' · watching' : ''}${window.TribeRoles ? window.TribeRoles.badge(m) : ''}</small></div></div>`;   // feat/roles: role badge
+    const PF = window.TribeProfiles, pst = PF && PF.statusOf(member(m.id) || m);   // feat/profiles: status, pronouns, edit / full profile
+    const head = `<div class="m2-pf-top">${avatar(member(m.id) || m, 'xl')}<div class="m2-pf-id"><b>${esc(PF ? PF.displayName(member(m.id) || m) : m.name)}</b>${pst ? `<small class="m2-pf-cs">${PF.statusLine(pst)}</small>` : ''}<small><i class="m2-on ${m.online || mine ? 'y' : ''}"></i>${mine ? 'You' : esc(m.online ? 'online' : 'away')}${m.role === 'host' && !window.TribeRoles ? ' · host' : ''}${m.role === 'spectator' ? ' · watching' : ''}${window.TribeRoles ? window.TribeRoles.badge(m) : ''}</small></div></div>`;
     let body;
     if (pane === 'net') {
       body = `<div class="m2-pf-h"><button class="m2-back" data-pf="main" aria-label="Back">${ic('back', 18)}</button>${mine ? 'Your network' : esc(m.name) + "'s network"}</div>
@@ -664,6 +665,7 @@
           <button data-pf="notify">${ic('bell', 20)}<span>Alerts</span></button>
           <button data-pf="settings">${ic('gear', 20)}<span>Settings</span></button>
         </div>
+        ${window.TribeProfiles ? '<button class="m2-pf-more" data-pf="editprofile">Edit profile and status</button>' : ''}
         ${window.TribeGuide ? '<button class="m2-pf-more" data-pf="guide">Guide: how to TribeCode</button>' : ''}`;   // feat/vision-guide: tucked under the actions
     } else {
       body = `${head}
@@ -676,6 +678,7 @@
           <button data-pf="ask" ${ag ? '' : 'disabled'}>${ic('spark', 20)}<span>Ask Claude</span></button>
         </div>
         ${window.TribeRoles ? window.TribeRoles.memberActions(m, { cls: 'btn soft' }) : ''}
+        ${window.TribeProfiles ? '<button class="m2-pf-more" data-pf="fullprofile">Full profile</button>' : ''}
         ${window.TribePeople ? `<button class="m2-pf-agent m2-pf-activity" data-pf="activity">${ic('net', 18)}<span><b>Activity</b><small>Commits, prompts, chat and notes</small></span>${ic('right', 16)}</button>` : ''}
         ${ag ? '' : `<p class="m2-fine">${esc(m.name)} hasn't connected a Claude Code yet.</p>`}`;
     }
@@ -688,6 +691,8 @@
       closeSheet();
       if (k === 'dm') return DM() && DM().open(m.id);
       if (k === 'activity') return window.TribePeople && window.TribePeople.open(m.id);
+      if (k === 'editprofile') return window.TribeProfiles.edit();   // feat/profiles
+      if (k === 'fullprofile') return window.TribeProfiles.open(m.id);
       if (k === 'claude') return DM() && DM().open(ag.id);
       if (k === 'connect') return App().connectClaude ? App().connectClaude() : $('#cc-connect').click();
       if (k === 'invite') return App().openInvite();

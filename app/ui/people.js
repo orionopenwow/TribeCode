@@ -311,7 +311,7 @@
     if (t.closest('#person-panel')) return;
     // room list: the avatar opens the profile; the rest of the row keeps its menu (Message / Follow) and gains "Profile"
     const row = t.closest('#room-list .person[data-follow]');
-    if (row) { lastRow = row.dataset.follow; if (t.closest('.avatar')) { e.preventDefault(); e.stopPropagation(); open(row.dataset.follow); } return; }
+    if (row) { lastRow = row.dataset.follow; if (t.closest('.avatar') && !window.TribeProfiles) { e.preventDefault(); e.stopPropagation(); open(row.dataset.follow); } return; }   // feat/profiles: with profiles.js the avatar opens the popout; its View activity opens this panel
     // agents at a glance (right panel) and agent cards: the name opens the profile
     const ag = t.closest('#room-agents .ra-row[data-agent] b, .ag-card[data-agent] .ag-t b, .ag-card[data-agent] .ag-ico');
     if (ag) { e.preventDefault(); e.stopPropagation(); open(ag.closest('[data-agent]').dataset.agent); return; }
@@ -320,7 +320,7 @@
   }, true);
   document.addEventListener('click', e => {
     const t = e.target; if (!t.closest) return;
-    const hit = t.closest('.msg[data-by] > .avatar, .msg[data-by] .mb > b'); if (!hit) return;
+    const hit = !window.TribeProfiles && t.closest('.msg[data-by] > .avatar, .msg[data-by] .mb > b'); if (!hit) return;   // feat/profiles: names open the popout
     const by = hit.closest('.msg').dataset.by; if (isSys(by)) return;
     open(by);
   });

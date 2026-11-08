@@ -160,10 +160,12 @@
     // Connect your Claude Code: one clear card, only while your own agent isn't connected (feat/sidebar-widgets)
     const cc = $('#cc-connect'); if (cc) cc.classList.toggle('hidden', list.some(m => m.role === 'agent' && m.owner === meId && m.online));
     const shown = list.filter(m => m.role !== 'agent');   // agents have their own list below (coord.js #room-agents)
-    $('#room-list').innerHTML = shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(m => `
+    const roomRow = m => `
       <div class="person ${m.online ? 'on' : ''} ${m.role === 'agent' ? 'agent' : ''}" data-follow="${esc(m.id)}" title="${m.online && m.id !== meId && m.role !== 'agent' ? 'Click to follow ' + esc(m.name) : ''}">
       <div class="avatar" style="background:${m.role === 'agent' ? 'var(--surface-3)' : esc(m.color)};color:${ink(m.color)}">${m.role === 'agent' ? '🤖' : esc(initials(m.name))}<span class="st"></span></div>
-      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}${(C.state().huddle || []).some(h => h.id === m.id) ? ' <span title="In the huddle">🎙️</span>' : ''}${window.TribeRoles ? window.TribeRoles.badge(m, { quiet: true }) : m.role === 'host' ? ' <span class="rm-pill">host</span>' : ''}</span><div class="what">${m.online ? (window.TribeProjects ? window.TribeProjects.whereLabel(m) : '') + esc(m.where || 'Home') : m.role === 'agent' ? 'idle' : 'offline'}</div></div></div>`).join('');   // online: the avatar's dot; host: a small pill
+      <div><span>${esc(m.name)}${meId === m.id ? ' <span class="faint">(you)</span>' : ''}${(C.state().huddle || []).some(h => h.id === m.id) ? ' <span title="In the huddle">🎙️</span>' : ''}${window.TribeRoles ? window.TribeRoles.badge(m, { quiet: true }) : m.role === 'host' ? ' <span class="rm-pill">host</span>' : ''}</span><div class="what">${m.online ? (window.TribeProjects ? window.TribeProjects.whereLabel(m) : '') + esc(m.where || 'Home') : m.role === 'agent' ? 'idle' : 'offline'}</div></div></div>`;   // online: the avatar's dot; host: a small pill
+    $('#room-list').innerHTML = window.TribeProfiles ? window.TribeProfiles.grouped(shown, roomRow)   // feat/profiles: grouped by presence (Online / Idle / Do not disturb / Offline)
+      : shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(roomRow).join('');
     $('#room-list').querySelectorAll('[data-follow]').forEach(el => el.onclick = () => follow(el.dataset.follow));
     $('#room-hint').classList.toggle('hidden', shown.length > 1);
     $('#room-hint').textContent = 'Invite friends to see them here.';
