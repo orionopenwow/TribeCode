@@ -125,3 +125,6 @@ body.dt-on .sc-cele { bottom: 132px; }
   .dt-end-flint { animation: none; }
   .dt-ripple { display: none; }
 }
+
+/* while Flint introduces a chapter, his bubble says it: the caption steps aside */
+body.dt-narr .dt-cap { opacity: 0; }

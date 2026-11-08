@@ -174,6 +174,8 @@
     ],
   };
 
+  // A calm pace: every pause in these scripts runs 1.8x longer, so there's time to read each line before the next appears
+  const PACE = 1.8;
   function runLoop(root, ops) {
     let visible = false, undo = [], restart = false;
     const tick = () => visible && !document.hidden && root.dataset.paused !== '1';   // paused once a visitor types or clicks around in the stage
@@ -186,7 +188,7 @@
     async function exec(op, instant) {
       const [k, a, b] = op;
       const el = typeof a === 'string' ? $(a, root) : null;
-      if (k === 'wait') return wait(a, instant);
+      if (k === 'wait') return wait(a * PACE, instant);
       if (k === 'show' && el) { el.classList.add('on'); undo.push(() => el.classList.remove('on')); }
       else if (k === 'hide' && el) { el.classList.remove('on'); }
       else if (k === 'next') { const n = $$('[data-step]:not(.on)', root)[0]; if (n) { n.classList.add('on'); undo.push(() => n.classList.remove('on')); } }
@@ -199,7 +201,7 @@
         undo.push(() => { el.textContent = ''; el.classList.remove('is-typing'); });
         if (instant) { el.textContent = full; return; }
         el.classList.add('is-typing');
-        for (let i = 0; i < full.length;) { i = Math.min(full.length, i + 1 + (Math.random() * 3 | 0)); el.textContent = full.slice(0, i); await wait(28 + Math.random() * 24); }
+        for (let i = 0; i < full.length;) { i = Math.min(full.length, i + 1 + (Math.random() * 2 | 0)); el.textContent = full.slice(0, i); await wait(42 + Math.random() * 30); }
         el.classList.remove('is-typing');
       }
     }
@@ -558,15 +560,19 @@
       { k: 'download', re: /download|install|windows|mac|linux|desktop|setup/, a: 'The desktop app runs on Windows, Apple Silicon Macs and Linux. It hosts your tribe and updates itself.', act: 'download' },
       { k: 'host', re: /host|server|24\/7|always on|tailscale|network|offline/, a: 'Your tribe’s code lives in your shared GitHub repo. To make it quicker, someone can keep the tribe online on their own computer or a small server, and friends connect with a link. Chat, docs and code are plain files.', act: 'docs' },
       { k: 'mission', re: /mission|why|who made|open source|license/, a: 'TribeCode is built in the open so friends can make things together without a big platform in the middle. The Mission page says more.', act: 'mission' },
-      { k: 'what', re: /what\s+is|what's|whats|tribecode|about|explain|how does it work/, a: 'TribeCode is a free, open-source app where friends and their AI agents build one app together, in one room. One friend’s computer hosts it. Everyone else joins with a link.', act: 'demo' },
+      { k: 'what', re: /what\s+is|what's|whats|tribecode|about|explain|how does it work/, a: 'TribeCode is a free, open-source app where friends and their AI agents build one app together, in one room. The work lives in your shared GitHub repo, and friends join with a link.', act: 'demo' },
       { k: 'hi', re: /^(hi|hey|hello|yo|hiya|sup)\b/, a: 'Hi! Ask me anything about TribeCode, or pick a question below.' },
       { k: 'thanks', re: /thank|thx|cheers/, a: 'Happy to help. Have fun building.' },
     ];
-    const CHIPS = [['What is TribeCode?', 'what'], ['Is it free?', 'free'], ['Which AI works?', 'ai'], ['How do friends join?', 'join'], ['Show me a demo', 'demo'], ['Download', 'download']];
+    const CHIPS = [...(onHome ? [['Show me around', 'tour']] : []), ['What is TribeCode?', 'what'], ['Is it free?', 'free'], ['Which AI works?', 'ai'], ['How do friends join?', 'join'], ['Show me a demo', 'demo'], ['Download', 'download']];
 
     const wrap = document.createElement('div'); wrap.className = 'flint-float';
     wrap.innerHTML = `
-      <div class="flint-bubble" id="flint-bubble" hidden><span>Click me to learn more</span><button type="button" class="flint-bubble__x" aria-label="Dismiss">×</button></div>
+      <div class="flint-bubble flint-hello" id="flint-bubble" role="dialog" aria-labelledby="flint-hello-t" hidden>
+        <button type="button" class="flint-bubble__x" aria-label="Dismiss">×</button>
+        <div class="flint-hello__top"><img src="assets/brand/flint.svg" alt="" width="34" height="44"><div><b id="flint-hello-t">Hi, I’m Flint, your guide</b><span>${onHome ? 'Want me to show you around? It takes about a minute.' : 'Ask me anything about TribeCode.'}</span></div></div>
+        <div class="flint-hello__acts">${onHome ? '<button type="button" class="flint-act" data-hello="tour">Show me around</button>' : ''}<button type="button" class="flint-act flint-act--ghost" data-hello="ask">Ask a question</button></div>
+      </div>
       <div class="flint-panel" id="flint-panel" role="dialog" aria-modal="true" aria-labelledby="flint-title" hidden>
         <div class="flint-panel__head"><img src="assets/brand/flint.svg" alt="" width="28" height="36"><div><b id="flint-title">Flint</b><span>a quick guide to TribeCode</span></div><button type="button" class="flint-panel__x" aria-label="Close">×</button></div>
         <div class="flint-panel__log" aria-live="polite" aria-relevant="additions">
@@ -583,13 +589,16 @@
     const SEEN = 'tc.flint.bubble';
     let bubbleTimer = null;
     const hideBubble = () => { bubble.hidden = true; clearTimeout(bubbleTimer); ls.set(SEEN, '1'); };
+    // First visit: Flint says hi and offers a short tour. It stays until you pick something or close it (phones: it
+    // tucks away after 20 s). After that it never pops up again; the tour lives in his panel as "Show me around".
     if (ls.get(SEEN) !== '1') setTimeout(() => {
-      if (!panel.hidden || wrap.classList.contains('is-away')) return;
-      bubble.hidden = false; ls.set(SEEN, '1');            // one time only: it never comes back after this visit
-      bubbleTimer = setTimeout(() => { bubble.hidden = true; }, matchMedia('(max-width: 640px)').matches ? 7000 : 12000);
-    }, 3000);
-    $('.flint-bubble__x', bubble).addEventListener('click', e => { e.stopPropagation(); hideBubble(); });
-    bubble.addEventListener('click', () => { hideBubble(); open(); });
+      if (!panel.hidden || wrap.classList.contains('is-away') || document.body.classList.contains('ftour-on')) return;
+      bubble.hidden = false; wrap.classList.add('is-hello'); ls.set(SEEN, '1');   // shown once per visitor
+      if (matchMedia('(max-width: 640px)').matches) bubbleTimer = setTimeout(() => { bubble.hidden = true; wrap.classList.remove('is-hello'); }, 20000);
+    }, 1600);
+    const hideHello = () => { hideBubble(); wrap.classList.remove('is-hello'); };
+    $('.flint-bubble__x', bubble).addEventListener('click', e => { e.stopPropagation(); hideHello(); });
+    bubble.addEventListener('click', e => { const b = e.target.closest('[data-hello]'); if (!b) return; hideHello(); if (b.dataset.hello === 'tour') tour(); else open(); });
 
     function say(html, who) {
       const m = document.createElement('div'); m.className = 'flint-msg' + (who === 'me' ? ' flint-msg--me' : '');
@@ -607,7 +616,59 @@
         }
       }, 260);
     }
-    $$('.flint-chip', wrap).forEach(c => c.addEventListener('click', () => answer(c.dataset.q, c.textContent)));
+    $$('.flint-chip', wrap).forEach(c => c.addEventListener('click', () => { if (c.dataset.q === 'tour') { close(); tour(); } else answer(c.dataset.q, c.textContent); }));
+
+    // ---------- "Show me around": Flint walks the home page one section at a time ----------
+    // Each step scrolls the section into view, rings it (the rest of the page dims a little) and explains it in a line.
+    // You set the pace: Next / Back, arrow keys, Esc to stop. The section's own little demo plays while it's lit.
+    const STEPS = [
+      ['.hero', 'This is TribeCode: one room where your friends and their AI agents build the same app. Try typing an idea in the chat box here.'],
+      ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
+      ['#phone', 'Friends join from a phone with one link. When an agent needs a yes, it arrives as one tap.'],
+      ['#lanes', 'Each agent works in its own lane, so nobody collides. When two need the same file they hand it off, and a person approves the merge.'],
+      ['#host', 'Your code lives in your shared GitHub repo. Want it quicker? Keep the tribe online on your own computer or a small server.'],
+      ['#starters', 'Not sure what to build? Pick a starter: a game, an app, a site or a tool.'],
+      ['#download', 'That’s the tour. Open TribeCode in your browser to try it, or download the desktop app. It’s free.'],
+    ];
+    let tr = null;
+    function tour(at = 0) {
+      const steps = STEPS.filter(([sel]) => $(sel)); if (!steps.length) return;
+      endTour();
+      document.body.classList.add('ftour-on'); wrap.classList.add('is-away');
+      const ring = document.createElement('div'); ring.className = 'ftour-ring'; ring.setAttribute('aria-hidden', 'true');
+      const card = document.createElement('div'); card.className = 'ftour-card'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-live', 'polite'); card.setAttribute('aria-label', 'Tour of TribeCode');
+      document.body.append(ring, card);
+      tr = { i: at, steps, ring, card, sec: null };
+      const place = () => { if (!tr || !tr.sec) return; const r = tr.sec.getBoundingClientRect(), pad = 10; ring.style.cssText = `left:${Math.max(4, r.left - pad)}px;top:${r.top - pad}px;width:${Math.min(innerWidth - 8, r.width + pad * 2)}px;height:${Math.min(r.height + pad * 2, innerHeight * 3)}px`; };
+      tr.place = place; addEventListener('scroll', place, { passive: true }); addEventListener('resize', place);
+      tr.key = e => { if (!tr) return; if (e.key === 'Escape') { e.preventDefault(); endTour(); } else if (e.key === 'ArrowRight' || e.key === 'Enter' && e.target === document.body) { e.preventDefault(); go(tr.i + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); go(tr.i - 1); } };
+      addEventListener('keydown', tr.key);
+      go(at);
+    }
+    function go(i) {
+      if (!tr) return;
+      if (i >= tr.steps.length) return endTour(true);
+      tr.i = Math.max(0, i);
+      const [sel, text] = tr.steps[tr.i], sec = $(sel); tr.sec = sec;
+      const box = sec.querySelector('.container, .wrap, .inner') || sec;
+      tr.sec = box;
+      box.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: box.getBoundingClientRect().height > innerHeight * 0.8 ? 'start' : 'center' });
+      tr.ring.classList.remove('on');
+      const last = tr.i === tr.steps.length - 1;
+      tr.card.innerHTML = `<img src="assets/brand/flint.svg" alt="" width="34" height="44"><div class="ftour-card__body"><p>${esc(text)}</p>
+        <div class="ftour-card__acts"><span class="ftour-n mono">${tr.i + 1} / ${tr.steps.length}</span><span class="ftour-sp"></span>
+        ${tr.i > 0 ? '<button type="button" class="ftour-btn ftour-btn--ghost" data-t="back">Back</button>' : '<button type="button" class="ftour-btn ftour-btn--ghost" data-t="end">Skip</button>'}
+        ${last ? '<a class="ftour-btn" href="app/?welcome=1" data-t="app">Open the app</a><button type="button" class="ftour-btn ftour-btn--ghost" data-t="end">Done</button>' : '<button type="button" class="ftour-btn" data-t="next">Next</button>'}</div></div>`;
+      tr.card.querySelectorAll('[data-t]').forEach(b => b.addEventListener('click', () => { const t = b.dataset.t; if (t === 'next') go(tr.i + 1); else if (t === 'back') go(tr.i - 1); else if (t === 'end') endTour(true); else endTour(); }));
+      setTimeout(() => { if (!tr) return; tr.place(); tr.ring.classList.add('on'); const n = tr.card.querySelector('[data-t="next"], [data-t="app"]'); if (n) n.focus({ preventScroll: true }); }, reduce ? 30 : 650);
+    }
+    function endTour(thanks) {
+      if (!tr) return;
+      removeEventListener('scroll', tr.place); removeEventListener('resize', tr.place); removeEventListener('keydown', tr.key);
+      tr.ring.remove(); tr.card.remove(); tr = null;
+      document.body.classList.remove('ftour-on'); wrap.classList.remove('is-away'); ls.set(SEEN, '1');
+      if (thanks) { open(); say('<p>Thanks for taking the tour! Ask me anything else, or open the app and make your first tribe.</p><a class="flint-act" href="app/?welcome=1">Open the app</a>'); }
+    }
     form.addEventListener('submit', e => { e.preventDefault(); const t = input.value.trim(); if (!t) return; input.value = ''; answer(null, t); });
 
     function open() {

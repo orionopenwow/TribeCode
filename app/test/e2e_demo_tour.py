@@ -107,10 +107,17 @@ def main():
             assert pg.locator("#dt-bar").count() == 0
 
             # ---- the chapter bar at normal speed ----
+            # Flint introduces each chapter: he rings the place it's about and waits for you (or about a reading's worth)
             pg.evaluate("TribeDirector.start()")
+            pg.wait_for_selector("#fg-bubble.on", timeout=8000)
+            assert "Flint" in pg.text_content("#fg-bubble") and "1 / 15" in pg.text_content("#fg-bubble")
+            e0 = state(pg)["elapsed"]; time.sleep(0.8); assert state(pg)["elapsed"] == e0, "the clock waits while Flint talks"
+            pg.click("#fg-next"); pg.wait_for_function("TribeDirector._test.state().elapsed > 0", timeout=5000)
+            pg.evaluate("TribeDirector.stop()")
+            pg.evaluate("TribeDirector.start({ narrate: false })")
             pg.wait_for_selector("#dt-bar", state="visible")
             for sel in ["#dt-play", "#dt-skip", "#dt-speed", "#dt-try", "#dt-leave", "#dt-chaps [data-i='14']", "#dt-cap"]: assert pg.locator(sel).count() == 1, sel
-            assert "/ 3:00" in pg.text_content("#dt-time"), pg.text_content("#dt-time")
+            assert "/ 4:" in pg.text_content("#dt-time"), pg.text_content("#dt-time")   # a calm pace: a little over four minutes
             time.sleep(1.2)
             if shots: time.sleep(2); pg.screenshot(path=str(SHOTS / "demo-tour-desktop.png"))
             pg.click("#dt-play"); assert state(pg)["paused"]
@@ -128,7 +135,7 @@ def main():
             pg.wait_for_function("document.body.dataset.view === 'chat'", timeout=8000)
             pg.wait_for_selector(".dt-cur[data-who='me']", state="attached", timeout=8000)   # a ghost cursor with a name
             assert pg.text_content(".dt-cur[data-who='me'] .dt-name") == "Orion"
-            assert "Messages" in pg.text_content("#dt-cap")
+            pg.wait_for_function("document.querySelector('#dt-cap').textContent.includes('Messages')", timeout=5000)
             # clicking into the app yourself pauses the tour
             pg.mouse.click(700, 300); assert state(pg)["paused"]
             pg.click("#dt-play")
@@ -171,7 +178,7 @@ def main():
             sideways(ph, "phone end")
             if shots: ph.screenshot(path=str(SHOTS / "demo-tour-phone-end.png"))
             ph.evaluate("TribeDirector.start()"); ph.wait_for_selector("#dt-bar", state="visible")
-            assert "/ 1:29" in ph.text_content("#dt-time") or "/ 1:30" in ph.text_content("#dt-time"), ph.text_content("#dt-time")
+            assert "/ 2:0" in ph.text_content("#dt-time"), ph.text_content("#dt-time")   # the calm phone cut: about two minutes
             ph.tap("#dt-skip"); ph.wait_for_function("TribeDirector._test.state().id === 'tasks'", timeout=5000)
             sideways(ph, "phone tour")
             if shots: time.sleep(3); ph.screenshot(path=str(SHOTS / "demo-tour-phone.png"))
