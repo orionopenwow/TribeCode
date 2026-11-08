@@ -117,7 +117,7 @@ def main():
                 assert host.locator("#ah-status").count() == 1 and "connect" in host.text_content("#ah-status").lower()
                 if kind == "codex":
                     assert "Orion's Codex" in host.text_content("#ah-connect"), host.text_content("#ah-connect")
-                    if take: host.locator("#ah-connect").scroll_into_view_if_needed(); host.wait_for_timeout(200); host.screenshot(path=str(SHOTS / "any-llm-agents.png"))
+                    if take: host.evaluate("document.querySelector('#ah-connect').scrollIntoView({block: 'end'})"); host.wait_for_timeout(300); host.screenshot(path=str(SHOTS / "any-llm-agents.png"))
             names = [a["name"] for a in api("/agents/mine", token=htok)[1]["agents"]]
             for n in ["Orion's Codex", "Orion's Gemini", "Orion's Qwen", "Orion's Cursor"]: assert n in names, names
 
