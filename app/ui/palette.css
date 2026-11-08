@@ -170,7 +170,7 @@ button.claude[data-give]::before { content: '✨'; }
 }
 
 /* ---- the room panel starts simple and grows with the project (stage.js sets body[data-stage]) ---- */
-body:not(.global)[data-stage="new"] #room-helpers, body:not(.global)[data-stage="growing"] #room-helpers { display: none !important; }
+body:not(.global)[data-stage="new"] #room-helpers { display: none !important; }
 body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="new"] #room-scratch { display: none !important; }
 #tour-room .fl-chips.fl-nudges, .fl-chips.fl-nudges { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
 .fl-chip.fl-nudge { border-color: color-mix(in srgb, var(--action, #B4512A) 40%, var(--edge)); }
