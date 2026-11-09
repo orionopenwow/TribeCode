@@ -19,7 +19,7 @@
 .sg-on { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; font-size: 13.5px; cursor: pointer; }
 .sg-on input { accent-color: var(--live); margin: 0; }
 .sg-on input:disabled + span { color: var(--muted); }
-.sg-tag { font-style: normal; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
+.sg-tag { font-style: normal; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
 .sg-edit { font-size: 13px; }
 .sg-ed { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-top: 1px solid var(--edge); background: var(--surface-2); }
 .sg-ed .wb-lbl { margin: 4px 0 0; }

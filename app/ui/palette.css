@@ -209,7 +209,7 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 /* simple-dashboard: At a glance tiles, Recent changes + Up next, a slim Add files row, the rest under "More about" */
 .pj-glance .pl-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .pj-glance .pl-cell { min-height: 72px; align-items: center; }
-.pj-glance .pl-cell small { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; }
+.pj-glance .pl-cell small { font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; }
 .pj-glance .pl-cell b { font-size: 15px; }
 .pj-glance .pl-cell.hot { border-color: var(--brand, #F26B1D); background: color-mix(in srgb, var(--brand, #F26B1D) 8%, var(--surface)); }
 .pj-files-row { padding: 14px 16px; }

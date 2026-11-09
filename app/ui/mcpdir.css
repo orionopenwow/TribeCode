@@ -35,8 +35,8 @@
 .mcd-id { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 2px; }
 .mcd-id b { font-size: 14px; font-weight: 650; color: var(--text); display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mcd-id span { font-size: 12.5px; line-height: 1.45; color: var(--muted); }
-.mcd-need { font-size: 11.5px; color: var(--amber, #FFB86B); }
-.mcd-on { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--agents-ink, var(--live-ink)); }
+.mcd-need { font-size: 12.5px; color: var(--amber, #FFB86B); }
+.mcd-on { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--agents-ink, var(--live-ink)); }
 .mcd-on i, .mcd-st i { width: 6px; height: 6px; border-radius: 50%; background: var(--agents, var(--live)); display: inline-block; }
 
 /* tonal teal buttons (agent things); the hero alone is .btn.primary */
@@ -53,7 +53,7 @@
 
 /* Connected */
 .mcd-list .mcd-row { padding: 12px 0; }
-.mcd-st { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); padding: 3px 8px; border: 1px solid var(--edge); border-radius: 999px; flex: none; }
+.mcd-st { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); padding: 3px 8px; border: 1px solid var(--edge); border-radius: 999px; flex: none; }
 .mcd-st:not(.live) i { background: var(--faint); }
 .mcd-st.live { color: var(--agents-ink, var(--live-ink)); }
 .mcd-rm { color: var(--faint); height: 32px; font-size: 13px; flex: none; }
@@ -63,13 +63,13 @@
 
 /* Apps on this computer */
 .mcd-apps { margin-top: 44px; }
-.mcd-ro { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.mcd-ro { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
 .mcd-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
 .mcd-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); min-width: 0; }
 .mcd-card-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .mcd-path { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
-.mcd-path code { font-family: var(--mono); font-size: 11.5px; color: var(--text); }
-.mcd-lab { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+.mcd-path code { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.mcd-lab { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
 .mcd-field { display: flex; gap: 8px; min-width: 0; }
 .mcd-field .input, .mcd-two .input { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; font-family: var(--mono); font-size: 12px; }
 .mcd-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }

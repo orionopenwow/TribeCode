@@ -7,13 +7,13 @@
 /* header: eyebrow + the board's name (a menu of boards), who is here, export */
 .wbd-head { display: flex; align-items: center; gap: 14px; padding: 14px 20px 12px; border-bottom: 1px solid var(--edge); background: var(--surface); min-height: 64px; }
 .wbd-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.wbd-title .eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.wbd-title .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 .wbd-name { display: inline-flex; align-items: center; gap: 4px; padding: 0; background: none; border: 0; color: var(--text); font: 650 18px/1.2 var(--display, var(--font)); cursor: pointer; max-width: 46vw; }
 .wbd-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wbd-name .wbd-i { color: var(--faint); flex: none; }
 .wbd-name:hover .wbd-i { color: var(--text); }
 .wbd-peers { display: flex; gap: 0; margin-left: 4px; }
-.wbd-peer { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #12151A; background: var(--c); border: 2px solid var(--surface); margin-left: -6px; }
+.wbd-peer { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: #12151A; background: var(--c); border: 2px solid var(--surface); margin-left: -6px; }
 .wbd-peer:first-child { margin-left: 0; }
 .wbd-ro { font-size: 13px; color: var(--muted); padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; white-space: nowrap; }
 .wbd-acts { margin-left: auto; display: flex; gap: 8px; }
@@ -33,7 +33,7 @@
 
 .wbd-cursors { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .wbd-cur { position: absolute; left: 0; top: 0; display: flex; align-items: flex-start; gap: 2px; transition: transform .08s linear; }
-.wbd-cur span { margin-top: 12px; font-size: 11.5px; font-weight: 600; color: #12151A; background: var(--c); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.wbd-cur span { margin-top: 12px; font-size: 12.5px; font-weight: 600; color: #12151A; background: var(--c); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
 
 .wbd-empty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; max-width: min(360px, 80vw); }
 .wbd-empty[hidden] { display: none; }
@@ -83,7 +83,7 @@
 .wbd-pop hr { border: 0; border-top: 1px solid var(--edge); margin: 4px 0; }
 .wbd-boards button { display: flex; align-items: center; gap: 8px; }
 .wbd-bn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
-.wbd-boards small { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.wbd-boards small { font-family: var(--mono); font-size: 12px; color: var(--faint); }
 .wbd-pop .wbd-i { width: 16px; height: 16px; flex: none; }
 
 /* + Add gallery: the whiteboard's mini preview */

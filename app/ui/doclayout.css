@@ -2,7 +2,7 @@
    Flat matte per docs/DESIGN-SYSTEM.md: 1px borders, depth only from luminance steps (canvas < page),
    no glows, blur, gradients or drop shadows. */
 .dl-i { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.dl-eyebrow { font: 500 10.5px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.dl-eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 
 /* ---------- desktop: the Docs view becomes the editor ---------- */
 .docs-grid.dl-on { display: block; }
@@ -187,7 +187,7 @@ body.light .md .tc-green { color: #1E7F43; }
 .dl-styles { display: flex; flex-direction: column; margin-bottom: 8px; }
 .dl-styles .dl-mi { min-height: 44px; }
 .dl-styles .dl-mi .dl-i { color: var(--accent-ink); }
-.dl-sub { margin: 12px 2px 6px; font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.dl-sub { margin: 12px 2px 6px; font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 .dl-sub small { text-transform: none; letter-spacing: 0; }
 .dl-row4, .dl-row2 { display: flex; gap: 6px; margin-bottom: 8px; }
 .dl-pb { flex: 1; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); color: var(--text); font: 600 14px var(--font); cursor: pointer; }

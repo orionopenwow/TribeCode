@@ -17,15 +17,15 @@
   border-radius: var(--r-lg); box-shadow: none; padding: 18px 18px 14px; font-size: 13.5px; animation: pill-in .18s var(--ease); }
 .up-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .up-head b { font-size: 15px; letter-spacing: -0.01em; }
-.up-head .faint { font-family: var(--mono); font-size: 11px; margin-top: 3px; }
+.up-head .faint { font-family: var(--mono); font-size: 12px; margin-top: 3px; }
 .up-badge { width: 34px; height: 34px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--live-tint); color: var(--live-ink); flex: none; }
 .up-x { margin-left: auto; height: 30px; width: 30px; padding: 0; }
 .up-sec { border-top: 1px solid var(--edge); padding: 12px 0 4px; }
-.up-sec h6 { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+.up-sec h6 { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
 .up-notes { padding-left: 18px; color: var(--muted); line-height: 1.6; font-size: 13px; }
 .up-step { display: flex; align-items: flex-start; gap: 11px; padding: 8px 0; }
 .up-step small { display: block; color: var(--faint); font-size: 12px; margin-top: 2px; }
-.up-step code { font-family: var(--mono); font-size: 11.5px; }
+.up-step code { font-family: var(--mono); font-size: 12.5px; }
 .up-ic { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--faint); flex: none; margin-top: 1px; position: relative; }
 .up-step.busy .up-ic { border-color: var(--accent-2); border-top-color: transparent; animation: spin .8s linear infinite; }
 .up-step.done .up-ic { background: var(--accent-2); border-color: var(--accent-2); }

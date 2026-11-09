@@ -74,9 +74,9 @@ body.light {
 .msg.dx.brain .mb > p { color: inherit; }
 .msg.dx .mb p strong { color: inherit; font-weight: 650; }
 .msg .mt { float: right; position: relative; top: 5px; display: inline-flex; align-items: center; gap: 3px; margin: 0 0 0 10px; height: 16px; line-height: 16px;
-  font-family: var(--font); font-size: 11px; font-weight: 400; color: var(--bubble-other-meta); white-space: nowrap; user-select: none; }
+  font-family: var(--font); font-size: 12px; font-weight: 400; color: var(--bubble-other-meta); white-space: nowrap; user-select: none; }
 .msg .mt time { margin: 0; font-family: inherit; font-size: inherit; color: inherit; }
-.msg .mt .edited { margin: 0 2px 0 0; font-family: inherit; font-size: 10.5px; font-style: italic; color: inherit; }
+.msg .mt .edited { margin: 0 2px 0 0; font-family: inherit; font-size: 12px; font-style: italic; color: inherit; }
 .msg.dx.mine .mt { color: var(--bubble-mine-meta); }
 .mt .tk { display: inline-flex; align-items: center; }
 .mt .tk svg.i { width: 15px; height: 15px; stroke-width: 1.8; }
@@ -105,7 +105,7 @@ body.light .mt .tk.read { color: var(--live-ink); }
 .msg.dx .rx.on:hover { border-color: var(--accent); background: rgba(242, 107, 29, .28); }
 .msg.dx.mine .rx { background: var(--bubble-mine-chip); }
 .msg.dx.mine .rx.on { background: rgba(242, 107, 29, .34); }
-.msg.dx .rx-n { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); }
+.msg.dx .rx-n { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); }
 .msg.dx.mine .rx-n { color: var(--bubble-mine-meta); }
 .msg.dx .rx.on .rx-n { color: var(--accent-ink); }
 .msg.dx .rx.has-f .rx-n { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -175,8 +175,8 @@ body.light .mt .tk.read { color: var(--live-ink); }
 
 /* date pills; the unread line */
 .day-sep { display: flex; justify-content: center; margin: 14px 0 4px; flex: none; }
-.day-sep span { padding: 3px 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--day-pill); font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); }
-.time-sep { display: flex; justify-content: center; margin: 14px 0 2px; flex: none; font-size: 11.5px; color: var(--faint); }
+.day-sep span { padding: 3px 11px; border: 1px solid var(--edge); border-radius: 999px; background: var(--day-pill); font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); }
+.time-sep { display: flex; justify-content: center; margin: 14px 0 2px; flex: none; font-size: 12.5px; color: var(--faint); }
 .day-sep + .msg.dx, .time-sep + .msg.dx { margin-top: 6px; }
 #chat-list .unread-div, #dm-list .unread-div { margin: 12px 0 2px; flex: none; }
 
@@ -223,7 +223,7 @@ body.light .mt .tk.read { color: var(--live-ink); }
 .msg.dx .fchip-dl .i { width: 18px; height: 18px; flex: none; color: var(--brand); }
 .msg.dx .fchip-dl .fd-t { display: flex; flex-direction: column; min-width: 0; }
 .msg.dx .fchip-dl b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.msg.dx .fchip-dl small { color: var(--body); font-size: 11.5px; font-family: var(--mono); }
+.msg.dx .fchip-dl small { color: var(--body); font-size: 12.5px; font-family: var(--mono); }
 
 /* "Load earlier messages" at the top of a long chat */
 .chat-more { display: block; margin: 6px auto 14px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--body); font: 500 12px/1.4 var(--mono); cursor: pointer; }

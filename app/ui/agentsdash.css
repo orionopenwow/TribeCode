@@ -61,7 +61,7 @@
 /* needs you */
 .ad-need { display: flex; align-items: center; gap: 14px; padding: 13px 0; transition: opacity .18s var(--ease); }
 .ad-need.done { opacity: 0; }
-.ad-kind { flex: none; min-width: 84px; text-align: center; font-family: var(--mono); font-size: 11.5px; letter-spacing: .02em; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--edge); color: var(--muted); background: var(--surface-2); }
+.ad-kind { flex: none; min-width: 84px; text-align: center; font-family: var(--mono); font-size: 12.5px; letter-spacing: .02em; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--edge); color: var(--muted); background: var(--surface-2); }
 .ad-kind.k-review { color: var(--people-ink); background: var(--people-soft); border-color: color-mix(in srgb, var(--people) 35%, var(--edge)); }
 .ad-kind.k-handoff, .ad-kind.k-approval { color: var(--agents-ink); background: var(--agents-soft); border-color: color-mix(in srgb, var(--agents) 35%, var(--edge)); }
 .ad-kind.k-conflict, .ad-kind.k-budget { color: var(--amber-ink); background: var(--amber-soft); border-color: color-mix(in srgb, #FABD2F 35%, var(--edge)); }

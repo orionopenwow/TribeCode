@@ -51,7 +51,7 @@ input, select { font: inherit; color: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2;   /* the thicker phone-rack weight, on desktop too */ stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .hidden { display: none !important; }
-kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; padding: 0 5px; border-radius: 4px; border: 1px solid var(--edge); color: var(--muted); background: var(--surface-2); }
+kbd, .kbd { font-family: var(--mono); font-size: 12px; line-height: 1.5; padding: 0 5px; border-radius: 4px; border: 1px solid var(--edge); color: var(--muted); background: var(--surface-2); }
 
 /* ---------- app shell: one flat window, edge-to-edge bento panels split by hairlines ---------- */
 .shell { position: relative; z-index: 1; height: 100vh; padding: 12px; }
@@ -75,19 +75,19 @@ kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; paddi
 .rail .spacer { flex: 1; }
 .avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 650; color: #fff; flex: none; }
 .side { border-right: 1px solid var(--edge); padding: 16px 12px; font-size: 13.5px; overflow: auto; background: var(--canvas); }
-.side h6, .panel h6 { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.side h6, .panel h6 { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 .side h6 { margin: 20px 8px 8px; }
 .side h6:first-child { margin-top: 2px; }
 .side .item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: var(--r-sm); color: var(--muted); width: 100%; text-align: left; transition: background .15s var(--ease), color .15s var(--ease); }
 .side .item:hover { background: var(--surface); color: var(--text); }
 .side .item.on { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: inset 0 0 0 1px var(--edge); }
-.side .item .n { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.side .item .n { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--faint); }
 .side .invite { color: var(--accent); margin-top: 14px; }
 .main { padding: 28px 36px; overflow: auto; background: var(--canvas); }
 .panel { border-left: 1px solid var(--edge); padding: 16px; display: flex; flex-direction: column; gap: 14px; font-size: 13px; overflow: auto; background: var(--surface); }
 .card { background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); padding: 16px 18px; box-shadow: none; }
 .panel .card { background: var(--canvas); }
-.chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 11px; line-height: 1.4; padding: 2px 8px; border-radius: 6px; background: var(--chip); color: var(--accent-ink); font-weight: 500; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 12px; line-height: 1.4; padding: 2px 8px; border-radius: 6px; background: var(--chip); color: var(--accent-ink); font-weight: 500; }
 .chip.teal { background: var(--live-tint); color: var(--live-ink); }
 .chip.peer { background: var(--peer-tint); color: var(--peer-ink); }
 .muted { color: var(--muted); } .faint { color: var(--faint); }
@@ -98,7 +98,7 @@ kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; paddi
 .home-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; align-items: start; }
 .card h3 { font-size: 15px; font-weight: 650; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.005em; }
 .card .lead { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
-#tour-checklist .lead { font-family: var(--mono); font-size: 11.5px; }
+#tour-checklist .lead { font-family: var(--mono); font-size: 12.5px; }
 #check-count { color: var(--text); }
 .progress { height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; margin: 8px 0 12px; }
 .progress i { display: block; height: 100%; border-radius: 3px; background: var(--accent-2); transition: width .2s var(--ease); }
@@ -114,9 +114,9 @@ kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; paddi
 .dropzone svg.i { width: 26px; height: 26px; margin-bottom: 8px; color: var(--live-ink); }
 .drops { margin-top: 10px; font-size: 12.5px; text-align: left; }
 .drops div { display: flex; gap: 8px; padding: 4px 0; }
-.drops .faint { font-family: var(--mono); font-size: 11px; }
+.drops .faint { font-family: var(--mono); font-size: 12px; }
 .person { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-.person .what { font-size: 11.5px; color: var(--faint); }
+.person .what { font-size: 12.5px; color: var(--faint); }
 .empty-room { font-size: 12.5px; color: var(--faint); line-height: 1.5; }
 .btn { white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 600;
   border: 1px solid var(--edge); background: var(--surface); color: var(--text); transition: background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease); }
@@ -149,7 +149,7 @@ kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; paddi
 .perk b { display: block; color: var(--text); font-size: 13.5px; margin: 10px 0 3px; }
 .perk svg.i { color: var(--live-ink); }
 .field { margin-bottom: 18px; }
-.field label { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; font-weight: 500; }
+.field label { display: block; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; font-weight: 500; }
 .input { width: 100%; height: 44px; border-radius: var(--r-sm); border: 1px solid var(--edge); background: var(--surface-2); padding: 0 14px; font-size: 15px; box-shadow: none; transition: border-color .15s var(--ease); }
 .input::placeholder { color: var(--faint); }
 .input:focus { outline: none; border-color: var(--accent); }
@@ -196,7 +196,7 @@ kbd, .kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1.5; paddi
 .tour { position: fixed; inset: 0; z-index: 40; }
 .tour .spot { position: fixed; border-radius: var(--r); box-shadow: 0 0 0 9999px var(--scrim); transition: all .22s var(--ease); pointer-events: none; border: 2px solid var(--accent-2); }
 .tour .tip { position: fixed; width: 320px; background: var(--surface); border: 1px solid var(--edge-pop); border-radius: var(--r); box-shadow: none; padding: 16px 18px 14px; transition: top .22s var(--ease), left .22s var(--ease); }
-.tour .tip .step { font-family: var(--mono); font-size: 10.5px; color: var(--live-ink); font-weight: 500; letter-spacing: .08em; margin-bottom: 8px; }
+.tour .tip .step { font-family: var(--mono); font-size: 12px; color: var(--live-ink); font-weight: 500; letter-spacing: .08em; margin-bottom: 8px; }
 .tour .tip h4 { font-size: 16px; font-weight: 650; margin-bottom: 6px; letter-spacing: -0.01em; }
 .tour .tip p { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
 .tour .tip .row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
@@ -217,7 +217,7 @@ body.compact .side .item { padding: 5px 8px; }
 /* join page (join.html): flatten its inline card styles to the system radii */
 .join .jc { width: min(460px, calc(100vw - 40px)); border-radius: var(--r-lg); background: var(--surface); }
 .join .jc img.brand-wm { margin-left: auto !important; margin-right: auto !important; }
-.join .fine { font-family: var(--mono); font-size: 11px; }
+.join .fine { font-family: var(--mono); font-size: 12px; }
 @media (max-width: 520px) { body .join { padding: 12px; } .join .jc { width: calc(100vw - 24px); padding: 28px 20px; } }
 .join .jc > img { border-radius: 0; }
 .join .jc .btn.big { border-radius: var(--r-sm); background: var(--accent); border-color: var(--accent); color: #FFFFFF; }

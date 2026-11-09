@@ -11,10 +11,10 @@
 .sh-note.ok { border-color: color-mix(in srgb, var(--online) 40%, var(--edge)); }
 .sh-note.warn { border-color: color-mix(in srgb, var(--amber) 50%, var(--edge)); }
 .sh-people, .sh-files, .sh-tasks, .sh-votes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.sh-k { font: 600 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-right: 4px; }
+.sh-k { font: 600 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-right: 4px; }
 .sh-who { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface-2); font-size: 13px; }
 .sh-who.agent { border-color: color-mix(in srgb, var(--live) 45%, var(--edge)); }
-.sh-who b { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
+.sh-who b { font-family: var(--mono); font-size: 12.5px; color: var(--faint); }
 .sh-commits { display: grid; gap: 2px; border: 1px solid var(--edge); border-radius: 10px; padding: 4px; background: var(--surface-2); }
 .sh-commit { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; font-size: 13.5px; }
 .sh-commit:hover { background: var(--surface-3); }
