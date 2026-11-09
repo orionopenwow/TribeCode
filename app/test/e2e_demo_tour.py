@@ -108,11 +108,14 @@ def main():
 
             # ---- the chapter bar at normal speed ----
             # Flint introduces each chapter: he rings the place it's about and waits for you (or about a reading's worth)
+            # v0.22: three slides first, then Flint shows and tells with a spotlight; nothing to click
             pg.evaluate("TribeDirector.start()")
-            pg.wait_for_selector("#fg-bubble.on", timeout=8000)
-            assert "Flint" in pg.text_content("#fg-bubble") and "1 / 15" in pg.text_content("#fg-bubble")
-            e0 = state(pg)["elapsed"]; time.sleep(0.8); assert state(pg)["elapsed"] == e0, "the clock waits while Flint talks"
-            pg.click("#fg-next"); pg.wait_for_function("TribeDirector._test.state().elapsed > 0", timeout=5000)
+            pg.wait_for_selector("#dt-intro", timeout=5000)
+            assert "1 of 3" in pg.text_content("#dt-intro") and "what you will see" in pg.text_content("#dt-intro").lower()
+            pg.click("#dt-in-skip")
+            pg.wait_for_selector("#dt-say.in", timeout=8000)
+            assert "1/15" in pg.text_content("#dt-say") and pg.locator("#dt-spot").count() == 1
+            pg.wait_for_function("TribeDirector._test.state().elapsed > 0", timeout=20000)   # it moves on by itself
             pg.evaluate("TribeDirector.stop()")
             pg.evaluate("TribeDirector.start({ narrate: false })")
             pg.wait_for_selector("#dt-bar", state="visible")
@@ -177,7 +180,7 @@ def main():
             box = ph.locator("#dt-bar").bounding_box(); assert box["x"] >= 0 and box["x"] + box["width"] <= 391, box
             sideways(ph, "phone end")
             if shots: ph.screenshot(path=str(SHOTS / "demo-tour-phone-end.png"))
-            ph.evaluate("TribeDirector.start({ watch: true })"); ph.wait_for_selector("#dt-bar", state="visible")
+            ph.evaluate("TribeDirector.start({ watch: true, noIntro: true })"); ph.wait_for_selector("#dt-bar", state="visible")
             assert "/ 2:0" in ph.text_content("#dt-time"), ph.text_content("#dt-time")   # the calm phone cut: about two minutes
             ph.tap("#dt-skip"); ph.wait_for_function("TribeDirector._test.state().id === 'tasks'", timeout=5000)
             sideways(ph, "phone tour")
