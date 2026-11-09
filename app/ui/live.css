@@ -193,3 +193,7 @@ textarea.input { height: 220px; padding: 12px 14px; font-family: var(--mono); fo
 .ap-comments b { color: var(--text); margin-right: 4px; }
 .ap-say { display: flex; gap: 6px; } .ap-say .input { flex: 1; min-width: 0; height: 40px; } .ap-say .btn { height: 40px; }
 .ap-withdraw { align-self: flex-start; font-size: 12.5px; color: var(--faint); }
+/* feat/ship-flow: split a task into smaller ones */
+.task .split { position: absolute; top: 6px; right: 32px; width: 22px; height: 22px; border-radius: 6px; display: none; place-items: center; font-size: 12px; }
+.task:hover .split { display: grid; } .task .split:hover { background: var(--surface-2); }
+@media (max-width: 820px) { .task .split { position: static; display: grid; flex: none; width: 26px; height: 26px; order: 3; } }
