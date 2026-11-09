@@ -25,3 +25,11 @@
   document.addEventListener('submit', e => { if (e.target && e.target.id === 'chat-form') { nearBottom = true; setTimeout(stick, 120); setTimeout(stick, 600); } }, true);
   window.TribeKeyboard = { sync };
 })();
+// A tiny haptic tick for main actions on phones that support it (Android). Never on every tap: only primary buttons and Send.
+(function () {
+  if (!('vibrate' in navigator) || !matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+  document.addEventListener('pointerup', e => {
+    const b = e.target && e.target.closest && e.target.closest('.btn.primary, .m2-send, #m2-send, #jw-hi, .ap-yes, .ap-no');
+    if (b && !b.disabled) try { navigator.vibrate(6); } catch {}
+  }, { passive: true });
+})();

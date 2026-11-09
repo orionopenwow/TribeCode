@@ -109,7 +109,11 @@
       card.querySelectorAll('[data-vote]').forEach(b => b.onclick = async () => {
         const p = proposals.find(x => x.id === pid), mine = (p.votes || {})[meId()];
         const vote = mine === b.dataset.vote ? 'clear' : b.dataset.vote;
-        try { const r = await C.api(`/proposals/${pid}/vote`, { method: 'POST', body: { vote } }); upsert(r.proposal); } catch (e) { window.TribeApp.toast(e.message); }
+        const before = { ...(p.votes || {}) }, votes = { ...before };   // instant: your vote shows now, the server confirms
+        if (vote === 'clear') delete votes[meId()]; else votes[meId()] = vote;
+        upsert({ ...p, votes });
+        try { const r = await C.api(`/proposals/${pid}/vote`, { method: 'POST', body: { vote } }); upsert(r.proposal); }
+        catch (e) { upsert({ ...p, votes: before }); window.TribeApp.toast('Vote not saved: ' + e.message, 'err'); }
       });
       const w = card.querySelector('[data-withdraw]'); if (w) w.onclick = async () => { try { await C.api('/proposals/' + pid, { method: 'DELETE' }); load(); } catch (e) { window.TribeApp.toast(e.message); } };
       const full = card.querySelector('.ap-full'); if (full) full.addEventListener('toggle', () => { full.open ? open.add(pid) : open.delete(pid); });

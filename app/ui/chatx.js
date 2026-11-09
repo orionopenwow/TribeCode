@@ -564,12 +564,11 @@
     }
     const ch = cur(); if (ch === 'general' && !reply) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    const inp = $('#chat-input'), text = inp.value.trim(); if (!text || !C.connected()) return;
+    const inp = $('#chat-input'), text = inp.value.trim(); if (!text || !C.hasToken()) return;
     const r = reply && reply.ch === ch ? reply.id : undefined;
     inp.value = ''; reply = null; drawReply();
-    C.send({ type: 'typing', channel: ch, stop: true });
-    try { await C.api(`/chat/${ch}/send`, { method: 'POST', body: { text, replyTo: r } }); }
-    catch (err) { inp.value = text; toast(err.message); }
+    if (window.TribeApp && window.TribeApp.sendQueued) window.TribeApp.sendQueued(ch, `/chat/${ch}/send`, { text, replyTo: r });   // instant bubble + outbox
+    else try { await C.api(`/chat/${ch}/send`, { method: 'POST', body: { text, replyTo: r } }); } catch (err) { inp.value = text; toast(err.message); }
   }, true);
 
   // ---------- media: voice player, image lightbox, paste ----------

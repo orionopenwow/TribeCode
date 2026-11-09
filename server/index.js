@@ -296,9 +296,15 @@ function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
 let chatHook = null;
 let captureHook = null;   // feat/captures (server/captures.js onChat)   // the secretary hears @secretary (server/secretary.js)
+// The outbox (app/ui/tribe.js) gives each message a client id (cid): the app shows it at once, the echo replaces it, and a
+// resend after a lost reply posts nothing twice.
+const CID_RE = /^[A-Za-z0-9_-]{6,40}$/, cidSeen = new Map();
+const cidOf = body => (body && typeof body.cid === 'string' && CID_RE.test(body.cid) ? { cid: body.cid } : {});
 function postChat(channel, by, text, extra) {
   if (channel === 'general') channel = P.channelOf(P.current() || P.defaultId());   // project rooms: each project has its own channel
-  const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js)
+  if (extra && extra.cid) { const k = `${channel}:${by}:${extra.cid}`; if (cidSeen.has(k)) return cidSeen.get(k); }
+  const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js), cid (outbox)
+  if (extra && extra.cid) { cidSeen.set(`${channel}:${by}:${extra.cid}`, msg); if (cidSeen.size > 2000) cidSeen.delete(cidSeen.keys().next().value); }
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
   if (!dms.deliver(channel, msg)) broadcast({ type: 'chat', channel, message: msg });   // DMs reach only their two members
   if (by !== 'tribecode' && !channel.startsWith('dm-')) pocket.chat(channel, by, text);   // @mentions -> notification hub
@@ -819,7 +825,8 @@ async function apiInProject(req, res, url) {
       const muted = perms.muteBlock(me); if (muted) return fail(res, 403, muted);   // feat/roles
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
-      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
+      const cid = cidOf(body), dup = !!(cid.cid && cidSeen.has(`${b}:${me.id}:${cid.cid}`));
+      const msg = postChat(b, me.id, text, cid); if (!dup) chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints (not twice for a resend)
       return send(res, 200, { message: msg });
     }
   }

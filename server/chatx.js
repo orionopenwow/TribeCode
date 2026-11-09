@@ -273,7 +273,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       const voted = command(ch, me, text); if (voted) return send(res, 200, { message: voted });
       const orig = body.replyTo ? find(ch, String(body.replyTo)) : null;
       const extra = orig ? { replyTo: { id: orig.id, by: orig.by, text: orig.deleted ? 'message deleted' : clip(orig.text || (orig.media ? (orig.media.kind === 'voice' ? 'Voice note' : orig.media.kind === 'file' ? `File: ${orig.media.name || ''}` : 'Image') : ''), 160) } } : {};
-      const msg = postChat(ch, me.id, text, extra); onPost(ch, me, text, msg);
+      const cid = typeof body.cid === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(body.cid) ? body.cid : null;   // the outbox's client id
+      const msg = postChat(ch, me.id, text, { ...extra, ...(cid ? { cid } : {}) }); if (!cid || msg.cid !== cid || Date.now() - Date.parse(msg.at) < 1500) onPost(ch, me, text, msg);
       return send(res, 200, { message: msg });
     }
 

@@ -318,6 +318,7 @@
       const { messages } = await C.api(`/chat/general?limit=${PAGE}`);
       $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
       $('#chat-list').scrollTop = 1e9;
+      for (const it of (C.outbox ? C.outbox() : [])) if (it.kind === 'chat' && it.ch === 'general' && !messages.some(x => x.cid === it.body.cid)) pendingBubble(it.body.text, it.body.cid, C.connected() ? 'sending' : 'waiting');
     } catch {}
   }
   // Older history, a page at a time, keeping your place in the list.
@@ -410,10 +411,35 @@
   $('#chat-form').addEventListener('submit', async e => {
     e.preventDefault();
     const inp = $('#chat-input'), text = inp.value.trim(); if (!text) return;
-    if (!C.connected()) return openInvite();
+    if (!C.hasToken()) return openInvite();
     inp.value = '';
-    try { await C.api('/chat/general', { method: 'POST', body: { text } }); } catch (err) { inp.value = text; toast(err.message); }
+    sendQueued('general', '/chat/general', { text });
   });
+  // ---------- instant messages (the outbox, tribe.js): your message shows at once, faint until the server has it ----------
+  // Offline or while the tribe wakes up, it waits in the outbox and sends by itself; a refusal marks it with Retry.
+  function pendingBubble(text, cid, state = 'sending') {
+    const list = $('#chat-list'); if (!list) return;
+    if (list.querySelector('.empty-room')) list.innerHTML = '';
+    const me = C.state().me || {}, when = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const old = list.querySelector(`.msg.pending[data-cid="${CSS.escape(cid)}"]`); if (old) old.remove();
+    list.insertAdjacentHTML('beforeend', `<div class="msg mine pending ${state === 'failed' ? 'failed' : ''}" data-cid="${esc(cid)}"><div class="avatar" style="background:${esc(me.color || '#F26B1D')};color:${ink(me.color || '#F26B1D')}">${esc(initials(me.name || 'Me'))}</div>
+      <div><b>${esc(me.name || 'You')}</b><time>${when}</time><p>${md(text)}</p><span class="msg-state">${state === 'failed' ? 'Not sent · <button class="linkish" data-retry>Retry</button> · <button class="linkish" data-drop>Delete</button>' : state === 'waiting' ? 'Waiting to send…' : 'Sending…'}</span></div></div>`);
+    readingHistory = false; list.scrollTop = 1e9;
+  }
+  function sendQueued(ch, path, body) {
+    const cid = C.newId(); pendingBubble(body.text, cid, C.connected() ? 'sending' : 'waiting');
+    C.queue(path, { ...body, cid }, { kind: 'chat', ch });
+    if (C.send) C.send({ type: 'typing', channel: ch, stop: true });
+    return cid;
+  }
+  C.on('outbox-failed', ({ item, error }) => {
+    if (item.kind !== 'chat') return toast(`Couldn't finish that: ${error}`, 'err');
+    pendingBubble(item.body.text, item.body.cid, 'failed'); toast(`Message not sent: ${error}`, 'err');
+    const el = document.querySelector(`.msg.pending[data-cid="${CSS.escape(item.body.cid)}"]`); if (!el) return;
+    el.querySelector('[data-retry]').onclick = () => { pendingBubble(item.body.text, item.body.cid); C.queue(item.path, item.body, { kind: 'chat', ch: item.ch }); };
+    el.querySelector('[data-drop]').onclick = () => el.remove();
+  });
+  C.on('status', st => { if (st.status === 'online') document.querySelectorAll('.msg.pending:not(.failed) .msg-state').forEach(x => { x.textContent = 'Sending…'; }); });
 
   // ---- invites ----
   async function openInvite() {
@@ -746,5 +772,5 @@
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
   C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { show, hostHere, setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();
