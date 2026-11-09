@@ -258,7 +258,7 @@ module.exports = function makeShare({ port, log = console.log }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (m === 'GET') return send(res, 200, status());
     if (me.role !== 'host') return fail(res, 403, 'only the host can share the tribe publicly');
-    if (m === 'POST') { const body = await readBody(req); return send(res, 200, await start(['tailscale', 'cloudflare'].includes(body.provider) ? body.provider : '', { download: !body.auto })); }
+    if (m === 'POST') { const body = await readBody(req); return send(res, 200, await start(['tailscale', 'cloudflare'].includes(body.provider) ? body.provider : '', { download: true }   /* opening Invite friends means you want a link that works from anywhere: fetch Cloudflare's helper if Tailscale can't */)); }
     if (m === 'DELETE') return send(res, 200, stop());
     return null;
   }

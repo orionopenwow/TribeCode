@@ -1,6 +1,6 @@
 [package]
 name = "tribecode"
-version = "0.19.0"
+version = "0.19.5"
 description = "TribeCode desktop app"
 license = "MIT"
 repository = "https://github.com/orionopenwow/TribeCode"
