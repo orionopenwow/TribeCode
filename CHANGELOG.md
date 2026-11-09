@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.21.0 (in progress)
+## v0.21.0
 - **Phones**: the message box no longer brings up the password-autofill bar; it grows to a few lines, Enter sends (Shift+Enter for a new line), and a slim format strip (bold, italic, strike, code, link, list) rides above it while you type. The newest message always sits just above the box, including when the keyboard opens, and the Add to Home Screen tip never covers the chat.
 - **Files**: start anything from the top of Files: a doc, sheet or slides, from a template, by asking Flint, or by uploading files. Cards say exactly what each file is (Sheet, CSV, Slides, Doc) and fit more on screen.
 - **Docs**: one title (the page's), Edit and Preview, a clear ✓ Saved, and a Done button that takes you back to all your files (so does tapping Files again). The page fills the width with no frame around it; the side panel button sits in the toolbar. History, pin, pop out, comment and dictate live in ⋯. No more "Live · synced · v1" or word-count lines; problems like being offline still show.
