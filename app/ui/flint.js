@@ -196,6 +196,15 @@
     const pid = PJ() && PJ().current && PJ().current(); if (!pid) return say('Open a project first, then ask me again.');
     const how = /\b(shuffle|another|different|new layout)\b/.test(t) ? 'shuffle' : /\b(redo|refresh|regenerate)\b/.test(t) ? 'regenerate' : 'generate';
     try {
+      // feat/site-builder: "make a website" / "build a site for my bakery" runs Instant (the kind of site is guessed from the words)
+      if (how === 'generate') {
+        const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/instant`, { method: 'POST', body: { hint: t } });
+        const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a', T = (G.types.find(x => x.id === r.type) || {}).name || 'site';
+        if (window.TribeSiteGen && window.TribeSiteGen.mode) window.TribeSiteGen.mode('instant');
+        ACTS.website();
+        return say(`Here's a draft in the ${L} layout as ${/^[aeiou]/i.test(T) ? 'an' : 'a'} ${T.toLowerCase()}, filled from what the project has. It's in the preview now. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
+          [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
+      }
       const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/gen`, { method: 'POST', body: { how } });
       const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a';
       ACTS.website();

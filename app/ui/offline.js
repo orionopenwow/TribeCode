@@ -374,6 +374,72 @@
     return out.join('\n').trim();
   }
 
+  // ---------- the site builder (app/ui/website.js + sitegen.js): a small in-browser stand-in for server/showcase.js + sitegen.js ----------
+  const SB = {
+    types: [['game', 'Game page', '🎮', 'Play button, screenshots, devlog'], ['app', 'App landing', '📱', 'What it does, try it, questions'], ['portfolio', 'Portfolio', '🖼️', 'Selected work, about, contact'],
+      ['business', 'Small business', '🏪', 'Hours, location, contact'], ['event', 'Event', '📅', 'Date, place, RSVP link'], ['docs', 'Docs / notes', '📓', 'Start here, topics, latest notes']].map(([id, name, icon, note]) => ({ id, name, icon, note })),
+    layouts: [['editorial', 'Editorial', 'Serif headlines, thin rules'], ['swiss', 'Swiss', 'A strict grid, a flat color band'], ['devlog', 'Devlog', 'Monospace, dark'], ['poster', 'Poster', 'Oversized type'], ['journal', 'Journal', 'Quiet, centered serif'], ['arcade', 'Arcade', 'Pixel type, a star field']].map(([id, name, note]) => ({ id, name, note })),
+    themes: [['cozy', 'Cozy', '#C0653A', '#4C8C4A', 'instrument', 'journal', 'Warm and calm'], ['bold', 'Bold', '#E4572E', '', 'bricolage', 'poster', 'Big type, bright color'], ['minimal', 'Minimal', '#2F5BEA', '', 'grotesk', 'swiss', 'A grid and one blue'],
+      ['retro', 'Retro pixel', '#FFC23D', '#7BD88F', 'silkscreen', 'arcade', 'Pixel type on a night sky'], ['night', 'Night', '#7BD88F', '#FFC23D', 'mono', 'devlog', 'Dark, monospace'], ['paper', 'Paper', '#B4432B', '', 'fraunces', 'editorial', 'Like a printed page'],
+      ['bakery', 'Bakery warm', '#B86B2E', '#C2417F', 'fraunces', 'journal', 'Crust brown and berry'], ['studio', 'Studio', '#7A5CC2', '', 'grotesk', 'editorial', 'Quiet, for showing work']].map(([id, name, primary, accent, font, layout, note]) => ({ id, name, primary, accent, font, layout, note, fontName: font, why: `${name}: ${note.toLowerCase()}.` })),
+    fonts: [['fraunces', 'Fraunces + Inter', 'Classic'], ['grotesk', 'Space Grotesk + Inter', 'Modern'], ['mono', 'JetBrains Mono + Inter', 'Techy'], ['bricolage', 'Bricolage Grotesque + Inter', 'Playful'], ['instrument', 'Instrument Serif + Inter', 'Elegant'], ['silkscreen', 'Silkscreen + Inter', 'Retro']].map(([id, name, feel]) => ({ id, name, feel })),
+    order: { game: ['hero', 'features', 'story', 'faq', 'footer'], app: ['hero', 'features', 'story', 'faq', 'contact', 'footer'], portfolio: ['hero', 'features', 'story', 'contact', 'footer'], business: ['hero', 'story', 'features', 'visit', 'faq', 'footer'], event: ['hero', 'event', 'story', 'faq', 'footer'], docs: ['hero', 'story', 'features', 'faq', 'footer'] },
+    names: { hero: 'Hero', story: 'Story', features: 'Features', visit: 'Visit us', event: 'Event details', contact: 'Contact', faq: 'FAQ', footer: 'Footer' },
+  };
+  function siteGuess(p, hint) { const t = `${hint || ''} ${p.name} ${p.bio || ''}`.toLowerCase(); return /bakery|cafe|coffee|shop|store|salon/.test(t) ? 'business' : /party|wedding|meetup|festival|event/.test(t) ? 'event' : /portfolio/.test(t) ? 'portfolio' : /notes|docs|wiki/.test(t) ? 'docs' : /game|platformer|quest|level/.test(t) ? 'game' : 'app'; }
+  function siteHtml(p, s) {
+    const g = s.gen, e = x => String(x ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])), c = g.copy, b = s.brand || {}, dark = ['devlog', 'arcade'].includes(g.layout);
+    const paper = dark ? '#14161B' : '#F7F4EE', ink = dark ? '#ECEEF1' : '#1A1714', pri = b.primary || p.color || '#2F5BEA', i = g.info || {};
+    const sec = k => k === 'hero' ? `<section class="hero"><p class="k">${e(c.hero.kicker)}</p><h1>${e(c.hero.title)}</h1><p class="d">${e(c.hero.dek)}</p></section>`
+      : k === 'visit' ? (i.hours || i.address ? `<section><h2>Visit us</h2><p>${e(i.hours || '')}<br>${e(i.address || '')}</p></section>` : '')
+      : k === 'event' ? (i.date || i.place ? `<section><h2>The details</h2><p>${e(i.date || '')} · ${e(i.place || '')}</p></section>` : '')
+      : k === 'footer' ? `<footer>${e(p.name)} · made in the TribeCode demo</footer>` : c[k] && c[k].body ? `<section><h2>${e(c[k].title)}</h2><p>${e(c[k].body)}</p></section>` : '';
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${e(p.name)}</title><style>body{margin:0;background:${paper};color:${ink};font:17px/1.6 system-ui,sans-serif}section,footer{max-width:860px;margin:0 auto;padding:40px 24px;border-top:1px solid ${dark ? '#2A2F37' : '#DCD4C6'}}.hero{border:0;padding-top:64px}.k{color:${pri};font:600 13px/1 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}h1{font-size:56px;line-height:1;margin:12px 0}.d{font-size:20px;opacity:.85}h2{font-size:28px;margin:0 0 10px}footer{font-size:14px;opacity:.8}</style></head><body>${(SB.order[g.type] || SB.order.app).filter(k => !(g.off || {})[k]).map(sec).join('')}</body></html>`;
+  }
+  function siteView(p, s) {
+    let url = null; if (s.gen) { try { if (s.url) URL.revokeObjectURL(s.url); s.url = URL.createObjectURL(new Blob([siteHtml(p, s)], { type: 'text/html' })); url = s.url + '#draft'; } catch {} }
+    const g = s.gen, ty = g ? g.type : siteGuess(p);
+    return { project: p.id, auto: false, sections: {}, fields: {}, defaults: { headline: p.name, tagline: p.bio || '', about: '', footer: '' }, shots: null, screens: [], built: null, exists: false, path: 'site/index.html', inRepo: false, autopilot: false,
+      previewUrl: null, suggestions: [], open: 0, canManage: true, canSuggest: true, suggestable: {}, sectionList: [], hint: 'In the real app, Publish writes site/index.html and site/styles.css into the project repo.',
+      gen: { draft: g ? { ...g, edited: g.edited || {}, polished: null, secs: SB.order[g.type] || SB.order.app } : null, live: s.live || null, unpublished: !!g && !s.live, draftUrl: url, brain: false, canDraft: true, canPublish: true, canBrand: true,
+        layouts: SB.layouts, sections: Object.entries(SB.names).map(([id, name]) => ({ id, name })), types: SB.types, themes: SB.themes, guess: { type: ty, name: SB.types.find(t => t.id === ty).name },
+        brand: { primary: (s.brand || {}).primary || '', accent: (s.brand || {}).accent || '', font: (s.brand || {}).font || '', wordmark: '', logo: null, notes: [], swatches: ['#B4432B', '#E4572E', '#E0951F', '#4C8C4A', '#2A8C80', '#2F5BEA', '#7A5CC2', '#C2417F'], fonts: SB.fonts, layoutFont: 'fraunces' },
+        idea: s.idea || null, handEdited: [] } };
+  }
+  function siteMock(p, sub, sid, M, body) {
+    db.website = db.website || {}; const s = db.website[p.id] = db.website[p.id] || {};
+    const make = (type, theme) => {
+      const t = SB.order[type] ? type : siteGuess(p, body.hint), th = SB.themes.find(x => x.id === theme);
+      const prev = s.gen || {};
+      s.gen = { type: t, layout: th ? th.layout : { game: 'arcade', app: 'swiss', portfolio: 'editorial', business: 'journal', event: 'poster', docs: 'devlog' }[t], theme: th ? th.id : null, info: prev.info || {}, off: {}, seed: 0, updated: iso(),
+        copy: { hero: { kicker: SB.types.find(x => x.id === t).name, title: p.name, dek: p.bio || `${p.name}, made by friends.`, cta: '' }, story: { title: t === 'business' ? 'Our story' : 'The idea', body: p.bio || '' },
+          features: { title: 'What you get', items: [] }, faq: { title: 'Questions', items: [{ q: `What is ${p.name}?`, a: p.bio || 'A small project.' }] }, footer: { text: p.name }, contact: { title: 'Get in touch', body: '' }, visit: { title: 'Visit us' }, event: { title: 'The details' } } };
+      if (th) s.brand = { ...(s.brand || {}), primary: th.primary, accent: th.accent, font: th.font };
+      s.live = null; return t;
+    };
+    if (M === 'GET' && !sub) return ok({ website: siteView(p, s) });
+    if (sub === 'instant' && M === 'POST') { const t = make(body.type, body.theme); save(); return ok({ type: t, guessed: !body.type, website: siteView(p, s) }); }
+    if (sub === 'gen' && M === 'POST') { if (!s.gen) make(); else if (body.how === 'shuffle') { const ids = SB.layouts.map(x => x.id); s.gen.layout = ids[(ids.indexOf(s.gen.layout) + 1) % ids.length]; s.live = null; } save(); return ok({ website: siteView(p, s) }); }
+    if (sub === 'gen' && M === 'PUT') {
+      if (!s.gen) make();
+      if (body.type) make(body.type, s.gen.theme); if (body.theme) make(s.gen.type, body.theme); if (body.layout) s.gen.layout = body.layout;
+      if (body.info) s.gen.info = { ...s.gen.info, ...body.info }; if (body.off) s.gen.off = { ...s.gen.off, ...body.off };
+      if (body.section && s.gen.copy[body.section]) s.gen.copy[body.section] = { ...s.gen.copy[body.section], ...(body.copy || {}) };
+      s.live = null; save(); return ok({ website: siteView(p, s) });
+    }
+    if (sub === 'brand') { if (M !== 'GET') { s.brand = { ...(s.brand || {}), ...['primary', 'accent', 'font'].reduce((o, k) => (body[k] !== undefined ? { ...o, [k]: body[k] } : o), {}) }; s.live = null; save(); } return ok({ brand: siteView(p, s).gen.brand, website: siteView(p, s) }); }
+    if (sub === 'ideas' && M === 'POST') {
+      if (sid === 'apply' && s.idea) { make(s.idea.type, s.idea.theme); s.idea = null; } else if (sid === 'skip') s.idea = null;
+      else { const t = siteGuess(p), th = SB.themes.find(x => x.id === ({ game: 'retro', business: 'bakery', event: 'bold', portfolio: 'studio', docs: 'night' }[t] || 'minimal')); s.idea = { type: t, theme: th.id, primary: th.primary, accent: th.accent, font: th.font, layout: th.layout, tagline: p.bio || '', why: `Suggested because ${th.name} suits this kind of project.`, via: 'rules' }; }
+      save(); return ok({ idea: s.idea, website: siteView(p, s) });
+    }
+    if (sub === 'code' && M === 'GET') { if (!s.gen) return no(404, 'make a draft first'); const h = siteHtml(p, s); return ok({ files: [{ name: 'index.html', bytes: h.length, text: h, note: 'The page.' }, { name: 'styles.css', bytes: 0, note: 'In the real app the look lives here, with brand tokens at the top.' }], folder: 'site/', inRepo: false, handEdited: [], draft: true, howTo: 'In the real app, Publish writes these files to the repo and never overwrites hand edits without asking.' }); }
+    if (sub === 'publish' && M === 'POST') { if (!s.gen) return no(409, 'make a draft first'); s.live = { layout: s.gen.layout, at: iso(), byName: me().name }; save(); return ok({ changed: true, website: siteView(p, s) }); }
+    if (sub === 'write' && M === 'POST') return no(503, 'Writing needs a brain. In the demo there is none.');
+    if (M === 'GET' && (sub === 'preview' || sub === 'export' || sub === 'draft')) return no(404, 'the demo shows the draft in the preview');
+    return no(404, NOPE);
+  }
+
   // ---------- project sense (app/ui/sense.js): a few of server/sense.js's templates, picked from the name and bio ----------
   function senseMock(p, e) {
     const text = `${p.name} ${p.bio || ''} ${((db.tasks || {})[p.id] || []).map(t => t.title).join(' ')}`.toLowerCase();
@@ -441,6 +507,7 @@
           if (PUT && Array.isArray(body.widgets)) { db.widgets[p.id] = body.widgets.slice(0, 24); save(); push({ type: 'widgets', project: p.id }); }
           if (GET || PUT) return ok({ widgets: db.widgets[p.id] || [], canEdit: true, preview: { show: false, label: '' }, website: { show: false } });
         }
+        if (c === 'website') return siteMock(p, parts[3], parts[4], method, body || {});   // feat/site-builder
         if (c === 'sense') {   // app/ui/sense.js: what the project is + the Inspiration card (server/sense.js, simplified)
           db.sense = db.sense || {}; const e = db.sense[p.id] = db.sense[p.id] || { override: '', notes: true, gone: [] };
           if (PUT) { if (body.kind !== undefined) e.override = String(body.kind || ''); if (body.notes !== undefined) e.notes = !!body.notes; save(); push({ type: 'sense', project: p.id }); }

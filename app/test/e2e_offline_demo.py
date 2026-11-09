@@ -64,6 +64,13 @@ def flow(page, tag, phone, tmp):
     # a second project, made through the API the real UI uses, then switched back
     page.evaluate("TribeClient.api('/projects', { method: 'POST', body: { name: 'Side Quest' } })")
     page.wait_for_function("TribeClient.api('/projects').then(r => r.projects.length === 2)", timeout=5000)
+    # feat/site-builder: the Website builder works in the demo (Instant, a theme, a suggestion card)
+    if not phone:
+        w = page.evaluate("(async () => { const p = TribeProjects.current(), a = (x, o) => TribeClient.api(`/projects/${p}/website${x}`, o); await a('/instant', { method: 'POST', body: { theme: 'cozy' } }); const i = await a('/ideas', { method: 'POST', body: {} }); return { w: (await a('')).website, i }; })()")
+        assert w["w"]["gen"]["draft"]["theme"] == "cozy" and w["w"]["gen"]["draftUrl"].startswith("blob:") and w["i"]["idea"]["why"], w["w"]["gen"]["draft"]
+        page.evaluate("TribeShell.go('website')")
+        page.wait_for_selector("#wb-root .sg-modes", timeout=8000)
+        page.wait_for_selector("#wb-frame", timeout=8000)
 
     # chat: post, and @claude answers
     page.evaluate("TribeApp.show('chat')")
@@ -160,7 +167,7 @@ def leave_and_reset(page, tag):
 def main():
     errors = []; tmp = tempfile.mkdtemp(prefix="tribe-offline-", dir="/tmp")
     srv = serve()
-    seed = "if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', %s)" % json.dumps(json.dumps(REAL))
+    seed = "try { if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', %s) } catch (e) {}" % json.dumps(json.dumps(REAL))   # try: it also runs in sandboxed preview frames
     try:
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
