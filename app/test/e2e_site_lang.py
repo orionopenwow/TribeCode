@@ -21,13 +21,13 @@ def main():
         b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
         pg = b.new_page(viewport={"width": 1440, "height": 900}, locale="en-US"); pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto(base + "/index.html"); pg.wait_for_selector("#lang-btn")
-        en = pg.text_content("#hero-title").strip(); assert en == "Build the thing with your friends.", en
+        en = pg.text_content("#hero-title").strip(); assert en == "Build apps, games and websites with your friends.", en
         pg.click("#lang-btn"); pg.wait_for_selector("#lang-menu:not([hidden])")
         assert pg.locator("#lang-menu [data-lang]").count() == 8
         pg.click("#lang-menu [data-lang='es']")
-        assert pg.text_content("#hero-title").strip() == "Construye esa idea con tus amigos." and pg.evaluate("document.documentElement.lang") == "es"
+        assert pg.text_content("#hero-title").strip() == "Crea apps, juegos y sitios web con tus amigos." and pg.evaluate("document.documentElement.lang") == "es"
         assert "Descargar" in pg.text_content(".nav__end") and pg.locator("#lang-menu").is_hidden()
-        pg.reload(); pg.wait_for_selector("#lang-btn"); assert pg.text_content("#hero-title").strip().startswith("Construye") and "ES" in pg.text_content("#lang-btn")
+        pg.reload(); pg.wait_for_selector("#lang-btn"); assert pg.text_content("#hero-title").strip().startswith("Crea apps") and "ES" in pg.text_content("#lang-btn")
         pg.evaluate("TribeLang.set('ja')"); assert "友だち" in pg.text_content("#hero-title") and pg.evaluate("document.documentElement.lang") == "ja"
         pg.evaluate("TribeLang.set('en')"); assert pg.text_content("#hero-title").strip() == en and pg.evaluate("document.documentElement.lang") == "en"
         # keyboard: open, arrow down, Enter picks

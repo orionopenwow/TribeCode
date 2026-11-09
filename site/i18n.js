@@ -24,7 +24,7 @@
     'Lanes': ['Carriles', 'Faixas', 'Couloirs', 'Bahnen', 'レーン', '分工', '레인'],
     'Where it runs': ['Dónde funciona', 'Onde roda', 'Où ça tourne', 'Wo es läuft', '動かす場所', '在哪里运行', '실행 위치'],
     'Starters': ['Plantillas', 'Modelos', 'Projets de départ', 'Vorlagen', 'スターター', '起步项目', '스타터'],
-    'Build the thing with your friends.': ['Construye esa idea con tus amigos.', 'Construa aquela ideia com seus amigos.', 'Construisez ce projet avec vos amis.', 'Bau dein Projekt mit deinen Freunden.', 'あのアイデアを、友だちと形に。', '和朋友一起把它做出来。', '그 아이디어, 친구들과 함께 만들어요.'],
+    'Build apps, games and websites with your friends.': ['Crea apps, juegos y sitios web con tus amigos.', 'Crie apps, jogos e sites com seus amigos.', 'Créez des apps, des jeux et des sites avec vos amis.', 'Baue Apps, Spiele und Websites mit deinen Freunden.', '友だちと、アプリやゲーム、Webサイトを作ろう。', '和朋友一起做应用、游戏和网站。', '친구들과 앱, 게임, 웹사이트를 만들어요.'],
     'Bring an idea and send a link. Your friends and the AI helpers you already use work in the same project, and nobody has to be an expert to help.': [
       'Trae una idea y envía un enlace. Tus amigos y los asistentes de IA que ya usas trabajan en el mismo proyecto, y nadie tiene que ser experto para ayudar.',
       'Traga uma ideia e mande um link. Seus amigos e os assistentes de IA que você já usa trabalham no mesmo projeto, e ninguém precisa ser especialista para ajudar.',
