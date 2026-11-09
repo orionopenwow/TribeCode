@@ -1209,3 +1209,15 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .maker__art img { width: min(300px, 80vw); }
   .maker__text { font-size: 16px; }
 }
+
+/* ================= language picker (i18n.js) ================= */
+.lang { position: relative; }
+.lang__btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 999px; background: transparent; color: var(--muted); font: 600 12px/1 var(--mono, ui-monospace, monospace); cursor: pointer; }
+.lang__btn:hover, .lang__btn[aria-expanded="true"] { color: var(--text); border-color: color-mix(in srgb, var(--text) 30%, var(--edge)); }
+.lang__menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 180px; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.lang__menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--text); font: 500 14px/1.2 var(--font); text-align: left; cursor: pointer; }
+.lang__menu button:hover, .lang__menu button:focus-visible { background: var(--main, #1D2021); outline: none; }
+.lang__menu button[aria-checked="true"]::after { content: "✓"; color: var(--ember); font-weight: 700; }
+.lang__note { padding: 6px 10px 2px; color: var(--muted); font-size: 12px; }
+.lang__note:empty { display: none; }
+@media (max-width: 640px) { .lang__btn b { display: none; } .lang__btn { width: 34px; padding: 0; justify-content: center; } }

@@ -1,0 +1,121 @@
+// Languages for the website (v0.25): a 🌐 picker in the top bar, like most sites have. The page is written in English;
+// this swaps the main text (menu, hero, section titles and intros, buttons, footer) for a translation. Anything not
+// translated stays in English, so a half-translated page still reads. The choice is remembered on this device; on a
+// first visit the browser's language is used when we have it. Translations are our own, kept short and plain.
+(function () {
+  'use strict';
+  const LANGS = [
+    ['en', 'English'], ['es', 'Español'], ['pt', 'Português'], ['fr', 'Français'], ['de', 'Deutsch'], ['ja', '日本語'], ['zh', '简体中文'], ['ko', '한국어'],
+  ];
+  // English source -> [es, pt, fr, de, ja, zh, ko]
+  const T = {
+    'Features': ['Funciones', 'Recursos', 'Fonctions', 'Funktionen', '機能', '功能', '기능'],
+    'Learn': ['Aprende', 'Aprenda', 'Apprendre', 'Lernen', '学ぶ', '学习', '배우기'],
+    'Pricing': ['Precios', 'Preços', 'Tarifs', 'Preise', '料金', '价格', '요금'],
+    'Mission': ['Misión', 'Missão', 'Mission', 'Mission', 'ミッション', '使命', '미션'],
+    'Docs': ['Documentación', 'Documentação', 'Docs', 'Doku', 'ドキュメント', '文档', '문서'],
+    'Open the app': ['Abrir la app', 'Abrir o app', 'Ouvrir l’app', 'App öffnen', 'アプリを開く', '打开应用', '앱 열기'],
+    'Download': ['Descargar', 'Baixar', 'Télécharger', 'Herunterladen', 'ダウンロード', '下载', '다운로드'],
+    'Star': ['Estrella', 'Estrela', 'Étoile', 'Stern', 'スター', '星标', '스타'],
+    'Star on GitHub': ['Estrella en GitHub', 'Estrela no GitHub', 'Une étoile sur GitHub', 'Stern auf GitHub', 'GitHubでスター', '在 GitHub 上加星', 'GitHub에서 스타'],
+    'What you can make': ['Lo que puedes hacer', 'O que você pode fazer', 'Ce que vous pouvez créer', 'Was du bauen kannst', '作れるもの', '你能做什么', '만들 수 있는 것'],
+    'One chat for everyone': ['Un chat para todos', 'Um chat para todos', 'Un seul chat pour tous', 'Ein Chat für alle', 'みんなでひとつのチャット', '所有人一个聊天', '모두를 위한 하나의 채팅'],
+    'Your phone as a remote': ['Tu móvil como control', 'Seu celular como controle', 'Votre téléphone comme télécommande', 'Dein Handy als Fernbedienung', 'スマホがリモコンに', '手机当遥控器', '휴대폰을 리모컨처럼'],
+    'Lanes': ['Carriles', 'Faixas', 'Couloirs', 'Bahnen', 'レーン', '分工', '레인'],
+    'Where it runs': ['Dónde funciona', 'Onde roda', 'Où ça tourne', 'Wo es läuft', '動かす場所', '在哪里运行', '실행 위치'],
+    'Starters': ['Plantillas', 'Modelos', 'Projets de départ', 'Vorlagen', 'スターター', '起步项目', '스타터'],
+    'Build the thing with your friends.': ['Construye esa idea con tus amigos.', 'Construa aquela ideia com seus amigos.', 'Construisez ce projet avec vos amis.', 'Bau dein Projekt mit deinen Freunden.', 'あのアイデアを、友だちと形に。', '和朋友一起把它做出来。', '그 아이디어, 친구들과 함께 만들어요.'],
+    'Bring an idea and send a link. Your friends and the AI helpers you already use work in the same project, and nobody has to be an expert to help.': [
+      'Trae una idea y envía un enlace. Tus amigos y los asistentes de IA que ya usas trabajan en el mismo proyecto, y nadie tiene que ser experto para ayudar.',
+      'Traga uma ideia e mande um link. Seus amigos e os assistentes de IA que você já usa trabalham no mesmo projeto, e ninguém precisa ser especialista para ajudar.',
+      'Apportez une idée et envoyez un lien. Vos amis et les assistants IA que vous utilisez déjà travaillent sur le même projet, et personne n’a besoin d’être expert pour aider.',
+      'Bring eine Idee mit und schick einen Link. Deine Freunde und die KI-Helfer, die ihr schon nutzt, arbeiten im selben Projekt, und niemand muss Profi sein, um mitzuhelfen.',
+      'アイデアを持ってきて、リンクを送るだけ。友だちと、いつものAIアシスタントが同じプロジェクトで作業します。専門家でなくても手伝えます。',
+      '带上一个想法，发一个链接。你的朋友和你们已经在用的 AI 助手在同一个项目里协作，不需要是专家也能帮忙。',
+      '아이디어를 가져와 링크를 보내세요. 친구들과 이미 쓰고 있는 AI 도우미가 같은 프로젝트에서 함께 일하고, 전문가가 아니어도 도울 수 있어요.'],
+    'Download the desktop app': ['Descargar la app de escritorio', 'Baixar o app para desktop', 'Télécharger l’app de bureau', 'Desktop-App herunterladen', 'デスクトップアプリをダウンロード', '下载桌面应用', '데스크톱 앱 다운로드'],
+    'Open in your browser': ['Abrir en el navegador', 'Abrir no navegador', 'Ouvrir dans le navigateur', 'Im Browser öffnen', 'ブラウザで開く', '在浏览器中打开', '브라우저에서 열기'],
+    'Watch a demo tribe': ['Ver una tribu de demostración', 'Ver uma tribo de demonstração', 'Voir une tribu de démo', 'Demo-Tribe ansehen', 'デモのトライブを見る', '观看演示部落', '데모 트라이브 보기'],
+    'runs by itself in your browser, nothing sent anywhere': ['funciona sola en tu navegador, no se envía nada', 'roda sozinha no seu navegador, nada é enviado', 'tourne seule dans votre navigateur, rien n’est envoyé', 'läuft allein in deinem Browser, nichts wird gesendet', 'ブラウザだけで動き、何も送信されません', '完全在你的浏览器里运行，不发送任何数据', '브라우저에서만 실행되고, 아무것도 전송되지 않아요'],
+    'The game for your little brother. The site for the bakery down the street.': ['El juego para tu hermano pequeño. La web de la panadería de la esquina.', 'O jogo para o seu irmão mais novo. O site da padaria da esquina.', 'Le jeu pour votre petit frère. Le site de la boulangerie du coin.', 'Das Spiel für deinen kleinen Bruder. Die Website für die Bäckerei um die Ecke.', '弟のためのゲーム。近所のパン屋さんのサイト。', '给弟弟做的游戏，给街角面包店做的网站。', '동생을 위한 게임. 동네 빵집을 위한 웹사이트.'],
+    'How a night of building usually goes': ['Así suele ir una noche de construir', 'Como costuma ser uma noite de criação', 'Comment se passe une soirée de création', 'So läuft ein Bau-Abend meistens ab', 'ある夜の作り方', '一个晚上的搭建通常是这样的', '만드는 밤은 보통 이렇게 흘러가요'],
+    'New to code? So was everyone.': ['¿Nuevo en el código? Todos lo fuimos.', 'Novo em programação? Todo mundo já foi.', 'Débutant en code ? Tout le monde l’a été.', 'Neu beim Programmieren? Das waren alle mal.', 'コードは初めて？ みんな最初はそうでした。', '刚接触代码？谁都是这么开始的。', '코딩이 처음인가요? 누구나 처음이었어요.'],
+    'Four short modules for people who have never opened a code editor. Read one on the bus. There’s nothing to install.': ['Cuatro módulos cortos para quien nunca ha abierto un editor de código. Lee uno en el autobús. No hay nada que instalar.', 'Quatro módulos curtos para quem nunca abriu um editor de código. Leia um no ônibus. Não precisa instalar nada.', 'Quatre modules courts pour qui n’a jamais ouvert un éditeur de code. Lisez-en un dans le bus. Rien à installer.', 'Vier kurze Module für alle, die noch nie einen Code-Editor geöffnet haben. Lies eins im Bus. Nichts zu installieren.', 'コードエディタを開いたことがない人のための短い4つのモジュール。バスの中で読めます。インストールは不要です。', '四个短模块，写给从没打开过代码编辑器的人。坐公交时就能读完一个，什么都不用安装。', '코드 편집기를 한 번도 열어 본 적 없는 분을 위한 짧은 모듈 네 개. 버스에서 하나 읽어 보세요. 설치할 것은 없어요.'],
+    'One chat for people and their AI.': ['Un chat para las personas y su IA.', 'Um chat para pessoas e suas IAs.', 'Un seul chat pour les gens et leur IA.', 'Ein Chat für Menschen und ihre KI.', '人とAIのための、ひとつのチャット。', '人和他们的 AI，共用一个聊天。', '사람과 그들의 AI를 위한 하나의 채팅.'],
+    'Keep building from your phone.': ['Sigue construyendo desde el móvil.', 'Continue criando pelo celular.', 'Continuez depuis votre téléphone.', 'Bau vom Handy aus weiter.', 'スマホからでも作り続けられる。', '用手机也能继续搭建。', '휴대폰으로도 계속 만들어요.'],
+    'Everyone gets their own corner.': ['Cada uno tiene su rincón.', 'Cada um tem seu cantinho.', 'Chacun a son coin.', 'Jeder bekommt seine eigene Ecke.', 'それぞれに自分の持ち場。', '每个人都有自己的一块。', '모두가 자기 자리를 가져요.'],
+    'It runs where you want it.': ['Funciona donde tú quieras.', 'Roda onde você quiser.', 'Ça tourne où vous voulez.', 'Es läuft, wo du willst.', '好きな場所で動かせる。', '想在哪运行就在哪运行。', '원하는 곳에서 실행돼요.'],
+    'Skip the blank page.': ['Olvídate de la página en blanco.', 'Esqueça a página em branco.', 'Adieu la page blanche.', 'Schluss mit der leeren Seite.', '白紙から始めなくていい。', '不必从空白页开始。', '빈 페이지는 이제 그만.'],
+    'Or remix something people already love.': ['O haz un remix de algo que la gente ya adora.', 'Ou faça um remix de algo que as pessoas já amam.', 'Ou remixez quelque chose que les gens adorent déjà.', 'Oder remixe etwas, das alle schon lieben.', 'みんなが好きな作品をリミックスするのもあり。', '或者，改编大家已经喜欢的作品。', '아니면 사람들이 이미 좋아하는 것을 리믹스하세요.'],
+    'Open source, out in the open.': ['Código abierto, a la vista de todos.', 'Código aberto, à vista de todos.', 'Open source, en toute transparence.', 'Open Source, ganz offen.', 'オープンソース、すべて公開。', '开源，一切公开。', '오픈 소스, 모두 공개.'],
+    'Start a tribe tonight.': ['Empieza una tribu esta noche.', 'Comece uma tribo hoje à noite.', 'Lancez une tribu ce soir.', 'Starte heute Abend eine Tribe.', '今夜、トライブを始めよう。', '今晚就建一个部落。', '오늘 밤 트라이브를 시작하세요.'],
+    'Download the app, name your project and text two friends the link. That’s the whole setup, and the app keeps itself up to date.': ['Descarga la app, ponle nombre a tu proyecto y envía el enlace a dos amigos. Esa es toda la configuración, y la app se actualiza sola.', 'Baixe o app, dê um nome ao projeto e mande o link para dois amigos. Essa é toda a configuração, e o app se atualiza sozinho.', 'Téléchargez l’app, nommez votre projet et envoyez le lien à deux amis. C’est toute l’installation, et l’app se met à jour toute seule.', 'Lade die App, gib deinem Projekt einen Namen und schick zwei Freunden den Link. Das ist die ganze Einrichtung, und die App hält sich selbst aktuell.', 'アプリをダウンロードして、プロジェクトに名前を付け、友だち2人にリンクを送るだけ。設定はそれで終わり。アプリは自動で最新に保たれます。', '下载应用，给项目起个名字，把链接发给两个朋友。设置就这么简单，应用会自动更新。', '앱을 내려받고, 프로젝트 이름을 정하고, 친구 두 명에게 링크를 보내세요. 설정은 그게 전부이고, 앱은 알아서 최신 상태를 유지해요.'],
+    'All downloads': ['Todas las descargas', 'Todos os downloads', 'Tous les téléchargements', 'Alle Downloads', 'すべてのダウンロード', '全部下载', '모든 다운로드'],
+    "Hi, I'm Campton.": ['Hola, soy Campton.', 'Oi, eu sou o Campton.', 'Salut, moi c’est Campton.', 'Hi, ich bin Campton.', 'こんにちは、Camptonです。', '你好，我是 Campton。', '안녕하세요, Campton이에요.'],
+    "I make TribeCode, in the open, with my own small tribe of friends and AI agents. It's the app I wanted: one place where people and their AI build the same thing together, and where your work stays in your own GitHub repository.": [
+      'Hago TribeCode en abierto, con mi propia pequeña tribu de amigos y agentes de IA. Es la app que yo quería: un lugar donde las personas y su IA construyen lo mismo juntas, y donde tu trabajo se queda en tu propio repositorio de GitHub.',
+      'Eu faço o TribeCode em aberto, com minha própria pequena tribo de amigos e agentes de IA. É o app que eu queria: um lugar onde pessoas e suas IAs constroem a mesma coisa juntas, e onde seu trabalho fica no seu próprio repositório do GitHub.',
+      'Je fais TribeCode en open source, avec ma propre petite tribu d’amis et d’agents IA. C’est l’app que je voulais : un seul endroit où les gens et leur IA construisent la même chose ensemble, et où votre travail reste dans votre propre dépôt GitHub.',
+      'Ich baue TribeCode offen, mit meiner eigenen kleinen Tribe aus Freunden und KI-Agenten. Es ist die App, die ich wollte: ein Ort, an dem Menschen und ihre KI gemeinsam dasselbe bauen und deine Arbeit in deinem eigenen GitHub-Repository bleibt.',
+      '私は友だちとAIエージェントの小さなトライブと一緒に、TribeCodeをオープンに作っています。人とAIが同じものを一緒に作れて、作品は自分のGitHubリポジトリに残る。そんなアプリが欲しかったんです。',
+      '我和自己的一小群朋友以及 AI 智能体一起，公开地打造 TribeCode。这是我一直想要的应用：人和 AI 在同一个地方一起做同一件事，而你的成果留在你自己的 GitHub 仓库里。',
+      '저는 친구들과 AI 에이전트로 이루어진 저만의 작은 트라이브와 함께 TribeCode를 공개적으로 만들고 있어요. 사람과 AI가 한곳에서 같은 것을 함께 만들고, 작업은 내 GitHub 저장소에 남는 앱. 제가 원했던 앱이에요.'],
+    'If something breaks, or you have an idea, tell me. Every issue gets read.': ['Si algo falla o tienes una idea, cuéntamelo. Leo cada issue.', 'Se algo quebrar ou você tiver uma ideia, me conte. Toda issue é lida.', 'Si quelque chose casse ou si vous avez une idée, dites-le-moi. Chaque issue est lue.', 'Wenn etwas kaputtgeht oder du eine Idee hast, sag Bescheid. Jedes Issue wird gelesen.', '何か壊れたり、アイデアがあったら教えてください。すべてのissueに目を通します。', '如果有东西坏了，或者你有想法，告诉我。每个 issue 我都会看。', '뭔가 고장 나거나 아이디어가 있으면 알려 주세요. 모든 이슈를 읽어요.'],
+    'Send an idea or a bug': ['Enviar una idea o un fallo', 'Enviar uma ideia ou um bug', 'Envoyer une idée ou un bug', 'Idee oder Fehler senden', 'アイデアやバグを送る', '提交想法或问题', '아이디어나 버그 보내기'],
+    'Build one app with your friends and their AI.': ['Construye una app con tus amigos y su IA.', 'Construa um app com seus amigos e suas IAs.', 'Construisez une app avec vos amis et leur IA.', 'Bau eine App mit deinen Freunden und ihrer KI.', '友だちとそのAIと、ひとつのアプリを作ろう。', '和朋友以及他们的 AI 一起做一个应用。', '친구들과 그들의 AI와 함께 하나의 앱을 만들어요.'],
+    'Demo tribe': ['Tribu de demostración', 'Tribo de demonstração', 'Tribu de démo', 'Demo-Tribe', 'デモのトライブ', '演示部落', '데모 트라이브'],
+    'Quick start': ['Inicio rápido', 'Início rápido', 'Démarrage rapide', 'Schnellstart', 'クイックスタート', '快速开始', '빠른 시작'],
+    'Security & privacy': ['Seguridad y privacidad', 'Segurança e privacidade', 'Sécurité et confidentialité', 'Sicherheit & Datenschutz', 'セキュリティとプライバシー', '安全与隐私', '보안 및 개인정보'],
+    'Releases': ['Versiones', 'Versões', 'Versions', 'Versionen', 'リリース', '版本发布', '릴리스'],
+    'Changelog': ['Cambios', 'Novidades', 'Journal des modifications', 'Änderungen', '更新履歴', '更新日志', '변경 내역'],
+    'Start module 1': ['Empezar el módulo 1', 'Começar o módulo 1', 'Commencer le module 1', 'Modul 1 starten', 'モジュール1を始める', '开始模块 1', '모듈 1 시작'],
+  };
+  const NOTE = ['Algunas partes siguen en inglés.', 'Algumas partes ainda estão em inglês.', 'Certaines parties restent en anglais.', 'Einige Teile sind noch auf Englisch.', '一部はまだ英語です。', '部分内容仍为英文。', '일부는 아직 영어예요.'];
+  const KEY = 'tribecode.lang';
+  const idx = code => LANGS.findIndex(l => l[0] === code) - 1;   // -1 for English
+  const SEL = 'h1, h2, h3, .hero__sub, .hero__more a, .hero__more-note, [class*="__lead"], .feature__text, .maker__text, .nav__link, .nav__open, .nav__star, [data-dl-label], .btn, .menu b, .footer p, .footer__links a, .lc-go';
+  let cur = 'en';
+  function textNode(el) { for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return n; return null; }
+  function apply(code) {
+    cur = LANGS.some(l => l[0] === code) ? code : 'en';
+    const i = idx(cur);
+    document.documentElement.lang = cur === 'zh' ? 'zh-Hans' : cur === 'pt' ? 'pt-BR' : cur;
+    document.querySelectorAll(SEL).forEach(el => {
+      if (el.closest('[data-no-i18n], .stage, .mk-win, script, style')) return;
+      const n = textNode(el); if (!n) return;
+      if (n.__src === undefined) n.__src = n.nodeValue;
+      const src = n.__src, key = src.trim().replace(/\s+/g, ' ');
+      const tr = i >= 0 && T[key] ? T[key][i] : null;
+      n.nodeValue = tr ? src.replace(src.trim(), tr) : src;
+    });
+    const b = document.getElementById('lang-btn'); if (b) { b.querySelector('b').textContent = cur.toUpperCase(); b.setAttribute('aria-label', `Language: ${LANGS.find(l => l[0] === cur)[1]}`); }
+    document.querySelectorAll('#lang-menu [data-lang]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.lang === cur)));
+    const note = document.getElementById('lang-note'); if (note) note.textContent = i >= 0 ? NOTE[i] : '';
+  }
+  function picker() {
+    const end = document.querySelector('.nav__end'); if (!end || document.getElementById('lang-btn')) return;
+    const wrap = document.createElement('div'); wrap.className = 'lang';
+    wrap.innerHTML = `<button class="lang__btn" id="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Language"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9s1.3-6.3 3.9-9z"/></svg><b>EN</b></button>
+      <ul class="lang__menu" id="lang-menu" role="menu" hidden>${LANGS.map(([c, n]) => `<li><button type="button" role="menuitemradio" aria-checked="false" data-lang="${c}" lang="${c}">${n}</button></li>`).join('')}<li class="lang__note" id="lang-note" aria-live="polite"></li></ul>`;
+    end.insertBefore(wrap, end.firstChild);
+    const btn = wrap.querySelector('#lang-btn'), menu = wrap.querySelector('#lang-menu');
+    const open = on => { menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on) (menu.querySelector('[aria-checked="true"]') || menu.querySelector('button')).focus(); };
+    btn.onclick = e => { e.stopPropagation(); open(menu.hidden); };
+    menu.onclick = e => { const b = e.target.closest('[data-lang]'); if (!b) return; try { localStorage.setItem(KEY, b.dataset.lang); } catch {} apply(b.dataset.lang); open(false); btn.focus(); };
+    menu.addEventListener('keydown', e => {
+      const items = [...menu.querySelectorAll('[data-lang]')], k = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') { e.preventDefault(); items[(k + 1) % items.length].focus(); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); items[(k - 1 + items.length) % items.length].focus(); }
+      if (e.key === 'Escape') { open(false); btn.focus(); }
+    });
+    document.addEventListener('click', e => { if (!wrap.contains(e.target)) open(false); });
+  }
+  function start() {
+    picker();
+    let want = null; try { want = localStorage.getItem(KEY); } catch {}
+    if (!want) { const nav = (navigator.languages || [navigator.language || 'en']).map(x => String(x).slice(0, 2).toLowerCase()); want = nav.find(c => LANGS.some(l => l[0] === c)) || 'en'; }
+    if (want !== 'en') apply(want); else apply('en');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  window.TribeLang = { set: c => { try { localStorage.setItem(KEY, c); } catch {} apply(c); }, get: () => cur, langs: LANGS.map(l => l[0]) };
+})();
