@@ -156,6 +156,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
   const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace, huddleSummary: !!p.huddleSummary,
     members: Object.entries(p.members || {}).map(([id, role]) => ({ id, role })), created: p.created, default: p.id === defaultId(), ...extra });
 
-  return { als, all, get, defaultId, current, inProject, channelOf, byChannel, okId, create, update, remove, trash, addMember, canSee, visibleTo, pick, scoped,
+  const reload = () => { list = store.readJSON(FILE, []); ensureFirst(); };   // cloud save put the files back
+  return { reload, als, all, get, defaultId, current, inProject, channelOf, byChannel, okId, create, update, remove, trash, addMember, canSee, visibleTo, pick, scoped,
     scopedStore, migrate, view, pdir, TAGGED };
 };
