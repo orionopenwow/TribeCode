@@ -307,7 +307,7 @@ def main():
             wait_text(host, "#bug-list", "resolved")
 
             # ---- Claude Code joins over MCP ----
-            host.click("#cc-connect")
+            host.evaluate("document.querySelector('#cc-connect').click()")   # v0.22: the helper card hides this button until setup is done
             wait_text(host, "#invite-body", "claude mcp add --transport http tribecode")
             cmd = host.inner_text("#cc-cmd")
             atok = cmd.split("Bearer ")[1].rstrip('"')

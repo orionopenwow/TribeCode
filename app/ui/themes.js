@@ -6,15 +6,15 @@
 // last light theme (themeLight) and the last dark theme (themeDark) you picked. The old value 'system' still works.
 (function () {
   const LIST = [
-    { id: 'campfire',    name: 'Campfire',       mode: 'dark',  sw: ['#1D2021', '#282828', '#8EC07C'] },   // the default
-    { id: 'dark',        name: 'TribeCode Dark', mode: 'dark',  sw: ['#12151A', '#1B2028', '#F26B1D'] },
-    { id: 'light',       name: 'Light',          mode: 'light', sw: ['#F4F5F7', '#FFFFFF', '#F26B1D'] },
-    { id: 'midnight',    name: 'Midnight',       mode: 'dark',  sw: ['#0B0E14', '#11151D', '#F26B1D'] },
-    { id: 'nordic',      name: 'Nordic',         mode: 'dark',  sw: ['#2A2F3A', '#323845', '#88C0D0'] },
-    { id: 'nightshade',  name: 'Nightshade',     mode: 'dark',  sw: ['#21222C', '#2A2C39', '#BD93F9'] },
-    { id: 'solar-dark',  name: 'Solar Dark',     mode: 'dark',  sw: ['#00232B', '#032F39', '#2AA198'] },
-    { id: 'solar-light', name: 'Solar Light',    mode: 'light', sw: ['#EEE8D5', '#FDF6E3', '#2AA198'] },
-    { id: 'contrast',    name: 'High contrast',  mode: 'dark',  sw: ['#000000', '#0A0A0A', '#FFFFFF'] },
+    { id: 'campfire',    name: 'Campfire',       mode: 'dark',  sw: ['#1D2021', '#282828', '#FE8019'], lg: ['#EBDBB2', '#FE8019'] },   // the default
+    { id: 'dark',        name: 'TribeCode Dark', mode: 'dark',  sw: ['#12151A', '#1B2028', '#F26B1D'], lg: ['#F8FAFC', '#F26B1D'] },
+    { id: 'light',       name: 'Light',          mode: 'light', sw: ['#F4F5F7', '#FFFFFF', '#F26B1D'], lg: ['#12151A', '#F26B1D'] },
+    { id: 'midnight',    name: 'Midnight',       mode: 'dark',  sw: ['#0B0E14', '#11151D', '#5AB8FF'], lg: ['#8AB8FF', '#FF8A3D'] },
+    { id: 'nordic',      name: 'Nordic',         mode: 'dark',  sw: ['#2A2F3A', '#323845', '#88C0D0'], lg: ['#ECEFF4', '#D08770'] },
+    { id: 'nightshade',  name: 'Nightshade',     mode: 'dark',  sw: ['#21222C', '#2A2C39', '#BD93F9'], lg: ['#BD93F9', '#FF79C6'] },
+    { id: 'solar-dark',  name: 'Solar Dark',     mode: 'dark',  sw: ['#00232B', '#032F39', '#2AA198'], lg: ['#93A1A1', '#CB4B16'] },
+    { id: 'solar-light', name: 'Solar Light',    mode: 'light', sw: ['#EEE8D5', '#FDF6E3', '#2AA198'], lg: ['#586E75', '#CB4B16'] },
+    { id: 'contrast',    name: 'High contrast',  mode: 'dark',  sw: ['#000000', '#0A0A0A', '#FFD400'], lg: ['#FFFFFF', '#FFD400'] },
   ];
   const DEFAULT = 'campfire';
   const byId = id => LIST.find(t => t.id === id);

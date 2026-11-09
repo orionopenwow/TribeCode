@@ -59,7 +59,8 @@
       ${d ? `${G.handEdited && G.handEdited.length ? `<div class="sg-hand" id="sg-hand" role="alert"><b>Someone edited the code by hand</b><span>${G.handEdited.map(f => `<code>${esc(f)}</code>`).join(' ')} changed since the last publish.${G.canPublish ? ' Keep their edits (those files are skipped) or replace them with the builder\'s version.' : ''}</span>
         ${G.canPublish ? '<div class="sg-hand-acts"><button class="btn sm primary" id="sg-keep">Keep their edits</button><button class="btn sm" id="sg-replace">Replace</button></div>' : ''}</div>` : ''}
       <div class="sg-pub">${G.canPublish ? `<button class="btn primary" id="sg-publish" ${G.unpublished ? '' : 'disabled'}>${G.live ? 'Publish changes' : 'Publish'}</button>` : '<span class="wb-note">The host or the project lead publishes it.</span>'}
-        ${exportUrl ? `<a class="linkish" id="sg-export" href="${esc(exportUrl)}" download data-mode-min="intermediate">Export as one HTML file</a>` : ''}${G.canPublish && G.live ? '<button class="linkish" id="sg-classic" data-mode-min="advanced">Use the simple page</button>' : ''}</div>` : ''}`;
+        ${exportUrl ? `<a class="linkish" id="sg-export" href="${esc(exportUrl)}" download data-mode-min="intermediate">Export as one HTML file</a>` : ''}${G.canPublish && G.live ? '<button class="linkish" id="sg-classic" data-mode-min="advanced">Use the simple page</button>' : ''}${G.canPublish && G.live ? '<button class="linkish" id="sg-save-tpl" title="New projects can start from this website">Save as a template</button>' : ''}</div>` : ''}
+      <div class="sg-tpls" id="sg-tpls" hidden></div>`;
     wire(box, w, ctx);
   }
 
@@ -162,6 +163,13 @@
     if (q('#sg-ideas')) q('#sg-ideas').onclick = e => suggest(e.currentTarget, w, ctx);
     if (q('#sg-idea-apply')) q('#sg-idea-apply').onclick = e => run(e.currentTarget, () => ctx.api('/ideas/apply', { method: 'POST' }), ctx, 'Applied. Have a look at the preview.');
     if (q('#sg-idea-skip')) q('#sg-idea-skip').onclick = e => run(e.currentTarget, () => ctx.api('/ideas/skip', { method: 'POST' }), ctx, 'Noted. Next time I suggest something else.');
+    // v0.25: site templates. Save this website as one, or start from one the host made.
+    if (q('#sg-save-tpl')) q('#sg-save-tpl').onclick = async e => { const b = e.currentTarget; b.disabled = true; try { const t = await window.TribeClient.api('/site-templates', { method: 'POST', body: { project: window.TribeClient.project(), name: (window.TribeProjects && window.TribeProjects.currentProject && (window.TribeProjects.currentProject() || {}).name) || '' } }); ctx.toast(`Saved as the template “${t.name}”. New projects can start from it in setup.`); } catch (er) { ctx.toast(er.message); } b.disabled = false; };
+    if (q('#sg-tpls') && (G.canBrand || G.canPublish)) window.TribeClient.api('/site-templates').then(r => {
+      const box2 = q('#sg-tpls'); if (!box2 || !r.templates.length) return;
+      box2.hidden = false; box2.innerHTML = `<span class="wb-lbl">Start from a tribe template</span><div class="sg-chips">${r.templates.map(t => `<button class="sg-chip" data-sgtpl="${esc(t.slug)}" title="${esc(t.summary || '')}">🧩 ${esc(t.name)}</button>`).join('')}</div>`;
+      box2.querySelectorAll('[data-sgtpl]').forEach(b => b.onclick = () => run(b, () => window.TribeClient.api(`/projects/${encodeURIComponent(window.TribeClient.project())}/site-template`, { method: 'POST', body: { slug: b.dataset.sgtpl } }), ctx, null, x => ctx.toast(x.written.length ? `Added ${x.written.length} files from the template to site/` : 'Those files were already there')));
+    }).catch(() => {});
     const pub = onEdited => ctx.api('/publish', { method: 'POST', body: onEdited ? { onEdited } : {} });
     if (q('#sg-publish')) q('#sg-publish').onclick = e => { if (G.handEdited && G.handEdited.length) { ctx.toast('Someone edited the code by hand: keep their edits or replace them first'); const h = q('#sg-hand'); if (h) h.scrollIntoView({ block: 'nearest' }); return; } run(e.currentTarget, () => pub(), ctx, 'Published: the website is live'); };
     if (q('#sg-keep')) q('#sg-keep').onclick = e => run(e.currentTarget, () => pub('keep'), ctx, 'Published. Their hand edits stay as they are.');

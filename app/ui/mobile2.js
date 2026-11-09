@@ -973,7 +973,7 @@
     mq.addEventListener('change', () => { if (phone()) onShow(cur); });
     if (C.connected()) loadUpdates();
   }
-  window.TribeMobile = { show, onShow, profile, talkTo, plusMenu, recorder, closeSheet, refresh: () => { loadUpdates(); hub.at = 0; if (cur === 'docs') docsHub(true); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } };
+  window.TribeMobile = { show, onShow, profile, myProfile: () => profile(me().id), talkTo, startTribe: typeof startTribe === 'function' ? startTribe : undefined, projectsSheet: typeof projectsSheet === 'function' ? projectsSheet : undefined, askAi, plusMenu, recorder, closeSheet, refresh: () => { loadUpdates(); hub.at = 0; if (cur === 'docs') docsHub(true); if (cur === 'tasks' || cur === 'home') suggested(cur, true); } };
   // Phone: while the drawer (rail + nest) is closed it sits off-screen; keep its controls out of the Tab order
   // and away from screen readers (found by scripts/explore.py: 15+ invisible focusable controls).
   const phoneMq = matchMedia('(max-width: 820px)');

@@ -1187,3 +1187,44 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .plats a.is-mine { border-color: #F26B1D; }
 @media (max-width: 860px) { .stats__in::before { display: none; } }
 .plats { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; } .plats span.mono { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; } .plats a { min-width: 0; }
+
+/* ================= the maker (an app by Campton) ================= */
+/* its own night palette: deep indigo, warm skin and ember, with a slow pixel sky (stars + rising embers) behind it */
+.maker { --m-bg: #17132E; --m-edge: #2C2650; --m-text: #F4EFFF; --m-soft: #B7AEDB; --m-ember: #FF8A3D;
+  position: relative; overflow: hidden; padding: 112px 0; background: var(--m-bg); border-top: 1px solid var(--m-edge); color: var(--m-soft); isolation: isolate; }
+.maker__sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; image-rendering: pixelated; }
+.maker__in { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; }
+.maker__art { margin: 0; justify-self: center; position: relative; }
+.maker__art::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: -10px; height: 10px; background: #0F0C22; border-radius: 50%; z-index: -1; }
+.maker__art img { display: block; width: min(420px, 100%); height: auto; image-rendering: pixelated; }
+.maker .eyebrow { color: var(--m-ember); }
+.maker__title { margin: 8px 0 16px; color: var(--m-text); font-size: clamp(32px, 4.4vw, 52px); line-height: 1.05; letter-spacing: -0.02em; }
+.maker__text { margin: 0 0 14px; max-width: 34em; font-size: 18px; line-height: 1.6; color: var(--m-soft); }
+.maker__links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 26px; }
+.maker__gh { color: var(--m-text); text-decoration: none; border-bottom: 1px solid var(--m-edge); padding-bottom: 2px; font-size: 14px; }
+.maker__gh:hover { border-color: var(--m-ember); color: var(--m-ember); }
+@media (max-width: 860px) {
+  .maker { padding: 72px 0; }
+  .maker__in { grid-template-columns: 1fr; gap: 28px; text-align: left; }
+  .maker__art img { width: min(300px, 80vw); }
+  .maker__text { font-size: 16px; }
+}
+
+/* ================= language picker (i18n.js) ================= */
+.lang { position: relative; }
+.lang__btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 999px; background: transparent; color: var(--muted); font: 600 12px/1 var(--mono, ui-monospace, monospace); cursor: pointer; }
+.lang__btn:hover, .lang__btn[aria-expanded="true"] { color: var(--text); border-color: color-mix(in srgb, var(--text) 30%, var(--edge)); }
+.lang__menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 180px; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.lang__menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--text); font: 500 14px/1.2 var(--font); text-align: left; cursor: pointer; }
+.lang__menu button:hover, .lang__menu button:focus-visible { background: var(--main, #1D2021); outline: none; }
+.lang__menu button[aria-checked="true"]::after { content: "✓"; color: var(--ember); font-weight: 700; }
+.lang__note { padding: 6px 10px 2px; color: var(--muted); font-size: 12px; }
+.lang__note:empty { display: none; }
+@media (max-width: 640px) { .lang__btn b { display: none; } .lang__btn { width: 34px; padding: 0; justify-content: center; } }
+.lang__chips { display: none; }
+@media (max-width: 480px) {
+  body:has(.nav__mobile-extra) .nav__end .lang { display: none; }
+  .lang__chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 0 4px; }
+  .lang__chips button { padding: 6px 10px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--muted); font: 500 13px/1 var(--font); }
+  .lang__chips button[aria-pressed="true"] { color: var(--text); border-color: var(--ember); }
+}

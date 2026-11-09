@@ -58,12 +58,14 @@
     { k: 'template', e: '📋', t: 'From a template', s: 'Plans, notes, specs' },
     { k: 'flint', e: '✨', t: 'Ask Flint', s: 'Describe it, get a draft' },
     { k: 'upload', e: '⬆️', t: 'Upload', s: 'Docs, CSV, pictures, PDFs' },
+    { k: 'assets', e: '🎒', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' },
   ];
   function start(k, o) {
     if (k === 'doc') return o.create();
     if (k === 'sheet' || k === 'deck') return o.create(k);
     if (k === 'template' && window.TribeDocsX) return window.TribeDocsX.templatePicker();
     if (k === 'flint') { const F = window.TribeFlint; if (F && F.prefill) F.prefill('make a doc about '); else if (window.TribeApp) window.TribeApp.toast('Open Flint (bottom right) and say what to make, like "make slides about our game".'); return; }
+    if (k === 'assets') { if (window.TribeAssets) window.TribeAssets.open(); return; }
     if (k === 'upload') {
       const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = '.md,.txt,.csv,.tsv,.html,.json,.png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.mp3,.wav,.m4a,.mp4,.mov,.webm,.js,.ts,.py,.css';
       inp.onchange = () => { if (inp.files.length && window.TribeDocs && window.TribeDocs.importFiles) window.TribeDocs.importFiles([...inp.files]); };

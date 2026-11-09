@@ -779,7 +779,7 @@ ${blocks.join('\n')}
     return null;
   }
 
-  return { route, build, gather, html, signature, tick, exists, load, httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits };
+  return { route, build, gather, html, signature, tick, exists, load, httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
 };
 module.exports.httpsRepo = httpsRepo;
 module.exports.visionText = visionText;

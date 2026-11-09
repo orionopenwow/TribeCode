@@ -805,3 +805,35 @@
     const go = document.querySelector('[data-learn-go]'); go.textContent = 'Open the app'; go.href = 'app/?welcome=1';
   }
 })();
+
+// The maker section's sky: a few pixel stars that twinkle and embers that drift up, drawn small and scaled up crisp.
+// Only runs while the section is on screen; with reduced motion it draws one still frame.
+(() => {
+  const cv = document.querySelector('.maker__sky'); if (!cv) return;
+  const g = cv.getContext('2d'), PX = 4, still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w = 0, h = 0, stars = [], embers = [], on = false, raf = 0, t = 0;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function size() {
+    const r = cv.getBoundingClientRect(); w = Math.max(1, Math.ceil(r.width / PX)); h = Math.max(1, Math.ceil(r.height / PX));
+    cv.width = w; cv.height = h;
+    stars = Array.from({ length: Math.round(w * h / 420) }, () => ({ x: rnd(0, w) | 0, y: rnd(0, h * 0.8) | 0, p: rnd(0, 6.28), s: rnd(0.6, 1.6) }));
+    embers = Array.from({ length: Math.max(6, Math.round(w / 24)) }, () => ({ x: rnd(0, w), y: rnd(0, h), v: rnd(3, 8), d: rnd(0, 6.28) }));
+  }
+  function draw(dt) {
+    t += dt; g.fillStyle = '#17132E'; g.fillRect(0, 0, w, h);
+    // a low hill line, flat colors
+    g.fillStyle = '#1D1838'; for (let x = 0; x < w; x++) { const y = h - 6 - Math.round(3 * Math.sin(x / 9) + 2 * Math.sin(x / 23)); g.fillRect(x, y, 1, h - y); }
+    for (const s of stars) { const a = 0.35 + 0.65 * Math.max(0, Math.sin(t * s.s + s.p)); g.fillStyle = a > 0.8 ? '#F4EFFF' : a > 0.5 ? '#7E74B0' : '#3A3368'; g.fillRect(s.x, s.y, 1, 1); }
+    for (const e of embers) {
+      e.y -= e.v * dt; e.x += Math.sin(t * 1.3 + e.d) * 2 * dt;
+      if (e.y < -2) { e.y = h + rnd(0, 10); e.x = rnd(0, w); }
+      g.fillStyle = e.y > h * 0.6 ? '#FF8A3D' : e.y > h * 0.3 ? '#C85A24' : '#6B3420'; g.fillRect(e.x | 0, e.y | 0, 1, 1);
+    }
+  }
+  let last = 0;
+  function loop(now) { const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now; draw(dt); if (on) raf = requestAnimationFrame(loop); }
+  size(); draw(0);
+  addEventListener('resize', () => { size(); draw(0); });
+  if (still || !('IntersectionObserver' in window)) return;
+  new IntersectionObserver(es => { const vis = es.some(e => e.isIntersecting); if (vis && !on) { on = true; last = 0; raf = requestAnimationFrame(loop); } else if (!vis) { on = false; cancelAnimationFrame(raf); } }).observe(cv);
+})();

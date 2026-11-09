@@ -44,7 +44,7 @@
   if (wc) wc.before(btn); else if (right) right.appendChild(btn); else ($('.titlebar') || document.body).appendChild(btn);
 
   let menu = null;
-  function close() { if (menu) { menu.remove(); menu = null; btn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }
+  function close() { const sc = document.getElementById('help-scrim'); if (sc) { sc.classList.remove('on'); setTimeout(() => sc.remove(), 160); } if (menu) { menu.remove(); menu = null; btn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }
   const outside = e => { if (menu && !menu.contains(e.target) && !btn.contains(e.target)) close(); };
   function open() {
     if (menu) return close();
@@ -53,6 +53,8 @@
     menu.innerHTML = SECTIONS.map(([title, items]) => `<div class="hm-sec"><span class="eyebrow">${esc(title)}</span>${items.map(([k, icon, t, s, run, kbd]) => { acts[k] = run;
       return `<button role="menuitem" data-help="${k}">${ico(icon)}<span class="hm-t"><b>${esc(t)}</b>${s ? `<small>${esc(s)}</small>` : ''}</span>${kbd ? `<span class="kbd">${esc(kbd)}</span>` : ''}</button>`; }).join('')}</div>`).join('')
       + `<div class="hm-foot"><span>TribeCode${ver() ? ` v${esc(ver())}` : ''}</span><span class="faint">MIT · self-hosted</span></div>`;
+    // the page behind dims a little while the menu is open (a click on it closes the menu)
+    const scrim = document.createElement('div'); scrim.className = 'help-scrim'; scrim.id = 'help-scrim'; document.body.appendChild(scrim); requestAnimationFrame(() => scrim.classList.add('on'));
     document.body.appendChild(menu);
     const r = btn.getBoundingClientRect(), w = Math.min(320, innerWidth - 16);
     menu.style.width = w + 'px'; menu.style.top = (r.bottom + 8) + 'px'; menu.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';

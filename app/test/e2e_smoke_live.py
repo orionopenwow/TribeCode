@@ -78,7 +78,7 @@ def main():
             wait_text(host, "#pj-bio", "lanterns")
             host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vtext", "Run through the night lighting lanterns.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
             host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
-            host.wait_for_selector("#pj-living .pl-cell", timeout=10000)   # the tribe has begun: the Living update shows
+            host.wait_for_selector("#pj-living .gl-tile", timeout=10000)   # the tribe has begun: the Living update shows
             shot(host, "overview")
 
             # ---- project settings: rename + emoji ----

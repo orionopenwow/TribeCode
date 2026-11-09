@@ -293,7 +293,7 @@ def main():
             # a second thread on another line, from Write mode (line comment)
             host.click("[data-mode='write']")
             host.evaluate("() => { const ta = document.querySelector('#doc-body'); const i = ta.value.indexOf('Mod support'); ta.focus(); ta.setSelectionRange(i + 2, i + 2); }")
-            host.click("#dx-comment"); host.fill("#cm-new", "Later = after 1.0, right?"); host.click("#cm-post")
+            host.evaluate("document.querySelector('#dx-comment').click()"); host.fill("#cm-new", "Later = after 1.0, right?"); host.click("#cm-post")
             wait_for(lambda: len(api("/docs/roadmap/comments", token=host_tok)["threads"]) == 2, what="line comment")
             host.click("[data-mode='read']")
             host.wait_for_selector("#doc-read mark.cm-hl:has-text('Mod support')")

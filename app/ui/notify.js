@@ -137,7 +137,7 @@
         <span class="nf-g-title">${esc(GROUP[g.type](g.items.length))}</span><time>${ago(g.items[0].at)}</time><span class="nf-caret">${open ? '−' : '+'}</span></button>
         ${open ? g.items.map(i => itemHtml(i, 'sub')).join('') : ''}</div>`;
     }).join('')
-      : `<div class="nf-empty">${filter === 'needs' ? 'Nothing needs you right now.' : filter === 'mentions' ? 'No mentions yet.' : 'You are all caught up.'}<br><button class="linkish" id="nf-empty-settings">Choose what pings you</button></div>`)
+      : `<div class="nf-empty"><span class="nf-empty-ic" aria-hidden="true">${filter === 'mentions' ? '💬' : '✨'}</span><b>${filter === 'needs' ? 'Nothing needs you right now' : filter === 'mentions' ? 'No mentions yet' : 'You’re all caught up'}</b><span>${filter === 'needs' ? 'Approvals and reviews show up here.' : filter === 'mentions' ? 'When someone @mentions you, it lands here.' : 'Approvals, mentions, bugs and DMs land here.'}</span><button class="btn sm" id="nf-empty-settings">Choose what pings you</button></div>`)
       + `<div class="nf-foot"><button class="linkish" id="nf-history">Approvals history</button>${countUnread() ? '<button class="linkish" id="nf-allread">Mark all read</button>' : ''}</div>`;
     const es = $('#nf-empty-settings'); if (es) es.onclick = openSettings;
     $('#nf-history').onclick = () => { meta.history = true; render(); };

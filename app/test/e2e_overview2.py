@@ -71,9 +71,9 @@ def main():
             assert "Add a short description" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
             assert "Invite to My Tribe" in host.text_content("#pj-invite")
             assert "At a glance" in host.text_content("#pj-living .eyebrow")
-            labels = host.eval_on_selector_all("#pj-living .pl-cell small", "els => els.map(e => e.textContent.trim().toUpperCase())")
+            labels = host.eval_on_selector_all("#pj-living .gl-tile .gl-top small", "els => els.map(e => e.textContent.trim().toUpperCase())")
             assert labels == ["NEEDS YOU", "UNREAD", "TASKS", "NEW FILES"], labels
-            widths = host.eval_on_selector_all("#pj-living .pl-cell", "els => els.map(e => Math.round(e.getBoundingClientRect().width))")
+            widths = host.eval_on_selector_all("#pj-living .gl-tile", "els => els.map(e => Math.round(e.getBoundingClientRect().width))")
             assert max(widths) - min(widths) <= 2, f"equal tiles {widths}"
             assert host.locator("#pj-living .pl-sum").count() == 0, "no duplicate sentence"
             # section order, top to bottom
@@ -112,7 +112,7 @@ def main():
             # 6. Repo & Tools: repo empty state + standup button top right + the drop zone, wired as before
             wait_text("#pj-repo", "Code repository"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
             assert host.locator("#pj-sf h3 #standup-go").is_visible(), "standup button in the card head"
-            assert host.locator("#pj-context #dropzone").is_visible(), "drop zone moved in"
+            host.wait_for_selector("#pj-context #dropzone", state="visible", timeout=8000)   # drop zone moved in (after the overview settles)
             assert host.evaluate("getComputedStyle(document.querySelector('#pj-context #dropzone')).borderStyle") == "dashed"
             # a redraw keeps the live nodes (they are moved, not copied)
             host.evaluate("document.querySelector('#dropzone').dataset.mark = 'x'")

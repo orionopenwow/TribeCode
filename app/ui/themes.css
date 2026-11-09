@@ -116,3 +116,75 @@ html body[data-theme="contrast"] :focus-visible { outline-width: 3px; }
   .th-sw { height: 24px; }
   .th-name { font-size: 12px; }
 }
+
+/* ================= v0.25 colour pass: every theme gets its own accent family and logo =================
+   --accent / --brand: the theme's signature (the "you are here" markers, the wordmark's Code, links)
+   --action: main buttons (white text on it stays >= 4.5:1), --accent-ink: accent text on dark tints
+   --sel: the selected row, tinted with the accent so you always see where you are
+   --logo-bracket / --logo-flame / --logo-tile: the logo recolors itself (app/ui/logo.js) */
+html body[data-theme="campfire"] {
+  --accent: #FE8019; --brand: #FE8019; --accent-ink: #FE9A4A; --chip: rgba(254,128,25,0.15);
+  --action: #B4501C; --action-hover: #9E4518; --rust-ink: #F2A35E;
+  --sel: #4F3B2C;
+  --logo-bracket: #EBDBB2; --logo-flame: #FE8019; --logo-tile: #32302F;
+}
+html body[data-theme="dark"] { --sel: #3B3030; }
+html body[data-theme="light"] {
+  --accent: #E0590C; --brand: #E0590C; --chip: rgba(224,89,12,0.12);
+  --action: #B4481A; --action-hover: #9C3E16;
+  --sel: #FDEDE4;
+  --logo-bracket: #12151A; --logo-flame: #F26B1D; --logo-tile: #FFFFFF;
+}
+html body[data-theme="midnight"] {
+  --accent: #FF8A3D; --brand: #FF8A3D; --accent-ink: #FF9E5E; --chip: rgba(255,138,61,0.15);
+  --accent-2: #5AB8FF; --live: #5AB8FF; --live-ink: #7CC8FF; --live-tint: rgba(90,184,255,0.15); --on-live: #071827;
+  --action: #B4512A; --sel: #1A2938;
+  --logo-bracket: #8AB8FF; --logo-flame: #FF8A3D; --logo-tile: #0E1219;
+}
+html body[data-theme="nordic"] {
+  --accent: #88C0D0; --brand: #88C0D0; --accent-ink: #8FCADA; --chip: rgba(136,192,208,0.18);
+  --action: #4C6E96; --action-hover: #42628A; --on-action: #F4F8FC; --rust-ink: #D8A48A;
+  --sel: #41505E;
+  --logo-bracket: #ECEFF4; --logo-flame: #D08770; --logo-tile: #2E3440;
+}
+html body[data-theme="nightshade"] {
+  --accent: #BD93F9; --brand: #BD93F9; --accent-ink: #CBA8FB; --chip: rgba(189,147,249,0.18);
+  --action: #7146C7; --action-hover: #633BB4; --on-action: #FBF8FF; --rust-ink: #FF92D0;
+  --sel: #423C58;
+  --logo-bracket: #BD93F9; --logo-flame: #FF79C6; --logo-tile: #21222C;
+}
+html body[data-theme="solar-dark"] {
+  --accent: #2AA198; --brand: #2AA198; --accent-ink: #3DC2B7; --chip: rgba(42,161,152,0.18);
+  --action: #1D7A73; --action-hover: #186A64; --on-action: #F2FBFA; --rust-ink: #E07A4A;
+  --sel: #094148;
+  --logo-bracket: #93A1A1; --logo-flame: #CB4B16; --logo-tile: #00232B;
+}
+html body[data-theme="solar-light"] {
+  --accent: #1E7F78; --brand: #1E7F78; --accent-ink: #1E6F69; --chip: rgba(42,161,152,0.14);
+  --action: #1E6F69; --action-hover: #185C57; --on-action: #F4FBFA;
+  --sel: #DFEAD8;
+  --logo-bracket: #586E75; --logo-flame: #CB4B16; --logo-tile: #FDF6E3;
+}
+html body[data-theme="contrast"] {
+  --accent: #FFD400; --brand: #FFD400; --accent-ink: #FFD400; --chip: rgba(255,212,0,0.18);
+  --action: #FFD400; --action-hover: #FFE04D; --on-action: #000000; --rust-ink: #FFD400;
+  --sel: #2A2400;
+  --logo-bracket: #FFFFFF; --logo-flame: #FFD400; --logo-tile: #000000;
+}
+/* the selected sidebar row and active markers follow the theme's accent */
+html body[data-theme] .nest-row.on, html body[data-theme] .nest-row[aria-current="page"] { background: var(--sel); }
+html body[data-theme] .nest-row.on::before { background: var(--accent); }
+/* v0.25: theme chips are a tiny preview of the app in that theme: rail with the themed logo, sidebar, accent button */
+.th-chip { padding: 7px; gap: 8px; border-radius: 12px; }
+.th-chip.on { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.th-pv { display: grid; grid-template-columns: 16px 30% 1fr; height: 58px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(127,127,127,.3); background: var(--p0); }
+.th-rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 5px; background: color-mix(in srgb, var(--p0) 70%, #000); }
+.th-logo { display: flex; align-items: center; gap: 1px; } .th-logo i { width: 2px; height: 7px; background: var(--lb); border-radius: 1px; } .th-logo b { width: 4px; height: 6px; background: var(--lf); border-radius: 2px 2px 1px 1px; }
+.th-dot { width: 8px; height: 8px; border-radius: 3px; background: var(--p1); }
+.th-side { display: flex; flex-direction: column; gap: 4px; padding: 6px 4px; background: var(--p1); }
+.th-side i { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--lb) 30%, var(--p1)); } .th-side i.on { background: color-mix(in srgb, var(--p2) 55%, var(--p1)); }
+.th-main { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 7px 6px; }
+.th-main i { height: 5px; width: 80%; border-radius: 3px; background: color-mix(in srgb, var(--lb) 35%, var(--p0)); } .th-main i.s { width: 55%; }
+.th-main b { position: absolute; right: 6px; bottom: 6px; width: 22px; height: 9px; border-radius: 5px; background: var(--p2); }
+.th-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.th-name em { font-style: normal; color: var(--accent); font-weight: 800; }
