@@ -34,7 +34,7 @@ def main():
         pg.focus("#lang-btn"); pg.keyboard.press("Enter"); pg.keyboard.press("ArrowDown"); pg.keyboard.press("Enter")
         assert pg.evaluate("TribeLang.get()") == "es"; pg.evaluate("TribeLang.set('en')")
         ph = b.new_page(viewport={"width": 390, "height": 844}, locale="de-DE"); ph.on("pageerror", lambda e: errs.append(str(e)))
-        ph.goto(base + "/learn.html#m1-0"); ph.wait_for_selector("#lang-btn")
+        ph.goto(base + "/learn.html#m1-0"); ph.wait_for_selector("#lang-btn", state="attached")
         assert ph.evaluate("TribeLang.get()") == "de" and "Herunterladen" in ph.text_content("header") and ph.locator("#lang-chips [aria-pressed=true]").count() == 1
         sw = ph.evaluate("[document.documentElement.scrollWidth, innerWidth]"); assert sw[0] <= sw[1] + 1, sw
         for k in ["m1-0", "m1-3", "m2-1", "m3-2", "m3-4", "m4-5", "m4-6", "m2-q"]:
