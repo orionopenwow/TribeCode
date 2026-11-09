@@ -212,6 +212,8 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       .replace(/\{\{palette\}\}/g, pal.colors.map((c, i) => `${vars[i]}: ${c};`).join(' '));
     const written = [];
     copyTree(path.join(TEMPLATES, tpl), repo, fill, written);
+    // the game starter's page takes the project's name (the template keeps "Pixel Quest" so the test project still reads well)
+    try { const ix = path.join(repo, 'index.html'); if (written.some(f => /(^|[\\/])index\.html$/.test(f))) { const h = fs.readFileSync(ix, 'utf8'); if (h.includes('<title>Pixel Quest</title>')) fs.writeFileSync(ix, h.replace('<title>Pixel Quest</title>', `<title>${esc(p.name)}</title>`)); } } catch {}
     const pf = path.join(repo, 'design', 'palette.css');
     if (!fs.existsSync(pf)) { fs.mkdirSync(path.dirname(pf), { recursive: true }); fs.writeFileSync(pf, `/* ${pal.name}: the project's colors. Use these variables everywhere. */\n:root {\n${pal.colors.map((c, i) => `  ${vars[i]}: ${c};`).join('\n')}\n}\n`); written.push('design/palette.css'); }
     if (written.length) {
