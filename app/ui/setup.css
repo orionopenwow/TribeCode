@@ -128,3 +128,7 @@ body[data-vision="0"] #nest-add { display: none; }
   .sx-thumb { flex-basis: 48px; }
   .sx-body b { font-size: 16px; }
 }
+/* v0.25: start from a tribe template */
+.su-tpls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 12px; }
+.su-tpl { border: 1px solid var(--border, #2A313C); background: var(--surface, #1B2028); color: inherit; border-radius: 999px; padding: 5px 11px; font-size: 13px; cursor: pointer; }
+.su-tpl.on { border-color: #F26B1D; background: var(--raised, #1E242D); }

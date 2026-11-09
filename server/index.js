@@ -433,7 +433,7 @@ const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => m
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
-const preview = makePreview({ P, store: baseStore, getMembers: () => members, broadcast, share, lanUrls, port: PORT, log: m => console.error('  ' + m) });   // app preview (server/preview.js)   // the pinned repo's thumbnail: README image → screenshot → tile
+const preview = makePreview({ P, store: baseStore, getMembers: () => members, broadcast, share, lanUrls, port: PORT, log: m => console.error('  ' + m), llm });   // app preview (server/preview.js)   // the pinned repo's thumbnail: README image → screenshot → tile
 // Home Screen app links (server/applink.js) and Desktop folders: export, live copy, shortcut (server/export.js).
 const applink = require('./applink')({ P, store: baseStore, getMembers: () => members, preview, shareBase: () => share.publicUrl() || (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url || null, log: m => console.error('  ' + m) });
 const exporter = require('./export')({ P, W, store: baseStore, applink, isLocal, port: PORT, getMembers: () => members, log: m => console.log('  ' + m) });
@@ -504,7 +504,8 @@ dashboard.setFlow(flow);
 const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str , ui: UI, llm, sense: () => sense });   // per-project Website (server/showcase.js)
 sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
 const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W, perms });   // feat/customize: tribe + project look (server/look.js)
-setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members });   // feat/setup-flow: role flows, Create the repo, Make the starter
+const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
+setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl });   // feat/setup-flow: role flows, Create the repo, Make the starter
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
 mcpFlow = makeMcpFlow({ flow, P });
@@ -804,7 +805,8 @@ async function apiInProject(req, res, url) {
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
-  if (a === 'projects' && c === 'setup') return setupFlow.route(req, res, ctx());   // feat/setup-flow (server/setup.js)
+  if (a === 'projects' && c === 'setup') return setupFlow.route(req, res, ctx());
+  if (a === 'site-templates' || (a === 'projects' && c === 'site-template')) return siteTpl.route(req, res, { ...ctx(), str });   // feat/setup-flow (server/setup.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
   if (a === 'whiteboard') return whiteboard.route(req, res, ctx());   // feat/whiteboard (server/whiteboard.js)
   if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)

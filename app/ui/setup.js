@@ -15,7 +15,7 @@
   const hideKey = p => `tribecode.setup.${p}.hide`;
   const hidden = p => { try { return localStorage.getItem(hideKey(p)) === '1'; } catch { return false; } };
 
-  let st = null, forPid = '', seq = 0, making = false;
+  let st = null, forPid = '', seq = 0, making = false, tplPick = '';   // tplPick: '' = the built-in starter, 'tribe:<slug>' = a host's template
   async function load(p) {
     const n = ++seq;
     try { const r = await C.api(`/projects/${encodeURIComponent(p)}/setup`); if (n === seq) { st = r; forPid = p; } }
@@ -33,7 +33,7 @@
     if (allRoles && s.made) { slot.innerHTML = ''; return; }
     const noun = st.kind ? st.label : 'project';
     const starterHtml = s.made ? `<div class="su-made">${TICK}<span>The starter is in the code repository.</span><button class="linkish" id="su-preview">Open the preview</button></div>`
-      : s.ready && st.canHost ? `<div class="su-starter" id="su-starter-row"><span class="su-e" aria-hidden="true">🚀</span><div class="su-st-t"><b>Make the starter</b><small>Starter files for your ${esc(noun)}, committed to the code repository and open in Preview. Nothing gets overwritten.</small></div><button class="btn primary" id="su-starter" ${making ? 'disabled' : ''}>${making ? 'Making…' : 'Make the starter'}</button></div>`
+      : s.ready && st.canHost ? `<div class="su-starter" id="su-starter-row"><span class="su-e" aria-hidden="true">🚀</span><div class="su-st-t"><b>Make the starter</b><small>Starter files for your ${esc(noun)}, committed to the code repository and open in Preview. Nothing gets overwritten.</small></div><button class="btn primary" id="su-starter" ${making ? 'disabled' : ''}>${making ? 'Making…' : 'Make the starter'}</button></div>${(s.templates || []).length ? `<div class="su-tpls" role="radiogroup" aria-label="Start from"><span class="faint">Start from</span><button type="button" role="radio" class="su-tpl ${!tplPick ? 'on' : ''}" aria-checked="${!tplPick}" data-sutpl="">TribeCode starter</button>${s.templates.map(t => `<button type="button" role="radio" class="su-tpl ${tplPick === 'tribe:' + t.slug ? 'on' : ''}" aria-checked="${tplPick === 'tribe:' + t.slug}" data-sutpl="tribe:${esc(t.slug)}" title="${esc(t.summary || '')}">🧩 ${esc(t.name)}</button>`).join('')}</div>` : ''}`
       : '';
     slot.innerHTML = `<section class="card su-card" id="pj-setup">
       <div class="su-head"><div><span class="eyebrow">Shape it · optional</span><h3>Pick a role, make one choice</h3></div><button class="linkish su-hide" id="su-hide">Hide</button></div>
@@ -44,6 +44,7 @@
     slot.querySelectorAll('[data-role]').forEach(b => b.onclick = () => open(b.dataset.role));
     const hb = $('#su-hide'); if (hb) hb.onclick = () => { try { localStorage.setItem(hideKey(forPid), '1'); } catch {} draw(); };
     const sb = $('#su-starter'); if (sb) sb.onclick = starter;
+    slot.querySelectorAll('[data-sutpl]').forEach(b => b.onclick = () => { tplPick = b.dataset.sutpl; draw(); });
     const pv = $('#su-preview'); if (pv) pv.onclick = () => window.TribePreview && window.TribePreview.open();
   }
 
@@ -83,7 +84,7 @@
     if (making) return; making = true;
     const b = $('#su-starter'); if (b) { b.disabled = true; b.textContent = 'Making…'; }
     try {
-      const r = await C.api(`/projects/${encodeURIComponent(forPid)}/setup/starter`, { method: 'POST' });
+      const r = await C.api(`/projects/${encodeURIComponent(forPid)}/setup/starter`, { method: 'POST', body: tplPick ? { template: tplPick } : undefined });
       making = false; st = r.setup; draw();
       toast(r.written.length ? `🚀 Starter ready: ${r.written.length} files in the code repository` : 'The code repository already had these files');
       if (window.TribeProjects && window.TribeProjects.refresh) window.TribeProjects.refresh();

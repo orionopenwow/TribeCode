@@ -71,10 +71,25 @@ return Promise.all(jobs).then(function(){var html=new XMLSerializer().serializeT
 var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'"><foreignObject x="0" y="'+(-window.scrollY)+'" width="'+w+'" height="'+Math.max(h,document.documentElement.scrollHeight)+'">'+html+'</foreignObject></svg>';
 return new Promise(function(res,rej){var im=new Image();im.onload=function(){try{var cv=document.createElement('canvas');cv.width=w;cv.height=h;var g=cv.getContext('2d');g.fillStyle=getComputedStyle(document.body).backgroundColor||'#fff';g.fillRect(0,0,w,h);g.drawImage(im,0,0);res(cv.toDataURL('image/png'))}catch(e){rej(e)}};im.onerror=function(){rej(new Error('render failed'))};im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)})})}
 function shot(){var w=Math.min(window.innerWidth,2400),h=Math.min(window.innerHeight,2400);return page(w,h).catch(function(){var c=bigCanvas();if(!c)throw new Error('nothing to capture');return c.toDataURL('image/png')})}
+var ED=null;function edOn(on){if(on&&!ED){var st=document.createElement('style');st.setAttribute('data-tribe-preview','');st.textContent='[data-tc-hov]{outline:2px dashed #38C6B1!important;outline-offset:2px;cursor:pointer}[data-tc-sel]{outline:2px solid #F26B1D!important;outline-offset:2px}[contenteditable=true][data-tc-sel]{outline-style:solid;cursor:text}';document.head.appendChild(st);
+var TXT=/^(H[1-6]|P|A|LI|SPAN|BUTTON|FIGCAPTION|BLOCKQUOTE|TD|TH|LABEL|SMALL|STRONG|EM|B|I|DT|DD|SUMMARY|CAPTION)$/,hov=null,sel=null,before='';
+function leaf(el){return el&&TXT.test(el.tagName)&&el.children.length<=2&&el.textContent.trim().length>0&&el.textContent.length<600}
+function over(e){var t=e.target;if(t===hov)return;if(hov)hov.removeAttribute('data-tc-hov');hov=t&&t.nodeType===1&&t!==document.body&&t!==document.documentElement?t:null;if(hov)hov.setAttribute('data-tc-hov','')}
+function pick(t){if(sel&&sel!==t){finish(sel);sel.removeAttribute('data-tc-sel')}sel=t;t.setAttribute('data-tc-sel','');var h=t.outerHTML.replace(/ data-tc-(hov|sel)=""/g,'');say({tc:'pick',tag:t.tagName.toLowerCase(),text:t.textContent.trim().slice(0,600),html:h.slice(0,2000),editable:leaf(t),href:location.pathname})}
+function click(e){if(e.target.closest&&e.target.closest('[contenteditable=true]'))return;e.preventDefault();e.stopPropagation();var t=e.target;if(t.nodeType!==1)return;pick(t)}
+function dbl(e){var t=e.target;if(!leaf(t))return;e.preventDefault();pick(t);before=t.textContent;t.setAttribute('contenteditable','true');t.focus()}
+function finish(t){if(t.getAttribute('contenteditable')!=='true')return;t.removeAttribute('contenteditable');var after=t.textContent;if(after!==before&&before)say({tc:'text',tag:t.tagName.toLowerCase(),before:before.trim(),after:after.trim(),href:location.pathname});before=''}
+function key(e){if(!sel)return;if(e.key==='Enter'&&sel.getAttribute('contenteditable')==='true'&&!e.shiftKey){e.preventDefault();finish(sel)}if(e.key==='Escape'){if(sel.getAttribute('contenteditable')==='true'){sel.textContent=before;sel.removeAttribute('contenteditable');before=''}else{sel.removeAttribute('data-tc-sel');sel=null;say({tc:'pick',none:true})}}}
+function blur(e){if(sel&&e.target===sel)finish(sel)}
+document.addEventListener('mouseover',over,true);document.addEventListener('click',click,true);document.addEventListener('dblclick',dbl,true);document.addEventListener('keydown',key,true);document.addEventListener('focusout',blur,true);
+ED={off:function(){document.removeEventListener('mouseover',over,true);document.removeEventListener('click',click,true);document.removeEventListener('dblclick',dbl,true);document.removeEventListener('keydown',key,true);document.removeEventListener('focusout',blur,true);if(sel){finish(sel);sel.removeAttribute('data-tc-sel')}if(hov)hov.removeAttribute('data-tc-hov');st.remove()}}}
+else if(!on&&ED){ED.off();ED=null}}
+try{if(sessionStorage.getItem('tc-edit')==='1')edOn(true)}catch(_){}
+window.addEventListener('message',function(e){if(!up||e.source!==up||!e.data||e.data.tc!=='edit')return;edOn(!!e.data.on);try{sessionStorage.setItem('tc-edit',e.data.on?'1':'0')}catch(_){}});
 window.addEventListener('message',function(e){if(!up||e.source!==up||!e.data||e.data.tc!=='shot')return;var id=e.data.id;shot().then(function(d){say({tc:'shot',id:id,data:d})},function(err){say({tc:'shot',id:id,error:String(err&&err.message||err)})})});
 })();</script>`;
 
-module.exports = function preview({ P, store, getMembers, broadcast, share, lanUrls = () => [], port: tribePort, log = () => {} }) {
+module.exports = function preview({ P, store, getMembers, broadcast, share, lanUrls = () => [], port: tribePort, log = () => {}, llm = null }) {
   // ---------- per-tribe secret + per-project settings (kept apart from projects.js) ----------
   const SECRET_FILE = '.tribe/preview-secret';
   let key = null;
@@ -393,7 +408,94 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
       watch(pid); changed(pid, []);
       return send(res, 200, { preview: status(pid, me) });
     }
+    // v0.25: edit the page right in the preview. Text changes made in place, and "Ask Flint to change this".
+    if ((b === 'edit' || b === 'flint') && m === 'POST') {
+      if (!me || ['spectator', 'guest'].includes(me.role)) return fail(res, 403, 'only builders can edit the page');
+      if (modeOf(pid) === 'dev') return fail(res, 409, 'this preview runs the project\'s own dev server: edit the source files instead');
+      const body = await readBody(req, 128 * 1024);
+      const f = pageFile(pid, body.href);
+      if (f.error) return fail(res, f.status, f.error);
+      try {
+        const out = b === 'edit' ? textEdit(f, String(body.before || ''), String(body.after || ''), String(body.tag || '').toLowerCase()) : await flintEdit(pid, f, body, me);
+        changed(pid, [f.rel]);
+        return send(res, 200, { ok: true, file: f.rel, ...out });
+      } catch (e) { return fail(res, e.status || 500, e.message); }
+    }
     return null;
+  }
+  // the source file behind a preview page (its pathname), inside the web root, html only
+  function pageFile(pid, href) {
+    const r = rootOf(pid); if (!r.root) return { status: 404, error: 'no web page in this project yet' };
+    let rel = String(href || '').replace(/^\/preview\/[^/]+\/pv1\.[^/]+\/?/, '');
+    try { rel = decodeURIComponent(rel); } catch { return { status: 400, error: 'bad page address' }; }
+    if (!rel || rel.endsWith('/')) rel += 'index.html';
+    const segs = rel.split(/[\\/]+/).filter(Boolean);
+    if (segs.some(x => x === '..' || x.startsWith('.') || x === 'node_modules' || x === RESERVED) || !/\.html?$/i.test(rel)) return { status: 400, error: 'only the project\'s own HTML pages can be edited here' };
+    let realRoot; try { realRoot = fs.realpathSync(r.root); } catch { return { status: 404, error: 'not found' }; }
+    let file = path.resolve(realRoot, ...segs); try { file = fs.realpathSync(file); } catch { return { status: 404, error: 'that page is not a file in the repo' }; }
+    if (!file.startsWith(realRoot + path.sep)) return { status: 403, error: 'that page is outside the app folder' };
+    const st = fs.statSync(file); if (st.size > 1024 * 1024) return { status: 413, error: 'that page is too big to edit here' };
+    return { file, rel: path.relative(r.repo, file).replace(/\\/g, '/'), root: realRoot };
+  }
+  const escHtml = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const reEsc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // find `before` once in the source: as typed, HTML-escaped, then with any run of whitespace (or a tag break) between words
+  function findOnce(src, before) {
+    const tries = [before, escHtml(before)];
+    for (const t of tries) { if (!t) continue; const i = src.indexOf(t); if (i >= 0 && src.indexOf(t, i + 1) < 0) return { i, len: t.length }; }
+    const words = escHtml(before).split(/\s+/).filter(Boolean); if (!words.length || words.length > 120) return null;
+    const re = new RegExp(words.map(reEsc).join('(?:\\s|&nbsp;)+'), 'g'); const all = [...src.matchAll(re)];
+    return all.length === 1 ? { i: all[0].index, len: all[0][0].length } : null;
+  }
+  function textEdit(f, before, after, tag) {
+    before = before.trim(); after = after.trim();
+    if (!before || before.length > 2000 || after.length > 4000) throw Object.assign(new Error('nothing to change'), { status: 400 });
+    const src = fs.readFileSync(f.file, 'utf8');
+    let at = findOnce(src, before);
+    if (!at && /^[a-z][a-z0-9]{0,9}$/.test(tag || '')) {   // the same words elsewhere (a <title>, say): the one inside this kind of element
+      const re = new RegExp(`(<${tag}\\b[^>]*>\\s*)(${escHtml(before).split(/\s+/).map(reEsc).join('(?:\\s|&nbsp;)+')})(\\s*</${tag}>)`, 'g'), all = [...src.matchAll(re)];
+      if (all.length === 1) at = { i: all[0].index + all[0][1].length, len: all[0][2].length };
+    }
+    if (!at) throw Object.assign(new Error('couldn\'t find that text exactly once in the page\'s source (it may come from a script). Ask Flint, or edit the file in Files › Code.'), { status: 409 });
+    fs.writeFileSync(f.file, src.slice(0, at.i) + escHtml(after) + src.slice(at.i + at.len));
+    log(`preview edit: ${f.rel}`);
+    return { changed: 1 };
+  }
+  async function flintEdit(pid, f, body, me) {
+    const ask = String(body.ask || '').trim().slice(0, 600), pick = body.pick || {};
+    if (!ask) throw Object.assign(new Error('say what to change'), { status: 400 });
+    const text = String(pick.text || '').trim().slice(0, 600);
+    // no AI needed for the simple ones: new words, or taking the element out
+    const say = /^(?:change|set|make|rename)?\s*(?:the\s+)?(?:text|it|this|words?)?\s*(?:to|say|says|read|reads)\s*[:"“']?\s*(.+?)["”']?\s*$/i.exec(ask);
+    if (say && text && !/\b(color|colour|bigger|smaller|bold|font|size|red|blue|green|center|left|right)\b/i.test(say[1])) return { ...textEdit(f, text, say[1], String(pick.tag || '').toLowerCase()), say: 'Changed the words.', via: 'rules' };
+    if (/^(?:delete|remove|hide|take out|get rid of)\s+(?:this|it|that)\b/i.test(ask) && text && pick.tag && /^[a-z0-9]+$/.test(pick.tag)) {
+      const src = fs.readFileSync(f.file, 'utf8'), at = findOnce(src, text);
+      if (at) {
+        const open = src.lastIndexOf('<' + pick.tag, at.i), close = src.indexOf('</' + pick.tag + '>', at.i + at.len);
+        if (open >= 0 && close > 0 && src.slice(open, at.i).indexOf('<' + pick.tag, 1) < 0) { fs.writeFileSync(f.file, src.slice(0, open) + src.slice(close + pick.tag.length + 3)); return { changed: 1, say: 'Took it out.', via: 'rules' }; }
+      }
+    }
+    if (!llm || !llm.status || !llm.status().online) throw Object.assign(new Error('Flint needs an AI for that one. Choose Flint\'s AI in Settings, or say "change it to …" for new words.'), { status: 503 });
+    const src = fs.readFileSync(f.file, 'utf8');
+    // the page's own stylesheet (first local <link rel=stylesheet>), so style changes land in the CSS
+    let css = null; const lm = /<link[^>]+rel=["']?stylesheet["']?[^>]*href=["']([^"':?#]+\.css)["']/i.exec(src) || /<link[^>]+href=["']([^"':?#]+\.css)["'][^>]*rel=["']?stylesheet/i.exec(src);
+    if (lm) { try { const cf = fs.realpathSync(path.resolve(path.dirname(f.file), lm[1])); if (cf.startsWith(f.root + path.sep) && fs.statSync(cf).size < 64 * 1024) css = { file: cf, rel: path.relative(path.dirname(f.file), cf).replace(/\\/g, '/'), text: fs.readFileSync(cf, 'utf8') }; } catch {} }
+    let html = src; if (html.length > 48000) { const at = text ? findOnce(src, text) : null, c = at ? at.i : 0; html = src.slice(Math.max(0, c - 20000), c + 20000); }
+    const system = 'You edit a web page for a beginner. Make the smallest change that does what they asked, to the element they picked. Keep their style and structure. Reply with ONLY JSON, no prose, no code fences: {"edits":[{"file":"page" or "css","find":"exact text copied from that file","replace":"the new text"}],"say":"one short sentence about what you changed"}. Every "find" must appear exactly once in its file: copy enough surrounding characters to make it unique. At most 6 edits. Never add scripts, external links or tracking.';
+    const prompt = `What they asked: ${ask}\n\nThe element they picked (as the browser shows it): <${pick.tag || '?'}> ${String(pick.html || '').slice(0, 1600)}\n\n=== page (${f.rel}) ===\n${html}\n${css ? `\n=== css (${css.rel}) ===\n${css.text.slice(0, 30000)}\n` : ''}`;
+    let r; try { r = await llm.stream({ system, prompt, maxTokens: 1500, temperature: 0.2, timeoutMs: 120_000, me }); } catch (e) { throw Object.assign(new Error('Flint\'s AI didn\'t answer: ' + (e.message || e)), { status: 502 }); }
+    const raw = String((r && r.text) || ''), j = (() => { const a = raw.indexOf('{'), z = raw.lastIndexOf('}'); try { return JSON.parse(raw.slice(a, z + 1)); } catch { return null; } })();
+    if (!j || !Array.isArray(j.edits) || !j.edits.length) throw Object.assign(new Error('Flint couldn\'t work out a change for that. Try saying it another way.'), { status: 422 });
+    const files = { page: { file: f.file, text: src }, ...(css ? { css: { file: css.file, text: css.text } } : {}) };
+    for (const e of j.edits.slice(0, 6)) {
+      const tgt = files[e.file === 'css' ? 'css' : 'page']; if (!tgt || typeof e.find !== 'string' || typeof e.replace !== 'string' || !e.find) throw Object.assign(new Error('Flint\'s change didn\'t fit the page, nothing was changed'), { status: 422 });
+      if (/<script|javascript:|on\w+\s*=|<iframe|@import\s+url\(\s*['"]?https?:/i.test(e.replace) && !/<script|javascript:|on\w+\s*=|<iframe/i.test(e.find)) throw Object.assign(new Error('Flint tried to add a script or an outside link, so nothing was changed'), { status: 422 });
+      const i = tgt.text.indexOf(e.find); if (i < 0 || tgt.text.indexOf(e.find, i + 1) >= 0) throw Object.assign(new Error('Flint\'s change didn\'t match the page exactly, nothing was changed. Try again.'), { status: 422 });
+      tgt.text = tgt.text.slice(0, i) + e.replace + tgt.text.slice(i + e.find.length);
+    }
+    for (const k of Object.keys(files)) fs.writeFileSync(files[k].file, files[k].text);
+    log(`preview flint edit: ${f.rel}`);
+    return { changed: j.edits.length, say: String(j.say || 'Done.').slice(0, 200), via: (r && r.via) || 'brain' };
   }
 
   return { match, serve, upgrade, route, mint, verify, rootOf, status, changed, links, watch, CANDIDATES, okSub };
