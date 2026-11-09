@@ -27,7 +27,11 @@ def rot(img,deg,piv):
     for yy in range(img.height):
         for xx in range(img.width): op[xx,yy]=bp[xx*k+k//2,yy*k+k//2]
     return out
-LARM=armsprite(4,22,67,108); LROT=[rot(LARM,a,(15,67)) for a in (20,22)]
+UPPER=armsprite(4,22,67,86); FORE=armsprite(4,22,80,96)
+LROT=[rot(UPPER,a,(15,67)) for a in (20,22)]
+# the forearm is the portrait's own lower sleeve, turned to reach the keyboard, its top moved to the elbow
+def shifted(img,dx,dy): o=Image.new('RGBA',img.size,(0,0,0,0)); o.alpha_composite(img,(dx,dy)); return o
+FROT=[shifted(rot(FORE,a,(13,80)),5,1) for a in (78,74)]
 def blink(img):
     d=img.load()
     for (x0,x1) in ((28,39),(49,60)):
@@ -50,12 +54,26 @@ def frame(i):
     for yy in range(3,32):
         for xx in range(4,22): lp[xx,yy]=(0,0,0,0)
     c.alpha_composite(low,(21,64))
-    c.alpha_composite(LROT[1 if i%2==0 else 0].crop((0,64,70,110)),(21,64))
+    k2=1 if i%2==0 else 0
+    al=Image.new('RGBA',(W,H),(0,0,0,0))
+    al.alpha_composite(FROT[k2].crop((0,64,70,110)),(21,64-k2)); al.alpha_composite(LROT[k2].crop((0,64,70,110)),(21,64))
+    # tidy the rotated arm on its own layer: fill pinholes in the outline, drop stray single pixels
+    ap2=al.load()
+    for _ in range(2):
+        for yy in range(64,90):
+            for xx in range(18,64):
+                on=sum(1 for dx,dy in ((1,0),(-1,0),(0,1),(0,-1)) if ap2[xx+dx,yy+dy][3]>0)
+                if ap2[xx,yy][3]==0 and on>=3: ap2[xx,yy]=dark+(255,)
+                elif ap2[xx,yy][3]>0 and on<=1: ap2[xx,yy]=(0,0,0,0)
+    # the outer edge gets one clean dark outline where the arm meets the chair
+    for yy in range(64,90):
+        for xx in range(18,64):
+            if ap2[xx,yy][3]==0 and any(ap2[xx+dx,yy][3]>0 for dx in (1,)) and ap2[xx+1,yy][:3]!=dark: ap2[xx,yy]=dark+(255,)
+    c.alpha_composite(al)
     c.alpha_composite(top,(21,bob))
     # forearms: shirt sleeves from the shoulders down to the laptop's sides (the hands reach behind the lid)
     def sleeve(pts):
         g.polygon(pts, fill=shirt+(255,), outline=dark+(255,))
-    sleeve([(41,80),(47,78),(62,80),(60,87),(46,87)])
     sleeve([(78,72),(89,72),(109,81),(109,87),(104,87)])
     shl=tuple(min(255,int(v*1.45)+10) for v in shirt)
     g.line((41,73,60,81),fill=shl+(255,)); g.line((79,73,99,81),fill=shl+(255,))
