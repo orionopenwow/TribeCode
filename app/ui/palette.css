@@ -84,7 +84,7 @@ button.claude[data-give]::before { content: '✨'; }
 #pj-check .ock-row[data-step="task"] .ock-l::before { content: '📝'; }
 #pj-check .ock-row[data-step="friend"] .ock-l::before { content: '👋'; }
 #pj-check .ock-row[data-step="claude"] .ock-l::before { content: '🤖'; }
-#pj-check .ock-row[data-step="repo"] .ock-l::before { content: '🌿'; }
+#pj-check .ock-row[data-step="repo"] .ock-l::before { content: ''; display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z'/%3E%3C/svg%3E") center / contain no-repeat; }   /* the GitHub mark */
 #pj-check .ock-row.on .ock-l::before { filter: grayscale(1); opacity: .5; }
 #pj-check.done .ock-allset::before { content: '🎉'; margin-right: 6px; }
 
@@ -228,3 +228,22 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .pj-more[open] > summary { margin-bottom: 14px; color: var(--white, #F8FAFC); }
 @media (max-width: 820px) { .pj-glance .pl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pj-newfiles { margin-left: 0; } }
 .pj-files-row { margin-top: 16px; }
+/* the repo step wears the GitHub mark; Connect GitHub opens the in-app sign-in */
+.ock-emo .ock-ghm { width: 28px; height: 28px; color: var(--text); }
+@media (max-width: 820px) { .ock-emo .ock-ghm { width: 22px; height: 22px; } }
+.ock-gh { margin-right: 6px; }
+.pj-gh-h { display: flex; align-items: center; gap: 10px; } .pj-gh-h .ock-ghm { width: 24px; height: 24px; }
+.pj-gh-box { margin: 14px 0 4px; }
+/* the checklist, inline: write the vision in its card, then pick a first task */
+#pj-check.hero .ock-card .ock-inline { grid-column: 1 / -1; }
+.ock-vis textarea { width: 100%; height: 76px; min-height: 64px; resize: vertical; font: inherit; font-size: 15px; line-height: 1.5; padding: 10px 12px; border-radius: 10px; }
+.ock-in-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; } .ock-in-foot small { flex: 1; font-size: 13px; }
+.ock-save { border-color: var(--action, #B4512A); color: var(--text); }
+.ock-save:hover { background: color-mix(in srgb, var(--action, #B4512A) 18%, transparent); }
+.ock-sugg { display: grid; gap: 8px; }
+.ock-sugg .eyebrow { font-size: 12px; }
+.ock-sugg-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.ock-sg { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.ock-sg:hover { border-color: var(--teal, #38C6B1); } .ock-sg span { color: var(--teal, #38C6B1); font-weight: 700; }
+.ock-own { display: flex; gap: 8px; } .ock-own .input { flex: 1; min-width: 0; font-size: 14px; }
+.ock-row .ock-main .ock-inline { margin-top: 10px; }

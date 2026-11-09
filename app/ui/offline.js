@@ -540,6 +540,16 @@
         break;
       }
       case 'join': return no(410, 'This is a pretend link from the offline demo: it only works in the browser that made it.');
+      case 'github': {   // a pretend GitHub sign-in, so the demo shows Connect GitHub end to end (nothing leaves the browser)
+        const g = db.gh || (db.gh = { signedIn: false, login: null, polls: 0, state: 'none' });
+        const view = () => ({ configured: true, source: 'tribecode', signedIn: g.signedIn, login: g.login, via: g.signedIn ? 'oauth' : null, flow: { state: g.state }, local: true, canConfigure: false, demo: true });
+        if (GET && !b) return ok({ github: view() });
+        if (b === 'device' && POST) { g.state = 'pending'; g.polls = 0; save(); return ok({ userCode: 'DEMO-2026', verificationUri: 'https://github.com/login/device', expiresAt: Date.now() + 900000, interval: 1 }); }
+        if (b === 'device' && GET) { if (g.state === 'pending' && ++g.polls >= 2) { g.state = 'ok'; g.signedIn = true; g.login = (pfRaw('me') || {}).name ? String(pfRaw('me').name).toLowerCase().replace(/[^a-z0-9-]/g, '') || 'you' : 'you'; } save(); return ok({ state: g.state, login: g.login }); }
+        if (b === 'device' && DEL) { g.state = 'none'; save(); return ok({}); }
+        if (b === 'signout' && POST) { Object.assign(g, { signedIn: false, login: null, state: 'none' }); save(); return ok({ github: view() }); }
+        return no(400, 'not in the demo');
+      }
       case 'profile': {
         if (GET && !b) return ok({ profile: pfFull('me'), palette: PF_COLORS, pixels: PF_PIXELS, notes: db.pfNotes || {}, muted: db.pfMuted || [], limits: { pronouns: 40, bio: 300, status: 80, link: 300, label: 32, nick: 32, note: 256 } });
         if ((PATCH || PUT) && !b) return ok({ profile: pfPatch('me', body || {}) });

@@ -4,13 +4,14 @@
 // "Start a project" flow (drop a folder or code repository, paste a GitHub URL or a path), the invite project
 // picker, and the mobile project switcher sheet. Server side: server/projects.js, rooms.js, workspace.js.
 (function () {
+  const GH_MARK = '<svg class="ock-ghm" viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>';   // the GitHub mark (the repo step)
   const $ = s => document.querySelector(s);
   const C = window.TribeClient;
   const App = () => window.TribeApp;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const initials = n => (n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('').toUpperCase() || '?';
   const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
-  const toast = m => App() && App().toast(m);
+  const toast = (m, k) => App() && App().toast(m, k);
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!isFinite(s)) return ''; if (s < 60) return 'now'; if (s < 3600) return `${Math.floor(s / 60)}m`; if (s < 86400) return `${Math.floor(s / 3600)}h`; return `${Math.floor(s / 86400)}d`; };
   const ico = (id, sz = 16) => `<svg class="i" style="width:${sz}px;height:${sz}px"><use href="#${id}"/></svg>`;
@@ -142,10 +143,11 @@
   function step(k) {
     const p = curP(); if (!p) return;
     if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude();
-    else if (k === 'repo') { if (p.hasRepo || !isHost()) App().show('repo'); else createRepo(p); }   // feat/setup-flow: one click makes the code repository
+    else if (k === 'repo') { if (p.hasRepo || !isHost()) App().show('repo'); else createRepo(p); }
+    else if (k === 'github') connectGithub(p);   // sign in to GitHub inside the app   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
-  let ovSeq = 0;
+  let ovSeq = 0, visDraft = '';   // the checklist's inline vision box keeps what you typed across redraws
   async function overview() {
     const el = $('#pj-overview'); if (!el) return;
     const seq = ++ovSeq;   // the latest call wins: an older, slower render never paints over a newer one
@@ -160,6 +162,7 @@
     const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
     let plan = null; try { plan = (await C.api('/coord/plan')).plan; } catch {}
     let tasksAll = []; try { tasksAll = (await C.api('/tasks')).tasks || []; } catch {}   // simple-dashboard: the Tasks tile and Up next
+    let ghs = null; if (me().role !== 'spectator' && me().role !== 'agent') try { ghs = (await C.api('/github')).github || null; } catch {}   // the repo step: Connect GitHub first, then Create
     if (!$('#pj-overview') || curP() !== p) return;   // switched away while loading
     stash();
     const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
@@ -173,10 +176,14 @@
     const pk = `tribecode.ov.${p.id}.`, lsg = k => { try { return localStorage.getItem(pk + k); } catch { return null; } };
     const lss = (k, v) => { try { v == null ? localStorage.removeItem(pk + k) : localStorage.setItem(pk + k, v); } catch {} };
     const steps = [
-      { id: 'vision', emo: '✨', label: 'Write the vision', sub: 'Say what you’re making and who it’s for. Everyone reads it.', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
-      { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '' },
+      { id: 'vision', emo: '✨', label: 'Write the vision', sub: 'Say what you’re making and who it’s for. Everyone reads it.', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? '✨ Help me write' : 'Suggest'}</button>` : '',
+        inline: isHost() ? `<form class="ock-inline ock-vis" data-ock-vis><textarea class="input" id="ock-vis-in" rows="3" maxlength="4000" placeholder="e.g. A cozy pixel game where friends grow a garden at night. For our group of five, playable on phones." aria-label="Your vision">${esc(visDraft)}</textarea><div class="ock-in-foot"><small class="faint">A sentence or two is plenty. You can change it any time.</small><button class="btn sm ock-save" type="submit">Save vision</button></div></form>` : '' },
+      { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '',
+        inline: canEdit && d.vision && d.vision.has ? `<div class="ock-inline ock-sugg"><span class="eyebrow">Suggested from your vision</span><div class="ock-sugg-list" id="ock-sugg"><span class="faint">Thinking of first tasks…</span></div><form class="ock-own" data-ock-task><input class="input" maxlength="140" placeholder="Or write your own first task" aria-label="Your own first task"><button class="btn sm" type="submit">Add</button></form></div>` : '' },
       { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'repo', emo: '🌿', label: 'Create the code repository', sub: 'The shared online folder where your project’s code lives, with every change saved. One click makes it.', done: !!(d.repo || p.hasRepo), acts: isHost() ? '<button class="btn sm" data-ck="repo">Create</button>' : '' },
+      { id: 'repo', emo: GH_MARK, label: ghs && ghs.signedIn ? 'Create the code repository on GitHub' : 'Connect GitHub and create the code repository',
+        sub: (d.repo || p.hasRepo) ? 'Your project’s code lives here, with every change saved.' : ghs && ghs.signedIn ? `Signed in as @${esc(ghs.login || 'you')}. One click makes a private GitHub repository for your code, with every change saved.` : 'Your code lives on GitHub (the shared online folder for code), with every change saved. Connect your GitHub account, then one click makes it.',
+        done: !!(d.repo || p.hasRepo), acts: isHost() ? `${ghs && !ghs.signedIn ? '<button class="btn sm ock-gh" data-ck="github">Connect GitHub</button>' : ''}<button class="btn sm" data-ck="repo">Create</button>` : (ghs && !ghs.signedIn ? '<button class="btn sm ock-gh" data-ck="github">Connect GitHub</button>' : '') },
     ];   // feat/setup-flow: four steps (a friend joining is no longer one); the code repository comes last
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
@@ -193,9 +200,9 @@
           ${hero ? `<div class="ock-list ock-cards">${steps.map(x => `<div class="ock-row ock-card ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <span class="ock-emo" aria-hidden="true">${x.emo}${x.done ? `<i class="ock-emo-ok">${tick}</i>` : ''}</span>
             <div class="ock-main"><span class="ock-l">${x.label}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>
-            ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}</div>`).join('')}</div>` : ''}
+            ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}${!x.done && x.inline ? x.inline : ''}</div>`).join('')}</div>` : ''}
           ${hero ? '' : `<div class="ock-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
-            <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}</div></div>`).join('')}</div>`}</section>`;
+            <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}${!x.done && x.inline ? x.inline : ''}</div></div>`).join('')}</div>`}</section>`;
     // simple-dashboard: four tiles that answer "what needs me?" at a glance, each one click from where it's handled
     const N = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state() : {};
     const dmUnread = window.TribeDM && window.TribeDM.unread ? Object.values(window.TribeDM.unread()).reduce((a, n) => a + (Number(n) || 0), 0) : 0;
@@ -211,6 +218,7 @@
     ];
     const r = d.repo;
     if (seq !== ovSeq) return;
+    const visFocus = document.activeElement && document.activeElement.id === 'ock-vis-in';
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
           <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
@@ -258,6 +266,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     // the hero checklist: the next step gets the one solid button and a soft highlight; the rest stay calm
     const chk = $('#pj-check.hero');
     if (chk) { chk.querySelectorAll('.btn.primary').forEach(x => x.classList.remove('primary')); const nx = chk.querySelector('.ock-row:not(.on)'); if (nx) { nx.classList.add('ock-next'); const b1 = nx.querySelector('.ock-acts .btn, .ock-below .btn'); if (b1) b1.classList.add('primary'); } }
+    bindInline(p, visFocus);
     if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite();
@@ -343,11 +352,60 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const b = document.querySelector('#pj-check [data-ck=repo], #room-next [data-rn=repo]'); if (b) { b.disabled = true; b.textContent = 'Creating…'; }
     try {
       await C.api(`/projects/${encodeURIComponent(p.id)}/setup/repo`, { method: 'POST' });
-      toast('🌿 Code repository ready, with its first saved version'); await refresh(); overview();
+      toast('Code repository ready, with its first saved version', 'ok'); await refresh(); overview();
       // GitHub only when it is already set up on the host (a signed-in gh CLI or a saved token)
       let w = null; try { w = await C.api(`/projects/${encodeURIComponent(p.id)}/workspace`); } catch {}
-      if (w && w.repo && !w.repo.remote && ((w.github || {}).signedIn || (w.identity || {}).hasToken)) offerGithub(p);
+      if (w && w.repo && !w.repo.remote && ((w.github || {}).signedIn || (w.identity || {}).hasToken)) {
+        try { const r = await C.api('/flow/github', { method: 'POST', body: {} }); toast(r.step && r.step.s === 'ok' ? 'Your code repository is on GitHub now (private)' : 'Saved on this computer. GitHub: ' + ((r.step && r.step.note) || 'not done yet'), r.step && r.step.s === 'ok' ? 'ok' : 'warn'); } catch (e) { offerGithub(p); }
+        overview();
+      } else if (w && w.repo && !w.repo.remote) toast('Saved on this computer. Connect GitHub to put it online.', 'info');
     } catch (e) { toast(e.message); if (b) { b.disabled = false; b.textContent = 'Create'; } }
+  }
+  // ---------- the checklist, inline: write the vision right in its card, then pick a first task from suggestions ----------
+  function bindInline(p, refocus) {
+    const vf = $('[data-ock-vis]');
+    if (vf) {
+      const ta = vf.querySelector('textarea');
+      ta.oninput = () => { visDraft = ta.value; };
+      ta.onkeydown = e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); vf.requestSubmit(); } };
+      if (refocus) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      vf.onsubmit = async e => {
+        e.preventDefault(); const text = ta.value.trim();
+        if (text.length < 8) { toast('Write a sentence about what you’re making and who it’s for', 'warn'); ta.focus(); return; }
+        const btn = vf.querySelector('button'); btn.disabled = true; btn.textContent = 'Saving…';
+        try { await C.api('/vision', { method: 'PUT', body: { text: `# ${p.name}\n\n${text}` } }); visDraft = ''; toast('Vision saved. Here are some first tasks to pick from.', 'ok'); overview(); }
+        catch (err) { toast(err.message, 'err'); btn.disabled = false; btn.textContent = 'Save vision'; }
+      };
+    }
+    const own = $('[data-ock-task]');
+    if (own) own.onsubmit = async e => {
+      e.preventDefault(); const inp = own.querySelector('input'), title = inp.value.trim(); if (!title) { inp.focus(); return; }
+      try { await C.api('/tasks', { method: 'POST', body: { title } }); toast(`Added “${title}” to the Task Board`, 'ok'); overview(); } catch (err) { toast(err.message, 'err'); }
+    };
+    const list = $('#ock-sugg');
+    if (list) (async () => {
+      let sg = []; try { sg = (await C.api('/assist/tasks')).suggestions || []; } catch {}
+      if (!list.isConnected) return;
+      if (!sg.length) { list.innerHTML = '<span class="faint">No suggestions yet. Write your own below.</span>'; return; }
+      list.innerHTML = sg.slice(0, 4).map(x => `<button type="button" class="ock-sg" data-title="${esc(x.title)}" title="${esc(x.why || '')}"><span aria-hidden="true">＋</span>${esc(x.title)}</button>`).join('');
+      list.querySelectorAll('.ock-sg').forEach(b => b.onclick = async () => {
+        b.disabled = true;
+        try { await C.api('/tasks', { method: 'POST', body: { title: b.dataset.title } }); toast(`Added “${b.dataset.title}” to the Task Board`, 'ok'); overview(); } catch (err) { b.disabled = false; toast(err.message, 'err'); }
+      });
+    })();
+  }
+  function connectGithub(p) {
+    const m = $('#invite-modal'), body = $('#invite-body'); if (!m || !body) return;
+    m.classList.remove('hidden');
+    body.innerHTML = `<span class="eyebrow">GitHub · ${esc(p.name)}</span><h2 class="pj-gh-h">${GH_MARK} Connect GitHub</h2>
+      <p class="lead">GitHub keeps your project’s code online, with every change saved, so your friends and AI helpers all work from the same place. Sign in once. Your token stays on the host computer and is never shown in a browser.</p>
+      <div id="pj-gh-box" class="pj-gh-box"></div>
+      <div class="modal-foot"><a class="linkish" href="https://github.com/signup" target="_blank" rel="noopener">No account? Make one free</a><span style="flex:1"></span><button class="btn" data-close>Done</button></div>`;
+    const onIn = () => { if (!m.classList.contains('hidden')) setTimeout(close, 1200); };
+    function close() { m.classList.add('hidden'); removeEventListener('tribe:github', onIn); overview(); }
+    addEventListener('tribe:github', onIn);
+    body.querySelector('[data-close]').onclick = close;
+    if (window.TribeGitHub) window.TribeGitHub.mount($('#pj-gh-box')); else $('#pj-gh-box').textContent = 'Open Settings › GitHub to sign in.';
   }
   function offerGithub(p) {
     const m = $('#invite-modal'), body = $('#invite-body'); if (!m || !body) return;

@@ -35,16 +35,25 @@ def main():
             pg.fill("#wl-name", "Snack Squad"); assert "Snack Squad" in pg.inner_text("#wl-tile")
             pg.wait_for_timeout(300); pg.screenshot(path=str(SHOTS / "welcome-2.png"))
             pg.press("#wl-name", "Enter")
-            # 2: features, click through
-            assert pg.get_attribute("#wl", "data-step") == "2"
+            # 2-3: Flint's teaching slides: how an app comes together, then what you'd use for an app
+            assert pg.get_attribute("#wl", "data-step") == "2" and pg.locator(".wl-how li").count() == 5
             pg.wait_for_function("document.querySelector('#wl-line').textContent.includes('Snack Squad')")
+            assert pg.locator(".wl-deep").count() == 0, "new coders get the simple version"
+            pg.wait_for_timeout(300); pg.screenshot(path=str(SHOTS / "welcome-how.png"))
+            pg.click("#wl-next"); assert pg.get_attribute("#wl", "data-step") == "3"
+            assert pg.locator(".wl-use2 .wu").count() == 4 and "React Native" in pg.inner_text(".wl-use2") and "GitHub" in pg.inner_text(".wl-use2")
+            pg.wait_for_timeout(2600); pg.screenshot(path=str(SHOTS / "welcome-use.png"))
+            pg.click("#wl-next")
+            # 4: features, click through
+            assert pg.get_attribute("#wl", "data-step") == "4"
             assert pg.locator(".wl-feat").count() == 4
             pg.click(".wl-feat[data-f='2']"); assert "agent" in pg.inner_text("#wl-show").lower()
             assert pg.get_attribute(".wl-feat[data-f='2']", "aria-pressed") == "true"
-            pg.click("#wl-back"); assert pg.get_attribute("#wl", "data-step") == "1" and pg.input_value("#wl-name") == "Snack Squad"
-            pg.click("#wl-next"); pg.click("#wl-next")
-            # 3: the choice
-            assert pg.get_attribute("#wl", "data-step") == "3" and pg.locator(".wl-opt").count() == 4 and pg.is_hidden("#wl-next")
+            for _ in range(3): pg.click("#wl-back")
+            assert pg.get_attribute("#wl", "data-step") == "1" and pg.input_value("#wl-name") == "Snack Squad"
+            for _ in range(4): pg.click("#wl-next")
+            # 5: the choice
+            assert pg.get_attribute("#wl", "data-step") == "5" and pg.locator(".wl-opt").count() == 4 and pg.is_hidden("#wl-next")
             assert "recommended" in pg.inner_text(".wl-opt--main").lower() and "build an app with me" in pg.inner_text(".wl-opt--main").lower()
             pg.wait_for_timeout(400); pg.screenshot(path=str(SHOTS / "welcome-3.png"))
             assert pg.evaluate("JSON.parse(localStorage.getItem('tribecode.welcome.tribe')).name") == "Snack Squad"
@@ -60,7 +69,7 @@ def main():
             ph = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); ph.on("pageerror", lambda e: errors.append(str(e)))
             ph.goto(BASE + "/?welcome=1"); ph.wait_for_selector("#wl")
             assert ph.evaluate("document.documentElement.scrollWidth") <= 391
-            ph.click("#wl-skip"); assert ph.get_attribute("#wl", "data-step") == "3"
+            ph.click("#wl-skip"); assert ph.get_attribute("#wl", "data-step") == "5"
             ph.wait_for_timeout(300); ph.screenshot(path=str(SHOTS / "welcome-phone.png"))
             ph.click(".wl-opt[data-go=explore]")
             ph.wait_for_function("window.TribeOffline && TribeOffline.active()", timeout=30000)

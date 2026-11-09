@@ -76,7 +76,7 @@ def main():
             # nav
             assert pg.is_visible(".nav__logo img")
             labels = pg.evaluate("[...document.querySelectorAll('.nav__links > .nav__item > button, .nav__links > a')].map(e => e.textContent.trim())")
-            assert labels == ["Features", "Pricing", "Mission", "Docs"], labels   # no repeats: Download, Star and the Guide live elsewhere
+            assert labels == ["Features", "Learn", "Pricing", "Mission", "Docs"], labels   # no repeats: Download, Star and the Guide live elsewhere
             assert pg.is_visible(".nav__end a:has-text('Open the app')") and pg.is_visible(".nav__end .btn:has-text('Download')")
             pg.wait_for_function("document.querySelector('.nav [data-gh=stars]').textContent === '2.3k'", timeout=8000)
             assert pg.is_visible(".nav [data-gh=stars]")
@@ -86,7 +86,12 @@ def main():
             assert not pg.evaluate("document.querySelector('.nav').classList.contains('is-scrolled')")
             # hero
             h1 = pg.inner_text("h1")
-            assert "friends" in h1 and "Agents" in h1, h1
+            assert "Code anything" in h1 and "together" in h1, h1
+            sub = pg.inner_text(".hero__sub"); assert "Apps, games, websites" in sub and "learn" in sub, sub
+            # what you can make comes before how it works, then Learn, then the features and the network
+            ys = pg.evaluate("['#make', '#story', '#learn', '#room', '#host'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
+            assert ys == sorted(ys), ys
+            assert pg.locator("#make .make__card").count() == 8 and pg.locator("#learn .learn__card").count() == 4
             assert pg.evaluate("parseFloat(getComputedStyle(document.querySelector('h1')).fontSize)") >= 40
             assert pg.evaluate("document.querySelector('h1').getBoundingClientRect().left < 200"), "the hero is left-aligned"
             dl = pg.locator(".hero [data-dl-main]")
@@ -233,15 +238,15 @@ def main():
             assert pg.evaluate("getComputedStyle(document.querySelector('.flint-hello__top b')).fontFamily").startswith("Silkscreen")
             # Show me around: Flint rings one section at a time; Next / Back / Esc
             pg.click("[data-hello=tour]"); pg.wait_for_selector(".ftour-ring.on")
-            assert "1 / 8" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
-            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 8')")
-            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 8')")
+            assert "1 / 10" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
+            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 10')")
+            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 10')")
             pg.keyboard.press("Escape"); assert pg.locator(".ftour-card, .ftour-ring").count() == 0
             pg.reload(); pg.wait_for_load_state("load"); pg.wait_for_timeout(4000)
             assert not pg.is_visible("#flint-bubble"), "the bubble shows once"
             assert not pg.is_visible("#flint-panel"), "Flint never opens by itself"
             pg.click(".flint-fab"); assert pg.is_visible("#flint-panel") and pg.get_attribute(".flint-fab", "aria-expanded") == "true"
-            assert pg.locator("#flint-panel .flint-chip").count() == 7 and pg.locator(".flint-chip[data-q=tour]").count() == 1 and pg.get_attribute(".flint-panel__log", "aria-live") == "polite"
+            assert pg.locator("#flint-panel .flint-chip").count() == 9 and pg.locator(".flint-chip[data-q=tour]").count() == 1 and pg.get_attribute(".flint-panel__log", "aria-live") == "polite"
             assert pg.evaluate("document.querySelector('#flint-panel').contains(document.activeElement)")
             pg.click(".flint-chip[data-q=free]")
             pg.wait_for_function("document.querySelectorAll('.flint-panel__log .flint-msg').length >= 3", timeout=3000)

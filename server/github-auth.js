@@ -25,6 +25,7 @@ const { run } = require('./gitutil');
 const API = () => String(process.env.TRIBE_GITHUB_API || 'https://api.github.com').replace(/\/+$/, '');
 const WEB = () => String(process.env.TRIBE_GITHUB_WEB || 'https://github.com').replace(/\/+$/, '');
 const SCOPE = 'repo workflow';
+const BUILTIN_CLIENT_ID = '';   // TribeCode's OAuth App client id (github.com › Settings › Developer settings › OAuth Apps, device flow on)
 const CID_RE = /^[A-Za-z0-9._-]{8,80}$/;
 const TOKEN_RE = /^[\w-]{20,400}$/;
 function openUrl(u) {
@@ -37,8 +38,11 @@ const scrub = s => String(s || '').replace(/(gh[pousr]_|github_pat_)[\w]+/g, '**
 module.exports = function githubAuth({ W, store, getMembers, isLocal, str, broadcast = () => {}, log = () => {} }) {
   const CONF = '.tribe/github.json';
   const conf = () => store.readJSON(CONF, {}) || {};
-  const clientId = () => (process.env.TRIBE_GITHUB_CLIENT_ID || conf().clientId || '').trim() || null;
-  const source = () => (process.env.TRIBE_GITHUB_CLIENT_ID ? 'env' : conf().clientId ? 'settings' : null);
+  // TribeCode's own GitHub OAuth App (BUILTIN_CLIENT_ID, a public id: the device flow needs no secret), so "Connect GitHub"
+  // works out of the box once it is filled in. A host's own id (env or Settings) still wins. Tests opt out with TRIBE_TEST.
+  const builtIn = process.env.TRIBE_TEST ? '' : BUILTIN_CLIENT_ID;
+  const clientId = () => (process.env.TRIBE_GITHUB_CLIENT_ID || conf().clientId || builtIn || '').trim() || null;
+  const source = () => (process.env.TRIBE_GITHUB_CLIENT_ID ? 'env' : conf().clientId ? 'settings' : builtIn ? 'tribecode' : null);
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const human = me => me && me.role !== 'agent' && me.role !== 'spectator';
 

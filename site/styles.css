@@ -1044,3 +1044,40 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .pr-plans-hidden .pr-tabs, .pr-plans-hidden [data-panel="teams"], .pr-plans-hidden .pr-grid [data-tier]:not([data-tier="free"]),
 .pr-plans-hidden [data-tier="hire"], .pr-plans-hidden [data-tier="trial"], .pr-plans-hidden [data-tier="credits"], .pr-plans-hidden .pr-fine { display: none !important; }
 .pr-plans-hidden .pr-grid[data-panel="individual"] { grid-template-columns: minmax(0, 420px); justify-content: center; }
+
+/* ---------- hero sub line ---------- */
+.hero__sub { max-width: 720px; margin: 14px 0 0; color: var(--muted); font-size: clamp(17px, 1.5vw, 20px); line-height: 1.5; text-wrap: pretty; }
+
+/* ---------- What you can make: what TribeCode builds, defined before anything else ---------- */
+.make { padding: 80px 0 24px; }
+.make h2, .learn h2 { margin: 6px 0 8px; color: var(--text); font: 700 clamp(28px, 3.4vw, 40px)/1.15 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; text-wrap: balance; }
+.make__lead, .learn__lead { margin: 0 0 28px; max-width: 680px; color: var(--muted); font-size: 17px; line-height: 1.55; }
+.make__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.make__card { padding: 14px 14px 16px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.make__pic { display: grid; place-items: center; height: 96px; margin-bottom: 12px; border-radius: 10px; background: var(--main, #1D2021); }
+.make__art { width: 96px; height: auto; image-rendering: pixelated; }
+.make__card h3 { margin: 0 0 2px; color: var(--text); font-size: 16px; line-height: 1.25; }
+.make__sub { margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.make__ex { margin: 0; color: var(--muted); opacity: .85; font-size: 13px; line-height: 1.5; }
+.make__ex .mono { color: var(--ember); font-size: 11.5px; margin-right: 2px; }
+.make__next { margin: 22px 0 0; color: var(--muted); font-size: 15px; }
+.make__next a { color: var(--ember); text-decoration: none; font-weight: 600; } .make__next a:hover { text-decoration: underline; }
+.js .make__grid.reveal .make__card { opacity: .25; transform: translateY(6px); transition: opacity .4s var(--ease), transform .4s var(--ease); transition-delay: calc(var(--i) * 70ms); }
+.js .make__grid.reveal.is-in .make__card { opacity: 1; transform: none; }
+@media (max-width: 1000px) { .make__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .make { padding: 48px 0 16px; } .make__grid { gap: 10px; } .make__card { padding: 12px; } .make__pic { height: 72px; } .make__art { width: 72px; } .make__ex { display: none; } }
+
+/* ---------- Learn as you build ---------- */
+.learn { padding: 56px 0 24px; }
+.learn__path { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.learn__card { position: relative; padding: 18px 16px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.learn__n { position: absolute; top: 14px; right: 14px; color: var(--ember); font-size: 12px; letter-spacing: .08em; }
+.learn__e { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 12px; border-radius: 12px; background: var(--main, #1D2021); font-size: 22px; }
+.learn__card h3 { margin: 0 0 6px; color: var(--text); font-size: 16px; }
+.learn__card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.learn__cta { display: flex; gap: 10px; flex-wrap: wrap; margin: 24px 0 0; }
+.js .learn__path.reveal .learn__card { opacity: .25; transform: translateY(6px); transition: opacity .4s var(--ease), transform .4s var(--ease); transition-delay: calc(var(--i) * 90ms); }
+.js .learn__path.reveal.is-in .learn__card { opacity: 1; transform: none; }
+@media (max-width: 1000px) { .learn__path { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .learn__path { grid-template-columns: 1fr; } .learn { padding: 40px 0 16px; } }
+@media (prefers-reduced-motion: reduce) { .js .make__grid.reveal .make__card, .js .learn__path.reveal .learn__card { opacity: 1; transform: none; transition: none; } }
