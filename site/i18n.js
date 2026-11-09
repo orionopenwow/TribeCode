@@ -90,6 +90,7 @@
     });
     const b = document.getElementById('lang-btn'); if (b) { b.querySelector('b').textContent = cur.toUpperCase(); b.setAttribute('aria-label', `Language: ${LANGS.find(l => l[0] === cur)[1]}`); }
     document.querySelectorAll('#lang-menu [data-lang]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.lang === cur)));
+    document.querySelectorAll('#lang-chips [data-lang]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.lang === cur)));
     const note = document.getElementById('lang-note'); if (note) note.textContent = i >= 0 ? NOTE[i] : '';
   }
   function picker() {
@@ -109,6 +110,14 @@
       if (e.key === 'Escape') { open(false); btn.focus(); }
     });
     document.addEventListener('click', e => { if (!wrap.contains(e.target)) open(false); });
+    // phones: the top bar is full, so the languages also sit in the menu (☰) as a row of chips
+    const extra = document.querySelector('.nav__mobile-extra');
+    if (extra && !document.getElementById('lang-chips')) {
+      const row = document.createElement('div'); row.className = 'lang__chips'; row.id = 'lang-chips'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Language');
+      row.innerHTML = LANGS.map(([c, n]) => `<button type="button" data-lang="${c}" lang="${c}" aria-pressed="false">${n}</button>`).join('');
+      row.onclick = e => { const b = e.target.closest('[data-lang]'); if (!b) return; try { localStorage.setItem(KEY, b.dataset.lang); } catch {} apply(b.dataset.lang); };
+      extra.appendChild(row);
+    }
   }
   function start() {
     picker();

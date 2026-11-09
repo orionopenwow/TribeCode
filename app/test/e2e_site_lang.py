@@ -24,7 +24,7 @@ def main():
         en = pg.text_content("#hero-title").strip(); assert en == "Build the thing with your friends.", en
         pg.click("#lang-btn"); pg.wait_for_selector("#lang-menu:not([hidden])")
         assert pg.locator("#lang-menu [data-lang]").count() == 8
-        pg.click("[data-lang='es']")
+        pg.click("#lang-menu [data-lang='es']")
         assert pg.text_content("#hero-title").strip() == "Construye esa idea con tus amigos." and pg.evaluate("document.documentElement.lang") == "es"
         assert "Descargar" in pg.text_content(".nav__end") and pg.locator("#lang-menu").is_hidden()
         pg.reload(); pg.wait_for_selector("#lang-btn"); assert pg.text_content("#hero-title").strip().startswith("Construye") and "ES" in pg.text_content("#lang-btn")
@@ -35,7 +35,7 @@ def main():
         assert pg.evaluate("TribeLang.get()") == "es"; pg.evaluate("TribeLang.set('en')")
         ph = b.new_page(viewport={"width": 390, "height": 844}, locale="de-DE"); ph.on("pageerror", lambda e: errs.append(str(e)))
         ph.goto(base + "/learn.html#m1-0"); ph.wait_for_selector("#lang-btn")
-        assert ph.evaluate("TribeLang.get()") == "de" and "Herunterladen" in ph.text_content("header")
+        assert ph.evaluate("TribeLang.get()") == "de" and "Herunterladen" in ph.text_content("header") and ph.locator("#lang-chips [aria-pressed=true]").count() == 1
         sw = ph.evaluate("[document.documentElement.scrollWidth, innerWidth]"); assert sw[0] <= sw[1] + 1, sw
         for k in ["m1-0", "m1-3", "m2-1", "m3-2", "m3-4", "m4-5", "m4-6", "m2-q"]:
             ph.goto(base + f"/learn.html#{k}"); ph.wait_for_selector(".lx-fig .lv", timeout=5000)
