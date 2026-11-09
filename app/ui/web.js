@@ -173,6 +173,7 @@
       el.dataset.panel = i;
     };
     const done = () => { lsSet(INTRO_KEY, 'seen'); el.remove(); document.body.classList.remove('intro-on'); removeEventListener('keydown', keys, true); };
+    window.__tribeCloseIntro = done;   // a cloud tribe just claimed (tribe.js) closes the intro properly
     const keys = e => {
       if (e.key === 'Enter') e.stopPropagation();   // keep first-run setup underneath from reacting
       if (e.target instanceof HTMLInputElement) { if (e.key === 'Enter' && e.target.id === 'intro-link') $('#intro-join').click(); return; }

@@ -114,10 +114,11 @@
           const sc = window.prompt('This is a new TribeCode cloud server. Enter its setup code to become the host.\n\nIt is TRIBE_SETUP_CODE in your hosting dashboard (or in the server log).');
           if (!sc) return false;
           body.setupCode = sc.trim();
-          if (!body.name) body.name = (window.prompt('Your name?', '') || 'Host').trim().slice(0, 32) || 'Host';
+          if (!body.name || /^(me|you|host)$/i.test(body.name)) body.name = (window.prompt('Your name? Friends see it in chat.', '') || 'Host').trim().slice(0, 32) || 'Host';
         }
         const r = await api('/bootstrap', { method: 'POST', body });
         S.set({ server: { url: base(), token: r.token }, ...(h.cloud ? { name: r.member.name, color: r.member.color } : {}) });
+        if (h.cloud) { try { if (window.__tribeCloseIntro && document.getElementById('intro')) window.__tribeCloseIntro(); localStorage.setItem('tribecode.intro.v1', 'seen'); } catch {} }   // claimed: straight into the tribe, no intro slides
         connect();
         return 'host';
       }
