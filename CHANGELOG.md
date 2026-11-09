@@ -1,6 +1,9 @@
 # Changelog
 
 ## v0.20.0
+- **Experience modes**: Beginner, Intermediate or Advanced decides how much of TribeCode you see (Settings › Experience). Beginner keeps chat, Flint, templates and shipping; Advanced shows ownership, conflicts, MCP, the agent fleet and Turbo. Your role still decides what you can do. The host picks a starting mode per role (Settings › Starting modes), the welcome's "Have you made an app before?" sets yours, and the choice follows you to every device.
+- **Remix a starter**: New project › Remix a starter lists open-source games, apps and sites (2048, the Phaser and melonJS starters, PixiJS open games, HTML5 Boilerplate, plus LittleJS, KAPLAY, Godot, three.js, TodoMVC, Expo, Astro and Kenney's CC0 art to browse). Every one was checked for an MIT or CC0 license and keeps its authors' credit. The website has a matching "Remix a classic" row; its Start from this opens the app with the GitHub box filled in.
+- Project settings no longer opens the welcome by mistake when it's opened while the project list is still loading.
 
 Faster-feeling and harder to break: everything you do shows at once, nothing is lost offline, and Learn is a real course.
 

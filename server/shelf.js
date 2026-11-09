@@ -84,8 +84,11 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
     return { ok: true, item: it, where };
   }
 
+  // open-source starters to remix (templates/starters.json): checked permissive licenses only, with credit
+  const starters = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'starters.json'), 'utf8')).items || []; } catch { return []; } })();
   async function route(req, res, { m, b, me, url, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
+    if (b === 'starters' && m === 'GET') return send(res, 200, { items: starters });
     try {
       const pid = url.searchParams.get('project') || P.current() || P.defaultId();
       if (!b && m === 'GET') { const p = P.get(pid); if (!p || !P.canSee(me, pid)) return send(res, 200, { types: [], picks: [], items: catalog }); return send(res, 200, view(p)); }
@@ -93,5 +96,5 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { route, view, add, catalog: () => catalog };
+  return { route, view, add, catalog: () => catalog, starters: () => starters };
 };

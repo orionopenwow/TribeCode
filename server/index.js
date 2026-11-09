@@ -87,7 +87,7 @@ const saveInvites = () => store.writeJSON('.tribe/invites.json', invites);
 // feat/roles: roles & privileges (server/perms.js): host, admin, mod, builder, spectator, agent; the capability table, mutes, audit log.
 const perms = require('./perms')({ P, store: baseStore, getMembers: () => members, saveMembers: () => saveMembers(), bus, broadcast: m => broadcast(m), pushPresence: () => pushPresence(),
   pushProjects: () => rooms.pushProjects(), postChat: (...x) => postChat(...x), str: (v, n) => str(v, n) });
-const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}), ...(perms.mutedUntil(m.id) ? { mutedUntil: perms.mutedUntil(m.id) } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
+const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(m.mode ? { mode: m.mode } : {}), ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}), ...(perms.mutedUntil(m.id) ? { mutedUntil: perms.mutedUntil(m.id) } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
 
 // ---------- helpers ----------
 // Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
@@ -727,12 +727,22 @@ async function apiInProject(req, res, url) {
       .catch(e => { console.error('backup:', e); res.destroy(); });
   }
 
+  // Experience modes (v0.20): beginner, intermediate or advanced decides how much of TribeCode each person sees.
+  // The host (and admins) pick a starting mode per role; everyone can still change their own in Settings.
+  if (a === 'tribe' && b === 'modes' && m === 'PUT') {
+    if (!(me.role === 'host' || me.role === 'admin')) return fail(res, 403, 'only the host or an admin sets the starting modes');
+    const body = await readBody(req), MODES = ['beginner', 'intermediate', 'advanced'], ROLES = ['admin', 'mod', 'builder', 'spectator', 'guest'];
+    const next = {}; for (const r of ROLES) if (MODES.includes(body && body[r])) next[r] = body[r];
+    tribe.modes = next; baseStore.writeJSON('.tribe/tribe.json', tribe); broadcast({ type: 'tribe', tribe });
+    return send(res, 200, { modes: next });
+  }
   // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
   if (a === 'me' && !b && m === 'PATCH') {
     if (me.role === 'agent') return fail(res, 403, 'agents keep their names');
     const body = await readBody(req), mem = memberById(me.id);
     const name = body.name !== undefined ? str(body.name, 32) : mem.name; if (!name) return fail(res, 400, 'name required');
     mem.name = name; if (body.color !== undefined) mem.color = color(body.color);
+    if (body.mode !== undefined) { if (['beginner', 'intermediate', 'advanced'].includes(body.mode)) mem.mode = body.mode; else delete mem.mode; }   // experience mode follows you to every device
     saveMembers(); pushPresence();
     return send(res, 200, { member: publicMember(mem) });
   }
