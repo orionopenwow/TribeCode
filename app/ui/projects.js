@@ -223,11 +223,13 @@
     const weekAgo = Date.now() - 7 * 864e5, newFiles = (d.recent || []).filter(x => x.kind === 'doc' && Date.parse(x.at) > weekAgo);
     const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
     const prevMore = document.querySelector('#pj-more'), moreOpen = prevMore ? prevMore.open : lsg('more') === '1';
+    // v0.25: colour-coded tiles with a big number, what it means, and the one thing to do about it
+    const doneT = tasksAll.filter(t => t.status === 'done').length, unreadN = (N.unread || 0) + dmUnread, needN = (N.pending || 0) + reviewT.length;
     const tiles = [
-      ['Needs you', 'i-bell', N.pending ? plural(N.pending, 'approval waiting', 'approvals waiting') : reviewT.length ? plural(reviewT.length, 'task to review', 'tasks to review') : 'Nothing right now', N.pending ? 'inbox' : 'tasks', !!(N.pending || reviewT.length)],
-      ['Unread', 'i-chat', (N.unread || 0) + dmUnread ? plural((N.unread || 0) + dmUnread, 'new message', 'new messages') : 'All caught up', 'chat', !!((N.unread || 0) + dmUnread)],
-      ['Tasks', 'i-check', openT.length ? `${openT.length} open${mineT.length ? ` · ${mineT.length} yours` : ''}` : 'None open yet', 'tasks', false],
-      ['New files', 'i-doc', newFiles.length ? plural(newFiles.length, 'this week', 'this week') : 'None this week', 'docs', false],
+      { k: 'needs', label: 'Needs you', icon: 'i-bell', n: needN, line: N.pending ? plural(N.pending, 'approval waiting', 'approvals waiting') : reviewT.length ? plural(reviewT.length, 'task to review', 'tasks to review') : 'Nothing waiting on you', act: needN ? 'Review now' : 'All clear', go: N.pending ? 'inbox' : 'tasks', hot: needN > 0, c: '#F26B1D' },
+      { k: 'unread', label: 'Unread', icon: 'i-chat', n: unreadN, line: unreadN ? plural(unreadN, 'new message', 'new messages') : 'All caught up', act: unreadN ? 'Catch up' : 'Open chat', go: 'chat', hot: unreadN > 0, c: '#6C7CFF' },
+      { k: 'tasks', label: 'Tasks', icon: 'i-check', n: openT.length, line: openT.length ? `open${mineT.length ? ` · ${mineT.length} yours` : ''}${doneT ? ` · ${doneT} done` : ''}` : doneT ? `all ${doneT} done` : 'None yet', act: openT.length ? 'Open the board' : 'Add a task', go: 'tasks', hot: mineT.length > 0, c: '#38C6B1', pct: tasksAll.length ? Math.round(doneT / tasksAll.length * 100) : 0 },
+      { k: 'files', label: 'New files', icon: 'i-doc', n: newFiles.length, line: newFiles.length ? 'added this week' : 'Nothing new this week', act: newFiles.length ? 'See them' : 'Add a file', go: 'docs', hot: false, c: '#FABD2F' },
     ];
     const r = d.repo;
     if (naming) return;
@@ -240,7 +242,11 @@
       ${hero ? checklist : ''}
 ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
       ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span><button class="linkish pj-share" id="pj-share" type="button" title="Copy progress, the GitHub link and an invite link">📤 Share progress</button></div>
-          <div class="pl-grid">${tiles.map(([k, i, t, go, hot]) => `<button class="pl-cell ${hot ? 'hot' : ''}" data-go="${go}">${ico(i, 16)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
+          <div class="pl-grid gl-grid">${tiles.map(t => `<button class="gl-tile gl-${t.k} ${t.hot ? 'hot' : ''} ${t.n ? '' : 'zero'}" data-go="${t.go}" style="--gc:${t.c}" aria-label="${t.label}: ${t.n} · ${esc(t.line)}. ${t.act}">
+            <span class="gl-top"><span class="gl-ic">${ico(t.icon, 16)}</span><small>${t.label}</small>${t.hot ? '<i class="gl-dot" aria-hidden="true"></i>' : ''}</span>
+            <span class="gl-num">${t.n}</span><span class="gl-line">${esc(t.line)}</span>
+            ${t.pct != null && tasksAll.length ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
+            <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">
         <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
           ${d.recent.length ? d.recent.map(x => `<div class="pj-row-line" ${x.kind === 'doc' ? `data-doc="${esc(x.ref)}"` : x.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[x.kind] || 'i-doc', 14)}<span class="t">${esc(x.text)}</span><span class="faint">${esc(x.sub)} · ${ago(x.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Saved code, doc edits and task moves show up here.</div>'}</section>

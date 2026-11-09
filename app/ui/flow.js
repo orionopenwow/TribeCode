@@ -121,7 +121,7 @@
       </section>`;
       wire(d);
       const on = (sel, fn) => { const b = d.querySelector(sel); if (b) b.onclick = fn; };
-      on('#fk-ai', () => window.TribeMobile && window.TribeMobile.askAi());
+      on('#fk-ai', () => { const M = window.TribeMobile; if (M && typeof M.askAi === 'function') M.askAi(); else if (window.TribeApp) window.TribeApp.show('chat'); });
       on('#fk-voice', () => { const m = $('#m2-mic'); if (m) m.click(); });
       on('#fk-idea', () => { const fm = $('#flow-noteform'); fm.classList.remove('hidden'); $('#flow-note').focus(); });
       return;
