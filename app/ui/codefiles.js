@@ -348,6 +348,50 @@
     const big = lines.length > 5000;
     return `<div class="cf-codebox"><pre class="cf-gut" aria-hidden="true">${lines.map((_, i) => i + 1).join('\n')}</pre><pre class="cf-src" tabindex="0" aria-label="File contents"><code>${big ? esc(lines.join('\n')) : tint(lines.join('\n'), lang)}</code></pre></div>`;
   }
+  // ---------- edit (v0.23): write the file, commit it on the checked-out branch, 🔒 lock it so nobody saves over you ----------
+  const meNow = () => (window.TribeClient && window.TribeClient.state().me) || {};
+  const live = () => !ref || !info || !info.branch || ref === info.branch;
+  const editable = f => { const m = meNow(); return f && !f.loading && !f.error && !f.hidden && !f.binary && !f.tooBig && live() && m.role && m.role !== 'spectator' && m.role !== 'agent' && !m.guest; };
+  const allClaims = () => ((own && own.owners) || []).flatMap(o => (o.claims || []).map(c => ({ ...c, by: o.id, name: o.name })));
+  const myLock = path => allClaims().find(c => c.path === path && c.by === meNow().id);
+  const otherLock = path => allClaims().find(c => c.by !== meNow().id && (c.path === path || (c.path.endsWith('/') && path.startsWith(c.path))));
+  function editorHtml(f) {
+    const ol = otherLock(f.path), ml = myLock(f.path);
+    return `<div class="cf-ed-wrap">
+      ${ol ? `<div class="cf-ed-warn">🔒 <b>${esc(ol.name || 'Someone')}</b> has locked this file. You can look, but saving waits until they unlock it.</div>` : ''}
+      <textarea class="cf-ed" id="cf-ed" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Edit ${esc(f.path)}">${esc(f.draft)}</textarea>
+      <div class="cf-ed-bar"><input class="input" id="cf-ed-msg" placeholder="What did you change? (optional)" maxlength="160">
+        <button class="btn" id="cf-lock" aria-pressed="${!!ml}" title="Lock the file so nobody else saves over it">${ml ? '🔓 Unlock' : '🔒 Lock'}</button>
+        <button class="btn ghost" id="cf-ed-cancel">Cancel</button><button class="btn primary" id="cf-ed-save" ${ol ? 'disabled' : ''}>Save <small>Ctrl S</small></button></div></div>`;
+  }
+  function wireEditor(f) {
+    const ta = $('#cf-ed'); if (!ta) return;
+    ta.oninput = () => { f.draft = ta.value; };
+    ta.onkeydown = e => {
+      if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); const a = ta.selectionStart, z = ta.selectionEnd; ta.setRangeText('  ', a, z, 'end'); f.draft = ta.value; }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    };
+    const cancel = () => { if (f.draft !== (f.text || '') && !confirm('Drop your changes?')) return; f.editing = false; drawView(); };
+    async function save() {
+      const b = $('#cf-ed-save'); if (!b || b.disabled) return; b.disabled = true; b.textContent = 'Saving…';
+      try {
+        const r = await window.TribeClient.api('/code/file', { method: 'PUT', body: { path: f.path, text: f.draft, message: ($('#cf-ed-msg') || {}).value || '' } });
+        f.text = f.draft; f.editing = false; f.size = new Blob([f.text]).size; toast(r.committed ? `Saved and committed${r.sha ? ' (' + r.sha + ')' : ''}.` : 'Saved.');
+        get('log', { path: f.path }).then(l => { if (file === f) { f.commits = l.commits || []; drawView(); } }).catch(() => {});
+        drawView();
+      } catch (e) { b.disabled = false; b.innerHTML = 'Save <small>Ctrl S</small>'; toast(e.message || 'Could not save'); }
+    }
+    $('#cf-ed-save').onclick = save; $('#cf-ed-cancel').onclick = cancel;
+    $('#cf-lock').onclick = async () => {
+      const ml = myLock(f.path);
+      try {
+        if (ml) await window.TribeClient.api('/code/lock?path=' + encodeURIComponent(f.path), { method: 'DELETE' });
+        else await window.TribeClient.api('/code/lock', { method: 'POST', body: { path: f.path } });
+        await loadOwn(); toast(ml ? 'Unlocked.' : 'Locked. Others see your name on it.'); drawView();
+      } catch (e) { toast(e.message || 'Could not change the lock'); }
+    };
+  }
   function drawView() {
     const el = $('#cf-view'); if (!el) return;
     el.classList.toggle('open', !!file);
@@ -371,19 +415,23 @@
         ${gh ? `<a class="btn" id="cf-gh" href="${esc(gh)}" target="_blank" rel="noopener noreferrer">${svg(I.out, 15)}Open on GitHub</a>` : ''}
         ${f.md && f.text ? `<button class="btn" id="cf-src">${f.source ? 'Show it rendered' : 'Show the source'}</button>` : ''}
         ${canAsk() ? `<button class="btn" id="cf-ask">${svg(I.robot, 15)}Ask an agent about this file</button>` : ''}
+        ${editable(f) && !f.editing ? `<button class="btn primary" id="cf-edit">✏️ Edit</button>` : ''}
       </div>
       ${who.length ? `<div class="cf-owner" id="cf-owner">${who.map(w => `<span>${w.how === 'editing' ? '✋' : '🧭'} <b>${esc(w.name)}</b> ${w.how === 'editing' ? `is working on this${w.note ? `: ${esc(w.note)}` : ''}` : `looks after <code>${esc(w.note)}</code>`}</span>`).join('')}</div>` : ''}
       <div class="cf-fbody" id="cf-fbody">${f.loading ? '<p class="cf-empty">Opening…</p>' : f.error ? `<p class="cf-empty">${esc(f.error)}</p>`
         : f.hidden ? '<div class="cf-none"><b>Kept private</b><span>Files that hold keys or passwords are not shown here.</span></div>'
         : f.tooBig ? `<div class="cf-none"><b>Too big to show here</b><span>This file is ${esc(fsize(f.size))}. Open it in your editor${gh ? ' or on GitHub' : ''}.</span></div>`
         : f.binary ? `<div class="cf-none"><b>Not a text file</b><span>${esc(fsize(f.size))} of binary data, like a picture or a build.</span></div>`
-        : !f.text ? '<p class="cf-empty">This file is empty.</p>'
+        : !f.text && !f.editing ? '<p class="cf-empty">This file is empty.</p>'
+        : f.editing ? editorHtml(f)
         : f.md && !f.source ? `<div class="cf-rd-body md">${window.TribeMD.render(f.text)}</div>` : codeBlock(f.text, LANG[extOf(f.path)])}</div>
       ${f.commits && f.commits.length ? `<section class="cf-log"><span class="eyebrow">History</span><h3>Recent saved changes</h3>${f.commits.map(c => `<div class="cf-commit"><code>${esc(c.sha)}</code><span><b>${esc(c.subject)}</b><small>${esc(c.author)} · ${esc(ago(c.at))}</small></span></div>`).join('')}</section>` : ''}
     </div>`;
     $('#cf-close').onclick = closeFile;
     $('#cf-copy').onclick = () => copy(f.path);
     const sb = $('#cf-src'); if (sb) sb.onclick = () => { file.source = !file.source; drawView(); };
+    const eb = $('#cf-edit'); if (eb) eb.onclick = () => { file.editing = true; file.draft = file.text || ''; drawView(); const ta = $('#cf-ed'); if (ta) ta.focus(); };
+    if (f.editing) wireEditor(f);
     const ab = $('#cf-ask'); if (ab) ab.onclick = () => window.TribeAskAgent ? window.TribeAskAgent.open({ text: `About \`${f.path}\`${ref ? ` (branch ${ref})` : ''}: ` }) : toast('Ask an agent is not available here.');
   }
   function closeFile() {

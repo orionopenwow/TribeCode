@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.23.0
+- **Phones**: the Code view's editor works on phones too (a full-width box with Save and Lock below it).
+- **Edit code in the app**: in Files › Code, open a file and press ✏️ Edit. Save (Ctrl S) writes it and commits it on the checked-out branch with your name and an optional note, and the history updates. Tab indents, Esc cancels.
+- **🔒 Lock a file**: Lock puts your name on it; others (people and AI agents) see it and can't save over it until you unlock. Spectators, guests, secret files (.env, keys) and paths outside the repo can't be edited.
+
 ## v0.22.0
 - **Phones**: project pictures and emoji fill their squares on phones too, and the demo tour plays by itself with Flint's live line above the bar.
 - **The demo tour**: three short slides first (what you'll see, what TribeCode is, how it works), then Flint plays the whole tour himself. Nothing to click: a spotlight dims everything but what's happening and follows each click and each typed box, and Flint's line at the bottom says what he's doing ("Clicking Save vision", "Typing the vision") and then what it means. Pause, skip and Try it yourself stay on the bar.
