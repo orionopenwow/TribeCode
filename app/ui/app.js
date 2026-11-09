@@ -358,10 +358,33 @@
   C.on('hello', refreshBrain);
   C.on('hello', () => { loadChat(); refresh(); });
   // Just joined from an invite on a computer: offer the one line that connects their Claude Code (once).
+  // Just joined from an invite: land on the project's dashboard, with a friendly "Say hi" and (on a computer) Connect my AI.
   C.on('hello', () => {
     let fresh = false; try { fresh = localStorage.getItem('tribecode.afterJoin') === '1'; localStorage.removeItem('tribecode.afterJoin'); } catch {}
-    if (fresh && !matchMedia('(max-width: 820px)').matches) setTimeout(() => connectClaude({ welcome: true }), 900);
+    if (!fresh) return;
+    if (window.TribeHub && window.TribeHub.close) try { window.TribeHub.close(); } catch {}
+    show('home');
+    setTimeout(joinWelcome, 500);
   });
+  function joinWelcome() {
+    if (document.getElementById('jw-card')) return;
+    const me = C.state().me || {}, p = window.TribeProjects && window.TribeProjects.cur ? window.TribeProjects.cur() : null;
+    const where = (p && p.name) || (C.state().tribe && C.state().tribe.name) || 'the tribe';
+    const phone = matchMedia('(max-width: 820px)').matches;
+    const el = document.createElement('div'); el.id = 'jw-card'; el.className = 'jw-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', "You're in");
+    el.innerHTML = `<button class="jw-x" id="jw-x" aria-label="Close">✕</button><div class="jw-e" aria-hidden="true">🎉</div>
+      <div class="jw-t"><b>You're in ${esc(where)}!</b><span>Say hi so everyone knows you're here.</span></div>
+      <div class="jw-acts"><button class="btn primary" id="jw-hi">👋 Say hi</button>${phone ? '' : '<button class="btn" id="jw-ai">🔌 Connect my AI</button>'}</div>`;
+    document.body.appendChild(el);
+    const close = () => el.remove();
+    el.querySelector('#jw-x').onclick = close;
+    el.querySelector('#jw-hi').onclick = async () => {
+      const b = el.querySelector('#jw-hi'); b.disabled = true;
+      try { await C.api('/chat/general', { method: 'POST', body: { text: `👋 Hi everyone! ${String(me.name || '').split(' ')[0] || 'I'} just joined.` } }); toast('Said hi 👋', 'ok'); close(); show('chat'); }
+      catch (err) { b.disabled = false; toast(err.message, 'err'); }
+    };
+    const ai = el.querySelector('#jw-ai'); if (ai) ai.onclick = () => { close(); connectClaude({ welcome: true }); };
+  }
   // Unread count in the tab / window title while you're away: "(3) TribeCode".
   let unseen = 0, baseTitle = document.title;
   const paintTitle = () => { document.title = unseen ? `(${unseen > 99 ? '99+' : unseen}) ${baseTitle}` : baseTitle; };
@@ -701,7 +724,8 @@
     // have subscribed (the friend's "You're in" card and gist cards then never showed after a reload).
     if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
     // Every launch starts at your Home (the hub), apart from any tribe. Deep links (#/…) and automated tests keep their own start.
-    if ((params.has('home') || !navigator.webdriver) && !location.hash && !window.__tribeRestoredView && window.TribeHub) setTimeout(() => window.TribeHub.open('home'), 0);
+    let joinedNow = false; try { joinedNow = localStorage.getItem('tribecode.afterJoin') === '1'; } catch {}   // a friend who just joined lands in the project, not the hub
+    if ((params.has('home') || !navigator.webdriver) && !joinedNow && !location.hash && !window.__tribeRestoredView && window.TribeHub) setTimeout(() => window.TribeHub.open('home'), 0);
     const st = S.get(), remote = st.server && st.server.url && !/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(st.server.url);
     // The desktop app showing a page served by a TribeCode server (the Working version) talks to that server; it doesn't host its own.
     const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
