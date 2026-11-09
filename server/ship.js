@@ -158,18 +158,20 @@ module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTa
       save(s); await evaluate(load()); push();
     });
   }
+  // once a ship request is decided, the other voters' phone prompts close
+  function closeAsks(rq, why) { for (const aid of Object.values(rq.approvals || {})) { try { approvals.close && approvals.close(aid, why); } catch {} } }
   async function evaluate(s) {
     const rq = s.current; if (!rq || rq.status !== 'pending') return;
     const t = tally(rq);
     const approved = t.yes >= t.needed, denied = rq.mode === 'host' ? t.no >= 1 && !approved : rq.mode === 'majority' ? t.no > t.voters - t.needed : t.no >= 1;
     if (denied) {
-      rq.status = 'denied'; rq.decidedAt = new Date().toISOString(); s.history.push(rq); save(s);
+      rq.status = 'denied'; rq.decidedAt = new Date().toISOString(); s.history.push(rq); save(s); closeAsks(rq, 'Decided: not shipping');
       const nos = Object.entries(rq.votes).filter(([, x]) => x.v === 'no').map(([mid, x]) => `${nameOf(mid)}${x.comment ? ` ("${x.comment}")` : ''}`);
       postChat('general', 'tribecode', `⛔ Not shipping ${rq.short} yet: ${nos.join(', ')} said no.`);
       return;
     }
     if (!approved) return;
-    rq.status = 'shipping'; save(s); push();
+    rq.status = 'shipping'; save(s); push(); closeAsks(rq, 'Decided: shipping');
     const r = await doShip(rq.head, { kind: 'ship', label: `${MODE_TEXT[rq.mode].toLowerCase()} said yes` });
     const s2 = load(); const cur = s2.current && s2.current.id === rq.id ? s2.current : rq;
     cur.status = r.ok ? 'shipped' : 'failed'; cur.result = r; cur.decidedAt = new Date().toISOString(); s2.history.push(cur); s2.current = cur; save(s2);
@@ -178,7 +180,7 @@ module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTa
     const s = load(), rq = s.current;
     if (!rq || rq.id !== rid || rq.status !== 'pending') throw fail(404, 'No waiting ship request with that id.');
     if (rq.by !== me.id && !can(me, 'repo.merge')) throw fail(403, 'Only the person who asked, the host or an admin can cancel it.');
-    rq.status = 'cancelled'; rq.decidedAt = new Date().toISOString(); s.history.push(rq); save(s); push();
+    rq.status = 'cancelled'; rq.decidedAt = new Date().toISOString(); s.history.push(rq); save(s); push(); closeAsks(rq, 'Cancelled');
     return view(rq);
   }
   function comment(rid, text, me) {

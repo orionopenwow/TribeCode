@@ -750,7 +750,7 @@
     return `<article class="m2-ap ${decided ? 'done ' + a.status : ''}" data-ap="${esc(a.id)}">
       <div class="m2-ap-top">${avatar(member(a.by) || { name: a.byName })}<div class="m2-ap-t"><b>${esc(a.title)}</b><small>${esc(a.byName || 'someone')} · <span class="risk ${esc(a.risk)}">${RISK[a.risk] || ''}</span> · ${esc(ago(a.created))}</small></div></div>
       ${a.details ? `<p class="m2-ap-d">${esc(a.details.slice(0, 280))}</p>` : ''}
-      ${decided ? `<div class="m2-ap-res">${ic(a.status === 'approved' ? 'check' : 'x', 16)}<span>${a.status === 'approved' ? 'Approved' : 'Denied'} by ${esc(a.decidedByName || 'someone')}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`
+      ${decided ? `<div class="m2-ap-res">${ic(a.status === 'approved' ? 'check' : 'x', 16)}<span>${a.status === 'closed' ? 'Closed' : `${a.status === 'approved' ? 'Approved' : 'Denied'} by ${esc(a.decidedByName || 'someone')}`}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`
         : `<button class="m2-ap-note-btn ${open ? 'hidden' : ''}" data-note>${ic('plus', 14)}Add a comment</button>
         <textarea class="m2-ap-note ${open ? '' : 'hidden'}" rows="2" maxlength="500" placeholder="Optional comment for ${esc(a.byName || 'them')}" aria-label="Comment"></textarea>
         <div class="m2-ap-btns"><button class="deny" data-decide="deny">${ic('x', 18)}Deny</button><button class="approve" data-decide="approve">${ic('check', 18)}Approve</button></div>`}

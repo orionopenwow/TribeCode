@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.19.0
+
+Code anything, together: the website says what you can make before anything else, Learn guides for newcomers, a review step before code goes to GitHub, and an optional Turbo mode.
+
+- **Ship it**: a "Ready to ship" card in the Code repository view shows everything since the last push to GitHub (saved changes, files, who and which AI helper, linked tasks) before anything moves forward. The host ships, or anyone can ask to ship with a note
+- **Vote to push**: each project picks who decides: the host (default), a majority, or everyone. Approve or deny with a comment, on the card or as a one-tap approval on your phone. AI helpers can ask but never vote. Only the reviewed saved change goes out, and nothing is ever forced
+- **Turbo mode** (off by default): approved changes ship by themselves at a quiet moment: nobody mid-edit, no new saved changes for a while, no one working in those files, no open vote, the checks passing, at most a few times an hour. A ⚡ pill shows it's on, with a log of what it shipped
+- **Share progress**: one click copies the GitHub link, what's done and what's next, and an invite link, ready for a chat or a text
+- **Who's waiting on whom**: a live line in the Agents Hub; a waiting ship vote shows under Needs you. Claude can ask "is it OK to ship?" and request a ship through TribeCode's tools
+- **Split a task** into 2 to 5 smaller ones from its card
+- **Write the vision right in the checklist**, then pick first tasks suggested from it (it can tell a game from an app or a website by what you wrote), or type your own
+- **Connect GitHub** from the checklist: the step wears the GitHub mark and signs you in inside the app; once you're signed in, your new code repository goes up to GitHub (private) by itself
+- **Flint's welcome teaches**: it asks whether you've made an app before, then shows how an app comes together (with deeper notes if you've built things) and what you'd use, as four small live tiles
+- **Website**: "Code anything, together". A new "What you can make" section (apps, games, websites, tools, bots, school projects, open source, your big idea) comes before the six-step story, followed by **Learn**. The new Learn page has guides on what code is, your first app and building together, languages explained simply with a deeper version each, words to know, and a quiz that earns the First Spark badge. Flint on the site answers "What can I make?" and "New to coding?"
+- **Fixes**: renaming a project keeps its box while you type; a presence update no longer wipes a task you're typing; the ship push, the repository's background check and merges never overlap; a decided ship vote closes the other phone prompts
+- **Phones**: the What you can make and Learn cards stack two by two (one column for Learn on narrow phones), the welcome's tiles go two by two, and the Ship card, votes and Share fit one column
+
 ## v0.18.0
 
 A big, friendlier version: plain words everywhere, a hands-on guided demo, a simpler dashboard, and a website that explains itself in six steps.
