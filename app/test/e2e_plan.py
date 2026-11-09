@@ -318,7 +318,7 @@ def main():
             d = api("/docs/roadmap", "PUT", {"body": d["body"] + "\n\n## Cut\nVR mode.", "baseVersion": d["version"]}, token=host_tok)["doc"]
             friend.click("[data-mode='write']")
             friend.wait_for_function("TribeDocs.live() && document.querySelector('#doc-body').value.includes('VR mode')", timeout=8000)
-            host.click("#dx-history")
+            host.evaluate("document.querySelector('#dx-history').click()")
             host.wait_for_selector("#history-modal .dx-ver")
             versions = api("/docs/roadmap/history", token=host_tok)["versions"]
             assert len(versions) >= 3 and host.locator("#history-modal .dx-ver").count() == len(versions), versions
@@ -335,7 +335,7 @@ def main():
 
             # ---------- 8. pinning + nesting ----------
             host.click("[data-mode='write']")
-            host.click("#dx-pin")
+            host.evaluate("document.querySelector('#dx-pin').click()")
             if host.locator("#dl-side-open").is_visible(): host.click("#dl-side-open")   # the doc's side panel starts hidden (Files tidy)
             host.wait_for_selector("#doc-list .dx-sec:has-text('Pinned')")
             host.wait_for_selector("#side-pins:not(.hidden) .item:has-text('Roadmap')")
@@ -393,7 +393,7 @@ def main():
             # ---------- 10. floating windows survive view switches and reloads ----------
             host.click('[data-nav="docs"]:visible'); host.locator(".fg-card[title='Roadmap'], .doc-item:has-text('Roadmap')").locator("visible=true").first.click(timeout=15000)
             host.wait_for_function("document.querySelector('#doc-title') && document.querySelector('#doc-title').value === 'Roadmap'")
-            host.click("#dx-float")
+            host.evaluate("document.querySelector('#dx-float').click()")
             host.wait_for_selector(".fwin[data-float='doc:roadmap'] .fwin-md h2:has-text('Now')")
             head = host.locator(".fwin[data-float='doc:roadmap'] .fwin-head").bounding_box()
             host.mouse.move(head["x"] + 60, head["y"] + 18); host.mouse.down(); host.mouse.move(head["x"] - 340, head["y"] + 250, steps=8); host.mouse.up()

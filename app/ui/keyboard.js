@@ -23,6 +23,8 @@
   document.addEventListener('focusout', () => setTimeout(sync, 150));
   // your own message always scrolls into view (even if you were reading older ones)
   document.addEventListener('submit', e => { if (e.target && e.target.id === 'chat-form') { nearBottom = true; setTimeout(stick, 120); setTimeout(stick, 600); } }, true);
+  // the list changed size (keyboard, the message box growing, a picture loading): keep the newest message in view
+  if (window.ResizeObserver) { const ro = new ResizeObserver(() => stick()); const watch = () => { const l = document.getElementById('chat-list'); if (l && !l.dataset.kbro) { l.dataset.kbro = '1'; ro.observe(l); } }; watch(); setInterval(watch, 2000); }
   window.TribeKeyboard = { sync };
 })();
 // A tiny haptic tick for main actions on phones that support it (Android). Never on every tap: only primary buttons and Send.
@@ -51,4 +53,39 @@
   document.addEventListener('submit', e => { if (e.target && e.target.id === 'chat-form') { try { localStorage.removeItem(key()); } catch {} } }, true);
   setInterval(restore, 700);   // channel, DM or project changed: swap in that conversation's draft
   addEventListener('pagehide', save);
+})();
+
+// The message box (v0.21) is a textarea: no password-autofill bar on phones, room for a few lines, Enter sends
+// (Shift+Enter for a new line), and it grows up to five lines. On phones a slim format strip (bold, italic, strike,
+// code, link, list) rides above it while typing.
+(function () {
+  const inp = () => document.getElementById('chat-input');
+  const grow = el => { if (!el || el.tagName !== 'TEXTAREA' || !el.offsetParent) return; if (!el.value) { el.style.height = ''; return; } el.style.height = 'auto'; el.style.height = Math.min(Math.max(el.scrollHeight, 0), 132) + 'px'; };
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') grow(e.target); });
+  document.addEventListener('keydown', e => {
+    const el = e.target; if (!el || el.id !== 'chat-input' || el.tagName !== 'TEXTAREA') return;
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !document.getElementById('mention-pop')) {
+      e.preventDefault(); const f = document.getElementById('chat-form'); if (f) { if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+      setTimeout(() => grow(el), 30);
+    }
+  });
+  document.addEventListener('submit', e => { if (e.target && e.target.id === 'chat-form') setTimeout(() => grow(inp()), 30); });
+  const WRAP = { b: ['**', '**'], i: ['_', '_'], s: ['~~', '~~'], c: ['`', '`'], l: ['[', '](https://)'], u: ['- ', ''] };
+  function fmt(k) {
+    const el = inp(); if (!el) return; const [a, z] = WRAP[k], s0 = el.selectionStart, s1 = el.selectionEnd, v = el.value, sel = v.slice(s0, s1);
+    if (k === 'u') { const ls = v.lastIndexOf('\n', s0 - 1) + 1; el.value = v.slice(0, ls) + a + v.slice(ls); el.setSelectionRange(s0 + a.length, s1 + a.length); }
+    else { el.value = v.slice(0, s0) + a + sel + z + v.slice(s1); const at = sel ? s1 + a.length + z.length : s0 + a.length; el.setSelectionRange(k === 'l' && sel ? s0 + a.length + sel.length + 2 : at, k === 'l' && sel ? s0 + a.length + sel.length + 10 : at); }
+    el.focus(); el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  function bar() {
+    const f = document.getElementById('chat-form'); if (!f || document.getElementById('cf-bar')) return;
+    const d = document.createElement('div'); d.id = 'cf-bar'; d.className = 'cf-bar'; d.setAttribute('role', 'toolbar'); d.setAttribute('aria-label', 'Formatting');
+    d.innerHTML = [['b', '<b>B</b>', 'Bold'], ['i', '<i>I</i>', 'Italic'], ['s', '<s>S</s>', 'Strikethrough'], ['c', '<code>&lt;/&gt;</code>', 'Code'], ['l', '🔗', 'Link'], ['u', '•', 'List']].map(([k, h, t]) => `<button type="button" data-cf="${k}" aria-label="${t}" title="${t}">${h}</button>`).join('');
+    d.addEventListener('pointerdown', e => e.preventDefault());   // keep the keyboard open
+    d.addEventListener('click', e => { const b = e.target.closest('[data-cf]'); if (b) fmt(b.dataset.cf); });
+    f.parentNode.insertBefore(d, f);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bar); else bar();
+  setInterval(bar, 3000);
+  window.TribeComposer = { fmt, grow };
 })();

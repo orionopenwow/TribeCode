@@ -22,9 +22,9 @@
   }
   const TYPE = {
     doc: { ico: '📝', chip: 'DOC', label: 'Doc' }, image: { ico: '🖼️', chip: 'IMG', label: 'Picture' }, pdf: { ico: '📕', chip: 'PDF', label: 'PDF' },
-    code: { ico: '💻', chip: '</>', label: 'Code' }, sheet: { ico: '📊', chip: 'CSV', label: 'Table' }, audio: { ico: '🎧', chip: 'AUD', label: 'Audio' },
+    code: { ico: '💻', chip: '</>', label: 'Code' }, sheet: { ico: '📊', chip: 'CSV', label: 'Table' }, xsheet: { ico: '📊', chip: 'SHEET', label: 'Sheet' }, audio: { ico: '🎧', chip: 'AUD', label: 'Audio' },
     video: { ico: '🎬', chip: 'VID', label: 'Video' }, shot: { ico: '📸', chip: 'PNG', label: 'Screenshot' },
-    deck: { ico: '🎞️', chip: 'PPT', label: 'Slides' },
+    deck: { ico: '🎞️', chip: 'SLIDES', label: 'Slides' },
   };
   const strip = t => String(t || '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`>#]+/g, '').trim();
   function thumb(d, type) {
@@ -42,7 +42,7 @@
     return `<div class="fg-th fg-th-page"><div class="fg-paper"><b class="fg-pt">${esc(d.title || 'Untitled')}</b>${body || '<i class="fg-blank">Empty</i>'}${pic}</div></div>`;
   }
   function card(d, o) {
-    const type = typeOf(d), T = TYPE[type];
+    const type = typeOf(d), T = d.kind === 'sheet' ? TYPE.xsheet : TYPE[type];   // a sheet made here says Sheet; an uploaded CSV says CSV
     return `<button class="fg-card" data-slug="${esc(d.slug)}" data-type="${type}" title="${esc(d.title || 'Untitled')}">
       <span class="fg-head"><span class="fg-ico fg-ico-${type}" aria-hidden="true">${esc(T.chip)}</span><span class="fg-name">${esc(d.title || 'Untitled')}</span><span class="fg-more" aria-hidden="true">⋮</span></span>
       ${thumb(d, type)}
@@ -50,6 +50,35 @@
   }
   function folderOf(d) { const s = String(d.slug || ''); const i = s.lastIndexOf('/'); return i > 0 ? s.slice(0, i) : ''; }
 
+  // Start something new (v0.21): every kind of file, and the ways to begin one
+  const START = [
+    { k: 'doc', e: '📝', t: 'Doc', s: 'Write anything', id: 'doc-first' },
+    { k: 'sheet', e: '📊', t: 'Sheet', s: 'Numbers and lists', id: 'fg-new-sheet' },
+    { k: 'deck', e: '🎞️', t: 'Slides', s: 'A deck to present', id: 'fg-new-deck' },
+    { k: 'template', e: '📋', t: 'From a template', s: 'Plans, notes, specs' },
+    { k: 'flint', e: '✨', t: 'Ask Flint', s: 'Describe it, get a draft' },
+    { k: 'upload', e: '⬆️', t: 'Upload', s: 'Docs, CSV, pictures, PDFs' },
+  ];
+  function start(k, o) {
+    if (k === 'doc') return o.create();
+    if (k === 'sheet' || k === 'deck') return o.create(k);
+    if (k === 'template' && window.TribeDocsX) return window.TribeDocsX.templatePicker();
+    if (k === 'flint') { const F = window.TribeFlint; if (F && F.prefill) F.prefill('make a doc about '); else if (window.TribeApp) window.TribeApp.toast('Open Flint (bottom right) and say what to make, like "make slides about our game".'); return; }
+    if (k === 'upload') {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = '.md,.txt,.csv,.tsv,.html,.json,.png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.mp3,.wav,.m4a,.mp4,.mov,.webm,.js,.ts,.py,.css';
+      inp.onchange = () => { if (inp.files.length && window.TribeDocs && window.TribeDocs.importFiles) window.TribeDocs.importFiles([...inp.files]); };
+      inp.click();
+    }
+  }
+  function newMenu(anchor, o) {
+    let m = document.getElementById('fg-newmenu'); if (m) { m.remove(); return; }
+    m = document.createElement('div'); m.id = 'fg-newmenu'; m.className = 'ex-pop'; m.setAttribute('role', 'menu');
+    m.innerHTML = START.map(x => `<button type="button" role="menuitem" class="ex-i" data-k="${x.k}">${x.e}&nbsp; ${x.t}</button>`).join('');
+    document.body.appendChild(m); const r = anchor.getBoundingClientRect();
+    m.style.top = (r.bottom + 6) + 'px'; m.style.left = Math.max(8, r.right - m.offsetWidth) + 'px';
+    m.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { m.remove(); start(b.dataset.k, o); });
+    setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off, true); } }, true), 0);
+  }
   async function render(pane, list, o) {
     const folders = [...new Set(list.map(folderOf).filter(Boolean))].sort();
     let at = pane.dataset.fgFolder || '';
@@ -57,19 +86,19 @@
       const items = list.filter(d => folderOf(d) === at || (!at && !folderOf(d)));
       { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the code repository strip alive across redraws
       pane.innerHTML = `<div class="fg">
-        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn" id="doc-first">＋ New doc</button><button class="btn ghost" id="fg-new-sheet" title="A spreadsheet with formulas">📊 Sheet</button><button class="btn ghost" id="fg-new-deck" title="A slide deck you can present">🎞️ Slides</button></span></div>
+        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn primary" id="fg-new-menu">＋ New</button></span></div>
+        ${!at ? `<div class="fg-start" role="group" aria-label="Start something new">${START.map(x => `<button type="button" class="fg-st" data-start="${x.k}"${x.id ? ` id="${x.id}"` : ''}><span class="fg-st-e" aria-hidden="true">${x.e}</span><b>${x.t}</b><small>${x.s}</small></button>`).join('')}</div>` : ''}
         ${!at ? '<div class="fg-repo"></div>' : ''}
         ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button class="fg-folder" data-folder="${esc(f)}"><span aria-hidden="true">📁</span><span>${esc(f.split('/').pop())}</span><span class="fg-more" aria-hidden="true">⋮</span></button>`).join('')}</div>` : ''}
         ${items.length ? `<div class="fg-grid">${items.map(d => card(d, o)).join('')}</div>`
-          : `<div class="fg-empty"><span aria-hidden="true">🗂️</span><b>${list.length ? 'Nothing in this folder yet' : 'Your tribe’s files live here'}</b><p>${list.length ? 'Pick another folder, or press ＋ New doc to add one here.' : 'Press <b>＋ New doc</b> to write the first one. Notes, pictures, PDFs and code your tribe adds show up here too.'}</p></div>`}
+          : `<div class="fg-empty"><span aria-hidden="true">🗂️</span><b>${list.length ? 'Nothing in this folder yet' : 'Your tribe’s files live here'}</b><p>${list.length ? 'Pick another folder, or press ＋ New to add one here.' : 'Start one above, or press <b>＋ New</b>. Notes, pictures, PDFs and code your tribe adds show up here too.'}</p></div>`}
         ${!at && shots && shots.length ? `<h3 class="fg-sub">📸 Screenshots of the app</h3><div class="fg-grid">${shots.slice(0, 12).map(s => { const u = media(`/api/visuals/${s.latest.screen}/${s.latest.ts}.png`);
           return `<button class="fg-card" data-shot="${esc(u)}" data-title="${esc(s.name)}"><span class="fg-head"><span class="fg-ico fg-ico-shot" aria-hidden="true">PNG</span><span class="fg-name">${esc(s.name)}</span><span class="fg-more" aria-hidden="true">⋮</span></span><div class="fg-th fg-th-img"><img alt="" loading="lazy" src="${esc(u)}"></div><span class="fg-meta">📸 ${s.count} version${s.count === 1 ? '' : 's'}</span></button>`; }).join('')}</div>` : ''}
       </div>`;
       const slot = pane.querySelector('.fg-repo'), hero = document.getElementById('doc-repo-hero');
       if (slot && hero) { const extra = hero.nextElementSibling && hero.nextElementSibling.classList.contains('vw-assets') ? hero.nextElementSibling : null; slot.append(hero); if (extra) slot.append(extra); }
-      pane.querySelector('#doc-first').onclick = () => o.create();
-      pane.querySelector('#fg-new-sheet').onclick = () => o.create('sheet');
-      pane.querySelector('#fg-new-deck').onclick = () => o.create('deck');
+      pane.querySelector('#fg-new-menu').onclick = e => newMenu(e.currentTarget, o);
+      pane.querySelectorAll('[data-start]').forEach(b => b.onclick = () => start(b.dataset.start, o));
       pane.querySelectorAll('[data-slug]').forEach(b => b.onclick = () => o.open(b.dataset.slug));
       pane.querySelectorAll('[data-folder]').forEach(b => b.onclick = () => { at = pane.dataset.fgFolder = b.dataset.folder; draw(shots); });
       const up = pane.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };

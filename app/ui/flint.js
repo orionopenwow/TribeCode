@@ -479,5 +479,6 @@
   setInterval(() => { if (document.visibilityState === 'visible' && connected()) refreshModel(); }, 60000);
   // a quiet message from Flint with one button (feedback.js asks for a review this way, once)
   const nudge = (text, label, actName, arg) => say(text, [act(label, actName, arg)]);
-  window.TribeFlint = { focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge };
+  function prefill(t) { focus(); setTimeout(() => { const i = document.querySelector('.fl-in, #fl-in, [data-flin]'); if (i) { i.value = t; i.focus(); i.setSelectionRange(t.length, t.length); } }, 60); }
+  window.TribeFlint = { prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge };
 })();
