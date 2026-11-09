@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.24.0 (in progress)
+- **Phones**: the setup steps stay as big cards on phones too until all four are done.
+- **Setup stays until it's done**: writing the vision (or adding a task) no longer shrinks the dashboard's four setup steps into a small list. The big step cards stay at the top until the vision, a first task, your AI and the code repository are all done, so nobody skips the last two. The fold button tucks them into the compact list if you'd rather.
+
 ## v0.23.0
 - **Phones**: the Code view's editor works on phones too (a full-width box with Save and Lock below it).
 - **Edit code in the app**: in Files › Code, open a file and press ✏️ Edit. Save (Ctrl S) writes it and commits it on the checked-out branch with your name and an optional note, and the history updates. Tab indents, Esc cancels.

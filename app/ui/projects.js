@@ -199,7 +199,9 @@
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
     // the hero of the page and the Living update stays hidden: there is nothing to report yet.
-    const started = steps.some(x => x.done && (x.id === 'vision' || x.id === 'task')), hero = !started && !allDone;
+    // v0.24: the big step cards stay until every step is done (or the person hides them), so nobody skips the AI and the
+    // code repository just because the vision went in first. "Hide the steps" folds them into the compact list.
+    const started = steps.some(x => x.done && (x.id === 'vision' || x.id === 'task')), hero = !allDone && lsg('ckCompact') !== '1';
     const folded = !hero && lsg('ckFold') === '1';
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
     const checklist = allDone && lsg('ckGone') === '1' ? ''
@@ -283,7 +285,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     if (chk) { chk.querySelectorAll('.btn.primary').forEach(x => x.classList.remove('primary')); const nx = chk.querySelector('.ock-row:not(.on)'); if (nx) { nx.classList.add('ock-next'); const b1 = nx.querySelector('.ock-acts .btn, .ock-below .btn'); if (b1) b1.classList.add('primary'); } }
     bindInline(p, visFocus);
     const shb = $('#pj-share'); if (shb) shb.onclick = () => window.TribeShip && window.TribeShip.share();   // feat/ship-flow
-    if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
+    if (fold) fold.onclick = () => { if ($('#pj-check').classList.contains('hero')) { lss('ckCompact', '1'); lss('ckFold', '1'); lastOv = ''; overview(); return; } const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite();
     const more = $('#pj-more'); if (more) more.addEventListener('toggle', () => lss('more', more.open ? '1' : null));   // re-renders keep the current open state (moreOpen)
