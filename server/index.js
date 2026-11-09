@@ -105,9 +105,12 @@ function lanUrls() {
   for (const [name, addrs] of Object.entries(os.networkInterfaces())) for (const a of addrs || []) {
     if (a.family !== 'IPv4' || a.internal) continue;
     const ts = /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(a.address) || /tailscale/i.test(name);
-    out.push({ url: `http://${a.address}:${PORT}`, kind: ts ? 'tailscale' : 'lan', name });
+    // virtual adapters (VirtualBox, VMware, Hyper-V/WSL, Docker) look like Wi-Fi addresses but nobody can reach them
+    const virt = !ts && (/virtualbox|vbox|vmware|vmnet|vethernet|hyper-v|wsl|docker|br-|virbr|utun|zerotier|loopback/i.test(name) || /^192\.168\.56\./.test(a.address) || /^172\.(1[7-9]|2\d|3[01])\./.test(a.address));
+    out.push({ url: `http://${a.address}:${PORT}`, kind: ts ? 'tailscale' : virt ? 'virtual' : 'lan', name });
   }
-  return out.sort((x, y) => (y.kind === 'tailscale') - (x.kind === 'tailscale'));
+  const rank = u => (u.kind === 'tailscale' ? 0 : u.kind === 'lan' ? (/wi-?fi|wlan|wireless|ethernet|^en|^eth/i.test(u.name) ? 1 : 2) : 3);
+  return out.sort((x, y) => rank(x) - rank(y));
 }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 function send(res, status, body, headers = {}) {
