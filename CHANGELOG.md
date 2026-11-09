@@ -5,6 +5,8 @@
 Faster-feeling and harder to break: everything you do shows at once, nothing is lost offline, and Learn is a real course.
 
 - **Instant messages, never lost**: your message shows the moment you press Send, faint until the server has it. Offline or while the tribe wakes up, it waits in the outbox and sends by itself, exactly once (each message carries an id, so a resend never doubles). Queued messages survive a reload. If one is refused, it says Not sent with Retry
+- **Drafts stay**: what you were typing in a chat stays when you switch channels, DMs or projects, or reload
+- **Releases wait for tests**: installers build only after the essential tests pass on GitHub, and the same checks run on every push to work branches
 - **Instant votes**: your vote shows right away and rolls back with a note if it didn't save (task moves were already instant)
 - **Health pill**: quiet when all is well; shows Reconnecting, Waking up the tribe, Offline or "2 waiting to send" when it matters. Tap to try again. The app also reconnects the moment your network comes back
 - **Refresh TribeCode** (Settings › Fix problems): clears the app's stored files and reloads fresh, keeping your sign-in, drafts, unsent messages and the view you were on

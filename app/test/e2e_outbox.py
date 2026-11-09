@@ -58,6 +58,12 @@ def main():
             time.sleep(0.5); assert count(tok, "sent while offline") == 1
             try: host.wait_for_selector("#health-pill.hidden", state="attached", timeout=8000)   # quiet again
             except Exception: raise AssertionError(host.evaluate("[document.querySelector('#health-pill').className, document.querySelector('#health-pill').innerText, TribeClient.state().status, navigator.onLine]"))
+            # an unsent draft survives a reload
+            host.evaluate("TribeApp.show('chat')"); host.wait_for_selector("#chat-input")
+            host.fill("#chat-input", "half-written thought"); host.wait_for_timeout(500)
+            host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
+            host.evaluate("TribeApp.show('chat')"); host.wait_for_function("document.querySelector('#chat-input').value === 'half-written thought'", timeout=5000)
+            host.fill("#chat-input", ""); host.wait_for_timeout(500)
             # Refresh TribeCode: caches gone, still signed in, same tribe, back on the same view
             me = host.evaluate("TribeClient.state().me.id")
             host.evaluate("TribeApp.show('tasks')"); host.wait_for_timeout(300)
