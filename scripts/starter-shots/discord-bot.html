@@ -1,0 +1,11 @@
+<!doctype html><meta charset=utf-8><link rel=stylesheet href=base.css><div class=app style="max-width:820px"><div class=term><span class=m>// bot.js</span>
+<span class=b>client</span>.on(<span class=y>'interactionCreate'</span>, <span class=b>async</span> i => {
+  <span class=b>if</span> (i.commandName === <span class=y>'build'</span>) {
+    <span class=b>await</span> i.reply(<span class=y>`🛠️ Today's build: ${latest.version}`</span>);
+  }
+});</div>
+<div class=term style="margin-top:12px"><span class=g>$</span> npm start
+<span class=m>[bot]</span> Logged in as <span class=o>PixelGardenBot#2048</span>
+<span class=m>[bot]</span> Registered slash commands: <span class=y>/build /hello /roll</span>
+<span class=m>[bot]</span> Welcomed <span class=b>@maya</span> in #general
+<span class=m>[bot]</span> /build from <span class=b>@jay</span> → replied <span class=g>"🛠️ Today's build: v0.6.2"</span></div></div>

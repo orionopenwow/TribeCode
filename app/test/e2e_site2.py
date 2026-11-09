@@ -86,8 +86,8 @@ def main():
             assert not pg.evaluate("document.querySelector('.nav').classList.contains('is-scrolled')")
             # hero
             h1 = pg.inner_text("h1")
-            assert "Code anything" in h1 and "together" in h1, h1
-            sub = pg.inner_text(".hero__sub"); assert "Apps, games, websites" in sub and "learn" in sub, sub
+            assert "friends" in h1, h1
+            sub = pg.inner_text(".hero__sub"); assert "link" in sub and "AI helpers" in sub, sub
             # what you can make comes before how it works, then Learn, then the features and the network
             ys = pg.evaluate("['#make', '#story', '#learn', '#room', '#host'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
             assert ys == sorted(ys), ys
@@ -175,7 +175,7 @@ def main():
             assert pg.evaluate("document.querySelectorAll('#lanes [data-step].on').length") >= 2
             # host: share the network, honest about 24/7
             host = pg.inner_text("#host .feature__copy")
-            assert "Share the network." in host and "GitHub repo" in host and "pass the job" in host, host
+            assert "It runs where you want it." in host and "GitHub repository" in host and "move it later" in host, host
             assert all(c in host for c in ["Zero npm dependencies", "Plain files + git", "MIT licensed"])
             assert "one link" in host
             # pricing lives on its own page (pricing.html): promises, Tribes / Schools & studios tabs, Free is available now, paid plans are planned with a waitlist
@@ -197,9 +197,9 @@ def main():
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 6
             # start from something: tabs switch, cards carry chips, an idea fills the hero's chat box
             pg.locator("#starters .sw").scroll_into_view_if_needed()
-            assert "Start from something." in pg.inner_text("#starters h2")
+            assert "Skip the blank page." in pg.inner_text("#starters h2")
             assert pg.locator("#sw-panel .sw-card").count() == 4 and "Pixel platformer" in pg.inner_text("#sw-panel") and "KAPLAY" in pg.inner_text("#sw-panel")
-            assert pg.locator("#sw-panel .sw-card").nth(0).locator(".sw-chip").count() >= 2 and pg.locator("#sw-panel .sw-thumb").count() == 4
+            assert pg.locator("#sw-panel .sw-card").nth(0).locator(".sw-chip").count() >= 2 and pg.locator("#sw-panel .sw-shot, #sw-panel .sw-thumb").count() == 4
             assert "what you get" in pg.locator("#sw-panel .sw-card").nth(0).inner_text().lower()
             for tag, name in [("Game", "Pixel platformer"), ("App", "Habit tracker"), ("Site", "Portfolio"), ("Tool", "Discord bot")]:   # one of each kind, no tabs
                 assert tag in pg.inner_text("#sw-panel") and name in pg.inner_text("#sw-panel"), tag

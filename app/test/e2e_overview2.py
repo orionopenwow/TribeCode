@@ -57,14 +57,15 @@ def main():
             # 0. a brand-new project: the checklist is the hero and there's no Living update yet
             host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
-            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 4 and host.locator("#pj-check.hero .ock-fold").is_hidden()
+            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 4
             assert host.evaluate("parseFloat(getComputedStyle(document.querySelector('#pj-check .ock-hero-t')).fontSize)") >= 24
             n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
             host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]")
             assert host.locator("#pj-check .ock-next .btn.primary").count() == 1 and host.locator("#pj-check .btn.primary").count() == 1, "one solid button: the next step"
             st, _ = api("/tasks", "POST", {"title": "Draw the title screen"}, token=tok, headers={"X-Project": pid}); assert st in (200, 201), st
-            host.wait_for_selector("#pj-living", timeout=10000); host.evaluate("document.querySelector('#pj-more') && (document.querySelector('#pj-more').open = true)")   # started: the Living update appears, the checklist calms down
-            assert host.locator("#pj-check.hero").count() == 0
+            # v0.24: the step cards stay until every step is done, so nobody skips the AI and the repository
+            host.wait_for_selector("#pj-check.hero [data-step=task].on", timeout=10000)
+            assert host.locator("#pj-check.hero").count() == 1
 
             # 1-2. identity row, then the Living update: a pill and 4 equal tiles, no long sentence
             assert "Add a short description" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
@@ -76,7 +77,9 @@ def main():
             assert max(widths) - min(widths) <= 2, f"equal tiles {widths}"
             assert host.locator("#pj-living .pl-sum").count() == 0, "no duplicate sentence"
             # section order, top to bottom
-            ys = host.evaluate(ORDER); assert -1 not in ys and ys == sorted(ys), f"section order {ys}"
+            ys = host.evaluate(ORDER)
+            if host.locator("#pj-check.hero").count(): assert ys[3] < ys[1], "unfinished setup: the step cards sit right under the title"; ys = ys[:3] + ys[4:]
+            assert -1 not in ys and ys == sorted(ys), f"section order {ys}"
             titles = host.eval_on_selector_all("#pj-overview .pj-sec-t", "els => els.map(e => e.textContent.trim())")
             assert titles == ["Recent changes and what’s next", "Tribe & Agents", "Code & Tools"], titles
             assert host.evaluate("getComputedStyle(document.querySelector('.pj-sec-t')).fontSize") == "18px"
@@ -139,7 +142,9 @@ def main():
                 assert len(set(xs)) == 1, f"{s} single column {xs}"
             wide = ph.evaluate("[...document.querySelectorAll('#pj-overview *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && e.offsetParent).map(e => e.id || e.className).slice(0, 5)")
             assert not wide, f"nothing pokes past the edge: {wide}"
-            ys = ph.evaluate(ORDER); assert ys[1:] == sorted(ys[1:]), f"phone order {ys}"
+            ys = ph.evaluate(ORDER)
+            if ph.locator("#pj-check.hero").count(): ys = ys[:3] + ys[4:]   # unfinished setup: the step cards sit under the title
+            assert ys[1:] == sorted(ys[1:]), f"phone order {ys}"
             ph.set_viewport_size({"width": 390, "height": 3000}); ph.wait_for_timeout(300)
             ph.screenshot(path=str(SHOTS / "overview2-phone.png"))
             b.close()

@@ -26,7 +26,10 @@ const NAME_COLORS = {
   amber: '#F2B33D', lime: '#9AD65C', mint: '#4CD6A0', sand: '#D9B98C', orchid: '#E07BD0', slate: '#9AA7B8',
 };
 const PIXELS = ['flame', 'campfire', 'tent', 'star', 'moon', 'fox', 'owl', 'bear', 'rabbit', 'frog', 'cat', 'raccoon',
-  'hedgehog', 'deer', 'mushroom', 'pine', 'mountain', 'lantern', 'marshmallow', 'compass', 'canoe', 'firefly', 'snail', 'acorn'];
+  'hedgehog', 'deer', 'mushroom', 'pine', 'mountain', 'lantern', 'marshmallow', 'compass', 'canoe', 'firefly', 'snail', 'acorn',
+  // v0.24 themed packs
+  'rocket', 'planet', 'alien', 'ufo', 'comet', 'astronaut', 'fish', 'octopus', 'whale', 'crab', 'shell', 'jelly', 'dragon', 'wizard', 'crown', 'potion', 'sword', 'shield', 'robot', 'joystick', 'floppy', 'heart', 'ghost', 'cursor', 'pizza', 'donut', 'burger', 'sushi', 'icecream', 'coffee', 'headphones', 'guitar', 'note', 'ball', 'trophy', 'dice'];
+const MAKER = { s: 6, hc: 8, sh: 6, h: 6, e: 5, m: 4, x: 7 };   // the avatar maker's parts and how many of each
 const PRESENCE = ['online', 'idle', 'dnd', 'invisible'];
 const CLEAR = { '30m': 30 * 60_000, '4h': 4 * 3600_000, today: null, never: 0 };
 const LIM = { pronouns: 40, bio: 300, status: 80, link: 300, label: 32, nick: 32, note: 256, photo: 2_400_000, banner: 400_000 };
@@ -75,6 +78,7 @@ function makeProfiles({ P, store, getMembers, pushPresence, now = () => Date.now
     if (!a || !a.kind || a.kind === 'initials') return null;
     if (a.kind === 'emoji') return { kind: 'emoji', emoji: a.emoji, tint: a.tint || null };
     if (a.kind === 'pixel') return { kind: 'pixel', pixel: a.pixel, tint: a.tint || null };
+    if (a.kind === 'maker') return { kind: 'maker', spec: a.spec, tint: a.tint || null };
     if (a.kind === 'photo') return { kind: 'photo', file: a.file, still: a.still || null, anim: !!a.anim };
     return null;
   }
@@ -137,6 +141,11 @@ function makeProfiles({ P, store, getMembers, pushPresence, now = () => Date.now
         if (!PIXELS.includes(a.pixel)) throw err(400, 'unknown pixel avatar');
         if (a.tint && !NAME_COLORS[a.tint]) throw err(400, 'pick a tint from the palette');
         p.avatar = { kind: 'pixel', pixel: a.pixel, tint: a.tint || null };
+      } else if (a.kind === 'maker') {
+        const sp = a.spec || {}, spec = {};
+        for (const [k, n] of Object.entries(MAKER)) { const v = Number(sp[k] ?? 0); if (!Number.isInteger(v) || v < 0 || v >= n) throw err(400, 'unknown avatar part'); spec[k] = v; }
+        if (a.tint && !NAME_COLORS[a.tint]) throw err(400, 'pick a tint from the palette');
+        p.avatar = { kind: 'maker', spec, tint: a.tint || null };
       } else if (a.kind === 'photo') {
         if (!p.avatar || p.avatar.kind !== 'photo') throw err(400, 'upload a picture first');   // set by POST /avatar
       } else throw err(400, 'unknown avatar kind');

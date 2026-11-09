@@ -28,3 +28,8 @@ Checked and left out (November 2026): `ellisonleao/clumsy-bird` (GPL), `excalibu
 | 🌐 HTML5 Boilerplate | site | H5BP | MIT | Copy into a new project | https://github.com/h5bp/html5-boilerplate |
 | 🚀 Astro site templates | site | Astro | MIT | Browse and borrow | https://github.com/withastro/astro |
 | 🎨 Kenney game art | asset | Kenney | CC0 | Browse and borrow | https://kenney.nl/assets |
+
+## Screenshots
+
+- **Starter cards** (website "Start from something"): real screenshots of real, working pages, made by `python3 scripts/starter-shots.py`. The Pixel platformer and Portfolio come straight from `templates/`; the others are small working pages in `scripts/starter-shots/` (their real UI, real code and real output).
+- **Remix cards**: each image comes from the project itself, under its MIT license, with the authors credited on the card: 2048, TodoMVC and the KAPLAY double-jump example were run locally and captured; Phaser, LittleJS, Godot and three.js use the screenshot files in their own repositories. Projects without a usable image show a plain tile instead of an invented picture.

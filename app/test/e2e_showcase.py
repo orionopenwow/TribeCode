@@ -107,7 +107,7 @@ def main():
             pg = ctx.new_page(); watch(pg, errs)
             pg.goto(ABOUT); pg.wait_for_load_state("load")
             assert pg.title().startswith("TribeCode"), pg.title()
-            assert "Code anything" in pg.inner_text("h1")
+            assert "friends" in pg.inner_text("h1")
             assert pg.locator('meta[property="og:image"]').get_attribute("content")== "https://tribecode.org/assets/og-image.png"
             # live GitHub numbers, release line and downloads from the release (headless Chrome here reports Linux)
             pg.wait_for_function("document.querySelector('[data-gh=forks]').textContent === '56' && document.querySelector('.stats [data-gh=version]').textContent === 'v9.9.9'", timeout=8000)
@@ -154,7 +154,7 @@ def main():
             # agents in general, not one tool; the honest hosting line; pricing with every paid button disabled; no "Welcome back" bar
             for tool in ["Claude Code", "Codex", "Gemini CLI", "Cursor"]:
                 assert tool in body, tool
-            assert "Share the network." in body and "GitHub repo" in body and "Anthropic" not in body
+            assert "It runs where you want it." in body and "GitHub repository" in body and "Anthropic" not in body
             assert pg.locator("#pricing").count() == 0, "pricing has its own page"
             assert pg.locator("#continue").count() == 0
             assert all(u.startswith(("https://api.github.com/", "https://avatars.githubusercontent.com/")) for u in seen), seen
