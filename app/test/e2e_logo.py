@@ -24,7 +24,13 @@ def main():
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected()", timeout=30000)
             src = lambda: pg.get_attribute("#rail-logo img.logo", "src")
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=10000)   # resting once connected
-            assert pg.get_attribute("#rail-logo img.logo", "src").endswith("icon-mark-animated.svg"), "the flame idles (always flickers) in the top bar"
+            assert pg.get_attribute("#rail-logo img.logo", "data-logo-path").endswith("icon-mark-animated.svg"), "the flame idles (always flickers) in the top bar"
+            # v0.25: the logo takes the theme's colors (Campfire: cream brackets, its own orange flame), Light gets dark brackets
+            pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.startsWith('data:image/svg+xml')", timeout=5000)
+            assert "%23EBDBB2" in pg.get_attribute("#rail-logo img.logo", "src").upper()
+            pg.evaluate("TribeThemes.apply('light')"); pg.wait_for_function("decodeURIComponent(document.querySelector('#rail-logo img.logo').src).includes('#12151A')", timeout=5000)
+            pg.evaluate("TribeThemes.apply('dark')"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-mark-animated.svg')", timeout=5000)
+            pg.evaluate("TribeThemes.apply(TribeThemes.saved())")
             assert pg.locator(".rail #rail-logo").count() == 1 and pg.locator("#rail-camp").count() == 0, "the flame tops the rail (Home); the wordmark is in the top bar"
             # a prompt in flight: the logo flickers until the reply is in
             pg.route("**/api/hub/ask", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps({"answer": "ok"})))

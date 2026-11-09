@@ -93,7 +93,7 @@ const LINES = {
 const STARTER = { game: 'starter-game', '3d': 'tavern-3d' };   // everything else: starter-site
 const one = (s, n = 200) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; };
 
-module.exports = function setup({ P, W, base, sense, readVision, createTask, broadcast, resetHub, getMembers }) {
+module.exports = function setup({ P, W, base, sense, readVision, createTask, broadcast, resetHub, getMembers, siteTpl = () => null }) {
   let all = base.readJSON(FILE, {}); if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
   const save = () => base.writeJSON(FILE, all);
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -142,7 +142,8 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       kind: o.kind, label: o.label, vision: hasVision(v), canEdit: canEdit(me, pid), canHost: isHost(me, pid), choices: e.choices || {},
       roles: ROLES(o).map(r => ({ ...r, options: o[r.id], done: !!(e.choices || {})[r.id] })),
       repo: { has: !!p.repo, git: repoOk },
-      starter: { ready: hasVision(v) && !!o.kind, made: !!e.starter, template: STARTER[o.kind] || 'starter-site', at: (e.starter || {}).at || null },
+      starter: { ready: hasVision(v) && !!o.kind, made: !!e.starter, template: STARTER[o.kind] || 'starter-site', at: (e.starter || {}).at || null,
+        templates: ((siteTpl() && siteTpl().list()) || []).map(t => ({ slug: t.slug, name: t.name, summary: t.summary, from: t.from })) },
     };
   }
   // Two starter tasks per choice, typed for the Task Board's chips.
@@ -198,7 +199,7 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       fs.writeFileSync(d, text ? fill(fs.readFileSync(s, 'utf8')) : fs.readFileSync(s)); out.push(r);
     }
   }
-  async function starter(pid, me) {
+  async function starter(pid, me, body = {}) {
     if (!isHost(me, pid)) throw err(403, 'only the host can add files to the repo');
     const v = visionOf(pid), o = options(pid);
     if (!hasVision(v)) throw err(400, 'write the vision first');
@@ -210,8 +211,11 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
     const fill = t => t.replace(/\{\{name\}\}/g, esc(p.name)).replace(/\{\{gist\}\}/g, esc(gistOf(v) || p.bio || ''))
       .replace(/\{\{tagline\}\}/g, esc(((e.choices || {}).writer || {}).name || p.bio || '')).replace(/\{\{engine\}\}/g, esc(engine ? engine.name : 'plain HTML'))
       .replace(/\{\{palette\}\}/g, pal.colors.map((c, i) => `${vars[i]}: ${c};`).join(' '));
-    const written = [];
-    copyTree(path.join(TEMPLATES, tpl), repo, fill, written);
+    let written = [], usedTpl = tpl;
+    const own = typeof body.template === 'string' && body.template.startsWith('tribe:') && siteTpl() ? siteTpl().templateDir(body.template.slice(6)) : null;
+    if (typeof body.template === 'string' && body.template.startsWith('tribe:') && !own) throw err(404, 'no tribe template by that name');
+    if (own) { written = siteTpl().copyInto(body.template.slice(6), repo, t => siteTpl().fillFor(pid)(fill(t))); usedTpl = body.template; }   // v0.25: the host's own website templates
+    else copyTree(path.join(TEMPLATES, tpl), repo, fill, written);
     // the game starter's page takes the project's name (the template keeps "Pixel Quest" so the test project still reads well)
     try { const ix = path.join(repo, 'index.html'); if (written.some(f => /(^|[\\/])index\.html$/.test(f))) { const h = fs.readFileSync(ix, 'utf8'); if (h.includes('<title>Pixel Quest</title>')) fs.writeFileSync(ix, h.replace('<title>Pixel Quest</title>', `<title>${esc(p.name)}</title>`)); } } catch {}
     const pf = path.join(repo, 'design', 'palette.css');
@@ -221,10 +225,10 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       const r = await W.git([...W.identity(member(me.id) || me), 'commit', '-q', '-m', `Add the ${o.label} starter (via TribeCode)`], repo);
       if (r.code && !/nothing to commit/i.test(r.out + r.err)) throw err(422, one(r.err || r.out, 200));
     }
-    e.starter = { at: new Date().toISOString(), by: me.id, template: tpl, files: written.length }; save();
+    e.starter = { at: new Date().toISOString(), by: me.id, template: usedTpl, files: written.length }; save();
     if (resetHub) resetHub(pid);
     broadcast({ type: 'setup', project: pid }); broadcast({ type: 'repo', project: pid });
-    return { written, template: tpl, setup: view(pid, me) };
+    return { written, template: usedTpl, setup: view(pid, me) };
   }
 
   async function route(req, res, { m, b, parts, me, readBody, send, fail }) {
@@ -235,7 +239,7 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       if (m === 'GET' && !sub) return send(res, 200, view(b, me));
       if (m === 'PUT' && !sub) return send(res, 200, choose(b, me, await readBody(req, 8 * 1024)));
       if (m === 'POST' && sub === 'repo') { if (!isHost(me, b)) return fail(res, 403, 'only the host can create the repo'); return send(res, 200, { ...(await ensureRepo(b, me)), setup: view(b, me) }); }
-      if (m === 'POST' && sub === 'starter') return send(res, 200, await starter(b, me));
+      if (m === 'POST' && sub === 'starter') return send(res, 200, await starter(b, me, await readBody(req, 4 * 1024).catch(() => ({}))));
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return fail(res, 404, 'no such setup route');
   }

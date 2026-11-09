@@ -90,3 +90,12 @@
 .rhx-pv .pvw-i { width: 12px; height: 12px; fill: var(--live, #38C6B1); stroke: none; }
 @media (max-width: 820px) { .rhx-pv { height: 32px; top: 8px; position: static; margin: 10px 8px 0 0; } }   /* qa-qol-2: on phones it sits under the chips instead of over a long repo name */
 @media (prefers-reduced-motion: no-preference) { .pvw-btn, .pvw-seg button, .rhx-pv { transition: background .12s ease-out, color .12s ease-out; } }
+/* v0.25: edit the page in the preview */
+.pvw-edit { width: auto !important; padding: 0 10px; gap: 6px; display: inline-flex; align-items: center; font-size: 13px; }
+.pvw-edit.on { background: #F26B1D; color: #12151A; border-color: #F26B1D; }
+.pvw-edbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border, #2A313C); background: var(--raised, #1E242D); font-size: 13px; }
+.pvw-edbar.hidden { display: none; }
+.pvw-edhint { flex: 1 1 100%; color: var(--muted, #9AA4B2); } .pvw-edhint b { color: #F8FAFC; }
+.pvw-edpick { font: 12px/1.4 var(--mono, ui-monospace, monospace); color: #38C6B1; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pvw-edpick.hidden { display: none; }
+.pvw-edask { flex: 1 1 200px; min-width: 0; }

@@ -156,3 +156,19 @@
   .nf-panel, .nf-panel .nf-item, .nf-panel p { font-size: 15px; }
   .nf-panel h2, .nf-panel .nf-head h2 { font-size: 20px; }
 }
+
+/* v0.25 inbox design pass: colour-coded kinds, a clear empty state, a real footer */
+.nf-panel { box-shadow: -18px 0 48px rgba(0, 0, 0, .35); }
+.nf-tabs button.on { background: var(--accent, #F26B1D); color: var(--on-action, #fff); border-color: transparent; }
+.nf-tabs button.on span { color: inherit; }
+.nf-item { padding: 12px; border: 1px solid transparent; margin-bottom: 4px; border-radius: 12px; }
+.nf-item:hover { border-color: var(--edge); }
+.nf-item.unread { background: color-mix(in srgb, var(--accent, #F26B1D) 6%, transparent); }
+.nf-ico { width: 34px; height: 34px; border-radius: 10px; }
+.nf-ico.t-bug, .nf-ico[class*="t-bug"] { color: #FF6F8E; background: rgba(255, 111, 142, .14); border-color: transparent; }
+.nf-title span { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nf-empty { display: grid; justify-items: center; gap: 6px; padding: 56px 24px; line-height: 1.5; }
+.nf-empty-ic { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-size: 26px; background: var(--surface-2); border: 1px solid var(--edge); margin-bottom: 6px; }
+.nf-empty b { color: var(--text); font-size: 15px; } .nf-empty span { color: var(--muted); font-size: 13px; max-width: 30ch; }
+.nf-empty .btn { margin-top: 10px; }
+.nf-foot { display: flex; justify-content: space-between; align-items: center; margin: 8px 6px 0; padding-top: 10px; border-top: 1px solid var(--edge); }

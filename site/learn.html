@@ -11,7 +11,7 @@
 <meta property="og:title" content="Learn · TribeCode">
 <meta property="og:description" content="Four short modules: what code is, your first app, building together, and languages explained simply. Free, with badges.">
 <meta property="og:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.24.0">
+<link rel="stylesheet" href="styles.css?v=0.25.0">
 <style>
   .lx { max-width: 1120px; margin: 0 auto; padding: 32px 24px 48px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
   .lx-side { position: sticky; top: 84px; display: grid; gap: 10px; }
@@ -44,6 +44,9 @@
   .lx-card pre { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--main, #1D2021); border: 1px solid var(--edge); overflow-x: auto; font: 13.5px/1.6 var(--mono, ui-monospace, monospace); color: var(--text); }
   .lx-card details { margin-top: 14px; border: 1px solid var(--edge); border-radius: 12px; padding: 10px 14px; background: var(--main, #1D2021); }
   .lx-card summary { cursor: pointer; color: var(--text); font-weight: 600; font-size: 14.5px; }
+  .lx-fig { margin: 4px 0 18px; }
+  .lx-fig svg { display: block; width: 100%; height: auto; }
+  .lx-fig figcaption { margin-top: 8px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
   .lx-tip { margin-top: 16px; padding: 12px 14px; border-left: 3px solid var(--ember); background: var(--main, #1D2021); border-radius: 0 10px 10px 0; color: var(--muted); font-size: 15px; }
   .lx-nav { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
   .lx-nav .sp { flex: 1; }
@@ -65,6 +68,105 @@
     .lx-words dl { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { .lx-card { animation: none; } }
+  /* ===== lesson scenes (learn-art.js): the hero widget's look, small ===== */
+  .lv { position: relative; overflow: hidden; border: 1px solid #2A313C; border-radius: 16px; background: #0F1318 url(assets/art/stage-night.svg) center 78% / cover no-repeat; padding: 14px 16px 18px; isolation: isolate; font-family: Inter, system-ui, sans-serif; }
+  .lv::before { content: ""; position: absolute; inset: 0; background: rgba(12, 15, 20, .55); z-index: -1; }
+  .lv-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #9AA4B2; font: 600 11px/1.2 var(--mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; }
+  .lv-eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: #F26B1D; }
+  .lv-stage { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: center; min-height: 196px; }
+  .lx-card .lv p, .lx-card .lv li { margin: 0; color: inherit; font-size: inherit; line-height: inherit; max-width: none; }
+  .lv-win { flex: 1 1 300px; max-width: 520px; min-width: 0; border: 1px solid #2A313C; border-radius: 12px; background: #1B2028; color: #E8EAED; font-size: 13px; line-height: 1.45; overflow: hidden; }
+  .lv-win.wide { max-width: 600px; } .lv-win.sm { flex: 1 1 220px; max-width: 300px; }
+  .lv-bar { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: #161A21; border-bottom: 1px solid #2A313C; font-size: 12.5px; color: #C7CED8; white-space: nowrap; overflow: hidden; }
+  .lv-bar small { color: #7C8796; margin-left: 6px; }
+  .lv-lights { display: flex; gap: 5px; flex: none; } .lv-lights i { width: 9px; height: 9px; border-radius: 50%; background: #FF6F8E; } .lv-lights i:nth-child(2) { background: #FABD2F; } .lv-lights i:nth-child(3) { background: #3BD16F; }
+  .lv-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 600; } .lv-right { margin-left: auto; flex: none; }
+  .lv-file { font: 500 12px/1 var(--mono, ui-monospace, monospace); color: #E8EAED; }
+  .lv-sep { color: #4A5361; margin: 0 6px; }
+  .lv-body { padding: 12px 14px; }
+  .lv-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid #2A313C; border-radius: 999px; background: #12151A; font-size: 11.5px; font-weight: 600; color: #E8EAED; } .lv-pill i { width: 6px; height: 6px; border-radius: 50%; }
+  .lv-branch, .lv-dev { font: 500 11px/1 var(--mono, ui-monospace, monospace); color: #9AA4B2; padding: 3px 7px; border: 1px solid #2A313C; border-radius: 6px; }
+  .lv-av { width: 28px; height: 28px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; color: #12151A; font: 700 12px/1 Inter, sans-serif; font-style: normal; }
+  .lv-av.sm { width: 20px; height: 20px; font-size: 10px; }
+  .lv-av--agent { background: #232A35; border: 1px solid #2A313C; font-size: 13px; } .lv-av--agent.sm { font-size: 10px; }
+  .lv-chip { margin-left: 6px; padding: 1px 6px; border: 1px solid #2D4A3A; border-radius: 6px; background: #13241C; color: #9BD49B; font: 500 10.5px/1.5 var(--mono, ui-monospace, monospace); }
+  .lv-msg { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 6px 0; }
+  .lv-who { display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; font-size: 12.5px; } .lv-who time { color: #7C8796; font: 500 11px/1 var(--mono, ui-monospace, monospace); }
+  .lv-msg p + p { color: #D5DAE1; }
+  .lv code { font: 500 11.5px/1.4 var(--mono, ui-monospace, monospace); color: #F5C77E; background: #12151A; border: 1px solid #2A313C; border-radius: 5px; padding: 0 5px; }
+  .lv-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .lv-files span { font: 500 11px/1.6 var(--mono, ui-monospace, monospace); color: #C7CED8; padding: 1px 7px; border: 1px solid #2A313C; border-radius: 6px; background: #161A21; }
+  .lv .add { color: #3BD16F; font-style: normal; } .lv .del { color: #FF6F8E; font-style: normal; }
+  .lv-compose { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding: 7px 8px 7px 12px; border: 1px solid #2A313C; border-radius: 10px; background: #12151A; color: #7C8796; font-size: 12px; }
+  .lv-compose i { width: 22px; height: 22px; border-radius: 7px; background: #F26B1D; color: #12151A; display: grid; place-items: center; font-style: normal; font-weight: 800; }
+  .lv-code { margin: 0 !important; padding: 10px 0 !important; background: #12151A !important; border: 0 !important; border-radius: 0 !important; font: 12px/1.65 var(--mono, ui-monospace, monospace) !important; color: #E8EAED !important; overflow: hidden !important; white-space: pre; }
+  .lv-ed .lv-body { padding: 0; }
+  .lv-code .ln { display: block; padding-right: 12px; } .lv-code .ln i { display: inline-block; width: 28px; margin-right: 10px; text-align: right; color: #3A4452; font-style: normal; }
+  .lv-code em { font-style: normal; } .lv-code .tk { color: #C792EA; } .lv-code .ts { color: #C3E88D; } .lv-code .tn { color: #F78C6C; } .lv-code .tc { color: #637082; }
+  .lv-diff .add { background: rgba(59, 209, 111, .1); color: #C9F2D6; } .lv-diff .del { background: rgba(255, 111, 142, .1); color: #FFD0DA; }
+  .lv-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 640px; } .lv-grid2 .lv-win { max-width: none; }
+  .lv-split { display: grid; grid-template-columns: 170px 1fr; gap: 14px; }
+  .lv-tree { list-style: none; margin: 0; padding: 6px 0; border-right: 1px solid #2A313C; font: 500 12px/1.9 var(--mono, ui-monospace, monospace); color: #C7CED8; }
+  .lv-tree li { display: flex; gap: 6px; border-radius: 6px; } .lv-tree li.cur { background: #232A35; color: #F8FAFC; }
+  .lv-k { color: #F26B1D !important; font: 600 10.5px/1.4 var(--mono, ui-monospace, monospace) !important; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px !important; }
+  .lv-hist { list-style: none; margin: 0; padding: 0; position: relative; }
+  .lv-hist li { display: grid; grid-template-columns: 12px 20px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; position: relative; }
+  .lv-hist li + li::before { content: ""; position: absolute; left: 5px; top: -8px; height: 16px; width: 2px; background: #2A313C; }
+  .lv-node { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #38C6B1; background: #12151A; } .lv-hist li.on .lv-node { border-color: #F26B1D; background: #F26B1D; }
+  .lv-cm { min-width: 0; } .lv-cm b { display: block; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .lv-cm small { color: #7C8796; font-size: 11px; }
+  .lv-hist code { background: none; border: 0; color: #637082; }
+  .lv-big { font-size: 19px !important; font-weight: 700; line-height: 1.35 !important; color: #F8FAFC; margin: 2px 0 12px !important; letter-spacing: -.01em; }
+  .lv-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lv-tagbig { padding: 4px 10px; border: 1px solid color-mix(in srgb, var(--c) 50%, #2A313C); border-radius: 999px; color: var(--c); font: 600 11.5px/1.4 var(--mono, ui-monospace, monospace); background: color-mix(in srgb, var(--c) 10%, #12151A); }
+  .lv-saved { display: flex; align-items: center; gap: 8px; margin-top: 12px !important; color: #7C8796; font-size: 11.5px; }
+  .lv-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .lv-col { font: 600 11px/1 var(--mono, ui-monospace, monospace); color: #9AA4B2; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px !important; } .lv-col em { font-style: normal; color: #4A5361; margin-left: 4px; }
+  .lv-card { padding: 8px 9px; margin-bottom: 8px; border: 1px solid #2A313C; border-radius: 9px; background: #232A35; }
+  .lv-card p { font-size: 12.5px; font-weight: 600; margin: 4px 0 6px !important; }
+  .lv-tag { display: inline-block; padding: 0 6px; border: 1px solid; border-radius: 5px; font: 600 10px/1.6 var(--mono, ui-monospace, monospace); }
+  .lv-card-f { display: flex; align-items: center; justify-content: space-between; gap: 6px; } .lv-un { color: #637082; font-size: 11px; } .lv-st { color: #9BD49B; font: 500 10.5px/1 var(--mono, ui-monospace, monospace); }
+  .lv-agent { display: grid; grid-template-columns: 28px 1fr; gap: 10px; }
+  .lv-live { margin-left: 6px; color: #38C6B1; font: 600 10.5px/1 var(--mono, ui-monospace, monospace); }
+  .lv-sub { color: #9AA4B2 !important; font-size: 12px !important; } .lv-sub b { color: #E8EAED; }
+  .lv-gap { margin-top: 10px !important; }
+  .lv-steps { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 12.5px; }
+  .lv-steps li { display: flex; align-items: center; gap: 8px; } .lv-steps li::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #2A313C; flex: none; }
+  .lv-steps li.ok::before { content: "✓"; display: grid; place-items: center; font-size: 9px; font-weight: 800; color: #12151A; background: #3BD16F; border-color: #3BD16F; }
+  .lv-steps li.now { color: #38C6B1; } .lv-steps li.now::before { border-color: #38C6B1; border-top-color: transparent; }
+  .lv-site { padding: 10px; border-radius: 8px; background: #F4EFE6; color: #2A2320; } .lv-site-h { font: 800 16px/1.2 Inter, sans-serif; margin-bottom: 8px !important; }
+  .lv-site-cards { display: flex; gap: 6px; margin-bottom: 8px; overflow: hidden; } .lv-site-cards span { flex: none; padding: 8px 10px; border-radius: 8px; background: #fff; border: 1px solid #E3DACB; font-size: 12px; font-weight: 600; }
+  .lv-site-cards .cut { outline: 2px dashed #FF6F8E; outline-offset: 2px; margin-right: -30px; }
+  .lv-site-btn { display: inline-block; padding: 5px 12px; border-radius: 999px; background: #F26B1D; color: #12151A; font-size: 12px; font-weight: 700; } .lv-site-btn.g { background: #3BD16F; }
+  .lv-note { display: flex; gap: 8px; align-items: flex-start; max-width: 210px; padding: 10px; border: 1px solid #FF6F8E66; border-radius: 12px 12px 12px 4px; background: #1B2028; color: #E8EAED; font-size: 12.5px; } .lv-note b { font-size: 12px; color: #F5A35C; }
+  .lv-link { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #38C6B1; border-radius: 10px; background: #12151A; font: 500 12.5px/1 var(--mono, ui-monospace, monospace); } .lv-link span { color: #38C6B1; font-family: Inter, sans-serif; font-weight: 600; font-size: 12px; }
+  .lv-qr { display: grid; grid-template-columns: repeat(7, 9px); gap: 1px; margin-top: 10px; padding: 6px; width: max-content; background: #F8FAFC; border-radius: 6px; } .lv-qr i { width: 9px; height: 9px; } .lv-qr i.on { background: #12151A; }
+  .lv-toasts { display: grid; gap: 8px; } .lv-toast { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #2A313C; border-left: 3px solid #3BD16F; border-radius: 10px; background: #1B2028; color: #D5DAE1; font-size: 12.5px; }
+  .lv-repo-h { display: flex; align-items: center; gap: 8px; font-size: 14px; } .lv-gh { color: #9AA4B2; } .lv-pub { margin-left: 4px; padding: 0 6px; border: 1px solid #2A313C; border-radius: 999px; color: #9AA4B2; font-size: 10.5px; }
+  .lv-stack { display: flex; align-items: center; margin: 10px 0; } .lv-stack .lv-av { margin-right: -5px; box-shadow: 0 0 0 2px #1B2028; } .lv-stack span { margin-left: 14px; color: #9AA4B2; font-size: 12px; }
+  .lv-graph { position: relative; flex: 1 1 320px; max-width: 420px; } .lv-graph svg { display: block; width: 100%; height: auto; }
+  .lv-gl { position: absolute; font: 600 11px/1 var(--mono, ui-monospace, monospace); color: #38C6B1; } .lv-gl.o { color: #F26B1D; }
+  .lv-ok { padding: 3px 8px; border-radius: 999px; background: #13241C; border: 1px solid #2D4A3A; color: #9BD49B; font-size: 11.5px; margin-top: 8px; }
+  .lv-lanes { display: grid; gap: 6px; } .lv-lane { display: grid; grid-template-columns: 96px 20px 120px 1fr 16px; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid #2A313C; border-radius: 8px; background: #161A21; font-size: 12px; } .lv-lane small { color: #7C8796; } .lv-lane em { font-style: normal; font-size: 11px; }
+  .lv-phone { flex: none; width: 128px; padding: 7px; border: 1px solid #2A313C; border-radius: 20px; background: #1B2028; } .lv-phone--big { width: 190px; }
+  .lv-ph-screen { position: relative; height: 196px; border-radius: 14px; background: #12151A; overflow: hidden; }
+  .lv-ph-game { background: linear-gradient(#141826, #141826); } .lv-ph-hud { position: absolute; left: 8px; top: 8px; color: #F8FAFC; font: 700 9px/1 var(--mono, ui-monospace, monospace); }
+  .lv-ph-plat { position: absolute; height: 6px; background: #38C6B1; border-radius: 2px; } .lv-ph-plat.a { left: 8px; right: 30px; bottom: 34px; } .lv-ph-plat.b { left: 70px; right: 8px; bottom: 80px; }
+  .lv-ph-hero { position: absolute; left: 22px; bottom: 40px; font-size: 18px; }
+  .lv-ph-app { padding: 12px 10px; display: flex; flex-direction: column; gap: 8px; color: #E8EAED; font-size: 12px; }
+  .lv-ph-t { display: flex; gap: 6px; align-items: flex-start; font-weight: 700; font-size: 13px; line-height: 1.35 !important; }
+  .lv-yn { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .lv-yn span { padding: 7px 0; text-align: center; border-radius: 9px; font-weight: 700; font-size: 12px; } .lv-yn .y { background: #3BD16F; color: #0E2416; } .lv-yn .n { border: 1px solid #FF6F8E; color: #FF6F8E; }
+  .lv-ph-c { padding: 6px 8px; border: 1px solid #2A313C; border-radius: 8px; color: #637082; font-size: 11px; }
+  .lv-site--card { flex: 1 1 200px; max-width: 260px; padding: 16px; } .lv-css { display: block; margin-top: 10px; background: #12151A !important; color: #C3E88D !important; }
+  .lv-counter { display: grid; justify-items: center; gap: 6px; padding: 16px 22px; border: 1px solid #2A313C; border-radius: 12px; background: #1B2028; } .lv-counter b { font: 800 40px/1 Inter, sans-serif; color: #F8FAFC; } .lv-counter small { color: #7C8796; font-size: 11.5px; }
+  .lv-term { flex: 1 1 200px; max-width: 280px; padding: 12px 14px; border: 1px solid #2A313C; border-radius: 12px; background: #0B0E12; font: 500 12.5px/1.75 var(--mono, ui-monospace, monospace); color: #C3E88D; }
+  .lv-term em { color: #F26B1D; font-style: normal; } .lv-term .dim { color: #7C8796; } .lv-term .t { color: #38C6B1; }
+  .lv-term--big { max-width: 560px; color: #E8EAED; } .lv-tbar { display: flex; gap: 5px; align-items: center; color: #4A5361; font-size: 11px; margin-bottom: 6px !important; } .lv-tbar i { width: 9px; height: 9px; border-radius: 50%; background: #2A313C; }
+  .lv .caret { display: inline-block; width: 8px; height: 15px; background: #38C6B1; vertical-align: -3px; animation: lvblink 1s steps(1) infinite; } @keyframes lvblink { 50% { opacity: 0; } }
+  .lv-engines { display: grid; gap: 8px; } .lv-engines span { display: flex; justify-content: space-between; gap: 18px; padding: 8px 12px; border: 1px solid #2A313C; border-radius: 10px; background: #1B2028; color: #E8EAED; font-size: 12.5px; } .lv-engines small { color: #9AA4B2; font-family: var(--mono, ui-monospace, monospace); } .lv-engines .on { border-color: #38C6B1; }
+  .lv-table { flex: 1 1 220px; max-width: 280px; padding: 10px; border: 1px solid #2A313C; border-radius: 12px; background: #1B2028; } .lv-table table { width: 100%; border-collapse: collapse; font-size: 12px; color: #C7CED8; }
+  .lv-table th { text-align: left; color: #7C8796; font: 600 10.5px/1 var(--mono, ui-monospace, monospace); padding: 6px; border-bottom: 1px solid #2A313C; } .lv-table td { padding: 6px; border-bottom: 1px solid #222832; } .lv-table .hit td { background: rgba(242, 107, 29, .12); color: #F8C9A8; }
+  .lv-reacts { display: flex; gap: 6px; margin-top: 4px; } .lv-reacts span { padding: 1px 8px; border: 1px solid #F8FAFC55; border-radius: 999px; font-size: 11.5px; background: #161A21; }
+  .lv-badge { display: grid; justify-items: center; gap: 6px; padding: 18px 30px; border: 1px solid #2A313C; border-radius: 16px; background: #1B2028; } .lv-badge span { display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%; border: 2px dashed #F26B1D; font-size: 36px; } .lv-badge b { color: #F8FAFC; font-size: 15px; } .lv-badge small { color: #9AA4B2; font-size: 12px; }
+  @media (max-width: 640px) { .lv { padding: 12px 10px 14px; } .lv-split { grid-template-columns: 1fr; } .lv-tree { border-right: 0; border-bottom: 1px solid #2A313C; } .lv-cols { grid-template-columns: 1fr 1fr; } .lv-cols > div:nth-child(3) { display: none; } .lv-grid2 { grid-template-columns: 1fr; } .lv-grid2 .lv-win:nth-child(n+3) { display: none; } .lv-lane { grid-template-columns: 84px 20px 1fr 16px; } .lv-lane small { display: none; } .lv-phone--big { width: 170px; } }
 </style>
 </head>
 <body>
@@ -91,6 +193,7 @@
   </section>
 </main>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
+<script src="learn-art.js?v=0.25.0"></script>
 <script>
 (function () {
   'use strict';
@@ -180,7 +283,7 @@
     card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
     if (k.endsWith('-q')) {
       const got = {};
-      card.innerHTML = `<span class="k">Quick check · ${m.t}</span><h1>Three questions</h1><p>No timer and no penalty. Get two right to earn the <b>${m.bname}</b> badge ${m.badge}.</p>` +
+      card.innerHTML = `<span class="k">Quick check · ${m.t}</span><h1>Three questions</h1>${window.TribeLearnArt ? window.TribeLearnArt(k, m) : ''}<p>No timer and no penalty. Get two right to earn the <b>${m.bname}</b> badge ${m.badge}.</p>` +
         m.quiz.map((q, qi) => `<div class="lx-q" data-q="${qi}"><b>${qi + 1}. ${q[0]}</b><div class="lx-opts">${q[1].map((o, oi) => `<button type="button" data-a="${oi}">${o}</button>`).join('')}</div><p class="lx-why" hidden></p></div>`).join('') +
         `<div id="lx-earn">${P.passed[m.id] ? `<span class="lx-badge">${m.badge} ${m.bname} badge earned</span>` : ''}</div>`;
       card.querySelectorAll('.lx-q').forEach(el => el.addEventListener('click', e => {
@@ -196,7 +299,7 @@
       }));
     } else {
       const li = +k.split('-')[1], l = m.lessons[li];
-      card.innerHTML = `<span class="k">Lesson ${li + 1} of ${m.lessons.length} · ${m.min} min module</span><h1>${l[0]}</h1>${l[1]}`;
+      card.innerHTML = `<span class="k">Lesson ${li + 1} of ${m.lessons.length} · ${m.min} min module</span><h1>${l[0]}</h1>${window.TribeLearnArt ? window.TribeLearnArt(k, m, l[0]) : ''}${l[1]}`;
     }
     $('#lx-back').disabled = i === 0;
     $('#lx-next').textContent = k.endsWith('-q') ? (i === total - 1 ? 'Finish 🎉' : 'Next module →') : 'Got it, next →';
@@ -218,6 +321,7 @@
   window.TribeLearn = { M, steps, progress: () => P };
 })();
 </script>
-<script src="main.js?v=0.24.0" defer></script>
+<script src="main.js?v=0.25.0" defer></script>
+<script src="i18n.js?v=0.25.0" defer></script>
 </body>
 </html>

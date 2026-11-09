@@ -202,7 +202,7 @@ def main():
                 except Exception:
                     host.wait_for_timeout(400)
 
-            assert it["fs"] == "17px" and it["fw"] == "700" and it["ws"] == "nowrap", it
+            assert it["fs"] == "17px" and it["fw"] == "700" and it["ws"] in ("nowrap", "normal"), it   # v0.25: descriptions get two lines (clamped)
             assert it["thumbLeft"] <= 1 and it["shadow"] == "none" and it["bg"] == "none", it
             assert it["btnRight"] <= 20 and it["btnBottom"] <= 20, f"Make it a task sits bottom right {it}"
             host.evaluate("document.querySelector('#pj-insp')?.scrollIntoView()"); shot(host, "inspiration")

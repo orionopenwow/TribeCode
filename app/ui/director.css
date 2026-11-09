@@ -152,8 +152,18 @@ body.dt-guided #dt-speed { display: none; }
 .dt-in-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
 .dt-in-dots i { width: 56px; height: 4px; border-radius: 4px; background: #2A313C; overflow: hidden; }
 .dt-in-dots i.past b { width: 100%; } .dt-in-dots b { display: block; height: 100%; width: 0; background: #F26B1D; }
-.dt-in-dots i.on b { animation: dt-in-fill linear forwards; }
+.dt-in-dots i.on b { width: 100%; }
 @keyframes dt-in-fill { to { width: 100%; } }
 @keyframes dt-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .dt-spot, .dt-say { transition: none; } .dt-in-card { animation: none; } }
 body.dt-live .dt-cap { display: none !important; }
+
+/* v0.25: you move on yourself: Next on the slides and on Flint's line after each chapter */
+.dt-in-btns { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dt-in-nav { display: flex; gap: 8px; }
+.dt-say.wait { pointer-events: auto; }
+.dt-say-next { flex: none; margin-left: 6px; }
+.dt-say-next[hidden] { display: none; }
+.dt-in-card.again { animation: none; }
+.dt-say > div { flex: 1; min-width: 0; }
+@media (max-width: 820px) { .dt-say { width: calc(100vw - 24px); flex-wrap: wrap; } .dt-say > div { flex-basis: calc(100% - 50px); } .dt-say-next { margin-left: auto; } }

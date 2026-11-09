@@ -112,15 +112,25 @@ def main():
             pg.evaluate("TribeDirector.start()")
             pg.wait_for_selector("#dt-intro", timeout=5000)
             assert "1 of 3" in pg.text_content("#dt-intro") and "what you will see" in pg.text_content("#dt-intro").lower()
+            # v0.25: the slides wait for you (Next / Back / Enter), nothing advances by itself
+            time.sleep(7.5); assert "1 of 3" in pg.text_content("#dt-intro"), "a slide moved on by itself"
+            pg.click("#dt-in-next"); assert "2 of 3" in pg.text_content("#dt-intro")
+            pg.click("#dt-in-back"); assert "1 of 3" in pg.text_content("#dt-intro")
+            pg.keyboard.press("Enter"); assert "2 of 3" in pg.text_content("#dt-intro")
             pg.click("#dt-in-skip")
             pg.wait_for_selector("#dt-say.in", timeout=8000)
             assert "1/15" in pg.text_content("#dt-say") and pg.locator("#dt-spot").count() == 1
             pg.wait_for_function("TribeDirector._test.state().elapsed > 0", timeout=20000)   # it moves on by itself
+            # after a chapter, Flint's recap waits for Next (the clock skips ahead to the end of chapter 1 to get there fast)
+            pg.evaluate("TribeDirector.speed(2)")
+            pg.wait_for_selector("#dt-say-next:visible", timeout=90000)
+            idx0 = state(pg)["idx"]; time.sleep(2); assert state(pg)["idx"] == idx0, "the tour moved on without Next"
+            pg.click("#dt-say-next"); pg.wait_for_function(f"TribeDirector._test.state().idx > {idx0}", timeout=10000)
             pg.evaluate("TribeDirector.stop()")
             pg.evaluate("TribeDirector.start({ narrate: false })")
             pg.wait_for_selector("#dt-bar", state="visible")
             for sel in ["#dt-play", "#dt-skip", "#dt-speed", "#dt-try", "#dt-leave", "#dt-chaps [data-i='14']", "#dt-cap"]: assert pg.locator(sel).count() == 1, sel
-            assert "/ 4:" in pg.text_content("#dt-time"), pg.text_content("#dt-time")   # a calm pace: a little over four minutes
+            assert "/ 6:" in pg.text_content("#dt-time"), pg.text_content("#dt-time")   # a calm pace (v0.25): about six minutes
             time.sleep(1.2)
             if shots: time.sleep(2); pg.screenshot(path=str(SHOTS / "demo-tour-desktop.png"))
             pg.click("#dt-play"); assert state(pg)["paused"]
@@ -181,7 +191,7 @@ def main():
             sideways(ph, "phone end")
             if shots: ph.screenshot(path=str(SHOTS / "demo-tour-phone-end.png"))
             ph.evaluate("TribeDirector.start({ watch: true, noIntro: true })"); ph.wait_for_selector("#dt-bar", state="visible")
-            assert "/ 2:0" in ph.text_content("#dt-time"), ph.text_content("#dt-time")   # the calm phone cut: about two minutes
+            assert "/ 2:5" in ph.text_content("#dt-time"), ph.text_content("#dt-time")   # the calm phone cut (v0.25): about three minutes
             ph.tap("#dt-skip"); ph.wait_for_function("TribeDirector._test.state().id === 'tasks'", timeout=5000)
             sideways(ph, "phone tour")
             if shots: time.sleep(3); ph.screenshot(path=str(SHOTS / "demo-tour-phone.png"))

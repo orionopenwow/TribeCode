@@ -56,16 +56,19 @@
         <button class="pvw-btn" data-act="reload" title="Reload" aria-label="Reload">${ico(I.reload)}</button>
         <button class="pvw-btn" data-act="tab" title="Open in a new browser tab" aria-label="Open in a new browser tab">${ico(I.tab)}</button>
         <button class="pvw-btn" data-act="share" title="Copy a link friends can open on their phone" aria-label="Copy share link">${ico(I.link)}</button>
+        <button class="pvw-btn pvw-edit" data-act="edit" title="Edit the page: double-click text to change it, or pick anything and ask Flint" aria-label="Edit the page" aria-pressed="false">✏️<span>Edit</span></button>
         <button class="pvw-btn" data-act="shot" title="Screenshot to Visuals" aria-label="Screenshot to Visuals">${ico(I.shot)}</button>
         <button class="pvw-btn" data-act="home" title="${isPhone() ? 'Add to Home Screen' : 'Desktop shortcut / Home Screen'}" aria-label="Add to Home Screen">${ico(I.home)}</button>
         <button class="pvw-btn hidden" data-act="gear" title="How the preview runs (host)" aria-label="Preview settings">${ico(I.gear)}</button>
       </div>
       <form class="pvw-set hidden" id="pvw-set"></form>
+      <form class="pvw-edbar hidden" id="pvw-edbar" autocomplete="off"><span class="pvw-edhint" id="pvw-edhint"><b>Editing.</b> Double-click any text to change it. Or click something and tell Flint what to change.</span>
+        <span class="pvw-edpick hidden" id="pvw-edpick"></span><input class="input pvw-edask" id="pvw-edask" placeholder="Click something on the page first" disabled maxlength="600" aria-label="What should Flint change?"><button class="btn sm primary" id="pvw-edgo" disabled>Ask Flint</button><button type="button" class="btn sm" data-act="edit">Done</button></form>
       <div class="pvw-stage" id="pvw-stage"><div class="pvw-frame" id="pvw-frame"></div></div>`;
     el.addEventListener('click', e => {
       const d = e.target.closest('[data-dev]'); if (d) return setDevice(d.dataset.dev);
       const a = e.target.closest('[data-act]'); if (!a) return;
-      ({ reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
+      ({ edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
         home: () => window.TribeFolders && window.TribeFolders.home() })[a.dataset.act]?.();   // Home Screen / desktop shortcut (app/ui/folders.js)
     });
     return el;
@@ -214,9 +217,40 @@
       if (window.TribeRepoHero) window.TribeRepoHero.refresh();
     }).catch(e => toast(`Couldn't capture: ${e.message}`)).finally(() => { if (btn.isConnected) btn.disabled = false; });
   }
+  // ---------- v0.25: edit the page in the preview ----------
+  let editing = false, picked = null;
+  function toggleEdit() {
+    editing = !editing; picked = null;
+    const b = pane && pane.querySelector('.pvw-edit'), bar = pane && pane.querySelector('#pvw-edbar');
+    if (b) { b.classList.toggle('on', editing); b.setAttribute('aria-pressed', String(editing)); }
+    if (bar) { bar.classList.toggle('hidden', !editing); paintPick(); }
+    if (frame && frame.contentWindow) frame.contentWindow.postMessage({ tc: 'edit', on: editing }, '*');
+    if (editing && !helperAlive) toast('Editing works on the project\'s own pages (static preview).');
+  }
+  function paintPick() {
+    const bar = pane && pane.querySelector('#pvw-edbar'); if (!bar) return;
+    const ask = bar.querySelector('#pvw-edask'), go = bar.querySelector('#pvw-edgo'), pk = bar.querySelector('#pvw-edpick');
+    ask.disabled = go.disabled = !picked; ask.placeholder = picked ? 'e.g. make this bigger, change it to “Open daily”, make the button orange' : 'Click something on the page first';
+    pk.classList.toggle('hidden', !picked); pk.textContent = picked ? `<${picked.tag}> ${picked.text ? '“' + picked.text.slice(0, 40) + (picked.text.length > 40 ? '…' : '') + '”' : ''}` : '';
+  }
+  async function editApi(path, body) {
+    try { const r = await C.api('/preview/' + path, { method: 'POST', body }); toast(r.say ? `✏️ ${r.say}` : '✏️ Saved to ' + r.file); return r; }
+    catch (e) { toast(e.message); reload(true); return null; }
+  }
+  document.addEventListener('submit', async e => {
+    if (!e.target || e.target.id !== 'pvw-edbar') return; e.preventDefault();
+    const ask = e.target.querySelector('#pvw-edask'), go = e.target.querySelector('#pvw-edgo');
+    if (!picked || !ask.value.trim()) return;
+    go.disabled = true; go.textContent = 'Flint is on it…';
+    const r = await editApi('flint', { href: lastHref, pick: picked, ask: ask.value.trim() });
+    go.textContent = 'Ask Flint'; go.disabled = false; if (r) { ask.value = ''; }
+  });
   window.addEventListener('message', e => {
     if (!frame || e.source !== frame.contentWindow || !e.data || typeof e.data !== 'object') return;
     const m = e.data;
+    if (m.tc === 'ready' && editing && frame && frame.contentWindow) { frame.contentWindow.postMessage({ tc: 'edit', on: true }, '*'); picked = null; paintPick(); }
+    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000) }; paintPick(); }   // no auto-focus: it would pull focus out of text you're editing in the page
+    if (m.tc === 'text' && editing) editApi('edit', { href: m.href || lastHref, tag: String(m.tag || ''), before: String(m.before || ''), after: String(m.after || '') });
     if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string') lastHref = m.href.slice(0, 500); if (pane) pane.classList.add('ready'); }
     if (m.tc === 'shot' && shots.has(m.id)) { const p = shots.get(m.id); shots.delete(m.id); m.error ? p.reject(new Error(m.error)) : p.resolve(String(m.data || '')); }
   });
