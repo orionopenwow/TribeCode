@@ -72,7 +72,7 @@ def main():
             assert "game" in d["types"], d["types"]
             assert any(x["id"] in ("pixelfx", "pixelfx-skill", "phaser", "kaplay") for x in d["picks"]), [x["id"] for x in d["picks"]]
             # the overview's Toolbox
-            host.click("#nest-overview"); host.wait_for_selector("#pj-tools .pt-tile", timeout=15000)
+            host.click("#nest-overview"); host.wait_for_selector("#pj-more", state="attached", timeout=15000); host.evaluate("document.querySelector('#pj-more').open = true"); host.wait_for_selector("#pj-tools .pt-tile", timeout=15000)   # simple-dashboard: tools live under More
             assert "picks for a game" in host.text_content("#pj-tools .pt-head")
             if host.locator("#pj-tools [data-shelf-add='pixelfx-skill']").count(): host.click("#pj-tools [data-shelf-add='pixelfx-skill']")
             else: assert api("/shelf/pixelfx-skill/add", "POST", {"project": pid}, token=tok)[0] == 200

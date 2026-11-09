@@ -154,6 +154,7 @@ def main():
             host.wait_for_selector("#view-home:not(.hidden) .pj-title")
             wait_text(host, "#pj-overview h1", "lantern")
             assert host.evaluate("TribeClient.project()") == "lantern"
+            host.evaluate("document.querySelector('#pj-more') && (document.querySelector('#pj-more').open = true)")   # simple-dashboard: the code panel lives under More
             wait_text(host, "#pj-ws", "Give me a branch")
             # a tunnel-relayed request is never "local": paths are refused
             req = urllib.request.Request(BASE + "/api/projects", method="POST", data=json.dumps({"path": sketches}).encode(),
@@ -267,7 +268,7 @@ def main():
 
             # ---- "Give me a branch": per-member worktrees, commits attributed to the right person
             friend.click("#nest-overview")
-            friend.wait_for_selector("#pj-mybranch"); friend.click("#pj-mybranch")
+            friend.wait_for_selector("#pj-more", state="attached"); friend.evaluate("document.querySelector('#pj-more').open = true"); friend.wait_for_selector("#pj-mybranch"); friend.click("#pj-mybranch")
             friend.wait_for_selector("#pj-commit")
             fid = api("/me", token=ftoken)[1]["member"]["id"]
             tree = ws / ".trees" / fid

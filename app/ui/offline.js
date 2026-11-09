@@ -82,11 +82,38 @@
   const proj = id => db.projects.find(p => p.id === id);
   const cur = () => proj(db.current) ? db.current : db.projects[0].id;
   let where = 'Home';
+  // offline-profiles: the profile editor works in the demo too (the same fields as server/profiles.js, kept in this browser)
+  const PF_COLORS = { teal: '#38C6B1', indigo: '#6C7CFF', sky: '#4FA8F0', violet: '#A58BFF', rose: '#FF6F8E', coral: '#FF8A65', amber: '#F2B33D', lime: '#9AD65C', mint: '#4CD6A0', sand: '#D9B98C', orchid: '#E07BD0', slate: '#9AA7B8' };
+  const PF_PIXELS = ['flame', 'campfire', 'tent', 'star', 'moon', 'fox', 'owl', 'bear', 'rabbit', 'frog', 'cat', 'raccoon', 'hedgehog', 'deer', 'mushroom', 'pine', 'mountain', 'lantern', 'marshmallow', 'compass', 'canoe', 'firefly', 'snail', 'acorn'];
+  const pfRaw = mid => ((db.profiles = db.profiles || {})[mid] = db.profiles[mid] || {});
+  function pfBrief(mid) {
+    const p = (db.profiles || {})[mid]; if (!p) return null; const out = {};
+    if (p.avatar && p.avatar.kind && p.avatar.kind !== 'initials') out.avatar = p.avatar;
+    if (p.nameColor) out.nameColor = p.nameColor; if (p.pronouns) out.pronouns = p.pronouns;
+    if (p.status && (!p.status.until || Date.parse(p.status.until) > Date.now())) out.status = p.status;
+    if (p.nicks && Object.keys(p.nicks).length) out.nicks = p.nicks;
+    return Object.keys(out).length ? out : null;
+  }
+  const pfFull = mid => { const p = (db.profiles || {})[mid] || {}; return { ...(pfBrief(mid) || {}), bio: p.bio || '', banner: p.banner || null, links: p.links || [], tz: p.tz || null, presence: p.presence || 'online', skills: p.skills || [], featured: p.featured || null, hire: !!p.hire }; };
+  function pfPatch(mid, b) {
+    const p = pfRaw(mid);
+    for (const k of ['nameColor', 'pronouns', 'bio', 'tz', 'presence']) if (k in b) { if (b[k] === null || b[k] === '') delete p[k]; else p[k] = String(b[k]).slice(0, k === 'bio' ? 300 : 80); }
+    if ('avatar' in b) { const a = b.avatar || { kind: 'initials' }; if (a.kind === 'initials') delete p.avatar; else if (a.kind !== 'photo') p.avatar = { kind: a.kind, emoji: a.emoji || undefined, pixel: a.pixel || undefined, tint: a.tint || null }; }
+    if ('banner' in b) { if (!b.banner) delete p.banner; else if (b.banner.color) p.banner = { color: b.banner.color }; }
+    if ('status' in b) { const st = b.status; if (!st || (!st.text && !st.emoji)) delete p.status; else { const ms = { '30m': 30 * 60e3, '4h': 4 * 3600e3 }[st.clear]; p.status = { emoji: st.emoji || null, text: String(st.text || '').slice(0, 80), until: ms ? iso(Date.now() + ms) : null }; } }
+    if ('links' in b) p.links = (Array.isArray(b.links) ? b.links : []).slice(0, 3).filter(l => l && /^https?:\/\//.test(l.url || '')).map(l => ({ url: String(l.url).slice(0, 300), label: String(l.label || '').slice(0, 32) }));
+    if ('skills' in b) p.skills = (Array.isArray(b.skills) ? b.skills : []).map(x => String(x).slice(0, 24)).filter(Boolean).slice(0, 8);
+    if ('featured' in b) p.featured = b.featured && (b.featured.title || b.featured.url) ? { title: String(b.featured.title || '').slice(0, 60), url: /^https?:\/\//.test(b.featured.url || '') ? b.featured.url : null } : null;
+    if ('hire' in b) p.hire = !!b.hire;
+    if ('nick' in b && b.project) { p.nicks = p.nicks || {}; if (b.nick) p.nicks[b.project] = String(b.nick).slice(0, 32); else delete p.nicks[b.project]; }
+    save(); pushPresence(); return pfFull(mid);
+  }
   function presence() {
     return db.members.map(m => {
       const on = m.id === 'me' ? true : !!m.online;
       const { online, where: w, ...rest } = m;
-      return { ...rest, online: on, where: m.id === 'me' ? where : on ? (w || 'Home') : null, since: on ? db.created : null, project: on ? cur() : null };
+      const pb = pfBrief(m.id);
+      return { ...rest, ...(pb ? { profile: pb } : {}), online: on, where: m.id === 'me' ? where : on ? (w || 'Home') : null, since: on ? db.created : null, project: on ? cur() : null };
     });
   }
   function counts(pid) {
@@ -203,7 +230,7 @@
     save(); chatPush(pid, msg); return msg;
   }
   const LINES = [
-    'Hi! I\'m a pretend Claude in this offline demo. In a real tribe I read the board, claim files before I edit and push commits. Make a task and watch me pick it up.',
+    'Hi! I\'m a pretend Claude in this offline demo. In a real tribe I read the board, claim files before I edit and save my changes to the code. Make a task and watch me pick it up.',
     'Good idea. In a real tribe I\'d claim the folder first so nobody\'s agent collides with mine, then post a short gist when it\'s done.',
     'I\'d split that into one task per lane (Player, Levels, Art). Add them on the Tasks board and I\'ll grab one.',
     'Noted. A real coding agent (Claude Code, Codex, Gemini CLI…) connects from Connect your AI, then it shows up right here.',
@@ -361,7 +388,7 @@
         { id: 'pal-cozy', type: 'palette', emoji: '🎨', title: 'Palette: Campfire cozy', text: 'Flat colors that fit. Use them as CSS variables so agents keep to them.', colors: ['#3E4A3D', '#8FB996', '#E8C9A0', '#C97C5D', '#F4EBD9'], task: 'Set up the campfire cozy palette' },
         { id: 'cozy-ref', type: 'reference', emoji: '👀', title: 'Look at: Stardew Valley, A Short Hike', text: 'Slow pace, warm colors, nothing punishes you for wandering.' },
         { id: 'plat-checkpoints', type: 'idea', emoji: '🚩', title: 'Checkpoints', text: 'A flag mid-level so a fall costs ten seconds, not the whole run.', task: 'Add checkpoints' }],
-      '3d': [{ id: '3d-orbit', type: 'task', emoji: '📝', title: 'Add orbit controls and a ground plane', text: 'So everyone can look around the scene from the first commit.', task: 'Add orbit controls and a ground plane' },
+      '3d': [{ id: '3d-orbit', type: 'task', emoji: '📝', title: 'Add orbit controls and a ground plane', text: 'So everyone can look around the scene from the first version.', task: 'Add orbit controls and a ground plane' },
         { id: '3d-light', type: 'idea', emoji: '💡', title: 'One warm light, one cool fill', text: 'Two lights make a scene read as 3D. Add soft fog for depth.', task: 'Light the scene: warm key, cool fill, fog' },
         { id: 'cozy-sound', type: 'idea', emoji: '🎶', title: 'Soft ambient sound', text: 'A quiet loop (fire, rain) with a mute button. Cozy is half sound.', task: 'Soft ambient sound' }],
       site: [{ id: 'site-hero', type: 'task', emoji: '📝', title: 'Write the hero headline and one call to action', text: 'Short, specific, one button.', task: 'Write the hero headline and one call to action' },
@@ -481,6 +508,7 @@
         if (GET && !b) return ok({ proposals: list.map(x => ({ ...x, tally: tally(x) })) });
         const pr = list.find(x => x.id === b); if (!pr) break;
         if (POST && c === 'vote') { vote(pid, pr, 'me', body.vote === 'no' ? 'no' : 'yes'); return ok({ proposal: { ...pr, tally: tally(pr) } }); }
+        if (POST && c === 'comment') { const t = String(body.text || '').trim().slice(0, 1000); if (!t) return no(400, 'say something'); pr.comments = [...(pr.comments || []), { by: 'me', text: t, at: iso() }]; save(); return ok({ proposal: { ...pr, tally: tally(pr) } }); }
         break;
       }
       case 'milestones': if (GET && !b) { const ms = ((db.milestones || {})[pid] || []); return ok({ milestones: ms, next: nextVersion(ms), repo: false }); }
@@ -512,6 +540,20 @@
         break;
       }
       case 'join': return no(410, 'This is a pretend link from the offline demo: it only works in the browser that made it.');
+      case 'profile': {
+        if (GET && !b) return ok({ profile: pfFull('me'), palette: PF_COLORS, pixels: PF_PIXELS, notes: db.pfNotes || {}, muted: db.pfMuted || [], limits: { pronouns: 40, bio: 300, status: 80, link: 300, label: 32, nick: 32, note: 256 } });
+        if ((PATCH || PUT) && !b) return ok({ profile: pfPatch('me', body || {}) });
+        if (PATCH && b) { const ag = db.members.find(x => x.id === b && x.owner === 'me'); if (!ag) return no(403, 'not yours'); return ok({ profile: pfPatch(b, body || {}) }); }
+        if (POST && (b === 'avatar' || b === 'banner')) { const img = String((body || {}).image || ''); if (!/^data:image\//.test(img)) return no(400, 'pick a picture'); const p = pfRaw(q.get && q.get('for') || 'me'); if (b === 'avatar') p.avatar = { kind: 'photo', file: img, still: (body.still || null), anim: /gif/.test(img) }; else p.banner = { image: img }; save(); pushPresence(); return ok({ profile: pfFull('me') }); }
+        if (b && c === 'note' && PUT) { db.pfNotes = db.pfNotes || {}; db.pfNotes[b] = String((body || {}).text || '').slice(0, 256); save(); return ok({ note: db.pfNotes[b] }); }
+        if (b && c === 'mute' && PUT) { const s2 = new Set(db.pfMuted || []); body.on ? s2.add(b) : s2.delete(b); db.pfMuted = [...s2]; save(); return ok({ muted: s2.has(b), list: db.pfMuted }); }
+        if (b && !c && GET) { const m = db.members.find(x => x.id === b); if (!m) return no(404, 'no such person');
+          const L = { host: 'Host', agent: 'Agent' };
+          return ok({ member: { id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, agent: m.role === 'agent', owner: m.owner || null, ownerName: m.owner ? (db.members.find(x => x.id === m.owner) || {}).name || null : null },
+            profile: pfFull(m.id), badges: L[m.role] ? [{ id: m.role, label: L[m.role] }] : [], inCommon: (db.projects || []).slice(0, 6).map(p => ({ id: p.id, name: p.name, color: p.color || null, image: false })),
+            agents: db.members.filter(x => x.role === 'agent' && x.owner === m.id).map(x => ({ id: x.id, name: x.name, kind: 'claude-code', label: null })), note: (db.pfNotes || {})[m.id] || '', muted: (db.pfMuted || []).includes(m.id), you: m.id === 'me', canEdit: m.id === 'me' || m.owner === 'me' }); }
+        break;
+      }
       case 'friends': if (GET) return ok({ friends: db.friends }); if (PUT) { const s = new Set(db.friends); body.on ? s.add(body.id) : s.delete(body.id); db.friends = [...s]; save(); return ok({ friends: db.friends }); } break;
       case 'uploads': {
         if (!b && GET) { const mine = db.uploads.filter(f => f.scope === 'me').slice().reverse(), project = db.uploads.filter(f => f.scope === 'project').slice().reverse(); return ok({ mine, project, max: MAX_UPLOAD }); }

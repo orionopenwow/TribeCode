@@ -289,7 +289,7 @@
   function renderEditor() {
     { const p = $('#doc-pane'), g = $('#view-docs .docs-grid'); if (p && !(cur && isCraft(cur))) { p.classList.remove('craft-on'); if (g) g.classList.remove('craft-grid'); } }
     const pane = $('#doc-pane'); if (!pane) return;
-    { const h = $('#doc-repo-hero'), w = $('#doc-list-wrap'); if (h && w && !w.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // feat/file-grid: the repo strip lives in the grid while it shows
+    { const h = $('#doc-repo-hero'), w = $('#doc-list-wrap'); if (h && w && !w.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // feat/file-grid: the code repository strip lives in the grid while it shows
     parkAside(); outlineCtl = null; wasDesk = desk();
     if (!cur) {
       wideMode(false);

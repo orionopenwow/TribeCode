@@ -553,7 +553,7 @@
       docs: ['Docs', 'docs.html'],
     };
     const QA = [
-      { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes. Everything in TribeCode is free and open source (MIT), and what’s free today stays free. You bring your own AI. Hosting and AI-included plans are planned (from $6 a month per tribe) but not for sale yet.', act: 'pricing' },
+      { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes. Everything in TribeCode is free and open source (MIT), and what’s free today stays free. You bring your own AI. Paid extras like hosting may come later, but nothing is for sale today.', act: 'pricing' },
       { k: 'ai', re: /\bai\b|which|model|claude|codex|gemini|cursor|llm|agent|ollama|gpt/, a: 'Most coding agents work: Claude Code, Codex, Gemini CLI, Cursor and more. Each friend connects their own, so nobody pays for anyone else.', act: 'docs' },
       { k: 'join', re: /join|friend|invite|link|share|phone|mobile/, a: 'The host sends a link. A friend taps it, types a name and they’re in, from a phone or a laptop. On a phone they can add it to the Home Screen. No app store.', act: 'app' },
       { k: 'demo', re: /demo|show|see|try|example|look/, a: 'The demo tribe plays by itself in your browser with made-up friends and agents. Nothing is sent anywhere.', act: 'demo' },
@@ -564,7 +564,7 @@
       { k: 'hi', re: /^(hi|hey|hello|yo|hiya|sup)\b/, a: 'Hi! Ask me anything about TribeCode, or pick a question below.' },
       { k: 'thanks', re: /thank|thx|cheers/, a: 'Happy to help. Have fun building.' },
     ];
-    const CHIPS = [...(onHome ? [['Show me around', 'tour']] : []), ['What is TribeCode?', 'what'], ['Is it free?', 'free'], ['Which AI works?', 'ai'], ['How do friends join?', 'join'], ['Show me a demo', 'demo'], ['Download', 'download']];
+    const CHIPS = [...(onHome ? [['🧭 Show me around', 'tour']] : []), ['💡 What is TribeCode?', 'what'], ['💸 Is it free?', 'free'], ['🤖 Which AI works?', 'ai'], ['👋 How do friends join?', 'join'], ['🎮 Show me a demo', 'demo'], ['⬇️ Download', 'download']];
 
     const wrap = document.createElement('div'); wrap.className = 'flint-float';
     wrap.innerHTML = `
@@ -574,9 +574,9 @@
         <div class="flint-hello__acts">${onHome ? '<button type="button" class="flint-act" data-hello="tour">Show me around</button>' : ''}<button type="button" class="flint-act flint-act--ghost" data-hello="ask">Ask a question</button></div>
       </div>
       <div class="flint-panel" id="flint-panel" role="dialog" aria-modal="true" aria-labelledby="flint-title" hidden>
-        <div class="flint-panel__head"><img src="assets/brand/flint.svg" alt="" width="28" height="36"><div><b id="flint-title">Flint</b><span>a quick guide to TribeCode</span></div><button type="button" class="flint-panel__x" aria-label="Close">×</button></div>
+        <div class="flint-panel__head"><img src="assets/brand/flint.svg" alt="" width="28" height="36"><div><b id="flint-title">Flint <span class="flint-wave" aria-hidden="true">👋</span></b><span>your guide to TribeCode · ask me anything</span></div><button type="button" class="flint-panel__x" aria-label="Close">×</button></div>
         <div class="flint-panel__log" aria-live="polite" aria-relevant="additions">
-          <div class="flint-msg">Hi, I’m Flint. I can tell you what TribeCode is and how to get started. Pick a question or ask your own.</div>
+          <div class="flint-msg"><p>Hi, I’m Flint ✨ I can show you around, explain what TribeCode does, and help you get started.</p><p class="flint-msg__sub">Pick a question below, or type your own.</p></div>
         </div>
         <div class="flint-chips">${CHIPS.map(([t, k]) => `<button type="button" class="flint-chip" data-q="${k}">${t}</button>`).join('')}</div>
         <form class="flint-form"><input type="text" maxlength="200" placeholder="Ask anything…" aria-label="Ask Flint a question" autocomplete="off"><button type="submit" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
@@ -622,7 +622,8 @@
     // Each step scrolls the section into view, rings it (the rest of the page dims a little) and explains it in a line.
     // You set the pace: Next / Back, arrow keys, Esc to stop. The section's own little demo plays while it's lit.
     const STEPS = [
-      ['.hero', 'This is TribeCode: one room where your friends and their AI agents build the same app. Try typing an idea in the chat box here.'],
+      ['.hero', 'This is TribeCode: one place where you, your friends and your AI helpers build the same app together.'],
+      ['#story', 'Here’s the whole idea in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
       ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
       ['#phone', 'Friends join from a phone with one link. When an agent needs a yes, it arrives as one tap.'],
       ['#lanes', 'Each agent works in its own lane, so nobody collides. When two need the same file they hand it off, and a person approves the merge.'],
@@ -645,6 +646,7 @@
       addEventListener('keydown', tr.key);
       go(at);
     }
+    document.querySelectorAll('[data-story-tour]').forEach(b => b.addEventListener('click', () => { hideHello(); close(); tour(); }));
     function go(i) {
       if (!tr) return;
       if (i >= tr.steps.length) return endTour(true);

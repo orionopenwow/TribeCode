@@ -87,7 +87,7 @@
     const img = `<img class="sy-flare" src="assets/illustrations/brain.svg" alt="" aria-hidden="true">`;
     if (!d.items.length) {
       return `<section class="hero-card sy-hero">${img}<span class="eyebrow">Digest</span><h2>${data.enabled ? 'Nothing to report yet' : 'A secretary for the tribe'}</h2>
-        <p>${data.enabled ? 'It reads chat, voice notes, docs, files and commits as they come in, then writes the ten things that matter here.' : 'It reads what everyone types, says and drops in, keeps a daily journal and a digest, dreams up ideas that connect people\'s work, and asks the agents to research what nobody knows yet. It runs on this computer and stays off until the host turns it on.'}</p>
+        <p>${data.enabled ? 'It reads chat, voice notes, docs, files and code changes as they come in, then writes the ten things that matter here.' : 'It reads what everyone types, says and drops in, keeps a daily journal and a digest, dreams up ideas that connect people\'s work, and asks the agents to research what nobody knows yet. It runs on this computer and stays off until the host turns it on.'}</p>
         ${data.host ? `<div class="hero-acts">${data.enabled ? '<button class="btn primary" data-run>Read everything now</button>' : '<button class="btn primary" data-enable>Turn on the secretary</button>'}</div>` : ''}</section>`;
     }
     return `<section class="hero-card sy-hero">${img}<span class="eyebrow">Digest · ${esc(ago(d.updated))}</span><h2>${esc(data.inShort || 'The ten things that matter now')}</h2>
@@ -126,7 +126,7 @@
     return `<section class="sec"><div class="sec-head sy-jhead"><div><span class="eyebrow">Journal</span><h2>${esc(j.date ? new Date(j.date + 'T12:00').toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) : 'Today')}</h2></div>
       ${days.length > 1 ? `<select class="sy-day" id="sy-day" aria-label="Pick a day">${days.map(d => `<option value="${d}"${d === j.date ? ' selected' : ''}>${d}</option>`).join('')}</select>` : ''}</div>
       ${body.trim() ? `<article class="sy-journal">${md(body)}</article>` : '<div class="sy-empty">The journal starts with the first run.</div>'}
-      <p class="faint sy-hint">Saved in the tribe folder and, when the repo autopilot commits the tribe context, in the repo at <code>${esc((data.repo || {}).path || 'notes/secretary/')}</code>.</p></section>`;
+      <p class="faint sy-hint">Saved in the tribe folder and, when the autopilot saves the tribe context, in the code repository at <code>${esc((data.repo || {}).path || 'notes/secretary/')}</code>.</p></section>`;
   }
   function settingsHtml() {
     if (!data.host) return '';
@@ -137,7 +137,7 @@
         <div class="toggles">${tog('enabled', c.enabled, 'Secretary on', 'Reads new work on a timer, writes notes, dreams up ideas')}
           ${tog('useBrain', c.useBrain, 'Use the local model', (data.brain || {}).online ? 'Ollama is running on this computer' : 'Ollama is not running: plain rules instead')}
           ${tog('quiet', c.quiet.on, 'Quiet hours', 'No background runs at night')}
-          ${tog('repoNotes', c.repoNotes, 'Notes in the repo', 'Committed with the tribe context when the repo autopilot does that')}</div>
+          ${tog('repoNotes', c.repoNotes, 'Notes in the code repository', 'Committed with the tribe context when the autopilot does that')}</div>
         <div class="sy-fields">
           <label><span class="eyebrow">Model</span><select id="sy-model"><option value="">Default${(data.brain || {}).model && !c.model ? ` (${esc(data.brain.model)})` : ''}</option>${models.map(m => `<option value="${esc(m)}"${m === c.model ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
           <label><span class="eyebrow">Every</span><select id="sy-every">${[5, 10, 15, 30, 60, 120].map(n => `<option value="${n}"${n === c.everyMin ? ' selected' : ''}>${n < 60 ? n + ' min' : n / 60 + ' h'}</option>`).join('')}</select></label>

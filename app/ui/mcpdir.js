@@ -147,7 +147,7 @@
       </div>
       <div class="mcd-panel" id="mcd-panel">${tab === 'discover' ? discover() : connected()}</div>
       ${appsSection()}
-      <p class="mcd-foot">Want your GitHub repo or calendar in TribeCode? <button class="linkish" id="mcd-repo">Repo &amp; GitHub →</button> <button class="linkish" id="mcd-cal">Calendar →</button></p>
+      <p class="mcd-foot">Want your GitHub repository or calendar in TribeCode? <button class="linkish" id="mcd-repo">Code &amp; GitHub →</button> <button class="linkish" id="mcd-cal">Calendar →</button></p>
     </div>`;
     wire(sec);
   }

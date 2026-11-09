@@ -212,7 +212,7 @@
     if (C.connected()) return PJ() && PJ().openNew ? PJ().openNew() : null;   // in a tribe: a new project (Create my own · templates · Join)
     const dl = (window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest';
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Start a tribe</span><h3>Who runs it?</h3></div>
-      <p class="m2-fine left">A tribe’s work lives in its shared GitHub repo. Someone keeps the tribe online (a desktop app or their own server) so friends and agents can reach it. Your phone joins from anywhere.</p>
+      <p class="m2-fine left">A tribe’s work lives in its shared GitHub repository. Someone keeps the tribe online (a desktop app or their own server) so friends and agents can reach it. Your phone joins from anywhere.</p>
       <div class="m2-menu">
         <button class="m2-mi" data-st="mine"><span class="m2-mic live">${ic('desk', 18)}</span><span class="m2-mt"><b>My own computer</b><small>Send yourself the link, install, it starts hosting</small></span></button>
         <button class="m2-mi" data-st="friend"><span class="m2-mic">${ic('users', 18)}</span><span class="m2-mt"><b>A friend's computer</b><small>Ask someone with a PC or Mac to host for the group</small></span></button>

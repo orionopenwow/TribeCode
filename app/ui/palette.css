@@ -205,3 +205,26 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
   #room-pane .room-head { justify-content: flex-end; }
 }
 @media (min-width: 821px) { #room-pane #home-me { display: none !important; } }   /* the Home panel: no "Your home" card (you are in the bar at the bottom left) */
+
+/* simple-dashboard: At a glance tiles, Recent changes + Up next, a slim Add files row, the rest under "More about" */
+.pj-glance .pl-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pj-glance .pl-cell { min-height: 72px; align-items: center; }
+.pj-glance .pl-cell small { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; }
+.pj-glance .pl-cell b { font-size: 15px; }
+.pj-glance .pl-cell.hot { border-color: var(--brand, #F26B1D); background: color-mix(in srgb, var(--brand, #F26B1D) 8%, var(--surface)); }
+.pj-files-row { padding: 14px 16px; }
+.pj-files-row .pj-ctx-head { align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.pj-files-row .pj-ctx-head h3 { font-size: 15.5px; margin: 0 0 2px; }
+.pj-files-row .pj-ctx-head p { font-size: 13.5px; }
+.pj-files-row #dropzone { min-height: 56px; flex-direction: row; font-size: 14px; }
+.pj-newfiles { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.pj-nf { height: 30px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface-2, #222833); color: var(--white, #F1F4F8); font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.pj-nf:hover { border-color: #3A4350; }
+.pj-more { margin: 8px 0 24px; }
+.pj-more > summary { cursor: pointer; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 12px; color: var(--muted); font-size: 14.5px; list-style: none; }
+.pj-more > summary::-webkit-details-marker { display: none; }
+.pj-more > summary::before { content: "▸"; display: inline-block; margin-right: 8px; transition: transform .15s; }
+.pj-more[open] > summary::before { transform: rotate(90deg); }
+.pj-more[open] > summary { margin-bottom: 14px; color: var(--white, #F8FAFC); }
+@media (max-width: 820px) { .pj-glance .pl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pj-newfiles { margin-left: 0; } }
+.pj-files-row { margin-top: 16px; }

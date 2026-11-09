@@ -1,7 +1,7 @@
 // Flint's welcome: the first thing someone sees after "Open in your browser" on the website (app/?welcome=1), or
 // on a first visit to the hosted web app. Before the app shows, Flint walks them through making a pretend tribe,
 // shows a few features, then asks how they want to see it:
-//   * Auto demo (the guided 3-minute tour of a busy tribe, ?demo=showcase),
+//   * Build an app with me (the guided, hands-on tour, ?demo=showcase) or Just watch it (?demo=showcase&tour=watch),
 //   * Explore it myself (the calm offline demo tribe),
 //   * Start my real tribe (closes; first-run setup is already underneath).
 // The pretend tribe's name and emoji carry into the demo (offline.js / showcase.js read WKEY).
@@ -21,7 +21,7 @@
   const NAMES = { game: 'Lantern Run', app: 'Pocket Planner', site: 'Corner Bakery', tool: 'Helper Bot' };
   const FEATURES = [
     { e: '💬', t: 'One chat for everyone', d: 'Friends and their AI talk in channels. Type /task and it lands on the board.', mock: 'chat' },
-    { e: '🧭', t: 'Set up in four steps', d: 'Write the vision, add a first task, connect an AI, create the repo.', mock: 'setup' },
+    { e: '🧭', t: 'Set up in four steps', d: 'Write the vision, add a first task, connect an AI, create the code repository.', mock: 'setup' },
     { e: '🤖', t: 'Agents pick up tasks', d: 'Each person’s AI claims work, posts what it did, and asks before merging.', mock: 'agents' },
     { e: '👀', t: 'Watch it take shape', d: 'The preview updates as code lands. Approve from your phone with one tap.', mock: 'preview' },
   ];
@@ -40,7 +40,7 @@
 
   const mock = {
     chat: `<div class="wl-m wl-m-chat"><p><i style="--c:#6C7CFF">M</i><span><b>Maya</b> the jump feels floaty</span></p><p><i style="--c:#38C6B1">🤖</i><span><b>Maya’s agent</b> On it: shorter hang time ✓</span></p><p class="me"><span>/task add a title screen</span></p></div>`,
-    setup: `<div class="wl-m wl-m-setup"><p class="on">✨ Vision <s>done</s></p><p class="on">✅ First task <s>done</s></p><p class="nx">🤖 Connect your AI</p><p>📦 Create the repo</p></div>`,
+    setup: `<div class="wl-m wl-m-setup"><p class="on">✨ Vision <s>done</s></p><p class="on">✅ First task <s>done</s></p><p class="nx">🤖 Connect your AI</p><p>📦 Create the code repository</p></div>`,
     agents: `<div class="wl-m wl-m-agents"><p><i>🤖</i><span>Jay’s agent</span><em class="d">Doing</em></p><p><i>🤖</i><span>Your agent</span><em class="r">Review</em></p><p><i>🤖</i><span>Maya’s agent</span><em class="k">Done</em></p></div>`,
     preview: `<div class="wl-m wl-m-prev"><div class="sky"><b class="p1"></b><b class="p2"></b><b class="hero"></b></div><p>Preview · <span>updated just now</span></p></div>`,
   };
@@ -109,7 +109,8 @@
       { // 3: how to see it
         line: () => `How do you want to see ${tribeName()}?`,
         html: () => `<div class="wl-pick">
-          <button type="button" class="wl-opt wl-opt--main" data-go="auto"><span class="wl-oe">▶️</span><span><b>Watch the auto demo</b><small>Sit back for 3 minutes. I drive: friends chat, agents take tasks, a milestone ships.</small></span><em>Recommended</em></button>
+          <button type="button" class="wl-opt wl-opt--main" data-go="auto"><span class="wl-oe">🧭</span><span><b>Build an app with me</b><small>A guided tour, one step at a time. I point, you click, and you see each part of TribeCode do its job.</small></span><em>Recommended</em></button>
+          <button type="button" class="wl-opt" data-go="watch"><span class="wl-oe">▶️</span><span><b>Just watch it</b><small>Sit back for about four minutes while it plays by itself.</small></span></button>
           <button type="button" class="wl-opt" data-go="explore"><span class="wl-oe">🧭</span><span><b>Explore it myself</b><small>A calm pretend tribe. Click around and try things. Nothing happens until you act.</small></span></button>
           <button type="button" class="wl-opt" data-go="real"><span class="wl-oe">🏕️</span><span><b>Start my real tribe</b><small>Skip the pretend part and set up your own.</small></span></button>
           <details class="wl-inv"><summary>Have an invite link?</summary><div class="web-join"><input class="input" id="wl-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false"><button class="btn" id="wl-join" type="button">Join</button></div></details>
@@ -150,6 +151,7 @@
     function finish(how) {
       keep();
       if (how === 'auto') { lsSet('tribecode.flint.tour', 'done'); close(); location.href = location.pathname + '?demo=showcase'; return; }
+      if (how === 'watch') { lsSet('tribecode.flint.tour', 'done'); close(); location.href = location.pathname + '?demo=showcase&tour=watch'; return; }
       if (how === 'explore') { close(); const O = window.TribeOffline; if (O && O.start) O.start('quiet'); return; }
       try { localStorage.removeItem(WKEY); } catch {}
       close();

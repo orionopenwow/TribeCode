@@ -253,3 +253,11 @@ body.tauri .win-ctl { display: flex; }
   .search svg { width: 16px !important; height: 16px !important; }
 }
 .cc-skip { margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised); font-size: 13px; line-height: 1.5; color: var(--muted); } .cc-skip b { color: var(--text); font-family: var(--mono); font-weight: 600; }
+
+/* color-coded notifications: a colored edge and icon say what kind of news it is */
+.toast { display: flex; align-items: center; gap: 10px; padding: 11px 16px 11px 12px; font-size: 14px; line-height: 1.4; max-width: min(520px, calc(100vw - 32px)); border-left-width: 4px; box-shadow: 0 10px 28px rgba(0, 0, 0, .45); }
+.toast-ic { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font: 700 12px/1 var(--mono, monospace); color: #12151A; }
+.toast.t-ok { border-left-color: #3BD16F; } .toast.t-ok .toast-ic { background: #3BD16F; }
+.toast.t-err { border-left-color: #FF6F8E; } .toast.t-err .toast-ic { background: #FF6F8E; }
+.toast.t-warn { border-left-color: #FABD2F; } .toast.t-warn .toast-ic { background: #FABD2F; }
+.toast.t-info { border-left-color: #38C6B1; } .toast.t-info .toast-ic { background: #38C6B1; }

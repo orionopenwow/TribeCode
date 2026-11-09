@@ -1,7 +1,7 @@
 // Setup after the vision (feat/setup-flow), client side. Server side: server/setup.js.
 //   Dashboard card "Shape it": small optional role cards (I'm the artist / engineer / designer / writer). Each opens
 //   one screen with a few choices; picking one saves it and adds two starter tasks. "Make the starter" appears once
-//   there is a vision and a category: it puts starter files in the repo and opens the Preview.
+//   there is a vision and a category: it puts starter files in the code repository and opens the Preview.
 // Everything is skippable, needs no model, and stays out of the way once done.
 // Public: window.TribeSetup = { card(p, pulse), open(role), starter(), get() }.
 (function () {
@@ -32,8 +32,8 @@
     const allRoles = st.roles.every(r => r.done), s = st.starter;
     if (allRoles && s.made) { slot.innerHTML = ''; return; }
     const noun = st.kind ? st.label : 'project';
-    const starterHtml = s.made ? `<div class="su-made">${TICK}<span>The starter is in the repo.</span><button class="linkish" id="su-preview">Open the preview</button></div>`
-      : s.ready && st.canHost ? `<div class="su-starter" id="su-starter-row"><span class="su-e" aria-hidden="true">🚀</span><div class="su-st-t"><b>Make the starter</b><small>Starter files for your ${esc(noun)}, committed to the repo and open in Preview. Nothing gets overwritten.</small></div><button class="btn primary" id="su-starter" ${making ? 'disabled' : ''}>${making ? 'Making…' : 'Make the starter'}</button></div>`
+    const starterHtml = s.made ? `<div class="su-made">${TICK}<span>The starter is in the code repository.</span><button class="linkish" id="su-preview">Open the preview</button></div>`
+      : s.ready && st.canHost ? `<div class="su-starter" id="su-starter-row"><span class="su-e" aria-hidden="true">🚀</span><div class="su-st-t"><b>Make the starter</b><small>Starter files for your ${esc(noun)}, committed to the code repository and open in Preview. Nothing gets overwritten.</small></div><button class="btn primary" id="su-starter" ${making ? 'disabled' : ''}>${making ? 'Making…' : 'Make the starter'}</button></div>`
       : '';
     slot.innerHTML = `<section class="card su-card" id="pj-setup">
       <div class="su-head"><div><span class="eyebrow">Shape it · optional</span><h3>Pick a role, make one choice</h3></div><button class="linkish su-hide" id="su-hide">Hide</button></div>
@@ -85,7 +85,7 @@
     try {
       const r = await C.api(`/projects/${encodeURIComponent(forPid)}/setup/starter`, { method: 'POST' });
       making = false; st = r.setup; draw();
-      toast(r.written.length ? `🚀 Starter ready: ${r.written.length} files in the repo` : 'The repo already had these files');
+      toast(r.written.length ? `🚀 Starter ready: ${r.written.length} files in the code repository` : 'The code repository already had these files');
       if (window.TribeProjects && window.TribeProjects.refresh) window.TribeProjects.refresh();
       if (window.TribePreview) setTimeout(() => window.TribePreview.open(), 300);
     } catch (e) { making = false; toast(e.message); draw(); }

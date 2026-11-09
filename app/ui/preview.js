@@ -118,8 +118,8 @@
     pane.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.dev === device)));
     pane.querySelector('[data-act="gear"]').classList.toggle('hidden', !info.canConfigure);
     const meta = pane.querySelector('#pvw-meta');
-    meta.textContent = info.mode === 'dev' ? `dev :${info.port}` : info.root ? (info.root === '.' ? 'repo root' : info.root + '/') : '';
-    meta.title = info.mode === 'dev' ? `Proxying the dev server on localhost:${info.port} on the host` : 'Serving index.html from the repo';
+    meta.textContent = info.mode === 'dev' ? `dev :${info.port}` : info.root ? (info.root === '.' ? 'top folder of the code' : info.root + '/') : '';
+    meta.title = info.mode === 'dev' ? `Proxying the dev server on localhost:${info.port} on the host` : 'Serving index.html from the code repository';
     const empty = !info.hasRepo || !info.hasIndex;
     pane.classList.toggle('is-empty', empty);
     if (window.TribePhoneApp) window.TribePhoneApp.preview(pane, { empty });   // phone app mode: open it on a device (app/ui/phoneapp.js)
@@ -128,8 +128,8 @@
     if (empty) {
       frame = null; helperAlive = false;
       holder.innerHTML = !info.hasRepo
-        ? `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>Nothing to show yet</h3><p>Your app appears here once the project has a repo: the shared folder that holds its code. Make one, and the app shows up here, live.</p><button class="btn primary" data-act="repo">Set up the repo</button></div>`
-        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No page to show yet</h3><p>When your app has a first page, you see it here, and it refreshes by itself as your tribe changes it. Ask your AI to make that first page.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my AI to start one</button><details class="pvw-what"><summary>What does it look for?</summary><p>A file called <code>index.html</code> in the repo (or in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>).</p></details></div>`;
+        ? `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>Nothing to show yet</h3><p>Your app appears here once the project has a code repository: the shared folder that holds its code. Make one, and the app shows up here, live.</p><button class="btn primary" data-act="repo">Set up the code repository</button></div>`
+        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No page to show yet</h3><p>When your app has a first page, you see it here, and it refreshes by itself as your tribe changes it. Ask your AI to make that first page.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my AI to start one</button><details class="pvw-what"><summary>What does it look for?</summary><p>A file called <code>index.html</code> in the code repository (or in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>).</p></details></div>`;
       layout(); return;
     }
     if (!frame || !frame.isConnected) {
@@ -229,10 +229,10 @@
     const pinned = info.pinned === '' ? '.' : info.pinned || 'auto';
     if (!opts.includes(pinned)) opts.push(pinned);
     f.innerHTML = `<span class="eyebrow">How it runs</span>
-      <label><span>Web root</span><select name="root">${opts.map(o => `<option value="${esc(o)}" ${o === pinned ? 'selected' : ''}>${o === 'auto' ? `Auto${info.root ? ' (' + esc(info.root === '.' ? 'repo root' : info.root) + ')' : ''}` : o === '.' ? 'Repo root' : esc(o) + '/'}</option>`).join('')}<option value="__custom">Another folder…</option></select></label>
+      <label><span>Web root</span><select name="root">${opts.map(o => `<option value="${esc(o)}" ${o === pinned ? 'selected' : ''}>${o === 'auto' ? `Auto${info.root ? ' (' + esc(info.root === '.' ? 'top folder of the code' : info.root) + ')' : ''}` : o === '.' ? 'Top folder' : esc(o) + '/'}</option>`).join('')}<option value="__custom">Another folder…</option></select></label>
       <label class="pvw-custom hidden"><span>Folder</span><input name="custom" placeholder="site/" maxlength="120" autocomplete="off"></label>
       <label><span>Dev server</span><input name="port" inputmode="numeric" placeholder="port, e.g. 5173" value="${info.port || ''}" maxlength="5" autocomplete="off"></label>
-      <p class="pvw-hint">Leave the port empty to serve files straight from the repo. With a port, the preview shows the project's own dev server (<code>npm run dev</code>) running on the host.</p>
+      <p class="pvw-hint">Leave the port empty to serve files straight from the code repository. With a port, the preview shows the project's own dev server (<code>npm run dev</code>) running on the host.</p>
       <div class="pvw-set-acts"><button type="button" class="btn" data-set="cancel">Cancel</button><button class="btn primary">Save</button></div>`;
     f.classList.remove('hidden');
     const sel = f.querySelector('[name=root]');
@@ -252,7 +252,7 @@
 
   // Empty state: one tap asks the agents (the #agents channel; the project chat when no agent is here).
   async function askClaude() {
-    const text = 'please start the app: create an index.html at the repo root (a no-build static page is fine, relative paths for scripts and images) so the tribe can watch it live in TribeCode\'s preview.';
+    const text = 'please start the app: create an index.html at the top folder of the code (a no-build static page is fine, relative paths for scripts and images) so the tribe can watch it live in TribeCode\'s preview.';
     try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + text } }); toast('Asked the agents in #agents'); }
     catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + text } }); toast('Asked in the project chat'); } catch (e) { toast(e.message); } }
     const b = pane && pane.querySelector('[data-act="ask"]');

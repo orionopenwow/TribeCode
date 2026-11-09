@@ -310,7 +310,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         for label in ["Messages", "Files", "Task Board", "Agents Hub"]:   # Settings: the gear in the bottom-left user bar
             wait_text(host, "#tour-side", label)
         host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
-        for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]: wait_text(host, "#view-tabs", label)
+        for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Code repository", "Visuals"]: wait_text(host, "#view-tabs", label)
         # Agents Hub: one dashboard (feat/agents-dash); deep views open as temporary tabs or pinned from "+"
         host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-agents")
         wait_text(host, "#view-tabs", "Dashboard"); host.wait_for_selector("#view-tabs #wt-plus")
@@ -352,7 +352,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         # home = project overview, chat has a docked composer mount
         host.click(".nest-row[data-nav='chat']"); host.wait_for_selector("#view-chat:not(.hidden) #composer-mount #chat-form")
         host.click("#nest-overview"); host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
-        host.wait_for_selector("#pj-living"); host.wait_for_selector("#pj-sec-tribe")
+        host.wait_for_selector("#pj-living"); host.evaluate("document.querySelector('#pj-more').open = true"); host.wait_for_selector("#pj-sec-tribe")
         host.wait_for_selector("#nest-pinned .pin-row[data-nav='repo']")
         shot(host, "shell-desktop")
         # right panel collapses and comes back

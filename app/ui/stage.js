@@ -36,7 +36,7 @@
     vision: ['✨', 'Write the vision', 'What you’re making and who it’s for.', 'vision'],
     task: ['📝', 'Add a first task', 'One small thing to build first.', 'newtask'],
     agent: ['🤖', 'Connect your AI', 'Claude Code, Codex, Gemini or Cursor.', 'claude'],
-    repo: ['🌿', 'Create the repo', 'The shared folder for your code, in one click.', 'repo'],
+    repo: ['🌿', 'Create the code repository', 'The shared folder for your code, in one click.', 'repo'],
   };
   const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function drawNext() {

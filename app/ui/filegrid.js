@@ -55,7 +55,7 @@
     let at = pane.dataset.fgFolder || '';
     const draw = (shots) => {
       const items = list.filter(d => folderOf(d) === at || (!at && !folderOf(d)));
-      { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the repo strip alive across redraws
+      { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the code repository strip alive across redraws
       pane.innerHTML = `<div class="fg">
         <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn" id="doc-first">＋ New doc</button><button class="btn ghost" id="fg-new-sheet" title="A spreadsheet with formulas">📊 Sheet</button><button class="btn ghost" id="fg-new-deck" title="A slide deck you can present">🎞️ Slides</button></span></div>
         ${!at ? '<div class="fg-repo"></div>' : ''}

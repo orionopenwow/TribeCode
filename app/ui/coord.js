@@ -43,8 +43,11 @@
 
   // ---------- agents ----------
   const ctlLabel = c => (c ? `${c.action === 'stop' ? 'Stop' : 'Pause'} requested${c.seen ? ' · seen' : ' · not seen yet'}` : '');
+  // ai-panel: each AI helper gets a color by what it's doing: working (teal), reviewing (amber), asking you (ember), idle (gray)
+  const stateOf = a => !a.online ? 'idle' : /needs you|waiting for you|asks you/i.test(a.where || '') ? 'ask' : /review/i.test(a.where || '') ? 'review' : 'work';
+  const STATE_L = { work: 'Working', review: 'Reviewing', ask: 'Needs you', idle: 'Idle' };
   function agentCard(a) {
-    return `<div class="ra-row ${a.online ? 'on' : ''}" data-agent="${esc(a.id)}"><span class="ra-dot"></span><div><b>${esc(a.name)}</b><span>${esc(a.control ? ctlLabel(a.control) : `${a.online ? (a.where || 'working') : 'idle'}${a.task ? ' · ' + a.task.title : ''}`)}</span></div></div>`;
+    return `<div class="ra-row ${a.online ? 'on' : ''} st-${stateOf(a)}" data-agent="${esc(a.id)}" title="${STATE_L[stateOf(a)]}"><span class="ra-dot"></span><div><b>${esc(a.name)}</b><span>${esc(a.control ? ctlLabel(a.control) : `${a.online ? (a.where || 'working') : 'idle'}${a.task ? ' · ' + a.task.title : ''}`)}</span></div></div>`;
   }
   // The default tab is the Agents dashboard (app/ui/agentsdash.js, feat/agents-dash): a few big cards, each only when it has something to say.
   async function agents(el) {
@@ -76,7 +79,7 @@
   async function conflicts(el) {
     el.innerHTML = '<div class="faint">Comparing branches…</div>';
     const d = await C.api('/coord/conflicts');
-    if (!d.enabled) { el.innerHTML = empty('No repo to compare', esc(d.reason || 'Attach a git repo to this project (+ → drop a folder or paste a GitHub URL).')); return; }
+    if (!d.enabled) { el.innerHTML = empty('No code repository to compare', esc(d.reason || 'Attach a code repository to this project (+ → drop a folder or paste a GitHub URL).')); return; }
     el.innerHTML = `<p class="coord-lead">${d.branches} branch${d.branches === 1 ? '' : 'es'} compared with <code>${esc(d.main)}</code>. Pairs that change the same files will collide when they merge.</p>
       ${d.pairs.length ? d.pairs.map(p => `<article class="cf-card"><div class="cf-pair"><span><code>${esc(p.a.branch)}</code><small>${esc(p.a.ownerName || '')}${p.a.behind ? ` · ${p.a.behind} behind` : ''}</small></span>${ico('i-merge', 18)}<span><code>${esc(p.b.branch)}</code><small>${esc(p.b.ownerName || '')}${p.b.behind ? ` · ${p.b.behind} behind` : ''}</small></span></div>
           <div class="cf-files">${p.files.map(f => `<code>${esc(f)}</code>`).join('')}${p.count > p.files.length ? `<span class="faint">+${p.count - p.files.length} more</span>` : ''}</div>
@@ -144,7 +147,10 @@
     if (!C.connected()) { box.innerHTML = ''; return; }
     try {
       const { agents: list } = await C.api('/coord/agents');
-      box.innerHTML = list.length ? `<h6>Agents</h6>${list.slice(0, 6).map(a => agentCard(a, true)).join('')}${list.length > 6 ? `<button class="linkish" data-ra-all>All ${list.length} agents</button>` : ''}` : '';
+      const working = list.filter(a => a.online).length;
+      box.innerHTML = list.length ? `<div class="ra-head"><span class="ra-t">🤖 AI helpers</span><span class="ra-n">${working ? `${working} working` : 'none working'}</span></div>
+        <div class="ra-key" aria-hidden="true"><i class="k-work"></i>Working<i class="k-review"></i>Reviewing<i class="k-ask"></i>Needs you</div>
+        ${list.slice(0, 6).map(a => agentCard(a, true)).join('')}${list.length > 6 ? `<button class="linkish" data-ra-all>All ${list.length} AI helpers</button>` : ''}` : '';
       box.querySelectorAll('[data-agent], [data-ra-all]').forEach(r => r.onclick = () => open('agents'));
     } catch {}
   }

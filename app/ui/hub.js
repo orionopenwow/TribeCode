@@ -33,7 +33,7 @@
   // ---------- resume last session (client side, per server) ----------
   const LKEY = () => `tribecode.lastSession:${C.base()}`;
   const last = () => lsGet(LKEY());
-  const LABEL = { home: 'Dashboard', chat: 'Messages', docs: 'Files', tasks: 'Task Board', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
+  const LABEL = { home: 'Dashboard', chat: 'Messages', docs: 'Files', tasks: 'Task Board', board: 'Board', bugs: 'Bugs', repo: 'Code repository', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate', requests: 'Requests' };
   function remember(view) {
     if (!connected() || !LABEL[view]) return;
     const p = PJ() && PJ().cur(); if (!p) return;
@@ -162,11 +162,11 @@
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
     const tile = (id, title, sub, faceHtml = '', ic = '', go = '', k = '') => `<button class="gs-tile${k ? ' k-' + k : ''}" id="${id}">${ic ? `<span class="gs-ic"><svg class="i"><use href="#i-${ic}"/></svg></span>` : faceHtml}<b>${title}</b><span>${sub}</span>${go ? `<em class="gs-go">${go}<svg class="i"><use href="#i-chev"/></svg></em>` : ''}</button>`;
     const tiles = !on
-      ? tile('hub-host', 'Create your first project', desk ? 'Your work lives in a shared GitHub repo. Pick a name, invite friends, connect your AI.' : 'Projects live in a shared GitHub repo; a desktop app or a server keeps the tribe online.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
+      ? tile('hub-host', 'Create your first project', desk ? 'Your work lives in a shared GitHub repository. Pick a name, invite friends, connect your AI.' : 'Projects live in a shared GitHub repository; a desktop app or a server keeps the tribe online.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
         + tile('hub-join', 'Join a friend\'s tribe', 'Got an invite link? Paste it and you\'re in, on this computer or your phone.', '', 'link', 'Paste a link', 'indigo')
       : (lp || p1
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Its chat, files and tasks, all in one place.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
-          : tile('hub-new', 'Create a project', 'A room, a link and a repo, in one click.', '', 'plus', 'Start a project', 'ember'))
+          : tile('hub-new', 'Create a project', 'A room, a link and a code repository, in one click.', '', 'plus', 'Start a project', 'ember'))
         + tile('hub-instant', 'Invite a friend', 'Starts a new project for the two of you and copies a link they can open anywhere.', '', 'link', 'Copy a link', 'teal');
     // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
     const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`
@@ -507,7 +507,7 @@
     if (!on) {
       const local = scratch.notes().slice(0, 4), nm = ((window.TribeStore && window.TribeStore.get().name) || 'Me');
       return head(local.length ? `<div class="hub-act" id="hub-feed">${local.map(n => `<div class="ha-row static"><span class="ha-av" style="background:var(--accent)">${esc(([...nm][0] || '').toUpperCase())}</span><span class="ha-t"><span class="ha-l1"><b>You</b><span class="ha-at">${esc(ago(n.updated || n.at))}</span></span><span class="ha-text">${esc(n.text.split('\n')[0])}</span><span class="ha-l3"><small>Scratchpad note</small><span class="ha-tag">On this device</span></span></span></div>`).join('')}</div>`
-        : '<div class="hub-empty">Quiet so far. Notes you jot show up here; once you are in a tribe, so do commits, agent gists, decisions and people joining.</div>');
+        : '<div class="hub-empty">Quiet so far. Notes you jot show up here; once you are in a tribe, so do saved code changes, agent gists, decisions and people joining.</div>');
     }
     if (data && data.error) return head(`<div class="hub-empty">${esc(data.error)}</div>`);
     if (!data) return head('<div class="hub-empty faint">Loading…</div>');
@@ -597,14 +597,14 @@
 
   // ---------- All repos ----------
   async function renderRepos(el) {
-    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Global</span><h1>All code</h1><p class="faint">Each project's code lives in a shared folder on GitHub, called a <b>repo</b>. Here is what changed last in each one and whether everything is saved. Click one to open it.</p></header><div class="hub-repos" id="hub-repos">${reposCache ? reposHtml(reposCache) : '<div class="hub-empty faint">Loading…</div>'}</div></div>`;
-    if (!connected()) { $('#hub-repos').innerHTML = '<div class="hub-empty">Join or host a tribe to see its repos.</div>'; return; }
+    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Global</span><h1>All code</h1><p class="faint">Each project’s code lives in a shared folder on GitHub, called a <b>repo</b>. Here is what changed last in each one and whether everything is saved. Click one to open it.</p></header><div class="hub-repos" id="hub-repos">${reposCache ? reposHtml(reposCache) : '<div class="hub-empty faint">Loading…</div>'}</div></div>`;
+    if (!connected()) { $('#hub-repos').innerHTML = '<div class="hub-empty">Join or host a tribe to see its code repositorys.</div>'; return; }
     try { reposCache = (await C.api('/hub/repos')).repos; const box = $('#hub-repos'); if (box && mode === 'repos') { box.innerHTML = reposHtml(reposCache); bindRepos(box); } } catch (e) { const box = $('#hub-repos'); if (box) box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
   }
   function reposHtml(list) {
     if (!list.length) return '<div class="hub-empty">No projects yet.</div>';
     return list.map(r => { const p = projOf(r.project) || r, g = r.repo;
-      const state = !g ? '<span class="faint">No repo yet</span>' : g.loading ? '<span class="faint">Reading…</span>'
+      const state = !g ? '<span class="faint">No code repository yet</span>' : g.loading ? '<span class="faint">Reading…</span>'
         : [g.branch ? `<code>${esc(g.branch)}</code>` : '', g.ahead ? `${g.ahead} ahead` : '', g.behind ? `${g.behind} behind` : '', g.dirty ? `<span class="hr-dirty">${g.dirty} changed</span>` : (g.branch ? '<span class="hr-clean">clean</span>' : '')].filter(Boolean).join(' · ');
       return `<button class="hub-repo" data-repo="${esc(r.project)}"><span class="hr-face">${PJ() ? PJ().face(p, 'sm') : ''}</span><span class="hr-t"><b>${esc(r.name)}${g && g.name ? ` <span class="faint">· ${esc(g.name)}</span>` : ''}</b><small>${state}</small></span>
         <span class="hr-last">${g && g.last ? `${esc(g.last.subject)} <span class="faint">· ${esc(g.last.author)} · ${esc(ago(g.last.at))}</span>` : g && g.remote ? esc(g.remote) : ''}</span>${ico('i-chev', 14)}</button>`; }).join('');
@@ -901,7 +901,7 @@
         computeRow(row),
       ].join('');
       const open = lsGet(HKEY, true) !== false, nOn = (rows.match(/class="hp-pill on"/g) || []).length;   // collapsible, remembered
-      box.innerHTML = `<button class="hp-head" id="helpers-toggle" aria-expanded="${open}" aria-controls="hp-pills"><span class="hp-t">Helpers</span><span class="hp-sum">${nOn ? `${nOn} on` : 'all off'}</span>${ico('i-chev', 14)}</button><div class="hp-pills" id="hp-pills">${rows}</div>`;
+      box.innerHTML = `<button class="hp-head" id="helpers-toggle" aria-expanded="${open}" aria-controls="hp-pills"><span class="hp-t">⚙️ Background helpers</span><span class="hp-sum">${nOn ? `${nOn} on` : 'all off'}</span>${ico('i-chev', 14)}</button><div class="hp-pills" id="hp-pills">${rows}</div>`;
       box.classList.toggle('closed', !open);
       box.querySelector('#helpers-toggle').onclick = () => { const o = box.classList.contains('closed'); lsSet(HKEY, o); box.classList.toggle('closed', !o); box.querySelector('#helpers-toggle').setAttribute('aria-expanded', String(o)); };
       box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : r.dataset.helper === 'flint' && window.TribeFlint ? window.TribeFlint.focus() : fleetGo(r.dataset.helper));
@@ -913,7 +913,7 @@
     pad.classList.toggle('hidden', document.body.dataset.view === 'hub');
     homePanel();
   }
-  // ---------- Shared compute: a quiet helper, only once a project has a repo and more than one person ----------
+  // ---------- Shared compute: a quiet helper, only once a project has a code repository and more than one person ----------
   let cmp = { mine: { on: false }, helpers: [], at: 0 };
   async function loadCompute(force) { if (!connected() || (!force && Date.now() - cmp.at < 30000)) return; cmp.at = Date.now(); try { cmp = { ...(await C.api('/compute')), at: Date.now() }; panel(); } catch {} }
   C.on('ws', m => { if (m.type === 'compute') loadCompute(true); });
@@ -930,7 +930,7 @@
     const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
     const on = cmp.mine && cmp.mine.on, cores = navigator.hardwareConcurrency || null;
     body.innerHTML = `<span class="eyebrow">Helpers</span><h2>Shared compute</h2>
-      <p class="lead">Lend this computer to the tribe for heavy repo work: builds, test runs and code analysis. Work only comes from this tribe's repos, runs on a clean copy, and you can stop any time.</p>
+      <p class="lead">Lend this computer to the tribe for heavy code work: builds, test runs and code analysis. Work only comes from this tribe's repos, runs on a clean copy, and you can stop any time.</p>
       <div class="cmp-row"><span><b>Lend this computer</b><small>${cores ? `${cores} cores` : 'When it\'s on and TribeCode is open'}</small></span><button class="toggle set-toggle" role="switch" id="cmp-toggle" aria-checked="${!!on}" aria-label="Lend this computer"><span class="switch"></span></button></div>
       <div class="cmp-list">${cmp.helpers.length ? cmp.helpers.map(h => `<div class="cmp-h"><span class="cmp-dot ${h.online ? 'on' : ''}"></span><b>${esc(h.name)}</b><small>${h.cores ? `${h.cores} cores` : ''}${h.online ? ' · online' : ' · away'}</small></div>`).join('') : '<p class="faint">Nobody is lending yet.</p>'}</div>
       <p class="faint cmp-note">Lenders show up here for the tribe. Splitting big builds across them comes next.</p>

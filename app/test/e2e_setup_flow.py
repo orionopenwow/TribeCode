@@ -83,8 +83,8 @@ def main():
             host.wait_for_selector("#pj-check.hero .ock-card", timeout=15000)
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
             assert steps == ["vision", "task", "claude", "repo"], steps
-            assert "Four quick steps" in host.text_content("#pj-check .ock-hero-p")
-            assert "Create the repo" in host.text_content("#pj-check [data-step=repo]")
+            assert "4 steps" in host.text_content("#pj-check .ock-hero-t")
+            assert "Create the code repository" in host.text_content("#pj-check [data-step=repo]")
             assert host.locator("#pj-check [data-step=friend]").count() == 0
             host.wait_for_function("document.body.dataset.stage === 'new' && document.body.dataset.vision === '0'", timeout=5000)
             assert host.evaluate("!document.querySelector('#nest-add') || getComputedStyle(document.querySelector('#nest-add')).display === 'none'"), "+ Add waits for the vision"

@@ -111,7 +111,7 @@
 
   // ---------- media URLs ----------
   const token = () => { try { return (window.TribeStore.get().server || {}).token || ''; } catch { return ''; } };
-  const media = f => { if (!f) return ''; const u = `${C.base()}/api/profile/media/${encodeURIComponent(f)}`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
+  const media = f => { if (!f) return ''; if (/^data:image\//.test(f)) return f; /* offline demo: the picture itself */ const u = `${C.base()}/api/profile/media/${encodeURIComponent(f)}`; return (window.TribeMedia ? window.TribeMedia.url(u) : u); };   // fix/security-2: signed link, not the sign-in key
 
   // ---------- avatars ----------
   // Markup for the inside of an avatar (the caller keeps its own box size).
@@ -309,6 +309,10 @@
       ${acts}
       ${p.bio ? `<section class="pf-sec"><span class="eyebrow">About me</span><div class="pf-bio">${bioHtml(p.bio)}</div></section>` : ''}
       ${links ? `<section class="pf-sec"><div class="pf-links">${links}</div></section>` : ''}
+      ${p.hire ? '<section class="pf-sec"><span class="pf-hire">🛠️ Open to helping other tribes</span></section>' : ''}
+      ${(d.earned || []).length ? `<section class="pf-sec"><span class="eyebrow">Earned</span><div class="pf-chips pf-earned">${d.earned.map(x => `<span class="pf-chip">${esc(x)}</span>`).join('')}</div></section>` : ''}
+      ${(p.skills || []).length ? `<section class="pf-sec"><span class="eyebrow">Good at</span><div class="pf-chips">${p.skills.map(x => `<span class="pf-chip">${esc(x)}</span>`).join('')}</div></section>` : ''}
+      ${p.featured && (p.featured.title || p.featured.url) ? `<section class="pf-sec"><span class="eyebrow">Made</span>${p.featured.url ? `<a class="pf-feat" href="${esc(p.featured.url)}" target="_blank" rel="noopener noreferrer">🎮 ${esc(p.featured.title || p.featured.url)}</a>` : `<span class="pf-feat">🎮 ${esc(p.featured.title)}</span>`}</section>` : ''}
       ${facts ? `<div class="pf-facts">${facts}</div>` : ''}
       ${preview ? '' : `${(d.inCommon || []).length && !d.you ? `<section class="pf-sec"><span class="eyebrow">Projects in common</span><div class="pf-chips">${d.inCommon.map(x => `<span class="pf-chip">${esc(x.name)}</span>`).join('')}</div></section>` : ''}
       ${(d.agents || []).length ? `<section class="pf-sec"><span class="eyebrow">${d.you ? 'Your agents' : 'Their agents'}</span><div class="pf-agents">${d.agents.map(a => { const am = memberOf(a.id) || a; return `<button class="pf-agent" data-pop-agent="${esc(a.id)}">${avatar({ ...am, role: 'agent' }, 'sm')}<span>${esc(a.name)}</span><i class="pf-dot sm" data-state="${esc(stateOf(am))}"></i></button>`; }).join('')}</div></section>` : ''}
@@ -337,7 +341,22 @@
       if (fr) friendSet = new Set(fr.friends || []);
       if (!pop || pop.id !== id) return;
       pop.data = d; draw(); el.focus({ preventScroll: true });
+      earned(id).then(b => { if (pop && pop.id === id && b.length) { pop.data.earned = b; draw(); } });   // badges from real activity
     } catch (e) { if (pop && pop.id === id) el.insertAdjacentHTML('beforeend', `<p class="pf-err">${esc(e.message)}</p>`); }
+  }
+  // ---------- earned badges (feat/badges): counted from real activity, never typed in ----------
+  // Making: saved changes · Shipping: tasks done, proposals that passed · Together: reviews (tasks they moved to done for others)
+  async function earned(id) {
+    const out = [];
+    const [pp, tk, pr] = await Promise.all([C.api(`/people/${encodeURIComponent(id)}?limit=1`).catch(() => null), C.api('/tasks').catch(() => null), C.api('/proposals').catch(() => null)]);
+    const saved = pp && pp.counters ? pp.counters.commits || 0 : 0;
+    const done = ((tk && tk.tasks) || []).filter(t => t.status === 'done' && t.assignee === id).length;
+    const passed = ((pr && pr.proposals) || []).filter(p => p.by === id && p.status === 'approved').length;
+    const tiers = (n, list) => list.filter(([at]) => n >= at).slice(-1)[0];
+    const s1 = tiers(saved, [[1, '💾 First saved change'], [10, '💾 10 saved changes'], [100, '💾 100 saved changes'], [1000, '💾 1,000 saved changes']]); if (s1) out.push(s1[1]);
+    const d1 = tiers(done, [[1, '✅ First task done'], [5, '✅ 5 tasks done'], [25, '✅ 25 tasks done'], [100, '✅ 100 tasks done']]); if (d1) out.push(d1[1]);
+    if (passed) out.push(passed > 1 ? `🗳️ ${passed} ideas approved` : '🗳️ First idea approved');
+    return out;
   }
   async function refreshPop() {
     if (!pop || !pop.data) return;
@@ -441,6 +460,7 @@
       banner: p.banner || null, status: p.status ? { emoji: p.status.emoji || '', text: p.status.text || '', clear: 'keep' } : { emoji: '', text: '', clear: 'never' },
       presence: p.presence || 'online', links: [0, 1, 2].map(i => (p.links || [])[i] ? p.links[i].url : ''), labels: [0, 1, 2].map(i => ((p.links || [])[i] || {}).label || null), tz: p.tz || null,
       nick: (p.nicks || {})[project()] || '', tab: p.avatar ? p.avatar.kind : 'initials', tint: (p.avatar && p.avatar.tint) || 'teal', photoPending: null,
+      skills: (p.skills || []).join(', '), featTitle: (p.featured || {}).title || '', featUrl: (p.featured || {}).url || '', hire: !!p.hire,   // profile-showcase
     };
     const phone = isPhone();
     const el = document.createElement('div'); el.className = 'pf-editor' + (phone ? ' sheet' : ''); el.id = 'pf-editor'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Edit profile');
@@ -459,7 +479,7 @@
     const av = d.tab === 'photo' ? (d.photoPending ? { kind: 'photo-local' } : (d.avatar.kind === 'photo' ? d.avatar : null))
       : d.tab === 'emoji' ? { kind: 'emoji', emoji: d.avatar.emoji || '🔥', tint: d.tint } : d.tab === 'pixel' ? { kind: 'pixel', pixel: d.avatar.pixel || 'flame', tint: d.tint } : null;
     const status = d.status.text || d.status.emoji ? { emoji: d.status.emoji || null, text: d.status.text } : null;
-    return { member: { ...m, name: d.name || m.name }, you: true, profile: { avatar: av && av.kind !== 'photo-local' ? av : null, nameColor: d.nameColor, pronouns: d.pronouns, bio: d.bio, banner: d.banner, links: d.links.map((url, i) => ({ url, label: d.labels[i] })).filter(l => l.url), tz: d.tz, status, presence: d.presence, nicks: d.nick ? { [project()]: d.nick } : {} }, badges: [] };
+    return { member: { ...m, name: d.name || m.name }, you: true, profile: { avatar: av && av.kind !== 'photo-local' ? av : null, nameColor: d.nameColor, pronouns: d.pronouns, bio: d.bio, banner: d.banner, links: d.links.map((url, i) => ({ url, label: d.labels[i] })).filter(l => l.url), tz: d.tz, status, presence: d.presence, nicks: d.nick ? { [project()]: d.nick } : {}, skills: d.skills.split(',').map(x => x.trim()).filter(Boolean).slice(0, 8), featured: d.featTitle || d.featUrl ? { title: d.featTitle, url: d.featUrl } : null, hire: d.hire }, badges: [] };
   }
   function drawEditor() {
     if (!ed) return;
@@ -488,6 +508,10 @@
           <div class="pf-lbl">Links <small class="faint">up to 3</small>${d.links.map((u, i) => `<input class="input pf-link-in" data-link="${i}" maxlength="300" inputmode="url" placeholder="https://" value="${esc(u)}">`).join('')}</div>
           <div class="pf-lbl">Banner<div class="pf-row-sw" role="group" aria-label="Banner"><button type="button" class="pf-sw none ${!d.banner ? 'on' : ''}" data-bn="" aria-label="No banner" title="None"></button>${Object.keys(PALETTE).map(k => sw(k, d.banner && d.banner.color === k, 'data-bn')).join('')}<button type="button" class="btn tonal sm" data-ed="banner">${d.banner && d.banner.image ? 'Change picture' : 'Picture'}</button></div></div>
           <label class="pf-check"><input type="checkbox" id="pf-tz" ${d.tz ? 'checked' : ''}> Show my local time${d.tz ? ` <small class="faint">(${esc(d.tz)})</small>` : ''}</label></section>
+        <section class="pf-ed-sec" data-sec="showcase"><span class="eyebrow">Showcase</span>
+          <label class="pf-lbl">What you're good at <small class="faint">up to 8, separated by commas</small><input class="input" id="pf-skills" maxlength="200" placeholder="pixel art, game feel, JavaScript, music" value="${esc(d.skills)}"></label>
+          <label class="pf-lbl">Something you made <small class="faint">optional</small><input class="input" id="pf-feat-t" maxlength="60" placeholder="Lantern Run, a cozy platformer" value="${esc(d.featTitle)}"><input class="input" id="pf-feat-u" maxlength="300" inputmode="url" placeholder="https:// (a link to play or see it)" value="${esc(d.featUrl)}"></label>
+          <label class="pf-check"><input type="checkbox" id="pf-hire" ${d.hire ? 'checked' : ''}> 🛠️ Open to helping other tribes <small class="faint">(shows a badge on your profile)</small></label></section>
         <section class="pf-ed-sec" data-sec="status"><span class="eyebrow">Status</span>
           <div class="pf-status-row"><input class="input pf-se-in" id="pf-se" maxlength="16" value="${esc(d.status.emoji)}" placeholder="🙂" aria-label="Status emoji"><input class="input" id="pf-st" maxlength="80" value="${esc(d.status.text)}" placeholder="What are you up to?" aria-label="Status text"></div>
           <div class="pf-row-emo">${STATUS_EMOJI.map(x => `<button type="button" class="pf-cell sm" data-se="${x}">${x}</button>`).join('')}</div>
@@ -504,6 +528,8 @@
     if (!ed || !ed.el.contains(e.target)) return;
     const d = ed.draft, t = e.target, v = t.value;
     if (t.id === 'pf-name') d.name = v; else if (t.id === 'pf-nick') d.nick = v; else if (t.id === 'pf-pron') d.pronouns = v;
+    else if (t.id === 'pf-skills') d.skills = v; else if (t.id === 'pf-feat-t') d.featTitle = v; else if (t.id === 'pf-feat-u') d.featUrl = v.trim();
+    else if (t.id === 'pf-hire') d.hire = t.checked;
     else if (t.id === 'pf-bio') { d.bio = v; const n = ed.el.querySelector('#pf-bio-n'); if (n) n.textContent = `${v.length}/300`; }
     else if (t.dataset.link !== undefined) { const i = +t.dataset.link; if (host(v.trim()) !== host(d.links[i] || '')) d.labels[i] = null; d.links[i] = v.trim(); }
     else if (t.id === 'pf-st') { d.status.text = v; if (d.status.clear === 'keep') d.status.clear = 'never'; }
@@ -575,6 +601,7 @@
     const d = ed.draft, btn = ed.el.querySelector('#pf-save'); if (btn) btn.disabled = true;
     const body = {
       nameColor: d.nameColor, pronouns: d.pronouns, bio: d.bio, presence: d.presence, tz: d.tz,
+      skills: d.skills.split(',').map(x => x.trim()).filter(Boolean).slice(0, 8), featured: d.featUrl || d.featTitle ? { title: d.featTitle.trim(), url: d.featUrl } : null, hire: !!d.hire,
       links: d.links.map((url, i) => ({ url, label: d.labels[i] })).filter(l => l.url),
       banner: d.banner ? (d.banner.image ? { image: d.banner.image } : { color: d.banner.color }) : null,
       avatar: d.tab === 'initials' ? { kind: 'initials' } : d.tab === 'emoji' ? { kind: 'emoji', emoji: d.avatar.emoji || '🔥', tint: d.tint } : d.tab === 'pixel' ? { kind: 'pixel', pixel: d.avatar.pixel || 'flame', tint: d.tint } : (d.avatar.kind === 'photo' ? { kind: 'photo' } : { kind: 'initials' }),

@@ -179,3 +179,44 @@
 .dl-row { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); margin-bottom: 8px; font-size: 13.5px; }
 .dl-t { flex: 1; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .coord-body .sec:first-child, .coord-body .hero-card + .sec { margin-top: 0; }
+
+/* ai-panel: the right panel reads as the AI section: a clear header, a color key, color-coded helpers */
+#room-agents { padding: 4px 2px 6px; }
+#room-agents .ra-head { display: flex; align-items: baseline; gap: 8px; padding: 0 8px 6px; }
+#room-agents .ra-t { font-size: 14.5px; font-weight: 700; color: var(--text); }
+#room-agents .ra-n { margin-left: auto; font: 600 11.5px/1 var(--mono, monospace); color: var(--faint); }
+#room-agents .ra-key { display: flex; align-items: center; gap: 5px; padding: 0 8px 8px; font-size: 11px; color: var(--faint); }
+#room-agents .ra-key i { width: 8px; height: 8px; border-radius: 2px; margin-left: 6px; } #room-agents .ra-key i:first-child { margin-left: 0; }
+.ra-key .k-work { background: #38C6B1; } .ra-key .k-review { background: #FABD2F; } .ra-key .k-ask { background: #F26B1D; }
+#room-agents .ra-row { border-left: 3px solid transparent; padding-left: 9px; border-radius: 0 10px 10px 0; }
+#room-agents .ra-row.st-work { border-left-color: #38C6B1; } #room-agents .ra-row.st-work .ra-dot { background: #38C6B1; }
+#room-agents .ra-row.st-review { border-left-color: #FABD2F; } #room-agents .ra-row.st-review .ra-dot { background: #FABD2F; }
+#room-agents .ra-row.st-ask { border-left-color: #F26B1D; } #room-agents .ra-row.st-ask .ra-dot { background: #F26B1D; }
+#room-agents .ra-row.st-idle { border-left-color: #3A4350; }
+#room-agents .ra-row b { font-size: 13.5px; } #room-agents .ra-row span:not(.ra-dot) { font-size: 12.5px; color: var(--muted); }
+/* the panel's × sits in the top corner, level with the AI header, instead of on a row of its own */
+@media (min-width: 821px) { #room-pane .room-head { position: absolute; top: 6px; right: 22px; margin: 0; padding: 0; z-index: 3; } #room-pane { position: relative; } #room-agents .ra-head { padding-right: 40px; } }
+
+/* Your focus (focus.js): what you're on, your part of the code, a prompt for your AI helper, quick actions */
+.room-focus { margin: 0 0 14px; padding: 12px; border: 1px solid #4A3326; border-radius: 14px; background: color-mix(in srgb, #F26B1D 5%, var(--surface)); display: grid; gap: 10px; }
+.room-focus:empty { display: none; }
+.fc-head { display: flex; align-items: center; gap: 8px; padding-right: 30px; }
+.fc-t { font-size: 14.5px; font-weight: 700; color: var(--text); }
+.fc-badge { margin-left: auto; padding: 3px 8px; border: 1px solid #5A4A1F; border-radius: 999px; background: none; color: #FABD2F; font: 600 11.5px/1.2 var(--mono, monospace); cursor: pointer; }
+.fc-now { display: grid; gap: 3px; text-align: left; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: inherit; font: inherit; cursor: pointer; }
+.fc-now:hover { border-color: #3A4350; }
+.fc-now small { font: 600 11px/1 var(--mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: #F2A65A; }
+.fc-now.empty small { color: var(--faint); }
+.fc-now b { font-size: 14px; line-height: 1.35; color: var(--text); }
+.fc-more { font-size: 12px; color: var(--faint); }
+.fc-lane { display: grid; gap: 6px; }
+.fc-k { font: 600 11px/1 var(--mono, monospace); letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
+.fc-areas { display: flex; flex-wrap: wrap; gap: 5px; } .fc-areas code { padding: 3px 7px; border-radius: 6px; background: var(--surface-2, #222833); font-size: 12px; color: #38C6B1; }
+.fc-claim { display: flex; gap: 6px; } .fc-claim .input { flex: 1; min-width: 0; height: 32px; font-size: 13px; }
+.fc-prompt { width: 100%; height: 36px; justify-content: center; font-size: 13.5px; }
+.fc-acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.fc-acts button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 17px; cursor: pointer; }
+.fc-acts button span { font-size: 11.5px; color: var(--muted); }
+.fc-acts button:hover { border-color: #3A4350; background: var(--surface-2, #222833); }
+.fc-acts button span { font-size: 13px; } .fc-claim .btn, .fc-claim .btn.sm { font-size: 13px; }
+.fc-now small.eyebrow, .fc-k.eyebrow { margin: 0; }
