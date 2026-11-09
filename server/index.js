@@ -331,9 +331,11 @@ function loadTasks() {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.created).localeCompare(String(b.created)));
 }
 function saveTask(t) {
+  let was = null; try { const r = store.readMd(taskFile(t)); was = r && r.meta && r.meta.status; } catch {}
   const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t });
   bugs.onTask(t);
   if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
+  if (t.status === 'done' && was && was !== 'done' && askai) try { askai.taskDone(t, 'general'); } catch {}   // agents' finished work in the channel
   return t;
 }
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due, type }) {
@@ -409,7 +411,7 @@ const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, c
   const ag = /^agents-(.+)$/.exec(ch); return !!(ag && P.get(ag[1]) && P.canSee(me, ag[1]));
 } });
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
-const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
+const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), pubCmd: (c, mem, t) => askai && askai.command(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
   channelProject: ch => (P.byChannel(ch) || {}).id || (chans && chans.projectOf(ch)) || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
   canModerate: (mem, msg, ch) => { const pid = (P.byChannel(ch) || {}).id || P.current(); const by = memberById(msg.by); return perms.can(mem, 'chat.moderate', pid) && (!by || perms.outranks(mem, by, pid)); },   // feat/roles
