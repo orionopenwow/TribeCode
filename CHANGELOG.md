@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.23.0 (in progress)
+## v0.23.0
 - **Phones**: the Code view's editor works on phones too (a full-width box with Save and Lock below it).
 - **Edit code in the app**: in Files › Code, open a file and press ✏️ Edit. Save (Ctrl S) writes it and commits it on the checked-out branch with your name and an optional note, and the history updates. Tab indents, Esc cancels.
 - **🔒 Lock a file**: Lock puts your name on it; others (people and AI agents) see it and can't save over it until you unlock. Spectators, guests, secret files (.env, keys) and paths outside the repo can't be edited.
