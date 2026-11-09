@@ -116,7 +116,7 @@
     $$('[data-os]').forEach(a => {
       const x = find(assets, a.dataset.os); if (!x) return;
       a.href = x.browser_download_url;
-      const s = $('span', a); if (s && a.closest('.plats')) s.textContent = x.name.replace(/^TribeCode[_-]?/, '') + ' · ' + Math.round(x.size / 1e6) + ' MB';
+      const s = $('span.mono', a) || $('span:not(.os-ico)', a); if (s && a.closest('.plats')) { const kind = /\.exe$/.test(x.name) ? 'Installer' : /\.dmg$/.test(x.name) ? 'Apple Silicon' : /\.AppImage$/i.test(x.name) ? 'AppImage' : /\.deb$/.test(x.name) ? '.deb package' : /\.rpm$/.test(x.name) ? '.rpm package' : 'Download'; s.textContent = `${kind} · ${Math.round(x.size / 1e6)} MB`; }
     });
     if (NAMES[os]) { const x = find(assets, os); if (x) setMain('Download for ' + NAMES[os], x.browser_download_url, `${v} · ${Math.round(x.size / 1e6)} MB · ${x.name}`); }
     else setMain(null, null, `${v} from GitHub Releases`);
