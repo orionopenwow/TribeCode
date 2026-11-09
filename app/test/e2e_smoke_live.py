@@ -135,7 +135,7 @@ def main():
 
             # ---- shared compute: a quiet helper once the project has a repo and two people ----
             api("/tasks", "POST", {"title": "Light the first lantern"}, token=tok, headers={"X-Project": pid})   # vision + task + repo: the project is going (stage.js)
-            host.click("#nest-overview"); host.wait_for_selector("#room-helpers [data-helper='compute']", timeout=20000)
+            host.click("#nest-overview"); host.wait_for_selector("#room-helpers [data-helper='compute']", state="attached", timeout=20000); host.evaluate("document.querySelector('#helpers-toggle').getAttribute('aria-expanded') === 'false' && document.querySelector('#helpers-toggle').click()")
             host.click("#room-helpers [data-helper='compute']"); host.wait_for_selector("#cmp-toggle")
             host.click("#cmp-toggle"); wait_text(host, ".cmp-list", "Orion")
             assert api("/compute", token=tok)[1]["mine"]["on"] is True

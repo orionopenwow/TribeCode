@@ -231,5 +231,5 @@
 .room-focus { gap: 8px; padding: 10px; }
 .fc-acts { display: flex; gap: 4px; }
 .fc-acts button { flex: 1; flex-direction: row; justify-content: center; padding: 6px 0; font-size: 16px; line-height: 1; border-radius: 8px; }
-.fc-prompt { height: 32px; font-size: 13px; }
+.fc-prompt { height: 32px; font-size: 13px !important; }
 .fc-now { padding: 8px 10px; }
