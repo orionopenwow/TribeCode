@@ -112,7 +112,7 @@ def main():
             # 6. Repo & Tools: repo empty state + standup button top right + the drop zone, wired as before
             wait_text("#pj-repo", "Code repository"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
             assert host.locator("#pj-sf h3 #standup-go").is_visible(), "standup button in the card head"
-            assert host.locator("#pj-context #dropzone").is_visible(), "drop zone moved in"
+            host.wait_for_selector("#pj-context #dropzone", state="visible", timeout=8000)   # drop zone moved in (after the overview settles)
             assert host.evaluate("getComputedStyle(document.querySelector('#pj-context #dropzone')).borderStyle") == "dashed"
             # a redraw keeps the live nodes (they are moved, not copied)
             host.evaluate("document.querySelector('#dropzone').dataset.mark = 'x'")
