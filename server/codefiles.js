@@ -1,5 +1,6 @@
-// Code-aware Files (app/ui/codefiles.js): browse the project's pinned repo read-only — branches, a folder tree, a file
-// viewer, file-name search, recent changes and the repo's Markdown docs. Every route is GET and read-only.
+// Code-aware Files (app/ui/codefiles.js): browse the project's pinned repo — branches, a folder tree, a file viewer,
+// file-name search, recent changes and the repo's Markdown docs (GET), plus, since v0.23, edit + save (a commit) and
+// 🔒 locks for builders (see "edit and lock" below).
 //   GET /api/code                          -> { hasRepo, git, branch, github, name }
 //   GET /api/code/branches                 -> { current, branches: [{ name, current, sha, subject, author, at }] }
 //   GET /api/code/tree?ref=&path=&offset=  -> { ref, path, entries: [{ name, path, type: dir|file|link|module, size? }], total, more }
@@ -30,7 +31,7 @@ function git(cwd, args, { max = 16 << 20, timeout = 15000 } = {}) {
 }
 const txt = b => b.toString('utf8');
 
-module.exports = function codefiles({ P }) {
+module.exports = function codefiles({ P, claims = null, identity = null, member = null, broadcast = () => {} }) {
   const repoOf = () => { const p = P.get(P.current() || P.defaultId()); if (!p || !p.repo) return null; try { return fs.realpathSync(p.repo); } catch { return null; } };
   const cache = new Map();   // key -> { at, v }
   const memo = async (key, ms, fn) => { const h = cache.get(key); if (h && Date.now() - h.at < ms) return h.v; const v = await fn(); cache.set(key, { at: Date.now(), v }); if (cache.size > 200) cache.delete(cache.keys().next().value); return v; };
@@ -216,9 +217,47 @@ module.exports = function codefiles({ P }) {
     return { hasRepo: true, git: g, branch, github, name: path.basename(repo) };
   }
 
-  async function route(req, res, { m, b, me, url, send, fail }) {
+  // ---------- v0.23: edit and lock (the Cursor basics, built in) ----------
+  //   PUT    /api/code/file  { path, text, message? }  builders: write the file on the checked-out branch and commit it
+  //   POST   /api/code/lock  { path }                  🔒 a claim with your name; others (people and agents) can't save over it
+  //   DELETE /api/code/lock?path=                      unlock (yours, or any as host/admin)
+  // A file someone else has locked answers 423 with their name. Secrets, .env and hidden folders can't be written.
+  const canEdit = me => me && me.role !== 'agent' && me.role !== 'spectator' && !me.guest;
+  const lockedBy = (rel, me) => { if (!claims) return null; const ov = (a, b) => a === b || (b.endsWith('/') && a.startsWith(b)) || (a.endsWith('/') && b.startsWith(a)); return claims.list().find(c => c.by !== me.id && ov(rel, c.path)) || null; };
+  let chain = Promise.resolve();
+  const serial = fn => { const p = chain.then(fn, fn); chain = p.catch(() => {}); return p; };
+  async function save(repo, rel, text, msg, me) {
+    if (!rel || SECRET.test(rel.split('/').pop())) throw bad(403, 'that file can\'t be edited here');
+    if (typeof text !== 'string' || text.length > MAX_VIEW) throw bad(413, 'too big to save here (1 MB max)');
+    const lk = lockedBy(rel, me); if (lk) throw bad(423, `${lk.name || 'Someone'} has locked ${lk.path}${lk.note ? ' (' + lk.note + ')' : ''}. Ask them to unlock it.`);
+    const abs = path.join(repo, ...rel.split('/'));
+    const parent = path.dirname(abs); fs.mkdirSync(parent, { recursive: true });
+    const realParent = fs.realpathSync(parent); if (realParent !== repo && !realParent.startsWith(repo + path.sep)) throw bad(400, 'paths stay inside the repo');
+    try { if (fs.lstatSync(abs).isSymbolicLink()) throw bad(403, 'links can\'t be edited here'); } catch (e) { if (e.status) throw e; }
+    return serial(async () => {
+      fs.writeFileSync(abs, text);
+      if (!(await isGit(repo))) return { saved: true, committed: false };
+      await git(repo, ['add', '--', rel]);
+      const who = identity && member ? identity(member(me.id) || me) : [];
+      const r = await git(repo, [...who, 'commit', '-q', '-m', String(msg || `Edit ${rel}`).slice(0, 200) + ' (via TribeCode)', '--', rel]);
+      if (r.code && !/nothing to commit|no changes added/i.test(txt(r.out) + txt(r.err))) throw bad(422, txt(r.err || r.out).slice(0, 200));
+      const h = await git(repo, ['rev-parse', '--short', 'HEAD']);
+      broadcast({ type: 'repo', project: P.current() });
+      return { saved: true, committed: !r.code, sha: txt(h.out).trim() };
+    });
+  }
+  async function route(req, res, { m, b, me, url, send, fail, readBody }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
-    if (m !== 'GET') return fail(res, 405, 'the code view is read-only');
+    if (m !== 'GET') {
+      const repo = repoOf(); if (!repo) return fail(res, 404, 'this project has no repo pinned');
+      if (!canEdit(me)) return fail(res, 403, 'ask the host to make you a builder to edit code');
+      try {
+        if (b === 'file' && m === 'PUT') { const body = await readBody(req); return send(res, 200, await save(repo, clean(body.path), body.text, body.message, me)); }
+        if (b === 'lock' && m === 'POST') { if (!claims) return fail(res, 501, 'locks are off'); const body = await readBody(req); const r = claims.claim(clean(body.path), body.note || 'editing in TribeCode', me); return r.conflict ? fail(res, 423, `${r.conflict.name || 'Someone'} already locked ${r.conflict.path}`) : send(res, 200, r); }
+        if (b === 'lock' && m === 'DELETE') { if (!claims) return fail(res, 501, 'locks are off'); return send(res, 200, { released: !!claims.release(clean(url.searchParams.get('path')), me) }); }
+      } catch (e) { return fail(res, e.status || 500, e.status ? e.message : 'could not save'); }
+      return fail(res, 405, 'not here');
+    }
     const repo = repoOf();
     if (!b) return send(res, 200, repo ? await info(repo) : { hasRepo: false });
     if (!repo) return fail(res, 404, 'this project has no repo pinned');
