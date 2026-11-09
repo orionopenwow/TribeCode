@@ -49,7 +49,13 @@ const makeScratch = require('./scratch');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
-const PORT = Number(args.port || process.env.TRIBE_PORT || 4747);
+const PORT = Number(args.port || process.env.TRIBE_PORT || process.env.PORT || 4747);   // PORT: cloud hosts (Render, Koyeb, Railway) set it
+// Cloud mode (docs/CLOUD.md): a tribe server on a free cloud host. Nobody there is "the host machine", so the first
+// person claims the tribe with a setup code (TRIBE_SETUP_CODE, or one made at start and printed in the logs).
+const CLOUD = !!(process.env.TRIBE_CLOUD || process.env.RENDER || process.env.TRIBE_PUBLIC_URL);
+let SETUP_CODE = String(process.env.TRIBE_SETUP_CODE || '').trim();
+if (CLOUD && !SETUP_CODE) SETUP_CODE = require('node:crypto').randomBytes(9).toString('base64url');
+const setupOk = c => { if (!CLOUD || !SETUP_CODE || typeof c !== 'string') return false; const a = Buffer.from(c.trim()), b = Buffer.from(SETUP_CODE); return a.length === b.length && require('node:crypto').timingSafeEqual(a, b); };
 const HOST = args.host || process.env.TRIBE_HOST || '0.0.0.0';
 const DIR = args.dir || process.env.TRIBE_DIR || path.join(os.homedir(), 'TribeCode');
 const UI = path.resolve(args.ui || process.env.TRIBE_UI || path.join(__dirname, '..', 'app', 'ui'));
@@ -544,7 +550,7 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
     ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
@@ -594,8 +600,10 @@ async function apiInProject(req, res, url) {
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
-    if (!isLocal(req)) return fail(res, 403, 'bootstrap only from the host machine');
-    const body = await readBody(req); const name = str(body.name, 32);
+    if (!isLocal(req) && limited(req, 5)) return fail(res, 429, 'slow down');
+    const body = await readBody(req);
+    if (!isLocal(req) && !setupOk(body.setupCode)) return fail(res, 403, CLOUD ? 'That setup code is not right. It is TRIBE_SETUP_CODE in your hosting dashboard (or printed in the server log).' : 'bootstrap only from the host machine');
+    const name = str(body.name, 32);
     if (!name) return fail(res, 400, 'name required');
     if (body.tribe) { tribe.name = str(body.tribe, 48) || tribe.name; store.writeJSON('.tribe/tribe.json', tribe); }
     const out = newMember({ name, color: body.color, role: 'host' });
@@ -1016,6 +1024,7 @@ function start() {
     console.log(`\n  🔥 TribeCode server v${VERSION}  ·  tribe "${tribe.name}"`);
     console.log(`  Folder:   ${store.root}`);
     console.log(`  Open:     http://localhost:${PORT}`);
+    if (CLOUD) console.log(`  Cloud:    ${share.publicUrl() || 'your cloud address'} · first visitor claims the tribe with setup code ${members.length ? '(already claimed)' : SETUP_CODE}`);
     if (lan) console.log(`  Friends:  http://${lan.address}:${PORT}  (same network, or use Tailscale)`);
     console.log('');
   });

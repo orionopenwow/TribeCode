@@ -78,10 +78,10 @@ def main():
             host.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:false, repo:true}, {pin:true})")
             host.wait_for_selector("#room-next", state="detached", timeout=5000)
             chips = host.locator("#flint .fl-chip").all_text_contents()
-            assert chips == ["Connect my AI", "Capture a note", "What's happening?", "How do invites work?"], chips
+            assert chips == ["Connect my AI", "What's happening?"], chips   # simple right panel: two chips
             assert "leaves it" in host.text_content("#flint .fl-priv")
             # ---- the Helpers row is Flint now
-            host.wait_for_selector("#room-helpers [data-helper='flint']", timeout=40000)
+            host.wait_for_selector("#room-helpers [data-helper='flint']", state="attached", timeout=40000)
             assert "basic mode" in host.text_content("#room-helpers [data-helper='flint']")
             assert "Local model" not in host.text_content("#room-helpers")
 
@@ -139,7 +139,7 @@ def main():
             ph.evaluate("TribeStage.set(TribeProjects.current(), {vision:true, task:true, agent:false, repo:true}, {pin:true})")
             ph.click("#m2-talk-sheet [data-talk='flint']")
             ph.wait_for_selector("#flint-full:not(.hidden) #ff-input", state="visible")
-            assert ph.locator("#flint-full .fl-chip").count() == 4
+            assert ph.locator("#flint-full .fl-chip").count() == 2
             ask(ph, "what's happening?", "here with you", inp="#ff-input")
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "sideways scroll"
             assert ph.evaluate("document.querySelector('#flint-full').scrollWidth <= innerWidth + 1")

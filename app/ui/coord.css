@@ -226,3 +226,10 @@
 .fc-sh.on { border-color: color-mix(in srgb, var(--accent) 55%, var(--edge)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); font-weight: 600; }
 .fc-sh:hover { border-color: var(--edge-pop); }
 .fc-turbo { font-size: 13px; color: var(--amber-ink, var(--amber)); }
+
+/* simpler right panel: Your focus is compact (one slim row of quick actions) */
+.room-focus { gap: 8px; padding: 10px; }
+.fc-acts { display: flex; gap: 4px; }
+.fc-acts button { flex: 1; flex-direction: row; justify-content: center; padding: 6px 0; font-size: 16px; line-height: 1; border-radius: 8px; }
+.fc-prompt { height: 32px; font-size: 13px; }
+.fc-now { padding: 8px 10px; }

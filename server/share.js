@@ -265,7 +265,8 @@ module.exports = function makeShare({ port, log = console.log }) {
 
   process.on('exit', () => { if (state.status === 'on' || child) { try { stop(); } catch {} } });
 
-  const publicUrl = () => (state.status === 'on' && state.url) || null;   // cheap: no CLI calls
+  const CLOUD_URL = String(process.env.TRIBE_PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '').replace(/\/+$/, '');   // cloud mode: the host's own public address
+  const publicUrl = () => CLOUD_URL || (state.status === 'on' && state.url) || null;   // cheap: no CLI calls
   return { route, status, start, stop, lanEntry, publicUrl, INSTALL };
 };
 module.exports.verifiedDownload = verifiedDownload;   // fix/security-2: tests (app/test/security3_test.py)

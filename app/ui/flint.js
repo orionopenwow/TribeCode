@@ -340,13 +340,13 @@
   }
 
   // ---------- view ----------
-  const CHIPS = ['Connect my AI', 'Capture a note', 'What\'s happening?', 'How do invites work?'];
+  const CHIPS = ['Connect my AI', 'What\'s happening?'];   // simple right panel: two, the rest is one question away
   const statusLine = () => (model.online ? `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}` : 'basic mode · no model');
   const privLine = () => {   // qa-pass: say where words actually go (a friend's words go to the host; a cloud model sees what you ask)
     const host = !(window.TribeClient && window.TribeClient.state && window.TribeClient.state().me) || window.TribeClient.state().me.role === 'host';
     if (model.online && model.cloud) return `Flint uses ${model.via || model.model} through the host's key, so what you ask goes to that service. The key never leaves the host.`;
-    if (model.online && model.browser) return 'Flint runs in your browser. Nothing you type here leaves it.';
-    return host ? 'Flint runs on this computer. Nothing you type here leaves it.' : 'Flint runs on the host\'s computer. What you type stays in this tribe.';
+    if (model.online && model.browser) return '🔒 Runs in your browser. Nothing you type here leaves it.';
+    return host ? '🔒 Nothing you type here leaves it.' : '🔒 What you type stays in this tribe.';
   };
   // Early on Flint keeps it simple: a short hello and the next setup steps as nudges. He shows more as the tribe grows.
   const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the code repository', 'repo'] };   // feat/setup-flow: the four setup steps
@@ -355,7 +355,7 @@
     if (lv !== 'going' && st) {   // the next steps are big cards at the top of the panel; Flint just says hi
       return `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> ${lv === 'new' ? 'Pick a step above and I’ll show you where it happens.' : 'Nice start. Ask me anything, or pick the next step above.'}</p></div>`;
     }
-    return `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> I live in this room and get things going.</p>
+    return `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> Ask me anything.</p>
       <div class="fl-chips">${CHIPS.map(c => `<button class="fl-chip" data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
       <p class="fl-priv">${esc(privLine())}</p></div>`;
   }
