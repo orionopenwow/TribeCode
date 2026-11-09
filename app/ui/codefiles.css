@@ -155,3 +155,12 @@
   .cf-menu { left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto; max-height: 75vh; border-radius: 16px 16px 0 0; border-width: 1px 0 0; padding-bottom: env(safe-area-inset-bottom); }
   .cf-menu-list button { padding: 12px; }
 }
+
+/* Edit and lock (v0.23) */
+.cf-ed-wrap { display: grid; gap: 8px; }
+.cf-ed { width: 100%; min-height: 52vh; resize: vertical; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--canvas, #12151A); color: var(--text); font: 13px/1.6 var(--mono, ui-monospace, Menlo, Consolas, monospace); tab-size: 2; white-space: pre; overflow: auto; }
+.cf-ed:focus { outline: none; border-color: var(--accent); }
+.cf-ed-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cf-ed-bar .input { flex: 1; min-width: 180px; }
+.cf-ed-bar small { opacity: .7; font-size: 11px; margin-left: 4px; }
+.cf-ed-warn { padding: 8px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); font-size: 13px; }
