@@ -65,10 +65,12 @@ def frame(i):
                 on=sum(1 for dx,dy in ((1,0),(-1,0),(0,1),(0,-1)) if ap2[xx+dx,yy+dy][3]>0)
                 if ap2[xx,yy][3]==0 and on>=3: ap2[xx,yy]=dark+(255,)
                 elif ap2[xx,yy][3]>0 and on<=1: ap2[xx,yy]=(0,0,0,0)
-    # the outer edge gets one clean dark outline where the arm meets the chair
+    # close horizontal gaps (the chair showing through between two arm pixels), down to the desk edge
     for yy in range(64,90):
-        for xx in range(18,64):
-            if ap2[xx,yy][3]==0 and any(ap2[xx+dx,yy][3]>0 for dx in (1,)) and ap2[xx+1,yy][:3]!=dark: ap2[xx,yy]=dark+(255,)
+        xs=[xx for xx in range(18,64) if ap2[xx,yy][3]>0]
+        if xs:
+            for xx in range(xs[0],xs[-1]+1):
+                if ap2[xx,yy][3]==0: ap2[xx,yy]=(26,20,24,255)
     c.alpha_composite(al)
     c.alpha_composite(top,(21,bob))
     # forearms: shirt sleeves from the shoulders down to the laptop's sides (the hands reach behind the lid)
