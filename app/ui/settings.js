@@ -80,6 +80,7 @@
       ${window.TribeUpdater && window.TribeUpdater.supported() ? row('Download updates in the background', `<button class="toggle set-toggle" role="switch" id="set-bgupdate" aria-label="Download updates in the background" aria-checked="${st.startup.autoUpdate !== false}"><span class="switch"></span></button>`, st.startup.autoUpdate !== false ? 'New versions download quietly. When one is ready, Restart to update opens it in seconds.' : 'You see Update available and choose when to download.') : ''}
       ${C() && C().connected() ? row('Friends can ask my AI', `<select class="input set-select" id="set-askai" aria-label="Friends can ask my AI"><option value="ask">Ask me each time</option><option value="always">Always</option><option value="never">Never</option></select>`, 'When a friend without an AI of their own types @ai, your AI can answer. It uses your subscription, so you decide.') : ''}
       ${C() && C().connected() && window.TribeGitHub ? row('GitHub', '<div id="set-github"></div>', 'Sign in once and everything pushes on its own.') : row('GitHub', '<span class="faint">Start your tribe first (Home › Create your first project), then sign in here.</span>', 'Sign in once and everything pushes on its own.')}
+      ${C() && C().connected() && window.TribeExport ? row('Save a copy', '<button class="btn" id="set-copy">Save a copy</button>', 'Everything you can see here (messages, docs, tasks) as one .zip on this device, so nothing is lost. Your code also lives in the project\'s GitHub repository.') : ''}
       <details class="set-more" id="set-more" ${moreOpen() ? 'open' : ''}><summary><b>More settings</b><small>Connections, chat extras, sign-in, roles, packs and backups</small></summary><!-- qa-qol-2: advanced rows tuck away -->
       ${C() && C().connected() && window.TribeMcpDir ? row('TribeCode MCP', '<button class="btn" id="set-mcp" data-mcpdir-open>Open</button>', 'Use this project inside Claude, ChatGPT, VS Code, Cursor and more. (MCP is the plug AI tools use to talk to TribeCode.)') : ''}
       ${C() && C().connected() && window.TribeChatRich ? row('Chat', '<div id="set-chat"></div>', 'Link previews, GIF search and chat backgrounds.') : ''}
@@ -126,6 +127,18 @@
     const cr = $('#set-crash'); if (cr) cr.onclick = () => { S.set({ crashReports: S.get().crashReports === false }); draw(); };
     if (window.TribeMentions) window.TribeMentions.settingsRow($('#set-pubagents'));
     if (window.TribeMode) { window.TribeMode.picker($('#set-mode')); window.TribeMode.rolePicker($('#set-rolemodes')); }
+    const cp = $('#set-copy'); if (cp) cp.onclick = async () => {
+      cp.disabled = true; cp.textContent = 'Saving…';
+      try {
+        const r = await C().api('/cloud/copy'), E = window.TribeExport;
+        const entries = Object.entries(r.files || {}).map(([k, v]) => [k, v]);
+        entries.push(['README.txt', `A copy of your TribeCode tribe, saved ${r.at}.\nchat/ holds messages (one JSON per line), docs/ the docs, tasks/ the tasks.\nYour code lives in each project's GitHub repository.\n`]);
+        const name = String((C().state().tribe || {}).name || 'tribe').replace(/[^\w -]+/g, '').trim() || 'tribe';
+        const out = await E.save(E.zip(entries, 'application/zip'), `${name} copy ${r.at.slice(0, 10)}.zip`, { desktop: false });
+        toast(out.path ? `Saved to ${out.path}` : 'Saved a copy');
+      } catch (e) { toast(e.message || 'Could not save a copy'); }
+      cp.disabled = false; cp.textContent = 'Save a copy';
+    };
     const rf = $('#set-refresh'); if (rf) rf.onclick = () => { rf.disabled = true; rf.textContent = 'Refreshing…'; (window.TribeSelfHeal && window.TribeSelfHeal.refresh ? window.TribeSelfHeal.refresh() : location.reload()); };
     const hs = $('#set-host'); if (hs) hs.onclick = async () => { hs.disabled = true; await window.TribeApp.setHosting(hs.getAttribute('aria-checked') !== 'true'); draw(); };
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };

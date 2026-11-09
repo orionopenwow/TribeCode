@@ -597,6 +597,7 @@ async function apiInProject(req, res, url) {
     try { const r = cloudsave.restore(await readBody(req, 6_000_000)); reloadAfterRestore(); broadcast({ type: 'project' }); return send(res, 200, { ...r, members: members.length }); }
     catch (e) { return fail(res, e.status || 400, e.message); }
   }
+  if (a === 'cloud' && b === 'copy' && m === 'GET') { if (!need()) return; if (me.role === 'agent') return fail(res, 403, 'people only'); return send(res, 200, cloudsave.copy(me)); }   // Settings › Save a copy
   if (a === 'cloud' && b === 'snapshot' && m === 'GET') {
     if (!need()) return;
     if (!CLOUD) return send(res, 200, { enabled: false });

@@ -56,6 +56,16 @@ def main():
             assert "Excel (.xlsx)" in txt and "Copy for Google Sheets" in txt and "Google Drive" in txt, txt
             with pg.expect_download() as dl: pg.click("#ex-pop .ex-i >> text=Download Excel (.xlsx)")
             assert dl.value.suggested_filename.endswith(".xlsx")
+            # Save a copy: the tribe as one .zip, without member tokens
+            api("/chat/general", "POST", {"text": "keep me safe"}, token=tok)
+            cp = api("/cloud/copy", token=tok)[1]
+            assert any("keep me safe" in v for k, v in cp["files"].items() if k.endswith(".jsonl")), list(cp["files"])[:10]
+            assert not any(k.startswith(".tribe/members") for k in cp["files"]), "no member tokens in a copy"
+            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-copy")
+            with pg.expect_download() as dl2: pg.click("#set-copy")
+            assert dl2.value.suggested_filename.endswith(".zip")
+            import zipfile; zf = zipfile.ZipFile(dl2.value.path()); assert "README.txt" in zf.namelist() and any("keep me safe" in zf.read(n).decode() for n in zf.namelist() if n.endswith(".jsonl"))
+            pg.keyboard.press("Escape")
             # the + menu starts slides
             pg.evaluate("TribeApp.show('chat')"); pg.wait_for_selector("#chat-input", state="visible")
             b.close()
