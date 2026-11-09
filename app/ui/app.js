@@ -313,9 +313,19 @@
   new ResizeObserver(() => { if (!readingHistory) $('#chat-list').scrollTop = 1e9; }).observe($('#chat-list'));
   const PAGE = 100;
   const moreBtn = () => '<button class="chat-more" id="chat-more" type="button">Load earlier messages</button>';
+  // Instant first paint: the last messages this device saw draw at once (faded slightly), then the server's copy replaces them.
+  const chatCacheKey = () => `tribecode.chatcache:${C.base ? C.base() : ''}:${C.project ? C.project() : ''}`;
+  const chatCache = { get() { try { return JSON.parse(localStorage.getItem(chatCacheKey()) || 'null'); } catch { return null; } }, set(m) { try { localStorage.setItem(chatCacheKey(), JSON.stringify(m.slice(-60))); } catch {} } };
+  function paintCachedChat() {
+    const list = $('#chat-list'); if (!list || list.querySelector('.msg')) return;
+    const m = chatCache.get(); if (!m || !m.length) return;
+    list.innerHTML = m.map(chatHtml).join(''); list.classList.add('from-cache'); list.scrollTop = 1e9;
+  }
   async function loadChat() {
+    paintCachedChat();
     try {
       const { messages } = await C.api(`/chat/general?limit=${PAGE}`);
+      $('#chat-list').classList.remove('from-cache'); chatCache.set(messages);
       $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
       $('#chat-list').scrollTop = 1e9;
       for (const it of (C.outbox ? C.outbox() : [])) if (it.kind === 'chat' && it.ch === 'general' && !messages.some(x => x.cid === it.body.cid)) pendingBubble(it.body.text, it.body.cid, C.connected() ? 'sending' : 'waiting');
@@ -400,6 +410,7 @@
     const list = $('#chat-list'); if (list.querySelector('.empty-room')) list.innerHTML = '';
     list.insertAdjacentHTML('beforeend', chatHtml(message));
     if (!readingHistory) list.scrollTop = 1e9;
+    const cm = chatCache.get() || []; cm.push(message); chatCache.set(cm);
   });
   C.on('status', s => {
     const label = { online: 'connected', connecting: 'connecting…', reconnecting: 'reconnecting…', offline: 'local only' }[s.status];

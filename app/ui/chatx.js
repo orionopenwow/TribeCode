@@ -770,17 +770,46 @@
     const H = window.TribeHuddle, ch = cur(), peer = ch === 'general' ? null : dmPeer(ch);
     try {
       if (b.dataset.cb === 'pins') return pinsPanel(b);   // feat/chat2
-      if (b.dataset.cb === 'huddle' && H) return H.inCall() ? H.leave() : H.join();
-      if (b.dataset.cb === 'share' && H) { if (!H.inCall()) await H.join(); return H.share(); }
+      if (b.dataset.cb === 'huddle') {
+        if (!H) return toast('Voice calls are loading. Try again in a moment.', 'warn');
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return toast('This browser can’t do voice calls here. Open TribeCode over https or in the desktop app.', 'warn');
+        return H.inCall() ? H.leave() : H.join();
+      }
+      if (b.dataset.cb === 'share') {
+        if (!H) return toast('Voice calls are loading. Try again in a moment.', 'warn');
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) return toast('Screen sharing works on a computer (Chrome, Edge, Firefox or the desktop app). Phones can join and watch.', 'info');
+        if (!H.inCall()) await H.join(); return H.share();
+      }
       if (b.dataset.cb === 'info') {
         if (peer && window.TribePeople) return window.TribePeople.open(peer.id);
-        const t = $('#panel-toggle'); if (t && document.body.classList.contains('panel-off')) t.click();
+        return infoPanel(b, ch);
       }
     } catch (err) { toast(err.message); }
   });
   // feat/chat2: redraw the decorated header (channel emoji, topic, pinned count)
   function redrawHead() { const h = $('#chat-head'); if (!h) return; const s = h.querySelector('.cb-av'); if (!s) return decorateHead(); s.remove(); const kids = [...(h.querySelector('.cb-tt') || h).childNodes].filter(n => !(n.classList && n.classList.contains('cb-sub'))); h.innerHTML = ''; kids.forEach(k => h.appendChild(k)); }
   document.addEventListener('tribe-channels', () => setTimeout(redrawHead, 0));
+  // Who's here: a small panel from the header's ⓘ (a sheet on phones): the channel, its topic, people and AI helpers, online first.
+  function infoPanel(anchor, ch) {
+    const old = $('#info-panel'); if (old) { old.remove(); return; }
+    const st = C.state(), mem = (st.members || []).slice().sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0) || String(a.name).localeCompare(String(b.name)));
+    const people = mem.filter(m => m.role !== 'agent'), agents = mem.filter(m => m.role === 'agent');
+    const row = m => `<button type="button" class="ip-row" data-who="${esc(m.id)}"><span class="ip-av" style="background:${esc(m.color || '#6C7CFF')}">${esc(String(m.name || '?').slice(0, 1).toUpperCase())}</span><span class="ip-n">${esc(m.name || m.id)}${m.id === (st.me || {}).id ? ' <small>(you)</small>' : ''}</span><span class="ip-st ${m.online ? 'on' : ''}">${m.online ? 'online' : 'away'}</span></button>`;
+    const p = document.createElement('div'); p.id = 'info-panel'; p.className = 'pins-panel info-panel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Who is here');
+    p.innerHTML = `<header><b># ${esc(ch === 'general' ? 'general' : ch)}</b><button type="button" class="pp-x" aria-label="Close">✕</button></header>
+      <div class="ip-body"><span class="eyebrow">People · ${people.filter(m => m.online).length} online</span>${people.map(row).join('') || '<p class="faint">Just you so far.</p>'}
+      ${agents.length ? `<span class="eyebrow">AI helpers</span>${agents.map(row).join('')}` : ''}
+      <button type="button" class="btn sm ip-inv">👋 Invite someone</button></div>`;
+    document.body.appendChild(p);
+    const r = anchor.getBoundingClientRect(), phone = matchMedia('(max-width: 820px)').matches;
+    if (!phone) { p.style.top = (r.bottom + 6) + 'px'; p.style.right = Math.max(12, innerWidth - r.right) + 'px'; }
+    const close = () => { p.remove(); document.removeEventListener('click', outside, true); };
+    const outside = e => { if (!p.contains(e.target) && !anchor.contains(e.target)) close(); };
+    setTimeout(() => document.addEventListener('click', outside, true), 0);
+    p.querySelector('.pp-x').onclick = close;
+    p.querySelector('.ip-inv').onclick = () => { close(); window.TribeApp && window.TribeApp.openInvite && window.TribeApp.openInvite(); };
+    p.querySelectorAll('[data-who]').forEach(x => x.onclick = () => { close(); if (window.TribePeople) window.TribePeople.open(x.dataset.who); });
+  }
   // feat/chat2: Pinned: a panel from the header (a sheet on phones): jump to a message, unpin (host / builders).
   function pinsPanel(anchor) {
     const old = $('#pins-panel'); if (old && anchor) { old.remove(); return; }

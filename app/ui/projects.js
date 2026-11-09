@@ -159,6 +159,8 @@
   }
   async function overviewNow() {
     const el = $('#pj-overview'); if (!el) return;
+    // instant first paint: what this device saw last time draws at once (still), then the fresh data replaces it
+    { const cp = curP(); if (cp && !el.firstElementChild) { let c = null; try { c = localStorage.getItem('tribecode.ovcache:' + cp.id); } catch {} if (c) { el.innerHTML = c; el.classList.add('from-cache'); el.dataset.ovPid = ''; } } }
     const seq = ++ovSeq;   // the latest call wins: an older, slower render never paints over a newer one
     const p = curP();
     if (!p) { stash(); el.innerHTML = ''; return; }
@@ -265,7 +267,8 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       </details>`;
     if (html === lastOv && el.dataset.ovPid === p.id && el.firstElementChild && !el.querySelector('.pj-name-in, .pj-bio-in')) return;   // nothing changed: keep the page as it is (nothing you're using gets replaced)
     lastOv = html; el.dataset.ovPid = p.id;
-    el.innerHTML = html;
+    el.innerHTML = html; el.classList.remove('from-cache');
+    try { localStorage.setItem('tribecode.ovcache:' + p.id, html); } catch {}   // instant first paint next time
     // The standup button/text and the drop zone are wired in app.js: move the live nodes in (stash() moves them back before a redraw).
     const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }

@@ -282,19 +282,24 @@
     </div>
   </section>
 
-  <!-- ================= LEARN: the education side, in plain words ================= -->
+  <!-- ================= LEARN: one compact course panel (site/learn.html is the course) ================= -->
   <section class="learn" id="learn" aria-labelledby="learn-title">
     <div class="wrap">
       <p class="eyebrow mono">// learn as you build</p>
       <h2 id="learn-title">Never coded before? Start here.</h2>
-      <p class="learn__lead">TribeCode teaches while you make. Short, slow-paced guides explain what’s happening in plain words, and Flint answers questions any time. Earn badges as you go.</p>
-      <ol class="learn__path reveal">
-        <li class="learn__card" style="--i:0"><span class="learn__n mono">01</span><span class="learn__e" aria-hidden="true">💡</span><h3>What code is</h3><p>Instructions a computer follows, written in a language it understands. Five minutes, no jargon.</p></li>
-        <li class="learn__card" style="--i:1"><span class="learn__n mono">02</span><span class="learn__e" aria-hidden="true">🧱</span><h3>Your first app</h3><p>From an idea to a working page, one small step at a time, with an AI helper doing the typing.</p></li>
-        <li class="learn__card" style="--i:2"><span class="learn__n mono">03</span><span class="learn__e" aria-hidden="true">🤝</span><h3>Building together</h3><p>Code repositories, saved changes, reviews and taking turns, explained so nobody steps on anyone.</p></li>
-        <li class="learn__card" style="--i:3"><span class="learn__n mono">04</span><span class="learn__e" aria-hidden="true">🗣️</span><h3>Languages, simply</h3><p>HTML, JavaScript, Python, Swift and more: what each is for, in a simple version and a deeper one.</p></li>
-      </ol>
-      <p class="learn__cta"><a class="btn btn--light" href="learn.html">Open the Learn guides</a><a class="btn btn--dark" href="learn.html#quiz">Take the first quiz 🏅</a></p>
+      <div class="lc reveal">
+        <div class="lc-me">
+          <div class="lc-ring" data-learn-ring><b data-learn-pct>0%</b></div>
+          <div><b class="lc-t" data-learn-title>Four short modules · about 45 min</b><span class="lc-s" data-learn-sub>One lesson at a time, in plain words. A quick check at the end of each module earns a badge.</span></div>
+          <a class="btn btn--light lc-go" href="learn.html#m1-0" data-learn-go>Start module 1</a>
+        </div>
+        <ol class="lc-mods">
+          <li data-learn-mod="m1"><a href="learn.html#m1-0"><span class="lc-e">💡</span><span><b>What code is</b><small>4 lessons · 8 min</small></span><em data-learn-st>Start</em></a></li>
+          <li data-learn-mod="m2"><a href="learn.html#m2-0"><span class="lc-e">🧱</span><span><b>Your first app</b><small>6 lessons · 12 min</small></span><em data-learn-st>Start</em></a></li>
+          <li data-learn-mod="m3"><a href="learn.html#m3-0"><span class="lc-e">🤝</span><span><b>Building together</b><small>6 lessons · 10 min</small></span><em data-learn-st>Start</em></a></li>
+          <li data-learn-mod="m4"><a href="learn.html#m4-0"><span class="lc-e">🗣️</span><span><b>Languages, simply</b><small>7 lessons · 15 min</small></span><em data-learn-st>Start</em></a></li>
+        </ol>
+      </div>
     </div>
   </section>
 

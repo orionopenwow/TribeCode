@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.20.0
+
+Faster-feeling and harder to break: everything you do shows at once, nothing is lost offline, and Learn is a real course.
+
+- **Instant messages, never lost**: your message shows the moment you press Send, faint until the server has it. Offline or while the tribe wakes up, it waits in the outbox and sends by itself, exactly once (each message carries an id, so a resend never doubles). Queued messages survive a reload. If one is refused, it says Not sent with Retry
+- **Instant votes**: your vote shows right away and rolls back with a note if it didn't save (task moves were already instant)
+- **Health pill**: quiet when all is well; shows Reconnecting, Waking up the tribe, Offline or "2 waiting to send" when it matters. Tap to try again. The app also reconnects the moment your network comes back
+- **Refresh TribeCode** (Settings › Fix problems): clears the app's stored files and reloads fresh, keeping your sign-in, drafts, unsent messages and the view you were on
+- **Instant first screen**: the dashboard and chat draw at once from what this device saw last, then update in place
+- **Learn is a course**:
+  - Four modules of short lessons, one at a time, with Back and Next (arrow keys work).
+  - A three-question check at the end of each module earns its badge.
+  - Your progress, a ring and badges show in the sidebar.
+  - On the website, Learn is now one compact panel: your progress, a Continue button that picks up at the next unfinished lesson, and the four modules.
+- **Chat header buttons all do something**: ⓘ opens "Who's here" (people and AI helpers, online first, invite). Call and screen share explain kindly when a device can't do them
+- **Start a tribe from a browser**: the join panel offers a free cloud tribe next to the desktop app; docs/WEB-AND-DESKTOP.md lists what's the same and what's desktop-only
+- **Phones**: taps get a soft press instead of the blue flash, and buttons don't select text. Main actions give a tiny haptic tick on Android. The health pill is a chip at the top, and the Learn course stacks into one column
+
 ## v0.19.6
 
 - **Stay signed in**: joining or signing in also saves a secure sign-in cookie that pages can't read. If your browser's storage is cleared (iPhone Safari wipes it after a week away, or you open the tribe at another address), TribeCode signs you straight back in. A made-up cookie signs nobody in, and AI helpers' keys never come back this way

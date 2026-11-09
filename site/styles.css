@@ -1081,3 +1081,20 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 @media (max-width: 1000px) { .learn__path { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .learn__path { grid-template-columns: 1fr; } .learn { padding: 40px 0 16px; } }
 @media (prefers-reduced-motion: reduce) { .js .make__grid.reveal .make__card, .js .learn__path.reveal .learn__card { opacity: 1; transform: none; transition: none; } }
+
+/* Learn: one compact course panel (progress, Continue, four module rows) */
+.lc { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 0; border: 1px solid var(--edge); border-radius: 18px; background: var(--surface); overflow: hidden; }
+.lc-me { display: grid; grid-template-columns: 64px 1fr; grid-template-rows: auto auto; gap: 14px 16px; align-content: center; padding: 26px; border-right: 1px solid var(--edge); }
+.lc-ring { --p: 0; width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(var(--ember) calc(var(--p) * 1%), var(--main, #1D2021) 0); display: grid; place-items: center; }
+.lc-ring b { width: 50px; height: 50px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; color: var(--text); font: 700 14px/1 var(--mono, ui-monospace, monospace); }
+.lc-t { display: block; color: var(--text); font-size: 17px; line-height: 1.3; } .lc-s { display: block; margin-top: 4px; color: var(--muted); font-size: 14.5px; line-height: 1.5; }
+.lc-go { grid-column: 1 / -1; justify-self: start; }
+.lc-mods { list-style: none; margin: 0; padding: 10px; display: grid; gap: 4px; }
+.lc-mods a { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; color: var(--text); text-decoration: none; transition: background .15s; }
+.lc-mods a:hover { background: var(--main, #1D2021); }
+.lc-e { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--main, #1D2021); font-size: 19px; }
+.lc-mods b { display: block; font-size: 15.5px; } .lc-mods small { color: var(--muted); font-size: 13px; }
+.lc-mods em { font-style: normal; font: 600 12.5px/1 var(--mono, ui-monospace, monospace); color: var(--muted); padding: 6px 10px; border: 1px solid var(--edge); border-radius: 999px; }
+.lc-mods li.going em { color: var(--ember); border-color: color-mix(in srgb, var(--ember) 50%, var(--edge)); }
+.lc-mods li.done em { color: #3BD16F; border-color: color-mix(in srgb, #3BD16F 45%, var(--edge)); }
+@media (max-width: 860px) { .lc { grid-template-columns: 1fr; } .lc-me { border-right: 0; border-bottom: 1px solid var(--edge); padding: 20px; } .lc-go { justify-self: stretch; text-align: center; } }

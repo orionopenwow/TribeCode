@@ -91,7 +91,7 @@ def main():
             # what you can make comes before how it works, then Learn, then the features and the network
             ys = pg.evaluate("['#make', '#story', '#learn', '#room', '#host'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
             assert ys == sorted(ys), ys
-            assert pg.locator("#make .make__card").count() == 8 and pg.locator("#learn .learn__card").count() == 4
+            assert pg.locator("#make .make__card").count() == 8 and pg.locator("#learn .lc-mods li").count() == 4
             assert pg.evaluate("parseFloat(getComputedStyle(document.querySelector('h1')).fontSize)") >= 40
             assert pg.evaluate("document.querySelector('h1').getBoundingClientRect().left < 200"), "the hero is left-aligned"
             dl = pg.locator(".hero [data-dl-main]")

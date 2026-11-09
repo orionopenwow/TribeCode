@@ -290,3 +290,6 @@ html { -webkit-tap-highlight-color: transparent; }
   input, textarea, [contenteditable="true"], .msg p, .doc-body, .rt-editor { -webkit-user-select: text; user-select: text; }
 }
 @media (prefers-reduced-motion: reduce) { button:active, .btn:active { transform: none !important; } }
+/* instant first paint: last-seen content shows at once, a touch quieter and not clickable until fresh data lands */
+#chat-list.from-cache, #pj-overview.from-cache { opacity: .78; transition: opacity .2s; }
+#pj-overview.from-cache { pointer-events: none; }
