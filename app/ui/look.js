@@ -167,7 +167,7 @@
   function reTheme() { patchThemes(); if (window.TribeApp && window.TribeApp.applyTheme) window.TribeApp.applyTheme(); else if (T()) T().apply(S.get()); }
 
   // ---------- the Dashboard banner ----------
-  // The cover: a solid palette color, a flat pattern on a color, your picture, or the GitHub repo's social preview
+  // The cover: a solid palette color, a flat pattern on a color, your picture, or the GitHub repository's social preview
   // (fetched and cached by the host, server/look.js). Host and builders get a small "Change cover" button on hover.
   function coverStyle(c) {
     if (!c) return '';
@@ -183,7 +183,7 @@
     if (!style) { if (cur) cur.remove(); return; }
     if (cur && cur.dataset.key === key) return;
     if (cur) cur.remove();
-    const el = document.createElement('div'); el.className = `lk-banner k-${c.kind}`; el.dataset.key = key; el.setAttribute('role', 'img'); el.setAttribute('aria-label', c.kind === 'github' ? `GitHub preview of ${c.repo || 'the repo'}` : 'Project cover');
+    const el = document.createElement('div'); el.className = `lk-banner k-${c.kind}`; el.dataset.key = key; el.setAttribute('role', 'img'); el.setAttribute('aria-label', c.kind === 'github' ? `GitHub preview of ${c.repo || 'the code repository'}` : 'Project cover');
     el.setAttribute('style', style);
     if (can) { el.innerHTML = '<button class="lk-cover-btn" id="lk-cover-btn" type="button">Change cover</button>'; el.querySelector('button').onclick = e => { e.stopPropagation(); open('project'); }; }
     ov.insertBefore(el, ov.firstChild);
@@ -258,7 +258,7 @@
       ${block('Text', 'Font size', seg(t.fontSize || 'm', 'data-tfs', [['s', 'Small'], ['m', 'Default'], ['l', 'Large'], ['xl', 'Larger']]))}</fieldset>`;
     else if (tab === 'project') body = (can ? '' : '<p class="lk-note">The host and builders set a project\'s look.</p>') + `<fieldset ${can ? '' : 'disabled'} class="lk-fs">
       ${block('Theme', `Theme for ${p ? p.name : 'this project'}`, `<div class="lk-themes" role="radiogroup"><button class="lk-chip ${!pl.theme ? 'on' : ''}" data-pth="" role="radio" aria-checked="${!pl.theme}">Everyone's own</button>${(T() ? T().list : []).map(x => `<button class="lk-th ${pl.theme === x.id ? 'on' : ''}" data-pth="${x.id}" role="radio" aria-checked="${pl.theme === x.id}" title="${esc(x.name)}"><span class="th-sw" aria-hidden="true"><i style="background:${x.sw[0]}"></i><i style="background:${x.sw[1]}"></i><b style="background:${x.sw[2]}"></b></span><span>${esc(x.name)}</span></button>`).join('')}</div>`, 'Applies while you are in this project. Anyone can opt out under Just me.')}
-      ${block('Cover', 'Cover above the Dashboard', coverPicker(pid, pl.cover, p), 'A color, a pattern, a wide picture (about 5:1) or your GitHub repo\'s preview.')}</fieldset>`;
+      ${block('Cover', 'Cover above the Dashboard', coverPicker(pid, pl.cover, p), 'A color, a pattern, a wide picture (about 5:1) or your GitHub repository\'s preview.')}</fieldset>`;
     else body = `${block('Accent', 'My highlight color', swatches(m.accent, 'data-macc', true, 'Use the tribe\'s'))}
       ${block('Background', 'My background', bgPicker(m.bg, 'data-mbg', true, 'Use the tribe\'s', true))}
       ${block('Density', 'My spacing', seg(m.density, 'data-mden', [['', 'Tribe\'s'], ['cozy', 'Cozy'], ['compact', 'Compact']]))}

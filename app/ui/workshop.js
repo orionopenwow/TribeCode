@@ -319,7 +319,7 @@
       </div>
       <div class="ws-plan" id="wu-plan"><span class="faint">Checking…</span></div>
       <footer class="ws-m-foot"><span class="ws-safe">${ico('i-check', 14)}Files are copied. Nothing runs or installs.</span><span class="spacer"></span><button class="btn ghost" data-mclose>Cancel</button><button class="btn primary" id="wu-go" disabled>Copy files</button></footer>`
-      : `<div class="ws-empty"><b>No project folder yet</b><span>Workshop items are copied into a project's folder. Start a project from a folder or a repo first.</span></div>`}`, 'ws-use');
+      : `<div class="ws-empty"><b>No project folder yet</b><span>Workshop items are copied into a project's folder. Start a project from a folder or a code repository first.</span></div>`}`, 'ws-use');
     if (!projects.length) return;
     let plan = null, t;
     const check = async () => {
@@ -449,7 +449,7 @@
   async function donateDialog(it) {
     const r = await C.api(`/workshop/items/${it.id}/donate`, { method: 'POST', body: {} });
     const c = modal(`${mhead('Donate to the community', esc(it.title))}
-      <p class="ws-m-lead">The community shelf is a public GitHub repo, <b>${esc(r.repo)}</b>, served to everyone through jsDelivr, a free open-source CDN. Your item goes in as a pull request; the repo checks the license, file types, sizes and sha256 before anyone merges it.</p>
+      <p class="ws-m-lead">The community shelf is a public GitHub repository, <b>${esc(r.repo)}</b>, served to everyone through jsDelivr, a free open-source CDN. Your item goes in as a pull request; the code repository checks the license, file types, sizes and sha256 before anyone merges it.</p>
       <div class="ws-lic"><b>${esc(it.license)}</b><span>${esc(licNote(it.license))} Everyone will be able to use it under this license.</span></div>
       <div class="ws-bundle"><span class="ws-eyebrow">Bundle ready</span><code>${esc(r.bundle.folder)}/</code>${r.bundle.files.slice(0, 6).map(f => `<div><code>${esc(f.path)}</code>${f.size !== undefined ? `<span class="faint">${size(f.size)}</span>` : ''}</div>`).join('')}${r.bundle.files.length > 6 ? `<span class="faint">+${r.bundle.files.length - 6} more</span>` : ''}</div>
       <div class="ws-steps">
@@ -480,16 +480,16 @@
         <div class="ws-hero-band">
           <span class="ws-eyebrow">Community shelf</span>
           <h2>${esc(c.repo || '')}</h2>
-          <p>Open-licensed skills, scripts and assets donated by tribes everywhere. It is a public GitHub repo, served free through jsDelivr. Browsing is read-only; anything you bring in is checked (sha256, size, type) and copied as files.</p>
+          <p>Open-licensed skills, scripts and assets donated by tribes everywhere. It is a public GitHub repository, served free through jsDelivr. Browsing is read-only; anything you bring in is checked (sha256, size, type) and copied as files.</p>
           <div class="ws-hero-meta">${c.available ? `<span class="ok">● reachable</span><span>${c.items.length} item${c.items.length === 1 ? '' : 's'}</span>${c.updated ? `<span>updated ${esc(ago(c.updated))}</span>` : ''}` : `<span class="ws-warn">● ${c.reason === 'missing' ? 'not set up yet' : c.reason === 'offline' ? 'offline' : 'unreadable'}</span>`}</div>
-          <div class="ws-hero-a"><a class="btn ghost" href="https://github.com/${esc(c.repo)}" target="_blank" rel="noopener noreferrer">Open on GitHub</a><button class="btn ghost" id="wc-refresh">Refresh</button>${host ? '<button class="btn ghost" id="wc-repo">Change repo</button>' : ''}</div>
+          <div class="ws-hero-a"><a class="btn ghost" href="https://github.com/${esc(c.repo)}" target="_blank" rel="noopener noreferrer">Open on GitHub</a><button class="btn ghost" id="wc-refresh">Refresh</button>${host ? '<button class="btn ghost" id="wc-repo">Change code repository</button>' : ''}</div>
         </div></section>
       <section class="ws-sec">
         ${c.available ? `<div class="ws-sec-h"><span class="ws-eyebrow">${q || kind ? 'Filtered' : 'On the shelf'}</span><h2>${q ? `Results for “${esc(q)}”` : 'Shared by the community'}</h2></div>
           ${list.length ? `<div class="ws-grid">${list.map(it => card({ ...it, usedIn: [], _community: true }, it.inLibrary ? '<span class="ws-have">in your library</span>' : '', it.previewUrl)).join('')}</div>` : empty('Nothing here yet', 'Be the first: open an item in your library and donate it.')}
           ${c.rejected && c.rejected.length ? `<p class="faint ws-rej">${c.rejected.length} entr${c.rejected.length === 1 ? 'y was' : 'ies were'} skipped because they failed the safety checks.</p>` : ''}`
         : empty(c.reason === 'missing' ? 'No community shelf yet' : 'Could not reach the community shelf', c.reason === 'missing'
-          ? `There is no index at <code>${esc(c.repo)}</code> yet. Create that public repo from <code>templates/workshop-repo/</code> in the TribeCode repo (README, index.json, contribution rules and a check that validates every item), then donate the first item from your library.`
+          ? `There is no index at <code>${esc(c.repo)}</code> yet. Create that public code repository from <code>templates/workshop-repo/</code> in TribeCode’s code repository (README, index.json, contribution rules and a check that validates every item), then donate the first item from your library.`
           : `${esc(c.message || '')}. Your tribe library still works offline.`)}
       </section>`;
     body.querySelector('#wc-refresh').onclick = async () => { comm = await C.api('/workshop/community?refresh=1'); drawCommunity(body); };

@@ -12,7 +12,7 @@
   const NAME = 'website';
   const pid = () => (window.TribeProjects && window.TribeProjects.current()) || (C.project && C.project()) || '';
   const api = (p, o) => C.api(`/projects/${encodeURIComponent(pid())}/website${p || ''}`, o);
-  const SEC = { about: 'About', shots: 'Screens', play: 'Play / Try it', palette: 'Colors', news: "What's new", credits: 'Credits', repo: 'Repo link' };
+  const SEC = { about: 'About', shots: 'Screens', play: 'Play / Try it', palette: 'Colors', news: "What's new", credits: 'Credits', repo: 'Code link' };
   const FIELDS = [['headline', 'Headline', 'input', 80], ['tagline', 'Tagline', 'input', 160], ['about', 'About', 'textarea', 2000], ['footer', 'Footer line', 'input', 160], ['playUrl', 'Play link (optional, https)', 'input', 300]];
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)} min ago`; if (s < 86400) return `${Math.floor(s / 3600)} h ago`; return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
 
@@ -76,7 +76,7 @@
         </section>
         <section class="wb-sec">
           <div class="sec-head"><span class="eyebrow">Publishing</span><h2>Build and keep fresh</h2></div>
-          <button class="toggle wb-auto" id="wb-auto" role="switch" aria-checked="false" ${m ? '' : 'disabled'}><span>Keep it updated automatically<small>Rebuilds when the bio, picture, vision, screenshots, people or commits change${d.inRepo ? '; the repo autopilot commits site/' : ''}.</small></span><span class="switch"></span></button>
+          <button class="toggle wb-auto" id="wb-auto" role="switch" aria-checked="false" ${m ? '' : 'disabled'}><span>Keep it updated automatically<small>Rebuilds when the bio, picture, vision, screenshots, people or saved changes change${d.inRepo ? '; the autopilot commits site/' : ''}.</small></span><span class="switch"></span></button>
           <div class="wb-acts">${m ? '<button class="btn" id="wb-save">Save</button>' : ''}<button class="btn primary" id="wb-build" ${data.canSuggest || m ? '' : 'disabled'}>Build the site</button></div>
           <p class="wb-status" id="wb-status"></p>
           <p class="wb-hint" id="wb-hint"></p>
@@ -147,7 +147,7 @@
   function drawStatus() {
     const s = $('#wb-status'); if (!s) return;
     const b = data.built;
-    s.innerHTML = data.exists && b ? `Built ${esc(ago(b.at))}${b.auto ? ' automatically' : ''} · <code>${esc(data.path)}</code>${data.auto ? ` · <span class="wb-live">auto</span>${data.inRepo && !data.autopilot ? ' (turn on the repo autopilot to commit it)' : ''}` : ''}`
+    s.innerHTML = data.exists && b ? `Built ${esc(ago(b.at))}${b.auto ? ' automatically' : ''} · <code>${esc(data.path)}</code>${data.auto ? ` · <span class="wb-live">auto</span>${data.inRepo && !data.autopilot ? ' (turn on the autopilot to save it to the code)' : ''}` : ''}`
       : `Not built yet. It goes to <code>${esc(data.path)}</code>.`;
     $('#wb-hint').textContent = data.hint || '';
     const a = $('#wb-auto'); if (a) a.setAttribute('aria-checked', String(!!data.auto));

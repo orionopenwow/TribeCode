@@ -18,7 +18,7 @@
     const d = G.draft, can = G.canDraft;
     if (!d) {
       box.innerHTML = `<div class="sec-head"><span class="eyebrow">Design</span><h2>Design it for me</h2></div>
-        <p class="wb-note sg-intro">Pick-up-and-go layouts with real type and a calm palette, filled from your bio, vision, screenshots, commits and team. Nothing goes live until you publish.</p>
+        <p class="wb-note sg-intro">Pick-up-and-go layouts with real type and a calm palette, filled from your bio, vision, screenshots, saved changes and team. Nothing goes live until you publish.</p>
         ${can ? '<div class="wb-acts"><button class="btn primary" id="sg-make">Design it for me</button></div>' : '<p class="wb-note">Spectators can look but not draft.</p>'}`;
       const mk = box.querySelector('#sg-make'); if (mk) mk.onclick = () => run(mk, () => ctx.api('/gen', { method: 'POST', body: {} }), ctx, 'Here is a first draft');
       return;

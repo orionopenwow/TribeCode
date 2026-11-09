@@ -57,10 +57,23 @@
   }
 
   let toastTimer;
-  function toast(msg) {
-    let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
-    t.textContent = msg; t.classList.remove('hidden');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
+  // color-coded toasts: good news green, problems rose, heads-ups amber, everything else teal. Pass a kind, or it's guessed.
+  const TOAST_ICON = { ok: '✓', err: '!', warn: '⚠', info: 'i' };
+  function toastKind(msg) {
+    const m = String(msg).toLowerCase();
+    if (/(could not|couldn't|can't|cannot|failed|error|not saved|refused|denied|offline|didn't|did not|no access|not allowed|too big|is over)/.test(m)) return 'err';
+    if (/(only the host|needs|first\b|waiting|paused|retrying|heads up|careful|expires|ending)/.test(m)) return 'warn';
+    if (/(saved|done|added|approved|shipped|sent|copied|joined|connected|ready|merged|created|deleted|thanks|on\b|published|✓|✅|🎉)/.test(m)) return 'ok';
+    return 'info';
+  }
+  function toast(msg, kind) {
+    let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
+    const k = TOAST_ICON[kind] ? kind : toastKind(msg);
+    t.className = `toast t-${k}`; t.innerHTML = '';
+    const ic = document.createElement('span'); ic.className = 'toast-ic'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = TOAST_ICON[k];
+    const tx = document.createElement('span'); tx.className = 'toast-tx'; tx.textContent = msg;
+    t.append(ic, tx); t.classList.remove('hidden');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), k === 'err' ? 5200 : 3600);
   }
 
   // drop zone
@@ -88,7 +101,7 @@
     const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
     (async () => {
       for (const f of bin) {
-        if (f.size > 8 * 1024 * 1024) { toast(`${f.name} is over 8 MB: put it in the repo instead`); continue; }
+        if (f.size > 8 * 1024 * 1024) { toast(`${f.name} is over 8 MB: put it in the code repository instead`); continue; }
         try { await C.api('/chat/general/file', { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type } }); toast(`${f.name} shared in the chat`); } catch (err) { toast(err.message); }
       }
       if (txt.length) { await window.TribeDocs.importFiles(txt); show('docs'); } else if (bin.length) show('chat');
@@ -99,7 +112,7 @@
   }
 
   // nav + views (the shell: app/ui/shell.js renders the nest, breadcrumbs and menus around these)
-  const VIEWS = { hub: 'Home', home: 'Dashboard', chat: 'Messages', requests: 'Requests', docs: 'Files', tasks: 'Task Board', board: 'Board', bugs: 'Bugs', repo: 'Repo', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
+  const VIEWS = { hub: 'Home', home: 'Dashboard', chat: 'Messages', requests: 'Requests', docs: 'Files', tasks: 'Task Board', board: 'Board', bugs: 'Bugs', repo: 'Code repository', calendar: 'Calendar', visuals: 'Visuals', coord: 'Coordinate' };
   const ALIAS = { overview: 'home', inbox: 'home' };
   let current = 'home';
   function show(view) {

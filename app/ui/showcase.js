@@ -267,8 +267,8 @@
     if ((db().repo || {})[PID]) return;
     db().repo[PID] = { name: 'campfire-crew/lantern-run', branch: 'main', ahead: 0, behind: 0, dirty: 0 }; K().save();
     K().push({ type: 'repo' });
-    say('rio', 'Pinned our repo to Lantern Run, so commits show up on the Repo card now 📌');
-    journal('Rio pinned the repo: campfire-crew/lantern-run.');
+    say('rio', 'Connected our code repository to Lantern Run, so every saved change shows up on the Code card now 📌');
+    journal('Rio pinned the code repository: campfire-crew/lantern-run.');
   }
   function mention(n) {
     const who = pick(['jay', 'rio', 'maya'], n), me = member('me').name.split(' ')[0];
@@ -440,7 +440,7 @@
         <button class="btn sm" id="sc-restart">Restart</button>
       </div>
       <div class="od-acts">
-        ${window.TribeDirector ? '<button id="sc-tour"><svg class="i"><use href="#i-play"/></svg><span>Play the 3-minute tour</span></button>' : ''}<!-- feat/demo-tour -->
+        ${window.TribeDirector ? '<button id="sc-tour"><svg class="i"><use href="#i-play"/></svg><span>Guided tour with Flint</span></button><button id="sc-watch"><svg class="i"><use href="#i-play"/></svg><span>Just watch it play</span></button>' : ''}<!-- feat/demo-tour -->
         <button id="sc-quiet"><svg class="i"><use href="#i-zap"/></svg><span>Explore quietly</span></button>
         <button id="od-real" data-od="real"><svg class="i"><use href="#i-play"/></svg><span>Host this for real</span></button>
         <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave showcase</span></button>
@@ -448,7 +448,8 @@
     pop.querySelector('#sc-play').onclick = () => (sc().paused ? play() : pause());
     pop.querySelectorAll('[data-sc-speed]').forEach(b => b.onclick = () => speed(Number(b.dataset.scSpeed)));
     pop.querySelector('#sc-restart').onclick = () => O().reset();
-    const tour = pop.querySelector('#sc-tour'); if (tour) tour.onclick = () => { K().closePop(); window.TribeDirector.start(); };   // feat/demo-tour
+    const tour = pop.querySelector('#sc-tour'); if (tour) tour.onclick = () => { K().closePop(); window.TribeDirector.start(); };
+    const watch = pop.querySelector('#sc-watch'); if (watch) watch.onclick = () => { K().closePop(); window.TribeDirector.start({ watch: true }); };   // feat/demo-tour
     pop.querySelector('#sc-quiet').onclick = () => { clearTimeout(timer); popOpts.quiet(); };
     pop.querySelector('#od-leave').onclick = () => { clearTimeout(timer); popOpts.leave(); };
   }

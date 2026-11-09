@@ -128,3 +128,6 @@ body.dt-on .sc-cele { bottom: 132px; }
 
 /* while Flint introduces a chapter, his bubble says it: the caption steps aside */
 body.dt-narr .dt-cap { opacity: 0; }
+/* guided tour: your own pointer does the clicking, so the ghost "me" cursor stays out of the way */
+body.dt-guided .dt-cur[data-who="me"] { opacity: 0; }
+body.dt-guided #dt-speed { display: none; }

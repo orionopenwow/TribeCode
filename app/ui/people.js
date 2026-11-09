@@ -201,7 +201,7 @@
     const c = d.counters, bits = [];
     if (d.member.host && c.uptimeSec !== null) bits.push(`<span title="This computer hosts the tribe. Running since ${esc(new Date(c.startedAt).toLocaleString())}" data-up="${esc(c.startedAt)}">up ${span(c.uptimeSec)}</span>`);
     else if (d.presence.online && d.presence.since && !d.member.agent) bits.push(`<span title="Online since ${esc(clock(d.presence.since))}">here ${span((Date.now() - Date.parse(d.presence.since)) / 1000)}</span>`);
-    if (c.commits) bits.push(`<span title="${c.commits} commit${c.commits === 1 ? '' : 's'} in this project${c.commitsToday ? `, ${c.commitsToday} today` : ''}">${c.commitsToday ? `${c.commitsToday} commit${c.commitsToday === 1 ? '' : 's'} today` : `${c.commits} commit${c.commits === 1 ? '' : 's'}`}</span>`);
+    if (c.commits) bits.push(`<span title="${c.commits} saved change${c.commits === 1 ? '' : 's'} in this project${c.commitsToday ? `, ${c.commitsToday} today` : ''}">${c.commitsToday ? `${c.commitsToday} saved change${c.commitsToday === 1 ? '' : 's'} today` : `${c.commits} saved change${c.commits === 1 ? '' : 's'}`}</span>`);
     return bits.length ? `<footer class="pp-foot">${bits.join('<span class="pp-sep">·</span>')}</footer>` : '';
   }
   function render() {
@@ -357,9 +357,9 @@
     if (!status) { el.textContent = ''; return; }
     const up = status.uptimeSec + (Date.now() - statusAt) / 1000;
     const parts = [`<span>up ${span(up)}</span>`];
-    if (status.repo && status.commitsToday) parts.push(`<span>${status.commitsToday} commit${status.commitsToday === 1 ? '' : 's'} today</span>`);
+    if (status.repo && status.commitsToday) parts.push(`<span>${status.commitsToday} saved change${status.commitsToday === 1 ? '' : 's'} today</span>`);
     el.innerHTML = parts.join('<span class="pp-sep">·</span>');
-    el.title = `Host running since ${new Date(status.startedAt).toLocaleString()}${status.repo ? ` · ${status.commitsTotal} commit${status.commitsTotal === 1 ? '' : 's'} in this project` : ''}`;
+    el.title = `Host running since ${new Date(status.startedAt).toLocaleString()}${status.repo ? ` · ${status.commitsTotal} saved change${status.commitsTotal === 1 ? '' : 's'} in this project` : ''}`;
   }
   function statusLine(el) {
     if (!el) return null;

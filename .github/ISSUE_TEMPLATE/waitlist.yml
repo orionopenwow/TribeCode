@@ -7,7 +7,7 @@ body:
     id: plan
     attributes:
       label: Which plan interests you?
-      options: ["Campfire: always-on hosting", "Tribe: AI included for the whole tribe", "Tribe Pro: overnight agents", "School or club pilot", "Studio", "Enterprise", "Not sure yet"]
+      options: ["Hosted: always-on hosting", "Tribe: AI included for the whole tribe", "Tribe Pro: overnight agents", "School or club pilot", "Studio", "Enterprise", "Not sure yet"]
     validations: { required: true }
   - type: input
     id: size

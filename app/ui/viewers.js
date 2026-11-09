@@ -291,7 +291,7 @@
       const url = URL.createObjectURL(new Blob([buf], { type: 'image/png' }));
       img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('not a readable PNG')); i.src = url; });
       URL.revokeObjectURL(url);
-      // an Aseprite / TexturePacker JSON next to it: the listing says so, else try <name>.json beside a repo file
+      // an Aseprite / TexturePacker JSON next to it: the listing says so, else try <name>.json beside a code repository file
       const jsonPath = o.sheet || (o.path ? o.path.replace(/\.png$/i, '.json') : null);
       if (jsonPath) { try { sheet = parseSheet(JSON.parse(new TextDecoder().decode(await bytes(repoUrl(jsonPath))))); } catch {} }
     }
@@ -416,7 +416,7 @@
   }
 
   // =====================================================================
-  // The repo's assets, under the pinned repo hero (Docs on desktop and phones)
+  // The code repository's assets, under the pinned repo hero (Docs on desktop and phones)
   // =====================================================================
   let list = null, listAt = 0, listPid = null, listP = null, showAll = false;
   async function loadAssets(force) {
@@ -438,12 +438,12 @@
     slot.classList.remove('hidden');
     const models = items.filter(a => a.kind === 'model').length, shown = showAll ? items.slice(0, 120) : items.slice(0, 5);
     slot.innerHTML = `<div class="sec-head"><span class="eyebrow">Assets</span><h2>Art &amp; models</h2></div>
-      <p class="vw-alead">${models ? `${models} 3D model${models === 1 ? '' : 's'} · ` : ''}${items.length - models} image${items.length - models === 1 ? '' : 's'} in the repo. View plays sprite sheets and turns models around.</p>
+      <p class="vw-alead">${models ? `${models} 3D model${models === 1 ? '' : 's'} · ` : ''}${items.length - models} image${items.length - models === 1 ? '' : 's'} in the code repository. View plays sprite sheets and turns models around.</p>
       <div class="vw-alist">${shown.map(row).join('')}</div>
       ${items.length > 5 ? `<button class="linkish vw-amore" data-vw-more>${showAll ? 'Show fewer' : `Show all ${r.more ? `${r.assets.length}+` : items.length}`}</button>` : ''}`;
     const more = slot.querySelector('[data-vw-more]'); if (more) more.onclick = e => { e.stopPropagation(); showAll = !showAll; assets(slot); };
   }
-  // the repo hero calls this after every draw: keep one "Assets" section right after it
+  // the code repository hero calls this after every draw: keep one "Assets" section right after it
   if (window.TribeRepoHero && window.TribeRepoHero.onRender) window.TribeRepoHero.onRender((el, { empty }) => {
     let slot = el.nextElementSibling && el.nextElementSibling.classList.contains('vw-assets') ? el.nextElementSibling : null;
     if (empty) { if (slot) slot.remove(); return; }

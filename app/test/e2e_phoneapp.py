@@ -119,6 +119,7 @@ def main():
 
             # ---------- the overview card: stacks, Set it up ----------
             host.evaluate("TribeApp.show('home')")
+            host.wait_for_selector("#pj-more", state="attached", timeout=15000); host.evaluate("document.querySelector('#pj-more').open = true")   # simple-dashboard: under More
             host.wait_for_selector("#pa-card .pa-stack", timeout=15000)
             assert host.locator("#pa-card .pa-stack").count() == 3 and "Recommended" in host.text_content("#pa-card [data-stack='expo']")
             assert host.get_attribute("#pa-card [data-stack='expo']", "aria-checked") == "true"
@@ -184,7 +185,7 @@ def main():
             phone = ph.new_page(); watch(phone, "phone")
             phone.goto(BASE + "/?skipIntro=1")
             phone.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % pid, timeout=15000)
-            phone.evaluate("TribeApp.show('home')")
+            phone.evaluate("TribeApp.show('home')"); phone.wait_for_selector("#pj-more", state="attached", timeout=15000); phone.evaluate("document.querySelector('#pj-more').open = true")
             phone.wait_for_selector("#pa-card .pa-steps", timeout=15000)
             phone.locator("#pa-card").scroll_into_view_if_needed()
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll"

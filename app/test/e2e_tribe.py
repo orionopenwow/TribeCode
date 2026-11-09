@@ -174,7 +174,7 @@ def main():
             host.fill("#np-body", "## Plan\nSave the world at any lit campfire.\n\n## Tasks\n- [ ] Save format\n- [ ] Campfire UI\n")
             host.click("#np-go")
             wait_text(friend, "#prop-list", "Campfire save points")
-            wait_text(friend, "#prop-list", "1 yes")
+            wait_text(friend, "#prop-list", "👍 1")
             assert "You're the host" not in (friend.inner_text(".toast") if friend.locator(".toast").count() else ""), "friend must not be told they're host"
             assert friend.evaluate("(TribeClient.state().tribe || {}).name") == "Campfire Crew"
             shot(friend, "board-live")
@@ -194,7 +194,7 @@ def main():
 
             # ---- vision check by the brain ----
             host.click("#prop-new"); host.fill("#np-title", "Add a battle royale mode"); host.fill("#np-body", "Make it competitive PvP."); host.click("#np-go")
-            wait_text(friend, "#prop-list", "Off-vision")
+            wait_text(friend, "#prop-list", "Off the vision")
             wait_text(friend, "#chat-list", "may conflict with VISION.md")
 
             # ---- docs ----
@@ -262,7 +262,7 @@ def main():
             assert Path(tmp, "docs", "jam-notes.md").exists()
 
             # ---- standup ----
-            host.click('[data-nav="home"]:visible'); host.click("#standup-go")
+            host.click('[data-nav="home"]:visible'); host.wait_for_selector("#pj-more", state="attached"); host.evaluate("document.querySelector('#pj-more').open = true"); host.click("#standup-go")
             wait_text(host, "#standup-text", "Maya: asked for controller support")
             assert list(Path(tmp, "brain").glob("standup-*.md"))
 

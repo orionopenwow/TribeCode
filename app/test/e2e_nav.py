@@ -21,7 +21,7 @@ take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
 CORE = ["Dashboard", "Messages", "Files", "Task Board", "Agents Hub"]
-TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Repo", "Visuals"]
+TASK_TABS = ["📋 Board", "🐞 Bugs", "🗳️ Proposals", "🏁 Milestones", "📅 Calendar", "🌿 Code repository", "📸 Visuals"]
 AGENT_KEYS = ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]   # the Agents Hub shows Dashboard + pinned tabs (feat/agents-dash)
 # tab key -> how to tell its view is on screen
 OPENS = {
@@ -236,7 +236,7 @@ def main():
             host.click("#nest-ws-tasks"); host.wait_for_selector("#wt-roles", timeout=15000)
             host.click("#wt-roles"); host.wait_for_selector("#view-flow-roles:not(.hidden)")
             host.wait_for_function("document.querySelector('#wt-roles').classList.contains('on')")
-            assert tabs(host)[:8] == TASK_TABS + ["Roles"], tabs(host)
+            assert tabs(host)[:8] == TASK_TABS + ["👥 Roles"], tabs(host)
             no_dupes(host)
 
             # ---- phone: the swipe-in panel shows the same four rows, Settings + Invite at the bottom, no overflow

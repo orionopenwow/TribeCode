@@ -166,3 +166,8 @@
   .pf-pres { grid-template-columns: minmax(0, 1fr); }
   .pf-ed-foot .btn { flex: 1; height: 44px; }
 }
+/* profile-showcase */
+.pf-hire { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid #5A3A26; border-radius: 999px; background: #2A2320; color: #F2A65A; font-size: 12.5px; font-weight: 600; }
+.pf-feat { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 10px; color: var(--text); font-size: 13.5px; text-decoration: none; }
+a.pf-feat:hover { border-color: #3A4350; }
+.pf-earned .pf-chip { border-color: #4A3326; color: #F2A65A; }

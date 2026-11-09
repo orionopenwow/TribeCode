@@ -92,7 +92,7 @@
   }
 
   // ---------- Desktop folder: export + keep a copy ----------
-  const STATE = { ok: 'Up to date', 'local-changes': 'Waiting: you changed files there', diverged: 'Waiting: it has its own commits', missing: 'The folder is gone', error: 'Could not update', off: 'Off' };
+  const STATE = { ok: 'Up to date', 'local-changes': 'Waiting: you changed files there', diverged: 'Waiting: it has its own saved changes', missing: 'The folder is gone', error: 'Could not update', off: 'Off' };
   async function folders() {
     const st = await folderStatus(true);
     if (!st) return toast('Connect to your tribe first.');
@@ -100,7 +100,7 @@
     const p = project(), mi = st.mirror || {};
     const card = modal(`<span class="eyebrow">Desktop folder</span><h2>${esc(p.name || 'Project')} on your Desktop</h2>
       <p class="lead">Files land in <code class="fld-path">${esc(st.folder || 'Desktop/TribeCode Projects')}</code></p>
-      ${!st.hasRepo ? '<p class="fld-note">This project has no repo yet, so there is nothing to export.</p>' : `
+      ${!st.hasRepo ? '<p class="fld-note">This project has no code repository yet, so there is nothing to export.</p>' : `
       <div class="fld-sec"><b>Export a copy</b>
         <div class="fld-two"><button class="btn primary" data-exp="files">${ico(I.folder)}<span>Just the files</span></button><button class="btn" data-exp="history"><span>With history</span></button></div>
         <small>Just the files: everything you see, ready to zip or share. With history: a git clone that pushes to GitHub.</small></div>

@@ -1141,7 +1141,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
       <div class="lbl">Huddle</div>
       <div class="huddle"><div class="stack" id="huddle-stack"></div><div class="ht"><b>Orion and Maya talking</b></div><button id="huddle-btn">Join</button></div>
       <div class="lbl">Pinned</div>
-      <button type="button" class="pin-repo" data-v="docs"><span class="pr-ic" data-i="branch"></span><span class="pr-t"><small>Repo</small><b>pixel-quest</b><em>orion/pixel-quest</em></span></button>
+      <button type="button" class="pin-repo" data-v="docs"><span class="pr-ic" data-i="branch"></span><span class="pr-t"><small>Code repository</small><b>pixel-quest</b><em>orion/pixel-quest</em></span></button>
       <div class="nest-ppl"><div class="lbl">In the room</div>
       <div id="people"></div>
       <div id="friends"></div></div>
@@ -1169,7 +1169,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     <div class="views">
       <div class="view on" id="v-chat"><div class="cbar" id="cbar"></div><div class="chat-in"><div id="log" aria-live="polite"></div><div id="typing"></div></div></div>
       <div class="view" id="v-docs"><div class="wrap">
-        <section class="sect"><div class="sect-h"><div><div class="eb">Pinned · living</div><h3>Repo</h3></div><span id="repo-upd"></span></div><div class="hero repo" id="repo"></div></section>
+        <section class="sect"><div class="sect-h"><div><div class="eb">Pinned · living</div><h3>Code repository</h3></div><span id="repo-upd"></span></div><div class="hero repo" id="repo"></div></section>
         <section class="sect"><div class="sect-h"><div><div class="eb">Written as things happen</div><h3>Living notes</h3></div></div><div class="journal" id="notes"></div></section>
         <section class="sect"><div class="sect-h"><div><div class="eb">From people and agents</div><h3>Files <span class="cnt-pill" id="f-count"></span></h3></div></div><div class="chips" id="f-chips"></div><div class="fgrid" id="files"></div></section>
         <section class="sect"><div class="sect-h"><div><div class="eb">Sorted by screen · before / after</div><h3>Screens</h3></div></div><div class="flow" id="flow"></div><div class="panel cmpw" id="cmpw"></div></section>
@@ -1348,7 +1348,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     { id: 'dep', by: 'Claude', ask: 'wants to add <b>howler.js</b> for game audio', short: 'howler.js', detail: "A 7 kB audio library so Jay's music loops cleanly.", meta: `${ic('file', 14)} package.json · 1 new dependency`, state: 'pending' }
   ];
   const repo = { name: 'orion/pixel-quest', last: { sha: '9c41f7a', msg: 'Slime idle animation, 4 frames', by: 'Maya', at: ago(14) },
-    branches: [{ n: 'feat/double-jump', by: 'Claude', tag: 'tests passing', live: true }, { n: 'art/slime-boss', by: 'Maya', tag: 'WIP' }, { n: 'level-2-layout', by: 'Jay', tag: '3 commits' }],
+    branches: [{ n: 'feat/double-jump', by: 'Claude', tag: 'tests passing', live: true }, { n: 'art/slime-boss', by: 'Maya', tag: 'WIP' }, { n: 'level-2-layout', by: 'Jay', tag: '3 saved changes' }],
     activity: [2, 0, 3, 5, 1, 0, 4, 6, 2, 3, 7, 4, 5, 6], updated: false };
   const notes = [
     { at: ago(95), html: '<b>Decided</b>: Level 2 is the Slime Caves. Three rooms, ends with the slime boss.' },
@@ -1443,7 +1443,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $('#huddle-stack').innerHTML = av('Orion') + av('Maya');
     if (!S.pp) renderSide();
   }
-  const TITLES = { chat: ['Chat', 'Orion, Maya, Claude and you'], docs: ['Docs & files', 'Repo, living notes, files and screens'], updates: ['Updates', 'What needs you, and what happened'], tasks: ['Tasks', 'Suggested, in progress, done'], workshop: ['Workshop', 'Tribe library'] };
+  const TITLES = { chat: ['Chat', 'Orion, Maya, Claude and you'], docs: ['Docs & files', 'Code, living notes, files and screens'], updates: ['Updates', 'What needs you, and what happened'], tasks: ['Tasks', 'Suggested, in progress, done'], workshop: ['Workshop', 'Tribe library'] };
   const CTX = { docs: ['plus', 'Upload', () => $('#file').click()], updates: ['spark', 'Ask', () => switchThread('dm:Claude')], tasks: ['plus', 'Suggest', () => { const v = $('#v-tasks'); v.scrollTo({ top: 0, behavior: 'smooth' }); $('#sugg-in').focus(); }],
     workshop: ['plus', 'Add', () => toast('In the real app you add a skill, recipe or asset with an open license.')] };
   // move the section rack between the top bar (Chat) and the bottom tab bar, FLIP-animated so it reads as one object
@@ -1660,7 +1660,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
       repo.branches = repo.branches.filter(b => b.n !== 'feat/double-jump'); repo.activity[repo.activity.length - 1] += 1; repo.updated = true;
       const t = tasks.p.find(x => x.t === 'Fix the double jump'); if (t) { tasks.p = tasks.p.filter(x => x !== t); tasks.d.unshift(t); }
       if (S.view === 'docs') renderDocs(); if (S.view === 'tasks') renderTasks();
-      bot('Claude', { html: `Merged <b>feat/double-jump</b> into main ✓ ${N ? `You said “${N}”, so that's next. I'll put it on a new branch and ask you again.` : 'Thanks! Main is green and the repo card is updated.'}` }, { pre: 400 });
+      bot('Claude', { html: `Merged <b>feat/double-jump</b> into main ✓ ${N ? `You said “${N}”, so that's next. I'll put it on a new branch and ask you again.` : 'Thanks! Main is green and the code repository card is updated.'}` }, { pre: 400 });
       bot('Orion', { html: 'LETS GO 🔥 double jump is in' });
       later(async () => { await wait(1600); addApproval({ id: 'feel', by: 'Claude', ask: N ? 'wants to try your idea on <b>feat/floatier-jump</b>' : 'wants to tune the jump on <b>feat/jump-feel</b>', short: N ? 'feat/floatier-jump' : 'feat/jump-feel', detail: N ? `“${N}”: second-jump gravity 0.8 → 0.65.` : 'Jump height +8% so the second gap feels fair.', meta: `${ic('branch', 14)} player.ts <span class="add">+3</span> −3 <span class="tag live">12 tests passing</span>`, state: 'pending' }); });
     } else if (id === 'merge') {
@@ -2302,7 +2302,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
   const STEPS = [
     { v: 'chat', el: () => desk() ? $('#nest-nav') : $('#seg'), k: 'Sections', t: 'Chat, Docs, Updates, Tasks', p: 'Everything for the project lives behind these. Badges show what is new.' },
     { v: 'chat', el: () => $('#composer .cmp'), k: 'Composer', t: 'Type, attach or talk', p: '+ adds photos and files, proposals and polls, tasks, notes and more. The mic records a voice note; type and it becomes the send arrow.' },
-    { v: 'docs', el: () => $('#repo'), k: 'Docs & files', t: 'A living repo and living notes', p: 'The repo is pinned on top and updates itself. The notes under it write themselves as people act.' },
+    { v: 'docs', el: () => $('#repo'), k: 'Docs & files', t: 'A living code repository and living notes', p: 'The code repository is pinned on top and updates itself. The notes under it write themselves as people act.' },
     { v: 'updates', el: () => $('#needs .appr') || $('#needs'), k: 'Updates', t: 'One-tap approvals', p: 'When Claude needs a human, it lands here. Approve or Deny, with an optional note.' },
     { v: 'tasks', el: () => $('#l-s .tk') || $('#l-s'), k: 'Tasks', t: 'Take it, or give it to Claude', p: 'Suggestions from people and Claude, with who and why. One tap to take one.' }
   ];
@@ -2389,10 +2389,10 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     if (w === 'Jay') { later(async () => { await wait(600); sys("Jay is away. They'll see it later.", false, id); }); return; }
     if (w === 'Claude') {
       if (/\b(merge|push|deploy|delete|remove|drop|force|install|reset|release|ship|rm)\b/i.test(text)) {
-        bot('Claude', { html: "That changes the repo, so I've asked Orion for an OK first." }, { th: id });
+        bot('Claude', { html: "That changes the code repository, so I've asked Orion for an OK first." }, { th: id });
         later(async () => { sys("Waiting for Orion's OK…", false, id); await wait(2400); sys('Orion approved', false, id); });
         bot('Claude', { html: 'Orion said yes. Done ✓ <span style="opacity:.7">(demo)</span>' }, { th: id, pre: 300 });
-      } else bot('Claude', { html: "Sure. I can explain anything in Pixel Quest, draft docs or suggest tasks. Anything that changes the repo needs Orion's OK." }, { th: id });
+      } else bot('Claude', { html: "Sure. I can explain anything in Pixel Quest, draft docs or suggest tasks. Anything that changes the code repository needs Orion's OK." }, { th: id });
       return;
     }
     const arr = DMR[w] || ['👍']; bot(w, { html: arr[(S.dmN - 1) % arr.length] }, { th: id });
@@ -2416,7 +2416,7 @@ h1.hi { margin: 0 0 6px; color: var(--w); font: 800 26px/1.15 'Inter Display', I
     $('#side').innerHTML = `<div class="sd-sec"><div class="sd-l">In the room · <em>4 online</em></div>${hum.map(([w, s]) => `<button type="button" class="sd-p" data-p="${w}"><span class="avw">${av(w)}<i class="${w === 'Jay' ? 'off' : ''}"></i></span><span class="t"><b>${esc(nameOf(w))}${w === 'me' ? ' <span style="color:var(--m);font-weight:400">(you)</span>' : ''}</b><small>${w === 'Jay' ? 'away' : `<span class="on">online</span>${esc(s.slice(6))}`}</small></span></button>`).join('')}</div>
       <div class="sd-sec"><div class="sd-l">Agents</div><button type="button" class="sd-p" data-p="Claude"><span class="avw">${av('Claude')}<i></i></span><span class="t"><b>Claude · Orion</b><small>on feat/double-jump</small></span></button></div>
       <button type="button" class="sd-cc" data-cc>${ic('spark', 18)}Connect your AI</button>
-      <div class="sd-foot">up 3h 12m · 4 commits today</div>`;
+      <div class="sd-foot">up 3h 12m · 4 saved changes today</div>`;
   }
   const PPTABS = ['All', 'Commits', 'Prompts', 'Chat', 'Notes'], PPK = { Commits: 'commit', Prompts: 'prompt', Chat: 'chat', Notes: 'note' };
   function myTimeline() {
@@ -2578,7 +2578,7 @@ Rules: anything that changes main needs a human OK.</pre>`, 'ctxp').style.width 
     const sc = document.createElement('div'); sc.className = 'scrim'; sc.id = 'np-scrim'; sc.style.zIndex = 55; sc.onclick = closeNP;
     const d = document.createElement('div'); d.className = 'np'; d.id = 'np'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'New project');
     d.innerHTML = `<button type="button" class="pp-x np-x" data-npx aria-label="Close">${ic('x', 18)}</button><h3>New project</h3><p>One click. Friends join with a link.</p>
-      <button type="button" class="np-opt pri" id="np-create"><span class="ic">${ic('plus', 20)}</span><span class="t"><b>Create a new project</b><small>A room, an invite link, chat and a GitHub repo</small></span></button>
+      <button type="button" class="np-opt pri" id="np-create"><span class="ic">${ic('plus', 20)}</span><span class="t"><b>Create a new project</b><small>A room, an invite link, chat and a GitHub repository</small></span></button>
       <button type="button" class="np-opt" id="np-join"><span class="ic s">${ic('link', 20)}</span><span class="t"><b>Paste an invite link</b><small>Join a friend's project</small></span></button>`;
     document.body.append(sc, d);
     d.querySelector('[data-npx]').onclick = closeNP;
@@ -2586,7 +2586,7 @@ Rules: anything that changes main needs a human OK.</pre>`, 'ctxp').style.width 
       closeNP(); S.newP = (S.newP || 0) + 1;
       const b = document.createElement('button'); b.className = 'pc newp'; b.textContent = 'NP'; b.setAttribute('aria-label', 'New project'); b.dataset.toast = "Your new project is ready in the real app. The demo stays in Pixel Quest.";
       if (S.newP === 1) $('#rail-new').replaceWith(b);
-      toast('Created: room, invite link, chat and a private GitHub repo (demo).');
+      toast('Created: room, invite link, chat and a private GitHub repository (demo).');
     };
     $('#np-join').onclick = () => {
       $('#np-join').outerHTML = `<form class="np-link" id="np-link"><input id="np-in" placeholder="Paste the link your friend sent" autocomplete="off" aria-label="Invite link"><button class="btn primary">Join</button></form>`;

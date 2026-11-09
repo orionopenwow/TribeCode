@@ -91,7 +91,7 @@ function makeProfiles({ P, store, getMembers, pushPresence, now = () => Date.now
   }
   function full(mid) {
     const p = db[mid] || {};
-    return { ...(brief(mid) || {}), bio: p.bio || '', banner: p.banner || null, links: p.links || [], tz: p.tz || null, presence: p.presence || 'online' };
+    return { ...(brief(mid) || {}), bio: p.bio || '', banner: p.banner || null, links: p.links || [], tz: p.tz || null, presence: p.presence || 'online', skills: p.skills || [], featured: p.featured || null, hire: !!p.hire };
   }
   // presence(): add the profile and the presence state; invisible people look offline to everyone else.
   //   idle = every socket of theirs reported idle (notify.js sends it after 3 quiet minutes or a hidden tab).
@@ -170,6 +170,14 @@ function makeProfiles({ P, store, getMembers, pushPresence, now = () => Date.now
       if (agent && (body.presence === 'dnd' || body.presence === 'invisible')) throw err(400, 'agents can be online or idle');
       body.presence === 'online' ? delete p.presence : p.presence = body.presence;
     }
+    // profile-showcase: skills, one thing you made, and "open to helping other tribes" (the start of Triber)
+    if ('skills' in body) { const out = (Array.isArray(body.skills) ? body.skills : []).map(x => text(x, 24)).filter(Boolean).slice(0, 8); out.length ? p.skills = out : delete p.skills; }
+    if ('featured' in body) {
+      const f = body.featured;
+      if (!f || (!f.title && !f.url)) delete p.featured;
+      else { const u = f.url ? urlOk(String(f.url)) : null; if (f.url && !u) throw err(400, 'the link must start with http:// or https://'); p.featured = { title: text(f.title, 60) || null, url: u || null }; }
+    }
+    if ('hire' in body) { body.hire ? p.hire = true : delete p.hire; }
     if ('links' in body) {
       if (!Array.isArray(body.links)) throw err(400, 'links is a list');
       if (body.links.length > 3) throw err(400, 'up to 3 links');

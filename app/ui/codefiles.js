@@ -1,11 +1,11 @@
 // Code-aware Files (feat/files-code): when the project is code (a pinned repo, or project sense says game / app / site /
 // tool / bot / api / 3d), the project's Files view (#view-docs) gets a three-way switch at the top:
 //   Files  today's view, unchanged (docs.js, the phone Docs hub in mobile2.js)
-//   Code   the repo, read-only (server/codefiles.js): a branch picker (view any branch; nothing is checked out), a lazy
+//   Code   the code repository, read-only (server/codefiles.js): a branch picker (view any branch; nothing is checked out), a lazy
 //          folder tree (a drill-down list on phones), file-name search, a "Recently changed" strip, breadcrumbs and a
 //          viewer with line numbers, light syntax tint, Copy path, Open on GitHub, recent commits, who owns the path
 //          (claims and lanes from /api/coord/ownership) and Ask an agent. The root README renders like on GitHub.
-//   Docs   VISION.md, the project's notes, the living notes journal and the repo's Markdown (root + docs/) in one
+//   Docs   VISION.md, the project's notes, the living notes journal and the code repository's Markdown (root + docs/) in one
 //          searchable list, grouped Vision · Notes · Repo docs. Notes open in the doc editor (Files).
 // The choice is remembered per project. Other projects keep today's view with no switch.
 // Keys (Code and Docs): / focuses search, ↑ ↓ move, Enter opens, ← closes a folder or goes up, → opens a folder, Esc closes the viewer.
@@ -185,14 +185,14 @@
     const pane = $('#cf-pane'); if (!pane) return;
     const p = proj() || {};
     pane.innerHTML = `<div class="cf-code" id="cf-code">
-      <div class="cf-head"><div><span class="eyebrow">Code</span><h2 id="cf-title">${esc(p.name || 'Repo')}</h2></div>
+      <div class="cf-head"><div><span class="eyebrow">Code</span><h2 id="cf-title">${esc(p.name || 'Code')}</h2></div>
         <button class="btn cf-branch" id="cf-branch" aria-haspopup="menu" disabled>${svg(I.git, 16)}<span id="cf-branch-name">…</span>${svg(I.down, 14)}</button></div>
-      <div id="cf-body"><p class="cf-empty">Reading the repo…</p></div></div>`;
+      <div id="cf-body"><p class="cf-empty">Reading the code…</p></div></div>`;
     loadInfo().then(i => {
       if (seg !== 'code' || !$('#cf-code')) return;
       if (!i.hasRepo) {
         $('#cf-branch').remove();
-        $('#cf-body').innerHTML = `<div class="cf-none"><span class="cf-none-ic">${svg(I.git, 30)}</span><b>No repo pinned yet</b><span>Pin a git folder or a GitHub repo and its code shows up here: folders, branches, recent changes.</span><button class="btn primary" data-nav="repo">Set up the repo</button></div>`;
+        $('#cf-body').innerHTML = `<div class="cf-none"><span class="cf-none-ic">${svg(I.git, 30)}</span><b>No code repository yet</b><span>Pin a code folder or a GitHub repository and its code shows up here: folders, branches, recent changes.</span><button class="btn primary" data-nav="repo">Set up the code repository</button></div>`;
         return;
       }
       if (!ref) ref = i.branch || '';
@@ -202,7 +202,7 @@
         <label class="cf-search">${svg(I.search, 18)}<input id="cf-q" placeholder="Find a file" autocomplete="off" spellcheck="false" aria-label="Find a file by name" value="${esc(q)}"><kbd>/</kbd></label>
         <div class="cf-recent" id="cf-recent" aria-label="Recently changed"></div>
         <div class="cf-split">
-          <nav class="cf-nav" aria-label="Files in the repo"><div class="cf-crumbs" id="cf-crumbs"></div><div class="cf-tree" id="cf-tree" role="tree" tabindex="-1"></div></nav>
+          <nav class="cf-nav" aria-label="Files in the code repository"><div class="cf-crumbs" id="cf-crumbs"></div><div class="cf-tree" id="cf-tree" role="tree" tabindex="-1"></div></nav>
           <section class="cf-view" id="cf-view" aria-live="polite"></section>
         </div>`;
       const inp = $('#cf-q'); let t = null;
@@ -250,7 +250,7 @@
         let h = '';
         for (const e of f.entries) { h += row(e, depth); if (e.type === 'dir' && open.has(e.path)) h += walk(e.path, depth + 1); }
         if (f.more) h += `<button class="cf-more" data-more="${esc(path)}" style="--d:${depth}">Show more (${f.total - f.entries.length} left)</button>`;
-        if (!f.entries.length && !depth) h += '<p class="cf-empty">This repo is empty.</p>';
+        if (!f.entries.length && !depth) h += '<p class="cf-empty">This code repository is empty.</p>';
         return h;
       };
       html = walk('', 0);
@@ -379,7 +379,7 @@
         : f.binary ? `<div class="cf-none"><b>Not a text file</b><span>${esc(fsize(f.size))} of binary data, like a picture or a build.</span></div>`
         : !f.text ? '<p class="cf-empty">This file is empty.</p>'
         : f.md && !f.source ? `<div class="cf-rd-body md">${window.TribeMD.render(f.text)}</div>` : codeBlock(f.text, LANG[extOf(f.path)])}</div>
-      ${f.commits && f.commits.length ? `<section class="cf-log"><span class="eyebrow">History</span><h3>Recent commits</h3>${f.commits.map(c => `<div class="cf-commit"><code>${esc(c.sha)}</code><span><b>${esc(c.subject)}</b><small>${esc(c.author)} · ${esc(ago(c.at))}</small></span></div>`).join('')}</section>` : ''}
+      ${f.commits && f.commits.length ? `<section class="cf-log"><span class="eyebrow">History</span><h3>Recent saved changes</h3>${f.commits.map(c => `<div class="cf-commit"><code>${esc(c.sha)}</code><span><b>${esc(c.subject)}</b><small>${esc(c.author)} · ${esc(ago(c.at))}</small></span></div>`).join('')}</section>` : ''}
     </div>`;
     $('#cf-close').onclick = closeFile;
     $('#cf-copy').onclick = () => copy(f.path);
@@ -395,7 +395,7 @@
   async function branchMenu(anchor) {
     closeMenus();
     const w = document.createElement('div'); w.className = 'cf-menu-wrap'; w.id = 'cf-branches';
-    w.innerHTML = `<div class="cf-menu" role="menu" aria-label="Branches"><div class="cf-menu-h"><b>Branches</b><small>Pick one to look around. Nothing changes in the repo.</small></div><div class="cf-menu-list"><p class="cf-empty">Loading…</p></div></div>`;
+    w.innerHTML = `<div class="cf-menu" role="menu" aria-label="Branches"><div class="cf-menu-h"><b>Branches</b><small>Pick one to look around. Nothing changes in the code repository.</small></div><div class="cf-menu-list"><p class="cf-empty">Loading…</p></div></div>`;
     document.body.appendChild(w);
     if (!isPhone()) { const r = anchor.getBoundingClientRect(), m = w.firstElementChild; m.style.top = `${r.bottom + 6}px`; m.style.left = `${Math.max(12, Math.min(innerWidth - 372, r.right - 360))}px`; }
     w.onclick = e => { if (e.target === w) closeMenus(); };
@@ -446,7 +446,7 @@
       { group: 'Vision', kind: 'vision', id: 'vision', title: 'VISION.md', sub: first(vlines.join('\n')) || 'What you are building, in a few lines.', icon: I.star, text: d.vision },
       ...d.notes.map(n => ({ group: 'Notes', kind: 'note', id: n.slug, title: n.title || n.slug, sub: `${n.words || 0} words · ${ago(n.updated)}`, icon: I.note })),
       { group: 'Notes', kind: 'journal', id: 'journal', title: 'Living notes', sub: d.journal.length ? `${d.journal.length} moments from chat` : 'Decisions and files from chat collect here.', icon: I.journal },
-      ...d.repo.map(f => ({ group: 'Repo docs', kind: 'repo', id: f.path, title: f.path.split('/').pop(), sub: f.path, icon: I.doc })),
+      ...d.repo.map(f => ({ group: 'Docs in the code', kind: 'repo', id: f.path, title: f.path.split('/').pop(), sub: f.path, icon: I.doc })),
     ];
   }
   function drawDocs() {
@@ -496,7 +496,7 @@
   function drawReader() {
     const el = $('#cf-dview'); if (!el) return;
     el.classList.toggle('open', !!reading);
-    if (!reading) { el.innerHTML = isPhone() ? '' : `<div class="cf-hint">${svg(I.doc, 26)}<b>Pick a doc to read it</b><span>Notes open in the editor. Repo docs and the vision open right here.</span></div>`; return; }
+    if (!reading) { el.innerHTML = isPhone() ? '' : `<div class="cf-hint">${svg(I.doc, 26)}<b>Pick a doc to read it</b><span>Notes open in the editor. Docs in the code and the vision open right here.</span></div>`; return; }
     const r = reading, d = docsData || { vision: '', journal: [] };
     const p = proj() || {}, host = me().role === 'host';
     let title = '', sub = '', body = '', acts = '';
@@ -511,7 +511,7 @@
       body = d.journal.length ? `<div class="cf-journal">${d.journal.slice(0, 60).map(n => `<div class="cf-je"><small>${esc(ago(n.at))}</small><p>${nameOf(n.by) ? `<b>${esc(nameOf(n.by))}</b> ` : ''}${md(n.text)}</p></div>`).join('')}</div>`
         : '<div class="cf-none"><b>Nothing yet</b><span>Decisions, voice notes, approvals and files from chat collect here.</span></div>';
     } else {
-      const parts = r.id.split('/'); title = parts.pop(); sub = parts.join(' / ') || 'repo root';
+      const parts = r.id.split('/'); title = parts.pop(); sub = parts.join(' / ') || 'top folder of the code';
       body = r.loading ? '<p class="cf-empty">Opening…</p>' : r.error ? `<p class="cf-empty">${esc(r.error)}</p>` : `<div class="cf-rd-body md">${window.TribeMD.render(r.text)}</div>`;
       acts = `<button class="btn" id="cf-dcode">${svg(I.git, 15)}Show in Code</button>`;
     }

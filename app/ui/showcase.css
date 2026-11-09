@@ -55,3 +55,9 @@
   .sc-cele .btn { order: 3; flex: 1 1 100%; }
   .sc-mile { margin: 0 0 14px; padding: 14px; }
 }
+
+/* the milestone card reads as good news: green edge, green mark, a little bigger */
+.sc-cele { border-left: 4px solid #3BD16F; box-shadow: 0 12px 32px rgba(0, 0, 0, .45); padding: 16px 14px 16px 16px; }
+.sc-cele-mark { background: color-mix(in srgb, #3BD16F 14%, var(--surface)); border-color: #2D5A3D; color: #3BD16F; width: 40px; height: 40px; font-size: 20px; }
+.sc-cele-t .eyebrow { color: #3BD16F; }
+.sc-cele-t b { font-size: 16px; }

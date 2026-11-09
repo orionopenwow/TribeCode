@@ -39,7 +39,7 @@
     const link = g.link && g.link !== '#repo' ? `<a class="gx-link" href="${esc(g.link)}" target="_blank" rel="noopener noreferrer">${/compare|commit/.test(g.link) ? 'View diff' : 'Open link'}</a>`
       : g.link === '#repo' ? '<button class="gx-link linkish" data-gx-repo>Open in Repo</button>' : '';
     return `<article class="gx k-${esc(g.kind)}${feed ? ' feed' : ''}" data-gist="${esc(g.id)}" style="--rc:${esc(role ? role.hex : 'var(--edge-pop)')}">
-      <header><span class="gx-kind">${ico(k.ico)}${k.label}</span>${feed ? `<span class="gx-by">${role ? '<i class="rdot"></i>' : ''}${esc(g.byName)}</span><time>${esc(when(g.at))}</time>` : (role ? roleChip(role) : '')}${g.auto ? '<span class="gx-auto" title="Written by TribeCode from the commits">from commits</span>' : ''}</header>
+      <header><span class="gx-kind">${ico(k.ico)}${k.label}</span>${feed ? `<span class="gx-by">${role ? '<i class="rdot"></i>' : ''}${esc(g.byName)}</span><time>${esc(when(g.at))}</time>` : (role ? roleChip(role) : '')}${g.auto ? '<span class="gx-auto" title="Written by TribeCode from the saved changes">from saved changes</span>' : ''}</header>
       <h4>${esc(g.title)}</h4>
       ${g.bullets && g.bullets.length ? `<ul>${g.bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
       ${files.length || link ? `<footer>${files.length ? `<button class="gx-files" aria-expanded="false">${ico('i-folder')}${files.length === 1 ? '1 file' : `${files.length} files`}</button>` : ''}${link}</footer>

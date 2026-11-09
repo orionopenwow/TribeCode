@@ -217,7 +217,7 @@ def main():
                 page.keyboard.press("Escape"); page.wait_for_selector("#person-panel", state="hidden")
                 page.evaluate("TribePeople.statusLine(document.body.appendChild(Object.assign(document.createElement('div'), { id: 'pp-test' })))")   # desktop shows no uptime line; the helper still works
                 page.wait_for_function("(document.querySelector('#pp-test') || {}).innerText?.includes('up ')")
-                st = page.inner_text("#pp-test"); assert "2 commits today" in st, st
+                st = page.inner_text("#pp-test"); assert "2 saved changes today" in st, st
                 page.evaluate("TribePeople.statusLine(document.body.appendChild(document.createElement('div')))")
                 page.close()
 

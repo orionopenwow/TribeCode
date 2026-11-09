@@ -195,7 +195,7 @@ def main():
             host.wait_for_selector('#cf-dlist [data-doc-kind="vision"]')
             host.wait_for_selector('#cf-dlist [data-doc="repo|docs/GUIDE.md"]')
             groups = host.eval_on_selector_all("#cf-dlist .cf-group", "els => els.map(e => e.textContent)")
-            assert groups == ["Vision", "Notes", "Repo docs"], groups
+            assert groups == ["Vision", "Notes", "Docs in the code"], groups
             host.fill("#cf-dq", "guide")
             assert host.locator("#cf-dlist [data-doc]").count() == 1
             host.keyboard.press("Enter")

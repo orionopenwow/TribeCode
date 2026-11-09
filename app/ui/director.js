@@ -132,14 +132,14 @@
   // ======================================================================================================
   // The clock: virtual time that runs at 1x / 2x (or very fast for tests) and stops while paused
   // ======================================================================================================
-  let vt = 0, lastReal = 0, speedN = 1, paused = false, running = false, token = 0, loopT = null, fast = false, narrating = false, quiet = false;
+  let vt = 0, lastReal = 0, speedN = 1, paused = false, running = false, token = 0, loopT = null, fast = false, narrating = false, quiet = false, guided = false;
   // feat/calm-tour: 1x is a calm pace (the scripted chapters run at 0.7 of their old speed), and the clock stops while
   // Flint introduces a chapter, so nothing moves underneath him while you read
   const PACE = 0.7;
   let waiters = [];
   function loop() {
     const now = performance.now();
-    if (running && !paused && !narrating) vt += (now - lastReal) * speedN * (fast ? 1 : PACE);
+    if (running && !paused && !narrating) vt += (now - lastReal) * speedN * (fast ? 1 : guided ? 1.25 : PACE);
     lastReal = now;
     if (waiters.length) { const due = waiters.filter(w => w.at <= vt); if (due.length) { waiters = waiters.filter(w => w.at > vt); due.forEach(w => w.res()); } }
     paintTime();
@@ -270,7 +270,7 @@
   // The scenes (dur: desktop ms; pdur: the phone cut, phones play only scenes that have one)
   // ======================================================================================================
   const SCENES = [
-    { id: 'start', title: 'Start a project', flint: ["#pj-plus, #hpt-brand", "Hi, I'm Flint, your guide. Let's start a project together. This + makes one, and a short checklist sets it up with you."], cap: 'Start a project. A short checklist sets it up with you.', dur: 12000, async run() {
+    { id: 'start', title: 'Start a project', flint: ["#pj-plus, #hpt-brand", "Hi, I'm Flint. Let's build an app together, one step at a time. First, click the + to start a new project."], after: "Done: “Firefly Garden” is a new project. The checklist sets it up with you, one step at a time.", cap: 'Start a project. A short checklist sets it up with you.', dur: 12000, async run() {
       closeModals();
       await wait(600);
       const plus = $('#pj-plus');
@@ -289,7 +289,7 @@
       const steps = document.querySelectorAll('#pj-check [data-step]');
       for (const s of steps) { await move('me', s, 500, { dx: 0.12 }); await wait(420); }
     } },
-    { id: 'vision', title: 'Write the vision', flint: ["#pj-check, #pj-overview", "First, say what you're making. Everyone, and every agent, reads the vision before they build."], cap: 'Say what you’re making. Everyone, and every agent, reads it.', dur: 13000, async run() {
+    { id: 'vision', title: 'Write the vision', flint: ["#pj-check [data-ck=\"vision\"], #pj-check", "Every project starts with what you're making. Click here to write the vision."], after: "Now everyone, and every AI helper, knows the plan: a cozy garden game that plays on a phone.", cap: 'Say what you’re making. Everyone, and every agent, reads it.', dur: 13000, async run() {
       if (C().project() !== NEWID) await inProject(NEWID);
       if (view() !== 'home') A().show('home');
       const b = await waitFor('#pj-check [data-ck="vision"]', 3000);
@@ -307,7 +307,7 @@
       check('vision saved', !!(db().vision || {})[NEWID]);
       await settle('#pj-check [data-step="vision"].on', 'vision ticked', 3000);
     } },
-    { id: 'friends', title: 'Friends join', flint: ["#pj-check, #pj-overview", "Friends join with one link, no account. Watch the checklist fill in as they arrive and bring the first tasks."], cap: 'Friends join with one link. Their agents bring the first tasks.', dur: 11000, async run() {
+    { id: 'friends', title: 'Friends join', flint: ["#tour-invite, #pj-check", "Building is better with friends. Click Invite: friends join with one link, no account needed."], after: "Maya and Jay joined, added a first task and set up the code repository. Next, let's look at a project that's further along.", cap: 'Friends join with one link. Their agents bring the first tasks.', dur: 11000, async run() {
       if (C().project() !== NEWID) await inProject(NEWID);
       if (view() !== 'home') A().show('home');
       const p = db().projects.find(x => x.id === NEWID);
@@ -326,7 +326,7 @@
       if (window.TribeProjects) await window.TribeProjects.overview();
       await wait(1400);
       db().repo = db().repo || {}; db().repo[NEWID] = { name: 'campfire-crew/firefly-garden', branch: 'main', ahead: 0, behind: 0, dirty: 0 }; K().save(); K().push({ type: 'repo' });
-      say('jay', 'Pinned the repo too 📌', NEWID);
+      say('jay', 'Set up the code repository too 📌', NEWID);
       if (window.TribeProjects) await window.TribeProjects.overview();
       await settle('#pj-check.done', 'checklist all set', 3000);
       await wait(1200);
@@ -337,7 +337,7 @@
       where('maya', 'Tasks'); where('jay', 'Docs · Art direction');
       if (view() !== 'home') A().show('home');
     } },
-    { id: 'context', title: 'Add context', flint: ["#dropzone", "Drop notes, docs or pictures here. They land in Files, and the agents and I read them."], cap: 'Drop in docs, notes or images. Flint and the agents read them.', dur: 11000, async run() {
+    { id: 'context', title: 'Add context', flint: ["#dropzone", "Have notes or pictures? Click here to add a file to the project."], after: "The notes became a doc in Files. AI helpers read it before they build.", cap: 'Drop in docs, notes or images. Flint and the agents read them.', dur: 11000, async run() {
       if (C().project() !== PID) await inProject(PID);
       if (view() !== 'home') A().show('home');
       const dz = await waitFor('#dropzone', 3000);
@@ -358,7 +358,7 @@
       await waitFor(() => view() === 'docs' && document.body, 3000);
       await settle(() => [...document.querySelectorAll('#view-docs *')].find(e => e.children.length === 0 && /playtest/i.test(e.textContent)), 'the doc is in Files', 3000);
     } },
-    { id: 'chat', title: 'Messages', flint: ["#nest-chat, #tabbar [data-nav=\"chat\"]", "This is Messages: friends and their agents in one chat. Type @claude and an agent answers."], cap: 'Chat with friends and agents in one place. @claude answers.', dur: 14000, pdur: 14000, async run() {
+    { id: 'chat', title: 'Messages', flint: ["#nest-chat, #tabbar [data-nav=\"chat\"]", "Let's talk to the team. Click Messages."], after: "You asked Claude, an AI helper, for checkpoint flags, and it answered. Friends and AI helpers share one chat.", cap: 'Chat with friends and agents in one place. @claude answers.', dur: 14000, pdur: 14000, async run() {
       await go('chat');
       await settle('#chat-list', 'chat open');
       if (!phone()) { const m = cursor('maya'), j = cursor('jay'); m.x = innerWidth * 0.75; m.y = innerHeight * 0.3; j.x = innerWidth * 0.4; j.y = innerHeight + 30; place(m); place(j); }
@@ -383,7 +383,7 @@
       if (D()) { const t = (db().tasks[PID] || []).find(x => x.status === 'doing') || (db().tasks[PID] || [])[0]; if (t) D().gist(t.id, t.assignee && member(t.assignee) && member(t.assignee).role === 'agent' ? t.assignee : 'claude-maya', 1); }
       if (!phone()) await move('maya', $('#chat-list'), 800, { dx: 0.5, dy: 0.85 });
     } },
-    { id: 'tasks', title: 'Task Board', flint: ["#nest-ws-tasks, #tabbar [data-nav=\"tasks\"]", "The Task Board. Make a task, an agent picks it up, a friend reviews it, and it moves to Done."], cap: 'Make a task. An agent picks it up, a friend reviews, it’s done.', dur: 14000, pdur: 14000, async run() {
+    { id: 'tasks', title: 'Task Board', flint: ["#nest-ws-tasks, #tabbar [data-nav=\"tasks\"]", "Click Task Board to see the plan as cards."], after: "A new task went on the board, an AI helper picked one up, and Maya checked it and moved it to Done.", cap: 'Make a task. An agent picks it up, a friend reviews, it’s done.', dur: 14000, pdur: 14000, async run() {
       dropCursor('jay');
       await go('tasks');
       await settle('#board [data-col]', 'board open');
@@ -429,7 +429,7 @@
       check('card moved to Done', !!id2 && !!(await waitFor(`#board [data-col="done"] .task[data-id="${id2}"]`, 2500)));
       if (id2) say('maya', 'Reviewed and merged ✅');
     } },
-    { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents", "The Agents Hub shows every agent at work, each in its own lane, so nobody steps on anyone. Hand-offs take one click."], cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
+    { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents", "Click Agents Hub to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
       dropCursor('maya');
       await go('agents');
       await settle('#ad-hero .ad-agent', 'agents at work');
@@ -447,7 +447,7 @@
       T.channel.push({ id: 'c-' + K().rid(5), by: 'claude', to: 'claude-maya', text: 'Got it. Claiming src/levels/fog.js now.', at: iso() }); K().save();
       await wait(800); refresh();
     } },
-    { id: 'flint', title: 'Ask Flint', flint: ["#fl-input, #flint", "That's me down here. Ask me what's happening, or say \"task \u2026\" or \"note: \u2026\" and I'll do it."], cap: 'Flint, the built-in helper, answers and shows you where things are.', dur: 11000, async run() {
+    { id: 'flint', title: 'Ask Flint', flint: ["#fl-input, #flint", "This is where you can ask me things. Click the Ask Flint box."], after: "I can catch you up, add tasks and notes, write docs, sheets and slides, and show you where things are.", cap: 'Flint, the built-in helper, answers and shows you where things are.', dur: 11000, async run() {
       if (view() !== 'tasks') A().show('tasks');
       const inp = await waitFor('#fl-input', 3000);
       if (!inp) { check('flint bar', false); return; }
@@ -467,7 +467,7 @@
         window.TribeFlintGuide.hide();
       }
     } },
-    { id: 'preview', title: 'Preview', flint: ["#nest-preview", "Preview runs what you're building right beside the work. Let's play the game the tribe made."], cap: 'Run what you’re building right next to the work. Play it together.', dur: 14000, pdur: 14000, async run() {
+    { id: 'preview', title: 'Preview', flint: ["#nest-preview", "Let's try what the team made. Click Preview game."], after: "That's the real game, running right next to the work. Anyone in the project can play it.", cap: 'Run what you’re building right next to the work. Play it together.', dur: 14000, pdur: 14000, async run() {
       if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
       if (view() !== 'tasks' && view() !== 'home') A().show('home');
       if (window.TribeWidgets) await window.TribeWidgets.refresh();
@@ -491,7 +491,7 @@
       check('the game is playing', !!$('#pvw-iframe'), { lit: gameLit });
       await wait(400);
     } },
-    { id: 'docs', title: 'Write together', flint: ["#nest-docs, #tabbar [data-nav=\"docs\"]", "Docs are written together, live. Each friend's cursor shows in their own color."], cap: 'Docs are written live, together. Everyone’s cursor, in their color.', dur: 13000, pdur: 13000, async run() {
+    { id: 'docs', title: 'Write together', flint: ["#nest-docs, #tabbar [data-nav=\"docs\"]", "Click Files to write a document together."], after: "Jay and Maya typed at the same time, each with their own colored cursor. Nothing gets lost.", cap: 'Docs are written live, together. Everyone’s cursor, in their color.', dur: 13000, pdur: 13000, async run() {
       if (window.TribePreview) window.TribePreview.close();
       await go('docs');
       if (window.TribeDocs) await window.TribeDocs.open('level-design');
@@ -534,7 +534,7 @@
       await settle(() => [...document.querySelectorAll('[class*="caret"], [class*="cursor"]')].find(e => /Jay|Maya/.test(e.textContent || '') || e.style.borderColor), 'remote carets drawn', 1500);
       await wait(1200);
     } },
-    { id: 'website', title: 'The website', flint: ["#wt-website, #nest-website", "Your project gets a public page, built from the vision, screenshots and team you already have. Take your time to look."], cap: 'A public page for your project, built from what you already wrote.', dur: 17000, async run() {
+    { id: 'website', title: 'The website', flint: ["#wt-website, #nest-website", "Click Website: your project gets a public page."], after: "The page was built from what you already wrote. Publish it when you like it.", cap: 'A public page for your project, built from what you already wrote.', dur: 17000, async run() {
       if (window.TribeShell && window.TribeShell.go) window.TribeShell.go('website'); else if (window.TribeWebsite) window.TribeWebsite.open();
       const tab = $('#wt-website'); if (tab && !phone()) await click('me', tab, { noClick: true });
       const head = await settle('#wb-headline', 'website builder open', 4000);
@@ -553,7 +553,7 @@
       if (fr) await move('me', fr, 1600, { dx: 0.45, dy: 0.7 });
       await wait(2600);
     } },
-    { id: 'ship', title: 'Vote and ship', flint: ["#wt-board, #nest-ws-tasks", "Big changes get a vote. When the milestone is done, it ships, and everyone gets the credit."], cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
+    { id: 'ship', title: 'Vote and ship', flint: ["#wt-board, #nest-ws-tasks", "Big changes get a vote from the team. Click Board."], after: "The vote passed and the milestone shipped. Everyone who helped gets the credit.", cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
       if (view() !== 'tasks') A().show('tasks');
       const tb = await waitFor('#wt-board', 2000);
       if (tb && !phone()) await click('me', tb); else A().show('board');
@@ -579,7 +579,7 @@
       if (!calm() && window.TribeFlintGuide && window.TribeFlintGuide._burst && card && $('#flint-guide')) { const r = card.getBoundingClientRect(); window.TribeFlintGuide._burst(r.left + 30, r.top + 20, 18); }
       await wait(2400);
     } },
-    { id: 'add', title: '+ Add', flint: ["#nest-add", "Need more? Add a calendar, a bug list, links or a doc to the sidebar."], cap: 'Add what your project needs: a calendar, bugs, a link, a doc.', dur: 10000, async run() {
+    { id: 'add', title: '+ Add', flint: ["#nest-add", "Need more tools? Click + Add."], after: "A calendar is in the sidebar now. Bugs, links and docs go in the same way.", cap: 'Add what your project needs: a calendar, bugs, a link, a doc.', dur: 10000, async run() {
       document.querySelectorAll('.sc-cele').forEach(x => x.remove());
       if (view() !== 'home') A().show('home');
       const add = await waitFor('#nest-add', 2000);
@@ -594,7 +594,7 @@
       const row = key && $(`#wg-${key}`); if (row) await move('me', row, 600, { dx: 0.3 });
       await wait(700);
     } },
-    { id: 'phone', title: 'On your phone', flint: [null, "Away from your desk? When an agent wants to merge, your phone gets one tap: approve or deny."], cap: 'Away from your desk? Approve your agents’ work with one tap.', dur: 11000, async run() {
+    { id: 'phone', title: 'On your phone', flint: [null, "When you're away, your phone asks before anything big happens. Press Show me."], after: "Approved from the phone. The change goes into the main version of the app.", cap: 'Away from your desk? Approve your agents’ work with one tap.', dur: 11000, async run() {
       if (view() !== 'home') A().show('home');
       const t = (db().tasks[PID] || []).find(x => x.status === 'doing') || (db().tasks[PID] || []).find(x => x.status === 'backlog');
       if (t && D()) { if (t.status !== 'doing') D().claim(t.id, 'claude-maya'); D().review(t.id, t.assignee || 'claude-maya'); }
@@ -646,7 +646,8 @@
         if (!['start', 'vision', 'friends'].includes(cur.id) && C().project() !== PID) await inProject(PID);   // e.g. after a skip
         await narrate(cur, idx);
         await cur.run();
-        const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest);
+        if (guided) await recap(cur, idx);
+        else { const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest); }
       } catch (e) {
         if (e !== ABORT) { console.warn('demo tour:', cur.id, e); check('scene ran', false, String(e && e.message || e)); }
         if (!running || me !== runId) return;
@@ -672,6 +673,7 @@
   async function narrate(s, n) {
     const G = window.TribeFlintGuide;
     if (fast || quiet || !G || !s.flint) return;
+    if (guided) return guidedStep(s, n);
     const [sel, text] = s.flint;
     const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
     const t = token; narrating = true; document.body.classList.add('dt-narr');
@@ -686,11 +688,40 @@
     } finally { if (!done) G.hide(); narrating = false; document.body.classList.remove('dt-narr'); }
     await real(250);
   }
+  // ---------- the guided tour (the default): Flint points, you click, the app does it, Flint says what happened ----------
+  // Each chapter: Flint rings the real button the chapter is about and asks you to click it (or "Do it for me"). Your
+  // click is caught before the app sees it and the chapter plays the real feature, with your own cursor (no ghost "me").
+  // Then a short recap and Next. Nothing moves on until you say so.
+  function waitDone(t, isDone) { return new Promise((res, rej) => { const iv = setInterval(() => { if (t !== token || !running) { clearInterval(iv); rej(ABORT); } else if (isDone()) { clearInterval(iv); res(); } }, 80); }); }
+  async function guidedStep(s, n) {
+    const G = window.TribeFlintGuide, [sel, text] = s.flint;
+    const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
+    const t = token; let done = false;
+    narrating = true; document.body.classList.add('dt-narr');
+    const hit = e => el && el.contains(e.target);
+    const down = e => { if (!hit(e)) return; e.preventDefault(); e.stopPropagation(); done = true; G.hide(); };
+    const swallow = e => { if (hit(e)) { e.preventDefault(); e.stopPropagation(); } };
+    if (el) { addEventListener('pointerdown', down, true); addEventListener('click', swallow, true); }
+    G.point(el, text, { next: el ? 'Do it for me' : 'Show me', steps: list.length, step: n, side: el ? undefined : 'below' }).then(() => { done = true; });
+    try { await waitDone(t, () => done); }
+    finally {
+      removeEventListener('pointerdown', down, true); setTimeout(() => removeEventListener('click', swallow, true), 400);
+      if (!done) G.hide(); narrating = false; document.body.classList.remove('dt-narr');
+    }
+    await real(200);
+  }
+  async function recap(s, n) {
+    const G = window.TribeFlintGuide; if (!G || !s.after || fast || quiet) return;
+    const t = token; let done = false; narrating = true;
+    await real(500);
+    G.point(null, s.after, { next: n >= list.length - 2 ? 'Finish' : 'Next', steps: list.length, step: n }).then(() => { done = true; });
+    try { await waitDone(t, () => done); } finally { if (!done) G.hide(); narrating = false; }
+  }
   const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   function paintTime() {
     if (!bar) return;
     const t = done ? total : Math.min(total, vt);
-    const k = fast ? 1 : PACE, tm = $('#dt-time'); if (tm) tm.textContent = `${mmss(t / k)} / ${mmss(total / k)}`;
+    const k = fast ? 1 : PACE, tm = $('#dt-time'); if (tm) tm.textContent = guided && !done ? `Step ${Math.min(idx + 1, list.length)} of ${list.length}` : `${mmss(t / k)} / ${mmss(total / k)}`;
     if (cur && !done) { const n = list.indexOf(cur), seg = document.querySelector(`#dt-chaps [data-i="${n}"] i`); if (seg) seg.style.width = Math.min(100, Math.max(0, (vt - offsets[n]) / dur(cur) * 100)) + '%'; }
   }
   let bar = null;
@@ -729,7 +760,7 @@
     const e = document.createElement('div'); e.className = 'dt-end'; e.id = 'dt-end'; e.setAttribute('role', 'dialog'); e.setAttribute('aria-label', 'Make your own tribe');
     const web = /^https?:/.test(location.protocol);
     e.innerHTML = `<div class="dt-end-card"><img src="assets/flint.svg" alt="" width="48" height="48" class="dt-end-flint"><span class="eyebrow">Your turn</span><h2>Make your own tribe</h2>
-      <p>Share one GitHub repo, invite friends with one link, connect your AI. Free and open source.</p>
+      <p>Share one code repository on GitHub, invite friends with one link, connect your AI. Free and open source.</p>
       <div class="dt-end-acts"><a class="btn primary" id="dt-download" href="${RELEASES}" target="_blank" rel="noopener">Download TribeCode</a>${web ? '<button class="btn" id="dt-browser">Open in browser</button>' : ''}</div>
       <div class="dt-end-more"><button class="linkish" id="dt-again">Watch again</button><span>·</span><button class="linkish" id="dt-explore">Explore this tribe</button></div></div>`;
     document.body.appendChild(e);
@@ -754,7 +785,7 @@
     if (!on()) return false;
     if (running) stop();
     hookRoutes();
-    fast = !!opts.fast; quiet = opts.narrate === false; speedN = fast ? 30 : 1; paused = false; done = false; token++; vt = 0; lastReal = performance.now();
+    fast = !!opts.fast; quiet = opts.narrate === false; guided = !fast && !quiet && !opts.watch; document.body.classList.toggle('dt-guided', guided); speedN = fast ? 30 : 1; paused = false; done = false; token++; vt = 0; lastReal = performance.now();
     list = SCENES.filter(s => !phone() || s.pdur);
     offsets = []; total = 0; list.forEach(s => { offsets.push(total); total += dur(s); });
     if (SC() && SC().hold) SC().hold(true);
@@ -769,6 +800,7 @@
     const was = running || done;
     running = false; done = false; token++; flush(); clearInterval(loopT); loopT = null;
     if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
+    document.body.classList.remove('dt-guided');
     removeUi();
     if (!quiet && was && SC() && SC().hold) SC().hold(false);
   }
@@ -778,7 +810,7 @@
     if (view() !== 'home' && A()) A().show('home');
     K().toast('Your turn: click anything. The tribe keeps going by itself.');
   }
-  function restart() { stop(true); try { sessionStorage.setItem('tribecode.tour.next', fast ? 'fast' : 'on'); } catch {} O().reset(); }
+  function restart() { stop(true); try { sessionStorage.setItem('tribecode.tour.next', fast ? 'fast' : guided ? 'on' : 'watch'); } catch {} O().reset(); }
   function pause() { if (!running) return; paused = true; paintCtl(); }
   function play() { if (!running) return; paused = false; lastReal = performance.now(); paintCtl(); }
   function skip(to) {
@@ -790,7 +822,7 @@
   }
   function speed(n) { if (!running) return; speedN = fast ? 30 : n === 2 ? 2 : 1; paintCtl(); }
   // You clicked into the app yourself: the tour waits for you
-  document.addEventListener('pointerdown', e => { if (running && !paused && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
+  document.addEventListener('pointerdown', e => { if (running && !paused && !guided && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
 
   window.TribeDirector = {
     start, stop, pause, play, skip, speed, tryIt, restart, active: () => running,
@@ -807,7 +839,7 @@
   function boot() {
     if (!want || !on()) return;
     const c = C(); if (!c) return;
-    const go1 = () => { if (!want) return; const w = want; want = null; setTimeout(() => start({ fast: w === 'fast' }), w === 'fast' ? 300 : 900); };
+    const go1 = () => { if (!want) return; const w = want; want = null; setTimeout(() => start({ fast: w === 'fast', watch: w === 'watch' }), w === 'fast' ? 300 : 900); };
     if (c.connected()) go1(); else c.on('hello', go1);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

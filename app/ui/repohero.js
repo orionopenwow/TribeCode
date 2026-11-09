@@ -1,6 +1,6 @@
 // The pinned repo hero, with "Flare": real imagery on the screen's one hero area (docs/DESIGN-SYSTEM.md).
-// The picture comes from server/thumb.js: the README's first image (or GitHub's card for the repo), else the
-// latest app screenshot, else a flat tile with the repo's initials on the project color. The text sits on a
+// The picture comes from server/thumb.js: the README's first image (or GitHub's card for the code repository), else the
+// latest app screenshot, else a flat tile with the code repository's initials on the project color. The text sits on a
 // solid raised band under the image: no scrims, no gradients, no blur.
 // Public: window.TribeRepoHero = { render(el, { project, status, empty }), refresh() }.
 //   status: the /api/repo status (branch, ahead, behind, dirtyCount, commits, remote) or null while loading.
@@ -37,12 +37,12 @@
     const name = (thumb && thumb.name) || (s && ((s.remote && s.remote.github) || s.name)) || (project && project.name) || 'repo';
     el.classList.add('hero-card', 'rhx');
     el.dataset.kind = thumb ? thumb.kind : 'loading';
-    if (!empty) { el.dataset.nav = 'repo'; el.setAttribute('role', 'button'); el.setAttribute('tabindex', '0'); el.setAttribute('aria-label', 'Open the repo ' + name); }
+    if (!empty) { el.dataset.nav = 'repo'; el.setAttribute('role', 'button'); el.setAttribute('tabindex', '0'); el.setAttribute('aria-label', 'Open the code repository ' + name); }
     el.innerHTML = `<div class="rhx-art">${art(thumb)}</div>
       <div class="rhx-band">
-        <span class="eyebrow" title="The repo is the shared folder that holds your project's code">Pinned repo</span>
-        ${empty ? `<h2>No repo pinned yet</h2><p>A repo is the shared folder that holds your project's code. Set one up and it lives here: its picture, the last change and who made it.</p><div class="hero-acts"><button class="btn" data-nav="repo">Set up the repo</button></div>`
-        : `<div class="rhx-n"><span class="rhx-ic">${ico(GIT, 18)}</span><span class="rhx-t"><b>${esc(name)}</b><small>${esc(s ? (s.upstream || 'local') : 'reading the repo…')}</small></span>${ico(RIGHT, 18)}</div>
+        <span class="eyebrow" title="The code repository is the shared folder that holds your project's code">Pinned repo</span>
+        ${empty ? `<h2>No code repository yet</h2><p>A repo is the shared folder that holds your project's code. Set one up and it lives here: its picture, the last change and who made it.</p><div class="hero-acts"><button class="btn" data-nav="repo">Set up the code repository</button></div>`
+        : `<div class="rhx-n"><span class="rhx-ic">${ico(GIT, 18)}</span><span class="rhx-t"><b>${esc(name)}</b><small>${esc(s ? (s.upstream || 'local') : 'reading the code repository…')}</small></span>${ico(RIGHT, 18)}</div>
         ${c ? `<div class="rhx-c"><code>${esc(c.sha)}</code><span><b>${esc(c.subject)}</b><small>${esc(c.author)} · ${esc(ago(c.at))}</small></span></div>` : ''}
         ${s ? `<div class="rhx-chips"><span class="rhx-chip live" title="The branch: the version of the code shown here">${esc(s.branch || 'main')}</span>${s.ahead || s.behind ? `<span class="rhx-chip" title="Saved changes not yet sent (↑) or not yet fetched (↓)">↑${s.ahead || 0} ↓${s.behind || 0}</span>` : ''}<span class="rhx-chip ${s.dirtyCount ? 'warn' : ''}" title="${s.dirtyCount ? 'Files changed since the last save (commit)' : 'Every change is saved (committed)'}">${s.dirtyCount ? `${s.dirtyCount} changed` : 'all saved'}</span></div>` : ''}`}
       </div>`;
