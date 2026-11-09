@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.22.0 (in progress)
+## v0.22.0
 - **Phones**: project pictures and emoji fill their squares on phones too, and the demo tour plays by itself with Flint's live line above the bar.
 - **The demo tour**: three short slides first (what you'll see, what TribeCode is, how it works), then Flint plays the whole tour himself. Nothing to click: a spotlight dims everything but what's happening and follows each click and each typed box, and Flint's line at the bottom says what he's doing ("Clicking Save vision", "Typing the vision") and then what it means. Pause, skip and Try it yourself stay on the bar.
 - **Your helpers**: the right panel starts with three short steps: Meet Flint, give Flint an AI (built in, on this computer, or a cloud key, or keep simple rules), and bring your own AI (Claude Code, Codex, Cursor, Gemini). Steps tick themselves when they're already true, and the card goes away once done. Flint's box at the bottom is just the Ask box until you talk to him (no more "basic mode · no model" header). "Pick a brain" is now "Choose Flint's AI".
