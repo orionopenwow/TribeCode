@@ -91,6 +91,9 @@ def main():
             fr.wait_for_selector("#name", timeout=15000); fr.fill("#name", "Maya"); fr.click("#go")
             fr.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000)
             fr.wait_for_function("window.TribeProjects && TribeProjects.current() === %r" % fresh, timeout=15000)
+            fr.wait_for_selector("#jw-card #jw-hi", timeout=15000)   # just joined: the dashboard, Say hi, Connect my AI
+            assert fr.evaluate("document.body.dataset.view") in ("home", None) or fr.evaluate("TribeApp.view()") == "home", fr.evaluate("TribeApp.view()")
+            fr.click("#jw-ai")
             wait_text(fr, "#invite-body", "One line connects your Claude Code", 15000)
             fr.wait_for_selector("#cc-cmd", timeout=10000)
             cmd = fr.inner_text("#cc-cmd")

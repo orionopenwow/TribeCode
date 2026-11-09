@@ -132,6 +132,7 @@ def main():
             name = host.input_value("#np-input"); assert name.startswith("Orion's"), name
             host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")   # step 3: invite friends
+            host.wait_for_selector("#view-chat:not(.hidden) #flow-expand"); host.click("#flow-expand")   # starts folded to the slim bar
             host.wait_for_selector("#view-chat:not(.hidden) #flow-kick")
             pid = host.evaluate("TribeClient.project()"); assert pid == "orion-s-studio", pid
             host.wait_for_function("document.querySelectorAll('#flow-dock .fk-steps li.ok').length === 4", timeout=25000)

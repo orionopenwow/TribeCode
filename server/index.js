@@ -113,8 +113,19 @@ function lanUrls() {
   return out.sort((x, y) => rank(x) - rank(y));
 }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
+// A sign-in that survives cleared storage (iPhone Safari wipes site storage after a week away; every address is its own
+// storage): whenever a response hands out a new key (claim, join, sign-in, device link, reclaim), the browser also gets it as
+// an HttpOnly cookie that pages can't read. GET /api/session swaps the cookie back for the key when storage comes up empty.
+const SESSION_COOKIE = 'tribe_s';
+function sessionCookie(res, token) {
+  const req = res.req; if (!req || typeof token !== 'string') return;
+  const secure = req.socket.encrypted || /https/i.test(String(req.headers['x-forwarded-proto'] || '')) || /^https:/i.test(String(req.headers.origin || ''));
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=34560000${secure ? '; Secure' : ''}`);
+}
+const cookieToken = req => { const m = String(req.headers.cookie || '').match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`)); try { return m ? decodeURIComponent(m[1]) : null; } catch { return null; } };
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
+  if (isObj && body && status === 200 && typeof body.token === 'string' && body.member && !res.headersSent) sessionCookie(res, body.token);
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version, X-Project', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
   res.end(isObj ? JSON.stringify(body) : body);
@@ -563,6 +574,13 @@ async function apiInProject(req, res, url) {
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
   if (!req.headers['x-tribe-ping']) lastActivity = Date.now();
+  // the sign-in backup: the cookie set when this browser joined or signed in becomes the key again
+  if (a === 'session' && m === 'GET') {
+    const t = cookieToken(req); if (!t) return send(res, 200, { member: null });
+    const who = authed({ headers: { authorization: 'Bearer ' + t }, url: '/api/session' });
+    if (!who || who.role === 'agent') return send(res, 200, { member: null });
+    return send(res, 200, { member: publicMember(who), token: t, tribe });
+  }
   // cloud save: a fresh, empty tribe takes a member's sealed copy back (no setup code needed: the seals prove it came from here)
   if (a === 'cloud' && b === 'restore' && m === 'POST') {
     if (!CLOUD || !cloudsave.enabled) return fail(res, 400, 'cloud save is off');

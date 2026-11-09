@@ -169,6 +169,9 @@
         connect();
         return 'host';
       }
+      // the sign-in backup (an HttpOnly cookie from when this browser joined or signed in): storage was cleared, not the account
+      const ss = await api('/session').catch(() => null);
+      if (ss && ss.token && ss.member) { S.set({ server: { url: base(), token: ss.token }, name: ss.member.name, color: ss.member.color, onboarded: true }); connect(); return 'member'; }
       if (reclaim) {   // the desktop app on the host computer: sign back in as the host (server checks it's really this machine)
         const r = await api('/host/reclaim', { method: 'POST', body: {} }).catch(e => { window.__authError = `Signing back in as the host failed: ${e.message || e}`; return null; });
         if (r && r.token) { S.set({ server: { url: base(), token: r.token }, name: r.member.name, color: r.member.color }); connect(); return 'reclaimed'; }

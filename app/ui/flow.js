@@ -52,13 +52,13 @@
     if (m.type === 'flow' && m.project === pid()) { const steps = flow && JSON.stringify(flow.steps); setFlow(m.flow); if (steps && steps !== JSON.stringify(m.flow.steps)) stepToast(m.flow.steps); }
     if (m.type === 'gist' && m.project === pid() && cur === 'updates') feed();
   });
-  function stepToast(s) { if (s.github && s.github.s === 'ok') toast('Saved to a private GitHub repositorysitory'); }
+  function stepToast(s) { if (s.github && s.github.s === 'ok') toast('Saved to a private GitHub repository', 'ok'); }
 
   // ---------- create ----------
   async function create(name, extra = {}) {
     const r = await C.api('/flow/create', { method: 'POST', body: { name, emoji: extra.emoji, wait: extra.wait } });
     if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(r.flow.project, 'chat'); }
-    flow = r.flow; minimized = false; popOpen = true; draw();
+    flow = r.flow; minimized = true; popOpen = false; draw();   // starts folded to the slim Getting started bar (Open shows the card)
     App().show('chat');
     // qa-qol-2: not while a sheet is up (the invite sheet already says it, and on phones the toast covered its buttons)
     setTimeout(() => { const m = $("#invite-modal"); if (!m || m.classList.contains("hidden")) toast(`${r.flow.name} is live. Share the link.`); }, 600);
@@ -78,7 +78,7 @@
   function steps(f) {
     return `<ol class="fk-steps" aria-label="Setup">${STEP.map(([k, label]) => {
       const s = (f.steps[k] || {}).s || 'run';
-      if (k === 'github' && (s === 'todo' || s === 'fail')) return `<li class="todo"><button class="fk-gh" id="flow-gh" title="${esc((f.steps.github || {}).note || 'Create a private GitHub repositorysitory and upload the code')}">${ico('i-git')}Connect GitHub</button></li>`;
+      if (k === 'github' && (s === 'todo' || s === 'fail')) return `<li class="todo"><button class="fk-gh" id="flow-gh" title="${esc((f.steps.github || {}).note || 'Create a private GitHub repository and upload the code')}">${ico('i-git')}Connect GitHub</button></li>`;
       return `<li class="${s}" title="${esc((f.steps[k] || {}).note || STEP_HINT[k] || '')}">${s === 'ok' ? ico('i-tick') : s === 'fail' ? ico('i-x') : '<span class="spin" aria-hidden="true"></span>'}${label}</li>`;
     }).join('<li class="sep" aria-hidden="true">·</li>')}</ol>`;
   }
@@ -227,7 +227,7 @@
     const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
     const st = flow.steps.github || {};
     body.innerHTML = `<span class="eyebrow">GitHub</span><h2>Put ${esc(flow.name)} on GitHub</h2>
-      <p class="lead">TribeCode creates a private GitHub repositorysitory and uploads the starter. Paste a GitHub token with the <code>repo</code> scope (it stays on the host and never reaches a browser), or sign in with <code>gh auth login</code> on the host and press Try again.</p>
+      <p class="lead">TribeCode creates a private GitHub repository and uploads the starter. Paste a GitHub token with the <code>repo</code> scope (it stays on the host and never reaches a browser), or sign in with <code>gh auth login</code> on the host and press Try again.</p>
       ${st.s === 'fail' && st.note ? `<div class="np-err">${esc(st.note)}</div>` : ''}
       <div class="field"><input class="input" id="gh-token" type="password" placeholder="ghp_… or github_pat_…" autocomplete="off"></div>
       <div class="modal-foot"><a class="btn ghost" href="https://github.com/settings/tokens/new?scopes=repo&description=TribeCode" target="_blank" rel="noopener noreferrer">Make a token</a><span style="flex:1"></span><button class="btn" data-close>Later</button><button class="btn primary" id="gh-go">Try again</button></div>`;
@@ -406,7 +406,7 @@
     try {
       const r = await C.api('/flow/create', { method: 'POST', body: { name, wait: 12000 } }); f = r.flow;
       if (window.TribeProjects) { await window.TribeProjects.refresh(); await window.TribeProjects.switchTo(f.project, 'chat'); }
-      flow = f; minimized = false; popOpen = true; draw(); App().show('chat');
+      flow = f; minimized = true; popOpen = false; draw(); App().show('chat');   // folded: the chat stays the hero
     } catch (e) { body.innerHTML = `<span class="eyebrow">Instant invite</span><h2>That didn't work</h2><div class="np-err">${esc(e.message)}</div><div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = close; return; }
     return inviteSheet(f);
   }
