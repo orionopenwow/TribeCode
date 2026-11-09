@@ -576,7 +576,7 @@
     const presence = [['online', 'Online', 'Shown when you are here'], ['idle', 'Idle', 'Shown as away'], ['dnd', 'Do not disturb', 'No phone or desktop alerts'], ['invisible', 'Invisible', 'Look offline, use everything']];
     const scrollTop = el.querySelector('.pf-ed-body') ? el.querySelector('.pf-ed-body').scrollTop : 0;
     el.innerHTML = `${ed.scrim && isPhone() ? '<div class="pf-grab" aria-hidden="true"></div>' : ''}
-      <header class="pf-ed-head"><div><span class="eyebrow">You</span><h2>Edit profile</h2></div><button class="btn ghost" data-ed="cancel">Cancel</button></header>
+      <header class="pf-ed-head"><div><span class="eyebrow">You</span><h2>Edit profile</h2></div><button class="fwin-btn pf-ed-x" data-ed="cancel" title="Close without saving" aria-label="Close without saving"><svg class="i"><use href="#i-x"/></svg></button></header>
       <div class="pf-ed-body">
         <div class="pf-ed-prev pf-pop static" aria-label="Preview">${card(previewData(), { preview: true })}</div>
         <section class="pf-ed-sec" data-sec="avatar"><span class="eyebrow">Avatar</span>
@@ -584,11 +584,11 @@
           ${picker}${tints}</section>
         <section class="pf-ed-sec" data-sec="name"><span class="eyebrow">Name</span>
           <label class="pf-lbl">Display name<input class="input" id="pf-name" maxlength="32" value="${esc(d.name)}" autocomplete="off"></label>
-          ${project() ? `<label class="pf-lbl">Nickname in this project <small class="faint">optional</small><input class="input" id="pf-nick" maxlength="32" value="${esc(d.nick)}" autocomplete="off" placeholder="${esc(d.name)}"></label>` : ''}
-          <label class="pf-lbl">Pronouns <small class="faint">optional</small><input class="input" id="pf-pron" maxlength="40" value="${esc(d.pronouns)}" autocomplete="off" placeholder="they/them"></label>
+          <div class="pf-two">${project() ? `<label class="pf-lbl">Nickname in this project <small class="faint">optional</small><input class="input" id="pf-nick" maxlength="32" value="${esc(d.nick)}" autocomplete="off" placeholder="${esc(d.name)}"></label>` : ''}
+          <label class="pf-lbl">Pronouns <small class="faint">optional</small><input class="input" id="pf-pron" maxlength="40" value="${esc(d.pronouns)}" autocomplete="off" placeholder="they/them"></label></div>
           <div class="pf-lbl">Name color<div class="pf-row-sw" role="group" aria-label="Name color"><button type="button" class="pf-sw none ${!d.nameColor ? 'on' : ''}" data-nc="" aria-label="Default" aria-pressed="${!d.nameColor}" title="Default"></button>${Object.keys(PALETTE).map(k => sw(k, d.nameColor === k, 'data-nc')).join('')}</div></div></section>
         <section class="pf-ed-sec" data-sec="about"><span class="eyebrow">About me</span>
-          <textarea class="input pf-bio-in" id="pf-bio" maxlength="300" rows="4" placeholder="A line or two about you. **bold**, *italic* and links work.">${esc(d.bio)}</textarea><small class="faint pf-count" id="pf-bio-n">${d.bio.length}/300</small>
+          <textarea class="input pf-bio-in" id="pf-bio" maxlength="300" rows="3" placeholder="A line or two about you. **bold**, *italic* and links work.">${esc(d.bio)}</textarea><small class="faint pf-count" id="pf-bio-n">${d.bio.length}/300</small>
           <div class="pf-lbl">Links <small class="faint">up to 3</small>${d.links.map((u, i) => `<input class="input pf-link-in" data-link="${i}" maxlength="300" inputmode="url" placeholder="https://" value="${esc(u)}">`).join('')}</div>
           <div class="pf-lbl">Banner<div class="pf-row-sw" role="group" aria-label="Banner"><button type="button" class="pf-sw none ${!d.banner ? 'on' : ''}" data-bn="" aria-label="No banner" title="None"></button>${Object.keys(PALETTE).map(k => sw(k, d.banner && d.banner.color === k, 'data-bn')).join('')}<button type="button" class="btn tonal sm" data-ed="banner">${d.banner && d.banner.image ? 'Change picture' : 'Picture'}</button></div></div>
           <label class="pf-check"><input type="checkbox" id="pf-tz" ${d.tz ? 'checked' : ''}> Show my local time${d.tz ? ` <small class="faint">(${esc(d.tz)})</small>` : ''}</label></section>

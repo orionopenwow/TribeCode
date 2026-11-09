@@ -167,7 +167,7 @@
     const T = window.TribeThemes; if (!T) return '';
     const cur = T.resolve(st), sys = !!(st.themeSystem || st.theme === 'system');
     const chips = T.list.map(t => `<button class="th-chip ${t.id === cur ? 'on' : ''}" role="radio" aria-checked="${t.id === cur}" data-theme-id="${t.id}" title="${esc(t.name)}">`
-      + `<span class="th-sw" aria-hidden="true"><i style="background:${t.sw[0]}"></i><i style="background:${t.sw[1]}"></i><b style="background:${t.sw[2]}"></b></span><span class="th-name">${esc(t.name)}</span></button>`).join('');
+      + `<span class="th-pv" aria-hidden="true" style="--p0:${t.sw[0]};--p1:${t.sw[1]};--p2:${t.sw[2]};--lb:${(t.lg || [])[0] || '#F8FAFC'};--lf:${(t.lg || [])[1] || '#F26B1D'}"><span class="th-rail"><span class="th-logo"><i></i><b></b><i></i></span><i class="th-dot"></i><i class="th-dot"></i></span><span class="th-side"><i class="on"></i><i></i><i></i></span><span class="th-main"><i></i><i class="s"></i><b></b></span></span><span class="th-name">${esc(t.name)}${t.id === cur ? '<em>✓</em>' : ''}</span></button>`).join('');
     return `<div class="set-row set-theme"><div class="set-l"><b>Theme</b></div><div class="set-c"><div class="th-grid" role="radiogroup" aria-label="Theme">${chips}</div>
       <div class="th-sys"><span>Match system (light/dark)</span><button class="toggle set-toggle" role="switch" id="set-theme-sys" aria-label="Match system light or dark" aria-checked="${sys}"><span class="switch"></span></button></div></div></div>`;
   }

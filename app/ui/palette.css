@@ -300,9 +300,9 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 /* v0.25 dashboard layout: everything sizes to the dashboard's own width (container queries), not the window,
    so the right panel being open never crams the cards */
 .pj-overview { container-type: inline-size; container-name: ov; }
+@container ov (max-width: 620px) { .pj-overview .pj-grid { grid-template-columns: minmax(0, 1fr) !important; } }
 @container ov (max-width: 760px) {
   .pj-glance .pl-grid.gl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pj-overview .pj-grid { grid-template-columns: minmax(0, 1fr) !important; }
   .sx-list { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .su-roles { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }

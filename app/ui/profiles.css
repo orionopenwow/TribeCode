@@ -194,3 +194,19 @@ a.pf-feat:hover { border-color: #3A4350; }
 .pf-mk-row { grid-template-columns: 1fr; gap: 4px; }
 .pf-mk-opts { gap: 4px; }
 .pf-mk-o { height: 24px; font-size: 11.5px; padding: 0 7px; } .pf-mk-o[style] { width: 24px; }
+
+/* v0.25 Edit profile design pass */
+.pf-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.pf-tabs button { height: 32px; font-weight: 600; white-space: nowrap; }
+.pf-tabs button.on { background: var(--accent, #F26B1D); color: var(--on-action, #fff); box-shadow: none; }
+.pf-ed-prev { position: sticky; top: 0; }
+.pf-ed-sec { padding: 16px 0; }
+.pf-ed-sec + .pf-ed-sec { border-top: 1px solid var(--edge); }
+.pf-ed-sec > .eyebrow { display: block; margin-bottom: 10px; color: var(--accent-ink, var(--accent)); }
+.pf-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pf-lbl { display: grid; gap: 6px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+.pf-lbl small { font-weight: 400; }
+.pf-sw.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent, #F26B1D) !important; }
+.pf-ed-x { margin-left: auto; }
+@media (max-width: 720px) { .pf-two { grid-template-columns: minmax(0, 1fr); } .pf-ed-prev { position: static; } }
+.pf-two { align-items: end; }
