@@ -147,8 +147,17 @@
     else if (k === 'github') connectGithub(p);   // sign in to GitHub inside the app   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
-  let ovSeq = 0, visDraft = '', naming = false;   // naming: the project name is being edited, so a redraw waits   // the checklist's inline vision box keeps what you typed across redraws
-  async function overview() {
+  let ovSeq = 0, visDraft = '', naming = false, lastOv = '';   // naming: the project name is being edited, so a redraw waits   // the checklist's inline vision box keeps what you typed across redraws
+  // One redraw at a time: a request that arrives mid-redraw runs once right after it (never cancels it, so the page
+  // always catches up even when events keep coming). A redraw that fails tries again shortly.
+  let ovFlight = null, ovAgain = false;
+  function overview() {
+    if (ovFlight) { ovAgain = true; return ovFlight; }
+    ovFlight = overviewNow().catch(e => { console.warn('overview', e); clearTimeout(ot); ot = setTimeout(overview, 1500); })
+      .finally(() => { ovFlight = null; if (ovAgain) { ovAgain = false; overview(); } });
+    return ovFlight;
+  }
+  async function overviewNow() {
     const el = $('#pj-overview'); if (!el) return;
     const seq = ++ovSeq;   // the latest call wins: an older, slower render never paints over a newer one
     const p = curP();
@@ -217,9 +226,9 @@
       ['New files', 'i-doc', newFiles.length ? plural(newFiles.length, 'this week', 'this week') : 'None this week', 'docs', false],
     ];
     const r = d.repo;
-    if (seq !== ovSeq || naming) return;
+    if (naming) return;
     const visFocus = document.activeElement && document.activeElement.id === 'ock-vis-in';
-    el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
+    const html = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
           <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The code repository: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
@@ -254,6 +263,9 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
         <div class="pj-tools-row"><button class="linkish pj-tools-link" id="pj-tools-link">${ico('i-box', 14)}Tools for ${esc(p.name)}</button></div>
         <div id="pj-tools-slot"></div>`)}
       </details>`;
+    if (html === lastOv && el.dataset.ovPid === p.id && el.firstElementChild && !el.querySelector('.pj-name-in, .pj-bio-in')) return;   // nothing changed: keep the page as it is (nothing you're using gets replaced)
+    lastOv = html; el.dataset.ovPid = p.id;
+    el.innerHTML = html;
     // The standup button/text and the drop zone are wired in app.js: move the live nodes in (stash() moves them back before a redraw).
     const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
@@ -308,11 +320,11 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   function editBio(p, cur) {
     const b = $('#pj-bio'); if (!b) return;
     const inp = document.createElement('input'); inp.className = 'input pj-bio-in'; inp.maxLength = 200; inp.value = cur || ''; inp.placeholder = 'What is this, in one line?';
-    b.replaceWith(inp); inp.focus();
+    b.replaceWith(inp); inp.focus(); naming = true;
     let done = false;
-    const save = async keep => { if (done) return; done = true;
+    const save = async keep => { if (done) return; done = true; lastOv = '';
       if (keep && inp.value.trim() !== (cur || '')) { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { bio: inp.value } }); await refresh(); } catch (e) { toast(e.message); } }
-      overview(); };
+      naming = false; lastOv = ''; overview(); };
     inp.onkeydown = e => { if (e.key === 'Enter') save(true); if (e.key === 'Escape') save(false); };
     inp.onblur = () => save(true);
   }
@@ -323,10 +335,10 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const inp = document.createElement('input'); inp.className = 'input pj-name-in'; inp.maxLength = 48; inp.value = p.name; inp.setAttribute('aria-label', 'Project name');
     b.replaceWith(inp); inp.focus(); inp.select(); naming = true;
     let done = false;
-    const save = async keep => { if (done) return; done = true; naming = false;
+    const save = async keep => { if (done) return; done = true; lastOv = '';
       const v = inp.value.trim();
-      if (keep && v && v !== p.name) { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: v } }); await refresh(); toast('Renamed'); } catch (e) { toast(e.message); } }
-      overview(); };
+      if (keep && v && v !== p.name) { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: v } }); p.name = v; if (inp.isConnected) { const nb = document.createElement('button'); nb.className = 'pj-inl pj-name-btn'; nb.id = 'pj-name'; nb.title = 'Rename'; nb.textContent = v; nb.onclick = () => editName(p); inp.replaceWith(nb); } await refresh(); const cp = curP(); if (cp && cp.id === p.id) cp.name = v; toast('Renamed'); } catch (e) { toast(e.message); } }
+      naming = false; lastOv = ''; overview(); };
     inp.onkeydown = e => { if (e.key === 'Enter') save(true); if (e.key === 'Escape') save(false); };
     inp.onblur = () => save(true);
   }

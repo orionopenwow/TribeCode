@@ -264,12 +264,13 @@
   const side = () => { if (window.TribeCoord && window.TribeCoord.side) window.TribeCoord.side(); };
   const openAgent = id => { const S = Shell(); if (S && S.previewAgent) S.previewAgent(id); };
   // one-tap: the row goes away at once, then the dashboard refreshes from the server
-  const resolve = (b, msg) => { const r = b.closest('.ad-need'); if (r) { r.classList.add('done'); setTimeout(() => r.remove(), 180); } if (msg) toast(msg); };
+  const resolve = (b, msg) => { seq++;   // the data on screen is now older than what you just did: late fills must not repaint it (the live event reloads)
+    const r = b.closest('.ad-need'); if (r) { r.classList.add('done'); setTimeout(() => r.remove(), 180); } if (msg) toast(msg); };
 
   async function click(e, el, d) {
     const t = e.target.closest ? e.target : null; if (!t) return;
     const b = t.closest('button');
-    const run = async fn => { if (!b) return; b.disabled = true; try { await fn(); } catch (err) { toast(err.message); b.disabled = false; } };
+    const run = async fn => { if (!b) return; b.disabled = true; try { await fn(); setTimeout(() => { if (el && el.isConnected) render(el); }, 350); } catch (err) { toast(err.message); b.disabled = false; } };   // after an action, redraw from the server (a late redraw can't bring the old row back)
     if (b && (b.id === 'ad-connect' || 'adCc' in b.dataset)) return App() && App().connectClaude && App().connectClaude();
     if (b && b.id === 'ad-tools') return go('mcp-directory');
     if (b && b.dataset.adOpen) return go(b.dataset.adOpen);
