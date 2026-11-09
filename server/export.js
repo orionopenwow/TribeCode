@@ -227,6 +227,16 @@ module.exports = function exporter({ P, W, store, applink, isLocal, port, getMem
       if (a === 'shortcut' && m === 'POST') return send(res, 200, writeShortcut(pid, me));
       if (a !== 'export') return null;
       if (!b && m === 'POST') { const body = await readBody(req); return send(res, 200, await doExport(pid, body.mode === 'history' ? 'history' : 'files', body.reveal !== false)); }
+      // a doc, sheet or deck exported in the app (app/ui/exporter.js): saved next to the project's Desktop folder
+      if (b === 'file' && m === 'POST') {
+        const body = await readBody(req), name = String(body.name || '').replace(/[\\/:*?"<>|\x00-\x1f]+/g, '-').trim().slice(0, 120);
+        if (!/\.(docx|xlsx|pptx|md|csv|html|txt|pdf)$/i.test(name)) return fail(res, 400, 'that kind of file is not exported here');
+        const buf = Buffer.from(String(body.data || ''), 'base64'); if (!buf.length || buf.length > 20 * 1024 * 1024) return fail(res, 400, 'empty or too big');
+        const dir = path.join(projectsDir(), safeName(p.name, pid), 'Exports'); fs.mkdirSync(dir, { recursive: true });
+        let file = path.join(dir, name); for (let i = 2; fs.existsSync(file); i++) file = path.join(dir, name.replace(/(\.[^.]+)$/, ` (${i})$1`));
+        fs.writeFileSync(file, buf);
+        return send(res, 200, { path: file, revealed: body.reveal ? reveal(dir) : false });
+      }
       if (b === 'mirror' && !c && (m === 'PUT' || m === 'POST')) { const body = await readBody(req); return send(res, 200, { mirror: body.enabled ? await enableMirror(pid) : disableMirror(pid) }); }
       if (b === 'mirror' && c === 'sync' && m === 'POST') return send(res, 200, { mirror: await sync(pid) });
       if (b === 'reveal' && m === 'POST') {
