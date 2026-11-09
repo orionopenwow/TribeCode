@@ -6,22 +6,26 @@
   const C = { ink: '#F8FAFC', soft: '#C7CED8', dim: '#7C8796', edge: '#2A313C', bg: '#1B2028', raise: '#232A35', ember: '#F26B1D', teal: '#38C6B1', indigo: '#6C7CFF', green: '#3BD16F', rose: '#FF6F8E', gold: '#FABD2F' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   // primitives (viewBox 640 x 220)
-  const box = (x, y, w, h, o = {}) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.r ?? 12}" fill="${o.fill || C.raise}" stroke="${o.stroke || C.edge}" stroke-width="${o.sw || 1.5}"/>`;
+  const box = (x, y, w, h, o = {}) => { const r = o.r ?? 12; return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${o.fill || C.raise}" stroke="${o.stroke || C.edge}" stroke-width="${o.sw || 1.5}"/>${o.flat || o.fill === 'none' || h < 20 ? '' : `<line x1="${x + r}" y1="${y + 2.5}" x2="${x + w - r}" y2="${y + 2.5}" stroke="rgba(255,255,255,.07)" stroke-width="2"/>`}`; };
   const txt = (x, y, s, o = {}) => `<text x="${x}" y="${y}" fill="${o.c || C.ink}" font-size="${o.size || 14}" font-weight="${o.w || 600}" text-anchor="${o.a || 'middle'}" font-family="${o.mono ? 'JetBrains Mono, ui-monospace, monospace' : 'Inter, system-ui, sans-serif'}">${esc(s)}</text>`;
-  const arrow = (x1, y1, x2, y2, c = C.dim) => { const a = Math.atan2(y2 - y1, x2 - x1), h = 8; return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M${x2} ${y2} L${x2 - h * Math.cos(a - .45)} ${y2 - h * Math.sin(a - .45)} L${x2 - h * Math.cos(a + .45)} ${y2 - h * Math.sin(a + .45)}Z" fill="${c}"/>`; };
+  const arrow = (x1, y1, x2, y2, c = C.dim) => { const a = Math.atan2(y2 - y1, x2 - x1), h = 8; return `<circle cx="${x1}" cy="${y1}" r="2.5" fill="${c}"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="2" stroke-linecap="round"/><path d="M${x2} ${y2} L${x2 - h * Math.cos(a - .45)} ${y2 - h * Math.sin(a - .45)} L${x2 - h * Math.cos(a + .45)} ${y2 - h * Math.sin(a + .45)}Z" fill="${c}"/>`; };
   const dot = (x, y, r, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
   const chip = (x, y, s, c) => `${box(x, y, s.length * 8 + 22, 26, { r: 13, fill: C.bg, stroke: c })}${txt(x + (s.length * 8 + 22) / 2, y + 17, s, { size: 12, c, mono: true })}`;
-  const person = (x, y, c, label) => `${dot(x, y, 13, c)}<path d="M${x - 20} ${y + 40} Q${x} ${y + 10} ${x + 20} ${y + 40}Z" fill="${c}"/>${label ? txt(x, y + 58, label, { size: 12, c: C.soft, w: 500 }) : ''}`;
-  const bot = (x, y, label) => `${box(x - 18, y - 16, 36, 30, { r: 9, fill: C.bg, stroke: C.teal })}${dot(x - 7, y - 2, 3.5, C.teal)}${dot(x + 7, y - 2, 3.5, C.teal)}<line x1="${x}" y1="${y - 16}" x2="${x}" y2="${y - 26}" stroke="${C.teal}" stroke-width="2"/>${dot(x, y - 28, 3, C.teal)}${label ? txt(x, y + 34, label, { size: 12, c: C.soft, w: 500 }) : ''}`;
+  const person = (x, y, c, label) => `<path d="M${x - 22} ${y + 42} Q${x - 22} ${y + 16} ${x} ${y + 16} Q${x + 22} ${y + 16} ${x + 22} ${y + 42}Z" fill="${c}"/>${dot(x, y, 13, '#F2B48C')}<path d="M${x - 13} ${y - 1} Q${x - 13} ${y - 15} ${x} ${y - 15} Q${x + 14} ${y - 15} ${x + 13} ${y - 2} Q${x + 4} ${y - 9} ${x - 13} ${y - 1}Z" fill="#2A1F1A"/>${dot(x - 4.5, y + 2, 1.8, '#12151A')}${dot(x + 4.5, y + 2, 1.8, '#12151A')}${label ? txt(x, y + 60, label, { size: 12, c: C.soft, w: 500 }) : ''}`;
+  const bot = (x, y, label) => `<rect x="${x - 22}" y="${y - 6}" width="4" height="10" rx="2" fill="${C.teal}"/><rect x="${x + 18}" y="${y - 6}" width="4" height="10" rx="2" fill="${C.teal}"/>${box(x - 18, y - 16, 36, 30, { r: 9, fill: C.bg, stroke: C.teal })}<rect x="${x - 12}" y="${y - 10}" width="24" height="16" rx="5" fill="#10282A"/><path d="M${x - 5} ${y + 7} q5 3 10 0" stroke="${C.teal}" stroke-width="1.6" fill="none" stroke-linecap="round"/>${dot(x - 7, y - 2, 3.5, C.teal)}${dot(x + 7, y - 2, 3.5, C.teal)}<line x1="${x}" y1="${y - 16}" x2="${x}" y2="${y - 26}" stroke="${C.teal}" stroke-width="2"/>${dot(x, y - 28, 3, C.teal)}${label ? txt(x, y + 34, label, { size: 12, c: C.soft, w: 500 }) : ''}`;
   const lines = (x, y, n, w, c = C.dim) => Array.from({ length: n }, (_, i) => `<rect x="${x + (i % 2 ? 14 : 0)}" y="${y + i * 12}" width="${w - (i % 3) * 18 - (i % 2 ? 14 : 0)}" height="5" rx="2.5" fill="${i === 1 ? C.teal : i === 3 ? C.ember : c}"/>`).join('');
   const page = (x, y, w, h) => `${box(x, y, w, h, { r: 10, fill: C.bg })}<rect x="${x}" y="${y}" width="${w}" height="18" rx="10" fill="${C.raise}"/>${dot(x + 12, y + 9, 3, C.rose)}${dot(x + 22, y + 9, 3, C.gold)}${dot(x + 32, y + 9, 3, C.green)}`;
-  const phone = (x, y, c = C.edge) => `${box(x, y, 54, 96, { r: 12, fill: C.bg, stroke: c })}<rect x="${x + 20}" y="${y + 6}" width="14" height="4" rx="2" fill="${C.edge}"/>`;
+  const phone = (x, y, c = C.edge) => `${box(x, y, 54, 96, { r: 12, fill: C.bg, stroke: c })}<rect x="${x + 5}" y="${y + 14}" width="44" height="70" rx="5" fill="#151A21"/><rect x="${x + 20}" y="${y + 6}" width="14" height="4" rx="2" fill="${C.edge}"/><rect x="${x + 10}" y="${y + 62}" width="34" height="4" rx="2" fill="${C.edge}"/><rect x="${x + 10}" y="${y + 70}" width="24" height="4" rx="2" fill="${C.edge}"/><rect x="${x + 21}" y="${y + 89}" width="12" height="3" rx="1.5" fill="${C.edge}"/>`;
   const check = (x, y, c = C.green) => `${dot(x, y, 14, c)}<path d="M${x - 6} ${y} l4 4 l8 -8" stroke="${C.bg}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-  const fig = (body, cap) => `<figure class="lx-fig"><svg viewBox="0 0 640 220" role="img" aria-label="${esc(cap)}">${body}</svg><figcaption>${esc(cap)}</figcaption></figure>`;
+  let EYEBROW = '';
+  const fig = (body, cap) => `<figure class="lx-fig"><svg viewBox="0 0 640 256" role="img" aria-label="${esc(cap)}"><defs><pattern id="lxg" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#232A35"/></pattern></defs>
+    <rect x="0.5" y="0.5" width="639" height="255" rx="14" fill="#14181E" stroke="${C.edge}"/><rect x="1" y="1" width="638" height="254" rx="14" fill="url(#lxg)"/>
+    <line x1="16" y1="34" x2="624" y2="34" stroke="${C.edge}"/>${dot(26, 18, 4, C.ember)}${txt(38, 22, EYEBROW, { a: 'start', size: 11, mono: true, c: C.dim, w: 600 })}${txt(624, 22, 'TRIBECODE · LEARN', { a: 'end', size: 10, mono: true, c: '#3A4452', w: 600 })}
+    <g transform="translate(0 32)">${body}</g></svg><figcaption>${esc(cap)}</figcaption></figure>`;
 
   const ART = {
     'm1-0': () => fig(
-      [['Tap Start', C.ember], ['Load level 1', C.teal], ['Show the player', C.indigo]].map(([s, c], i) => `${box(30 + i * 205, 70, 170, 80, { stroke: c })}${txt(48 + i * 205, 98, String(i + 1), { a: 'start', c, mono: true })}${txt(115 + i * 205, 120, s, { size: 15 })}${i < 2 ? arrow(204 + i * 205, 110, 230 + i * 205, 110) : ''}`).join('') + txt(320, 190, 'Code = the steps, spelled out, in order', { c: C.soft, w: 500, size: 13 }),
+      [['Tap Start', C.ember, '👆'], ['Load level 1', C.teal, '🗺️'], ['Show the player', C.indigo, '🧍']].map(([s, c, e], i) => `${box(30 + i * 205, 60, 170, 100, { stroke: c })}${box(42 + i * 205, 72, 26, 22, { r: 6, fill: C.bg, stroke: c, sw: 1 })}${txt(55 + i * 205, 88, String(i + 1), { c, mono: true, size: 12 })}${txt(115 + i * 205, 104, e, { size: 22 })}${txt(115 + i * 205, 138, s, { size: 15 })}${i < 2 ? arrow(204 + i * 205, 110, 230 + i * 205, 110) : ''}`).join(''),
       'Code is a list of steps the computer follows exactly: tap Start, load level 1, show the player.'),
     'm1-1': () => fig(
       [['HTML · CSS', 'a web page', C.ember], ['JavaScript', 'things that move', C.gold], ['Python', 'data and AI', C.teal], ['Swift · Kotlin', 'phone apps', C.indigo]].map(([l, o, c], i) => `${chip(24 + i * 154, 40, l, c)}${arrow(80 + i * 154, 76, 80 + i * 154, 112, c)}${box(24 + i * 154, 118, 136, 56, { stroke: c })}${txt(92 + i * 154, 151, o, { size: 13, w: 500, c: C.soft })}`).join(''),
@@ -34,7 +38,7 @@
     'm1-3': () => fig(
       `${person(70, 80, C.indigo, 'You')}${box(110, 40, 170, 50, { r: 14, fill: C.bg, stroke: C.indigo })}${txt(195, 70, '“Add a jump button”', { size: 13, w: 500 })}` +
       `${arrow(290, 110, 335, 110)}${bot(370, 110, 'AI helper')}${arrow(405, 110, 450, 110)}${box(460, 60, 150, 100, { fill: C.bg })}${lines(476, 78, 5, 118)}` +
-      `${txt(320, 200, 'You decide and check · the AI types', { c: C.soft, w: 500, size: 13 })}`,
+      '',
       'You describe what you want in plain words; an AI helper writes the code; you check that it works.'),
     'm2-0': () => fig(
       `${box(70, 40, 500, 120, { stroke: C.ember })}${txt(100, 78, 'VISION', { a: 'start', c: C.ember, size: 12, mono: true })}${txt(100, 112, 'A recipe app for our family,', { a: 'start', size: 18, w: 600 })}${txt(100, 140, 'so everyone can add their favorites.', { a: 'start', size: 18, w: 600 })}` +
@@ -56,7 +60,7 @@
       `<line x1="60" y1="110" x2="590" y2="110" stroke="${C.edge}" stroke-width="3"/>` + ['First page', 'Add recipes', 'Search box', 'Fix typo'].map((s, i) => `${dot(100 + i * 150, 110, 10, i === 3 ? C.ember : C.teal)}${box(40 + i * 150, i % 2 ? 130 : 44, 120, 40, { fill: C.bg })}${txt(100 + i * 150, i % 2 ? 155 : 69, s, { size: 12, w: 500 })}`).join(''),
       'Each working step is saved with a short note, so you can always go back.'),
     'm2-5': () => fig(
-      `${box(40, 80, 200, 50, { r: 25, stroke: C.teal })}${txt(140, 110, '🔗 your-app.link', { size: 14, mono: true, w: 500 })}` + [0, 1, 2].map(i => `${arrow(250, 105, 360 + i * 85, 80)}${phone(338 + i * 85, 70, [C.indigo, C.ember, C.green][i])}${dot(365 + i * 85, 118, 10, [C.indigo, C.ember, C.green][i])}`).join(''),
+      `${box(40, 80, 200, 50, { r: 25, stroke: C.teal })}${txt(140, 110, '🔗 your-app.link', { size: 14, mono: true, w: 500 })}` + [0, 1, 2].map(i => { const x = 365 + i * 85, c = [C.indigo, C.ember, C.green][i]; return `<path d="M252 105 C285 ${30 - i * 6} ${x} ${18 - i * 4} ${x} 58" fill="none" stroke="${C.dim}" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 5"/><path d="M${x - 5} 56 L${x} 64 L${x + 5} 56Z" fill="${C.dim}"/>${phone(338 + i * 85, 70, c)}${dot(x, 108, 10, c)}`; }).join('') + `${dot(252, 105, 3, C.dim)}`,
       'Share it: one link, and friends open it on their phones.'),
     'm3-0': () => fig(
       `<ellipse cx="320" cy="78" rx="70" ry="16" fill="${C.raise}" stroke="${C.teal}" stroke-width="1.5"/><path d="M250 78 v60 a70 16 0 0 0 140 0 v-60" fill="${C.raise}" stroke="${C.teal}" stroke-width="1.5"/>${txt(320, 120, 'one repository', { size: 13 })}` +
@@ -112,5 +116,5 @@
       'The terminal is a text window for commands; AI helpers like Claude Code run there.'),
   };
   const QUIZ = (badge, name) => fig(`${dot(320, 100, 56, C.raise)}<circle cx="320" cy="100" r="56" fill="none" stroke="${C.ember}" stroke-width="3" stroke-dasharray="6 6"/>${txt(320, 116, badge, { size: 44 })}${txt(320, 192, `Earn the ${name} badge`, { size: 14, c: C.soft, w: 500 })}`, `A badge for passing the check: ${name}.`);
-  window.TribeLearnArt = (key, mod) => { try { if (/-q$/.test(key) && mod) return QUIZ(mod.badge, mod.bname); const f = ART[key]; return f ? f() : ''; } catch { return ''; } };
+  window.TribeLearnArt = (key, mod, title) => { try { const [mm, ll] = key.split('-'); EYEBROW = (ll === 'q' ? `MODULE ${mm.slice(1)} · QUICK CHECK` : `LESSON ${mm.slice(1)}.${Number(ll) + 1}${title ? ' · ' + String(title).toUpperCase().slice(0, 44) : ''}`); if (/-q$/.test(key) && mod) return QUIZ(mod.badge, mod.bname); const f = ART[key]; return f ? f() : ''; } catch { return ''; } };
 })();
