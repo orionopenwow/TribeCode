@@ -674,6 +674,25 @@ async function apiInProject(req, res, url) {
   // The desktop app on the host's own computer lost its sign-in (a reinstall, cleared app data) but the tribe is still
   // here: give the host's account a fresh key instead of telling them to join their own tribe. Only from this machine,
   // and only from the desktop app itself or a page this server serves (never another site running on localhost).
+  // Start fresh (v0.22, Settings › Fix problems): the host, on this computer only, moves the whole tribe (members,
+  // guests, chat, projects, docs, device links) into a sibling backup folder and stops the server. The desktop app
+  // starts it again empty, and whoever opens it becomes the host. Nothing is deleted: the backup can be put back.
+  if (a === 'host' && b === 'fresh-start' && m === 'POST') {
+    if (!me || me.role !== 'host') return fail(res, 403, 'only the host can start fresh');
+    if (!isLocal(req) || CLOUD) return fail(res, 403, 'start fresh only from the host computer');
+    const body = await readBody(req);
+    if (body.confirm !== 'START FRESH') return fail(res, 400, 'type START FRESH to confirm');
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    const backup = `${DIR}-backup-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    fs.mkdirSync(backup, { recursive: true });
+    const failed = [];
+    for (const e of fs.readdirSync(DIR)) { try { fs.renameSync(path.join(DIR, e), path.join(backup, e)); } catch (err) { failed.push(e); } }
+    if (failed.length) return fail(res, 500, `Moved most of the tribe to ${backup}, but these were in use: ${failed.join(', ')}. Close other apps using the folder and try again.`);
+    console.log(`Start fresh: the old tribe is in ${backup}. Stopping so the app can start an empty one.`);
+    send(res, 200, { backup });
+    setTimeout(() => process.exit(0), 400);
+    return;
+  }
   if (a === 'host' && b === 'reclaim' && m === 'POST') {
     const o = req.headers.origin, own = o === undefined || /^(tauri:\/\/localhost|https?:\/\/tauri\.localhost)$/i.test(o) || new RegExp(`^http://(localhost|127\\.0\\.0\\.1|\\[::1\\]):${PORT}$`, 'i').test(o);
     if (!isLocal(req) || !own) return fail(res, 403, 'only the TribeCode app on the host computer can do this');

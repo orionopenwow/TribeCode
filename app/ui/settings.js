@@ -85,6 +85,7 @@
       ${C() && C().connected() && window.TribeMcpDir ? row('TribeCode MCP', '<button class="btn" id="set-mcp" data-mcpdir-open>Open</button>', 'Use this project inside Claude, ChatGPT, VS Code, Cursor and more. (MCP is the plug AI tools use to talk to TribeCode.)') : ''}
       ${C() && C().connected() && window.TribeChatRich ? row('Chat', '<div id="set-chat"></div>', 'Link previews, GIF search and chat backgrounds.') : ''}
       ${C() && C().connected() ? row('Sign-in', '<div id="set-oauth"></div>', 'Discord, GitHub or Google: join with one tap, sign back in on a new device.') : ''}
+      ${window.TribeHost && window.TribeHost.isDesktop && C() && C().connected() && (C().state().me || {}).role === 'host' ? row('Start fresh', '<button class="btn danger" id="set-fresh">Start fresh…</button>', 'Moves this whole tribe (every account and guest, chat, projects, docs) into a backup folder next to it and starts an empty one. You become the host again. Nothing is deleted.') : ''}
       ${row('Fix problems', '<button class="btn" id="set-refresh">Refresh TribeCode</button>', 'Clears the app\'s stored files and reloads it fresh. You stay signed in, and your drafts, unsent messages and place are kept.')}
       ${row('Crash reports', `<button class="toggle set-toggle" role="switch" id="set-crash" aria-label="Send crash reports" aria-checked="${st.crashReports !== false}"><span class="switch"></span></button>`, 'When something breaks, send the error and recent logs to the bug inbox. Repeats are filed once.')}
       ${C() && C().connected() && window.TribeMentions ? row('Agents in chat', '<div id="set-pubagents"></div>', 'Type @my-claude or @maya\'s-claude in a channel: the agent answers there for everyone. Each owner\'s "Friends can ask my AI" still applies.') : ''}
@@ -138,6 +139,19 @@
         toast(out.path ? `Saved to ${out.path}` : 'Saved a copy');
       } catch (e) { toast(e.message || 'Could not save a copy'); }
       cp.disabled = false; cp.textContent = 'Save a copy';
+    };
+    const fr = $('#set-fresh'); if (fr) fr.onclick = async () => {
+      const typed = prompt('This moves every account, guest, message, project and doc into a backup folder and starts an empty tribe. You will be the host of the new one.\n\nType START FRESH to continue.');
+      if (typed !== 'START FRESH') { if (typed !== null) toast('Nothing changed. Type START FRESH exactly to continue.'); return; }
+      fr.disabled = true; fr.textContent = 'Starting fresh…';
+      try {
+        const r = await C().api('/host/fresh-start', { method: 'POST', body: { confirm: 'START FRESH' } });
+        try { sessionStorage.setItem('tribecode.fresh', r.backup || '1'); } catch {}
+        const st = S.get(); S.set({ server: { ...(st.server || {}), token: null, member: null } });
+        await new Promise(res => setTimeout(res, 1500));
+        if (window.TribeApp && window.TribeApp.hostHere) await window.TribeApp.hostHere({ noStaleCheck: true });
+        location.reload();
+      } catch (e) { fr.disabled = false; fr.textContent = 'Start fresh…'; toast(e.message || 'Could not start fresh'); }
     };
     const rf = $('#set-refresh'); if (rf) rf.onclick = () => { rf.disabled = true; rf.textContent = 'Refreshing…'; (window.TribeSelfHeal && window.TribeSelfHeal.refresh ? window.TribeSelfHeal.refresh() : location.reload()); };
     const hs = $('#set-host'); if (hs) hs.onclick = async () => { hs.disabled = true; await window.TribeApp.setHosting(hs.getAttribute('aria-checked') !== 'true'); draw(); };

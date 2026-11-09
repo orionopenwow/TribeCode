@@ -62,3 +62,27 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   window.TribeHelpers = { render, state, reset: () => { put({}); render(); } };
 })();
+
+// After Start fresh (Settings): once the new host is signed in, show the admin sign-in link a single time, so the host
+// can sign in as admin from another device. It's a device link (Settings › Devices lists and revokes it).
+(function () {
+  const C = () => window.TribeClient;
+  let shown = false;
+  async function maybe() {
+    let flag = null; try { flag = sessionStorage.getItem('tribecode.fresh'); } catch {}
+    const st = C() && C().state(); if (!flag || shown || !st || !st.me || st.me.role !== 'host') return;
+    shown = true; try { sessionStorage.removeItem('tribecode.fresh'); } catch {}
+    let link = ''; try { const r = await C().api('/device-link', { method: 'POST', body: { label: 'Admin sign-in', days: 365 } }); link = location.origin + r.path; } catch {}
+    const ov = document.createElement('div'); ov.className = 'dt-intro'; ov.id = 'fresh-done';
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    ov.innerHTML = `<div class="dt-in-card" style="text-align:left"><div class="dt-in-e">🧹</div><h2>A fresh tribe</h2>
+      <p class="dt-in-p" style="margin-left:0">Every old account and guest is gone from this tribe, and you're its host (the admin). The old tribe is saved in <code>${esc(flag)}</code>.</p>
+      ${link ? `<p class="dt-in-p" style="margin:0 0 8px">Your admin sign-in link, for another device that can reach this tribe:</p><input class="input" id="fresh-link" readonly value="${esc(link)}" style="width:100%;margin-bottom:12px">` : ''}
+      <div class="dt-in-btns" style="display:flex;gap:10px;justify-content:flex-end">${link ? '<button class="btn" id="fresh-copy">Copy link</button>' : ''}<button class="btn primary" id="fresh-ok">Done</button></div></div>`;
+    document.body.appendChild(ov);
+    const cp = ov.querySelector('#fresh-copy'); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText(link); cp.textContent = 'Copied'; } catch {} };
+    ov.querySelector('#fresh-ok').onclick = () => ov.remove();
+  }
+  function boot() { const c = C(); if (c && c.on) { c.on('hello', maybe); if (c.connected()) maybe(); } }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
