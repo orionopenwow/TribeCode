@@ -185,8 +185,11 @@ jobs:
           retryAttempts: 3
 
   # Publish once Windows and Linux built (macOS is best effort, see continue-on-error above).
+  # A Mac job that never gets a runner ends "cancelled", which would skip this job even with continue-on-error, so it
+  # always runs and checks the draft itself: Windows and Linux installers must be there, macOS is optional.
   publish:
     needs: build
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -196,4 +199,9 @@ jobs:
         run: |
           V=$(node -p "require('./app/src-tauri/tauri.conf.json').version")
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then V="${GITHUB_REF_NAME#v}"; fi
+          A=$(gh release view "v$V" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
+          echo "$A"
+          echo "$A" | grep -qiE '\.(msi|exe)$' || { echo "No Windows installer on v$V, not publishing"; exit 1; }
+          echo "$A" | grep -qiE '\.(appimage|deb)$' || { echo "No Linux installer on v$V, not publishing"; exit 1; }
+          echo "$A" | grep -qiE '\.dmg$' || echo "::warning::v$V goes out without a macOS installer (the Mac build didn't finish)"
           gh release edit "v$V" --repo "$GITHUB_REPOSITORY" --draft=false --latest
