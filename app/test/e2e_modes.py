@@ -70,6 +70,16 @@ def main():
             assert host.locator(".st-lic").first.inner_text() in ("MIT", "CC0")
             host.click('[data-remix="gabrielecirulli/2048"]')
             host.wait_for_function("document.querySelector('#np-input') && document.querySelector('#np-input').value === 'https://github.com/gabrielecirulli/2048'")
+            # start with a prompt: the sentence becomes the vision, the name and emoji are guessed
+            host.evaluate("TribeProjects.openNew()")
+            host.fill("#np-idea", "A website for my friend's bakery with hours and a menu")
+            host.click("#np-idea-go")
+            host.wait_for_function("TribeProjects.list().some(p => p.name.startsWith('Bakery Website') && /bakery/.test(p.bio || ''))", timeout=15000)
+            p = [x for x in host.evaluate("TribeProjects.list()") if x["name"].startswith("Bakery Website")][0]
+            assert p["emoji"] == "🌐" and "bakery" in (p.get("bio") or ""), p
+            req = urllib.request.Request(BASE + "/api/vision", headers={"Authorization": "Bearer " + tok, "X-Project": p["id"]})
+            with urllib.request.urlopen(req) as r: vis = json.loads(r.read())
+            assert "bakery" in json.dumps(vis), vis
             b.close()
         assert not errors, errors
         print("ok e2e_modes")
