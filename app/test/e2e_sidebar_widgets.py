@@ -183,6 +183,7 @@ def main():
             assert rows(host) == CORE + ["Website", "Level map", "Bugs"], rows(host)
 
             # ---- the room panel: readable, fewer lines
+            host.evaluate("try { localStorage.setItem('tribecode.helpers.v1', JSON.stringify({flint: true, brain: true, ai: true})); window.TribeHelpers && TribeHelpers.render() } catch (e) {}")
             host.click("#nest-overview")
             host.evaluate("TribeStage && TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:true, repo:true}, {pin:true})")   # past setup: the panel shows everything
             host.wait_for_selector("#room-helpers [data-helper='flint']", state="attached", timeout=45000)

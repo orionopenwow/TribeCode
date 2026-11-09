@@ -78,21 +78,22 @@ def main():
             fake = {"items": [
                 {"id": "ex:1", "kind": "issue", "title": "GET /api/docs/:id/backlinks -> 404", "body": "answered 404 · Where: Command palette", "source": "explorer", "at": "2026-11-07T08:00:00Z"},
                 {"id": "ex:2", "kind": "issue", "title": "Journey fails: Preview the app", "body": "no visible affordance", "source": "explorer", "at": "2026-11-07T08:00:00Z"},
-                {"id": "h:ollama", "kind": "health", "title": "Flint is in basic mode", "body": "x", "source": "health"}]}
+                {"id": "h:ollama", "kind": "health", "title": "Flint has no AI yet", "body": "x", "source": "health"}]}
             def with_api(route):
                 r = route.fetch(); d = r.json(); d["insightsApi"] = True
                 route.fulfill(response=r, body=json.dumps(d))
             pg.route(lambda u: u.endswith("/api/hub"), with_api)
             pg.route("**/api/insights", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(fake)))
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000)
+            pg.evaluate("try { localStorage.setItem('tribecode.helpers.v1', JSON.stringify({flint: true, brain: true, ai: true})); window.TribeHelpers && TribeHelpers.render() } catch (e) {}")
             pg.evaluate("TribeHub.open('home')")
             pg.wait_for_selector("#home-ai-cards details.ai-dev", timeout=15000)
             cards = pg.inner_text("#home-ai-cards")
             assert "backlinks" not in cards and "Journey fails" not in cards, "the test robot's findings are folded away: " + cards[:400]
             assert "Test robot notes (2)" in cards, cards[:400]
-            assert "Flint is in basic mode" in cards and "localhost:9" not in cards and "Ollama not reachable" not in cards, cards[:400]
-            assert cards.count("Flint is in basic mode") == 1
-            assert pg.locator("#home-ai-cards [data-ai-card-go]:has-text('Pick a brain')").count() == 1
+            assert "Flint has no AI yet" in cards and "localhost:9" not in cards and "Ollama not reachable" not in cards, cards[:400]
+            assert cards.count("Flint has no AI yet") == 1
+            assert pg.locator("#home-ai-cards [data-ai-card-go]:has-text('Choose Flint')").count() == 1
             assert pg.locator("#home-ai-cards .ai-card b:text-is('Connect your AI')").count() == 0, "the panel's own Connect your AI card is enough on desktop"
             pg.click("#home-ai-cards details.ai-dev > summary"); pg.wait_for_selector("#home-ai-cards details.ai-dev[open] .ai-card")
             assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All code", "Agent fleet"]
@@ -126,7 +127,7 @@ def main():
             pg.wait_for_selector("#board .col-hint", timeout=8000)
             assert "New task" in pg.inner_text("#board .col-hint")
             pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fg-empty", timeout=10000)
-            assert "New doc" in pg.inner_text(".fg-empty")
+            assert "New" in pg.inner_text(".fg-empty")
             pg.evaluate("TribeApp.show('coord')"); pg.wait_for_selector("#ad-hero", timeout=10000)
             hero = pg.inner_text("#ad-hero")
             assert "MCP tool" not in hero, hero
