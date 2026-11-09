@@ -364,7 +364,8 @@ let mcpFlow = null;
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
@@ -404,6 +405,9 @@ const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str, perms });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
+// feat/ship-flow: Ship it (review what changed, vote to push), Turbo (ships on its own at calm moments), Share, Pulse, Split (server/ship.js)
+const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
+  can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
@@ -489,7 +493,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -761,6 +765,7 @@ async function apiInProject(req, res, url) {
     }
   }
 
+  if (a === 'ship' || (a === 'tasks' && c === 'split')) { const h = await ship.route(req, res, ctx()); if (h !== null) return; }   // feat/ship-flow
   if (a === 'tasks') {
     if (m === 'GET' && !b) return send(res, 200, { tasks: loadTasks() });
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');

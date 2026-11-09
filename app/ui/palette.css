@@ -247,3 +247,6 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .ock-sg:hover { border-color: var(--teal, #38C6B1); } .ock-sg span { color: var(--teal, #38C6B1); font-weight: 700; }
 .ock-own { display: flex; gap: 8px; } .ock-own .input { flex: 1; min-width: 0; font-size: 14px; }
 .ock-row .ock-main .ock-inline { margin-top: 10px; }
+/* feat/ship-flow: At a glance › Share progress */
+.pj-glance .pl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pj-share { font-size: 13px; }

@@ -149,6 +149,12 @@
     const still = () => n === seq && el.isConnected && onView();
     // slower pieces fill in after the first paint
     C.api('/coord/plan').then(r => { d.plan = r.plan; if (still()) paint(el, d); }).catch(() => {});
+    // feat/ship-flow: who is waiting on whom, and a ship vote that needs you
+    Promise.all([C.api('/ship/pulse').catch(() => null), C.api('/ship').catch(() => null)]).then(([pl, sh]) => {
+      d.pulse = pl && pl.lines || []; d.ship = sh;
+      const shows = d.pulse.some(x => x.kind === 'wait' || x.kind === 'ship') || (sh && sh.request && sh.request.status === 'pending');   // repaint only when there is something to show
+      if (shows && still()) paint(el, d);
+    });
     if (cfCache.pid !== pid() || Date.now() - cfCache.at > 60_000) {
       C.api('/coord/conflicts').then(r => { cfCache = { at: Date.now(), pid: pid(), d: r }; d.conflicts = r; if (still()) paint(el, d); }).catch(() => {});
     }
@@ -175,13 +181,17 @@
         <div class="ad-a-main"><b>${esc(a.name)}</b><span class="ad-a-doing">${esc(doing)}${extra ? ` <code>${esc(extra)}</code>` : ''}</span>
         <span class="ad-a-meta">${esc(a.yours ? 'yours' : `${a.ownerName}'s`)} · ${esc(when)}${a.tokens !== null && a.tokens !== undefined ? ` · ${esc(k(a.tokens))} tokens` : ''}${a.control ? ` · <span class="ad-warn">${esc(ctlLabel(a.control))}</span>` : ''}</span></div>${steer}</div>`;
     };
+    const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');   // feat/ship-flow: who is waiting on whom
     return `<section class="ad-card ad-hero" id="ad-hero">${head('Agents', on ? `${plural(on, 'agent')} working now` : 'No agents working right now', 'agents-hub', 'Your agents')}
-      <div class="ad-rows">${shown.map(row).join('')}</div>
+      <div class="ad-rows">${shown.map(row).join('')}</div>${waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : ''}
       ${list.length > 5 ? `<button class="linkish ad-more" data-ad-more="agents">${moreAgents ? 'Show fewer' : `Show all ${list.length}`}</button>` : ''}</section>`;
   }
 
   function needsItems(d) {
     const my = me().id, out = [];
+    const rq = d.ship && d.ship.request;   // feat/ship-flow: a ship vote waiting on you
+    if (rq && rq.status === 'pending' && (rq.tally.waitingOn || []).includes(me().name) && !(rq.votes || []).some(v => v.id === my)) out.push({ kind: 'Ship', view: '', title: `Ship ${plural(rq.count, 'saved change')} to GitHub?`, sub: `${rq.byName} asked · ${rq.modeText}`,
+      acts: `<button class="btn ad-btn ok" data-ad-ship="yes" data-id="${esc(rq.id)}">Approve</button><button class="btn ad-btn no" data-ad-ship="no" data-id="${esc(rq.id)}">Deny</button>` });
     d.reviews.filter(r => r.status === 'pending' && r.canDecide).forEach(r => out.push({ kind: 'Review', view: 'reviews', title: r.title, sub: `${r.byName}${r.branch ? ' · ' + r.branch : ''}`,
       acts: `<button class="btn ad-btn ok" data-ad-rv="approve" data-id="${esc(r.id)}">Approve</button><button class="btn ad-btn no" data-ad-rv="deny" data-id="${esc(r.id)}">Deny</button>` }));
     d.handoffs.filter(h => h.status === 'open' && h.from !== my && (!h.to || h.to === my)).forEach(h => out.push({ kind: 'Hand-off', view: 'handoffs', title: h.title, sub: `From ${h.fromName} · ${ago(h.created)}`,
@@ -266,6 +276,7 @@
     if (b && b.dataset.adMore) { if (b.dataset.adMore === 'agents') moreAgents = !moreAgents; else moreOwners = !moreOwners; return paint(el, d); }
     if (b && b.dataset.adCtl) return run(async () => { const action = b.dataset.adCtl; await C.api(`/coord/agents/${encodeURIComponent(b.dataset.id)}/control`, { method: 'POST', body: { action } }); toast(action === 'resume' ? 'Resumed' : 'Pause requested'); refresh(); side(); });
     if (b && b.dataset.adRv) return run(async () => { const v = b.dataset.adRv; await C.api(`/coord/reviews/${encodeURIComponent(b.dataset.id)}/${v}`, { method: 'POST', body: {} }); resolve(b, v === 'approve' ? 'Approved: task moved to Done' : 'Sent back to doing'); setTimeout(refresh, 300); });
+    if (b && b.dataset.adShip) return run(async () => { const v = b.dataset.adShip; await C.api(`/ship/${encodeURIComponent(b.dataset.id)}/vote`, { method: 'POST', body: { vote: v } }); resolve(b, v === 'yes' ? 'Voted yes' : 'Voted no'); setTimeout(refresh, 600); });   // feat/ship-flow
     if (b && b.dataset.adTake) return run(async () => { await C.api(`/coord/handoffs/${encodeURIComponent(b.dataset.adTake)}/take`, { method: 'POST', body: {} }); resolve(b, 'It\'s yours'); setTimeout(refresh, 300); });
     if (b && b.dataset.adAp) return run(async () => { const v = b.dataset.adAp; await C.api(`/approvals/${encodeURIComponent(b.dataset.id)}/${v}`, { method: 'POST', body: {} }); resolve(b, v === 'approve' ? 'Approved' : 'Denied'); setTimeout(refresh, 3200); });
     if (b && b.hasAttribute('data-ad-sync')) return run(async () => { const r = await C.api('/coord/conflicts/sync', { method: 'POST', body: { a: b.dataset.a, b: b.dataset.b } }); cfCache.at = 0; resolve(b, `Asked ${r.asked.join(' and ')} to sync`); setTimeout(refresh, 300); });

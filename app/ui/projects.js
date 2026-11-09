@@ -226,7 +226,7 @@
         ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
       ${hero ? checklist : ''}
 ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
-      ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span></div>
+      ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span><button class="linkish pj-share" id="pj-share" type="button" title="Copy progress, the GitHub link and an invite link">📤 Share progress</button></div>
           <div class="pl-grid">${tiles.map(([k, i, t, go, hot]) => `<button class="pl-cell ${hot ? 'hot' : ''}" data-go="${go}">${ico(i, 16)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">
         <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
@@ -267,6 +267,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const chk = $('#pj-check.hero');
     if (chk) { chk.querySelectorAll('.btn.primary').forEach(x => x.classList.remove('primary')); const nx = chk.querySelector('.ock-row:not(.on)'); if (nx) { nx.classList.add('ock-next'); const b1 = nx.querySelector('.ock-acts .btn, .ock-below .btn'); if (b1) b1.classList.add('primary'); } }
     bindInline(p, visFocus);
+    const shb = $('#pj-share'); if (shb) shb.onclick = () => window.TribeShip && window.TribeShip.share();   // feat/ship-flow
     if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite();
