@@ -15,7 +15,7 @@ const crypto = require('node:crypto');
 
 const TEXT = /\.(json|jsonl|md|txt|csv)$/i;
 const SKIP = /^(\.git|node_modules|repo|repos|workspace|worktrees|uploads|media|packs|\.cache|\.explore|thumbs)(\/|$)/;
-const SECRET = /(^|\/)\.tribe\/(.*secret.*|secrets\/.*|github\.json|webpush.*|vapid.*)$/i;
+const SECRET = /(^|\/)\.tribe\/(.*secret.*|secrets\/.*|github\.json|oauth\.json|webpush.*|vapid.*|notify.*|push.*)$/i;   // never in anyone's copy
 const SAFE = /^[A-Za-z0-9._\-/]{1,200}$/;
 const MAX_FILE = 400 * 1024, MAX_TOTAL = 1800 * 1024, JSONL_KEEP = 1500;   // fits a browser's localStorage
 

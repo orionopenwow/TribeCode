@@ -131,5 +131,6 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
     return true;
   }
 
-  return { route, serveApp, memberForToken, deviceForToken, create, redeem, list: () => devices };
+  const reload = () => { devices = store.readJSON('.tribe/devices.json', []); };   // cloud save put the file back
+  return { route, serveApp, memberForToken, deviceForToken, create, redeem, reload, list: () => devices };
 };
