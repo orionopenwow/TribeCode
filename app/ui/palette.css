@@ -250,3 +250,11 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 /* feat/ship-flow: At a glance › Share progress */
 .pj-glance .pl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .pj-share { font-size: 13px; }
+
+/* v0.22 robust face fit: every face is a true square that never stretches; a picture covers it edge to edge; an
+   emoji is sized from the tile's width (works even where the tile's height comes from flex or grid) and is never 0 */
+.pj-face { aspect-ratio: 1 / 1; flex-shrink: 0; position: relative; box-sizing: border-box; line-height: 1; }
+.pj-face.img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.pj-face.emo { container-type: inline-size; font-size: 20px !important; }
+.pj-face .pj-emo { font-size: 1em; font-size: 60cqi; width: 100%; transform: none; display: grid; place-items: center; height: 100%; }
+.window .rail .pj-face.emo, .side .pj-strip .pj-face.emo { font-size: 24px !important; }

@@ -48,6 +48,8 @@ jobs:
           python3 app/test/e2e_friend.py
           python3 app/test/e2e_session.py
           python3 app/test/e2e_outbox.py
+          python3 app/test/e2e_journeys.py
+          python3 app/test/e2e_fresh.py
 
   build:
     needs: gate

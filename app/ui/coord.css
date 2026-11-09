@@ -233,3 +233,21 @@
 .fc-acts button { flex: 1; flex-direction: row; justify-content: center; padding: 6px 0; font-size: 16px; line-height: 1; border-radius: 8px; }
 .fc-prompt { height: 32px; font-size: 13px !important; }
 .fc-now { padding: 8px 10px; }
+
+/* Set up your helpers (app/ui/helpersetup.js) */
+.hs-card { margin: 0 0 14px; padding: 12px 12px 6px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.hs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.hs-x { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 13px; padding: 4px; }
+.hs-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.hs-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 4px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; font-size: 14px; }
+.hs-e { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; background: var(--surface-2); font-size: 14px; flex: none; }
+.hs-step.ok .hs-row { color: var(--muted); cursor: default; } .hs-step.ok .hs-e { background: rgba(59, 209, 111, .14); color: #3BD16F; font-weight: 700; }
+.hs-body { display: none; padding: 0 4px 10px 40px; } .hs-step.open .hs-body { display: block; }
+.hs-body p { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--muted); }
+.hs-opts { display: grid; gap: 6px; margin-bottom: 8px; }
+.hs-opt { display: grid; gap: 2px; text-align: left; padding: 9px 10px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); color: var(--text); cursor: pointer; }
+.hs-opt:hover { border-color: var(--accent); } .hs-opt small { color: var(--muted); font-size: 12px; }
+.hs-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+body.hs-on #cc-connect { display: none !important; }
+/* Flint's dock: just the Ask box until there is a conversation (no "basic mode · no model" header, no empty hello) */
+.flint:not(.has-msgs) .fl-head, .flint:not(.has-msgs) .fl-thread { display: none; }

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.22.0
+- **Phones**: project pictures and emoji fill their squares on phones too, and the demo tour plays by itself with Flint's live line above the bar.
+- **The demo tour**: three short slides first (what you'll see, what TribeCode is, how it works), then Flint plays the whole tour himself. Nothing to click: a spotlight dims everything but what's happening and follows each click and each typed box, and Flint's line at the bottom says what he's doing ("Clicking Save vision", "Typing the vision") and then what it means. Pause, skip and Try it yourself stay on the bar.
+- **Your helpers**: the right panel starts with three short steps: Meet Flint, give Flint an AI (built in, on this computer, or a cloud key, or keep simple rules), and bring your own AI (Claude Code, Codex, Cursor, Gemini). Steps tick themselves when they're already true, and the card goes away once done. Flint's box at the bottom is just the Ask box until you talk to him (no more "basic mode · no model" header). "Pick a brain" is now "Choose Flint's AI".
+- **Start fresh** (Settings, host on the desktop app): moves the whole tribe (every account and guest, chat, projects, docs) into a backup folder next to it and starts an empty tribe with you as host, then shows your admin sign-in link once. Nothing is deleted.
+- Project faces: emoji and pictures are true squares everywhere (rail, lists, phone), sized from the tile so they never vanish or spill.
+- The game starter's page takes your project's name.
+- Tests: end-to-end journeys from joining a tribe to a finished game (in the Preview), app (phone starter) and website (published files), plus a TribeCode-style landing page; part of the release gate.
+
 ## v0.21.0
 - **Phones**: the message box no longer brings up the password-autofill bar; it grows to a few lines, Enter sends (Shift+Enter for a new line), and a slim format strip (bold, italic, strike, code, link, list) rides above it while you type. The newest message always sits just above the box, including when the keyboard opens, and the Add to Home Screen tip never covers the chat.
 - **Files**: start anything from the top of Files: a doc, sheet or slides, from a template, by asking Flint, or by uploading files. Cards say exactly what each file is (Sheet, CSV, Slides, Doc) and fit more on screen.
