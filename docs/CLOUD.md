@@ -13,8 +13,10 @@ Run a TribeCode tribe on a free cloud host, so you and your friends can join fro
 
 ## What to know about the free plan
 
-- It sleeps after 15 minutes with nobody connected, and takes about a minute to wake up. While anyone has the tribe open, it stays awake.
-- Its files are wiped when it sleeps, restarts or redeploys. That includes chat, tasks and members. **Your code is safe once it's on GitHub.** For a tribe that keeps everything, host on your own computer (Tailscale Funnel or Cloudflare, see HOSTING.md) or on a paid cloud plan with a disk.
+- It sleeps after 15 minutes with nobody connected, and takes about a minute to wake up. **Keep-awake:** for 3 hours after real use, the server visits its own address every 10 minutes, so an evening's chat doesn't nap (`TRIBE_KEEP_AWAKE_HOURS`, 0 turns it off). It uses free hours; one service all month fits in Render's 750.
+- Its files are wiped when it sleeps, restarts or redeploys. **Cloud save brings them back:** every member's browser keeps a sealed copy of what that member can see (messages, members, tasks, docs, invites), refreshed about once a minute and after new messages. When the server wakes up empty, the first member who opens TribeCode puts the tribe back from their copy, and everyone stays signed in. Later arrivals add what they have, such as their own DMs and newer messages. If someone opens it before anyone with a copy, they see "The tribe is waking up" and wait.
+- The seals use a key made from `TRIBE_SETUP_CODE`, so nobody can edit a copy to give themselves more power. Each copy holds only what that person could already see: no one else's DMs, and no server secrets.
+- Copies hold the last 1,500 messages per channel and stay under about 2 MB. **Your code is safest on GitHub.**
 - 750 free hours a month per Render workspace.
 
 ## Other hosts

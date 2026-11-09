@@ -69,6 +69,14 @@ const tribe = baseStore.readJSON('.tribe/tribe.json', null) || (() => { const t 
 // Project rooms (server/projects.js): every module gets a project-aware view of the tribe folder.
 const P = makeProjects({ store: baseStore, tribe, slug, defaultRepo: REPO });
 const store = P.scopedStore();
+// Cloud save (server/cloudsave.js): members' browsers keep sealed copies, so a free cloud host's wipe loses nothing.
+const cloudsave = require('./cloudsave')({ root: baseStore.root, key: CLOUD && process.env.TRIBE_SETUP_CODE ? SETUP_CODE : '', log: m => console.log('  ' + m) });
+let lastActivity = Date.now();   // keep-awake (below): real use, not our own pings
+function reloadAfterRestore() {
+  members = baseStore.readJSON('.tribe/members.json', []); invites = baseStore.readJSON('.tribe/invites.json', []);
+  Object.assign(tribe, baseStore.readJSON('.tribe/tribe.json', {}) || {});
+  if (P.reload) P.reload();
+}
 P.migrate();
 const W = makeWorkspace({ store: baseStore, slug });
 let members = store.readJSON('.tribe/members.json', []);
@@ -550,7 +558,28 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
+  if (!req.headers['x-tribe-ping']) lastActivity = Date.now();
+  // cloud save: a fresh, empty tribe takes a member's sealed copy back (no setup code needed: the seals prove it came from here)
+  if (a === 'cloud' && b === 'restore' && m === 'POST') {
+    if (!CLOUD || !cloudsave.enabled) return fail(res, 400, 'cloud save is off');
+    if (members.length) return fail(res, 409, 'this tribe is already running; use merge');
+    if (limited(req, 6)) return fail(res, 429, 'slow down');
+    try { const r = cloudsave.restore(await readBody(req, 6_000_000)); reloadAfterRestore(); broadcast({ type: 'project' }); return send(res, 200, { ...r, members: members.length }); }
+    catch (e) { return fail(res, e.status || 400, e.message); }
+  }
+  if (a === 'cloud' && b === 'snapshot' && m === 'GET') {
+    if (!need()) return;
+    if (!CLOUD) return send(res, 200, { enabled: false });
+    return send(res, 200, cloudsave.snapshot(me));
+  }
+  if (a === 'cloud' && b === 'merge' && m === 'POST') {
+    if (!need()) return;
+    if (!CLOUD || !cloudsave.enabled) return send(res, 200, { enabled: false });
+    if (limited(req, 20)) return fail(res, 429, 'slow down');
+    try { const r = cloudsave.merge(await readBody(req, 6_000_000)); if (r.added || r.files) reloadAfterRestore(); return send(res, 200, r); }
+    catch (e) { return fail(res, e.status || 400, e.message); }
+  }
+  if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, cloudSave: cloudsave.enabled, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
     ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
@@ -1019,6 +1048,15 @@ function start() {
   // Write live doc edits that are still inside the debounce window before exiting.
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { docs.live.persistAll(); } catch (e) { console.error(e); } process.exit(0); });
   server.on('error', e => { console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Is another TribeCode server running?` : e.message); process.exit(1); });
+  // Keep-awake (cloud): free hosts sleep after ~15 min without visitors. For a few hours after real use, the server visits
+  // its own public address every 10 minutes so an evening's chat doesn't nap mid-conversation. TRIBE_KEEP_AWAKE_HOURS=0 turns it off.
+  if (CLOUD) {
+    const hours = Number(process.env.TRIBE_KEEP_AWAKE_HOURS ?? 3);
+    if (hours > 0) setInterval(() => {
+      const url = share.publicUrl(); if (!url || Date.now() - lastActivity > hours * 3600_000) return;
+      fetch(url + '/api/health', { headers: { 'x-tribe-ping': '1' } }).catch(() => {});
+    }, 10 * 60_000).unref();
+  }
   server.listen(PORT, HOST, () => {
     const lan = Object.values(os.networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal);
     console.log(`\n  🔥 TribeCode server v${VERSION}  ·  tribe "${tribe.name}"`);
