@@ -98,7 +98,7 @@
   function pfPatch(mid, b) {
     const p = pfRaw(mid);
     for (const k of ['nameColor', 'pronouns', 'bio', 'tz', 'presence']) if (k in b) { if (b[k] === null || b[k] === '') delete p[k]; else p[k] = String(b[k]).slice(0, k === 'bio' ? 300 : 80); }
-    if ('avatar' in b) { const a = b.avatar || { kind: 'initials' }; if (a.kind === 'initials') delete p.avatar; else if (a.kind !== 'photo') p.avatar = { kind: a.kind, emoji: a.emoji || undefined, pixel: a.pixel || undefined, tint: a.tint || null }; }
+    if ('avatar' in b) { const a = b.avatar || { kind: 'initials' }; if (a.kind === 'initials') delete p.avatar; else if (a.kind !== 'photo') p.avatar = { kind: a.kind, emoji: a.emoji || undefined, pixel: a.pixel || undefined, spec: a.spec || undefined, tint: a.tint || null }; }
     if ('banner' in b) { if (!b.banner) delete p.banner; else if (b.banner.color) p.banner = { color: b.banner.color }; }
     if ('status' in b) { const st = b.status; if (!st || (!st.text && !st.emoji)) delete p.status; else { const ms = { '30m': 30 * 60e3, '4h': 4 * 3600e3 }[st.clear]; p.status = { emoji: st.emoji || null, text: String(st.text || '').slice(0, 80), until: ms ? iso(Date.now() + ms) : null }; } }
     if ('links' in b) p.links = (Array.isArray(b.links) ? b.links : []).slice(0, 3).filter(l => l && /^https?:\/\//.test(l.url || '')).map(l => ({ url: String(l.url).slice(0, 300), label: String(l.label || '').slice(0, 32) }));

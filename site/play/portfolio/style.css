@@ -1,0 +1,18 @@
+/* The starter's look: flat colors from design/palette.css (the same values are inlined here). */
+:root { {{palette}} }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.6 system-ui, sans-serif; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 48px 16px; }
+.eyebrow { font: 12px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--second); margin: 0 0 12px; }
+h1 { font-size: clamp(28px, 6vw, 44px); line-height: 1.15; margin: 0 0 12px; }
+h1:empty { display: none; }
+.lead { opacity: .85; margin: 0 0 24px; }
+.card { background: var(--surface); border: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); border-radius: 12px; padding: 16px; }
+form { display: flex; gap: 8px; }
+input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); background: var(--canvas); color: var(--ink); font: inherit; }
+button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+ul { list-style: none; margin: 12px 0 0; padding: 0; }
+li { padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); display: flex; gap: 8px; align-items: center; }
+li input { flex: 0 0 auto; }
+li.done span { text-decoration: line-through; opacity: .6; }
+.foot { font-size: 13px; opacity: .6; margin-top: 24px; }

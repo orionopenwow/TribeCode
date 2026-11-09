@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.24.0
+- **Phones**: the setup steps stay as big cards on phones too until all four are done.
+- **Website copy**: rewritten in plainer, more human words. New headline ("Build the thing with your friends."), and every section says what it does in one or two specific sentences instead of lists and slogans. The GitHub strip is more distinct (a Star it on GitHub button, bigger numbers) and the download buttons show the system's icon, the kind of file and its size.
+- **Avatars**: 36 new pixel icons in six themes (Space, Ocean, Fantasy, Tech, Food, Play) next to the 24 Campfire ones, picked by theme in the profile editor. And **Make one**, a pixel avatar maker: skin, hair, hair color, eyes, mouth, an extra (glasses, cap, headphones, crown, bow, blush) and a shirt, plus 🎲 Surprise me, on any tint.
+- **Website**: the Learn panel is clearer and more polished (your path, progress, the course in numbers, numbered modules). Starter cards show real screenshots of real starters instead of pixel sketches, and four of them play right in their thumbnail (▶ Play / Try it), or big with ⤢: the Pixel platformer game, the Habit tracker, the Shared list and the Portfolio. The open-source "Remix a classic" cards show real screenshots from each project (2048, Phaser, LittleJS, KAPLAY, Godot, three.js, TodoMVC); the rest show a plain tile.
+- **Setup stays until it's done**: writing the vision (or adding a task) no longer shrinks the dashboard's four setup steps into a small list. The big step cards stay at the top until the vision, a first task, your AI and the code repository are all done, so nobody skips the last two. The fold button tucks them into the compact list if you'd rather.
+- Releases no longer wait on GitHub's Mac machines: when the Mac build can't start, Windows and Linux still ship and the Mac installer follows in a later release.
+
 ## v0.23.0
 - **Phones**: the Code view's editor works on phones too (a full-width box with Save and Lock below it).
 - **Edit code in the app**: in Files › Code, open a file and press ✏️ Edit. Save (Ctrl S) writes it and commits it on the checked-out branch with your name and an optional note, and the history updates. Tab indents, Esc cancels.

@@ -33,7 +33,7 @@
 
   // ---------- 24 pixel critters (10×10, original art in the TribeCode campfire style) ----------
   const INK = { r: '#E8603C', o: '#F2B33D', y: '#FFD866', w: '#F8FAFC', k: '#1B2028', b: '#8B5A3C', n: '#C98B5B', g: '#7FBF5A', G: '#4E8A3E',
-    t: '#38C6B1', s: '#9AA7B8', p: '#FF9AAE', u: '#4FA8F0', v: '#A58BFF', d: '#5A3A28', c: '#E9D8B4' };
+    t: '#38C6B1', s: '#9AA7B8', p: '#FF9AAE', u: '#4FA8F0', v: '#A58BFF', d: '#5A3A28', c: '#E9D8B4', m: '#E07BD0', l: '#9ED8FF' };
   const ART = {
     flame:       ['....r.....', '....rr....', '...rro....', '...roor...', '..rrooor..', '..roooyr..', '.rrooyyor.', '.rooyyyor.', '.rooyyyor.', '..rroyorr.'],
     campfire:    ['....r.....', '...ror....', '...roor...', '..royyor..', '..royyor..', '...ryyr...', '.bb.rr.bb.', '..bbbbbb..', '.bb.bb.bb.', '..........'],
@@ -59,8 +59,47 @@
     firefly:     ['..........', '..w....w..', '.www..www.', '..wwkkww..', '....kk....', '...kkkk...', '...kyyk...', '...yyyy...', '....yy....', '..........'],
     snail:       ['..........', '..........', '...bbbb...', '..bnnnnb..', '.bnbbbnnb.', '.bnbnbnnb.', '.bnbbnnb..', 'k.bbbbb...', 'cccccccc..', '..........'],
     acorn:       ['.....d....', '....d.....', '..dddddd..', '.dbdbdbdd.', '.dddddddd.', '..nnnnnn..', '..nnnnnn..', '...nnnn...', '....nn....', '..........'],
+  // v0.24 themed packs (original art): space, ocean, fantasy, tech, food, play
+    rocket: ['....w.....', '...www....', '...wuw....', '...www....', '...wuw....', '...www....', '..rwwwr...', '.rr.w.rr..', '....o.....', '...oyo....'],
+    planet: ['..........', '....vvv...', '...vvvvv..', 'oo.vmvvv..', '.oovvvvvoo', '..vvvvvoo.', '..vvvvoo..', '...voo....', '..oo......', '..........'],
+    alien: ['..........', '...gggg...', '..gggggg..', '.gkkggkkg.', '.gkkggkkg.', '.gggggggg.', '..gggkgg..', '...gggg...', '..g.gg.g..', '.g......g.'],
+    ufo: ['..........', '....ll....', '...llll...', '..ssssss..', '.ssyssyss.', 'ssssssssss', '.ssssssss.', '...y..y...', '..y....y..', '.y......y.'],
+    comet: ['......ww..', '....oyyww.', '...oyyyyw.', '..oyyyyyy.', '.oyyyyyy..', 'o.oyyyy...', '.o.oyy....', 'o.o.......', '.o........', '..........'],
+    astronaut: ['...wwww...', '..wwwwww..', '.wwllllww.', '.wlklklw..', '.wllllllw.', '..wwwwww..', '.wwwrwwww.', 'wwwwwwwwww', '.ww.ww.ww.', '.ss....ss.'],
+    fish: ['..........', '......o...', '..ooooo...', '.oooooooo.', 'okooooooo.', 'oooooooooo', '.oooooooo.', '..ooooo...', '......o...', '..........'],
+    octopus: ['...mmmm...', '..mmmmmm..', '.mmmmmmmm.', '.mwkmmwkm.', '.mmmmmmmm.', '..mmmmmm..', '.m.mm.mm.m', 'm.m..m..m.', '.m.m.m.m..', '..........'],
+    whale: ['.......u.u', '........u.', '.uuuuuu.u.', 'uuuuuuuuuu', 'ukuuuuuuuu', 'uuuuuuuuu.', '.wwwwwwuu.', '..wwwwwu..', '..........', 'llllllllll'],
+    crab: ['r..r..r..r', 'rr.r..r.rr', '.rr....rr.', '..rrrrrr..', '.rkrrrrkr.', '.rrrrrrrr.', 'rr.rrrr.rr', '.r......r.', 'r........r', '..........'],
+    shell: ['..........', '....pp....', '...pppp...', '..pcpcpp..', '.pcpcpcpp.', '.pcpcpcpp.', 'pcpcpcpcpp', 'pppppppppp', '..pp..pp..', '..........'],
+    jelly: ['...vvvv...', '..vvvvvv..', '.vvwvvvvv.', '.vvvvvvvv.', '.vvvvvvvv.', '.v.v.v.v..', '.v.v.v.v..', '..v.v.v.v.', '.v.v...v..', '..........'],
+    dragon: ['.g......g.', '.gg....gg.', '..gggggg..', '.gykggykg.', '.gggggggg.', '..gggggggr', '..gwwwwgr.', '...gggg...', '..gg..gg..', '..........'],
+    wizard: ['....v.....', '...vvv....', '...vyv....', '..vvvvv...', '..vvvvvv..', '.vvvvvvvv.', 'vvvvvvvvvv', '..ncknc...', '..nwwwn...', '...www....'],
+    crown: ['..........', '.y..y...y.', '.yy.yy.yy.', '.yyyyyyyy.', '.yryyuyry.', '.yyyyyyyy.', '.yyyyyyyy.', '..........', '..........', '..........'],
+    potion: ['....bb....', '....cc....', '....cc....', '...cccc...', '..cmmmmc..', '.cmmwmmmc.', '.cmmmmmmc.', '.cmmmmmmc.', '..cmmmmc..', '...cccc...'],
+    sword: ['........ss', '.......sws', '......sws.', '.....sws..', 'b...sws...', '.b.sws....', '..bss.....', '..obb.....', '.o..b.....', 'o.........'],
+    shield: ['.uuuuuuuu.', 'uuuuyyuuuu', 'uuuuyyuuuu', 'uuyyyyyyuu', 'uuyyyyyyuu', 'uuuuyyuuuu', '.uuuyyuuu.', '..uuyyuu..', '...uuuu...', '....uu....'],
+    robot: ['....r.....', '....s.....', '.ssssssss.', '.sttsstts.', '.sttsstts.', '.ssssssss.', '.sskkkkss.', '..ssssss..', '.ss.ss.ss.', '.ss....ss.'],
+    joystick: ['....rr....', '...rrrr...', '...rrrr...', '....kk....', '....kk....', '..ssssss..', '.ssrsssus.', '.ssssssss.', '.ssssssss.', '..........'],
+    floppy: ['uuuuuuuuu.', 'uusssssuuu', 'uusskssuuu', 'uusssssuuu', 'uuuuuuuuuu', 'uuwwwwwwuu', 'uuwkkkkwuu', 'uuwwwwwwuu', 'uuwkkkwwuu', 'uuuuuuuuuu'],
+    heart: ['..........', '.rr...rr..', 'rrrr.rrrr.', 'rwrrrrrrr.', 'rrrrrrrrr.', '.rrrrrrr..', '..rrrrr...', '...rrr....', '....r.....', '..........'],
+    ghost: ['...vvvv...', '..vvvvvv..', '.vvvvvvvv.', '.vwkvvwkv.', '.vvvvvvvv.', '.vvvvvvvv.', '.vvvvvvvv.', '.vvvvvvvv.', '.v.vv.vv.v', '..........'],
+    cursor: ['w.........', 'ww........', 'wkw.......', 'wkkw......', 'wkkkw.....', 'wkkkkw....', 'wkkkkkw...', 'wkkwwww...', 'ww.wkw....', '....ww....'],
+    pizza: ['oooooooooo', '.yyyyyyyy.', '.yryyyrly.', '..yyyyyy..', '..yyryyy..', '...yyyy...', '...yryy...', '....yy....', '....y.....', '..........'],
+    donut: ['..mmmmmm..', '.mmwmmmmm.', 'mmmmmmymmm', 'mmm....mmm', 'nnn....nnn', 'nnn....nnn', 'nnnnnnnnnn', '.nnnnnnnn.', '..nnnnnn..', '..........'],
+    burger: ['..nnnnnn..', '.nnwnnnwn.', 'nnnnnnnnnn', 'gggggggggg', 'yyyyyyyyyy', 'dddddddddd', 'rrrrrrrrrr', 'nnnnnnnnnn', '.nnnnnnnn.', '..........'],
+    sushi: ['..........', '..........', '..rrrrrr..', '.rrwrrwrr.', 'rrrrrrrrrr', 'wwwwwwwwww', 'wwwwwwwwww', 'kkkkkkkkkk', '..........', '..........'],
+    icecream: ['...pppp...', '..pppppp..', '..ppwppp..', '.uuuuuuuu.', '.uuuuwuuu.', '..nnnnnn..', '..nnnnnn..', '...nnnn...', '....nn....', '....n.....'],
+    coffee: ['...w.w....', '..w.w.....', '..........', '.ccccccc..', '.cddddc.c.', '.cddddc..c', '.cddddc.c.', '.ccccccc..', '..ccccc...', '.ccccccc..'],
+    headphones: ['..kkkkkk..', '.k......k.', 'k........k', 'k........k', 'kk......kk', 'rrk....krr', 'rrk....krr', 'rrk....krr', '.r......r.', '..........'],
+    guitar: ['........ss', '.......ss.', '......dd..', '.....dd...', '..oood....', '.oooooo...', 'oookkooo..', 'ooooooo...', '.ooooo....', '..ooo.....'],
+    note: ['....kkkkk.', '....kkkkk.', '....k...k.', '....k...k.', '....k...k.', '....k...k.', '.kkkk.kkk.', 'kkkkkkkkk.', 'kkkk.kkk..', '.kk.......'],
+    ball: ['...wwww...', '..wkkwww..', '.wkkkwwkw.', 'wwkwwwkkkw', 'wwwwwwwkkw', 'wkkwwwwwww', 'wkkkwwkkww', '.wkwwkkkw.', '..wwwkkw..', '...wwww...'],
+    trophy: ['.yyyyyyyy.', 'yyyyyyyyyy', 'y.yyyyyy.y', 'y.yyyyyy.y', '.yyyyyyyy.', '..yyyyyy..', '....yy....', '....yy....', '..bbbbbb..', '..bbbbbb..'],
+    dice: ['.wwwwwwww.', 'wwwwwwwwww', 'wkwwwwwwkw', 'wwwwwwwwww', 'wwwwkkwwww', 'wwwwkkwwww', 'wwwwwwwwww', 'wkwwwwwwkw', 'wwwwwwwwww', '.wwwwwwww.'],
   };
   const PIXELS = Object.keys(ART);
+  const PACKS = { campfire: PIXELS.slice(0, 24), space: ['rocket', 'planet', 'alien', 'ufo', 'comet', 'astronaut'], ocean: ['fish', 'octopus', 'whale', 'crab', 'shell', 'jelly'], fantasy: ['dragon', 'wizard', 'crown', 'potion', 'sword', 'shield'], tech: ['robot', 'joystick', 'floppy', 'heart', 'ghost', 'cursor'], food: ['pizza', 'donut', 'burger', 'sushi', 'icecream', 'coffee'], play: ['headphones', 'guitar', 'note', 'ball', 'trophy', 'dice'] };
+  const PACK_NAMES = { campfire: '🔥 Campfire', space: '🚀 Space', ocean: '🌊 Ocean', fantasy: '🐉 Fantasy', tech: '🤖 Tech', food: '🍕 Food', play: '🎧 Play' };
   const svgCache = new Map();
   function svg(id, tint) {
     const key = id + '|' + (tint || ''); if (svgCache.has(key)) return svgCache.get(key);
@@ -68,6 +107,48 @@
     rows.forEach((row, y) => { for (let x = 0; x < 10; x++) { const ch = row[x]; if (ch && INK[ch]) rects += `<rect x="${x + 1}" y="${y + 1}" width="1" height="1" fill="${INK[ch]}"/>`; } });
     const out = `<svg class="pf-px" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><rect width="12" height="12" fill="${tint ? esc(PALETTE[tint] || tint) : '#2A313C'}"/>${rects}</svg>`;
     svgCache.set(key, out); return out;
+  }
+
+  // ---------- v0.24: the avatar maker (12×12 pixel faces from parts: skin, hair, eyes, mouth, an extra, a shirt) ----------
+  const MK = {
+    skin: ['#F6D3B3', '#E8B48A', '#C98B5B', '#A86B3F', '#7A4A2A', '#5A3420'],
+    hairColor: ['#1B2028', '#5A3A28', '#8B5A3C', '#E0B04A', '#E8603C', '#F8FAFC', '#A58BFF', '#38C6B1'],
+    shirt: ['#38C6B1', '#F26B1D', '#6C7CFF', '#FF6F8E', '#9AD65C', '#2A313C'],
+    hair: ['Bald', 'Short', 'Spiky', 'Long', 'Bun', 'Curly'], eyes: ['Dots', 'Big', 'Happy', 'Sleepy', 'Wink'], mouth: ['Smile', 'Flat', 'Open', 'Grin'],
+    extra: ['None', 'Glasses', 'Cap', 'Headphones', 'Crown', 'Bow', 'Blush'],
+  };
+  const MK_KEYS = { s: 'skin', hc: 'hairColor', sh: 'shirt', h: 'hair', e: 'eyes', m: 'mouth', x: 'extra' };
+  const mkClamp = sp => { const o = {}; for (const [k, n] of Object.entries(MK_KEYS)) { const v = Number(sp && sp[k]); o[k] = Number.isInteger(v) && v >= 0 && v < MK[n].length ? v : 0; } return o; };
+  const mkRandom = () => { const o = {}; for (const [k, n] of Object.entries(MK_KEYS)) o[k] = Math.floor(Math.random() * MK[n].length); return o; };
+  function makerSvg(spec, tint) {
+    const sp = mkClamp(spec), px = new Map(), put = (x, y, c) => { if (x >= 0 && x < 12 && y >= 0 && y < 12) px.set(x + ',' + y, c); };
+    const S = MK.skin[sp.s], H = MK.hairColor[sp.hc], B = MK.shirt[sp.sh], K = '#1B2028', W = '#F8FAFC', R = '#E8603C';
+    const FACE = ['....SSSS....', '...SSSSSS...', '..SSSSSSSS..', '..SSSSSSSS..', '..SSSSSSSS..', '..SSSSSSSS..', '...SSSSSS...', '....SSSS....'];
+    FACE.forEach((r, i) => [...r].forEach((ch, x) => { if (ch === 'S') put(x, i + 2, S); }));
+    put(1, 5, S); put(10, 5, S);   // ears
+    ['...BBBBBB...', '..BBBBBBBB..'].forEach((r, i) => [...r].forEach((ch, x) => { if (ch === 'B') put(x, i + 10, B); }));
+    const hair = {
+      1: [[3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3], [2, 4], [9, 4]],
+      2: [[3, 1], [5, 1], [7, 1], [9, 1], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3]],
+      3: [[3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3], [2, 4], [9, 4], [1, 5], [10, 5], [1, 6], [10, 6], [1, 7], [10, 7], [1, 8], [10, 8], [2, 9], [9, 9]],
+      4: [[5, 0], [6, 0], [5, 1], [6, 1], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3]],
+      5: [[3, 1], [4, 1], [6, 1], [7, 1], [8, 1], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [1, 3], [2, 3], [3, 3], [5, 3], [6, 3], [8, 3], [9, 3], [10, 3], [1, 4], [2, 4], [9, 4], [10, 4], [1, 5], [10, 5]],
+    }[sp.h] || [];
+    hair.forEach(([x, y]) => put(x, y, H));
+    const eyes = [[[4, 5], [7, 5]], [[4, 5], [4, 6], [7, 5], [7, 6]], [[3, 6], [4, 5], [5, 6], [6, 6], [7, 5], [8, 6]], [[3, 6], [4, 6], [7, 6], [8, 6]], [[4, 5], [4, 6], [6, 6], [7, 6], [8, 6]]][sp.e];
+    eyes.forEach(([x, y]) => put(x, y, K));
+    const mouth = [[[4, 7], [5, 8], [6, 8], [7, 7]], [[5, 8], [6, 8]], [[5, 7], [6, 7], [5, 8], [6, 8]], [[4, 8], [5, 8], [6, 8], [7, 8]]][sp.m];
+    mouth.forEach(([x, y]) => put(x, y, sp.m === 2 ? R : sp.m === 3 ? W : K));
+    if (sp.m === 3) { put(4, 7, K); put(7, 7, K); }
+    const X = sp.x;
+    if (X === 1) [[3, 5], [5, 5], [6, 5], [8, 5], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [8, 4]].forEach(([x, y]) => put(x, y, K));
+    if (X === 2) { for (let x = 2; x <= 9; x++) { put(x, 2, B); put(x, 3, B); } for (let x = 3; x <= 8; x++) put(x, 1, B); for (let x = 0; x <= 6; x++) put(x, 4, B); }
+    if (X === 3) { for (let x = 3; x <= 8; x++) put(x, 1, K); [[2, 2], [9, 2]].forEach(([x, y]) => put(x, y, K)); for (let y = 4; y <= 7; y++) { put(1, y, R); put(10, y, R); } }
+    if (X === 4) [[3, 0], [5, 0], [7, 0], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [8, 1], [8, 0]].forEach(([x, y]) => put(x, y, '#FFD866'));
+    if (X === 5) [[7, 1], [9, 1], [8, 2], [7, 3], [9, 3]].forEach(([x, y]) => put(x, y, '#FF9AAE'));
+    if (X === 6) [[3, 7], [8, 7]].forEach(([x, y]) => put(x, y, '#FF9AAE'));
+    let rects = ''; px.forEach((c, k) => { const [x, y] = k.split(','); rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`; });
+    return `<svg class="pf-px pf-mk" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><rect width="12" height="12" fill="${tint ? esc(PALETTE[tint] || tint) : '#2A313C'}"/>${rects}</svg>`;
   }
 
   // ---------- color: contrast against the theme's surface ----------
@@ -120,6 +201,7 @@
     if (!a) return null;
     if (a.kind === 'emoji') return { html: `<span class="pf-emo">${esc(a.emoji)}</span>`, bg: a.tint ? PALETTE[a.tint] : 'var(--surface-3)', cls: 'pf-k-emoji' };
     if (a.kind === 'pixel') return { html: svg(a.pixel, a.tint), bg: 'transparent', cls: 'pf-k-pixel' };
+    if (a.kind === 'maker') return { html: makerSvg(a.spec, a.tint), bg: 'transparent', cls: 'pf-k-pixel' };
     if (a.kind === 'photo') {
       const still = a.anim && a.still ? media(a.still) : media(a.file);
       return { html: `<img class="pf-img" src="${esc(still)}" alt="" loading="lazy" ${a.anim ? `data-anim="${esc(media(a.file))}" data-still="${esc(still)}"` : ''}>`, bg: 'var(--surface-3)', cls: 'pf-k-photo' + (a.anim ? ' pf-anim' : '') };
@@ -477,16 +559,18 @@
   function previewData() {
     const d = ed.draft, m = meMember();
     const av = d.tab === 'photo' ? (d.photoPending ? { kind: 'photo-local' } : (d.avatar.kind === 'photo' ? d.avatar : null))
-      : d.tab === 'emoji' ? { kind: 'emoji', emoji: d.avatar.emoji || '🔥', tint: d.tint } : d.tab === 'pixel' ? { kind: 'pixel', pixel: d.avatar.pixel || 'flame', tint: d.tint } : null;
+      : d.tab === 'emoji' ? { kind: 'emoji', emoji: d.avatar.emoji || '🔥', tint: d.tint } : d.tab === 'pixel' ? { kind: 'pixel', pixel: d.avatar.pixel || 'flame', tint: d.tint } : d.tab === 'maker' ? { kind: 'maker', spec: mkClamp(d.avatar.spec), tint: d.tint } : null;
     const status = d.status.text || d.status.emoji ? { emoji: d.status.emoji || null, text: d.status.text } : null;
     return { member: { ...m, name: d.name || m.name }, you: true, profile: { avatar: av && av.kind !== 'photo-local' ? av : null, nameColor: d.nameColor, pronouns: d.pronouns, bio: d.bio, banner: d.banner, links: d.links.map((url, i) => ({ url, label: d.labels[i] })).filter(l => l.url), tz: d.tz, status, presence: d.presence, nicks: d.nick ? { [project()]: d.nick } : {}, skills: d.skills.split(',').map(x => x.trim()).filter(Boolean).slice(0, 8), featured: d.featTitle || d.featUrl ? { title: d.featTitle, url: d.featUrl } : null, hire: d.hire }, badges: [] };
   }
   function drawEditor() {
     if (!ed) return;
-    const d = ed.draft, el = ed.el, tabs = [['initials', 'Initials'], ['emoji', 'Emoji'], ['pixel', 'Pixel'], ['photo', 'Photo']];
-    const tints = d.tab === 'emoji' || d.tab === 'pixel' ? `<div class="pf-row-sw" role="group" aria-label="Tint">${Object.keys(PALETTE).map(k => sw(k, d.tint === k, 'data-tint')).join('')}</div>` : '';
+    const d = ed.draft, el = ed.el, tabs = [['initials', 'Initials'], ['maker', 'Make one'], ['pixel', 'Icons'], ['emoji', 'Emoji'], ['photo', 'Photo']];
+    const tints = d.tab === 'emoji' || d.tab === 'pixel' || d.tab === 'maker' ? `<div class="pf-row-sw" role="group" aria-label="Tint">${Object.keys(PALETTE).map(k => sw(k, d.tint === k, 'data-tint')).join('')}</div>` : '';
     const picker = d.tab === 'emoji' ? `<div class="pf-grid emo">${EMOJI.map(x => `<button type="button" class="pf-cell ${d.avatar.emoji === x ? 'on' : ''}" data-emo="${x}">${x}</button>`).join('')}</div><input class="input pf-emo-in" id="pf-emo-in" maxlength="16" placeholder="Or type one emoji" value="${esc(d.avatar.kind === 'emoji' && !EMOJI.includes(d.avatar.emoji) ? d.avatar.emoji || '' : '')}">`
-      : d.tab === 'pixel' ? `<div class="pf-grid px">${PIXELS.map(x => `<button type="button" class="pf-cell ${d.avatar.pixel === x ? 'on' : ''}" data-px="${x}" aria-label="${x}" title="${x}">${svg(x, d.tint)}</button>`).join('')}</div>`
+      : d.tab === 'maker' ? (() => { const sp = mkClamp(d.avatar.spec); const opt = (k, n, list, sw) => `<div class="pf-mk-row"><span class="pf-mk-l">${n}</span><div class="pf-mk-opts">${list.map((v, i) => `<button type="button" class="pf-mk-o ${sp[k] === i ? 'on' : ''}" data-mk="${k}:${i}" ${sw ? `style="background:${v}" aria-label="${n} ${i + 1}"` : ''}>${sw ? '' : esc(v)}</button>`).join('')}</div></div>`;
+          return `<div class="pf-mk"><div class="pf-mk-prev">${makerSvg(sp, d.tint)}</div><div class="pf-mk-parts">${opt('s', 'Skin', MK.skin, true)}${opt('h', 'Hair', MK.hair)}${opt('hc', 'Hair color', MK.hairColor, true)}${opt('e', 'Eyes', MK.eyes)}${opt('m', 'Mouth', MK.mouth)}${opt('x', 'Extra', MK.extra)}${opt('sh', 'Shirt', MK.shirt, true)}<button type="button" class="btn tonal pf-mk-rnd" data-mk-rnd>🎲 Surprise me</button></div></div>`; })()
+      : d.tab === 'pixel' ? `<div class="pf-packs" role="group" aria-label="Icon themes">${Object.keys(PACKS).map(k => `<button type="button" class="pf-pack ${(d.pack || 'campfire') === k ? 'on' : ''}" data-pack="${k}">${PACK_NAMES[k]}</button>`).join('')}</div><div class="pf-grid px">${PACKS[d.pack || 'campfire'].map(x => `<button type="button" class="pf-cell ${d.avatar.pixel === x ? 'on' : ''}" data-px="${x}" aria-label="${x}" title="${x}">${svg(x, d.tint)}</button>`).join('')}</div>`
       : d.tab === 'photo' ? `<div class="pf-photo"><button type="button" class="btn tonal" data-ed="photo">${d.avatar.kind === 'photo' || d.photoPending ? 'Change picture' : 'Upload a picture'}</button><small class="faint">PNG, JPEG, WebP or GIF. GIFs move only when someone hovers them.</small></div>`
       : '<p class="faint pf-hint">Your initials on your color.</p>';
     const presence = [['online', 'Online', 'Shown when you are here'], ['idle', 'Idle', 'Shown as away'], ['dnd', 'Do not disturb', 'No phone or desktop alerts'], ['invisible', 'Invisible', 'Look offline, use everything']];
@@ -547,7 +631,10 @@
     if (!ed || !e.target.closest || !ed.el.contains(e.target)) return;
     const d = ed.draft, t = e.target, x = s => t.closest(s);
     let b;
-    if ((b = x('[data-tab]'))) { d.tab = b.dataset.tab; if (d.tab === 'emoji' && d.avatar.kind !== 'emoji') d.avatar = { kind: 'emoji', emoji: '🔥' }; if (d.tab === 'pixel' && d.avatar.kind !== 'pixel') d.avatar = { kind: 'pixel', pixel: 'flame' }; return drawEditor(); }
+    if ((b = x('[data-tab]'))) { d.tab = b.dataset.tab; if (d.tab === 'emoji' && d.avatar.kind !== 'emoji') d.avatar = { kind: 'emoji', emoji: '🔥' }; if (d.tab === 'pixel' && d.avatar.kind !== 'pixel') d.avatar = { kind: 'pixel', pixel: 'flame' }; if (d.tab === 'maker' && d.avatar.kind !== 'maker') d.avatar = { kind: 'maker', spec: mkRandom() }; return drawEditor(); }
+    if ((b = x('[data-pack]'))) { d.pack = b.dataset.pack; return drawEditor(); }
+    if ((b = x('[data-mk]'))) { const [k, v] = b.dataset.mk.split(':'); d.avatar = { kind: 'maker', spec: { ...mkClamp(d.avatar.spec), [k]: Number(v) } }; return drawEditor(); }
+    if ((b = x('[data-mk-rnd]'))) { d.avatar = { kind: 'maker', spec: mkRandom() }; return drawEditor(); }
     if ((b = x('[data-emo]'))) { d.avatar = { kind: 'emoji', emoji: b.dataset.emo }; return drawEditor(); }
     if ((b = x('[data-px]'))) { d.avatar = { kind: 'pixel', pixel: b.dataset.px }; return drawEditor(); }
     if ((b = x('[data-tint]'))) { d.tint = b.dataset.tint; return drawEditor(); }
@@ -604,7 +691,7 @@
       skills: d.skills.split(',').map(x => x.trim()).filter(Boolean).slice(0, 8), featured: d.featUrl || d.featTitle ? { title: d.featTitle.trim(), url: d.featUrl } : null, hire: !!d.hire,
       links: d.links.map((url, i) => ({ url, label: d.labels[i] })).filter(l => l.url),
       banner: d.banner ? (d.banner.image ? { image: d.banner.image } : { color: d.banner.color }) : null,
-      avatar: d.tab === 'initials' ? { kind: 'initials' } : d.tab === 'emoji' ? { kind: 'emoji', emoji: d.avatar.emoji || '🔥', tint: d.tint } : d.tab === 'pixel' ? { kind: 'pixel', pixel: d.avatar.pixel || 'flame', tint: d.tint } : (d.avatar.kind === 'photo' ? { kind: 'photo' } : { kind: 'initials' }),
+      avatar: d.tab === 'initials' ? { kind: 'initials' } : d.tab === 'emoji' ? { kind: 'emoji', emoji: d.avatar.emoji || '🔥', tint: d.tint } : d.tab === 'pixel' ? { kind: 'pixel', pixel: d.avatar.pixel || 'flame', tint: d.tint } : d.tab === 'maker' ? { kind: 'maker', spec: mkClamp(d.avatar.spec), tint: d.tint } : (d.avatar.kind === 'photo' ? { kind: 'photo' } : { kind: 'initials' }),
     };
     if (d.status.clear !== 'keep') {
       const midnight = new Date(); midnight.setHours(23, 59, 59, 0);
@@ -625,6 +712,6 @@
   async function setPresence(p) { try { await C.api('/profile', { method: 'PATCH', body: { presence: p } }); toast(STATE[p]); } catch (e) { toast(e.message); } }
 
   window.TribeProfiles = { avatar, fill, nameColor, legible, displayName, open, close, edit, closeEditor, grouped, decorate, setPresence, statusOf, statusLine, stateOf,
-    palette: PALETTE, pixels: PIXELS, svg, bioHtml, STATE, muted: id => mine.muted.has(id) };
+    palette: PALETTE, pixels: PIXELS, packs: PACKS, maker: makerSvg, makerParts: MK, svg, bioHtml, STATE, muted: id => mine.muted.has(id) };
   if (C.connected()) loadMine();
 })();

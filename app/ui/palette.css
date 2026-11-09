@@ -97,7 +97,7 @@ button.claude[data-give]::before { content: '✨'; }
 #pj-check.hero .ock-hero-p { margin: 0 0 18px; color: var(--muted); font-size: 15.5px; line-height: 1.5; }
 #pj-check.hero .ock-head h3 { font-size: 13.5px; color: var(--muted); font-weight: 600; }
 #pj-check.hero .ock-head h3::before { content: none; }
-#pj-check.hero .ock-fold { display: none; }
+#pj-check.hero .ock-fold { display: inline-grid; }   /* v0.24: tuck the step cards into the compact list */
 #pj-check.hero .ock-bar { height: 6px; margin: 10px 0 16px; } #pj-check.hero .ock-bar span { background: var(--action, #B4512A); }
 .ock-cards { display: grid; gap: 10px; }
 #pj-check.hero .ock-card { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); }
