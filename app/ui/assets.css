@@ -1,0 +1,22 @@
+/* the asset library (app/ui/assets.js) */
+.as-card { width: min(920px, calc(100vw - 32px)); max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 12px; }
+.as-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.as-head h2 { margin: 2px 0 0; }
+.as-lead { margin: 0; color: var(--muted, #9AA4B2); font-size: 14px; }
+.as-q { width: 100%; }
+.as-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.as-kind { border: 1px solid var(--border, #2A313C); background: var(--surface, #1B2028); color: inherit; border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.as-kind.on { border-color: #F26B1D; color: #F8FAFC; background: var(--raised, #1E242D); }
+.as-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; overflow: auto; min-height: 180px; padding: 2px; }
+.as-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px; border: 1px solid var(--border, #2A313C); border-radius: 12px; background: var(--surface, #1B2028); color: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.as-tile:hover { background: var(--raised, #1E242D); }
+.as-tile.on { border-color: #38C6B1; box-shadow: inset 0 0 0 1px #38C6B1; }
+.as-tile b { font-size: 13px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-tile small { font-size: 11px; color: var(--muted, #9AA4B2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-thumb { width: 100%; aspect-ratio: 4 / 3; display: grid; place-items: center; border-radius: 8px; background: var(--canvas, #12151A); overflow: hidden; }
+.as-thumb img { width: 56%; height: 56%; object-fit: contain; image-rendering: pixelated; filter: none; }
+.as-thumb .as-k { font-size: 28px; } .as-thumb .as-play { font-size: 22px; color: #38C6B1; }
+.as-empty { grid-column: 1 / -1; padding: 24px 4px; }
+.as-more { font-size: 13px; } .as-more ul { margin: 8px 0; padding-left: 18px; line-height: 1.6; }
+.as-foot { display: flex; align-items: center; gap: 8px; } .as-foot .faint { margin-right: auto; }
+@media (max-width: 640px) { .as-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); } .as-card { max-height: calc(100vh - 24px); } }
