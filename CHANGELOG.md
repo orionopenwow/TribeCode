@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.19.5
+
+Tonight's fixes for hosting and inviting, together (v0.19.1 to v0.19.4 reached the website and cloud servers but never got a desktop build).
+
+- **A link that works from anywhere, by itself**: opening Invite friends falls back to a Cloudflare tunnel whenever Tailscale sharing isn't approved. The helper is fetched the first time and checked against Cloudflare's published fingerprint. The link turns into an https address with no setup
+- **The right Wi-Fi link**: invite links never pick a virtual network adapter (VirtualBox, VMware, Hyper-V, WSL, Docker) that friends can't reach
+- **Cloud tribes**:
+  - Claiming asks for the setup code and your name, then takes you straight in. Chat works right away with no AI
+  - **Cloud save**: every member's browser keeps a sealed copy and brings a napped server back, so nobody rejoins
+  - **Keep-awake** for 3 hours after use
+  - **Sign in with GitHub** from the host's environment settings (docs/CLOUD.md)
+- **Phones**: the invite link works on a friend's phone wherever they are; a phone that joined through a link stays signed in after a cloud restore
+
 ## v0.19.0
 
 Code anything, together: the website says what you can make before anything else, Learn guides for newcomers, a review step before code goes to GitHub, and an optional Turbo mode.
