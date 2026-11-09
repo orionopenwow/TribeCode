@@ -232,6 +232,7 @@ def main():
 
             # ======== SITE GENERATOR ========
             host.evaluate("() => { TribeShell.go('website'); }")
+            host.wait_for_selector("#wb-root [data-sgmode='instant']"); host.click("[data-sgmode='instant']")   # feat/site-builder: the one-tap level
             host.wait_for_selector("#wb-root #sg-make")
             host.click("#sg-make")
             host.wait_for_selector(".sg-lay.on")
@@ -325,7 +326,7 @@ def main():
             ph.click("[data-ltab='project']"); ph.wait_for_selector(".lk-ban")
             assert ph.evaluate("(() => { const c = document.querySelector('.lk-card'); return c.scrollWidth <= c.clientWidth + 1; })()")
             ph.evaluate("TribeLook.open('tribe'); document.querySelector('#lk-close').click(); TribeShell.go('website')")
-            ph.wait_for_selector("#wb-root .sg-lay")
+            ph.wait_for_selector("#wb-root .sg-modes")
             assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "Website + generator fit at 390"
             b.close()
         assert not errors, "\n".join(errors)

@@ -256,7 +256,9 @@ def main():
             host.evaluate("pid => TribeProjects.refresh().then(() => TribeProjects.switchTo(pid, 'home'))", pid)
             host.wait_for_function("pid => TribeProjects.current() === pid", arg=pid)
             host.evaluate("TribeShell.go('website')")
-            host.wait_for_selector("#wb-root .sg-modes [data-sgmode='instant'].on")
+            host.wait_for_selector("#wb-root .sg-modes [data-sgmode='code']")   # Advanced (the default experience mode): every level
+            assert host.locator("[data-sgmode='guided'].on").count() == 1, 'Advanced starts at Guided'
+            host.click("[data-sgmode='instant']")
             host.wait_for_selector("#sg-shuffle")
             host.click("#sg-ideas")
             host.wait_for_selector("#sg-idea #sg-idea-apply")
@@ -283,15 +285,25 @@ def main():
             assert W()["gen"]["draft"]["type"] == "event"
             # phone 390: Website + builder fit
             pctx = b.new_context(**PHONE)
-            pctx.add_init_script(f"try {{ localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Orion', onboarded:true, theme:'campfire', themePicked:true, server:{{url:'{BASE}', token:'{tok}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pid}'); localStorage.setItem('tribecode.sitegen.mode', 'guided'); }} catch (e) {{}}")
+            pctx.add_init_script(f"try {{ localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Orion', onboarded:true, theme:'campfire', themePicked:true, server:{{url:'{BASE}', token:'{tok}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pid}'); if (!sessionStorage.getItem('sb-once')) {{ sessionStorage.setItem('sb-once', '1'); localStorage.setItem('tribecode.mode', 'intermediate'); }} }} catch (e) {{}}")
             ph = pctx.new_page(); watch(ph, "phone")
             ph.goto(BASE + "/?skipIntro=1")
             ph.wait_for_function("pid => window.TribeProjects && TribeProjects.current() === pid", arg=pid, timeout=20000)
             ph.evaluate("TribeShell.go('website')")
+            # Intermediate (experience mode) starts at Guided: brand kit + sections, no Code view
             ph.wait_for_selector("#wb-root .sg-type")
+            assert ph.locator("[data-sgmode='guided'].on").count() == 1 and ph.locator("[data-sgmode='code']").count() == 0, "Intermediate: Guided by default, no Code tab"
+
             assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "the builder fits at 390"
             ph.click("[data-sgstep='2']"); ph.wait_for_selector(".sg-theme")
             assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "the brand step fits at 390"
+            # Beginner: Instant only, few buttons (no level tabs, no layout grid, no Regenerate)
+            ph.evaluate("localStorage.setItem('tribecode.mode', 'beginner'); localStorage.removeItem('tribecode.sitegen.mode')")
+            ph.reload(); ph.wait_for_function("pid => window.TribeProjects && TribeProjects.current() === pid", arg=pid, timeout=20000)
+            ph.evaluate("TribeShell.go('website')"); ph.wait_for_selector("#wb-root #sg-shuffle")
+            assert ph.evaluate("document.body.dataset.mode") == "beginner"
+            assert ph.locator(".sg-modes").count() == 0 and not ph.is_visible("#sg-regen") and not ph.is_visible(".sg-layouts") and ph.is_visible("#sg-publish"), "Beginner sees few buttons"
+            assert ph.evaluate("document.documentElement.scrollWidth") <= 390
             b.close()
         assert not errors, "\n".join(errors)
         print("e2e_site_builder: OK")

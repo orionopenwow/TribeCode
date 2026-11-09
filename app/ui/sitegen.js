@@ -4,6 +4,9 @@
 //              · 3 Sections (on/off, edit, Shuffle, Regenerate, Write it for me). The live preview sits beside (below on phones).
 //   🧑‍💻 Code    the files Publish writes (index.html with section markers, styles.css with brand tokens), how to edit them,
 //              and a jump to the Code view. Publish never overwrites hand edits without asking (Keep their edits / Replace).
+// The level follows the person's experience mode (app/ui/modes.js, TribeMode.get()): Beginner starts at Instant with few
+// buttons, Intermediate at Guided (brand kit + sections), Advanced gets every control and the Code view. A level they pick
+// here is remembered on this device, as long as their mode shows it. Controls above a mode carry data-mode-min.
 // ✨ Suggest for me asks the tribe's brain (or rules from project sense) for a theme, type, palette, font pair, section order
 // and tagline; it shows as a card with Apply / Not now and is never applied by itself.
 // Server: server/showcase.js + server/sitegen.js (/api/projects/:id/website/gen | instant | brand | ideas | code | publish | draft | export).
@@ -25,14 +28,23 @@
   let editing = null, busy = false, step = 1, code = null, codeFile = 'styles.css', mode = null;
   try { mode = localStorage.getItem(LS); } catch {}
   const setMode = m => { mode = m; try { localStorage.setItem(LS, m); } catch {} };
+  const XP = () => (window.TribeMode && window.TribeMode.get ? window.TribeMode.get() : 'advanced');
+  const allows = min => (window.TribeMode && window.TribeMode.allows ? window.TribeMode.allows(min) : true);
+  const LEVEL_MIN = { instant: '', guided: 'intermediate', code: 'advanced' };
+  const DEFAULT_LEVEL = { beginner: 'instant', intermediate: 'guided', advanced: 'guided' };
+  let lastBox = null, lastW = null, lastCtx = null;
+  document.addEventListener('tribe:mode', () => { if (lastBox && lastBox.isConnected) draw(lastBox, lastW, lastCtx); });
 
   function draw(box, w, ctx) {
     const G = w.gen; if (!G) { box.innerHTML = ''; return; }
     const d = G.draft, can = G.canDraft;
-    if (!mode || !['instant', 'guided', 'code'].includes(mode)) mode = 'instant';
-    if (mode === 'code' && !d) mode = 'instant';
-    const tabs = `<div class="sg-modes" role="tablist" aria-label="How to build">${[['instant', '⚡', 'Instant'], ['guided', '🧭', 'Guided'], ['code', '🧑‍💻', 'Code']].map(([id, ic, label]) =>
-      `<button class="sg-mode ${mode === id ? 'on' : ''}" role="tab" aria-selected="${mode === id}" data-sgmode="${id}" ${id === 'code' && !d ? 'disabled title="Make a draft first"' : ''}><span aria-hidden="true">${ic}</span>${label}</button>`).join('')}</div>`;
+    lastBox = box; lastW = w; lastCtx = ctx;
+    // the level: the one picked here (if this experience mode shows it), else the mode's own default
+    if (!mode || !LEVEL_MIN.hasOwnProperty(mode) || !allows(LEVEL_MIN[mode])) mode = DEFAULT_LEVEL[XP()] || 'instant';
+    if (mode === 'code' && !d) mode = allows('intermediate') ? 'guided' : 'instant';
+    const levels = [['instant', '⚡', 'Instant'], ['guided', '🧭', 'Guided'], ['code', '🧑‍💻', 'Code']].filter(([id]) => allows(LEVEL_MIN[id]));
+    const tabs = levels.length < 2 ? '' : `<div class="sg-modes" role="tablist" aria-label="How to build" style="grid-template-columns:repeat(${levels.length},minmax(0,1fr))">${levels.map(([id, ic, label]) =>
+      `<button class="sg-mode ${mode === id ? 'on' : ''}" role="tab" aria-selected="${mode === id}" data-sgmode="${id}"${LEVEL_MIN[id] ? ` data-mode-min="${LEVEL_MIN[id]}"` : ''} ${id === 'code' && !d ? 'disabled title="Make a draft first"' : ''}><span aria-hidden="true">${ic}</span>${label}</button>`).join('')}</div>`;
     const L = d ? (G.layouts.find(x => x.id === d.layout) || G.layouts[0]) : null, T = d && d.type ? G.types.find(x => x.id === d.type) : null;
     const status = !d ? '' : G.unpublished ? `Draft · ${T ? `${esc(T.name)} · ` : ''}${esc(L.name)} · not published yet` : `Published${G.live && G.live.at ? ` ${esc(ago(G.live.at))}` : ''}${G.live && G.live.byName ? ` by ${esc(G.live.byName)}` : ''} · ${T ? `${esc(T.name)} · ` : ''}${esc(L.name)}`;
     const pol = d && d.polished ? ` · polished by ${esc(d.polished.via)}` : '';
@@ -47,7 +59,7 @@
       ${d ? `${G.handEdited && G.handEdited.length ? `<div class="sg-hand" id="sg-hand" role="alert"><b>Someone edited the code by hand</b><span>${G.handEdited.map(f => `<code>${esc(f)}</code>`).join(' ')} changed since the last publish.${G.canPublish ? ' Keep their edits (those files are skipped) or replace them with the builder\'s version.' : ''}</span>
         ${G.canPublish ? '<div class="sg-hand-acts"><button class="btn sm primary" id="sg-keep">Keep their edits</button><button class="btn sm" id="sg-replace">Replace</button></div>' : ''}</div>` : ''}
       <div class="sg-pub">${G.canPublish ? `<button class="btn primary" id="sg-publish" ${G.unpublished ? '' : 'disabled'}>${G.live ? 'Publish changes' : 'Publish'}</button>` : '<span class="wb-note">The host or the project lead publishes it.</span>'}
-        ${exportUrl ? `<a class="linkish" id="sg-export" href="${esc(exportUrl)}" download>Export as one HTML file</a>` : ''}${G.canPublish && G.live ? '<button class="linkish" id="sg-classic">Use the simple page</button>' : ''}</div>` : ''}`;
+        ${exportUrl ? `<a class="linkish" id="sg-export" href="${esc(exportUrl)}" download data-mode-min="intermediate">Export as one HTML file</a>` : ''}${G.canPublish && G.live ? '<button class="linkish" id="sg-classic" data-mode-min="advanced">Use the simple page</button>' : ''}</div>` : ''}`;
     wire(box, w, ctx);
   }
 
@@ -58,9 +70,9 @@
     const themes = `<span class="wb-lbl">Start from a theme (optional)</span><div class="sg-chips">${G.themes.slice(0, 6).map(t => `<button class="sg-chip sg-th-chip" data-sginsttheme="${esc(t.id)}" title="${esc(t.why)}" ${can ? '' : 'disabled'}><i style="background:${esc(t.primary)}" aria-hidden="true"></i>${esc(t.name)}</button>`).join('')}</div>`;
     if (!d) return `<p class="wb-note sg-intro">One tap makes a real page from what the project already has: bio, vision, screenshots, saved changes and team. Nothing goes live until you publish.</p>
       ${guess}${can ? `<div class="wb-acts"><button class="btn primary sg-big" id="sg-make">⚡ Make my site</button></div>${types}${themes}` : '<p class="wb-note">Spectators can look but not draft.</p>'}`;
-    return `${can ? `<div class="sg-layouts" role="radiogroup" aria-label="Layout">${G.layouts.map(x => `<button class="sg-lay ${x.id === d.layout ? 'on' : ''}" role="radio" aria-checked="${x.id === d.layout}" data-lay="${esc(x.id)}"><b>${esc(x.name)}</b><small>${esc(x.note)}</small></button>`).join('')}</div>
-      <div class="sg-acts"><button class="btn" id="sg-shuffle">Shuffle layout</button><button class="btn" id="sg-regen">Regenerate copy</button><button class="btn" id="sg-write" title="${G.brain ? 'Uses the tribe\'s brain' : 'Needs a brain: Settings › Flint\'s brain'}">Write it for me</button></div>
-      <span class="wb-lbl">Make it again as</span>${types}<p class="wb-note">Want more control? <button class="linkish" data-sgmode="guided">Fine-tune it in Guided</button></p>` : `<p class="wb-note">Spectators can look but not draft.</p>`}`;
+    return `${can ? `<div class="sg-layouts" role="radiogroup" aria-label="Layout" data-mode-min="intermediate">${G.layouts.map(x => `<button class="sg-lay ${x.id === d.layout ? 'on' : ''}" role="radio" aria-checked="${x.id === d.layout}" data-lay="${esc(x.id)}"><b>${esc(x.name)}</b><small>${esc(x.note)}</small></button>`).join('')}</div>
+      <div class="sg-acts"><button class="btn" id="sg-shuffle">Shuffle layout</button><button class="btn" id="sg-regen" data-mode-min="intermediate">Regenerate copy</button><button class="btn" id="sg-write" title="${G.brain ? 'Uses the tribe\'s brain' : 'Needs a brain: Settings › Flint\'s brain'}">Write it for me</button></div>
+      <span class="wb-lbl">Make it again as</span>${types}${allows('intermediate') ? '<p class="wb-note">Want more control? <button class="linkish" data-sgmode="guided">Fine-tune it in Guided</button></p>' : ''}` : `<p class="wb-note">Spectators can look but not draft.</p>`}`;
   }
 
   // ---------- 🧭 Guided ----------
@@ -176,7 +188,7 @@
   function secRow(s, d, can) {
     const on = !(d.off || {})[s.id], fixed = s.id === 'hero', ed = (d.edited || {})[s.id];
     return `<div class="sg-sec ${editing === s.id ? 'open' : ''}"><label class="sg-on"><input type="checkbox" data-sgsec="${esc(s.id)}" ${on ? 'checked' : ''} ${can && !fixed ? '' : 'disabled'}><span>${esc(s.name)}</span>${ed ? '<em class="sg-tag">edited</em>' : ''}</label>
-      ${can && FIELDS[s.id] ? `<button class="linkish sg-edit" data-sgedit="${esc(s.id)}" aria-expanded="${editing === s.id}">${editing === s.id ? 'Close' : 'Edit'}</button>` : ''}</div>
+      ${can && FIELDS[s.id] ? `<button class="linkish sg-edit" data-mode-min="intermediate" data-sgedit="${esc(s.id)}" aria-expanded="${editing === s.id}">${editing === s.id ? 'Close' : 'Edit'}</button>` : ''}</div>
       ${editing === s.id ? editor(s.id, d.copy[s.id] || {}, ed) : ''}`;
   }
   function itemRow(k, x, i) {
@@ -223,5 +235,5 @@
     } catch (e) { ctx.toast(e.message); }
     finally { busy = false; btn.disabled = false; btn.textContent = label; }
   }
-  window.TribeSiteGen = { draw, mode: m => { if (m) setMode(m); return mode; }, step: n => { if (n) step = n; return step; } };
+  window.TribeSiteGen = { draw, mode: m => { if (m) setMode(m); return mode; }, step: n => { if (n) step = n; return step; }, levelFor: xp => DEFAULT_LEVEL[xp] || 'instant' };
 })();
