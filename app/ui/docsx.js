@@ -102,6 +102,7 @@
         '-',
         { label: (bySlug.get(cur.slug) || cur).pinned ? 'Unpin' : 'Pin to the top', icon: 'i-pin', run: () => setMeta(cur.slug, { pinned: !(bySlug.get(cur.slug) || cur).pinned }) },
         { label: 'Page history', icon: 'i-history', run: () => history(cur.slug) },
+        { label: 'Pop out as a floating window', icon: 'i-popout', run: () => floatDoc(cur.slug, cur.title) },
         ...(window.TribeExport ? [{ label: 'Export: Word, PDF, Google Docs…', icon: 'i-doc', run: () => { const ta = pane.querySelector('#doc-body'), c = D().current() || cur; window.TribeExport.menu(pane.querySelector('#dx-more'), { title: c.title, body: ta ? ta.value : c.body || '', kind: 'doc' }); } }] : []),
         ...(window.TribeRich ? [{ label: window.TribeRich.markdown() ? 'View formatted' : 'View Markdown', icon: 'i-doc', run: () => { window.TribeRich.setMarkdown(!window.TribeRich.markdown()); D().setMode('write'); } }] : []),   // feat/richtext
         '-',

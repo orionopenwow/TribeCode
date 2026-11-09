@@ -5,7 +5,7 @@
 .reacts { align-items: center; }
 .rx { cursor: pointer; transition: border-color .12s var(--ease), background .12s var(--ease); }
 .rx:hover { border-color: var(--edge-pop); background: var(--surface-2); }
-.rx.on:hover { border-color: var(--accent); background: var(--chip); }
+.rx.on:hover { border-color: #FFFFFF; background: rgba(255, 255, 255, .16); }
 .rx-add { width: 26px; padding: 0; justify-content: center; color: var(--faint); opacity: 0; }
 .rx-add svg.i { width: 14px; height: 14px; }
 .msg:hover .rx-add, .msg:focus-within .rx-add, .rx-add:focus-visible { opacity: 1; }

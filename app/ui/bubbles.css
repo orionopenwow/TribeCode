@@ -101,13 +101,13 @@ body.light .mt .tk.read { color: var(--live-ink); }
 .msg.dx .reacts .mt { float: none; top: 2px; margin-left: auto; padding-left: 8px; }
 .msg.dx .rx { height: 26px; gap: 4px; padding: 0 8px 0 6px; border: 1px solid transparent; border-radius: 999px; background: var(--surface-3); font-size: 14px; line-height: 1; color: inherit; }
 .msg.dx .rx:hover { border-color: var(--edge-pop); background: var(--surface-3); }
-.msg.dx .rx.on { border-color: var(--accent); background: rgba(242, 107, 29, .22); }
-.msg.dx .rx.on:hover { border-color: var(--accent); background: rgba(242, 107, 29, .28); }
+.msg.dx .rx.on { border-color: #F8FAFC; background: rgba(255, 255, 255, .10); }
+.msg.dx .rx.on:hover { border-color: #FFFFFF; background: rgba(255, 255, 255, .16); }
 .msg.dx.mine .rx { background: var(--bubble-mine-chip); }
-.msg.dx.mine .rx.on { background: rgba(242, 107, 29, .34); }
+.msg.dx.mine .rx.on { background: rgba(255, 255, 255, .14); }
 .msg.dx .rx-n { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); }
 .msg.dx.mine .rx-n { color: var(--bubble-mine-meta); }
-.msg.dx .rx.on .rx-n { color: var(--accent-ink); }
+.msg.dx .rx.on .rx-n { color: #F8FAFC; }
 .msg.dx .rx.has-f .rx-n { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .msg.dx .rx { position: relative; }
 .rx-fs { display: inline-flex; }

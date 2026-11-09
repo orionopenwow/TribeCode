@@ -126,7 +126,7 @@
 .reacts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .rx { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 7px; border-radius: 999px; border: 1px solid var(--edge); background: var(--canvas); font-size: 12px; }
 .rx span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.rx.on { border-color: var(--accent); background: var(--chip); } .rx.on span { color: var(--accent-ink); }
+.rx.on { border-color: #F8FAFC; background: rgba(255, 255, 255, .10); } .rx.on span { color: #F8FAFC; }
 .lps { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .lp { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--edge); background: var(--canvas);
   font-family: var(--mono); font-size: 12px; color: var(--muted) !important; text-decoration: none !important; }

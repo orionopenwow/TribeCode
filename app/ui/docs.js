@@ -198,7 +198,7 @@
   }
 
   // ---------- rendering ----------
-  function setStatus(t) { const el = $('#doc-status'); if (el) el.textContent = t; }
+  function setStatus(t) { const el = $('#doc-status'); if (!el) return; el.textContent = t; el.classList.toggle('warn', /^(Offline|Not saved)/.test(String(t))); }   // only problems show; the rest is for screen readers
   function setTldr(html) { const el = $('#doc-tldr-text'); if (el) el.innerHTML = html; }
   function renderTldr() {
     const box = $('#doc-tldr'); if (!box) return;
@@ -305,7 +305,7 @@
     const seg = `<div class="seg" role="group" aria-label="Mode"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}" aria-pressed="${mode === 'write'}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}" aria-pressed="${mode === 'read'}">Read</button></div>`;
     const page = `
       <input class="doc-title" id="doc-title" value="${esc(cur.title)}" maxlength="120" placeholder="Untitled" aria-label="Title">
-      <div class="doc-meta">${cur.source ? `Imported from ${esc(cur.source)} · ` : ''}${words} words · <span class="faint">${remote() ? 'shared with your tribe' : 'saved on this device'}</span></div>
+      ${cur.source ? `<div class="doc-meta">Imported from ${esc(cur.source)}</div>` : ''}
       <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · the tribe\'s AI</div><div id="doc-tldr-text"></div></div>
       ${desk() ? '' : DL() ? `<div class="gd-fmt-wrap ${mode === 'write' ? '' : 'hidden'}">${DL().gdBar()}</div>` : ''}
       <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" aria-label="Document text" placeholder="Start writing, or type / for blocks…">${esc(inLive() ? sess.text() : cur.body || '')}</textarea></div>
