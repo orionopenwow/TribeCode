@@ -31,8 +31,15 @@
   'use strict';
   const cv = document.getElementById('c'), g = cv.getContext('2d');
   const T = 16, ROWS = 14;                       // the world is 14 tiles tall; it scales to the window
-  let W = 0, H = 0, S = 1;
-  function size() { W = cv.width = Math.round(innerWidth * devicePixelRatio); H = cv.height = Math.round(innerHeight * devicePixelRatio); S = H / (ROWS * T); }
+  let W = 0, H = 0, S = 1, OY = 0;
+  // v0.25: sized from the real window every frame (a preview that opened hidden starts at 0x0 and may never get a resize
+  // event), and on tall phone screens the world keeps ~13 tiles in view and sits low in the screen instead of zooming in
+  function size() {
+    const w = Math.round(innerWidth * devicePixelRatio), h = Math.round(innerHeight * devicePixelRatio);
+    if (w === W && h === H) return;
+    W = cv.width = w; H = cv.height = h;
+    S = Math.max(0.01, Math.min(H / (ROWS * T), W / (13 * T))); OY = Math.max(0, H - ROWS * T * S) * 0.55;   // a bit above the bottom: phone bars and touch buttons sit there
+  }
   addEventListener('resize', size); size();
   // platforms [x, y, w] in tiles (y from the top), lanterns [x, y]
   const PLAT = [[0, 12, 14], [16, 10, 5], [23, 8, 4], [29, 11, 7], [38, 9, 4], [44, 7, 4], [50, 10, 10], [62, 8, 5], [69, 11, 12]];
@@ -68,9 +75,12 @@
   function tell() { try { parent.postMessage({ tour: 'game', lit: lit.size, total: LAN.length, x: Math.round(p.x / T) }, '*'); } catch {} }
   function rect(x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round((x - camX) * S), Math.round(y * S), Math.ceil(w * S), Math.ceil(h * S)); }
   function draw() {
-    g.fillStyle = '#12151A'; g.fillRect(0, 0, W, H);
+    size(); if (!W || !H) return;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#12151A'; g.fillRect(0, 0, W, H); g.setTransform(1, 0, 0, 1, 0, OY);
     // stars and two flat hill layers (parallax)
-    for (let i = 0; i < 40; i++) { const sx = ((i * 97) % 400) * 3 - camX * 0.1 % 1200, sy = (i * 53) % 90; g.fillStyle = i % 5 ? '#2A313C' : '#9AA4B2'; g.fillRect(Math.round(((sx % (W / S)) + W / S) % (W / S) * S), Math.round(sy * S), Math.ceil(S), Math.ceil(S)); }
+    g.setTransform(1, 0, 0, 1, 0, 0);   // stars over the whole sky (tall screens too), then back to the world
+    for (let i = 0; i < 90; i++) { const sx = (i * 97) % 997 / 997, sy = (i * 53) % 389 / 389; g.fillStyle = i % 5 ? '#2A313C' : '#9AA4B2'; g.fillRect(Math.round(((sx * W - camX * 0.1 * S) % W + W) % W), Math.round(sy * (OY + 100 * S)), Math.ceil(S), Math.ceil(S)); }
+    g.setTransform(1, 0, 0, 1, 0, OY);
     g.fillStyle = '#1B2028';
     for (let i = -1; i < 12; i++) { const hx = i * 140 - (camX * 0.3) % 140; g.beginPath(); g.moveTo(hx * S, 150 * S); g.lineTo((hx + 70) * S, 110 * S); g.lineTo((hx + 140) * S, 150 * S); g.lineTo((hx + 140) * S, H); g.lineTo(hx * S, H); g.fill(); }
     // platforms

@@ -135,7 +135,7 @@
   let vt = 0, lastReal = 0, speedN = 1, paused = false, running = false, token = 0, loopT = null, fast = false, narrating = false, quiet = false, guided = false;
   // feat/calm-tour: 1x is a calm pace (the scripted chapters run at 0.7 of their old speed), and the clock stops while
   // Flint introduces a chapter, so nothing moves underneath him while you read
-  const PACE = 0.7;
+  const PACE = 0.5;   // v0.25: calmer still (people said it ran too fast)
   let waiters = [];
   function loop() {
     const now = performance.now();
@@ -236,6 +236,22 @@
   const labelOf = el => { if (!el) return ''; const t = (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || el.placeholder || '').replace(/\s+/g, ' ').trim(); return t.length > 42 ? t.slice(0, 40) + '…' : t; };
   const readMs = text => Math.max(2600, String(text || '').split(/\s+/).length * 300);
   async function readFor(text) { const t = token; let left = readMs(text); while (left > 0) { await new Promise(r => setTimeout(r, 100)); if (t !== token || !running) throw ABORT; if (!paused) left -= 100 * Math.max(1, speedN); } }
+  // v0.25: after each chapter's recap the tour waits for you: Next on Flint's line (or Enter / →). Pause still works.
+  function waitNext(label) {
+    if (!liveOn()) return Promise.resolve();
+    const t = token;
+    return new Promise((res, rej) => {
+      if (!sayEl || !sayEl.isConnected) return res();
+      let b = sayEl.querySelector('#dt-say-next');
+      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm primary dt-say-next'; b.id = 'dt-say-next'; sayEl.appendChild(b); }
+      b.textContent = label || 'Next →'; b.hidden = false; sayEl.classList.add('wait');
+      const key = e => { if ((e.key === 'Enter' || e.key === 'ArrowRight') && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); go(); } };
+      const iv = setInterval(() => { if (t !== token || !running) { off(); rej(ABORT); } else if (jump != null) { off(); res(); } }, 100);
+      function off() { clearInterval(iv); removeEventListener('keydown', key, true); if (b.isConnected) b.hidden = true; if (sayEl) sayEl.classList.remove('wait'); }
+      function go() { off(); res(); }
+      b.onclick = go; addEventListener('keydown', key, true); setTimeout(() => { try { b.focus({ preventScroll: true }); } catch {} }, 50);
+    });
+  }
   function unspot() { if (spotEl) spotEl.remove(); spotEl = null; if (sayEl) sayEl.remove(); sayEl = null; clearTimeout(sayT); }
 
   // glide to it, then click the real element (the app's own handler runs)
@@ -682,7 +698,7 @@
         if (guided) await recap(cur, idx);
         else {
           const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest);
-          if (liveOn() && cur.after && !opts0.classic) { spot(null); live(cur.after.replace(/\s*Next[^.]*\.?$/i, ''), { lead: '✓' }); await readFor(cur.after); }
+          if (liveOn() && cur.after && !opts0.classic) { spot(null); live(cur.after.replace(/\s*Next[^.]*\.?$/i, ''), { lead: '✓' }); await waitNext(idx >= list.length - 2 ? 'Finish →' : 'Next →'); }
         }
       } catch (e) {
         if (e !== ABORT) { console.warn('demo tour:', cur.id, e); check('scene ran', false, String(e && e.message || e)); }
@@ -839,28 +855,33 @@
     else runFrom(0);
     return true;
   }
-  // Three slides before the tour: what you're about to see, what TribeCode is, how it works. They advance by themselves.
+  // Three slides before the tour: what you're about to see, what TribeCode is, how it works. You move on with Next
+  // (or Enter / →, Back with ←), at your own pace; nothing advances by itself.
   const SLIDES = [
-    { e: '🎬', h: 'Here is what you will see', p: 'Flint builds a tiny garden game with two friends in about three minutes: a project, a vision, friends joining, tasks, AI agents at work, a playable preview, a vote, and shipping it. You do not need to click anything.' },
+    { e: '🎬', h: 'Here is what you will see', p: 'Flint builds a tiny garden game with two friends in a few minutes: a project, a vision, friends joining, tasks, AI agents at work, a playable preview, a vote, and shipping it. Press Next whenever you are ready to move on.' },
     { e: '🔥', h: 'What TribeCode is', p: 'The place where friends make apps, games and websites together, with AI helpers. Chat, tasks, docs and the code live in one tribe. Your code is saved in your own GitHub repository.' },
     { e: '🧭', h: 'How it works', p: 'Say what you want to make. Send friends one link. Everyone, and every AI agent, takes a part. The tribe votes, and one tap ships it. Pause, skip or try it yourself any time from the bar at the bottom.' },
   ];
   function intro() {
     return new Promise(res => {
       const ov = document.createElement('div'); ov.className = 'dt-intro'; ov.id = 'dt-intro'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Before the tour');
-      let i = 0, t = null, left = 0;
-      const PER = calm() ? 7000 : 6000;
-      const done = () => { clearInterval(t); ov.remove(); res(); };
+      let i = 0, iv = null;
+      const done = () => { clearInterval(iv); removeEventListener('keydown', key, true); ov.remove(); res(); };
+      const next = () => { if (i >= SLIDES.length - 1) done(); else { i++; draw(); } };
+      const back = () => { if (i > 0) { i--; draw(); } };
+      function key(e) { if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); next(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); back(); } else if (e.key === 'Escape') { e.preventDefault(); done(); } }
       const draw = () => {
-        const x = SLIDES[i];
-        ov.innerHTML = `<div class="dt-in-card"><div class="dt-in-e" aria-hidden="true">${x.e}</div><p class="eyebrow mono">${i + 1} of ${SLIDES.length}</p><h2>${esc(x.h)}</h2><p class="dt-in-p">${esc(x.p)}</p>
-          <div class="dt-in-dots">${SLIDES.map((_, k) => `<i class="${k < i ? 'past' : k === i ? 'on' : ''}"><b style="animation-duration:${PER}ms"></b></i>`).join('')}</div>
-          <div class="dt-in-btns"><button class="linkish" id="dt-in-skip">Skip to the tour</button></div></div>`;
+        const x = SLIDES[i], last = i === SLIDES.length - 1;
+        ov.innerHTML = `<div class="dt-in-card${ov.isConnected ? ' again' : ''}"><div class="dt-in-e" aria-hidden="true">${x.e}</div><p class="eyebrow mono">${i + 1} of ${SLIDES.length}</p><h2>${esc(x.h)}</h2><p class="dt-in-p">${esc(x.p)}</p>
+          <div class="dt-in-dots">${SLIDES.map((_, k) => `<i class="${k < i ? 'past' : k === i ? 'on now' : ''}"><b></b></i>`).join('')}</div>
+          <div class="dt-in-btns"><button class="linkish" id="dt-in-skip">Skip to the tour</button><span class="dt-in-nav">${i > 0 ? '<button class="btn" id="dt-in-back">Back</button>' : ''}<button class="btn primary" id="dt-in-next">${last ? 'Start the tour' : 'Next'}</button></span></div></div>`;
         ov.querySelector('#dt-in-skip').onclick = done;
-        left = PER;
+        ov.querySelector('#dt-in-next').onclick = next;
+        const bk = ov.querySelector('#dt-in-back'); if (bk) bk.onclick = back;
+        setTimeout(() => { const n = ov.querySelector('#dt-in-next'); if (n) n.focus({ preventScroll: true }); }, 30);
       };
-      draw(); document.body.appendChild(ov);
-      t = setInterval(() => { if (!running) { done(); return; } left -= 100; if (left <= 0) { i++; if (i >= SLIDES.length) done(); else draw(); } }, 100);
+      draw(); document.body.appendChild(ov); addEventListener('keydown', key, true);
+      iv = setInterval(() => { if (!running) done(); }, 200);
     });
   }
   function stop(quiet) {
@@ -889,7 +910,7 @@
   }
   function speed(n) { if (!running) return; speedN = fast ? 30 : n === 2 ? 2 : 1; paintCtl(); }
   // You clicked into the app yourself: the tour waits for you
-  document.addEventListener('pointerdown', e => { if (running && !paused && !guided && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
+  document.addEventListener('pointerdown', e => { if (running && !paused && !guided && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root, .dt-say, .dt-intro')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
 
   window.TribeDirector = {
     start, stop, pause, play, skip, speed, tryIt, restart, active: () => running,
