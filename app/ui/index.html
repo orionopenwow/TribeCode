@@ -243,7 +243,7 @@
         <div class="chat" id="chat-list"><div class="empty-room">Start a tribe server to chat. Type <span class="kbd">/task</span> to turn a message into a task, <span class="kbd">/decide</span> to log a decision.</div></div>
         <!-- Composer mount: app/ui/composer.js (another branch) replaces the plain form inside it. Keep #chat-form / #chat-input working. -->
         <div class="composer-dock" id="composer-mount">
-          <form class="compose" id="chat-form"><input id="chat-input" placeholder="Message the tribe…" autocomplete="off" maxlength="4000"><span class="kbd">/task</span></form>
+          <form class="compose" id="chat-form"><textarea id="chat-input" rows="1" placeholder="Message the tribe…" maxlength="4000" aria-label="Message" name="tribe-chat-message" autocomplete="off" autocorrect="on" autocapitalize="sentences" spellcheck="true" enterkeyhint="send" inputmode="text" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"></textarea><span class="kbd">/task</span></form>
         </div>
       </div>
      </section>

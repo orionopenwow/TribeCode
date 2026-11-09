@@ -198,7 +198,12 @@
   }
 
   // ---------- rendering ----------
-  function setStatus(t) { const el = $('#doc-status'); if (el) el.textContent = t; }
+  function setStatus(t) {
+    const el = $('#doc-status'); if (el) { el.textContent = t; el.classList.toggle('warn', /^(Offline|Not saved)/.test(String(t))); }
+    const sv = $('#dl-save'); if (!sv) return;   // the toolbar's short version: Saving… / ✓ Saved / Offline
+    const x = String(t || ''); sv.textContent = /^Offline|Not saved|retry/i.test(x) ? 'Offline · will save' : /Sav(ing)|Sync(ing)|…/i.test(x) && !/^Saved/i.test(x) ? 'Saving…' : '✓ Saved';
+    sv.classList.toggle('busy', sv.textContent === 'Saving…'); sv.classList.toggle('warn', /^Offline/.test(sv.textContent));
+  }   // only problems show; the rest is for screen readers
   function setTldr(html) { const el = $('#doc-tldr-text'); if (el) el.innerHTML = html; }
   function renderTldr() {
     const box = $('#doc-tldr'); if (!box) return;
@@ -302,10 +307,10 @@
     if (isCraft(cur)) return renderCraft(pane);
     if (craft) { craft.ctl.destroy(); craft = null; }
     const words = (cur.body || '').split(/\s+/).filter(Boolean).length;
-    const seg = `<div class="seg" role="group" aria-label="Mode"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}" aria-pressed="${mode === 'write'}">Write</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}" aria-pressed="${mode === 'read'}">Read</button></div>`;
+    const seg = `<div class="seg" role="group" aria-label="Mode"><button data-mode="write" class="${mode === 'write' ? 'on' : ''}" aria-pressed="${mode === 'write'}" title="Edit the doc">✏️ Edit</button><button data-mode="read" class="${mode === 'read' ? 'on' : ''}" aria-pressed="${mode === 'read'}" title="See it as others read it">Preview</button></div>`;
     const page = `
       <input class="doc-title" id="doc-title" value="${esc(cur.title)}" maxlength="120" placeholder="Untitled" aria-label="Title">
-      <div class="doc-meta">${cur.source ? `Imported from ${esc(cur.source)} · ` : ''}${words} words · <span class="faint">${remote() ? 'shared with your tribe' : 'saved on this device'}</span></div>
+      ${cur.source ? `<div class="doc-meta">Imported from ${esc(cur.source)}</div>` : ''}
       <div class="doc-tldr" id="doc-tldr"><div class="lbl"><svg class="i" style="width:14px;height:14px"><use href="#i-spark"/></svg>TL;DR · the tribe\'s AI</div><div id="doc-tldr-text"></div></div>
       ${desk() ? '' : DL() ? `<div class="gd-fmt-wrap ${mode === 'write' ? '' : 'hidden'}">${DL().gdBar()}</div>` : ''}
       <div class="doc-edit ${mode === 'write' ? '' : 'hidden'}"><textarea id="doc-body" spellcheck="true" aria-label="Document text" placeholder="Start writing, or type / for blocks…">${esc(inLive() ? sess.text() : cur.body || '')}</textarea></div>
@@ -318,7 +323,8 @@
           ${remote() ? '' : `<button class="btn ghost dx-tool" id="dl-more" title="More" aria-label="More">${L.ico('more', 18)}</button>`}
           ${remote() ? `<button class="btn ghost dl-act" id="dl-link" title="Copy a link to this doc" aria-label="Copy link">${L.ico('share', 17)}<span>Share</span></button>` : ''}
           <button class="btn ghost dx-tool" id="doc-del" title="Delete doc" aria-label="Delete doc">${L.ico('trash', 17)}</button>
-          <button class="btn ghost dx-tool" id="dl-close" title="Close doc" aria-label="Close doc">${L.ico('close', 17)}</button></div>`;
+          <span class="dl-save" id="dl-save" role="status" aria-live="polite">✓ Saved</span>
+          <button class="btn primary dl-done" id="dl-close" title="Done: save and go back to all files" aria-label="Done">Done</button></div>`;
       pane.innerHTML = `<div class="doc-banner hidden" id="doc-banner"></div>
         <div class="dl-head">${L.top({ kind: 'doc', nameId: 'dl-name', title: cur.title, where: remote() ? projName() : 'On this device', statusId: 'doc-status', status: statusText(), peers: '<span class="doc-peers hidden" id="doc-peers" aria-live="polite"></span>', acts })}
           ${L.toolbar()}</div>
@@ -387,9 +393,11 @@
     if (body) {
       const fit = () => body.classList.toggle('narrow', pane.clientWidth < 1000);   // a squeezed pane (room panel open): a slimmer side panel and page margins
       fit(); if (!pane.__dlFit && window.ResizeObserver) { pane.__dlFit = new ResizeObserver(() => { const b = pane.querySelector('.dl-body'); if (b) b.classList.toggle('narrow', pane.clientWidth < 1000); }); pane.__dlFit.observe(pane); }   // the room panel opening or closing resizes the pane
-      body.classList.toggle('side-off', get(sideKey) !== 'on');   // the side panel starts hidden; the button top-left brings it back
-      $('#dl-side-x').onclick = () => { body.classList.add('side-off'); set(sideKey, 'off'); $('#dl-side-open').focus(); };
-      $('#dl-side-open').onclick = () => { body.classList.remove('side-off'); set(sideKey, 'on'); $('#dl-side-x').focus(); if (outlineCtl) outlineCtl.render(); };
+      const so = $('#dl-side-open'), acts = pane.querySelector('.dl-acts'); if (so && acts) acts.prepend(so);   // v0.21: in the toolbar row, not over the page
+      const sideSync = off => { body.classList.toggle('side-off', off); pane.classList.toggle('side-off-on', off); };
+      sideSync(get(sideKey) !== 'on');   // the side panel starts hidden; the toolbar button brings it back
+      $('#dl-side-x').onclick = () => { sideSync(true); set(sideKey, 'off'); $('#dl-side-open').focus(); };
+      $('#dl-side-open').onclick = () => { sideSync(false); set(sideKey, 'on'); $('#dl-side-x').focus(); if (outlineCtl) outlineCtl.render(); };
     }
     const sec = $('#dl-outline-sec'), head = $('#dl-ol-head');
     if (sec && head) {
@@ -557,7 +565,7 @@
   document.addEventListener('drop', e => { const w = e.target.closest && e.target.closest('#doc-list-wrap'); if (w) { e.preventDefault(); w.classList.remove('over'); importFiles([...e.dataTransfer.files]); } });
 
   async function refreshList() { if (remote()) { try { list = (await C.api('/docs')).docs; } catch {} } renderList(); }
-  window.TribeDocs = { load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
+  window.TribeDocs = { shelf: () => { if (cur) closeDoc(); }, load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
     newSheet: () => newCraft('sheet'), newDeck: () => newCraft('deck'),
     current: () => cur, list: () => list, refreshList, renderList, changed, caretXY, mode: () => mode, setMode: m => { mode = m; renderEditor(); } };
 })();

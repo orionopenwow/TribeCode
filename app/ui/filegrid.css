@@ -49,3 +49,12 @@
 .fg-repo > #doc-repo-hero .rhx-tile span { font-size: 44px; }
 .fg-repo > #doc-repo-hero:empty, .fg-repo > #doc-repo-hero:has(.hero-acts) { display: none; }   /* no repo yet: nothing to show here */
 body:has(#view-tabs.wt-files:not(.hidden)) #view-docs > #cf-switch { display: none; }   /* phones too: the emoji tab row already has Notes · Code · Docs */
+
+/* Start something new (v0.21) */
+.fg-start { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 4px 0 20px; }
+.fg-st { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); cursor: pointer; }
+.fg-st:hover { background: var(--surface-2); }
+.fg-st-e { grid-row: 1 / 3; font-size: 20px; }
+.fg-st b { font-size: 14px; } .fg-st small { color: var(--muted); font-size: 12px; }
+.fg-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.fg-th { aspect-ratio: 16 / 10; }
