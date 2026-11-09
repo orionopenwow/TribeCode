@@ -645,9 +645,9 @@
     // You set the pace: Next / Back, arrow keys, Esc to stop. The section's own little demo plays while it's lit.
     const STEPS = [
       ['.hero', 'This is TribeCode: one shared place where you, your friends and your AI helpers code anything together.'],
-      ['#make', 'First, what you can make: apps, games, websites, tools, bots. If it runs on code, your tribe can build it.'],
+      ['#make', 'First, the kind of things people make here. Games, apps, sites, bots, and whatever you thought of in the shower.'],
       ['#story', 'Here’s how any of those comes together, in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
-      ['#learn', 'Never coded before? That’s fine. The Learn guides explain each step slowly, in plain words, and a quiz earns your first badge.'],
+      ['#learn', 'New to code? The Learn modules go slowly and skip the jargon, and a short quiz at the end earns your first badge.'],
       ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
       ['#phone', 'Friends join from a phone with one link. When an agent needs a yes, it arrives as one tap.'],
       ['#lanes', 'Each agent works in its own lane, so nobody collides. When two need the same file they hand it off, and a person approves the merge.'],
