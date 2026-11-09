@@ -44,6 +44,9 @@
   .lx-card pre { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--main, #1D2021); border: 1px solid var(--edge); overflow-x: auto; font: 13.5px/1.6 var(--mono, ui-monospace, monospace); color: var(--text); }
   .lx-card details { margin-top: 14px; border: 1px solid var(--edge); border-radius: 12px; padding: 10px 14px; background: var(--main, #1D2021); }
   .lx-card summary { cursor: pointer; color: var(--text); font-weight: 600; font-size: 14.5px; }
+  .lx-fig { margin: 4px 0 18px; padding: 14px; border: 1px solid var(--edge); border-radius: 14px; background: var(--main, #12151A); }
+  .lx-fig svg { display: block; width: 100%; height: auto; }
+  .lx-fig figcaption { margin-top: 8px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
   .lx-tip { margin-top: 16px; padding: 12px 14px; border-left: 3px solid var(--ember); background: var(--main, #1D2021); border-radius: 0 10px 10px 0; color: var(--muted); font-size: 15px; }
   .lx-nav { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
   .lx-nav .sp { flex: 1; }
@@ -91,6 +94,7 @@
   </section>
 </main>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
+<script src="learn-art.js?v=0.24.0"></script>
 <script>
 (function () {
   'use strict';
@@ -180,7 +184,7 @@
     card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
     if (k.endsWith('-q')) {
       const got = {};
-      card.innerHTML = `<span class="k">Quick check · ${m.t}</span><h1>Three questions</h1><p>No timer and no penalty. Get two right to earn the <b>${m.bname}</b> badge ${m.badge}.</p>` +
+      card.innerHTML = `<span class="k">Quick check · ${m.t}</span><h1>Three questions</h1>${window.TribeLearnArt ? window.TribeLearnArt(k, m) : ''}<p>No timer and no penalty. Get two right to earn the <b>${m.bname}</b> badge ${m.badge}.</p>` +
         m.quiz.map((q, qi) => `<div class="lx-q" data-q="${qi}"><b>${qi + 1}. ${q[0]}</b><div class="lx-opts">${q[1].map((o, oi) => `<button type="button" data-a="${oi}">${o}</button>`).join('')}</div><p class="lx-why" hidden></p></div>`).join('') +
         `<div id="lx-earn">${P.passed[m.id] ? `<span class="lx-badge">${m.badge} ${m.bname} badge earned</span>` : ''}</div>`;
       card.querySelectorAll('.lx-q').forEach(el => el.addEventListener('click', e => {
@@ -196,7 +200,7 @@
       }));
     } else {
       const li = +k.split('-')[1], l = m.lessons[li];
-      card.innerHTML = `<span class="k">Lesson ${li + 1} of ${m.lessons.length} · ${m.min} min module</span><h1>${l[0]}</h1>${l[1]}`;
+      card.innerHTML = `<span class="k">Lesson ${li + 1} of ${m.lessons.length} · ${m.min} min module</span><h1>${l[0]}</h1>${window.TribeLearnArt ? window.TribeLearnArt(k, m) : ''}${l[1]}`;
     }
     $('#lx-back').disabled = i === 0;
     $('#lx-next').textContent = k.endsWith('-q') ? (i === total - 1 ? 'Finish 🎉' : 'Next module →') : 'Got it, next →';
