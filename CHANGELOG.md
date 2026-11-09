@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.25.0
+- **Phones**: the demo tour's game shows on phones again and Flint's line fits the screen; the Task Board, dashboard tiles and inspiration board stack neatly; the website's language chips sit in the menu.
+- **Asset library** (Files › Assets, or ask Flint "add a jump sound"): open sounds made on the spot, a pixel sprite kit, motion presets, icons (Lucide, Tabler, Phosphor, Heroicons, Pixelarticons, Twemoji), self-hosted fonts, 3D models including a rigged, animated fox, and Poly Haven textures and skies. Only open licenses; every file is credited in assets/CREDITS.md. AI agents get find_assets and add_assets.
+- **Inspiration board** on the dashboard: drop pictures, paste Pinterest boards, Dribbble shots, any page or a font name. TribeCode pulls out the colors and fonts, and Dress it up puts them on the website and in design/inspiration.css. No AI needed.
+- **Edit the website in the preview**: press Edit, double-click text to change it, or pick anything and tell Flint what to change.
+- **Site templates**: save a website as a template and start new projects from it in setup.
+- **Dashboard**: colour-coded At a glance tiles with a big number, what it means and one action; cards fit when the side panel is open. **Task Board**: columns that fit, each with its colour.
+- **Themes**: every theme has its own accent colors and its own logo colors (dark brackets on Light). Theme chips preview the app. Settings, Edit profile and Inbox got a design pass; the Help menu dims the page behind it.
+- **Demo tour**: the slides and each chapter wait for Next, at a calmer pace.
+- **Website**: Learn lessons open with scenes in the style of the homepage's app picture; a language picker (English, Español, Português, Français, Deutsch, 日本語, 简体中文, 한국어); an "app by Campton" section.
+- Fixed a crash when tapping Ask AI from the flow card on some phones.
+
 ## v0.24.0
 - **Phones**: the setup steps stay as big cards on phones too until all four are done.
 - **Website copy**: rewritten in plainer, more human words. New headline ("Build the thing with your friends."), and every section says what it does in one or two specific sentences instead of lists and slogans. The GitHub strip is more distinct (a Star it on GitHub button, bigger numbers) and the download buttons show the system's icon, the kind of file and its size.
