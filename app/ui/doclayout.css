@@ -275,8 +275,9 @@ body.light .md .tc-green { color: #1E7F43; }
 .side-off-on .dl-acts .dl-side-open { display: grid; }
 .dl-acts .dl-side-open { order: -1; position: static; place-items: center; width: 34px; height: 34px; margin-right: 4px; border: 1px solid var(--edge); border-radius: 9px; background: var(--surface); color: var(--muted); cursor: pointer; }
 .dl-acts .dl-side-open:hover { color: var(--text); background: var(--surface-2); }
-/* the TL;DR box shows only once there is a summary (✨ makes one) */
-.doc-tldr.empty { display: none; }
+/* no summary yet: just a quiet one-line link instead of a box */
+.doc-tldr.empty { background: none; border: 0; padding: 0; margin: 0 0 10px; font-size: 12.5px; color: var(--faint); }
+.doc-tldr.empty .lbl { display: none; }
 /* v0.21: a tidier doc toolbar. Mode · tools (dictate, AI, comment) · Share · More · Close. History, pin and pop out live in More */
 .doc-toolbar.dl-acts { display: flex; align-items: center; }
 .dl-acts .dx-tools { display: contents; }

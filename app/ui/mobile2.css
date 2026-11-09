@@ -428,3 +428,8 @@
   body.kb-open .composer-dock.m2-composer { padding-bottom: 6px; }
   #chat-list { overscroll-behavior: contain; scroll-behavior: auto; }
 }
+/* v0.21: the message box can grow to a few lines */
+@media (max-width: 820px) {
+  .m2-composer #chat-form, .composer-dock.m2-composer:not(.rec) #chat-form { height: auto; min-height: 42px; align-items: center; }
+  .m2-composer #chat-form textarea#chat-input { font-size: 16px; line-height: 22px; padding: 10px 6px; height: 42px; }
+}

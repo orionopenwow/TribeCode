@@ -52,9 +52,9 @@
 
   // Start something new (v0.21): every kind of file, and the ways to begin one
   const START = [
-    { k: 'doc', e: '📝', t: 'Doc', s: 'Write anything' },
-    { k: 'sheet', e: '📊', t: 'Sheet', s: 'Numbers and lists' },
-    { k: 'deck', e: '🎞️', t: 'Slides', s: 'A deck to present' },
+    { k: 'doc', e: '📝', t: 'Doc', s: 'Write anything', id: 'doc-first' },
+    { k: 'sheet', e: '📊', t: 'Sheet', s: 'Numbers and lists', id: 'fg-new-sheet' },
+    { k: 'deck', e: '🎞️', t: 'Slides', s: 'A deck to present', id: 'fg-new-deck' },
     { k: 'template', e: '📋', t: 'From a template', s: 'Plans, notes, specs' },
     { k: 'flint', e: '✨', t: 'Ask Flint', s: 'Describe it, get a draft' },
     { k: 'upload', e: '⬆️', t: 'Upload', s: 'Docs, CSV, pictures, PDFs' },
@@ -86,8 +86,8 @@
       const items = list.filter(d => folderOf(d) === at || (!at && !folderOf(d)));
       { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the code repository strip alive across redraws
       pane.innerHTML = `<div class="fg">
-        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn primary" id="doc-first">＋ New</button></span></div>
-        ${!at ? `<div class="fg-start" role="group" aria-label="Start something new">${START.map(x => `<button type="button" class="fg-st" data-start="${x.k}"><span class="fg-st-e" aria-hidden="true">${x.e}</span><b>${x.t}</b><small>${x.s}</small></button>`).join('')}</div>` : ''}
+        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn primary" id="fg-new-menu">＋ New</button></span></div>
+        ${!at ? `<div class="fg-start" role="group" aria-label="Start something new">${START.map(x => `<button type="button" class="fg-st" data-start="${x.k}"${x.id ? ` id="${x.id}"` : ''}><span class="fg-st-e" aria-hidden="true">${x.e}</span><b>${x.t}</b><small>${x.s}</small></button>`).join('')}</div>` : ''}
         ${!at ? '<div class="fg-repo"></div>' : ''}
         ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button class="fg-folder" data-folder="${esc(f)}"><span aria-hidden="true">📁</span><span>${esc(f.split('/').pop())}</span><span class="fg-more" aria-hidden="true">⋮</span></button>`).join('')}</div>` : ''}
         ${items.length ? `<div class="fg-grid">${items.map(d => card(d, o)).join('')}</div>`
@@ -97,7 +97,7 @@
       </div>`;
       const slot = pane.querySelector('.fg-repo'), hero = document.getElementById('doc-repo-hero');
       if (slot && hero) { const extra = hero.nextElementSibling && hero.nextElementSibling.classList.contains('vw-assets') ? hero.nextElementSibling : null; slot.append(hero); if (extra) slot.append(extra); }
-      pane.querySelector('#doc-first').onclick = e => newMenu(e.currentTarget, o);
+      pane.querySelector('#fg-new-menu').onclick = e => newMenu(e.currentTarget, o);
       pane.querySelectorAll('[data-start]').forEach(b => b.onclick = () => start(b.dataset.start, o));
       pane.querySelectorAll('[data-slug]').forEach(b => b.onclick = () => o.open(b.dataset.slug));
       pane.querySelectorAll('[data-folder]').forEach(b => b.onclick = () => { at = pane.dataset.fgFolder = b.dataset.folder; draw(shots); });

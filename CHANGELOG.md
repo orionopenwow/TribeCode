@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.21.0 (in progress)
+- **Phones**: the message box no longer brings up the password-autofill bar; it grows to a few lines, Enter sends (Shift+Enter for a new line), and a slim format strip (bold, italic, strike, code, link, list) rides above it while you type. The newest message always sits just above the box, including when the keyboard opens, and the Add to Home Screen tip never covers the chat.
+- **Files**: start anything from the top of Files: a doc, sheet or slides, from a template, by asking Flint, or by uploading files. Cards say exactly what each file is (Sheet, CSV, Slides, Doc) and fit more on screen.
+- **Docs**: one title (the page's), Edit and Preview, a clear ✓ Saved, and a Done button that takes you back to all your files (so does tapping Files again). The page fills the width with no frame around it; the side panel button sits in the toolbar. History, pin, pop out, comment and dictate live in ⋯. No more "Live · synced · v1" or word-count lines; problems like being offline still show.
+- Reactions you've added have a white outline instead of orange.
+- Your focus stays hidden until there's something to focus on (a task, your part of the code, a vote), and its row of unlabeled icons is gone.
+
 ## v0.20.0
 - **Save a copy**: Settings › Save a copy downloads everything you can see in the tribe (messages, docs, tasks) as one .zip on your phone or computer, so nothing is lost even if the host's computer is. Other members' DMs and sign-in secrets are never in it.
 - **Export docs, sheets and slides**: docs to Word (.docx), Markdown, a web page or PDF; sheets to Excel (.xlsx, formulas kept) or CSV; slides to PowerPoint (.pptx). Copy for Google Docs or Sheets puts it on the clipboard with formatting and opens a new Doc or Sheet; Open in Google Slides saves the .pptx to import. On the host computer, Save to Desktop puts the file in the project's Desktop folder. Start one fast from the chat's + menu (Doc, sheet or slides) or Ctrl K. Google Drive linking is planned (docs/EXPORT.md).
