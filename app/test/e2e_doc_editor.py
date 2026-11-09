@@ -224,7 +224,7 @@ async def main():
             await host.keyboard.press("Backspace"); await host.keyboard.press("Backspace"); await host.keyboard.press("Backspace")
 
             # title in the top bar and on the page stay in step
-            await host.fill("#dl-name", "Lantern level plan")
+            await host.fill("#doc-title", "Lantern level plan")
             assert await host.input_value("#doc-title") == "Lantern level plan"
 
             # ---------------- two people co-editing still converge ----------------
@@ -244,7 +244,7 @@ async def main():
             assert "Ship the shiny *lantern* level." in text and "**Filler paragraph 7.**" in text and "Maya: Party at the" in text, text[-400:]
             await maya.wait_for_function("document.querySelector('#dl-name').value === 'Lantern level plan'")
             # a remote title change reaches the top bar too
-            await maya.fill("#dl-name", "Lantern level v2")
+            await maya.fill("#doc-title", "Lantern level v2")
             await host.wait_for_function("document.querySelector('#dl-name').value === 'Lantern level v2' && document.querySelector('#doc-title').value === 'Lantern level v2'", timeout=8000)
             # the file on disk matches
             for _ in range(60):

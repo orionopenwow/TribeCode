@@ -40,7 +40,7 @@
   const DEST = [
     { key: 'home', label: 'Dashboard', icon: 'i-home', group: 'core', keys: 'home overview project dashboard living update', run: () => App().show('home') },
     { key: 'chat', label: 'Messages', icon: 'i-chat', group: 'core', keys: 'messages general talk channels streams dm', run: () => { if (window.TribeDM && window.TribeDM.current && window.TribeDM.current() !== 'general' && window.TribeDM.back) window.TribeDM.back(); App().show('chat'); } },
-    { key: 'docs', label: 'Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => App().show('docs') },
+    { key: 'docs', label: 'Files', icon: 'i-doc', group: 'core', keys: 'documents notes files pages', run: () => { if (document.body.dataset.view === 'docs' && window.TribeDocs && window.TribeDocs.shelf) window.TribeDocs.shelf(); App().show('docs'); } },
     { key: 'ws-tasks', label: 'Task Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
     { key: 'ws-agents', label: 'Agents Hub', icon: 'i-robot', group: 'core', keys: 'agents coordinate ops claude workspace', run: () => openWs('agents') },
     { key: 'docs-files', label: 'Project files', tab: 'Files', slug: 'files', icon: 'i-doc', group: 'docs', keys: 'documents notes files pages journal', run: () => App().show('docs') },
