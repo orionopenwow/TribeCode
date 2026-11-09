@@ -82,7 +82,9 @@
   ];
   const byKey = k => DEST.find(d => d.key === k);
   const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Task Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
-  const tabsOf = w => DEST.filter(d => d.group === w && (!d.when || d.when()));
+  // shown: its own condition, plus the person's experience mode (app/ui/modes.js). The palette still finds everything.
+  const shown = d => (!d.when || d.when()) && (!window.TribeMode || window.TribeMode.allows(window.TribeMode.minFor(d.key)));
+  const tabsOf = w => DEST.filter(d => d.group === w && shown(d));
   const wsOf = key => { const d = byKey(key); return d && WS[d.group] ? d.group : null; };
   const TKEY = w => `tribecode.tab.${w}`;
   // A workspace opens on its last tab (if it is still there).
@@ -307,7 +309,7 @@
   // ---------- breadcrumbs: the section menu mirrors the nest (the four rows, then each workspace's tabs) ----------
   function menuRows(list) {
     const cur = current();
-    return list.filter(d => !d.when || d.when()).map(d => `<button data-dest="${esc(d.key)}" class="${d.key === cur ? 'on' : ''}">${ico(d.icon)}<span>${esc(d.label)}</span>${COUNT[d.key] && counts[d.key] ? `<span class="n ${HOT[d.key] ? 'hot' : ''}">${counts[d.key]}</span>` : ''}</button>`).join('');
+    return list.filter(shown).map(d => `<button data-dest="${esc(d.key)}" class="${d.key === cur ? 'on' : ''}">${ico(d.icon)}<span>${esc(d.label)}</span>${COUNT[d.key] && counts[d.key] ? `<span class="n ${HOT[d.key] ? 'hot' : ''}">${counts[d.key]}</span>` : ''}</button>`).join('');
   }
   function sectionMenu(anchor) {
     const core = DEST.filter(d => d.group === (isGlobal() ? 'global' : 'core'));
@@ -631,8 +633,11 @@
   $('#panel-close').addEventListener('click', () => setPanel(true));
 
   // ---------- project settings (the switcher's Project settings, Ctrl K) ----------
-  function projectSettings() {
-    const p = PJ() && PJ().cur(); if (!p) return window.TribeOnboarding.open({ fromSettings: true });
+  function projectSettings(tries = 0) {
+    const p = PJ() && PJ().cur();
+    // right after connecting the project list can still be loading: wait for it instead of opening onboarding by mistake
+    if (!p && C.project && C.project() && tries < 20) return setTimeout(() => projectSettings(tries + 1), 250);
+    if (!p) return window.TribeOnboarding.open({ fromSettings: true });
     const host = (C.state().me || {}).role === 'host';
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
     body.innerHTML = `<h2>${esc(p.name)} settings</h2>

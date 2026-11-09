@@ -15,6 +15,13 @@ const POLICIES = ['ask', 'always', 'never'];
 module.exports = function askai({ store, id, str, P, getMembers, presenceFor, postChat, coord, approvals, brain, askBrain, createTask, bus, nameOf }) {
   const FILE = '.tribe/askai.json';
   const db = Object.assign({ policy: {}, pending: [] }, store.readJSON(FILE, {}));
+  // Agents in public chat (v0.20): "@maya's-claude add a jump sound" in a channel gives Maya's Claude a public command;
+  // it answers, and posts what it makes and finishes, in that channel. The right panel stays the private way.
+  // Admins decide: on/off, who may command (members | builders | admins), which channels ([] = every public one),
+  // whether finished work is posted, and a per-person hourly limit. Each owner's own "Friends can ask my AI"
+  // policy (ask | always | never) still decides whether someone else may command *their* agent.
+  const PUB_DEFAULT = { on: true, who: 'members', channels: [], postDone: true, perHour: 20 };
+  const pub = () => Object.assign({}, PUB_DEFAULT, db.pub || {});
   const save = () => { db.pending = db.pending.slice(-200); store.writeJSON(FILE, db); };
   const member = mid => getMembers().find(m => m.id === mid);
   const err = (status, message) => Object.assign(new Error(message), { status });
@@ -74,7 +81,7 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
     let changed = false;
     for (const p of db.pending.filter(x => x.status === 'waiting')) {
       const ap = approvals.get ? approvals.get(p.approval) : null; if (!ap || ap.status === 'pending') continue;
-      if (ap.status === 'approved') P.inProject(p.project, () => { deliver(p); postChat(p.channel, 'tribecode', `🤖 ${first(nameOf(p.owner))} said yes: their Claude is on ${first(nameOf(p.by))}'s question.`); });
+      if (ap.status === 'approved') P.inProject(p.project, () => { (p.pub ? deliverPublic : deliver)(p); postChat(p.channel, 'tribecode', `🤖 ${first(nameOf(p.owner))} said yes: their Claude is on ${first(nameOf(p.by))}'s question.`); });
       else { p.status = 'denied'; changed = true; P.inProject(p.project, () => postChat(p.channel, 'tribecode', `@${first(nameOf(p.by))} ${first(nameOf(p.owner))}'s Claude can't take that one right now. Try again later, or ask in chat.`)); }
     }
     if (changed) save();
@@ -90,6 +97,11 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
         return send(res, 200, await ask(ch, me, '@ai ' + str(body.text, 2000)));
       }
       if (b === 'policy' && m === 'GET') return send(res, 200, { policy: policyOf(me.id), options: POLICIES });
+      if (b === 'public' && m === 'GET') return send(res, 200, { ...pub(), canEdit: me.role === 'host' || me.role === 'admin', canCommand: canCommand(me) });
+      if (b === 'public' && m === 'PUT') {
+        if (!(me.role === 'host' || me.role === 'admin')) return fail(res, 403, 'only the host or an admin changes this');
+        return send(res, 200, setPub(await readBody(req)));
+      }
       if (b === 'policy' && m === 'PUT') {
         if (me.role === 'agent') return fail(res, 403, 'agents cannot change this');
         const v = str((await readBody(req)).policy, 10); if (!POLICIES.includes(v)) return fail(res, 400, 'policy must be ask, always or never');
@@ -99,5 +111,81 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
 
-  return { ask, pick, route, sync, policyOf, err };
+  // ---------- agents in public chat ----------
+  const RANKS = { spectator: 0, builder: 1, mod: 2, admin: 3, host: 4 };
+  const WHO_MIN = { members: 1, builders: 1, admins: 3 };
+  const canCommand = me => me && me.role !== 'agent' && (RANKS[me.role] ?? 1) >= (WHO_MIN[pub().who] ?? 1) && !(pub().who === 'builders' && me.guest);
+  const slugName = n => String(n || '').toLowerCase().replace(/\s+/g, '-');
+  // only explicit agent mentions: @my-claude, @maya's-claude (or @mayas-claude, @maya-claude), or an agent's own name or id.
+  // A plain @maya is a person, never her agent.
+  function agentsIn(text, me) {
+    const agents = getMembers().filter(m => m.role === 'agent' && m.owner);
+    const online = new Set(presenceFor(me).filter(m => m.role === 'agent' && m.online).map(m => m.id));
+    const found = [];
+    for (const raw of String(text).match(/@[^\s,.:;!?()]+/g) || []) {
+      const t = raw.slice(1).toLowerCase().replace(/[’]/g, "'");
+      let hit = null;
+      if (/^my[-_]?(claude|agent)$/.test(t)) hit = agents.find(a => a.owner === me.id && online.has(a.id)) || agents.find(a => a.owner === me.id);
+      else {
+        const own = t.match(/^(.+?)(?:'s|s)?[-_]?(claude|agent)$/);
+        if (own) { const o = getMembers().find(m => m.role !== 'agent' && [slugName(m.name), slugName(String(m.name).split(/\s+/)[0])].includes(own[1])); if (o) hit = agents.find(a => a.owner === o.id && online.has(a.id)) || agents.find(a => a.owner === o.id); }
+        if (!hit) hit = agents.find(a => a.id.toLowerCase() === t || slugName(a.name) === t);
+      }
+      if (hit && !found.some(f => f.id === hit.id)) found.push(hit);
+    }
+    return found.map(a => ({ agent: a, online: online.has(a.id) }));
+  }
+  function deliverPublic(p) {
+    const asker = member(p.by) || { name: 'A teammate' };
+    coord.tell(p.agent, 'ask', `${asker.name} gave you a public command in #${p.channel}: "${p.text}". This is public: everyone in the channel sees it. ` +
+      `Answer in that channel with post_chat (channel "${p.channel}", project "${p.project}"), starting with @${first(asker.name)}. Say briefly what you'll do, then do it. ` +
+      (pub().postDone ? `When you make something or finish a task, post it in #${p.channel} too (what changed, links, task ids). ` : '') +
+      `Big or risky changes go through the project's ship rules (approvals) as usual. If you can't do it, say why in the channel.`, p.by);
+    p.status = 'sent'; p.sentAt = new Date().toISOString(); save();
+  }
+  function command(ch, me, text) {
+    if (!me || me.role === 'agent' || String(ch).startsWith('dm-') || ch === 'agents') return null;
+    const hits = agentsIn(text, me); if (!hits.length) return null;
+    const P0 = pub(), who = first(me.name);
+    if (!P0.on) { postChat(ch, 'tribecode', `@${who} agents don't take commands in public chat in this tribe. Use the right panel to talk to your agent, or ask an admin (Settings › Agents in chat).`); return { kind: 'off' }; }
+    if (P0.channels.length && !P0.channels.includes(ch)) { postChat(ch, 'tribecode', `@${who} agents take public commands in ${P0.channels.map(c => '#' + c).join(', ')}, not here.`); return { kind: 'channel' }; }
+    if (!canCommand(me)) { postChat(ch, 'tribecode', `@${who} in this tribe only ${P0.who === 'admins' ? 'admins' : 'builders'} can give agents public commands.`); return { kind: 'role' }; }
+    const hourAgo = Date.now() - 3600e3;
+    if (db.pending.filter(x => x.pub && x.by === me.id && Date.parse(x.created) > hourAgo).length >= P0.perHour) { postChat(ch, 'tribecode', `@${who} that's a lot of agent commands this hour (limit ${P0.perHour}). Try again a bit later.`); return { kind: 'limit' }; }
+    const pid = P.current() || P.defaultId(), out = [];
+    for (const { agent, online } of hits.slice(0, 3)) {
+      const mine = agent.owner === me.id, owner = first(nameOf(agent.owner)), label = mine ? `${who}'s ${agent.name.includes('Claude') ? 'Claude' : 'agent'}` : `${owner}'s Claude`;
+      if (!mine && policyOf(agent.owner) === 'never') { postChat(ch, 'tribecode', `@${who} ${owner} keeps their Claude to themselves. Ask them, or try @ai.`); out.push({ agent: agent.id, kind: 'never' }); continue; }
+      const p = { id: 'pub-' + id(6).toLowerCase(), pub: true, by: me.id, text: str(text, 2000), channel: ch, agent: agent.id, owner: agent.owner, project: pid, status: 'new', created: new Date().toISOString() };
+      db.pending.push(p); save();
+      if (mine || policyOf(agent.owner) === 'always') {
+        deliverPublic(p);
+        postChat(ch, 'tribecode', online ? `🤖 ${label} is on it.` : `🤖 ${label} is offline. It gets this as soon as it connects.`);
+        out.push({ agent: agent.id, kind: mine ? 'mine' : 'theirs' }); continue;
+      }
+      const ap = approvals.create({ title: `Let your Claude do ${who}'s public request?`, details: `In #${ch}: "${p.text}"\n\nApprove and ${agent.name} answers and works in the channel. ` +
+        `To skip this step next time: Settings › Friends can ask my AI › Always.`, risk: 'low', kind: 'ask-claude', to: [agent.owner] }, me);
+      p.approval = ap.id; p.status = ap.status === 'approved' ? 'approved' : 'waiting'; save();
+      if (p.status === 'approved') deliverPublic(p); else postChat(ch, 'tribecode', `🤖 Asked ${owner} to let their Claude take this. One tap for them.`);
+      out.push({ agent: agent.id, kind: 'waiting', approval: ap.id });
+    }
+    return { kind: 'public', agents: out };
+  }
+  // finished tasks by agents land in the project's channel when the tribe wants that
+  function taskDone(t, ch) {
+    if (!pub().postDone || !t || !t.assignee) return;
+    const a = member(t.assignee); if (!a || a.role !== 'agent') return;
+    postChat(ch, 'tribecode', `✅ ${a.name} finished **${str(t.title, 160)}**${a.owner ? ` (${first(nameOf(a.owner))}'s agent)` : ''}.`);
+  }
+  function setPub(body) {
+    const cur = pub(), next = { ...cur };
+    if (typeof body.on === 'boolean') next.on = body.on;
+    if (['members', 'builders', 'admins'].includes(body.who)) next.who = body.who;
+    if (Array.isArray(body.channels)) next.channels = body.channels.map(c => str(c, 40).replace(/^#/, '')).filter(Boolean).slice(0, 20);
+    if (typeof body.postDone === 'boolean') next.postDone = body.postDone;
+    if (Number.isFinite(+body.perHour)) next.perHour = Math.max(1, Math.min(200, Math.round(+body.perHour)));
+    db.pub = next; save(); return next;
+  }
+
+  return { ask, pick, route, sync, policyOf, err, command, taskDone, pub, setPub };
 };

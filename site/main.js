@@ -757,3 +757,33 @@
     }
   })();
 })();
+
+/* ---------- Learn panel on the home page: your progress from learn.html (this device) ---------- */
+(function () {
+  const ring = document.querySelector('[data-learn-ring]'); if (!ring) return;
+  const MODS = [['m1', 'What code is', 4], ['m2', 'Your first app', 6], ['m3', 'Building together', 6], ['m4', 'Languages, simply', 7]];
+  let P = null; try { P = JSON.parse(localStorage.getItem('tribecode.learn.v2') || 'null'); } catch {}
+  if (!P) return;
+  const done = P.done || {}, passed = P.passed || {};
+  const total = MODS.reduce((n, m) => n + m[2] + 1, 0);
+  const got = MODS.reduce((n, [id, , k]) => n + Array.from({ length: k }, (_, i) => done[`${id}-${i}`]).filter(Boolean).length + (passed[id] ? 1 : 0), 0);
+  const pct = Math.round(got / total * 100);
+  ring.style.setProperty('--p', pct); document.querySelector('[data-learn-pct]').textContent = pct + '%';
+  MODS.forEach(([id, , k]) => {
+    const li = document.querySelector(`[data-learn-mod="${id}"]`); if (!li) return;
+    const n = Array.from({ length: k }, (_, i) => done[`${id}-${i}`]).filter(Boolean).length, st = li.querySelector('[data-learn-st]');
+    if (passed[id]) { li.classList.add('done'); st.textContent = '✓ Done'; } else if (n) { li.classList.add('going'); st.textContent = `${n}/${k}`; }
+  });
+  // continue at the first lesson (or check) not finished yet, in course order
+  const order = MODS.flatMap(([id, , k]) => [...Array.from({ length: k }, (_, i) => `${id}-${i}`), `${id}-q`]);
+  const at = order.find(x => (x.endsWith('-q') ? !passed[x.slice(0, 2)] : !done[x])) || null, mod = at && MODS.find(m => m[0] === at.slice(0, 2));
+  if (got && at && pct < 100) {
+    document.querySelector('[data-learn-title]').textContent = `Continue: ${mod[1]}`;
+    document.querySelector('[data-learn-sub]').textContent = `${pct}% of the course done. Pick up where you left off.`;
+    const go = document.querySelector('[data-learn-go]'); go.textContent = 'Continue'; go.href = `learn.html#${at}`;
+  } else if (pct === 100) {
+    document.querySelector('[data-learn-title]').textContent = 'Course complete 🎉';
+    document.querySelector('[data-learn-sub]').textContent = 'All four badges earned. Now build something with your tribe.';
+    const go = document.querySelector('[data-learn-go]'); go.textContent = 'Open the app'; go.href = 'app/?welcome=1';
+  }
+})();

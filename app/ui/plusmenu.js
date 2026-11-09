@@ -34,6 +34,7 @@
       : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no AI of your own needed', hide: inDm() || me().role === 'spectator' },
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
     { k: 'note', icon: 'i-doc', t: 'Note', s: 'Into the living notes' },
+    { k: 'newdoc', icon: 'i-doc', t: 'Doc, sheet or slides', s: 'Start one in Files. Export to Word, Excel, PowerPoint or Google', hide: !window.TribeDocs || me().role === 'spectator' },
     { k: 'capture', icon: 'i-link', t: 'Read a link', s: draft() && /^https?:\/\//.test(draft()) ? 'Summarize the link you typed' : 'Short notes from an article or video', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
     { k: 'voicenote', icon: 'i-mic', t: 'Voice note to notes', s: 'Record, get a summary and action items', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
     { k: 'bug', icon: 'i-bug', t: 'Report a bug', s: 'With the recent logs attached', hide: !window.TribeBugs },
@@ -98,6 +99,15 @@
     if (k === 'remind') {
       const t = text || prompt('What and when? (e.g. "playtest friday 7pm")'); if (!t) return;
       try { await window.TribePlan.quickAdd(window.TribePlan.parse(t)); if (text) clearDraft(); toast('Scheduled'); } catch (e) { toast(e.message); }
+      return;
+    }
+    if (k === 'newdoc') {   // three quick starts; each exports from its own menu (app/ui/exporter.js)
+      const D = window.TribeDocs, A = window.TribeApp;
+      const m = document.createElement('div'); m.className = 'ex-pop'; m.id = 'pl-new'; m.setAttribute('role', 'menu');
+      m.innerHTML = '<p class="ex-h">Start a…</p><button type="button" class="ex-i" data-n="doc">📝 Doc</button><button type="button" class="ex-i" data-n="sheet">📊 Sheet</button><button type="button" class="ex-i" data-n="deck">🎞 Slides</button>';
+      document.body.appendChild(m); m.style.left = '50%'; m.style.top = '30%'; m.style.transform = 'translateX(-50%)';
+      m.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { m.remove(); A.show('docs'); const n = b.dataset.n; if (n === 'sheet') D.newSheet(); else if (n === 'deck') D.newDeck(); else D.create('Untitled doc', ''); });
+      setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off, true); } }, true), 0);
       return;
     }
     if (k === 'note') {

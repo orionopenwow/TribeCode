@@ -55,6 +55,18 @@ module.exports = function cloudsave({ root, key, log = () => {} }) {
     return { enabled: true, v: 1, at: new Date().toISOString(), files, sigs, bytes: total };
   }
 
+  // "Save a copy" (any tribe, cloud or not): the same files a member may see, unsealed, to keep on their own device
+  function copy(me) {
+    const files = {}; let total = 0;
+    for (const rel of walk().filter(r => !isDm(r) || dmMine(r, me.id))) {
+      let text; try { const st = fs.statSync(abs(rel)); if (st.size > MAX_FILE * 4) continue; text = fs.readFileSync(abs(rel), 'utf8'); } catch { continue; }
+      if (rel.startsWith('.tribe/') && !/^\.tribe\/(tribe|projects)\.json$/.test(rel)) continue;   // no member tokens or settings in a personal copy
+      if (rel.endsWith('.jsonl')) text = tail(text);
+      if (total + text.length > MAX_TOTAL * 4) break;
+      files[rel] = text; total += text.length;
+    }
+    return { at: new Date().toISOString(), files, bytes: total };
+  }
   function check(body) {
     if (!enabled) throw Object.assign(new Error('Cloud save needs TRIBE_SETUP_CODE set on the host.'), { status: 400 });
     const files = body && body.files, sigs = body && body.sigs;
@@ -102,5 +114,5 @@ module.exports = function cloudsave({ root, key, log = () => {} }) {
     return { added, files };
   }
 
-  return { enabled, snapshot, restore, merge, _seal: seal };
+  return { enabled, snapshot, copy, restore, merge, _seal: seal };
 };

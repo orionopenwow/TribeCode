@@ -47,7 +47,7 @@
     if (!quiet && drawnFor !== pid()) sec.innerHTML = '<div class="wb-wait">Loading…</div>';
     try { data = (await api('')).website; } catch (e) { sec.innerHTML = `<div class="wb-wait">${esc(e.message)}</div>`; return; }
     if (drawnFor !== pid() || !$('#wb-root')) { draw(); drawnFor = pid(); dirty = false; }
-    else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); if (!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#wb-gen .sg-ed'))) drawGen(); drawPreview(); }
+    else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); const ae = document.activeElement; if (!(ae && ae.closest && ae.closest('#wb-gen') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) drawGen(); drawPreview(); }
   }
   // feat/customize: the generator panel (app/ui/sitegen.js) and the Draft / Live preview switch
   let pvMode = null;

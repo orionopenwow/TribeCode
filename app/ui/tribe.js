@@ -29,7 +29,34 @@
     return data;
   }
 
-  function setStatus(s) { state.status = s; emit('status', state); }
+  // ---------- the outbox: actions show at once and send in order, even while the server is waking up ----------
+  // Each item is { id, path, method, body, kind, ch, at }. Network trouble (no answer, 5xx, 429) keeps it queued and retries;
+  // a real refusal (4xx) drops it and tells the page ('outbox-failed'). Kept per server in localStorage, so a reload keeps it.
+  const OB = () => 'tribecode.outbox:' + base();
+  const obLoad = () => { try { const a = JSON.parse(localStorage.getItem(OB()) || '[]'); return Array.isArray(a) ? a.slice(0, 200) : []; } catch { return []; } };
+  let outbox = null, flushing = false, flushTimer = null;
+  const ob = () => (outbox = outbox || obLoad());
+  function obSave() { try { localStorage.setItem(OB(), JSON.stringify(ob())); } catch {} emit('outbox', ob()); }
+  const cid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  function queue(path, body = {}, { method = 'POST', kind = 'action', ch = null } = {}) {
+    const item = { id: body.cid || cid(), path, method, body: { ...body, cid: body.cid || undefined }, kind, ch, at: Date.now(), project: project() };
+    ob().push(item); obSave(); flush(); return item;
+  }
+  async function flush() {
+    if (flushing || !ob().length || !token()) return; flushing = true; clearTimeout(flushTimer);
+    while (ob().length) {
+      const it = ob()[0];
+      try { const r = await api(it.path, { method: it.method, body: it.body, project: it.project }); ob().shift(); obSave(); emit('outbox-sent', { item: it, result: r }); }
+      catch (e) {
+        if (!e.status || e.status >= 500 || e.status === 429) break;   // offline or waking up: try again soon
+        ob().shift(); obSave(); emit('outbox-failed', { item: it, error: e.message });
+      }
+    }
+    flushing = false; if (ob().length) flushTimer = setTimeout(flush, 4000);
+  }
+  addEventListener('online', () => { flush(); if (token() && state.status !== 'online') { retry = 0; connect(); } });   // network back: reconnect now, not after the back-off
+
+  function setStatus(s) { state.status = s; emit('status', state); if (s === 'online') setTimeout(flush, 200); }
 
   let retryTimer = null;
   // ---------- cloud save (server/cloudsave.js): this device keeps a sealed copy of the tribe ----------
@@ -90,12 +117,14 @@
       let m; try { m = JSON.parse(e.data); } catch { return; }
       emit('ws', m);   // every message, for feature modules (captions, typing, DMs…)
       if (m.type === 'hello') { setProject(m.project, m.projects); }
+      if (m.type === 'chat' && m.message && m.message.cid) document.querySelectorAll(`.msg.pending[data-cid="${CSS.escape(m.message.cid)}"]`).forEach(el => el.remove());   // the outbox's instant bubble -> the real one
       if (m.type === 'hello') cloudJoined();   // cloud save: add this device's copy, then keep it fresh
       else if (cloud && (m.type === 'chat' || m.type === 'task' || m.type === 'doc' || m.type === 'presence')) cloudSoon();
       if (m.type === 'project-switched') { setProject(m.project); emit('project', state.project); }
       if (m.type === 'projects' || m.type === 'project-pulse') emit(m.type, m);
       if (m.type === 'hello') { state.huddle = m.huddle || []; emit('huddle', state.huddle); state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
       if (m.type === 'presence') { state.members = m.members; emit('presence', state.members); }
+      if (m.type === 'tribe' && m.tribe) { state.tribe = m.tribe; emit('tribe', m.tribe); }
       if (m.type === 'chat') emit('chat', m);
       if (m.type === 'task') emit('task', m.task);
       if (m.type === 'task-removed') emit('task-removed', m.id);
@@ -187,6 +216,7 @@
     connected: () => state.status === 'online',
     hasToken: () => !!token(),
     send(obj) { if (sock && sock.readyState === 1) { sock.send(JSON.stringify(obj)); return true; } return false; },
+    queue, outbox: () => ob().slice(), flush, newId: cid,
     announce(text) { if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'announce', text })); },
     async probe() { try { return await api('/health'); } catch { return null; } },
   };

@@ -211,5 +211,13 @@
     }, 2500);
   }
   start();
-  window.TribeSelfHeal = { check, shouldFile, report, reportsOn, versionCheck, healthy, logs: () => logs.slice(), state: () => ({ settled, bootErrors: bootErrors.slice(), healed: ss.get(HEAL), page: pageVersion() }) };
+  // Refresh TribeCode (Settings › Fix problems): drop the stored app files (service worker + caches) and reload, keeping
+  // what matters: sign-in and settings, unsent messages (outbox), the cloud-save copy, drafts and the view you were on.
+  // Those live in localStorage/sessionStorage, which this never touches; the reload lands on the same view.
+  async function refresh() {
+    try { const v = document.body && document.body.dataset.view; if (v) sessionStorage.setItem('tribecode.view', v); } catch {}
+    await clearCaches();
+    const u = new URL(location.href); u.searchParams.set('fresh', Date.now().toString(36)); location.replace(u.toString());
+  }
+  window.TribeSelfHeal = { check, refresh, shouldFile, report, reportsOn, versionCheck, healthy, logs: () => logs.slice(), state: () => ({ settled, bootErrors: bootErrors.slice(), healed: ss.get(HEAL), page: pageVersion() }) };
 })();

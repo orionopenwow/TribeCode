@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, built around your shared GitHub repo.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.19.6">
+<link rel="stylesheet" href="styles.css?v=0.20.0">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -282,19 +282,24 @@
     </div>
   </section>
 
-  <!-- ================= LEARN: the education side, in plain words ================= -->
+  <!-- ================= LEARN: one compact course panel (site/learn.html is the course) ================= -->
   <section class="learn" id="learn" aria-labelledby="learn-title">
     <div class="wrap">
       <p class="eyebrow mono">// learn as you build</p>
       <h2 id="learn-title">Never coded before? Start here.</h2>
-      <p class="learn__lead">TribeCode teaches while you make. Short, slow-paced guides explain what’s happening in plain words, and Flint answers questions any time. Earn badges as you go.</p>
-      <ol class="learn__path reveal">
-        <li class="learn__card" style="--i:0"><span class="learn__n mono">01</span><span class="learn__e" aria-hidden="true">💡</span><h3>What code is</h3><p>Instructions a computer follows, written in a language it understands. Five minutes, no jargon.</p></li>
-        <li class="learn__card" style="--i:1"><span class="learn__n mono">02</span><span class="learn__e" aria-hidden="true">🧱</span><h3>Your first app</h3><p>From an idea to a working page, one small step at a time, with an AI helper doing the typing.</p></li>
-        <li class="learn__card" style="--i:2"><span class="learn__n mono">03</span><span class="learn__e" aria-hidden="true">🤝</span><h3>Building together</h3><p>Code repositories, saved changes, reviews and taking turns, explained so nobody steps on anyone.</p></li>
-        <li class="learn__card" style="--i:3"><span class="learn__n mono">04</span><span class="learn__e" aria-hidden="true">🗣️</span><h3>Languages, simply</h3><p>HTML, JavaScript, Python, Swift and more: what each is for, in a simple version and a deeper one.</p></li>
-      </ol>
-      <p class="learn__cta"><a class="btn btn--light" href="learn.html">Open the Learn guides</a><a class="btn btn--dark" href="learn.html#quiz">Take the first quiz 🏅</a></p>
+      <div class="lc reveal">
+        <div class="lc-me">
+          <div class="lc-ring" data-learn-ring><b data-learn-pct>0%</b></div>
+          <div><b class="lc-t" data-learn-title>Four short modules · about 45 min</b><span class="lc-s" data-learn-sub>One lesson at a time, in plain words. A quick check at the end of each module earns a badge.</span></div>
+          <a class="btn btn--light lc-go" href="learn.html#m1-0" data-learn-go>Start module 1</a>
+        </div>
+        <ol class="lc-mods">
+          <li data-learn-mod="m1"><a href="learn.html#m1-0"><span class="lc-e">💡</span><span><b>What code is</b><small>4 lessons · 8 min</small></span><em data-learn-st>Start</em></a></li>
+          <li data-learn-mod="m2"><a href="learn.html#m2-0"><span class="lc-e">🧱</span><span><b>Your first app</b><small>6 lessons · 12 min</small></span><em data-learn-st>Start</em></a></li>
+          <li data-learn-mod="m3"><a href="learn.html#m3-0"><span class="lc-e">🤝</span><span><b>Building together</b><small>6 lessons · 10 min</small></span><em data-learn-st>Start</em></a></li>
+          <li data-learn-mod="m4"><a href="learn.html#m4-0"><span class="lc-e">🗣️</span><span><b>Languages, simply</b><small>7 lessons · 15 min</small></span><em data-learn-st>Start</em></a></li>
+        </ol>
+      </div>
     </div>
   </section>
 
@@ -430,6 +435,38 @@
           <a class="btn btn--light" href="app/" data-sw-cta>Start with this<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         </div>
       </div>
+      <div class="rx reveal" id="remix">
+        <div class="rx__head"><p class="eyebrow mono">// remix a classic</p><h3>Or build on open source.</h3>
+          <p class="feature__text">Real games, apps and sites from people who share their code. Each one was checked for a license that lets you remix it (MIT or CC0), and the credit stays with its authors.</p></div>
+        <ul class="rx__grid" role="list">
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🔢</span><div class="rx__t"><b>2048</b><p>The sliding-number puzzle in plain HTML, CSS and JavaScript. Small, readable, easy to restyle into your own puzzle.</p>
+            <p class="rx__by mono">by <a href="https://github.com/gabrielecirulli/2048" target="_blank" rel="noopener">Gabriele Cirulli</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=gabrielecirulli/2048">Start from this</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🕹️</span><div class="rx__t"><b>Phaser + Vite template</b><p>The official Phaser 3 starter: a boot scene, a menu, a game scene and hot reload. The usual base for a 2D pixel game.</p>
+            <p class="rx__by mono">by <a href="https://github.com/phaserjs/template-vite" target="_blank" rel="noopener">Phaser Studio</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=phaserjs/template-vite">Start from this</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🍈</span><div class="rx__t"><b>melonJS boilerplate</b><p>A ready-made melonJS project for tile-map games: load a level made in Tiled and walk around it.</p>
+            <p class="rx__by mono">by <a href="https://github.com/melonjs/es6-boilerplate" target="_blank" rel="noopener">melonJS</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=melonjs/es6-boilerplate">Start from this</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🧩</span><div class="rx__t"><b>PixiJS open games</b><p>Complete, polished small games from the PixiJS team (a bubble shooter, a match-3 puzzle) with menus and sound.</p>
+            <p class="rx__by mono">by <a href="https://github.com/pixijs/open-games" target="_blank" rel="noopener">PixiJS</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=pixijs/open-games">Start from this</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🎯</span><div class="rx__t"><b>LittleJS examples</b><p>A tiny, fast engine for pixel games with many short examples: a breakout, a platformer, a puzzle, particles.</p>
+            <p class="rx__by mono">by <a href="https://github.com/KilledByAPixel/LittleJS" target="_blank" rel="noopener">Frank Force</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://killedbyapixel.github.io/LittleJS/examples/" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🦖</span><div class="rx__t"><b>KAPLAY examples</b><p>A friendly JavaScript game library made for beginners, with a playground of examples you can copy one by one.</p>
+            <p class="rx__by mono">by <a href="https://github.com/kaplayjs/kaplay" target="_blank" rel="noopener">KAPLAY team</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://play.kaplayjs.com/" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🤖</span><div class="rx__t"><b>Godot demo projects</b><p>Official Godot demos for 2D and 3D: platformers, physics, pathfinding, UI. Borrow one folder as your starting point.</p>
+            <p class="rx__by mono">by <a href="https://github.com/godotengine/godot-demo-projects" target="_blank" rel="noopener">Godot Engine contributors</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://github.com/godotengine/godot-demo-projects" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="game"><span class="rx__e" aria-hidden="true">🧊</span><div class="rx__t"><b>three.js examples</b><p>Hundreds of 3D examples in the browser: cameras, lights, models, physics. Pick one and build around it.</p>
+            <p class="rx__by mono">by <a href="https://github.com/mrdoob/three.js" target="_blank" rel="noopener">three.js authors</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://threejs.org/examples/" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="app"><span class="rx__e" aria-hidden="true">✅</span><div class="rx__t"><b>TodoMVC</b><p>The same to-do app written in many frameworks. A clear way to see how an app is put together, then grow your own.</p>
+            <p class="rx__by mono">by <a href="https://github.com/tastejs/todomvc" target="_blank" rel="noopener">TasteJS</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://todomvc.com/" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="app"><span class="rx__e" aria-hidden="true">📱</span><div class="rx__t"><b>Expo phone app</b><p>Make a real iPhone and Android app in JavaScript. One command creates a starter with tabs and screens.</p>
+            <p class="rx__by mono">by <a href="https://github.com/expo/expo" target="_blank" rel="noopener">Expo</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://docs.expo.dev/get-started/create-a-project/" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="site"><span class="rx__e" aria-hidden="true">🌐</span><div class="rx__t"><b>HTML5 Boilerplate</b><p>A clean, well-commented starting point for a website: one index.html, sensible defaults, nothing extra.</p>
+            <p class="rx__by mono">by <a href="https://github.com/h5bp/html5-boilerplate" target="_blank" rel="noopener">H5BP</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=h5bp/html5-boilerplate">Start from this</a></li>
+          <li class="rx__card" data-kind="site"><span class="rx__e" aria-hidden="true">🚀</span><div class="rx__t"><b>Astro site templates</b><p>Fast content sites: a blog, docs and a portfolio, written in Markdown. Its examples folder holds the official starters.</p>
+            <p class="rx__by mono">by <a href="https://github.com/withastro/astro" target="_blank" rel="noopener">Astro</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://astro.build/themes/" target="_blank" rel="noopener">Browse</a></li>
+          <li class="rx__card" data-kind="asset"><span class="rx__e" aria-hidden="true">🎨</span><div class="rx__t"><b>Kenney game art</b><p>Thousands of free sprites, tiles, sounds and fonts, including &#x27;Platformer pixel&#x27;. Public domain (CC0): use them anywhere, credit welcome.</p>
+            <p class="rx__by mono">by <a href="https://kenney.nl/assets" target="_blank" rel="noopener">Kenney</a> · <span class="rx__lic">CC0</span></p></div><a class="btn rx__go" href="https://kenney.nl/assets" target="_blank" rel="noopener">Browse</a></li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -504,6 +541,6 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.19.6" defer></script>
+<script src="main.js?v=0.20.0" defer></script>
 </body>
 </html>
