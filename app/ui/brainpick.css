@@ -15,14 +15,14 @@
 .bp-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .bp-t b { font-size: 14px; font-weight: 650; }
 .bp-t small { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
-.bp-t code { font-family: var(--mono); font-size: 11.5px; color: var(--text); }
+.bp-t code { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
 .bp-body { padding: 0 14px 14px 42px; display: grid; gap: 10px; }
 .bp-note { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); max-width: 62ch; }
 .bp-note a { color: var(--accent-ink); }
 .bp-nogpu { margin: 0 14px 12px 42px; padding: 8px 10px; font-size: 12.5px; line-height: 1.5; color: var(--muted); border: 1px dashed var(--edge-pop); border-radius: var(--r-sm); }
 .bp-bar { height: 6px; border-radius: 3px; background: var(--canvas); border: 1px solid var(--edge); overflow: hidden; }
 .bp-bar i { display: block; height: 100%; background: var(--agents, var(--live)); transition: width .2s var(--ease, ease); }
-.bp-prog small { display: block; margin-top: 4px; font-size: 11.5px; }
+.bp-prog small { display: block; margin-top: 4px; font-size: 12.5px; }
 .bp-err { margin: 0; font-size: 12.5px; color: var(--deny-ink, var(--text)); }
 .bp-body > .btn { justify-self: start; }
 .bp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
@@ -39,7 +39,7 @@
 .bp-res.ok { color: var(--live-ink, var(--text)); }
 .bp-row-l { display: inline-flex; align-items: center; gap: 8px; margin-right: 8px; }
 #set-flintbrain { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.fl-via { display: block; margin-top: 4px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--faint); }
+.fl-via { display: block; margin-top: 4px; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--faint); }
 
 /* Ask an agent */
 .aa-card { width: min(520px, 100%); }

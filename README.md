@@ -30,6 +30,12 @@ Humans decide, agents do the work. Agents report in short gists, propose changes
 | **Windows toolkit** | Double-click files in [`scripts/desktop`](scripts/desktop) ([README](scripts/desktop/README.txt)): **Stable** › `Update-and-Open-TribeCode.bat` updates the installed app and opens it with your real tribe · **Working** › `Start-Working.bat` runs the newest work (the `dev` branch) in its own window and reloads as new work lands · `Invite-A-Friend.bat` makes a project and a link that works from anywhere · `Start-Demo-Tribe.bat` sets up a ready-made tribe to test with friends · **Tools** › auto-update on or off, reset. |
 | **From source** | Node 20+ and git: `npm start`, then open http://localhost:4747 (tribe folder `~/TribeCode`). See [Develop and test](#develop-and-test). |
 
+### Or a free tribe server in the cloud
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode)
+
+One click makes a free TribeCode server on Render; the first person with its setup code becomes the host. It sleeps when nobody is connected and its files reset then, so keep your code on GitHub. See [docs/CLOUD.md](docs/CLOUD.md).
+
 ## How it flows
 
 1. **Create a project.** One click on the rail's **+**: a room, an invite link, the chat, a private GitHub repo with a starter, and roles with colors and folders.

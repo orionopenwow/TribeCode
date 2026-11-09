@@ -7,7 +7,7 @@
 .gx { --rc: var(--edge-pop); position: relative; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r); padding: 10px 14px 10px 16px; margin-top: 4px; max-width: 560px; }
 .gx::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--r) 0 0 var(--r); background: var(--rc); }
 .gx header { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
-.gx-kind { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.gx-kind { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 .gx-kind .i { width: 13px; height: 13px; }
 .gx.k-progress .gx-kind { color: var(--live-ink); }
 .gx.k-upgrade .gx-kind { color: var(--accent-ink); }
@@ -15,8 +15,8 @@
 .gx.k-blocker .gx-kind { color: var(--ember-ink); }
 .gx.k-assessment .gx-kind { color: var(--amber-ink); }
 .gx-by { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text); }
-.gx time { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
-.gx-auto { font-family: var(--mono); font-size: 10px; color: var(--faint); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 7px; margin-left: auto; }
+.gx time { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+.gx-auto { font-family: var(--mono); font-size: 12px; color: var(--faint); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 7px; margin-left: auto; }
 .gx h4 { font-size: 14px; font-weight: 650; color: var(--text); margin: 5px 0 0; line-height: 1.4; letter-spacing: -0.005em; }
 .gx ul { margin: 6px 0 0; padding: 0 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .gx li { margin: 1px 0; }
@@ -32,10 +32,10 @@
 
 /* role dot + chips */
 .rdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--rc, var(--faint)); flex: none; }
-.rchip { --rc: var(--faint); display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 9px 1px 7px; background: var(--surface-2); white-space: nowrap; }
+.rchip { --rc: var(--faint); display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 9px 1px 7px; background: var(--surface-2); white-space: nowrap; }
 .fchip { --rc: var(--faint); display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font-size: 12px; color: var(--text); border: 1px solid var(--edge); border-radius: var(--r-sm); padding: 2px 8px; background: var(--surface-2); white-space: nowrap; overflow: hidden; }
 .fchip b { font-weight: 600; }
-.fchip .fp { font-family: var(--mono); font-size: 11px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; }
+.fchip .fp { font-family: var(--mono); font-size: 12px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; }
 .fchip.plain .fp { color: var(--muted); }
 .fchip.big { padding: 4px 6px 4px 10px; font-size: 13px; }
 .fchip .fx { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 0; background: none; color: var(--faint); cursor: pointer; border-radius: 4px; padding: 0; }

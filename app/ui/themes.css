@@ -114,5 +114,5 @@ html body[data-theme="contrast"] :focus-visible { outline-width: 3px; }
   .th-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .th-chip { padding: 5px; }
   .th-sw { height: 24px; }
-  .th-name { font-size: 11px; }
+  .th-name { font-size: 12px; }
 }

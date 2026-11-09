@@ -68,6 +68,7 @@
         <h5><span class="dot" style="background:${dot}"></span>${label} <span class="n">${list.length}</span><button class="add" data-add="${key}" title="Add task">+</button></h5>
         ${list.map(t => `<div class="task" draggable="true" data-id="${esc(t.id)}">
             <button class="del" data-del title="Delete"><svg class="i" style="width:13px;height:13px"><use href="#i-x"/></svg></button>
+            ${remote() && t.status !== 'done' ? '<button class="split" data-split title="Split into smaller tasks" aria-label="Split into smaller tasks">✂️</button>' : ''}
             <div class="t" data-title>${esc(t.title)}</div>
             ${who(t)}
             <div class="meta">${typeOf(t.type) ? `<span class="chip tk-tchip" data-t="${t.type}"><span class="emo" aria-hidden="true">${typeOf(t.type)[1]}</span>${typeOf(t.type)[2]}</span>` : ''}${t.source === 'chat' ? '<span class="chip">from chat</span>' : ''}${window.TribePlan ? window.TribePlan.dueChip(t) : ''}<select class="mv" data-move title="Move to">${COLS.map(([k, l]) => `<option value="${k}" ${k === t.status ? 'selected' : ''}>${l}</option>`).join('')}</select>${memberOptions(t.assignee)}</div>
@@ -134,6 +135,11 @@
       title.addEventListener('blur', commit);
       title.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } if (e.key === 'Escape') { const t = tasks.find(x => x.id === id); title.textContent = t ? t.title : ''; title.blur(); } });
       el.querySelector('[data-del]').addEventListener('click', () => remove(id));
+      const sp = el.querySelector('[data-split]'); if (sp) sp.addEventListener('click', async e => {   // feat/ship-flow: one task becomes smaller ones
+        e.stopPropagation(); sp.disabled = true;
+        try { const r = await C.api(`/tasks/${encodeURIComponent(id)}/split`, { method: 'POST', body: {} }); window.TribeApp && window.TribeApp.toast(`✂️ Split into ${r.tasks.length} smaller tasks`, 'ok'); }
+        catch (err) { sp.disabled = false; window.TribeApp && window.TribeApp.toast(err.message, 'err'); }
+      });
       el.querySelectorAll('[data-do]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const t = tasks.find(x => x.id === id); if (t) delegate(t, b.dataset.do, b); }));   // feat/setup-flow (An agent = feat/any-llm's Ask an agent)
       const wc = el.querySelector('[data-who-change]'); if (wc) wc.addEventListener('click', e => { e.stopPropagation(); const t = tasks.find(x => x.id === id); if (t) { t._pick = true; render(); } });
       const mv = el.querySelector('[data-move]'); mv.addEventListener('change', () => patch(id, { status: mv.value, order: Date.now() }));
@@ -174,7 +180,7 @@
   C.on('task', t => { if (loaded) upsert(t); });
   C.on('task-removed', id => { tasks = tasks.filter(t => t.id !== id); render(); });
   C.on('status', s => { if (s.status === 'online' && loaded) load(); });
-  C.on('presence', () => { if (loaded) render(); });
+  C.on('presence', () => { if (!loaded) return; const a = document.activeElement; if (a && a.classList && a.classList.contains('quick-add')) return; render(); });   // a presence blip never wipes the task you're typing
   document.addEventListener('click', e => { if (e.target.closest('#task-new')) quickAdd('backlog'); });
 
   window.TribeTasks = { load, render, create, patch, all: () => tasks, typeChips, TYPES };

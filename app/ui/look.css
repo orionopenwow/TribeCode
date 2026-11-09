@@ -42,7 +42,7 @@ html[data-fs] .modal-card, html[data-fs] .set-card { max-height: calc(100dvh / v
 
 .lk-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
 .lk-tile { position: relative; height: 64px; border: 1px solid var(--edge); border-radius: var(--r-sm); background-color: var(--main); background-size: cover; background-position: center; cursor: pointer; padding: 0; overflow: hidden; color: var(--text); }
-.lk-tile span { position: absolute; left: 6px; bottom: 5px; font: 500 11px/1.3 var(--mono); text-transform: lowercase; background: var(--surface); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
+.lk-tile span { position: absolute; left: 6px; bottom: 5px; font: 500 12px/1.3 var(--mono); text-transform: lowercase; background: var(--surface); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
 .lk-tile i { position: absolute; right: 8px; top: 8px; width: 12px; height: 12px; border-radius: 50%; }
 .lk-tile.on { border-color: var(--live); box-shadow: inset 0 0 0 1px var(--live); }
 .lk-tile.lk-img:not([style]) { background: var(--surface-2); }

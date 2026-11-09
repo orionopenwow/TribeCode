@@ -460,11 +460,61 @@
         if (c === 'receipt' && GET) return ok({ receipts: {} });
         break;
       }
+      case 'ship': {   // feat/ship-flow: Ready to ship in the demo (pretend saved changes; "shipping" stays in this browser)
+        const S = db.ship = db.ship || {}; const sp = S[pid] = S[pid] || { mode: 'host', turbo: { on: false, quietMin: 10, maxPerHour: 4 }, current: null, log: [], lastShip: null };
+        const MT = { host: 'The host decides', majority: 'More than half of the people decide', everyone: 'Everyone has to say yes' };
+        const agent = db.members.find(m => m.role === 'agent');
+        const since = sp.lastShip ? Date.parse(sp.lastShip.at) : 0;
+        const doneT = (db.tasks[pid] || []).filter(x => (x.status === 'done' || x.status === 'review') && Date.parse(x.updated) > since);
+        const seed = sp.lastShip ? [] : [['Add the title screen', agent ? agent.id : 'maya'], ['Tune the jump so it feels snappy', 'jay'], ['Draw the lantern sprite', 'maya']];
+        const commits = [...doneT.slice(-4).map(x => [`Finish: ${x.title}`, x.assignee || 'maya']), ...seed].map(([subject, who], i) => ({ sha: 'demo' + i, short: ('d' + (7300 + i * 37).toString(16)).slice(0, 7), author: nameOf(who), subject, at: iso(Date.now() - (i + 1) * 9 * 60e3), kind: (db.members.find(m => m.id === who) || {}).role === 'agent' ? 'agent' : 'person' }));
+        const people = []; for (const c2 of commits) { const w = people.find(x => x.name === c2.author); if (w) w.count++; else people.push({ name: c2.author, kind: c2.kind, owner: c2.kind === 'agent' ? me().name : null, count: 1 }); }
+        const files = commits.length ? ['src/scenes/title.js', 'src/player/jump.js', 'assets/lantern.png'].slice(0, Math.min(3, commits.length)) : [];
+        const humans = db.members.filter(m => m.role !== 'agent' && m.role !== 'spectator');
+        const voters = rq => (rq.mode === 'host' ? humans.filter(m => m.role === 'host') : humans);
+        const tally = rq => { const v = voters(rq).map(m => m.id), yes = v.filter(x => rq.votes[x] && rq.votes[x].v === 'yes').length, no = v.filter(x => rq.votes[x] && rq.votes[x].v === 'no').length, n = v.length || 1;
+          return { voters: v.length, yes, no, needed: rq.mode === 'host' ? 1 : rq.mode === 'majority' ? Math.floor(n / 2) + 1 : n, waitingOn: v.filter(x => !rq.votes[x]).map(nameOf) }; };
+        const view = rq => rq && ({ ...rq, byName: nameOf(rq.by), tally: tally(rq), modeText: MT[rq.mode], votes: Object.entries(rq.votes).map(([id, x]) => ({ id, name: nameOf(id), ...x })), comments: rq.comments.map(x => ({ ...x, byName: nameOf(x.by) })) });
+        const shipNow = (kind) => { const n = commits.length; sp.lastShip = { sha: 'demo', at: iso(), kind, count: n }; sp.log.unshift({ at: iso(), kind, text: `${kind === 'turbo' ? '⚡ Turbo shipped' : '🚀 Shipped'} ${n} saved change${n === 1 ? '' : 's'} to GitHub (pretend)`, count: n }); post(pid, 'tribecode', `🚀 Shipped ${n} saved change${n === 1 ? '' : 's'} to GitHub. (In the demo nothing leaves your browser.)`); };
+        const evaluate = () => { const rq = sp.current; if (!rq || rq.status !== 'pending') return; const t2 = tally(rq);
+          if (t2.yes >= t2.needed) { rq.status = 'shipped'; shipNow('ship'); } else if (rq.mode === 'host' ? t2.no >= 1 : rq.mode === 'majority' ? t2.no > t2.voters - t2.needed : t2.no >= 1) { rq.status = 'denied'; post(pid, 'tribecode', '⛔ Not shipping yet.'); } };
+        const overview = () => ({ enabled: true, demo: true, branch: 'main', mode: sp.mode, modeText: MT[sp.mode], turbo: sp.turbo, log: sp.log.slice(0, 12), lastShip: sp.lastShip, request: view(sp.current),
+          commits, count: commits.length, files, fileCount: files.length, stat: commits.length ? `${files.length} files changed, ${commits.length * 23} insertions(+), ${commits.length * 4} deletions(-)` : '', people,
+          tasks: doneT.slice(-5).reverse().map(x => ({ id: x.id, title: x.title, status: x.status, who: x.assignee ? nameOf(x.assignee) : null, agent: !!(agent && x.assignee === agent.id) })), waiting: [],
+          hasRemote: true, remote: { url: 'https://github.com/you/lantern-run', github: 'you/lantern-run', link: 'https://github.com/you/lantern-run' },
+          canShip: commits.length > 0, blocker: commits.length ? '' : 'Everything is on GitHub. Nothing new to ship.' });
+        const done = () => { save(); push({ type: 'ship', project: pid }); };
+        if (!b && GET) return ok(overview());
+        if (b === 'share' && GET) { const ts = db.tasks[pid] || [], p = proj(pid) || {};
+          const text = [`${p.emoji || '🔥'} ${p.name} on TribeCode`, `✅ ${ts.filter(x => x.status === 'done').length} done · 🛠️ ${ts.filter(x => x.status === 'doing' || x.status === 'review').length} in progress · 📋 ${ts.filter(x => x.status === 'backlog').length} to do`, '', 'Up next:', ...ts.filter(x => x.status !== 'done').slice(0, 3).map(x => `• ${x.title}`), '', 'Code: https://github.com/you/lantern-run (pretend)'].join('\n');
+          return ok({ text, repoUrl: 'https://github.com/you/lantern-run', counts: {} }); }
+        if (b === 'pulse' && GET) { const lines = (db.tasks[pid] || []).filter(x => x.status === 'doing' && x.assignee).map(x => ({ kind: 'agent', text: `${(db.members.find(m => m.id === x.assignee) || {}).role === 'agent' ? '🤖' : '🧑'} ${nameOf(x.assignee)} is working on “${x.title}”` }));
+          if (sp.current && sp.current.status === 'pending') lines.push({ kind: 'ship', text: `🚀 ${sp.current.count} saved changes waiting to ship` }); return ok({ lines }); }
+        if (b === 'settings' && (PUT || PATCH)) { if (MT[body.mode]) sp.mode = body.mode; if (body.turbo && typeof body.turbo.on === 'boolean') { sp.turbo.on = body.turbo.on; sp.turbo.state = body.turbo.on ? 'Watching for a calm moment.' : ''; post(pid, 'tribecode', body.turbo.on ? `⚡ ${me().name} turned on Turbo.` : `${me().name} turned off Turbo.`); if (body.turbo.on && commits.length) later(2500, () => { if (sp.turbo.on && !(sp.current && sp.current.status === 'pending')) { shipNow('turbo'); sp.turbo.state = 'Shipped. Watching for the next calm moment.'; done(); } }); } done(); return ok({ mode: sp.mode, modeText: MT[sp.mode], turbo: sp.turbo }); }
+        if (b === 'request' && POST) { if (sp.current && sp.current.status === 'pending') return no(409, 'A ship request is already waiting.'); if (!commits.length) return no(400, 'Nothing new to ship.');
+          const rq = sp.current = { id: 'sh-' + rid(5), by: 'me', at: iso(), note: String(body.note || '').slice(0, 600), short: 'd7300ab', count: commits.length, fileCount: files.length, mode: sp.mode, status: 'pending', votes: { me: { v: 'yes', at: iso(), comment: '' } }, comments: body.note ? [{ by: 'me', at: iso(), text: String(body.note).slice(0, 600) }] : [] };
+          post(pid, 'tribecode', `🚀 ${me().name} wants to ship ${rq.count} saved changes to GitHub. ${MT[rq.mode]}.`);
+          evaluate();
+          if (rq.status === 'pending') later(2200, () => { if (sp.current === rq && rq.status === 'pending') { rq.votes.maya = { v: 'yes', at: iso(), comment: 'Looks good 👍', from: 'phone' }; post(pid, 'maya', 'Voted yes from my phone 👍'); evaluate(); done(); } });
+          done(); return ok({ request: view(rq) }); }
+        if (b && c === 'vote' && POST) { const rq = sp.current; if (!rq || rq.id !== b || rq.status !== 'pending') return no(404, 'That ship request is gone.'); rq.votes.me = { v: body.vote === 'no' ? 'no' : 'yes', at: iso(), comment: String(body.comment || '').slice(0, 300) }; evaluate(); done(); return ok({ request: view(rq) }); }
+        if (b && c === 'cancel' && POST) { const rq = sp.current; if (rq && rq.id === b) rq.status = 'cancelled'; done(); return ok({ request: view(rq) }); }
+        if (b && c === 'comment' && POST) { const rq = sp.current; if (!rq || rq.id !== b) return no(404, 'gone'); rq.comments.push({ by: 'me', at: iso(), text: String(body.text || '').slice(0, 500) }); done(); return ok({ request: view(rq) }); }
+        if (b === 'turbo' && c === 'run' && POST) return ok({ shipped: false, reason: 'In the demo, Turbo ships a moment after you turn it on.' });
+        break;
+      }
       case 'tasks': {
         const list = db.tasks[pid] = db.tasks[pid] || [];
         if (!b && GET) return ok({ tasks: list });
         if (!b && POST) { const t = addTask(pid, { ...body, by: 'me' }); if (!body.assignee) pickUp(pid, t.id); return ok({ task: t }); }
         const t = list.find(x => x.id === b); if (!t) return no(404, 'task not found');
+        if (c === 'split' && POST) {   // feat/ship-flow: a task becomes smaller ones (rules, like the server's basic fallback)
+          const base = t.title.replace(/^\[[^\]]*\]\s*/, '').trim(), bits = base.split(/\s*(?:,|;|\band then\b|\bthen\b|\band\b|\+)\s*/i).map(x => x.trim()).filter(x => x.length > 2);
+          const titles = bits.length >= 2 ? bits.slice(0, 5).map(x => x[0].toUpperCase() + x.slice(1)) : [`Sketch how “${base}” should work`, `Build a first small version of “${base}”`, `Try “${base}” and fix what feels off`];
+          const made = titles.map(title => addTask(pid, { title, by: 'me', body: `Part of: ${t.title} (${t.id})` }));
+          post(pid, 'tribecode', `✂️ ${me().name} split “${t.title}” into ${made.length} smaller tasks.`);
+          return ok({ tasks: made.map(x => ({ id: x.id, title: x.title })), by: 'rules' });
+        }
         if (PATCH) {
           if (body.title !== undefined) t.title = String(body.title).slice(0, 200) || t.title;
           if (body.status !== undefined) { if (!['backlog', 'doing', 'review', 'done'].includes(body.status)) return no(400, 'bad status'); t.status = body.status; }
@@ -540,6 +590,16 @@
         break;
       }
       case 'join': return no(410, 'This is a pretend link from the offline demo: it only works in the browser that made it.');
+      case 'github': {   // a pretend GitHub sign-in, so the demo shows Connect GitHub end to end (nothing leaves the browser)
+        const g = db.gh || (db.gh = { signedIn: false, login: null, polls: 0, state: 'none' });
+        const view = () => ({ configured: true, source: 'tribecode', signedIn: g.signedIn, login: g.login, via: g.signedIn ? 'oauth' : null, flow: { state: g.state }, local: true, canConfigure: false, demo: true });
+        if (GET && !b) return ok({ github: view() });
+        if (b === 'device' && POST) { g.state = 'pending'; g.polls = 0; save(); return ok({ userCode: 'DEMO-2026', verificationUri: 'https://github.com/login/device', expiresAt: Date.now() + 900000, interval: 1 }); }
+        if (b === 'device' && GET) { if (g.state === 'pending' && ++g.polls >= 2) { g.state = 'ok'; g.signedIn = true; g.login = (pfRaw('me') || {}).name ? String(pfRaw('me').name).toLowerCase().replace(/[^a-z0-9-]/g, '') || 'you' : 'you'; } save(); return ok({ state: g.state, login: g.login }); }
+        if (b === 'device' && DEL) { g.state = 'none'; save(); return ok({}); }
+        if (b === 'signout' && POST) { Object.assign(g, { signedIn: false, login: null, state: 'none' }); save(); return ok({ github: view() }); }
+        return no(400, 'not in the demo');
+      }
       case 'profile': {
         if (GET && !b) return ok({ profile: pfFull('me'), palette: PF_COLORS, pixels: PF_PIXELS, notes: db.pfNotes || {}, muted: db.pfMuted || [], limits: { pronouns: 40, bio: 300, status: 80, link: 300, label: 32, nick: 32, note: 256 } });
         if ((PATCH || PUT) && !b) return ok({ profile: pfPatch('me', body || {}) });

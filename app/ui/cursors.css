@@ -3,5 +3,5 @@
 .lc { position: absolute; left: 0; top: 0; transition: transform .09s linear, opacity .2s; will-change: transform; }
 .lc.off { opacity: 0; }
 .lc svg { display: block; }
-.lc span { position: absolute; left: 13px; top: 15px; padding: 2px 7px; border-radius: 6px; font: 600 11.5px/16px var(--font, system-ui); color: #12151A; white-space: nowrap; }
+.lc span { position: absolute; left: 13px; top: 15px; padding: 2px 7px; border-radius: 6px; font: 600 12.5px/16px var(--font, system-ui); color: #12151A; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .lc { transition: none; } }

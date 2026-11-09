@@ -101,7 +101,7 @@
   }
   function close(soft) {
     if (!root) return;
-    bubble.classList.remove('on'); $('#fg-ring').classList.remove('on');
+    if (bubble) bubble.classList.remove('on'); const fr = $('#fg-ring'); if (fr) fr.classList.remove('on');
     if (resolveCur) { const r = resolveCur; resolveCur = null; if (!soft) r('close'); }
     if (!soft || !root.classList.contains('touring')) {
       const s = sprite.getBoundingClientRect(); burst(s.left + SIZE / 2, s.top + SIZE / 2, 16);

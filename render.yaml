@@ -1,0 +1,14 @@
+# One-click TribeCode cloud server on Render's free plan (docs/CLOUD.md).
+# Deploy: https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode
+services:
+  - type: web
+    name: tribecode
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: TRIBE_CLOUD
+        value: "1"
+      - key: TRIBE_SETUP_CODE
+        generateValue: true

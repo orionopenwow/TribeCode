@@ -69,6 +69,13 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     return view(a);
   }
 
+  // Close a request that no longer needs an answer (e.g. a ship vote already decided), so phones stop asking.
+  function close(aid, note) {
+    const a = get(aid); if (!a || a.status !== 'pending') return a ? view(a) : null;
+    a.status = 'closed'; a.decidedAt = new Date(now()).toISOString(); a.note = str(note || 'No longer needed', 500);
+    save(); broadcast({ type: 'approval', approval: view(a) }); return view(a);
+  }
+
   // "Ask a question": goes back to the requester. Agents read it from check_approval.
   function question(aid, who, text) {
     const a = get(aid); if (!a) fail(404, 'approval not found');
@@ -137,5 +144,5 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     return null;
   }
 
-  return { create, list: () => list.map(view), decide, question, bulk, sweep, get: aid => view(get(aid)), rules: () => rules, route, RISKS };
+  return { create, list: () => list.map(view), decide, close, question, bulk, sweep, get: aid => view(get(aid)), rules: () => rules, route, RISKS };
 };

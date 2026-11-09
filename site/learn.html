@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learn · TribeCode</title>
+<meta name="description" content="Learn to make apps, games and websites with friends, in plain words: what code is, your first app step by step, building together, and the main coding languages explained simply. Free, with quizzes and badges.">
+<meta name="theme-color" content="#1D2021">
+<link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<meta property="og:title" content="Learn · TribeCode">
+<meta property="og:description" content="What code is, your first app, building together, and coding languages explained simply. Slow-paced, free, with quizzes and badges.">
+<meta property="og:image" content="https://tribecode.org/assets/og-image.png">
+<link rel="stylesheet" href="styles.css?v=0.19.0">
+<style>
+  .lrn { max-width: 1040px; margin: 0 auto; padding: 64px 24px 48px; }
+  .lrn h1 { font-size: clamp(34px, 4.6vw, 52px); line-height: 1.1; letter-spacing: -0.025em; margin: 10px 0 14px; }
+  .lrn h2 { font-size: clamp(24px, 2.6vw, 30px); margin: 0 0 8px; letter-spacing: -0.02em; }
+  .lrn h3 { font-size: 17px; margin: 0 0 6px; }
+  .lrn p, .lrn li { font-size: 16px; line-height: 1.6; color: var(--muted); }
+  .lrn .lede { font-size: 18px; max-width: 680px; }
+  .lrn section { margin-top: 64px; scroll-margin-top: 90px; }
+  .lrn .sec-lead { max-width: 680px; margin: 0 0 22px; }
+  .lrn-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; padding: 0; list-style: none; }
+  .lrn-jump a { display: inline-flex; gap: 6px; align-items: center; padding: 8px 14px; border: 1px solid var(--edge); border-radius: 999px; color: var(--text); text-decoration: none; font-size: 14px; background: var(--surface); }
+  .lrn-jump a:hover { border-color: var(--ember); }
+  .lrn-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+  .lrn-steps > li { counter-increment: s; position: relative; padding: 16px 18px 16px 62px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+  .lrn-steps > li::before { content: counter(s); position: absolute; left: 18px; top: 16px; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--main, #1D2021); color: var(--ember); font: 700 14px/1 var(--mono, ui-monospace, monospace); }
+  .lrn-steps p { margin: 0; }
+  .lrn-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .lrn-card { padding: 16px 18px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+  .lrn-card .tag { display: inline-block; margin-bottom: 8px; color: var(--ember); font: 600 11.5px/1 var(--mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; }
+  .lrn-card p { margin: 0 0 8px; font-size: 15px; }
+  .lrn-card details { margin-top: 6px; }
+  .lrn-card summary { cursor: pointer; color: var(--text); font-size: 14px; font-weight: 600; }
+  .lrn-card details p { margin-top: 8px; }
+  .lrn-card pre { margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--main, #1D2021); border: 1px solid var(--edge); overflow-x: auto; font: 12.5px/1.6 var(--mono, ui-monospace, monospace); color: var(--text); }
+  .lrn-gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; margin: 0; }
+  .lrn-gloss div { padding: 12px 0; border-bottom: 1px solid var(--edge); }
+  .lrn-gloss dt { color: var(--text); font-weight: 600; font-size: 15.5px; }
+  .lrn-gloss dd { margin: 4px 0 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
+  .quiz { padding: 22px; border: 2px solid var(--ember); border-radius: 16px; background: var(--surface); }
+  .quiz-q { margin: 0 0 18px; }
+  .quiz-q > b { display: block; margin-bottom: 8px; color: var(--text); font-size: 16px; }
+  .quiz-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .quiz-opts button { padding: 9px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--main, #1D2021); color: var(--text); font: inherit; font-size: 14.5px; cursor: pointer; text-align: left; }
+  .quiz-opts button:hover:not(:disabled) { border-color: var(--ember); }
+  .quiz-opts button.right { border-color: #3BD16F; background: color-mix(in srgb, #3BD16F 16%, var(--main, #1D2021)); }
+  .quiz-opts button.wrong { border-color: #FF6F8E; background: color-mix(in srgb, #FF6F8E 14%, var(--main, #1D2021)); }
+  .quiz-why { margin: 8px 0 0; font-size: 14.5px; }
+  .quiz-end { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-top: 6px; }
+  .badge { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; border: 2px solid #FABD2F; color: var(--text); font-weight: 700; background: color-mix(in srgb, #FABD2F 12%, var(--main, #1D2021)); }
+  .badge[hidden] { display: none; }
+  .lrn-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  @media (max-width: 900px) { .lrn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 620px) { .lrn { padding: 40px 16px 32px; } .lrn-grid, .lrn-gloss { grid-template-columns: 1fr; } .lrn section { margin-top: 48px; } .lrn-steps > li { padding-left: 56px; } }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav__in wrap" style="justify-content:space-between">
+    <a class="nav__logo" href="index.html" aria-label="TribeCode home"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="150" height="26"></a>
+    <div class="nav__end">
+      <a class="nav__text" href="index.html">Home</a>
+      <a class="nav__text" href="app/?welcome=1">Open the app</a>
+      <a class="btn btn--light btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest">Download</a>
+    </div>
+  </div>
+</header>
+<main class="lrn">
+  <p class="eyebrow mono">// learn</p>
+  <h1>Learn to make things with code, together.</h1>
+  <p class="lede">Slow-paced guides in plain words. Start anywhere, skip what you know, and ask Flint in the app whenever something is unclear. Nobody needs to be an expert to join a tribe.</p>
+  <ul class="lrn-jump">
+    <li><a href="#what">💡 What code is</a></li>
+    <li><a href="#first">🧱 Your first app</a></li>
+    <li><a href="#together">🤝 Building together</a></li>
+    <li><a href="#languages">🗣️ Languages, simply</a></li>
+    <li><a href="#words">📖 Words to know</a></li>
+    <li><a href="#quiz">🏅 Quiz</a></li>
+  </ul>
+
+  <section id="what" aria-labelledby="what-t">
+    <p class="eyebrow mono">// guide 01 · about 5 minutes</p>
+    <h2 id="what-t">What code is</h2>
+    <p class="sec-lead">Code is a list of instructions for a computer, written in a language it can follow. Every app, game and website is made of it.</p>
+    <ol class="lrn-steps">
+      <li><h3>Computers follow instructions exactly</h3><p>They don’t guess what you meant. “When someone taps Start, show level 1” has to be spelled out, step by step. That spelled-out version is code.</p></li>
+      <li><h3>Languages are just different ways to write those steps</h3><p>Like spoken languages, each has its own words and grammar. Some are best for web pages, some for phones, some for data. You can start with any of them.</p></li>
+      <li><h3>Code lives in files, and files live in folders</h3><p>A small website might be three files. A big game might be thousands. A project’s folder of code is called its code repository.</p></li>
+      <li><h3>AI helpers can write code for you</h3><p>Tools like Claude Code, Codex and Gemini CLI read your project and write code when you describe what you want in plain words. You still decide what to build and check that it works.</p></li>
+    </ol>
+  </section>
+
+  <section id="first" aria-labelledby="first-t">
+    <p class="eyebrow mono">// guide 02 · about 15 minutes</p>
+    <h2 id="first-t">Your first app, step by step</h2>
+    <p class="sec-lead">The same six steps work for a game, an app, a website or a tool. In TribeCode, the Getting started checklist walks you through the first four.</p>
+    <ol class="lrn-steps">
+      <li><h3>Write the idea down</h3><p>One or two sentences: what it is and who it’s for. “A recipe app for our family, so everyone can add their favorites.” This is your vision.</p></li>
+      <li><h3>Break it into small tasks</h3><p>“Show a list of recipes.” “Add a recipe.” “Search by name.” Small tasks are easier to finish and easier to share out.</p></li>
+      <li><h3>Connect an AI helper</h3><p>Give it one task at a time. It writes the code, runs it, and tells you what it changed.</p></li>
+      <li><h3>Try it in the preview</h3><p>Click around like a user would. If something looks wrong, say what you saw. Fixing is part of making.</p></li>
+      <li><h3>Save the change</h3><p>Each working step is saved in the code repository with a short note, so you can always go back.</p></li>
+      <li><h3>Share it</h3><p>Send friends a link, put the website online, or publish the app. Then start the next small task.</p></li>
+    </ol>
+  </section>
+
+  <section id="together" aria-labelledby="together-t">
+    <p class="eyebrow mono">// guide 03 · about 10 minutes</p>
+    <h2 id="together-t">Building together without stepping on each other</h2>
+    <p class="sec-lead">When several people and their AI helpers work on one project, a few simple habits keep everyone’s work safe.</p>
+    <div class="lrn-grid">
+      <div class="lrn-card"><span class="tag">Code repository</span><h3>One shared folder</h3><p>Everyone works from the same code repository on GitHub, so nobody emails files around.</p></div>
+      <div class="lrn-card"><span class="tag">Saved changes</span><h3>Small and often</h3><p>Save a change each time something works, with a note saying what changed. The history shows who did what.</p></div>
+      <div class="lrn-card"><span class="tag">Branches</span><h3>Your own copy to work in</h3><p>A branch is a side copy where you try things. When it works, it’s merged back into the main version.</p></div>
+      <div class="lrn-card"><span class="tag">Your part</span><h3>Claim an area</h3><p>Say which files or features you’re working on. Your AI helper stays in that part, so changes don’t collide.</p></div>
+      <div class="lrn-card"><span class="tag">Review</span><h3>A second pair of eyes</h3><p>Before a change joins the main version, someone looks at it and approves. In TribeCode that’s one tap.</p></div>
+      <div class="lrn-card"><span class="tag">Kindness</span><h3>Ask, don’t assume</h3><p>Post what you’re doing, ask before changing someone else’s part, and thank people for reviews.</p></div>
+    </div>
+  </section>
+
+  <section id="languages" aria-labelledby="lang-t">
+    <p class="eyebrow mono">// guide 04 · read the simple version, open the deeper one when you’re ready</p>
+    <h2 id="lang-t">Languages, simply</h2>
+    <p class="sec-lead">You don’t have to pick one before you start. Your AI helper usually chooses a good fit for what you’re making, and you can learn the language as you go.</p>
+    <div class="lrn-grid">
+      <div class="lrn-card"><span class="tag">Websites</span><h3>HTML and CSS</h3><p>HTML says what’s on a page (a heading, a button). CSS says how it looks (colors, sizes, layout).</p>
+        <details><summary>Deeper</summary><p>Every web page is built on these two. They describe structure and style but don’t make decisions; that’s JavaScript’s job.</p><pre>&lt;button class="go"&gt;Start&lt;/button&gt;
+.go { background: orange; }</pre></details></div>
+      <div class="lrn-card"><span class="tag">Websites and apps</span><h3>JavaScript</h3><p>Makes web pages do things: react to clicks, load data, run games in the browser.</p>
+        <details><summary>Deeper</summary><p>It runs in every web browser, and with Node.js it runs on servers too. TypeScript is JavaScript with labels for kinds of data, which catches mistakes early.</p><pre>button.onclick = () =&gt; {
+  score = score + 1;
+};</pre></details></div>
+      <div class="lrn-card"><span class="tag">Data, AI, tools</span><h3>Python</h3><p>Reads almost like English. Popular for data, AI, automation and first programs.</p>
+        <details><summary>Deeper</summary><p>Great for scripts that tidy files, analyze spreadsheets or talk to AI models. Also used for web servers and in many schools.</p><pre>for name in friends:
+    print("Hi", name)</pre></details></div>
+      <div class="lrn-card"><span class="tag">iPhone and Mac apps</span><h3>Swift</h3><p>Apple’s language for apps on iPhone, iPad and Mac.</p>
+        <details><summary>Deeper</summary><p>SwiftUI lets you describe screens in a few lines. Publishing to the App Store needs a Mac and an Apple developer account.</p><pre>Text("Hello, tribe!")
+  .font(.title)</pre></details></div>
+      <div class="lrn-card"><span class="tag">Android apps</span><h3>Kotlin</h3><p>Google’s recommended language for Android apps.</p>
+        <details><summary>Deeper</summary><p>Jetpack Compose describes screens in code, much like SwiftUI. Tools like React Native and Flutter can build for iPhone and Android from one codebase.</p><pre>Text("Hello, tribe!")</pre></details></div>
+      <div class="lrn-card"><span class="tag">Games</span><h3>C# and GDScript</h3><p>C# powers games made in Unity. GDScript is the simple built-in language of the free Godot engine.</p>
+        <details><summary>Deeper</summary><p>For small browser games, JavaScript with a library like Phaser works well. Game engines handle drawing, sound and physics so you can focus on play.</p><pre>func _on_jump():
+    velocity.y = -400</pre></details></div>
+      <div class="lrn-card"><span class="tag">Saving data</span><h3>SQL</h3><p>Asks questions of a database: “show every recipe with chocolate in it.”</p>
+        <details><summary>Deeper</summary><p>Databases keep data safe and searchable even with millions of rows. SQLite is a tiny one that lives in a single file.</p><pre>SELECT name FROM recipes
+WHERE name LIKE '%chocolate%';</pre></details></div>
+      <div class="lrn-card"><span class="tag">Fast and safe</span><h3>Rust and Go</h3><p>Languages for speedy programs and servers. TribeCode’s desktop app uses Rust.</p>
+        <details><summary>Deeper</summary><p>Rust prevents whole kinds of crashes before the program runs. Go is simple and popular for web services. Both are good second languages.</p><pre>fn main() {
+    println!("Hello, tribe!");
+}</pre></details></div>
+      <div class="lrn-card"><span class="tag">Glue</span><h3>The terminal</h3><p>A text window where you type commands instead of clicking. AI helpers like Claude Code run there.</p>
+        <details><summary>Deeper</summary><p>A few commands go a long way: <code>cd</code> moves between folders, <code>ls</code> (or <code>dir</code>) lists files, <code>git status</code> shows what changed.</p><pre>cd my-game
+git status</pre></details></div>
+    </div>
+  </section>
+
+  <section id="words" aria-labelledby="words-t">
+    <p class="eyebrow mono">// words to know</p>
+    <h2 id="words-t">Words to know</h2>
+    <dl class="lrn-gloss">
+      <div><dt>Code repository</dt><dd>The shared online folder that holds a project’s code and every saved change. Often on GitHub.</dd></div>
+      <div><dt>Saved change (commit)</dt><dd>A snapshot of the code with a short note about what changed.</dd></div>
+      <div><dt>Branch</dt><dd>A side copy of the code where you can try things without touching the main version.</dd></div>
+      <div><dt>Merge</dt><dd>Bringing the changes from a branch back into the main version.</dd></div>
+      <div><dt>AI helper (agent)</dt><dd>An AI tool that reads your project and writes code from plain-language requests.</dd></div>
+      <div><dt>Preview</dt><dd>A live view of your app that updates as the code changes.</dd></div>
+      <div><dt>Bug</dt><dd>Something that doesn’t work the way it should. Finding and fixing bugs is normal.</dd></div>
+      <div><dt>Open source</dt><dd>Code anyone can read, use and improve. TribeCode is open source under the MIT license.</dd></div>
+    </dl>
+  </section>
+
+  <section id="quiz" aria-labelledby="quiz-t">
+    <p class="eyebrow mono">// quiz · 5 questions · earn your first badge</p>
+    <h2 id="quiz-t">Quick quiz: the basics</h2>
+    <p class="sec-lead">No timer and no penalty. Pick an answer to see why it’s right or not.</p>
+    <div class="quiz" id="quiz-box">
+      <div id="quiz-qs"></div>
+      <div class="quiz-end"><span id="quiz-score" class="mono">0 of 5 right</span><span class="badge" id="quiz-badge" hidden>🔥 First Spark badge earned</span><button class="btn btn--dark btn--sm" id="quiz-reset" type="button">Start over</button></div>
+    </div>
+    <div class="lrn-cta"><a class="btn btn--light" href="app/?welcome=1">Try it in the app</a><a class="btn btn--dark" href="index.html#make">See what you can make</a></div>
+  </section>
+</main>
+<footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
+<script>
+(function () {
+  var Q = [
+    ['What is code?', ['A list of instructions a computer follows', 'A secret password', 'A kind of picture'], 0, 'Code spells out, step by step, what the computer should do.'],
+    ['What is a code repository?', ['A coding contest', 'The shared folder that holds a project’s code and its saved changes', 'A type of computer'], 1, 'It keeps every version, so a tribe can work from one place and go back in time.'],
+    ['Which language describes what is on a web page?', ['SQL', 'HTML', 'Swift'], 1, 'HTML lists what’s on the page; CSS styles it; JavaScript makes it do things.'],
+    ['Why claim your part of the code before your AI helper starts?', ['So changes don’t collide with a friend’s', 'It makes the code faster', 'It is required by law'], 0, 'When everyone stays in their own part, merges are smooth and nobody loses work.'],
+    ['What should you do after a small change works?', ['Delete the old files', 'Save the change with a short note', 'Wait until the whole app is done'], 1, 'Small saved changes are easy to review and easy to undo.'],
+  ];
+  var KEY = 'tribecode.learn.quiz', box = document.getElementById('quiz-qs'), got = {};
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function score() {
+    var n = Object.keys(got).filter(function (k) { return got[k]; }).length;
+    document.getElementById('quiz-score').textContent = n + ' of ' + Q.length + ' right';
+    var all = Object.keys(got).length === Q.length, b = document.getElementById('quiz-badge');
+    if (all && n >= 4) { b.hidden = false; try { localStorage.setItem(KEY, 'spark'); } catch (e) {} }
+  }
+  function draw() {
+    got = {};
+    box.innerHTML = Q.map(function (q, i) {
+      return '<div class="quiz-q" data-q="' + i + '"><b>' + (i + 1) + '. ' + esc(q[0]) + '</b><div class="quiz-opts">' +
+        q[1].map(function (o, j) { return '<button type="button" data-a="' + j + '">' + esc(o) + '</button>'; }).join('') + '</div><p class="quiz-why" hidden></p></div>';
+    }).join('');
+    box.querySelectorAll('.quiz-q').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        var i = +el.dataset.q, a = +b.dataset.a, ok = a === Q[i][2];
+        el.querySelectorAll('button').forEach(function (x) { x.disabled = true; if (+x.dataset.a === Q[i][2]) x.classList.add('right'); });
+        if (!ok) b.classList.add('wrong');
+        var w = el.querySelector('.quiz-why'); w.hidden = false; w.textContent = (ok ? '✓ Right. ' : 'Not quite. ') + Q[i][3];
+        got[i] = ok; score();
+      });
+    });
+    document.getElementById('quiz-badge').hidden = true; score();
+    try { if (localStorage.getItem(KEY) === 'spark') document.getElementById('quiz-badge').hidden = false; } catch (e) {}
+  }
+  document.getElementById('quiz-reset').addEventListener('click', draw);
+  draw();
+})();
+</script>
+<script src="main.js?v=0.19.0" defer></script>
+</body>
+</html>

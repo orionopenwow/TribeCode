@@ -36,6 +36,7 @@ function runShell(line, { cwd, timeoutMs = 600_000, env } = {}) {
 
 const tail = (s, lines = 40, chars = 4000) => { const t = String(s || '').split('\n').slice(-lines).join('\n'); return t.length > chars ? t.slice(-chars) : t; };
 
+const CHAINS = new Map();   // one write queue per code repository folder
 module.exports = function gitutil(repo) {
   const gitTry = (args, cwd = repo, opts = {}) => run('git', args, { cwd, ...opts });
   async function git(args, cwd = repo, opts = {}) {
@@ -45,8 +46,9 @@ module.exports = function gitutil(repo) {
   }
 
   // One write operation at a time (worktrees, merges, commits, pushes).
-  let chain = Promise.resolve();
-  function locked(fn) { const p = chain.then(() => fn()); chain = p.catch(() => {}); return p; }
+  // Shared per code repository (not per caller), so a ship push, the repo poller and merges never overlap.
+  const key = String(repo || '');
+  function locked(fn) { const prev = CHAINS.get(key) || Promise.resolve(); const p = prev.then(() => fn()); CHAINS.set(key, p.catch(() => {})); return p; }
 
   let version = null;
   async function gitVersion() {

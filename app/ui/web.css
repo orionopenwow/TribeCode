@@ -7,7 +7,7 @@ body.intro-on { overflow: hidden; }
 .intro-top { display: flex; align-items: center; gap: 12px; padding: 0 32px; border-bottom: 1px solid var(--edge); }
 .intro-logo { width: 30px; height: 30px; }
 .intro-top .brand-wm { height: 17px; width: auto; }
-.intro-tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding-left: 14px; margin-left: 4px; border-left: 1px solid var(--edge); }
+.intro-tag { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding-left: 14px; margin-left: 4px; border-left: 1px solid var(--edge); }
 .intro-skip { margin-left: auto; }
 .intro-stage { position: relative; overflow: hidden; touch-action: pan-y; user-select: none; }
 .intro-track { display: flex; height: 100%; transition: transform .22s var(--ease); }
@@ -26,14 +26,14 @@ body.intro-on { overflow: hidden; }
 .intro-final h1 em { font-style: normal; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 6px; }
 .intro-final p { color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 22px; }
 .intro-open { width: 100%; height: 50px; font-size: 15.5px; }
-.intro-or { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; font-family: var(--mono); font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .1em; }
+.intro-or { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; font-family: var(--mono); font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: .1em; }
 .intro-or::before, .intro-or::after { content: ''; flex: 1; height: 1px; background: var(--edge); }
-.intro-k { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+.intro-k { display: block; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
 .web-join { display: flex; gap: 8px; }
 .web-join .input { height: 42px; font-size: 14px; font-family: var(--mono); }
 .web-join .btn { height: 42px; }
 .intro-dl { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--edge); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.intro-dl .intro-k { margin: 0; flex: 1; min-width: 180px; text-transform: none; letter-spacing: 0; font-size: 11.5px; line-height: 1.5; }
+.intro-dl .intro-k { margin: 0; flex: 1; min-width: 180px; text-transform: none; letter-spacing: 0; font-size: 12.5px; line-height: 1.5; }
 .intro-dl-btn { text-decoration: none; }
 .intro-dl-btn .i, .web-sec .btn .i, #dev-add .i { width: 16px; height: 16px; }
 .intro-a2hs { display: block; }
@@ -56,7 +56,7 @@ body.intro-on { overflow: hidden; }
   .intro-art { aspect-ratio: auto; height: min(40vh, 300px); }
   .intro-copy h1 { font-size: 34px; margin-bottom: 10px; }
   .intro-copy p { font-size: 16px; }
-  .intro-eyebrow { margin-bottom: 12px; font-size: 11px; }
+  .intro-eyebrow { margin-bottom: 12px; font-size: 12px; }
   .intro-final-card { padding: 24px 20px 20px; }
   .intro-nav { gap: 16px; }
 }
@@ -95,7 +95,7 @@ body.intro-on { overflow: hidden; }
 /* ---------- Settings → Devices & app ---------- */
 .ob-top .ob-devices { margin-left: 12px; height: 30px; font-size: 12.5px; padding: 0 10px; }
 .web-sec { border-top: 1px solid var(--edge); padding: 16px 0 6px; }
-.web-sec-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+.web-sec-h { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
 .web-sec-p { font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
 .web-sec .btn { text-decoration: none; }
 .dev-list { margin-bottom: 12px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--canvas); }

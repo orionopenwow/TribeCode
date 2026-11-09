@@ -1,0 +1,59 @@
+/* Ship it (feat/ship-flow): the Ready to ship card. Flat matte: 1px borders, luminance steps, no glows. */
+.ship-card { margin-bottom: 16px; display: grid; gap: 12px; }
+.ship-card[hidden] { display: none; }
+.sh-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sh-head h3 { margin: 0; font-size: 17px; }
+.sh-sp { flex: 1; }
+.sh-turbo { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--edge)); color: var(--amber-ink, var(--amber)); background: var(--amber-tint, transparent); font-size: 12.5px; font-weight: 600; }
+.sh-sub { margin: 0; color: var(--muted); font-size: 14.5px; }
+.sh-sub b { color: var(--text); }
+.sh-note { margin: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--edge); background: var(--surface-2); font-size: 14px; color: var(--muted); }
+.sh-note.ok { border-color: color-mix(in srgb, var(--online) 40%, var(--edge)); }
+.sh-note.warn { border-color: color-mix(in srgb, var(--amber) 50%, var(--edge)); }
+.sh-people, .sh-files, .sh-tasks, .sh-votes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.sh-k { font: 600 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-right: 4px; }
+.sh-who { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface-2); font-size: 13px; }
+.sh-who.agent { border-color: color-mix(in srgb, var(--live) 45%, var(--edge)); }
+.sh-who b { font-family: var(--mono); font-size: 12.5px; color: var(--faint); }
+.sh-commits { display: grid; gap: 2px; border: 1px solid var(--edge); border-radius: 10px; padding: 4px; background: var(--surface-2); }
+.sh-commit { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; font-size: 13.5px; }
+.sh-commit:hover { background: var(--surface-3); }
+.sh-cs { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.sh-commit .faint { font-size: 12px; white-space: nowrap; }
+.sh-more { padding: 4px 8px 6px; font-size: 12.5px; }
+.sh-files code { font-size: 12px; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--edge); }
+.sh-task { display: inline-flex; gap: 4px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--edge); font-size: 13px; }
+.sh-wait { margin: 0; font-size: 13.5px; color: var(--muted); }
+.sh-act { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sh-act .input { flex: 1; min-width: 180px; }
+.sh-act .btn { min-height: 40px; font-weight: 700; }
+.sh-yes { border-color: #3BD16F; } .sh-yes:hover { background: color-mix(in srgb, #3BD16F 16%, transparent); }
+.sh-no { border-color: #FF6F8E; } .sh-no:hover { background: color-mix(in srgb, #FF6F8E 14%, transparent); }
+.sh-how { margin: -4px 0 0; font-size: 12.5px; }
+.sh-req { display: grid; gap: 8px; padding: 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--edge)); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.sh-req-h { font-size: 14px; }
+.sh-tally { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.sh-bar { flex: 0 0 140px; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.sh-bar i { display: block; height: 100%; background: var(--online); }
+.sh-vote { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--edge); font-size: 12.5px; }
+.sh-vote.yes { border-color: color-mix(in srgb, var(--online) 50%, var(--edge)); } .sh-vote.no { border-color: color-mix(in srgb, var(--ember) 50%, var(--edge)); }
+.sh-cmt { font-size: 13px; color: var(--muted); } .sh-cmt b { color: var(--text); }
+.sh-cancel { justify-self: start; font-size: 12.5px; }
+.sh-set { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--stroke); }
+.sh-seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 10px; overflow: hidden; }
+.sh-seg button { padding: 6px 12px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.sh-seg button + button { border-left: 1px solid var(--edge); }
+.sh-seg button[aria-checked="true"] { background: var(--surface-3); color: var(--text); font-weight: 600; }
+.sh-tg { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--edge); background: transparent; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.sh-tg i { width: 28px; height: 16px; border-radius: 99px; background: var(--surface-3); position: relative; }
+.sh-tg i::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--faint); transition: transform .15s var(--ease); }
+.sh-tg.on { color: var(--text); border-color: color-mix(in srgb, var(--amber) 55%, var(--edge)); }
+.sh-tg.on i { background: color-mix(in srgb, var(--amber) 55%, var(--surface-3)); } .sh-tg.on i::after { transform: translateX(12px); background: var(--amber); }
+.sh-tstate { font-size: 12.5px; }
+.sh-logs { display: grid; gap: 4px; }
+.sh-log { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted); }
+/* the "who's working / waiting on whom" line (Agents Hub, Your focus) */
+.sh-pulse { display: grid; gap: 4px; margin: 6px 0 2px; }
+.sh-pulse span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.sh-pulse span.wait, .sh-pulse span.ship { color: var(--text); }
+@media (max-width: 820px) { .sh-commit { grid-template-columns: 22px 1fr; } .sh-commit .faint { grid-column: 2; } .sh-act .btn { flex: 1; } .sh-bar { flex-basis: 90px; } }

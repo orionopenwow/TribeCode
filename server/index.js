@@ -49,7 +49,13 @@ const makeScratch = require('./scratch');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
-const PORT = Number(args.port || process.env.TRIBE_PORT || 4747);
+const PORT = Number(args.port || process.env.TRIBE_PORT || process.env.PORT || 4747);   // PORT: cloud hosts (Render, Koyeb, Railway) set it
+// Cloud mode (docs/CLOUD.md): a tribe server on a free cloud host. Nobody there is "the host machine", so the first
+// person claims the tribe with a setup code (TRIBE_SETUP_CODE, or one made at start and printed in the logs).
+const CLOUD = !!(process.env.TRIBE_CLOUD || process.env.RENDER || process.env.TRIBE_PUBLIC_URL);
+let SETUP_CODE = String(process.env.TRIBE_SETUP_CODE || '').trim();
+if (CLOUD && !SETUP_CODE) SETUP_CODE = require('node:crypto').randomBytes(9).toString('base64url');
+const setupOk = c => { if (!CLOUD || !SETUP_CODE || typeof c !== 'string') return false; const a = Buffer.from(c.trim()), b = Buffer.from(SETUP_CODE); return a.length === b.length && require('node:crypto').timingSafeEqual(a, b); };
 const HOST = args.host || process.env.TRIBE_HOST || '0.0.0.0';
 const DIR = args.dir || process.env.TRIBE_DIR || path.join(os.homedir(), 'TribeCode');
 const UI = path.resolve(args.ui || process.env.TRIBE_UI || path.join(__dirname, '..', 'app', 'ui'));
@@ -364,7 +370,8 @@ let mcpFlow = null;
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
@@ -404,6 +411,9 @@ const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str, perms });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
+// feat/ship-flow: Ship it (review what changed, vote to push), Turbo (ships on its own at calm moments), Share, Pulse, Split (server/ship.js)
+const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
+  can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
@@ -489,7 +499,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -540,7 +550,7 @@ async function apiInProject(req, res, url) {
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
 
-  if (a === 'health') return send(res, 200, { ok: true, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
     ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
@@ -590,8 +600,10 @@ async function apiInProject(req, res, url) {
 
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
-    if (!isLocal(req)) return fail(res, 403, 'bootstrap only from the host machine');
-    const body = await readBody(req); const name = str(body.name, 32);
+    if (!isLocal(req) && limited(req, 5)) return fail(res, 429, 'slow down');
+    const body = await readBody(req);
+    if (!isLocal(req) && !setupOk(body.setupCode)) return fail(res, 403, CLOUD ? 'That setup code is not right. It is TRIBE_SETUP_CODE in your hosting dashboard (or printed in the server log).' : 'bootstrap only from the host machine');
+    const name = str(body.name, 32);
     if (!name) return fail(res, 400, 'name required');
     if (body.tribe) { tribe.name = str(body.tribe, 48) || tribe.name; store.writeJSON('.tribe/tribe.json', tribe); }
     const out = newMember({ name, color: body.color, role: 'host' });
@@ -761,6 +773,7 @@ async function apiInProject(req, res, url) {
     }
   }
 
+  if (a === 'ship' || (a === 'tasks' && c === 'split')) { const h = await ship.route(req, res, ctx()); if (h !== null) return; }   // feat/ship-flow
   if (a === 'tasks') {
     if (m === 'GET' && !b) return send(res, 200, { tasks: loadTasks() });
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
@@ -1011,6 +1024,7 @@ function start() {
     console.log(`\n  🔥 TribeCode server v${VERSION}  ·  tribe "${tribe.name}"`);
     console.log(`  Folder:   ${store.root}`);
     console.log(`  Open:     http://localhost:${PORT}`);
+    if (CLOUD) console.log(`  Cloud:    ${share.publicUrl() || 'your cloud address'} · first visitor claims the tribe with setup code ${members.length ? '(already claimed)' : SETUP_CODE}`);
     if (lan) console.log(`  Friends:  http://${lan.address}:${PORT}  (same network, or use Tailscale)`);
     console.log('');
   });
