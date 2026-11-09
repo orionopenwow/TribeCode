@@ -5,7 +5,7 @@
 - **Stay signed in**: joining or signing in also saves a secure sign-in cookie that pages can't read. If your browser's storage is cleared (iPhone Safari wipes it after a week away, or you open the tribe at another address), TribeCode signs you straight back in. A made-up cookie signs nobody in, and AI helpers' keys never come back this way
 - **Joining lands on the dashboard**: a friend who just joined goes straight to the project's dashboard, with a "You're in!" card and a one-tap **👋 Say hi** (and Connect my AI on a computer)
 - **Getting started starts folded**: a new project's chat opens with the slim Getting started bar; Open shows the full card
-- **Phones: the message bar rides on the keyboard**: while typing, the chat fits the space above the keyboard, the bottom bar steps aside, and the newest message stays in view; your own message always scrolls into view
+- **Phones**: the message bar rides on the keyboard. While typing, the chat fits the space above the keyboard, the bottom bar steps aside, and the newest message stays in view; your own message always scrolls into view
 - Fixed a "repositorysitory" typo in the GitHub step
 
 ## v0.19.5
