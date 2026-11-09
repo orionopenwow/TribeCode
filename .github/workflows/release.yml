@@ -65,6 +65,10 @@ jobs:
           - platform: ubuntu-22.04
             args: ''
     runs-on: ${{ matrix.platform }}
+    # GitHub's Apple Silicon runners are sometimes out of capacity for hours: a Mac build that can't start (or fails)
+    # never holds back the release for Windows and Linux. The Mac installer is added when that build does finish.
+    continue-on-error: ${{ matrix.platform == 'macos-latest' }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -180,7 +184,7 @@ jobs:
           # GitHub's release downloads (WiX, AppRun) sometimes answer 504: try the build again before giving up
           retryAttempts: 3
 
-  # Publish only when Windows, macOS and Linux all built, so latest.json always lists every platform.
+  # Publish once Windows and Linux built (macOS is best effort, see continue-on-error above).
   publish:
     needs: build
     runs-on: ubuntu-latest
