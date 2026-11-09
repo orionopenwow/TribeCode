@@ -49,8 +49,131 @@ const LAYOUTS = {
     paper: '#14121C', surface: '#1C1928', ink: '#F4F1FF', muted: '#B9B3D1', rule: '#34304A', motif: 'stars', primary: '#FFC23D', order: ['hero', 'play', 'features', 'gallery', 'story', 'roadmap', 'devlog', 'team', 'faq', 'footer'] },
 };
 const LAYOUT_IDS = Object.keys(LAYOUTS);
-const SECTIONS = ['hero', 'story', 'features', 'gallery', 'play', 'devlog', 'roadmap', 'team', 'faq', 'footer'];
-const SECTION_NAMES = { hero: 'Hero', story: 'Story', features: 'Features', gallery: 'Gallery', play: 'Play / try it', devlog: 'Devlog', roadmap: 'Roadmap', team: 'Team', faq: 'FAQ', footer: 'Footer' };
+const SECTIONS = ['hero', 'story', 'features', 'gallery', 'play', 'devlog', 'roadmap', 'team', 'visit', 'event', 'contact', 'faq', 'footer'];
+const SECTION_NAMES = { hero: 'Hero', story: 'Story', features: 'Features', gallery: 'Gallery', play: 'Play / try it', devlog: 'Devlog', roadmap: 'Roadmap', team: 'Team', visit: 'Visit us', event: 'Event details', contact: 'Contact', faq: 'FAQ', footer: 'Footer' };
+
+// feat/site-builder: the brand kit's font pairs (a display face + Inter), independent of the layout.
+const FONTS = {
+  fraunces: { name: 'Fraunces', display: 'Fraunces', file: 'fraunces-latin-700-normal.woff2', weight: 700, serif: true, feel: 'Classic' },
+  grotesk: { name: 'Space Grotesk', display: 'Space Grotesk', file: 'space-grotesk-latin-700-normal.woff2', weight: 700, feel: 'Modern' },
+  mono: { name: 'JetBrains Mono', display: 'JetBrains Mono', file: 'jetbrains-mono-latin-700-normal.woff2', weight: 700, feel: 'Techy' },
+  bricolage: { name: 'Bricolage Grotesque', display: 'Bricolage Grotesque', file: 'bricolage-grotesque-latin-800-normal.woff2', weight: 800, feel: 'Playful' },
+  instrument: { name: 'Instrument Serif', display: 'Instrument Serif', file: 'instrument-serif-latin-400-normal.woff2', weight: 400, serif: true, feel: 'Elegant' },
+  silkscreen: { name: 'Silkscreen', display: 'Silkscreen', file: 'silkscreen-latin-400-normal.woff2', weight: 400, feel: 'Retro' },
+};
+const FONT_IDS = Object.keys(FONTS);
+const LAYOUT_FONT = { editorial: 'fraunces', swiss: 'grotesk', devlog: 'mono', poster: 'bricolage', journal: 'instrument', arcade: 'silkscreen' };
+const fontOf = (layout, id) => FONTS[id] || FONTS[LAYOUT_FONT[layout]] || FONTS.fraunces;
+// The brand kit's quick picks: 8 calm, flat colors (any hex works; contrast is fixed for the layout either way).
+const SWATCHES = ['#B4432B', '#E4572E', '#E0951F', '#4C8C4A', '#2A8C80', '#2F5BEA', '#7A5CC2', '#C2417F'];
+
+// feat/site-builder: the kind of site. Each picks its sections, their order, a layout that suits it and starter copy.
+const TYPES = {
+  game: { name: 'Game page', icon: '🎮', note: 'Play button, screenshots, devlog', layout: null, order: ['hero', 'play', 'features', 'gallery', 'story', 'devlog', 'roadmap', 'team', 'faq', 'footer'] },
+  app: { name: 'App landing', icon: '📱', note: 'What it does, try it, questions', layout: 'swiss', order: ['hero', 'features', 'gallery', 'story', 'play', 'faq', 'contact', 'footer'] },
+  portfolio: { name: 'Portfolio', icon: '🖼️', note: 'Selected work, about, contact', layout: 'editorial', order: ['hero', 'gallery', 'features', 'story', 'contact', 'footer'] },
+  business: { name: 'Small business', icon: '🏪', note: 'Hours, location, contact', layout: 'journal', order: ['hero', 'story', 'features', 'gallery', 'visit', 'faq', 'footer'] },
+  event: { name: 'Event', icon: '📅', note: 'Date, place, RSVP link', layout: 'poster', order: ['hero', 'event', 'story', 'features', 'gallery', 'faq', 'footer'] },
+  docs: { name: 'Docs / notes', icon: '📓', note: 'Start here, topics, latest notes', layout: 'devlog', order: ['hero', 'story', 'features', 'devlog', 'roadmap', 'faq', 'footer'] },
+};
+const TYPE_IDS = Object.keys(TYPES);
+
+// feat/site-builder: one-tap themes (a palette + a font pair + a layout). Contrast is still fixed for the layout.
+const THEMES = {
+  cozy: { name: 'Cozy', primary: '#C0653A', accent: '#4C8C4A', font: 'instrument', layout: 'journal', note: 'Warm and calm' },
+  bold: { name: 'Bold', primary: '#E4572E', accent: '', font: 'bricolage', layout: 'poster', note: 'Big type, bright color' },
+  minimal: { name: 'Minimal', primary: '#2F5BEA', accent: '', font: 'grotesk', layout: 'swiss', note: 'A grid and one blue' },
+  retro: { name: 'Retro pixel', primary: '#FFC23D', accent: '#7BD88F', font: 'silkscreen', layout: 'arcade', note: 'Pixel type on a night sky' },
+  night: { name: 'Night', primary: '#7BD88F', accent: '#FFC23D', font: 'mono', layout: 'devlog', note: 'Dark, monospace' },
+  paper: { name: 'Paper', primary: '#B4432B', accent: '', font: 'fraunces', layout: 'editorial', note: 'Like a printed page' },
+  bakery: { name: 'Bakery warm', primary: '#B86B2E', accent: '#C2417F', font: 'fraunces', layout: 'journal', note: 'Crust brown and berry' },
+  studio: { name: 'Studio', primary: '#7A5CC2', accent: '', font: 'grotesk', layout: 'editorial', note: 'Quiet, for showing work' },
+  garden: { name: 'Garden', primary: '#4C8C4A', accent: '#E0951F', font: 'instrument', layout: 'editorial', note: 'Green and gold' },
+  ocean: { name: 'Ocean', primary: '#2A8C80', accent: '', font: 'grotesk', layout: 'swiss', note: 'Teal and clean' },
+};
+const THEME_IDS = Object.keys(THEMES);
+// What suits each kind of site, before a tribe has picked anything (the starting order of the theme list).
+const KIND_THEMES = { game: ['retro', 'bold', 'night'], app: ['minimal', 'ocean', 'studio'], portfolio: ['studio', 'paper', 'minimal'], business: ['bakery', 'cozy', 'garden'], event: ['bold', 'cozy', 'paper'], docs: ['night', 'paper', 'minimal'] };
+
+// Self-evolving, kept local and explainable: picks = { project: { theme: {id: n}, skip: {id: n}, type: {id: n}, font: {id: n} }, tribe: same shape }
+function rankThemes(type, picks = {}) {
+  const mine = picks.project || {}, tribe = picks.tribe || {}, kind = KIND_THEMES[type] || [];
+  const score = id => ((mine.theme || {})[id] || 0) * 4 + ((tribe.theme || {})[id] || 0) * 2 - ((mine.skip || {})[id] || 0) * 3 - ((tribe.skip || {})[id] || 0) + (kind.includes(id) ? 3 - kind.indexOf(id) : 0);
+  return THEME_IDS.map((id, i) => ({ id, s: score(id), i })).sort((a, b) => b.s - a.s || a.i - b.i).map(x => x.id);
+}
+function why(id, type, picks = {}) {
+  const t = THEMES[id]; if (!t) return '';
+  if (((picks.project || {}).theme || {})[id]) return `Suggested because you picked ${t.name} before.`;
+  if (((picks.tribe || {}).theme || {})[id]) return `Suggested because your tribe picked ${t.name} on another project.`;
+  if ((KIND_THEMES[type] || []).includes(id)) return `Suggested because ${t.name} suits a ${TYPES[type].name.toLowerCase()}.`;
+  return `${t.name}: ${t.note.toLowerCase()}.`;
+}
+// "Suggest for me" without a model: rules from the project's sense and what this tribe picked before.
+function suggestRules(g, picks = {}, hint = '') {
+  const type = guessType(g.sense, g.p, hint), theme = rankThemes(type, picks)[0], T = THEMES[theme];
+  const s = g.sense || {}, tagline = one(g.p.bio || s.summary || '', 160);
+  return { type, theme, primary: T.primary, accent: T.accent || '', font: T.font, layout: T.layout, order: TYPES[type].order.slice(), tagline: tagline && !hasHype(tagline) ? clean(tagline, 160) : '', why: why(theme, type, picks), via: 'rules' };
+}
+function suggestPrompt(g, type, picks = {}) {
+  const s = g.sense || {};
+  const facts = [`Name: ${g.p.name}`, g.p.bio ? `Bio: ${g.p.bio}` : '', s.label ? `It is: ${s.label}` : '', (s.tags || []).length ? `Tags: ${s.tags.join(', ')}` : '', type ? `Site type so far: ${type}` : '',
+    g.vision ? `Vision:\n${String(g.vision).slice(0, 1200)}` : ''].filter(Boolean).join('\n');
+  const liked = Object.entries((picks.project || {}).theme || {}).concat(Object.entries((picks.tribe || {}).theme || {})).map(x => x[0]);
+  return { system: STYLE.replace('You edit the words on a small indie project website.', 'You help a small team pick the look of their project website.'),
+    prompt: `WEBSITE LOOK\nFacts:\n${facts}\n${liked.length ? `They liked these themes before: ${[...new Set(liked)].join(', ')}\n` : ''}\nPick from these options only.\nthemes: ${THEME_IDS.join(', ')}\ntypes: ${TYPE_IDS.join(', ')}\nfonts: ${FONT_IDS.join(', ')}\nsections: ${SECTIONS.join(', ')}\n\nReply with JSON: {"theme": "", "type": "", "primary": "#RRGGBB", "accent": "#RRGGBB or empty", "font": "", "order": ["hero", ...], "tagline": "one plain sentence under 20 words", "why": "one short sentence"}` };
+}
+// Parse a model's suggestion and keep only valid, clean parts on top of the rules suggestion.
+function parseSuggest(reply, base) {
+  let j = null; try { j = JSON.parse((String(reply || '').replace(/<think>[\s\S]*?<\/think>/g, '').match(/\{[\s\S]*\}/) || [''])[0]); } catch {}
+  if (!j || typeof j !== 'object') return null;
+  const out = { ...base, via: 'brain' };
+  if (TYPES[j.type]) { out.type = j.type; out.order = TYPES[j.type].order.slice(); }
+  if (THEMES[j.theme]) { const T = THEMES[j.theme]; Object.assign(out, { theme: j.theme, primary: T.primary, accent: T.accent || '', font: T.font, layout: T.layout }); }
+  if (okHex(j.primary)) out.primary = j.primary.toUpperCase();
+  if (j.accent === '' || okHex(j.accent)) out.accent = j.accent ? j.accent.toUpperCase() : '';
+  if (FONTS[j.font]) out.font = j.font;
+  if (Array.isArray(j.order)) { const allowed = TYPES[out.type].order, o = j.order.filter(k => allowed.includes(k)).filter((k, i, a) => a.indexOf(k) === i); if (o.length >= 3 && o[0] === 'hero') out.order = [...o.filter(k => k !== 'footer'), 'footer']; }
+  if (typeof j.tagline === 'string') { const t = clean(j.tagline, 160).replace(/\n/g, ' '); if (t.length >= 4 && !hasHype(t)) out.tagline = t; }
+  if (typeof j.why === 'string') { const w = clean(j.why, 160).replace(/\n/g, ' '); if (w && !hasHype(w)) out.why = w; }
+  return out;
+}
+// Business and event facts (typed in the Guided builder). Plain text, capped; links must be https.
+const INFO = { hours: 300, address: 200, phone: 40, email: 120, link: 300, date: 60, time: 40, place: 200, rsvp: 300 };
+const okHttps = u => /^https:\/\/[^\s"'<>]+$/i.test(String(u || ''));
+const okEmail = e => /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(String(e || ''));
+function cleanInfo(body) {
+  const out = {};
+  for (const [k, n] of Object.entries(INFO)) {
+    if (body[k] === undefined) continue;
+    const v = k === 'hours' ? String(body[k] ?? '').replace(/\r/g, '').split('\n').map(l => one(l, 80)).filter(Boolean).slice(0, 8).join('\n') : one(body[k], n);
+    if (!v) { out[k] = ''; continue; }
+    if ((k === 'link' || k === 'rsvp') && !okHttps(v)) throw Object.assign(new Error(k === 'rsvp' ? 'the RSVP link must start with https://' : 'the link must start with https://'), { status: 400 });
+    if (k === 'email' && !okEmail(v)) throw Object.assign(new Error('that email does not look right'), { status: 400 });
+    out[k] = clean(v, n);
+  }
+  return out;
+}
+// One tap: which kind of site fits (a hint like "a site for my bakery" wins, then the project's sense).
+function guessType(sense, p, hint) {
+  const words = t => {
+    if (/\b(bakery|bakeries|cafe|café|coffee|restaurant|shop|store|salon|barber|bar|pub|florist|gym|clinic|plumber|repair|boutique|market|deli|pizzeria|food truck|business|bookshop)\b/.test(t)) return 'business';
+    if (/\b(event|party|wedding|meetup|conference|festival|birthday|hackathon|concert|reunion|gala|rsvp)\b/.test(t)) return 'event';
+    if (/\b(portfolio|my work|resume|résumé|cv)\b/.test(t)) return 'portfolio';
+    if (/\b(docs|documentation|notes|wiki|handbook|notebook)\b/.test(t)) return 'docs';
+    if (/\b(game|platformer|arcade|rpg|puzzle game)\b/.test(t)) return 'game';
+    if (/\b(app|tool|saas|startup|product)\b/.test(t)) return 'app';
+    return null;
+  };
+  const h = words(String(hint || '').toLowerCase().replace(/\b(web ?site|site|page|landing page|home ?page)\b/g, ' ')); if (h) return h;
+  const s = sense || {}, tags = new Set(s.tags || []), kind = s.kind;
+  if (kind === 'game' || kind === '3d') return 'game';
+  if (kind === 'notes') return 'docs';
+  if (tags.has('portfolio')) return 'portfolio';
+  if (tags.has('e-commerce')) return 'business';
+  const w = words(`${(p && p.name) || ''} ${(p && p.bio) || ''}`.toLowerCase()); if (w) return w;
+  if (/\b(play|level|quest)\b/i.test(`${(p && p.name) || ''} ${(p && p.bio) || ''}`)) return 'game';
+  return 'app';
+}
 const NOUN = { game: 'game', '3d': '3D world', app: 'app', site: 'website', tool: 'tool', bot: 'bot', api: 'API', notes: 'notebook', other: 'project' };
 const TAG_HUE = { cozy: '#C0653A', spooky: '#7A5CC2', retro: '#D9482B', 'pixel art': '#D9482B', minimal: '#2F5BEA', saas: '#2F5BEA', farming: '#4C8C4A', music: '#C2417F', education: '#2A8C80', kids: '#E0951F', story: '#8A4FA3', portfolio: '#1F6F8B', 'e-commerce': '#1F6F8B' };
 const TAG_LINES = {
@@ -107,7 +230,7 @@ function visionParts(text) {
   for (const l of String(text || '').split('\n')) { const m = l.trim().match(/^[-*•]\s+(.*)$/); if (m) bullets.push(m[1].trim()); else body.push(l); }
   return { bullets, body: body.join('\n').replace(/\n{3,}/g, '\n\n').trim() };
 }
-function draftCopy(g, seed = 0) {
+function draftCopy(g, seed = 0, type = null, info = {}) {
   const pickR = rng(`${g.p.id}:copy:${seed}`), pick = arr => (seed ? arr[Math.floor(pickR() * arr.length)] : arr[0]);
   const p = g.p, f = (g.st && g.st.fields) || {}, s = g.sense || {}, kind = s.kind || (g.looksGame ? 'game' : 'other'), noun = NOUN[kind] || 'project';
   const tags = (s.tags || []).filter(t => t !== kind).slice(0, 4), game = kind === 'game' || g.looksGame;
@@ -124,7 +247,7 @@ function draftCopy(g, seed = 0) {
   if (g.play) faq.push({ q: game ? 'Can I play it?' : 'Can I try it?', a: `Yes. Press ${cta} at the top. It runs in your browser, no install.` });
   if (g.repoUrl) faq.push({ q: 'Is the code open?', a: 'The code is on GitHub. Have a look, star it or open an issue.' });
   faq.push({ q: 'How is it made?', a: `${list || 'A small team'}${agents.length ? ` and ${agents.length === 1 ? 'an AI agent' : `${agents.length} AI agents`}` : ''} build it together in TribeCode, one commit at a time.` });
-  return {
+  const base = {
     hero: { kicker: one([cap(noun), ...tags.slice(0, 2)].join(' · '), 80), title: one(f.headline || p.name, 80), dek, cta },
     story: { title: game ? pick(['The idea', 'Why we are making it', 'How it started']) : kind === 'site' ? pick(['Why it exists', 'The idea', 'What it is for']) : kind === 'tool' || kind === 'api' ? pick(['What it does', 'Why we built it']) : pick(['The idea', 'What it is', 'Why it exists']), body: clean(vp.body || [p.bio, s.summary].filter(Boolean).join('\n\n'), 1600) },
     features: { title: game ? pick(['What you can do', 'In the game', 'What to expect']) : pick(['What it does', 'What you get', 'The good parts']), items },
@@ -135,23 +258,61 @@ function draftCopy(g, seed = 0) {
     team: { title: 'Made by', body: `${people.length} ${people.length === 1 ? 'person' : 'people'}${agents.length ? ` and ${agents.length} AI ${agents.length === 1 ? 'agent' : 'agents'}` : ''} ${people.length + agents.length === 1 ? 'builds' : 'build'} ${p.name} together.` },
     faq: { title: pick(['Questions', 'Good to know', 'FAQ']), items: faq.slice(0, 6) },
     footer: { text: one(f.footer || `${p.name}, made by ${list || 'friends'} with TribeCode.`, 160) },
+    visit: { title: 'Visit us', body: '' },
+    event: { title: 'The details', body: '' },
+    contact: { title: 'Get in touch', body: 'Write any time. We read everything.' },
   };
+  return typeCopy(base, g, type, info || {}, dek);
+}
+// feat/site-builder: the same facts, said the way each kind of site would say them.
+function typeCopy(c, g, type, info, dek) {
+  const p = g.p, name = p.name;
+  if (['business', 'event', 'portfolio'].includes(type)) c.faq.items = c.faq.items.filter(x => !/^(How is it made|Is the code open|Can I (play|try) it)/.test(x.q));
+  if (type === 'app') { c.hero.cta = g.play ? 'Try it' : g.repoUrl ? 'See the code' : ''; c.features.title = 'What it does'; c.contact.body = 'Questions, ideas or a bug? Tell us.'; }
+  if (type === 'portfolio') {
+    Object.assign(c.hero, { kicker: 'Portfolio', cta: info.email || info.link || info.phone ? 'Get in touch' : '' });
+    c.gallery.title = 'Selected work'; c.features.title = 'What I do'; c.story.title = 'About'; c.contact.body = 'Open to new work and good conversations.';
+    c.footer.text = one(`${name}. Thanks for looking.`, 160);
+  }
+  if (type === 'business') {
+    Object.assign(c.hero, { kicker: one(info.address ? info.address.split(',').slice(-1)[0] : 'Local business', 80), cta: 'Visit us' });
+    c.story.title = 'Our story'; c.features.title = 'What we offer'; c.gallery.title = 'A look inside'; c.faq.title = 'Good to know';
+    if (!c.story.body) c.story.body = clean(dek, 1600);
+    const q = []; if (info.hours) q.push({ q: 'When are you open?', a: info.hours.replace(/\n/g, ', ') });
+    if (info.address) q.push({ q: 'Where are you?', a: info.address });
+    if (info.phone || info.email) q.push({ q: 'How do I reach you?', a: [info.phone && `Call ${info.phone}`, info.email && `email ${info.email}`].filter(Boolean).join(' or ') + '.' });
+    c.faq.items = [...q, ...c.faq.items.filter(x => /^What is/.test(x.q))].slice(0, 6);
+    c.footer.text = one(`${name}${info.address ? `, ${info.address}` : ''}.`, 160);
+  }
+  if (type === 'event') {
+    Object.assign(c.hero, { kicker: one([info.date, info.place].filter(Boolean).join(' · ') || 'Event', 80), cta: info.rsvp ? 'RSVP' : 'The details' });
+    c.story.title = 'What it is'; c.features.title = 'What to expect';
+    if (!c.story.body) c.story.body = clean(dek, 1600);
+    const q = []; if (info.date) q.push({ q: 'When is it?', a: [info.date, info.time].filter(Boolean).join(', ') + '.' });
+    if (info.place) q.push({ q: 'Where is it?', a: info.place });
+    if (info.rsvp) q.push({ q: 'How do I say I am coming?', a: 'Press RSVP at the top. It opens the sign-up page.' });
+    c.faq.items = [...q, ...c.faq.items.filter(x => /^(What is|Who is it for)/.test(x.q))].slice(0, 6);
+    c.footer.text = one(`${name}${info.date ? `, ${info.date}` : ''}. See you there.`, 160);
+  }
+  if (type === 'docs') { c.hero.kicker = 'Notes'; c.story.title = 'Start here'; c.features.title = 'Topics'; c.devlog.title = 'Latest notes'; c.roadmap.title = 'What is next'; }
+  return c;
 }
 // Fresh template copy, keeping every section someone edited by hand.
 function mergeCopy(fresh, prev, edited) { const out = { ...fresh }; for (const k of Object.keys(edited || {})) if (edited[k] && prev && prev[k]) out[k] = prev[k]; return out; }
 
 // Which sections have something to show.
 function available(g, gen) {
-  const c = gen.copy || {};
+  const c = gen.copy || {}, i = gen.info || {};
   return { hero: true, story: !!(c.story && c.story.body), features: !!(c.features && (c.features.items || []).length >= 2), gallery: (g.shots || []).length > 0, play: !!g.play,
-    devlog: (g.commits || []).length + (g.news || []).length > 0, roadmap: (g.milestones || []).length > 0, team: (g.people || []).length + (g.agents || []).length > 0, faq: !!(c.faq && (c.faq.items || []).length), footer: true };
+    devlog: (g.commits || []).length + (g.news || []).length > 0, roadmap: (g.milestones || []).length > 0, team: (g.people || []).length + (g.agents || []).length > 0, faq: !!(c.faq && (c.faq.items || []).length), footer: true,
+    visit: !!(i.hours || i.address || i.phone || i.email), event: !!(i.date || i.place || i.rsvp), contact: !!(i.email || i.link || i.phone) };
 }
 
 // ---------- palette ----------
-function palette(L, g) {
-  const s = g.sense || {}, pc = okHex(g.p.color) ? g.p.color.toUpperCase() : '';
+function palette(L, g, brand) {
+  const s = g.sense || {}, pc = okHex(g.p.color) ? g.p.color.toUpperCase() : '', b = brand || {};
   const tagHue = (s.tags || []).map(t => TAG_HUE[t]).find(Boolean);
-  let primary = pc && pc !== '#F26B1D' ? pc : tagHue || L.primary;
+  let primary = okHex(b.primary) ? b.primary.toUpperCase() : pc && pc !== '#F26B1D' ? pc : tagHue || L.primary;
   const dark = lum(L.paper) < 0.2;
   // Fill: shapes and the hero band. On a dark paper it must stand out (3:1); on light paper it can be deep.
   primary = reach(primary, L.paper, 3, dark ? '#FFFFFF' : L.ink);
@@ -159,7 +320,19 @@ function palette(L, g) {
   const btn = reach(primary, onPrimary, 4.5, onPrimary === '#FFFFFF' ? '#000000' : '#FFFFFF');
   const link = reach(primary, L.paper, 4.5, dark ? '#FFFFFF' : L.ink);
   const tint = mix(L.paper, primary, dark ? 0.16 : 0.12);
-  return { paper: L.paper, surface: L.surface, ink: L.ink, muted: reach(L.muted, L.surface, 4.5, L.ink), rule: L.rule, primary, onPrimary, btn, link, tint, dark };
+  const muted = reach(L.muted, L.surface, 4.5, L.ink);
+  const accent = okHex(b.accent) ? reach(reach(b.accent.toUpperCase(), L.surface, 4.5, dark ? '#FFFFFF' : L.ink), L.paper, 4.5, dark ? '#FFFFFF' : L.ink) : muted;
+  return { paper: L.paper, surface: L.surface, ink: L.ink, muted, rule: L.rule, primary, onPrimary, btn, link, tint, accent, dark };
+}
+// feat/site-builder: what the contrast check changed, in plain words, for the brand kit.
+function brandNotes(layout, brand, g) {
+  const L = LAYOUTS[layout] || LAYOUTS.editorial, b = brand || {}, pal = palette(L, g || { p: {}, sense: null }, b), out = [];
+  if (okHex(b.primary)) {
+    const want = b.primary.toUpperCase();
+    if ([pal.primary, pal.link, pal.btn].some(x => x !== want)) out.push({ which: 'primary', from: want, to: pal.link, text: `Adjusted so text stays readable on the ${L.name} layout: links use ${pal.link}${pal.btn !== pal.link ? `, buttons ${pal.btn}` : ''}${pal.primary !== want && pal.primary !== pal.link ? `, shapes ${pal.primary}` : ''}.` });
+  }
+  if (okHex(b.accent) && pal.accent !== b.accent.toUpperCase()) out.push({ which: 'accent', from: b.accent.toUpperCase(), to: pal.accent, text: `The accent is shown as ${pal.accent} so small text stays readable.` });
+  return out;
 }
 
 // ---------- flat SVG art (seeded; no gradients, no filters) ----------
@@ -207,12 +380,17 @@ const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).
 function paras(text) { return String(text || '').split(/\n\s*\n/).map(b => b.trim()).filter(Boolean).map(b => `<p>${esc(b).replace(/\n/g, '<br>')}</p>`).join(''); }
 
 // opts: { fontUrl: file -> url (default 'fonts/<file>'), preview: bool }
+// opts: { fontUrl: file -> url (default 'fonts/<file>'), split: true -> { html, css } (the published files), logoUrl }
 function render(g, gen, opts = {}) {
-  const L = LAYOUTS[gen.layout] || LAYOUTS.editorial, id = LAYOUTS[gen.layout] ? gen.layout : 'editorial', pal = palette(L, g), c = gen.copy || draftCopy(g), p = g.p;
+  const L = LAYOUTS[gen.layout] || LAYOUTS.editorial, id = LAYOUTS[gen.layout] ? gen.layout : 'editorial', p = g.p;
+  const brand = gen.brand || (g.st && g.st.brand) || {}, F = fontOf(id, brand.font), pal = palette(L, g, brand), info = gen.info || {}, T = TYPES[gen.type] ? gen.type : null;
+  const c = gen.copy || draftCopy(g, 0, T, info), cc = k => c[k] || {};
   const fontUrl = opts.fontUrl || (f => `fonts/${f}`), seed = `${p.id}:${gen.seed || 0}`;
-  const avail = available(g, { copy: c }), off = gen.off || {};
-  const order = (Array.isArray(gen.order) && gen.order.length ? gen.order : L.order).filter(k => SECTIONS.includes(k));
-  for (const k of L.order) if (!order.includes(k)) order.splice(order.length - 1, 0, k);
+  const avail = available(g, { copy: c, info }), off = gen.off || {};
+  const base = T ? TYPES[T].order : L.order;
+  const order = (Array.isArray(gen.order) && gen.order.length ? gen.order : base).filter(k => SECTIONS.includes(k) && (!T || base.includes(k)));
+  for (const k of base) if (!order.includes(k)) order.splice(Math.max(0, order.length - 1), 0, k);
+  if (order.includes('footer')) order.push(...order.splice(order.indexOf('footer'), 1));
   const shown = order.filter(k => avail[k] && !off[k]);
   let n = 0; const num = () => String(++n).padStart(2, '0');
   const eyebrow = (k, label) => id === 'editorial' || id === 'poster' ? num() : id === 'devlog' ? `// ${label.toLowerCase()}` : id === 'arcade' ? `Stage ${++n}` : id === 'journal' ? '§' : label;
@@ -220,9 +398,19 @@ function render(g, gen, opts = {}) {
   const playIsLocal = g.play && !/^https:/.test(g.play);
   const hero0 = g.shots && g.shots[0];
   const heroImg = hero0 ? `<img class="art" src="shots/${esc(hero0.slug)}.png" alt="${esc(hero0.name)}">` : art(L.motif, pal, seed, 1200, 720, `${p.name} illustration`);
-  const cta = c.hero.cta && (g.play || g.repoUrl) ? `<a class="btn primary" href="${esc(g.play ? (playIsLocal && shown.includes('play') ? '#play' : g.play) : g.repoUrl)}"${!g.play || !playIsLocal ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(c.hero.cta)}</a>` : '';
-  const code = g.repoUrl && g.play ? `<a class="btn" href="${esc(g.repoUrl)}" target="_blank" rel="noopener noreferrer">Code</a>` : '';
-  const logo = p.image ? `<img class="mark" src="${esc(p.image)}" alt="" width="36" height="36">` : `<span class="mark" aria-hidden="true">${esc(p.emoji || initials(p.name))}</span>`;
+  // The hero button goes where this kind of site needs it: the visit card, the RSVP page, contact, else Play / the code.
+  let to = null, ext = false;
+  if (T === 'business') to = shown.includes('visit') ? '#visit' : null;
+  else if (T === 'event') { if (okHttps(info.rsvp)) { to = info.rsvp; ext = true; } else if (shown.includes('event')) to = '#event'; }
+  else if (T === 'portfolio') to = shown.includes('contact') ? '#contact' : null;
+  else if (g.play) { to = playIsLocal && shown.includes('play') ? '#play' : g.play; ext = !playIsLocal; }
+  else if (g.repoUrl) { to = g.repoUrl; ext = true; }
+  const cta = c.hero.cta && to ? `<a class="btn primary" href="${esc(to)}"${ext ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(c.hero.cta)}</a>` : '';
+  const code = g.repoUrl && g.play && !['business', 'event', 'portfolio'].includes(T) ? `<a class="btn" href="${esc(g.repoUrl)}" target="_blank" rel="noopener noreferrer">Code</a>` : '';
+  const word = one(brand.wordmark || p.name, 60);
+  const logoSrc = brand.logo && brand.logo.type ? (opts.logoUrl || `logo.${brand.logo.type}`) : null;
+  const logo = logoSrc ? `<img class="logo" src="${esc(logoSrc)}" alt="${esc(word)}" height="40">`
+    : p.image ? `<img class="mark" src="${esc(p.image)}" alt="" width="36" height="36">` : `<span class="mark" aria-hidden="true">${esc(p.emoji || initials(word))}</span>`;
   const stats = [[(g.commits || []).length ? `${(g.commits || []).length}+` : '', 'commits'], [String((g.people || []).length), (g.people || []).length === 1 ? 'person' : 'people'], [(g.agents || []).length ? String(g.agents.length) : '', (g.agents || []).length === 1 ? 'agent' : 'agents']].filter(x => x[0] && x[0] !== '0');
 
   const S = {
@@ -243,14 +431,25 @@ function render(g, gen, opts = {}) {
       ${(g.people || []).map((x, i) => `<li><span class="av" style="background:${i % 2 ? pal.ink : pal.primary};color:${i % 2 ? pal.paper : pal.onPrimary}" aria-hidden="true">${esc(initials(x.name))}</span><b>${esc(x.name)}</b>${x.roles && x.roles.length ? `<small>${esc(x.roles.join(' · '))}</small>` : ''}</li>`).join('')}
       ${(g.agents || []).map(a => `<li class="agent"><span class="av" aria-hidden="true">AI</span><b>${esc(a)}</b><small>Agent</small></li>`).join('')}
       ${(g.authors || []).slice(0, 8).map(a => `<li><span class="av" aria-hidden="true">${esc(initials(a))}</span><b>${esc(a)}</b><small>Commits</small></li>`).join('')}</ul></div></section>`,
+    visit: () => { const i = info, map = i.address ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(i.address)}` : '';
+      return `<section class="sec visit" id="visit"><div class="wrap">${head('visit', cc('visit').title || 'Visit us')}${cc('visit').body ? `<p class="lede">${esc(cc('visit').body)}</p>` : ''}
+      <dl class="facts">${i.hours ? `<div><dt>Hours</dt><dd>${esc(i.hours).replace(/\n/g, '<br>')}</dd></div>` : ''}${i.address ? `<div><dt>Where</dt><dd>${esc(i.address)}<br><a href="${esc(map)}" target="_blank" rel="noopener noreferrer">Open the map</a></dd></div>` : ''}${i.phone ? `<div><dt>Call</dt><dd><a href="tel:${esc(i.phone.replace(/[^\d+]/g, ''))}">${esc(i.phone)}</a></dd></div>` : ''}${i.email ? `<div><dt>Email</dt><dd><a href="mailto:${esc(i.email)}">${esc(i.email)}</a></dd></div>` : ''}</dl></div></section>`; },
+    event: () => { const i = info;
+      return `<section class="sec event" id="event"><div class="wrap">${head('event', cc('event').title || 'The details')}${cc('event').body ? `<p class="lede">${esc(cc('event').body)}</p>` : ''}
+      <dl class="facts">${i.date ? `<div><dt>When</dt><dd>${esc(i.date)}${i.time ? `<br>${esc(i.time)}` : ''}</dd></div>` : ''}${i.place ? `<div><dt>Where</dt><dd>${esc(i.place)}</dd></div>` : ''}</dl>
+      ${okHttps(i.rsvp) ? `<p class="acts"><a class="btn primary" href="${esc(i.rsvp)}" target="_blank" rel="noopener noreferrer">RSVP</a></p>` : ''}</div></section>`; },
+    contact: () => { const i = info;
+      return `<section class="sec contact" id="contact"><div class="wrap">${head('contact', cc('contact').title || 'Get in touch')}${cc('contact').body ? `<p class="lede">${esc(cc('contact').body)}</p>` : ''}
+      <p class="acts">${i.email ? `<a class="btn primary" href="mailto:${esc(i.email)}">${esc(i.email)}</a>` : ''}${okHttps(i.link) ? `<a class="btn" href="${esc(i.link)}" target="_blank" rel="noopener noreferrer">${esc(i.link.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, ''))}</a>` : ''}${i.phone ? `<a class="btn" href="tel:${esc(i.phone.replace(/[^\d+]/g, ''))}">${esc(i.phone)}</a>` : ''}</p></div></section>`; },
     faq: () => `<section class="sec faq" id="faq"><div class="wrap">${head('faq', c.faq.title)}<div class="qa">${c.faq.items.map(x => `<details><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join('')}</div></div></section>`,
     footer: () => `<footer class="foot"><div class="wrap foot-in"><p>${esc(c.footer.text)}</p><p class="foot-links">${g.repoUrl ? `<a href="${esc(g.repoUrl)}" target="_blank" rel="noopener noreferrer">Source</a>` : ''}<a href="#top">Back to top</a></p></div></footer>`,
   };
-  const body = shown.filter(k => k !== 'footer').map(k => S[k]()).join('\n');
-  const fonts = [[L.display, L.file, L.weight], ['Inter', FONT_BODY[0], 400], ['Inter', FONT_BODY[1], 600], ['JetBrains Mono', FONT_MONO, 500]]
-    .filter((x, i, a) => a.findIndex(y => y[1] === x[1]) === i).map(([fam, file, w]) => `@font-face{font-family:'${fam}';font-weight:${w};font-display:swap;src:url('${fontUrl(file)}') format('woff2')}`).join('\n');
-  const icon = p.image ? `<link rel="icon" href="${esc(p.image)}">` : `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${pal.primary}"/><text x="32" y="42" font-family="sans-serif" font-size="28" font-weight="700" text-anchor="middle" fill="${pal.onPrimary}">${esc(initials(p.name))}</text></svg>`)}">`;
-  return `<!doctype html>
+  // Each section starts with a marker comment, so whoever edits the HTML by hand can find their way.
+  const mark = k => `<!-- ===== section: ${k} ===== -->`;
+  const body = shown.filter(k => k !== 'footer').map(k => `${mark(k)}\n${S[k]()}`).join('\n\n');
+  const styles = css(id, L, pal, F, fontUrl);
+  const icon = logoSrc ? `<link rel="icon" href="${esc(logoSrc)}">` : p.image ? `<link rel="icon" href="${esc(p.image)}">` : `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${pal.primary}"/><text x="32" y="42" font-family="sans-serif" font-size="28" font-weight="700" text-anchor="middle" fill="${pal.onPrimary}">${esc(initials(p.name))}</text></svg>`)}">`;
+  const page = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -258,56 +457,114 @@ function render(g, gen, opts = {}) {
 <meta name="color-scheme" content="${pal.dark ? 'dark' : 'light'}">
 <meta name="theme-color" content="${pal.paper}">
 <meta name="description" content="${esc(c.hero.dek || c.hero.title)}">
-<meta name="generator" content="TribeCode site generator (${esc(L.name)})">
+<meta name="generator" content="TribeCode site generator (${esc(L.name)}${T ? `, ${esc(TYPES[T].name)}` : ''})">
 <meta property="og:title" content="${esc(c.hero.title)}">
 <meta property="og:description" content="${esc(c.hero.dek || '')}">
 <title>${esc(p.name)}${c.hero.dek ? ` · ${esc(one(c.hero.dek, 70))}` : ''}</title>
 ${icon}
-<style>
-${fonts}
-${css(id, L, pal)}
-</style>
+${opts.split ? '<link rel="stylesheet" href="styles.css">' : `<style>\n${styles}</style>`}
 </head>
-<body class="l-${id}">
+<body class="l-${id}"${T ? ` data-type="${T}"` : ''}>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap top-in"><a class="brand" href="#top">${logo}<b>${esc(p.name)}</b></a><nav aria-label="Sections">${shown.filter(k => !['hero', 'footer'].includes(k)).slice(0, 4).map(k => `<a href="#${k}">${esc(k === 'faq' ? 'FAQ' : SECTION_NAMES[k].split(' ')[0])}</a>`).join('')}</nav></div></header>
+
+${mark('header')}
+<header class="top"><div class="wrap top-in"><a class="brand" href="#top">${logo}<b${logoSrc ? ' class="sr"' : ''}>${esc(word)}</b></a><nav aria-label="Sections">${shown.filter(k => !['hero', 'footer'].includes(k)).slice(0, 4).map(k => `<a href="#${k}">${esc(k === 'faq' ? 'FAQ' : k === 'visit' ? 'Visit' : k === 'event' ? 'Details' : SECTION_NAMES[k].split(' ')[0])}</a>`).join('')}</nav></div></header>
 <main id="main">
+
 ${body}
+
 </main>
-${shown.includes('footer') ? S.footer() : ''}
+
+${shown.includes('footer') ? `${mark('footer')}\n${S.footer()}` : ''}
 </body>
 </html>
 `;
+  const html = page.replace(/[ \t]+$/gm, '');
+  return opts.split ? { html, css: styles } : html;
 }
 
-function css(id, L, pal) {
-  const base = `:root{--paper:${pal.paper};--surface:${pal.surface};--ink:${pal.ink};--muted:${pal.muted};--rule:${pal.rule};--primary:${pal.primary};--on-primary:${pal.onPrimary};--btn:${pal.btn};--link:${pal.link};--tint:${pal.tint};
---display:'${L.display}',${/Serif|Fraunces/.test(L.display) ? 'Georgia,serif' : 'system-ui,sans-serif'};--body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
-*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+// A readable stylesheet: the brand tokens first (commented, so a person can restyle by hand), then the rules, one per line.
+function prettyCss(src) {
+  let out = '', depth = 0, q = null;
+  const ind = () => '  '.repeat(depth), last = () => out.replace(/\s+$/, '').slice(-1);
+  for (const ch of src) {
+    if (q) { out += ch; if (ch === q) q = null; continue; }
+    if (ch === '"' || ch === "'") { q = ch; out += ch; continue; }
+    if (ch === '{') { out = out.replace(/\s+$/, '') + ' {\n'; depth++; out += ind(); continue; }
+    if (ch === ';') { out = out.replace(/\s+$/, '') + ';\n' + ind(); continue; }
+    if (ch === '}') { const l = last(); out = out.replace(/\s+$/, ''); if (!';{}'.includes(l)) out += ';'; depth = Math.max(0, depth - 1); out += '\n' + ind() + '}\n' + (depth ? '' : '\n') + ind(); continue; }
+    if (ch === '\n') { if (!/\s$/.test(out)) out += ' '; continue; }
+    out += ch;
+  }
+  return out.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+function css(id, L, pal, F, fontUrl = f => `fonts/${f}`) {
+  F = F || fontOf(id);
+  const fam = `'${F.display}',${F.serif ? 'Georgia,serif' : 'system-ui,sans-serif'}`;
+  const tokens = `/* ${'='.repeat(64)}
+   Brand tokens: change these to restyle the whole site.
+   TribeCode checked every color pair for contrast. If you change one,
+   keep body text readable (at least 4.5:1 against its background).
+   ${'='.repeat(64)} */
+:root {
+  /* colors */
+  --paper: ${pal.paper};        /* page background */
+  --surface: ${pal.surface};      /* cards and boxes */
+  --ink: ${pal.ink};          /* headlines and body text */
+  --muted: ${pal.muted};        /* quieter text */
+  --rule: ${pal.rule};         /* thin lines and borders */
+  --primary: ${pal.primary};      /* the brand color: shapes and bands */
+  --on-primary: ${pal.onPrimary};   /* text on the brand color */
+  --btn: ${pal.btn};          /* main button */
+  --link: ${pal.link};         /* links */
+  --accent: ${pal.accent};       /* small labels */
+  --tint: ${pal.tint};         /* a soft wash of the brand color */
+
+  /* fonts */
+  --display: ${fam};   /* headlines */
+  --body: 'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;   /* everything else */
+  --mono: 'JetBrains Mono',ui-monospace,Menlo,monospace;   /* small labels */
+
+  /* spacing */
+  --wrap: 1160px;     /* the widest the content gets */
+  --gutter: 24px;     /* space at the page edges */
+  --section: 72px;    /* space above and below each section */
+}
+`;
+  const faces = [[F.display, F.file, F.weight], ['Inter', FONT_BODY[0], 400], ['Inter', FONT_BODY[1], 600], ['JetBrains Mono', FONT_MONO, 500]]
+    .filter((x, i, a) => a.findIndex(y => y[1] === x[1]) === i).map(([f, file, w]) => `@font-face{font-family:'${f}';font-weight:${w};font-display:swap;src:url('${fontUrl(file)}') format('woff2')}`).join('\n');
+  return `${tokens}\n/* ===== fonts (self-hosted, in fonts/) ===== */\n${prettyCss(faces)}\n/* ===== layout: ${L.name} ===== */\n${prettyCss(rules(id, L, F))}`;
+}
+function rules(id, L, F) {
+  const base = `*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--body);overflow-wrap:anywhere}
 img,svg{display:block;max-width:100%}a{color:var(--link)}a:focus-visible,summary:focus-visible{outline:2px solid var(--link);outline-offset:3px}
 .skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;background:var(--surface);padding:8px 12px;z-index:9}
-.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.logo{height:40px;width:auto;max-width:180px;object-fit:contain}
 .top{border-bottom:1px solid var(--rule)}.top-in{display:flex;align-items:center;gap:20px;min-height:64px}
 .brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;min-width:0}.brand b{font:600 16px/1.2 var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mark{width:36px;height:36px;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font:700 15px/1 var(--body);object-fit:cover;flex:none}
 nav{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap}nav a{color:var(--muted);text-decoration:none;font:500 13px/1 var(--mono);text-transform:lowercase}nav a:hover{color:var(--ink)}
-h1,h2,h3{font-family:var(--display);font-weight:${L.weight};color:var(--ink);margin:0;letter-spacing:-.01em}
+h1,h2,h3{font-family:var(--display);font-weight:${F.weight};color:var(--ink);margin:0;letter-spacing:-.01em}
 .hero{padding:64px 0 56px}.hero-in{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;align-items:end}
 .hero-txt{grid-column:1/span 7}.hero-art{grid-column:8/span 5;margin:0}
 .hero-art .art{width:100%;height:auto;aspect-ratio:5/3;object-fit:cover;border:1px solid var(--rule)}
-.kicker{font:500 13px/1.4 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 18px}
+.kicker{font:500 13px/1.4 var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin:0 0 18px}
 h1{font-size:clamp(44px,7vw,92px);line-height:.98}
 .dek{font-size:clamp(18px,2.2vw,22px);color:var(--muted);max-width:34ch;margin:22px 0 0}
 .acts{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 0}
 .btn{display:inline-flex;align-items:center;min-height:46px;padding:0 20px;border:1px solid var(--ink);color:var(--ink);background:transparent;text-decoration:none;font:600 15px/1 var(--body)}
 .btn.primary{background:var(--btn);border-color:var(--btn);color:var(--on-primary)}
 .stats{list-style:none;padding:0;margin:26px 0 0;display:flex;flex-wrap:wrap;gap:8px 22px;font:500 13px/1.4 var(--mono);color:var(--muted)}.stats b{color:var(--ink)}
-.sec{padding:72px 0;border-top:1px solid var(--rule)}
+.sec{padding:var(--section) 0;border-top:1px solid var(--rule)}
 .sh{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;margin-bottom:32px;align-items:baseline}
-.eb{grid-column:1/span 2;font:500 13px/1.4 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.eb{grid-column:1/span 2;font:500 13px/1.4 var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
 .sh h2{grid-column:3/span 10;font-size:clamp(30px,4vw,48px);line-height:1.05}
-.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.sec .acts{margin-left:calc((100% + 24px) / 12 * 2)}
+.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.sec .acts{margin-left:calc((100% + 24px) / 12 * 2)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-top:0;margin-bottom:0;border-top:1px solid var(--rule);padding-top:20px}
+.facts dt{font:500 12px/1.4 var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.facts dd{margin:0;font-size:18px;line-height:1.5}
 .prose{max-width:65ch}.prose p,.lede{margin-top:0;margin-bottom:16px;font-size:19px;line-height:1.65}.lede{max-width:60ch;color:var(--muted)}
 .feat{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;border-top:1px solid var(--rule)}
 .feat li{padding:22px 24px 24px 0;border-bottom:1px solid var(--rule)}.fn{font:500 12px/1 var(--mono);color:var(--muted)}
@@ -330,7 +587,7 @@ details p{margin:10px 0 0;color:var(--muted)}
 .foot{border-top:1px solid var(--rule);padding:36px 0 48px;color:var(--muted);font-size:15px}.foot-in{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between}.foot p{margin:0}
 .foot-links{display:flex;gap:18px}
 @media (max-width:820px){.hero{padding:40px 0}.hero-txt,.hero-art{grid-column:1/-1}.sh{grid-template-columns:1fr;gap:8px}.eb,.sh h2{grid-column:1}
-.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.sec .acts{margin-left:0}.sec{padding:52px 0}.log li,.road li{grid-template-columns:1fr;gap:4px}nav{display:none}.wrap{padding:0 18px}}`;
+.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.sec .acts{margin-left:0}.sec{padding:52px 0}.log li,.road li{grid-template-columns:1fr;gap:4px}nav{display:none}.wrap{padding:0 18px}}`;
   const per = {
     editorial: `h1{font-size:clamp(46px,7.6vw,104px);letter-spacing:-.025em}.sh h2{font-style:normal}.eb{font-size:15px;color:var(--ink)}.hero{border-bottom:1px solid var(--ink)}.sec{border-top-color:var(--ink)}
 .feat li{padding-right:32px}.feat h3{font-family:var(--display)}.prose p:first-child::first-letter{font:700 3.4em/0.8 var(--display);float:left;margin:6px 10px 0 0;color:var(--primary)}`,
@@ -346,7 +603,7 @@ h1{font-size:clamp(56px,13vw,176px);line-height:.86;letter-spacing:-.045em;text-
 .feat li:nth-child(3n+1){background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.feat li:nth-child(3n+1) h3,.feat li:nth-child(3n+1) p,.feat li:nth-child(3n+1) .fn{color:var(--on-primary)}.btn{border-width:2px}`,
     journal: `body{font-size:18px}.hero{text-align:center;padding:80px 0 64px}.hero-in{display:block}.hero-txt{max-width:760px;margin:0 auto}.hero-art{max-width:880px;margin:48px auto 0}.hero .dek{margin:22px auto 0}.hero .acts{justify-content:center}
 h1{font-size:clamp(48px,8vw,108px);line-height:1;font-style:italic;letter-spacing:-.01em}.kicker{letter-spacing:.2em}.sh{display:block;text-align:center}.eb{display:block;color:var(--primary);font-size:20px;margin-bottom:6px}
-.sh h2{font-size:clamp(34px,5vw,56px);font-weight:400}.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.sec .acts{margin-left:auto;margin-right:auto}.prose,.lede{max-width:62ch}.lede{text-align:center}
+.sh h2{font-size:clamp(34px,5vw,56px);font-weight:400}.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.sec .acts{margin-left:auto;margin-right:auto}.facts{max-width:860px;text-align:center}.prose,.lede{max-width:62ch}.lede{text-align:center}
 .feat{max-width:860px}.feat h3{font-weight:400;font-size:28px}.gal{max-width:980px}.log,.road,.qa{max-width:720px}.ppl{max-width:880px;justify-content:center}.sec{border-top:0}.sec+.sec .sh::before{content:'· · ·';display:block;color:var(--muted);letter-spacing:.4em;margin-bottom:28px}
 .frame{max-width:980px}.sec .acts{justify-content:center}`,
     arcade: `body{font-size:16px}h1,h2,h3{text-transform:uppercase;letter-spacing:0;line-height:1.05}h1{font-size:clamp(38px,7vw,84px);color:var(--primary)}.sh h2{font-size:clamp(24px,3.6vw,40px)}
@@ -390,13 +647,14 @@ function applyPolish(gen, reply) {
 function editSection(copy, sec, body) {
   if (!SECTIONS.includes(sec)) throw Object.assign(new Error(`sections are: ${SECTIONS.join(', ')}`), { status: 400 });
   const cur = JSON.parse(JSON.stringify(copy[sec] || {})), str = (v, n) => clean(v, n);
-  const fields = { hero: { kicker: 80, title: 80, dek: 220, cta: 30 }, story: { title: 60, body: 1600 }, features: { title: 60 }, gallery: { title: 60 }, play: { title: 60, body: 220 }, devlog: { title: 60 }, roadmap: { title: 60 }, team: { title: 60, body: 300 }, faq: { title: 60 }, footer: { text: 160 } }[sec];
+  const fields = { hero: { kicker: 80, title: 80, dek: 220, cta: 30 }, story: { title: 60, body: 1600 }, features: { title: 60 }, gallery: { title: 60 }, play: { title: 60, body: 220 }, devlog: { title: 60 }, roadmap: { title: 60 }, team: { title: 60, body: 300 }, faq: { title: 60 }, footer: { text: 160 }, visit: { title: 60, body: 300 }, event: { title: 60, body: 300 }, contact: { title: 60, body: 300 } }[sec];
   for (const [k, n] of Object.entries(fields)) if (typeof body[k] === 'string') { const v = str(body[k], n); if (k === 'title' && !v && sec === 'hero') continue; cur[k] = v; }
   if (sec === 'features' && Array.isArray(body.items)) cur.items = body.items.slice(0, 6).map(x => ({ title: str(x && x.title, 60), body: str(x && x.body, 180) })).filter(x => x.title);
   if (sec === 'faq' && Array.isArray(body.items)) cur.items = body.items.slice(0, 8).map(x => ({ q: str(x && x.q, 120), a: str(x && x.a, 320) })).filter(x => x.q && x.a);
   return cur;
 }
 
-const fontFiles = layout => [...new Set([(LAYOUTS[layout] || LAYOUTS.editorial).file, ...FONT_BODY, FONT_MONO])];
+const fontFiles = (layout, font) => [...new Set([fontOf(LAYOUTS[layout] ? layout : 'editorial', font).file, ...FONT_BODY, FONT_MONO])];
 
-module.exports = { LAYOUTS, LAYOUT_IDS, SECTIONS, SECTION_NAMES, HYPE, pickLayout, nextLayout, draftCopy, mergeCopy, available, render, art, palette, polishPrompt, applyPolish, editSection, clean, hasHype, fontFiles, ratio };
+module.exports = { LAYOUTS, LAYOUT_IDS, SECTIONS, SECTION_NAMES, HYPE, pickLayout, nextLayout, draftCopy, mergeCopy, available, render, art, palette, polishPrompt, applyPolish, editSection, clean, hasHype, fontFiles, ratio,
+  FONTS, FONT_IDS, LAYOUT_FONT, SWATCHES, TYPES, TYPE_IDS, THEMES, THEME_IDS, INFO, cleanInfo, guessType, brandNotes, rankThemes, why, suggestRules, suggestPrompt, parseSuggest, okHex, okHttps, prettyCss };

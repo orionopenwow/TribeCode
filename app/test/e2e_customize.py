@@ -267,6 +267,7 @@ def main():
             assert "revolutionary" not in json.dumps(copy).lower() and copy["story"]["title"] == "Why we made it"
             assert json.dumps(copy).count("🎮") <= 1
             # per-section edit (UI), kept through Regenerate
+            host.click("[data-sgmode='guided']"); host.click("[data-sgstep='3']")   # feat/site-builder: sections live in Guided step 3
             host.click("[data-sgedit='hero']"); host.wait_for_selector(".sg-ed [data-f='title']")
             host.fill(".sg-ed [data-f='title']", "Jump together")
             host.click("[data-sgsave]")
@@ -283,7 +284,8 @@ def main():
             host.click("#sg-publish")
             wait(host, "document.querySelector('#sg-status') && document.querySelector('#sg-status').textContent.includes('Published')", timeout=20000)
             site = Path(repo, "site", "index.html").read_text()
-            assert "TribeCode site generator" in site and "Jump together" in site and "url('fonts/" in site
+            assert "TribeCode site generator" in site and "Jump together" in site and 'href="styles.css"' in site
+            assert "url('fonts/" in Path(repo, "site", "styles.css").read_text()   # feat/site-builder: the look is in styles.css
             assert any(Path(repo, "site", "fonts").glob("*.woff2")) and Path(repo, "site", "fonts", "inter-latin-400-normal.woff2").exists()
             valid(site)
             purl = api(f"/projects/{pid}/website", token=tok)[1]["website"]["previewUrl"]
