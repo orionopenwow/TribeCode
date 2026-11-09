@@ -128,7 +128,7 @@
             await C.api(`/chat/${chan()}`, { method: 'POST', body: { text: `📎 Shared **${f.name}** in Files` } });
           } else if (f.size <= 8 * 1024 * 1024) {   // anything else (PDF, zip, big photo…) is kept as a file to download
             await C.api(`/chat/${chan()}/file`, { method: 'POST', body: { data: await toB64(f), name: f.name, mime: f.type, text: draft() } }); clearDraft();
-          } else toast(`${f.name} is over 8 MB: put it in the repo instead`);
+          } else toast(`${f.name} is over 8 MB: put it in the code repository instead`);
         } catch (e) { toast(e.message); }
       }
     };

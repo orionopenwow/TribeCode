@@ -1,6 +1,6 @@
 // The one-click project flow, client side (server/flow.js):
 //   create(name)    Create project -> room, invite link, repo, GitHub; opens the project's chat
-//   kickoff card    docked at the top of Chat: steps (Room · Link · Repo · GitHub), the invite link
+//   kickoff card    docked at the top of Chat: steps (Room · Link · Code repository · GitHub), the invite link
 //                   (copy, QR, share sheet), roles to claim or give, a drop zone for notes and files,
 //                   and "Start the flow". Once running it folds into a slim bar.
 //   Updates         the plan as the one hero card (milestones -> items per role, blockers), plan
@@ -52,7 +52,7 @@
     if (m.type === 'flow' && m.project === pid()) { const steps = flow && JSON.stringify(flow.steps); setFlow(m.flow); if (steps && steps !== JSON.stringify(m.flow.steps)) stepToast(m.flow.steps); }
     if (m.type === 'gist' && m.project === pid() && cur === 'updates') feed();
   });
-  function stepToast(s) { if (s.github && s.github.s === 'ok') toast('Pushed to a private GitHub repo'); }
+  function stepToast(s) { if (s.github && s.github.s === 'ok') toast('Saved to a private GitHub repositorysitory'); }
 
   // ---------- create ----------
   async function create(name, extra = {}) {
@@ -73,12 +73,12 @@
   }
 
   // ---------- kickoff card / running bar (docked at the top of Chat) ----------
-  const STEP = [['room', 'Room'], ['link', 'Link'], ['repo', 'Repo'], ['github', 'GitHub']];
-  const STEP_HINT = { room: 'The chat room for this project', link: 'An invite link for your friends', repo: 'The repo: the shared folder that holds your code, with a starter in it', github: 'A private copy on GitHub, so everyone works on the same code' };   // qa-qol-2: plain words on hover
+  const STEP = [['room', 'Room'], ['link', 'Link'], ['repo', 'Code'], ['github', 'GitHub']];
+  const STEP_HINT = { room: 'The chat room for this project', link: 'An invite link for your friends', repo: 'The code repository: the shared folder that holds your code, with a starter in it', github: 'A private copy on GitHub, so everyone works on the same code' };   // qa-qol-2: plain words on hover
   function steps(f) {
     return `<ol class="fk-steps" aria-label="Setup">${STEP.map(([k, label]) => {
       const s = (f.steps[k] || {}).s || 'run';
-      if (k === 'github' && (s === 'todo' || s === 'fail')) return `<li class="todo"><button class="fk-gh" id="flow-gh" title="${esc((f.steps.github || {}).note || 'Create a private GitHub repo and push')}">${ico('i-git')}Connect GitHub</button></li>`;
+      if (k === 'github' && (s === 'todo' || s === 'fail')) return `<li class="todo"><button class="fk-gh" id="flow-gh" title="${esc((f.steps.github || {}).note || 'Create a private GitHub repositorysitory and upload the code')}">${ico('i-git')}Connect GitHub</button></li>`;
       return `<li class="${s}" title="${esc((f.steps[k] || {}).note || STEP_HINT[k] || '')}">${s === 'ok' ? ico('i-tick') : s === 'fail' ? ico('i-x') : '<span class="spin" aria-hidden="true"></span>'}${label}</li>`;
     }).join('<li class="sep" aria-hidden="true">·</li>')}</ol>`;
   }
@@ -206,7 +206,7 @@
       try {
         if (TEXTY.test(f.name) && f.size < 2e6) await C.api('/flow/notes', { method: 'POST', body: { name: f.name, text: await f.text() } });
         else {
-          if (f.size > 10 * 1024 * 1024) { toast(`${f.name} is over 10 MB: put it in the repo instead`); continue; }
+          if (f.size > 10 * 1024 * 1024) { toast(`${f.name} is over 10 MB: put it in the code repository instead`); continue; }
           const data = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = no; r.readAsDataURL(f); });
           await C.api('/flow/notes', { method: 'POST', body: { name: f.name, data } });
         }
@@ -227,7 +227,7 @@
     const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
     const st = flow.steps.github || {};
     body.innerHTML = `<span class="eyebrow">GitHub</span><h2>Put ${esc(flow.name)} on GitHub</h2>
-      <p class="lead">TribeCode creates a private repo and pushes the starter. Paste a GitHub token with the <code>repo</code> scope (it stays on the host and never reaches a browser), or sign in with <code>gh auth login</code> on the host and press Try again.</p>
+      <p class="lead">TribeCode creates a private GitHub repositorysitory and uploads the starter. Paste a GitHub token with the <code>repo</code> scope (it stays on the host and never reaches a browser), or sign in with <code>gh auth login</code> on the host and press Try again.</p>
       ${st.s === 'fail' && st.note ? `<div class="np-err">${esc(st.note)}</div>` : ''}
       <div class="field"><input class="input" id="gh-token" type="password" placeholder="ghp_… or github_pat_…" autocomplete="off"></div>
       <div class="modal-foot"><a class="btn ghost" href="https://github.com/settings/tokens/new?scopes=repo&description=TribeCode" target="_blank" rel="noopener noreferrer">Make a token</a><span style="flex:1"></span><button class="btn" data-close>Later</button><button class="btn primary" id="gh-go">Try again</button></div>`;
@@ -323,7 +323,7 @@
     let list = [];
     try { list = (await C.api('/gists?limit=80')).gists || []; list.forEach(g => G().remember(g)); } catch {}
     const shown = list.filter(g => filter === 'all' || g.kind === filter);
-    box.innerHTML = shown.length ? shown.map(g => G().card(g, { feed: true })).join('') : `<div class="pj-none">${filter === 'all' ? 'Nothing yet. Agents post gists here as they work; commits show up on their own.' : 'Nothing of this kind yet.'}</div>`;
+    box.innerHTML = shown.length ? shown.map(g => G().card(g, { feed: true })).join('') : `<div class="pj-none">${filter === 'all' ? 'Nothing yet. Agents post gists here as they work; saved code changes show up on their own.' : 'Nothing of this kind yet.'}</div>`;
   }
   async function assess() {
     const b = $('#flow-assess'); if (b) { b.disabled = true; b.innerHTML = '<span class="spin"></span>Assessing…'; }

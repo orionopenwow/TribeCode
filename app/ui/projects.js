@@ -1,7 +1,7 @@
 // Project rooms, client side: the Projects cascade in the sidebar (each project unfolds into Overview,
 // Chat, Docs, Tasks, Requests and More ›), the project Overview (pulse) and Requests views, the
 // shared-workspace panel (GitHub sign-in on the host, "Give me a branch", commit/push as you), the
-// "Start a project" flow (drop a folder or repo, paste a GitHub URL or a path), the invite project
+// "Start a project" flow (drop a folder or code repository, paste a GitHub URL or a path), the invite project
 // picker, and the mobile project switcher sheet. Server side: server/projects.js, rooms.js, workspace.js.
 (function () {
   const $ = s => document.querySelector(s);
@@ -142,11 +142,13 @@
   function step(k) {
     const p = curP(); if (!p) return;
     if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude();
-    else if (k === 'repo') { if (p.hasRepo || !isHost()) App().show('repo'); else createRepo(p); }   // feat/setup-flow: one click makes the repo
+    else if (k === 'repo') { if (p.hasRepo || !isHost()) App().show('repo'); else createRepo(p); }   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
+  let ovSeq = 0;
   async function overview() {
     const el = $('#pj-overview'); if (!el) return;
+    const seq = ++ovSeq;   // the latest call wins: an older, slower render never paints over a newer one
     const p = curP();
     if (!p) { stash(); el.innerHTML = ''; return; }
     let d; try { d = await C.api(`/projects/${encodeURIComponent(p.id)}/pulse`); } catch (e) { stash(); el.innerHTML = `<div class="pj-empty">${esc(e.message)}</div>`; return; }
@@ -157,6 +159,7 @@
     const who = m => `<div class="pj-person"><span class="avatar" style="background:${esc(m.color)};color:${ink(m.color)}">${esc(initials(m.name))}</span><span>${esc(m.name)}${m.id === meId ? ' <span class="faint">(you)</span>' : ''}</span><span class="faint">${whereOf(m)}</span></div>`;
     const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
     let plan = null; try { plan = (await C.api('/coord/plan')).plan; } catch {}
+    let tasksAll = []; try { tasksAll = (await C.api('/tasks')).tasks || []; } catch {}   // simple-dashboard: the Tasks tile and Up next
     if (!$('#pj-overview') || curP() !== p) return;   // switched away while loading
     stash();
     const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
@@ -173,8 +176,8 @@
       { id: 'vision', emo: '✨', label: 'Write the vision', sub: 'Say what you’re making and who it’s for. Everyone reads it.', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write' : 'Suggest'}</button>` : '' },
       { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '' },
       { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'repo', emo: '🌿', label: 'Create the repo', sub: 'The repo is the shared folder that holds your code. One click makes it.', done: !!(d.repo || p.hasRepo), acts: isHost() ? '<button class="btn sm" data-ck="repo">Create</button>' : '' },
-    ];   // feat/setup-flow: four steps (a friend joining is no longer one); the repo comes last
+      { id: 'repo', emo: '🌿', label: 'Create the code repository', sub: 'The shared online folder where your project’s code lives, with every change saved. One click makes it.', done: !!(d.repo || p.hasRepo), acts: isHost() ? '<button class="btn sm" data-ck="repo">Create</button>' : '' },
+    ];   // feat/setup-flow: four steps (a friend joining is no longer one); the code repository comes last
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
     // the hero of the page and the Living update stays hidden: there is nothing to report yet.
@@ -182,10 +185,10 @@
     const folded = !hero && lsg('ckFold') === '1';
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
     const checklist = allDone && lsg('ckGone') === '1' ? ''
-      : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI and a repo.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
+      : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI and a code repository.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
       : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''}" id="pj-check">
-          ${hero ? `<span class="eyebrow ock-eyebrow">⛺ Camp setup</span><h2 class="ock-hero-t">Set up camp for ${esc(p.name)}</h2><p class="ock-hero-p">Four quick steps and your tribe can start building: say what you're making, add a first task, connect an AI, then create the repo (the shared folder for your code). The dashboard fills in as you go.</p>` : ''}
-          <div class="ock-head"><h3>${hero ? 'Steps' : '⛺ Camp setup'}</h3><span class="ock-n">${nDone} of ${steps.length} done</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
+          ${hero ? `<span class="eyebrow ock-eyebrow">🚀 Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)} in 4 steps</h2><p class="ock-hero-p">Say what you're making, add a first task, connect an AI helper, and create the code repository (the shared online folder for your code). The dashboard fills in as you go.</p>` : ''}
+          <div class="ock-head"><h3>${hero ? 'Steps' : 'Getting started'}</h3><span class="ock-n">${nDone} of ${steps.length} done</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
           <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
           ${hero ? `<div class="ock-list ock-cards">${steps.map(x => `<div class="ock-row ock-card ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <span class="ock-emo" aria-hidden="true">${x.emo}${x.done ? `<i class="ock-emo-ok">${tick}</i>` : ''}</span>
@@ -193,39 +196,56 @@
             ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}</div>`).join('')}</div>` : ''}
           ${hero ? '' : `<div class="ock-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}</div></div>`).join('')}</div>`}</section>`;
-    const tiles = L ? [['Lately', 'i-refresh', L.lines.lately, 'updates'], ['Chat', 'i-chat', L.lines.chat, 'chat'], ['Way forward', 'i-check', next, planned ? 'plan' : 'tasks'], ['Coming up', 'i-calendar', L.lines.soon, 'calendar']] : [];
+    // simple-dashboard: four tiles that answer "what needs me?" at a glance, each one click from where it's handled
+    const N = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state() : {};
+    const dmUnread = window.TribeDM && window.TribeDM.unread ? Object.values(window.TribeDM.unread()).reduce((a, n) => a + (Number(n) || 0), 0) : 0;
+    const openT = tasksAll.filter(t => t.status !== 'done'), mineT = openT.filter(t => t.assignee === meId), reviewT = openT.filter(t => t.status === 'review');
+    const weekAgo = Date.now() - 7 * 864e5, newFiles = (d.recent || []).filter(x => x.kind === 'doc' && Date.parse(x.at) > weekAgo);
+    const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+    const prevMore = document.querySelector('#pj-more'), moreOpen = prevMore ? prevMore.open : lsg('more') === '1';
+    const tiles = [
+      ['Needs you', 'i-bell', N.pending ? plural(N.pending, 'approval waiting', 'approvals waiting') : reviewT.length ? plural(reviewT.length, 'task to review', 'tasks to review') : 'Nothing right now', N.pending ? 'inbox' : 'tasks', !!(N.pending || reviewT.length)],
+      ['Unread', 'i-chat', (N.unread || 0) + dmUnread ? plural((N.unread || 0) + dmUnread, 'new message', 'new messages') : 'All caught up', 'chat', !!((N.unread || 0) + dmUnread)],
+      ['Tasks', 'i-check', openT.length ? `${openT.length} open${mineT.length ? ` · ${mineT.length} yours` : ''}` : 'None open yet', 'tasks', false],
+      ['New files', 'i-doc', newFiles.length ? plural(newFiles.length, 'this week', 'this week') : 'None this week', 'docs', false],
+    ];
     const r = d.repo;
+    if (seq !== ovSeq) return;
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
           <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
-          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The repo: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
+          <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The code repository: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
         ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
       ${hero ? checklist : ''}
-${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add context</h3><p>Drop docs, PDFs, images or notes. Flint and your agents read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
-      ${L && started ? `<section class="card pj-living" id="pj-living"><div class="pl-head"><span class="eyebrow">Living update</span><span class="pl-mood ${esc(L.mood)}">${MOOD[L.mood] || ''}</span>${L.by === 'local model' ? `<span class="pl-by" title="${esc(L.summary)}">local model</span>` : ''}</div>
-          <div class="pl-grid">${tiles.map(([k, i, t, go]) => `<button class="pl-cell" data-go="${go}">${ico(i, 14)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
+${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
+      ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span></div>
+          <div class="pl-grid">${tiles.map(([k, i, t, go, hot]) => `<button class="pl-cell ${hot ? 'hot' : ''}" data-go="${go}">${ico(i, 16)}<span><small>${k}</small><b>${esc(t)}</b></span></button>`).join('')}</div></section>` : ''}
+      ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">
+        <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
+          ${d.recent.length ? d.recent.map(x => `<div class="pj-row-line" ${x.kind === 'doc' ? `data-doc="${esc(x.ref)}"` : x.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[x.kind] || 'i-doc', 14)}<span class="t">${esc(x.text)}</span><span class="faint">${esc(x.sub)} · ${ago(x.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Saved code, doc edits and task moves show up here.</div>'}</section>
+        <section class="card" id="pj-upcoming"><h3>${ico('i-calendar', 16)}Up next</h3>
+          ${openT.length ? openT.slice().sort((x, y) => (y.assignee === meId) - (x.assignee === meId) || (x.status === 'doing' ? -1 : 0)).slice(0, 4).map(t => `<div class="pj-row-line" data-go="tasks">${ico('i-check', 14)}<span class="t">${esc(t.title)}</span><span class="faint">${t.status === 'doing' ? 'in progress' : t.status === 'review' ? 'to review' : 'to do'}${t.assignee === meId ? ' · yours' : ''}</span></div>`).join('') : ''}
+          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-calendar', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : (openT.length ? '' : '<div class="pj-none">Nothing planned yet. Open tasks and calendar items show up here.</div>')}</section></div>`)}
+      ${canEdit && started ? `<section class="pj-context pj-files-row" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, pictures or notes here. Flint and the AI helpers read them.</p></div>${newFiles.length ? `<div class="pj-newfiles">${newFiles.slice(0, 4).map(x => `<button class="pj-nf" data-doc="${esc(x.ref)}" title="${esc(x.text)}">📄 ${esc(String(x.text).replace(/^(Edited|Added|Created)\s+/i, '').slice(0, 26))}</button>`).join('')}</div>` : ''}</div><div id="pj-ctx-body"></div></section>` : ''}
       ${hero ? '' : checklist}
       <div id="pj-setup-slot"></div><!-- feat/setup-flow: role flows + Make the starter (setup.js) -->
       <div id="pj-insp-slot"></div>
+      <details class="pj-more" id="pj-more"${moreOpen ? ' open' : ''}><summary>More about ${esc(p.name)}: people, AI helpers, code and standup</summary>
       ${sec('pj-sec-tribe', 'Tribe &amp; Agents', `<div class="pj-grid">
         <section class="card" id="pj-who"><h3>${ico('i-users', 16)}Who is here</h3>
           ${team.length ? team.sort((a, b) => b.here - a.here || b.online - a.online).map(who).join('') : '<div class="pj-none">Just you so far. Invite a friend to this project.</div>'}</section>
         <section class="card" id="pj-agents"><h3><span class="pj-live"></span>Agents</h3>
           ${d.agents.length ? d.agents.map(a => `<div class="pj-agent"><span class="pj-live"></span><b>${esc(a.name)}</b><span class="faint">${esc(a.where || 'working')}</span></div>`).join('') : '<div class="pj-none">No agent is working here right now.</div><button class="linkish pj-cc" id="pj-cc">Connect your AI</button>'}</section></div>`)}
-      ${sec('pj-sec-stream', 'Project Stream', `<div class="pj-grid">
-        <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
-          ${d.recent.length ? d.recent.map(x => `<div class="pj-row-line" ${x.kind === 'doc' ? `data-doc="${esc(x.ref)}"` : x.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[x.kind] || 'i-doc', 14)}<span class="t">${esc(x.text)}</span><span class="faint">${esc(x.sub)} · ${ago(x.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Commits, doc edits and task moves show up here.</div>'}</section>
-        <section class="card" id="pj-upcoming"><h3>${ico('i-calendar', 16)}Upcoming</h3>
-          ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-calendar', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : '<div class="pj-none">Nothing scheduled. Calendar items and due tasks show up here.</div>'}</section></div>`)}
-      ${sec('pj-sec-repo', 'Repo &amp; Tools', `<div class="pj-grid">
-        <section class="card" id="pj-repo"><h3>${ico('i-git', 16)}Shared repo${r ? '<button class="linkish pj-h-act" data-go="repo">Open</button>' : ''}</h3>
+      ${sec('pj-sec-repo', 'Code &amp; Tools', `<div class="pj-grid">
+        <section class="card" id="pj-repo"><h3>${ico('i-git', 16)}Code repository${r ? '<button class="linkish pj-h-act" data-go="repo">Open</button>' : ''}</h3>
           ${r ? `<div class="pj-repo-sum"><b>${esc(r.name)}</b><span class="pj-chip live">${esc(r.branch || 'main')}</span><span class="pj-chip">↑${r.ahead || 0} ↓${r.behind || 0}</span><span class="pj-chip">${r.dirty ? `${r.dirty} changed` : 'clean'}</span></div>`
-            : p.hasRepo ? '' : `<div class="pj-none">No repo pinned yet. Point ${esc(p.name)} at a git folder or a GitHub repo and it lives here.</div><div class="pj-actions"><button class="btn" data-go="repo">Set up the repo</button></div>`}
+            : p.hasRepo ? '' : `<div class="pj-none">No code repository yet. Point ${esc(p.name)} at a code folder or a GitHub repository and it lives here.</div><div class="pj-actions"><button class="btn" data-go="repo">Set up the code repository</button></div>`}
           <div id="pj-ws" ${r ? '' : 'data-quiet="1"'}></div></section>
         <section class="card" id="pj-sf"><h3>${ico('i-upload', 16)}Daily standup<span class="pj-h-act" id="pj-sf-btn"></span></h3>
           <div id="pj-sf-body"></div></section></div>
         <div class="pj-tools-row"><button class="linkish pj-tools-link" id="pj-tools-link">${ico('i-box', 14)}Tools for ${esc(p.name)}</button></div>
-        <div id="pj-tools-slot"></div>`)}`;
+        <div id="pj-tools-slot"></div>`)}
+      </details>`;
     // The standup button/text and the drop zone are wired in app.js: move the live nodes in (stash() moves them back before a redraw).
     const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
@@ -241,12 +261,13 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     if (fold) fold.onclick = () => { const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
     const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite();
+    const more = $('#pj-more'); if (more) more.addEventListener('toggle', () => lss('more', more.open ? '1' : null));   // re-renders keep the current open state (moreOpen)
     $('#pj-face').onclick = () => (canName ? pickFace(p) : pickImage(p));   // feat/setup-flow: emoji grid + Upload a picture
     const nm = $('#pj-name'); if (nm) nm.onclick = () => editName(p);
     const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
     $('#pj-tools-link').onclick = () => (window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : App().show('repo'));
-    el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : App().show(x.dataset.go)));
+    el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : x.dataset.go === 'inbox' ? (window.TribeNotify && window.TribeNotify.openInbox()) : App().show(x.dataset.go)));
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
     toolbox(p);
@@ -285,7 +306,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     inp.onkeydown = e => { if (e.key === 'Enter') save(true); if (e.key === 'Escape') save(false); };
     inp.onblur = () => save(true);
   }
-  // ---------- feat/setup-flow: inline header edits (name, face) and Create the repo ----------
+  // ---------- feat/setup-flow: inline header edits (name, face) and Create the code repository ----------
   // All three header fields behave the same: a hover outline, click to edit, Enter saves, Esc cancels.
   function editName(p) {
     const b = $('#pj-name'); if (!b) return;
@@ -322,7 +343,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     const b = document.querySelector('#pj-check [data-ck=repo], #room-next [data-rn=repo]'); if (b) { b.disabled = true; b.textContent = 'Creating…'; }
     try {
       await C.api(`/projects/${encodeURIComponent(p.id)}/setup/repo`, { method: 'POST' });
-      toast('🌿 Repo ready: a local git repo with a first commit'); await refresh(); overview();
+      toast('🌿 Code repository ready, with its first saved version'); await refresh(); overview();
       // GitHub only when it is already set up on the host (a signed-in gh CLI or a saved token)
       let w = null; try { w = await C.api(`/projects/${encodeURIComponent(p.id)}/workspace`); } catch {}
       if (w && w.repo && !w.repo.remote && ((w.github || {}).signedIn || (w.identity || {}).hasToken)) offerGithub(p);
@@ -331,8 +352,8 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
   function offerGithub(p) {
     const m = $('#invite-modal'), body = $('#invite-body'); if (!m || !body) return;
     m.classList.remove('hidden');
-    body.innerHTML = `<span class="eyebrow">Repo · ${esc(p.name)}</span><h2>Also put it on GitHub?</h2>
-      <p class="lead">GitHub is set up on this computer, so ${esc(p.name)} can get a private GitHub repo too. Everything works locally either way.</p>
+    body.innerHTML = `<span class="eyebrow">Code repository · ${esc(p.name)}</span><h2>Also put it on GitHub?</h2>
+      <p class="lead">GitHub is set up on this computer, so ${esc(p.name)} can get a private GitHub repository too. Everything works locally either way.</p>
       <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Not now</button><button class="btn primary" id="pj-gh-go">Push to GitHub</button></div>`;
     const close = () => m.classList.add('hidden');
     body.querySelector('[data-close]').onclick = close;
@@ -382,8 +403,8 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
       : `<div class="pj-gh">${gh.installed ? 'GitHub CLI is not signed in on the host' : 'No GitHub CLI on the host'}: pushes use the host's git credentials. GitHub is optional; everything works with plain git.</div>`;
     let html = '';
     if (!r && box.dataset.quiet) { box.innerHTML = ''; return; }
-    if (!r) html = `<div class="pj-none">No repo yet. ${isHost() ? 'Start a project from a folder or a GitHub URL with <b>+</b> in the sidebar.' : 'The host can attach one.'}</div>`;
-    else if (!r.git) html = `<div class="pj-none">The folder <b>${esc(r.name)}</b> is not a git repo yet.</div>${isHost() ? '<button class="btn primary" id="pj-gitinit">Make it a git repo</button><div class="faint pj-small">Runs git init with a .gitignore for node_modules, build folders and .env, then makes a first commit.</div>' : ''}`;
+    if (!r) html = `<div class="pj-none">No code repository yet. ${isHost() ? 'Start a project from a folder or a GitHub URL with <b>+</b> in the sidebar.' : 'The host can attach one.'}</div>`;
+    else if (!r.git) html = `<div class="pj-none">The folder <b>${esc(r.name)}</b> is not a code repository yet.</div>${isHost() ? '<button class="btn primary" id="pj-gitinit">Make it a code repository</button><div class="faint pj-small">Runs git init with a .gitignore for node_modules, build folders and .env, then saves a first version.</div>' : ''}`;
     else {
       html = `<div class="pj-repo"><b>${esc(r.name)}</b>${r.remote ? ` <span class="faint">· ${esc(r.remote.replace(/^https?:\/\//, ''))}</span>` : ' <span class="faint">· local only</span>'}</div>${ghLine}`;
       if (b && b.exists) html += `<div class="pj-branch"><code>${esc(b.branch)}</code><span class="faint">${b.head ? esc(b.head.subject) + ' · ' + esc(b.head.author) : ''}${b.dirty ? ` · ${b.dirty} changed file${b.dirty > 1 ? 's' : ''}` : ''}</span></div>
@@ -400,7 +421,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     box.innerHTML = html;
     const pid = encodeURIComponent(p.id), again = () => workspacePanel(box);
     const act = (sel, fn) => { const x = box.querySelector(sel); if (x) x.onclick = async () => { x.disabled = true; try { await fn(); } catch (e) { toast(e.message); } x.disabled = false; again(); }; };
-    act('#pj-gitinit', async () => { await C.api(`/projects/${pid}/git-init`, { method: 'POST' }); toast('It is a git repo now, with a first commit.'); refresh(); });
+    act('#pj-gitinit', async () => { await C.api(`/projects/${pid}/git-init`, { method: 'POST' }); toast('It’s a code repository now, with its first saved version.'); refresh(); });
     act('#pj-mybranch', async () => { const r2 = await C.api(`/projects/${pid}/branch`, { method: 'POST' }); toast(`Your branch ${r2.branch.branch} is ready`); });
     act('#pj-commit', async () => { const msg = prompt('Commit message', 'Work in progress'); if (msg === null) return; await C.api(`/projects/${pid}/branch/commit`, { method: 'POST', body: { message: msg } }); toast('Committed as you'); });
     act('#pj-push', async () => { const r2 = await C.api(`/projects/${pid}/branch/push`, { method: 'POST' }); toast(`Pushed ${r2.branch} with ${r2.as}`); });
@@ -440,10 +461,10 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
   C.on('approval', () => { if (App() && App().view() === 'requests') requests(); });
   C.on('change', () => { if (App() && App().view() === 'requests') requests(); });
 
-  // ---------- Start a project: drop a folder or repo, paste a URL or a path ----------
+  // ---------- Start a project: drop a folder or code repository, paste a URL or a path ----------
   const modal = () => $('#invite-modal'), body = () => $('#invite-body');
   const close = () => { modal().classList.add('hidden'); body().classList.remove('np-setup'); };
-  // One dialog: drop a folder or repo, or type a name, a GitHub URL or a folder path, then Create.
+  // One dialog: drop a folder or code repository, or type a name, a GitHub URL or a folder path, then Create.
   let dropped = null;   // { name, files, remote, mode: 'clone' | 'upload' }
   function classify(v) {
     v = v.trim(); if (!v) return { kind: 'none' };
@@ -457,9 +478,9 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     const h = $('#np-hint'); if (!h) return;
     const c = classify($('#np-input').value), host = isHost();
     if (dropped && c.kind === 'none') { h.textContent = ''; return; }
-    h.textContent = c.kind === 'url' ? (host ? 'Clones the repo onto the host and makes it this project\'s shared workspace.' : 'Only the host can bring a repo in. This will just be the project name.')
+    h.textContent = c.kind === 'url' ? (host ? 'Clones the code repository onto the host and makes it this project\'s shared workspace.' : 'Only the host can bring a code repository in. This will just be the project name.')
       : c.kind === 'path' ? (host && onHostMachine() ? 'Opens that folder on this computer as the project\'s repo.' : 'Folder paths only work on the host computer.')
-      : c.kind === 'name' ? (window.TribeFlow ? 'One click: the room, an invite link and a repo with a starter. The chat opens with a Getting started card.' : 'Starts an empty project. You can attach a repo later.') : '';
+      : c.kind === 'name' ? (window.TribeFlow ? 'One click: the room, an invite link and a code repository with a starter. The chat opens with a Getting started card.' : 'Starts an empty project. You can attach a code repository later.') : '';
   }
   // The rail "+": two choices, stacked. Top: start a new tribe (one click, name prefilled). Bottom: paste an invite link.
   // ---------- Start a project, like Discord's "Create a server" ----------
@@ -477,7 +498,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
     if (!on || scoped) {
-      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repo; friends join with one link.' : 'Your work lives in a shared GitHub repo. Get the app to start a tribe, or join a friend.'}</p></div>
+      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repository; friends join with one link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe, or join a friend.'}</p></div>
         ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>${desk ? 'Host on this computer' : 'Get the desktop app'}</b><small>${desk ? 'Start a tribe here, then make your first project' : 'Windows, Mac and Linux'}</small></span>${ico('i-chev', 16)}</button></div>`}
         ${joinFoot()}`;
       wireStart(); return;
@@ -488,7 +509,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
       <div class="ns-list">${row('own', ico('i-plus', 18), 'Create my own', 'Start from a blank page', 'ns-own')}
         <div class="ns-sub">Start from a template</div>
         ${TEMPLATES.map(t => row('tpl:' + t.k, `<span class="ns-emo">${t.emoji}</span>`, t.t, t.s)).join('')}
-        ${host ? row('code', ico('i-folder', 18), 'Bring my code', 'A folder on this computer, or a GitHub repo') : ''}</div>
+        ${host ? row('code', ico('i-folder', 18), 'Bring my code', 'A folder on this computer, or a GitHub repository') : ''}</div>
       ${joinFoot()}`;
     body().querySelectorAll('[data-ns]').forEach(b => b.onclick = () => {
       const k = b.dataset.ns;
@@ -540,7 +561,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
       window.TribeFlow.inviteSheet(f);   // step 3, like Discord: invite your friends
     } catch (e) { btn.disabled = false; btn.textContent = 'Create'; status(`<div class="np-err">${esc(e.message)}</div>`); }
   }
-  function openAdvanced() {   // bring existing code (a folder, a repo, a GitHub URL), and the old one-box start
+  function openAdvanced() {   // bring existing code (a folder, a code repository, a GitHub URL), and the old one-box start
     dropped = null;
     modal().classList.remove('hidden');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop;
@@ -549,18 +570,18 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
       ? `<div class="np-card np-new">
           <span class="eyebrow">Start a new tribe</span>
           <h3>Name it and go</h3>
-          <p class="faint">A room, an invite link, chat and a repo, in one click.</p>
+          <p class="faint">A room, an invite link, chat and a code repository, in one click.</p>
           <div class="np-row"><input class="input" id="np-input" aria-label="${host ? 'Name, GitHub URL or folder path' : 'Tribe name'}" placeholder="${host ? 'Name, or paste a GitHub URL' : 'Tribe name'}" autocomplete="off" maxlength="400" value="${esc(suggested)}"><button class="btn primary" id="np-create">Create</button></div>
           <div class="np-hint faint" id="np-hint"></div>
           ${window.TribeFlow ? `<button class="btn np-instant" id="np-instant">${ico('i-link', 15)}Invite a friend now<span class="faint">a fresh project, link copied</span></button>` : ''}
-          ${host ? `<button class="linkish np-more" id="np-more">Bring existing code: a folder or repo</button>
-            <div class="dropzone pj-dropzone np-drop-alt hidden" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or repo, or choose one">${ico('i-folder', 18)}<div>Drop a folder or repo here</div><div class="faint" style="font-size:12px;margin-top:2px">or <span class="linkish">choose one</span></div></div>
+          ${host ? `<button class="linkish np-more" id="np-more">Bring existing code: a folder or code repository</button>
+            <div class="dropzone pj-dropzone np-drop-alt hidden" id="np-drop" tabindex="0" role="button" aria-label="Drop a folder or code repository, or choose one">${ico('i-folder', 18)}<div>Drop a folder or code repository here</div><div class="faint" style="font-size:12px;margin-top:2px">or <span class="linkish">choose one</span></div></div>
             <div class="np-status" id="np-status"></div>` : ''}
         </div>`
       : `<div class="np-card np-new">
           <span class="eyebrow">Start a new tribe</span>
           <h3>${desk ? 'Host it on this computer' : 'Host it with the desktop app'}</h3>
-          <p class="faint">${desk ? 'Your work lives in a shared GitHub repo; friends join with a link.' : 'Your work lives in a shared GitHub repo. Get the app to start a tribe.'}</p>
+          <p class="faint">${desk ? 'Your work lives in a shared GitHub repository; friends join with a link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe.'}</p>
           <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start hosting</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
         </div>`;
     body().innerHTML = `<div class="np-stack">${top}
@@ -617,11 +638,11 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
   }
   function askGit(p) {
     modal().classList.remove('hidden');
-    body().innerHTML = `<h2>${label(p)} is not a git repo yet</h2>
-      <p class="lead">Make it one so everyone gets their own branch and every change is attributed. TribeCode runs <code>git init</code>, adds a .gitignore for node_modules, build folders and .env, and makes a first commit. Nothing leaves this computer.</p>
-      <div class="modal-foot"><button class="btn" id="np-later">Not now</button><button class="btn primary" id="np-git">Make it a git repo</button></div>`;
+    body().innerHTML = `<h2>${label(p)} is not a code repository yet</h2>
+      <p class="lead">Make it one so everyone gets their own branch and every change is attributed. TribeCode runs <code>git init</code>, adds a .gitignore for node_modules, build folders and .env, and saves a first version. Nothing leaves this computer.</p>
+      <div class="modal-foot"><button class="btn" id="np-later">Not now</button><button class="btn primary" id="np-git">Make it a code repository</button></div>`;
     $('#np-later').onclick = () => { close(); switchTo(p.id, 'home'); };
-    $('#np-git').onclick = async () => { $('#np-git').disabled = true; try { await C.api(`/projects/${encodeURIComponent(p.id)}/git-init`, { method: 'POST' }); toast('It is a git repo now'); } catch (e) { toast(e.message); } close(); await refresh(); switchTo(p.id, 'home'); };
+    $('#np-git').onclick = async () => { $('#np-git').disabled = true; try { await C.api(`/projects/${encodeURIComponent(p.id)}/git-init`, { method: 'POST' }); toast('It’s a code repository now'); } catch (e) { toast(e.message); } close(); await refresh(); switchTo(p.id, 'home'); };
   }
   const fromPath = path => create({ path }, 'Opening the folder…').catch(() => {});
 
@@ -644,7 +665,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     const entry = it && it.webkitGetAsEntry ? it.webkitGetAsEntry() : null;
     const uri = dt.getData && dt.getData('text/uri-list');
     if (!entry && uri && /^https?:\/\//.test(uri)) { if (!$('#np-input') || $('#invite-body').classList.contains('np-setup')) { $('#invite-body').classList.remove('np-setup'); openAdvanced(); } $('#np-input').value = uri.trim(); hint(); return; }
-    if (!entry || !entry.isDirectory) throw new Error('Drop a folder (or a repo folder). Single files go into Docs.');
+    if (!entry || !entry.isDirectory) throw new Error('Drop a folder (or a code folder). Single files go into Docs.');
     if (!$('#np-status') || $('#invite-body').classList.contains('np-setup')) { $('#invite-body').classList.remove('np-setup'); openAdvanced(); }
     status('<div class="faint">Reading the folder…</div>');
     return analyze(entry.name, await readEntry(entry));
@@ -675,17 +696,17 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
     return out;
   }
   const kb = n => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
-  // Decide what to offer: clone (the folder is a git repo with a remote) or upload the files.
+  // Decide what to offer: clone (the folder is a code repository with a remote) or upload the files.
   async function analyze(name, items) {
     const cfg = items.find(i => i.gitConfig), files = items.filter(i => !i.gitConfig);
     let remote = null; if (cfg) { const t = await cfg.file.text(); const m = t.match(/\[remote "origin"\][^[]*?url\s*=\s*(\S+)/); remote = m ? m[1] : null; }
     const total = files.reduce((n, f) => n + f.file.size, 0);
     const big = total > CAP;
     dropped = { name, files, remote, mode: remote ? 'clone' : 'upload' };
-    const say = () => status(`<div class="np-found">${ico('i-folder', 15)}<b>${esc(name)}</b> <span class="faint">· ${files.length} file${files.length === 1 ? '' : 's'} · ${kb(total)}${remote ? ' · has a git remote' : cfg ? ' · git repo' : ''}</span></div>
+    const say = () => status(`<div class="np-found">${ico('i-folder', 15)}<b>${esc(name)}</b> <span class="faint">· ${files.length} file${files.length === 1 ? '' : 's'} · ${kb(total)}${remote ? ' · has a git remote' : cfg ? ' · code repository' : ''}</span></div>
       ${dropped.mode === 'clone' ? `<div class="pj-small faint">Create clones it from <code>${esc(remote.replace(/\/\/[^@/]+@/, '//'))}</code> with the host's git, history included. <button class="linkish" id="np-do-upload">Upload the files instead</button></div>`
         : big ? `<div class="np-err">That's over 25 MB after skipping node_modules, .git and build folders. ${remote ? '<button class="linkish" id="np-do-clone">Clone it instead</button>,' : 'Push it to GitHub and paste the URL,'} or paste its path on the host.</div>`
-        : `<div class="pj-small faint">Create copies the files to the host (skipping node_modules, .git and build folders), runs git init and commits as you.${remote ? ' <button class="linkish" id="np-do-clone">Clone it instead</button>' : ''}</div>`}`);
+        : `<div class="pj-small faint">Create copies the files to the host (skipping node_modules, .git and build folders), sets up the code repository and saves the first version as you.${remote ? ' <button class="linkish" id="np-do-clone">Clone it instead</button>' : ''}</div>`}`);
     const wire = () => { say(); const u = $('#np-do-upload'), c2 = $('#np-do-clone'); if (u) u.onclick = () => { dropped.mode = 'upload'; wire(); }; if (c2) c2.onclick = () => { dropped.mode = 'clone'; wire(); }; };
     wire();
     const inp = $('#np-input'); if (inp && !inp.value) inp.placeholder = name;
@@ -707,7 +728,7 @@ ${canEdit ? `      <section class="pj-context" id="pj-context"><div class="pj-ct
   if (homeDz) {
     homeDz.addEventListener('dragover', e => { e.preventDefault(); homeDz.classList.add('over'); });
     homeDz.addEventListener('dragleave', () => homeDz.classList.remove('over'));
-    homeDz.addEventListener('drop', async e => { e.preventDefault(); homeDz.classList.remove('over'); if (!isHost()) return toast('Only the host can bring a repo in. Ask them, or start an empty project with +.'); openAdvanced(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
+    homeDz.addEventListener('drop', async e => { e.preventDefault(); homeDz.classList.remove('over'); if (!isHost()) return toast('Only the host can bring a code repository in. Ask them, or start an empty project with +.'); openAdvanced(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
     homeDz.addEventListener('click', openNew);
     homeDz.addEventListener('keydown', e => { if (e.key === 'Enter') openAdvanced(); });
   }

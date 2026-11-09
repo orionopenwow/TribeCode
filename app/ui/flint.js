@@ -63,6 +63,8 @@
     customize: tab => window.TribeLook && window.TribeLook.open(tab || 'tribe'),
     capture: id => window.TribeCaptures && window.TribeCaptures.open(id || undefined),   // feat/captures
     feedback: () => window.TribeFeedback && window.TribeFeedback.open(),   // feat/reviews
+    prompt: async () => { const p = window.TribeFocus && window.TribeFocus.prompt(); if (!p) return; try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper.'); } catch { window.prompt('Copy this for your AI helper:', p); } },   // feat/focus
+    preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
 
@@ -130,6 +132,9 @@
     hello: /^(hi|hey|hello|yo|hiya|good (morning|afternoon|evening))\b|^(thanks|thank you|thx|cheers)\b/,
     website: /\b(make|build|generate|create|design|redo|refresh|write|shuffle)\b.*\b(web ?site|home ?page|landing page|site)\b|^(our |the )?web ?site$/,   // feat/customize
     customize: /\b(customi[sz]e|change|pick|set)\b.*\b(background|accent|look|banner|font size|density)\b|^customi[sz]e\b/,
+    focus: /^(what should i (do|work on)|what'?s (next|my next)|my (next )?task|what am i (doing|working on)|where was i|next steps?)\b/,   // feat/focus
+    prompt: /\b(copy|give me|write|make)\b.*\bprompt\b|^prompt( for)? my (ai|agent|claude)/,
+    preview: /^(open |show |run |start )?(the )?preview\b|^(play|try) (the|our) (game|app)\b/,
     make: /^(?:please\s+|can you\s+|could you\s+)?(?:make|write|create|draft|build|start|put together|give me|do)\s+(?:me\s+|us\s+)?(?:a|an|some|the|our)?\s*(?:new\s+|quick\s+|short\s+|simple\s+)?(?:[a-z-]+\s+)?(doc|document|write-?up|sheet|spreadsheet|table|budget|tracker|slides?|slide deck|deck|presentation)\b/,   // feat/crafts
   };
 
@@ -143,17 +148,20 @@
     if (RX.connect.test(t)) { ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
     if (RX.hosting.test(t)) return hosting(t);
     if (RX.website.test(t)) return website(t);
+    if (RX.focus.test(t)) return focusReply();
+    if (RX.prompt.test(t)) { await ACTS.prompt(); return say('I copied a prompt for your AI helper: your task, your part of the code, the branch to use, and what to leave alone so nothing collides. Paste it into Claude Code, Codex or Cursor.', [act('Copy it again', 'prompt')]); }
+    if (RX.preview.test(t)) { ACTS.preview(); return say('Opened the preview, right next to the work.', [act('Open it again', 'preview')]); }
     if ((m = RX.make.exec(t))) return makeFile(/sheet|table|budget|tracker/.test(m[1]) ? 'sheet' : /slide|deck|presentation/.test(m[1]) ? 'deck' : 'doc', text);   // feat/crafts   // feat/customize: "make our website"
     if (RX.customize.test(t)) { ACTS.customize(/\b(banner|this project)\b/.test(t) ? 'project' : 'tribe'); return say('I opened Customize: accent, background, spacing, font size and the tribe\'s name and icon. "Just me" changes only your view.', [act('Open Customize again', 'customize')]); }
     if ((m = RX.task.exec(t)) && m[1].trim()) return task(text.slice(text.length - m[1].length).trim());
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
     // Setup steps by name: Flint does them (and shows where they live) instead of explaining
     if ((m = RX.doStep.exec(t))) { const k = /task/.test(t) ? 'newtask' : /vision/.test(t) ? 'vision' : /repo/.test(t) ? 'repo' : 'claude';
-      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. Pick what it is and write the gist.' : k === 'repo' ? 'Making the repo: a home for the code, right on the host.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
+      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. Pick what it is and write the gist.' : k === 'repo' ? 'Making the code repository: a home for the code, right on the host.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
     if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website', whiteboard: 'whiteboard', 'white board': 'whiteboard' }, v = map[m[1]];
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
       const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
-      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Repo', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
+      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Code repository', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
       if (v === 'agents' || v === 'mcp') { if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
         if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const r = document.querySelector('#nest-ws-agents'); if (r) r.click(); }
         return say(`Opened ${NAME[v].replace(/^The /, 'the ')}.`); }
@@ -191,9 +199,19 @@
       const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/gen`, { method: 'POST', body: { how } });
       const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a';
       ACTS.website();
-      return say(`Here's a draft in the ${L} layout, filled from the bio, vision, screenshots, commits and team. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
+      return say(`Here's a draft in the ${L} layout, filled from the bio, vision, screenshots, saved changes and team. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
         [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
     } catch (e) { return say('I could not make the draft: ' + e.message); }
+  }
+  // feat/focus: what you're on, what's next, and a prompt that keeps your AI helper in your part of the code
+  async function focusReply() {
+    if (!connected()) return say('Join or host a tribe and I can tell you what to work on next.', [act('Host or join', 'invite')]);
+    const r = await room(), mine = r.mine || [], meId = r.meId;
+    let tasks = []; try { tasks = (await C.api('/tasks')).tasks || []; } catch {}
+    const open = tasks.filter(x => x.status !== 'done'), now = open.find(x => x.assignee === meId && x.status === 'doing') || open.find(x => x.assignee === meId);
+    const next = open.find(x => !x.assignee && x.status !== 'review'), review = open.filter(x => x.status === 'review' && x.assignee !== meId);
+    const parts = [now ? `You're on “${now.title}”.` : 'Nothing is assigned to you yet.', next ? `Next up for anyone: “${next.title}”.` : '', review.length ? `${review.length} task${review.length === 1 ? '' : 's'} waiting for someone to review.` : ''].filter(Boolean);
+    return say(parts.join(' '), [act('Copy a prompt for my AI', 'prompt'), act('Open Tasks', 'nav', 'tasks')]);
   }
   // feat/crafts: Flint writes a doc, a sheet or slides into Files (server/flint.js /api/flint/make)
   async function makeFile(kind, text) {
@@ -226,9 +244,9 @@
       catch (e) { ACTS.secretary(); return say(e.status === 403 ? 'Only the host can switch the Secretary. I opened it so you can see what it does.' : 'I could not switch the Secretary: ' + e.message, [act('Open Secretary', 'secretary')]); }
     }
     if (/auto-?pilot/.test(t)) {
-      if (!connected()) return say('Repo autopilot runs on the tribe host. Host or join a tribe first.', [act('Host or join', 'invite')]);
-      try { await C.api('/repo/settings', { method: 'PUT', body: { autopilot: { enabled: on } } }); return say(on ? 'Repo autopilot is on. Every action it takes is logged in the repo view.' : 'Repo autopilot is off.', [act('Open the repo', 'repo')]); }
-      catch (e) { return say(e.status === 403 ? 'Only the host can switch repo autopilot.' : 'Repo autopilot needs a project with a repo: ' + e.message, [act('Open the repo', 'repo')]); }
+      if (!connected()) return say('Autopilot runs on the tribe host. Host or join a tribe first.', [act('Host or join', 'invite')]);
+      try { await C.api('/repo/settings', { method: 'PUT', body: { autopilot: { enabled: on } } }); return say(on ? 'Autopilot is on. Every change it makes is listed under Code repository.' : 'Autopilot is off.', [act('Open the code repository', 'repo')]); }
+      catch (e) { return say(e.status === 403 ? 'Only the host can switch autopilot.' : 'Autopilot needs a project with a code repository: ' + e.message, [act('Open the code repository', 'repo')]); }
     }
     await refreshModel();
     if (model.online) return say(off ? `I think with ${model.via || model.model}. Pick None in Flint's brain to drop back to basic mode.` : `I already think with ${model.via || model.model}. I use it for anything I don't know by heart.`, [act('Flint\'s brain', 'brain')]);
@@ -241,7 +259,7 @@
     const who = others.length ? `${others.length === 1 ? 'Here with you' : `${others.length} here with you`}: ${others.slice(0, 4).map(p => first(p.name)).join(', ')}${others.length > 4 ? '…' : ''}.` : 'Just you in the room right now.';
     const ag = r.agents.length ? ` ${r.agents.length} agent${r.agents.length === 1 ? '' : 's'} online.` : '';
     const tk = ` ${r.open.length ? `${r.open.length} open task${r.open.length === 1 ? '' : 's'}${r.mine.length ? `, ${r.mine.length} yours` : ''}` : 'No open tasks'}.`;
-    const cm = r.commit ? ` Last commit: “${r.commit.title}”${r.commit.byName ? ` by ${first(r.commit.byName)}` : ''}${r.commit.at ? `, ${ago(r.commit.at)}` : ''}.` : '';
+    const cm = r.commit ? ` Last saved change: “${r.commit.title}”${r.commit.byName ? ` by ${first(r.commit.byName)}` : ''}${r.commit.at ? `, ${ago(r.commit.at)}` : ''}.` : '';
     return say(who + ag + tk + cm, [act('Open Tasks', 'nav', 'tasks'), act('Open chat', 'nav', 'chat')]);
   }
   async function summarize() {
@@ -331,7 +349,7 @@
     return host ? 'Flint runs on this computer. Nothing you type here leaves it.' : 'Flint runs on the host\'s computer. What you type stays in this tribe.';
   };
   // Early on Flint keeps it simple: a short hello and the next setup steps as nudges. He shows more as the tribe grows.
-  const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the repo', 'repo'] };   // feat/setup-flow: the four setup steps
+  const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the code repository', 'repo'] };   // feat/setup-flow: the four setup steps
   function emptyHtml() {
     const S = window.TribeStage, lv = S ? S.level() : 'going', st = S ? S.steps() : null;
     if (lv !== 'going' && st) {   // the next steps are big cards at the top of the panel; Flint just says hi
@@ -371,6 +389,8 @@
     const input = root.querySelector('.fl-in');
     const fill = t => { if (input) { input.value = t; input.focus(); input.setSelectionRange(t.length, t.length); } };
     const items = [
+      ['🎯', 'What should I do next?', 'Your task, and what is next for the tribe', () => { setOpen(true); send('what should i do next?'); }],
+      ['🤖', 'Prompt for my AI helper', 'Keeps it in your part of the code', () => { setOpen(true); send('copy a prompt for my ai'); }],
       ['📰', "What's new?", 'A quick catch-up on the project', () => { setOpen(true); send("what's new?"); }],
       ['📝', 'Take a note', 'Saved for the whole tribe', () => fill('note: ')],
       ['✅', 'Make a task', 'Straight onto the Task Board', () => fill('task: ')],

@@ -1,4 +1,4 @@
-// Repo view: live status of the project repo, autopilot (host), "needs a desktop" change requests,
+// Repo view: live status of the project’s code repository, autopilot (host), "needs a desktop" change requests,
 // branches with drift + conflict hints, integrations, and the activity log. Also the floating
 // Context window (TRIBE_CONTEXT.md, Ctrl+Shift+K).
 (function () {
@@ -17,11 +17,11 @@
   // ---------- DOM: rail button, side item, view section, title-bar Context button ----------
   function inject() {
     const bugs = document.querySelector('.rail [data-nav="bugs"]');
-    if (bugs && !document.querySelector('.rail [data-nav="repo"]')) bugs.insertAdjacentHTML('afterend', `<button class="nav" data-nav="repo" title="Repo">${icon('git', 18).replace(' style="width:18px;height:18px"', '')}</button>`);
+    if (bugs && !document.querySelector('.rail [data-nav="repo"]')) bugs.insertAdjacentHTML('afterend', `<button class="nav" data-nav="repo" title="Code repository">${icon('git', 18).replace(' style="width:18px;height:18px"', '')}</button>`);
     const main = $('#main');
     if (main && !$('#view-repo')) main.insertAdjacentHTML('beforeend', `
      <section id="view-repo" class="hidden">
-      <div class="view-head"><h1>Repo</h1><span class="faint" id="repo-sub"></span>
+      <div class="view-head"><h1>Code repository</h1><span class="faint" id="repo-sub"></span>
         <button class="btn" id="repo-refresh" style="margin-left:auto" title="Fetch and refresh">${icon('refresh')}Refresh</button>
         <button class="btn primary" id="repo-send">${icon('upload')}Send to a desktop</button></div>
       <div class="repo-strip" id="repo-strip"></div>
@@ -36,7 +36,7 @@
         <div class="repo-col">
           <section class="card" id="ap-card"><h3>${icon('zap', 17)}Autopilot</h3><div id="ap-body"></div></section>
           <section class="card" id="act-card"><h3>${icon('list', 17)}Activity</h3><div id="act-list" class="act-list"></div></section>
-          <section class="card" id="cm-card"><h3>${icon('git', 17)}Recent commits</h3><div id="cm-list"></div></section>
+          <section class="card" id="cm-card"><h3>${icon('git', 17)}Recent saved changes</h3><div id="cm-list"></div></section>
         </div>
       </div>
      </section>`);
@@ -54,7 +54,7 @@
       st = r; changes = cr.changes; integrations = ints.integrations;
       renderAll();
       loadBranches();
-    } catch (e) { toast('Could not load the repo: ' + e.message); }
+    } catch (e) { toast('Could not load the code repository: ' + e.message); }
   }
   let brTimer = null;
   async function loadBranches() {
@@ -67,7 +67,7 @@
 
   function renderOffline() {
     $('#repo-sub').textContent = '';
-    $('#repo-strip').innerHTML = '<span class="faint">The repo view is shared, so it needs a tribe. Click <b>Invite friends</b> to start or join one.</span>';
+    $('#repo-strip').innerHTML = '<span class="faint">The code repository view is shared, so it needs a tribe. Click <b>Invite friends</b> to start or join one.</span>';
     for (const id of ['#cr-list', '#br-list', '#int-list', '#ap-body', '#act-list', '#cm-list']) $(id).innerHTML = '';
   }
 
@@ -76,7 +76,7 @@
     const s = st.status || {};
     if (!s.enabled) {
       $('#repo-sub').textContent = '';
-      $('#repo-strip').innerHTML = `<span class="rs-item">${icon('git')}<span class="faint">${esc(s.reason || (s.loading ? 'Reading the repo…' : 'No project repo connected.'))}</span></span>`;
+      $('#repo-strip').innerHTML = `<span class="rs-item">${icon('git')}<span class="faint">${esc(s.reason || (s.loading ? 'Reading the code…' : 'No code repository connected to this project yet.'))}</span></span>`;
       return;
     }
     $('#repo-sub').textContent = s.remote && s.remote.github ? s.remote.github : s.name;
@@ -138,7 +138,7 @@
   const LV = { ok: 'var(--live)', watch: 'var(--amber)', drifting: 'var(--ember)' };
   function renderBranches() {
     const s = st.status || {};
-    if (!s.enabled) { $('#br-lead').textContent = s.reason || 'No project repo connected.'; $('#br-list').innerHTML = ''; return; }
+    if (!s.enabled) { $('#br-lead').textContent = s.reason || 'No code repository connected to this project yet.'; $('#br-list').innerHTML = ''; return; }
     const rows = (s.branches || []);
     const info = branches && branches.branches ? Object.fromEntries(branches.branches.map(b => [b.branch, b])) : {};
     const overlaps = (branches && branches.pairs) || [];
@@ -194,16 +194,16 @@
     const people = C.state().members || [], host = people.find(m => m.role === 'host'), agent = host && people.find(m => m.role === 'agent' && m.owner === host.id);
     if (host) st.master = s.integrator ? (agent ? { id: agent.id, name: agent.name } : { id: null, name: `Claude · ${host.name}`, pending: true }) : null;
     $('#ap-body').innerHTML = `
-      <div class="lead">${isHost() ? 'Keeps the repo in sync for you. Off by default. It never force-pushes and never merges code branches without an approved integration.' : 'Only the host changes these. Here is what is on.'}</div>
+      <div class="lead">${isHost() ? 'Keeps the code repository in sync for you. Off by default. It never force-pushes and never merges code branches without an approved integration.' : 'Only the host changes these. Here is what is on.'}</div>
       ${sw('autopilot.enabled', ap.enabled, 'Autopilot', 'Every action is logged below')}
       <div class="ap-sub">
         ${sw('autopilot.autoPull', ap.autoPull, 'Auto-pull main when clean', 'Fast-forward only', off)}
-        ${sw('autopilot.commitContext', ap.commitContext, 'Commit + push the tribe context', 'TRIBE_CONTEXT.md and tribe docs, if the tribe folder is in the repo', off)}
+        ${sw('autopilot.commitContext', ap.commitContext, 'Commit + push the tribe context', 'TRIBE_CONTEXT.md and tribe docs, if the tribe folder is in the code repository', off)}
         ${sw('autopilot.reportTags', ap.reportTags, 'Report milestone tags', 'Released milestones are tagged and pushed', off)}
       </div>
       <div class="ap-sep"></div>
       ${sw('integrator', s.integrator, 'Integrator agent', st.master ? `${esc(st.master.name)}${st.master.pending ? ' (connect your AI first)' : ''} collects, checks and assembles branches` : 'The host\'s AI agent becomes the master')}
-      ${sw('keepContextLocal', s.keepContextLocal, 'Keep TRIBE_CONTEXT.md local', 'Adds it to the repo\'s .gitignore')}
+      ${sw('keepContextLocal', s.keepContextLocal, 'Keep TRIBE_CONTEXT.md local', 'Adds it to the code repository\'s .gitignore')}
       <div class="ap-field"><label for="ap-cmd">Check command</label>
         <div class="ap-cmd"><input class="input" id="ap-cmd" placeholder="npm test (when package.json has a test script)" value="${esc(s.checkCommand)}" ${isHost() ? '' : 'disabled'} spellcheck="false">
         ${isHost() ? '<button class="btn sm" id="ap-cmd-save">Save</button>' : ''}</div>
@@ -225,7 +225,7 @@
   }
   function renderCommits() {
     const c = (st.status && st.status.commits) || [];
-    $('#cm-list').innerHTML = c.length ? c.slice(0, 6).map(x => `<div class="cm"><code>${esc(x.sha)}</code><span class="cm-s" title="${esc(x.subject)}">${esc(x.subject)}</span><span class="faint">${esc(x.author)} · ${esc(ago(x.at))}</span></div>`).join('') : '<div class="empty">No commits yet.</div>';
+    $('#cm-list').innerHTML = c.length ? c.slice(0, 6).map(x => `<div class="cm"><code>${esc(x.sha)}</code><span class="cm-s" title="${esc(x.subject)}">${esc(x.subject)}</span><span class="faint">${esc(x.author)} · ${esc(ago(x.at))}</span></div>`).join('') : '<div class="empty">No saved changes yet.</div>';
   }
 
   // ---------- "Send to a desktop" ----------

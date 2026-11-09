@@ -26,7 +26,7 @@ def watch(page, who):
     page.on("pageerror", lambda e: errors.append(f"{who}: {e}"))
     page.on("console", lambda m: errors.append(f"{who} console: {m.text}") if m.type == "error" and "Failed to load resource" not in m.text else None)
 
-ORDER = """() => ['.pj-title2', '#pj-living', '#pj-check', '#pj-sec-tribe', '#pj-sec-stream', '#pj-sec-repo']
+ORDER = """() => ['.pj-title2', '#pj-living', '#pj-sec-stream', '#pj-check', '#pj-sec-tribe', '#pj-sec-repo']
   .map(s => { const e = document.querySelector('#pj-overview ' + s); return e ? e.getBoundingClientRect().top + scrollY : -1; })"""
 
 def main():
@@ -52,7 +52,7 @@ def main():
             host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.fill("#np-input", "My Tribe"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000); host.click(".modal-card.ii [data-close]")
             pid = host.evaluate("TribeProjects.current()")
-            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-sec-repo", timeout=15000)
+            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-more", state="attached", timeout=15000); host.evaluate("document.querySelector('#pj-more').open = true"); host.wait_for_selector("#pj-sec-repo", timeout=15000)
 
             # 0. a brand-new project: the checklist is the hero and there's no Living update yet
             host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
@@ -63,29 +63,29 @@ def main():
             host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]")
             assert host.locator("#pj-check .ock-next .btn.primary").count() == 1 and host.locator("#pj-check .btn.primary").count() == 1, "one solid button: the next step"
             st, _ = api("/tasks", "POST", {"title": "Draw the title screen"}, token=tok, headers={"X-Project": pid}); assert st in (200, 201), st
-            host.wait_for_selector("#pj-living", timeout=10000)   # started: the Living update appears, the checklist calms down
+            host.wait_for_selector("#pj-living", timeout=10000); host.evaluate("document.querySelector('#pj-more') && (document.querySelector('#pj-more').open = true)")   # started: the Living update appears, the checklist calms down
             assert host.locator("#pj-check.hero").count() == 0
 
             # 1-2. identity row, then the Living update: a pill and 4 equal tiles, no long sentence
             assert "Add a short description" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
             assert "Invite to My Tribe" in host.text_content("#pj-invite")
-            assert "Living update" in host.text_content("#pj-living .eyebrow") and host.text_content("#pj-living .pl-mood").strip() in ("Brand new", "Steady", "Quiet", "Buzzing")
+            assert "At a glance" in host.text_content("#pj-living .eyebrow")
             labels = host.eval_on_selector_all("#pj-living .pl-cell small", "els => els.map(e => e.textContent.trim().toUpperCase())")
-            assert labels == ["LATELY", "CHAT", "WAY FORWARD", "COMING UP"], labels
+            assert labels == ["NEEDS YOU", "UNREAD", "TASKS", "NEW FILES"], labels
             widths = host.eval_on_selector_all("#pj-living .pl-cell", "els => els.map(e => Math.round(e.getBoundingClientRect().width))")
             assert max(widths) - min(widths) <= 2, f"equal tiles {widths}"
             assert host.locator("#pj-living .pl-sum").count() == 0, "no duplicate sentence"
             # section order, top to bottom
             ys = host.evaluate(ORDER); assert -1 not in ys and ys == sorted(ys), f"section order {ys}"
             titles = host.eval_on_selector_all("#pj-overview .pj-sec-t", "els => els.map(e => e.textContent.trim())")
-            assert titles == ["Tribe & Agents", "Project Stream", "Repo & Tools"], titles
+            assert titles == ["Recent changes and what’s next", "Tribe & Agents", "Code & Tools"], titles
             assert host.evaluate("getComputedStyle(document.querySelector('.pj-sec-t')).fontSize") == "18px"
             # old blocks are gone
             for gone in ["#pj-vnudge", "#pj-hero"]: assert host.locator(gone).count() == 0, gone
             assert host.locator("#home-start").is_hidden(), "the old Standup and files section is folded into Repo & Tools"
 
             # 3. Onboarding checklist: ticks itself
-            assert host.text_content("#pj-check h3").strip() in ("Set up", "Steps", "⛺ Camp setup")   # v0.16.x: "Set up", not "Onboarding Checklist"
+            assert host.text_content("#pj-check h3").strip() in ("Set up", "Steps", "Getting started")   # v0.16.x: "Set up", not "Onboarding Checklist"
             host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
             host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000)
             assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1
@@ -105,9 +105,9 @@ def main():
             assert "Connect your AI" in host.text_content("#pj-agents #pj-cc")
             # 5. Project Stream: the task shows in Recent changes; Upcoming has a clean empty state
             wait_text("#pj-recent", "Draw the title screen")
-            assert "Nothing scheduled" in host.text_content("#pj-upcoming")
+            assert "Draw the title screen" in host.text_content("#pj-upcoming")   # simple-dashboard: Up next lists open tasks first
             # 6. Repo & Tools: repo empty state + standup button top right + the drop zone, wired as before
-            wait_text("#pj-repo", "Shared repo"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
+            wait_text("#pj-repo", "Code repository"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
             assert host.locator("#pj-sf h3 #standup-go").is_visible(), "standup button in the card head"
             assert host.locator("#pj-context #dropzone").is_visible(), "drop zone moved in"
             assert host.evaluate("getComputedStyle(document.querySelector('#pj-context #dropzone')).borderStyle") == "dashed"
@@ -130,7 +130,7 @@ def main():
             pctx.add_init_script(f"localStorage.setItem('tribecode.settings.v1', {json.dumps(settings)}); localStorage.setItem('tribecode.project:{BASE}', '{pid}');")
             ph = pctx.new_page(); watch(ph, "phone")
             ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
-            ph.evaluate("TribeApp.show('home')"); ph.wait_for_selector("#pj-sec-repo", timeout=15000)
+            ph.evaluate("TribeApp.show('home')"); ph.wait_for_selector("#pj-more", state="attached", timeout=15000); ph.evaluate("document.querySelector('#pj-more').open = true"); ph.wait_for_selector("#pj-sec-repo", timeout=15000)
             ph.wait_for_timeout(600)
             if ph.locator("#install-sheet:not(.hidden) #ins-later").count(): ph.click("#ins-later")
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll"

@@ -75,7 +75,7 @@
     const p = pendingForMe().length; $('#nf-needs-n').textContent = p ? String(p) : '';
     bell.title = unread ? `Inbox · ${unread} unread` : 'Inbox';
   }
-  const LABEL = { approval: 'Approval', mention: 'Mention', dm: 'Message', 'task-assigned': 'Task', reminder: 'Reminder', proposal: 'Proposal', 'bug-critical': 'Critical bug', release: 'Release', huddle: 'Huddle', digest: 'Digest', 'approval-question': 'Question', 'approval-result': 'Decision', 'comment-reply': 'Comment', 'meeting-notes': 'Meeting', 'visual-diff': 'Visuals', repo: 'Repo' };
+  const LABEL = { approval: 'Approval', mention: 'Mention', dm: 'Message', 'task-assigned': 'Task', reminder: 'Reminder', proposal: 'Proposal', 'bug-critical': 'Critical bug', release: 'Release', huddle: 'Huddle', digest: 'Digest', 'approval-question': 'Question', 'approval-result': 'Decision', 'comment-reply': 'Comment', 'meeting-notes': 'Meeting', 'visual-diff': 'Visuals', repo: 'Code repository' };
   const GROUP = { 'task-assigned': n => `${n} new tasks assigned to you`, mention: n => `${n} new mentions`, dm: n => `${n} new messages`, proposal: n => `${n} new proposals`,
     release: n => `${n} releases`, huddle: n => `${n} huddles started`, 'bug-critical': n => `${n} critical bugs`, reminder: n => `${n} reminders` };
   const openGroups = new Set();

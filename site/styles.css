@@ -993,3 +993,54 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .pr-now { color: #3BD16F; border-color: #2D5A3D; } .pr-soon { color: var(--faint); border-color: var(--edge-pop); }
 .pr-hire { margin-top: 22px; border-color: #5A3A26; }
 .pr-fine { max-width: 760px; margin: 16px auto 0; color: var(--faint); font-size: 13px; line-height: 1.5; text-align: center; }
+
+/* Flint's panel, dressed up: bigger, ember frame, a soft shadow so it sits above the page */
+.flint-panel { width: 380px; max-height: min(620px, calc(100vh - 110px)); border: 2px solid var(--ember); box-shadow: 0 18px 48px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .35); }
+.flint-panel__head { padding: 14px 14px 14px 16px; background: #2A2320; border-bottom-color: #4A3326; }
+.flint-panel__head img { width: 28px; }
+.flint-panel__head b { font-size: 15.5px; display: flex; align-items: center; gap: 6px; }
+.flint-wave { display: inline-block; transform-origin: 70% 70%; animation: flint-wave 2.4s ease-in-out 1s 2; }
+@keyframes flint-wave { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-8deg); } }
+.flint-panel__head span { font-size: 12.5px; }
+.flint-msg p { margin: 0; } .flint-msg__sub { margin-top: 4px !important; color: var(--faint); font-size: 13px; }
+.flint-chips { gap: 7px; padding: 12px 14px; }
+.flint-chip { padding: 7px 12px; font-size: 13px; background: var(--surface-2); }
+.flint-chip:hover { border-color: var(--ember); color: var(--text); }
+.flint-chip[data-q="tour"] { border-color: #D4561A; color: var(--text); }
+.flint-form { padding: 12px 14px; }
+.flint-fab { box-shadow: 0 8px 22px rgba(0, 0, 0, .45); }
+.flint-float.is-open .flint-fab { border-color: var(--ember); }
+@media (max-width: 640px) { .flint-panel { width: calc(100vw - 24px); } }
+@media (prefers-reduced-motion: reduce) { .flint-wave { animation: none; } }
+
+/* ---------- the story: how an app comes together (six pixel scenes) ---------- */
+.story { padding: 72px 0 40px; }
+.story h2 { margin: 6px 0 8px; color: var(--text); font: 700 clamp(28px, 3.4vw, 40px)/1.15 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; }
+.story__lead { margin: 0 0 28px; max-width: 620px; color: var(--muted); font-size: 17px; line-height: 1.55; }
+.story__track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; counter-reset: s; position: relative; }
+.story__step { position: relative; padding: 16px 14px 18px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.story__step:not(:last-child)::after { content: ""; position: absolute; top: 60px; right: -12px; width: 10px; height: 4px; background: repeating-linear-gradient(90deg, var(--ember) 0 4px, transparent 4px 6px); z-index: 1; }
+.story__pic { display: grid; place-items: center; height: 116px; margin-bottom: 12px; border-radius: 10px; background: var(--main, #1D2021); }
+.story__art { width: 112px; height: auto; image-rendering: pixelated; }
+.story__n { margin: 0; font-size: 11px; color: var(--ember); letter-spacing: .08em; }
+.story__step h3 { margin: 4px 0 6px; color: var(--text); font-size: 16px; line-height: 1.25; }
+.story__step p:last-child { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.story__cta { display: flex; gap: 10px; flex-wrap: wrap; margin: 24px 0 0; }
+/* each step lights up in turn when the story scrolls into view */
+.js .story__track.reveal .story__step { opacity: .25; transform: translateY(6px); transition: opacity .45s var(--ease), transform .45s var(--ease), border-color .45s; transition-delay: calc(var(--i) * 420ms); }
+.js .story__track.reveal.is-in .story__step { opacity: 1; transform: none; }
+.js .story__track.reveal.is-in .story__step:last-child { border-color: #5A3A26; }
+@media (max-width: 1100px) { .story__track { grid-template-columns: repeat(3, minmax(0, 1fr)); } .story__step:nth-child(3)::after { display: none; } }
+@media (max-width: 640px) {
+  .story { padding: 48px 0 24px; }
+  .story__track { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .story__step { padding: 12px; } .story__step::after { display: none !important; }
+  .story__pic { height: 72px; } .story__art { width: 68px; }
+  .story__step h3 { font-size: 15px; } .story__step p:last-child { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .js .story__track.reveal .story__step { opacity: 1; transform: none; transition: none; } }
+
+/* paid plans stay in the page but hidden until they're ready (remove .pr-plans-hidden on <main> to show them) */
+.pr-plans-hidden .pr-tabs, .pr-plans-hidden [data-panel="teams"], .pr-plans-hidden .pr-grid [data-tier]:not([data-tier="free"]),
+.pr-plans-hidden [data-tier="hire"], .pr-plans-hidden [data-tier="trial"], .pr-plans-hidden [data-tier="credits"], .pr-plans-hidden .pr-fine { display: none !important; }
+.pr-plans-hidden .pr-grid[data-panel="individual"] { grid-template-columns: minmax(0, 420px); justify-content: center; }

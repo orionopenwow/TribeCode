@@ -44,8 +44,8 @@ def main():
             pg.click("#wl-back"); assert pg.get_attribute("#wl", "data-step") == "1" and pg.input_value("#wl-name") == "Snack Squad"
             pg.click("#wl-next"); pg.click("#wl-next")
             # 3: the choice
-            assert pg.get_attribute("#wl", "data-step") == "3" and pg.locator(".wl-opt").count() == 3 and pg.is_hidden("#wl-next")
-            assert "recommended" in pg.inner_text(".wl-opt--main").lower() and "auto demo" in pg.inner_text(".wl-opt--main").lower()
+            assert pg.get_attribute("#wl", "data-step") == "3" and pg.locator(".wl-opt").count() == 4 and pg.is_hidden("#wl-next")
+            assert "recommended" in pg.inner_text(".wl-opt--main").lower() and "build an app with me" in pg.inner_text(".wl-opt--main").lower()
             pg.wait_for_timeout(400); pg.screenshot(path=str(SHOTS / "welcome-3.png"))
             assert pg.evaluate("JSON.parse(localStorage.getItem('tribecode.welcome.tribe')).name") == "Snack Squad"
             # the auto demo carries the pretend tribe's name into the showcase

@@ -3,7 +3,7 @@
 // The nest is communication and core only: Dashboard, Messages (with #general, #agents and DMs under it), Files,
 // Task Board and Agents Hub (then Preview / Website / added widgets / + Add: widgets.js), then Settings and Invite friends. Task Board and Agents Hub are tabbed workspaces:
 // a tab bar (#view-tabs) at the top of main holds what used to be the Project Hub and Coordinate & Ops groups
-// (Board · Bugs · Proposals · Milestones · Calendar · Repo · Visuals · Roles · Requests, and Agents · Your agents ·
+// (Board · Bugs · Proposals · Milestones · Calendar · Code repository · Visuals · Roles · Requests, and Agents · Your agents ·
 // Ownership · Conflicts · Hand-offs · Reviews · Daily plan · Secretary). The last tab per workspace is remembered,
 // deep links (#/tasks/bugs, #/agents/conflicts) work, breadcrumbs say View › Tab, Ctrl K lists every tab.
 // Updates live in the bell (and the switcher's Timeline), the huddle in the chat header's call button (the nest
@@ -51,7 +51,7 @@
     { key: 'board', label: 'Proposals & board', tab: 'Proposals', slug: 'proposals', icon: 'i-vote', group: 'tasks', keys: 'approval board vote vision', run: () => App().show('board') },
     { key: 'milestones', label: 'Milestones', tab: 'Milestones', slug: 'milestones', icon: 'i-flag', group: 'tasks', keys: 'roadmap goals', run: () => { App().show('board'); setTimeout(() => { const m = $('#ms-list'); m && m.closest('.card').scrollIntoView({ block: 'center' }); }, 120); } },
     { key: 'calendar', label: 'Calendar', tab: 'Calendar', slug: 'calendar', icon: 'i-calendar', group: 'tasks', keys: 'schedule week month events', run: () => App().show('calendar') },
-    { key: 'repo', label: 'Repo', tab: 'Repo', slug: 'repo', icon: 'i-git', group: 'tasks', keys: 'git branches code github', run: () => App().show('repo') },
+    { key: 'repo', label: 'Code repository', tab: 'Code repository', slug: 'repo', icon: 'i-git', group: 'tasks', keys: 'git branches code github', run: () => App().show('repo') },
     { key: 'visuals', label: 'Visuals & screenshots', tab: 'Visuals', slug: 'visuals', icon: 'i-photo', group: 'tasks', keys: 'screenshots compare diff images', run: () => App().show('visuals') },
     { key: 'roles', label: 'Roles', tab: 'Roles', slug: 'roles', icon: 'i-users', group: 'tasks', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
     { key: 'requests', label: 'Requests', tab: 'Requests', slug: 'requests', icon: 'i-inbox', group: 'tasks', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
@@ -154,6 +154,7 @@
   function drawTabs(cur) {
     if (cur === undefined) cur = document.body.classList.contains('ws-open') || document.body.classList.contains('gd-open') ? '' : current();
     const bar = $('#view-tabs'); if (!bar) return;
+    const TAB_EMO = { tasks: '📋', bugs: '🐞', board: '🗳️', milestones: '🏁', calendar: '📅', repo: '🌿', visuals: '📸', roles: '👥', requests: '📥' };   // a small emoji beside each Task Board tab
     const w = wsOf(cur);
     if (gated(w) && cur === 'tasks') { if (document.body.classList.contains('ws-tabbed')) document.body.classList.remove('ws-tabbed'); if (!bar.classList.contains('hidden')) bar.classList.add('hidden'); tabsSig = ''; return; }   // feat/setup-flow
     document.body.classList.toggle('ws-tabbed', !!w);
@@ -175,7 +176,7 @@
         bar.classList.add('wt-files');
       } else { bar.classList.remove('wt-files');
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
-        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${TAB_EMO[t.key] ? TAB_EMO[t.key] + ' ' : ''}${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
     }
     bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
@@ -340,7 +341,7 @@
     const groupH = (label, items) => items.length ? `<h6>${esc(label)}</h6>${items.map(row).join('')}` : '';
     const el = pop(anchor, `<div class="sh-menu sh-projects sh-switch">
         <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Home · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
-        ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Repo', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
+        ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Code', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-box')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
@@ -471,12 +472,12 @@
   drawGroups(); markActive();
 
   const repoBranch = {};
-  // ---------- Pinned: the repo, pinned docs (docsx.js fills #side-pins-list), pinned chat messages ----------
+  // ---------- Pinned: the code repository, pinned docs (docsx.js fills #side-pins-list), pinned chat messages ----------
   function pinned(p) {
     const repo = $('#pin-repo');
-    // Pinned links sit in the tool list as plain rows (no separate card): the repo. Preview game / app and Website are
+    // Pinned links sit in the tool list as plain rows (no separate card): the code repository. Preview game / app and Website are
     // rows under the core ones now, shown only when they apply (feat/sidebar-widgets, app/ui/widgets.js).
-    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="nest-row pin-row" data-nav="repo" data-pnav="repo" title="The project's repo: branch, commits, autopilot">${ico('i-git')}<span>Repo <code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span></button>` : '';
+    if (repo) repo.innerHTML = p && p.hasRepo ? `<button class="nest-row pin-row" data-nav="repo" data-pnav="repo" title="The project’s code repository: versions, saved changes, autopilot">${ico('i-git')}<span>Code <code id="pin-repo-branch">${esc(repoBranch[p.id] || '')}</code></span></button>` : '';
     setTimeout(markActive, 0);   // re-drawn rows keep the lit state
     if (p && p.hasRepo && repoBranch[p.id] === undefined) { repoBranch[p.id] = ''; C.api(`/projects/${encodeURIComponent(p.id)}/workspace`).then(w => { const b = w.branch && w.branch.exists ? w.branch.branch : (w.repo ? (w.repo.remote ? w.repo.remote.replace(/^https?:\/\/(www\.)?/, '').replace(/\.git$/, '') : 'local repo') : ''); repoBranch[p.id] = b; const el = $('#pin-repo-branch'); if (el) el.textContent = b; }).catch(() => {}); }
     const chats = $('#pin-chats'), strip = $('#pin-strip'), m = strip && !strip.classList.contains('hidden') && /(\d+) pinned/.exec(strip.textContent);
@@ -584,7 +585,7 @@
         ${pct !== null ? `<div class="ad-meter" title="${a.tokens} of ${a.budget} tokens"><span>Tokens</span><i><em style="width:${pct}%"></em></i><span>${pct}%</span></div>` : ''}
         ${(a.files || []).length ? `<div class="ad-files">${a.files.slice(0, 4).map(f => `<code>${esc(f)}</code>`).join('')}</div>` : ''}</div>`)}
       ${sec('Hand-offs', hos.length ? `<ul class="ad-list">${hos.map(h => `<li><b>${esc(h.title)}</b><small>${esc(h.fromName)} → ${esc(h.toName)} · ${esc(h.status || 'open')} · ${esc(agoS(h.created || h.at))}</small></li>`).join('')}</ul>` : '', 'Nothing handed to or from it.')}
-      ${sec('Conflict radar', cfs.length ? `<ul class="ad-list">${cfs.map(p => `<li><b>${esc(p.count)} shared file${p.count === 1 ? '' : 's'} with ${esc((p.a.owner === id || p.a.branch === branch ? p.b : p.a).ownerName || 'another branch')}</b><small><code>${esc(p.files[0] || '')}</code>${p.count > 1 ? ` and ${p.count - 1} more` : ''}</small></li>`).join('')}</ul>` : '', cf && cf.enabled === false ? 'The radar needs a git repo.' : 'No overlap with other branches.')}
+      ${sec('Conflict radar', cfs.length ? `<ul class="ad-list">${cfs.map(p => `<li><b>${esc(p.count)} shared file${p.count === 1 ? '' : 's'} with ${esc((p.a.owner === id || p.a.branch === branch ? p.b : p.a).ownerName || 'another branch')}</b><small><code>${esc(p.files[0] || '')}</code>${p.count > 1 ? ` and ${p.count - 1} more` : ''}</small></li>`).join('')}</ul>` : '', cf && cf.enabled === false ? 'The radar needs a code repository.' : 'No overlap with other branches.')}
       ${sec('Review queue', rvs.length ? `<ul class="ad-list">${rvs.map(r => `<li><b>${esc(r.title || r.branch)}</b><small>${esc(r.status)}${(r.askedOf || []).length ? ` · asked ${esc(r.askedOf.join(', '))}` : ''}</small></li>`).join('')}</ul>` : '', 'Nothing waiting for review.')}
       ${sec('Timeline', items.length ? `<ul class="ad-list ad-tl">${items.map(t => `<li class="k-${esc(t.kind)}"><b>${esc(t.text || t.title || '')}</b><small>${esc(t.kind)} · ${esc(agoS(t.at))}</small></li>`).join('')}</ul>` : '', 'Nothing yet.')}
     </div>`;

@@ -177,7 +177,7 @@ def main():
             box = ph.locator("#dt-bar").bounding_box(); assert box["x"] >= 0 and box["x"] + box["width"] <= 391, box
             sideways(ph, "phone end")
             if shots: ph.screenshot(path=str(SHOTS / "demo-tour-phone-end.png"))
-            ph.evaluate("TribeDirector.start()"); ph.wait_for_selector("#dt-bar", state="visible")
+            ph.evaluate("TribeDirector.start({ watch: true })"); ph.wait_for_selector("#dt-bar", state="visible")
             assert "/ 2:0" in ph.text_content("#dt-time"), ph.text_content("#dt-time")   # the calm phone cut: about two minutes
             ph.tap("#dt-skip"); ph.wait_for_function("TribeDirector._test.state().id === 'tasks'", timeout=5000)
             sideways(ph, "phone tour")

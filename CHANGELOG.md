@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.18.0
+
+A big, friendlier version: plain words everywhere, a hands-on guided demo, a simpler dashboard, and a website that explains itself in six steps.
+
+- **Plain words for everyone**: "code repository" instead of "repo", "saved changes" instead of "commits", "AI helpers" where it matters, and "Getting started" instead of "Camp setup". The website drops the heavy role-play words (the Campfire plan is now Hosted, huddles are voice calls, gists are updates)
+- **Build an app with Flint**: the demo now starts as a hands-on guided tour. Flint rings the real button, you click it, the app does the step, and Flint says what just happened, one step at a time through making a whole app. "Just watch it" still plays it by itself, and "Explore it myself" stays calm
+- **A simpler dashboard**: At a glance (needs you, unread, tasks, new files), Recent changes and Up next, and a slim Add files row with this week's new files. People, AI helpers, the code repository, the standup and tools fold under "More about this project"
+- **Approval cards**: each proposal is its own card with a short summary, the vote, big Approve and Deny buttons and a comment box
+- **Task Board tabs** get a small emoji each (📋 Board, 🐞 Bugs, 🗳️ Proposals, 🏁 Milestones, 📅 Calendar, 🌿 Code repository, 📸 Visuals)
+- **The right panel is the AI section**: "AI helpers" with a color key (teal working, amber reviewing, orange needs you) and a colored edge on each helper; "Background helpers" below; the panel's × sits in the corner
+- **Your focus**, at the top of the right panel: what you're working on and what's next, your part of the code (claim one in a click), **Copy a prompt for my AI helper** (your task, your part, a branch name, and what to leave alone, so changes don't collide), and quick actions for a doc, sheet, slides, task, the preview and the code. Flint answers "what should I do next?" and copies the same prompt
+- **Notifications you can read at a glance**: green for good news, rose for problems, amber for heads-ups, teal for everything else, each with an icon; the milestone card is green
+- **Profiles**: a Showcase section (what you're good at, something you made, "open to helping other tribes"), shown on your profile card. Editing your profile now works in the offline demo too
+- **Website**: "How an app comes together", six pixel-art steps near the top; Flint's panel is bigger with an orange frame, a soft shadow and emoji on every question; Show me around includes the new story. Paid plans are written out but hidden until hosting, payments and support are ready; the pricing page shows Free and our promises
+- **Phones**: the dashboard tiles go two by two, approval cards stack, the story shows two steps per row, the guided demo works with taps, and toasts sit above the bottom bar
+
 ## v0.17.20
 
 - **New pricing, said plainly**: TribeCode is free today with everything in it, and what's free stays free. Planned hosted plans are priced per tribe: Campfire $6 (always-on hosting), Tribe $24 (AI included for up to 8 people, 14-day free trial at launch), Tribe Pro $79 (overnight agents). School & club is free; Studio is $12 a person. Each says "Planned" with a waitlist; nothing is for sale before it works

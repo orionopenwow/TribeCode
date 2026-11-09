@@ -124,7 +124,7 @@ def main():
             assert "↑0" in host.inner_text("#repo-strip") and "↓0" in host.inner_text("#repo-strip")
             wait_text(host, "#ap-body", "Auto-pull main when clean")
             assert host.locator('#ap-body [data-sw="autopilot.enabled"]:not([disabled])').count() == 1, "host can toggle autopilot"
-            assert host.inner_text("#crumb-label") == "Task Board › Repo"
+            assert host.inner_text("#crumb-label") == "Task Board › Code repository"
 
             # ---- 2. phone sends a change with a patch; desktop takes it and applies it ----
             code = api("/invites", "POST", {"hours": 1, "maxUses": 2}, htok)[1]["invite"]["code"]

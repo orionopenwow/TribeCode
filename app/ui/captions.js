@@ -81,12 +81,12 @@
     strip.querySelector('#cap-end').onclick = () => { C.send({ type: 'meeting-end' }); window.TribeApp && window.TribeApp.toast('Writing meeting notes… they show up in Files.'); };
   }
   // "Post a summary after each huddle" (server/huddlesum.js): a project setting the host or the project's lead switches
-  // here; everyone else sees that it is on. The summary and the mood go to the project's chat and, with a repo, notes/huddles/.
+  // here; everyone else sees that it is on. The summary and the mood go to the project's chat and, with a code repository, notes/huddles/.
   const project = () => (window.TribeProjects && window.TribeProjects.cur && window.TribeProjects.cur()) || null;
   const canSetSummary = p => !!p && ((C.state().me || {}).role === 'host' || p.role === 'host');
   function summaryHtml() {
     const p = project(); if (!p) return '';
-    if (canSetSummary(p)) return `<label class="cap-check cap-sum" title="When the huddle ends: a short summary and the overall mood in ${esc(p.name)}'s chat${p.hasRepo ? ', and notes/huddles/ in its repo' : ''}"><input type="checkbox" id="h-summary" ${p.huddleSummary ? 'checked' : ''}> Post a summary after the huddle</label>`;
+    if (canSetSummary(p)) return `<label class="cap-check cap-sum" title="When the huddle ends: a short summary and the overall mood in ${esc(p.name)}'s chat${p.hasRepo ? ', and notes/huddles/ in its code repository' : ''}"><input type="checkbox" id="h-summary" ${p.huddleSummary ? 'checked' : ''}> Post a summary after the huddle</label>`;
     return p.huddleSummary ? `<div class="cap-check cap-sum">A summary is posted after the huddle</div>` : '';
   }
   async function setSummary(on, el) {

@@ -121,6 +121,12 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
         save(p); resolve(p, me);
         const fresh = load(p.id); return send(res, 200, { proposal: { ...fresh, tally: tally(fresh) } });
       }
+      if (m === 'POST' && c === 'comment') {   // approval cards: a short comment under the vote
+        if (me.role === 'agent') return fail(res, 403, 'agents comment in chat; their humans comment here');
+        const body = await readBody(req); const text = str(body.text, 1000); if (!text) return fail(res, 400, 'say something');
+        p.comments = [...(p.comments || []), { by: me.id, text, at: new Date().toISOString() }].slice(-50); save(p);
+        return send(res, 200, { proposal: { ...p, tally: tally(p) } });
+      }
       if (m === 'DELETE') {
         if (p.by !== me.id && !can(me, 'board.manage')) return fail(res, 403, 'only the author, a mod or the host can withdraw');
         if (p.status !== 'open') return fail(res, 409, 'only open proposals can be withdrawn');

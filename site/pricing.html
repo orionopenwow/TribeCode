@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, built around your shared GitHub repo.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.17.20">
+<link rel="stylesheet" href="styles.css?v=0.18.0">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -85,11 +85,12 @@
   </div>
 </header>
 
-<main id="main" class="pr-page">
+<!-- Paid plans are written out below but hidden (class pr-plans-hidden) until hosting, payments and support are ready. Remove the class to show them. -->
+<main id="main" class="pr-page pr-plans-hidden">
   <section class="pr-hero">
     <div class="wrap">
       <h1 class="pr-title">Pricing</h1>
-      <p class="pr-note">TribeCode is free today, with everything in it. Hosted plans are planned and not for sale yet.</p>
+      <p class="pr-note">TribeCode is free, with everything in it. Paid extras like hosting will come later, and only once they work well.</p>
       <ul class="pr-promises" aria-label="Our promises">
         <li><b>Free stays free.</b> Everything free today stays free: self-hosting, unlimited friends and projects, bringing your own AI.</li>
         <li><b>Your code is yours.</b> It lives in your GitHub repo, MIT licensed. Leave any time and take everything.</li>
@@ -107,8 +108,8 @@
         <a class="btn btn--light pr-btn" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a>
         <p class="pr-lead">Get started with:</p><p class="pr-big">Everything</p><p class="pr-sub">self-hosted, bring your own AI</p>
         <p class="pr-g">App</p><ul class="pr-list"><li>Unlimited friends, projects and agents</li><li>Chat, Files, Sheets, Slides, Task Board, Agents Hub</li><li>Website builder, Preview, phone app</li></ul><p class="pr-g">AI · bring your own</p><ul class="pr-list"><li>Your own Claude Code, Codex, Gemini or Antigravity CLI, Cursor</li><li>Or your own API key, Ollama, or the free built-in browser model</li><li>Flint in basic mode</li></ul><p class="pr-foot">Your repo, your files. <a href="app/">Open in browser</a></p>
-      </article><article class="pr-card" data-tier="campfire">
-        <div class="pr-top"><p class="pr-name">Campfire</p><span class="pr-soon">Planned</span></div>
+      </article><article class="pr-card" data-tier="hosted">
+        <div class="pr-top"><p class="pr-name">Hosted</p><span class="pr-soon">Planned</span></div>
         <p class="pr-price"><b>$6</b><span>/month per tribe</span></p>
         <a class="btn btn--dark pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a>
         <p class="pr-lead">Everything in Free, and:</p><p class="pr-big">Always on</p><p class="pr-sub">we host your tribe</p>
@@ -118,7 +119,7 @@
         <p class="pr-trial">14-day free trial at launch · no card</p>
         <p class="pr-price"><b>$24</b><span>/month per tribe</span></p>
         <a class="btn btn--light pr-btn" href="https://github.com/orionopenwow/TribeCode/issues/new?template=waitlist.yml" rel="noopener">Join the waitlist</a>
-        <p class="pr-lead">Everything in Campfire, and:</p><p class="pr-big">AI included</p><p class="pr-sub">for up to 8 people, keys or not</p>
+        <p class="pr-lead">Everything in Hosted, and:</p><p class="pr-big">AI included</p><p class="pr-sub">for up to 8 people, keys or not</p>
         <p class="pr-g">AI for the whole tribe</p><ul class="pr-list"><li>Built-in AI for everyone, no keys needed</li><li>A shared credit pool that refills weekly</li><li>Flint smart mode: writes docs, sheets, slides and plans</li><li>The cost shown before a big job; refunds when a change is rolled back</li></ul><p class="pr-foot">About $6 a friend. Bringing your own AI stays free.</p>
       </article><article class="pr-card" data-tier="pro">
         <div class="pr-top"><p class="pr-name">Tribe Pro</p><span class="pr-soon">Planned</span></div>
@@ -195,6 +196,6 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.17.20" defer></script>
+<script src="main.js?v=0.18.0" defer></script>
 </body>
 </html>

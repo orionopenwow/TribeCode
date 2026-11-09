@@ -176,19 +176,13 @@ def main():
             # pricing lives on its own page (pricing.html): promises, Tribes / Schools & studios tabs, Free is available now, paid plans are planned with a waitlist
             assert pg.locator("#pricing, .tier").count() == 0 and pg.locator(".nav__links a[href='pricing.html']").count() == 1
             pp = pg.context.new_page(); pp.goto(BASE + "pricing.html"); pp.wait_for_load_state("load")
-            assert "free today" in pp.inner_text(".pr-hero") and pp.locator(".pr-promises li").count() == 5
-            names = pp.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-name')].map(e => e.textContent.trim())")
-            assert names == ["Free", "Campfire", "Tribe", "Tribe Pro"], names
-            for t, price in [("free", "$0"), ("campfire", "$6"), ("tribe", "$24"), ("pro", "$79")]:
-                assert price in pp.inner_text(f"[data-tier={t}]"), t
-            assert "Available now" in pp.inner_text("[data-tier=free]") and all("Planned" in pp.inner_text(f"[data-tier={t}]") for t in ("campfire", "tribe", "pro"))
-            assert "Most popular" not in pp.inner_text(".pr-page"), "no popularity claims before anyone has bought"
-            assert pp.evaluate("[...document.querySelectorAll('[data-tier=campfire] a.pr-btn, [data-tier=tribe] a.pr-btn, [data-tier=pro] a.pr-btn')].every(a => a.href.includes('template=waitlist.yml'))")
+            # paid plans are written out but hidden until hosting, payments and support are ready: only Free and the promises show
+            assert "free, with everything" in pp.inner_text(".pr-hero") and pp.locator(".pr-promises li").count() == 5
+            assert pp.locator("main.pr-plans-hidden").count() == 1 and pp.is_visible("[data-tier=free]")
+            for t in ("hosted", "tribe", "pro", "hire", "trial", "credits"): assert pp.locator(f"[data-tier={t}]").count() == 1 and pp.is_hidden(f"[data-tier={t}]"), t
+            assert pp.is_hidden(".pr-tabs") and "$24" not in pp.inner_text("main")
             assert pp.locator("[data-tier=free] a.pr-btn").inner_text().strip() == "Download"
-            assert "template=hire.yml" in pp.get_attribute("[data-tier=hire] a", "href")
-            assert pp.locator("[data-panel=teams]").is_hidden(); pp.click(".pr-tab[data-tab=teams]")
-            assert pp.locator("[data-panel=teams]").is_visible() and "$12" in pp.inner_text("[data-tier=studio]") and "Free" in pp.inner_text("[data-tier=school]")
-            assert "$10" in pp.inner_text("[data-tier=credits]") and "own key" in pp.inner_text("[data-tier=credits]") and "$0.01" in pp.inner_text("[data-tier=credits]")
+            assert "Most popular" not in pp.content()
             assert "Anthropic" not in pp.inner_text("body"); pp.close()
             # mission: its own page from the top menu, styled like the rest of the site
             assert pg.locator(".nav__links a[href='mission.html']").count() == 1
@@ -239,9 +233,9 @@ def main():
             assert pg.evaluate("getComputedStyle(document.querySelector('.flint-hello__top b')).fontFamily").startswith("Silkscreen")
             # Show me around: Flint rings one section at a time; Next / Back / Esc
             pg.click("[data-hello=tour]"); pg.wait_for_selector(".ftour-ring.on")
-            assert "1 / 7" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
-            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 7')")
-            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 7')")
+            assert "1 / 8" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
+            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 8')")
+            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 8')")
             pg.keyboard.press("Escape"); assert pg.locator(".ftour-card, .ftour-ring").count() == 0
             pg.reload(); pg.wait_for_load_state("load"); pg.wait_for_timeout(4000)
             assert not pg.is_visible("#flint-bubble"), "the bubble shows once"
@@ -351,8 +345,8 @@ def main():
             ph.locator("#starters .sw").scroll_into_view_if_needed(); assert ph.locator("#sw-panel .sw-card").count() == 4; no_overflow(ph, "phone starters")
             no_overflow(ph, "phone starters"); ph.evaluate("scrollTo(0, 0)")
             pq = ph.context.new_page(); pq.set_viewport_size({"width": 390, "height": 844}); pq.goto(BASE + "pricing.html"); pq.wait_for_load_state("load")
-            lefts = pq.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-card')].map(t => Math.round(t.getBoundingClientRect().left))")
-            assert len(lefts) == 4 and len(set(lefts)) == 1, f"pricing stacks on phones: {lefts}"
+            lefts = pq.evaluate("[...document.querySelectorAll('[data-panel=individual] .pr-card')].filter(t => t.offsetParent).map(t => Math.round(t.getBoundingClientRect().left))")
+            assert len(lefts) >= 1 and len(set(lefts)) == 1, f"pricing stacks on phones (paid plans hidden for now): {lefts}"
             assert pq.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"); pq.close()
             for y in [0.25, 0.5, 0.75, 1.0]:
                 ph.evaluate(f"scrollTo({{top: document.body.scrollHeight * {y}, behavior: 'instant'}})"); ph.wait_for_timeout(150); no_overflow(ph, f"phone at {int(y * 100)}%")

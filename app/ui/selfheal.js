@@ -2,7 +2,7 @@
 //  1. Start-up watchdog. If the shell hasn't built within ~6 s (no nest rows, no view) or one of our own scripts
 //     threw while the page was starting, clear stale caches (service workers + CacheStorage, the usual cause:
 //     an old cached page with new scripts, or the reverse) and reload once. If it still fails, show a calm
-//     "Something went wrong" card (Reload / Send report) instead of a half-built page. The report goes to the
+//     "Something went wrong" card (Reload / Send report) instead of a half-built page. The code repositoryrt goes to the
 //     bug inbox with the recent logs; Settings → "Send crash reports" turns automatic reports off.
 //  2. Version check. index.html carries the server version it was served with (<meta name="tribe-version">,
 //     stamped by server/index.js). When the running server says another version (it was updated while this tab
