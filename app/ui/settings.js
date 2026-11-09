@@ -68,6 +68,7 @@
     const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
       ${window.TribeProfiles && C() && C().connected() ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and presence.') : ''}
+      ${window.TribeMode ? row('Experience', '<div id="set-mode"></div>', 'How much of TribeCode you see. Your role still decides what you can do.') : ''}
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
       ${themeRow(st)}
@@ -79,11 +80,15 @@
       ${window.TribeUpdater && window.TribeUpdater.supported() ? row('Download updates in the background', `<button class="toggle set-toggle" role="switch" id="set-bgupdate" aria-label="Download updates in the background" aria-checked="${st.startup.autoUpdate !== false}"><span class="switch"></span></button>`, st.startup.autoUpdate !== false ? 'New versions download quietly. When one is ready, Restart to update opens it in seconds.' : 'You see Update available and choose when to download.') : ''}
       ${C() && C().connected() ? row('Friends can ask my AI', `<select class="input set-select" id="set-askai" aria-label="Friends can ask my AI"><option value="ask">Ask me each time</option><option value="always">Always</option><option value="never">Never</option></select>`, 'When a friend without an AI of their own types @ai, your AI can answer. It uses your subscription, so you decide.') : ''}
       ${C() && C().connected() && window.TribeGitHub ? row('GitHub', '<div id="set-github"></div>', 'Sign in once and everything pushes on its own.') : row('GitHub', '<span class="faint">Start your tribe first (Home › Create your first project), then sign in here.</span>', 'Sign in once and everything pushes on its own.')}
+      ${C() && C().connected() && window.TribeExport ? row('Save a copy', '<button class="btn" id="set-copy">Save a copy</button>', 'Everything you can see here (messages, docs, tasks) as one .zip on this device, so nothing is lost. Your code also lives in the project\'s GitHub repository.') : ''}
       <details class="set-more" id="set-more" ${moreOpen() ? 'open' : ''}><summary><b>More settings</b><small>Connections, chat extras, sign-in, roles, packs and backups</small></summary><!-- qa-qol-2: advanced rows tuck away -->
       ${C() && C().connected() && window.TribeMcpDir ? row('TribeCode MCP', '<button class="btn" id="set-mcp" data-mcpdir-open>Open</button>', 'Use this project inside Claude, ChatGPT, VS Code, Cursor and more. (MCP is the plug AI tools use to talk to TribeCode.)') : ''}
       ${C() && C().connected() && window.TribeChatRich ? row('Chat', '<div id="set-chat"></div>', 'Link previews, GIF search and chat backgrounds.') : ''}
       ${C() && C().connected() ? row('Sign-in', '<div id="set-oauth"></div>', 'Discord, GitHub or Google: join with one tap, sign back in on a new device.') : ''}
+      ${row('Fix problems', '<button class="btn" id="set-refresh">Refresh TribeCode</button>', 'Clears the app\'s stored files and reloads it fresh. You stay signed in, and your drafts, unsent messages and place are kept.')}
       ${row('Crash reports', `<button class="toggle set-toggle" role="switch" id="set-crash" aria-label="Send crash reports" aria-checked="${st.crashReports !== false}"><span class="switch"></span></button>`, 'When something breaks, send the error and recent logs to the bug inbox. Repeats are filed once.')}
+      ${C() && C().connected() && window.TribeMentions ? row('Agents in chat', '<div id="set-pubagents"></div>', 'Type @my-claude or @maya\'s-claude in a channel: the agent answers there for everyone. Each owner\'s "Friends can ask my AI" still applies.') : ''}
+      ${canRoles() && window.TribeMode && C() && C().connected() ? row('Starting modes', '<div id="set-rolemodes"></div>', 'The experience each role starts with. Anyone can change their own.') : ''}
       ${canRoles() ? row('Roles &amp; privileges', '<button class="btn" id="set-roles">Manage</button>', 'Admins, 🛡️ mods and what each role can do.') : ''}
       ${isHost() && window.TribePacks ? row('Packs', '<div id="set-packs"></div>', 'Optional tools for video captions and local transcripts. Downloaded on this computer, checked by sha256.') : ''}
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
@@ -120,6 +125,21 @@
     const sc = $('#set-chat'); if (sc) window.TribeChatRich.mountSettings(sc);   // feat/chat2 (app/ui/chatrich.js)
     const oa = $('#set-oauth'); if (oa && window.TribeOAuth) window.TribeOAuth.mount(oa);   // Sign in with Discord/GitHub/Google (app/ui/oauth.js)
     const cr = $('#set-crash'); if (cr) cr.onclick = () => { S.set({ crashReports: S.get().crashReports === false }); draw(); };
+    if (window.TribeMentions) window.TribeMentions.settingsRow($('#set-pubagents'));
+    if (window.TribeMode) { window.TribeMode.picker($('#set-mode')); window.TribeMode.rolePicker($('#set-rolemodes')); }
+    const cp = $('#set-copy'); if (cp) cp.onclick = async () => {
+      cp.disabled = true; cp.textContent = 'Saving…';
+      try {
+        const r = await C().api('/cloud/copy'), E = window.TribeExport;
+        const entries = Object.entries(r.files || {}).map(([k, v]) => [k, v]);
+        entries.push(['README.txt', `A copy of your TribeCode tribe, saved ${r.at}.\nchat/ holds messages (one JSON per line), docs/ the docs, tasks/ the tasks.\nYour code lives in each project's GitHub repository.\n`]);
+        const name = String((C().state().tribe || {}).name || 'tribe').replace(/[^\w -]+/g, '').trim() || 'tribe';
+        const out = await E.save(E.zip(entries, 'application/zip'), `${name} copy ${r.at.slice(0, 10)}.zip`, { desktop: false });
+        toast(out.path ? `Saved to ${out.path}` : 'Saved a copy');
+      } catch (e) { toast(e.message || 'Could not save a copy'); }
+      cp.disabled = false; cp.textContent = 'Save a copy';
+    };
+    const rf = $('#set-refresh'); if (rf) rf.onclick = () => { rf.disabled = true; rf.textContent = 'Refreshing…'; (window.TribeSelfHeal && window.TribeSelfHeal.refresh ? window.TribeSelfHeal.refresh() : location.reload()); };
     const hs = $('#set-host'); if (hs) hs.onclick = async () => { hs.disabled = true; await window.TribeApp.setHosting(hs.getAttribute('aria-checked') !== 'true'); draw(); };
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
     $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };

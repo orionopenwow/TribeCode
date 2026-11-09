@@ -126,7 +126,7 @@ document.addEventListener('click',function(e){go(e.clientX<innerWidth/3?i-1:i+1)
     $('#dk-more').onclick = e => {
       const old = document.getElementById('dk-menu'); if (old) { old.remove(); return; }
       const m = document.createElement('div'); m.id = 'dk-menu'; m.className = 'fl-menu'; m.setAttribute('role', 'menu');
-      m.innerHTML = `<button type="button" role="menuitem" data-x="html"><span class="fm-e">🌐</span><span><b>Download as a web page</b><small>One HTML file. Opens anywhere, arrow keys to move</small></span></button>
+      m.innerHTML = `${window.TribeExport ? '<button type="button" role="menuitem" data-x="export"><span class="fm-e">📊</span><span><b>PowerPoint or Google Slides</b><small>A real .pptx you can open anywhere, or import into Slides</small></span></button>' : ''}<button type="button" role="menuitem" data-x="html"><span class="fm-e">🌐</span><span><b>Download as a web page</b><small>One HTML file. Opens anywhere, arrow keys to move</small></span></button>
         <button type="button" role="menuitem" data-x="pdf"><span class="fm-e">🖨</span><span><b>Print or save as PDF</b><small>One slide per page</small></span></button>
         <button type="button" role="menuitem" data-x="md"><span class="fm-e">📝</span><span><b>Download the Markdown</b><small>Works with Marp and DeckCraft's importer</small></span></button>`;
       document.body.appendChild(m); const r = e.currentTarget.getBoundingClientRect(); m.style.left = Math.max(8, r.right - m.offsetWidth) + 'px'; m.style.top = (r.bottom + 6) + 'px';
@@ -135,7 +135,8 @@ document.addEventListener('click',function(e){go(e.clientX<innerWidth/3?i-1:i+1)
       const dl = (data, type, ext) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type })); a.download = name + ext; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
       m.querySelectorAll('[data-x]').forEach(b => b.onclick = () => {
         close(); const x = b.dataset.x;
-        if (x === 'html') dl(html(d, name), 'text/html', '.html');
+        if (x === 'export') window.TribeExport.menu($('#dk-more'), { title: name, body: serialize(d), kind: 'deck' });
+        else if (x === 'html') dl(html(d, name), 'text/html', '.html');
         else if (x === 'md') dl(serialize(d), 'text/markdown', '.md');
         else { const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0'; f.srcdoc = html(d, name); document.body.appendChild(f); f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch {} setTimeout(() => f.remove(), 60000); }; }
       });

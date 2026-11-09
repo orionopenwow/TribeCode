@@ -21,7 +21,7 @@ const pad = n => String(n).padStart(2, '0');
 const localDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
-module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands, ask = null,
+module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sendTo, broadcast, brain, docs, loadTasks, commands, ask = null, pubCmd = null,
   approvals = null, board = null, createTask = null, bus = { notify() {} }, slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
   voters = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator'), channelOf = () => 'general', project = () => null, inProject = (p, fn) => fn(), voteTick = true,
   channelProject = () => null, canSeeProject = () => false,
@@ -174,6 +174,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     dms.onPost(ch, me, text);
     if (/(^|\s)@ai\b/i.test(text) && me.role !== 'agent' && ask) Promise.resolve(ask(ch, me, text)).catch(e => console.error('ask ai', e));   // server/askai.js
     else if (/(^|\s)@brain\b/i.test(text) && me.role !== 'agent') askBrain(ch, me, text).catch(e => console.error('brain', e));
+    else if (pubCmd && me.role !== 'agent' && /@[^\s]+/.test(text) && (() => { try { return pubCmd(ch, me, text); } catch (e) { console.error('public command', e); return null; } })()) { /* an agent took a public command (askai.command) */ }
     else hintVote(ch, me, msg).catch(e => console.error('vote hint', e));
   }
   // "/vote Question? | opt | opt | 24h" posts a vote card instead of the raw text. Returns the message or null.
@@ -273,7 +274,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       const voted = command(ch, me, text); if (voted) return send(res, 200, { message: voted });
       const orig = body.replyTo ? find(ch, String(body.replyTo)) : null;
       const extra = orig ? { replyTo: { id: orig.id, by: orig.by, text: orig.deleted ? 'message deleted' : clip(orig.text || (orig.media ? (orig.media.kind === 'voice' ? 'Voice note' : orig.media.kind === 'file' ? `File: ${orig.media.name || ''}` : 'Image') : ''), 160) } } : {};
-      const msg = postChat(ch, me.id, text, extra); onPost(ch, me, text, msg);
+      const cid = typeof body.cid === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(body.cid) ? body.cid : null;   // the outbox's client id
+      const msg = postChat(ch, me.id, text, { ...extra, ...(cid ? { cid } : {}) }); if (!cid || msg.cid !== cid || Date.now() - Date.parse(msg.at) < 1500) onPost(ch, me, text, msg);
       return send(res, 200, { message: msg });
     }
 

@@ -48,11 +48,98 @@ field with a hype word keeps the template.
 A connected Claude uses the MCP tools `website_draft`, `website_edit_section` and `website_request_publish`.
 Agents never publish: the host or the project lead presses Publish.
 
+## The site builder (three levels, one draft)
+
+The builder sits on top of the generator. Every level edits the same draft, and nothing is live until the host or
+the project lead presses Publish.
+
+| Level | Who it suits | What it shows |
+|-------|--------------|---------------|
+| ⚡ Instant | Beginner | One tap (**Make my site**). The kind of site is guessed from project sense, or picked from six chips; an optional theme. Shuffle, Write it for me, Publish. |
+| 🧭 Guided | Intermediate | Three steps: **1 Type** (and the facts it needs: hours, address, phone, email, date, place, RSVP, a contact link) · **2 Brand** (themes, color, accent, logo, font pair, layout) · **3 Sections** (on/off, edit, Shuffle, Regenerate). The live preview sits beside it on desktop and below it on phones. |
+| 🧑‍💻 Code | Advanced | The files Publish writes, with sizes, a viewer for `index.html` and `styles.css`, Copy, a jump to the Code view, and how to edit them. |
+
+The level starts from the person's experience mode (`app/ui/modes.js`, `TribeMode.get()`): Beginner → Instant
+with few buttons, Intermediate → Guided, Advanced → Guided with every control and the Code tab. Controls above a
+mode carry `data-mode-min` (CSS in `readability.css`). A level picked in the builder is remembered on that device
+while the mode shows it.
+
+Flint runs Instant from a sentence: "make a website", "build a site for my bakery" (→ Small business), "a website
+for our birthday party" (→ Event). "Shuffle our website layout" still shuffles.
+
+### Site types
+
+| Type | Sections, in order | Layout | Hero button |
+|------|--------------------|--------|-------------|
+| Game page | hero, play, features, gallery, story, devlog, roadmap, team, FAQ | Arcade / Poster (from sense) | Play it |
+| App landing | hero, features, gallery, story, play, FAQ, contact | Swiss | Try it / See the code |
+| Portfolio | hero, gallery (Selected work), features (What I do), story (About), contact | Editorial | Get in touch |
+| Small business | hero, story, features (What we offer), gallery, visit (hours, address + map link, phone, email), FAQ | Journal | Visit us |
+| Event | hero (date · place), event (when, where, RSVP), story, features, gallery, FAQ | Poster | RSVP |
+| Docs / notes | hero, story (Start here), features (Topics), devlog (Latest notes), roadmap, FAQ | Devlog | — |
+
+Starter copy comes from the project's facts, said the way each kind of site says them. A bakery's FAQ answers
+"When are you open?" from the hours; build talk ("AI agents build it") is left off business, event and portfolio
+pages. Facts are cleaned: links must be https, an email must look like one. Sections with nothing to show stay hidden.
+
+### Brand kit
+
+Per project, set by the host or the project lead (`GET|PUT /api/projects/:id/website/brand`):
+
+- **Color**: a main color (8 quick swatches or any hex) and an optional accent. Contrast is fixed for the chosen
+  layout with `reach()`, and the builder says what changed in plain words ("Adjusted so text stays readable on the
+  Journal layout: links use #807113, buttons #A1900E").
+- **Logo**: PNG, JPG or a plain SVG under 200 KB (an SVG with scripts, event handlers or outside links is refused).
+  Stored in the website state, inlined in previews and exports, copied to `site/logo.<ext>` on publish. Without a
+  logo the header shows a text wordmark (the project name unless one is set).
+- **Font pair**: a display face + Inter, independent of the layout. All self-hosted (OFL), never hotlinked:
+  Classic (Fraunces), Modern (Space Grotesk), Elegant (Instrument Serif), Techy (JetBrains Mono),
+  Playful (Bricolage Grotesque), Retro (Silkscreen).
+
+### Themes
+
+Ten one-tap themes, each a palette + a font pair + a layout: Cozy, Bold, Minimal, Retro pixel, Night, Paper,
+Bakery warm, Studio, Garden, Ocean. Instant and Guided can start from one. Contrast is fixed the same way.
+
+### Suggest for me
+
+**✨ Suggest for me** sends the project's facts (name, bio, vision, sense tags, the site type so far, themes the
+tribe liked) to the brain on the same path as Write it for me (or the person's in-browser model). The reply is JSON
+(theme, type, palette, font pair, section order, tagline, why); every part is validated against the known options
+and the tagline goes through `clean()` and the hype check. With no model on, rules from project sense answer.
+The suggestion shows as a card with **Apply** and **Not now**. It is never applied by itself.
+
+It learns, locally: each project's website state keeps what was applied and skipped (`picks`), and the theme list
+and the next suggestion are ordered by what this project, the rest of the tribe and the project's kind tend to
+pick. The card says why ("Suggested because you picked Cozy before", "…because your tribe picked Paper on another
+project", "…because Bakery warm suits a small business").
+
+### Files people can edit
+
+Publish writes, in the repo's `site/` folder (or the tribe folder without a repo):
+
+- `index.html`: semantic, no JavaScript, readable indentation, and a marker before every part:
+  `<!-- ===== section: hero ===== -->`. It links `styles.css`; no inline styles.
+- `styles.css`: starts with the commented brand tokens (`:root { --paper; --ink; --primary; --link; --accent;
+  --display; --body; --wrap; --gutter; --section; … }`), then the fonts, then one rule per line.
+- `fonts/` (only the faces in use), `logo.<ext>`, `shots/`.
+
+The sha of each file Publish wrote is kept. When `index.html` or `styles.css` on disk no longer matches, someone
+edited it by hand: Publish answers 409 and the builder shows **Someone edited the code by hand** with **Keep their
+edits** (those files are skipped, the rest update) or **Replace**. Automatic rebuilds always keep hand edits.
+Nothing is overwritten silently. **Export** still gives one self-contained HTML file (styles, fonts, logo and
+screenshots inlined).
+
 ### API
 
 `POST /api/projects/:id/website/gen` `{ how: generate|shuffle|regenerate, layout? }`,
-`PUT …/gen` `{ layout?, off?, order?, section?, copy?, reset? }`, `GET …/gen/prompt`, `POST …/write` `{ reply? }`,
-`POST …/publish`, `POST …/classic`, `GET …/draft?pt=`, `GET …/export[?which=live]`.
+`PUT …/gen` `{ layout?, off?, order?, section?, copy?, reset?, type?, info?, theme? }`, `GET …/gen/prompt`, `POST …/write` `{ reply? }`,
+`POST …/instant` `{ type?, theme?, hint? }`, `GET|PUT …/brand` `{ primary?, accent?, font?, wordmark?, logo? }`,
+`POST …/ideas` `{ hint?, reply? }`, `POST …/ideas/apply`, `POST …/ideas/skip`, `GET …/ideas/prompt`, `GET …/code`,
+`POST …/publish` `{ onEdited?: keep|replace }`, `POST …/classic`, `GET …/draft?pt=`, `GET …/export[?which=live]`.
+
+The offline demo (`app/ui/offline.js`) has a small stand-in for these routes, so the showcase can show Instant,
+themes and a suggestion without a server.
 
 ## Customize (Settings › Look, project menu › Customize)
 

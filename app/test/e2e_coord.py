@@ -346,7 +346,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.click("#preview-close"); host.wait_for_selector("#tour-room:not(.previewing)")
         # + opens one simple dialog
         host.evaluate("document.getElementById('pj-plus').click()"); host.wait_for_selector(".np-setup [data-ns='own']")   # like Discord: Create my own · templates · Join
-        wait_text(host, ".np-setup", "Create my own"); wait_text(host, ".np-setup", "Have an invite already")
+        wait_text(host, ".np-setup", "A blank project"); wait_text(host, ".np-setup", "Have an invite already")
         shot(host, "shell-new-project")
         host.keyboard.press("Escape")
         # home = project overview, chat has a docked composer mount

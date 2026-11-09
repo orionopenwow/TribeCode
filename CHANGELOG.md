@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.20.0
+- **Save a copy**: Settings › Save a copy downloads everything you can see in the tribe (messages, docs, tasks) as one .zip on your phone or computer, so nothing is lost even if the host's computer is. Other members' DMs and sign-in secrets are never in it.
+- **Export docs, sheets and slides**: docs to Word (.docx), Markdown, a web page or PDF; sheets to Excel (.xlsx, formulas kept) or CSV; slides to PowerPoint (.pptx). Copy for Google Docs or Sheets puts it on the clipboard with formatting and opens a new Doc or Sheet; Open in Google Slides saves the .pptx to import. On the host computer, Save to Desktop puts the file in the project's Desktop folder. Start one fast from the chat's + menu (Doc, sheet or slides) or Ctrl K. Google Drive linking is planned (docs/EXPORT.md).
+- **Start with a prompt**: New project opens on one box, "What do you want to make?". Your sentence becomes the project's vision and bio; the name and emoji are guessed from it ("A website for my friend's bakery" → 🌐 Bakery Website), so the dashboard's vision step is already done and the suggested tasks, starter and site builder follow from it. A blank project, templates and starters are still one tap below.
+- **Site builder**: every project gets a brand kit (main and accent color with automatic contrast fixes, a logo or text name, a font pair), six site types (game, app, portfolio, small business, event, docs) and three levels that follow your experience mode: ⚡ Instant (one tap, the type guessed from the project), 🧭 Guided (type, brand, sections, live preview) and 🧑‍💻 Code. Ten one-tap themes, "✨ Suggest for me" that learns what your tribe picks and says why, and Publish writes a plain `site/index.html` and a commented `styles.css` an HTML person can edit. Hand edits are never overwritten without asking. Saying "make a website" to Flint runs Instant.
+- **Agents in public chat**: type @ in a channel for a picker of people, agents and @ai. `@my-claude add a jump sound` or `@maya's-claude …` gives that agent a public command: it answers, and posts what it makes, in the channel for everyone. The right panel stays private. A plain @maya is still just Maya. Each owner's "Friends can ask my AI" (ask, always, never) still decides who may use their agent, and admins set the rules in Settings › Agents in chat: on or off, who can command (everyone, builders, admins), which channels, whether finished agent tasks are posted, and a limit per person per hour.
+- **Experience modes**: Beginner, Intermediate or Advanced decides how much of TribeCode you see (Settings › Experience). Beginner keeps chat, Flint, templates and shipping; Advanced shows ownership, conflicts, MCP, the agent fleet and Turbo. Your role still decides what you can do. The host picks a starting mode per role (Settings › Starting modes), the welcome's "Have you made an app before?" sets yours, and the choice follows you to every device.
+- **Remix a starter**: New project › Remix a starter lists open-source games, apps and sites (2048, the Phaser and melonJS starters, PixiJS open games, HTML5 Boilerplate, plus LittleJS, KAPLAY, Godot, three.js, TodoMVC, Expo, Astro and Kenney's CC0 art to browse). Every one was checked for an MIT or CC0 license and keeps its authors' credit. The website has a matching "Remix a classic" row; its Start from this opens the app with the GitHub box filled in.
+- Project settings no longer opens the welcome by mistake when it's opened while the project list is still loading.
+
+Faster-feeling and harder to break: everything you do shows at once, nothing is lost offline, and Learn is a real course.
+
+- **Instant messages, never lost**: your message shows the moment you press Send, faint until the server has it. Offline or while the tribe wakes up, it waits in the outbox and sends by itself, exactly once (each message carries an id, so a resend never doubles). Queued messages survive a reload. If one is refused, it says Not sent with Retry
+- **Drafts stay**: what you were typing in a chat stays when you switch channels, DMs or projects, or reload
+- **Releases wait for tests**: installers build only after the essential tests pass on GitHub, and the same checks run on every push to work branches
+- **Instant votes**: your vote shows right away and rolls back with a note if it didn't save (task moves were already instant)
+- **Health pill**: quiet when all is well; shows Reconnecting, Waking up the tribe, Offline or "2 waiting to send" when it matters. Tap to try again. The app also reconnects the moment your network comes back
+- **Refresh TribeCode** (Settings › Fix problems): clears the app's stored files and reloads fresh, keeping your sign-in, drafts, unsent messages and the view you were on
+- **Instant first screen**: the dashboard and chat draw at once from what this device saw last, then update in place
+- **Learn is a course**:
+  - Four modules of short lessons, one at a time, with Back and Next (arrow keys work).
+  - A three-question check at the end of each module earns its badge.
+  - Your progress, a ring and badges show in the sidebar.
+  - On the website, Learn is now one compact panel: your progress, a Continue button that picks up at the next unfinished lesson, and the four modules.
+- **Chat header buttons all do something**: ⓘ opens "Who's here" (people and AI helpers, online first, invite). Call and screen share explain kindly when a device can't do them
+- **Start a tribe from a browser**: the join panel offers a free cloud tribe next to the desktop app; docs/WEB-AND-DESKTOP.md lists what's the same and what's desktop-only
+- **Phones**: taps get a soft press instead of the blue flash, and buttons don't select text. Main actions give a tiny haptic tick on Android. The health pill is a chip at the top, and the Learn course stacks into one column
+
 ## v0.19.6
 
 - **Stay signed in**: joining or signing in also saves a secure sign-in cookie that pages can't read. If your browser's storage is cleared (iPhone Safari wipes it after a week away, or you open the tribe at another address), TribeCode signs you straight back in. A made-up cookie signs nobody in, and AI helpers' keys never come back this way

@@ -22,7 +22,35 @@ permissions:
   contents: write
 
 jobs:
+  # The gate: a release builds only after the essentials pass (v0.20). Joining, staying signed in, the outbox,
+  # security and the desktop bundle. The full suite (npm test) still runs locally before a release.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Test tools
+        run: pip install playwright
+      - name: Essentials
+        env: { TRIBE_NO_DOWNLOAD: '1', TRIBE_TEST: '1' }
+        run: |
+          git config --global user.name "TribeCode CI"; git config --global user.email "ci@tribecode.org"
+          node app/test/bundle_test.js
+          node app/test/ot_test.js
+          python3 app/test/security_test.py
+          python3 app/test/security2_test.py
+          python3 app/test/security3_test.py
+          python3 app/test/ui_smoke.py
+          python3 app/test/e2e_friend.py
+          python3 app/test/e2e_session.py
+          python3 app/test/e2e_outbox.py
+
   build:
+    needs: gate
     strategy:
       fail-fast: false
       matrix:

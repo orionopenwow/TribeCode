@@ -102,6 +102,7 @@
         '-',
         { label: (bySlug.get(cur.slug) || cur).pinned ? 'Unpin' : 'Pin to the top', icon: 'i-pin', run: () => setMeta(cur.slug, { pinned: !(bySlug.get(cur.slug) || cur).pinned }) },
         { label: 'Page history', icon: 'i-history', run: () => history(cur.slug) },
+        ...(window.TribeExport ? [{ label: 'Export: Word, PDF, Google Docs…', icon: 'i-doc', run: () => { const ta = pane.querySelector('#doc-body'), c = D().current() || cur; window.TribeExport.menu(pane.querySelector('#dx-more'), { title: c.title, body: ta ? ta.value : c.body || '', kind: 'doc' }); } }] : []),
         ...(window.TribeRich ? [{ label: window.TribeRich.markdown() ? 'View formatted' : 'View Markdown', icon: 'i-doc', run: () => { window.TribeRich.setMarkdown(!window.TribeRich.markdown()); D().setMode('write'); } }] : []),   // feat/richtext
         '-',
         { label: 'Delete doc…', icon: 'i-x', run: () => confirmDelete(cur, pane.querySelector('#dx-more')) },
@@ -556,6 +557,9 @@
     window.TribePalette.register(() => {
       if (!tplNames.length && C.connected() && !tplNames.loading) { tplNames.loading = true; templates().then(l => { tplNames = l; }); }
       return [
+        { kind: 'Action', label: 'New doc', keys: 'create write page word document', run: () => { window.TribeApp.show('docs'); D().create('Untitled doc', ''); } },
+        { kind: 'Action', label: 'New sheet', keys: 'create spreadsheet table excel budget numbers', run: () => { window.TribeApp.show('docs'); D().newSheet(); } },
+        { kind: 'Action', label: 'New slides', keys: 'create deck presentation powerpoint', run: () => { window.TribeApp.show('docs'); D().newDeck(); } },
         { kind: 'Action', label: 'New doc from template', keys: 'template meeting notes spec retro bug report weekly update', run: () => templatePicker() },
         ...tplNames.map(t => ({ kind: 'Template', label: `New ${t.title}`, keys: 'template doc ' + t.title, run: () => fromTemplate(t).catch(e => toast(e.message)) })),
         ...(D() && D().current() && C.connected() ? [

@@ -69,7 +69,7 @@ def shot(page, name):
 
 
 def watch(page, who):
-    page.on("pageerror", lambda e: errors.append(f"{who} pageerror: {e}"))
+    page.on("pageerror", lambda e: errors.append(f"{who} pageerror: {e} {getattr(e, 'stack', '')}"))
     page.on("console", lambda m: m.type == "error" and "ERR_" not in m.text and "Failed to load resource" not in m.text and errors.append(f"{who} console: {m.text}"))
 
 

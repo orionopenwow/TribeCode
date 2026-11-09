@@ -87,7 +87,7 @@ const saveInvites = () => store.writeJSON('.tribe/invites.json', invites);
 // feat/roles: roles & privileges (server/perms.js): host, admin, mod, builder, spectator, agent; the capability table, mutes, audit log.
 const perms = require('./perms')({ P, store: baseStore, getMembers: () => members, saveMembers: () => saveMembers(), bus, broadcast: m => broadcast(m), pushPresence: () => pushPresence(),
   pushProjects: () => rooms.pushProjects(), postChat: (...x) => postChat(...x), str: (v, n) => str(v, n) });
-const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}), ...(perms.mutedUntil(m.id) ? { mutedUntil: perms.mutedUntil(m.id) } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
+const publicMember = m => m && ({ id: m.id, name: m.name, color: m.color, role: m.role, joined: m.joined, ...(m.mode ? { mode: m.mode } : {}), ...(Array.isArray(m.projects) ? { projects: m.projects } : {}), ...(m.guestUntil ? { guest: true, guestUntil: m.guestUntil } : {}), ...(m.avatar ? { avatar: m.avatar } : {}), ...(perms.mutedUntil(m.id) ? { mutedUntil: perms.mutedUntil(m.id) } : {}) });   // avatar: from Sign in with Discord/GitHub/Google (server/oauth.js), https provider CDN only
 
 // ---------- helpers ----------
 // Addresses phones and other computers can use to reach this server (Tailscale first: it works anywhere).
@@ -296,9 +296,15 @@ function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
 let chatHook = null;
 let captureHook = null;   // feat/captures (server/captures.js onChat)   // the secretary hears @secretary (server/secretary.js)
+// The outbox (app/ui/tribe.js) gives each message a client id (cid): the app shows it at once, the echo replaces it, and a
+// resend after a lost reply posts nothing twice.
+const CID_RE = /^[A-Za-z0-9_-]{6,40}$/, cidSeen = new Map();
+const cidOf = body => (body && typeof body.cid === 'string' && CID_RE.test(body.cid) ? { cid: body.cid } : {});
 function postChat(channel, by, text, extra) {
   if (channel === 'general') channel = P.channelOf(P.current() || P.defaultId());   // project rooms: each project has its own channel
-  const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js)
+  if (extra && extra.cid) { const k = `${channel}:${by}:${extra.cid}`; if (cidSeen.has(k)) return cidSeen.get(k); }
+  const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js), cid (outbox)
+  if (extra && extra.cid) { cidSeen.set(`${channel}:${by}:${extra.cid}`, msg); if (cidSeen.size > 2000) cidSeen.delete(cidSeen.keys().next().value); }
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
   if (!dms.deliver(channel, msg)) broadcast({ type: 'chat', channel, message: msg });   // DMs reach only their two members
   if (by !== 'tribecode' && !channel.startsWith('dm-')) pocket.chat(channel, by, text);   // @mentions -> notification hub
@@ -325,9 +331,11 @@ function loadTasks() {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.created).localeCompare(String(b.created)));
 }
 function saveTask(t) {
+  let was = null; try { const r = store.readMd(taskFile(t)); was = r && r.meta && r.meta.status; } catch {}
   const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t });
   bugs.onTask(t);
   if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
+  if (t.status === 'done' && was && was !== 'done' && askai) try { askai.taskDone(t, 'general'); } catch {}   // agents' finished work in the channel
   return t;
 }
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due, type }) {
@@ -403,7 +411,7 @@ const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, c
   const ag = /^agents-(.+)$/.exec(ch); return !!(ag && P.get(ag[1]) && P.canSee(me, ag[1]));
 } });
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
-const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
+const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), pubCmd: (c, mem, t) => askai && askai.command(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
   channelProject: ch => (P.byChannel(ch) || {}).id || (chans && chans.projectOf(ch)) || null, canSeeProject: (mem, pid) => P.canSee(mem, pid),
   canModerate: (mem, msg, ch) => { const pid = (P.byChannel(ch) || {}).id || P.current(); const by = memberById(msg.by); return perms.can(mem, 'chat.moderate', pid) && (!by || perms.outranks(mem, by, pid)); },   // feat/roles
@@ -589,6 +597,7 @@ async function apiInProject(req, res, url) {
     try { const r = cloudsave.restore(await readBody(req, 6_000_000)); reloadAfterRestore(); broadcast({ type: 'project' }); return send(res, 200, { ...r, members: members.length }); }
     catch (e) { return fail(res, e.status || 400, e.message); }
   }
+  if (a === 'cloud' && b === 'copy' && m === 'GET') { if (!need()) return; if (me.role === 'agent') return fail(res, 403, 'people only'); return send(res, 200, cloudsave.copy(me)); }   // Settings › Save a copy
   if (a === 'cloud' && b === 'snapshot' && m === 'GET') {
     if (!need()) return;
     if (!CLOUD) return send(res, 200, { enabled: false });
@@ -721,12 +730,22 @@ async function apiInProject(req, res, url) {
       .catch(e => { console.error('backup:', e); res.destroy(); });
   }
 
+  // Experience modes (v0.20): beginner, intermediate or advanced decides how much of TribeCode each person sees.
+  // The host (and admins) pick a starting mode per role; everyone can still change their own in Settings.
+  if (a === 'tribe' && b === 'modes' && m === 'PUT') {
+    if (!(me.role === 'host' || me.role === 'admin')) return fail(res, 403, 'only the host or an admin sets the starting modes');
+    const body = await readBody(req), MODES = ['beginner', 'intermediate', 'advanced'], ROLES = ['admin', 'mod', 'builder', 'spectator', 'guest'];
+    const next = {}; for (const r of ROLES) if (MODES.includes(body && body[r])) next[r] = body[r];
+    tribe.modes = next; baseStore.writeJSON('.tribe/tribe.json', tribe); broadcast({ type: 'tribe', tribe });
+    return send(res, 200, { modes: next });
+  }
   // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
   if (a === 'me' && !b && m === 'PATCH') {
     if (me.role === 'agent') return fail(res, 403, 'agents keep their names');
     const body = await readBody(req), mem = memberById(me.id);
     const name = body.name !== undefined ? str(body.name, 32) : mem.name; if (!name) return fail(res, 400, 'name required');
     mem.name = name; if (body.color !== undefined) mem.color = color(body.color);
+    if (body.mode !== undefined) { if (['beginner', 'intermediate', 'advanced'].includes(body.mode)) mem.mode = body.mode; else delete mem.mode; }   // experience mode follows you to every device
     saveMembers(); pushPresence();
     return send(res, 200, { member: publicMember(mem) });
   }
@@ -819,7 +838,8 @@ async function apiInProject(req, res, url) {
       const muted = perms.muteBlock(me); if (muted) return fail(res, 403, muted);   // feat/roles
       const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
-      const msg = postChat(b, me.id, text); chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints
+      const cid = cidOf(body), dup = !!(cid.cid && cidSeen.has(`${b}:${me.id}:${cid.cid}`));
+      const msg = postChat(b, me.id, text, cid); if (!dup) chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints (not twice for a resend)
       return send(res, 200, { message: msg });
     }
   }

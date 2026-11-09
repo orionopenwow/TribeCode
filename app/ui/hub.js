@@ -281,8 +281,8 @@
       <div class="hj-acts"><button class="btn" id="hub-join">Paste invite link</button>${on ? '<button class="btn" id="hub-new">' + ico('i-plus', 15) + 'New project</button>' : ''}</div>`
       : `<h3>${ico('i-link', 16)}Join with a link</h3>
       <p>A friend sent a link like <code>…/join/k7Qx2</code>? Paste it and pick a name. No account needed.</p>
-      <div class="hj-acts"><button class="btn primary" id="hub-join">Paste invite link</button><button class="btn" id="hub-host">Get the desktop app</button></div>
-      <p class="hj-note">Hosting runs in the desktop app (or <code>npm start</code>).</p>`}</div>`;
+      <div class="hj-acts"><button class="btn primary" id="hub-join">Paste invite link</button><button class="btn" id="hub-host">Get the desktop app</button><a class="btn" id="hub-cloud" href="https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode" target="_blank" rel="noopener">☁️ Free cloud tribe</a></div>
+      <p class="hj-note">To start your own tribe from a browser: the desktop app hosts it on your computer, or one click makes a free cloud tribe (docs: CLOUD.md).</p>`}</div>`;
   }
   async function instant() {   // host first if needed (desktop app), then the instant invite
     if (!connected()) {

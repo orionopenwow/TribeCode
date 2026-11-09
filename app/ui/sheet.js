@@ -171,7 +171,7 @@
         <span class="sx-status faint" id="sx-status">Saved</span>
         <span class="sx-acts">
           <button class="btn ghost" id="sx-flint" title="Ask Flint to fill or change this sheet">✨ Ask Flint</button>
-          <button class="btn ghost" id="sx-csv" title="Download as CSV (opens in Excel, Sheets, GridCraft)">⬇ CSV</button>
+          <button class="btn ghost" id="sx-csv" title="Export: Excel, CSV or Google Sheets">⬇ Export</button>
           <label class="btn ghost sx-imp" title="Import a CSV">⬆ Import<input type="file" id="sx-file" accept=".csv,.tsv,.txt" hidden></label>
           <button class="btn ghost" id="sx-del" title="Delete sheet" aria-label="Delete sheet">🗑</button>
           <button class="btn ghost" id="sx-close" title="Close" aria-label="Close sheet">✕</button>
@@ -284,7 +284,8 @@
     $('#sx-title').addEventListener('input', queue);
     $('#sx-close').onclick = async () => { if (saveT) await flush(); o.close(); };
     $('#sx-del').onclick = () => o.del();
-    $('#sx-csv').onclick = () => {
+    $('#sx-csv').onclick = e => {
+      if (window.TribeExport) { window.TribeExport.menu(e.currentTarget, { title: $('#sx-title').value.trim() || 'Sheet', body: serialize(sh), kind: 'sheet' }); return; }
       const ev2 = evaluate(sh.grid), { r, c } = bounds(sh.grid), out = [];
       for (let i = 0; i < r; i++) { const row = []; for (let j = 0; j < c; j++) row.push(show(ev2.at(i, j))); out.push(row); }
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([toCSV(out)], { type: 'text/csv' })); a.download = ($('#sx-title').value.trim() || 'sheet') + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);

@@ -159,6 +159,8 @@
   }
   async function overviewNow() {
     const el = $('#pj-overview'); if (!el) return;
+    // instant first paint: what this device saw last time draws at once (still), then the fresh data replaces it
+    { const cp = curP(); if (cp && !el.firstElementChild) { let c = null; try { c = localStorage.getItem('tribecode.ovcache:' + cp.id); } catch {} if (c) { el.innerHTML = c; el.classList.add('from-cache'); el.dataset.ovPid = ''; } } }
     const seq = ++ovSeq;   // the latest call wins: an older, slower render never paints over a newer one
     const p = curP();
     if (!p) { stash(); el.innerHTML = ''; return; }
@@ -265,7 +267,8 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       </details>`;
     if (html === lastOv && el.dataset.ovPid === p.id && el.firstElementChild && !el.querySelector('.pj-name-in, .pj-bio-in')) return;   // nothing changed: keep the page as it is (nothing you're using gets replaced)
     lastOv = html; el.dataset.ovPid = p.id;
-    el.innerHTML = html;
+    el.innerHTML = html; el.classList.remove('from-cache');
+    try { localStorage.setItem('tribecode.ovcache:' + p.id, html); } catch {}   // instant first paint next time
     // The standup button/text and the drop zone are wired in app.js: move the live nodes in (stash() moves them back before a redraw).
     const sfBtn = $('#standup-go'), sfText = $('#standup-text'), dzn = $('#dropzone'), drops = $('#drops');
     if (sfBtn) { sfBtn.classList.add('sm'); $('#pj-sf-btn').appendChild(sfBtn); }
@@ -576,20 +579,86 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     }
     const row = (k, ic, t, sub, cls = '') => `<button class="ns-row ${cls}" data-ns="${k}"><span class="ns-ic">${ic}</span><span class="ns-t"><b>${t}</b><small>${sub}</small></span>${ico('i-chev', 16)}</button>`;
     body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button>
-      <div class="ns-head"><h2>Create your project</h2><p class="lead">Your project is where you, your friends and your agents build together. Make yours and start building.</p></div>
-      <div class="ns-list">${row('own', ico('i-plus', 18), 'Create my own', 'Start from a blank page', 'ns-own')}
-        <div class="ns-sub">Start from a template</div>
+      <div class="ns-head"><h2>What do you want to make?</h2><p class="lead">One sentence is enough. It becomes your project's vision, and the suggested tasks, starter and website follow from it.</p></div>
+      <form class="ns-prompt" id="np-prompt"><textarea class="input" id="np-idea" rows="3" maxlength="600" placeholder="e.g. A cozy pixel game where friends water plants at night" aria-label="What do you want to make?"></textarea>
+        <div class="ns-chips">${IDEAS.map(t => `<button type="button" class="ns-chip" data-idea="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+        <div class="np-status" id="np-status"></div>
+        <div class="ns-btns"><span style="flex:1"></span><button class="btn primary" id="np-idea-go" type="submit">Start building</button></div></form>
+      <div class="ns-list"><div class="ns-sub">Or start from</div>
+        ${row('own', ico('i-plus', 18), 'A blank project', 'Name it and add the idea later', 'ns-own')}
         ${TEMPLATES.map(t => row('tpl:' + t.k, `<span class="ns-emo">${t.emoji}</span>`, t.t, t.s)).join('')}
+        ${host ? row('remix', '<span class="ns-emo">🧩</span>', 'Remix a starter', 'Open-source games, apps and sites to build on', 'ns-remix') : ''}
         ${host ? row('code', ico('i-folder', 18), 'Bring my code', 'A folder on this computer, or a GitHub repository') : ''}</div>
       ${joinFoot()}`;
     body().querySelectorAll('[data-ns]').forEach(b => b.onclick = () => {
       const k = b.dataset.ns;
       if (k === 'code') { body().classList.remove('np-setup'); return openAdvanced(); }
+      if (k === 'remix') return openStarters();
       setup.tpl = k.startsWith('tpl:') ? TEMPLATES.find(t => t.k === k.slice(4)) : null;
       customize();
     });
+    const ideaIn = $('#np-idea');
+    body().querySelectorAll('[data-idea]').forEach(b => b.onclick = () => { ideaIn.value = b.dataset.idea; ideaIn.focus(); });
+    ideaIn.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#np-prompt').requestSubmit(); } };
+    $('#np-prompt').onsubmit = e => { e.preventDefault(); createFromIdea(ideaIn.value); };
+    if (!isPhone()) ideaIn.focus();
     wireStart();
   }
+  // Start with a prompt (v0.20): the sentence becomes the vision; the name, emoji and kind are guessed from it, and the
+  // dashboard's suggested tasks, the starter and the site builder read the vision from there.
+  const IDEAS = ['A cozy pixel game we can play together', 'A website for my friend\'s bakery', 'An app that tracks our habits', 'A party quiz for game night'];
+  const KIND_OF = [[/\b(game|platformer|rpg|puzzle|shooter|runner|quiz|pixel|level|boss)\b/i, '🎮'], [/\b(site|website|page|portfolio|blog|landing|bakery|shop|caf[eé]|restaurant|event)\b/i, '🌐'], [/\b(app|tracker|planner|list|bot|tool|dashboard)\b/i, '📱']];
+  function nameFromIdea(idea) {
+    const STOP = new Set('a an the and or of to for in on at with by is are be it its this that we our us you your my me i from as into where who can will make build want like some cozy simple small little new friend friends play together let lets'.split(' '));
+    const KINDW = /^(game|website|site|app|page|bot|tool|quiz)$/i;
+    const pick = t => String(t).replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter(w => w && !STOP.has(w.toLowerCase()) && !/'s$/i.test(w));
+    let words = pick(String(idea).split(/\s(?:with|that|where|which|so|to help|,)\s/i)[0]);
+    if (words.length < 2) words = pick(idea);
+    words = words.slice(0, 3);
+    if (words.length > 1 && KINDW.test(words[0])) words.push(words.shift());   // "website … bakery" -> "Bakery Website"
+    const n = words.slice(0, 3).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    return (n || `${String(me().name || 'My').split(/\s+/)[0]}'s project`).slice(0, 40);
+  }
+  async function createFromIdea(raw) {
+    const idea = String(raw || '').trim(); if (!idea) { $('#np-idea').focus(); return; }
+    const kind = KIND_OF.find(([re]) => re.test(idea)), taken = new Set(projects.map(p => p.name)), base = nameFromIdea(idea);
+    let name = base; for (let i = 2; taken.has(name); i++) name = `${base} ${i}`;
+    const btn = $('#np-idea-go'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Setting it up…';
+    try {
+      const f = await window.TribeFlow.create(name, { emoji: kind ? kind[1] : '✨', wait: 8000 });
+      const pid = f.project;
+      await C.api(`/projects/${encodeURIComponent(pid)}`, { method: 'PATCH', body: { bio: idea.slice(0, 200) } }).catch(() => {});
+      await C.api('/vision', { method: 'PUT', project: pid, body: { text: `# ${name}\n\n${idea}\n` } }).catch(() => {});
+      body().classList.remove('np-setup');
+      await refresh();
+      window.TribeFlow.inviteSheet(f);
+    } catch (e) { btn.disabled = false; btn.textContent = 'Start building'; status(`<div class="np-err">${esc(e.message)}</div>`); }
+  }
+  // Remix a starter (templates/starters.json): open-source projects checked for permissive licenses. Small ones copy
+  // straight into a new project from GitHub; big collections open in the browser to borrow from. Credit stays with the authors.
+  const KIND_E = { game: '🎮 Games', app: '📱 Apps', site: '🌐 Sites', asset: '🎨 Art and sound' };
+  async function openStarters() {
+    body().classList.add('np-setup');
+    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div><div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
+      <div class="ns-btns"><button class="linkish" id="np-back">Back</button></div>`;
+    body().querySelector('[data-close]').onclick = close; $('#np-back').onclick = openNew;
+    let items = []; try { items = (await C.api('/shelf/starters')).items || []; } catch {}
+    const box = $('#st-list'); if (!box) return;
+    if (!items.length) { box.innerHTML = '<p class="faint">Starters are not available right now.</p>'; return; }
+    const groups = Object.keys(KIND_E).map(k => [k, items.filter(i => i.kind === k)]).filter(([, l]) => l.length);
+    box.innerHTML = groups.map(([k, l]) => `<div class="ns-sub">${KIND_E[k]}</div>${l.map(i => `<div class="st-row"><span class="ns-emo">${esc(i.emoji || '✨')}</span>
+        <span class="st-t"><b>${esc(i.title)}</b><small>${esc(i.summary)}</small><small class="st-cred">by ${esc(i.by)} · <span class="st-lic">${esc(i.license)}</span></small></span>
+        ${i.remix && i.repo ? `<button class="btn sm primary" data-remix="${esc(i.repo)}" data-name="${esc(i.title)}">Start from this</button>` : `<a class="btn sm" href="${esc(i.url || 'https://github.com/' + i.repo)}" target="_blank" rel="noopener">Browse</a>`}</div>`).join('')}`).join('');
+    box.querySelectorAll('[data-remix]').forEach(b => b.onclick = () => remix(b.dataset.remix));
+  }
+  function remix(repo) {   // the "Bring my code" box, filled with the GitHub address
+    if (!isHost()) { toastMsg('Ask your host to start this one: only the host can copy code into a new project.'); return; }
+    body().classList.remove('np-setup'); openAdvanced();
+    const inp = $('#np-input'); if (!inp) return;
+    inp.value = /^https?:/.test(repo) ? repo : 'https://github.com/' + repo; inp.dataset.touched = '1';
+    inp.dispatchEvent(new Event('input')); inp.focus();
+  }
+  const toastMsg = t => { if (App() && App().toast) App().toast(t); else alert(t); };
   const joinFoot = () => `<div class="ns-foot"><b>Have an invite already?</b><div class="np-row"><input class="input" id="np-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false" aria-label="Invite link"><button class="btn" id="np-join-go">Join</button></div></div>`;
   function wireStart() {
     const x = body().querySelector('[data-close]'); if (x) x.onclick = close;
@@ -832,5 +901,12 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
 
   // A project deleted (here or by the host elsewhere): leave it and go Home.
   C.on('ws', m => { if (m.type !== 'project-removed') return; const was = cur() === m.id; refresh().then(async () => { if (!was) return; const d = projects[0]; if (d) await switchTo(d.id, 'home').catch(() => {}); if (window.TribeHub) window.TribeHub.open('home'); }); });
-  window.TribeProjects = { step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  // tribecode.org's "Start from this" opens the app with ?remix=owner/repo: once you're the host, the box is filled in
+  (function remixFromLink() {
+    let r = ''; try { r = new URLSearchParams(location.search).get('remix') || ''; } catch {}
+    if (!/^[\w.-]+\/[\w.-]+$/.test(r)) return;
+    const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
+    if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
+  })();
+  window.TribeProjects = { createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
 })();
