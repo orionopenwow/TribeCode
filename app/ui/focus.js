@@ -17,6 +17,7 @@
     let tasks = [], own = { owners: [], lanes: [] };
     try { tasks = (await C.api('/tasks')).tasks || []; } catch {}
     try { own = await C.api('/coord/ownership'); } catch {}
+    let shipD = null; try { shipD = await C.api('/ship'); } catch {}   // feat/ship-flow
     const open = tasks.filter(t => t.status !== 'done');
     const mine = open.filter(t => t.assignee === me.id);
     const now = mine.find(t => t.status === 'doing') || mine.find(t => t.status === 'review') || mine[0] || null;
@@ -27,7 +28,7 @@
     const lanes = [...(myRow.lanes || []), ...agentLanes].map(l => l.area);
     const others = (own.owners || []).filter(o => o.id !== me.id && !myAgents.includes(o.id)).flatMap(o => [...(o.lanes || []).map(l => ({ who: o.name, area: l.area })), ...(o.claims || []).map(c => ({ who: o.name, area: c.path || c }))]).slice(0, 8);
     const project = window.TribeProjects && window.TribeProjects.cur ? window.TribeProjects.cur() : null;
-    return { me, now, next, mine, lanes: [...new Set(lanes)], others, project, review: open.filter(t => t.status === 'review' && t.assignee !== me.id).length };
+    return { me, now, next, mine, lanes: [...new Set(lanes)], others, project, review: open.filter(t => t.status === 'review' && t.assignee !== me.id).length, ship: shipD, openCount: open.length };
   }
 
   function prompt(d = last) {
@@ -54,11 +55,11 @@
         <b>${esc(t ? t.title : n ? `Next up: ${n.title}` : 'Add a first task')}</b>
         ${d.mine.length > 1 ? `<span class="fc-more">+${d.mine.length - 1} more of yours</span>` : ''}</button>
       <div class="fc-lane"><span class="fc-k eyebrow">Your part of the code</span>${d.lanes.length ? `<span class="fc-areas">${d.lanes.map(a => `<code>${esc(a)}</code>`).join('')}</span>` : `<form class="fc-claim" data-fc-claim><input class="input" maxlength="200" placeholder="e.g. src/ui/ or docs/story.md" aria-label="Your part of the code"><button class="btn sm" type="submit">Claim</button></form>`}</div>
-      <button class="btn fc-prompt" data-fc="prompt" title="Copies instructions that keep your AI helper in your part of the code">🤖 Copy a prompt for my AI helper</button>
-      <div class="fc-acts" role="group" aria-label="Quick actions">
-        <button data-fc="doc" title="New doc">📄<span>Doc</span></button><button data-fc="sheet" title="New sheet">📊<span>Sheet</span></button><button data-fc="deck" title="New slides">🎞️<span>Slides</span></button>
-        <button data-fc="newtask" title="New task">✅<span>Task</span></button><button data-fc="preview" title="Open the preview">▶️<span>Preview</span></button><button data-fc="code" title="Browse the code">🌿<span>Code</span></button>
-      </div>`;
+      <button class="btn sm fc-prompt" data-fc="prompt" title="Copies instructions that keep your AI helper in your part of the code">🤖 Copy prompt for my AI</button>
+      <div class="fc-ship">${d.ship && d.ship.request && d.ship.request.status === 'pending' ? `<button class="fc-sh on" data-fc="ship" title="A ship request is waiting">🗳️ Vote: ship ${d.ship.request.count} saved change${d.ship.request.count === 1 ? '' : 's'}</button>` : d.ship && d.ship.canShip ? `<button class="fc-sh on" data-fc="ship" title="Review what changed and ship it to GitHub">🚀 ${d.ship.count} ready to ship</button>` : d.ship && d.ship.enabled ? '<button class="fc-sh" data-fc="ship" title="Everything is on GitHub">✅ All shipped</button>' : ''}<button class="fc-sh" data-fc="share" title="Copy progress, the GitHub link and an invite">📤 Share progress</button>${d.ship && d.ship.turbo && d.ship.turbo.on ? '<span class="fc-turbo" title="Turbo ships approved work at calm moments">⚡ Turbo</span>' : ''}</div>
+      <div class="fc-acts" role="group" aria-label="Quick actions"><button data-fc="doc" title="New doc" aria-label="New doc">📄</button><button data-fc="sheet" title="New sheet" aria-label="New sheet">📊</button><button data-fc="deck" title="New slides" aria-label="New slides">🎞️</button><button data-fc="newtask" title="New task" aria-label="New task">✅</button><button data-fc="preview" title="Open the preview" aria-label="Open the preview">▶️</button><button data-fc="code" title="Browse the code" aria-label="Browse the code">🌿</button></div>`;
+    // a brand-new project (no tasks yet): Next steps already says what to do, so Your focus is just the quick actions
+    if (!d.openCount && !d.lanes.length && !(d.ship && d.ship.request && d.ship.request.status === 'pending')) box.querySelectorAll('.fc-now, .fc-lane, .fc-prompt, .fc-ship').forEach(e => e.remove());
     box.querySelectorAll('[data-fc]').forEach(b => b.onclick = () => act(b.dataset.fc, d));
     const f = box.querySelector('[data-fc-claim]'); if (f) f.onsubmit = async e => {
       e.preventDefault(); const area = f.querySelector('input').value.trim(); if (!area) return;
@@ -69,6 +70,8 @@
     const D = window.TribeDocs;
     if (k === 'prompt') { const p = prompt(d); try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper (Claude Code, Codex, Cursor…).', 'ok'); } catch { window.prompt('Copy this for your AI helper:', p); } return; }
     if (k === 'task' || k === 'review' || k === 'pick') return A().show('tasks');
+    if (k === 'ship') { A().show('repo'); return setTimeout(() => window.TribeShip && window.TribeShip.refresh(), 60); }   // feat/ship-flow
+    if (k === 'share') return window.TribeShip && window.TribeShip.share();
     if (k === 'newtask') { A().show('tasks'); return setTimeout(() => { const nb = $('#task-new'); if (nb) nb.click(); }, 80); }
     if (k === 'doc' && D) { A().show('docs'); return D.create(); }
     if (k === 'sheet' && D) { A().show('docs'); return D.newSheet(); }
@@ -85,7 +88,8 @@
   }
   const soon = () => { clearTimeout(timer); timer = setTimeout(refresh, 500); };
   C.on('hello', soon); C.on('project', soon); C.on('task', soon); C.on('presence', soon);
-  C.on('ws', m => { if (m && (m.type === 'coord' || m.type === 'claims' || m.type === 'tasks')) soon(); });
+  C.on('ws', m => { if (m && (m.type === 'coord' || m.type === 'claims' || m.type === 'tasks' || m.type === 'ship')) soon(); });
+  C.on('ship', soon);
   addEventListener('resize', soon);
   setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 60000);
   window.TribeFocus = { refresh, prompt: () => prompt() };

@@ -551,8 +551,12 @@
       pricing: ['Pricing', 'pricing.html'],
       mission: ['Mission', 'mission.html'],
       docs: ['Docs', 'docs.html'],
+      make: ['See what you can make', onHome ? '#make' : 'index.html#make'],
+      learn: ['Open the Learn guides', 'learn.html'],
     };
     const QA = [
+      { k: 'make', re: /what can (i|we|you) (make|build|create)|what (do|does) (it|tribecode) (make|build)|kinds? of|games? only|only (for )?games/, a: 'Anything that runs on code: apps, games, websites, tools and dashboards, bots and AI helpers, school projects, open-source libraries. TribeCode is the shared place where you and your friends build it with your AI helpers.', act: 'make' },
+      { k: 'learn', re: /learn|beginner|never coded|new to cod|teach|lesson|quiz|badge|kids?|school/, a: 'You don’t need to know how to code. The Learn guides explain what code is and how an app comes together, slowly and in plain words. There’s a short quiz that earns your first badge.', act: 'learn' },
       { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes. Everything in TribeCode is free and open source (MIT), and what’s free today stays free. You bring your own AI. Paid extras like hosting may come later, but nothing is for sale today.', act: 'pricing' },
       { k: 'ai', re: /\bai\b|which|model|claude|codex|gemini|cursor|llm|agent|ollama|gpt/, a: 'Most coding agents work: Claude Code, Codex, Gemini CLI, Cursor and more. Each friend connects their own, so nobody pays for anyone else.', act: 'docs' },
       { k: 'join', re: /join|friend|invite|link|share|phone|mobile/, a: 'The host sends a link. A friend taps it, types a name and they’re in, from a phone or a laptop. On a phone they can add it to the Home Screen. No app store.', act: 'app' },
@@ -564,7 +568,7 @@
       { k: 'hi', re: /^(hi|hey|hello|yo|hiya|sup)\b/, a: 'Hi! Ask me anything about TribeCode, or pick a question below.' },
       { k: 'thanks', re: /thank|thx|cheers/, a: 'Happy to help. Have fun building.' },
     ];
-    const CHIPS = [...(onHome ? [['🧭 Show me around', 'tour']] : []), ['💡 What is TribeCode?', 'what'], ['💸 Is it free?', 'free'], ['🤖 Which AI works?', 'ai'], ['👋 How do friends join?', 'join'], ['🎮 Show me a demo', 'demo'], ['⬇️ Download', 'download']];
+    const CHIPS = [...(onHome ? [['🧭 Show me around', 'tour']] : []), ['💡 What is TribeCode?', 'what'], ['🧩 What can I make?', 'make'], ['🎓 New to coding?', 'learn'], ['💸 Is it free?', 'free'], ['🤖 Which AI works?', 'ai'], ['👋 How do friends join?', 'join'], ['🎮 Show me a demo', 'demo'], ['⬇️ Download', 'download']];
 
     const wrap = document.createElement('div'); wrap.className = 'flint-float';
     wrap.innerHTML = `
@@ -622,8 +626,10 @@
     // Each step scrolls the section into view, rings it (the rest of the page dims a little) and explains it in a line.
     // You set the pace: Next / Back, arrow keys, Esc to stop. The section's own little demo plays while it's lit.
     const STEPS = [
-      ['.hero', 'This is TribeCode: one place where you, your friends and your AI helpers build the same app together.'],
-      ['#story', 'Here’s the whole idea in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
+      ['.hero', 'This is TribeCode: one shared place where you, your friends and your AI helpers code anything together.'],
+      ['#make', 'First, what you can make: apps, games, websites, tools, bots. If it runs on code, your tribe can build it.'],
+      ['#story', 'Here’s how any of those comes together, in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
+      ['#learn', 'Never coded before? That’s fine. The Learn guides explain each step slowly, in plain words, and a quiz earns your first badge.'],
       ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
       ['#phone', 'Friends join from a phone with one link. When an agent needs a yes, it arrives as one tap.'],
       ['#lanes', 'Each agent works in its own lane, so nobody collides. When two need the same file they hand it off, and a person approves the merge.'],
@@ -728,14 +734,14 @@
 (function () {
   const el = document.querySelector('[data-typer]'); if (!el) return;
   const ASKS = [
-    'make a website for my game and invite my friends',
-    'connect my AI and fix the jump physics',
-    'plan the boss fight with Maya’s Codex',
-    'add a title screen, then ship v0.2',
-    'turn tonight’s huddle into notes and tasks',
-    'split the levels so nobody steps on each other',
-    'keep our tribe up 24/7 on the spare PC',
-    'preview the game on my phone',
+    'make a budget app with my roommates',
+    'build a site for my sister’s bakery',
+    'make a pixel game with friends',
+    'turn our club sheet into an app',
+    'connect my AI and fix the login',
+    'make a Discord bot for homework',
+    'explain this code in plain words',
+    'split the work so nobody collides',
   ];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = ASKS[0]; return; }
   let i = 0, n = ASKS[0].length, dir = -1, visible = true;

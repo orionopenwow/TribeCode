@@ -1,0 +1,4 @@
+/* Readability floor (v0.19). The per-pane sizes were raised in place (labels ≥ 12px, captions ≥ 12.5px);
+   this file keeps a few shared rules for long reading text. Loaded last. */
+.fl-msg, .doc-body p, .pj-row-line .t, .ock-sub, .ap-thumb { line-height: 1.55; }
+.eyebrow { letter-spacing: .04em; }

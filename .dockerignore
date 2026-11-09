@@ -1,0 +1,8 @@
+.git
+node_modules
+app/src-tauri
+app/test
+docs/screenshots
+site
+dist
+.claude

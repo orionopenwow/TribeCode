@@ -109,8 +109,15 @@
     try {
       const h = await api('/health');
       if (h.members === 0) {
-        const r = await api('/bootstrap', { method: 'POST', body: { name, color } });
-        S.set({ server: { url: base(), token: r.token } });
+        const body = { name, color };
+        if (h.cloud) {   // a new cloud tribe server: the first person claims it with its setup code (docs/CLOUD.md)
+          const sc = window.prompt('This is a new TribeCode cloud server. Enter its setup code to become the host.\n\nIt is TRIBE_SETUP_CODE in your hosting dashboard (or in the server log).');
+          if (!sc) return false;
+          body.setupCode = sc.trim();
+          if (!body.name) body.name = (window.prompt('Your name?', '') || 'Host').trim().slice(0, 32) || 'Host';
+        }
+        const r = await api('/bootstrap', { method: 'POST', body });
+        S.set({ server: { url: base(), token: r.token }, ...(h.cloud ? { name: r.member.name, color: r.member.color } : {}) });
         connect();
         return 'host';
       }

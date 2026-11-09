@@ -97,7 +97,7 @@
           <button class="linkish nf-ask" data-ask="${esc(a.id)}">Ask a question</button>
           <button class="btn nf-deny" data-decide="deny" data-ap="${esc(a.id)}">Deny</button><button class="btn primary nf-approve" data-decide="approve" data-ap="${esc(a.id)}">Approve</button></div>`;
     }
-    return `${details}${qs}<div class="nf-actions">${risk}<span class="nf-state ${esc(a.status)}">${a.status === 'approved' ? 'Approved' : 'Denied'}${a.decidedByName ? ' by ' + esc(a.decidedByName) : ''}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`;
+    return `${details}${qs}<div class="nf-actions">${risk}<span class="nf-state ${esc(a.status)}">${a.status === 'closed' ? 'Closed' : a.status === 'approved' ? 'Approved' : 'Denied'}${a.decidedByName ? ' by ' + esc(a.decidedByName) : ''}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`;
   }
   const itemHtml = (i, extra = '') => `
       <article class="nf-item ${isUnread(i) ? 'unread' : ''} ${i.priority === 'high' ? 'hi' : ''} ${extra}" data-id="${esc(i.id)}" data-view="${esc(i.view || '')}" data-ref="${esc(i.ref || '')}" data-type="${esc(i.type)}">

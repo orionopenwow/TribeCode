@@ -4,7 +4,7 @@
 .pl-pop { position: fixed; z-index: 400; width: 320px; max-height: min(560px, calc(100vh - 24px)); overflow-y: auto; padding: 6px; background: var(--raised, #1E242D); border: 1px solid var(--edge, #2A313C); border-radius: 14px; }
 .pl-pop.form { width: 420px; padding: 16px; }
 .pl-pop.sheet { left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto; border-radius: 18px 18px 0 0; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); max-height: 82vh; }
-.pl-group { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 10px 10px 4px; }
+.pl-group { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 10px 10px 4px; }
 .pl-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 0; border-radius: 10px; background: none; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
 .pl-item:hover, .pl-item:focus-visible { background: var(--hover, #262D38); outline: none; }
 .pl-ic { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--surface, #1B2028); border: 1px solid var(--edge, #2A313C); color: var(--muted); }
@@ -15,7 +15,7 @@
 .pl-t b { font-size: 13.5px; font-weight: 600; }
 .pl-t small { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pl-form { display: flex; flex-direction: column; gap: 10px; }
-.pl-eye { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #F26B1D); }
+.pl-eye { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #F26B1D); }
 .pl-form h3 { margin: -4px 0 2px; font-size: 18px; }
 .pl-form input, .pl-form textarea, .pl-form select { width: 100%; box-sizing: border-box; background: var(--canvas, #12151A); border: 1px solid var(--edge, #2A313C); border-radius: 10px; color: var(--text); font: inherit; font-size: 14px; padding: 10px 12px; }
 .pl-form textarea { resize: vertical; line-height: 1.5; }

@@ -197,12 +197,19 @@ module.exports = function assist({ P, store, brain, docs, loadTasks, getMembers,
     return n / Math.min(x.size, y.size) >= 0.6;
   }
   function pool(me) {
-    const p = proj(), kind = kindOf(typesOf(p));
+    const p = proj(), vtext = readVision();
+    let kind = kindOf(typesOf(p));
+    if (kind === 'any' || kind === '3d') {   // no starter picked yet: read the kind off the vision ("a cozy pixel game…")
+      const v = String(vtext || '').toLowerCase();
+      kind = /\b(game|platformer|puzzle|level|player|rpg|arcade)\b/.test(v) ? 'game' : /\b(website|site|landing page|portfolio|blog|shop page)\b/.test(v) ? 'site'
+        : /\b(app|mobile|phone|ios|android|tracker|planner)\b/.test(v) ? 'app' : /\b(tool|script|bot|cli|dashboard|automat\w*)\b/.test(v) ? 'tool' : kind;
+      if (!TEMPLATE_TASKS[kind]) kind = 'any';
+    }
     const raw = [
-      ...visionIdeas(readVision()).map(x => [...x, 'vision']),
-      ...repoIdeas(repoDir(p)).map(x => [...x, 'repo']),
+      ...visionIdeas(vtext).map(x => [...x, 'vision']),
       ...chatIdeas().map(x => [...x, 'chat']),
       ...(kind !== 'any' ? TEMPLATE_TASKS[kind] : []).map(([t, w]) => [t, `${kind} starter · ${w}`, 'template']),
+      ...repoIdeas(repoDir(p)).map(x => [...x, 'repo']),
       ...(!docs.list().length ? [['Write a short design note in Files', 'no docs yet', 'docs']] : []),
       ...TEMPLATE_TASKS.any.map(([t, w]) => [t, w, 'starter']),
     ];

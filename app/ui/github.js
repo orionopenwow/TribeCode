@@ -44,7 +44,7 @@
   async function act(what, el) {
     try {
       if (what === 'start') {   // open the tab now, while the click still counts (popup blockers), and point it at GitHub once the code is ready
-        const desk = !!(window.TribeHost && window.TribeHost.isDesktop), w = desk ? null : window.open('about:blank', '_blank');
+        const desk = !!(window.TribeHost && window.TribeHost.isDesktop), w = desk || (gh && gh.demo) ? null : window.open('about:blank', '_blank');
         return signIn(w).catch(e => { if (w) w.close(); throw e; });
       }
       if (what === 'open') return openGitHub();
@@ -68,7 +68,7 @@
     const f = await C.api('/github/device', { method: 'POST', body: { open: desk } });
     gh.flow = f; redraw();
     copy(f.userCode).then(ok => ok && toast(`Code ${f.userCode} copied: paste it on GitHub`));
-    openGitHub(win);
+    if (!gh.demo) openGitHub(win);   // the offline demo pretends: no tab opens
     startPoll(f.interval);
   }
   function stopPoll() { clearTimeout(poller); poller = null; }
@@ -86,7 +86,7 @@
   // Signed in: say so, and finish this project's GitHub step if it was waiting for a login (server/flow.js).
   async function done(login) {
     toast(`Signed in to GitHub as @${login}`);
-    redraw();
+    redraw(); try { dispatchEvent(new CustomEvent('tribe:github', { detail: { login } })); } catch {}
     try {
       const fl = (await C.api('/flow')).flow;
       const s = fl && fl.steps && fl.steps.github && fl.steps.github.s;

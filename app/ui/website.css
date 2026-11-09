@@ -5,7 +5,7 @@
 .wb-sec .sec-head { margin-bottom: 12px; }
 .wb-fields { display: flex; flex-direction: column; gap: 12px; }
 .wb-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.wb-field > span, .wb-lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.wb-field > span, .wb-lbl { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 .wb-lbl { display: block; margin: 14px 0 8px; }
 .wb .input { font-size: 14px; min-width: 0; }
 .wb textarea.input { height: auto; padding: 10px 14px; line-height: 1.6; resize: vertical; font-family: var(--font); }
@@ -21,7 +21,7 @@
 .wb-acts { display: flex; gap: 10px; flex-wrap: wrap; }
 .wb-status { font-size: 13px; color: var(--muted); margin: 12px 0 4px; line-height: 1.6; overflow-wrap: anywhere; }
 .wb-status code { font-family: var(--mono); font-size: 12px; }
-.wb-live { color: var(--live); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.wb-live { color: var(--live); font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
 .wb-hint { font-size: 12.5px; color: var(--faint); margin: 0; line-height: 1.6; max-width: 65ch; }
 .wb-suggest { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); margin-bottom: 14px; }
 .wb-suggest .wb-lbl { margin: 0; }
@@ -30,7 +30,7 @@
 .wb-sug.open { border-left: 3px solid var(--accent); }
 .wb-sug.approved, .wb-sug.declined { opacity: .72; }
 .wb-sug-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; font-size: 13px; }
-.wb-st { margin-left: auto; font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+.wb-st { margin-left: auto; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
 .wb-sug.approved .wb-st { color: var(--online, #3BD16F); }
 .wb-sug-text { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .wb-sug-acts { display: flex; gap: 8px; margin-top: 10px; }

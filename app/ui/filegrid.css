@@ -21,7 +21,7 @@
 .fg-th-page { background: var(--surface-2); padding: 10px 12px 0; }
 .fg-paper { height: 100%; padding: 10px 11px; border-radius: 4px 4px 0 0; background: #EDE7DC; color: #3A3530; overflow: hidden; display: flex; flex-direction: column; gap: 3px; }
 .fg-paper b, .fg-paper i { display: block; font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fg-paper .fg-pt { font-size: 10.5px; font-weight: 800; color: #1D1A17; margin-bottom: 3px; }
+.fg-paper .fg-pt { font-size: 12px; font-weight: 800; color: #1D1A17; margin-bottom: 3px; }
 .fg-paper b:not(.fg-pt) { font-size: 8.5px; font-weight: 700; color: #2A2622; margin-top: 2px; }
 .fg-paper i { font-size: 7.5px; line-height: 1.35; color: #5A534B; }
 .fg-paper .fg-blank { color: #A39A8E; }

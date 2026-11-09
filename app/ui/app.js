@@ -180,7 +180,7 @@
     $('#room-list').innerHTML = window.TribeProfiles ? window.TribeProfiles.grouped(shown, roomRow)   // feat/profiles: grouped by presence (Online / Idle / Do not disturb / Offline)
       : shown.slice().sort((a, b) => b.online - a.online || (a.role === 'agent') - (b.role === 'agent')).map(roomRow).join('');
     $('#room-list').querySelectorAll('[data-follow]').forEach(el => el.onclick = () => follow(el.dataset.follow));
-    $('#room-hint').classList.toggle('hidden', shown.length > 1);
+    const rh = $('#room-hint'); if (rh) rh.classList.toggle('hidden', shown.length > 1);
     $('#room-hint').textContent = 'Invite friends to see them here.';
   }
   function follow(mid) {
@@ -194,7 +194,7 @@
   }
   function renderClaims(list) {
     const meId = (C.state().me || {}).id;
-    $('#claims-box').classList.toggle('hidden', !list || !list.length);
+    const cbx = $('#claims-box'); if (cbx) cbx.classList.toggle('hidden', !list || !list.length);
     $('#claims-list').innerHTML = (list || []).map(c => `<div class="claim"><svg class="i" style="width:14px;height:14px;color:var(--amber)"><use href="#i-folder"/></svg>
       <code title="${esc(c.note || '')}">${esc(c.path)}</code><span class="faint">${esc(c.name)}</span>${c.by === meId ? `<button class="linkish" data-unclaim="${esc(c.id)}">release</button>` : ''}</div>`).join('');
     $('#claims-list').querySelectorAll('[data-unclaim]').forEach(b => b.onclick = () => C.api('/claims/' + b.dataset.unclaim, { method: 'DELETE' }).catch(e => toast(e.message)));

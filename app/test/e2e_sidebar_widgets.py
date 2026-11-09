@@ -185,7 +185,7 @@ def main():
             # ---- the room panel: readable, fewer lines
             host.click("#nest-overview")
             host.evaluate("TribeStage && TribeStage.set(TribeProjects.current(), {vision:true, task:true, friend:true, agent:true, repo:true}, {pin:true})")   # past setup: the panel shows everything
-            host.wait_for_selector("#room-helpers [data-helper='flint']", timeout=45000)
+            host.wait_for_selector("#room-helpers [data-helper='flint']", state="attached", timeout=45000)
             host.wait_for_selector("#cc-connect", state="visible")
             assert host.locator("#room-helpers .hp-pill").count() >= 2, "helpers are pills"
             assert host.locator("#room-helpers .what").count() == 0, "no second status lines under helpers"
@@ -195,11 +195,11 @@ def main():
             # the Flint chips sit in one row
             tops = host.evaluate("[...document.querySelectorAll('#flint .fl-chip')].map(e => Math.round(e.getBoundingClientRect().top))")
             assert tops and len(set(tops)) == 1, tops
-            # Helpers fold and stay folded
-            host.click("#helpers-toggle"); host.wait_for_selector("#hp-pills", state="hidden")
-            host.reload(); host.wait_for_selector("#helpers-toggle", timeout=45000)
+            # Helpers start folded to one line; opening is remembered
             assert host.get_attribute("#helpers-toggle", "aria-expanded") == "false"
             host.click("#helpers-toggle"); host.wait_for_selector("#hp-pills", state="visible")
+            host.reload(); host.wait_for_selector("#helpers-toggle", timeout=45000)
+            assert host.get_attribute("#helpers-toggle", "aria-expanded") == "true"
             shot(host, "desktop")
             # Connect your Claude Code: gone once it's connected
             ag = ok(api("/agents", "POST", token=orion, project=pid), "agent")

@@ -201,6 +201,7 @@ def main():
             host.wait_for_selector("#pj-rail [data-pj-open]", state="attached")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
             host.wait_for_selector("#room-agents .ra-row, #room-agents [data-agent]")
+            host.wait_for_selector("#helpers-toggle"); host.evaluate("document.querySelector('#helpers-toggle').getAttribute('aria-expanded') === 'false' && document.querySelector('#helpers-toggle').click()")   # helpers start folded
             wait_text(host, "#room-helpers", "Secretary"); wait_text(host, "#room-helpers", "Flint")   # the built-in helper (was "Local model")
             host.wait_for_selector("#hub-note-new")
             assert host.locator("#room-scratch").is_hidden(), "Home has Start a note in the page, not the panel"
