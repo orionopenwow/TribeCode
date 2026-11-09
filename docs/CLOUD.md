@@ -19,6 +19,19 @@ Run a TribeCode tribe on a free cloud host, so you and your friends can join fro
 - Copies hold the last 1,500 messages per channel and stay under about 2 MB. **Your code is safest on GitHub.**
 - 750 free hours a month per Render workspace.
 
+## Sign in with GitHub (accounts that follow you to any device)
+
+Without this, each device remembers its own sign-in. With it, you and friends can **Sign in with GitHub** to join from an invite, and sign back in on a new phone or laptop.
+
+1. On GitHub: Settings › Developer settings › OAuth Apps › **New OAuth App**.
+   - Homepage URL: your Render address, e.g. `https://tribecode-xxxx.onrender.com`
+   - Authorization callback URL: `https://tribecode-xxxx.onrender.com/api/oauth/github/callback`
+2. Copy the **Client ID**, then click **Generate a new client secret** and copy it.
+3. In Render, open the service › **Environment** › add `TRIBE_OAUTH_GITHUB_ID` and `TRIBE_OAUTH_GITHUB_SECRET` › **Save**. Render restarts the service, and cloud save brings the tribe back.
+4. In TribeCode: open your profile › Sign-in › **Link GitHub**, so your account is tied to it. Invite links now show "Sign in with GitHub".
+
+Discord and Google work the same way, with `TRIBE_OAUTH_DISCORD_ID` / `_SECRET` and `TRIBE_OAUTH_GOOGLE_ID` / `_SECRET`.
+
 ## Other hosts
 
 The `Dockerfile` works on any host that runs containers (Koyeb, Fly.io, Railway, a small VPS). Set these:

@@ -85,7 +85,10 @@ function cookieOf(req, name) {
 
 module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMember, isLocal, str, limited, publicBase, findInvite, joinByInvite, addToProject, devices, tribe, log = () => {} }) {
   const CONF = '.tribe/oauth.json';
-  const conf = () => store.readJSON(CONF, {}) || {};
+  // Cloud hosts (docs/CLOUD.md) set providers in their environment, which survives restarts:
+  // TRIBE_OAUTH_GITHUB_ID / TRIBE_OAUTH_GITHUB_SECRET (and _DISCORD_, _GOOGLE_). The file still works on a host computer.
+  const fromEnv = () => { const o = {}; for (const p of Object.keys(PROVIDERS)) { const id = process.env[`TRIBE_OAUTH_${p.toUpperCase()}_ID`], sec = process.env[`TRIBE_OAUTH_${p.toUpperCase()}_SECRET`]; if (id && sec) o[p] = { enabled: true, clientId: String(id).trim(), clientSecret: String(sec).trim(), env: true }; } return o; };
+  const conf = () => ({ ...(store.readJSON(CONF, {}) || {}), ...fromEnv() });
   function writeConf(c) {
     const file = store.p(CONF);
     fs.writeFileSync(file, JSON.stringify(c, null, 2), { mode: 0o600 }); try { fs.chmodSync(file, 0o600); } catch {}

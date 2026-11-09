@@ -76,6 +76,7 @@ function reloadAfterRestore() {
   members = baseStore.readJSON('.tribe/members.json', []); invites = baseStore.readJSON('.tribe/invites.json', []);
   Object.assign(tribe, baseStore.readJSON('.tribe/tribe.json', {}) || {});
   if (P.reload) P.reload();
+  if (typeof devices !== 'undefined' && devices.reload) devices.reload();   // phones signed in through device links
 }
 P.migrate();
 const W = makeWorkspace({ store: baseStore, slug });
