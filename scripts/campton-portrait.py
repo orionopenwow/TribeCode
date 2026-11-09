@@ -14,21 +14,20 @@ for y in range(98,112):
 hand=hand or (236,170,130); handsh=tuple(int(c*0.82) for c in hand)
 shirt=mp[35,75][:3]; shirtd=tuple(int(c*0.75) for c in shirt)
 W,H=112,104
+# v3: the left arm is the portrait's own pixels, tilted in from the shoulder toward the laptop (RotSprite-style)
 def armsprite(x0,x1,y0,y1):
     a=Image.new('RGBA',me.size,(0,0,0,0)); ap=a.load()
     for yy in range(y0,y1):
         for xx in range(x0,x1): ap[xx,yy]=mp[xx,yy]
     return a
-LARM=armsprite(4,22,67,108); RARM=armsprite(54,67,67,108)
 def rot(img,deg,piv):
-    # RotSprite-style: scale up 8x, rotate with nearest neighbour around the pivot, scale back by sampling (keeps the pixel detail)
     k=8; big=img.resize((img.width*k,img.height*k),Image.NEAREST)
     big=big.rotate(deg,resample=Image.NEAREST,center=(piv[0]*k+k//2,piv[1]*k+k//2))
     out=Image.new('RGBA',img.size,(0,0,0,0)); op=out.load(); bp=big.load()
     for yy in range(img.height):
         for xx in range(img.width): op[xx,yy]=bp[xx*k+k//2,yy*k+k//2]
     return out
-LROT=[rot(LARM,14+d,(14,67)) for d in (0,2)]; RROT=[rot(RARM,-14-d,(59,67)) for d in (0,2)]
+LARM=armsprite(4,22,67,108); LROT=[rot(LARM,a,(15,67)) for a in (20,22)]
 def blink(img):
     d=img.load()
     for (x0,x1) in ((28,39),(49,60)):
@@ -47,25 +46,43 @@ def frame(i):
     bob=1 if i in (2,3,6,7) else 0
     # paste the body (lower part stays, head + torso bob by a pixel)
     top=body.crop((0,0,70,64)); low=body.crop((0,64,70,96))
-    # the portrait's arms hang straight down; take them out below the shoulder and draw them reaching for the laptop
     lp=low.load()
-    for yy in range(3,32):   # low starts at portrait row 64
-        for xx in list(range(4,22))+list(range(54,67)): lp[xx,yy]=(0,0,0,0)
+    for yy in range(3,32):
+        for xx in range(4,22): lp[xx,yy]=(0,0,0,0)
     c.alpha_composite(low,(21,64))
-    # the arms, swung in toward the laptop; they take turns lifting a little (typing)
-    la=LROT[1 if i%2==0 else 0]; ra=RROT[1 if i%2==1 else 0]
-    c.alpha_composite(la.crop((0,64,70,110)),(21,64)); c.alpha_composite(ra.crop((0,64,70,110)),(21,64))
+    c.alpha_composite(LROT[1 if i%2==0 else 0].crop((0,64,70,110)),(21,64))
     c.alpha_composite(top,(21,bob))
     # forearms: shirt sleeves from the shoulders down to the laptop's sides (the hands reach behind the lid)
     def sleeve(pts):
         g.polygon(pts, fill=shirt+(255,), outline=dark+(255,))
+    sleeve([(41,80),(47,78),(62,80),(60,87),(46,87)])
+    sleeve([(78,72),(89,72),(109,81),(109,87),(104,87)])
+    shl=tuple(min(255,int(v*1.45)+10) for v in shirt)
+    g.line((41,73,60,81),fill=shl+(255,)); g.line((79,73,99,81),fill=shl+(255,))
+    # hands (drawn before the lid so the fingers tuck behind its edges); they tap in turn
+    def handpx(x0,y0,flip):
+        # 8x6 pixel hand seen from the side-top: knuckles, three finger bumps, a shade line, a dark outline
+        f=i%4
+        rows=[".ooooooo..","oHHHHHHHo.","oHHHHHHHHo","oHHHHHHHHo",
+              "oH"+("h" if f!=0 else "H")+"H"+("h" if f!=2 else "H")+"H"+("h" if f!=1 else "H")+"HHo",
+              "oS"+("S" if f!=0 else "o")+"S"+("S" if f!=2 else "o")+"S"+("S" if f!=1 else "o")+"SSo",".oooooooo."]
+        for j,row in enumerate(rows):
+            for k,ch in enumerate(row):
+                xx=x0+(len(row)-1-k if flip else k); yy=y0+j
+                col={'o':dark,'H':hand,'h':handsh,'S':handsh}.get(ch)
+                if col: c.putpixel((xx,yy),col+(255,))
+        # cuff
+        cx=x0+(10 if flip else -1)
+        for yy in range(y0+1,y0+6): c.putpixel((cx,yy),shirtd+(255,))
+    lu=1 if i%2==0 else 0; ru=1 if i%2==1 else 0
+    handpx(57,79-lu,False); handpx(100,79-ru,True)
     # desk
     g.rectangle((0,88,W-1,92),fill=(92,86,116,255)); g.line((0,88,W-1,88),fill=(122,116,146,255))
     g.rectangle((0,93,W-1,H-1),fill=(58,53,80,255)); g.line((0,93,W-1,93),fill=(38,34,54,255))
     g.rectangle((6,96,10,H-1),fill=(44,40,62,255)); g.rectangle((W-11,96,W-7,H-1),fill=(44,40,62,255))
     # laptop, seen from the back: a beveled lid with a tapered silhouette, a hinge, and the deck's front lip
     OUT=(58,62,74); BODY=(176,182,193); HI=(206,211,220); SH=(140,147,160); DEEP=(112,119,133)
-    lx0,lx1,ly0,ly1=39,73,71,84
+    lx0,lx1,ly0,ly1=65,103,63,84
     for yy in range(ly0,ly1+1):
         t=(yy-ly0)/(ly1-ly0); inset=round((1-t)*2)   # a little narrower at the top: perspective
         a,b=lx0+inset,lx1-inset
@@ -75,23 +92,23 @@ def frame(i):
             elif yy==ly0+1 or xx==a+1: col=HI
             elif xx>=b-2 or yy>=ly1-1: col=SH
             c.putpixel((xx,yy),col+(255,))
-    for xx in (lx0+1,lx1-1): c.putpixel((xx,ly0),(0,0,0,0)); c.putpixel((xx+(1 if xx<56 else -1),ly0),OUT+(255,))
+    for xx in (lx0+1,lx1-1): c.putpixel((xx,ly0),(0,0,0,0)); c.putpixel((xx+(1 if xx<84 else -1),ly0),OUT+(255,))
     # the TribeCode flame on the lid; it breathes
     fl=["..X..",".XX..",".XXX.","XXYXX","XYYYX",".XXX."]
     lc=(56,198,177) if i%4<2 else (44,160,143); lc2=(150,235,222) if i%4<2 else (110,200,188)
     for j,row in enumerate(fl):
         for k,ch in enumerate(row):
-            if ch!='.': c.putpixel((54+k,75+j),(lc if ch=='X' else lc2)+(255,))
+            if ch!='.': c.putpixel((82+k,70+j),(lc if ch=='X' else lc2)+(255,))
     # hinge + deck lip (the keyboard deck pokes out under the lid, wider, catching the light)
-    g.rectangle((35,85,77,85),fill=DEEP+(255,))
-    g.rectangle((33,86,79,87),fill=HI+(255,)); g.line((33,87,79,87),fill=SH+(255,))
-    g.line((32,86,32,87),fill=OUT+(255,)); g.line((80,86,80,87),fill=OUT+(255,)); g.line((33,88,79,88),fill=OUT+(255,))
+    g.rectangle((63,85,105,85),fill=DEEP+(255,))
+    g.rectangle((61,86,107,87),fill=HI+(255,)); g.line((61,87,107,87),fill=SH+(255,))
+    g.line((60,86,60,87),fill=OUT+(255,)); g.line((108,86,108,87),fill=OUT+(255,)); g.line((61,88,107,88),fill=OUT+(255,))
     # a soft teal spill from the screen on his chin (two flat steps, no glow)
     for xx in range(46,60):
         if c.getpixel((xx,60))[3] and c.getpixel((xx,60))[0]>180: c.putpixel((xx,60),(min(255,c.getpixel((xx,60))[0]-20),c.getpixel((xx,60))[1]+6,c.getpixel((xx,60))[2]+14,255))
     # a few code characters floating up from the screen
     k=i%8
-    for j,(dx,col) in enumerate(((96,(56,198,177)),(101,(242,107,29)),(106,(108,124,255)))):
+    for j,(dx,col) in enumerate(((97,(56,198,177)),(103,(242,107,29)),(108,(108,124,255)))):
         yy=64-((k*3+j*7)%22)
         if 40<yy<64: g.rectangle((dx,yy,dx+1,yy+1),fill=col+(255,))
     return c
