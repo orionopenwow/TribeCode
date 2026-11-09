@@ -1228,3 +1228,5 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .lang__chips button { padding: 6px 10px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--muted); font: 500 13px/1 var(--font); }
   .lang__chips button[aria-pressed="true"] { color: var(--text); border-color: var(--ember); }
 }
+
+.maker__sign { color: var(--m-text) !important; font-weight: 700; font-size: 20px !important; margin-top: 4px !important; }
