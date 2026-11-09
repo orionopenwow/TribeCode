@@ -1223,7 +1223,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 @media (max-width: 640px) { .lang__btn b { display: none; } .lang__btn { width: 34px; padding: 0; justify-content: center; } }
 .lang__chips { display: none; }
 @media (max-width: 480px) {
-  .nav__end .lang { display: none; }
+  body:has(.nav__mobile-extra) .nav__end .lang { display: none; }
   .lang__chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 0 4px; }
   .lang__chips button { padding: 6px 10px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--muted); font: 500 13px/1 var(--font); }
   .lang__chips button[aria-pressed="true"] { color: var(--text); border-color: var(--ember); }
