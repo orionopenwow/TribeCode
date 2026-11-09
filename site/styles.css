@@ -1187,3 +1187,25 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .plats a.is-mine { border-color: #F26B1D; }
 @media (max-width: 860px) { .stats__in::before { display: none; } }
 .plats { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 560px; } .plats span.mono { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; } .plats a { min-width: 0; }
+
+/* ================= the maker (an app by Campton) ================= */
+/* its own night palette: deep indigo, warm skin and ember, with a slow pixel sky (stars + rising embers) behind it */
+.maker { --m-bg: #17132E; --m-edge: #2C2650; --m-text: #F4EFFF; --m-soft: #B7AEDB; --m-ember: #FF8A3D;
+  position: relative; overflow: hidden; padding: 112px 0; background: var(--m-bg); border-top: 1px solid var(--m-edge); color: var(--m-soft); isolation: isolate; }
+.maker__sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; image-rendering: pixelated; }
+.maker__in { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; }
+.maker__art { margin: 0; justify-self: center; position: relative; }
+.maker__art::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: -10px; height: 10px; background: #0F0C22; border-radius: 50%; z-index: -1; }
+.maker__art img { display: block; width: min(420px, 100%); height: auto; image-rendering: pixelated; }
+.maker .eyebrow { color: var(--m-ember); }
+.maker__title { margin: 8px 0 16px; color: var(--m-text); font-size: clamp(32px, 4.4vw, 52px); line-height: 1.05; letter-spacing: -0.02em; }
+.maker__text { margin: 0 0 14px; max-width: 34em; font-size: 18px; line-height: 1.6; color: var(--m-soft); }
+.maker__links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 26px; }
+.maker__gh { color: var(--m-text); text-decoration: none; border-bottom: 1px solid var(--m-edge); padding-bottom: 2px; font-size: 14px; }
+.maker__gh:hover { border-color: var(--m-ember); color: var(--m-ember); }
+@media (max-width: 860px) {
+  .maker { padding: 72px 0; }
+  .maker__in { grid-template-columns: 1fr; gap: 28px; text-align: left; }
+  .maker__art img { width: min(300px, 80vw); }
+  .maker__text { font-size: 16px; }
+}
