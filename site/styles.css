@@ -1098,3 +1098,14 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .lc-mods li.going em { color: var(--ember); border-color: color-mix(in srgb, var(--ember) 50%, var(--edge)); }
 .lc-mods li.done em { color: #3BD16F; border-color: color-mix(in srgb, #3BD16F 45%, var(--edge)); }
 @media (max-width: 860px) { .lc { grid-template-columns: 1fr; } .lc-me { border-right: 0; border-bottom: 1px solid var(--edge); padding: 20px; } .lc-go { justify-self: stretch; text-align: center; } }
+
+/* Remix a classic (v0.20): open-source starters with license and credit */
+.rx { margin-top: 56px; }
+.rx__head h3 { font-size: clamp(22px, 2.4vw, 28px); margin: 6px 0 8px; }
+.rx__grid { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.rx__card { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; padding: 16px; border: 1px solid #2A313C; border-radius: 14px; background: #1B2028; }
+.rx__e { font-size: 24px; line-height: 1.2; }
+.rx__t b { font-size: 16px; } .rx__t p { margin: 4px 0 0; color: #AEB6C2; font-size: 14px; line-height: 1.5; }
+.rx__by { font-size: 12.5px !important; } .rx__by a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.rx__lic { color: #38C6B1; }
+.rx__go { grid-column: 1 / -1; justify-self: start; }

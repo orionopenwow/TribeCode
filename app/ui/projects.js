@@ -583,16 +583,43 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       <div class="ns-list">${row('own', ico('i-plus', 18), 'Create my own', 'Start from a blank page', 'ns-own')}
         <div class="ns-sub">Start from a template</div>
         ${TEMPLATES.map(t => row('tpl:' + t.k, `<span class="ns-emo">${t.emoji}</span>`, t.t, t.s)).join('')}
+        ${host ? row('remix', '<span class="ns-emo">🧩</span>', 'Remix a starter', 'Open-source games, apps and sites to build on', 'ns-remix') : ''}
         ${host ? row('code', ico('i-folder', 18), 'Bring my code', 'A folder on this computer, or a GitHub repository') : ''}</div>
       ${joinFoot()}`;
     body().querySelectorAll('[data-ns]').forEach(b => b.onclick = () => {
       const k = b.dataset.ns;
       if (k === 'code') { body().classList.remove('np-setup'); return openAdvanced(); }
+      if (k === 'remix') return openStarters();
       setup.tpl = k.startsWith('tpl:') ? TEMPLATES.find(t => t.k === k.slice(4)) : null;
       customize();
     });
     wireStart();
   }
+  // Remix a starter (templates/starters.json): open-source projects checked for permissive licenses. Small ones copy
+  // straight into a new project from GitHub; big collections open in the browser to borrow from. Credit stays with the authors.
+  const KIND_E = { game: '🎮 Games', app: '📱 Apps', site: '🌐 Sites', asset: '🎨 Art and sound' };
+  async function openStarters() {
+    body().classList.add('np-setup');
+    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div><div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
+      <div class="ns-btns"><button class="linkish" id="np-back">Back</button></div>`;
+    body().querySelector('[data-close]').onclick = close; $('#np-back').onclick = openNew;
+    let items = []; try { items = (await C.api('/shelf/starters')).items || []; } catch {}
+    const box = $('#st-list'); if (!box) return;
+    if (!items.length) { box.innerHTML = '<p class="faint">Starters are not available right now.</p>'; return; }
+    const groups = Object.keys(KIND_E).map(k => [k, items.filter(i => i.kind === k)]).filter(([, l]) => l.length);
+    box.innerHTML = groups.map(([k, l]) => `<div class="ns-sub">${KIND_E[k]}</div>${l.map(i => `<div class="st-row"><span class="ns-emo">${esc(i.emoji || '✨')}</span>
+        <span class="st-t"><b>${esc(i.title)}</b><small>${esc(i.summary)}</small><small class="st-cred">by ${esc(i.by)} · <span class="st-lic">${esc(i.license)}</span></small></span>
+        ${i.remix && i.repo ? `<button class="btn sm primary" data-remix="${esc(i.repo)}" data-name="${esc(i.title)}">Start from this</button>` : `<a class="btn sm" href="${esc(i.url || 'https://github.com/' + i.repo)}" target="_blank" rel="noopener">Browse</a>`}</div>`).join('')}`).join('');
+    box.querySelectorAll('[data-remix]').forEach(b => b.onclick = () => remix(b.dataset.remix));
+  }
+  function remix(repo) {   // the "Bring my code" box, filled with the GitHub address
+    if (!isHost()) { toastMsg('Ask your host to start this one: only the host can copy code into a new project.'); return; }
+    body().classList.remove('np-setup'); openAdvanced();
+    const inp = $('#np-input'); if (!inp) return;
+    inp.value = /^https?:/.test(repo) ? repo : 'https://github.com/' + repo; inp.dataset.touched = '1';
+    inp.dispatchEvent(new Event('input')); inp.focus();
+  }
+  const toastMsg = t => { if (App() && App().toast) App().toast(t); else alert(t); };
   const joinFoot = () => `<div class="ns-foot"><b>Have an invite already?</b><div class="np-row"><input class="input" id="np-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false" aria-label="Invite link"><button class="btn" id="np-join-go">Join</button></div></div>`;
   function wireStart() {
     const x = body().querySelector('[data-close]'); if (x) x.onclick = close;
@@ -835,5 +862,12 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
 
   // A project deleted (here or by the host elsewhere): leave it and go Home.
   C.on('ws', m => { if (m.type !== 'project-removed') return; const was = cur() === m.id; refresh().then(async () => { if (!was) return; const d = projects[0]; if (d) await switchTo(d.id, 'home').catch(() => {}); if (window.TribeHub) window.TribeHub.open('home'); }); });
-  window.TribeProjects = { step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  // tribecode.org's "Start from this" opens the app with ?remix=owner/repo: once you're the host, the box is filled in
+  (function remixFromLink() {
+    let r = ''; try { r = new URLSearchParams(location.search).get('remix') || ''; } catch {}
+    if (!/^[\w.-]+\/[\w.-]+$/.test(r)) return;
+    const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
+    if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
+  })();
+  window.TribeProjects = { openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
 })();

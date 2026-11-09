@@ -1,10 +1,15 @@
 # Changelog
 
 ## v0.20.0
+- **Experience modes**: Beginner, Intermediate or Advanced decides how much of TribeCode you see (Settings › Experience). Beginner keeps chat, Flint, templates and shipping; Advanced shows ownership, conflicts, MCP, the agent fleet and Turbo. Your role still decides what you can do. The host picks a starting mode per role (Settings › Starting modes), the welcome's "Have you made an app before?" sets yours, and the choice follows you to every device.
+- **Remix a starter**: New project › Remix a starter lists open-source games, apps and sites (2048, the Phaser and melonJS starters, PixiJS open games, HTML5 Boilerplate, plus LittleJS, KAPLAY, Godot, three.js, TodoMVC, Expo, Astro and Kenney's CC0 art to browse). Every one was checked for an MIT or CC0 license and keeps its authors' credit. The website has a matching "Remix a classic" row; its Start from this opens the app with the GitHub box filled in.
+- Project settings no longer opens the welcome by mistake when it's opened while the project list is still loading.
 
 Faster-feeling and harder to break: everything you do shows at once, nothing is lost offline, and Learn is a real course.
 
 - **Instant messages, never lost**: your message shows the moment you press Send, faint until the server has it. Offline or while the tribe wakes up, it waits in the outbox and sends by itself, exactly once (each message carries an id, so a resend never doubles). Queued messages survive a reload. If one is refused, it says Not sent with Retry
+- **Drafts stay**: what you were typing in a chat stays when you switch channels, DMs or projects, or reload
+- **Releases wait for tests**: installers build only after the essential tests pass on GitHub, and the same checks run on every push to work branches
 - **Instant votes**: your vote shows right away and rolls back with a note if it didn't save (task moves were already instant)
 - **Health pill**: quiet when all is well; shows Reconnecting, Waking up the tribe, Offline or "2 waiting to send" when it matters. Tap to try again. The app also reconnects the moment your network comes back
 - **Refresh TribeCode** (Settings › Fix problems): clears the app's stored files and reloads fresh, keeping your sign-in, drafts, unsent messages and the view you were on

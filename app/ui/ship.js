@@ -65,7 +65,7 @@
         <p class="sh-how faint">${esc(d.modeText)}. Only the saved changes above go out, exactly as you see them. Nothing is ever forced.</p>`;
     }
     const settings = isHost() ? `<div class="sh-set"><span class="sh-k">Who decides</span><div class="sh-seg" role="radiogroup" aria-label="Who decides">${[['host', '👑 Host'], ['majority', '🙌 Majority'], ['everyone', '🤝 Everyone']].map(([k, l]) => `<button type="button" role="radio" aria-checked="${d.mode === k}" data-sh-mode="${k}">${l}</button>`).join('')}</div>
-        <button type="button" class="sh-tg ${d.turbo && d.turbo.on ? 'on' : ''}" data-sh="turbo" role="switch" aria-checked="${!!(d.turbo && d.turbo.on)}" title="Ships approved work on main by itself at calm moments: no unsaved edits, a quiet ${d.turbo ? d.turbo.quietMin : 10} min, checks passing, never during a vote, at most ${d.turbo ? d.turbo.maxPerHour : 4} times an hour"><i></i>⚡ Turbo</button>
+        <button type="button" data-mode-min="advanced" class="sh-tg ${d.turbo && d.turbo.on ? 'on' : ''}" data-sh="turbo" role="switch" aria-checked="${!!(d.turbo && d.turbo.on)}" title="Ships approved work on main by itself at calm moments: no unsaved edits, a quiet ${d.turbo ? d.turbo.quietMin : 10} min, checks passing, never during a vote, at most ${d.turbo ? d.turbo.maxPerHour : 4} times an hour"><i></i>⚡ Turbo</button>
         ${d.turbo && d.turbo.on && d.turbo.state ? `<span class="faint sh-tstate">${esc(d.turbo.state)}</span>` : ''}</div>` : '';
     const log = (d.log || []).slice(0, 3).map(x => `<div class="sh-log"><span>${esc(x.text)}</span><span class="faint">${esc(ago(x.at))}</span></div>`).join('');
     card.innerHTML = `${head}

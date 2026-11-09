@@ -124,6 +124,7 @@
       if (m.type === 'projects' || m.type === 'project-pulse') emit(m.type, m);
       if (m.type === 'hello') { state.huddle = m.huddle || []; emit('huddle', state.huddle); state.me = m.member; state.tribe = m.tribe; state.members = m.members; emit('hello', m); emit('presence', state.members); }
       if (m.type === 'presence') { state.members = m.members; emit('presence', state.members); }
+      if (m.type === 'tribe' && m.tribe) { state.tribe = m.tribe; emit('tribe', m.tribe); }
       if (m.type === 'chat') emit('chat', m);
       if (m.type === 'task') emit('task', m.task);
       if (m.type === 'task-removed') emit('task-removed', m.id);

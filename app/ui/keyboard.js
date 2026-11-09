@@ -33,3 +33,22 @@
     if (b && !b.disabled) try { navigator.vibrate(6); } catch {}
   }, { passive: true });
 })();
+// Unsent drafts: what you were typing in a chat stays when you switch channels, DMs or projects, or reload.
+(function () {
+  const inp = () => document.getElementById('chat-input');
+  const C = () => window.TribeClient;
+  const key = () => { const c = C(), ch = window.TribeDM && window.TribeDM.current ? window.TribeDM.current() : 'general'; return `tribecode.draft:${c && c.project ? c.project() : ''}:${ch}`; };
+  let curKey = null, t = null;
+  const save = () => { const i = inp(); if (!i || !curKey) return; try { i.value.trim() ? localStorage.setItem(curKey, i.value.slice(0, 4000)) : localStorage.removeItem(curKey); } catch {} };
+  function restore() {
+    const i = inp(); if (!i) return;
+    const k = key(); if (k === curKey) return;
+    save(); curKey = k;
+    let v = ''; try { v = localStorage.getItem(k) || ''; } catch {}
+    if (document.activeElement !== i || !i.value) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'chat-input') { clearTimeout(t); t = setTimeout(save, 300); } }, true);
+  document.addEventListener('submit', e => { if (e.target && e.target.id === 'chat-form') { try { localStorage.removeItem(key()); } catch {} } }, true);
+  setInterval(restore, 700);   // channel, DM or project changed: swap in that conversation's draft
+  addEventListener('pagehide', save);
+})();

@@ -2,3 +2,15 @@
    this file keeps a few shared rules for long reading text. Loaded last. */
 .fl-msg, .doc-body p, .pj-row-line .t, .ock-sub, .ap-thumb { line-height: 1.55; }
 .eyebrow { letter-spacing: .04em; }
+
+/* Experience modes (app/ui/modes.js): data-mode-min hides a feature below that mode */
+body[data-mode="beginner"] [data-mode-min="intermediate"], body[data-mode="beginner"] [data-mode-min="advanced"],
+body[data-mode="intermediate"] [data-mode-min="advanced"] { display: none !important; }
+.md-pick { display: grid; gap: 8px; }
+.md-opt { display: flex; gap: 12px; align-items: flex-start; text-align: left; padding: 12px 14px; border: 1px solid var(--border, #2A313C); border-radius: 12px; background: var(--surface, #1B2028); color: inherit; cursor: pointer; }
+.md-opt:hover { background: var(--raised, #1E242D); }
+.md-opt.on { border-color: var(--ember, #F26B1D); background: var(--raised, #1E242D); }
+.md-e { font-size: 20px; line-height: 1.2; }
+.md-t { display: grid; gap: 2px; } .md-t small { color: var(--muted, #9AA4B2); font-size: 12.5px; line-height: 1.45; }
+.md-note { margin: 8px 0 0; font-size: 12.5px; }
+.md-roles { display: grid; gap: 8px; } .md-role { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
