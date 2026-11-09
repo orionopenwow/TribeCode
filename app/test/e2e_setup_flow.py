@@ -219,7 +219,7 @@ def main():
             if ph.locator("#install-sheet:not(.hidden) #ins-later").count(): ph.click("#ins-later")
             ph.evaluate("TribeApp.show('home')"); ph.wait_for_selector("#pj-setup .su-role", timeout=15000)
             ph.wait_for_selector("#pj-insp .sx-item", timeout=15000); ph.wait_for_timeout(300)
-            no_overflow(ph, "phone dashboard"); ph.evaluate("document.querySelector('#pj-setup').scrollIntoView()"); shot(ph, "phone-dashboard")
+            no_overflow(ph, "phone dashboard"); ph.evaluate("(document.querySelector('#pj-setup') || document.body).scrollIntoView()"); shot(ph, "phone-dashboard")
             ph.click("#pj-setup [data-role=writer]"); ph.wait_for_selector(".su-flow .su-opt"); no_overflow(ph, "phone role chooser")
             ph.click(".su-flow .su-opt >> nth=0"); ph.wait_for_selector("#pj-setup [data-role=writer].on", timeout=10000)
             ph.evaluate("TribeProjects.step('vision')"); ph.wait_for_selector("#av-cats .av-cat"); ph.wait_for_timeout(200); no_overflow(ph, "phone vision composer"); shot(ph, "phone-vision")

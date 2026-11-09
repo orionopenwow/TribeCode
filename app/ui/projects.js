@@ -147,7 +147,7 @@
     else if (k === 'github') connectGithub(p);   // sign in to GitHub inside the app   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
-  let ovSeq = 0, visDraft = '';   // the checklist's inline vision box keeps what you typed across redraws
+  let ovSeq = 0, visDraft = '', naming = false;   // naming: the project name is being edited, so a redraw waits   // the checklist's inline vision box keeps what you typed across redraws
   async function overview() {
     const el = $('#pj-overview'); if (!el) return;
     const seq = ++ovSeq;   // the latest call wins: an older, slower render never paints over a newer one
@@ -217,7 +217,7 @@
       ['New files', 'i-doc', newFiles.length ? plural(newFiles.length, 'this week', 'this week') : 'None this week', 'docs', false],
     ];
     const r = d.repo;
-    if (seq !== ovSeq) return;
+    if (seq !== ovSeq || naming) return;
     const visFocus = document.activeElement && document.activeElement.id === 'ock-vis-in';
     el.innerHTML = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
@@ -320,9 +320,9 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   function editName(p) {
     const b = $('#pj-name'); if (!b) return;
     const inp = document.createElement('input'); inp.className = 'input pj-name-in'; inp.maxLength = 48; inp.value = p.name; inp.setAttribute('aria-label', 'Project name');
-    b.replaceWith(inp); inp.focus(); inp.select();
+    b.replaceWith(inp); inp.focus(); inp.select(); naming = true;
     let done = false;
-    const save = async keep => { if (done) return; done = true;
+    const save = async keep => { if (done) return; done = true; naming = false;
       const v = inp.value.trim();
       if (keep && v && v !== p.name) { try { await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name: v } }); await refresh(); toast('Renamed'); } catch (e) { toast(e.message); } }
       overview(); };
