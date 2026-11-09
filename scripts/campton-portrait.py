@@ -32,14 +32,20 @@ def frame(i):
     bob=1 if i in (2,3,6,7) else 0
     # paste the body (lower part stays, head + torso bob by a pixel)
     top=body.crop((0,0,70,64)); low=body.crop((0,64,70,96))
+    # the portrait's arms hang straight down; take them out below the shoulder and draw them reaching for the laptop
+    lp=low.load()
+    for yy in range(7,32):
+        for xx in list(range(0,15))+list(range(55,70)): lp[xx,yy]=(0,0,0,0)
     c.alpha_composite(low,(21,64)); c.alpha_composite(top,(21,bob))
     # forearms: shirt sleeves from the shoulders down to the laptop's sides (the hands reach behind the lid)
     def sleeve(pts):
         g.polygon(pts, fill=shirt+(255,), outline=dark+(255,))
-    sleeve([(31,72),(42,72),(62,80),(60,87),(55,87)])
-    sleeve([(78,72),(89,72),(109,81),(109,87),(104,87)])
-    shl=tuple(min(255,int(v*1.45)+10) for v in shirt)
-    g.line((41,73,60,81),fill=shl+(255,)); g.line((79,73,99,81),fill=shl+(255,))
+    # upper arm angles down and in, the forearm tilts up toward the keyboard (elbow just above the desk)
+    sleeve([(22,70),(34,69),(40,76),(58,80),(59,86),(36,87),(26,84)])
+    sleeve([(91,70),(79,69),(76,76),(100,80),(102,86),(80,87),(88,84)])
+    shl=tuple(min(255,int(v*1.5)+12) for v in shirt)
+    for (x0,y0,x1,y1) in ((34,70,40,76),(40,77,57,81),(79,70,76,76),(77,77,99,81)): g.line((x0,y0,x1,y1),fill=shl+(255,))
+    for (x0,y0,x1,y1) in ((27,83,35,86),(88,83,81,86)): g.line((x0,y0,x1,y1),fill=shirtd+(255,))   # the elbow fold
     # hands (drawn before the lid so the fingers tuck behind its edges); they tap in turn
     def handpx(x0,y0,flip):
         # 8x6 pixel hand seen from the side-top: knuckles, three finger bumps, a shade line, a dark outline
