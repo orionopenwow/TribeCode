@@ -188,6 +188,7 @@
   const ease = p => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
   async function move(id, target, ms = 850, opts = {}) {
     const c = cursor(id), to = pointOf(target, opts.dx, opts.dy); if (!to) return false;
+    if (liveOn() && target && target.nodeType === 1 && !opts.carry) spot(target);   // the spotlight follows the action
     if (calm() || fast) { c.x = to.x; c.y = to.y; place(c); if (opts.carry) carryAt(opts.carry, c); await wait(calm() ? Math.min(ms, 250) : 1); return true; }
     const from = { x: c.x, y: c.y }, dist = Math.hypot(to.x - from.x, to.y - from.y), bend = Math.min(160, dist * 0.25) * (opts.bend || (id.length % 2 ? 1 : -1));
     const nx = -(to.y - from.y) / (dist || 1), ny = (to.x - from.x) / (dist || 1);
@@ -208,9 +209,39 @@
     r.style.left = c.x + 'px'; r.style.top = c.y + 'px'; ensureLayer().appendChild(r); setTimeout(() => r.remove(), 700);
     c.el.classList.add('down'); setTimeout(() => c.el.classList.remove('down'), 160);
   }
+  // ---------- v0.22: Flint narrates live (no clicks needed) ----------
+  // A spotlight dims everything but what's happening (it follows each click and each typed box), and Flint's line at the
+  // bottom says what he's doing right now: "Clicking Save vision", "Typing the vision", then what it means.
+  let spotEl = null, sayEl = null, sayT = null;
+  const liveOn = () => running && !guided && !fast && !quiet;
+  function spot(target, pad = 8) {
+    if (!liveOn()) return;
+    const el = elOf(target);
+    if (!spotEl || !spotEl.isConnected) { spotEl = document.createElement('div'); spotEl.className = 'dt-spot'; spotEl.id = 'dt-spot'; spotEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(spotEl); }
+    if (!el || !el.getClientRects().length) { if (target === null) spotEl.classList.add('wide'); return; }   // keep the last spot when a target is missing
+    const r = el.getBoundingClientRect(), x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad);
+    const w = Math.min(innerWidth - x - 4, r.width + pad * 2), h = Math.min(innerHeight - y - 4, r.height + pad * 2);
+    spotEl.classList.remove('wide'); spotEl.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; spotEl.style.width = Math.round(w) + 'px'; spotEl.style.height = Math.round(h) + 'px';
+  }
+  function live(text, { lead = '' } = {}) {
+    if (!liveOn() || !text) return;
+    if (!sayEl || !sayEl.isConnected) {
+      sayEl = document.createElement('div'); sayEl.className = 'dt-say'; sayEl.id = 'dt-say'; sayEl.setAttribute('role', 'status'); sayEl.setAttribute('aria-live', 'polite');
+      sayEl.innerHTML = '<img src="assets/flint.svg" alt="" width="34" height="34"><div><span class="dt-say-who">Flint</span><span class="dt-say-t" id="dt-say-t"></span></div>';
+      document.body.appendChild(sayEl);
+    }
+    const t = sayEl.querySelector('#dt-say-t'); sayEl.classList.remove('in'); void sayEl.offsetWidth;
+    t.innerHTML = (lead ? `<b>${esc(lead)}</b> ` : '') + esc(text); sayEl.classList.add('in');
+  }
+  const labelOf = el => { if (!el) return ''; const t = (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || el.placeholder || '').replace(/\s+/g, ' ').trim(); return t.length > 42 ? t.slice(0, 40) + '…' : t; };
+  const readMs = text => Math.max(2600, String(text || '').split(/\s+/).length * 300);
+  async function readFor(text) { const t = token; let left = readMs(text); while (left > 0) { await new Promise(r => setTimeout(r, 100)); if (t !== token || !running) throw ABORT; if (!paused) left -= 100 * Math.max(1, speedN); } }
+  function unspot() { if (spotEl) spotEl.remove(); spotEl = null; if (sayEl) sayEl.remove(); sayEl = null; clearTimeout(sayT); }
+
   // glide to it, then click the real element (the app's own handler runs)
   async function click(id, target, opts = {}) {
     let el = elOf(target); if (!el) return false;
+    if (liveOn()) { spot(el); const who = id === 'me' ? '' : String((member(id) || {}).name || id).split(' ')[0]; const lb = labelOf(el); if (lb && !opts.noClick) live(`${who ? who + ' clicks' : 'Clicking'} “${lb}”`, { lead: '▶' }); }
     await move(id, el, opts.ms || 850, opts); await wait(140);
     if (!el.isConnected && typeof target === 'string') el = $(target) || el;   // the screen re-rendered meanwhile
     ripple(cursor(id));
@@ -221,6 +252,7 @@
   // type into an input or a textarea through its normal input events
   async function type(el, text, cps = 26) {
     el = elOf(el); if (!el) return;
+    if (liveOn()) { spot(el); live(`Typing: “${text.split('\n')[0].slice(0, 60)}${text.length > 60 ? '…' : ''}”`, { lead: '⌨' }); }
     el.focus({ preventScroll: true });
     const setV = v => { const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); };
     let v = el.value || '';
@@ -633,6 +665,7 @@
   // ======================================================================================================
   // The runner, the chapter bar, the caption and the end card
   // ======================================================================================================
+  let opts0 = {};
   let list = [], idx = 0, cur = null, sceneStart = 0, offsets = [], total = 0, jump = null, done = false;
   const log = [];
   const dur = s => (phone() ? s.pdur || s.dur : s.dur);
@@ -647,7 +680,10 @@
         await narrate(cur, idx);
         await cur.run();
         if (guided) await recap(cur, idx);
-        else { const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest); }
+        else {
+          const rest = dur(cur) - (vt - sceneStart); if (rest > 0) await wait(rest);
+          if (liveOn() && cur.after && !opts0.classic) { spot(null); live(cur.after.replace(/\s*Next[^.]*\.?$/i, ''), { lead: '✓' }); await readFor(cur.after); }
+        }
       } catch (e) {
         if (e !== ABORT) { console.warn('demo tour:', cur.id, e); check('scene ran', false, String(e && e.message || e)); }
         if (!running || me !== runId) return;
@@ -674,6 +710,11 @@
     const G = window.TribeFlintGuide;
     if (fast || quiet || !G || !s.flint) return;
     if (guided) return guidedStep(s, n);
+    if (!opts0.classic) {   // v0.22 default: Flint shows and tells, nothing to click
+      const [sel0, text0] = s.flint; const el0 = sel0 ? [...document.querySelectorAll(sel0)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
+      spot(el0, 10); live(text0.replace(/\b(First, |Now |Then |Next, )?([Cc])lick\b/g, (m, a) => (a || '') + (a ? 'I click' : 'I click')).replace(/(^|[.!?]\s+)I click/g, (m, p) => p + 'I click'), { lead: `${n + 1}/${list.length} · ${s.title}` });
+      await readFor(text0); return;
+    }
     const [sel, text] = s.flint;
     const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
     const t = token; narrating = true; document.body.classList.add('dt-narr');
@@ -752,7 +793,7 @@
     if (bar) bar.classList.toggle('paused', paused);
   }
   function removeUi() {
-    ['#dt-bar', '#dt-cap', '#dt-end', '#dt-phone', '#dt-layer'].forEach(s => { const e = $(s); if (e) e.remove(); });
+    ['#dt-bar', '#dt-cap', '#dt-end', '#dt-phone', '#dt-layer', '#dt-intro'].forEach(s => { const e = $(s); if (e) e.remove(); }); unspot();
     bar = null; layer = null; capsEl && capsEl.remove(); capsEl = null; clearCursors(); drop();
     document.body.classList.remove('dt-on');
   }
@@ -785,7 +826,8 @@
     if (!on()) return false;
     if (running) stop();
     hookRoutes();
-    fast = !!opts.fast; quiet = opts.narrate === false; guided = !fast && !quiet && !opts.watch; document.body.classList.toggle('dt-guided', guided); speedN = fast ? 30 : 1; paused = false; done = false; token++; vt = 0; lastReal = performance.now();
+    opts0 = opts; document.body.classList.toggle('dt-live', !opts.fast && opts.narrate !== false && !opts.guided && !opts.classic);
+    fast = !!opts.fast; quiet = opts.narrate === false; guided = !!opts.guided && !fast && !quiet; /* v0.22: autoplay with live narration is the default */ document.body.classList.toggle('dt-guided', guided); speedN = fast ? 30 : 1; paused = false; done = false; token++; vt = 0; lastReal = performance.now();
     list = SCENES.filter(s => !phone() || s.pdur);
     offsets = []; total = 0; list.forEach(s => { offsets.push(total); total += dur(s); });
     if (SC() && SC().hold) SC().hold(true);
@@ -793,14 +835,39 @@
     K().closePop && K().closePop();
     buildBar(); ensureLayer();
     running = true; clearInterval(loopT); loopT = setInterval(loop, 16);
-    runFrom(0);
+    if (!fast && !quiet && !opts.noIntro) { paused = true; intro().then(() => { if (running) { paused = false; runFrom(0); } }); }
+    else runFrom(0);
     return true;
+  }
+  // Three slides before the tour: what you're about to see, what TribeCode is, how it works. They advance by themselves.
+  const SLIDES = [
+    { e: '🎬', h: 'Here is what you will see', p: 'Flint builds a tiny garden game with two friends in about three minutes: a project, a vision, friends joining, tasks, AI agents at work, a playable preview, a vote, and shipping it. You do not need to click anything.' },
+    { e: '🔥', h: 'What TribeCode is', p: 'The place where friends make apps, games and websites together, with AI helpers. Chat, tasks, docs and the code live in one tribe. Your code is saved in your own GitHub repository.' },
+    { e: '🧭', h: 'How it works', p: 'Say what you want to make. Send friends one link. Everyone, and every AI agent, takes a part. The tribe votes, and one tap ships it. Pause, skip or try it yourself any time from the bar at the bottom.' },
+  ];
+  function intro() {
+    return new Promise(res => {
+      const ov = document.createElement('div'); ov.className = 'dt-intro'; ov.id = 'dt-intro'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Before the tour');
+      let i = 0, t = null, left = 0;
+      const PER = calm() ? 7000 : 6000;
+      const done = () => { clearInterval(t); ov.remove(); res(); };
+      const draw = () => {
+        const x = SLIDES[i];
+        ov.innerHTML = `<div class="dt-in-card"><div class="dt-in-e" aria-hidden="true">${x.e}</div><p class="eyebrow mono">${i + 1} of ${SLIDES.length}</p><h2>${esc(x.h)}</h2><p class="dt-in-p">${esc(x.p)}</p>
+          <div class="dt-in-dots">${SLIDES.map((_, k) => `<i class="${k < i ? 'past' : k === i ? 'on' : ''}"><b style="animation-duration:${PER}ms"></b></i>`).join('')}</div>
+          <div class="dt-in-btns"><button class="linkish" id="dt-in-skip">Skip to the tour</button></div></div>`;
+        ov.querySelector('#dt-in-skip').onclick = done;
+        left = PER;
+      };
+      draw(); document.body.appendChild(ov);
+      t = setInterval(() => { if (!running) { done(); return; } left -= 100; if (left <= 0) { i++; if (i >= SLIDES.length) done(); else draw(); } }, 100);
+    });
   }
   function stop(quiet) {
     const was = running || done;
     running = false; done = false; token++; flush(); clearInterval(loopT); loopT = null;
     if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
-    document.body.classList.remove('dt-guided');
+    document.body.classList.remove('dt-guided', 'dt-live');
     removeUi();
     if (!quiet && was && SC() && SC().hold) SC().hold(false);
   }

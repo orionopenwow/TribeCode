@@ -131,3 +131,29 @@ body.dt-narr .dt-cap { opacity: 0; }
 /* guided tour: your own pointer does the clicking, so the ghost "me" cursor stays out of the way */
 body.dt-guided .dt-cur[data-who="me"] { opacity: 0; }
 body.dt-guided #dt-speed { display: none; }
+
+/* v0.22: Flint shows and tells. A spotlight dims everything but what's happening; his live line says what he's doing */
+.dt-spot { position: fixed; left: 0; top: 0; z-index: 9990; pointer-events: none; border-radius: 12px; border: 2px solid #F26B1D;
+  box-shadow: 0 0 0 9999px rgba(8, 10, 14, .62); transition: transform .45s cubic-bezier(.3,.7,.2,1), width .45s cubic-bezier(.3,.7,.2,1), height .45s cubic-bezier(.3,.7,.2,1), opacity .3s; }
+.dt-spot.wide { opacity: 0; }
+.dt-say { position: fixed; left: 50%; bottom: 76px; z-index: 9995; transform: translate(-50%, 8px); opacity: 0; display: flex; gap: 12px; align-items: center;
+  max-width: min(640px, calc(100vw - 32px)); padding: 12px 16px; border: 1px solid #2A313C; border-radius: 14px; background: #1E242D; color: #F8FAFC; transition: opacity .25s, transform .25s; pointer-events: none; }
+.dt-say.in { opacity: 1; transform: translate(-50%, 0); }
+.dt-say img { flex: none; }
+.dt-say-who { display: block; font: 600 11px/1.2 var(--mono, ui-monospace, monospace); color: #F26B1D; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 2px; }
+.dt-say-t { font-size: 15px; line-height: 1.45; } .dt-say-t b { color: #38C6B1; font-weight: 600; margin-right: 4px; }
+@media (max-width: 820px) { .dt-say { bottom: 96px; } .dt-say-t { font-size: 14px; } }
+/* the three slides before the tour */
+.dt-intro { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 16px; background: rgba(8, 10, 14, .82); }
+.dt-in-card { width: min(560px, 100%); padding: 32px 28px 22px; border: 1px solid #2A313C; border-radius: 18px; background: #1B2028; color: #F8FAFC; text-align: center; animation: dt-in-up .35s ease both; }
+.dt-in-e { font-size: 44px; margin-bottom: 6px; }
+.dt-in-card h2 { margin: 6px 0 10px; font-size: clamp(22px, 3vw, 28px); }
+.dt-in-p { margin: 0 auto 20px; max-width: 46ch; color: #C7CED8; font-size: 15.5px; line-height: 1.6; }
+.dt-in-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+.dt-in-dots i { width: 56px; height: 4px; border-radius: 4px; background: #2A313C; overflow: hidden; }
+.dt-in-dots i.past b { width: 100%; } .dt-in-dots b { display: block; height: 100%; width: 0; background: #F26B1D; }
+.dt-in-dots i.on b { animation: dt-in-fill linear forwards; }
+@keyframes dt-in-fill { to { width: 100%; } }
+@keyframes dt-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dt-spot, .dt-say { transition: none; } .dt-in-card { animation: none; } }
+body.dt-live .dt-cap { display: none !important; }
