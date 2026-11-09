@@ -44,6 +44,7 @@
   // ---------- actions (stored by name so buttons still work after a reload) ----------
   const ACTS = {
     assets: o => window.TribeAssets && window.TribeAssets.open(o || {}),   // v0.25: the asset library
+    inspoApply: to => window.TribeInspo && window.TribeInspo.apply(to || 'both'),
     connect: () => App() && App().connectClaude && App().connectClaude(),
     brain: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
     guide: slug => window.TribeGuide && window.TribeGuide.open(slug || undefined),
@@ -127,6 +128,9 @@
     task: /^(?:please\s+)?(?:add|new|make|create)?\s*(?:a\s+)?(?:task|todo|to-do)(?:\s*(?::|-|,)\s*|\s+)([\s\S]+)$/,
     nav: /^(?:open|go to|goto|show(?: me)?|take me to|switch to|bring me to|where(?:'s| is| are| do i find)|how do i (?:get to|find))\s+(?:the\s+|my\s+|our\s+)?(files|docs|documents|tasks|task board|board|chat|messages|home|dashboard|overview|repo|code|guide|settings|calendar|agents hub|agents|mcp|bugs|website|whiteboard|white board)\b/,
     doStep: /^(?:how (?:do|can) i |help me |let'?s |i want to |)(?:add|make|create|start)(?: a| my| the)? (?:first )?task\b|^(?:how (?:do|can) i |help me |let'?s |)(write|start)(?: the| our)? vision\b|^(?:how (?:do|can) i |help me |)(?:connect|hook up|add)(?: my)? (?:ai|claude|codex|gemini|cursor|agent)\b|^(?:how (?:do|can) i |help me |let'?s |)(?:create|make|set up|start)(?: a| the| our)? (?:git )?repo\b/,
+    // v0.25: the inspiration board. "use this for inspiration https://…", a Pinterest/Dribbble link, "dress it up"
+    inspo: /(?:\b(?:inspiration|inspo|mood ?board|style (?:it )?like)\b[^h]*?(https?:\/\/\S+)|(https?:\/\/(?:[\w-]+\.)?(?:pinterest\.[a-z.]+|pin\.it|dribbble\.com|behance\.net|fonts\.google\.com)\S*))/i,
+    dress: /\b(dress (?:it|this|the (?:site|website|app|game|project)) up|dress up the (?:site|website|app|game|project)|apply (?:the )?(?:inspiration|palette|board|mood ?board))\b/i,
     // v0.25: "add a jump sound", "get me a coin sprite", "find a 3D fox", "I need a heart icon"
     asset: /^(?:please\s+|can you\s+|could you\s+)?(?:add|get|find|grab|give me|i need|we need|use|put in|drop in|pick)\s+(?:me\s+|us\s+)?(?:an?\s+|some\s+|the\s+)?(.*?)\b(sound effects?|sounds?|sfx|3d models?|models?|glb|rigged|animated character|sprites?|pixel art|icons?|fonts?|textures?|hdris?|motion|animations?)\b(.*)$/,
     find: /^(?:find|search(?: for)?|look for|where(?:'s| is))\s+(.+)$/,
@@ -170,6 +174,8 @@
     if (RX.focus.test(t)) return focusReply();
     if (RX.prompt.test(t)) { await ACTS.prompt(); return say('I copied a prompt for your AI helper: your task, your part of the code, the branch to use, and what to leave alone so nothing collides. Paste it into Claude Code, Codex or Cursor.', [act('Copy it again', 'prompt')]); }
     if (RX.preview.test(t)) { ACTS.preview(); return say('Opened the preview, right next to the work.', [act('Open it again', 'preview')]); }
+    if ((m = RX.inspo.exec(text))) { const u = m[1] || m[2]; if (window.TribeInspo) { if (App() && App().show) App().show('home'); setTimeout(() => window.TribeInspo.addLink(u), 400); } return say(`Pinned it to the inspiration board on the dashboard. I'm reading the colors and fonts now; say "dress it up" when you like the palette.`, [act('Dress it up', 'inspoApply', 'both')]); }
+    if (RX.dress.test(t)) { const to = /\b(site|website)\b/.test(t) ? 'site' : /\b(app|game)\b/.test(t) ? 'app' : 'both'; if (window.TribeInspo) { const r = await window.TribeInspo.apply(to); if (r) return say(`Done: ${esc(r.changed.join(', '))}. Accent ${esc(r.palette.accent)} on ${r.palette.mode === 'dark' ? 'a dark' : 'a light'} background.`, [act('Open the preview', 'preview')]); } return say('Drop a few pictures or a Pinterest link on the inspiration board (on the dashboard) first, then I can dress it up.'); }
     if ((m = RX.asset.exec(t))) return asset(m);
     if ((m = RX.make.exec(t))) return makeFile(/sheet|table|budget|tracker/.test(m[1]) ? 'sheet' : /slide|deck|presentation/.test(m[1]) ? 'deck' : 'doc', text);   // feat/crafts   // feat/customize: "make our website"
     if (RX.customize.test(t)) { ACTS.customize(/\b(banner|this project)\b/.test(t) ? 'project' : 'tribe'); return say('I opened Customize: accent, background, spacing, font size and the tribe\'s name and icon. "Just me" changes only your view.', [act('Open Customize again', 'customize')]); }

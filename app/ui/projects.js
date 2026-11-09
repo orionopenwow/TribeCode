@@ -247,6 +247,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
             <span class="gl-num">${t.n}</span><span class="gl-line">${esc(t.line)}</span>
             ${t.pct != null && tasksAll.length ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
             <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
+      ${canEdit ? '<div id="pj-board-slot"></div>' : ''}<!-- v0.25: the inspiration board (inspo.js) -->
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">
         <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
           ${d.recent.length ? d.recent.map(x => `<div class="pj-row-line" ${x.kind === 'doc' ? `data-doc="${esc(x.ref)}"` : x.kind === 'task' ? 'data-go="tasks"' : 'data-go="repo"'}>${ico(kindIco[x.kind] || 'i-doc', 14)}<span class="t">${esc(x.text)}</span><span class="faint">${esc(x.sub)} · ${ago(x.at)}</span></div>`).join('') : '<div class="pj-none">Nothing yet. Saved code, doc edits and task moves show up here.</div>'}</section>
@@ -303,6 +304,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : x.dataset.go === 'inbox' ? (window.TribeNotify && window.TribeNotify.openInbox()) : App().show(x.dataset.go)));
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
+    if (window.TribeInspo) window.TribeInspo.draw(p.id);
     toolbox(p);
     if (window.TribeSense) window.TribeSense.card(p);   // feat/project-sense: the Inspiration card (sense.js)
     if (window.TribeSetup) window.TribeSetup.card(p, d);   // feat/setup-flow: role flows + Make the starter (setup.js)

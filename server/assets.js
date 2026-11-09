@@ -93,12 +93,13 @@ module.exports = function assets({ P, root, base, postChat, str, nameOf }) {
     if (p.id === 'sprites') { const s = kit.sprite(name); if (!s) throw err(404, 'no sprite by that name'); return [{ rel: `sprites/${clean(name)}.svg`, buf: Buffer.from(s) }]; }
     if (p.id === 'motion-css') return [{ rel: 'css/motion.css', buf: Buffer.from(kit.motionCss()) }];
     if (p.id === 'fonts') {
-      const id = clean(name); if (!(p.names || []).includes(id)) throw err(404, 'that font isn\'t in the library yet');
+      const id = clean(name); if (!(p.names || []).includes(id) && !/^[a-z0-9][a-z0-9-]{1,39}$/.test(id)) throw err(404, 'that font isn\'t in the library yet');   // any Fontsource family by its id (inspiration board)
       const weights = id === 'inter' || id === 'space-grotesk' || id === 'jetbrains-mono' ? [400, 700] : [400];
       const out = [];
-      for (const w of weights) out.push({ rel: `fonts/${id}-${w}.woff2`, buf: await get(`${CDN()}/@fontsource/${id}@${p.version}/files/${id}-latin-${w}-normal.woff2`, { cap: CAP.font }) });
+      for (const w of weights) { try { out.push({ rel: `fonts/${id}-${w}.woff2`, buf: await get(`${CDN()}/@fontsource/${id}@${p.version}/files/${id}-latin-${w}-normal.woff2`, { cap: CAP.font }) }); } catch (e) { if (w === 400) throw err(404, `no font called ${id} on Fontsource`); } }
+      const got = out.map(o => Number(o.rel.match(/-(\d+)\.woff2$/)[1]));
       const fam = id.split('-').map(x => x[0].toUpperCase() + x.slice(1)).join(' ').replace('2p', '2P').replace('Vt323', 'VT323');
-      out.push({ rel: `fonts/${id}.css`, buf: Buffer.from(weights.map(w => `@font-face { font-family: "${fam}"; src: url("./${id}-${w}.woff2") format("woff2"); font-weight: ${w}; font-style: normal; font-display: swap; }`).join('\n') + '\n') });
+      out.push({ rel: `fonts/${id}.css`, buf: Buffer.from(got.map(w => `@font-face { font-family: "${fam}"; src: url("./${id}-${w}.woff2") format("woff2"); font-weight: ${w}; font-style: normal; font-display: swap; }`).join('\n') + '\n') });
       return out;
     }
     if (p.how === 'npm') {
