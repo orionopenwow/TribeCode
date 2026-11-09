@@ -471,11 +471,26 @@
     KINDS.mix = { cards: [['games', '🎮 Game'], ['apps', '📱 App'], ['sites', '🌐 Site'], ['tools', '🛠️ Tool']].map(([k, tag]) => ({ ...KINDS[k].cards[0], tag })),
       ideas: [KINDS.games.ideas[0], KINDS.apps.ideas[1], KINDS.sites.ideas[1], KINDS.tools.ideas[0]] };
     const thumb = px => `<svg class="sw-thumb" viewBox="0 0 32 20" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><rect width="32" height="20" fill="#282828"/>${px.map(([x, y, w, h, c]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`).join('')}</svg>`;
+    // v0.24: real screenshots of the real starters (scripts/starter-shots.py), with the pixel sketch as a fallback
+    const shot = n => 'assets/starters/' + n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.jpg';
+    // some starters are playable right in their thumbnail (site/play), and ⤢ opens them big
+    const LIVE = { 'Pixel platformer': 'play/pixel-quest/index.html', 'Habit tracker': 'play/habit-tracker.html', 'Shared list': 'play/shared-list.html', 'Portfolio': 'play/portfolio/index.html' };
+    const liveBtns = c => LIVE[c.n] ? `<span class="sw-live"><span role="button" tabindex="0" class="sw-play" data-live="${LIVE[c.n]}" aria-label="Try ${esc(c.n)} here">▶ ${c.n === 'Pixel platformer' ? 'Play' : 'Try it'}</span><span role="button" tabindex="0" class="sw-big" data-big="${LIVE[c.n]}" data-name="${esc(c.n)}" aria-label="Open ${esc(c.n)} big">⤢</span></span>` : '';
+    const thumbOf0 = c => `<span class="sw-shot"><img src="${shot(c.n)}" alt="" loading="lazy" width="800" height="500" onerror="this.parentNode.outerHTML=this.parentNode.dataset.fb"></span>`.replace('class="sw-shot"', `class="sw-shot" data-fb='${thumb(c.px).replace(/'/g, '&#39;')}'`);
+    const thumbOf = c => thumbOf0(c).replace('</span>`', '</span>`').replace(/<\/span>$/, liveBtns(c) + '</span>');
+    function bigDemo(src, name) {
+      const ov = document.createElement('div'); ov.className = 'sw-modal'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', name);
+      ov.innerHTML = `<div class="sw-modal__box"><div class="sw-modal__bar"><b>${esc(name)}</b><span class="mono">a real starter, running</span><button type="button" class="sw-modal__x" aria-label="Close">✕</button></div><iframe src="${src}" title="${esc(name)}" allow="fullscreen"></iframe></div>`;
+      const close = () => { ov.remove(); document.removeEventListener('keydown', esc1); };
+      const esc1 = e => { if (e.key === 'Escape') close(); };
+      ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.sw-modal__x')) close(); });
+      document.addEventListener('keydown', esc1); document.body.appendChild(ov); ov.querySelector('iframe').focus();
+    }
     let kind = 'mix', pick = 0;
     function render() {
       const k = KINDS[kind];
       panel.innerHTML = `<div class="sw-cards">${k.cards.map((c, i) => `<button type="button" class="sw-card${i === pick ? ' is-on' : ''}" data-pick="${i}" aria-pressed="${i === pick}">
-          ${thumb(c.px)}${c.tag ? `<span class="sw-card__kind">${esc(c.tag)}</span>` : ''}<span class="sw-card__t"><b>${esc(c.n)}</b><span class="mono">${esc(c.tech)}</span></span>
+          ${thumbOf(c)}${c.tag ? `<span class="sw-card__kind">${esc(c.tag)}</span>` : ''}<span class="sw-card__t"><b>${esc(c.n)}</b><span class="mono">${esc(c.tech)}</span></span>
           <span class="sw-card__get"><small>What you get</small>${esc(c.get)}</span>
           <span class="sw-chips">${c.w.map(w => `<span class="sw-chip">${esc(w)}</span>`).join('')}</span></button>`).join('')}</div>
         <div class="sw-ideas"><p class="eyebrow mono">Inspiration</p>${k.ideas.map(t => `<button type="button" class="sw-idea" data-idea="${esc(t)}">“${esc(t)}”</button>`).join('')}</div>`;
@@ -494,6 +509,9 @@
       });
     });
     panel.addEventListener('click', e => {
+      const pl = e.target.closest('[data-live]');
+      if (pl) { e.stopPropagation(); const box = pl.closest('.sw-shot'); const nm = (pl.closest('.sw-card') && pl.closest('.sw-card').querySelector('.sw-card__t b') || {}).textContent || 'Live demo'; box.innerHTML = `<iframe class="sw-frame" src="${pl.dataset.live}" title="${esc(nm)}, running" loading="lazy"></iframe><span class="sw-live"><span role="button" tabindex="0" class="sw-big" data-big="${pl.dataset.live}" data-name="${esc(nm)}" aria-label="Open ${esc(nm)} big">⤢</span></span>`; box.classList.add('is-live'); const fit = () => box.style.setProperty('--s', String(box.clientWidth / 800)); fit(); new ResizeObserver(fit).observe(box); const f = box.querySelector('iframe'); f.addEventListener('load', () => { try { f.focus(); } catch {} }); return; }
+      const bg = e.target.closest('[data-big]'); if (bg) { e.stopPropagation(); bigDemo(bg.dataset.big, bg.dataset.name || 'Live demo'); return; }
       const c = e.target.closest('[data-pick]');
       if (c) { pick = +c.dataset.pick; $$('.sw-card', panel).forEach((x, i) => { x.classList.toggle('is-on', i === pick); x.setAttribute('aria-pressed', String(i === pick)); }); if (cta) cta.setAttribute('aria-label', 'Start with this: ' + KINDS[kind].cards[pick].n + ' (opens the app)'); return; }
       const idea = e.target.closest('[data-idea]');

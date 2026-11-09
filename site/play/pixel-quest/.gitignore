@@ -1,0 +1,4 @@
+node_modules/
+.trees/
+.DS_Store
+CONNECT-CLAUDE.txt

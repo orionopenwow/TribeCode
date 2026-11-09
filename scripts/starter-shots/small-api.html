@@ -1,0 +1,11 @@
+<!doctype html><meta charset=utf-8><link rel=stylesheet href=base.css><div class=app style="max-width:820px"><div class=term><span class=g>$</span> curl localhost:3000/api/scores
+[
+  { <span class=y>"name"</span>: <span class=g>"Maya"</span>, <span class=y>"score"</span>: <span class=o>3200</span> },
+  { <span class=y>"name"</span>: <span class=g>"Jay"</span>,  <span class=y>"score"</span>: <span class=o>2950</span> }
+]</div>
+<div class=term style="margin-top:12px"><span class=g>$</span> npm test
+  <span class=g>✓</span> GET /api/scores lists the top scores <span class=m>(12 ms)</span>
+  <span class=g>✓</span> POST /api/scores saves a new score <span class=m>(9 ms)</span>
+  <span class=g>✓</span> rejects a score without a name <span class=m>(3 ms)</span>
+
+  <span class=g>3 passing</span> <span class=m>(41 ms)</span></div></div>

@@ -199,7 +199,7 @@ def main():
             pg.locator("#starters .sw").scroll_into_view_if_needed()
             assert "Start from something." in pg.inner_text("#starters h2")
             assert pg.locator("#sw-panel .sw-card").count() == 4 and "Pixel platformer" in pg.inner_text("#sw-panel") and "KAPLAY" in pg.inner_text("#sw-panel")
-            assert pg.locator("#sw-panel .sw-card").nth(0).locator(".sw-chip").count() >= 2 and pg.locator("#sw-panel .sw-thumb").count() == 4
+            assert pg.locator("#sw-panel .sw-card").nth(0).locator(".sw-chip").count() >= 2 and pg.locator("#sw-panel .sw-shot, #sw-panel .sw-thumb").count() == 4
             assert "what you get" in pg.locator("#sw-panel .sw-card").nth(0).inner_text().lower()
             for tag, name in [("Game", "Pixel platformer"), ("App", "Habit tracker"), ("Site", "Portfolio"), ("Tool", "Discord bot")]:   # one of each kind, no tabs
                 assert tag in pg.inner_text("#sw-panel") and name in pg.inner_text("#sw-panel"), tag

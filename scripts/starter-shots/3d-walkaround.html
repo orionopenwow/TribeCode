@@ -1,0 +1,7 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#12151A}canvas{display:block;width:100vw;height:100vh}</style><canvas id=c width=640 height=400></canvas><script>
+// a tiny real raycaster: a room you can walk around (this frame: standing near the door)
+const M=['1111111111','1000000001','1000220001','1000000001','1003000301','1000000001','1000000001','1111111111'],x=c.getContext('2d'),W=640,H=400,px=1.5,py=6.5,a=-0.62,F=Math.PI/3;
+const C={1:[180,81,42],2:[242,107,29],3:[56,198,177]};x.fillStyle='#2B2D5C';x.fillRect(0,0,W,H/2);x.fillStyle='#3C3836';x.fillRect(0,H/2,W,H/2);
+for(let i=0;i<W;i++){const r=a-F/2+F*i/W;let d=0,h=0;while(d<20){d+=0.01;const X=px+Math.cos(r)*d,Y=py+Math.sin(r)*d,t=M[Math.floor(Y)][Math.floor(X)];if(t!=='0'){h=t;break}}
+const dd=d*Math.cos(r-a),hh=Math.min(H,H/dd*1.1),s=Math.max(.25,1-dd/9),col=C[h];x.fillStyle=`rgb(${col.map(v=>v*s|0).join(',')})`;x.fillRect(i,(H-hh)/2,1,hh);}
+x.fillStyle='#FABD2F';x.fillRect(W/2-1,H/2-8,2,16);x.fillRect(W/2-8,H/2-1,16,2);</script>

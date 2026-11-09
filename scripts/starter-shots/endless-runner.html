@@ -1,0 +1,7 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#12151A}canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated}</style><canvas id=c width=320 height=200></canvas><script>
+const x=c.getContext('2d');x.fillStyle='#1B1E2B';x.fillRect(0,0,320,200);x.fillStyle='#F2CC8F';for(let i=0;i<50;i++)x.fillRect((i*97)%320,(i*41)%110,1,1);
+x.fillStyle='#E9D8A6';x.beginPath();x.arc(260,40,14,0,7);x.fill();x.fillStyle='#2B2D5C';for(let i=0;i<8;i++){const h=40+(i*37)%50;x.fillRect(i*44,150-h,40,h);}
+x.fillStyle='#3B4A6B';x.fillRect(0,150,320,50);x.fillStyle='#45506E';for(let i=0;i<16;i++)x.fillRect(i*22,150,10,3);
+x.fillStyle='#81B29A';[[150,134,10,16],[230,128,12,22]].forEach(r=>x.fillRect(...r));
+x.fillStyle='#E07A5F';x.fillRect(60,118,12,16);x.fillStyle='#F2CC8F';x.fillRect(61,108,10,10);x.fillStyle='#E07A5F';x.fillRect(58,134,5,8);x.fillRect(69,128,5,8);
+x.fillStyle='#fff';x.font='bold 12px monospace';x.fillText('SCORE 01842',10,18);x.fillText('BEST 02210',230,18);</script>
