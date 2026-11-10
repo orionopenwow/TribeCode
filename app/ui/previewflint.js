@@ -392,6 +392,7 @@
     error(e) { feed({ k: 'error', text: String(e && e.msg || e || 'error').slice(0, 300), key: 'e' + String(e && e.msg) + (e && e.line) }); },
     feed,
     open: () => setOpen(true), close: () => setOpen(false), isOpen: () => !!(el && el.classList.contains('is-open')),
+    ask: t => send(String(t || '')),   // flint-local: Flint's chat hands picked-element edits here (app/ui/flintlocal.js)
     items: () => items.slice(),
     notes: () => notes.slice(),
   };

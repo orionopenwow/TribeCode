@@ -1,0 +1,4647 @@
+{
+ "about": "Phrasings for Flint's local brain (app/ui/flintnlu.js). Written by scripts/dev/flint-nlu-cases.js; checked by app/test/flint_nlu_test.js. \"i\" is the expected intent (a list for many steps, null when Flint should not claim it); \"s\" the slots that must match; \"ctx\" the context; \"v\" marks typo/filler variants.",
+ "now": "2026-11-10T10:00:00",
+ "cases": [
+  {
+   "t": "add a task to buy milk",
+   "i": "task.add",
+   "s": {
+    "title": "Buy milk"
+   }
+  },
+  {
+   "t": "new task: fix the save button",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the save button",
+    "type": "fix"
+   }
+  },
+  {
+   "t": "create a task called write the press kit",
+   "i": "task.add",
+   "s": {
+    "title": "Write the press kit"
+   }
+  },
+  {
+   "t": "task buy more sticky notes",
+   "i": "task.add",
+   "s": {
+    "title": "Buy more sticky notes"
+   }
+  },
+  {
+   "t": "todo call the printer",
+   "i": "task.add",
+   "s": {
+    "title": "Call the printer"
+   }
+  },
+  {
+   "t": "remind me to email Sam tomorrow",
+   "i": "task.add",
+   "s": {
+    "title": "Email Sam",
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "remind me to call the venue friday at 3pm",
+   "i": "task.add",
+   "s": {
+    "title": "Call the venue",
+    "due": "2026-11-13",
+    "time": "15:00"
+   }
+  },
+  {
+   "t": "add a task to fix the menu for Maya by monday",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the menu",
+    "due": "2026-11-16",
+    "who": "Maya"
+   }
+  },
+  {
+   "t": "put order stickers on the list",
+   "i": "task.add",
+   "s": {
+    "title": "Order stickers"
+   }
+  },
+  {
+   "t": "add design the boss sprite to the board",
+   "i": "task.add",
+   "s": {
+    "title": "Design the boss sprite",
+    "type": "design"
+   }
+  },
+  {
+   "t": "we need to test the checkout flow",
+   "i": "task.add",
+   "s": {
+    "title": "Test the checkout flow"
+   }
+  },
+  {
+   "t": "i need to renew the domain by next week",
+   "i": "task.add",
+   "s": {
+    "title": "Renew the domain",
+    "due": "2026-11-16"
+   }
+  },
+  {
+   "t": "new task research physics libraries",
+   "i": "task.add",
+   "s": {
+    "title": "Research physics libraries",
+    "type": "research"
+   }
+  },
+  {
+   "t": "add a todo: update the readme",
+   "i": "task.add",
+   "s": {
+    "title": "Update the readme"
+   }
+  },
+  {
+   "t": "don't let me forget to back up the save files",
+   "i": "task.add",
+   "s": {
+    "title": "Back up the save files"
+   }
+  },
+  {
+   "t": "make a task to draw the title screen in 3 days",
+   "i": "task.add",
+   "s": {
+    "title": "Draw the title screen",
+    "due": "2026-11-13"
+   }
+  },
+  {
+   "t": "add a task: playtest level 2 tonight",
+   "i": "task.add",
+   "s": {
+    "title": "Playtest level 2",
+    "due": "2026-11-10"
+   }
+  },
+  {
+   "t": "log a task to look into the lag spikes",
+   "i": "task.add",
+   "s": {
+    "title": "Look into the lag spikes",
+    "type": "research"
+   }
+  },
+  {
+   "t": "add a ticket fix the crash on resume",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the crash on resume",
+    "type": "fix"
+   }
+  },
+  {
+   "t": "someone needs to write the trailer script",
+   "i": "task.add",
+   "s": {
+    "title": "Write the trailer script"
+   }
+  },
+  {
+   "t": "add a task to order samples for Friday",
+   "i": "task.add",
+   "s": {
+    "title": "Order samples",
+    "due": "2026-11-13"
+   }
+  },
+  {
+   "t": "new task pick fonts and assign it to Sam",
+   "i": "task.add",
+   "s": {
+    "title": "Pick fonts",
+    "who": "Sam"
+   }
+  },
+  {
+   "t": "add urgent: fix the login bug",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the login bug"
+   }
+  },
+  {
+   "t": "add a task to buy cake for the party on the 20th",
+   "i": "task.add",
+   "s": {
+    "title": "Buy cake for the party",
+    "due": "2026-11-20"
+   }
+  },
+  {
+   "t": "add a task to send invoices nov 30",
+   "i": "task.add",
+   "s": {
+    "title": "Send invoices",
+    "due": "2026-11-30"
+   }
+  },
+  {
+   "t": "remind me to stretch in 2 hours",
+   "i": "task.add",
+   "s": {
+    "title": "Stretch"
+   }
+  },
+  {
+   "t": "mark the logo task done",
+   "i": "task.done",
+   "s": {
+    "task": "Design the logo"
+   }
+  },
+  {
+   "t": "i finished the jump bug",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "done: fix the jump bug",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "complete design the logo",
+   "i": "task.done",
+   "s": {
+    "task": "Design the logo"
+   }
+  },
+  {
+   "t": "check off the trailer task",
+   "i": "task.done",
+   "s": {
+    "task": "Cut the trailer"
+   }
+  },
+  {
+   "t": "the jump bug is done",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "mark it done",
+   "i": "task.done",
+   "ctx": {
+    "last": "t2"
+   }
+  },
+  {
+   "t": "it's done",
+   "i": "task.done",
+   "ctx": {
+    "last": "t1"
+   }
+  },
+  {
+   "t": "i did the onboarding copy",
+   "i": "task.done",
+   "s": {
+    "task": "Write the onboarding copy"
+   }
+  },
+  {
+   "t": "close the trailer task",
+   "i": "task.done",
+   "s": {
+    "task": "Cut the trailer"
+   }
+  },
+  {
+   "t": "finished with the logo",
+   "i": "task.done",
+   "s": {
+    "task": "Design the logo"
+   }
+  },
+  {
+   "t": "set the jump bug to complete",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "start the onboarding copy",
+   "i": "task.start",
+   "s": {
+    "task": "Write the onboarding copy"
+   }
+  },
+  {
+   "t": "i'll take the trailer",
+   "i": "task.start",
+   "s": {
+    "task": "Cut the trailer"
+   }
+  },
+  {
+   "t": "move fix the jump bug to in progress",
+   "i": "task.start",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "work on the logo",
+   "i": "task.start",
+   "s": {
+    "task": "Design the logo"
+   }
+  },
+  {
+   "t": "grab the jump bug",
+   "i": "task.start",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "assign the logo task to Maya",
+   "i": "task.assign",
+   "s": {
+    "task": "Design the logo",
+    "who": "Maya"
+   }
+  },
+  {
+   "t": "give the trailer to Sam",
+   "i": "task.assign",
+   "s": {
+    "task": "Cut the trailer",
+    "who": "Sam"
+   }
+  },
+  {
+   "t": "have Maya do the onboarding copy",
+   "i": "task.assign",
+   "s": {
+    "task": "Write the onboarding copy",
+    "who": "Maya"
+   }
+  },
+  {
+   "t": "hand the jump bug to my claude",
+   "i": "task.assign",
+   "s": {
+    "task": "Fix the jump bug",
+    "who": "Camp's Claude"
+   }
+  },
+  {
+   "t": "assign Sam the logo",
+   "i": "task.assign",
+   "s": {
+    "task": "Design the logo",
+    "who": "Sam"
+   }
+  },
+  {
+   "t": "let Sam handle the trailer",
+   "i": "task.assign",
+   "s": {
+    "task": "Cut the trailer",
+    "who": "Sam"
+   }
+  },
+  {
+   "t": "send the logo task to review",
+   "i": "task.review",
+   "s": {
+    "task": "Design the logo"
+   }
+  },
+  {
+   "t": "the trailer is ready for review",
+   "i": "task.review",
+   "s": {
+    "task": "Cut the trailer"
+   }
+  },
+  {
+   "t": "move the jump bug to review",
+   "i": "task.review",
+   "s": {
+    "task": "Fix the jump bug"
+   }
+  },
+  {
+   "t": "delete the task cut the trailer",
+   "i": "task.delete",
+   "s": {
+    "task": "Cut the trailer"
+   }
+  },
+  {
+   "t": "scrap the logo task",
+   "i": "task.delete",
+   "s": {
+    "task": "Design the logo"
+   }
+  },
+  {
+   "t": "get rid of the onboarding copy task",
+   "i": "task.delete",
+   "s": {
+    "task": "Write the onboarding copy"
+   }
+  },
+  {
+   "t": "push the jump bug to friday",
+   "i": "task.due",
+   "s": {
+    "task": "Fix the jump bug",
+    "due": "2026-11-13"
+   }
+  },
+  {
+   "t": "set the due date of the logo to tomorrow",
+   "i": "task.due",
+   "s": {
+    "task": "Design the logo",
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "the trailer is due next week",
+   "i": "task.due",
+   "s": {
+    "task": "Cut the trailer",
+    "due": "2026-11-16"
+   }
+  },
+  {
+   "t": "postpone the onboarding copy until monday",
+   "i": "task.due",
+   "s": {
+    "task": "Write the onboarding copy",
+    "due": "2026-11-16"
+   }
+  },
+  {
+   "t": "make the logo due on the 15th",
+   "i": "task.due",
+   "s": {
+    "task": "Design the logo",
+    "due": "2026-11-15"
+   }
+  },
+  {
+   "t": "rename the task logo to final logo",
+   "i": "task.rename",
+   "s": {
+    "task": "Design the logo",
+    "title": "final logo"
+   }
+  },
+  {
+   "t": "rename cut the trailer to cut the launch trailer",
+   "i": "task.rename",
+   "s": {
+    "task": "Cut the trailer",
+    "title": "cut the launch trailer"
+   }
+  },
+  {
+   "t": "what are my tasks",
+   "i": "task.list",
+   "s": {
+    "whose": "me"
+   }
+  },
+  {
+   "t": "show open tasks",
+   "i": "task.list",
+   "s": {
+    "which": "open"
+   }
+  },
+  {
+   "t": "what's overdue",
+   "i": "task.list",
+   "s": {
+    "which": "overdue"
+   }
+  },
+  {
+   "t": "what do i have to do today",
+   "i": "task.list",
+   "s": {
+    "which": "today",
+    "whose": "me"
+   }
+  },
+  {
+   "t": "list all tasks",
+   "i": "task.list"
+  },
+  {
+   "t": "show me my tasks for this week",
+   "i": "task.list",
+   "s": {
+    "whose": "me",
+    "which": "week"
+   }
+  },
+  {
+   "t": "how many tasks are left",
+   "i": "task.list"
+  },
+  {
+   "t": "what's on my plate",
+   "i": "task.list"
+  },
+  {
+   "t": "what needs someone",
+   "i": "task.unassigned"
+  },
+  {
+   "t": "show unassigned tasks",
+   "i": "task.unassigned"
+  },
+  {
+   "t": "what can i help with",
+   "i": "task.unassigned"
+  },
+  {
+   "t": "note: the boss needs a second phase",
+   "i": "note.add",
+   "s": {
+    "body": "the boss needs a second phase"
+   }
+  },
+  {
+   "t": "jot down call the venue about parking",
+   "i": "note.add",
+   "s": {
+    "body": "call the venue about parking"
+   }
+  },
+  {
+   "t": "remember that the demo is at 3",
+   "i": "note.add",
+   "s": {
+    "body": "the demo is at 3"
+   }
+  },
+  {
+   "t": "take a note: ask Maya about colors",
+   "i": "note.add",
+   "s": {
+    "body": "ask Maya about colors"
+   }
+  },
+  {
+   "t": "write down the wifi password is on the fridge",
+   "i": "note.add"
+  },
+  {
+   "t": "note to self buy batteries",
+   "i": "note.add",
+   "s": {
+    "body": "buy batteries"
+   }
+  },
+  {
+   "t": "new note",
+   "i": "note.blank"
+  },
+  {
+   "t": "start a blank note",
+   "i": "note.blank"
+  },
+  {
+   "t": "write a doc about the launch plan",
+   "i": "doc.new",
+   "s": {
+    "topic": "the launch plan"
+   }
+  },
+  {
+   "t": "draft a plan for the game jam",
+   "i": "doc.new",
+   "s": {
+    "topic": "the game jam"
+   }
+  },
+  {
+   "t": "make a page called house rules",
+   "i": "doc.new",
+   "s": {
+    "topic": "house rules"
+   }
+  },
+  {
+   "t": "write a press release about the beta",
+   "i": "doc.new",
+   "s": {
+    "topic": "the beta"
+   }
+  },
+  {
+   "t": "draft an email to the venue",
+   "i": "doc.new"
+  },
+  {
+   "t": "write me a short brief on the art style",
+   "i": "doc.new",
+   "s": {
+    "topic": "the art style"
+   }
+  },
+  {
+   "t": "make a sheet for the budget",
+   "i": "sheet.new",
+   "s": {
+    "topic": "the budget"
+   }
+  },
+  {
+   "t": "create an expense tracker",
+   "i": "sheet.new"
+  },
+  {
+   "t": "new sheet for inventory",
+   "i": "sheet.new",
+   "s": {
+    "topic": "inventory"
+   }
+  },
+  {
+   "t": "make a price list for the menu",
+   "i": "sheet.new",
+   "s": {
+    "topic": "the menu"
+   }
+  },
+  {
+   "t": "set up a sign up sheet for the jam",
+   "i": "sheet.new",
+   "s": {
+    "topic": "the jam"
+   }
+  },
+  {
+   "t": "make slides about the launch",
+   "i": "deck.new",
+   "s": {
+    "topic": "the launch"
+   }
+  },
+  {
+   "t": "build a pitch deck for investors",
+   "i": "deck.new",
+   "s": {
+    "topic": "investors"
+   }
+  },
+  {
+   "t": "make a presentation on our progress",
+   "i": "deck.new",
+   "s": {
+    "topic": "our progress"
+   }
+  },
+  {
+   "t": "open the doc house rules",
+   "i": "doc.open",
+   "s": {
+    "name": "house rules"
+   }
+  },
+  {
+   "t": "pull up the launch plan doc",
+   "i": "doc.open",
+   "s": {
+    "name": "launch plan"
+   }
+  },
+  {
+   "t": "write the vision",
+   "i": "vision.write"
+  },
+  {
+   "t": "open our vision",
+   "i": "vision.write"
+  },
+  {
+   "t": "write a readme",
+   "i": "draft.readme"
+  },
+  {
+   "t": "draft the release notes",
+   "i": "draft.readme"
+  },
+  {
+   "t": "tell everyone the build is up",
+   "i": "chat.send",
+   "s": {
+    "msg": "the build is up"
+   }
+  },
+  {
+   "t": "post in the chat: demo at 3",
+   "i": "chat.send",
+   "s": {
+    "msg": "demo at 3"
+   }
+  },
+  {
+   "t": "announce we ship friday",
+   "i": "chat.send",
+   "s": {
+    "msg": "we ship friday"
+   }
+  },
+  {
+   "t": "let the team know the server is back",
+   "i": "chat.send",
+   "s": {
+    "msg": "the server is back"
+   }
+  },
+  {
+   "t": "tell the tribe pizza is here",
+   "i": "chat.send",
+   "s": {
+    "msg": "pizza is here"
+   }
+  },
+  {
+   "t": "tell maya the build is up",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "the build is up"
+   }
+  },
+  {
+   "t": "message sam about the logo",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam",
+    "msg": "the logo"
+   }
+  },
+  {
+   "t": "ask maya if she can test tonight",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "she can test tonight"
+   }
+  },
+  {
+   "t": "ping sam: are you around?",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam"
+   }
+  },
+  {
+   "t": "let maya know the logo is ready",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "the logo is ready"
+   }
+  },
+  {
+   "t": "text Sam that I am running late",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam",
+    "msg": "I am running late"
+   }
+  },
+  {
+   "t": "remind maya to send the files",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "send the files"
+   }
+  },
+  {
+   "t": "send a message to Sam saying great work",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam",
+    "msg": "great work"
+   }
+  },
+  {
+   "t": "dm maya can you review the copy",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya"
+   }
+  },
+  {
+   "t": "tell my claude to look at the bug",
+   "i": "dm.send",
+   "s": {
+    "who": "Camp's Claude"
+   }
+  },
+  {
+   "t": "open a dm with maya",
+   "i": "dm.open",
+   "s": {
+    "who": "Maya"
+   }
+  },
+  {
+   "t": "chat with sam",
+   "i": "dm.open",
+   "s": {
+    "who": "Sam"
+   }
+  },
+  {
+   "t": "summarize the chat",
+   "i": "chat.summarize"
+  },
+  {
+   "t": "what did i miss",
+   "i": "chat.summarize"
+  },
+  {
+   "t": "tldr",
+   "i": "chat.summarize"
+  },
+  {
+   "t": "schedule a demo friday at 3pm",
+   "i": "event.add",
+   "s": {
+    "what": "demo",
+    "date": "2026-11-13",
+    "time": "15:00"
+   }
+  },
+  {
+   "t": "book a playtest tomorrow",
+   "i": "event.add",
+   "s": {
+    "what": "playtest",
+    "date": "2026-11-11"
+   }
+  },
+  {
+   "t": "add lunch with sam to the calendar",
+   "i": "event.add",
+   "s": {
+    "what": "lunch with sam"
+   }
+  },
+  {
+   "t": "set up a call with Maya on thursday at 10am",
+   "i": "event.add",
+   "s": {
+    "what": "call with Maya",
+    "date": "2026-11-12",
+    "time": "10:00"
+   }
+  },
+  {
+   "t": "plan a launch party next friday",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-13"
+   }
+  },
+  {
+   "t": "meet with sam monday at noon",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-16",
+    "time": "12:00"
+   }
+  },
+  {
+   "t": "schedule standup every day at 9am",
+   "i": "event.add"
+  },
+  {
+   "t": "put the deadline on the calendar for the 28th",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-28"
+   }
+  },
+  {
+   "t": "create an event for the jam on saturday",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-14"
+   }
+  },
+  {
+   "t": "what's on my calendar today",
+   "i": "cal.show",
+   "s": {
+    "when": "today"
+   }
+  },
+  {
+   "t": "what do i have tomorrow",
+   "i": "cal.show",
+   "s": {
+    "when": "tomorrow"
+   }
+  },
+  {
+   "t": "am i free tonight",
+   "i": "cal.show",
+   "s": {
+    "when": "tonight"
+   }
+  },
+  {
+   "t": "what is on the schedule this week",
+   "i": "cal.show",
+   "s": {
+    "when": "this week"
+   }
+  },
+  {
+   "t": "any meetings today",
+   "i": "cal.show",
+   "s": {
+    "when": "today"
+   }
+  },
+  {
+   "t": "make a 3d game called orb run",
+   "i": "build.3d",
+   "s": {
+    "name": "orb run"
+   }
+  },
+  {
+   "t": "build me a three js game",
+   "i": "build.3d"
+  },
+  {
+   "t": "make a platformer",
+   "i": "build.2d"
+  },
+  {
+   "t": "build a pixel game called gem dash",
+   "i": "build.2d",
+   "s": {
+    "name": "gem dash"
+   }
+  },
+  {
+   "t": "make a game",
+   "i": "build.2d"
+  },
+  {
+   "t": "build a to-do app",
+   "i": "build.todo"
+  },
+  {
+   "t": "make a checklist app",
+   "i": "build.todo"
+  },
+  {
+   "t": "make me a habit tracker",
+   "i": "build.todo"
+  },
+  {
+   "t": "build me a video editor",
+   "i": "build.video"
+  },
+  {
+   "t": "make a clip trimmer",
+   "i": "build.video"
+  },
+  {
+   "t": "make a landing page for Sunrise Bakery",
+   "i": "build.landing",
+   "s": {
+    "name": "Sunrise Bakery"
+   }
+  },
+  {
+   "t": "build a one pager for gem dash in green",
+   "i": "build.landing",
+   "s": {
+    "name": "gem dash",
+    "color": "green"
+   }
+  },
+  {
+   "t": "make me a link in bio",
+   "i": "site.linkbio"
+  },
+  {
+   "t": "build a linktree for my band",
+   "i": "site.linkbio"
+  },
+  {
+   "t": "make a merch store for Ember Socks",
+   "i": "site.merch",
+   "s": {
+    "name": "Ember Socks"
+   }
+  },
+  {
+   "t": "build an online shop for my candles",
+   "i": "site.merch",
+   "s": {
+    "name": "candles"
+   }
+  },
+  {
+   "t": "make a cafe website for Moon Beans",
+   "i": "site.cafe",
+   "s": {
+    "name": "Moon Beans"
+   }
+  },
+  {
+   "t": "make a band page called The Pines",
+   "i": "site.band",
+   "s": {
+    "name": "The Pines"
+   }
+  },
+  {
+   "t": "build a podcast site for Night Shift",
+   "i": "site.podcast",
+   "s": {
+    "name": "Night Shift"
+   }
+  },
+  {
+   "t": "make a wedding website for Ana and Leo",
+   "i": "site.wedding",
+   "s": {
+    "name": "Ana and Leo"
+   }
+  },
+  {
+   "t": "start a blog",
+   "i": "site.blog"
+  },
+  {
+   "t": "make me a portfolio",
+   "i": "site.portfolio"
+  },
+  {
+   "t": "build a photo gallery for my trips",
+   "i": "site.photography"
+  },
+  {
+   "t": "make a resume site",
+   "i": "site.resume"
+  },
+  {
+   "t": "make a streamer page for pixelpip",
+   "i": "site.creator",
+   "s": {
+    "name": "pixelpip"
+   }
+  },
+  {
+   "t": "make a press kit for Lantern Run",
+   "i": "site.gamepage",
+   "s": {
+    "name": "Lantern Run"
+   }
+  },
+  {
+   "t": "build a donation page for the food bank",
+   "i": "site.nonprofit",
+   "s": {
+    "name": "the food bank"
+   }
+  },
+  {
+   "t": "make a salon site for Fade Room",
+   "i": "site.service",
+   "s": {
+    "name": "Fade Room"
+   }
+  },
+  {
+   "t": "make a waitlist page",
+   "i": "site.comingsoon"
+  },
+  {
+   "t": "build a startup site for Tidy",
+   "i": "site.saas",
+   "s": {
+    "name": "Tidy"
+   }
+  },
+  {
+   "t": "make a coming soon page for gem dash in dark mode",
+   "i": "site.comingsoon",
+   "s": {
+    "name": "gem dash",
+    "mode": "dark"
+   }
+  },
+  {
+   "t": "show me the website templates",
+   "i": "site.gallery"
+  },
+  {
+   "t": "which templates are there",
+   "i": "site.gallery"
+  },
+  {
+   "t": "make a login screen for Ember",
+   "i": "canvas.login",
+   "s": {
+    "name": "Ember"
+   }
+  },
+  {
+   "t": "design a sign up page",
+   "i": "canvas.login"
+  },
+  {
+   "t": "mock up an onboarding screen",
+   "i": "canvas.onboarding"
+  },
+  {
+   "t": "design a pricing page for Tidy",
+   "i": "canvas.pricing",
+   "s": {
+    "name": "Tidy"
+   }
+  },
+  {
+   "t": "sketch a settings screen",
+   "i": "canvas.settings"
+  },
+  {
+   "t": "make a profile page",
+   "i": "canvas.profile"
+  },
+  {
+   "t": "design a checkout screen in dark mode",
+   "i": "canvas.checkout",
+   "s": {
+    "mode": "dark"
+   }
+  },
+  {
+   "t": "make a dashboard screen",
+   "i": "canvas.dashboard"
+  },
+  {
+   "t": "design a chat screen for Ping",
+   "i": "canvas.chat",
+   "s": {
+    "name": "Ping"
+   }
+  },
+  {
+   "t": "make an empty state card",
+   "i": "canvas.empty"
+  },
+  {
+   "t": "design a home feed screen",
+   "i": "canvas.home"
+  },
+  {
+   "t": "make a product card design",
+   "i": "canvas.product"
+  },
+  {
+   "t": "design a landing hero section for Tidy",
+   "i": "canvas.hero",
+   "s": {
+    "name": "Tidy"
+   }
+  },
+  {
+   "t": "wireframe a feed screen",
+   "i": "canvas.feed"
+  },
+  {
+   "t": "tidy up",
+   "i": "canvas.tidy"
+  },
+  {
+   "t": "clean up this frame",
+   "i": "canvas.tidy"
+  },
+  {
+   "t": "add auto layout",
+   "i": "canvas.tidy"
+  },
+  {
+   "t": "rename layers",
+   "i": "canvas.rename"
+  },
+  {
+   "t": "give the layers better names",
+   "i": "canvas.rename"
+  },
+  {
+   "t": "make a dark mode version of this frame",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   }
+  },
+  {
+   "t": "light version",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "light"
+   }
+  },
+  {
+   "t": "make variants",
+   "i": "canvas.variants"
+  },
+  {
+   "t": "create some variations of this",
+   "i": "canvas.variants"
+  },
+  {
+   "t": "send this frame to the app",
+   "i": "canvas.send"
+  },
+  {
+   "t": "turn this into code",
+   "i": "canvas.send"
+  },
+  {
+   "t": "export this frame as png",
+   "i": "canvas.export",
+   "s": {
+    "fmt": "png"
+   }
+  },
+  {
+   "t": "download as svg",
+   "i": "canvas.export",
+   "s": {
+    "fmt": "svg"
+   }
+  },
+  {
+   "t": "reload the preview",
+   "i": "preview.reload"
+  },
+  {
+   "t": "refresh the app",
+   "i": "preview.reload"
+  },
+  {
+   "t": "show it on a phone",
+   "i": "preview.device",
+   "s": {
+    "dev": "phone"
+   }
+  },
+  {
+   "t": "tablet view",
+   "i": "preview.device",
+   "s": {
+    "dev": "tablet"
+   }
+  },
+  {
+   "t": "how does it look on mobile",
+   "i": "preview.device",
+   "s": {
+    "dev": "phone"
+   }
+  },
+  {
+   "t": "switch to desktop view",
+   "i": "preview.device",
+   "s": {
+    "dev": "desktop"
+   }
+  },
+  {
+   "t": "turn on edit mode",
+   "i": "preview.edit"
+  },
+  {
+   "t": "let me pick an element",
+   "i": "preview.edit"
+  },
+  {
+   "t": "leave a comment",
+   "i": "comment.mode"
+  },
+  {
+   "t": "comment mode",
+   "i": "comment.mode"
+  },
+  {
+   "t": "publish it",
+   "i": "publish"
+  },
+  {
+   "t": "ship the game",
+   "i": "publish"
+  },
+  {
+   "t": "make a play link",
+   "i": "publish"
+  },
+  {
+   "t": "go live",
+   "i": "publish"
+  },
+  {
+   "t": "make it bigger",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   }
+  },
+  {
+   "t": "make the title blue",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   }
+  },
+  {
+   "t": "change the text to order now",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   }
+  },
+  {
+   "t": "make it bold",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   }
+  },
+  {
+   "t": "center it",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   }
+  },
+  {
+   "t": "make the button rounder",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   }
+  },
+  {
+   "t": "make it bigger",
+   "i": "edit.picked",
+   "ctx": {
+    "view": "canvas",
+    "selection": [
+     "n1"
+    ]
+   }
+  },
+  {
+   "t": "turn it red",
+   "i": "edit.picked",
+   "ctx": {
+    "view": "canvas",
+    "selection": [
+     "n1"
+    ]
+   }
+  },
+  {
+   "t": "switch to dark mode",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "dark mode",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "light mode please",
+   "i": "theme.light"
+  },
+  {
+   "t": "turn off dark mode",
+   "i": "theme.light"
+  },
+  {
+   "t": "use the nordic theme",
+   "i": "theme.nordic"
+  },
+  {
+   "t": "switch to midnight",
+   "i": "theme.midnight"
+  },
+  {
+   "t": "campfire theme",
+   "i": "theme.campfire"
+  },
+  {
+   "t": "change the theme to solar light",
+   "i": "theme.solar-light"
+  },
+  {
+   "t": "high contrast mode",
+   "i": "theme.contrast"
+  },
+  {
+   "t": "try nightshade",
+   "i": "theme.nightshade"
+  },
+  {
+   "t": "my eyes hurt",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "match my system theme",
+   "i": "theme.system"
+  },
+  {
+   "t": "use the tribecode dark theme",
+   "i": "theme.dark"
+  },
+  {
+   "t": "change the accent color to teal",
+   "i": "accent.set",
+   "s": {
+    "color": "teal"
+   }
+  },
+  {
+   "t": "make the app purple",
+   "i": "accent.set",
+   "s": {
+    "color": "purple"
+   }
+  },
+  {
+   "t": "teal accent",
+   "i": "accent.set",
+   "s": {
+    "color": "teal"
+   }
+  },
+  {
+   "t": "set the main color to #ff6f8e",
+   "i": "accent.set",
+   "s": {
+    "color": "#ff6f8e"
+   }
+  },
+  {
+   "t": "make the text bigger",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   }
+  },
+  {
+   "t": "bigger font",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   }
+  },
+  {
+   "t": "text is too small",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   }
+  },
+  {
+   "t": "make the font smaller",
+   "i": "textsize.set",
+   "s": {
+    "size": "s"
+   }
+  },
+  {
+   "t": "normal text size",
+   "i": "textsize.set"
+  },
+  {
+   "t": "switch the language to spanish",
+   "i": "lang.set",
+   "s": {
+    "lang": "es"
+   }
+  },
+  {
+   "t": "speak french",
+   "i": "lang.set",
+   "s": {
+    "lang": "fr"
+   }
+  },
+  {
+   "t": "german please",
+   "i": "lang.set",
+   "s": {
+    "lang": "de"
+   }
+  },
+  {
+   "t": "change language to japanese",
+   "i": "lang.set",
+   "s": {
+    "lang": "ja"
+   }
+  },
+  {
+   "t": "use korean",
+   "i": "lang.set",
+   "s": {
+    "lang": "ko"
+   }
+  },
+  {
+   "t": "change my avatar",
+   "i": "personalize.open"
+  },
+  {
+   "t": "personalize the app",
+   "i": "personalize.open"
+  },
+  {
+   "t": "change my profile picture",
+   "i": "personalize.open"
+  },
+  {
+   "t": "open calendar",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "go to the task board",
+   "i": "nav.tasks"
+  },
+  {
+   "t": "show me the files",
+   "i": "nav.files"
+  },
+  {
+   "t": "take me to settings",
+   "i": "nav.settings"
+  },
+  {
+   "t": "open the marketplace",
+   "i": "nav.market"
+  },
+  {
+   "t": "where is the whiteboard",
+   "i": "nav.whiteboard"
+  },
+  {
+   "t": "open design",
+   "i": "nav.design"
+  },
+  {
+   "t": "open the canvas",
+   "i": "nav.design"
+  },
+  {
+   "t": "go to chat",
+   "i": "nav.chat"
+  },
+  {
+   "t": "open my inbox",
+   "i": "nav.inbox"
+  },
+  {
+   "t": "show notifications",
+   "i": "nav.inbox"
+  },
+  {
+   "t": "open studios",
+   "i": "nav.studios"
+  },
+  {
+   "t": "go to the company page",
+   "i": "nav.company"
+  },
+  {
+   "t": "open the asset library",
+   "i": "nav.assets"
+  },
+  {
+   "t": "open the academy",
+   "i": "nav.academy"
+  },
+  {
+   "t": "show me the agents hub",
+   "i": "nav.agents"
+  },
+  {
+   "t": "open the repo",
+   "i": "nav.repo"
+  },
+  {
+   "t": "open the guide",
+   "i": "nav.guide"
+  },
+  {
+   "t": "open the website builder",
+   "i": "nav.website"
+  },
+  {
+   "t": "show the preview",
+   "i": "nav.preview"
+  },
+  {
+   "t": "open the secretary",
+   "i": "nav.secretary"
+  },
+  {
+   "t": "go home",
+   "i": "nav.home"
+  },
+  {
+   "t": "dashboard",
+   "i": "nav.home"
+  },
+  {
+   "t": "open keyboard shortcuts",
+   "i": "nav.shortcuts"
+  },
+  {
+   "t": "open the bug list",
+   "i": "nav.bugs"
+  },
+  {
+   "t": "show my dms",
+   "i": "nav.dms"
+  },
+  {
+   "t": "open my notes",
+   "i": "nav.notes"
+  },
+  {
+   "t": "open money",
+   "i": "nav.money"
+  },
+  {
+   "t": "open the command palette",
+   "i": "nav.search"
+  },
+  {
+   "t": "open trending repos",
+   "i": "nav.trending"
+  },
+  {
+   "t": "open the task board",
+   "i": "nav.tasks"
+  },
+  {
+   "t": "open my tasks",
+   "i": "nav.tasks"
+  },
+  {
+   "t": "settings",
+   "i": "nav.settings"
+  },
+  {
+   "t": "calendar",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "where do i find the templates",
+   "i": "nav.templates"
+  },
+  {
+   "t": "open mcp",
+   "i": "nav.mcp"
+  },
+  {
+   "t": "invite a friend",
+   "i": "invite"
+  },
+  {
+   "t": "share the invite link",
+   "i": "invite"
+  },
+  {
+   "t": "invite maya",
+   "i": "invite"
+  },
+  {
+   "t": "start hosting",
+   "i": "host.start"
+  },
+  {
+   "t": "host here",
+   "i": "host.start"
+  },
+  {
+   "t": "stop hosting",
+   "i": "host.stop"
+  },
+  {
+   "t": "connect my ai",
+   "i": "connect.ai"
+  },
+  {
+   "t": "hook up claude code",
+   "i": "connect.ai"
+  },
+  {
+   "t": "add codex",
+   "i": "connect.ai"
+  },
+  {
+   "t": "give flint a brain",
+   "i": "brain.pick"
+  },
+  {
+   "t": "use the local model",
+   "i": "brain.pick"
+  },
+  {
+   "t": "turn on the secretary",
+   "i": "helper.toggle",
+   "s": {
+    "what": "secretary",
+    "on": true
+   }
+  },
+  {
+   "t": "autopilot off",
+   "i": "helper.toggle",
+   "s": {
+    "what": "autopilot",
+    "on": false
+   }
+  },
+  {
+   "t": "start a jam",
+   "i": "jam.start"
+  },
+  {
+   "t": "kick off a jam for 60 minutes",
+   "i": "jam.start"
+  },
+  {
+   "t": "start a huddle",
+   "i": "huddle.start"
+  },
+  {
+   "t": "join the voice chat",
+   "i": "huddle.start"
+  },
+  {
+   "t": "hang up",
+   "i": "huddle.leave"
+  },
+  {
+   "t": "record meeting notes",
+   "i": "capture.toggle"
+  },
+  {
+   "t": "give feedback",
+   "i": "feedback"
+  },
+  {
+   "t": "rate tribecode",
+   "i": "feedback"
+  },
+  {
+   "t": "show me around",
+   "i": "tour"
+  },
+  {
+   "t": "i'm new",
+   "i": "tour"
+  },
+  {
+   "t": "copy a prompt for my ai",
+   "i": "prompt.copy"
+  },
+  {
+   "t": "find a ui library",
+   "i": "market.search",
+   "s": {
+    "q": "ui"
+   }
+  },
+  {
+   "t": "recommend a physics library for 3d games",
+   "i": "market.search",
+   "s": {
+    "q": "physics"
+   }
+  },
+  {
+   "t": "search the marketplace for icons",
+   "i": "market.search",
+   "s": {
+    "q": "icons"
+   }
+  },
+  {
+   "t": "what's trending",
+   "i": "trending"
+  },
+  {
+   "t": "show trending repos",
+   "i": "trending"
+  },
+  {
+   "t": "any new tools",
+   "i": "trending"
+  },
+  {
+   "t": "open blender",
+   "i": "studio.open",
+   "s": {
+    "app": "blender"
+   }
+  },
+  {
+   "t": "download krita",
+   "i": "studio.open",
+   "s": {
+    "app": "krita"
+   }
+  },
+  {
+   "t": "add a jump sound",
+   "i": "asset.add"
+  },
+  {
+   "t": "get me a coin sprite",
+   "i": "asset.add"
+  },
+  {
+   "t": "find a heart icon",
+   "i": "asset.add"
+  },
+  {
+   "t": "find the boss notes",
+   "i": "find",
+   "s": {
+    "q": "the boss notes"
+   }
+  },
+  {
+   "t": "search for parking",
+   "i": "find",
+   "s": {
+    "q": "parking"
+   }
+  },
+  {
+   "t": "what's new",
+   "i": "status"
+  },
+  {
+   "t": "catch me up",
+   "i": "status"
+  },
+  {
+   "t": "who's online",
+   "i": "status"
+  },
+  {
+   "t": "what should i do next",
+   "i": "focus"
+  },
+  {
+   "t": "where was i",
+   "i": "focus"
+  },
+  {
+   "t": "what can you do",
+   "i": "tiers"
+  },
+  {
+   "t": "what is free",
+   "i": "tiers"
+  },
+  {
+   "t": "hi",
+   "i": "hello"
+  },
+  {
+   "t": "thanks",
+   "i": "hello",
+   "s": {
+    "thanks": true
+   }
+  },
+  {
+   "t": "good morning",
+   "i": "hello"
+  },
+  {
+   "t": "how do i invite a friend",
+   "i": "invite"
+  },
+  {
+   "t": "how does publishing work",
+   "i": "help.kb"
+  },
+  {
+   "t": "what is the secretary",
+   "i": "help.kb"
+  },
+  {
+   "t": "can i host on my phone",
+   "i": "help.kb"
+  },
+  {
+   "t": "why is the preview blank",
+   "i": "help.kb"
+  },
+  {
+   "t": "explain how cloud save works",
+   "i": "help.kb"
+  },
+  {
+   "t": "what is 12 * 7",
+   "i": "calc",
+   "s": {
+    "value": 84
+   }
+  },
+  {
+   "t": "15% of 80",
+   "i": "calc",
+   "s": {
+    "value": 12
+   }
+  },
+  {
+   "t": "split 120 between 4 people",
+   "i": "calc",
+   "s": {
+    "value": 30
+   }
+  },
+  {
+   "t": "(3 + 4) * 2",
+   "i": "calc",
+   "s": {
+    "value": 14
+   }
+  },
+  {
+   "t": "tip on 60",
+   "i": "calc",
+   "s": {
+    "value": 10.8
+   }
+  },
+  {
+   "t": "whats 100 / 8",
+   "i": "calc",
+   "s": {
+    "value": 12.5
+   }
+  },
+  {
+   "t": "convert 5 km to miles",
+   "i": "convert",
+   "s": {
+    "value": 3.11
+   }
+  },
+  {
+   "t": "100 f in c",
+   "i": "convert",
+   "s": {
+    "value": 37.78
+   }
+  },
+  {
+   "t": "how many grams in 2 pounds",
+   "i": null
+  },
+  {
+   "t": "convert 10 kg to lbs",
+   "i": "convert",
+   "s": {
+    "value": 22.05
+   }
+  },
+  {
+   "t": "what time is it",
+   "i": "time.now"
+  },
+  {
+   "t": "what's the date",
+   "i": "time.now"
+  },
+  {
+   "t": "what day is it",
+   "i": "time.now"
+  },
+  {
+   "t": "what date is next friday",
+   "i": "date.calc"
+  },
+  {
+   "t": "how many days until friday",
+   "i": "date.calc"
+  },
+  {
+   "t": "flip a coin",
+   "i": "random",
+   "s": {
+    "kind": "coin"
+   }
+  },
+  {
+   "t": "roll a d20",
+   "i": "random",
+   "s": {
+    "kind": "dice",
+    "sides": 20
+   }
+  },
+  {
+   "t": "roll the dice",
+   "i": "random",
+   "s": {
+    "kind": "dice"
+   }
+  },
+  {
+   "t": "pick a number between 1 and 10",
+   "i": "random",
+   "s": {
+    "kind": "number"
+   }
+  },
+  {
+   "t": "who should do the dishes",
+   "i": "random",
+   "s": {
+    "kind": "person"
+   }
+  },
+  {
+   "t": "pick someone",
+   "i": "random",
+   "s": {
+    "kind": "person"
+   }
+  },
+  {
+   "t": "undo",
+   "i": "undo"
+  },
+  {
+   "t": "take that back",
+   "i": "undo"
+  },
+  {
+   "t": "oops",
+   "i": "undo"
+  },
+  {
+   "t": "never mind",
+   "i": "undo"
+  },
+  {
+   "t": "when i say ship it, do publish the game",
+   "i": "teach",
+   "s": {
+    "say": "ship it",
+    "means": "publish the game"
+   }
+  },
+  {
+   "t": "teach flint: when i say standup, open the calendar",
+   "i": "teach",
+   "s": {
+    "say": "standup",
+    "means": "open the calendar"
+   }
+  },
+  {
+   "t": "no, i meant open the calendar",
+   "i": "meant",
+   "s": {
+    "means": "open the calendar"
+   }
+  },
+  {
+   "t": "what have i taught you",
+   "i": "taught"
+  },
+  {
+   "t": "añade una tarea comprar leche mañana",
+   "i": "task.add",
+   "s": {
+    "title": "Comprar leche",
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "agrega tarea llamar a Sam",
+   "i": "task.add",
+   "s": {
+    "title": "Llamar a Sam"
+   }
+  },
+  {
+   "t": "abre el calendario",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "modo oscuro",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "abre ajustes",
+   "i": "nav.settings"
+  },
+  {
+   "t": "deshacer",
+   "i": "undo"
+  },
+  {
+   "t": "adiciona uma tarefa comprar pão amanhã",
+   "i": "task.add",
+   "s": {
+    "title": "Comprar pão",
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "abra o calendário",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "modo escuro",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "desfazer",
+   "i": "undo"
+  },
+  {
+   "t": "ajoute une tâche acheter du pain demain",
+   "i": "task.add",
+   "s": {
+    "title": "Acheter du pain",
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "ouvre le calendrier",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "mode sombre",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "ouvre les paramètres",
+   "i": "nav.settings"
+  },
+  {
+   "t": "füge eine Aufgabe hinzu Brot kaufen morgen",
+   "i": "task.add",
+   "s": {
+    "title": "Brot kaufen",
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "öffne den Kalender",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "dunkles Thema",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "öffne die Einstellungen",
+   "i": "nav.settings"
+  },
+  {
+   "t": "明日 牛乳を買う タスクを追加",
+   "i": "task.add",
+   "s": {
+    "due": "2026-11-11"
+   }
+  },
+  {
+   "t": "カレンダーを開いて",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "ダークテーマ",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "添加任务 买牛奶",
+   "i": "task.add"
+  },
+  {
+   "t": "打开日历",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "深色主题",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "할 일 추가 우유 사기",
+   "i": "task.add"
+  },
+  {
+   "t": "캘린더 열어",
+   "i": "nav.calendar"
+  },
+  {
+   "t": "다크 테마",
+   "i": "theme.dark-mode"
+  },
+  {
+   "t": "make a merch store for Ember Socks, dark, then add a task to order samples for Friday and tell Maya",
+   "i": [
+    "site.merch",
+    "task.add",
+    "dm.send"
+   ],
+   "s": {
+    "0": {
+     "name": "Ember Socks",
+     "mode": "dark"
+    },
+    "1": {
+     "title": "Order samples",
+     "due": "2026-11-13"
+    },
+    "2": {
+     "who": "Maya"
+    }
+   }
+  },
+  {
+   "t": "add a task to fix the menu and tell Sam",
+   "i": [
+    "task.add",
+    "dm.send"
+   ],
+   "s": {
+    "0": {
+     "title": "Fix the menu"
+    },
+    "1": {
+     "who": "Sam"
+    }
+   }
+  },
+  {
+   "t": "switch to dark mode then open the calendar",
+   "i": [
+    "theme.dark-mode",
+    "nav.calendar"
+   ]
+  },
+  {
+   "t": "mark the logo done and send the trailer to review",
+   "i": [
+    "task.done",
+    "task.review"
+   ],
+   "s": {
+    "0": {
+     "task": "Design the logo"
+    },
+    "1": {
+     "task": "Cut the trailer"
+    }
+   }
+  },
+  {
+   "t": "schedule a playtest friday at 5pm; tell everyone the playtest is friday",
+   "i": [
+    "event.add",
+    "chat.send"
+   ]
+  },
+  {
+   "t": "make a link in bio for pixelpip then publish it",
+   "i": [
+    "site.linkbio",
+    "publish"
+   ],
+   "s": {
+    "0": {
+     "name": "pixelpip"
+    }
+   }
+  },
+  {
+   "t": "add a task to buy cups, add a task to buy plates, then remind maya to bring chairs",
+   "i": [
+    "task.add",
+    "task.add",
+    "dm.send"
+   ]
+  },
+  {
+   "t": "open the canvas and make a login screen for Ember",
+   "i": [
+    "nav.design",
+    "canvas.login"
+   ]
+  },
+  {
+   "t": "assign the trailer to Sam and then push it to monday",
+   "i": [
+    "task.assign",
+    "task.due"
+   ],
+   "s": {
+    "0": {
+     "who": "Sam"
+    }
+   }
+  },
+  {
+   "t": "change the accent to teal, then make the text bigger",
+   "i": [
+    "accent.set",
+    "textsize.set"
+   ]
+  },
+  {
+   "t": "write me a sonnet about our bug tracker",
+   "i": null
+  },
+  {
+   "t": "refactor the physics engine to use quadtrees",
+   "i": null
+  },
+  {
+   "t": "why does my shader flicker on safari when the canvas resizes",
+   "i": "help.kb"
+  },
+  {
+   "t": "is our pricing too high compared to competitors",
+   "i": "help.kb"
+  },
+  {
+   "t": "compose a melody for the title screen",
+   "i": null
+  },
+  {
+   "t": "make the enemies smarter with pathfinding and flocking",
+   "i": null
+  },
+  {
+   "t": "ad a task to buy milk",
+   "i": "task.add",
+   "s": {
+    "title": "Buy milk"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, add a task to buy milk",
+   "i": "task.add",
+   "s": {
+    "title": "Buy milk"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you new task: fix the save button",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the save button",
+    "type": "fix"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "craete a task called write the press kit",
+   "i": "task.add",
+   "s": {
+    "title": "Write the press kit"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "task buy more sticky notes please",
+   "i": "task.add",
+   "s": {
+    "title": "Buy more sticky notes"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you todo call the printer for me",
+   "i": "task.add",
+   "s": {
+    "title": "Call the printer"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "remnd me to call the venue friday at 3pm",
+   "i": "task.add",
+   "s": {
+    "title": "Call the venue",
+    "due": "2026-11-13",
+    "time": "15:00"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "remind me to call the venue friday at 3pm thanks",
+   "i": "task.add",
+   "s": {
+    "title": "Call the venue",
+    "due": "2026-11-13",
+    "time": "15:00"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint add a task to fix the menu for Maya by monday",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the menu",
+    "due": "2026-11-16",
+    "who": "Maya"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you add design the boss sprite to the board",
+   "i": "task.add",
+   "s": {
+    "title": "Design the boss sprite",
+    "type": "design"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please we need to test the checkout flow",
+   "i": "task.add",
+   "s": {
+    "title": "Test the checkout flow"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "new tsak research physics libraries",
+   "i": "task.add",
+   "s": {
+    "title": "Research physics libraries",
+    "type": "research"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "could you new task research physics libraries for me",
+   "i": "task.add",
+   "s": {
+    "title": "Research physics libraries",
+    "type": "research"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so add a todo: update the readme",
+   "i": "task.add",
+   "s": {
+    "title": "Update the readme"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a task to draw the title screen in 3 days",
+   "i": "task.add",
+   "s": {
+    "title": "Draw the title screen",
+    "due": "2026-11-13"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ad a task: playtest level 2 tonight",
+   "i": "task.add",
+   "s": {
+    "title": "Playtest level 2",
+    "due": "2026-11-10"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, add a task: playtest level 2 tonight",
+   "i": "task.add",
+   "s": {
+    "title": "Playtest level 2",
+    "due": "2026-11-10"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ad a ticket fix the crash on resume",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the crash on resume",
+    "type": "fix"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "please add a ticket fix the crash on resume",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the crash on resume",
+    "type": "fix"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "someone needs to write the trailer script please",
+   "i": "task.add",
+   "s": {
+    "title": "Write the trailer script"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ad a task to order samples for Friday",
+   "i": "task.add",
+   "s": {
+    "title": "Order samples",
+    "due": "2026-11-13"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "ok so new task pick fonts and assign it to Sam",
+   "i": "task.add",
+   "s": {
+    "title": "Pick fonts",
+    "who": "Sam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ad urgent: fix the login bug",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the login bug"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "add urgent: fix the login bug thanks",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the login bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ad a task to send invoices nov 30",
+   "i": "task.add",
+   "s": {
+    "title": "Send invoices",
+    "due": "2026-11-30"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, add a task to send invoices nov 30",
+   "i": "task.add",
+   "s": {
+    "title": "Send invoices",
+    "due": "2026-11-30"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you remind me to stretch in 2 hours",
+   "i": "task.add",
+   "s": {
+    "title": "Stretch"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "makr the logo task done",
+   "i": "task.done",
+   "s": {
+    "task": "Design the logo"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "i finished the jump bug please",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you done: fix the jump bug for me",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "check off the trailer tsak",
+   "i": "task.done",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "check off the trailer task thanks",
+   "i": "task.done",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint the jump bug is done",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "makr it done",
+   "i": "task.done",
+   "ctx": {
+    "last": "t2"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "can you it's done",
+   "i": "task.done",
+   "ctx": {
+    "last": "t1"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please i did the onboarding copy",
+   "i": "task.done",
+   "s": {
+    "task": "Write the onboarding copy"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you finished with the logo for me",
+   "i": "task.done",
+   "s": {
+    "task": "Design the logo"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so set the jump bug to complete",
+   "i": "task.done",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint i'll take the trailer",
+   "i": "task.start",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, move fix the jump bug to in progress",
+   "i": "task.start",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please grab the jump bug",
+   "i": "task.start",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "assign the logo task to Maya please",
+   "i": "task.assign",
+   "s": {
+    "task": "Design the logo",
+    "who": "Maya"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so have Maya do the onboarding copy",
+   "i": "task.assign",
+   "s": {
+    "task": "Write the onboarding copy",
+    "who": "Maya"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hand the jump bug to my claude thanks",
+   "i": "task.assign",
+   "s": {
+    "task": "Fix the jump bug",
+    "who": "Camp's Claude"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, let Sam handle the trailer",
+   "i": "task.assign",
+   "s": {
+    "task": "Cut the trailer",
+    "who": "Sam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you send the logo task to review",
+   "i": "task.review",
+   "s": {
+    "task": "Design the logo"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "the trailer is ready for reveiw",
+   "i": "task.review",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "move the jump bug to review please",
+   "i": "task.review",
+   "s": {
+    "task": "Fix the jump bug"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "delte the task cut the trailer",
+   "i": "task.delete",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "could you delete the task cut the trailer for me",
+   "i": "task.delete",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "get rid of the onboarding copy tsak",
+   "i": "task.delete",
+   "s": {
+    "task": "Write the onboarding copy"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "get rid of the onboarding copy task thanks",
+   "i": "task.delete",
+   "s": {
+    "task": "Write the onboarding copy"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint push the jump bug to friday",
+   "i": "task.due",
+   "s": {
+    "task": "Fix the jump bug",
+    "due": "2026-11-13"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "set the due date of the logo to tomorow",
+   "i": "task.due",
+   "s": {
+    "task": "Design the logo",
+    "due": "2026-11-11"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "can you the trailer is due next week",
+   "i": "task.due",
+   "s": {
+    "task": "Cut the trailer",
+    "due": "2026-11-16"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please postpone the onboarding copy until monday",
+   "i": "task.due",
+   "s": {
+    "task": "Write the onboarding copy",
+    "due": "2026-11-16"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "rename the tsak logo to final logo",
+   "i": "task.rename",
+   "s": {
+    "task": "Design the logo",
+    "title": "final logo"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "could you rename the task logo to final logo for me",
+   "i": "task.rename",
+   "s": {
+    "task": "Design the logo",
+    "title": "final logo"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so rename cut the trailer to cut the launch trailer",
+   "i": "task.rename",
+   "s": {
+    "task": "Cut the trailer",
+    "title": "cut the launch trailer"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint show open tasks",
+   "i": "task.list",
+   "s": {
+    "which": "open"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, what's overdue",
+   "i": "task.list",
+   "s": {
+    "which": "overdue"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please list all tasks",
+   "i": "task.list",
+   "v": "wrap"
+  },
+  {
+   "t": "show me my tasks for this week please",
+   "i": "task.list",
+   "s": {
+    "whose": "me",
+    "which": "week"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so what's on my plate",
+   "i": "task.list",
+   "v": "wrap"
+  },
+  {
+   "t": "what needs someone thanks",
+   "i": "task.unassigned",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, what can i help with",
+   "i": "task.unassigned",
+   "v": "wrap"
+  },
+  {
+   "t": "can you note: the boss needs a second phase",
+   "i": "note.add",
+   "s": {
+    "body": "the boss needs a second phase"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "remember that the demo is at 3 please",
+   "i": "note.add",
+   "s": {
+    "body": "the demo is at 3"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you take a note: ask Maya about colors for me",
+   "i": "note.add",
+   "s": {
+    "body": "ask Maya about colors"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "note to self buy batteries thanks",
+   "i": "note.add",
+   "s": {
+    "body": "buy batteries"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint new note",
+   "i": "note.blank",
+   "v": "wrap"
+  },
+  {
+   "t": "can you write a doc about the launch plan",
+   "i": "doc.new",
+   "s": {
+    "topic": "the launch plan"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please draft a plan for the game jam",
+   "i": "doc.new",
+   "s": {
+    "topic": "the game jam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you write a press release about the beta for me",
+   "i": "doc.new",
+   "s": {
+    "topic": "the beta"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so draft an email to the venue",
+   "i": "doc.new",
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a sheet for the budget",
+   "i": "sheet.new",
+   "s": {
+    "topic": "the budget"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "craete an expense tracker",
+   "i": "sheet.new",
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, create an expense tracker",
+   "i": "sheet.new",
+   "v": "wrap"
+  },
+  {
+   "t": "please make a price list for the menu",
+   "i": "sheet.new",
+   "s": {
+    "topic": "the menu"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "set up a sign up sheet for the jam please",
+   "i": "sheet.new",
+   "s": {
+    "topic": "the jam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so build a pitch deck for investors",
+   "i": "deck.new",
+   "s": {
+    "topic": "investors"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "make a presentation on our progress thanks",
+   "i": "deck.new",
+   "s": {
+    "topic": "our progress"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, pull up the launch plan doc",
+   "i": "doc.open",
+   "s": {
+    "name": "launch plan"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you write the vision",
+   "i": "vision.write",
+   "v": "wrap"
+  },
+  {
+   "t": "opne our vision",
+   "i": "vision.write",
+   "v": "typo"
+  },
+  {
+   "t": "write a readme please",
+   "i": "draft.readme",
+   "v": "wrap"
+  },
+  {
+   "t": "could you draft the release notes for me",
+   "i": "draft.readme",
+   "v": "wrap"
+  },
+  {
+   "t": "post in the chat: demo at 3 thanks",
+   "i": "chat.send",
+   "s": {
+    "msg": "demo at 3"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint announce we ship friday",
+   "i": "chat.send",
+   "s": {
+    "msg": "we ship friday"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you tell the tribe pizza is here",
+   "i": "chat.send",
+   "s": {
+    "msg": "pizza is here"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please tell maya the build is up",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "the build is up"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you ask maya if she can test tonight for me",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "she can test tonight"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so ping sam: are you around?",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint text Sam that I am running late",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam",
+    "msg": "I am running late"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "remnd maya to send the files",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "send the files"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, remind maya to send the files",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya",
+    "msg": "send the files"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "dm maya can you reveiw the copy",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "please dm maya can you review the copy",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "tell my claude to look at the bug please",
+   "i": "dm.send",
+   "s": {
+    "who": "Camp's Claude"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "opne a dm with maya",
+   "i": "dm.open",
+   "s": {
+    "who": "Maya"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "ok so chat with sam",
+   "i": "dm.open",
+   "s": {
+    "who": "Sam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "summarize the chat thanks",
+   "i": "chat.summarize",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, tldr",
+   "i": "chat.summarize",
+   "v": "wrap"
+  },
+  {
+   "t": "can you schedule a demo friday at 3pm",
+   "i": "event.add",
+   "s": {
+    "what": "demo",
+    "date": "2026-11-13",
+    "time": "15:00"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "book a playtest tomorow",
+   "i": "event.add",
+   "s": {
+    "what": "playtest",
+    "date": "2026-11-11"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "add lunch with sam to the calendar please",
+   "i": "event.add",
+   "s": {
+    "what": "lunch with sam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you set up a call with Maya on thursday at 10am for me",
+   "i": "event.add",
+   "s": {
+    "what": "call with Maya",
+    "date": "2026-11-12",
+    "time": "10:00"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "meet with sam monday at noon thanks",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-16",
+    "time": "12:00"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint schedule standup every day at 9am",
+   "i": "event.add",
+   "v": "wrap"
+  },
+  {
+   "t": "put the deadline on the calender for the 28th",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-28"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "can you create an event for the jam on saturday",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-14"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "what's on my calender today",
+   "i": "cal.show",
+   "s": {
+    "when": "today"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "please what's on my calendar today",
+   "i": "cal.show",
+   "s": {
+    "when": "today"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you am i free tonight for me",
+   "i": "cal.show",
+   "s": {
+    "when": "tonight"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so what is on the schedule this week",
+   "i": "cal.show",
+   "s": {
+    "when": "this week"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a 3d game called orb run",
+   "i": "build.3d",
+   "s": {
+    "name": "orb run"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, build me a three js game",
+   "i": "build.3d",
+   "v": "wrap"
+  },
+  {
+   "t": "please build a pixel game called gem dash",
+   "i": "build.2d",
+   "s": {
+    "name": "gem dash"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "make a game please",
+   "i": "build.2d",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so make a checklist app",
+   "i": "build.todo",
+   "v": "wrap"
+  },
+  {
+   "t": "make me a habit tracker thanks",
+   "i": "build.todo",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, make a clip trimmer",
+   "i": "build.video",
+   "v": "wrap"
+  },
+  {
+   "t": "can you make a landing page for Sunrise Bakery",
+   "i": "build.landing",
+   "s": {
+    "name": "Sunrise Bakery"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "make me a link in bio please",
+   "i": "site.linkbio",
+   "v": "wrap"
+  },
+  {
+   "t": "could you build a linktree for my band for me",
+   "i": "site.linkbio",
+   "v": "wrap"
+  },
+  {
+   "t": "build an online shop for my candles thanks",
+   "i": "site.merch",
+   "s": {
+    "name": "candles"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a cafe website for Moon Beans",
+   "i": "site.cafe",
+   "s": {
+    "name": "Moon Beans"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you build a podcast site for Night Shift",
+   "i": "site.podcast",
+   "s": {
+    "name": "Night Shift"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please make a wedding website for Ana and Leo",
+   "i": "site.wedding",
+   "s": {
+    "name": "Ana and Leo"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you make me a portfolio for me",
+   "i": "site.portfolio",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so build a photo gallery for my trips",
+   "i": "site.photography",
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a streamer page for pixelpip",
+   "i": "site.creator",
+   "s": {
+    "name": "pixelpip"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, make a press kit for Lantern Run",
+   "i": "site.gamepage",
+   "s": {
+    "name": "Lantern Run"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "please make a salon site for Fade Room",
+   "i": "site.service",
+   "s": {
+    "name": "Fade Room"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "make a waitlist page please",
+   "i": "site.comingsoon",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so make a coming soon page for gem dash in dark mode",
+   "i": "site.comingsoon",
+   "s": {
+    "name": "gem dash",
+    "mode": "dark"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "show me the website tempaltes",
+   "i": "site.gallery",
+   "v": "typo"
+  },
+  {
+   "t": "show me the website templates thanks",
+   "i": "site.gallery",
+   "v": "wrap"
+  },
+  {
+   "t": "make a login scren for Ember",
+   "i": "canvas.login",
+   "s": {
+    "name": "Ember"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, make a login screen for Ember",
+   "i": "canvas.login",
+   "s": {
+    "name": "Ember"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you design a sign up page",
+   "i": "canvas.login",
+   "v": "wrap"
+  },
+  {
+   "t": "mock up an onboarding scren",
+   "i": "canvas.onboarding",
+   "v": "typo"
+  },
+  {
+   "t": "design a pricing page for Tidy please",
+   "i": "canvas.pricing",
+   "s": {
+    "name": "Tidy"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "sketch a setings screen",
+   "i": "canvas.settings",
+   "v": "typo"
+  },
+  {
+   "t": "could you sketch a settings screen for me",
+   "i": "canvas.settings",
+   "v": "wrap"
+  },
+  {
+   "t": "desing a checkout screen in dark mode",
+   "i": "canvas.checkout",
+   "s": {
+    "mode": "dark"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "design a checkout screen in dark mode thanks",
+   "i": "canvas.checkout",
+   "s": {
+    "mode": "dark"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a dashboard screen",
+   "i": "canvas.dashboard",
+   "v": "wrap"
+  },
+  {
+   "t": "desing a chat screen for Ping",
+   "i": "canvas.chat",
+   "s": {
+    "name": "Ping"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "can you make an empty state card",
+   "i": "canvas.empty",
+   "v": "wrap"
+  },
+  {
+   "t": "desing a home feed screen",
+   "i": "canvas.home",
+   "v": "typo"
+  },
+  {
+   "t": "please design a home feed screen",
+   "i": "canvas.home",
+   "v": "wrap"
+  },
+  {
+   "t": "desing a landing hero section for Tidy",
+   "i": "canvas.hero",
+   "s": {
+    "name": "Tidy"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "could you design a landing hero section for Tidy for me",
+   "i": "canvas.hero",
+   "s": {
+    "name": "Tidy"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so wireframe a feed screen",
+   "i": "canvas.feed",
+   "v": "wrap"
+  },
+  {
+   "t": "flint clean up this frame",
+   "i": "canvas.tidy",
+   "v": "wrap"
+  },
+  {
+   "t": "ad auto layout",
+   "i": "canvas.tidy",
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, add auto layout",
+   "i": "canvas.tidy",
+   "v": "wrap"
+  },
+  {
+   "t": "please give the layers better names",
+   "i": "canvas.rename",
+   "v": "wrap"
+  },
+  {
+   "t": "make a dark mode version of this frame please",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so make variants",
+   "i": "canvas.variants",
+   "v": "wrap"
+  },
+  {
+   "t": "craete some variations of this",
+   "i": "canvas.variants",
+   "v": "typo"
+  },
+  {
+   "t": "create some variations of this thanks",
+   "i": "canvas.variants",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, turn this into code",
+   "i": "canvas.send",
+   "v": "wrap"
+  },
+  {
+   "t": "can you export this frame as png",
+   "i": "canvas.export",
+   "s": {
+    "fmt": "png"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "reload the preview please",
+   "i": "preview.reload",
+   "v": "wrap"
+  },
+  {
+   "t": "could you refresh the app for me",
+   "i": "preview.reload",
+   "v": "wrap"
+  },
+  {
+   "t": "tablet view thanks",
+   "i": "preview.device",
+   "s": {
+    "dev": "tablet"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint how does it look on mobile",
+   "i": "preview.device",
+   "s": {
+    "dev": "phone"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "swich to desktop view",
+   "i": "preview.device",
+   "s": {
+    "dev": "desktop"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "can you turn on edit mode",
+   "i": "preview.edit",
+   "v": "wrap"
+  },
+  {
+   "t": "please let me pick an element",
+   "i": "preview.edit",
+   "v": "wrap"
+  },
+  {
+   "t": "could you comment mode for me",
+   "i": "comment.mode",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so publish it",
+   "i": "publish",
+   "v": "wrap"
+  },
+  {
+   "t": "flint make a play link",
+   "i": "publish",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, go live",
+   "i": "publish",
+   "v": "wrap"
+  },
+  {
+   "t": "please make the title blue",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "change the text to order now please",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so center it",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "make the button rounder thanks",
+   "i": "edit.picked",
+   "ctx": {
+    "picked": true
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, turn it red",
+   "i": "edit.picked",
+   "ctx": {
+    "view": "canvas",
+    "selection": [
+     "n1"
+    ]
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you switch to dark mode",
+   "i": "theme.dark-mode",
+   "v": "wrap"
+  },
+  {
+   "t": "light mode please please",
+   "i": "theme.light",
+   "v": "wrap"
+  },
+  {
+   "t": "could you turn off dark mode for me",
+   "i": "theme.light",
+   "v": "wrap"
+  },
+  {
+   "t": "swich to midnight",
+   "i": "theme.midnight",
+   "v": "typo"
+  },
+  {
+   "t": "switch to midnight thanks",
+   "i": "theme.midnight",
+   "v": "wrap"
+  },
+  {
+   "t": "flint campfire theme",
+   "i": "theme.campfire",
+   "v": "wrap"
+  },
+  {
+   "t": "change the thme to solar light",
+   "i": "theme.solar-light",
+   "v": "typo"
+  },
+  {
+   "t": "can you high contrast mode",
+   "i": "theme.contrast",
+   "v": "wrap"
+  },
+  {
+   "t": "please try nightshade",
+   "i": "theme.nightshade",
+   "v": "wrap"
+  },
+  {
+   "t": "match my system thme",
+   "i": "theme.system",
+   "v": "typo"
+  },
+  {
+   "t": "could you match my system theme for me",
+   "i": "theme.system",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so use the tribecode dark theme",
+   "i": "theme.dark",
+   "v": "wrap"
+  },
+  {
+   "t": "flint make the app purple",
+   "i": "accent.set",
+   "s": {
+    "color": "purple"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, teal accent",
+   "i": "accent.set",
+   "s": {
+    "color": "teal"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "make the text biger",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "please make the text bigger",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "bigger font please",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so make the font smaller",
+   "i": "textsize.set",
+   "s": {
+    "size": "s"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "normal text size thanks",
+   "i": "textsize.set",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, speak french",
+   "i": "lang.set",
+   "s": {
+    "lang": "fr"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you german please",
+   "i": "lang.set",
+   "s": {
+    "lang": "de"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "use korean please",
+   "i": "lang.set",
+   "s": {
+    "lang": "ko"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "could you change my avatar for me",
+   "i": "personalize.open",
+   "v": "wrap"
+  },
+  {
+   "t": "change my profile picture thanks",
+   "i": "personalize.open",
+   "v": "wrap"
+  },
+  {
+   "t": "flint open calendar",
+   "i": "nav.calendar",
+   "v": "wrap"
+  },
+  {
+   "t": "go to the tsak board",
+   "i": "nav.tasks",
+   "v": "typo"
+  },
+  {
+   "t": "can you show me the files",
+   "i": "nav.files",
+   "v": "wrap"
+  },
+  {
+   "t": "take me to setings",
+   "i": "nav.settings",
+   "v": "typo"
+  },
+  {
+   "t": "please take me to settings",
+   "i": "nav.settings",
+   "v": "wrap"
+  },
+  {
+   "t": "where is the whitboard",
+   "i": "nav.whiteboard",
+   "v": "typo"
+  },
+  {
+   "t": "could you where is the whiteboard for me",
+   "i": "nav.whiteboard",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so open design",
+   "i": "nav.design",
+   "v": "wrap"
+  },
+  {
+   "t": "opne the canvas",
+   "i": "nav.design",
+   "v": "typo"
+  },
+  {
+   "t": "flint go to chat",
+   "i": "nav.chat",
+   "v": "wrap"
+  },
+  {
+   "t": "opne my inbox",
+   "i": "nav.inbox",
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, open my inbox",
+   "i": "nav.inbox",
+   "v": "wrap"
+  },
+  {
+   "t": "opne studios",
+   "i": "nav.studios",
+   "v": "typo"
+  },
+  {
+   "t": "please open studios",
+   "i": "nav.studios",
+   "v": "wrap"
+  },
+  {
+   "t": "go to the company page please",
+   "i": "nav.company",
+   "v": "wrap"
+  },
+  {
+   "t": "opne the asset library",
+   "i": "nav.assets",
+   "v": "typo"
+  },
+  {
+   "t": "ok so open the academy",
+   "i": "nav.academy",
+   "v": "wrap"
+  },
+  {
+   "t": "show me the agents hub thanks",
+   "i": "nav.agents",
+   "v": "wrap"
+  },
+  {
+   "t": "opne the guide",
+   "i": "nav.guide",
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, open the guide",
+   "i": "nav.guide",
+   "v": "wrap"
+  },
+  {
+   "t": "can you open the website builder",
+   "i": "nav.website",
+   "v": "wrap"
+  },
+  {
+   "t": "show the preveiw",
+   "i": "nav.preview",
+   "v": "typo"
+  },
+  {
+   "t": "open the secretary please",
+   "i": "nav.secretary",
+   "v": "wrap"
+  },
+  {
+   "t": "could you go home for me",
+   "i": "nav.home",
+   "v": "wrap"
+  },
+  {
+   "t": "opne keyboard shortcuts",
+   "i": "nav.shortcuts",
+   "v": "typo"
+  },
+  {
+   "t": "open keyboard shortcuts thanks",
+   "i": "nav.shortcuts",
+   "v": "wrap"
+  },
+  {
+   "t": "flint open the bug list",
+   "i": "nav.bugs",
+   "v": "wrap"
+  },
+  {
+   "t": "can you open my notes",
+   "i": "nav.notes",
+   "v": "wrap"
+  },
+  {
+   "t": "opne money",
+   "i": "nav.money",
+   "v": "typo"
+  },
+  {
+   "t": "please open money",
+   "i": "nav.money",
+   "v": "wrap"
+  },
+  {
+   "t": "opne trending repos",
+   "i": "nav.trending",
+   "v": "typo"
+  },
+  {
+   "t": "could you open trending repos for me",
+   "i": "nav.trending",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so open the task board",
+   "i": "nav.tasks",
+   "v": "wrap"
+  },
+  {
+   "t": "opne my tasks",
+   "i": "nav.tasks",
+   "v": "typo"
+  },
+  {
+   "t": "flint settings",
+   "i": "nav.settings",
+   "v": "wrap"
+  },
+  {
+   "t": "calender",
+   "i": "nav.calendar",
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, calendar",
+   "i": "nav.calendar",
+   "v": "wrap"
+  },
+  {
+   "t": "opne mcp",
+   "i": "nav.mcp",
+   "v": "typo"
+  },
+  {
+   "t": "please open mcp",
+   "i": "nav.mcp",
+   "v": "wrap"
+  },
+  {
+   "t": "invite a friend please",
+   "i": "invite",
+   "v": "wrap"
+  },
+  {
+   "t": "share the invte link",
+   "i": "invite",
+   "v": "typo"
+  },
+  {
+   "t": "ok so invite maya",
+   "i": "invite",
+   "v": "wrap"
+  },
+  {
+   "t": "start hosting thanks",
+   "i": "host.start",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, stop hosting",
+   "i": "host.stop",
+   "v": "wrap"
+  },
+  {
+   "t": "can you connect my ai",
+   "i": "connect.ai",
+   "v": "wrap"
+  },
+  {
+   "t": "add codex please",
+   "i": "connect.ai",
+   "v": "wrap"
+  },
+  {
+   "t": "could you give flint a brain for me",
+   "i": "brain.pick",
+   "v": "wrap"
+  },
+  {
+   "t": "turn on the secretary thanks",
+   "i": "helper.toggle",
+   "s": {
+    "what": "secretary",
+    "on": true
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint autopilot off",
+   "i": "helper.toggle",
+   "s": {
+    "what": "autopilot",
+    "on": false
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you kick off a jam for 60 minutes",
+   "i": "jam.start",
+   "v": "wrap"
+  },
+  {
+   "t": "please start a huddle",
+   "i": "huddle.start",
+   "v": "wrap"
+  },
+  {
+   "t": "could you hang up for me",
+   "i": "huddle.leave",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so record meeting notes",
+   "i": "capture.toggle",
+   "v": "wrap"
+  },
+  {
+   "t": "flint rate tribecode",
+   "i": "feedback",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, show me around",
+   "i": "tour",
+   "v": "wrap"
+  },
+  {
+   "t": "please copy a prompt for my ai",
+   "i": "prompt.copy",
+   "v": "wrap"
+  },
+  {
+   "t": "find a ui library please",
+   "i": "market.search",
+   "s": {
+    "q": "ui"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so search the marketplace for icons",
+   "i": "market.search",
+   "s": {
+    "q": "icons"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "what's trendng",
+   "i": "trending",
+   "v": "typo"
+  },
+  {
+   "t": "what's trending thanks",
+   "i": "trending",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, any new tools",
+   "i": "trending",
+   "v": "wrap"
+  },
+  {
+   "t": "can you open blender",
+   "i": "studio.open",
+   "s": {
+    "app": "blender"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "add a jump sound please",
+   "i": "asset.add",
+   "v": "wrap"
+  },
+  {
+   "t": "could you get me a coin sprite for me",
+   "i": "asset.add",
+   "v": "wrap"
+  },
+  {
+   "t": "find the boss notes thanks",
+   "i": "find",
+   "s": {
+    "q": "the boss notes"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "flint search for parking",
+   "i": "find",
+   "s": {
+    "q": "parking"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you catch me up",
+   "i": "status",
+   "v": "wrap"
+  },
+  {
+   "t": "please who's online",
+   "i": "status",
+   "v": "wrap"
+  },
+  {
+   "t": "could you where was i for me",
+   "i": "focus",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so what can you do",
+   "i": "tiers",
+   "v": "wrap"
+  },
+  {
+   "t": "flint how do i invite a friend",
+   "i": "invite",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, how does publishing work",
+   "i": "help.kb",
+   "v": "wrap"
+  },
+  {
+   "t": "please can i host on my phone",
+   "i": "help.kb",
+   "v": "wrap"
+  },
+  {
+   "t": "why is the preview blank please",
+   "i": "help.kb",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so agrega tarea llamar a Sam",
+   "i": "task.add",
+   "s": {
+    "title": "Llamar a Sam"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "abre el calendario thanks",
+   "i": "nav.calendar",
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, abre ajustes",
+   "i": "nav.settings",
+   "v": "wrap"
+  },
+  {
+   "t": "can you modo escuro",
+   "i": "theme.dark-mode",
+   "v": "wrap"
+  },
+  {
+   "t": "mode sombre please",
+   "i": "theme.dark-mode",
+   "v": "wrap"
+  },
+  {
+   "t": "could you dunkles Thema for me",
+   "i": "theme.dark-mode",
+   "v": "wrap"
+  },
+  {
+   "t": "is our pricing too high compared to competitors thanks",
+   "i": "help.kb",
+   "v": "wrap"
+  },
+  {
+   "t": "could you jot that the venue wants a deposit",
+   "i": "note.add",
+   "v": "held"
+  },
+  {
+   "t": "please add buy tape to my list",
+   "i": "task.add",
+   "s": {
+    "title": "Buy tape"
+   },
+   "v": "held"
+  },
+  {
+   "t": "new todo: email the printer by thursday",
+   "i": "task.add",
+   "s": {
+    "due": "2026-11-12"
+   },
+   "v": "held"
+  },
+  {
+   "t": "finish the trailer",
+   "i": "task.done",
+   "s": {
+    "task": "Cut the trailer"
+   },
+   "v": "held"
+  },
+  {
+   "t": "I already did the logo",
+   "i": "task.done",
+   "s": {
+    "task": "Design the logo"
+   },
+   "v": "held"
+  },
+  {
+   "t": "can sam take the trailer",
+   "i": "task.assign",
+   "s": {
+    "who": "Sam"
+   },
+   "v": "held"
+  },
+  {
+   "t": "move the logo to review please",
+   "i": "task.review",
+   "s": {
+    "task": "Design the logo"
+   },
+   "v": "held"
+  },
+  {
+   "t": "bump the jump bug to next week",
+   "i": "task.due",
+   "s": {
+    "due": "2026-11-16"
+   },
+   "v": "held"
+  },
+  {
+   "t": "what's left to do",
+   "i": "task.list",
+   "v": "held"
+  },
+  {
+   "t": "show overdue tasks",
+   "i": "task.list",
+   "s": {
+    "which": "overdue"
+   },
+   "v": "held"
+  },
+  {
+   "t": "tell sam lunch is on me",
+   "i": "dm.send",
+   "s": {
+    "who": "Sam"
+   },
+   "v": "held"
+  },
+  {
+   "t": "let everyone know we are live",
+   "i": "chat.send",
+   "v": "held"
+  },
+  {
+   "t": "ping maya about the colors",
+   "i": "dm.send",
+   "s": {
+    "who": "Maya"
+   },
+   "v": "held"
+  },
+  {
+   "t": "schedule a sync with sam tomorrow at 4",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-11"
+   },
+   "v": "held"
+  },
+  {
+   "t": "what's happening tomorrow",
+   "i": "cal.show",
+   "s": {
+    "when": "tomorrow"
+   },
+   "v": "held"
+  },
+  {
+   "t": "book a review on friday",
+   "i": "event.add",
+   "s": {
+    "date": "2026-11-13"
+   },
+   "v": "held"
+  },
+  {
+   "t": "make me a tiny platformer called hop",
+   "i": "build.2d",
+   "s": {
+    "name": "hop"
+   },
+   "v": "held"
+  },
+  {
+   "t": "build a store for my zines",
+   "i": "site.merch",
+   "v": "held"
+  },
+  {
+   "t": "i want a portfolio site",
+   "i": "site.portfolio",
+   "v": "held"
+  },
+  {
+   "t": "make a links page for my art",
+   "i": "site.linkbio",
+   "v": "held"
+  },
+  {
+   "t": "spin up a coming soon page",
+   "i": "site.comingsoon",
+   "v": "held"
+  },
+  {
+   "t": "design a settings page",
+   "i": "canvas.settings",
+   "v": "held"
+  },
+  {
+   "t": "mock up a checkout page for Tidy",
+   "i": "canvas.checkout",
+   "s": {
+    "name": "Tidy"
+   },
+   "v": "held"
+  },
+  {
+   "t": "make a darker version",
+   "i": "canvas.dark",
+   "v": "held"
+  },
+  {
+   "t": "clean up the layers",
+   "i": "canvas.tidy",
+   "v": "held"
+  },
+  {
+   "t": "preview on tablet",
+   "i": "preview.device",
+   "s": {
+    "dev": "tablet"
+   },
+   "v": "held"
+  },
+  {
+   "t": "publish the site",
+   "i": "publish",
+   "v": "held"
+  },
+  {
+   "t": "go dark",
+   "i": "theme.dark-mode",
+   "v": "held"
+  },
+  {
+   "t": "switch to the light theme",
+   "i": "theme.light",
+   "v": "held"
+  },
+  {
+   "t": "make the accent pink",
+   "i": "accent.set",
+   "s": {
+    "color": "pink"
+   },
+   "v": "held"
+  },
+  {
+   "t": "larger text please",
+   "i": "textsize.set",
+   "s": {
+    "size": "l"
+   },
+   "v": "held"
+  },
+  {
+   "t": "put the app in portuguese",
+   "i": "lang.set",
+   "s": {
+    "lang": "pt"
+   },
+   "v": "held"
+  },
+  {
+   "t": "take me to the calendar",
+   "i": "nav.calendar",
+   "v": "held"
+  },
+  {
+   "t": "show me the marketplace",
+   "i": "nav.market",
+   "v": "held"
+  },
+  {
+   "t": "open my profile",
+   "i": "nav.profile",
+   "v": "held"
+  },
+  {
+   "t": "bring up search",
+   "i": "nav.search",
+   "v": "held"
+  },
+  {
+   "t": "get my friend in here",
+   "i": "invite",
+   "v": "held"
+  },
+  {
+   "t": "hook up gemini",
+   "i": "connect.ai",
+   "v": "held"
+  },
+  {
+   "t": "start a call",
+   "i": "huddle.start",
+   "v": "held"
+  },
+  {
+   "t": "find me a charting library",
+   "i": "market.search",
+   "v": "held"
+  },
+  {
+   "t": "add a click sound",
+   "i": "asset.add",
+   "v": "held"
+  },
+  {
+   "t": "who is around",
+   "i": "status",
+   "v": "held"
+  },
+  {
+   "t": "whats 7 times 8",
+   "i": "calc",
+   "v": "held"
+  },
+  {
+   "t": "20% of 45",
+   "i": "calc",
+   "s": {
+    "value": 9
+   },
+   "v": "held"
+  },
+  {
+   "t": "convert 3 miles to km",
+   "i": "convert",
+   "s": {
+    "value": 4.83
+   },
+   "v": "held"
+  },
+  {
+   "t": "heads or tails",
+   "i": "random",
+   "s": {
+    "kind": "coin"
+   },
+   "v": "held"
+  },
+  {
+   "t": "roll a die",
+   "i": "random",
+   "s": {
+    "kind": "dice"
+   },
+   "v": "held"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "v": "held"
+  },
+  {
+   "t": "how do i publish a game",
+   "i": "help.kb",
+   "v": "held"
+  },
+  {
+   "t": "what does autopilot do",
+   "i": "help.kb",
+   "v": "held"
+  },
+  {
+   "t": "agrega una tarea: lavar los platos",
+   "i": "task.add",
+   "v": "held"
+  },
+  {
+   "t": "ouvre le calendrier stp",
+   "i": "nav.calendar",
+   "v": "held"
+  },
+  {
+   "t": "mach eine aufgabe einkaufen gehen",
+   "i": "task.add",
+   "v": "held"
+  },
+  {
+   "t": "add a task to call mom and then switch to dark mode",
+   "i": [
+    "task.add",
+    "theme.dark-mode"
+   ],
+   "v": "held"
+  },
+  {
+   "t": "make a link in bio, then tell everyone",
+   "i": [
+    "site.linkbio",
+    "chat.send"
+   ],
+   "v": "held"
+  },
+  {
+   "t": "write a poem about the sea",
+   "i": null,
+   "v": "held"
+  },
+  {
+   "t": "optimize our database queries",
+   "i": null,
+   "v": "held"
+  }
+ ]
+}
