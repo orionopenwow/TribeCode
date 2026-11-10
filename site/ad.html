@@ -48,13 +48,13 @@
   .rec { position: absolute; display: flex; align-items: center; gap: 14px; font: 600 22px var(--mono); color: var(--muted); }
   .rec b { width: 16px; height: 16px; border-radius: 50%; background: var(--rose); }
   .wave { position: absolute; display: flex; align-items: center; gap: 7px; height: 70px; }
-  .listen { position: absolute; left: 30px; top: 300px; width: 240px; }
+  .listen { position: absolute; left: 10px; top: -168px; width: 300px; background: #12151A; border: 2px solid var(--teal); border-radius: 14px; overflow: hidden; }
   .listen__bar { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 2px solid var(--border); background: var(--surface); font: 500 13px var(--mono); color: var(--muted); }
   .listen__bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); } .listen__bar span { margin-left: 6px; }
   .listen__body { display: flex; align-items: center; gap: 12px; padding: 14px 14px 16px; }
   .listen__mic { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--teal); background: #173430; }
   .listen__body b { display: block; font: 600 18px Inter; color: var(--white); }
-  .listen__wave { display: flex; align-items: center; justify-content: center; gap: 6px; height: 64px; } .listen__wave i { width: 7px; border-radius: 3px; background: var(--teal); }
+  .listen__wave { display: flex; align-items: center; gap: 4px; height: 28px; margin-top: 4px; } .listen__wave i { width: 5px; border-radius: 2px; background: var(--teal); }
   .listen-x::after { content: ""; position: absolute; left: 50%; bottom: -2px; width: 60px; margin-left: -30px; height: 2px; background: var(--teal); }
   .tag { font: 600 20px var(--mono); fill: #94A3B8; }
   .wave i { width: 9px; background: var(--ember); border-radius: 3px; }
@@ -140,7 +140,9 @@
       <svg class="px" id="camp" viewBox="0 0 980 840" width="980" height="840" style="position:absolute;left:0;top:0;overflow:visible"></svg>
       <div id="p1" style="position:absolute;left:40px;top:280px;width:320px;height:480px">
         <img src="assets/creator/campton.png" alt="" width="254" height="480" style="position:absolute;left:33px;top:0;image-rendering:pixelated">
-        <div class="listen" id="listen"><span class="listen__wave" id="lwave"></span></div>
+        <div class="listen" id="listen"><div class="listen__bar"><i></i><i></i><i></i><span>TribeCode</span></div>
+          <div class="listen__body"><span class="listen__mic"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#38C6B1" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+          <div><b id="listen-t">Listening…</b><span class="listen__wave" id="lwave"></span></div></div></div>
       </div>
       <div class="rec" id="rec" style="left:40px;top:780px"><b></b><span id="rec-t">0:01</span> · voice note</div>
       <div class="wave" id="wave" style="left:400px;top:220px;display:none"></div>
@@ -290,8 +292,8 @@
     $('p1').style.transform = talk ? 'translateY(-3px)' : 'none';
     // the floating screen in front of him listens, then hands off
     const L = $('listen'); L.style.transform = `translateY(${(Math.sin(t * 2.4) * 6).toFixed(1)}px)`;
-    const on = t > .6 && t < 2.8; L.style.opacity = on ? 1 : .35;
-    let w = ''; for (let i = 0; i < 18; i++) { const h = on ? 8 + Math.abs(Math.sin(t * 10 + i * 1.3)) * 52 * (.35 + .65 * Math.abs(Math.sin(i * .7))) * (1 - Math.abs(i - 8.5) / 12) : 6; w += `<i style="height:${h.toFixed(1)}px"></i>`; } $('lwave').innerHTML = w;   // Camp's own avatar (assets/creator/campton.png), a small bob while he talks
+    const on = t > .6 && t < 2.8; $('listen-t').textContent = t < .6 ? 'Tap to talk' : on ? 'Listening…' : 'Sent to your tribe ✓';
+    let w = ''; for (let i = 0; i < 18; i++) { const h = on ? 5 + Math.abs(Math.sin(t * 10 + i * 1.3)) * 22 * (.4 + .6 * Math.abs(Math.sin(i * .7))) : 4; w += `<i style="height:${h.toFixed(1)}px"></i>`; } $('lwave').innerHTML = w;   // Camp's own avatar (assets/creator/campton.png), a small bob while he talks
   }
     // ---------- beat 1: the campfire, and friends pulling up a seat ----------
   const FR = [   // x: left edge in scene px, face: 1 looks right (toward the fire), -1 looks left; at: seconds they arrive
