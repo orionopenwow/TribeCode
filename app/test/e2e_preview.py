@@ -331,6 +331,7 @@ def main():
             host.wait_for_selector("#pvw:not(.is-empty) #pvw-iframe", timeout=10000)
             host.evaluate("TribePreview.refresh && TribePreview.refresh()")
             host.frame_locator("#pvw-iframe").locator("#new").wait_for(timeout=10000)
+            host.evaluate("document.activeElement && document.activeElement.blur && document.activeElement.blur()")   # keys go to the app, not the reloaded frame
             host.keyboard.press("Escape")
             host.wait_for_function("!document.body.classList.contains('pvw-on')", timeout=3000)
 
