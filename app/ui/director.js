@@ -263,7 +263,7 @@
       const nx = list[idx + 1], up = b.querySelector('#dt-say-up'), foot = b.querySelector('#dt-say-foot');
       up.innerHTML = nx ? `<span class="k">Up next</span> <b>${esc(nx.title)}</b><span class="faint"> · ${esc(nx.cap || '')}</span>` : '<span class="k">Last one</span> <b>Your turn</b>';
       foot.hidden = false;
-      t.textContent = text;
+      t.textContent = text.replace(/^(Done|Nice|Great)[:!,.]\s*/i, '');   // the ✓ Done chip says it
     } else {
       // the chapter label used to be glued to the front of the line ("3/15 · Write the vision"); it lives in the header now
       const m = /^(\d+)\/(\d+) · (.*)$/.exec(lead || '');

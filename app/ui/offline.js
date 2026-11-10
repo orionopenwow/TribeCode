@@ -522,7 +522,7 @@
         const chPid = b === 'general' ? pid : (db.projects.find(p => p.channel === b) || {}).id;
         if (!chPid) return no(404, 'Direct messages are ' + NOPE.toLowerCase());
         if (!c && GET) { const lim = Math.min(Number(q.get('limit')) || 100, 500), before = q.get('before'); let list = db.chat[chPid] || []; if (before) { const i = list.findIndex(m => m.id === before); list = i >= 0 ? list.slice(0, i) : []; } return ok({ messages: list.slice(-lim) }); }
-        if ((!c && POST) || (c === 'send' && POST)) { const text = String(body.text || '').trim(); if (!text) return no(400, 'empty message'); const msg = post(chPid, 'me', text); onChat(chPid, text); return ok({ message: msg }); }
+        if ((!c && POST) || (c === 'send' && POST)) { const text = String(body.text || '').trim(); if (!text) return no(400, 'empty message'); const msg = post(chPid, 'me', text, body.cid ? { cid: String(body.cid).slice(0, 40) } : undefined); onChat(chPid, text); return ok({ message: msg }); }   // cid: the outbox's instant bubble gives way to the real one
         if (c === 'pins' && GET) return ok({ pins: [] });
         if (c === 'receipt' && GET) return ok({ receipts: {} });
         break;
