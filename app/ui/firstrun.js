@@ -201,6 +201,7 @@
   // ---------- boot ----------
   function decide() {
     allPill();
+    if (window.TribePersonalize && window.TribePersonalize.pending()) { window.TribePersonalize.then(() => setTimeout(decide, 250)); return; }   // Make it yours first: one onboarding thing at a time
     if (blocked()) return;
     const m = me(); if (!m.id) return;
     if (m.role === 'host') {

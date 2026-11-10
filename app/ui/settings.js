@@ -67,6 +67,7 @@
     const st = S.get(), desk = window.TribeHost.isDesktop;
     const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
+      ${window.TribePersonalize && C() && C().connected() ? row('Personalize', '<button class="btn" id="set-personalize">Make it yours…</button>', 'Name, profile icon, theme, accent, language and text size, with a live preview.') : ''}
       ${window.TribeProfiles && C() && C().connected() ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and presence.') : ''}
       ${window.TribeMode ? row('Experience', '<div id="set-mode"></div>', 'How much of TribeCode you see. Your role still decides what you can do.') : ''}
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
@@ -101,6 +102,7 @@
     $('#set-close').onclick = close;
     const sm = $('#set-more'); if (sm) sm.ontoggle = () => { try { localStorage.setItem('tribecode.set.more', sm.open ? '1' : '0'); } catch {} };   // qa-qol-2
     const sp = $('#set-profile'); if (sp) sp.onclick = () => { close(); window.TribeProfiles.edit(); };   // feat/profiles
+    const spz = $('#set-personalize'); if (spz) spz.onclick = () => { close(); window.TribePersonalize.open(0); };
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;

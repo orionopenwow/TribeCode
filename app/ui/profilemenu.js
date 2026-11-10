@@ -52,6 +52,7 @@
       ${upd && upd.ready ? `<button role="menuitem" class="pf-item pf-update" data-act="restart"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg><span>Update ready · v${esc(upd.version)}</span><b class="pf-restart">Restart</b></button>` : ''}
       <div class="pf-sep"></div>
       ${m && window.TribeProfiles ? item('editprofile', 'i-users', 'Edit profile') + item('status', 'i-smile', 'Set a status') : ''}
+      ${m && window.TribePersonalize ? item('personalize', 'i-sparkle', 'Personalize') : ''}
       ${m ? item('profile', window.TribeProfiles ? 'i-net' : 'i-users', window.TribeProfiles ? 'My activity' : 'My profile and activity') : ''}
       ${item('claude', 'i-sparkle', 'Connect your AI')}
       ${window.TribeAgentsHub ? item('agents', 'i-robot', 'Your agents') : ''}
@@ -88,6 +89,7 @@
     if (a === 'profile' && m && window.TribePeople) window.TribePeople.open(m.id);
     else if (a === 'editprofile') window.TribeProfiles.edit();   // feat/profiles
     else if (a === 'status') window.TribeProfiles.edit('status');
+    else if (a === 'personalize') window.TribePersonalize.open(0);
     else if (a === 'claude') click('#cc-connect');
     else if (a === 'agents') window.TribeAgentsHub.open();
     else if (a === 'invite') click('#tour-invite');
