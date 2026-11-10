@@ -1,0 +1,323 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "TribeCode design tokens. Generated from app/ui/styles.css and app/ui/motion.css by scripts/dev/design-tokens.js; edit the CSS, then rerun. Rules: docs/DESIGN-SYSTEM.md.",
+  "rules": [
+    "Flat matte: 1px borders, depth only from luminance steps (canvas → surface → surface-2 → surface-3). No glows, shadows, blur or gradients.",
+    "Use var(--token) in CSS; never hardcode a palette hex or a duration.",
+    "One Ember (--accent) primary action per screen. Teal means live / AI at work. Indigo means people.",
+    "Animate named properties (never `transition: all`) with --dur-* and --ease-*, opacity-led, 2–8px of movement; honor prefers-reduced-motion.",
+    "Each section: a mono eyebrow, a clear title, one hero card. Long text: line-height 1.6, about 65 characters per line.",
+    "Phones: design the 390px layout on purpose, no horizontal scroll, tap targets at least 44px."
+  ],
+  "font": {
+    "font": {
+      "$type": "fontFamily",
+      "$value": "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "css": "var(--font)"
+    },
+    "display": {
+      "$type": "fontFamily",
+      "$value": "'Inter Display', 'Inter', system-ui, sans-serif",
+      "css": "var(--display)"
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": "'JetBrains Mono', 'Cascadia Code', 'SF Mono', ui-monospace, Menlo, Consolas, monospace",
+      "css": "var(--mono)"
+    }
+  },
+  "color": {
+    "accent": {
+      "$type": "color",
+      "$value": "#F26B1D",
+      "$description": "Ember: the one primary action per screen",
+      "css": "var(--accent)"
+    },
+    "accent-2": {
+      "$type": "color",
+      "$value": "#38C6B1",
+      "$description": "Teal: live, agents, AI at work",
+      "css": "var(--accent-2)"
+    },
+    "peer": {
+      "$type": "color",
+      "$value": "#6C7CFF",
+      "$description": "Indigo: people and peers",
+      "css": "var(--peer)"
+    },
+    "ember": {
+      "$type": "color",
+      "$value": "#FF6F8E",
+      "$description": "rose: errors, deny, alerts",
+      "css": "var(--ember)"
+    },
+    "amber": {
+      "$type": "color",
+      "$value": "#FFB86B",
+      "$description": "warnings, waiting",
+      "css": "var(--amber)"
+    },
+    "online": {
+      "$type": "color",
+      "$value": "#3BD16F",
+      "$description": "success, approve",
+      "css": "var(--online)"
+    },
+    "canvas": {
+      "$type": "color",
+      "$value": "#12151A",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#12151A",
+          "light": "#F4F5F7"
+        }
+      },
+      "$description": "app background",
+      "css": "var(--canvas)"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "#1B2028",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#1B2028",
+          "light": "#FFFFFF"
+        }
+      },
+      "$description": "cards and panels",
+      "css": "var(--surface)"
+    },
+    "surface-2": {
+      "$type": "color",
+      "$value": "#222833",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#222833",
+          "light": "#EEF0F3"
+        }
+      },
+      "$description": "raised: inputs, hover rows",
+      "css": "var(--surface-2)"
+    },
+    "surface-3": {
+      "$type": "color",
+      "$value": "#2A313C",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#2A313C",
+          "light": "#E3E7EC"
+        }
+      },
+      "$description": "pressed / selected",
+      "css": "var(--surface-3)"
+    },
+    "border": {
+      "$type": "color",
+      "$value": "#2A313C",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#2A313C",
+          "light": "#DADFE6"
+        }
+      },
+      "$description": "1px borders",
+      "css": "var(--border)"
+    },
+    "edge-pop": {
+      "$type": "color",
+      "$value": "#3A4452",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#3A4452",
+          "light": "#C5CCD6"
+        }
+      },
+      "$description": "focused or hovered border",
+      "css": "var(--edge-pop)"
+    },
+    "text": {
+      "$type": "color",
+      "$value": "#F8FAFC",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#F8FAFC",
+          "light": "#12151A"
+        }
+      },
+      "$description": "primary text",
+      "css": "var(--text)"
+    },
+    "muted": {
+      "$type": "color",
+      "$value": "#D4DBE5",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#D4DBE5",
+          "light": "#4B5563"
+        }
+      },
+      "$description": "secondary text",
+      "css": "var(--muted)"
+    },
+    "faint": {
+      "$type": "color",
+      "$value": "#A3AEBD",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#A3AEBD",
+          "light": "#5F6775"
+        }
+      },
+      "$description": "captions, meta",
+      "css": "var(--faint)"
+    },
+    "accent-ink": {
+      "$type": "color",
+      "$value": "#FF7A33",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#FF7A33",
+          "light": "#A34410"
+        }
+      },
+      "$description": "Ember text on dark tints",
+      "css": "var(--accent-ink)"
+    },
+    "live-ink": {
+      "$type": "color",
+      "$value": "#38C6B1",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#38C6B1",
+          "light": "#127A6C"
+        }
+      },
+      "$description": "Teal text",
+      "css": "var(--live-ink)"
+    },
+    "peer-ink": {
+      "$type": "color",
+      "$value": "#8F9BFF",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "#8F9BFF",
+          "light": "#4A58D9"
+        }
+      },
+      "$description": "Indigo text",
+      "css": "var(--peer-ink)"
+    },
+    "chip": {
+      "$type": "color",
+      "$value": "rgba(242,107,29,0.14)",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "rgba(242,107,29,0.14)",
+          "light": "rgba(242,107,29,0.12)"
+        }
+      },
+      "$description": "Ember tint background",
+      "css": "var(--chip)"
+    },
+    "live-tint": {
+      "$type": "color",
+      "$value": "rgba(56,198,177,0.14)",
+      "$description": "Teal tint background",
+      "css": "var(--live-tint)"
+    },
+    "peer-tint": {
+      "$type": "color",
+      "$value": "rgba(108,124,255,0.16)",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "rgba(108,124,255,0.16)",
+          "light": "rgba(108,124,255,0.12)"
+        }
+      },
+      "$description": "Indigo tint background",
+      "css": "var(--peer-tint)"
+    },
+    "scrim": {
+      "$type": "color",
+      "$value": "rgba(8,10,13,0.72)",
+      "$extensions": {
+        "tribecode.modes": {
+          "dark": "rgba(8,10,13,0.72)",
+          "light": "rgba(18,21,26,0.40)"
+        }
+      },
+      "$description": "behind sheets and drawers",
+      "css": "var(--scrim)"
+    }
+  },
+  "radius": {
+    "r-sm": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$description": "controls",
+      "css": "var(--r-sm)"
+    },
+    "r": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$description": "cards",
+      "css": "var(--r)"
+    },
+    "r-lg": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$description": "panels and sheets",
+      "css": "var(--r-lg)"
+    }
+  },
+  "motion": {
+    "dur-instant": {
+      "$type": "duration",
+      "$value": "0ms",
+      "$description": "press feedback",
+      "css": "var(--dur-instant)"
+    },
+    "dur-quick": {
+      "$type": "duration",
+      "$value": "0ms",
+      "$description": "hover, toggles, section cross-fade",
+      "css": "var(--dur-quick)"
+    },
+    "dur-base": {
+      "$type": "duration",
+      "$value": "0ms",
+      "$description": "drawers, sheets, toasts, menus",
+      "css": "var(--dur-base)"
+    },
+    "dur-slow": {
+      "$type": "duration",
+      "$value": "0ms",
+      "$description": "large panels",
+      "css": "var(--dur-slow)"
+    },
+    "ease-out": {
+      "$type": "cubicBezier",
+      "$value": "cubic-bezier(.2, .7, .3, 1)",
+      "$description": "things arriving",
+      "css": "var(--ease-out)"
+    },
+    "ease-in": {
+      "$type": "cubicBezier",
+      "$value": "cubic-bezier(.4, 0, 1, 1)",
+      "$description": "things leaving",
+      "css": "var(--ease-in)"
+    },
+    "ease-in-out": {
+      "$type": "cubicBezier",
+      "$value": "cubic-bezier(.65, 0, .35, 1)",
+      "$description": "moving A to B",
+      "css": "var(--ease-in-out)"
+    },
+    "rise": {
+      "$type": "dimension",
+      "$value": "0px",
+      "$description": "entrance distance",
+      "css": "var(--rise)"
+    }
+  }
+}

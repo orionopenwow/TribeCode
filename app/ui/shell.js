@@ -118,7 +118,8 @@
   function go(key) {
     const d = byKey(key); if (!d) return;
     lastDest = key; closePop(); closeDrawer();
-    d.run(); setTimeout(markActive, 0);
+    const run = () => { d.run(); setTimeout(markActive, 0); };
+    window.TribeMotion ? window.TribeMotion.swap(run) : run();
   }
 
   // ---------- the rows: Global ones with no project (in #nest-groups); the project's four are in index.html ----------
