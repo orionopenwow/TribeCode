@@ -13,6 +13,8 @@
 //   PUT  /api/projects/:id/setup            { role, choice }   host and builders; returns { setup, tasks }
 //   POST /api/projects/:id/setup/repo       host: make sure the project has a git repo; returns { created, repo }
 //   POST /api/projects/:id/setup/starter    host: copy the starter in and commit; returns { written, template }
+//   POST /api/projects/:id/setup/business   v0.27 company: "A business" { template, helpers } -> the project becomes a company
+//                                           (server/company.js); helpers: true fills the open seats with the caller's AI helper
 // State: .tribe/setup.json in the tribe folder (one entry per project).
 'use strict';
 const fs = require('node:fs');
@@ -93,7 +95,7 @@ const LINES = {
 const STARTER = { game: 'starter-game', '3d': 'tavern-3d' };   // everything else: starter-site
 const one = (s, n = 200) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; };
 
-module.exports = function setup({ P, W, base, sense, readVision, createTask, broadcast, resetHub, getMembers, siteTpl = () => null }) {
+module.exports = function setup({ P, W, base, sense, readVision, createTask, broadcast, resetHub, getMembers, siteTpl = () => null, company = () => null }) {
   let all = base.readJSON(FILE, {}); if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
   const save = () => base.writeJSON(FILE, all);
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -239,6 +241,7 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       if (m === 'GET' && !sub) return send(res, 200, view(b, me));
       if (m === 'PUT' && !sub) return send(res, 200, choose(b, me, await readBody(req, 8 * 1024)));
       if (m === 'POST' && sub === 'repo') { if (!isHost(me, b)) return fail(res, 403, 'only the host can create the repo'); return send(res, 200, { ...(await ensureRepo(b, me)), setup: view(b, me) }); }
+      if (m === 'POST' && sub === 'business') { if (!company()) return fail(res, 503, 'company mode is off'); const bd = await readBody(req, 8 * 1024).catch(() => ({})); const r = company().createFrom(b, me, { template: String(bd.template || 'blank'), helpers: !!bd.helpers, name: bd.name, mission: bd.mission }); broadcast({ type: 'setup', project: b }); return send(res, 200, { company: r.company, tasks: r.tasks, helper: r.helper }); }   // v0.27 company
       if (m === 'POST' && sub === 'starter') return send(res, 200, await starter(b, me, await readBody(req, 4 * 1024).catch(() => ({}))));
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return fail(res, 404, 'no such setup route');

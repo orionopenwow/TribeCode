@@ -231,6 +231,7 @@
       { k: 'tasks', label: 'Tasks', icon: 'i-check', n: openT.length, line: openT.length ? `open${mineT.length ? ` · ${mineT.length} yours` : ''}${doneT ? ` · ${doneT} done` : ''}` : doneT ? `all ${doneT} done` : 'None yet', act: openT.length ? 'Open the board' : 'Add a task', go: 'tasks', hot: mineT.length > 0, c: '#38C6B1', pct: tasksAll.length ? Math.round(doneT / tasksAll.length * 100) : 0 },
       { k: 'files', label: 'New files', icon: 'i-doc', n: newFiles.length, line: newFiles.length ? 'added this week' : 'Nothing new this week', act: newFiles.length ? 'See them' : 'Add a file', go: 'docs', hot: false, c: '#FABD2F' },
     ];
+    if (window.TribeCompany) { if (window.TribeCompany.loadedFor() !== p.id && C.project() === p.id) await window.TribeCompany.refresh(p.id).catch(() => null); const ct = curP() === p && window.TribeCompany.tile(); if (ct) tiles.push(ct); }   // v0.27 company: one At a glance tile when the project is a company
     const r = d.repo;
     if (naming) return;
     const visFocus = document.activeElement && document.activeElement.id === 'ock-vis-in';
@@ -242,10 +243,10 @@
       ${hero ? checklist : ''}
 ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
       ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span><button class="linkish pj-share" id="pj-share" type="button" title="Copy progress, the GitHub link and an invite link">📤 Share progress</button></div>
-          <div class="pl-grid gl-grid">${tiles.map(t => `<button class="gl-tile gl-${t.k} ${t.hot ? 'hot' : ''} ${t.n ? '' : 'zero'}" data-go="${t.go}" style="--gc:${t.c}" aria-label="${t.label}: ${t.n} · ${esc(t.line)}. ${t.act}">
+          <div class="pl-grid gl-grid ${tiles.some(t => t.k === 'company') ? 'has-co' : ''}">${tiles.map(t => `<button class="gl-tile gl-${t.k} ${t.hot ? 'hot' : ''} ${t.n ? '' : 'zero'}" data-go="${t.go}" style="--gc:${t.c}" aria-label="${t.label}: ${t.n} · ${esc(t.line)}. ${t.act}">
             <span class="gl-top"><span class="gl-ic">${ico(t.icon, 16)}</span><small>${t.label}</small>${t.hot ? '<i class="gl-dot" aria-hidden="true"></i>' : ''}</span>
             <span class="gl-num">${t.n}</span><span class="gl-line">${esc(t.line)}</span>
-            ${t.pct != null && tasksAll.length ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
+            ${t.pct != null && (tasksAll.length || t.k === 'company') ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
             <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
       ${canEdit ? '<div id="pj-board-slot"></div>' : ''}<!-- v0.25: the inspiration board (inspo.js) -->
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">
@@ -301,7 +302,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
     $('#pj-tools-link').onclick = () => (window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : App().show('repo'));
-    el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : x.dataset.go === 'inbox' ? (window.TribeNotify && window.TribeNotify.openInbox()) : App().show(x.dataset.go)));
+    el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'company' && window.TribeCompany ? window.TribeCompany.go() : x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : x.dataset.go === 'inbox' ? (window.TribeNotify && window.TribeNotify.openInbox()) : App().show(x.dataset.go)));
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
     if (window.TribeInspo) window.TribeInspo.draw(p.id);
@@ -575,6 +576,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     { k: 'app', emoji: '📱', t: 'App', s: 'For phones or the desktop', word: 'App', bio: 'An app we build together', note: 'App idea: the problem, who has it, and the first screen.' },
     { k: 'tool', emoji: '🛠️', t: 'Tool or script', s: 'Automate something', word: 'Tool', bio: 'A small tool we build together', note: 'Tool: what it automates, the input, the output.' },
     { k: 'notes', emoji: '📚', t: 'Notes & research', s: 'Plan, write, learn together', word: 'Notebook', bio: 'Notes and research we keep together', note: '' },
+    { k: 'business', emoji: '🏢', t: 'A business', s: 'Seats, goals and AI helpers, like a company', word: 'Company', bio: 'A business we run together', note: '', business: true },   // v0.27 company: becomes a company (server/setup.js business)
   ];
   const setup = { tpl: null, image: null };
   function openNew() {
@@ -708,8 +710,31 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       if (t && t.note) await C.api('/flow/notes', { method: 'POST', body: { name: 'Starting idea', text: t.note } }).catch(() => {});
       body().classList.remove('np-setup');
       await refresh();
+      if (t && t.business) return businessStep(f);   // v0.27 company
       window.TribeFlow.inviteSheet(f);   // step 3, like Discord: invite your friends
     } catch (e) { btn.disabled = false; btn.textContent = 'Create'; status(`<div class="np-err">${esc(e.message)}</div>`); }
+  }
+  // v0.27 company: "A business" picks a company template, then offers to fill the other seats with the person's AI helper.
+  async function businessStep(f) {
+    let tpls = []; try { tpls = (await C.api(`/projects/${encodeURIComponent(f.project)}/company`, { project: f.project })).templates || []; } catch {}
+    const hasAi = (C.state().members || []).some(m => m.role === 'agent' && m.owner === me().id);
+    modal().classList.remove('hidden'); body().classList.add('np-setup');
+    body().innerHTML = `<div class="ns-head"><h2>What kind of business?</h2><p class="lead">Each one comes with seats (who does what), a few goals and starter tasks. You can change all of it later.</p></div>
+      <div class="ns-list">${tpls.map(t => `<button class="ns-row" data-biz="${esc(t.id)}"><span class="ns-ic"><span class="ns-emo">${esc(t.emoji)}</span></span><span class="ns-t"><b>${esc(t.name)}</b><small>${esc(t.seats.join(' · '))}</small></span>${ico('i-chev', 16)}</button>`).join('')}</div>
+      <label class="ns-biz-ai"><input type="checkbox" id="np-biz-ai" ${hasAi ? 'checked' : ''}> Fill the other seats with AI helpers${hasAi ? '' : ' <span class="faint">(connect your AI first; you can do it later)</span>'}</label>
+      <div class="np-status" id="np-status"></div>
+      <div class="ns-btns"><button class="linkish" id="np-biz-skip">Skip for now</button></div>`;
+    const done = () => { body().classList.remove('np-setup'); window.TribeFlow.inviteSheet(f); };
+    $('#np-biz-skip').onclick = done;
+    body().querySelectorAll('[data-biz]').forEach(b => b.onclick = async () => {
+      body().querySelectorAll('[data-biz]').forEach(x => { x.disabled = true; });
+      try {
+        const r = await C.api(`/projects/${encodeURIComponent(f.project)}/setup/business`, { method: 'POST', project: f.project, body: { template: b.dataset.biz, helpers: !!($('#np-biz-ai') || {}).checked } });
+        if (window.TribeCompany) window.TribeCompany.refresh(f.project);
+        toastMsg(`🏢 ${r.company.name} is a company: ${r.company.seats.length} seats${r.helper ? `, ${r.helper.name} holds the open ones` : ''}`);
+        done();
+      } catch (e) { body().querySelectorAll('[data-biz]').forEach(x => { x.disabled = false; }); status(`<div class="np-err">${esc(e.message)}</div>`); }
+    });
   }
   function openAdvanced() {   // bring existing code (a folder, a code repository, a GitHub URL), and the old one-box start
     dropped = null;
