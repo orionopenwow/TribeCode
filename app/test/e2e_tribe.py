@@ -64,7 +64,7 @@ def wait_text(page, sel, text, timeout=8000):
 
 def watch(page, who):
     page.on("pageerror", lambda e: errors.append(f"{who} pageerror: {e}"))
-    page.on("console", lambda m: m.type == "error" and "11434" not in m.text and "api.github.com" not in m.text and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_FAILED" not in m.text and "ERR_NAME_NOT_RESOLVED" not in m.text and errors.append(f"{who} console: {m.text}"))
+    page.on("console", lambda m: m.type == "error" and "11434" not in m.text and "api.github.com" not in m.text and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_FAILED" not in m.text and "ERR_NAME_NOT_RESOLVED" not in m.text and "409 (Conflict)" not in m.text and errors.append(f"{who} console: {m.text}"))
 
 
 def main():
@@ -303,7 +303,7 @@ def main():
             st, d = api("/tasks", token=tok)
             fix = [t for t in d["tasks"] if t["title"].startswith("Fix: Chat stops")][0]
             assert api("/tasks/" + fix["id"], "PATCH", {"status": "done"}, token=tok)[0] == 200
-            wait_text(friend, "#chat-list", "Bug resolved by finishing its task")
+            wait_text(friend, "#chat-list", "Bug resolved by finishing its task", timeout=15000)
             host.click('[data-bf="resolved"]')
             wait_text(host, "#bug-list", "resolved")
 

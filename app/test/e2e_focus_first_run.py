@@ -85,7 +85,7 @@ def main():
             time.sleep(0.5); assert api("/activation", token=tok)[1]["friendJoined"]
             # 5. Getting started N/5 in Home
             host.evaluate("TribeShell.go && TribeShell.go('hub')"); host.wait_for_selector("#fr-prog", timeout=10000)
-            host.wait_for_function("/[3-5]\\/5/.test(document.querySelector('#fr-prog .fr-prog-h').textContent)", timeout=8000)
+            host.wait_for_function("(() => { const h = document.querySelector('#fr-prog .fr-prog-h'); return !!h && /[3-5]\\/5/.test(h.textContent); })()", timeout=10000)   # Home can re-render while this looks (projects/presence events)
             assert not host.is_visible("#nest-work"), "Work waits until asked"
             host.screenshot(path=str(SHOTS / "focus-home-1440.png"))
             # 6. Show everything: the full sidebar again

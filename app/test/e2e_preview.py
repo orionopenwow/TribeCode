@@ -323,7 +323,7 @@ def main():
             host.click("#pvw [data-bchip]")
             assert host.input_value("#pvw-bprompt") == "A pixel platformer game"
             host.click("#pvw-bgo")
-            host.wait_for_function("/(Asked|running)/.test(document.querySelector('#pvw-bstat') ? document.querySelector('#pvw-bstat').innerText : '')", timeout=15000)
+            host.wait_for_function("/(Asked|running)/.test((document.querySelector('#pvw-bstat') ? document.querySelector('#pvw-bstat').innerText : '') + [...document.querySelectorAll('.toast')].map(t => t.innerText).join(' '))", timeout=15000)   # the start screen can give way to the app before this looks
             msgs = ok(api("/chat/general", token=orion, project=ep))["messages"] + ok(api("/agents/channel", token=orion, project=ep))["messages"]
             assert any("index.html" in (m.get("text") or "") for m in msgs), msgs[-3:]
             shot(host, "empty")
@@ -331,6 +331,7 @@ def main():
             host.wait_for_selector("#pvw:not(.is-empty) #pvw-iframe", timeout=10000)
             host.evaluate("TribePreview.refresh && TribePreview.refresh()")
             host.frame_locator("#pvw-iframe").locator("#new").wait_for(timeout=10000)
+            host.evaluate("document.activeElement && document.activeElement.blur && document.activeElement.blur()")   # keys go to the app, not the reloaded frame
             host.keyboard.press("Escape")
             host.wait_for_function("!document.body.classList.contains('pvw-on')", timeout=3000)
 

@@ -1,0 +1,72 @@
+/* Flint beside the live preview (app/ui/previewflint.js). Flat matte: luminance steps and 1px borders only. */
+.pvw-body { flex: 1; min-height: 0; display: flex; position: relative; }
+.pvw-body > .pvw-stage { flex: 1; min-width: 0; }
+
+/* desktop: the right column grows to hold the preview and Flint side by side */
+@media (min-width: 821px) {
+  body.pvw-on.pvf-on .shell .window { grid-template-columns: 72px var(--side-w, 260px) minmax(0, 1fr) var(--pvw-w2, clamp(640px, 56vw, 1180px)); }
+  .pvf { display: none; position: relative; flex: none; width: var(--pvf-w, 320px); min-width: 240px; max-width: 520px; flex-direction: column; border-left: 1px solid var(--edge, #2A313C); background: var(--surface, #1B2028); }
+  .pvf.is-open { display: flex; }
+  .pvf-grip { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: col-resize; z-index: 2; }
+  .pvf-grip:hover, .pvf-grip:focus-visible, .pvw.pvf-resizing .pvf-grip { background: var(--edge, #2A313C); outline: none; }
+  .pvw.pvf-resizing iframe { pointer-events: none; }
+  .pvf-handle { display: none; }
+}
+/* phones: a bottom sheet over the preview that you pull up */
+@media (max-width: 820px) {
+  .pvf { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; flex-direction: column; max-height: 72%; border-top: 1px solid var(--edge, #2A313C); border-radius: 16px 16px 0 0; background: var(--surface, #1B2028); transform: translateY(calc(100% - 52px)); transition: transform .22s ease; padding-bottom: env(safe-area-inset-bottom); }
+  .pvf.is-open { transform: none; }
+  .pvf-grip { display: none; }
+  .pvf-handle { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 64px; height: 18px; display: grid; place-items: center; }
+  .pvf-handle i { width: 36px; height: 4px; border-radius: 2px; background: var(--edge-pop, #3A4350); }
+  .pvf-head { touch-action: none; }
+  .pvf .pvf-x { display: none; }
+  .pvw-flint span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .pvf { transition: none; } }
+
+.pvf-head { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 12px; border-bottom: 1px solid var(--edge, #2A313C); flex: none; position: relative; }
+.pvf-head b { font-size: 14px; color: var(--text, #F8FAFC); }
+.pvf-sub { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.pvf-x { width: 28px; height: 28px; border-radius: 8px; color: var(--muted, #94A3B8); flex: none; }
+.pvf-x:hover { background: var(--hover, #1D222A); color: var(--text, #F8FAFC); }
+
+.pvf-feed { flex: 1; min-height: 80px; overflow: auto; margin: 0; padding: 10px 12px; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.pvf-it { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 8px; align-items: start; font-size: 13px; line-height: 1.5; color: var(--muted, #CBD5E1); }
+.pvf-it img { margin-top: 2px; }
+.pvf-ic { width: 18px; text-align: center; color: var(--faint, #94A3B8); font-size: 12px; line-height: 20px; }
+.pvf-t { min-width: 0; overflow-wrap: anywhere; }
+.pvf-t b { color: var(--text, #F8FAFC); font-weight: 600; }
+.pvf-t .btn { display: inline-flex; margin-left: 6px; height: 24px; padding: 0 10px; font-size: 12px; }
+.pvf-it time { font: 10.5px/20px var(--mono); color: var(--faint, #6B7A90); white-space: nowrap; }
+.pvf-you .pvf-t { color: var(--text, #F8FAFC); }
+.pvf-flint .pvf-t { color: var(--text, #F8FAFC); }
+.pvf-agent .pvf-ic { color: var(--agents, #38C6B1); }
+.pvf-file .pvf-ic { color: var(--indigo, #6C7CFF); }
+.pvf-reload .pvf-ic, .pvf-reload .pvf-t { color: var(--agents, #38C6B1); }
+.pvf-error .pvf-ic, .pvf-error .pvf-t { color: var(--rose, #FF6F8E); }
+.pvf-diff { font: 11.5px var(--mono); } .pvf-diff ins { color: var(--green, #3BD16F); text-decoration: none; } .pvf-diff del { color: var(--rose, #FF6F8E); text-decoration: none; }
+
+.pvf-pick { display: flex; align-items: center; gap: 8px; margin: 0 12px 8px; padding: 6px 8px 6px 10px; border: 1px solid var(--accent, #F26B1D); border-radius: 8px; font-size: 12.5px; color: var(--muted, #CBD5E1); }
+.pvf-pick > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pvf-pick b { color: var(--text, #F8FAFC); font-weight: 600; }
+.pvf-pick button { width: 22px; height: 22px; border-radius: 6px; color: var(--muted, #94A3B8); }
+.pvf-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
+.pvf-chips .chip { font: 500 12px/1.4 var(--font, Inter, system-ui, sans-serif); }
+.pvf-form { display: flex; gap: 8px; align-items: flex-end; padding: 10px 12px 12px; border-top: 1px solid var(--edge, #2A313C); flex: none; }
+.pvf-form textarea { flex: 1; min-width: 0; resize: none; height: 44px; min-height: 44px; max-height: 120px; padding: 10px 12px; font: 13.5px/1.45 var(--font, Inter, system-ui, sans-serif); }
+.pvf-form .btn { height: 40px; }
+.pvw-flint { width: auto; padding: 0 10px; display: inline-flex; gap: 6px; font-size: 12.5px; font-weight: 600; }
+.pvw-flint[aria-pressed="true"] { background: var(--sel, #232A33); color: var(--text, #F8FAFC); box-shadow: 0 0 0 1px var(--edge, #2A313C); }
+.pvf .hidden { display: none !important; }
+
+/* Phones: the preview toolbar holds Reload, Tab, Publish, Share, Edit, Shot, Home, Settings and Flint. Icons only,
+   a little tighter, and it scrolls sideways instead of clipping when there are more. */
+@media (max-width: 820px) {
+  .pvw-bar { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; justify-content: flex-start; padding: 0 6px; }
+  .pvw-bar::-webkit-scrollbar { display: none; }
+  .pvw-bar > .pvw-sp, .pvw-bar > .pvw-meta { display: none; }
+  .pvw-bar .pvw-btn { width: 34px; flex: none; }
+  .pvw-bar .pvw-edit span { display: none; }
+  .pvw-bar .pvw-edit, .pvw-bar .pvw-flint { width: 34px !important; padding: 0 !important; justify-content: center; }
+}

@@ -245,6 +245,11 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
       if (r.code && !/nothing to commit|no changes added/i.test(txt(r.out) + txt(r.err))) throw bad(422, txt(r.err || r.out).slice(0, 200));
       const h = await git(repo, ['rev-parse', '--short', 'HEAD']);
       broadcast({ type: 'repo', project: P.current() });
+      if (!r.code) {   // v0.27: the preview's Flint panel shows who saved what (+/- lines)
+        const ns = await git(repo, ['show', '--numstat', '--format=', 'HEAD', '--', rel]);
+        const [add, del] = (txt(ns.out).trim().split('\n')[0] || '').split('\t').map(n => (/^\d+$/.test(n) ? Number(n) : 0));
+        broadcast({ type: 'code-saved', project: P.current(), path: rel, by: me.id, add: add || 0, del: del || 0, sha: txt(h.out).trim() });
+      }
       return { saved: true, committed: !r.code, sha: txt(h.out).trim() };
     });
   }
