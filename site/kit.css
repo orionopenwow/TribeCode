@@ -107,3 +107,8 @@
   .kg__it { grid-template-columns: 70px minmax(0, 1fr) auto; }
 }
 @media (prefers-reduced-motion: reduce) { .kit__mock [data-k] { transition: none; } }
+
+/* Remix gallery: six cards first, the rest one click away */
+.rx:not(.is-all) .rx__card:nth-child(n+7) { display: none; }
+.rx__all { margin: 18px 0 0; text-align: center; }
+.rx.is-all .rx__all { display: none; }

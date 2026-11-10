@@ -35,3 +35,7 @@
   else visible = true;
   show(0);
 })();
+
+// Remix gallery: "Show all" opens the rest of the cards.
+(function () { const b = document.querySelector('[data-rx-all]'); if (!b) return; const n = document.querySelectorAll('.rx__card').length; b.textContent = 'Show all ' + n;
+  b.addEventListener('click', () => { const rx = b.closest('.rx'); rx.classList.add('is-all'); b.setAttribute('aria-expanded', 'true'); const c = rx.querySelectorAll('.rx__card')[6]; if (c) { const a = c.querySelector('a'); if (a) a.focus({ preventScroll: true }); } }); })();
