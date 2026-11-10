@@ -192,7 +192,7 @@ def main():
             # mission: its own page from the top menu, styled like the rest of the site
             assert pg.locator(".nav__links a[href='mission.html']").count() == 1
             mp = pg.context.new_page(); mp.goto(BASE + "mission.html"); mp.wait_for_load_state("load")
-            assert "Code that helps people." in mp.inner_text("h1") and mp.locator(".ms-card").count() == 4 and "open-source maintainers" in mp.inner_text("body"); mp.close()
+            assert "One place to build, run and work together." in mp.inner_text("h1") and mp.locator(".ms-card").count() == 6 and "open-source maintainers" in mp.inner_text("body"); mp.close()
             assert "Anthropic" not in pg.inner_text("body")
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 6
             # start from something: tabs switch, cards carry chips, an idea fills the hero's chat box

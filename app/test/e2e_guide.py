@@ -33,7 +33,7 @@ def main():
         st, body = get("/api/guide"); assert st == 200, st
         pages = json.loads(body)["pages"]
         files = sorted(f for f in os.listdir(ROOT / "docs" / "guide") if f.endswith(".md"))
-        assert 5 <= len(pages) <= 10 and len(pages) == len(files), (len(pages), files)
+        assert 5 <= len(pages) <= 16 and len(pages) == len(files), (len(pages), files)
         assert pages[0]["slug"] == "start-here" and pages[0]["title"] == "Start here", pages[0]
         assert all(len(p["body"].split()) < 480 for p in pages), [(p["slug"], len(p["body"].split())) for p in pages]
         st, body = get("/api/guide/troubleshooting"); assert st == 200 and json.loads(body)["title"] == "Troubleshooting"
