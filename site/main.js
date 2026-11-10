@@ -650,7 +650,7 @@
       ['#make', 'First, the kind of things people make here. Games, apps, sites, bots, and whatever you thought of in the shower.'],
       ['#company', 'Built something people use? Company mode turns the project into a small business: seats for friends or AI helpers, short check-ins, and real numbers. People still make the big calls.'],
       ['#story', 'Here’s how any of those comes together, in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
-      ['#learn', 'New to code? The Learn modules go slowly and skip the jargon, and finishing one earns your first badge.'],
+      ['#learn', 'New to vibecoding? The Learn modules go slowly and skip the jargon, and finishing one earns your first badge.'],
       ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
       ['#phone', 'Friends join from a phone with one link. When an agent needs a yes, it arrives as one tap.'],
       ['#lanes', 'Each agent works in its own lane, so nobody collides. When two need the same file they hand it off, and a person approves the merge.'],
