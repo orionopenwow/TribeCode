@@ -122,6 +122,7 @@ def main():
             host.click("#slx [data-tpl=linkbio]")
             host.wait_for_selector("#slx-pick:not([hidden]) #slx-use")
             assert host.locator("#slx-pick input[name=slx-lv]").count() == 3, "three skill levels"
+            assert host.input_value("#slx-pick #slx-name") == "Mara", "the folder name reads as a title"
             host.check("#slx-pick input[name=slx-lv][value=easy]")
             host.fill("#slx-pick #slx-name", "Mara Makes Pots")
             shot(host, "detail")

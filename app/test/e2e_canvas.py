@@ -252,6 +252,67 @@ def main():
             # ---- export: HTML + flex CSS
             ex = host.evaluate("id => TribeCanvas.exportFrame(id)", fr["id"])
             assert "display: flex" in ex["css"] and "gap: 30px" in ex["css"] and "Hello café" in ex["html"], ex
+            assert ".tc-design { --color-1:" in ex["css"] and "var(--color-" in ex["css"], "colors are CSS variables in the export"
+
+            # ---- polish (docs/POLISH-AUDIT.md): presets, align + distribute, selection colors, right-click, rotate, live drag
+            host.evaluate("TribeCanvas._e.select([])")
+            host.wait_for_selector("#cv-props .cvx-preset[data-preset=Phone]", timeout=3000)
+            n0 = len(nodes(host))
+            host.click("#cv-props .cvx-preset[data-preset=Phone]")
+            host.wait_for_function("n => TribeCanvas.state().nodes.length === n + 1", arg=n0, timeout=5000)
+            ph_fr = [n for n in nodes(host, t="frame") if n.get("name") == "Phone"]
+            assert ph_fr and ph_fr[0]["w"] == 393 and ph_fr[0]["h"] == 852, ph_fr
+            host.evaluate("""() => TribeCanvas._e.insert([
+              { id: 'polr1', t: 'rect', p: '', i: 1, x: 0, y: 3000, w: 20, h: 20, fill: '#AA0000', name: 'A' },
+              { id: 'polr2', t: 'rect', p: '', i: 2, x: 30, y: 3030, w: 20, h: 20, fill: '#AA0000', name: 'B' },
+              { id: 'polr3', t: 'rect', p: '', i: 3, x: 200, y: 3060, w: 20, h: 20, fill: '#00AA00', name: 'C' }])""")
+            host.wait_for_function("() => ['polr1','polr2','polr3'].every(id => TribeCanvas.state().nodes.some(n => n.id === id))", timeout=5000)
+            host.evaluate("TribeCanvas._e.select(['polr1','polr2','polr3']); TribeCanvas._e.fit(true)"); host.wait_for_timeout(200)
+            host.wait_for_selector("#cv-props .cvx-align .cvx-ab", timeout=3000)
+            host.click("#cv-props [data-align=dh]")
+            host.wait_for_function("() => { const x = id => TribeCanvas.state().nodes.find(n => n.id === id).x; return x('polr2') === 100; }", timeout=5000)
+            host.keyboard.press("Alt+KeyW")   # align top
+            host.wait_for_function("() => ['polr1','polr2','polr3'].every(id => TribeCanvas.state().nodes.find(n => n.id === id).y === 3000)", timeout=5000)
+            host.wait_for_selector("#cv-props .cvx-colors .cvx-c", timeout=3000)
+            assert host.locator("#cv-props .cvx-colors .cvx-c").count() == 2, "two colours in the selection"
+            host.evaluate("""() => { const i = document.querySelector('#cv-props .cvx-c input[data-from="#AA0000"]'); i.value = '#123456'; i.dispatchEvent(new Event('change', { bubbles: true })); }""")
+            host.wait_for_function("() => ['polr1','polr2'].every(id => TribeCanvas.state().nodes.find(n => n.id === id).fill === '#123456')", timeout=5000)
+            assert host.evaluate("TribeCanvas.state().nodes.find(n => n.id === 'polr3').fill") == "#00AA00"
+            # right-click a layer: the layer menu (right-clicking outside the selection selects what's under the pointer)
+            host.evaluate("TribeCanvas._e.select(['polr1'])")
+            r3 = host.evaluate("document.querySelector(`#cv-world [data-id='polr3']`).getBoundingClientRect().toJSON()")
+            host.mouse.click(r3["x"] + r3["width"] / 2, r3["y"] + r3["height"] / 2, button="right")
+            host.wait_for_selector("#cv-menu:not([hidden])", timeout=3000)
+            mtxt = host.inner_text("#cv-menu")
+            assert "Bring to front" in mtxt and "Duplicate" in mtxt and "Create component" in mtxt, mtxt
+            assert st(host)["selected"] == ["polr3"], "right-click selects what's under the pointer"
+            host.keyboard.press("Escape"); host.evaluate("document.getElementById('cv-menu').hidden = true")
+            # rotate handle: drag a quarter turn around the centre, Shift snaps to 15°
+            host.evaluate("TribeCanvas._e.select(['polr3'])"); host.wait_for_selector("#cv-ov .cv-rot", timeout=3000)
+            rb = host.locator("#cv-ov .cv-rot").bounding_box()
+            r3 = host.evaluate("document.querySelector(`#cv-world [data-id='polr3']`).getBoundingClientRect().toJSON()")
+            cx, cy = r3["x"] + r3["width"] / 2, r3["y"] + r3["height"] / 2
+            host.mouse.move(rb["x"] + rb["width"] / 2, rb["y"] + rb["height"] / 2); host.keyboard.down("Shift"); host.mouse.down()
+            for k in range(1, 9): host.mouse.move(cx + 60 * (1 - k / 8), cy + 60 * (k / 8))
+            host.mouse.up(); host.keyboard.up("Shift")
+            rot = host.evaluate("TribeCanvas.state().nodes.find(n => n.id === 'polr3').rot || 0")
+            assert rot != 0 and rot % 15 == 0, rot
+            mp.wait_for_function("() => (TribeCanvas.state().nodes.find(n => n.id === 'polr3') || {}).rot", timeout=8000)
+            # live drag: Maya sees polr1 move before Orion lets go
+            mp.evaluate("TribeCanvas._e.select(['polr1']); TribeCanvas._e.fit(true)")
+            r1 = host.evaluate("document.querySelector(`#cv-world [data-id='polr1']`).getBoundingClientRect().toJSON()")
+            host.mouse.move(r1["x"] + 10, r1["y"] + 10); host.mouse.down()
+            for k in range(1, 12): host.mouse.move(r1["x"] + 10 + k * 8, r1["y"] + 10 + k * 3); host.wait_for_timeout(30)
+            mp.wait_for_selector("#cv-world [data-id='polr1'].cv-peerdrag", timeout=5000)
+            assert mp.evaluate("TribeCanvas.state().nodes.find(n => n.id === 'polr1').x") == 0, "only a preview until the drop"
+            host.mouse.up()
+            mp.wait_for_function("() => TribeCanvas.state().nodes.find(n => n.id === 'polr1').x > 0", timeout=8000)
+            # shortcut sheet: the canvas section comes first
+            host.keyboard.press("Control+/"); host.wait_for_selector("#help-keys .hk-here", timeout=3000)
+            assert "design canvas" in host.inner_text("#help-keys .hk-here").lower(), "the section for where you are comes first"
+            host.click("#hk-close")
+            host.evaluate("id => { TribeCanvas._e.select(['polr1','polr2','polr3', id]); TribeCanvas._e.removeSel(); }", ph_fr[0]["id"])
+            host.wait_for_function("() => !TribeCanvas.state().nodes.some(n => n.id === 'polr1')", timeout=5000)
 
             # ---- persistence: reload, and the file on disk
             n_before = len(nodes(host))

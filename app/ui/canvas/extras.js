@@ -41,7 +41,7 @@
         items.push('-', { label: T('Bring to front'), key: 'Ctrl Shift ]', run: () => E.order('front') }, { label: T('Send to back'), key: 'Ctrl Shift [', run: () => E.order('back') });
         items.push('-', { label: one && one.hide ? T('Show') : T('Hide'), key: 'Ctrl Shift H', run: () => E.toggleSel('hide') }, { label: one && one.lock ? T('Unlock') : T('Lock'), key: 'Ctrl Shift L', run: () => E.toggleSel('lock') });
         if (one) items.push({ label: T('Rename'), key: 'Ctrl R', run: () => { const P = window.TribeCanvasPanels; P && P.layers && P.layers.rename(one.id); } });
-        if (sel.length > 1) items.push('-', ...ALIGN.map(([k, l]) => ({ label: T(l), run: () => align(k) })));
+        if (sel.length > 1) items.push('-', ...ALIGN.map(([k, l, key]) => ({ label: T(l), key, run: () => align(k) })));
       }
       if (one && window.TribeCanvasCode && ['frame', 'component'].includes(one.t) && !one.p) items.push('-', { label: T('Copy as HTML and CSS'), run: () => copyCode(one.id) });
     } else {
@@ -79,7 +79,7 @@
     <div class="cvx-plist">${PRESETS.map(([l, w, h]) => `<button class="cvx-preset" data-preset="${esc(l)}" data-w="${w}" data-h="${h}"${E.canEdit ? '' : ' disabled'}><i class="cvx-pico" style="--ar:${w / h}"></i><span><b>${esc(T(l))}</b><small>${w} × ${h}</small></span></button>`).join('')}</div></section>`;
 
   // ---------- align + distribute ----------
-  const ALIGN = [['l', 'Align left'], ['ch', 'Align horizontal centers'], ['r', 'Align right'], ['t', 'Align top'], ['cv', 'Align vertical centers'], ['b', 'Align bottom'], ['dh', 'Distribute horizontal spacing'], ['dv', 'Distribute vertical spacing']];
+  const ALIGN = [['l', 'Align left', 'Alt A'], ['ch', 'Align horizontal centers', 'Alt H'], ['r', 'Align right', 'Alt D'], ['t', 'Align top', 'Alt W'], ['cv', 'Align vertical centers', 'Alt V'], ['b', 'Align bottom', 'Alt S'], ['dh', 'Distribute horizontal spacing', 'Alt Shift H'], ['dv', 'Distribute vertical spacing', 'Alt Shift V']];
   function movable() {
     const S = E.S;
     return E.sel.map(id => S.get(id)).filter(n => n && !n.lock && !S.inFlow(n));
@@ -109,7 +109,7 @@
     E.patchMany([...d.keys()], c => { const [dx, dy] = d.get(c.id); c.x = Math.round((c.x || 0) + dx); c.y = Math.round((c.y || 0) + dy); });
   }
   const alignHTML = n => `<section class="cv-ps cvx-align"><header><h4>${esc(T('Align'))}</h4><small class="faint">${esc(T('{n} layers').replace('{n}', n))}</small></header>
-    <div class="cvx-abar" role="group" aria-label="${esc(T('Align'))}">${ALIGN.map(([k, l]) => `<button class="cvx-ab" data-align="${k}" title="${esc(T(l))}" aria-label="${esc(T(l))}"${E.canEdit ? '' : ' disabled'}>${svg(k)}</button>`).join('')}</div></section>`;
+    <div class="cvx-abar" role="group" aria-label="${esc(T('Align'))}">${ALIGN.map(([k, l, key]) => `<button class="cvx-ab" data-align="${k}" title="${esc(T(l))} (${key})" aria-label="${esc(T(l))}"${E.canEdit ? '' : ' disabled'}>${svg(k)}</button>`).join('')}</div></section>`;
 
   // ---------- selection colors ----------
   function colorsIn(ids) {
@@ -183,5 +183,19 @@
       empty.addEventListener('click', e => { const p = e.target.closest('[data-preset]'); if (p) { e.stopPropagation(); addPreset(p.dataset.preset, +p.dataset.w, +p.dataset.h); } });
     }
   }
+  // Alt shortcuts for aligning, like other design tools: Alt A / D left, right; Alt W / S top, bottom; Alt H / V centres;
+  // Alt Shift H / V spread evenly.
+  const AKEY = { a: 'l', d: 'r', w: 't', s: 'b', h: 'ch', v: 'cv' };
+  addEventListener('keydown', e => {
+    if (!E || !e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!window.TribeCanvas || !window.TribeCanvas.state || !window.TribeCanvas.state().open) return;
+    if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+    if (E.sel.length < 2) return;
+    const k = (e.code || '').replace(/^Key/, '').toLowerCase();
+    const kind = e.shiftKey ? (k === 'h' ? 'dh' : k === 'v' ? 'dv' : null) : AKEY[k];
+    if (!kind) return;
+    e.preventDefault(); e.stopPropagation(); align(kind);
+  }, true);
+
   window.TribeCanvasExtras = { mount, context, align, replaceColor, presets: PRESETS, addPreset };
 })();

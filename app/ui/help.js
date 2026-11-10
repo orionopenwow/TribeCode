@@ -77,13 +77,13 @@
     ['Writing docs', [['Ctrl B / I / U', 'Bold, italic, underline'], ['Ctrl K', 'Add a link'], ['Ctrl Alt 1 · 2 · 3', 'Heading 1, 2, 3 (0 for normal text)'], ['Ctrl Shift 7 · 8 · 9', 'Numbered, bulleted, checklist'], ['Ctrl Z / Y', 'Undo, redo'], ['/', 'Insert a block']]],
     ['Chat', [['Enter', 'Send'], ['Shift Enter', 'New line'], ['@', 'Mention someone or an agent']]],
     ['Design canvas', [['V · F · R · O · T · K', 'Move, frame, rectangle, ellipse, text, scale'], ['Shift A', 'Add auto layout'], ['Ctrl Alt K', 'Create a component'], ['Ctrl Alt B', 'Detach an instance'],
-      ['Ctrl G / Ctrl Shift G', 'Group, ungroup'], ['Ctrl D', 'Duplicate'], ['Alt drag', 'Duplicate while dragging'], ['Shift drag', 'Keep the angle or the ratio'], ['Ctrl ] / [', 'Bring forward, send backward'],
+      ['Ctrl G / Ctrl Shift G', 'Group, ungroup'], ['Ctrl D', 'Duplicate'], ['Alt drag', 'Duplicate while dragging'], ['Alt A · D · W · S', 'Align left, right, top, bottom'], ['Alt H · V', 'Align centers (Shift: spread evenly)'], ['Shift drag', 'Keep the angle or the ratio'], ['Ctrl ] / [', 'Bring forward, send backward'],
       ['Ctrl Shift H / L', 'Hide, lock'], ['Ctrl R', 'Rename'], ['Enter / Esc', 'Select children, select parent'], ['Arrows', 'Nudge 1 px (Shift: 10 px)'], ['Shift 1 / 2 / 0', 'Zoom to fit, to selection, to 100%'],
       ['Space drag', 'Pan'], ['C', 'Comment'], ['Shift I', 'Ask Flint'], ['Right-click', 'Layer menu: copy, order, align, presets']]],
     ['Preview', [['Esc', 'Close the innermost thing, then leave'], ['C', 'Comment on the page'], ['Double-click text', 'Edit the words in place'], ['Ctrl Z', 'Undo the last edit']]],
   ];
   // the section for where you are comes first
-  const here = () => (document.body.classList.contains('pvw-focus') || document.body.classList.contains('pvw-on')) ? 'Preview' : /^#\/canvas/.test(location.hash) ? 'Design canvas' : /^#\/docs?\b/.test(location.hash) ? 'Writing docs' : /^#\/(chat|general)/.test(location.hash) ? 'Chat' : '';
+  const here = () => document.body.classList.contains('cv-focus') ? 'Design canvas' : (document.body.classList.contains('pvw-focus') || document.body.classList.contains('pvw-on')) ? 'Preview' : /^#\/canvas/.test(location.hash) ? 'Design canvas' : /^#\/docs?\b/.test(location.hash) ? 'Writing docs' : /^#\/(chat|general)/.test(location.hash) ? 'Chat' : '';
   function shortcuts() {
     close(); const old = $('#help-keys'); if (old) return old.remove();
     const w = document.createElement('div'); w.className = 'help-keys-wrap'; w.id = 'help-keys';
