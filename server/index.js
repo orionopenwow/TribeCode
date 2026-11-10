@@ -497,6 +497,28 @@ function linkFor(c) {
   const base = (pub || (lan || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
   return { link: site.joinLink(base, c), kind: pub ? 'public' : lan ? (lan.kind === 'tailscale' ? 'tailscale' : 'wifi') : 'local' };
 }
+// v0.26 Tribe link: every tribe gets one permanent, memorable link, like a Discord server's: <host>/t/<name>.
+// It is a long-lived reusable invite (builder role) behind a name the host can change, turn off or renew. No AI needed.
+//   GET /api/tribe-link   members: { slug, on, short, link }      PUT /api/tribe-link { slug?, on?, renew? }  host
+const TL_FILE = '.tribe/tribelink.json';
+function tribeLink(create = true) {
+  let t = baseStore.readJSON(TL_FILE, null);
+  const live = t && findInvite(t.code);
+  if ((!t || (t.on !== false && !live)) && create && members.some(m => m.role === 'host')) {
+    const host = members.find(m => m.role === 'host');
+    const inv = makeInvite({ by: host.id, hours: 24 * 365, maxUses: 1000 }); inv.tribeLink = true; saveInvites();
+    t = { slug: (t && t.slug) || slug(tribe.name).slice(0, 32) || 'tribe', code: inv.code, on: t ? t.on !== false : true, at: new Date().toISOString() };
+    baseStore.writeJSON(TL_FILE, t);
+  }
+  return t;
+}
+function tribeLinkView() {
+  const t = tribeLink(); if (!t) return { on: false };
+  const l = linkFor(t.code);
+  const pub = share.publicUrl(), lan = lanUrls().find(u => u.kind === 'lan') || lanUrls()[0];
+  const host = (pub || (lan || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '');
+  return { slug: t.slug, on: t.on !== false, short: `${host}/t/${t.slug}`, link: l.link, kind: l.kind, code: t.on !== false ? t.code : null };
+}
 flow = makeFlow({ P, W, base: baseStore, id, str, slug, broadcast, postChat, bus, getMembers: () => members, nameOf, docs, brain, coord, createTask: o => createTask(o), loadTasks: () => loadTasks(), saveTask: t => saveTask(t),
   rooms, hubFor, resetHub, share, makeInvite, linkFor, isLocal, perms, approvals });   // fix/security-2: perms + approvals for Connect GitHub
 W.onCommit = x => flow.onCommit(x);   // commits through "Commit my changes" become gists
@@ -533,7 +555,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -591,6 +613,16 @@ async function apiInProject(req, res, url) {
     const who = authed({ headers: { authorization: 'Bearer ' + t }, url: '/api/session' });
     if (!who || who.role === 'agent') return send(res, 200, { member: null });
     return send(res, 200, { member: publicMember(who), token: t, tribe });
+  }
+  // v0.26 Storage & sync (Settings): where this tribe's things live, in plain words. People only; paths for the host.
+  if (a === 'storage' && !b && m === 'GET') {
+    if (!need()) return; if (me.role === 'agent') return fail(res, 403, 'people only');
+    const host = me.role === 'host', cloudHost = !!(process.env.RENDER || process.env.KOYEB_APP_NAME || process.env.RAILWAY_ENVIRONMENT || process.env.FLY_APP_NAME || CLOUD);
+    const remoteOf = repo => { try { const cfg = fs.readFileSync(path.join(repo, '.git', 'config'), 'utf8'); const mm = cfg.match(/\[remote "origin"\][^[]*?url\s*=\s*(\S+)/); return mm ? mm[1].replace(/\/\/[^@/]+@/, '//') : null; } catch { return null; } };
+    const projects = P.all().filter(p => P.canSee(me, p.id)).map(p => { const st = (() => { try { return baseStore.readJSON(`projects/${p.id}/repo/settings.json`, null); } catch { return null; } })(); return { id: p.id, name: p.name, hasRepo: !!p.repo, github: p.repo ? remoteOf(p.repo) : null, ...(host && p.repo ? { folder: p.repo } : {}) }; });
+    return send(res, 200, { where: cloudHost ? 'cloud' : 'computer', folder: host ? DIR : null, cloudSave: !!(CLOUD && cloudsave.enabled), projects,
+      github: (() => { try { const sct = W.readSecret(me.id); return { signedIn: !!sct.githubToken, login: sct.githubLogin || null }; } catch { return { signedIn: false }; } })(),
+      browser: 'Your device keeps your settings, drafts and a copy of what you can see so the app opens fast and works offline.' });
   }
   // cloud save: a fresh, empty tribe takes a member's sealed copy back (no setup code needed: the seals prove it came from here)
   if (a === 'cloud' && b === 'restore' && m === 'POST') {
@@ -707,6 +739,20 @@ async function apiInProject(req, res, url) {
     return send(res, 200, { member: publicMember(h), token, tribe });
   }
 
+  if (a === 'tribe-link') {
+    if (!need()) return; if (me.role === 'agent' || me.guest) return fail(res, 403, 'people only');
+    if (m === 'GET') return send(res, 200, tribeLinkView());
+    if (m === 'PUT') {
+      if (me.role !== 'host') return fail(res, 403, 'only the host changes the tribe link');
+      const body = await readBody(req); const t = tribeLink() || {};
+      if (typeof body.slug === 'string') { const sl = slug(body.slug).slice(0, 32); if (sl.length < 3) return fail(res, 400, 'use at least 3 letters or numbers'); t.slug = sl; }
+      if (typeof body.on === 'boolean') t.on = body.on;
+      if (body.renew) { const old = invites.find(i => i.code === t.code); if (old) old.revoked = true; const inv = makeInvite({ by: me.id, hours: 24 * 365, maxUses: 1000 }); inv.tribeLink = true; t.code = inv.code; }
+      if (t.on === false) { const old = invites.find(i => i.code === t.code); if (old) old.revoked = true; }
+      saveInvites(); baseStore.writeJSON(TL_FILE, t);
+      return send(res, 200, tribeLinkView());
+    }
+  }
   if (a === 'invites' && b && m === 'GET') {
     if (limited(req)) return fail(res, 429, 'slow down');
     const inv = invites.find(i => i.code === b);
@@ -998,6 +1044,13 @@ function serveStatic(req, res, url) {
   let rel; try { rel = decodeURIComponent(url.pathname); } catch { return fail(res, 400, 'bad path'); }
   if (rel === '/' ) rel = '/index.html';
   if (/^\/join\/[A-Za-z0-9]+\/?$/.test(rel)) rel = '/join.html';
+  const tm = rel.match(/^\/t\/([a-z0-9-]{1,40})\/?$/i);   // v0.26 tribe link: /t/<name> -> this tribe's join page
+  if (tm) {
+    const t = tribeLink(false);
+    if (t && t.on !== false && t.slug === tm[1].toLowerCase() && findInvite(t.code)) { res.writeHead(302, { Location: `/join/${t.code}`, 'Cache-Control': 'no-store' }); return res.end(); }
+    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', ...SAFE_HEADERS('x.html') });
+    return res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TribeCode</title><body style="font:16px system-ui;background:#12151A;color:#E6E9EE;display:grid;place-items:center;min-height:90vh;margin:0;padding:16px"><div style="max-width:420px"><h1 style="font-size:22px">This tribe link isn't active</h1><p style="color:#9AA4B2;line-height:1.6">The host may have renamed it or turned it off. Ask them for the new link.</p></div>`);
+  }
   const file = path.resolve(UI, '.' + rel);
   if (!file.startsWith(UI + path.sep)) return fail(res, 403, 'forbidden');
   fs.readFile(file, (err, data) => {

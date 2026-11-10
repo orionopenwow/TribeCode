@@ -1,6 +1,73 @@
 {
-  "about": "The starter shelf: open-source tools, libraries and Claude Code skills that fit common project types. Each entry was checked (repo exists, license, install line) on 2026-11-07. Game skills from github.com/gamedev-skills/awesome-gamedev-agent-skills (Apache-2.0). 'for' matches project types: game, site, app, tool, notes, any.",
+  "about": "The starter shelf: open-source tools, libraries and Claude Code skills that fit common project types. Each entry was checked (repo exists, license, install line) on 2026-11-07. Game skills from github.com/gamedev-skills/awesome-gamedev-agent-skills (Apache-2.0). 'for' matches project types: game, site, app, tool, notes, any. 'studio' entries are creative apps people use beside TribeCode (linked, never bundled); ArtCraft checked 2026-11-09.",
   "items": [
+    {
+      "id": "artcraft",
+      "kind": "studio",
+      "title": "ArtCraft",
+      "summary": "The IDE for artists: compose in 2D, stage scenes in 3D, pose characters and pick your image and video models. Make the art, backgrounds and trailers for what the tribe builds, then drop them into Files or the inspiration board.",
+      "repo": "storytold/artcraft",
+      "url": "https://getartcraft.com/",
+      "license": "MIT OR Apache-2.0",
+      "for": [
+        "game",
+        "site",
+        "app",
+        "3d",
+        "any"
+      ],
+      "featured": true
+    },
+    {
+      "id": "godot",
+      "kind": "studio",
+      "title": "Godot Engine",
+      "summary": "A free game engine for 2D and 3D games. Export to the web so the tribe can play it in TribeCode's preview.",
+      "repo": "godotengine/godot",
+      "url": "https://godotengine.org",
+      "license": "MIT",
+      "for": [
+        "game",
+        "3d"
+      ]
+    },
+    {
+      "id": "pixelorama",
+      "kind": "studio",
+      "title": "Pixelorama",
+      "summary": "A pixel art editor for sprites, tiles and animations (desktop and web); export sprite sheets the game uses directly.",
+      "repo": "Orama-Interactive/Pixelorama",
+      "url": "https://orama-interactive.itch.io/pixelorama",
+      "license": "MIT",
+      "for": [
+        "game"
+      ]
+    },
+    {
+      "id": "material-maker",
+      "kind": "studio",
+      "title": "Material Maker",
+      "summary": "Make textures and materials with nodes for 3D scenes (three.js, Godot).",
+      "repo": "RodZill4/material-maker",
+      "url": "https://www.materialmaker.org",
+      "license": "MIT",
+      "for": [
+        "3d",
+        "game"
+      ]
+    },
+    {
+      "id": "beepbox",
+      "kind": "studio",
+      "title": "BeepBox",
+      "summary": "Write chiptune music in the browser and export WAV or MP3 for the game's soundtrack.",
+      "repo": "johnnesky/beepbox",
+      "url": "https://www.beepbox.co",
+      "license": "MIT",
+      "for": [
+        "game"
+      ]
+    },
     {
       "id": "pixelfx",
       "kind": "library",

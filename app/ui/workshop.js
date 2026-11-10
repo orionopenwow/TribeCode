@@ -16,8 +16,8 @@
   const me = () => C.state().me || {};
   const human = () => me().role && me().role !== 'agent' && me().role !== 'spectator';
 
-  const KINDS = [['', 'All'], ['skill', 'Skills'], ['recipe', 'Recipes'], ['template', 'Templates'], ['asset', 'Assets'], ['script', 'Scripts']];
-  const KIND_LABEL = { skill: 'Skill', recipe: 'Recipe', template: 'Template', asset: 'Asset', script: 'Script' };
+  const KINDS = [['', 'All'], ['module', 'Modules'], ['skill', 'Skills'], ['recipe', 'Recipes'], ['template', 'Templates'], ['asset', 'Assets'], ['script', 'Scripts']];
+  const KIND_LABEL = { module: 'Module', skill: 'Skill', recipe: 'Recipe', template: 'Template', asset: 'Asset', script: 'Script' };
   const LICENSES = [['CC0-1.0', 'CC0 1.0', 'Public domain. No credit needed.'], ['CC-BY-4.0', 'CC BY 4.0', 'Free to use. Credit the author.'], ['MIT', 'MIT', 'Free to use. Keep the license notice.'], ['Apache-2.0', 'Apache 2.0', 'Free to use. Keep the notice; patent grant.']];
   const licNote = id => (LICENSES.find(l => l[0] === id) || [])[2] || '';
   const IMG = /\.(png|jpe?g|webp|gif)$/i, TEXT = /\.(md|txt|json|js|ts|lua|gd|cs|py|glsl|frag|vert|wgsl)$/i, AUDIO = /\.(ogg|mp3|wav)$/i, MODEL = /\.(glb|gltf)$/i;
@@ -155,8 +155,8 @@
       </div></article>`;
   }
   // ---------- Starter shelf (templates/shelf.json, server/shelf.js): checked open-source tools, libraries and Claude skills ----------
-  const SHELF_EMO = { skill: '✨', library: '📦', tool: '🛠️', mcp: '🔌' };
-  const SHELF_KIND = { skill: 'Claude Code skills', library: 'Libraries', tool: 'Tools', mcp: 'Agent tools (MCP)' };
+  const SHELF_EMO = { studio: '🎨', skill: '✨', library: '📦', tool: '🛠️', mcp: '🔌' };
+  const SHELF_KIND = { studio: 'Creative studios', skill: 'Claude Code skills', library: 'Libraries', tool: 'Tools', mcp: 'Agent tools (MCP)' };
   function shelfCard(it) {
     return `<article class="ws-card-s"><div class="wss-top"><span class="ws-eyebrow">${esc(it.license)}</span>${it.added ? '<span class="wss-added">in this project</span>' : ''}</div>
       <h3>${esc(it.title)}</h3><p>${esc(it.summary)}</p>${it.install ? `<code class="wss-cmd">${esc(it.install)}</code>` : ''}

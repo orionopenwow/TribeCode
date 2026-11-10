@@ -168,7 +168,7 @@ def main():
             host.click("#tour-invite"); host.wait_for_selector("#share-pub-t")
             host.click("#share-pub-t"); host.wait_for_selector("#share-pub-msg.warn")
             assert "cloudflared" in host.text_content("#share-pub-msg") and "Couldn't get a public address" in host.inner_text("#share-pub-msg")   # qa-qol-2: plain line, details folded
-            connected(friend); friend.click("#tour-invite"); friend.wait_for_selector("#inv-qr svg")
+            connected(friend); friend.click("#tour-invite"); friend.wait_for_selector("#tl-box"); friend.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); friend.wait_for_selector("#inv-qr svg")
             assert friend.locator("#share-pub").count() == 0, "toggle is host-only"
             b.close()
     finally:

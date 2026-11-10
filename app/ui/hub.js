@@ -592,7 +592,8 @@
   function bindInsights(root) { root.querySelectorAll('[data-ai-card-go]').forEach(b => b.onclick = () => { const f = insActs[b.dataset.aiCardGo]; if (f) f(); }); }
   function drawInsights() {
     const html = insightCards();
-    for (const id of ['#home-ai-cards', '#hub-ins-phone']) { const box = $(id); if (box) { box.innerHTML = html; bindInsights(box); } }
+    // v0.26: unchanged cards stay as they are, so an open "Test robot notes" (or anything you're reading) doesn't snap shut
+    for (const id of ['#home-ai-cards', '#hub-ins-phone']) { const box = $(id); if (box) { if (box.__html === html && box.childElementCount) { bindInsights(box); continue; } box.__html = html; box.innerHTML = html; bindInsights(box); } }
   }
 
   // ---------- All repos ----------

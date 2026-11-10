@@ -136,3 +136,9 @@ textarea.sd-code { height: 150px; }
   #view-repo .view-head > .btn { margin-left: 0 !important; }
 }
 @media (prefers-reduced-motion: reduce) { .ctx-win, .sw, .sw i { animation: none; transition: none; } }
+/* v0.26: the Sync line above the autopilot switches */
+.ap-sync { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 4px 0 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised, var(--surface)); }
+.ap-sync-t { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.ap-sync-t .eyebrow { margin: 0; }
+.ap-sync-t b { font-size: 14.5px; }
+.ap-sync-t .faint { font-size: 12.5px; }

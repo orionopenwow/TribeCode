@@ -76,7 +76,8 @@
     bell.title = unread ? `Inbox · ${unread} unread` : 'Inbox';
   }
   const LABEL = { approval: 'Approval', mention: 'Mention', dm: 'Message', 'task-assigned': 'Task', reminder: 'Reminder', proposal: 'Proposal', 'bug-critical': 'Critical bug', release: 'Release', huddle: 'Huddle', digest: 'Digest', 'approval-question': 'Question', 'approval-result': 'Decision', 'comment-reply': 'Comment', 'meeting-notes': 'Meeting', 'visual-diff': 'Visuals', repo: 'Code repository' };
-  const GROUP = { 'task-assigned': n => `${n} new tasks assigned to you`, mention: n => `${n} new mentions`, dm: n => `${n} new messages`, proposal: n => `${n} new proposals`,
+  // v0.26: group titles count all of them; how many are unread shows as its own "N new" (it used to say "new" for read ones too)
+  const GROUP = { 'task-assigned': n => `${n} tasks assigned to you`, mention: n => `${n} mentions`, dm: n => `${n} messages`, proposal: n => `${n} proposals`,
     release: n => `${n} releases`, huddle: n => `${n} huddles started`, 'bug-critical': n => `${n} critical bugs`, reminder: n => `${n} reminders` };
   const openGroups = new Set();
 
@@ -134,7 +135,7 @@
       if (g.items.length === 1) return itemHtml(g.items[0]);
       const key = g.items[0].id, open = openGroups.has(key), un = g.items.filter(isUnread).length;
       return `<div class="nf-group ${open ? 'open' : ''}"><button class="nf-group-head ${un ? 'unread' : ''}" data-group="${esc(key)}"><div class="nf-ico t-${esc(g.type)}">${ico(g.type)}</div>
-        <span class="nf-g-title">${esc(GROUP[g.type](g.items.length))}</span><time>${ago(g.items[0].at)}</time><span class="nf-caret">${open ? '−' : '+'}</span></button>
+        <span class="nf-g-title">${esc(GROUP[g.type](g.items.length))}${un ? ` <span class="nf-g-new">${un} new</span>` : ''}</span><time>${ago(g.items[0].at)}</time><span class="nf-caret">${open ? '−' : '+'}</span></button>
         ${open ? g.items.map(i => itemHtml(i, 'sub')).join('') : ''}</div>`;
     }).join('')
       : `<div class="nf-empty"><span class="nf-empty-ic" aria-hidden="true">${filter === 'mentions' ? '💬' : '✨'}</span><b>${filter === 'needs' ? 'Nothing needs you right now' : filter === 'mentions' ? 'No mentions yet' : 'You’re all caught up'}</b><span>${filter === 'needs' ? 'Approvals and reviews show up here.' : filter === 'mentions' ? 'When someone @mentions you, it lands here.' : 'Approvals, mentions, bugs and DMs land here.'}</span><button class="btn sm" id="nf-empty-settings">Choose what pings you</button></div>`)
@@ -491,5 +492,5 @@
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'tribe-open') go(e.data.view, e.data.ref); });
 
-  window.TribeNotify = { openInbox, closeInbox, openSettings, closeSettings, reload: load, enableWebPush, pushOk, state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
+  window.TribeNotify = { openInbox, closeInbox, openSettings, closeSettings, reload: load, enableWebPush, pushOk, markAllRead, markRead: id => setMark(id, { read: true }), isUnread: id => isUnread(items.find(i => i.id === id) || {}), state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
 })();

@@ -130,9 +130,19 @@
     const holder = pane.querySelector('#pvw-frame');
     if (empty) {
       frame = null; helperAlive = false;
-      holder.innerHTML = !info.hasRepo
-        ? `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>Nothing to show yet</h3><p>Your app appears here once the project has a code repository: the shared folder that holds its code. Make one, and the app shows up here, live.</p><button class="btn primary" data-act="repo">Set up the code repository</button></div>`
-        : `<div class="pvw-empty"><span class="eyebrow">Preview</span><h3>No page to show yet</h3><p>When your app has a first page, you see it here, and it refreshes by itself as your tribe changes it. Ask your AI to make that first page.</p><button class="btn primary" data-act="ask">${ico(I.play)} Ask my AI to start one</button><details class="pvw-what"><summary>What does it look for?</summary><p>A file called <code>index.html</code> in the code repository (or in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>).</p></details></div>`;
+      // v0.26: an AI Studio style start screen: say what to make, it gets a runnable first version right away (the
+      // starter, when you're the host) and your agents and Flint build it out from there, live, in this pane.
+      holder.innerHTML = `<div class="pvw-empty pvw-build"><span class="eyebrow">Preview · nothing to run yet</span><h3>What should it be?</h3>
+        <p>Describe the app, game or site. You get a first version you can run here straight away, then your Claude and the tribe's agents build it out while you watch.</p>
+        <form class="pvw-bform" id="pvw-bform" autocomplete="off"><textarea class="input" id="pvw-bprompt" rows="3" maxlength="1200" placeholder="A cozy pixel platformer where a little flame lights lanterns" aria-label="What should it be?"></textarea>
+        <div class="pvw-bchips">${['A pixel platformer game', 'A website for a local bakery', 'A to-do app for our team', 'A 3D tavern to walk around'].map(t => `<button type="button" class="chip" data-bchip="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+        <div class="pvw-brow"><button class="btn primary" id="pvw-bgo">${ico(I.play)} Build it</button>${info.hasRepo ? '' : '<button type="button" class="btn" data-act="repo">Set up the code repository</button>'}</div>
+        <p class="pvw-bstat faint" id="pvw-bstat" aria-live="polite"></p></form>
+        <details class="pvw-what"><summary>What does the preview run?</summary><p>A file called <code>index.html</code> in the code repository (or in <code>public/</code>, <code>dist/</code>, <code>build/</code>, <code>app/</code> or <code>web/</code>), or the dev server the host points it at.</p></details></div>`;
+      const fm = holder.querySelector('#pvw-bform'), ta = holder.querySelector('#pvw-bprompt');
+      holder.querySelectorAll('[data-bchip]').forEach(c => c.onclick = () => { ta.value = c.dataset.bchip; ta.focus(); });
+      ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) fm.requestSubmit(); });
+      fm.onsubmit = e => { e.preventDefault(); buildFrom(ta.value.trim()); };
       layout(); return;
     }
     if (!frame || !frame.isConnected) {
@@ -285,6 +295,24 @@
   }
 
   // Empty state: one tap asks the agents (the #agents channel; the project chat when no agent is here).
+  // "Build it": the vision (when there is none), the starter (host, so there is something to run now), then the agents.
+  async function buildFrom(text) {
+    const st = pane && pane.querySelector('#pvw-bstat'), go = pane && pane.querySelector('#pvw-bgo');
+    const say = m => { if (st) st.textContent = m; };
+    if (!text) { say('Say what it should be first.'); return; }
+    if (go) go.disabled = true;
+    const pid = (info && info.project) || C.project(), name = ((C.state().projects || []).find(p => p.id === pid) || {}).name || 'Our project';
+    try {
+      say('Writing it down as the project vision…');
+      try { const v = await C.api('/vision'); if (!String(v.text || '').trim()) await C.api('/vision', { method: 'PUT', body: { text: `# ${name}\n\n${text}\n` } }); } catch {}
+      say('Making a first version you can run…');
+      let made = false; try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }); made = !!(r.written && r.written.length); } catch {}
+      const ask = `please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${text}${made ? ' A starter is already in the repo; build on it.' : ''}`;
+      try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); } catch {} }
+      say(made ? 'A first version is running. Your agents were asked to build the rest; it refreshes here as they work.' : 'Asked your agents to build it. It appears here the moment there is a page.');
+      if (made) setTimeout(() => open(), 600);
+    } finally { if (go) go.disabled = false; }
+  }
   async function askClaude() {
     const text = 'please start the app: create an index.html at the top folder of the code (a no-build static page is fine, relative paths for scripts and images) so the tribe can watch it live in TribeCode\'s preview.';
     try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + text } }); toast('Asked the agents in #agents'); }

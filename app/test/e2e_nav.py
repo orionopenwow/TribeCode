@@ -123,7 +123,8 @@ def main():
             assert rows(host, "#pj-nav .nest-row") == CORE, rows(host, "#pj-nav .nest-row")   # + Add sits below the Repo row, outside the rows
             assert host.locator("#nest-huddle").is_hidden() and host.locator("#capture-toggle").is_hidden(), "huddle and capture have no rows"
             for t in ["One", "Two"]: assert api("/tasks", "POST", {"title": f"Task {t}"}, token=token, project=pid)[0] == 200
-            host.wait_for_function("document.querySelector('#nn-tasks').textContent === '2'", timeout=8000)
+            # v0.26: the Task Board badge counts others' task updates you haven't seen (e2e_counts.py), never your own
+            host.wait_for_timeout(800); assert host.evaluate("document.querySelector('#nn-tasks').textContent") == '', "own tasks don't count"
             # Chat & Streams: #general, #agents and DMs fold out, remembered
             assert host.locator("#nest-streams").is_hidden()
             host.click("#streams-toggle"); host.wait_for_selector("#nest-streams [data-stream='general']", state="visible")
@@ -207,7 +208,7 @@ def main():
             # ---- bottom row: Settings and Invite work
             host.click("#ub-gear"); host.wait_for_selector("#settings-modal:not(.hidden) #set-name")
             host.keyboard.press("Escape"); host.evaluate("TribeSettings.close()")
-            host.click("#tour-invite"); host.wait_for_selector("#invite-modal:not(.hidden) #inv-link")
+            host.click("#tour-invite"); host.wait_for_selector("#invite-modal:not(.hidden) #tl-link"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#invite-modal:not(.hidden) #inv-link")
             host.keyboard.press("Escape")
             # right-click the project's bubble: overview, chat, pin, invite, project settings (no dropdown in the sidebar)
             host.evaluate("TribeShell.go('repo')"); host.wait_for_selector("#view-repo:not(.hidden)")

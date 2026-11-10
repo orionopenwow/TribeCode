@@ -574,7 +574,7 @@
     };
     const QA = [
       { k: 'make', re: /what can (i|we|you) (make|build|create)|what (do|does) (it|tribecode) (make|build)|kinds? of|games? only|only (for )?games/, a: 'Anything that runs on code: apps, games, websites, tools and dashboards, bots and AI helpers, school projects, open-source libraries. TribeCode is the shared place where you and your friends build it with your AI helpers.', act: 'make' },
-      { k: 'learn', re: /learn|beginner|never coded|new to cod|teach|lesson|quiz|badge|kids?|school/, a: 'You don’t need to know how to code. The Learn guides explain what code is and how an app comes together, slowly and in plain words. There’s a short quiz that earns your first badge.', act: 'learn' },
+      { k: 'learn', re: /learn|beginner|never coded|new to cod|teach|lesson|quiz|badge|kids?|school/, a: 'You don’t need to know how to code. The Learn guides explain what code is and how an app comes together, slowly and in plain words. Finish a module to earn its badge.', act: 'learn' },
       { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes. Everything in TribeCode is free and open source (MIT), and what’s free today stays free. You bring your own AI. Paid extras like hosting may come later, but nothing is for sale today.', act: 'pricing' },
       { k: 'ai', re: /\bai\b|which|model|claude|codex|gemini|cursor|llm|agent|ollama|gpt/, a: 'Most coding agents work: Claude Code, Codex, Gemini CLI, Cursor and more. Each friend connects their own, so nobody pays for anyone else.', act: 'docs' },
       { k: 'join', re: /join|friend|invite|link|share|phone|mobile/, a: 'The host sends a link. A friend taps it, types a name and they’re in, from a phone or a laptop. On a phone they can add it to the Home Screen. No app store.', act: 'app' },
@@ -647,7 +647,7 @@
       ['.hero', 'This is TribeCode: one shared place where you, your friends and your AI helpers code anything together.'],
       ['#make', 'First, the kind of things people make here. Games, apps, sites, bots, and whatever you thought of in the shower.'],
       ['#story', 'Here’s how any of those comes together, in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
-      ['#learn', 'New to code? The Learn modules go slowly and skip the jargon, and a short quiz at the end earns your first badge.'],
+      ['#learn', 'New to code? The Learn modules go slowly and skip the jargon, and finishing one earns your first badge.'],
       ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
       ['#phone', 'Friends join from a phone with one link. When an agent needs a yes, it arrives as one tap.'],
       ['#lanes', 'Each agent works in its own lane, so nobody collides. When two need the same file they hand it off, and a person approves the merge.'],
@@ -782,9 +782,10 @@
   const MODS = [['m1', 'What code is', 4], ['m2', 'Your first app', 6], ['m3', 'Building together', 6], ['m4', 'Languages, simply', 7]];
   let P = null; try { P = JSON.parse(localStorage.getItem('tribecode.learn.v2') || 'null'); } catch {}
   if (!P) return;
-  const done = P.done || {}, passed = P.passed || {};
-  const total = MODS.reduce((n, m) => n + m[2] + 1, 0);
-  const got = MODS.reduce((n, [id, , k]) => n + Array.from({ length: k }, (_, i) => done[`${id}-${i}`]).filter(Boolean).length + (passed[id] ? 1 : 0), 0);
+  // v0.26: no end-of-module quiz; a module is done when its lessons are
+  const done = P.done || {}, passed = Object.fromEntries(MODS.map(([id, , k]) => [id, Array.from({ length: k }, (_, i) => done[`${id}-${i}`]).every(Boolean)]));
+  const total = MODS.reduce((n, m) => n + m[2], 0);
+  const got = MODS.reduce((n, [id, , k]) => n + Array.from({ length: k }, (_, i) => done[`${id}-${i}`]).filter(Boolean).length, 0);
   const pct = Math.round(got / total * 100);
   ring.style.setProperty('--p', pct); document.querySelector('[data-learn-pct]').textContent = pct + '%';
   MODS.forEach(([id, , k]) => {
@@ -792,9 +793,9 @@
     const n = Array.from({ length: k }, (_, i) => done[`${id}-${i}`]).filter(Boolean).length, st = li.querySelector('[data-learn-st]');
     if (passed[id]) { li.classList.add('done'); st.textContent = '✓ Done'; } else if (n) { li.classList.add('going'); st.textContent = `${n}/${k}`; }
   });
-  // continue at the first lesson (or check) not finished yet, in course order
-  const order = MODS.flatMap(([id, , k]) => [...Array.from({ length: k }, (_, i) => `${id}-${i}`), `${id}-q`]);
-  const at = order.find(x => (x.endsWith('-q') ? !passed[x.slice(0, 2)] : !done[x])) || null, mod = at && MODS.find(m => m[0] === at.slice(0, 2));
+  // continue at the first lesson not finished yet, in course order
+  const order = MODS.flatMap(([id, , k]) => Array.from({ length: k }, (_, i) => `${id}-${i}`));
+  const at = order.find(x => !done[x]) || null, mod = at && MODS.find(m => m[0] === at.slice(0, 2));
   if (got && at && pct < 100) {
     document.querySelector('[data-learn-title]').textContent = `Continue: ${mod[1]}`;
     document.querySelector('[data-learn-sub]').textContent = `${pct}% of the course done. Pick up where you left off.`;

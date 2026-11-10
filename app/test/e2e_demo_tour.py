@@ -119,7 +119,7 @@ def main():
             pg.keyboard.press("Enter"); assert "2 of 3" in pg.text_content("#dt-intro")
             pg.click("#dt-in-skip")
             pg.wait_for_selector("#dt-say.in", timeout=8000)
-            assert "1/15" in pg.text_content("#dt-say") and pg.locator("#dt-spot").count() == 1
+            assert "Chapter 1 of 15" in pg.text_content("#dt-say") and pg.locator("#dt-spot").count() == 1
             pg.wait_for_function("TribeDirector._test.state().elapsed > 0", timeout=20000)   # it moves on by itself
             # after a chapter, Flint's recap waits for Next (the clock skips ahead to the end of chapter 1 to get there fast)
             pg.evaluate("TribeDirector.speed(2)")

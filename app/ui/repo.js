@@ -195,9 +195,11 @@
     if (host) st.master = s.integrator ? (agent ? { id: agent.id, name: agent.name } : { id: null, name: `Claude · ${host.name}`, pending: true }) : null;
     $('#ap-body').innerHTML = `
       <div class="lead">${isHost() ? 'Keeps the code repository in sync for you. Off by default. It never force-pushes and never merges code branches without an approved integration.' : 'Only the host changes these. Here is what is on.'}</div>
-      ${sw('autopilot.enabled', ap.enabled, 'Autopilot', 'Every action is logged below')}
+      <div class="ap-sync" id="ap-sync">${syncLine()}</div>
+      ${sw('autopilot.enabled', ap.enabled, 'Autopilot', 'Syncs every 20 seconds while TribeCode runs. Every action is logged below')}
       <div class="ap-sub">
-        ${sw('autopilot.autoPull', ap.autoPull, 'Auto-pull main when clean', 'Fast-forward only', off)}
+        ${sw('autopilot.autoPull', ap.autoPull, 'Auto-pull main when clean', 'Brings in friends\' pushed work. Fast-forward only', off)}
+        ${sw('autopilot.autoPush', !!ap.autoPush, 'Auto-push saved commits', 'Sends your saved commits on main to GitHub. Never force-pushes, never when GitHub has newer work', off)}
         ${sw('autopilot.commitContext', ap.commitContext, 'Commit + push the tribe context', 'TRIBE_CONTEXT.md and tribe docs, if the tribe folder is in the code repository', off)}
         ${sw('autopilot.reportTags', ap.reportTags, 'Report milestone tags', 'Released milestones are tagged and pushed', off)}
       </div>
@@ -209,6 +211,21 @@
         ${isHost() ? '<button class="btn sm" id="ap-cmd-save">Save</button>' : ''}</div>
         <span class="faint">Runs in a temporary worktree, never in your working tree. Timeout ${Math.round(s.checkTimeoutSec / 60)} min.</span></div>`;
   }
+  // v0.26: where the repo stands against GitHub, in one line, plus "Sync now"
+  function syncLine() {
+    const x = st.status || {}, s = st.settings || {}, A = s.autopilot || {};
+    const state = !x.upstream ? 'Not connected to GitHub yet' : x.behind && x.ahead ? `${x.ahead} to push · ${x.behind} to pull (both changed)` : x.behind ? `${x.behind} new on GitHub to pull` : x.ahead ? `${x.ahead} saved commit${x.ahead > 1 ? 's' : ''} to push` : 'In sync with GitHub';
+    const mode = !A.enabled ? 'Autopilot off: sync by hand' : A.autoPull && A.autoPush ? 'Autopilot: pull + push' : A.autoPull ? 'Autopilot: pull only' : A.autoPush ? 'Autopilot: push only' : 'Autopilot on, sync off';
+    const when = s.lastSync || s.lastPush;
+    return `<div class="ap-sync-t"><span class="eyebrow">Sync</span><b>${esc(state)}</b><span class="faint">${esc(mode)}${when ? ' · last synced ' + esc(ago(when)) : ''}${x.dirtyCount ? ` · ${x.dirtyCount} unsaved change${x.dirtyCount > 1 ? 's' : ''}` : ''}</span></div>
+      ${isHost() && x.upstream ? '<button class="btn sm primary" id="ap-sync-now">Sync now</button>' : ''}`;
+  }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest && e.target.closest('#ap-sync-now'); if (!b) return;
+    b.disabled = true; b.textContent = 'Syncing…';
+    try { const r = await C.api('/repo/sync', { method: 'POST' }); st.status = r.status; if (st.settings) st.settings.lastSync = r.lastSync; toast(r.note || (r.done && r.done.length ? 'Synced: ' + r.done.join(', ') : 'Already up to date')); renderAutopilot(); renderStrip(); }
+    catch (err) { toast(err.message); b.disabled = false; b.textContent = 'Sync now'; }
+  });
   async function setSetting(key, value) {
     const body = key.startsWith('autopilot.') ? { autopilot: { [key.split('.')[1]]: value } } : { [key]: value };
     try { const r = await C.api('/repo/settings', { method: 'PUT', body }); st.settings = r.settings; renderAutopilot(); renderStrip(); }
@@ -216,7 +233,7 @@
   }
 
   // ---------- activity + commits ----------
-  const KIND = { pull: 'var(--live)', commit: 'var(--live)', tag: 'var(--brand)', apply: 'var(--live)', integrate: 'var(--live)', checks: 'var(--peer)', propose: 'var(--peer)', settings: 'var(--faint)' };
+  const KIND = { pull: 'var(--live)', push: 'var(--live)', sync: 'var(--live)', commit: 'var(--live)', tag: 'var(--brand)', apply: 'var(--live)', integrate: 'var(--live)', checks: 'var(--peer)', propose: 'var(--peer)', settings: 'var(--faint)' };
   function renderActivity() {
     const a = st.activity || [];
     $('#act-list').innerHTML = a.length ? a.slice(0, 30).map(e => `<div class="act"><span class="dot" style="background:${/failed/.test(e.kind) ? 'var(--ember)' : KIND[e.kind] || 'var(--faint)'}"></span>
@@ -309,7 +326,7 @@
   }, true);
   async function refreshIntegrations() { try { integrations = (await C.api('/integrations')).integrations; renderIntegrations(); } catch {} }
   const isShown = () => !$('#view-repo').classList.contains('hidden');
-  C.on('repo', m => { st.status = m.status; if (isShown()) { renderStrip(); renderCommits(); renderBranches(); reloadBranchesSoon(); } });
+  C.on('repo', m => { st.status = m.status; if (isShown()) { renderStrip(); renderCommits(); const sy = document.getElementById('ap-sync'); if (sy) sy.innerHTML = syncLine(); renderBranches(); reloadBranchesSoon(); } });
   C.on('repo-settings', m => { st.settings = m.settings; if (isShown()) { renderAutopilot(); renderStrip(); } });
   C.on('repo-activity', m => { st.activity = [m.entry, ...(st.activity || [])].slice(0, 60); if (isShown()) renderActivity(); if (/integrate|propose/.test(m.entry.kind)) refreshIntegrations(); });
   C.on('change', m => {
