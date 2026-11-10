@@ -218,11 +218,12 @@ def main():
             ember = host.evaluate("getComputedStyle(document.body).getPropertyValue('--ember-ink').trim()")
             assert color.replace(" ", "") in ("rgb(255,111,142)",) and ember.lower() == "#ff6f8e", (color, ember)
             assert "Yesterday" in host.inner_text(f".task[data-id='{late['id']}'] .due-chip")
-            host.hover(f".task[data-id='{nodue['id']}']")
-            host.click(f".task[data-id='{nodue['id']}'] .due-chip.none")
-            host.click(".due-pop [data-d]:has-text('Tomorrow')")
+            assert host.locator(f".task[data-id='{nodue['id']}'] .due-chip").count() == 0, "v0.27.2: a calm card shows a due date only once one is set"
+            host.click(f".task[data-id='{nodue['id']}']"); host.wait_for_selector("#tk-drawer:not([hidden]) #tkd-due")   # set it in the task drawer
+            host.fill("#tkd-due", (now + timedelta(days=1)).strftime("%Y-%m-%d")); host.locator("#tkd-due").dispatch_event("change")
             wait_for(lambda: [t for t in api("/tasks", token=host_tok)["tasks"] if t["id"] == nodue["id"] and t.get("due") == (now + timedelta(days=1)).strftime("%Y-%m-%d")], what="due date set from the chip")
             host.wait_for_selector(f".task[data-id='{nodue['id']}'] .due-chip:has-text('Tomorrow')")
+            host.click("#tk-drawer [data-tkclose]")
             # palette: "task ... due friday"
             palette(host, "task polish the menu due friday")
             assert "add task" in host.locator(".pal-item").first.inner_text().lower()

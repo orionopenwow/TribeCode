@@ -149,11 +149,11 @@ def main():
             host.wait_for_selector('[data-col="doing"] .task', timeout=5000)
             assert "Controller support" in host.inner_text('[data-col="doing"]')
             # quick add + rename + assign on host
-            host.click('[data-add="backlog"]'); host.fill(".quick-add", "Campfire save points"); host.press(".quick-add", "Enter")
+            host.click('[data-add="backlog"]'); host.fill(".col .quick-add", "Campfire save points"); host.press(".col .quick-add", "Enter")
             friend.wait_for_function("document.querySelector('[data-col=\"backlog\"]').innerText.includes('Campfire save points')", timeout=5000)
             host.keyboard.press("Escape")
-            host.select_option('[data-col="doing"] .task select[data-assign]', label="Maya")
-            friend.wait_for_function("document.querySelector('[data-col=\"doing\"] select[data-assign]').selectedOptions[0].text === 'Maya'", timeout=5000)
+            host.click('[data-col="doing"] .task'); host.click('#tk-drawer .tkd-who:has-text("Maya")'); host.keyboard.press("Escape")   # v0.27.2: assign in the task drawer
+            friend.wait_for_function("!!document.querySelector('[data-col=\"doing\"] .task .tk-av[title=\"Maya\"]')", timeout=5000)
             # presence shows where people are
             host.wait_for_function("document.querySelector('#room-list').innerText.includes('Task Board')", timeout=5000)
             shot(host, "tasks-live")

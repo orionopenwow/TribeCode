@@ -299,10 +299,12 @@ def main():
             host.evaluate("TribeApp.show('tasks')"); host.wait_for_selector("#board .task", timeout=10000)
             t1 = next(t for t in api("/tasks", token=tok, project=pid)[1]["tasks"] if t["title"] == "Light the first lantern")
             card = host.locator(f"#board .task[data-id='{t1['id']}']")
-            card.locator(".tk-do").first.wait_for(timeout=8000)
+            card.wait_for(timeout=8000)
             shot(host, "14-board"); audit(host, "task board")
-            card.locator("[data-do=me]").click(); card.locator(".tk-who-chip").wait_for(timeout=8000)
             me_id = host.evaluate("TribeClient.state().me.id")
+            card.click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=8000)   # v0.27.2: who does it lives in the task drawer
+            host.click(f"#tk-drawer [data-who='{me_id}']")
+            card.locator(f".tk-av[title]").first.wait_for(timeout=8000); host.keyboard.press("Escape")
             assert next(t for t in api("/tasks", token=tok, project=pid)[1]["tasks"] if t["id"] == t1["id"])["assignee"] == me_id
 
             # ---- 6. an agent connects (fake MCP client) -> Needs you

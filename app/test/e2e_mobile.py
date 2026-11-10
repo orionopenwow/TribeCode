@@ -99,11 +99,12 @@ def main():
             phone.click('#tabbar [data-nav="tasks"]')
             phone.wait_for_selector('[data-col="backlog"] .task')
             assert phone.locator("#view-chat").is_hidden()
-            phone.select_option('[data-col="backlog"] .task select.mv', "doing")
+            phone.click('[data-col="backlog"] .task'); phone.click('#tk-drawer [data-status="doing"]')   # v0.27.2: the task sheet's status row
+            phone.keyboard.press("Escape")
             host.click('[data-nav="tasks"]:visible')
             host.wait_for_selector('[data-col="doing"] .task', timeout=8000)
-            assert host.locator(".task select.mv").first.is_hidden(), "move menu is phone-only"
-            phone.wait_for_selector('[data-col="doing"] .task')
+            assert host.locator("#board .task select").count() == 0, "calm cards: no menus on a card"
+            phone.click('#tk-seg [data-seg="doing"]'); phone.wait_for_selector('[data-col="doing"] .task', state="visible")
             if take: phone.wait_for_timeout(400); phone.screenshot(path=str(SHOTS / "phone-tasks.png"))
             # PWA bits are served
             m = json.loads(urllib.request.urlopen(BASE + "/manifest.webmanifest").read())
