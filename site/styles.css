@@ -1453,7 +1453,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .vs__side { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
 .vs-name { font-size: 12px; color: var(--faint); text-align: center; } .vs-name b { color: var(--text); font-weight: 600; }
 .vs-px { display: block; height: auto; image-rendering: pixelated; }
-.vs-px--a { width: 120px; } .vs-px--b { width: 180px; }
+.vs-px--a { width: 110px; } .vs-px--b { width: 200px; }
 /* speech bubbles */
 .vs-bubbles { display: grid; gap: 8px; width: 100%; align-self: stretch; }
 .vs-bubble { position: relative; padding: 9px 11px; border-radius: 12px 12px 12px 4px; background: var(--raised); border: 1px solid var(--edge); }
@@ -1524,7 +1524,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 @media (max-width: 960px) {
   .vs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "a b" "mid mid"; gap: 14px 12px; padding: 14px; }
   .vs__side--a { grid-area: a; } .vs__side--b { grid-area: b; } .vs__mid { grid-area: mid; max-width: none; }
-  .vs-px--a { width: 64px; } .vs-px--b { width: 96px; }
+  .vs-px--a { width: 58px; } .vs-px--b { width: 104px; }
 }
 @media (max-width: 520px) {
   .vs { margin: 0 -2px 14px; padding: 12px; }
@@ -1539,3 +1539,28 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 
 /* Company section: parts tucked away with the hidden attribute stay hidden */
 #company [hidden] { display: none !important; }
+
+/* Maya's floating phone (v0.27.1): no phone in her hand; a small phone floats at her shoulder and listens while she talks */
+.vs-fig { position: relative; display: inline-block; }
+.vs-phone { position: absolute; top: 30%; left: calc(100% + 10px); width: 30px; height: 52px; border: 2px solid #0F1216; border-radius: 7px; background: #12151A;
+  box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: vs-bob 2.6s ease-in-out infinite; }
+.vs-phone__notch { position: absolute; top: 3px; width: 8px; height: 2px; border-radius: 2px; background: #2A313C; }
+.vs-phone__bar { position: absolute; bottom: 4px; width: 10px; height: 2px; border-radius: 2px; background: #2A313C; }
+.vs-phone__wave { display: flex; align-items: center; gap: 2px; height: 16px; }
+.vs-phone__wave i { width: 3px; height: 3px; border-radius: 1px; background: #38C6B1; opacity: .55; }
+.vs--talk .vs-phone { border-color: #38C6B1; }
+.vs--talk .vs-phone__wave i { opacity: 1; animation: vs-wave .42s ease-in-out infinite alternate; }
+.vs--talk .vs-phone__wave i:nth-child(2) { animation-delay: -.12s; } .vs--talk .vs-phone__wave i:nth-child(3) { animation-delay: -.3s; }
+.vs--talk .vs-phone__wave i:nth-child(4) { animation-delay: -.2s; } .vs--talk .vs-phone__wave i:nth-child(5) { animation-delay: -.06s; }
+@keyframes vs-wave { from { height: 3px; } to { height: 15px; } }
+@keyframes vs-bob { 50% { transform: translateY(-4px); } }
+.vs-sound { position: absolute; top: calc(30% + 22px); left: calc(100% - 4px); display: flex; gap: 3px; opacity: 0; }
+.vs-sound i { width: 3px; height: 3px; background: #38C6B1; }
+.vs--talk .vs-sound { opacity: 1; } .vs--talk .vs-sound i { animation: vs-dot .6s steps(1) infinite; }
+.vs--talk .vs-sound i:nth-child(2) { animation-delay: .2s; } .vs--talk .vs-sound i:nth-child(3) { animation-delay: .4s; }
+@keyframes vs-dot { 50% { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .vs-phone, .vs-phone__wave i, .vs-sound i { animation: none !important; } }
+@media (max-width: 960px) {
+  .vs-phone { width: 20px; height: 34px; border-radius: 5px; left: calc(100% + 8px); } .vs-phone__wave { gap: 1px; } .vs-phone__wave i { width: 2px; } .vs-sound { top: calc(30% + 14px); left: calc(100% - 3px); } .vs-sound i { width: 2px; height: 2px; }
+  @keyframes vs-wave { from { height: 2px; } to { height: 10px; } }
+}
