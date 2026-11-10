@@ -5,7 +5,9 @@
   <img src="assets/brand/logo-wordmark.png" width="760" alt="TribeCode">
 </picture>
 
-**Build one app together with friends — each with your own Agents.**
+**Build apps, games and websites with your friends, and run the business around them.**
+
+One person or a whole crew: give each role to a friend or an AI helper, and keep the decisions human.
 
 TribeCode is a free, open-source app for a few friends building one thing at the same time. The tribe lives in one shared place: a GitHub repo and a computer someone in the group hosts. Everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Agent (Claude Code, Codex, Gemini CLI, Cursor…) connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with these tools; it isn't made by their makers.
 
@@ -13,7 +15,7 @@ TribeCode is a free, open-source app for a few friends building one thing at the
 [![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)
 ![Desktop](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-6C7CFF.svg)
 
-**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect your AI](#connect-your-ai) · [Demo tribe](https://tribecode.org/app/demo.html)
+**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Company mode](docs/COMPANY.md) · [Connect your AI](#connect-your-ai) · [Demo tribe](https://tribecode.org/app/demo.html)
 
 </div>
 
@@ -165,6 +167,20 @@ A library of skills, recipes, templates, assets and scripts, shared across the t
 **Your agents** gathers everything that works with you: Claude Code, Claude Desktop (through a stdio bridge), other MCP agents and local models. The **Secretary** runs in the background on a local model: it keeps a journal, writes a "what matters now" digest, files research, and turns realizations into tasks or votes. See [docs/SOLO.md](docs/SOLO.md).
 
 <p align="center"><img src="docs/screenshots/readme-secretary.png" alt="The Secretary digest" width="100%"></p>
+
+### Company mode (new in v0.27)
+
+Turn a project into a small business, alone or with friends:
+
+- **Company**: an org chart of **seats** (CEO, Build, Grow, Run, plus Design, Sales, Support, Money, Legal or your own). Each goes to a person, an AI helper, or both, with a short charter: this month's goal, what it may do alone, what needs a person's OK, a weekly AI budget. Seven templates (SaaS, agency, creator, game studio, local business, nonprofit, club). A daily standup, a weekly review and a monthly board update arrive by themselves; goals and a decision log keep everyone pointed the same way.
+- **Money**: revenue, costs, net, runway and users, every number with its source (typed in, a Stripe/Plausible/PostHog CSV, or Stripe sync with your own key). CSV export for your accountant, AI spend per seat.
+- **Seat autopilot**: an AI-held seat works its charter on a schedule; anything outward or costly becomes an approval, with pause-all and an audit trail.
+- **Work**: work profiles, gigs and hiring straight into a seat, a time bank both sides confirm, compute sharing on your own terms, and an opt-in public gig board.
+- **Academy**: 62 plain-language lessons across ten tracks (founder basics and every seat). **Legal**: ten plain-English starting templates (NDA, contractor, co-founder, privacy, terms…), always marked *not legal advice*. **Offload**: send simple jobs to free models elsewhere and bring the result back.
+- **Marketplace**: 515 checked widgets, skills, libraries, connectors, studios, playbooks and templates, sorted Hot · Rising · New · Top by what your tribe uses.
+- **Recommended next** on the Dashboard senses what the project is and suggests what to do next; **experience modes** (Beginner, Intermediate, Advanced) stack these features as you grow, and any one can be turned on early.
+
+Anything outward or costly (money, publishing, customer emails, contracts, production deploys) waits for a person's approval. Guides: [Company](docs/guide/10-company-mode.md) · [Money and autopilot](docs/guide/11-money-and-autopilot.md) · [Work](docs/guide/12-work-and-hiring.md) · [Academy, Legal, Offload](docs/guide/13-academy-legal-offload.md) · [Marketplace](docs/guide/14-marketplace.md) · [Modes](docs/guide/15-modes-and-recommendations.md) · [docs/COMPANY.md](docs/COMPANY.md).
 
 ### Try it offline
 

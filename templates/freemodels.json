@@ -1,0 +1,284 @@
+{
+  "version": 1,
+  "checked": "2026-11-09",
+  "note": "Free options verified on the date shown from each provider's own pages. Free tiers change often: check the source link before relying on a limit.",
+  "safety": [
+    "Never paste passwords, API keys, tokens, .env files or private keys into any AI tool.",
+    "Free cloud tiers may use what you send to improve or train their models. Keep customer and personal data out unless you use a local model.",
+    "Check facts, links and numbers before you rely on them: AI tools can sound confident and still be wrong.",
+    "Check the terms before using AI output commercially, especially images."
+  ],
+  "providers": [
+    {
+      "id": "gemini",
+      "name": "Gemini app",
+      "by": "Google",
+      "url": "https://gemini.google.com/",
+      "kind": "chat",
+      "where": "cloud",
+      "free": "Free plan ($0 with a Google Account): the Flash-Lite model, image creation and editing, Deep Research and Canvas.",
+      "privacy": "A cloud chat app: what you type is sent to Google. Check the app's activity and privacy settings before sharing anything sensitive.",
+      "source": "https://gemini.google/subscriptions/",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "aistudio",
+      "name": "Google AI Studio",
+      "by": "Google",
+      "url": "https://aistudio.google.com/",
+      "kind": "api",
+      "where": "cloud",
+      "free": "Gemini API free tier: free input and output tokens for models such as Gemini 3.5 Flash, Gemini 3.1 Flash-Lite, Gemini 2.5 Pro and Gemma 4, with rate limits. Long documents fit well.",
+      "privacy": "Google's pricing page says free-tier content is used to improve its products. Use the paid tier or a local model for anything private.",
+      "source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT Free",
+      "by": "OpenAI",
+      "url": "https://chatgpt.com/",
+      "kind": "chat",
+      "where": "cloud",
+      "free": "Free plan: everyday chats, with limits on uploads, image creation, voice and deep research.",
+      "privacy": "OpenAI's pricing page says Free plan content is used to train its models, with an opt-out available in settings.",
+      "source": "https://chatgpt.com/pricing",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral Vibe (was Le Chat)",
+      "by": "Mistral AI",
+      "url": "https://chat.mistral.ai/",
+      "kind": "chat",
+      "where": "cloud",
+      "free": "Free plan: limited messages and web searches, basic image generation and editing. Le Chat became Vibe in May 2026.",
+      "privacy": "Mistral's pricing page lists a training opt-out for paid plans but doesn't say how the Free plan is handled. Assume it may be used and keep secrets out.",
+      "source": "https://mistral.ai/pricing",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "ollama",
+      "name": "Ollama (on your computer)",
+      "by": "Ollama",
+      "url": "https://ollama.com/",
+      "kind": "local",
+      "where": "local",
+      "free": "Running open models on your own computer is free and unlimited: Qwen, Llama, Gemma, Mistral, DeepSeek and many more. TribeCode's local brain can use it too.",
+      "privacy": "Local models run on your machine, so prompts stay with you. Ollama's optional cloud models are paid and run on its servers.",
+      "source": "https://ollama.com/pricing",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "lmstudio",
+      "name": "LM Studio (on your computer)",
+      "by": "LM Studio",
+      "url": "https://lmstudio.ai/",
+      "kind": "local",
+      "where": "local",
+      "free": "Free plan ($0): download and run local models with llama.cpp and MLX in a desktop app. For work use, check LM Studio's terms.",
+      "privacy": "Runs on your own computer, so prompts stay local.",
+      "source": "https://lmstudio.ai/pricing",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter free models",
+      "by": "OpenRouter",
+      "url": "https://openrouter.ai/models?max_price=0",
+      "kind": "api",
+      "where": "cloud",
+      "free": "Models marked \":free\": 20 requests a minute and 50 a day (1,000 a day once you have bought at least 10 credits). The free list changes often.",
+      "privacy": "Free models are served by different providers with different data policies, and some may log prompts. Check the model's page first.",
+      "source": "https://openrouter.ai/docs/api-reference/limits",
+      "checked": "2026-11-09"
+    },
+    {
+      "id": "groq",
+      "name": "GroqCloud",
+      "by": "Groq",
+      "url": "https://console.groq.com/",
+      "kind": "api",
+      "where": "cloud",
+      "free": "Groq's rate-limit docs list free-plan limits, for example 30 requests a minute and 1,000 a day for gpt-oss-120b. Your console shows your exact limits.",
+      "privacy": "A cloud API: prompts are sent to Groq. Read its data policy before sending anything private.",
+      "source": "https://console.groq.com/docs/rate-limits",
+      "checked": "2026-11-09"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "research",
+      "title": "Research",
+      "emoji": "🔎",
+      "blurb": "Compare competitors, find communities, learn a market.",
+      "options": [
+        {
+          "provider": "gemini",
+          "why": "Deep Research is in the free plan."
+        },
+        {
+          "provider": "chatgpt",
+          "why": "Good for quick overviews; deep research is limited."
+        },
+        {
+          "provider": "mistral",
+          "why": "Web search on the free plan, with limits."
+        }
+      ],
+      "prompt": "I'm working on {{project}}. {{gist}}\n\nResearch this for me: {{input}}\n\nGive me: a short summary, a table of the main options or competitors (name, what they do, price if public, link), what people complain about, and 3 opportunities for us. Mark anything you are unsure of, and include links to your sources so I can check them.",
+      "bring": "files",
+      "bringHint": "Paste the answer below. It becomes a doc in Files so the tribe and agents can use it. Check the links before you rely on them."
+    },
+    {
+      "id": "copy",
+      "title": "Drafting copy",
+      "emoji": "✍️",
+      "blurb": "Landing page text, posts, emails, button and error messages.",
+      "options": [
+        {
+          "provider": "chatgpt",
+          "why": "Strong at tone and variations."
+        },
+        {
+          "provider": "gemini",
+          "why": "Good drafts, free."
+        },
+        {
+          "provider": "mistral",
+          "why": "A different voice for a second opinion."
+        },
+        {
+          "provider": "ollama",
+          "why": "Private: nothing leaves your computer."
+        }
+      ],
+      "prompt": "I'm writing for {{project}}. {{gist}}\n\nWrite: {{input}}\n\nKeep it plain, friendly and short. Give me 3 versions with different tones (calm, playful, direct), each under 80 words, and a one-line headline for each. Don't invent facts, numbers or testimonials.",
+      "bring": "files",
+      "bringHint": "Paste your favourite drafts. They land in Files; edit them in your own voice before publishing."
+    },
+    {
+      "id": "summarize",
+      "title": "Summarizing long docs",
+      "emoji": "📚",
+      "blurb": "Long reports, contracts to understand, meeting transcripts.",
+      "options": [
+        {
+          "provider": "aistudio",
+          "why": "Handles very long documents on the free tier."
+        },
+        {
+          "provider": "gemini",
+          "why": "Upload a file in the app."
+        },
+        {
+          "provider": "ollama",
+          "why": "Private documents stay on your computer."
+        }
+      ],
+      "prompt": "Summarize the document below for my team working on {{project}}. {{gist}}\n\nGive: a 5-line summary, the key points as bullets, any decisions or deadlines, open questions, and anything that affects us. Quote exact lines for anything important.\n\nDocument:\n{{input}}",
+      "bring": "captures",
+      "bringHint": "Paste the summary. It becomes a Capture with key points and action items the tribe can turn into tasks."
+    },
+    {
+      "id": "translate",
+      "title": "Translating",
+      "emoji": "🌍",
+      "blurb": "Website pages, help articles, messages to customers.",
+      "options": [
+        {
+          "provider": "gemini",
+          "why": "Many languages, free."
+        },
+        {
+          "provider": "chatgpt",
+          "why": "Natural phrasing."
+        },
+        {
+          "provider": "mistral",
+          "why": "Strong in European languages."
+        },
+        {
+          "provider": "ollama",
+          "why": "Private, if a model for your language is available."
+        }
+      ],
+      "prompt": "Translate the text below for {{project}}. {{gist}}\n\nTarget language: [write the language]. Keep the meaning, tone and formatting (Markdown, links, placeholders like {name}). Use natural, everyday wording for the target audience. After the translation, list any phrases that were hard to translate and your choice.\n\nText:\n{{input}}",
+      "bring": "files",
+      "bringHint": "Paste the translation. Ask a native speaker to check anything customers will read."
+    },
+    {
+      "id": "image",
+      "title": "Image ideas",
+      "emoji": "🖼️",
+      "blurb": "Mood pictures, logo ideas, illustrations to explore a look.",
+      "options": [
+        {
+          "provider": "gemini",
+          "why": "Image creation and editing on the free plan."
+        },
+        {
+          "provider": "chatgpt",
+          "why": "Limited image creation on the free plan."
+        },
+        {
+          "provider": "mistral",
+          "why": "Basic image generation on the free plan."
+        }
+      ],
+      "prompt": "Create image ideas for {{project}}. {{gist}}\n\nWhat I need: {{input}}\n\nStyle: flat, simple shapes, a limited palette. Give me 4 different directions. No real people, no existing logos or characters, no text in the image unless I ask.",
+      "bring": "inspo",
+      "bringHint": "Save the pictures you like and drop them on the inspiration board on the dashboard: it reads their colors. Paste any notes below to keep them in Files. Check the service's terms before using generated images commercially."
+    },
+    {
+      "id": "codereview",
+      "title": "Code review",
+      "emoji": "🧪",
+      "blurb": "A second pair of eyes on a function or a change.",
+      "options": [
+        {
+          "provider": "ollama",
+          "why": "Best for code: it stays on your computer."
+        },
+        {
+          "provider": "lmstudio",
+          "why": "Local too, with a desktop app."
+        },
+        {
+          "provider": "aistudio",
+          "why": "Only for code you would happily make public."
+        },
+        {
+          "provider": "openrouter",
+          "why": "Free coding models; check each provider's data policy."
+        }
+      ],
+      "prompt": "Review this code from {{project}}. {{gist}}\n\nLook for: bugs, security problems (check against the OWASP Top 10), unclear names, missing tests and simpler ways to do the same thing. Rank findings by importance and show the fix for each.\n\nCode:\n{{input}}",
+      "bring": "files",
+      "bringHint": "Paste the review. It becomes a doc your build seat or agents can turn into tasks. Never paste keys, passwords or .env files into any tool."
+    },
+    {
+      "id": "data",
+      "title": "Data cleanup",
+      "emoji": "🧹",
+      "blurb": "Tidy a messy list, fix formats, dedupe, turn notes into a table.",
+      "options": [
+        {
+          "provider": "ollama",
+          "why": "Lists often hold personal data: keep them local."
+        },
+        {
+          "provider": "lmstudio",
+          "why": "Local desktop app."
+        },
+        {
+          "provider": "gemini",
+          "why": "Only for data with no personal or customer details."
+        }
+      ],
+      "prompt": "Clean up this data for {{project}}. {{gist}}\n\nTask: {{input}}\n\nReturn a Markdown table with consistent formats (dates as YYYY-MM-DD, trimmed text, one row per item), remove exact duplicates, and list every change you made below the table. Don't guess missing values; leave them empty.\n\nData:\n[paste the data here, without personal or customer details unless you are using a local model]",
+      "bring": "files",
+      "bringHint": "Paste the cleaned table. It lands in Files as a doc (you can turn it into a sheet)."
+    }
+  ]
+}

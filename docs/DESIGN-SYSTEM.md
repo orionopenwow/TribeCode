@@ -93,3 +93,17 @@ Tokens live in [`app/ui/tokens.css`](../app/ui/tokens.css) (app) and at the top 
 - **The right panel is contextual.** "In the room" lists people, agents and helpers (Secretary, local model, repo autopilot) and the private scratchpad; clicking an agent opens its detail there (task, hand-offs, conflicts, reviews, recent timeline). It hides with the X in its own corner and comes back from a slim tab on the main column's right edge.
 - **The Guide is tucked away** (`app/ui/guide.js`, pages in `docs/guide/`): no row, no floating button. It opens from the profile menu (phones: the profile sheet), Ctrl K and the "? Guide" link at the bottom of Settings, as a reading layer like the Workshop.
 - **Top right:** the update icon (only when an update is ready) · bell · profile (rightmost) · window lights.
+
+## 9. Illustration and motion standard
+
+Every explainer, infographic or illustration on the site or in the app is built to the fidelity of the hero widget (the animated app mock at the top of the website). The reference examples are the hero (`site/index.html` `.stage` + `site/main.js`) and the "How vibecoding works" scene (`#vf-scene` + `site/vibe-anim.js`).
+
+- **Real UI, real text.** Show the actual interface: readable labels, chat lines, tool rows ("Edited index.html +27 −3"), buttons with their real names. No grey placeholder bars standing in for content.
+- **Real steps, believable data.** Tell one concrete story with named people (Maya, Jay, Orion), a real-sounding project (a bake sale page, Pixel Quest) and plausible numbers. Never show prices or invented metrics as if they were TribeCode's own.
+- **Readable beats.** Animate in steps a person can follow: someone asks, the AI thinks, a tool row appears, the result shows up. Hold the finished state for a few seconds before looping. Nothing moves so fast it can't be read.
+- **The markup is the final frame.** Write the finished state in HTML so it reads with no JavaScript and holds still for `prefers-reduced-motion`. The script only hides steps and plays them in.
+- **Reserve the space.** Hide steps with `visibility`, not `display`, so the layout never jumps while it plays.
+- **Phone layout.** Design the 390 px version on purpose (stack the parts, shorten labels), with no horizontal scroll.
+- **Words for everyone.** Mark the visuals `aria-hidden` and describe the whole story in a figcaption or `aria-label`.
+- **Flat matte rules apply.** 1px borders, depth from luminance steps, palette colors only. Pixel art uses `shape-rendering: crispEdges` and shades with darker steps of the same color, never glows, blur or gradients.
+- **Lightweight.** No libraries. DOM and inline SVG, a little CSS, one small script. Animate only while the scene is on screen (IntersectionObserver), and stop timers when it leaves.

@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TribeCode · type ad</title>
+<meta name="robots" content="noindex">
+<!-- A 41-second kinetic-type ad (v0.27), after a classic motion-graphics pattern: a short headline types in word by word,
+     a cut to the brand color with the logo, a line whose last word swaps in place, then one feature at a time as a large,
+     detailed exhibit of the real app with the feature line as its caption. Self-contained (no libraries). Everything is drawn from the time t, so any frame renders exactly:
+     ad-type.html?t=9.5, or window.adSeek(9.5). Landscape 16:9 and vertical 9:16 (text kept out of the bottom 20% and the
+     right-hand UI strip) switch on the window's shape. Music: scripts/dev/ad-type-sound.py, 120 BPM, synced to the beats here. -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("../site/assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("../site/assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("../site/assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  :root { --canvas: #12151A; --surface: #1B2028; --raised: #232A34; --border: #2A313C; --ember: #F26B1D; --ember-d: #C9530F; --teal: #38C6B1; --indigo: #6C7CFF; --white: #F8FAFC; --muted: #94A3B8; --green: #3BD16F; --yellow: #FABD2F; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  .ad { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--canvas); overflow: hidden; color: var(--white); font-family: Inter, system-ui, sans-serif; }
+  .ad.v { width: 1080px; height: 1920px; }
+  .layer { position: absolute; inset: 0; }
+  .panel { position: absolute; left: 0; right: 0; bottom: 0; height: 0; }
+  .center { position: absolute; left: 0; right: 0; display: flex; justify-content: center; align-items: center; }
+  .h { font: 800 112px/1.12 InterDisplay, Inter, sans-serif; letter-spacing: -.025em; white-space: nowrap; }
+  .v .h { font-size: 104px; }
+  .w { display: inline-block; will-change: transform, opacity; }
+  /* intro headline: wraps on the vertical layout */
+  #intro { top: 0; bottom: 0; }
+  #intro .h { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .26em; max-width: 1500px; text-align: center; }
+  .v #intro .h { max-width: 860px; }
+  /* a line with one slot whose word swaps in place */
+  .sw { display: inline-flex; align-items: flex-start; line-height: 1.12; }
+  .sw .w { height: 1.12em; }
+  .v .sw { flex-direction: column; align-items: center; } .v .sw .sp { display: none; }
+  .v #buildLine .h { font-size: 128px; }
+  .slot { position: relative; display: inline-block; height: 1.12em; overflow: hidden; vertical-align: bottom; }
+  .slot b { position: absolute; left: 0; top: 0; font: inherit; line-height: 1.12; white-space: nowrap; }
+  .sp { display: inline-block; width: .26em; }
+  /* logo */
+  .logo { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; transform-origin: 0 0; }
+  .logo .mark { width: 168px; height: 168px; display: block; image-rendering: pixelated; flex: none; }
+  .logo .wm-clip { overflow: hidden; height: 140px; display: flex; align-items: center; }
+  .logo .wm { height: 118px; width: auto; display: block; margin-left: 34px; }
+  .logo.dark .wm { filter: none; }
+  .url { font: 600 46px/1 Inter, sans-serif; letter-spacing: .01em; color: var(--white); }
+  .url b { font-weight: 600; color: var(--canvas); background: var(--white); padding: 14px 26px; border-radius: 999px; }
+  /* feature icon area */
+  .card { position: absolute; background: var(--surface); border: 3px solid var(--border); border-radius: 22px; }
+  .chip { position: absolute; display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-radius: 18px; background: var(--surface); border: 3px solid var(--border); font: 600 30px Inter, sans-serif; white-space: nowrap; }
+  .av { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font: 700 26px Inter, sans-serif; color: #fff; flex: none; }
+  .av.ai { border-radius: 50%; background: var(--canvas); border: 3px solid var(--teal); color: var(--teal); }
+  /* ---------- exhibits (one per feature): a large flat micro-UI that fills ~65-75% of the frame ---------- */
+  .ex { position: absolute; left: 230px; top: 108px; width: 1460px; height: 650px; transform-origin: 50% 50%; font: 500 24px/1.45 Inter, sans-serif; color: #CBD5E1; }
+  .v .ex { left: 60px; top: 205px; width: 960px; height: 1110px; font-size: 25px; }
+  .exbg { position: absolute; border-radius: 90px; }
+  .ex b { color: var(--white); font-weight: 600; }
+  .ex-win { position: relative; background: var(--surface); border: 3px solid var(--border); border-radius: 24px; overflow: hidden; }
+  .ex-pad { padding: 26px 30px; }
+  .ex-eb { font: 600 17px/1.4 ui-monospace, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--ember); margin-bottom: 10px; }
+  .ex-h { font: 700 34px/1.2 Inter, sans-serif; color: var(--white); margin-bottom: 18px; }
+  .ex-small { font-size: 21px; color: var(--muted); margin: 12px 0 8px; }
+  .ex-av { flex: none; width: 54px; height: 54px; border-radius: 15px; display: grid; place-items: center; font: 700 24px Inter, sans-serif; color: #fff; }
+  .ex-av.ai { border-radius: 50%; background: var(--canvas); border: 4px solid var(--teal); }
+  .ex-av.sm { width: 36px; height: 36px; font-size: 17px; border-width: 3px; }
+  .ex-lt { display: inline-flex; gap: 9px; } .ex-lt i { width: 14px; height: 14px; border-radius: 50%; background: #FF6F8E; } .ex-lt i:nth-child(2) { background: var(--yellow); } .ex-lt i:nth-child(3) { background: var(--green); }
+  .ex-bar { height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 22px; border-bottom: 3px solid var(--border); background: var(--raised); }
+  .ex-bar.sm { height: 50px; }
+  .ex-url { font: 500 20px ui-monospace, Menlo, monospace; color: var(--muted); padding: 6px 16px; border-radius: 10px; background: var(--canvas); }
+  .ex-head { height: 72px; display: flex; align-items: center; gap: 18px; padding: 0 28px; border-bottom: 3px solid var(--border); }
+  .ex-head.sm { height: 62px; padding: 0 22px; } .ex-head b { font-size: 26px; } .ex-head span { font-size: 20px; color: var(--muted); }
+  .ex-caret { display: inline-block; width: 3px; height: 1.1em; background: var(--ember); vertical-align: -.2em; margin-left: 2px; }
+  /* chat */
+  .ex-chat { height: 100%; display: flex; }
+  .ex-side { width: 300px; flex: none; padding: 26px 20px; background: #171B21; border-right: 3px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+  .ex-side span { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; font-size: 21px; color: #AEB7C4; } .ex-side span.on { background: var(--raised); color: var(--white); }
+  .ex-side .dot { width: 14px; height: 14px; border-radius: 50%; } .ex-side .dot.ring { border: 3px solid; background: none; }
+  .ex-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .ex-msgs { flex: 1; padding: 26px 30px; display: flex; flex-direction: column; gap: 26px; }
+  .ex-msg { display: flex; gap: 18px; } .ex-msg p { margin: 0; }
+  .ex-who { font-weight: 600; color: var(--white); display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px !important; }
+  .ex-who em { font: 600 15px ui-monospace, Menlo, monospace; font-style: normal; color: var(--teal); border: 2px solid var(--teal); border-radius: 999px; padding: 1px 10px; }
+  .ex-who time { font-size: 17px; color: #64748B; font-weight: 500; }
+  .ex-think { font: 500 21px ui-monospace, Menlo, monospace; color: var(--teal); }
+  .ex-tools { display: flex; flex-direction: column; gap: 9px; margin-top: 12px; max-width: 640px; }
+  .ex-tool { display: flex; align-items: center; gap: 16px; padding: 9px 16px; border: 3px solid var(--border); border-radius: 12px; background: var(--canvas); font: 500 20px ui-monospace, Menlo, monospace; }
+  .ex-tool .k { color: var(--teal); min-width: 84px; } .ex-tool .r { margin-left: auto; } .ex-tool ins { color: var(--green); text-decoration: none; } .ex-tool del { color: #FF6F8E; text-decoration: none; } .ex-tool .ok { color: var(--green); }
+  .ex-react { display: inline-block; margin-top: 8px; padding: 3px 14px; border: 2px solid var(--border); border-radius: 999px; background: var(--raised); font-size: 19px; }
+  .ex-comp { margin: 0 26px 24px; height: 62px; border: 3px solid var(--border); border-radius: 16px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 22px; color: #64748B; font-size: 21px; }
+  .ex-comp b { width: 40px; height: 40px; border-radius: 50%; background: var(--ember); display: grid; place-items: center; color: #fff; }
+  /* two-column layouts */
+  .ex-grid2 { height: 100%; display: grid; grid-template-columns: 1.35fr 1fr; gap: 26px; }
+  .ex-grid2.co { grid-template-columns: 1.15fr 1fr; } .ex-grid2.os { grid-template-columns: 1fr 1fr; }
+  .v .ex-grid2 { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .ex-col2 { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+  /* connect your AI */
+  .ex-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .ex-tile { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 3px solid var(--border); border-radius: 14px; background: #171B21; color: var(--white); font-weight: 600; font-size: 21px; white-space: nowrap; }
+  .ex-tile span { font-size: 26px; } .ex-tile.on { border-color: var(--ember); background: #2A2018; }
+  .ex-pills { display: flex; gap: 10px; margin-top: 18px; } .ex-pills span { padding: 7px 18px; border-radius: 999px; border: 3px solid var(--border); font-size: 19px; } .ex-pills .on { border-color: var(--teal); color: var(--white); }
+  .ex-cmd { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; border: 3px solid var(--border); border-radius: 14px; background: var(--canvas); min-height: 118px; }
+  .ex-cmd code { flex: 1; font: 500 20px/1.5 ui-monospace, Menlo, monospace; color: #E2E8F0; word-break: break-all; }
+  .ex-copy { flex: none; padding: 6px 16px; border-radius: 10px; border: 3px solid var(--border); font: 600 18px Inter, sans-serif; color: var(--white); } .ex-copy.ok { border-color: var(--green); color: var(--green); }
+  .ex-can { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-top: 20px; font-size: 21px; color: var(--teal); font-weight: 600; }
+  .ex-room { display: flex; flex-direction: column; gap: 14px; }
+  .v .ex-room { display: grid; grid-template-columns: 1fr 1fr; }
+  .ex-person { display: grid; grid-template-columns: 54px 1fr; column-gap: 16px; align-items: center; }
+  .ex-person b { font-size: 23px; } .ex-person small { grid-column: 2; font-size: 18px; color: var(--muted); }
+  .ex-person .ex-av { grid-row: span 2; } .ex-agent small { color: var(--teal); }
+  /* preview: the kombucha app */
+  .ex-browser { height: 100%; }
+  .ex-build { margin-left: auto; font: 600 19px Inter; color: var(--muted); }
+  .ex-live { margin-left: auto; padding: 6px 16px; border-radius: 999px; border: 3px solid var(--teal); color: var(--teal); font: 700 19px ui-monospace, Menlo, monospace; }
+  .ex-app { padding: 22px 26px; background: #F6F4EF; height: calc(100% - 60px); color: #1F2937; }
+  .ka-nav { display: flex; align-items: center; gap: 24px; padding-bottom: 14px; border-bottom: 2px solid #E5E1D8; font-size: 20px; color: #6B7280; }
+  .ka-nav b { color: #111827; font-size: 24px; margin-right: auto; } .ka-nav .on { color: #C2410C; font-weight: 600; }
+  .ka-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+  .v .ka-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ka-tile { background: #fff; border: 2px solid #E5E1D8; border-radius: 14px; padding: 12px 16px; }
+  .ka-tile small { display: block; font-size: 16px; color: #6B7280; } .ka-tile b { display: block; color: #111827; font: 700 38px/1.2 Inter; } .ka-tile em { font-style: normal; font-size: 15px; color: #16A34A; }
+  .ka-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .v .ka-cols { grid-template-columns: minmax(0, 1fr); }
+  .ka-card { background: #fff; border: 2px solid #E5E1D8; border-radius: 14px; padding: 12px 16px; }
+  .ka-h { display: flex; align-items: center; justify-content: space-between; font: 700 20px Inter; color: #111827; margin-bottom: 6px; }
+  .ka-btn { font: 600 15px Inter; color: #fff; background: #15803D; padding: 4px 12px; border-radius: 999px; }
+  .ka-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 1px solid #F0EDE6; }
+  .ka-sw { width: 16px; height: 22px; border-radius: 5px; flex: none; }
+  .ka-t { flex: 1; min-width: 0; } .ka-t b { display: block; color: #111827; font-size: 18px; } .ka-t small { font-size: 14px; color: #6B7280; }
+  .ka-bar { width: 140px; height: 10px; border-radius: 5px; background: #EEE9DF; overflow: hidden; } .ka-bar i { display: block; height: 100%; }
+  .ka-st { width: 110px; text-align: right; font: 600 15px Inter; }
+  .ka-dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #6C7CFF; color: #fff; font: 700 15px Inter; flex: none; }
+  .ex-toast { position: absolute; right: 26px; bottom: 24px; display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 14px; background: var(--canvas); border: 3px solid var(--indigo); color: var(--white); font-size: 20px; font-weight: 600; }
+  /* docs, board, whiteboard */
+  .ex-grid3 { height: 100%; display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr 1fr; gap: 24px; }
+  .ex-grid3 .ex-doc { grid-row: span 2; }
+  .v .ex-grid3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1.25fr 1fr; } .v .ex-grid3 .ex-doc { grid-row: auto; grid-column: span 2; }
+  .ex-who-row { margin-left: auto; display: flex; } .ex-who-row i { width: 34px; height: 34px; border-radius: 50%; margin-left: -8px; border: 3px solid var(--surface); display: grid; place-items: center; font: 700 15px Inter; font-style: normal; color: #fff; } .ex-who-row i.ring { background: var(--canvas); border: 3px solid; }
+  .ex-doc-body { padding: 22px 30px; } .ex-doc-body h4 { font: 700 34px Inter; color: var(--white); margin-bottom: 10px; } .ex-doc-body p { margin-bottom: 12px; }
+  .ex-todo { display: flex; align-items: center; gap: 12px; margin: 6px 0; color: #E2E8F0; } .ex-todo em { font-style: normal; color: var(--teal); font-size: 20px; }
+  .ck { width: 22px; height: 22px; border-radius: 6px; border: 3px solid #4A5462; flex: none; } .ck.on { background: var(--green); border-color: var(--green); }
+  .ex-slash { width: 300px; margin-top: 12px; padding: 8px; border: 3px solid var(--border); border-radius: 14px; background: #171B21; display: flex; flex-direction: column; gap: 2px; }
+  .ex-slash .q { padding: 2px 10px 6px; font: 500 20px ui-monospace, Menlo, monospace; color: #7C8796; } .ex-slash b { padding: 6px 10px; border-radius: 8px; font-weight: 500; font-size: 20px; color: #CBD5E1; } .ex-slash b.on { background: var(--raised); color: #fff; }
+  .ex-cmt { margin-top: 18px; padding: 12px 16px; border: 3px solid var(--border); border-left: 6px solid var(--indigo); border-radius: 12px; background: #171B21; font-size: 20px; } .ex-cmt b { margin-right: 8px; } .ex-cmt span { float: right; color: #7C8796; }
+  .ex-tbl { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 20px; } .ex-tbl th, .ex-tbl td { border: 2px solid var(--border); padding: 8px 12px; text-align: left; } .ex-tbl th { color: var(--muted); font-weight: 500; background: #171B21; }
+  .st { padding: 2px 10px; border-radius: 999px; background: #3A3320; color: var(--yellow); font-size: 16px; } .st.g { background: #1F3A2A; color: var(--green); }
+  .ex-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; }
+  .ex-col p { font: 600 17px Inter; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .ex-n { display: inline-block; margin-left: 6px; padding: 0 9px; border-radius: 999px; background: var(--raised); color: var(--white); }
+  .ex-task { position: relative; padding: 12px 14px; margin-bottom: 10px; border: 3px solid var(--border); border-radius: 12px; background: #171B21; color: var(--white); font-weight: 600; font-size: 20px; }
+  .ex-task small { display: block; font-weight: 500; font-size: 16px; color: var(--muted); } .ex-task.drag { z-index: 2; } .ex-task.dim { opacity: .6; } .ex-task.ok { border-color: var(--green); }
+  .ex-wb-body { position: relative; height: calc(100% - 62px); background: #171B21; }
+  .ex-wb-body svg { position: absolute; inset: 10px; width: calc(100% - 20px); height: calc(100% - 20px); }
+  .ex-sticky { position: absolute; right: 22px; bottom: 22px; width: 200px; padding: 14px 16px; background: var(--yellow); color: #3A2A08; border-radius: 8px; font: 700 20px/1.3 Inter; transform-origin: 50% 0; }
+  /* company */
+  .ex-org { display: flex; flex-direction: column; align-items: center; }
+  .ex-org-top { width: 46%; } .ex-org-line { width: 3px; height: 26px; background: var(--border); }
+  .ex-org-row { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding-top: 22px; border-top: 3px solid var(--border); }
+  .ex-seat { position: relative; padding: 14px 16px 16px 20px; border: 3px solid var(--border); border-radius: 16px; background: #171B21; min-height: 130px; }
+  .ex-seat::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 5px; border-radius: 0 4px 4px 0; background: var(--c); }
+  .ex-seat.on { border-color: var(--c); } .ex-seat p { font: 700 16px ui-monospace, Menlo, monospace; letter-spacing: .08em; color: var(--c); margin-bottom: 10px; }
+  .ex-sh { display: flex; align-items: center; gap: 12px; } .ex-sh b { display: block; font-size: 20px; line-height: 1.2; } .ex-sh small { font-size: 15px; color: var(--muted); }
+  .ex-sh .ex-av { width: 46px; height: 46px; font-size: 20px; }
+  .ex-empty { height: 50px; border: 3px dashed #3A4350; border-radius: 12px; display: grid; place-items: center; font-size: 17px; color: #64748B; }
+  .ex-su { padding: 12px 0; border-top: 2px solid var(--border); font-size: 22px; } .ex-su b { margin-right: 10px; }
+  .ex-appr { flex: none; }
+  .ex-goal { margin-top: 26px; padding-top: 20px; border-top: 3px solid var(--border); } .ex-goal b { font-size: 26px; } .ex-goal small { display: block; margin-top: 8px; font-size: 19px; color: var(--muted); }
+  .ex-gbar { display: block; height: 14px; margin-top: 12px; border-radius: 7px; background: var(--raised); overflow: hidden; } .ex-gbar i { display: block; height: 100%; background: var(--teal); }
+  .ex-inbox { display: flex; align-items: center; gap: 16px; } .ex-inbox > span { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: var(--raised); font-size: 26px; flex: none; } .ex-inbox small { display: block; font-size: 18px; color: var(--muted); } .ex-appr.ok { border-color: var(--green); }
+  .ex-ap { font: 600 26px/1.35 Inter; color: var(--white); margin-bottom: 18px; } .ex-ap small { display: block; font: 500 19px Inter; color: var(--muted); margin-top: 6px; }
+  .ex-btns { display: flex; gap: 14px; } .ex-btn { padding: 12px 30px; border-radius: 999px; border: 3px solid var(--border); font: 700 21px Inter; color: #CBD5E1; } .ex-btn.ok { background: var(--green); border-color: var(--green); color: #0B1A10; }
+  .ex-done { font: 700 24px Inter; color: var(--green); }
+  .ex-cur { position: absolute; width: 34px; height: 44px; }
+  /* open source */
+  .ex-repo-t { font-size: 26px; color: var(--muted); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .ex-repo-t b { font-size: 26px; } .ex-repo-t .gh { color: var(--white); }
+  .ex-tag { padding: 3px 12px; border: 2px solid var(--border); border-radius: 999px; font-size: 17px; color: var(--muted); }
+  .ex-repo-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .ex-gh { padding: 5px 16px; border: 3px solid var(--border); border-radius: 10px; background: var(--raised); font: 600 18px Inter; color: var(--white); } .ex-gh.on { border-color: var(--yellow); color: var(--yellow); }
+  .ex-term { flex: 1; background: #0D1014; } .ex-term pre { padding: 18px 22px; font: 500 20px/1.65 ui-monospace, Menlo, monospace; color: #E2E8F0; white-space: pre-wrap; word-break: break-all; } .ex-term .g { color: var(--green); }
+  .ex-mini { height: 100%; }
+  .ex-wait { height: calc(100% - 50px); min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; } .ex-wait b { font-size: 24px; } .ex-wait small { font-size: 18px; color: var(--muted); }
+  .ex-ring { width: 56px; height: 56px; border-radius: 50%; border: 6px solid var(--raised); border-top-color: var(--ember); } .v .ex-mini { height: auto; }
+  .ex-mini-b { display: flex; height: calc(100% - 50px); } .ex-mini-b aside { width: 70px; padding: 18px 13px; display: flex; flex-direction: column; gap: 12px; background: #171B21; border-right: 3px solid var(--border); }
+  .ex-mini-b aside i { width: 44px; height: 44px; border-radius: 50%; background: var(--raised); } .ex-mini-b aside i.on { border-radius: 14px; background: var(--ember); }
+  .ex-mini-b > div { flex: 1; padding: 22px 24px; }
+  .ex-mini-c { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; } .ex-mini-c div { padding: 14px 16px; border: 3px solid var(--border); border-radius: 14px; background: #171B21; }
+  .ex-mini-c small { display: block; font-size: 16px; color: var(--muted); } .ex-mini-c b { font-size: 21px; }
+  /* the caption under each exhibit */
+  #featLine .h { font-size: 88px; }
+  .v #featLine .h { font-size: 72px; white-space: normal; max-width: 960px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="ad" id="ad" role="img" aria-label="TribeCode type ad: Build apps with your friends. Build apps, games, websites and companies together. One chat for friends and their AI. Bring your own Claude, Codex or Gemini. A live preview while it's built. Docs, tasks and a whiteboard. Run it as a company. Free and open source. tribecode.org">
+  <div class="layer" id="bgEmber" style="background:var(--ember);opacity:0"></div>
+  <div class="panel" id="wipe1" style="background:var(--ember)"></div>
+  <div class="panel" id="wipe2" style="background:var(--canvas)"></div>
+  <div class="panel" id="wipe3" style="background:var(--ember)"></div>
+
+  <div class="exbg" id="exbg"></div>
+  <div class="center" id="intro"><p class="h" id="introH"></p></div>
+  <div class="center" id="buildLine"><p class="h"><span class="sw"><span class="w">Build</span><span class="sp"></span><span class="slot" id="slotB"></span><span class="sp"></span><span class="w">together.</span></span></p></div>
+  <div class="center" id="featLine"><p class="h" id="featH"></p></div>
+  <div class="ex" id="ex"></div>
+  <div class="logo" id="logo"><img class="mark" src="../site/assets/brand/icon.svg" alt=""><span class="wm-clip" id="wmClip"><img class="wm" id="wm" src="../site/assets/brand/wordmark.svg" alt="TribeCode"></span></div>
+  <div class="center" id="urlRow"><p class="url"><b>tribecode.org</b></p></div>
+  <div class="center" id="foss" style="font:600 30px Inter, sans-serif;color:var(--white)">Free and open source</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const D = 41, BEAT = .5, WMW = 562;                         // seconds; 120 BPM, matches the soundtrack
+  const $ = id => document.getElementById(id);
+  const ad = $('ad');
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const k = (t, a, d) => clamp((t - a) / d);
+  const outC = x => 1 - Math.pow(1 - x, 3);
+  const outQ = x => 1 - Math.pow(1 - x, 5);
+  const inC = x => x * x * x;
+  const back = x => { const c = 1.25; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const lerp = (a, b, x) => a + (b - a) * x;
+  let V = false, W = 1920, H = 1080;
+
+  // ---------- timeline (seconds) ----------
+  const INTRO = ['Build', 'apps', 'with', 'your', 'friends.'];
+  const INTRO_AT = [.35, .7, 1.05, 1.4, 1.75];      // words land on 8th notes
+  const T_TILT = 2.55, T_WIPE1 = 2.75, T_LOGO = 3.0, T_WM = 3.45, T_UP = 4.0;
+  const BUILD = ['apps', 'games', 'websites', 'companies'];
+  const BUILD_AT = [4.5, 5.25, 6.0, 6.75];          // swaps on the beat (1.5 beats apart)
+  const T_WIPE2 = 7.75;                             // to the dark canvas for the features
+  const FEATS = [                                  // five seconds each (10 beats): long enough to see what is happening
+    { at: 8.0, words: ['One chat for friends and their AI.'], ex: exChat, side: -1, tint: '#1D2138' },
+    { at: 13.0, pre: 'Bring your own', swap: ['Claude.', 'Codex.', 'Gemini.'], swapAt: [13.0, 16.5, 17.1], ex: exAgents, side: 1, tint: '#14292A' },
+    { at: 18.0, words: ['A live preview while it’s built.'], ex: exPreview, side: -1, tint: '#2E1D12' },
+    { at: 23.0, words: ['Docs, tasks and a whiteboard.'], ex: exDocs, side: 1, tint: '#2A2514' },
+    { at: 28.0, words: ['Run it as a company.'], ex: exCompany, side: -1, tint: '#14292A' },
+    { at: 33.0, words: ['Free and open source.'], ex: exOpen, side: 1, tint: '#1D2138' },
+  ];
+  const T_WIPE3 = 37.75, T_END = 38.0, T_COLLAPSE = 39.6;
+
+  // ---------- layout ----------
+  function fit() {
+    V = innerHeight > innerWidth; ad.classList.toggle('v', V);
+    W = V ? 1080 : 1920; H = V ? 1920 : 1080;
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    ad.style.transform = `translate(${(innerWidth - W * s) / 2}px, ${(innerHeight - H * s) / 2}px) scale(${s})`;
+    widths = {};
+  }
+  // the vertical cut keeps text in the safe middle: away from the bottom ~20% and the right-hand UI strip
+  const lineY = () => V ? 860 : 560;             // centre of the main line
+
+  // ---------- word widths (for slots that glide between words) ----------
+  let widths = {};
+  const meas = document.createElement('span'); meas.className = 'h'; meas.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden';
+  ad.appendChild(meas);
+  function wOf(word, el) { const fs = getComputedStyle(el).fontSize, key = fs + '|' + word; if (widths[key] == null) { meas.style.fontSize = fs; meas.textContent = word; widths[key] = meas.getBoundingClientRect().width / (ad.getBoundingClientRect().width / W); } return widths[key]; }
+
+  // A slot showing words[i] at times at[i]: the old word slides up and out, the new one rises in with a little overshoot,
+  // and the slot's width glides so the words around it move smoothly instead of jumping.
+  function slot(el, words, at, t) {
+    let i = -1; for (let j = 0; j < at.length; j++) if (t >= at[j]) i = j;
+    if (i < 0) { el.innerHTML = ''; el.style.width = '0px'; return; }
+    const p = k(t, at[i], .32), prev = i > 0 ? words[i - 1] : null;
+    const wNew = wOf(words[i], el), wOld = prev ? wOf(prev, el) : wNew;
+    el.style.width = lerp(wOld, wNew, outQ(k(t, at[i], .38))).toFixed(1) + 'px';
+    const yIn = (1 - back(p)) * 100, yOut = -outC(p) * 100;
+    el.innerHTML = (prev && p < 1 ? `<b style="transform:translateY(${yOut.toFixed(2)}%);opacity:${(1 - outC(p)).toFixed(3)}">${prev}</b>` : '') +
+      `<b style="transform:translateY(${yIn.toFixed(2)}%);opacity:${outC(k(t, at[i], .2)).toFixed(3)}">${words[i]}</b>`;
+  }
+  const pop = (t, a) => { const p = k(t, a, .34); return `transform:translateY(${((1 - back(p)) * 60).toFixed(1)}px);opacity:${outC(k(t, a, .2)).toFixed(3)}`; };
+
+  // ---------- exhibits: one screen-filling, detailed micro-UI per feature, drawn from local time lt (0..5 s) ----------
+  // Each runs in 2-3 readable beats; the caption under it stays on screen the whole time.
+  const typed = (s, lt, a, cps) => s.slice(0, Math.max(0, Math.min(s.length, Math.floor((lt - a) * cps))));
+  const ap = (lt, a, d = .35) => { const p = k(lt, a, d); return `opacity:${outC(p).toFixed(3)};transform:translateY(${((1 - back(p)) * 26).toFixed(1)}px)`; };
+  const vis = (lt, a) => lt >= a ? '' : 'visibility:hidden;';
+  const count = (lt, a, d, v) => Math.round(v * outC(k(lt, a, d)));
+  const lights = '<span class="ex-lt"><i></i><i></i><i></i></span>';
+  const caret = lt => Math.floor(lt * 3) % 2 ? '<span class="ex-caret"></span>' : '<span class="ex-caret" style="opacity:0"></span>';
+
+  function exChat(lt) {
+    const tools = [['Read', 'the batches view', ''], ['Edited', 'batches.js', '<ins>+42</ins> <del>−7</del>'], ['Tests', '12 passed', '<span class="ok">✓</span>']];
+    const think = lt >= 1.1 && lt < 1.7;
+    return `<div class="ex-win ex-chat">
+      ${V ? '' : `<aside class="ex-side"><p class="ex-eb">Kombucha Co.</p><span class="on"># general</span><span># agents</span><span># batches</span><p class="ex-eb" style="margin-top:22px">In the room</p>
+        <span><i class="dot" style="background:var(--indigo)"></i>Maya</span><span><i class="dot" style="background:var(--ember)"></i>Orion</span><span><i class="dot ring" style="border-color:var(--teal)"></i>Orion's Claude</span><span><i class="dot ring" style="border-color:var(--indigo)"></i>Maya's Codex</span></aside>`}
+      <div class="ex-main">
+        <div class="ex-head"><b># general</b><span>Kombucha Co. · 4 online</span></div>
+        <div class="ex-msgs">
+          <div class="ex-msg" style="${ap(lt, .3)}"><span class="ex-av" style="background:var(--indigo)">M</span><div><p class="ex-who">Maya<time>7:02 PM</time></p><p>Can we track each batch by day, so we know when to bottle?</p></div></div>
+          <div class="ex-msg" style="${vis(lt, 1.1)}${ap(lt, 1.1)}"><span class="ex-av ai" style="border-color:var(--teal);color:var(--teal)">✦</span><div style="flex:1"><p class="ex-who">Orion's Claude <em>Claude Code</em><time>7:02 PM</time></p>
+            ${think ? `<p class="ex-think">thinking${'.'.repeat(1 + Math.floor(lt * 5) % 3)}</p>` : `<p>${typed('On it. Each batch gets a day counter and a “ready to bottle” badge.', lt, 1.7, 60)}</p>`}
+            <div class="ex-tools">${tools.map((x, i) => `<div class="ex-tool" style="${vis(lt, 2.1 + i * .45)}${ap(lt, 2.1 + i * .45, .25)}"><span class="k">${x[0]}</span><span>${x[1]}</span><span class="r">${x[2]}</span></div>`).join('')}</div></div></div>
+          <div class="ex-msg" style="${vis(lt, 3.6)}${ap(lt, 3.6)}"><span class="ex-av ai" style="border-color:var(--indigo);color:var(--indigo)">◎</span><div><p class="ex-who">Maya's Codex <em style="color:var(--indigo);border-color:var(--indigo)">Codex</em><time>7:03 PM</time></p><p>I'll add a bottling reminder for Friday. 🍾</p>${lt > 4.2 ? '<span class="ex-react">👍 2</span>' : ''}</div></div>
+        </div>
+        <div class="ex-comp"><span>Message #general</span><b>↑</b></div>
+      </div></div>`;
+  }
+
+  function exAgents(lt) {
+    const tiles = [['✦', 'Claude Code', 'var(--ember)'], ['◎', 'Codex CLI', 'var(--indigo)'], ['◆', 'Gemini CLI', 'var(--teal)'], ['Q', 'Qwen Code', 'var(--yellow)'], ['▲', 'Cursor', 'var(--muted)']];
+    const sel = lt >= .5;
+    const cmd = 'claude mcp add --transport http tribecode https://kombucha.tribe.page/mcp --header "Authorization: Bearer tc_••••••"';
+    const copied = lt >= 2.3;
+    const joins = [[2.9, '✦', 'Camp’s Claude', 'Claude Code', 'var(--teal)'], [3.5, '◎', 'Maya’s Codex', 'Codex', 'var(--indigo)'], [4.1, '◆', 'Jay’s Gemini', 'Gemini CLI', '#4FD1C5']];
+    return `<div class="ex-grid2">
+      <div class="ex-win ex-pad"><p class="ex-eb">Profile › Connect your AI</p><h4 class="ex-h">Connect your AI</h4>
+        <div class="ex-tiles">${tiles.map((x, i) => `<div class="ex-tile${sel && i === 0 ? ' on' : ''}"><span style="color:${x[2]}">${x[0]}</span>${x[1]}</div>`).join('')}</div>
+        <div class="ex-pills"><span class="on">Anywhere</span><span>Same Wi-Fi</span><span>This computer</span></div>
+        <p class="ex-small">Run this in your terminal:</p>
+        <div class="ex-cmd"><code>${typed(cmd, lt, .9, 95)}${lt >= .9 && lt < 2.2 ? caret(lt) : ''}</code><span class="ex-copy${copied ? ' ok' : ''}">${copied ? 'Copied ✓' : 'Copy'}</span></div>
+        <div class="ex-can" style="${vis(lt, 2.5)}${ap(lt, 2.5)}"><span>✓ Reads the project</span><span>✓ Takes tasks</span><span>✓ Saves code</span><span>✓ Uses your own subscription</span></div>
+      </div>
+      <div class="ex-win ex-pad"><p class="ex-eb">In the room</p>
+        <div class="ex-room"><div class="ex-person"><span class="ex-av" style="background:var(--ember)">C</span><b>Camp</b><small>host</small></div>
+          <div class="ex-person"><span class="ex-av" style="background:var(--indigo)">M</span><b>Maya</b><small>builder</small></div>
+          <div class="ex-person"><span class="ex-av" style="background:#0EA5A0">J</span><b>Jay</b><small>builder</small></div>
+          ${joins.map(x => `<div class="ex-person ex-agent" style="${vis(lt, x[0])}${ap(lt, x[0])}"><span class="ex-av ai" style="border-color:${x[4]};color:${x[4]}">${x[1]}</span><b>${x[2]}</b><small>${x[3]} · joined</small></div>`).join('')}
+        </div></div></div>`;
+  }
+
+  function exPreview(lt) {
+    const tiles = [['Batches brewing', 6, '2 ready Friday'], ['Bottles ready', 148, '+36 this week'], ['Orders this week', 23, '+5 vs last week'], ['Out for delivery', 4, 'Maya and Jay']];
+    const batches = [['Ginger Lemon', 'Day 8 of 10', .8, 'Fermenting', '#F2A541'], ['Hibiscus Berry', 'Bottled Tuesday', 1, 'Ready', '#3BD16F'], ['Mint Green Tea', 'Second ferment · day 2', .55, 'Flavoring', '#6C7CFF'], ['Lavender Blueberry', 'Day 2 of 10', .2, 'Fermenting', '#F2A541']];
+    const orders = [['Corner Café', '12 × Ginger Lemon · Maya delivers'], ['Farmers market stall', '40 × mixed · Jay delivers'], ['Yoga studio', '8 × Hibiscus Berry · pickup']];
+    const live = lt >= 3.7;
+    return `<div class="ex-win ex-browser">
+      <div class="ex-bar">${lights}<span class="ex-url">kombucha.tribe.page</span>${live ? `<span class="ex-live" style="${ap(lt, 3.7)}">● LIVE · 3 viewing</span>` : '<span class="ex-build">building…</span>'}</div>
+      <div class="ex-app">
+        <div class="ka-nav" style="${ap(lt, .2)}"><b>🫙 Kombucha Empire</b><span class="on">Brewing</span><span>Orders</span><span>Flavors</span><span>Deliveries</span></div>
+        <div class="ka-tiles">${tiles.map((x, i) => `<div class="ka-tile" style="${vis(lt, .8 + i * .15)}${ap(lt, .8 + i * .15)}"><small>${x[0]}</small><b>${count(lt, .8 + i * .15, .7, x[1])}</b><em>${x[2]}</em></div>`).join('')}</div>
+        <div class="ka-cols">
+          <div class="ka-card" style="${vis(lt, 1.7)}${ap(lt, 1.7)}"><p class="ka-h">Batches <span class="ka-btn">+ New batch</span></p>
+            ${batches.map((b, i) => `<div class="ka-row"><i class="ka-sw" style="background:${b[4]}"></i><div class="ka-t"><b>${b[0]}</b><small>${b[1]}</small></div><span class="ka-bar"><i style="width:${(100 * b[2] * outC(k(lt, 1.9 + i * .15, .6))).toFixed(1)}%;background:${b[4]}"></i></span><span class="ka-st" style="color:${b[4]}">${b[3]}</span></div>`).join('')}</div>
+          <div class="ka-card" style="${vis(lt, 2.8)}${ap(lt, 2.8)}"><p class="ka-h">Today’s orders</p>
+            ${orders.map((o, i) => `<div class="ka-row" style="${vis(lt, 2.9 + i * .2)}${ap(lt, 2.9 + i * .2, .25)}"><span class="ka-dot">${o[0][0]}</span><div class="ka-t"><b>${o[0]}</b><small>${o[1]}</small></div></div>`).join('')}</div>
+        </div>
+      </div>
+      ${lt >= 4.1 ? `<div class="ex-toast" style="${ap(lt, 4.1)}"><span class="ex-av ai sm" style="border-color:var(--indigo);color:var(--indigo)">◎</span>Maya’s Codex added Today’s orders</div>` : ''}
+    </div>`;
+  }
+
+  function exDocs(lt) {
+    const slash = lt >= .6 && lt < 1.5, table = lt >= 1.5;
+    const drag = k(lt, 2.0, .8), dragE = outC(drag), done = lt >= 2.8;
+    const pen = outC(k(lt, 3.6, .6));
+    return `<div class="ex-grid3">
+      <div class="ex-win ex-doc"><div class="ex-head sm"><b>📄 Launch plan</b><span class="ex-who-row"><i style="background:var(--indigo)">M</i><i class="ring" style="border-color:var(--teal);color:var(--teal)">✦</i><i style="background:var(--ember)">C</i></span></div>
+        <div class="ex-doc-body"><h4>Launch plan</h4><p>We sell at the farmers market on Saturday and open café orders on Monday.</p>
+          <div class="ex-todo"><i class="ck on"></i>Bottle labels <em>@Maya</em></div><div class="ex-todo"><i class="ck"></i>Price sheet for cafés <em>@Camp</em></div>
+          ${slash ? `<div class="ex-slash" style="${ap(lt, .6, .25)}"><span class="q">/${typed('table', lt, .7, 9)}</span><b class="on">▦ Table</b><b>☑ To-do list</b><b>📊 Sheet</b><b>🎞 Slides</b></div>` : ''}
+          ${table ? `<table class="ex-tbl" style="${ap(lt, 1.5)}"><tr><th>Flavor</th><th>Batches</th><th>Status</th></tr><tr><td>Ginger Lemon</td><td>2</td><td><span class="st">Brewing</span></td></tr><tr><td>Hibiscus Berry</td><td>1</td><td><span class="st g">Ready</span></td></tr></table>` : ''}
+          ${lt >= 2.2 ? `<div class="ex-cmt" style="${ap(lt, 2.2)}"><b style="color:#9AA6FF">Jay</b> Add Lavender to the table? We start it Monday. <span>Reply</span></div>` : ''}
+        </div></div>
+      <div class="ex-win ex-board"><div class="ex-head sm"><b>☑ Task Board</b></div>
+        <div class="ex-cols"><div class="ex-col"><p>Doing</p><div class="ex-task">Price sheet<small>Camp</small></div>${done ? '' : `<div class="ex-task drag" style="transform:translate(${(dragE * 100).toFixed(1)}%, ${(-Math.sin(drag * Math.PI) * 18).toFixed(1)}px) rotate(${(Math.sin(drag * Math.PI) * 4).toFixed(1)}deg);${drag > 0 && drag < 1 ? 'border-color:var(--ember);' : ''}">Bottle labels<small>Maya</small></div>`}</div>
+          <div class="ex-col"><p>Done ${done ? '<span class="ex-n">2</span>' : '<span class="ex-n">1</span>'}</p><div class="ex-task dim">Flavor list<small>Jay</small></div>${done ? `<div class="ex-task ok" style="${ap(lt, 2.8, .2)}">Bottle labels ✓<small>Maya</small></div>` : ''}</div></div></div>
+      <div class="ex-win ex-wb"><div class="ex-head sm"><b>🖍 Whiteboard</b></div>
+        <div class="ex-wb-body">
+          <svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet"><path d="M30 170 C 80 60, 150 60, 190 130" fill="none" stroke="var(--yellow)" stroke-width="7" stroke-linecap="round" stroke-dasharray="260" stroke-dashoffset="${(260 * (1 - pen)).toFixed(1)}"/>
+            <rect x="24" y="22" width="120" height="70" rx="10" fill="none" stroke="var(--indigo)" stroke-width="5"/><text x="84" y="64" text-anchor="middle" fill="#CBD5E1" font-family="Inter" font-size="22" font-weight="600">Stall</text></svg>
+          ${lt >= 3.2 ? `<div class="ex-sticky" style="${ap(lt, 3.2)}">Farmers market Saturday! 🍋</div>` : ''}
+        </div></div></div>`;
+  }
+
+  function exCompany(lt) {
+    const seats = [['CEO', 'var(--ember)', 'C', 'Camp', 'you', false, .3], ['BUILD', 'var(--teal)', '✦', 'Camp’s Claude', 'AI helper · autopilot', true, .7], ['GROW', 'var(--yellow)', 'M', 'Maya', 'friend', false, 1.1], ['RUN', 'var(--indigo)', '◎', 'Flint', 'AI helper', true, 1.5]];
+    const seat = s => { const on = lt >= s[6]; return `<div class="ex-seat${on ? ' on' : ''}" style="--c:${s[1]}"><p>${s[0]}</p>${on ? `<div class="ex-sh" style="${ap(lt, s[6], .3)}"><span class="ex-av ${s[5] ? 'ai' : ''}" style="${s[5] ? 'border-color:' + s[1] + ';color:' + s[1] : 'background:' + s[1]}">${s[2]}</span><div><b>${s[3]}</b><small>${s[4]}</small></div></div>` : '<div class="ex-empty">Open seat</div>'}</div>`; };
+    const approved = lt >= 4.0, cur = outC(k(lt, 3.3, .6));
+    return `<div class="ex-grid2 co">
+      <div class="ex-win ex-pad"><p class="ex-eb">Company · Kombucha Empire</p><h4 class="ex-h">Org chart</h4>
+        <div class="ex-org"><div class="ex-org-top">${seat(seats[0])}</div><div class="ex-org-line"></div><div class="ex-org-row">${seats.slice(1).map(seat).join('')}</div></div>
+        <div class="ex-goal" style="${vis(lt, 1.8)}${ap(lt, 1.8)}"><p class="ex-eb" style="color:var(--muted)">This month’s goal</p><b>30 café accounts</b><span class="ex-gbar"><i style="width:${(40 * outC(k(lt, 2.0, 1.2))).toFixed(1)}%"></i></span><small>${count(lt, 2.0, 1.2, 12)} of 30 · from your numbers</small></div></div>
+      <div class="ex-col2">
+        <div class="ex-win ex-pad"><p class="ex-eb">Today · standup</p>
+          <div class="ex-su" style="${vis(lt, 2.0)}${ap(lt, 2.0)}"><b style="color:var(--teal)">Build</b> Shipped the batch counter. Next: Friday reminder.</div>
+          <div class="ex-su" style="${vis(lt, 2.4)}${ap(lt, 2.4)}"><b style="color:var(--yellow)">Grow</b> Two new café leads from the market.</div></div>
+        <div class="ex-win ex-pad ex-appr${approved ? ' ok' : ''}" style="${vis(lt, 2.9)}${ap(lt, 2.9)}"><p class="ex-eb">Needs your OK · Grow</p>
+          <p class="ex-ap">Email 120 customers about the new Lavender flavor<small>Maya drafted it · outward, so a person decides</small></p>
+          ${approved ? '<p class="ex-done">✓ Approved by Camp · sending now</p>' : `<div class="ex-btns"><span class="ex-btn ok"${lt > 3.9 ? ' style="transform:scale(.94)"' : ''}>Approve</span><span class="ex-btn">Deny</span></div>`}
+          ${lt >= 3.2 && lt < 4.4 ? `<svg class="ex-cur" viewBox="0 0 17 22" style="left:${(70 + 200 * (1 - cur)).toFixed(0)}px;bottom:${(20 - 60 * (1 - cur)).toFixed(0)}px"><path d="M1 1v17l5-4 3 7 3-1-3-7h7z" fill="#F8FAFC" stroke="#12151A" stroke-width="1.5" stroke-linejoin="round"/></svg>` : ''}
+        </div>
+        <div class="ex-win ex-pad ex-inbox" style="${vis(lt, 4.4)}${ap(lt, 4.4)}"><span>📥</span><div><b>Weekly review is in your Inbox</b><small>Every seat, what moved, what needs you</small></div></div></div></div>`;
+  }
+
+  function exOpen(lt) {
+    const l1 = '$ git clone https://github.com/orionopenwow/TribeCode', l2 = '$ cd TribeCode && npm start';
+    const appOn = lt >= 3.4, starred = lt >= 1.0;
+    return `<div class="ex-grid2 os">
+      <div class="ex-col2">
+        <div class="ex-win ex-pad ex-repo" style="${ap(lt, .2)}"><p class="ex-repo-t"><span class="gh">⌂</span>orionopenwow / <b>TribeCode</b><span class="ex-tag">Public</span></p>
+          <p class="ex-small">Build apps, games and websites with your friends and AI helpers.</p>
+          <div class="ex-repo-row"><span class="ex-tag">⚖ MIT license</span><span class="ex-tag">● JavaScript</span><span class="ex-gh${starred ? ' on' : ''}">${starred ? '★ Starred' : '☆ Star'}</span><span class="ex-gh">⑂ Fork</span></div></div>
+        <div class="ex-win ex-term" style="${vis(lt, 1.3)}${ap(lt, 1.3)}"><div class="ex-bar sm">${lights}<span class="ex-url">terminal</span></div>
+          <pre>${typed(l1, lt, 1.5, 45)}${lt >= 1.5 + l1.length / 45 ? '\n' + typed(l2, lt, 2.5, 40) : ''}${lt >= 3.1 ? '\n<span class="g">✓ TribeCode is running → http://localhost:4747</span>' : ''}${lt < 3.1 ? caret(lt) : ''}</pre></div>
+      </div>
+      <div class="ex-win ex-mini" style="${ap(lt, .5)}"><div class="ex-bar sm">${lights}<span class="ex-url">localhost:4747</span></div>
+        ${appOn ? '' : `<div class="ex-wait"><span class="ex-ring" style="transform:rotate(${(lt * 300).toFixed(0)}deg)"></span><b>${lt < 3.1 ? 'Waiting for the server…' : 'Starting TribeCode…'}</b><small>npm start runs it on your own computer or server</small></div>`}
+        <div class="ex-mini-b" style="${appOn ? ap(lt, 3.4, .4) : 'display:none'}"><aside><i class="on"></i><i></i><i></i><i></i></aside><div><p class="ex-eb">Home</p><h4 class="ex-h">Good evening, Camp</h4>
+          <div class="ex-mini-c"><div><small>Pick up where you left off</small><b>Kombucha Empire</b></div><div><small>Invite a friend</small><b>Copy the link</b></div></div>
+          <div class="ex-mini-c"><div><small>Your AI</small><b>✦ Connected</b></div><div><small>Preview</small><b>● Live</b></div></div>
+          <div class="ex-mini-c"><div><small>Task Board</small><b>3 open · 5 done</b></div><div><small>Company</small><b>4 seats filled</b></div></div></div></div></div>
+    </div>`;
+  }
+
+  // ---------- one frame ----------
+  function render(T) {
+    const t = Math.max(0, Math.min(D - 1e-3, T));
+    // background wipes: panels rise from the bottom (ember → dark → ember)
+    const wipe = (id, a) => { const p = k(t, a, .32); $(id).style.height = (outC(p) * 100).toFixed(2) + '%'; };
+    wipe('wipe1', T_WIPE1); wipe('wipe2', T_WIPE2); wipe('wipe3', T_WIPE3);
+
+    // intro: words land one by one, then the whole line tilts and drops away
+    const intro = $('intro');
+    if (t < T_WIPE1 + .35) {
+      intro.style.display = 'flex';
+      $('introH').innerHTML = INTRO.map((w, i) => `<span class="w" style="${pop(t, INTRO_AT[i])}">${w}</span>`).join('');
+      const p = inC(k(t, T_TILT, .45));
+      intro.style.transform = `translateY(${(p * 260).toFixed(1)}px) rotate(${(-7 * p).toFixed(2)}deg) scale(${(1 - .35 * p).toFixed(3)})`;
+      intro.style.opacity = (1 - k(t, T_TILT + .2, .25)).toFixed(3);
+    } else intro.style.display = 'none';
+
+    // logo: the mark drops in with a bounce, the wordmark slides out from behind it, then it all moves up small
+    const logo = $('logo');
+    const logoOn = (t >= T_LOGO && t < T_WIPE2 + .3) || t >= T_END;
+    logo.style.display = logoOn ? 'flex' : 'none';
+    if (logoOn) {
+      const end = t >= T_END;
+      const a0 = end ? T_END : T_LOGO, aW = end ? T_END + .25 : T_WM;
+      const drop = back(k(t, a0, .45));
+      const wmP = outQ(k(t, aW, .45));
+      const wmW = WMW * wmP;
+      $('wmClip').style.width = wmW.toFixed(1) + 'px';
+      // end card: the wordmark tucks back behind the mark (like the classic sign-off)
+      if (end) { const c = outQ(k(t, T_COLLAPSE, .4)); $('wmClip').style.width = (WMW * wmP * (1 - c)).toFixed(1) + 'px'; }
+      const fullW = 168 + parseFloat($('wmClip').style.width);
+      const up = end ? 0 : outQ(k(t, T_UP, .45));
+      const sc = lerp(1, .42, up);
+      const cy = lerp(H / 2 - (end ? 70 : 0), V ? 250 : 120, up);
+      logo.style.transform = `translate(${(-fullW * sc / 2).toFixed(1)}px, ${(cy - 84 * sc - (1 - drop) * 180).toFixed(1)}px) scale(${sc.toFixed(4)})`;
+      logo.style.left = '50%'; logo.style.top = '0px';
+      logo.style.opacity = outC(k(t, a0, .15)).toFixed(3);
+      // over the dark canvas wipe, fade the small header logo out
+      if (!end) logo.style.opacity = (outC(k(t, a0, .15)) * (1 - k(t, T_WIPE2, .25))).toFixed(3);
+    }
+
+    // "Build ___ together." with the swapping word
+    const bl = $('buildLine');
+    const blOn = t >= BUILD_AT[0] - .05 && t < T_WIPE2 + .3;
+    bl.style.display = blOn ? 'flex' : 'none';
+    if (blOn) {
+      bl.style.top = (lineY() - 70) + 'px';
+      slot($('slotB'), BUILD, BUILD_AT, t);
+      const p = k(t, BUILD_AT[0], .34);
+      bl.firstElementChild.style.cssText = `transform:translateY(${((1 - back(p)) * 50).toFixed(1)}px);opacity:${(outC(k(t, BUILD_AT[0], .2)) * (1 - k(t, T_WIPE2, .2))).toFixed(3)}`;
+    }
+
+    // features: a big exhibit with the feature line as its caption; a slow push-in while it runs
+    const fl = $('featLine'), ex = $('ex');
+    let f = null; for (const x of FEATS) if (t >= x.at) f = x;
+    const featOn = f && t < T_WIPE3 + .3;
+    fl.style.display = ex.style.display = featOn ? '' : 'none'; if (!featOn) $('exbg').style.display = 'none';
+    if (featOn) {
+      const lt = t - f.at, next = FEATS[FEATS.indexOf(f) + 1], outAt = next ? next.at - .3 : T_WIPE3 - .1;
+      const o = outC(k(t, outAt, .3)), inP = outC(k(lt, 0, .45));
+      fl.style.top = (V ? 1372 : 846) + 'px';
+      const fh = fl.firstElementChild;
+      if (f.swap) {
+        fh.innerHTML = `<span class="sw" style="${pop(t, f.at)}"><span class="w">${f.pre}</span><span class="sp"></span><span class="slot" id="slotF"></span></span>`;
+        slot($('slotF'), f.swap, f.swapAt, t);
+      } else fh.innerHTML = `<span class="w" style="${pop(t, f.at)}">${f.words[0]}</span>`;
+      fl.style.transform = `translateY(${(-o * 50).toFixed(1)}px)`; fl.style.opacity = (1 - o).toFixed(3);
+      const push = 1 + .045 * (lt / 5) * (lt / 5) * (3 - 2 * lt / 5);   // smoothstep push-in over the five seconds
+      ex.innerHTML = f.ex(lt);
+      const S = V ? 1.06 : 1.2, side = f.side;                       // the design box is scaled up to fill the frame
+      ex.style.transform = `translate(${(side * (1 - inP) * 80).toFixed(1)}px, ${(-o * 40).toFixed(1)}px) scale(${(S * (.97 + .03 * inP) * push).toFixed(4)})`;
+      ex.style.opacity = (inP * (1 - o)).toFixed(3);
+      // a big flat block in the feature's colour bleeds off one edge behind the exhibit, alternating sides
+      const bg = $('exbg'), bw = V ? 980 : 1100, bh = V ? 1260 : 980;
+      bg.style.background = f.tint; bg.style.width = bw + 'px'; bg.style.height = bh + 'px';
+      const bx = side < 0 ? (V ? -420 : -520) : W - (V ? 560 : 580), by = V ? 120 : 20;
+      bg.style.transform = `translate(${(bx + side * (1 - inP) * 220 - side * 30 * (lt / 5)).toFixed(1)}px, ${by}px)`;
+      bg.style.opacity = (inP * (1 - o)).toFixed(3); bg.style.display = '';
+    }
+
+    // end card: url and line under the logo
+    const u = $('urlRow'), fo = $('foss');
+    const uOn = t >= T_END + .45;
+    u.style.display = fo.style.display = uOn ? 'flex' : 'none';
+    if (uOn) {
+      u.style.top = (H / 2 + 80) + 'px'; u.style.cssText += `;${pop(t, T_END + .45)}`;
+      fo.style.top = (H / 2 + 200) + 'px'; fo.style.opacity = outC(k(t, T_END + .7, .3)).toFixed(3);
+    }
+  }
+
+  let seekT = null;
+  window.adSeek = t => { seekT = t; render(t); return document.fonts ? document.fonts.ready.then(() => true) : true; };
+  const q = new URLSearchParams(location.search);
+  addEventListener('resize', () => { fit(); render(seekT ?? 0); });
+  fit();
+  const go = () => {
+    widths = {};
+    if (q.has('t')) { seekT = parseFloat(q.get('t')) || 0; render(seekT); }
+    else if (q.has('still') || matchMedia('(prefers-reduced-motion: reduce)').matches) render(39.3);
+    else { const t0 = performance.now(); const loop = now => { if (seekT === null) render(((now - t0) / 1000) % D); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  };
+  // on Ember, the wordmark's ember "Code" would vanish: draw it all in white with its dark outline (same drawing, one colour swapped)
+  const wmReady = fetch('../site/assets/brand/wordmark.svg').then(r => r.text()).then(svg => new Promise(res => {
+    const im = $('wm'); im.onload = res; im.onerror = res;
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace(/#F26B1D/gi, '#F8FAFC').replace(/#A8471B/gi, '#A8A29E'));
+  })).catch(() => {});
+  Promise.all([document.fonts ? document.fonts.ready : 0, wmReady]).then(go);
+})();
+</script>
+</body>
+</html>

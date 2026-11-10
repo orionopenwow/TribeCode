@@ -12,7 +12,7 @@
 'use strict';
 const crypto = require('node:crypto');
 
-const BUILTIN = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'whiteboard'];
+const BUILTIN = ['calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'whiteboard', 'captures', 'assets', 'mcp', 'market'];   // v0.27 company: + captures, assets, mcp, market
 const MAX = 24;
 
 module.exports = function widgets({ P, store, broadcast, preview, showcase, shelf, sense, can = null }) {   // can(me, cap, pid): feat/roles
@@ -77,6 +77,18 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
     return { preview: pv, website: { show: site } };
   }
 
+  // v0.27 company: one widget from the Marketplace (server/market.js); skips duplicates (same built-in key or same link)
+  function addOne(pid, w, me) {
+    if (!P.get(pid) || !P.canSee(me, pid)) throw err(404, 'project not found');
+    if (!canEdit(me, pid)) throw err(403, 'only the host and builders can change the sidebar');
+    const cur = all[pid] || [];
+    const [one] = clean([w]);
+    if (cur.some(x => x.kind === one.kind && (one.kind === 'builtin' ? x.key === one.key : one.kind === 'link' ? x.url === one.url : x.doc === one.doc))) return { already: true, widgets: cur };
+    all[pid] = clean([...cur, one]); save();
+    broadcast({ type: 'widgets', project: pid });
+    return { widgets: all[pid] };
+  }
+
   function view(pid, me) { return { widgets: all[pid] || [], canEdit: canEdit(me, pid), builtin: BUILTIN, ...auto(pid, me) }; }
 
   async function route(req, res, { m, b, me, readBody, send, fail }) {
@@ -97,5 +109,5 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
     return null;
   }
 
-  return { route, view, BUILTIN };
+  return { route, view, addOne, BUILTIN };
 };

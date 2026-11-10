@@ -64,7 +64,7 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
     }
     return path.relative(dir, dest).replace(/\\/g, '/');
   }
-  const line = it => `- **${it.title}** (${it.kind}, ${it.license}): ${it.summary}${it.install ? ` \`${it.install}\`` : ''} · https://github.com/${it.repo}${it.url ? ` · ${it.url}` : ''} <!-- shelf:${it.id} -->`;
+  const line = it => `- **${it.title}** (${it.kind}, ${it.license}): ${it.summary}${it.install ? ` \`${it.install}\`` : ''}${it.repo ? ` · https://github.com/${it.repo}` : ''}${it.url ? ` · ${it.url}` : ''} <!-- shelf:${it.id} -->`;
   function addToToolbox(p, it, dir, me) {
     const head = `# Toolbox\n\nTools, libraries and Claude Code skills this project uses or wants to try. Added from TribeCode's starter shelf; agents read this before picking a library.\n\n`;
     if (dir) {
@@ -74,8 +74,8 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
     const d = docs.find('Toolbox'), body = (d && d.body) || head;
     if (!body.includes(`<!-- shelf:${it.id} -->`)) docs.upsert({ name: 'Toolbox', body: body.replace(/\s*$/, '\n') + line(it) + '\n', baseVersion: d ? d.version : undefined, by: me.id });
   }
-  async function add(id, pid, me) {
-    const it = catalog.find(x => x.id === id); if (!it) throw err(404, 'not on the shelf');
+  async function add(id, pid, me, extra) {   // v0.27 company: extra = a Marketplace item (server/market.js, from its own checked catalog)
+    const it = extra || catalog.find(x => x.id === id); if (!it) throw err(404, 'not on the shelf');
     const p = P.get(pid); if (!p || !P.canSee(me, pid)) throw err(404, 'project not found');
     if (me.role === 'spectator') throw err(403, 'read-only');
     const dir = repoDir(p); let where = null;

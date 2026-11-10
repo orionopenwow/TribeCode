@@ -1,0 +1,28 @@
+name: Feedback
+description: An idea, a bug, a question or a wish for TribeCode. Short is fine.
+title: "Feedback: "
+labels: ["feedback"]
+body:
+  - type: dropdown
+    id: facet
+    attributes:
+      label: What is it about?
+      options: ["Idea", "Bug", "Company mode", "Work and hiring", "Learn and Academy", "Marketplace", "Design and look", "Phones", "Website", "Something else"]
+    validations: { required: true }
+  - type: textarea
+    id: message
+    attributes:
+      label: Tell us
+      description: What happened or what you wish TribeCode did. A screenshot helps for bugs.
+    validations: { required: true }
+  - type: input
+    id: where
+    attributes:
+      label: Where (optional)
+      placeholder: "desktop app, phone, tribecode.org, version…"
+  - type: checkboxes
+    id: quote
+    attributes:
+      label: Sharing
+      options:
+        - label: "OK to quote this (without my name) when we explain what changed"

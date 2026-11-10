@@ -37,7 +37,7 @@ def main():
         ph.goto(base + "/learn.html#m1-0"); ph.wait_for_selector("#lang-btn", state="attached")
         st = ph.evaluate("[TribeLang.get(), document.querySelector('header').textContent.includes('Herunterladen'), !!document.querySelector('#lang-btn').offsetParent]"); assert st == ["de", True, True], st
         sw = ph.evaluate("[document.documentElement.scrollWidth, innerWidth]"); assert sw[0] <= sw[1] + 1, sw
-        for k in ["m1-0", "m1-3", "m2-1", "m3-2", "m3-4", "m4-5", "m4-6", "m2-q"]:
+        for k in ["m1-0", "m1-3", "m2-1", "m3-2", "m3-4", "m4-5", "m4-6", "m5-2", "m5-4", "m2-q"]:
             ph.goto(base + f"/learn.html#{k}"); ph.wait_for_selector(".lx-fig .lv", timeout=5000)
             sw = ph.evaluate("[document.documentElement.scrollWidth, innerWidth]"); assert sw[0] <= sw[1] + 1, (k, sw)
         b.close()

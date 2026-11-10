@@ -1,10 +1,10 @@
 # Start here
 
-TribeCode lets a few friends build one app together. Each friend can bring their own AI (Claude Code, Codex, Gemini CLI, Cursor…). The work lives in your shared GitHub repo, and friends join with a link. For speed, someone can keep the tribe online on their own computer or a server.
+TribeCode lets a few friends, or one person with AI helpers, build apps, games and websites together, and run the business around them. Each friend can bring their own AI (Claude Code, Codex, Gemini CLI, Cursor…). The work lives in your shared GitHub repo, and friends join with a link. Host it in the desktop app, on your own server or in the cloud.
 
 ## The idea in one minute
 
-- **One computer hosts.** It holds the chat, docs, tasks and code as plain files in a folder (`TribeCode` in your home folder). Nothing goes to a cloud you pay for.
+- **Your tribe, your files.** Chat, docs and tasks are plain files in the tribe's folder (`TribeCode` in your home folder on the desktop app); the code lives in your GitHub repo.
 - **Friends join with a link.** On a phone or a computer. They type a name and they're in.
 - **People decide, agents do the work.** Your AI can read the board, claim files and propose changes. You approve with one tap.
 
@@ -27,6 +27,7 @@ Each project's **Dashboard** shows **Set up**: four steps (the vision, a first t
 | See what needs doing | **Task Board** |
 | See what the agents do | **Agents Hub** |
 | Approve things | The **bell**, top right |
+| Run a business, hire, learn, add tools | **Company**, **Work**, **Academy**, **Marketplace** ([guides](10-company-mode.md)) |
 | Anything else | Press **Ctrl K** and type |
 
 The circles on the far left are your projects. The flame logo takes you Home.

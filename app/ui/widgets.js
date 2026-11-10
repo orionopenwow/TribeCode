@@ -33,8 +33,13 @@
     plan: { label: 'Daily plan', icon: 'i-sun', go: 'plan' },
     secretary: { label: 'Secretary', icon: 'i-quill', go: 'secretary' },
     whiteboard: { label: 'Whiteboard', icon: 'i-whiteboard', run: () => window.TribeWhiteboard && window.TribeWhiteboard.open() },   // feat/whiteboard (whiteboard.js)
+    // v0.27 company: four more views that already exist elsewhere in the app
+    captures: { label: 'Captures', icon: 'i-link', go: 'captures' },
+    assets: { label: 'Asset library', icon: 'i-photo', run: () => window.TribeAssets && window.TribeAssets.open() },
+    mcp: { label: 'TribeCode MCP', icon: 'i-plug', go: 'mcp-directory' },
+    market: { label: 'Marketplace', icon: 'i-box', run: () => window.TribeMarket && window.TribeMarket.open() },
   };
-  const ORDER = ['whiteboard', 'calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary'];
+  const ORDER = ['whiteboard', 'calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'captures', 'assets', 'mcp', 'market'];
 
   let st = { widgets: [], canEdit: false, preview: { show: false, label: 'Preview' }, website: { show: false } }, forPid = '', seq = 0;
   async function refresh() {
@@ -144,6 +149,10 @@
     plan: { tint: 'teal', emo: '☀️', blurb: "Today's focus for everyone", cols: ['Today', 'Who', 'Done'], pills: ['Focus', 'Next', 'Done'] },
     secretary: { tint: 'violet', emo: '🪶', blurb: 'Notes, recaps and follow-ups', cols: ['Note', 'From', 'When'], pills: ['Recap', 'Action', 'Idea'] },
     whiteboard: { tint: 'amber', emo: '🖍️', blurb: 'Draw, sketch and stick notes, together', art: 'board' },   // feat/whiteboard: its own mini preview
+    captures: { tint: 'blue', emo: '🔖', blurb: 'Links, videos and voice notes, summed up', cols: ['Capture', 'From', 'When'], pills: ['Article', 'Video', 'Voice'] },   // v0.27 company
+    assets: { tint: 'green', emo: '🎨', blurb: 'Open art, sounds, icons and fonts', cols: ['Asset', 'Kind', 'License'], pills: ['CC0', 'MIT', 'OFL'] },
+    mcp: { tint: 'teal', emo: '🔌', blurb: 'Connect Claude and other apps to the tribe', cols: ['App', 'Status', 'Tools'], pills: ['Claude', 'Ready', 'Cursor'] },
+    market: { tint: 'ember', emo: '🛍️', blurb: 'Hundreds of widgets, skills and templates', cols: ['Item', 'Kind', 'License'], pills: ['Widget', 'Skill', 'MIT'] },
   };
   const PACKS = [
     { id: 'jam', emo: '🎮', name: 'Game jam', blurb: 'Calendar, Bugs, Milestones and Visuals', keys: ['calendar', 'bugs', 'milestones', 'visuals'] },
@@ -173,6 +182,8 @@
           <button class="wgx-q" data-wcustom data-k="link custom url website">${ico('i-link', 18)}<b>A link</b><small>Any page, opened right here</small></button>
           <button class="wgx-q" data-wcustom data-doc data-k="doc pin file notes">${ico('i-doc', 18)}<b>Pin a doc</b><small>One of the project's files</small></button>
         </div>
+        <div class="wgx-mk-head"><h6 class="wgx-h">🛍️ From the Marketplace</h6><div class="mk-seg" role="tablist" aria-label="Sort">${[['hot', 'Hot'], ['new', 'New'], ['top', 'Top']].map(([k, l]) => `<button role="tab" data-wmk="${k}">${l}</button>`).join('')}</div><a class="wgx-mk-all" href="#/market" id="wgx-mk-all">Browse all</a></div>
+        <div class="wgx-mk" id="wgx-mk"></div>
         <h6 class="wgx-h">↗ Built into TribeCode</h6>
         <div class="wgx-grid">${ORDER.map(k => `<button class="wgx-card t-${LOOK[k].tint}" data-wadd="${k}" data-k="${esc((BUILT[k].label + ' ' + LOOK[k].blurb + ' ' + k).toLowerCase())}" ${have.has(k) ? 'disabled aria-disabled="true"' : ''}>
             <span class="wgx-top"><b>${esc(BUILT[k].label)}</b>${have.has(k) ? '<em>Added</em>' : ''}</span><small>${esc(LOOK[k].blurb)}</small>${mini(k)}</button>`).join('')}</div>
@@ -203,6 +214,21 @@
       if (await save([...(st.widgets || []), ...add])) toast(`${p.emo} ${p.name}: ${add.length} added`);
     });
     g.querySelectorAll('[data-wcustom]').forEach(b => b.onclick = () => { const doc = b.hasAttribute('data-doc'); closeGallery(); custom($('#nest-add') || anchor, doc); });
+    marketStrip(g);
+  }
+  // v0.27 company: a few link widgets from the Marketplace (market.js / server/market.js), with quick sorts and a way to all of it
+  let mkSort = 'hot';
+  async function marketStrip(g) {
+    const box = g.querySelector('#wgx-mk'), all = g.querySelector('#wgx-mk-all'); if (!box || !window.TribeMarket) return;
+    g.querySelectorAll('[data-wmk]').forEach(b => { b.classList.toggle('on', b.dataset.wmk === mkSort); b.onclick = () => { mkSort = b.dataset.wmk; marketStrip(g); }; });
+    all.onclick = e => { e.preventDefault(); closeGallery(); window.TribeMarket.open({ kind: 'widget' }); };
+    try {
+      const r = await window.TribeMarket.quick(mkSort, 'widget', 6, 'link');
+      all.textContent = `Browse all (${r.catalog})`;
+      const have = new Set((st.widgets || []).filter(w => w.kind === 'link').map(w => w.url));
+      box.innerHTML = r.items.map(it => `<button class="wgx-mk-row" data-wmkid="${esc(it.id)}" data-k="${esc((it.title + ' ' + it.summary + ' ' + (it.tags || []).join(' ')).toLowerCase())}" ${have.has(it.url) ? 'disabled' : ''}><span class="mk-emo" aria-hidden="true">${esc(it.emoji || '🔗')}</span><span><b>${esc(it.title)}</b><small>${esc(it.summary)}</small></span>${have.has(it.url) ? '<em>Added</em>' : ''}</button>`).join('');
+      box.querySelectorAll('[data-wmkid]:not([disabled])').forEach(b => b.onclick = async () => { closeGallery(); await window.TribeMarket.use(b.dataset.wmkid); });
+    } catch { box.innerHTML = ''; }
   }
   async function custom(anchor, preferDoc) {
     const el = pop(anchor, `<form class="wg-form" id="wg-form" autocomplete="off">

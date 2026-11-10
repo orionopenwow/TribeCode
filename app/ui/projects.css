@@ -323,3 +323,20 @@ button.linkish.pj-h-act { font-size: 13px; }
 .ns-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ns-chip { padding: 6px 10px; border: 1px solid var(--border, #2A313C); border-radius: 999px; background: var(--surface, #1B2028); color: var(--muted, #9AA4B2); font-size: 12.5px; cursor: pointer; }
 .ns-chip:hover { color: var(--text, #F8FAFC); background: var(--raised, #1E242D); }
+
+/* v0.27 Recommended next (reco.js): three suggestions with one button each */
+.rc-card { margin: 0 0 22px; padding: 16px 18px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.rc-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.rc-head .eyebrow { margin: 0; }
+.rc-sub { font-size: 12px; }
+.rc-list { display: grid; gap: 8px; }
+.rc-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised, var(--canvas)); }
+.rc-e { flex: none; width: 36px; height: 36px; display: grid; place-items: center; font-size: 18px; border-radius: 10px; background: var(--surface); border: 1px solid var(--edge); }
+.rc-t { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rc-t b { font-size: 14.5px; }
+.rc-t small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.rc-acts { flex: none; display: flex; align-items: center; gap: 4px; }
+.rc-x { width: 28px; height: 28px; border-radius: 8px; border: 0; background: none; color: var(--faint, var(--muted)); font-size: 18px; cursor: pointer; }
+.rc-x:hover { color: var(--text); background: var(--hover, var(--surface)); }
+@container ov (max-width: 560px) { .rc-item { flex-wrap: wrap; } .rc-acts { width: 100%; justify-content: flex-end; } }
+@media (max-width: 560px) { .rc-item { flex-wrap: wrap; } .rc-acts { width: 100%; justify-content: flex-end; } }
