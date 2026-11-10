@@ -265,6 +265,7 @@ def main():
             ph.frame_locator("#pvw-iframe").locator("#add").wait_for(timeout=10000)
             ph.frame_locator("#pvw-iframe").locator("#new").fill("Take out the bins")
             ph.frame_locator("#pvw-iframe").locator("#new").press("Enter")
+            ph.frame_locator("#pvw-iframe").locator("#list", has_text="Take out the bins").wait_for(timeout=8000)   # the list redraws after Enter (and after a late reload)
             assert "Take out the bins" in ph.frame_locator("#pvw-iframe").locator("#list").inner_text()
             shot(ph, "phone-todo")
             b.close()

@@ -305,9 +305,15 @@
       return `<label><span>${label}</span><input class="pvf-pv" data-prop="${k}" value="${esc(trimLen(cs[k]))}" inputmode="text" aria-label="${label}"></label>`;
     };
     const min = lsGet('tribecode.pvf.pmin', '0') === '1'; box.classList.toggle('is-min', min);
+    // a repaint (fresh live styles after a reload) keeps the status line and whatever the person is typing right now
+    const pk = picked.tag + '|' + String(picked.text || '').slice(0, 80), same = box.dataset.pk === pk; box.dataset.pk = pk;
+    const oldStat = same ? (box.querySelector('#pvf-pstat') || {}).textContent || '' : '', act = document.activeElement;
+    const typing = same && act && box.contains(act) && act.matches('input.pvf-pv[data-prop]') ? { k: act.dataset.prop, v: act.value, s: act.selectionStart, e: act.selectionEnd } : null;
     box.innerHTML = `<header><button type="button" class="pvf-pmin" data-pvf="pmin" aria-expanded="${!min}"><b>Properties</b></button><span class="faint">free · edits the code</span><button type="button" class="btn sm" data-pvf="undo" title="Undo the last change on this page">Undo</button></header>
       <div class="pvf-pgrid">${PROPS.map(([g, fs]) => `<p class="pvf-pg mono">${g}</p>${fs.map(([k, l]) => field(k, l)).join('')}`).join('')}</div>
       <p class="pvf-pstat faint" id="pvf-pstat" aria-live="polite"></p>`;
+    if (oldStat) box.querySelector('#pvf-pstat').textContent = oldStat;
+    if (typing) { const i = box.querySelector(`input.pvf-pv[data-prop="${typing.k}"]`); if (i) { i.value = typing.v; i.focus(); try { i.setSelectionRange(typing.s, typing.e); } catch {} } }
   }
   function wireProps() {
     const box = el.querySelector('#pvf-props');
