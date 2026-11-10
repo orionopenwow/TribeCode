@@ -181,6 +181,7 @@ function addToProject(mem, inv) {
   if (proj && Array.isArray(mem.projects) && !mem.projects.includes(proj.id)) { mem.projects.push(proj.id); inv.uses++; saveInvites(); }
   if (proj) P.addMember(proj.id, mem.id, P.scoped(mem) ? inv.role : mem.role);
   saveMembers(); pushPresence(); rooms.pushProjects();
+  if (inv.talent && talent) try { talent.onJoin(inv, mem); } catch (e) { console.error(e); }   // v0.27 company: a hire opened their invite
   return proj ? proj.id : null;
 }
 function joinByInvite(inv, { name, color: c, extra }) {
@@ -190,6 +191,7 @@ function joinByInvite(inv, { name, color: c, extra }) {
   if (inv.guest) { out.member.guestUntil = new Date(Date.now() + (inv.guestHours || 24) * 3600_000).toISOString(); saveMembers(); }   // one-time guest pass
   if (proj) P.addMember(proj.id, out.member.id, inv.role);
   P.inProject(proj ? proj.id : P.defaultId(), () => postChat('general', 'tribecode', `${name} joined ${proj ? proj.name : 'the tribe'} 👋`));
+  if (inv.talent && talent) try { talent.onJoin(inv, out.member); } catch (e) { console.error(e); }   // v0.27 company: an outside hire joined -> their seat
   pushPresence(); if (proj) rooms.pushProjects();   // everyone's project list shows the new member (Shared compute, overview team)
   return { ...out, project: proj ? proj.id : null };
 }
@@ -245,6 +247,7 @@ function broadcast(msg, except) {
   }
 }
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
+let talent = null;   // v0.27 company: the Work view (server/talent.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
@@ -528,6 +531,8 @@ sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loa
 const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W, perms });   // feat/customize: tribe + project look (server/look.js)
 const inspoBoard = require('./inspo')({ P, base: baseStore, embeds, showcase, assets: assetLib, postChat, nameOf, broadcast });   // v0.25: the inspiration board (server/inspo.js)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
+talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name,   // v0.27 company: Work (gigs, hiring, time bank, compute)
+  joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl });   // feat/setup-flow: role flows, Create the repo, Make the starter
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
@@ -555,7 +560,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...talent.mcpTools /* v0.27 company */ }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -839,6 +844,7 @@ async function apiInProject(req, res, url) {
   if (a === 'shelf') return shelf.route(req, res, ctx());
   if (a === 'assets') return assetLib.route(req, res, ctx());
   if (a === 'inspo') return inspoBoard.route(req, res, ctx());
+  if (a === 'talent') return talent.route(req, res, ctx());   // v0.27 company: Work (server/talent.js)
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)

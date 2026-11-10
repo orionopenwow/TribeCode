@@ -67,6 +67,7 @@
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
     { key: 'docs-all', label: 'All files', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
     { key: 'repos-all', label: 'All code', icon: 'i-git', group: 'global', keys: 'all repos repositories every project code branches status',   /* qa-qol-2: plain word (was All repos) */ run: () => hubOpen('repos') },
+    { key: 'work', label: 'Work', icon: 'i-users', group: 'global', keys: 'work gigs jobs hire hiring talent people open to work time bank compute share bounty seat freelance', run: () => window.TribeTalent && window.TribeTalent.open() },   // v0.27 company: app/ui/talent.js
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
     { key: 'huddle', label: 'Huddle', icon: 'i-mic', kind: 'Action', keys: 'voice call talk mic audio join start', hint: 'Ctrl Shift M', run: () => { const H = window.TribeHuddle; if (H && !H.inCall()) H.join(); } },
