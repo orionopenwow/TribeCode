@@ -11,6 +11,7 @@
 <meta property="og:title" content="Docs · TribeCode">
 <meta property="og:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="nav.css?v=0.27.1">
 <style>
   .doc { max-width: 760px; padding: 72px 24px 40px; margin: 0 auto; }
   .doc h1 { font-size: clamp(34px, 4.6vw, 48px); line-height: 1.12; letter-spacing: -0.025em; margin: 12px 0 16px; }
@@ -51,13 +52,35 @@
 </style>
 </head>
 <body>
-<header class="nav">
-  <div class="nav__in wrap" style="justify-content:space-between">
-    <a class="nav__logo" href="index.html" aria-label="TribeCode home"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="150" height="26"></a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><defs>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></symbol>
+</defs></svg>
+<header class="nav" id="top">
+  <div class="wrap nav__in">
+    <a class="nav__logo" href="index.html" aria-label="TribeCode home"><img class="nav__mark" src="assets/brand/logo-flame-sm.gif" alt="" width="28" height="28"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="132" height="23"></a>
+    <nav class="nav__links" id="nav-links" aria-label="Main">
+      <div class="nav__item" data-menu>
+        <button class="nav__link nav__drop" type="button" aria-expanded="false" aria-controls="menu-features">Features<svg class="i i--xs" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <div class="menu" id="menu-features" hidden></div><!-- filled by nav.js: the Features mega-menu -->
+      </div>
+      <a class="nav__link" href="learn.html">Learn</a>
+      <a class="nav__link" href="pricing.html">Pricing</a>
+      <a class="nav__link" href="flint.html">Flint</a>
+      <a class="nav__link" href="mission.html">Mission</a>
+      <a class="nav__link" href="docs.html">Docs</a>
+      <div class="nav__mobile-extra">
+        <a class="nav__link" href="app/">Open the app</a>
+        <a class="nav__link" href="https://github.com/orionopenwow/TribeCode/stargazers">Star on GitHub</a>
+      </div>
+    </nav>
     <div class="nav__end">
-      <a class="nav__text" href="index.html">Home</a>
-      <a class="nav__text" href="app/?welcome=1">Open the app</a>
-      <a class="btn btn--light btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest">Download</a>
+      <a class="btn btn--dark btn--sm nav__open" href="app/?welcome=1" data-open-app>Open the app</a>
+      <a class="nav__text nav__star" href="https://github.com/orionopenwow/TribeCode/stargazers" aria-label="Star TribeCode on GitHub"><svg class="i i--sm" aria-hidden="true"><use href="#i-star"/></svg>Star<span class="nav__count mono" data-gh="stars" hidden></span></a>
+      <a class="btn btn--light btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
     </div>
   </div>
 </header>
@@ -212,7 +235,9 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
 </main>
 </div>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
-<script src="i18n.js?v=0.27.0" defer></script>
+<script src="main.js?v=0.27.1" defer></script>
+<script src="nav.js?v=0.27.1" defer></script>
+<script src="i18n.js?v=0.27.1" defer></script>
 <script>
 // highlight the section you're reading in the table of contents
 (function () {

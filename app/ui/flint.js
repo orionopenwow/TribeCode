@@ -65,6 +65,7 @@
     customize: tab => window.TribeLook && window.TribeLook.open(tab || 'tribe'),
     capture: id => window.TribeCaptures && window.TribeCaptures.open(id || undefined),   // feat/captures
     company: () => window.TribeCompany && window.TribeCompany.go(),   // v0.27 company
+    flintmem: arg => window.TribeFlintMem && window.TribeFlintMem.act(arg),   // v0.27.1
     feedback: () => window.TribeFeedback && window.TribeFeedback.open(),   // feat/reviews
     prompt: async () => { const p = window.TribeFocus && window.TribeFocus.prompt(); if (!p) return; try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper.'); } catch { window.prompt('Copy this for your AI helper:', p); } },   // feat/focus
     preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
@@ -165,6 +166,7 @@
   async function route(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
+    if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) return r === true ? null : say(r.text, r.acts || []); }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
     if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) return say(co.text, co.open ? [act('Open Company', 'company')] : []); }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
     if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) return say(ac.text); }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
     if (window.TribeCaptures) { const cap = await window.TribeCaptures.flint(text); if (cap) return say(cap.text, cap.capture ? [act('Open notes', 'capture', cap.capture)] : []); }   // feat/captures: summarize <url>, what did we decide about X
@@ -336,7 +338,7 @@
     const history = thread.slice(-9, -1).map(m => ({ role: m.who === 'flint' ? 'assistant' : 'user', content: String(m.text).slice(0, 400) }));
     const msg = say(B().browserReady() ? '…' : 'Waking up the built-in model (the first time downloads it)…', [], { streaming: true });
     try {
-      const out = await B().askBrowser([{ role: 'system', content: SYSTEM + (r ? `\n\nRoom facts:\n${roomText(r)}` : '') + (extra ? `\n\nRecent chat:\n${extra}` : '') }, ...history, { role: 'user', content: text }],
+      const out = await B().askBrowser([{ role: 'system', content: SYSTEM + (window.TribeFlintMem ? window.TribeFlintMem.brief() : '') + (r ? `\n\nRoom facts:\n${roomText(r)}` : '') + (extra ? `\n\nRecent chat:\n${extra}` : '') }, ...history, { role: 'user', content: text }],
         t => { msg.text = t || '…'; drawLast(); });
       msg.text = out.text || 'I had nothing to add there.'; msg.via = out.via; delete msg.streaming; save(); draw();
     } catch (e) { msg.text = 'The built-in model could not answer: ' + e.message; delete msg.streaming; msg.acts = [act('Flint\'s brain', 'brain')]; save(); draw(); }
@@ -375,6 +377,7 @@
     busy = true; push('me', text);
     try { await route(text); } catch (e) { say('Something went wrong: ' + e.message); }
     finally { busy = false; }
+    if (window.TribeFlintMem) window.TribeFlintMem.log(text);   // v0.27.1: notices repeats and offers to make a skill
   }
 
   // ---------- view ----------
@@ -397,7 +400,8 @@
       <div class="fl-chips">${CHIPS.map(c => `<button class="fl-chip" data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
       <p class="fl-priv">${esc(privLine())}</p></div>`;
   }
-  const linkify = s => esc(s).replace(/“([^”]{1,120})”/g, '“<b>$1</b>”');
+  const linkify = s => esc(s).replace(/```[a-z]*\n?([\s\S]*?)```/g, (_, c) => `<pre class="fl-code"><code>${c.replace(/\n$/, '')}</code></pre>`)   // v0.27.1: lessons show code
+    .replace(/`([^`\n]{1,80})`/g, '<code>$1</code>').replace(/\*\*([^*\n]{1,120})\*\*/g, '<b>$1</b>').replace(/“([^”]{1,120})”/g, '“<b>$1</b>”');
   function msgHtml(m, i) {
     const mine = m.who === 'me';
     return `<div class="fl-msg ${mine ? 'me' : 'fl'}${m.streaming ? ' streaming' : ''}" data-i="${i}">${mine ? '' : `<span class="fl-av sm">${flintIco(12)}</span>`}
@@ -509,5 +513,6 @@
   // a quiet message from Flint with one button (feedback.js asks for a review this way, once)
   const nudge = (text, label, actName, arg) => say(text, [act(label, actName, arg)]);
   function prefill(t) { focus(); setTimeout(() => { const i = document.querySelector('.fl-in, #fl-in, [data-flin]'); if (i) { i.value = t; i.focus(); i.setSelectionRange(t.length, t.length); } }, 60); }
-  window.TribeFlint = { prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge };
+  window.TribeFlint = { prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
+    say: (text, acts) => say(text, acts || []), act, step: async t => { push('me', t); await route(t); }, think: async t => { await refreshModel(); if (!model.online) return false; await modelReply(t); return true; } };   // v0.27.1: flintmem.js uses say/act/step/think
 })();

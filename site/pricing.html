@@ -34,6 +34,7 @@
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, built around your shared GitHub repo.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css?v=0.27.0">
+<link rel="stylesheet" href="nav.css?v=0.27.1">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -61,15 +62,11 @@
     <nav class="nav__links" id="nav-links" aria-label="Main">
       <div class="nav__item" data-menu>
         <button class="nav__link nav__drop" type="button" aria-expanded="false" aria-controls="menu-features">Features<svg class="i i--xs" aria-hidden="true"><use href="#i-chevron"/></svg></button>
-        <ul class="menu" id="menu-features" hidden>
-          <li><a href="index.html#company"><b>Company mode</b><span>Seats, rhythms and real numbers for a business</span></a></li>
-          <li><a href="index.html#room"><b>One chat for everyone</b><span>People and their AI, in the same room</span></a></li>
-          <li><a href="index.html#phone"><b>Your phone as a remote</b><span>One-tap approvals, voice notes, tasks</span></a></li>
-          <li><a href="index.html#lanes"><b>Lanes</b><span>Every agent in its own lane, people approve</span></a></li>
-          <li><a href="index.html#host"><b>Where it runs</b><span>Your computer, a server or the cloud; friends join with a link</span></a></li>
-        </ul>
+        <div class="menu" id="menu-features" hidden></div><!-- filled by nav.js: the Features mega-menu -->
       </div>
+      <a class="nav__link" href="learn.html">Learn</a>
       <a class="nav__link" href="pricing.html">Pricing</a>
+      <a class="nav__link" href="flint.html">Flint</a>
       <a class="nav__link" href="mission.html">Mission</a>
       <a class="nav__link" href="docs.html">Docs</a>
       <div class="nav__mobile-extra">
@@ -182,6 +179,7 @@
       <a href="app/">Open the app</a>
       <a href="app/?demo=showcase">Demo tribe</a>
       <a href="pricing.html">Pricing</a>
+      <a href="flint.html">Meet Flint</a>
       <a href="mission.html">Mission</a>
       <a href="index.html#company">Company mode</a>
       <a href="docs.html">Quick start</a>
@@ -198,7 +196,8 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.27.0" defer></script>
-<script src="i18n.js?v=0.27.0" defer></script>
+<script src="main.js?v=0.27.1" defer></script>
+<script src="nav.js?v=0.27.1" defer></script>
+<script src="i18n.js?v=0.27.1" defer></script>
 </body>
 </html>

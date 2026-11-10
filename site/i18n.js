@@ -47,6 +47,44 @@
     "Widgets for the tools you already use": ["Widgets para las herramientas que ya usas", "Widgets para as ferramentas que você já usa", "Des widgets pour vos outils habituels", "Widgets für deine Werkzeuge", "いつものツールのウィジェット", "为你常用的工具准备的小组件", "이미 쓰는 도구를 위한 위젯"],
     "Bring your own studio": ["Trae tu propio estudio", "Traga seu próprio estúdio", "Apportez votre studio", "Bring dein eigenes Studio mit", "好きなスタジオを持ち込もう", "带上你自己的创作工具", "나만의 스튜디오를 연결하세요"],
     "From a pixel game to full 3D": ["De un juego de píxeles a 3D completo", "De um jogo em pixels a 3D completo", "Du jeu en pixels à la 3D", "Vom Pixelspiel bis zu vollem 3D", "ピクセルゲームから本格3Dまで", "从像素游戏到完整 3D", "픽셀 게임부터 풀 3D까지"],
+    // v0.27.1 nav mega-menu + Meet Flint
+    "Flint": ["Flint", "Flint", "Flint", "Flint", "Flint", "Flint", "Flint"],
+    "Build": ["Crear", "Criar", "Créer", "Bauen", "つくる", "构建", "만들기"],
+    "Together": ["Juntos", "Juntos", "Ensemble", "Zusammen", "いっしょに", "一起", "함께"],
+    "Run it": ["Gestiónalo", "Toque o negócio", "Faites-le tourner", "Betreiben", "運営する", "运营", "운영하기"],
+    "Games, sites and tools for the people around you": ["Juegos, webs y herramientas para la gente que te rodea", "Jogos, sites e ferramentas para as pessoas ao seu redor", "Des jeux, des sites et des outils pour votre entourage", "Spiele, Websites und Tools für die Menschen um dich herum", "身近な人のためのゲーム、サイト、ツール", "为身边的人做游戏、网站和工具", "주변 사람들을 위한 게임, 사이트, 도구"],
+    "The whole studio": ["Todo el estudio", "O estúdio inteiro", "Tout le studio", "Das ganze Studio", "スタジオのすべて", "整个工作室", "스튜디오 전체"],
+    "Docs, widgets, studios and assets in one app": ["Documentos, widgets, estudios y recursos en una app", "Documentos, widgets, estúdios e recursos em um app", "Docs, widgets, studios et ressources dans une app", "Docs, Widgets, Studios und Assets in einer App", "ドキュメント、ウィジェット、スタジオ、素材をひとつに", "文档、小组件、创作工具和素材，一个应用搞定", "문서, 위젯, 스튜디오, 에셋을 하나의 앱에"],
+    "Working first versions to play with and remix": ["Primeras versiones que funcionan, para jugar y remezclar", "Primeiras versões que funcionam, para brincar e remixar", "Des premières versions qui marchent, à essayer et remixer", "Funktionierende erste Versionen zum Ausprobieren und Remixen", "遊んで改造できる動く最初の版", "能直接玩、能改编的初版", "바로 써 보고 리믹스할 수 있는 첫 버전"],
+    "Friends and their AI helpers in one room": ["Amigos y sus ayudantes de IA en una sala", "Amigos e seus ajudantes de IA em uma sala", "Des amis et leurs assistants IA dans une même pièce", "Freunde und ihre KI-Helfer in einem Raum", "友だちとそのAIヘルパーがひとつの部屋に", "朋友和他们的 AI 助手在同一个房间", "친구와 그들의 AI 도우미가 한 방에"],
+    "Meet Flint": ["Conoce a Flint", "Conheça o Flint", "Voici Flint", "Das ist Flint", "Flint を紹介", "认识 Flint", "Flint를 만나보세요"],
+    "The built-in helper that runs the app with you": ["El ayudante integrado que maneja la app contigo", "O ajudante integrado que cuida do app com você", "L’assistant intégré qui pilote l’app avec vous", "Der eingebaute Helfer, der die App mit dir bedient", "いっしょにアプリを動かす内蔵ヘルパー", "和你一起操作应用的内置助手", "함께 앱을 움직이는 내장 도우미"],
+    "Approve, reply and send voice notes on the go": ["Aprueba, responde y envía notas de voz donde sea", "Aprove, responda e envie áudios em qualquer lugar", "Approuvez, répondez et envoyez des notes vocales partout", "Freigeben, antworten und Sprachnotizen senden, unterwegs", "外出先で承認、返信、ボイスメモ", "随时随地批准、回复、发语音", "이동 중에도 승인, 답장, 음성 메모"],
+    "Each AI works its own part; people approve": ["Cada IA trabaja su parte; las personas aprueban", "Cada IA cuida da sua parte; as pessoas aprovam", "Chaque IA travaille sa partie ; les humains approuvent", "Jede KI arbeitet an ihrem Teil; Menschen geben frei", "AIはそれぞれ自分の担当、承認は人が", "每个 AI 负责自己的部分，由人来批准", "각 AI는 자기 부분을 맡고, 승인은 사람이"],
+    "Seats, money and hiring for a real business": ["Puestos, dinero y contrataciones para un negocio real", "Cargos, dinheiro e contratações para um negócio de verdade", "Des sièges, de l’argent et des embauches pour une vraie entreprise", "Rollen, Geld und Einstellungen für ein echtes Business", "本物のビジネスのための役割、お金、採用", "为真正的生意准备职位、资金和招聘", "진짜 사업을 위한 자리, 돈, 채용"],
+    "Your computer, your own server or the cloud": ["Tu computadora, tu propio servidor o la nube", "Seu computador, seu servidor ou a nuvem", "Votre ordinateur, votre serveur ou le cloud", "Dein Computer, dein Server oder die Cloud", "自分のPC、自分のサーバー、クラウド", "你的电脑、你自己的服务器或云端", "내 컴퓨터, 내 서버, 또는 클라우드"],
+    "Vibecoding, explained": ["El vibecoding, explicado", "Vibecoding, explicado", "Le vibecoding, expliqué", "Vibecoding, erklärt", "バイブコーディングとは", "氛围编程是什么", "바이브코딩이란"],
+    "Make software by saying what you want": ["Crea software diciendo lo que quieres", "Crie software dizendo o que você quer", "Créez des logiciels en disant ce que vous voulez", "Software bauen, indem du sagst, was du willst", "ほしいものを言うだけでソフトをつくる", "说出你想要的，就能做出软件", "원하는 걸 말해서 소프트웨어를 만들기"],
+    "Five short, free lessons from zero": ["Cinco lecciones breves y gratis desde cero", "Cinco aulas curtas e grátis do zero", "Cinq leçons courtes et gratuites, depuis zéro", "Fünf kurze, kostenlose Lektionen von null", "ゼロからの短い無料レッスン5つ", "从零开始的五节免费短课", "처음부터 시작하는 짧은 무료 수업 5개"],
+    "Install, connect your AI, host, fix things": ["Instala, conecta tu IA, aloja, arregla cosas", "Instale, conecte sua IA, hospede, resolva problemas", "Installer, connecter votre IA, héberger, dépanner", "Installieren, KI verbinden, hosten, Fehler beheben", "インストール、AI接続、ホスト、トラブル対応", "安装、连接你的 AI、托管、排错", "설치, AI 연결, 호스팅, 문제 해결"],
+    "See it ↓": ["Verlo ↓", "Ver ↓", "Voir ↓", "Ansehen ↓", "見る ↓", "查看 ↓", "보기 ↓"],
+    "Open →": ["Abrir →", "Abrir →", "Ouvrir →", "Öffnen →", "開く →", "打开 →", "열기 →"],
+    "TribeCode's own helper: it runs the app for you, teaches you, and works without a paid AI.": ["El ayudante propio de TribeCode: maneja la app por ti, te enseña y funciona sin una IA de pago.", "O ajudante do próprio TribeCode: cuida do app para você, ensina você e funciona sem uma IA paga.", "L’assistant de TribeCode : il pilote l’app pour vous, vous apprend des choses et marche sans IA payante.", "TribeCodes eigener Helfer: bedient die App für dich, bringt dir Dinge bei und läuft ohne bezahlte KI.", "TribeCode 自前のヘルパー。アプリを動かし、教えてくれて、有料AIなしでも動きます。", "TribeCode 自己的助手：替你操作应用、教你东西，不用付费 AI 也能用。", "TribeCode의 자체 도우미: 앱을 대신 움직이고, 가르쳐 주고, 유료 AI 없이도 동작합니다."],
+    "Talk to Flint": ["Habla con Flint", "Fale com o Flint", "Parlez à Flint", "Sprich mit Flint", "Flint と話す", "和 Flint 聊聊", "Flint와 대화하기"],
+    "One helper, the whole app": ["Un ayudante, toda la app", "Um ajudante, o app inteiro", "Un assistant, toute l’app", "Ein Helfer, die ganze App", "ひとりのヘルパーで、アプリ全体を", "一个助手，整个应用", "도우미 하나로 앱 전체를"],
+    "Runs the app for you": ["Maneja la app por ti", "Cuida do app para você", "Pilote l’app pour vous", "Bedient die App für dich", "アプリを代わりに動かす", "替你操作应用", "앱을 대신 움직여요"],
+    "Builds anything you can describe": ["Construye lo que puedas describir", "Constrói o que você conseguir descrever", "Construit tout ce que vous savez décrire", "Baut alles, was du beschreiben kannst", "説明できるものは何でもつくる", "你能描述的都能做", "설명할 수 있는 건 뭐든 만들어요"],
+    "Teaches you the way you learn": ["Te enseña como tú aprendes", "Ensina do jeito que você aprende", "Vous apprend à votre façon", "Bringt dir bei, wie du lernst", "あなたの学び方で教える", "按你的学习方式来教", "내가 배우는 방식으로 가르쳐요"],
+    "Writes your docs": ["Escribe tus documentos", "Escreve seus documentos", "Écrit vos docs", "Schreibt deine Doku", "ドキュメントを書く", "帮你写文档", "문서를 써 줘요"],
+    "Remembers you, and knows your tribe": ["Te recuerda y conoce a tu tribu", "Lembra de você e conhece sua tribo", "Se souvient de vous et connaît votre tribu", "Erinnert sich an dich und kennt deinen Tribe", "あなたを覚えて、トライブを知っている", "记得你，也了解你的部落", "나를 기억하고 트라이브를 알아요"],
+    "Learns your tribe's shortcuts": ["Aprende los atajos de tu tribu", "Aprende os atalhos da sua tribo", "Apprend les raccourcis de votre tribu", "Lernt die Abkürzungen deines Tribes", "トライブの近道を覚える", "学会你们部落的快捷方式", "트라이브의 지름길을 배워요"],
+    "Works offline, or with any AI": ["Funciona sin conexión o con cualquier IA", "Funciona offline ou com qualquer IA", "Marche hors ligne ou avec n’importe quelle IA", "Läuft offline oder mit jeder KI", "オフラインでも、どのAIとでも", "离线可用，也能接任何 AI", "오프라인으로도, 어떤 AI와도"],
+    "Asks before anything that matters": ["Pregunta antes de todo lo importante", "Pergunta antes de qualquer coisa importante", "Demande avant tout ce qui compte", "Fragt vor allem, was zählt", "大事なことの前には必ず確認", "重要的事先问你", "중요한 일은 먼저 물어봐요"],
+    "From your words to done": ["De tus palabras a hecho", "Das suas palavras ao feito", "De vos mots au résultat", "Von deinen Worten zum Ergebnis", "あなたの言葉から完成まで", "从一句话到完成", "말 한마디에서 완성까지"],
+    "Good to know": ["Bueno saber", "Bom saber", "Bon à savoir", "Gut zu wissen", "知っておきたいこと", "值得了解", "알아 두면 좋아요"],
+    "Strike up a tribe": ["Enciende una tribu", "Acenda uma tribo", "Allumez une tribu", "Entfache einen Tribe", "トライブに火をつけよう", "点燃一个部落", "트라이브에 불을 붙여요"],
+    "Try Flint here": ["Prueba Flint aquí", "Teste o Flint aqui", "Essayez Flint ici", "Flint hier ausprobieren", "ここで Flint を試す", "在这里试试 Flint", "여기서 Flint 써 보기"],
+    "Try the demo tribe": ["Prueba la tribu demo", "Teste a tribo demo", "Essayez la tribu démo", "Demo-Tribe ausprobieren", "デモトライブを試す", "试试演示部落", "데모 트라이브 써 보기"],
     "New to vibecoding?": ["¿Nuevo en el vibecoding?", "Novo no vibecoding?", "Débutant en vibecoding ?", "Neu beim Vibecoding?", "バイブコーディングは初めて？", "刚接触氛围编程？", "바이브코딩이 처음인가요?"],
     'One chat for people and their': ['Un chat para las personas y su', 'Um chat para pessoas e seu', 'Un seul chat pour les gens et leur', 'Ein Chat für Menschen und ihr', '人と、その人の', '一个聊天，属于大家和他们的', '사람과 그들의'],
     'One chat for people and their AI.': ['Un chat para las personas y su IA.', 'Um chat para pessoas e suas IAs.', 'Un seul chat pour les gens et leur IA.', 'Ein Chat für Menschen und ihre KI.', '人とAIのための、ひとつのチャット。', '人和他们的 AI，共用一个聊天。', '사람과 그들의 AI를 위한 하나의 채팅.'],
@@ -138,7 +176,7 @@
   const NOTE = ['Algunas partes siguen en inglés.', 'Algumas partes ainda estão em inglês.', 'Certaines parties restent en anglais.', 'Einige Teile sind noch auf Englisch.', '一部はまだ英語です。', '部分内容仍为英文。', '일부는 아직 영어예요.'];
   const KEY = 'tribecode.lang';
   const idx = code => LANGS.findIndex(l => l[0] === code) - 1;   // -1 for English
-  const SEL = 'h1, h2, h3, .hero__sub, .hero__more a, .hero__more-note, [class*="__lead"], .feature__text, .maker__text, .nav__link, .nav__open, .nav__star, [data-dl-label], .btn, .menu b, .footer p, .footer__links a, .lc-go, .vibe__text, .biz__note, .biz__text, .biz__sk, .biz__ss, .bx__cap, .biz__docs, .fbk__more a, .vf__k, .vf__cap, .vf__step b, .kit__text';
+  const SEL = 'h1, h2, h3, .hero__sub, .hero__more a, .hero__more-note, [class*="__lead"], .feature__text, .maker__text, .nav__link, .nav__open, .nav__star, [data-dl-label], .btn, .menu b, .footer p, .footer__links a, .lc-go, .vibe__text, .biz__note, .biz__text, .biz__sk, .biz__ss, .bx__cap, .biz__docs, .fbk__more a, .vf__k, .vf__cap, .vf__step b, .kit__text, .mm__d, .mm__eb, .mm-spot__t, .mm-spot__d, .mm-spot__go';
   let cur = 'en';
   function textNode(el) { for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return n; return null; }
   function apply(code) {
@@ -191,5 +229,5 @@
     if (want !== 'en') apply(want); else apply('en');
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
-  window.TribeLang = { set: c => { try { localStorage.setItem(KEY, c); } catch {} apply(c); }, get: () => cur, langs: LANGS.map(l => l[0]) };
+  window.TribeLang = { set: c => { try { localStorage.setItem(KEY, c); } catch {} apply(c); }, get: () => cur, langs: LANGS.map(l => l[0]), t: s => { const i = idx(cur), k = String(s).trim().replace(/\s+/g, ' '); return i >= 0 && T[k] ? T[k][i] : s; } };
 })();

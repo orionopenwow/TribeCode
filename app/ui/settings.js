@@ -76,6 +76,7 @@
       ${window.TribeLook ? row('Look', '<button class="btn" id="set-look">Customize…</button>', 'Accent, background, spacing, font size, and the tribe\'s name and icon.') : ''}
       ${C() && C().connected() && window.TribeStorage ? `<div class="set-row set-row-wide"><div class="set-l"><b>Storage &amp; sync</b><small>Where your tribe, code and drafts are kept, and what keeps them safe.</small></div><div class="set-c" id="set-storage"></div></div>` : ''}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
+      ${C() && C().connected() && window.TribeFlintMem ? `<div class="set-row set-row-wide" id="set-flint"><div class="set-l"><b>Flint</b><small>What Flint remembers about you, how you like to learn, and the tribe's skills.</small></div><div class="set-c" id="set-flintmem"></div></div>` : ''}
       ${window.TribeBrain ? row('Flint\'s brain', '<div id="set-flintbrain"></div>', 'Built in, Ollama, or a cloud model with your key. Also writes summaries, drafts and standups.') : row('Local brain', `<span class="set-brain">${brainTxt}</span>${probe.state === 'found' && probe.models.length ? `<select id="set-model">${['', ...probe.models].map(m => `<option value="${esc(m)}" ${(st.brain.enabled ? st.brain.model : '') === m ? 'selected' : ''}>${m ? esc(m) : 'Off'}</option>`).join('')}</select>` : ''}`, 'Writes summaries and standups on this computer.')}
       ${desk ? row('Host on this computer', `<button class="toggle set-toggle" role="switch" id="set-host" aria-label="Host on this computer" aria-checked="${!!(st.hosting && !st.hostOff)}" ${st.hosting ? '' : 'disabled'}><span class="switch"></span></button>`, st.hosting ? 'Your tribe runs here only while this is on. Off stops the server; nothing is deleted.' : 'Starts when you create your first project.') : ''}
       ${desk ? row('Open at login', `<button class="toggle set-toggle" role="switch" id="set-login" aria-label="Open at login" aria-checked="${!!st.startup.launchAtLogin}"><span class="switch"></span></button>`) : ''}
@@ -125,6 +126,7 @@
     const md = $('#set-model'); if (md) md.onchange = () => { S.set({ brain: { model: md.value, enabled: !!md.value }, checklist: { brain: !!md.value } }); window.TribeApp.refresh(); };
     const ai = $('#set-askai');
     if (ai) { C().api('/ask/policy').then(r => { ai.value = r.policy; }).catch(() => {}); ai.onchange = () => C().api('/ask/policy', { method: 'PUT', body: { policy: ai.value } }).then(() => toast('Saved')).catch(e => toast(e.message)); }
+    const fm = $('#set-flintmem'); if (fm) window.TribeFlintMem.mountSettings(fm);   // v0.27.1: Settings › Flint
     const fb = $('#set-flintbrain'); if (fb) window.TribeBrain.mountRow(fb);   // feat/any-llm: Flint's brain (app/ui/brainpick.js)
     const gh = $('#set-github'); if (gh) window.TribeGitHub.mount(gh);   // GitHub sign-in (app/ui/github.js)
     const sc = $('#set-chat'); if (sc) window.TribeChatRich.mountSettings(sc);   // feat/chat2 (app/ui/chatrich.js)
