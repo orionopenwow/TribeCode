@@ -284,6 +284,14 @@
 
   /* ---------- Suggested tasks ---------- */
   #view-tasks .m2-sugg { margin: 4px 0 22px; }
+  #view-tasks .m2-sugg--slim { margin: 0 0 12px; }
+  #view-tasks .m2-sugg--slim[hidden] { display: none; }
+  #view-tasks .m2-sugg--slim .m2-sl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0; }
+  #view-tasks .m2-sugg--slim .m2-si--slim { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 48px; padding: 6px 6px 6px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+  #view-tasks .m2-si--slim .m2-si-k { flex: none; font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  #view-tasks .m2-si--slim .m2-si-tt { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #view-tasks .m2-si--slim button { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--edge); font-size: 13px; font-weight: 600; color: var(--text); }
+  #view-tasks .m2-si--slim .claude { width: 36px; padding: 0; justify-content: center; color: var(--live-ink); }
   #view-home .m2-sugg { margin: 0 0 26px; }
   .m2-sl { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
   .m2-si { background: var(--surface); border: 1px solid var(--edge); border-radius: 14px; padding: 12px; transition: opacity .2s, transform .2s; }

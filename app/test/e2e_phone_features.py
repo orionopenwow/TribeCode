@@ -136,13 +136,13 @@ def main():
                 wait_until(lambda: any(t["title"] == "Draw the lantern sprite" for t in api("/tasks", token=ftok, project=pid)[1]["tasks"]), 10, "task saved")
                 tid = [t for t in api("/tasks", token=ftok, project=pid)[1]["tasks"] if t["title"] == "Draw the lantern sprite"][0]["id"]
                 ph.wait_for_selector(f".task[data-id='{tid}']", state="visible", timeout=10000)
-                ph.click(f".task[data-id='{tid}']"); ph.click('#tk-drawer [data-status="doing"]'); ph.keyboard.press("Escape")   # v0.27.2: the task sheet
+                ph.click(f".task[data-id='{tid}'] .t"); ph.click('#tk-drawer [data-status="doing"]'); ph.keyboard.press("Escape")   # v0.27.2: the task sheet
                 wait_until(lambda: [t for t in api("/tasks", token=ftok, project=pid)[1]["tasks"] if t["id"] == tid][0]["status"] == "doing", 10, "moved")
                 reload_phone(); ph.click('#tabbar [data-nav="tasks"]')
-                ph.click('#tk-seg [data-seg="doing"]')   # v0.27.2: phones show one column at a time
+                ph.click('#tk-seg [data-seg="doing"]')   # v0.28: the In progress tile filters the list
                 ph.wait_for_selector(f".col[data-col='doing'] .task[data-id='{tid}']", timeout=10000)
                 h = ph.locator(f".task[data-id='{tid}']").bounding_box()["height"]
-                assert h < 70, f"a slate, not a pane ({h}px)"
+                assert h < 170, f"a row with its next step, not a pane ({h}px)"
                 no_sideways(ph, "tasks")
             feature("Tasks: New task, move with the status chip (a slim slate), saved", tasks)
 
