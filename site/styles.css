@@ -1536,3 +1536,6 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .vs-ai__st { font-size: 10px; } .vs-code pre { font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .vs-eye, .vs-caret { animation: none; } }
+
+/* Company section: parts tucked away with the hidden attribute stay hidden */
+#company [hidden] { display: none !important; }

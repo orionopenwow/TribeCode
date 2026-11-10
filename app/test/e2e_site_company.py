@@ -37,9 +37,9 @@ def main():
         assert pg.locator("#cs .cs__seat").count() == 4 and pg.locator("#cs .cs__line").count() == 4
         assert "Approved by Camp" in pg.text_content("#cs .cs__ask") and pg.is_visible("#cs .cs__ask-done") and pg.is_visible("#cs .cs__toast")
         assert pg.get_attribute("#cs .cs__win", "aria-hidden") == "true" and "Lantern Games" in pg.text_content("#cs-desc")
-        assert pg.locator("#company .bx__card").count() == 3 and pg.locator("#company .bx__cap").count() == 10
-        assert pg.locator("#company .biz__strip li").count() == 4
-        assert pg.locator("#company a[href='learn.html#m5-0']").count() == 1 and pg.locator("#company a[href='docs.html#company']").count() == 1
+        # the explainers and the Learn-it strip are tucked away for now (hidden), the docs link stays
+        assert not pg.locator("#company .bx").is_visible() and not pg.locator("#company .biz__strip").is_visible()
+        assert pg.locator("#company a[href='docs.html#company']").is_visible()
         assert "person’s OK" in pg.text_content("#company .biz__note")
         assert pg.locator("#menu-features a[href='#company']").count() == 1 and pg.locator(".footer__links a[href='#company']").count() == 1
         # the mock's example revenue aside, the section names no prices
