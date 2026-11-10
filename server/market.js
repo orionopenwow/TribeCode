@@ -144,7 +144,7 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
       return { done: 'doc', doc: slug, name, message: `${it.title} saved as a doc` };
     }
     if (it.kind === 'site-template') return { client: 'remix', repo: it.repo || null, remix: (it.tags || []).includes('remix'), url: it.url || (it.repo ? `https://github.com/${it.repo}` : null) };
-    if (it.kind === 'company-template') return exists('server/company.js') ? { client: 'company', template: it.ref } : { needs: 'company', template: it.ref, message: 'Company mode isn’t on this tribe’s TribeCode yet' };
+    if (it.kind === 'company-template') return exists('templates/companies.json') ? { client: 'company', template: it.ref } : { needs: 'company', template: it.ref, message: 'Company mode isn’t on this tribe’s TribeCode yet' };
     if (it.kind === 'asset-pack') return it.url ? { client: 'open', url: it.url } : { client: 'assets', kind: it.assetKind || '', ref: it.ref };
     if (it.kind === 'legal') return exists('templates/legal') ? { client: 'legal', ref: it.ref } : { needs: 'legal', ref: it.ref, message: 'Legal templates aren’t on this tribe’s TribeCode yet' };
     if (it.kind === 'academy') return { client: 'academy', ref: it.ref };

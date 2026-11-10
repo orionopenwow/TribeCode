@@ -17,7 +17,7 @@ const path = require('node:path');
 const { run } = require('./gitutil');
 const makeGists = require('./gists');
 
-const TEMPLATE = path.join(__dirname, '..', 'templates', 'flow-starter');
+const TEMPLATE = require('./tpldir')('flow-starter');   // v0.27: also works in the desktop app
 // Role colors: the palette tokens plus three muted matte hues (app/ui/flow.css mirrors these).
 const PALETTE = { ember: '#F26B1D', teal: '#38C6B1', indigo: '#6C7CFF', green: '#3BD16F', rose: '#FF6F8E', sand: '#C9A66B', sage: '#8FB39A', plum: '#A98BC9' };
 const GLYPHS = ['i-flag', 'i-eye', 'i-zap', 'i-git', 'i-bug', 'i-spark', 'i-brain', 'i-map', 'i-users', 'i-doc', 'i-mic', 'i-robot'];

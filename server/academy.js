@@ -14,7 +14,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const TPL = path.join(__dirname, '..', 'templates');
+const TPL = require('./tpldir')();   // v0.27: also works in the desktop app
 const KINDS = ['ceo', 'cto', 'design', 'growth', 'sales', 'support', 'ops', 'finance', 'legal'];
 const loadJson = f => { try { return JSON.parse(fs.readFileSync(path.join(TPL, f), 'utf8')); } catch (e) { console.error('academy: ' + f + ' ' + e.message); return null; } };
 // Anything that looks like a key, token or password is dropped before text leaves the tribe (the offload prompt).

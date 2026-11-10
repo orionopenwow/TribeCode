@@ -48,7 +48,7 @@ const STATUSES = ['on-track', 'needs-you', 'blocked', 'idle'];
 const RHYTHMS = ['standup', 'weekly', 'board'];
 const OUTWARD = /\b(publish|post publicly|spend|pay|buy|order|email|send|contract|sign|deploy|production|release|refund|price|invoice|ads?)\b/i;
 const MAX_SEATS = 16, MAX_GOALS = 12, MAX_RESULTS = 5, MAX_LIST = 12;
-const TPL_FILE = path.join(__dirname, '..', 'templates', 'companies.json');
+const TPL_FILE = require('./tpldir')('companies.json');   // v0.27: also works in the desktop app
 
 module.exports = function company({ P, base, store, broadcast, postChat = () => {}, nameOf = () => 'someone', perms, getMembers, approvals, bus, coord, createTask, saveTask, loadTasks = () => [], docs, tick = !process.env.TRIBE_TEST || !!process.env.TRIBE_COMPANY_TICK }) {
   const err = (status, m) => Object.assign(new Error(m), { status });

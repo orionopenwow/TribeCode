@@ -187,3 +187,15 @@
 @media (max-width: 1180px) and (min-width: 821px) { .pj-glance .pl-grid.gl-grid.has-co { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .ns-biz-ai { display: flex; gap: 8px; align-items: center; margin: 12px 2px 0; font-size: 13.5px; color: var(--muted); cursor: pointer; }
 .ns-biz-ai input { accent-color: var(--accent); }
+
+/* v0.27 company links (companylinks.js): Money this month + a seat's AI spend */
+.cl-money { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.cl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.cl-head .eyebrow { margin: 0; }
+.cl-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.cl-nums > div { padding: 8px 10px; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised, var(--canvas)); display: grid; gap: 2px; }
+.cl-nums small { color: var(--muted); font-size: 11.5px; } .cl-nums b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.cl-nums b.pos { color: #3BD16F; } .cl-nums b.neg { color: #FF6F8E; }
+.cl-empty { margin: 0; font-size: 13px; }
+.cl-spend { display: grid; gap: 4px; margin-top: 10px; } .cl-spend .eyebrow { margin: 0; }
+.cl-bar { height: 6px; border-radius: 6px; background: var(--edge); overflow: hidden; } .cl-bar i { display: block; height: 100%; background: var(--accent, #38C6B1); } .cl-bar.over i { background: #FF6F8E; }

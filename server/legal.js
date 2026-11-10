@@ -11,7 +11,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DIR = path.join(__dirname, '..', 'templates', 'legal');
+const DIR = require('./tpldir')('legal');   // v0.27: also works in the desktop app
 const JUR_NAME = { US: 'the United States', UK: 'the United Kingdom', EU: 'the European Union', CA: 'Canada', AU: 'Australia', Other: 'other places' };
 const BANNER = '> ⚖️ **Starting point, not legal advice.** This draft was made from a TribeCode template. Laws differ by place and situation: have a lawyer in your jurisdiction review it before anyone signs or relies on it.';
 const TITLE_KEYS = ['party_b', 'contractor', 'client', 'assignor', 'volunteer', 'app_name', 'site', 'project', 'company'];

@@ -71,6 +71,7 @@
     ],
     "resources": {
       "../ui/": "ui/",
+      "../../templates/": "templates/",
       "../../docs/guide/*.md": "guide/"
     },
     "windows": {

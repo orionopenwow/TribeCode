@@ -453,8 +453,8 @@ const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: (
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
 const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
-const shelf = require('./shelf')({ P, root: path.join(__dirname, '..'), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
-const assetLib = require('./assets')({ P, root: path.join(__dirname, '..'), base: baseStore, postChat, str, nameOf });   // v0.25: the open asset library (server/assets.js)
+const shelf = require('./shelf')({ P, root: require('./tpldir').root(), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
+const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base: baseStore, postChat, str, nameOf });   // v0.25: the open asset library (server/assets.js)
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
@@ -538,7 +538,7 @@ talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
-const market = require('./market')({ P, store: baseStore, root: path.join(__dirname, '..'), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str });   // v0.27 company: the Marketplace (server/market.js)
+const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str });   // v0.27 company: the Marketplace (server/market.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const company = companyHub = require('./company')({ P, base: baseStore, store, broadcast, postChat, nameOf, perms, getMembers: () => members, approvals, bus, coord, createTask: o => createTask(o), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), docs });   // v0.27 company: seats, goals, decisions, rhythms (server/company.js)
 company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x => x.events) ? { spentWeek: w.total, currency: w.currency } : null; });   // v0.27 company: real AI spend from Money (ledger.js) in the weekly review

@@ -20,7 +20,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const TEMPLATES = path.join(__dirname, '..', 'templates');
+const TEMPLATES = require('./tpldir')();   // v0.27: also works in the desktop app
 const FILE = '.tribe/setup.json';
 
 // Flat palettes (5 colors: canvas, surface, accent, second, text-ish). `when`: sense tags or kinds that suit it.
