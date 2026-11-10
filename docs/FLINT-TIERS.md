@@ -21,6 +21,44 @@ subscription, and this repository holds no prices.
 `GET /api/flint/tiers` returns this map and whether the tribe's AI is on. `POST /api/flint/tier { ask, picked }`
 classifies one request. Ask Flint "What can you do for free?" to see it in the app.
 
+## Flint's local brain (no model at all)
+
+The first tier is wider than a list of commands. `app/ui/flintnlu.js` understands what people type with no language
+model, in the browser and on the server, and `app/ui/flintlocal.js` does it. Flint's chat tries it first.
+
+- **About 170 actions across the app:** tasks (add, finish, start, assign, review, delete, move the due date, rename,
+  list, "what needs someone"), notes, docs, sheets, slides, the vision, DMs and chat posts, the calendar (add, "what's
+  on today"), free builds and the 16 website templates, the design canvas (13 screens, tidy up, rename layers, dark
+  version, variants, send to the app, export), the preview (reload, phone/tablet/desktop, edit, comments, publish),
+  edits to the picked element, themes, accent, text size, language, personalize, invites, hosting, connecting an AI,
+  the Secretary and autopilot, jams, huddles, capture, the Marketplace, trending repos, Studios, assets, find, status,
+  and about 40 places to open.
+- **Spelling and slang:** "ad a tsk to buy milk tomorow", "pls", "tmrw", "whats". Edit distance against the words
+  Flint knows, with real words protected so "bake" stays "bake".
+- **Dates, times, people, colors:** "by friday", "the 20th", "in 3 days", "at 5pm", "for Maya", "teal", "#ff6f8e".
+- **Several steps at once:** "make a merch store for Ember Socks, dark, then add a task to order samples for Friday
+  and tell Maya". A step with no message ("tell Maya") gets a summary of what Flint just did.
+- **What's on screen:** "make it bigger" edits the element picked in the preview or the canvas selection; "mark it
+  done" is the last task; "tell her" is the last person.
+- **Eight languages** for the core commands (tasks, notes, open, theme, undo) and every reply.
+- **One question when a detail is missing** ("Which task?"), with tappable answers. **Did you mean** with three
+  choices when Flint isn't sure; tapping one teaches him.
+- **Undo** for every change it can take back: tasks, messages, calendar events, theme, accent, text size, language.
+  A build stays in the code; Flint points to History in the preview instead.
+- **Taught phrases:** "when I say standup, open the calendar", or "no, I meant …" after a miss. Stored per person on
+  the host (`/api/flint/learned`) and on the device, matched by TF-IDF.
+- **How-to answers from the docs:** the Guide first, then `docs/*.md` ranked by TF-IDF (`/api/flint/kb`,
+  `server/flintkb.js`), with the source named.
+- **Local smarts:** math ("split 120 between 4", "15% of 80", tips), unit conversion, the date and time, "what date
+  is next friday", coins, dice, random numbers, "who should do the dishes".
+
+What it can't do: write or judge open-ended text (a poem, a review of a design), reason about code, chat freely, or
+answer questions the docs don't cover. Those get the honest card: hand it to your AI helper, or give Flint a brain.
+
+Coverage: `app/test/flint_nlu_test.js` runs `app/test/flint_nlu_cases.json` (750 phrasings: 406 written by hand,
+plus typo and filler variants, plus a held-out set that was never tuned against and is reported on its own).
+`app/test/e2e_flint_local.py` runs 15 commands in the app with no model.
+
 ## Free building
 
 - In the Flint panel beside the preview, or in Flint's chat: "make a 3D game called Gem Rush", "build a to-do app
@@ -55,4 +93,4 @@ and **Undo** takes back the last change on that page (up to 40 steps, kept while
   sheet, recipe builds, tasks, notes and the Guide.
 - The Flint panel is a bottom sheet over the preview at phone width, with full-size buttons.
 
-Tests: `app/test/e2e_flint_free.py`.
+Tests: `app/test/e2e_flint_free.py`, `app/test/e2e_flint_local.py`, `app/test/flint_nlu_test.js`.

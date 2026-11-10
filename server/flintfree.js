@@ -20,7 +20,7 @@ const path = require('node:path');
 // ---------- the capability map ----------
 const TIERS = [
   { id: 'rules', label: 'Free · no AI', where: 'Runs anywhere, even on a phone with no signal',
-    can: ['Answer how-to questions from the Guide', 'Add tasks, notes and reminders', 'Open any part of the app', 'Edit the picked element in the preview: words, color, size, spacing, corners, alignment, hide or remove', 'Add built-in sounds and sprites', 'Draft docs, sheets and decks from templates and your project'] },
+    can: ['Understand plain requests, typos and several steps at once, in eight languages', 'Answer how-to questions from the Guide and the docs', 'Add, finish, assign and reschedule tasks; notes and reminders', 'Tell people things, post in chat, put things on the calendar', 'Switch theme, accent, text size and language', 'Undo what it did, and learn your own phrases', 'Math, units, dates, coins and dice', 'Open any part of the app', 'Edit the picked element in the preview: words, color, size, spacing, corners, alignment, hide or remove', 'Add built-in sounds and sprites', 'Draft docs, sheets and decks from templates and your project'] },
   { id: 'recipe', label: 'Free · recipes', where: 'No AI needed: builds from the open-source build kit',
     can: ['A landing page for anything', 'A website from 16 templates: link in bio, merch shop, café, band, portfolio, blog and more', 'A to-do app', 'A 3D game (three.js)', 'A 2D platformer', 'A video editor in the browser', 'Names, words and colors filled in from what you said'] },
   { id: 'small', label: 'Free · small model', where: 'Qwen on this device (WebGPU) or on the host (Ollama)',

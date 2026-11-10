@@ -19,6 +19,7 @@
 //   POST /api/flint/skills                { name, title?, steps: [text] }   PUT/DELETE /api/flint/skills/<id>
 //   POST /api/flint/skills/<id>/ran       count a run (the app replays the steps)
 //   GET  /api/flint/vocab                 -> { words: [{ term, hint }] }
+//   GET/POST/DELETE /api/flint/learned    { say, means }: phrases this person taught Flint (flint-local), only theirs
 //   POST /api/flint/draft                 -> { slug, title, basic, via }
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -166,6 +167,12 @@ module.exports = function flintmem({ base, store, docs, str, nameOf, loadTasks, 
       if (!canEdit(me, sk)) return fail(res, 403, 'only the person who made this skill, or an admin, can change it');
       if (m === 'PUT') { const body = await readBody(req); if (body.title != null) sk.title = clip(body.title, 80) || sk.title; if (body.steps) { const st = cleanSteps(body.steps); if (!st.length) return fail(res, 400, 'a skill needs at least one step'); sk.steps = st; } if (body.name) { const n = slugName(body.name); if (!n) return fail(res, 400, 'bad name'); if (all.some(x => x !== sk && x.name === n)) return fail(res, 409, `there is already a /${n}`); sk.name = n; } saveSkills(all); return send(res, 200, { skill: sk }); }
       if (m === 'DELETE') { saveSkills(all.filter(x => x !== sk)); return send(res, 200, { ok: true }); }
+    }
+    if (b === 'learned') {   // flint-local: "when I say X, do Y" phrases, per person (only they see and use them)
+      const lf = `.tribe/flint/learned/${String(owner(me)).replace(/[^\w-]/g, '_')}.json`, all = () => (base.readJSON(lf, null) || {}).items || [];
+      if (m === 'GET') return send(res, 200, { items: all() });
+      if (m === 'POST') { const body = await readBody(req); const say = clip(String(body.say || '').replace(/\s+/g, ' ').trim(), 120), means = clip(String(body.means || '').replace(/\s+/g, ' ').trim(), 400); if (!say || !means) return fail(res, 400, 'say and means are both needed'); const items = all().filter(x => x.say.toLowerCase() !== say.toLowerCase()); items.push({ id: nid(), say, means, at: new Date().toISOString() }); put(lf, { items: items.slice(-200) }); return send(res, 200, { items: items.slice(-200) }); }
+      if (m === 'DELETE') { const id = c, q = String(id || '').toLowerCase(); const items = all().filter(x => x.id !== id && x.say.toLowerCase() !== decodeURIComponent(q)); put(lf, { items }); return send(res, 200, { items }); }
     }
     if (b === 'vocab' && m === 'GET') return send(res, 200, vocab());
     if (b === 'draft' && m === 'POST') { const body = await readBody(req); const r = await draft(me, { kind: str(body.kind, 20), ask: str(body.ask, 500) }); return r.error ? fail(res, r.status, r.error) : send(res, 200, r); }

@@ -69,6 +69,8 @@
     feedback: () => window.TribeFeedback && window.TribeFeedback.open(),   // feat/reviews
     prompt: async () => { const p = window.TribeFocus && window.TribeFocus.prompt(); if (!p) return; try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper.'); } catch { window.prompt('Copy this for your AI helper:', p); } },   // feat/focus
     preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
+    dm: id => window.TribeDM && window.TribeDM.open && window.TribeDM.open(id),   // flint-local
+    meant: arg => window.TribeFlintLocal && window.TribeFlintLocal.meant(arg),   // flint-local: a "did you mean" chip teaches Flint the phrase, then runs it
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
   // v0.27.2 Flint at work: a small flame flies to whatever he's changing (app/ui/flintfly.js)
@@ -183,10 +185,31 @@
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
     if (/^(what can (you|flint) do( for free)?|what('?s| is) free|what do you do for free|what can you build( for free)?|(show )?(your|flint'?s) (free )?tiers?|are you free)\??$/.test(t)) return tiersReply();   // flint-free: the honest capability map
-    if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) return r === true ? null : say(r.text, r.acts || []); }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
-    if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) return say(co.text, co.open ? [act('Open Company', 'company')] : []); }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
-    if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) return say(ac.text); }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
-    if (window.TribeCaptures) { const cap = await window.TribeCaptures.flint(text); if (cap) return say(cap.text, cap.capture ? [act('Open notes', 'capture', cap.capture)] : []); }   // feat/captures: summarize <url>, what did we decide about X
+    // flint-local: Flint's own brain first (app/ui/flintnlu.js + flintlocal.js): many-step commands, typos, eight
+    // languages, taught phrases, undo, how-to answers from the docs. It hands back to the routes below when they fit.
+    if (window.TribeFlintLocal && !localBusy) {
+      localBusy = true;
+      try { const r = await window.TribeFlintLocal.handle(text, LH); if (r) return r === true ? null : r; } finally { localBusy = false; }
+      return legacyRoute(text, true);
+    }
+    return legacyRoute(text);
+  }
+  let localBusy = false;
+  async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
+    if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
+    if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) { say(co.text, co.open ? [act('Open Company', 'company')] : []); return true; } }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
+    if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) { say(ac.text); return true; } }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
+    if (window.TribeCaptures) { const cap = await window.TribeCaptures.flint(text); if (cap) { say(cap.text, cap.capture ? [act('Open notes', 'capture', cap.capture)] : []); return true; } }   // feat/captures: summarize <url>, what did we decide about X
+    return false;
+  }
+  // the specific phrases the routes below handle well on their own (flintlocal.js lets them keep those)
+  const LEGACY = ['status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
+  const legacyHit = raw => { const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase(); return LEGACY.some(k => { const m = RX[k].exec(k === 'inspo' ? text : t); return m && (k !== 'task' || (m[1] && m[1].trim())); }); };
+  const LH = { say: (text, acts) => say(text, acts || []), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
+  async function legacyRoute(raw, specialsDone, viaLocal) {
+    const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
+    let m;
+    if (!specialsDone && await special(text)) return null;
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);
@@ -233,14 +256,15 @@
     try { const id = await S.create(body.charAt(0).toUpperCase() + body.slice(1)); if (FF()) { const n = seen('#room-notes') || seen('#nest-docs') || curView(); if (n) FF().done(n, 'Noted ✓'); } return say(`Saved to your notes: “${body}”.`, id ? [act('Open note', 'note', id)] : [], { link: id ? 'note:' + id : '' }); }
     catch (e) { return say('I could not save that note: ' + e.message); }
   }
-  async function task(title) {
+  async function task(title, extra, quiet) {   // flint-local: extra = { due, assignee, type } from flintnlu; quiet returns the task for flintlocal.js to word the reply
     if (!connected()) return say('Tasks live in a tribe. Host one on this computer or join a friend, then ask me again.', [act('Host or join', 'invite')]);
     title = title.charAt(0).toUpperCase() + title.slice(1);
     const tr = seen('#board') || seen('#nest-ws-tasks') || curView(); if (FF() && tr) FF().work(tr, 'Adding a task');
-    try { const { task: tk } = await C.api('/tasks', { method: 'POST', body: { title: title.slice(0, 200) } }); const p = PJ() && PJ().cur && PJ().cur();
+    try { const { task: tk } = await C.api('/tasks', { method: 'POST', body: { title: title.slice(0, 200), ...(extra || {}) } }); const p = PJ() && PJ().cur && PJ().cur();
       if (FF()) later(450, () => { const card = seen(`#board .task[data-id="${CSS.escape(tk.id)}"]`); FF().done(card || tr, card ? 'Added ✓' : 'Task added ✓'); });
+      if (quiet) return tk;
       return say(`Added to Tasks${p ? ` in ${p.name}` : ''}: “${tk.title}”.`, [act('Open Tasks', 'nav', 'tasks')], { link: 'task:' + tk.id }); }
-    catch (e) { if (FF()) FF().home(); return say('I could not add that task: ' + e.message); }
+    catch (e) { if (FF()) FF().home(); say('I could not add that task: ' + e.message); return null; }
   }
   // feat/customize: the site generator (server/sitegen.js). A draft only; the host or the project lead publishes.
   async function website(t) {
@@ -351,8 +375,9 @@
     if (model.online && !noModel) return modelReply(text);
     const g = triedGuide ? null : await guideSearch(text);
     if (g) return say(`I'm in basic mode, but the Guide might help. ${g.title}: ${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
-    return say('I\'m in basic mode, so I only know a few things by heart: connect your AI, "note: …", "task …", invites, "find …", "what\'s new", and how-to questions from the Guide. Give me a brain (built in, Ollama, or a cloud key) and I can answer anything else.',
-      [act('Give Flint a brain', 'brain'), act('What\'s happening?', 'ask', 'What\'s happening?'), act('Open the Guide', 'guide')]);
+    // flint-local: the honest card. With no AI, Flint still does a lot (see "what can you do"); this one needs more.
+    return say('I\'m in basic mode (no AI), and that one is more than I can do on my own. Without one I still add, finish and assign tasks, tell people things, schedule, switch themes, build from templates and answer how-to questions from the docs. For this, hand it to your AI helper or give me a brain.',
+      [act('Ask my AI helper', 'agents'), act('Give Flint a brain', 'brain'), act('What can you do?', 'ask', 'what can you do')]);
   }
 
   // ---------- a brain: built in (this browser, WebLLM) or the tribe's (server/flint.js → server/llm.js), streamed ----------
