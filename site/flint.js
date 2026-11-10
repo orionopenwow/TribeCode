@@ -374,6 +374,7 @@
         <span class="fb__status" data-k="7">● Preview reloaded ✓</span>
       </div>
       <div class="fb__phone" aria-hidden="true"><div class="fb__screen"><span class="fb__notch"></span><div class="fb__sb"><span>9:41</span><i>●●● ▮</i></div>
+        <div class="fb__build" id="fb-build"><img src="assets/brand/flint.svg" alt="" width="34" height="44"><b>Building Flat habits</b><ul><li data-b="1"><span>index.html</span><em>+142</em></li><li data-b="2"><span>app.js</span><em>+88</em></li><li data-b="3"><span>style.css</span><em>+61</em></li></ul><div class="fb__bar"><i id="fb-bar"></i></div></div>
         <div class="fb__app is-blank" id="fb-app"><div class="ha-bar"><b>Flat habits</b><span>C</span></div>
           <div class="ha-week">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => `<span class="${i === 3 ? 'on' : ''}">${d}<b>${10 + i}</b></span>`).join('')}</div>
           <div class="ha-ring"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="#ECE4D8" stroke-width="4"/><circle id="fb-ring" cx="18" cy="18" r="15" fill="none" stroke="#2F9E5B" stroke-width="4" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="37.7" transform="rotate(-90 18 18)" style="transition:stroke-dashoffset .5s"/></svg><div><b id="fb-count">3 of 5 today</b><small>Nice going, flat 🎉</small></div></div>
@@ -391,7 +392,7 @@
     let tok = 0, visible = false, running = false;
     const wait = (ms, t) => gate(o, ms, () => t !== tok);
     function reset() {
-      fb.querySelectorAll('[data-k]').forEach(x => x.classList.remove('is-on')); fb.classList.remove('has-streaks'); app.classList.add('is-blank');
+      fb.querySelectorAll('[data-k]').forEach(x => x.classList.remove('is-on')); fb.classList.remove('has-streaks'); app.classList.add('is-blank'); app.classList.remove('is-assembling'); app.dataset.part = '0'; { const bl = fb.querySelector('#fb-build'); bl.classList.remove('is-on'); bl.querySelectorAll('li').forEach(x => x.classList.remove('is-on')); fb.querySelector('#fb-bar').style.width = '0'; }
       app.querySelectorAll('.ha-toast').forEach(x => x.remove());
       const d = fb.querySelector('[data-ck="2"]'); d.classList.remove('on'); d.textContent = ''; fb.querySelector('[data-fl="2"]').textContent = '🔥 2';
       fb.querySelector('#fb-count').textContent = '3 of 5 today'; fb.querySelector('#fb-ring').style.strokeDashoffset = '37.7';
@@ -399,7 +400,14 @@
     async function story(t) {
       reset(); step(0);
       await wait(600, t); step(1); K(1); await wait(900, t); step(2); K(2); await wait(800, t);
-      K(3); await wait(500, t); app.classList.remove('is-blank'); await wait(900, t);
+      // the phone builds itself: the files arrive, a bar fills, then the app assembles piece by piece
+      const bl = fb.querySelector('#fb-build'), bar = fb.querySelector('#fb-bar');
+      bl.classList.add('is-on'); K(3);
+      for (let i = 1; i <= 3; i++) { await wait(420, t); bl.querySelector(`[data-b="${i}"]`).classList.add('is-on'); bar.style.width = (i * 33) + '%'; }
+      await wait(500, t); bar.style.width = '100%'; await wait(400, t); bl.classList.remove('is-on');
+      app.classList.remove('is-blank'); app.classList.add('is-assembling');
+      for (let i = 1; i <= 5; i++) { await wait(260, t); app.dataset.part = String(i); }
+      app.classList.remove('is-assembling'); await wait(600, t);
       K(4); await wait(700, t); K(5); step(3); await wait(900, t);
       const d = fb.querySelector('[data-ck="2"]'); d.classList.add('on', 'pop'); d.textContent = '✓'; setTimeout(() => d.classList.remove('pop'), 300);
       fb.querySelector('#fb-count').textContent = '4 of 5 today'; fb.querySelector('#fb-ring').style.strokeDashoffset = '18.8';

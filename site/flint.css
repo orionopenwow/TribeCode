@@ -414,3 +414,21 @@
 @media (max-width: 900px) { .fw2 { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 16px; } .fw2__side { order: -1; } }
 @media (prefers-reduced-motion: reduce) { .fw2__scene, .fw2__tools li, .fw2__screen { transition: none; } .fw2__ring { animation: none; } }
 .fw2__side .fx-pp { justify-self: start; }
+
+/* Builds anything: the phone builds itself before the app appears */
+.fb__build { position: absolute; inset: 44px 18px 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; opacity: 0; transition: opacity .35s; pointer-events: none; color: #1F1A16; }
+.fb__build.is-on { opacity: 1; }
+.fb__build img { image-rendering: pixelated; animation: fb-pulse 1.2s ease-in-out infinite; }
+.fb__build b { font: 700 16px var(--font); }
+.fb__build ul { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; display: grid; gap: 6px; }
+.fb__build li { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 10px; border: 1px solid #E5DCCF; background: #FFFFFF; font: 500 12px var(--mono); opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; }
+.fb__build li.is-on { opacity: 1; transform: none; } .fb__build li em { font-style: normal; color: #2F9E5B; }
+.fb__bar { width: 100%; height: 6px; border-radius: 3px; background: #ECE4D8; overflow: hidden; } .fb__bar i { display: block; height: 100%; width: 0; background: #F26B1D; transition: width .4s; }
+.fb__app.is-assembling .ha-bar, .fb__app.is-assembling .ha-week, .fb__app.is-assembling .ha-ring, .fb__app.is-assembling .ha-row, .fb__app.is-assembling .ha-tabs, .fb__app.is-assembling .ha-fab { opacity: 0; transform: translateY(8px); transition: opacity .3s, transform .3s; }
+.fb__app.is-assembling[data-part="1"] .ha-bar, .fb__app.is-assembling[data-part="2"] .ha-bar, .fb__app.is-assembling[data-part="3"] .ha-bar, .fb__app.is-assembling[data-part="4"] .ha-bar, .fb__app.is-assembling[data-part="5"] .ha-bar,
+.fb__app.is-assembling[data-part="2"] .ha-week, .fb__app.is-assembling[data-part="3"] .ha-week, .fb__app.is-assembling[data-part="4"] .ha-week, .fb__app.is-assembling[data-part="5"] .ha-week,
+.fb__app.is-assembling[data-part="3"] .ha-ring, .fb__app.is-assembling[data-part="4"] .ha-ring, .fb__app.is-assembling[data-part="5"] .ha-ring,
+.fb__app.is-assembling[data-part="4"] .ha-row, .fb__app.is-assembling[data-part="5"] .ha-row,
+.fb__app.is-assembling[data-part="5"] .ha-tabs, .fb__app.is-assembling[data-part="5"] .ha-fab { opacity: 1; transform: none; }
+@keyframes fb-pulse { 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .fb__build img { animation: none; } }
