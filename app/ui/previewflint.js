@@ -50,7 +50,7 @@
       <p class="pvf-tier" id="pvf-tier"><span class="pvf-free">Free</span><span id="pvf-tier-t">Edits and first builds need no AI</span></p>
       <ol class="pvf-feed" id="pvf-feed" aria-live="polite"></ol>
       <div class="pvf-hist hidden" id="pvf-hist" aria-label="Build history"></div>
-      <div class="pvf-pick hidden" id="pvf-pick"><span></span><button type="button" data-pvf="unpick" aria-label="Clear the picked element">✕</button></div>
+      <div class="pvf-pick hidden" id="pvf-pick"><span></span><button type="button" class="pvf-tocanvas" data-open-canvas title="Edit this on the design canvas (P1-C)">Open in canvas</button><button type="button" data-pvf="unpick" aria-label="Clear the picked element">✕</button></div>
       <section class="pvf-props hidden" id="pvf-props" aria-label="Properties"></section>
       <div class="pvf-queue hidden" id="pvf-queue" aria-label="Notes to apply"></div>
       <div class="pvf-chips" id="pvf-chips"></div>

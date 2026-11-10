@@ -119,6 +119,7 @@ days, L ≈ a week or more for one agent. Priority: P1 is what the plan does fir
   - "Copy as HTML/CSS" and per-frame PNG/SVG export.
 - **Acceptance:** design a card on the canvas, click "Send to app", and see it in the live preview. Pick a preview element, click "Edit on canvas", change the padding, send it back, and the preview updates.
 - **Tests:** `e2e_canvas_code.py`.
+- **Built (fork/canvas-code):** `server/canvascode.js` (`POST /api/canvascode/send`; markers `tribecode:design <file>:<frame>` around the CSS in `<head>` and the HTML in `<body>`, so a resend replaces only those parts; frame → file links in `.tribe/canvascode.json`; commits each send; scripts, handlers and paths outside the repo refused). `app/ui/canvas/code.js` + `code.css`: the Send to app button, the Inspect tab (CSS with token names, spacing, colors, copy), Alt-hover measuring, PNG/PNG 2x/SVG export, comment pins on layers (`TribePins.mount`, C), and "Open in canvas" from the Flint panel's picked element (the preview helper's `serialize` message returns the DOM with computed styles; flex → auto layout). Not yet: colors as CSS custom properties in the export (hex for now), and absolutely placed children in non-flex containers export as `position: absolute`.
 
 **P1-D: Components (basic).**
 - **Files:** additions to `app/ui/canvas/scene.js` for `component` and `instance` types; overrides on text, fill and visibility; "Detach"; an assets section in the layers panel. Each component exports as a reusable HTML snippet or class.
