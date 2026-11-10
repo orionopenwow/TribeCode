@@ -35,7 +35,7 @@
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css?v=0.27.0">
 <link rel="stylesheet" href="nav.css?v=0.27.1">
-<link rel="stylesheet" href="flint.css?v=0.27.1">
+<link rel="stylesheet" href="flint.css?v=0.27.2">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -85,155 +85,110 @@
 </header>
 
 <main id="main" class="fp">
-  <!-- ================= HERO ================= -->
-  <section class="fp-hero">
-    <div class="wrap fp-hero__in">
+  <!-- ================= HERO: the real app, Flint answering live ================= -->
+  <section class="fp-hero" aria-labelledby="fp-title">
+    <div class="wrap">
       <div class="fp-hero__copy">
         <p class="eyebrow mono">// meet flint</p>
-        <h1 class="fp-title">Meet Flint</h1>
+        <h1 class="fp-title" id="fp-title"><img class="fp-title__flame" src="assets/brand/flint.svg" alt="" width="54" height="70">Meet Flint</h1>
         <p class="fp-lead">TribeCode's own helper: it runs the app for you, teaches you, and works without a paid AI.</p>
-        <p class="fp-sub">Ask in plain words. Flint opens things, makes everyday changes, writes your docs, remembers how you like to learn, and gets the tribe's AI helpers going. Everything you see on this page is something Flint does in TribeCode today.</p>
-        <div class="fp-ctas"><a class="btn btn--light" href="#try">Try Flint here</a><a class="btn btn--dark" href="app/?demo=showcase">Try the demo tribe</a><a class="btn btn--dark" href="app/?welcome=1">Open the app</a></div>
+        <p class="fp-sub">You ask in plain words, like you'd ask a friend. Flint opens things, makes changes, writes things down and remembers how you like to work. Below is the real app, playing by itself.</p>
+        <div class="fp-ctas"><a class="btn btn--light" href="#try">Try Flint yourself</a><a class="btn btn--dark" href="app/?demo=showcase">Try the demo tribe</a></div>
       </div>
-      <figure class="fp-mascot" aria-hidden="true">
-        <div class="fp-camp">
-          <img class="fp-flame" src="assets/brand/flint.svg" alt="" width="132" height="170">
-          <span class="fp-ember" style="--x:-34px;--d:0s"></span><span class="fp-ember" style="--x:22px;--d:.9s"></span><span class="fp-ember" style="--x:-6px;--d:1.7s"></span>
-          <span class="fp-log"></span>
-        </div>
-        <div class="fp-said"><span class="mono">flint</span><b id="fp-said">Morning Camp. 2 new orders came in.</b></div>
-      </figure>
+    </div>
+    <div class="wrap">
+      <figure class="fa fa--hero reveal" data-app="hero" aria-label="The TribeCode app: Camp says good morning and Flint gives a short brief, then Camp asks for a jump sound and a bigger title, and Flint does both while the preview updates."></figure>
     </div>
   </section>
 
-  <!-- ================= TRY IT ================= -->
+  <!-- ================= TRY IT: the app, interactive ================= -->
   <section class="fp-try" id="try" aria-labelledby="try-title">
     <div class="wrap">
-      <p class="eyebrow mono">// try it right here</p>
+      <p class="eyebrow mono">// try it yourself</p>
       <h2 id="try-title">Talk to Flint</h2>
-      <p class="fp-section__lead">This runs in your browser with no account. Press a suggestion or type your own, and watch the app next to the chat react.</p>
-      <div class="ft reveal" data-try>
-        <div class="ft__chat">
-          <div class="ft__head"><img src="assets/brand/flint.svg" alt="" width="18" height="23"><b>Flint</b><span class="ft__st mono" id="ft-st">ready · basic mode, no AI needed</span></div>
-          <div class="ft__thread" id="ft-thread" aria-live="polite"></div>
-          <div class="ft__chips" id="ft-chips"></div>
-          <form class="ft__bar" id="ft-form"><input class="ft__in" id="ft-in" type="text" placeholder="Ask Flint…" aria-label="Ask Flint" autocomplete="off"><button class="ft__send" aria-label="Send">↑</button></form>
-        </div>
-        <div class="ft__stage" id="ft-stage" aria-hidden="true">
-          <div class="ft__app">
-            <div class="ft__bar2"><i></i><i></i><i></i><span id="ft-where">Kombucha Empire · Dashboard</span></div>
-            <div class="ft__view" id="ft-view"></div>
-          </div>
-        </div>
-      </div>
+      <p class="fp-section__lead">This is a copy of the app that runs in your browser, with a pretend kombucha business. Press a suggestion in Flint's panel or type your own. You can also click around the sidebar.</p>
+      <figure class="fa fa--try ft" data-app="try" data-try aria-label="An interactive copy of the TribeCode app with Flint's panel on the right."></figure>
     </div>
   </section>
 
   <!-- ================= EXHIBITS ================= -->
   <section class="fp-ex" aria-labelledby="ex-title">
-    <div class="wrap">
+    <div class="wrap fp-ex__head">
       <p class="eyebrow mono">// what flint does</p>
       <h2 id="ex-title">One helper, the whole app</h2>
+      <p class="fp-section__lead">Eight things Flint does for you every day. Each one plays out below in the real app.</p>
     </div>
 
-    <article class="fx reveal" style="--c:#F26B1D" data-fx>
+    <article class="fx" data-fx="run">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">01 · runs the app</span><h3>Runs the app for you</h3><p class="fx__text">Say “open the whiteboard”, “invite Sam” or “start a huddle”. Flint flies to the place in the sidebar so you learn where things live, then does it.</p></div>
-        <div class="fx__pic">
-          <div class="fxa">
-            <div class="fxa__side"><span>🏠 Dashboard</span><span>💬 Messages</span><span>📄 Files</span><span class="fxa__hit" data-b="2">🖍 Whiteboard</span><span>✅ Task Board</span></div>
-            <div class="fxa__main"><div class="fxa__ring" data-b="2"></div><div class="fxa__bubble" data-b="1"><img src="assets/brand/flint.svg" alt="" width="16" height="20">open the whiteboard</div><div class="fxa__board" data-b="3"><i style="--x:12%;--y:22%;--c:#FABD2F">Farmers market Saturday!</i><i style="--x:52%;--y:48%;--c:#38C6B1">New flavor: hibiscus</i></div><p class="fxa__said" data-b="3">Whiteboard lives here. Opened it for you.</p></div>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">01 · runs the app</span><h3>Runs the app for you</h3>
+          <p class="fx__mean"><b>What this means for you:</b> you never have to hunt for a button. Say where you want to go, and Flint takes you there and shows you where it lives.</p>
+          <ol class="fx-steps"><li>You ask: “open the task board”</li><li>Flint opens it and lights up where it lives</li><li>Then the whiteboard, then an invite for Sam</li></ol>
+          <p class="fx__hint">Try it: click the rows in the sidebar.</p></div>
+        <figure class="fa" data-app="run" aria-label="Flint opens the Task Board, then the whiteboard, then makes an invite link for Sam."></figure>
       </div>
     </article>
 
-    <article class="fx fx--flip reveal" style="--c:#38C6B1" data-fx>
+    <article class="fx fx--flip" data-fx="build">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">02 · builds with you</span><h3>Builds anything you can describe</h3><p class="fx__text">“Build me a habit tracker for our flat.” Flint writes it down as the vision, starts a first version you can run in the Preview, and hands the brief to your AI helpers. Then it tells you what it did and what it still needs.</p></div>
-        <div class="fx__pic">
-          <div class="fxb">
-            <p class="fxb__ask" data-b="1">build me a habit tracker for our flat</p>
-            <ul class="fxb__list"><li data-b="2">✓ Wrote it down as the project vision</li><li data-b="3">✓ Started a first version in the Preview</li><li data-b="4">✓ Handed the brief to Orion's Claude</li></ul>
-            <div class="fxb__pv" data-b="3"><b>Flat habits</b><span><i class="on"></i>Bins out</span><span><i class="on"></i>Plants watered</span><span><i></i>Dishes</span></div>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">02 · builds with you</span><h3>Builds anything you can describe</h3>
+          <p class="fx__mean"><b>What this means for you:</b> describe an app in one sentence and a first version is running on your phone minutes later, built by Flint and your AI helpers.</p>
+          <ol class="fx-steps"><li>You describe it in one sentence</li><li>Flint and your AI helpers write the code</li><li>It runs on your phone, and keeps improving</li></ol></div>
+        <figure class="fb" data-build aria-label="On the left, Flint and Orion's Claude build a habit tracker: the vision is written, three files are created, tests pass, and streaks are added. On the right, a phone shows the Flat habits app appearing, a habit being checked and a streak counting up."></figure>
       </div>
     </article>
 
-    <article class="fx reveal" style="--c:#3BD16F" data-fx>
+    <article class="fx" data-fx="teach">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">03 · teaches your way</span><h3>Teaches you the way you learn</h3><p class="fx__text">“Teach me what an API is.” Pick a picture, an analogy, code or step by step. Ask for another way, or take a light quiz. Flint remembers the style you like.</p></div>
-        <div class="fx__pic">
-          <div class="fxc">
-            <div class="fxc__tabs"><span data-b="1" class="on">Picture</span><span data-b="2">Analogy</span><span data-b="3">Code</span><span>Steps</span></div>
-            <div class="fxc__card"><b>An API</b><p class="fxc__pic">📱 your app ── “menu, please” ➜ 🍽️ the API ➜ 👩‍🍳 the server</p><p class="fxc__alt" data-b="2">An API is a waiter. You order from a menu; it brings back what you asked for.</p><pre class="fxc__code" data-b="3">const res = await fetch("/api/orders");</pre></div>
-            <div class="fxc__quiz" data-b="4"><span>Quick one: an API is mostly…</span><em class="ok">✓ a menu of things to ask for</em></div>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">03 · teaches your way</span><h3>Teaches you the way you learn</h3>
+          <p class="fx__mean"><b>What this means for you:</b> no confusing jargon. Ask what anything means and get it as a picture, a comparison, code or simple steps, whichever clicks for you.</p>
+          <ol class="fx-steps"><li>You ask: “teach me what an API is”</li><li>Pick a picture, an analogy or code</li><li>A quick quiz, if you like. Flint remembers your style</li></ol></div>
+        <figure class="fa" data-app="teach" aria-label="Flint teaches what an API is as a picture, then as an analogy, then as code, and asks a light quiz question."></figure>
       </div>
     </article>
 
-    <article class="fx fx--flip reveal" style="--c:#6C7CFF" data-fx>
+    <article class="fx fx--flip" data-fx="docs">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">04 · writes your docs</span><h3>Writes your docs</h3><p class="fx__text">“Write the launch doc.” Flint builds a real doc in Files from your vision, tasks, decisions and chat. It does the same for a README, meeting notes or a changelog. Each one is marked as a Flint draft so a person reviews it.</p></div>
-        <div class="fx__pic">
-          <div class="fxd">
-            <p class="fxd__flag" data-b="1">✦ Flint draft · from your vision, tasks, decisions and chat</p>
-            <h4 data-b="1">Launch plan</h4>
-            <p data-b="2"><b>What we're launching</b> Track every kombucha batch from brewing to bottling.</p>
-            <p data-b="3"><b>Done</b> Batch counter · Orders page · Café list</p>
-            <p data-b="4"><b>Still to do</b> ☐ Delivery routes (Jay) ☐ Flavor photos (Maya)</p>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">04 · writes your docs</span><h3>Writes your docs</h3>
+          <p class="fx__mean"><b>What this means for you:</b> the boring writing gets done. Launch plans, read-me pages, meeting notes and change lists, written from what your tribe already said and did.</p>
+          <ol class="fx-steps"><li>You ask: “write the launch doc”</li><li>Flint reads your plan, tasks and chat</li><li>A draft appears in Files for you to check</li></ol></div>
+        <figure class="fa" data-app="docs" aria-label="Flint writes a Launch plan doc in Files, marked as a Flint draft, line by line."></figure>
       </div>
     </article>
 
-    <article class="fx reveal" style="--c:#FABD2F" data-fx>
+    <article class="fx" data-fx="know">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">05 · knows you</span><h3>Remembers you, and knows your tribe</h3><p class="fx__text">Say “remember I'm learning CSS” or “call me Camp”. Only you can see these notes, and you can edit or delete them in Settings › Flint. Flint greets you with what changed and what's next, and it learns the project's own words, so “batches” means your kombucha batches.</p></div>
-        <div class="fx__pic">
-          <div class="fxe">
-            <div class="fxe__notes"><span class="mono">only you can see these</span><p data-b="1">📝 My name is Camp</p><p data-b="2">📝 I like code examples</p><p data-b="3">📝 Working on the orders page</p></div>
-            <div class="fxe__hi" data-b="4"><img src="assets/brand/flint.svg" alt="" width="18" height="23"><span><b>Morning Camp.</b> 2 tasks on you; last time you were on the orders page; next up: fill the Grow seat.</span></div>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">05 · knows you</span><h3>Remembers you, and knows your tribe</h3>
+          <p class="fx__mean"><b>What this means for you:</b> Flint greets you with what changed and what to do next, and remembers what you tell it. Only you can see those notes, and you can delete them any time.</p>
+          <ol class="fx-steps"><li>You say good morning</li><li>Flint catches you up and suggests what's next</li><li>“Remember…” saves a private note you can edit</li></ol></div>
+        <figure class="fa" data-app="know" aria-label="Flint greets Camp with a morning brief, then saves a note Camp asked it to remember, shown in Settings, Flint."></figure>
       </div>
     </article>
 
-    <article class="fx fx--flip reveal" style="--c:#E86A92" data-fx>
+    <article class="fx fx--flip" data-fx="brain">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">06 · learns new tricks</span><h3>Learns your tribe's shortcuts</h3><p class="fx__text">Do the same few things twice and Flint offers to save them as a skill. The whole tribe can then run it by name, like <code>/ship-friday</code>. Skills are listed and edited in Settings › Flint. Anything outward or costly still asks a person first.</p></div>
-        <div class="fx__pic">
-          <div class="fxf">
-            <p class="fxf__offer" data-b="1">You've done these 3 together before: “what's new” → “write the changelog” → “open the preview”. Make it a skill?</p>
-            <span class="fxf__btn" data-b="2">Make it /ship-friday</span>
-            <div class="fxf__run" data-b="3"><b>/ship-friday</b><span class="ok">✓ what's new</span><span class="ok">✓ write the changelog</span><span class="ok">✓ open the preview</span></div>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">06 · any brain, or none</span><h3>Works offline, or with any AI</h3>
+          <p class="fx__mean"><b>What this means for you:</b> Flint is free and works straight away. When you want it smarter, plug in an AI: one that runs on your own computer, or a paid one the host already has.</p>
+          <ol class="fx-steps"><li>Basic mode: the everyday things, no AI needed</li><li>A free AI on the host's computer</li><li>Or a cloud AI, with the host's own key</li></ol></div>
+        <figure class="fa" data-app="brain" aria-label="Flint's status switches from basic mode, to a free model on the host's computer, to a cloud model, and the same question gets a richer answer each time."></figure>
       </div>
     </article>
 
-    <article class="fx reveal" style="--c:#94A3B8" data-fx>
+    <article class="fx" data-fx="skill">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">07 · any brain, or none</span><h3>Works offline, or with any AI</h3><p class="fx__text">With no model at all, Flint still does the everyday things by heart. Give it a brain when you want more: a model that runs in your own browser, Ollama on the host's computer, or a cloud model with the host's own key.</p></div>
-        <div class="fx__pic">
-          <div class="fxg">
-            <span data-b="1"><b>Basic mode</b>no model · always on</span>
-            <span data-b="2"><b>In your browser</b>runs on your device</span>
-            <span data-b="3"><b>Ollama / Qwen</b>on the host's computer</span>
-            <span data-b="4"><b>Cloud model</b>the host's own key</span>
-          </div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">07 · learns new tricks</span><h3>Learns your tribe's shortcuts</h3>
+          <p class="fx__mean"><b>What this means for you:</b> things you do often become one word. Flint notices a routine and turns it into a shortcut the whole tribe can use.</p>
+          <ol class="fx-steps"><li>You do the same few things again</li><li>Flint offers to save them as /ship-friday</li><li>Anyone runs all the steps with one word</li></ol></div>
+        <figure class="fa" data-app="skill" aria-label="After Camp repeats two commands, Flint offers to save them as a shortcut called ship-friday, and runs it."></figure>
       </div>
     </article>
 
-    <article class="fx fx--flip reveal" style="--c:#3BD16F" data-fx>
+    <article class="fx fx--flip" data-fx="safe">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">08 · safe by design</span><h3>Asks before anything that matters</h3><p class="fx__text">Flint only acts inside your own app, as you. Anything outward or costly goes to a person: spending money, publishing, emailing customers. Your notes stay yours, and DMs are never Flint's business.</p></div>
-        <div class="fx__pic">
-          <div class="fxh"><p class="fxh__k mono" data-b="1">needs your ok</p><p class="fxh__t" data-b="1">Email 120 customers about the spring flavors?</p><div class="fxh__btns" data-b="2"><span class="ok">Approve</span><span>Deny</span></div><p class="fxh__done" data-b="3">✓ Approved by Camp</p></div>
-        </div>
+        <div class="fx__copy"><span class="fx__k mono">08 · safe by design</span><h3>Asks before anything that matters</h3>
+          <p class="fx__mean"><b>What this means for you:</b> nothing happens behind your back. Spending money, publishing or emailing customers always waits for a person to say yes.</p>
+          <ol class="fx-steps"><li>An AI helper wants to email 120 customers</li><li>It waits for a person's OK</li><li>Camp taps Approve, and only then it goes</li></ol></div>
+        <figure class="fa" data-app="safe" aria-label="An AI helper asks to email 120 customers; the request waits until Camp taps Approve."></figure>
       </div>
     </article>
   </section>
@@ -245,9 +200,9 @@
       <h2 id="how-title">From your words to done</h2>
       <ol class="fh reveal" role="list">
         <li style="--c:#F26B1D"><b>Your words</b><span>“add a jump sound”, “teach me loops”, “/ship-friday”</span></li>
-        <li style="--c:#38C6B1"><b>Built-in skills</b><span>Flint knows the app by heart: no model, instant</span></li>
-        <li style="--c:#6C7CFF"><b>Your AI, when connected</b><span>for anything new, with your notes and the room's facts</span></li>
-        <li style="--c:#3BD16F"><b>You decide the big things</b><span>outward or costly steps wait for a person</span></li>
+        <li style="--c:#38C6B1"><b>What Flint knows by heart</b><span>the everyday things, instantly, with no AI</span></li>
+        <li style="--c:#6C7CFF"><b>Your AI, when you add one</b><span>for anything new, with your notes and your project</span></li>
+        <li style="--c:#3BD16F"><b>You decide the big things</b><span>money, publishing and emails wait for a person</span></li>
       </ol>
     </div>
   </section>
@@ -258,11 +213,11 @@
       <p class="eyebrow mono">// questions</p>
       <h2 id="faq-title">Good to know</h2>
       <div class="fq">
-        <details><summary>Does Flint cost money?</summary><p>No. Flint is part of TribeCode, which is free and open source. In basic mode it needs no AI at all. If you give it a brain, the browser model and Ollama are free; a cloud model uses the host's own key.</p></details>
-        <details><summary>What does Flint remember, and who can see it?</summary><p>Only what you ask it to remember, like your name or how you like to learn. The notes live with your tribe, only you can read them, you can edit or delete them in Settings › Flint, and they're never part of anyone else's saved copy.</p></details>
-        <details><summary>Does Flint read my DMs?</summary><p>No. Flint works from the room you're in: tasks, docs, the project's vision and the channels you can see.</p></details>
-        <details><summary>Which AI does Flint use?</summary><p>None by default. You can choose a model that runs in your browser, the host's Ollama (Qwen and friends), or a cloud model the host connects with their own key. Your own Claude Code, Codex or Gemini join as separate helpers.</p></details>
-        <details><summary>Can Flint do things without asking?</summary><p>Only small things inside your own app, the same things your buttons do. Spending, publishing and emailing people always wait for a person's OK, and skills follow the same rules.</p></details>
+        <details><summary>Does Flint cost money?</summary><p>No. Flint is part of TribeCode, which is free and open source. It needs no AI to do the everyday things. If you add one, a model in your browser or on the host's computer is free; a cloud model uses the host's own account.</p></details>
+        <details><summary>What does Flint remember, and who can see it?</summary><p>Only what you ask it to remember, like your name or how you like to learn. Only you can read those notes. You can edit or delete them in Settings › Flint, and they're never part of anyone else's saved copy.</p></details>
+        <details><summary>Does Flint read my private messages?</summary><p>No. Flint works from the project you're in: tasks, docs, the plan and the channels you can see.</p></details>
+        <details><summary>Which AI does Flint use?</summary><p>None by default. You can choose one that runs in your browser, a free one on the host's computer (like Qwen through Ollama), or a cloud AI the host connects. Your own Claude, Codex or Gemini join separately as your AI helpers.</p></details>
+        <details><summary>Can Flint do things without asking?</summary><p>Only small things inside your own app, the same things your buttons do. Spending, publishing and emailing people always wait for a person's OK, and shortcuts follow the same rules.</p></details>
       </div>
     </div>
   </section>
@@ -276,6 +231,7 @@
     </div>
   </section>
 </main>
+
 
 
 
@@ -309,7 +265,7 @@
 
 <script src="main.js?v=0.27.1" defer></script>
 <script src="nav.js?v=0.27.1" defer></script>
-<script src="flint.js?v=0.27.1" defer></script>
+<script src="flint.js?v=0.27.2" defer></script>
 <script src="i18n.js?v=0.27.1" defer></script>
 </body>
 </html>
