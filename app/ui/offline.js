@@ -747,6 +747,17 @@
         break;
       case 'bugs': if (GET && !b) return ok({ bugs: [] }); if (POST && !b) return ok({ bug: { id: 'b-' + rid(6), deduped: false } }); break;
       case 'ask': if (GET && !b) return ok({ policy: 'never' }); break;
+      // newer modules (v0.27+): quiet, empty answers so nothing reaches for a server that isn't there
+      case 'jam': if (GET && !b) return ok({ jam: null, canRun: false, mine: [] }); break;
+      case 'publish': if (GET && !b) return ok({ published: [], canPublish: false }); break;
+      case 'activation': if (GET && !b) return ok({ steps: [], done: 0, total: 0 });   // the demo skips "Getting started"
+        if (POST && !b) return ok({ ok: true }); break;
+      case 'studios': if (GET && !b) return ok({ studios: [] }); break;
+      case 'flint':
+        if (b === 'memory' && GET) return ok({ notes: [], prefs: {} });
+        if (b === 'skills' && GET) return ok({ skills: [], canCreate: false });
+        if (b === 'vocab' && GET) return ok({ words: [] });
+        break;
       case 'assist': {   // app/ui/assist.js: the vision composer's basic draft and the game template's starter tasks
         const p = proj(pid), name = p.name;
         if (b === 'vision' && GET) return ok({ name, bio: p.bio, types: ['game'], kind: 'game', readme: '', docs: [], tasks: [], chat: '', questions: ASSIST_Q, vision: db.vision[pid] || '', model: { online: false, model: '' }, helpers: { claude: null, others: [] },
