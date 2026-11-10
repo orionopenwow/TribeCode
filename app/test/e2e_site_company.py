@@ -28,8 +28,8 @@ def main():
         ctx.route("**/*", lambda r: r.continue_() if r.request.url.startswith(base) else r.abort())
         pg = ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto(base + "/index.html"); pg.wait_for_selector("#lang-btn")
-        # the section sits right after vibecoding, before the story
-        ys = pg.evaluate("['#vibecoding', '#company', '#story'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
+        # the section sits after "what you can make" and before the story; vibecoding is now an infographic inside Learn
+        ys = pg.evaluate("['#make', '#company', '#story', '#vibecoding'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
         assert ys == sorted(ys), ys
         assert pg.text_content("#biz-title").strip() == "Run a company, not just a project"
         assert pg.text_content("#company .eyebrow").strip() == "// vibe-run a business"
@@ -39,9 +39,8 @@ def main():
         assert pg.locator("#menu-features a[href='#company']").count() == 1 and pg.locator(".footer__links a[href='#company']").count() == 1
         body = pg.text_content("#company")
         assert "$" not in body and "price" not in body.lower(), "no prices in the section"
-        # Learn: five modules on the home page panel
-        assert pg.locator("#learn .lc-mods li").count() == 5 and pg.locator("#learn [data-learn-mod=m5]").count() == 1
-        assert "29" in pg.text_content("#learn .lc-facts")
+        # Learn: one simple section with the "How vibecoding works" infographic (four steps) and one button
+        assert pg.locator("#learn #vibecoding .vf__step").count() == 4 and pg.locator("#learn a[href='learn.html#m1-0']").count() == 1
         if SHOTS:
             pg.locator("#company").scroll_into_view_if_needed(); pg.wait_for_timeout(300)
             pg.locator("#company").screenshot(path=f"{SHOTS}/sitebiz-section-1440.png")
