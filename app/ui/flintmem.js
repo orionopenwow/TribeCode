@@ -199,17 +199,29 @@
     if (!on()) return { text: 'Connect to your tribe first, then I can start it.' };
     const pid = C.project(), done = [], need = [];
     const bt = seen('#pvw') || seen('#nest-preview-slot') || seen('#view-home') || seen('#main'); if (FF() && bt) FF().work(bt, 'Building');
+    // Flint's free tier first (server/flintfree.js): a recipe from the build kit, no AI needed; or an honest "this needs a stronger AI"
+    let tier = null; try { tier = await C.api('/flint/tier', { method: 'POST', body: { ask: 'build ' + what } }); } catch {}
     try { const v = await C.api('/vision'); if (!String(v.text || '').trim()) { const name = ((C.state().projects || []).find(p => p.id === pid) || {}).name || 'Our project'; await C.api('/vision', { method: 'PUT', body: { text: `# ${name}\n\n${what}\n` } }); done.push('wrote it down as the project vision'); } } catch {}
-    let made = false; try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }); made = !!(r.written && r.written.length); } catch {}
-    if (made) done.push('started a first version you can run in the Preview');
+    let made = false, free = null;
+    if (tier && tier.tier === 'recipe') {
+      try { free = await C.api(`/projects/${encodeURIComponent(pid)}/flint/build`, { method: 'POST', body: { ask: 'build ' + what } }); } catch (e) { need.push(`the code repository (${e.message})`); }
+      if (free && free.built) { made = true; done.push(`built a ${free.title} for free from the open-source build kit${free.dir ? ` in \`${free.dir}/\`` : ''}, with no AI`); }
+      else if (free && free.exists) { made = true; done.push(`found the ${free.title} already in \`${free.dir}/\``); }
+      if (made && window.TribePreview) setTimeout(() => { window.TribePreview.open(); if (free.href && window.TribePreview.show) setTimeout(() => window.TribePreview.show(free.href), 500); }, 300);
+    }
+    if (!made) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }); made = !!(r.written && r.written.length); } catch {} if (made) done.push('started a first version you can run in the Preview'); }
     const agents = (C.state().members || []).filter(m => m.role === 'agent' && (!m.project || m.project === pid));
-    const ask = `please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${what}${made ? ' A starter is already in the repo; build on it.' : ''}`;
-    let asked = false; try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); asked = true; } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); asked = true; } catch {} }
-    if (asked) done.push(agents.length ? `handed the brief to ${agents.length === 1 ? agents[0].name : agents.length + ' AI helpers'}` : 'posted the brief for your AI helpers');
-    if (!agents.length) need.push('an AI helper to build the rest: connect Claude Code, Codex or Gemini (I can open that)');
+    // a free build stands on its own; hand it on only when an AI helper is here to take it further, or when it needs one
+    if (!(free && free.built && !agents.length)) {
+      const ask = `please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${what}${made ? ` A first version is already in the repo${free && free.dir ? ` at ${free.dir}/` : ''}; build on it.` : ''}`;
+      let asked = false; try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); asked = true; } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); asked = true; } catch {} }
+      if (asked) done.push(agents.length ? `handed the brief to ${agents.length === 1 ? agents[0].name : agents.length + ' AI helpers'}` : 'posted the brief for your AI helpers');
+      if (!agents.length) need.push(tier && tier.tier === 'agent' ? 'a stronger AI for this one (it needs real engineering): connect Claude Code, Codex or Gemini, or the host can add an AI key' : 'an AI helper to build the rest: connect Claude Code, Codex or Gemini (I can open that)');
+    }
     if (FF()) FF().done(seen('#pvw') || bt, made ? 'First version ✓' : 'Brief sent ✓');
-    return { text: `On it: “${(what)}”. I ${done.length ? done.join(', ') : 'tried, but couldn\'t reach the project'}.${need.length ? ` Still needed: ${need.join('; ')}.` : ' It refreshes in the Preview as they work.'}`,
-      acts: [act('Open the Preview', 'preview'), ...(agents.length ? [] : [act('Connect my AI', 'connect')])] };
+    const tail = need.length ? ` Still needed: ${need.join('; ')}.` : free && free.built ? ' It\'s in the Preview now. Pick anything there and tell me what to change: words, colors, size and spacing are free too.' : ' It refreshes in the Preview as they work.';
+    return { text: `On it: “${(what)}”. I ${done.length ? done.join(', ') : 'tried, but couldn\'t reach the project'}.${tail}`,
+      acts: [act('Open the Preview', 'preview'), ...(agents.length || (free && free.built) ? [] : [act('Connect my AI', 'connect')])] };
   }
   async function morning() {
     const h = new Date().getHours(), hi = h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening', nm = myName();
@@ -271,6 +283,7 @@
     // docs
     if (/^(?:please\s+|can you\s+)?(?:write|draft|make|create|put together)\s+(?:me\s+|us\s+)?(?:a|an|the|our)?\s*/.test(t)) for (const [k, rx] of Object.entries(DOCK)) if (rx.test(t)) return draft(k, text);
     // build
+    if ((m = /^(?:please\s+|can you\s+|could you\s+)?(?:make|create|start|give me|set up)\s+(?:me\s+|us\s+)?(?:an?\s+|the\s+|our\s+)?((?:[\w'-]+\s+){0,4}?(?:3d game|three\.?js game|game|platformer|to-?do (?:list|app)|todo app|checklist app|video editor|video editing app)\b.{0,160})$/.exec(t))) return build(text.replace(/^(?:please\s+|can you\s+|could you\s+)?(?:make|create|start|give me|set up)\s+(?:me\s+|us\s+)?/i, ''));
     if ((m = /^(?:please\s+|can you\s+|could you\s+)?build\s+(?:me\s+|us\s+)?(?:an?\s+|the\s+|our\s+)?(.{3,200})$/.exec(t)) && !/\b(doc|document|sheet|spreadsheet|slides?|deck|presentation|web ?site|home ?page|landing page)\b/.test(m[1])) return build(text.replace(/^(?:please\s+|can you\s+|could you\s+)?build\s+(?:me\s+|us\s+)?/i, ''));
     // morning brief
     if (/^(hi|hey|hello|hiya|yo|morning|good (morning|afternoon|evening)|brief me|daily brief|my brief|catch me up on me)( flint)?$/.test(t) && (myName() || on())) return morning();

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{name}}</title>
+<meta name="description" content="{{sub}}">
+<link rel="stylesheet" href="style.css">
+<style>:root { --accent: {{accent}}; }</style>
+</head>
+<body>
+<header class="top wrap">
+  <a class="brand" href="#">{{name}}</a>
+  <nav><a href="#features">What we do</a><a href="#about">About</a><a class="btn sm" href="#contact">{{cta}}</a></nav>
+</header>
+<main>
+  <section class="hero wrap">
+    <p class="eyebrow">{{eyebrow}}</p>
+    <h1>{{headline}}</h1>
+    <p class="lead">{{sub}}</p>
+    <p class="acts"><a class="btn" href="#contact">{{cta}}</a><a class="btn ghost" href="#features">See how it works</a></p>
+  </section>
+  <section class="features wrap" id="features">
+    <article><span class="ic">{{f1i}}</span><h2>{{f1t}}</h2><p>{{f1d}}</p></article>
+    <article><span class="ic">{{f2i}}</span><h2>{{f2t}}</h2><p>{{f2d}}</p></article>
+    <article><span class="ic">{{f3i}}</span><h2>{{f3t}}</h2><p>{{f3d}}</p></article>
+  </section>
+  <section class="about wrap" id="about">
+    <h2>About {{name}}</h2>
+    <p>{{about}}</p>
+  </section>
+  <section class="contact wrap" id="contact">
+    <h2>{{cta}}</h2>
+    <form id="contact-form" autocomplete="on">
+      <label>Name <input name="name" required></label>
+      <label>Email <input name="email" type="email" required></label>
+      <label>Message <textarea name="message" rows="4"></textarea></label>
+      <button class="btn">Send</button>
+      <p class="sent" id="sent" hidden>Thanks! We'll get back to you soon.</p>
+    </form>
+  </section>
+</main>
+<footer class="wrap foot">© {{year}} {{name}} · made with TribeCode</footer>
+<script src="main.js"></script>
+</body>
+</html>
