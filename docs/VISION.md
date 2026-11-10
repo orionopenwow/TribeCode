@@ -4,6 +4,8 @@
 
 **TribeCode is the campfire where a few friends and their Claudes build one thing together, around one shared GitHub repo.**
 
+**New in v0.27:** build apps, games and websites with your friends, and run the business around them. One person or a whole crew: give each role to a friend or an AI helper, and keep the decisions human. See [COMPANY.md](COMPANY.md).
+
 Not another hosted app builder. A room: one link to join, phones welcome, your own agents, your files, any engine.
 
 ---
@@ -18,7 +20,7 @@ Why this crowd:
 - **Games show bugs instantly**, so vibe coding works better there than anywhere.
 - **Nobody serves them on their own terms.** Hosted builders are single-player and bill per attempt. Zed Delta targets engineers in an editor. spawn.co has the "with friends" magic, but only inside its own engine, cloud and economy.
 
-Who we're **not** for, yet: companies with compliance needs, solo founders shipping SaaS (Lovable already does that), large engineering teams.
+Who we're **not** for, yet: companies with compliance needs, solo founders shipping SaaS (Lovable already does that), large engineering teams. *(v0.27 widens this: Company mode gives solo founders a one-person C-suite of AI helpers, and friend crews a way to run what they build. We still don't chase compliance-heavy companies or large engineering teams.)*
 
 ## 2. Why we win there
 

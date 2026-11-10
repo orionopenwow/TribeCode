@@ -1251,3 +1251,34 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .hero__vibe { margin: 0 0 10px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ember); }
 .hero__vibe a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; text-transform: none; letter-spacing: 0; }
 .hero__vibe a:hover { color: var(--text); }
+/* ===== v0.27 Company mode (#company): run the business around what you build ===== */
+.biz { padding: 72px 0 24px; }
+.biz__top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 32px; align-items: center; margin-bottom: 28px; }
+.biz h2 { margin: 6px 0 8px; color: var(--text); font: 700 clamp(28px, 3.4vw, 40px)/1.15 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; text-wrap: balance; }
+.biz__lead { margin: 0 0 16px; max-width: 640px; color: var(--muted); font-size: 17px; line-height: 1.6; }
+.biz__note { display: flex; align-items: baseline; gap: 10px; margin: 0; max-width: 640px; color: var(--text); font-size: 14.5px; line-height: 1.5; }
+.biz__dot { flex: none; width: 8px; height: 8px; border-radius: 2px; background: #3BD16F; transform: translateY(-1px); }
+.biz__pic { margin: 0; padding: 22px 18px 14px; border: 1px solid var(--edge); border-radius: 14px; background: var(--main, #1D2021); display: grid; justify-items: center; gap: 14px; }
+.biz__art { width: 100%; max-width: 320px; height: auto; image-rendering: pixelated; }
+.biz__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; color: var(--muted); font-size: 11.5px; letter-spacing: .04em; }
+.biz__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.biz__legend span[style]::before { content: ""; width: 8px; height: 8px; background: var(--c); }
+.biz__ai { color: #38C6B1; }
+.biz__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.biz__card { padding: 18px 16px 20px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
+.biz__k { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 8px; color: var(--c); font-size: 12px; letter-spacing: .08em; }
+.biz__k::before { content: ""; width: 8px; height: 8px; background: var(--c); }
+.biz__card h3 { margin: 0 0 6px; color: var(--text); font: 700 18px/1.25 'Inter Display', Inter, sans-serif; }
+.biz__text { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+.biz__strip { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--edge); border-radius: 14px; overflow: hidden; }
+.biz__strip li { display: grid; gap: 2px; padding: 12px 16px; }
+.biz__strip li + li { border-left: 1px solid var(--edge); }
+.biz__sk { color: var(--text); font-size: 14.5px; font-weight: 600; }
+.biz__ss { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.js .biz__grid.reveal .biz__card { opacity: .25; transform: translateY(6px); transition: opacity .4s var(--ease), transform .4s var(--ease); transition-delay: calc(var(--i) * 70ms); }
+.js .biz__grid.reveal.is-in .biz__card { opacity: 1; transform: none; }
+@media (max-width: 1000px) { .biz__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .biz__strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } .biz__strip li:nth-child(3) { border-left: 0; } .biz__strip li:nth-child(n+3) { border-top: 1px solid var(--edge); } }
+@media (max-width: 800px) { .biz__top { grid-template-columns: 1fr; gap: 20px; } .biz__pic { max-width: 420px; } }
+@media (max-width: 520px) { .biz { padding-top: 56px; } .biz__grid { grid-template-columns: 1fr; gap: 10px; } .biz__card { padding: 14px 14px 16px; } .biz__strip { grid-template-columns: 1fr; } .biz__strip li { padding: 10px 14px; } .biz__strip li + li { border-left: 0; border-top: 1px solid var(--edge); } .biz__pic { padding: 16px 12px 12px; } }
+@media (prefers-reduced-motion: reduce) { .js .biz__grid.reveal .biz__card { opacity: 1; transform: none; transition: none; } }
+.ms-biz { margin-top: 56px; } .ms-biz p { margin: 0 0 12px; font-size: 16px; line-height: 1.6; max-width: 62ch; } .ms-biz .eyebrow { margin: 0 0 6px; } .ms-biz a { color: #E58A5E; } .ms-biz .ms-note p { font-size: 15px; }

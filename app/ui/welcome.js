@@ -91,7 +91,7 @@
       { // 0: hello
         line: 'Hi, I’m Flint 👋 I help your tribe keep track of things. Let me show you around with a pretend tribe. It takes about a minute.',
         html: () => `<div class="wl-hello"><div class="wl-fire" aria-hidden="true"><img src="assets/flint.svg" alt="" width="120" height="120"></div>
-          <ul class="wl-facts"><li><span>👥</span>Friends, each with their own AI, build apps, games, websites and tools together.</li><li><span>🔒</span>This tour is pretend and stays in your browser.</li></ul>
+          <ul class="wl-facts"><li><span>👥</span>Friends, each with their own AI, build apps, games, websites and tools together, and can run the business around them.</li><li><span>🔒</span>This tour is pretend and stays in your browser.</li></ul>
           <div class="wl-level"><span class="wl-k">Have you made an app before?</span><div class="wl-chips" id="wl-level">${LEVELS.map(([k, e, l]) => `<button type="button" data-level="${k}" aria-pressed="${k === s.level}"><span>${e}</span>${l}</button>`).join('')}</div></div></div>`,
         bind: () => { $('#wl-level').onclick = e => { const b = e.target.closest('[data-level]'); if (!b) return; s.level = b.dataset.level; el.querySelectorAll('[data-level]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); say(s.level === 'new' ? 'Perfect, I’ll keep it simple. No coding needed to follow along.' : s.level === 'some' ? 'Nice. I’ll add a little more detail as we go.' : 'Great, I’ll include the details you’d want to know.'); }; },
         next: 'Let’s go',

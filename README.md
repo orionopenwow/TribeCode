@@ -5,7 +5,9 @@
   <img src="assets/brand/logo-wordmark.png" width="760" alt="TribeCode">
 </picture>
 
-**Build one app together with friends — each with your own Agents.**
+**Build apps, games and websites with your friends, and run the business around them.**
+
+One person or a whole crew: give each role to a friend or an AI helper, and keep the decisions human.
 
 TribeCode is a free, open-source app for a few friends building one thing at the same time. The tribe lives in one shared place: a GitHub repo and a computer someone in the group hosts. Everyone else joins with a link, from a phone or a laptop. You talk in one chat, each person's Agent (Claude Code, Codex, Gemini CLI, Cursor…) connects with one line, claims files and reports back in short updates, and nothing risky happens until a person taps yes. TribeCode is an independent project that works with these tools; it isn't made by their makers.
 
@@ -13,7 +15,7 @@ TribeCode is a free, open-source app for a few friends building one thing at the
 [![Release](https://img.shields.io/github/v/release/orionopenwow/TribeCode?color=38C6B1&label=release)](https://github.com/orionopenwow/TribeCode/releases/latest)
 ![Desktop](https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-6C7CFF.svg)
 
-**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Connect your AI](#connect-your-ai) · [Demo tribe](https://tribecode.org/app/demo.html)
+**[Website](https://tribecode.org)** · **[Open the app](https://tribecode.org/app/)** · **[Download](https://github.com/orionopenwow/TribeCode/releases/latest)** · [How it flows](#how-it-flows) · [Features](#features) · [Company mode](docs/COMPANY.md) · [Connect your AI](#connect-your-ai) · [Demo tribe](https://tribecode.org/app/demo.html)
 
 </div>
 
@@ -165,6 +167,10 @@ A library of skills, recipes, templates, assets and scripts, shared across the t
 **Your agents** gathers everything that works with you: Claude Code, Claude Desktop (through a stdio bridge), other MCP agents and local models. The **Secretary** runs in the background on a local model: it keeps a journal, writes a "what matters now" digest, files research, and turns realizations into tasks or votes. See [docs/SOLO.md](docs/SOLO.md).
 
 <p align="center"><img src="docs/screenshots/readme-secretary.png" alt="The Secretary digest" width="100%"></p>
+
+### Company mode (new in v0.27)
+
+Turn a project into a small business. **Seats** (CEO, Build, Grow, Run, plus Design, Sales, Support, Finance, Legal or your own) each go to a person or an AI helper, with a short charter that says what the seat may do alone and what needs a person's OK. A daily standup, a weekly review and a board update arrive by themselves. The **Money** view shows only numbers with a source (a connected tool or a person who typed them in). **Work**, the **Academy**, **Legal starting points**, **Offload** to free models and the **Marketplace** round it out. Anything outward or costly (money, publishing, customer emails, contracts, production deploys) waits for a person's approval. See [docs/COMPANY.md](docs/COMPANY.md).
 
 ### Try it offline
 
