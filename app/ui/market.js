@@ -210,7 +210,7 @@
         if (r.remix && r.repo && window.TribeProjects && window.TribeProjects.remix) { leave(); window.TribeProjects.openNew(); setTimeout(() => window.TribeProjects.remix(r.repo), 60); }
         else if (r.url) window.open(r.url, '_blank', 'noopener');
       } else if (r.client === 'company') {
-        if (window.TribeCompany && window.TribeCompany.start) { leave(); window.TribeCompany.start(r.template); }
+        if (window.TribeCompany && window.TribeCompany.create) { leave(); await window.TribeCompany.create(r.template); window.TribeCompany.open(); }   // v0.27: company.js
         else { try { await C.api(`/projects/${encodeURIComponent(pid())}/company`, { method: 'PUT', body: { on: true, template: r.template } }); toast(`${it.title}: Company mode is on`); } catch { toast('Company mode isn’t ready on this tribe yet'); } }
       } else if (r.client === 'legal') { if (window.TribeLegal && window.TribeLegal.open) { leave(); window.TribeLegal.open(r.ref); } else toast('Legal templates come with Company mode'); }
       else if (r.client === 'academy') { if (window.TribeAcademy && window.TribeAcademy.open) { leave(); window.TribeAcademy.open(r.ref); } else toast('The academy comes with Company mode'); }
