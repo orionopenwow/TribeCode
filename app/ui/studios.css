@@ -1,0 +1,71 @@
+/* Studios (app/ui/studios.js), inside the Workshop layer. Flat matte: 1px borders, depth from luminance steps only,
+   theme variables so every theme works. Thumbnails are flat tiles drawn by TribeCode (a glyph + the name), not logos. */
+.sto { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.sto-empty { padding: 28px; color: var(--muted); }
+.sto-eyebrow { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.sto-hero { border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface); padding: 22px 26px; }
+.sto-hero h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.018em; line-height: 1.15; margin: 6px 0; }
+.sto-hero p { color: var(--muted); font-size: 14.5px; line-height: 1.6; max-width: 70ch; margin: 0; }
+.sto-sec { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sto-h { font-size: 13px; font-weight: 650; letter-spacing: .02em; color: var(--muted); margin: 0; }
+.sto-h .faint { font-weight: 500; margin-left: 4px; }
+.sto-allhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.sto-cats { display: inline-flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.sto-cat { height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 600; flex: none; }
+.sto-cat:hover { color: var(--text); border-color: var(--edge-pop); }
+.sto-cat.on { color: var(--text); border-color: var(--accent); }
+.sto-row, .sto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+.sto-card { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; padding: 14px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); cursor: pointer; min-width: 0; transition: border-color .15s, background-color .15s; }
+.sto-card:hover, .sto-card:focus-visible { border-color: var(--edge-pop); outline: none; }
+.sto-card.wide { grid-template-columns: 132px minmax(0, 1fr); padding: 18px; border-color: color-mix(in srgb, var(--accent) 45%, var(--edge)); }
+.sto-thumb { display: grid; place-items: center; align-content: center; gap: 4px; width: 76px; height: 76px; border-radius: 14px; background: color-mix(in srgb, var(--c) 22%, var(--canvas)); border: 1px solid color-mix(in srgb, var(--c) 55%, var(--edge)); color: var(--c); overflow: hidden; }
+.sto-thumb i { font-style: normal; font-size: 28px; line-height: 1; }
+.sto-thumb b { font-size: 9.5px; font-weight: 700; letter-spacing: .02em; color: var(--text); max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sto-thumb.big { width: 132px; height: 132px; border-radius: 20px; } .sto-thumb.big i { font-size: 50px; } .sto-thumb.big b { font-size: 13px; max-width: 120px; }
+.sto-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sto-t { display: flex; align-items: center; gap: 8px; } .sto-t b { font-size: 15px; font-weight: 650; color: var(--text); }
+.sto-card.wide .sto-t b { font-size: 19px; }
+.sto-pin { font: 600 10.5px/1.6 var(--mono); padding: 0 7px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--agents, #38C6B1) 50%, var(--edge)); color: var(--agents-ink, #5DD6C3); }
+.sto-what { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.sto-meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.sto-lic { font: 600 10.5px/1.7 var(--mono); padding: 0 7px; border-radius: 6px; border: 1px solid var(--edge); color: var(--faint); }
+.sto-plats { display: inline-flex; flex-wrap: wrap; gap: 4px; } .sto-plat { font-size: 11px; color: var(--faint); padding: 0 6px; border-radius: 6px; background: var(--canvas); line-height: 1.7; }
+.sto-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sto-dl { text-decoration: none; }
+.sto-acts .btn.ghost, .sto-d-sec .btn.ghost, .sto-d-acts .btn.ghost { border: 1px solid var(--edge); background: var(--canvas); color: var(--text); }
+.sto-acts .btn.ghost:hover, .sto-d-sec .btn.ghost:hover, .sto-d-acts .btn.ghost:hover { border-color: var(--edge-pop); }
+.sto-d-acts .btn.ghost[aria-pressed="true"] { border-color: color-mix(in srgb, var(--agents, #38C6B1) 55%, var(--edge)); color: var(--agents-ink, #5DD6C3); }
+.sto-foot { font-size: 12px; margin: 0; }
+
+/* detail pane: side panel on desktop, bottom sheet on phones */
+.sto-detail-wrap { position: fixed; inset: 0; z-index: 1200; }
+.sto-scrim { position: absolute; inset: 0; background: rgba(8, 10, 14, .55); }
+.sto-detail { position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 100%); overflow-y: auto; background: var(--surface); border-left: 1px solid var(--edge); padding: 22px 22px 28px; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; }
+.sto-detail.sheet { top: auto; left: 0; width: 100%; max-height: 88vh; border-left: 0; border-top: 1px solid var(--edge); border-radius: 18px 18px 0 0; padding: 18px 16px 24px; }
+.sto-d-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.sto-d-head h2 { margin: 2px 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -0.015em; }
+.sto-detail.sheet .sto-thumb.big { width: 84px; height: 84px; } .sto-detail.sheet .sto-thumb.big i { font-size: 32px; } .sto-detail.sheet .sto-thumb.big b { font-size: 10px; max-width: 76px; }
+.sto-x { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--edge); background: var(--canvas); color: var(--muted); font-size: 20px; line-height: 1; }
+.sto-x:hover { color: var(--text); border-color: var(--edge-pop); }
+.sto-d-sec h3 { margin: 0 0 6px; font-size: 12px; font-family: var(--mono); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.sto-d-sec p { margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.sto-d-helps { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--edge)); border-radius: var(--r); background: var(--canvas); }
+.sto-d-helps p { color: var(--text); margin: 0; }
+.sto-d-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.sto-d-note { font-size: 12px; margin: 0; }
+/* the Marketplace's Studio filter points here; the asset library links here */
+.mk-studios { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); color: var(--muted); font-size: 13.5px; }
+.as-studios { margin-left: auto; margin-right: 8px; }
+@media (max-width: 820px) {
+  .sto-hero { padding: 16px; } .sto-hero h2 { font-size: 20px; }
+  .sto-row, .sto-grid { grid-template-columns: minmax(0, 1fr); }
+  .sto-card { grid-template-columns: 60px minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .sto-thumb { width: 60px; height: 60px; border-radius: 12px; } .sto-thumb i { font-size: 22px; } .sto-thumb b { display: none; }
+  .sto-card.wide { grid-template-columns: 76px minmax(0, 1fr); padding: 14px; } .sto-card.wide .sto-thumb.big { width: 76px; height: 76px; } .sto-card.wide .sto-thumb.big i { font-size: 30px; }
+  .sto-cats { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+}
+
+/* Workshop tabs: five fit on a phone with short labels (Market, Studios, Shelf, Library, Community) */
+.ws-tabs .ws-ts { display: none; }
+@media (max-width: 820px) { .ws-tabs .ws-tl { display: none; } .ws-tabs .ws-ts { display: inline; } .ws-tabs button { padding: 0 8px; } }

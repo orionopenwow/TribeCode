@@ -37,6 +37,7 @@
     { k: 'newdoc', icon: 'i-doc', t: 'Doc, sheet or slides', s: 'Start one in Files. Export to Word, Excel, PowerPoint or Google', hide: !window.TribeDocs || me().role === 'spectator' },
     { k: 'capture', icon: 'i-link', t: 'Read a link', s: draft() && /^https?:\/\//.test(draft()) ? 'Summarize the link you typed' : 'Short notes from an article or video', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
     { k: 'voicenote', icon: 'i-mic', t: 'Voice note to notes', s: 'Record, get a summary and action items', hide: !window.TribeCaptures || me().role === 'spectator' },   // feat/captures
+    { k: 'studios', icon: 'i-sparkle', t: 'Creative tools', s: 'ArtCraft, Blender, Krita and more, free to download', hide: !window.TribeStudios },   // v0.27 Studios
     { k: 'bug', icon: 'i-bug', t: 'Report a bug', s: 'With the recent logs attached', hide: !window.TribeBugs },
   ].filter(x => !x.hide);
 
@@ -119,6 +120,7 @@
       } catch (e) { toast(e.message); }
       return;
     }
+    if (k === 'studios') return window.TribeStudios.open();
     if (k === 'bug') return window.TribeBugs.capture();
   }
 

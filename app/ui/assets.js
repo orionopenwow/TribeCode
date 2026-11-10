@@ -38,7 +38,7 @@
     document.getElementById('as-modal')?.remove(); picked = new Map();
     const m = document.createElement('div'); m.className = 'modal as-modal'; m.id = 'as-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', 'Asset library');
     m.innerHTML = `<div class="modal-card as-card">
-      <div class="as-head"><div><p class="eyebrow mono">Asset library</p><h2>Sounds, models, sprites and more</h2></div><button class="fwin-btn" data-close title="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <div class="as-head"><div><p class="eyebrow mono">Asset library</p><h2>Sounds, models, sprites and more</h2></div>${window.TribeStudios ? '<button class="btn sm ghost as-studios" data-studios title="Free creative tools to make your own">Make your own: Studios</button>' : ''}<button class="fwin-btn" data-close title="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
       <p class="as-lead">Open assets only (CC0, MIT, OFL, CC-BY with credit). Everything you add lands in <code>assets/</code> with a credit line.</p>
       <div class="as-bar"><input class="input as-q" id="as-q" type="search" placeholder="Try jump, coin, heart, fox, forest…" value="${esc(opts.q || '')}" autocomplete="off" aria-label="Search assets"></div>
       <div class="as-kinds" role="tablist">${[{ id: '', title: 'All', emoji: '🎒' }, ...c.kinds].map(k => `<button type="button" class="as-kind${(opts.kind || '') === k.id ? ' on' : ''}" data-kind="${k.id}" role="tab" aria-selected="${(opts.kind || '') === k.id}">${k.emoji} ${esc(k.title)}</button>`).join('')}</div>
@@ -50,7 +50,7 @@
     const q = m.querySelector('#as-q'), grid = m.querySelector('#as-grid'), addB = m.querySelector('#as-add'), count = m.querySelector('#as-count');
     let kind = opts.kind || '', tmr = null, seq = 0;
     const close = () => { m.remove(); blobs.forEach(u => URL.revokeObjectURL(u)); blobs = []; };
-    m.onclick = e => { if (e.target === m || e.target.closest('[data-close]')) close(); };
+    m.onclick = e => { if (e.target.closest('[data-studios]')) { close(); window.TribeStudios.open(); return; } if (e.target === m || e.target.closest('[data-close]')) close(); };
     m.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     const paintCount = () => { count.textContent = picked.size ? `${picked.size} picked` : 'Pick what you want'; addB.disabled = !picked.size; };
     async function run() {
