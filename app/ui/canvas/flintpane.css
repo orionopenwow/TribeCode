@@ -83,6 +83,8 @@
 .fp-qcol { position: relative; }
 .fp-qcol input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .fp-qcol i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--edge); background: transparent; }
+.fp-qalign { display: inline-flex; align-items: center; gap: 2px; }
+.fp-qalign[hidden] { display: none; }
 .fp-qsep { width: 1px; height: 18px; margin: 0 3px; background: var(--edge); }
 .fp-qask { color: var(--text); }
 

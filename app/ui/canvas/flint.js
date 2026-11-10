@@ -129,4 +129,6 @@
   }
 
   window.TribeCanvasFlint = { mount, ask, open, close, run, sendToHelpers, use: h => { hook = h; if (h && bar) close(); }, get busy() { return busy; } };
+  // the canvas may have been built before this file loaded (scripts load one by one): mount now
+  if (document.getElementById('cv') && window.TribeCanvas && window.TribeCanvas._e) mount(window.TribeCanvas._e);
 })();

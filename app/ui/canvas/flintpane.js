@@ -102,6 +102,10 @@
       <button type="button" class="fp-qb" data-q="smaller" title="${esc(T('Smaller'))}" aria-label="${esc(T('Smaller'))}">A−</button>
       <button type="button" class="fp-qb" data-q="bigger" title="${esc(T('Bigger'))}" aria-label="${esc(T('Bigger'))}">A+</button>
       <button type="button" class="fp-qb" data-q="del" title="${esc(T('Delete'))} (Del)" aria-label="${esc(T('Delete'))}"><svg class="fp-svg" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 6h10M8 6V4h4v2M6.5 6l.7 10h5.6l.7-10"/></svg></button>
+      <span class="fp-qalign" data-qalign>
+        <span class="fp-qsep"></span>
+        ${[['l', 'Align left', '<path d="M4 3v14M7 6h9M7 12h5"/>'], ['ch', 'Align centre', '<path d="M10 3v14M5 6h10M7 12h6"/>'], ['r', 'Align right', '<path d="M16 3v14M4 6h9M8 12h5"/>'], ['t', 'Align top', '<path d="M3 4h14M6 7v9M12 7v5"/>'], ['cv', 'Align middle', '<path d="M3 10h14M6 5v10M12 7v6"/>'], ['b', 'Align bottom', '<path d="M3 16h14M6 4v9M12 8v5"/>'], ['dh', 'Spread evenly', '<path d="M3 4v12M17 4v12M8 7h4v6H8z"/>']].map(([k, l, d]) => `<button type="button" class="fp-qb" data-q="align" data-k="${k}" title="${esc(T(l))}" aria-label="${esc(T(l))}"><svg class="fp-svg" viewBox="0 0 20 20" aria-hidden="true">${d}</svg></button>`).join('')}
+      </span>
       <span class="fp-qsep"></span>
       <button type="button" class="fp-qb fp-qask" data-q="ask">${flame(11, 14)}<span>${esc(T('Ask Flint'))}</span></button>`;
     E.stage.appendChild(quick);
@@ -162,7 +166,8 @@
     paintLog();
     const i = pane.querySelector('#fp-in');
     if (typeof prefill === 'string') { i.value = prefill; }
-    setTimeout(() => { i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 30);
+    // phones: no auto focus (the keyboard would jump up and scroll the page); desktop: focus without scrolling
+    if (!isPhone() || typeof prefill === 'string') setTimeout(() => { i.focus({ preventScroll: true }); i.setSelectionRange(i.value.length, i.value.length); }, 30);
     flameBtn(true);
   }
   function close() {
@@ -289,6 +294,7 @@
     for (const id of E.sel) { const el = E.elOf(id); if (!el) continue; const r = el.getBoundingClientRect(); top = Math.min(top, r.top); left = Math.min(left, r.left); right = Math.max(right, r.right); bottom = Math.max(bottom, r.bottom); }
     if (!Number.isFinite(top)) { quick.hidden = true; return; }
     const sr = E.stage.getBoundingClientRect();
+    const al = quick.querySelector('[data-qalign]'); if (al) al.hidden = !(E.sel.length > 1 && window.TribeCanvasExtras);   // multi-select: align and spread (extras.js)
     quick.hidden = false;
     const w = quick.offsetWidth || 260, h = quick.offsetHeight || 36;
     let y = top - sr.top - h - 30;   // above the selection (clear of its name label), else below it
@@ -303,6 +309,7 @@
     const b = e.target.closest('[data-q]'); if (!b || b.dataset.q === 'fill') return;
     const q = b.dataset.q;
     if (q === 'del') { E.removeSel(); quick.hidden = true; return; }
+    if (q === 'align') { if (window.TribeCanvasExtras) window.TribeCanvasExtras.align(b.dataset.k); return; }
     if (q === 'ask') { const n = E.S.get(E.sel[0]); open(n ? `${T('This')} “${(n.name || n.t)}”: ` : ''); return; }
     const k = q === 'bigger' ? 1.1 : 1 / 1.1;
     E.patchMany(E.sel, n => {
@@ -312,4 +319,6 @@
   }
 
   window.TribeCanvasFlintPane = { mount, mode, setMode, open, close, toggle, askFlint, items: () => items.slice() };
+  // the canvas may have been built before this file loaded (scripts load one by one): mount now
+  if (document.getElementById('cv') && window.TribeCanvas && window.TribeCanvas._e) mount(window.TribeCanvas._e);
 })();

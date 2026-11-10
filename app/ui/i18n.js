@@ -10,6 +10,31 @@
   const IDX = { es: 0, pt: 1, fr: 2, de: 3, ja: 4, zh: 5, ko: 6 };
   // English -> [es, pt, fr, de, ja, zh, ko]
   const D = {
+    // Flint's pane beside the Design canvas (canvas/flintpane.js)
+    'designs with you': ['diseña contigo', 'desenha com você', 'conçoit avec vous', 'gestaltet mit dir', '一緒にデザイン', '和你一起设计', '함께 디자인해요'],
+    'Screens, tidy, rename, themes and variants need no AI': ['Pantallas, ordenar, renombrar, temas y variantes no necesitan IA', 'Telas, organizar, renomear, temas e variantes não precisam de IA', 'Écrans, rangement, renommage, thèmes et variantes sans IA', 'Screens, Aufräumen, Umbenennen, Themes und Varianten brauchen keine KI', '画面・整理・名前変更・テーマ・バリエーションはAI不要', '页面、整理、重命名、主题和变体都不需要 AI', '화면, 정리, 이름 바꾸기, 테마, 변형은 AI가 필요 없어요'],
+    'Describe a screen or a change…': ['Describe una pantalla o un cambio…', 'Descreva uma tela ou uma mudança…', 'Décrivez un écran ou un changement…', 'Beschreib einen Screen oder eine Änderung…', '画面や変更を説明…', '描述一个页面或一处修改…', '화면이나 변경을 설명해 주세요…'],
+    'Add a note and send several together': ['Añade una nota y envía varias juntas', 'Adicione uma nota e envie várias juntas', 'Ajoutez une note et envoyez-en plusieurs', 'Notiz hinzufügen und mehrere zusammen senden', 'メモを追加してまとめて送る', '添加备注，一起发送多条', '메모를 추가해 한 번에 보내기'],
+    'Note': ['Nota', 'Nota', 'Note', 'Notiz', 'メモ', '备注', '메모'],
+    'Editing tools': ['Herramientas de edición', 'Ferramentas de edição', 'Outils d’édition', 'Bearbeitungswerkzeuge', '編集ツール', '编辑工具', '편집 도구'],
+    'Advanced tools': ['Herramientas avanzadas', 'Ferramentas avançadas', 'Outils avancés', 'Erweiterte Werkzeuge', '詳細ツール', '高级工具', '고급 도구'],
+    'Simple': ['Simple', 'Simples', 'Simple', 'Einfach', 'シンプル', '简单', '간단히'],
+    'Advanced': ['Avanzado', 'Avançado', 'Avancé', 'Erweitert', '詳細', '高级', '고급'],
+    'Smaller': ['Más pequeño', 'Menor', 'Plus petit', 'Kleiner', '小さく', '缩小', '작게'],
+    'Bigger': ['Más grande', 'Maior', 'Plus grand', 'Größer', '大きく', '放大', '크게'],
+    'Ask Flint': ['Preguntar a Flint', 'Perguntar ao Flint', 'Demander à Flint', 'Flint fragen', 'Flintに聞く', '问 Flint', 'Flint에게 묻기'],
+    'Align left': ['Alinear a la izquierda', 'Alinhar à esquerda', 'Aligner à gauche', 'Links ausrichten', '左揃え', '左对齐', '왼쪽 정렬'],
+    'Align centre': ['Centrar', 'Centralizar', 'Centrer', 'Zentrieren', '中央揃え', '居中对齐', '가운데 정렬'],
+    'Align right': ['Alinear a la derecha', 'Alinhar à direita', 'Aligner à droite', 'Rechts ausrichten', '右揃え', '右对齐', '오른쪽 정렬'],
+    'Align top': ['Alinear arriba', 'Alinhar ao topo', 'Aligner en haut', 'Oben ausrichten', '上揃え', '顶部对齐', '위쪽 정렬'],
+    'Align middle': ['Alinear al medio', 'Alinhar ao meio', 'Aligner au milieu', 'Mittig ausrichten', '上下中央揃え', '垂直居中', '세로 가운데 정렬'],
+    'Align bottom': ['Alinear abajo', 'Alinhar embaixo', 'Aligner en bas', 'Unten ausrichten', '下揃え', '底部对齐', '아래쪽 정렬'],
+    'Spread evenly': ['Repartir por igual', 'Distribuir igualmente', 'Répartir également', 'Gleichmäßig verteilen', '均等に配置', '均匀分布', '고르게 배치'],
+    'Tell me what to design': ['Dime qué diseñar', 'Diga o que desenhar', 'Dites-moi quoi concevoir', 'Sag mir, was ich gestalten soll', '何をデザインするか教えて', '告诉我要设计什么', '무엇을 디자인할지 알려 주세요'],
+    'A screen, a section or a change to what you select. I build real frames with auto layout that you can edit, and every step can be undone.': ['Una pantalla, una sección o un cambio en lo que selecciones. Creo marcos reales con diseño automático que puedes editar, y cada paso se puede deshacer.', 'Uma tela, uma seção ou uma mudança no que você selecionar. Crio quadros reais com layout automático que você pode editar, e cada passo pode ser desfeito.', 'Un écran, une section ou un changement sur la sélection. Je crée de vrais cadres en mise en page auto, modifiables, et chaque étape s’annule.', 'Ein Screen, ein Abschnitt oder eine Änderung an der Auswahl. Ich baue echte Frames mit Auto-Layout zum Bearbeiten, und jeder Schritt lässt sich rückgängig machen.', '画面、セクション、選択中のものへの変更。編集できる自動レイアウトの本物のフレームを作り、どの手順も元に戻せます。', '一个页面、一个区块，或对所选内容的修改。我会生成可编辑的自动布局框架，每一步都能撤销。', '화면, 섹션, 또는 선택한 것의 변경. 편집할 수 있는 자동 레이아웃 프레임을 만들고, 모든 단계는 되돌릴 수 있어요.'],
+    'Undone': ['Deshecho', 'Desfeito', 'Annulé', 'Rückgängig gemacht', '元に戻しました', '已撤销', '되돌림'],
+    'Send all': ['Enviar todo', 'Enviar tudo', 'Tout envoyer', 'Alle senden', 'すべて送信', '全部发送', '모두 보내기'],
+    'This': ['Esto', 'Isto', 'Ceci', 'Das hier', 'これ', '这个', '이것'],
     // The focused preview workspace (preview.js v0.28)
     'Switch project': ['Cambiar de proyecto', 'Trocar de projeto', 'Changer de projet', 'Projekt wechseln', 'プロジェクトを切り替え', '切换项目', '프로젝트 전환'],
     'Dismiss': ['Descartar', 'Dispensar', 'Ignorer', 'Ausblenden', '閉じる', '关闭', '닫기'],
