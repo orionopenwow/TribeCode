@@ -10,6 +10,7 @@
   const md = s => esc(s).replace(/```\n?([\s\S]*?)```/g, '<pre>$1</pre>').replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
   const FLAME = '<img src="assets/brand/flint.svg" alt="" width="16" height="20">';
   const STOP = Symbol('stop');
+  const PACE = 1.6;   // every story plays at this multiple of its scripted timings (calmer to read)
 
   /* ---------------- the app's views (Kombucha Empire) ---------------- */
   const ROWS = [['dashboard', 'Dashboard', 'home'], ['messages', 'Messages', 'chat'], ['files', 'Files', 'file'], ['tasks', 'Task Board', 'check'], ['whiteboard', 'Whiteboard', 'board'], ['preview', 'Preview', 'play']];
@@ -58,6 +59,7 @@
       <div class="fa-main"><div class="fa-view" role="tabpanel"></div></div>
       <div class="fa-fl"><div class="fa-fl__head">${FLAME}<b>FLINT</b><span class="fa-fl__st">basic mode · no model</span><span class="fa-fl__x">⌄ ✕</span></div><div class="fa-fl__thread" aria-live="polite"></div><div class="fa-chips"></div>
         <form class="fa-ask">${FLAME}${o.input ? '<input type="text" placeholder="Ask Flint…" aria-label="Ask Flint" autocomplete="off">' : '<span class="fa-typed"></span>'}<svg class="mk-mic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><button class="mk-send" type="${o.input ? 'submit' : 'button'}" aria-label="Send" tabindex="${o.input ? 0 : -1}"></button></form></div>
+      <div class="fa-flier" aria-hidden="true">${FLAME}<span>Flint</span></div>
       <div class="fa-rack" aria-hidden="true"><span data-rk="dashboard">⌂</span><span data-rk="messages">💬</span><span data-rk="files">📄</span><span data-rk="tasks">☑</span><span class="fl">${FLAME}</span></div>
     </div>${o.card ? o.card : ''}</div>`;
     const q = s => el.querySelector(s), qa = s => [...el.querySelectorAll(s)];
@@ -70,14 +72,30 @@
       const k = w / W; scaler.style.width = W + 'px'; scaler.style.height = H + 'px'; scaler.style.transform = `scale(${k})`; el.style.height = Math.round(H * k) + 'px';
     }
     fit(); if ('ResizeObserver' in window) new ResizeObserver(fit).observe(el); else addEventListener('resize', fit);
+    // Flint flies to what he's working on: a small flame glides over, outlines the target, then gets on with it
+    const flier = q('.fa-flier');
+    function at(t) {
+      const w = win.getBoundingClientRect(), r = t.getBoundingClientRect(), k = w.width / win.offsetWidth || 1;
+      return { x: (r.left - w.left) / k, y: (r.top - w.top) / k, w: r.width / k, h: r.height / k };
+    }
+    function flyTo(t, label) {
+      if (!t || !flier) return; const b = at(t);
+      flier.querySelector('span').textContent = label || 'Flint';
+      flier.style.transform = `translate(${Math.round(b.x + b.w - 14)}px, ${Math.round(b.y - 18)}px)`; flier.classList.add('is-on');
+      win.querySelectorAll('.fa-sel').forEach(x => x !== t && x.classList.remove('fa-sel')); t.classList.add('fa-sel');
+    }
     const api = {
       el, q, view, cur: '', token: 0,
+      fly(sel, label) { clearTimeout(api._fl); const t = typeof sel === 'string' ? (view.querySelector(sel) || win.querySelector(sel)) : sel; flyTo(t, label); return t; },
+      unsel() { win.querySelectorAll('.fa-sel').forEach(x => x.classList.remove('fa-sel')); if (flier) flier.classList.remove('is-working'); },
+      park() { api.unsel(); if (flier) flier.classList.remove('is-on'); },
       go(name, flash) {
         api.cur = name; view.classList.remove('is-in'); void view.offsetWidth; view.innerHTML = (V[name] || V.dashboard)(); view.classList.add('is-in');
         const r = ROW_OF[name] || '';
         qa('.mk-row[role=tab]').forEach(b => { const on = b.dataset.row === r; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && flash) { b.classList.remove('is-flash'); void b.offsetWidth; b.classList.add('is-flash'); } });
         qa('.fa-rack span[data-rk]').forEach(s => s.classList.toggle('on', s.dataset.rk === r));
         const side = q('.mk-side'), onb = q('.mk-row.is-on'); if (el.classList.contains('is-phone') && side && onb) side.scrollLeft = Math.max(0, onb.offsetLeft - 10);
+        if (flash && !still) { const rowEl = q(`.mk-row[data-row="${r}"]`); if (rowEl) flyTo(rowEl, 'Opening'); clearTimeout(api._fl); api._fl = setTimeout(() => { const m = view.firstElementChild; if (m && api.cur === name) flyTo(m, 'Flint'); }, 650 * PACE); }
         const d = view.querySelector('[data-wb]'); if (d) drag(d);
         view.querySelectorAll('[data-open]').forEach(f => f.addEventListener('click', () => { if (o.onUser) o.onUser(); api.go(f.dataset.open, true); api.fill(); }));
       },
@@ -91,10 +109,10 @@
       async say(text, tok) { await api.typeAsk(text, tok); api.me(text); },
       status(s, on) { st.textContent = s; st.classList.toggle('is-on', !!on); },
       toast(text) { const old = q('.fa-toast'); if (old) old.remove(); const t = document.createElement('div'); t.className = 'fa-toast'; t.textContent = text; q('.fa-main').appendChild(t); setTimeout(() => t.remove(), still ? 99999 : 2600); },
-      clear() { thread.innerHTML = ''; },
-      wait(ms, tok) { return new Promise((res, rej) => setTimeout(() => (tok != null && tok !== api.token ? rej(STOP) : res()), still ? 0 : ms)); },
+      clear() { thread.innerHTML = ''; api.park(); },
+      wait(ms, tok) { return gate(api, ms, () => tok != null && tok !== api.token); },
       chips(list) { q('.fa-chips').innerHTML = list.map(c => `<button type="button" class="fa-chip" data-ask="${esc(c[1])}">${esc(c[0])}</button>`).join(''); },
-      async typeInto(sel, html, tok, per = 260) { const box = view.querySelector(sel); if (!box) return; for (const h of html) { await api.wait(still ? 0 : per, tok); box.insertAdjacentHTML('beforeend', h); } },
+      async typeInto(sel, html, tok, per = 260) { const box = view.querySelector(sel); if (!box) return; clearTimeout(api._fl); flyTo(box, 'Writing…'); if (flier) flier.classList.add('is-working'); for (const h of html) { await api.wait(still ? 0 : per, tok); box.insertAdjacentHTML('beforeend', h); } api.unsel(); },
       fill() { const p = view.querySelector('#fv-page'); if (p && p.children.length < 3) p.insertAdjacentHTML('beforeend', DOC.join('')); },
     };
     function trim() { while (thread.children.length > 7) thread.firstElementChild.remove(); }
@@ -138,7 +156,7 @@
       await a.wait(1800, t); await a.say('add a jump sound and make the title bigger', t);
       a.go('preview', true); await a.wait(500, t); card(a, 2);
       a.toast('Added jump.wav · credited in CREDITS.md'); await a.wait(700, t);
-      const h = a.view.querySelector('#fv-title'); if (h) h.style.fontSize = '34px'; card(a, 3);
+      const h = a.fly('#fv-title', 'Editing'); await a.wait(700, t); if (h) h.style.fontSize = '34px'; card(a, 3); await a.wait(500, t); a.unsel();
       await a.fl('Done: added `assets/sounds/jump.wav` (free to use, credited) and made the title 34px in the preview. Undo is one tap.', [['Undo', 'undo'], ['Make it bounce', 'bounce']], t); card(a, 4);
       await a.wait(3200, t);
     },
@@ -217,12 +235,39 @@
   }
   const HERO_CARD = `<div class="mk-card" aria-hidden="true"><div class="mk-card__head"><img src="assets/brand/flint.svg" alt="" width="18" height="23" style="image-rendering:pixelated"><b style="color:var(--fa-act)">Flint</b><span class="mk-chip">0/4</span></div><p class="mk-card__title">Camp’s morning</p><ol class="mk-plan"><li><i></i><span>Catch Camp up</span></li><li><i></i><span>Open the preview</span></li><li><i></i><span>Add a jump sound</span></li><li><i></i><span>Make the title bigger</span></li></ol><div class="mk-follow"><span>+ Ask a follow-up</span><i class="mk-send"></i></div></div>`;
 
+  // waits honour "fast" (skipping ahead to a step) and "paused" (the visitor pressed pause or picked a step)
+  async function gate(o, ms, gone) {
+    if (gone()) throw STOP;
+    if (!o.fast) await new Promise(r => setTimeout(r, still ? 0 : ms * PACE));
+    while (o.paused) { await new Promise(r => setTimeout(r, 120)); if (gone()) throw STOP; }
+    if (gone()) throw STOP;
+  }
+  // the numbered steps beside an exhibit: click one to jump there (it pauses on it), or pause / play the story
+  function controls(lis, o, restart) {
+    if (!lis.length || still) return { reached() {}, reset() {} };
+    const ol = lis[0].parentElement; let target = 0;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'fx-pp';
+    const draw = () => { btn.textContent = o.paused ? '▶ Play' : '❚❚ Pause'; btn.setAttribute('aria-label', o.paused ? 'Play this story' : 'Pause this story'); ol.classList.toggle('is-paused', !!o.paused); };
+    btn.addEventListener('click', () => { o.paused = !o.paused; target = 0; o.fast = false; draw(); });
+    ol.after(btn); draw();
+    lis.forEach((li, i) => {
+      li.tabIndex = 0; li.setAttribute('role', 'button'); li.setAttribute('aria-label', `Show step ${i + 1}: ${li.textContent.trim()}`);
+      const go = () => { target = i + 1; o.paused = false; o.fast = true; draw(); restart(); };
+      li.addEventListener('click', go); li.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
+    return {
+      reached(n) { if (target && n >= target) { target = 0; o.fast = false; o.paused = true; draw(); } },
+      reset() { target = 0; o.fast = false; o.paused = false; draw(); },
+    };
+  }
+
   // the runner: play while visible, stop on a visitor's click, resume after scrolling away and back
   function auto(app, story, steps) {
     let visible = false, userHeld = false, running = false;
     const lis = steps ? [...steps.querySelectorAll('li')] : [];
-    const step = n => lis.forEach((li, i) => { li.classList.toggle('on', i === n - 1); li.classList.toggle('done', i < n - 1); });
-    app.hold = () => { userHeld = true; app.token++; lis.forEach(li => li.classList.remove('on')); };
+    const ctl = controls(lis, app, () => { userHeld = false; app.token++; if (visible) setTimeout(loop, 0); });
+    const step = n => { lis.forEach((li, i) => { li.classList.toggle('on', i === n - 1); li.classList.toggle('done', i < n - 1); }); ctl.reached(n); };
+    app.hold = () => { if (app.paused) return; userHeld = true; app.token++; lis.forEach(li => li.classList.remove('on')); };
     async function loop() {
       if (running) return; running = true;
       try {
@@ -236,7 +281,7 @@
     if (still || !('IntersectionObserver' in window)) { visible = true; const t = ++app.token; story(app, t, step).catch(() => {}); return; }
     new IntersectionObserver(es => es.forEach(e => {
       visible = e.isIntersecting;
-      if (visible) loop(); else { app.token++; userHeld = false; }
+      if (visible) loop(); else { app.token++; userHeld = false; ctl.reset(); }
     }), { threshold: .3 }).observe(app.el);
   }
 
@@ -312,11 +357,14 @@
           <div class="ha-tabs"><span class="on"><i>☀️</i>Today</span><span><i>📅</i>Week</span><span><i>👥</i>Flatmates</span></div>
         </div><span class="ha-home"></span></div></div>`;
     const art = fb.closest('.fx'), lis = art ? [...art.querySelectorAll('.fx-steps li')] : [];
-    const step = n => lis.forEach((li, i) => { li.classList.toggle('on', i === n - 1); li.classList.toggle('done', i < n - 1); });
+    const o = { fast: false, paused: false };
+    let restartB = () => {};
+    const ctl = controls(lis, o, () => restartB());
+    const step = n => { lis.forEach((li, i) => { li.classList.toggle('on', i === n - 1); li.classList.toggle('done', i < n - 1); }); ctl.reached(n); };
     const K = n => fb.querySelectorAll(`[data-k="${n}"]`).forEach(x => x.classList.add('is-on'));
     const app = fb.querySelector('#fb-app');
     let tok = 0, visible = false, running = false;
-    const wait = (ms, t) => new Promise((res, rej) => setTimeout(() => (t !== tok ? rej(STOP) : res()), still ? 0 : ms));
+    const wait = (ms, t) => gate(o, ms, () => t !== tok);
     function reset() {
       fb.querySelectorAll('[data-k]').forEach(x => x.classList.remove('is-on')); fb.classList.remove('has-streaks'); app.classList.add('is-blank');
       app.querySelectorAll('.ha-toast').forEach(x => x.remove());
@@ -335,10 +383,29 @@
       await wait(800, t); K(7); await wait(3600, t);
     }
     if (still || !('IntersectionObserver' in window)) { story(++tok).catch(() => {}); }
-    else new IntersectionObserver(es => es.forEach(async e => {
-      visible = e.isIntersecting; if (!visible) { tok++; return; }
-      if (running) return; running = true;
-      try { while (visible) { const t = ++tok; try { await story(t); } catch (er) { if (er !== STOP) throw er; break; } } } finally { running = false; }
-    }), { threshold: .3 }).observe(fb);
+    else {
+      const run = async () => {
+        if (running) return; running = true;
+        try { while (visible) { const t = ++tok; try { await story(t); } catch (er) { if (er !== STOP) throw er; if (t === tok) break; } } } finally { running = false; }
+      };
+      restartB = () => { tok++; if (visible) setTimeout(run, 0); };
+      new IntersectionObserver(es => es.forEach(e => {
+        visible = e.isIntersecting; if (!visible) { tok++; ctl.reset(); return; }
+        run();
+      }), { threshold: .3 }).observe(fb);
+    }
   }
+
+  // big Flint's eyes look toward the pointer (one pixel at most, so it stays gentle)
+  (function () {
+    const eyes = document.getElementById('fp-eyes'), box = document.querySelector('.fp-big__svg'); if (!eyes || !box || still) return;
+    let raf = 0, px = 0, py = 0;
+    addEventListener('pointermove', e => { px = e.clientX; py = e.clientY; if (!raf) raf = requestAnimationFrame(look); }, { passive: true });
+    function look() {
+      raf = 0; const r = box.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+      const cx = r.left + r.width * .5, cy = r.top + r.height * .6, dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy);
+      const sx = d < 40 ? 0 : Math.round(dx / d * 1.2), sy = d < 40 ? 0 : Math.max(-1, Math.min(1, Math.round(dy / d * 1.2)));
+      eyes.setAttribute('transform', `translate(${Math.max(-1, Math.min(1, sx))} ${sy})`);
+    }
+  })();
 })();

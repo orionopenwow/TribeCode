@@ -309,3 +309,30 @@
 }
 @media (prefers-reduced-motion: reduce) { .fp-title__flame { animation: none; } .fa *, .fb * { animation: none !important; transition: none !important; } }
 .fa.is-phone .fa-chips { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .fa.is-phone .fa-chip { flex: none; }
+
+/* exhibit steps: click to jump to a step (it pauses there), or pause / play */
+.fx-steps li[role="button"] { cursor: pointer; transition: border-color .15s, background-color .15s; }
+.fx-steps li[role="button"]:hover { border-color: var(--edge-pop, #45403D); }
+.fx-steps li[role="button"]:focus-visible { outline: 2px solid #F26B1D; outline-offset: 2px; }
+.fx-pp { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--edge, #45403D); background: var(--surface, #282828); color: var(--muted, #E4E4E4); font: 600 13px/1 Inter, system-ui, sans-serif; cursor: pointer; }
+.fx-pp:hover { border-color: #F26B1D; color: #fff; }
+
+/* big Flint in the hero's open right side; his eyes follow the pointer (site/flint.js) */
+.fp-hero > .wrap:first-child { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 40px; }
+.fp-big { position: relative; width: 300px; display: grid; justify-items: center; }
+.fp-big__svg { width: 260px; height: auto; display: block; image-rendering: pixelated; }
+.fp-big__bob { animation: fp-bob 3.6s ease-in-out infinite; }
+.fp-big__shadow { width: 170px; height: 16px; margin-top: 6px; border-radius: 50%; background: #2A2420; }
+.fp-eyes { transition: transform .25s steps(2, end); }
+@keyframes fp-bob { 50% { transform: translateY(-10px); } }
+@media (max-width: 900px) { .fp-hero > .wrap:first-child { grid-template-columns: minmax(0, 1fr); } .fp-big { display: none; } }
+@media (prefers-reduced-motion: reduce) { .fp-big__bob { animation: none; } .fp-eyes { transition: none; } }
+
+/* Flint at work inside the app copies: a small flame flies to the target, which gets a quiet ember outline */
+.fa-flier { position: absolute; left: 0; top: 0; z-index: 30; display: flex; align-items: center; gap: 5px; padding: 3px 8px 3px 4px; border-radius: 999px; border: 1px solid #F26B1D; background: #1B2028; color: #F8FAFC; font: 600 11px/1 Inter, system-ui, sans-serif; opacity: 0; pointer-events: none; transform: translate(40px, 40px); transition: transform .9s cubic-bezier(.3, .7, .2, 1), opacity .3s; }
+.fa-flier svg, .fa-flier img { width: 14px; height: 18px; }
+.fa-flier.is-on { opacity: 1; }
+.fa-flier.is-working span::after { content: ""; display: inline-block; width: 4px; height: 4px; margin-left: 4px; border-radius: 50%; background: #F26B1D; animation: fa-blink 1s steps(2, start) infinite; vertical-align: middle; }
+.fa-sel { outline: 1.5px dashed #F26B1D !important; outline-offset: 3px; border-radius: 6px; transition: outline-color .2s; }
+@keyframes fa-blink { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .fa-flier { transition: none; } .fa-flier.is-working span::after { animation: none; } }

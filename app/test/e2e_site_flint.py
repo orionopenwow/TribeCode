@@ -34,15 +34,9 @@ def main():
             pg.hover('[data-mm="company"]'); pg.wait_for_timeout(150)
             assert pg.text_content("#mm-t") == "Company mode" and pg.locator("#mm-view .sp-seats").count() == 1, f"{page}: spotlight follows hover"
             pg.keyboard.press("Escape"); pg.mouse.move(5, 600)
-        # Meet Flint: the live chat, in a copy of the real app
-        pg.goto(f"{base}/flint.html"); pg.wait_for_selector('[data-app=try] .fa-chip')
-        assert pg.text_content("h1").strip() == "Meet Flint"
-        tr = '[data-app=try]'
-        pg.click(f'{tr} .fa-chip[data-ask="add a jump sound"]')
-        pg.wait_for_function("document.querySelector('[data-app=try] .fa-fl__thread').textContent.includes('assets/sounds/jump.wav')", timeout=6000)
-        assert pg.get_attribute(f'{tr} .mk-row[data-row=preview]', "aria-selected") == "true", "the Preview row lights up"
-        pg.fill(f"{tr} .fa-ask input", "teach me what an API is"); pg.press(f"{tr} .fa-ask input", "Enter")
-        pg.wait_for_function("document.querySelectorAll('[data-app=try] #fv-tabs span').length === 4", timeout=6000)
+        # Meet Flint: no big try-it app (removed), the exhibits carry the story
+        pg.goto(f"{base}/flint.html"); pg.wait_for_selector("[data-app=run] .mk-row")
+        assert pg.text_content("h1").strip() == "Meet Flint" and pg.locator("[data-app=try]").count() == 0
         # sidebar rows are tabs: click and arrow keys switch the view, Flint says where it lives
         run = '[data-app=run]'
         pg.locator(run).scroll_into_view_if_needed(); pg.wait_for_timeout(400)
@@ -71,7 +65,7 @@ def main():
             w = ph.evaluate("document.documentElement.scrollWidth"); assert w <= 391, f"{page} 390: scrollWidth {w}"
             assert not ph.locator(".mm-spot").is_visible(), "no spotlight on phones"
         ph.goto(f"{base}/flint.html"); ph.wait_for_timeout(600)
-        assert "is-phone" in ph.get_attribute("[data-app=try]", "class"), "the app copies switch to the phone layout"
+        assert "is-phone" in ph.get_attribute("[data-app=run]", "class"), "the app copies switch to the phone layout"
         b.close()
     assert not errs, errs
     print("ok e2e_site_flint")
