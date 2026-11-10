@@ -22,7 +22,7 @@
     const p = proj(pid), out = [];
     let sense = {}, co = null, vision = '';
     try { sense = await C.api(`/projects/${encodeURIComponent(pid)}/sense`); } catch {}
-    try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/company`); co = r && (r.company || r); if (co && co.on === false) co = null; } catch {}
+    try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/company`); co = r && Object.prototype.hasOwnProperty.call(r, 'company') ? r.company : r; if (!co || co.on === false || !Array.isArray(co.seats)) co = null; } catch {}
     try { vision = String((await C.api('/vision')).text || ''); } catch {}
     const kind = String(sense.kind || '').toLowerCase(), text = `${p.name || ''} ${p.bio || ''} ${vision} ${(sense.tags || []).join(' ')}`.toLowerCase();
     const businessy = kind === 'business' || /\b(business|shop|store|customers?|clients?|startup|company|agency|bakery|salon|sell|revenue|subscription|saas|nonprofit|donat)/.test(text);
