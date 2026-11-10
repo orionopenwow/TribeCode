@@ -48,6 +48,15 @@
   .rec { position: absolute; display: flex; align-items: center; gap: 14px; font: 600 22px var(--mono); color: var(--muted); }
   .rec b { width: 16px; height: 16px; border-radius: 50%; background: var(--rose); }
   .wave { position: absolute; display: flex; align-items: center; gap: 7px; height: 70px; }
+  .listen { position: absolute; left: 30px; top: 300px; width: 240px; }
+  .listen__bar { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 2px solid var(--border); background: var(--surface); font: 500 13px var(--mono); color: var(--muted); }
+  .listen__bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); } .listen__bar span { margin-left: 6px; }
+  .listen__body { display: flex; align-items: center; gap: 12px; padding: 14px 14px 16px; }
+  .listen__mic { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--teal); background: #173430; }
+  .listen__body b { display: block; font: 600 18px Inter; color: var(--white); }
+  .listen__wave { display: flex; align-items: center; justify-content: center; gap: 6px; height: 64px; } .listen__wave i { width: 7px; border-radius: 3px; background: var(--teal); }
+  .listen-x::after { content: ""; position: absolute; left: 50%; bottom: -2px; width: 60px; margin-left: -30px; height: 2px; background: var(--teal); }
+  .tag { font: 600 20px var(--mono); fill: #94A3B8; }
   .wave i { width: 9px; background: var(--ember); border-radius: 3px; }
   /* beat 2: chat */
   .chat { left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; }
@@ -121,17 +130,21 @@
 </style>
 </head>
 <body>
-<div class="ad" id="ad" role="img" aria-label="TribeCode in 20 seconds: a friend says an idea into a phone, friends and their AI helpers build it together in one chat, the game runs in the preview, the project becomes a company with seats held by people and AI helpers, and an approval waits for a person. Ends on: Build apps, games and companies with your friends. Free and open source, tribecode.org.">
+<div class="ad" id="ad" role="img" aria-label="TribeCode in 20 seconds: friends gather around a campfire as Camp says an idea into his phone, friends and their AI helpers build it together in one chat, the game runs in the preview, the project becomes a company with seats held by people and AI helpers, and an approval waits for a person. Ends on: Build apps, games and companies with your friends. Free and open source, tribecode.org.">
   <div class="stars" id="stars"></div>
 
   <!-- 1 · idea -->
   <section class="beat" id="b1">
-    <div class="copy"><p class="eye">// an idea</p><h1 class="ttl">Got an idea?</h1><p class="sub">Say it the way you’d say it to a friend.</p></div>
+    <div class="copy"><p class="eye">// an idea</p><h1 class="ttl">Got an idea?</h1><p class="sub">Say it around the fire. Your friends pull up a seat.</p></div>
     <div class="scene">
-      <svg class="px" id="p1" viewBox="0 0 32 48" width="320" height="480" style="position:absolute;left:40px;top:280px"></svg>
+      <svg class="px" id="camp" viewBox="0 0 980 840" width="980" height="840" style="position:absolute;left:0;top:0;overflow:visible"></svg>
+      <div id="p1" style="position:absolute;left:40px;top:280px;width:320px;height:480px">
+        <img src="assets/creator/campton.png" alt="" width="254" height="480" style="position:absolute;left:33px;top:0;image-rendering:pixelated">
+        <div class="listen" id="listen"><span class="listen__wave" id="lwave"></span></div>
+      </div>
       <div class="rec" id="rec" style="left:40px;top:780px"><b></b><span id="rec-t">0:01</span> · voice note</div>
-      <div class="wave" id="wave" style="left:400px;top:330px"></div>
-      <div class="bubble" id="bub" style="left:400px;top:430px;width:540px">“<span id="bub-t"></span>”<i class="caret" id="caret"></i></div>
+      <div class="wave" id="wave" style="left:400px;top:220px;display:none"></div>
+      <div class="bubble" id="bub" style="left:400px;top:310px;width:540px">“<span id="bub-t"></span>”<i class="caret" id="caret"></i></div>
     </div>
   </section>
 
@@ -274,9 +287,61 @@
   function drawP1(t) {
     const talk = t > .6 && t < 3.2 && Math.floor(t * 7) % 2 === 0;
     const rows = PERSON.map((r, i) => i === 10 ? (talk ? '.........sssmmmmsss......kggk...' : '.........ssssddsss.......kggk...') : r);
-    $('p1').innerHTML = sprite(rows, { ...PAL1, M: PAL1.d });
+    $('p1').style.transform = talk ? 'translateY(-3px)' : 'none';
+    // the floating screen in front of him listens, then hands off
+    const L = $('listen'); L.style.transform = `translateY(${(Math.sin(t * 2.4) * 6).toFixed(1)}px)`;
+    const on = t > .6 && t < 2.8; L.style.opacity = on ? 1 : .35;
+    let w = ''; for (let i = 0; i < 18; i++) { const h = on ? 8 + Math.abs(Math.sin(t * 10 + i * 1.3)) * 52 * (.35 + .65 * Math.abs(Math.sin(i * .7))) * (1 - Math.abs(i - 8.5) / 12) : 6; w += `<i style="height:${h.toFixed(1)}px"></i>`; } $('lwave').innerHTML = w;   // Camp's own avatar (assets/creator/campton.png), a small bob while he talks
   }
-  const IDEA = 'a game for my little brother';
+    // ---------- beat 1: the campfire, and friends pulling up a seat ----------
+  const FR = [   // x: left edge in scene px, face: 1 looks right (toward the fire), -1 looks left; at: seconds they arrive
+    { n: 'Jay', x: 352, face: 1, at: 1.0, hair: '#15161A', skin: '#8D5A3B', shirt: '#0EA5A0', pants: '#2F3846' },
+    { n: 'Maya', x: 682, face: -1, at: 1.6, hair: '#3B2418', skin: '#C98F66', shirt: '#6C7CFF', pants: '#343B4A' },
+    { n: 'Orion', x: 838, face: -1, at: 2.2, hair: '#D9B26A', skin: '#E8B48A', shirt: '#F26B1D', pants: '#2A313C' },
+  ];
+  const SZ = 8, GY = 800, FX = 600;               // pixel size, ground line, fire centre
+  const sh = (hex, m) => '#' + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * m))).toString(16).padStart(2, '0')).join('');
+  function seated(f, lit, rim) {                   // 16×24 cells, drawn facing right then mirrored
+    const R = [];
+    const r = (x, y, w, h, c) => R.push([x, y, w, h, c]);
+    r(4, 0, 7, 3, f.hair); r(4, 3, 2, 3, f.hair);            // hair, back of the head
+    r(6, 3, 5, 5, f.skin); r(9, 4, 1, 1, '#12151A');           // face, eye
+    r(10, 6, 1, 1, '#A8664A');                                  // mouth
+    r(7, 8, 2, 1, f.skin);                                      // neck
+    r(4, 9, 7, 8, f.shirt); r(4, 15, 7, 2, sh(f.shirt, .72)); r(4, 9, 1, 6, sh(f.shirt, .82));   // body, its shadow side and hem
+    r(5, 0, 4, 1, sh(f.hair, 1.5)); r(6, 7, 4, 1, sh(f.skin, .85));   // hair highlight, jaw shadow
+    r(8, 11, 3, 3, f.shirt); r(10, 13, 3, 2, f.skin);           // arm reaching to the keys
+    r(9, 15, 7, 1, '#8A94A6'); r(14, 9, 2, 6, '#4A5262');       // laptop base + lid
+    if (lit) r(14, 10, 1, 4, '#38C6B1');                        // screen glow, seen edge-on
+    r(4, 17, 9, 2, f.pants); r(11, 19, 2, 4, f.pants); r(11, 23, 4, 1, '#12151A');   // lap, shin, shoe
+    if (rim) { r(10, 3, 1, 3, '#F5C08A'); r(10, 9, 1, 2, '#FFB27A'); r(12, 17, 1, 2, '#6A4A36'); }  // firelight on the side facing the fire
+    return R;
+  }
+  function drawCamp(t) {
+    let s = '';
+    // ground glow: flat steps of light, no gradients
+    const fl = Math.sin(t * 13) * 6 + Math.sin(t * 7.3) * 4;
+    s += `<ellipse cx="${FX}" cy="${GY + 4}" rx="${330 + fl}" ry="46" fill="#161A20"/><ellipse cx="${FX}" cy="${GY + 4}" rx="${220 + fl}" ry="32" fill="#1B1F26"/><ellipse cx="${FX}" cy="${GY + 4}" rx="${120 + fl / 2}" ry="18" fill="#2A2420"/>`;
+    // logs to sit on
+    [[340, 150], [670, 300]].forEach(([x, w]) => s += `<rect x="${x}" y="${GY - 12}" width="${w}" height="18" fill="#5B3A29"/><rect x="${x}" y="${GY - 12}" width="${w}" height="5" fill="#7A5236"/><rect x="${x}" y="${GY - 12}" width="10" height="18" fill="#8A6244"/><rect x="${x + w - 10}" y="${GY - 12}" width="10" height="18" fill="#3E281C"/>`);
+    // friends arrive and sit
+    FR.forEach(f => {
+      const a = ease(k(t, f.at, .5)); if (a <= 0) return;
+      const lit = t > f.at + .7, dx = (1 - a) * 140 * f.face * -1, top = GY - 12 - 24 * SZ + 6;
+      let g = '';
+      seated(f, lit, true).forEach(([x, y, w, h, c]) => { const X = f.face > 0 ? x : 16 - x - w; g += `<rect x="${f.x + dx + X * SZ}" y="${top + y * SZ}" width="${w * SZ}" height="${h * SZ}" fill="${c}"/>`; });
+      s += `<g opacity="${a}">${g}</g>`;
+      s += `<text class="tag" x="${f.x + dx + 8 * SZ}" y="${GY + 44}" text-anchor="middle" opacity="${ease(k(t, f.at + .4, .3))}">${f.n}</text>`;
+    });
+    // the fire: crossed logs, three flame layers, sparks
+    s += `<rect x="${FX - 54}" y="${GY - 14}" width="108" height="14" fill="#4A2F22"/><rect x="${FX - 42}" y="${GY - 24}" width="84" height="12" fill="#6B4430"/>`;
+    const fr = Math.floor(t * 9);
+    const flame = (w, h, c, ph) => { let o = ''; const cols = Math.round(w / SZ); for (let i = 0; i < cols; i++) { const mid = 1 - Math.abs(i - (cols - 1) / 2) / (cols / 2); const hh = Math.max(1, Math.round((h / SZ) * mid * (0.75 + 0.25 * Math.sin(fr * 1.7 + i * 2.1 + ph)))); o += `<rect x="${FX - w / 2 + i * SZ}" y="${GY - 24 - hh * SZ}" width="${SZ}" height="${hh * SZ}" fill="${c}"/>`; } return o; };
+    s += flame(96, 108, '#E8542A', 0) + flame(66, 78, '#F26B1D', 1) + flame(36, 48, '#FABD2F', 2);
+    for (let i = 0; i < 5; i++) { const p = ((t * .7 + i / 5) % 1); s += `<rect x="${FX - 30 + ((i * 37) % 60) + Math.sin(p * 9 + i) * 10}" y="${GY - 120 - p * 160}" width="${SZ}" height="${SZ}" fill="#FABD2F" opacity="${(1 - p).toFixed(2)}"/>`; }
+    $('camp').innerHTML = s;
+  }
+  const IDEA = 'build me an app to manage my kombucha empire';
 
   // ---------- beat 3: the game ----------
   const G = { sky: '#1A2333', far: '#222E42', hill: '#283650', g1: '#3B7A4B', g2: '#2E5E3B', dirt: '#5B3A29', dirt2: '#4A2F22', star: '#3A4A66', coin: '#FABD2F', coin2: '#C98F1A', lan: '#FABD2F', rope: '#94A3B8' };
@@ -375,7 +440,7 @@
 
     // beat 1
     if (t < B[1][1]) {
-      drawP1(t);
+      drawP1(t); drawCamp(t);
       const n = Math.round(IDEA.length * clamp((t - .7) / 1.8)); $('bub-t').textContent = IDEA.slice(0, n);
       $('caret').style.opacity = n < IDEA.length || Math.floor(t * 3) % 2 ? 1 : 0;
       $('bub').style.opacity = ease(k(t, .4, .3)); $('bub').style.transform = `scale(${.92 + .08 * ease(k(t, .4, .3))})`; $('bub').style.transformOrigin = '0 100%';
