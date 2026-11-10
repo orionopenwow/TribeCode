@@ -49,7 +49,7 @@
         <button class="btn primary ws-add" id="ws-add">${ico('i-plus', 15)}<span>Add</span></button>
       </header>
       <div class="ws-bar">
-        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="market">Marketplace</button><button role="tab" data-wt="shelf">Starter shelf</button><button role="tab" data-wt="library">Tribe library</button><button role="tab" data-wt="community">Community</button></nav>
+        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="market" aria-label="Marketplace"><span class="ws-tl">Marketplace</span><span class="ws-ts" aria-hidden="true">Market</span></button><button role="tab" data-wt="studios">Studios</button><button role="tab" data-wt="shelf" aria-label="Starter shelf"><span class="ws-tl">Starter shelf</span><span class="ws-ts" aria-hidden="true">Shelf</span></button><button role="tab" data-wt="library" aria-label="Tribe library"><span class="ws-tl">Tribe library</span><span class="ws-ts" aria-hidden="true">Library</span></button><button role="tab" data-wt="community">Community</button></nav>
         <div class="ws-chips" id="ws-chips">${KINDS.map(([k, l]) => `<button class="ws-chip" data-k="${k}">${l}</button>`).join('')}</div>
       </div>
       <div class="ws-scroll" id="ws-scroll"><div class="ws-inner" id="ws-body"></div></div>
@@ -69,7 +69,7 @@
   }
 
   function open(which) {
-    if (typeof which === 'string' && ['market', 'shelf', 'library', 'community'].includes(which)) tab = which;   // v0.27 company: + market
+    if (typeof which === 'string' && ['market', 'studios', 'shelf', 'library', 'community'].includes(which)) tab = which;   // v0.27 company: + market
     const root = frame(); open_ = true;
     root.classList.remove('hidden'); document.body.classList.add('ws-open'); document.body.classList.remove('drawer-open');
     if (location.hash !== '#/workshop') history.replaceState(null, '', location.pathname + location.search + '#/workshop');
@@ -92,13 +92,14 @@
     const root = frame();
     root.querySelectorAll('[data-wt]').forEach(b => { b.classList.toggle('on', b.dataset.wt === tab); b.setAttribute('aria-selected', String(b.dataset.wt === tab)); });
     root.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === kind));
-    root.querySelector('#ws-title').textContent = tab === 'market' ? 'Marketplace' : tab === 'library' ? 'Tribe library' : tab === 'shelf' ? 'Starter shelf' : 'Community shelf';
-    root.querySelector('.ws-search').classList.toggle('hidden', tab === 'market');   // v0.27 company: the Marketplace has its own search + filters
-    root.querySelector('#ws-chips').classList.toggle('hidden', tab === 'shelf' || tab === 'market');
+    root.querySelector('#ws-title').textContent = tab === 'market' ? 'Marketplace' : tab === 'studios' ? 'Studios' : tab === 'library' ? 'Tribe library' : tab === 'shelf' ? 'Starter shelf' : 'Community shelf';
+    root.querySelector('.ws-search').classList.toggle('hidden', tab === 'market' || tab === 'studios');   // v0.27 company: the Marketplace has its own search + filters
+    root.querySelector('#ws-chips').classList.toggle('hidden', tab === 'shelf' || tab === 'market' || tab === 'studios');
     root.querySelector('#ws-add').classList.toggle('hidden', !(me().role && me().role !== 'spectator') || tab !== 'library');
     const body = root.querySelector('#ws-body');
     if (!C.hasToken()) { body.innerHTML = empty('Needs a tribe', 'The Workshop is shared, so it lives on the tribe host. Host or join a tribe first.'); return; }
     try {
+      if (tab === 'studios') { if (window.TribeStudios) window.TribeStudios.mount(body); else body.innerHTML = empty('Studios unavailable', 'Reload the app.'); return; }   // v0.27: Studios (studios.js)
       if (tab === 'market') { if (window.TribeMarket) window.TribeMarket.mount(body); else body.innerHTML = empty('Marketplace unavailable', 'Reload the app.'); return; }   // v0.27 company (market.js)
       if (tab === 'shelf') { const pid = window.TribeProjects && window.TribeProjects.current(); drawShelf(body, await C.api('/shelf' + (pid ? `?project=${encodeURIComponent(pid)}` : '')), pid); return; }
       if (tab === 'library') {

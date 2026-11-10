@@ -119,6 +119,10 @@
   function draw(reset) {
     const grid = host.querySelector('#mk-grid');
     host.querySelector('#mk-note').textContent = st.note || '';
+    // v0.27 Studios: with the Studio filter on, point to the Studios view (downloads, what each tool is for)
+    const sb = host.querySelector('#mk-studios'); if (sb) sb.remove();
+    if (window.TribeStudios && st.kind.includes('studio')) grid.insertAdjacentHTML('beforebegin', '<div class="mk-studios" id="mk-studios"><span>Want downloads and what each tool is for in this project?</span><button class="btn sm primary" type="button" data-open-studios>Open Studios</button></div>');
+    const ob = host.querySelector('[data-open-studios]'); if (ob) ob.onclick = () => window.TribeStudios.open();
     if (!st.items.length) {
       grid.innerHTML = `<div class="mk-empty"><b>Nothing matches</b><span>Try fewer words${active() ? ' or clear a filter' : ''}.</span></div>`;
     } else if (reset) grid.innerHTML = st.items.map(card).join('');
