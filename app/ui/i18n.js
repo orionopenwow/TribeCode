@@ -10,6 +10,28 @@
   const IDX = { es: 0, pt: 1, fr: 2, de: 3, ja: 4, zh: 5, ko: 6 };
   // English -> [es, pt, fr, de, ja, zh, ko]
   const D = {
+    // P1-E comment pins (pins.js)
+    'New comment': ['Nuevo comentario', 'Novo comentário', 'Nouveau commentaire', 'Neuer Kommentar', '新しいコメント', '新评论', '새 댓글'],
+    'Add a comment. Type @ to mention someone': ['Escribe un comentario. Usa @ para mencionar a alguien', 'Escreva um comentário. Use @ para mencionar alguém', 'Ajoutez un commentaire. Tapez @ pour mentionner quelqu’un', 'Kommentar schreiben. Mit @ jemanden erwähnen', 'コメントを追加。@で誰かをメンション', '添加评论。输入 @ 提及某人', '댓글을 남기세요. @로 사람을 멘션할 수 있어요'],
+    'Comment': ['Comentar', 'Comentar', 'Commenter', 'Kommentieren', 'コメント', '评论', '댓글'],
+    'Post': ['Publicar', 'Publicar', 'Publier', 'Senden', '投稿', '发布', '게시'],
+    'Resolved': ['Resuelto', 'Resolvido', 'Résolu', 'Erledigt', '解決済み', '已解决', '해결됨'],
+    'Resolve': ['Resolver', 'Resolver', 'Résoudre', 'Erledigen', '解決', '解决', '해결'],
+    'Reply': ['Responder', 'Responder', 'Répondre', 'Antworten', '返信', '回复', '답글'],
+    'Comments': ['Comentarios', 'Comentários', 'Commentaires', 'Kommentare', 'コメント一覧', '评论', '댓글'],
+    'Unresolved': ['Sin resolver', 'Não resolvidos', 'Non résolus', 'Offen', '未解決', '未解决', '미해결'],
+    'Mine': ['Míos', 'Meus', 'Les miens', 'Meine', '自分の', '我的', '내 것'],
+    'reply': ['respuesta', 'resposta', 'réponse', 'Antwort', '件の返信', '条回复', '개 답글'],
+    'replies': ['respuestas', 'respostas', 'réponses', 'Antworten', '件の返信', '条回复', '개 답글'],
+    'No open comments. Press C and click the page to add one.': ['No hay comentarios abiertos. Pulsa C y haz clic en la página para añadir uno.', 'Nenhum comentário aberto. Aperte C e clique na página para adicionar um.', 'Aucun commentaire ouvert. Appuyez sur C et cliquez sur la page pour en ajouter un.', 'Keine offenen Kommentare. Drücke C und klicke auf die Seite, um einen hinzuzufügen.', '未解決のコメントはありません。C を押してページをクリックすると追加できます。', '没有未解决的评论。按 C 并点击页面即可添加。', '열린 댓글이 없어요. C를 누르고 페이지를 클릭해 추가하세요.'],
+    'Nothing here yet.': ['Todavía no hay nada.', 'Ainda não há nada.', 'Rien pour l’instant.', 'Noch nichts hier.', 'まだ何もありません。', '这里还没有内容。', '아직 아무것도 없어요.'],
+    'Click anywhere to comment': ['Haz clic donde quieras para comentar', 'Clique em qualquer lugar para comentar', 'Cliquez n’importe où pour commenter', 'Klicke irgendwo, um zu kommentieren', 'どこでもクリックしてコメント', '点击任意位置进行评论', '아무 곳이나 클릭해 댓글 달기'],
+    'Esc to cancel': ['Esc para cancelar', 'Esc para cancelar', 'Échap pour annuler', 'Esc zum Abbrechen', 'Esc でキャンセル', '按 Esc 取消', 'Esc로 취소'],
+    'Stop following': ['Dejar de seguir', 'Parar de seguir', 'Ne plus suivre', 'Nicht mehr folgen', 'フォローをやめる', '停止跟随', '따라가기 중지'],
+    'Follow': ['Seguir a', 'Seguir', 'Suivre', 'Folgen:', 'フォロー', '跟随', '따라가기'],
+    'Following': ['Siguiendo a', 'Seguindo', 'Vous suivez', 'Du folgst', 'フォロー中:', '正在跟随', '따라가는 중'],
+    'Comment on the preview': ['Comentar en la vista previa', 'Comentar na prévia', 'Commenter l’aperçu', 'Vorschau kommentieren', 'プレビューにコメント', '在预览上评论', '미리보기에 댓글 달기'],
+    'now': ['ahora', 'agora', 'maintenant', 'jetzt', '今', '刚刚', '방금'],
     // v0.28 Make it yours (personalize.js): first-launch name, icon, theme, language
     'Make it yours': ['Hazlo tuyo', 'Deixe do seu jeito', 'Personnalisez', 'Mach es zu deinem', '自分好みに', '打造专属于你', '나만의 스타일로'],
     'What should friends call you?': ['¿Cómo te llaman tus amigos?', 'Como seus amigos devem te chamar?', 'Comment vos amis vous appellent-ils ?', 'Wie sollen dich Freunde nennen?', '友だちに何と呼ばれたい？', '朋友们怎么称呼你？', '친구들이 뭐라고 부르면 될까요?'],
