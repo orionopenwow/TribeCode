@@ -91,7 +91,7 @@ def main():
             # what you can make comes before how it works, then Learn, then the features and the network
             ys = pg.evaluate("['#make', '#story', '#learn', '#room', '#host'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
             assert ys == sorted(ys), ys
-            assert pg.locator("#make .make__card").count() == 8 and pg.locator("#learn .lc-mods li").count() == 4
+            assert pg.locator("#make .make__card").count() == 8 and pg.locator("#learn .vf__step").count() == 4
             assert pg.evaluate("parseFloat(getComputedStyle(document.querySelector('h1')).fontSize)") >= 40
             assert pg.evaluate("document.querySelector('h1').getBoundingClientRect().left < 200"), "the hero is left-aligned"
             dl = pg.locator(".hero [data-dl-main]")
@@ -192,7 +192,7 @@ def main():
             # mission: its own page from the top menu, styled like the rest of the site
             assert pg.locator(".nav__links a[href='mission.html']").count() == 1
             mp = pg.context.new_page(); mp.goto(BASE + "mission.html"); mp.wait_for_load_state("load")
-            assert "Code that helps people." in mp.inner_text("h1") and mp.locator(".ms-card").count() == 4 and "open-source maintainers" in mp.inner_text("body"); mp.close()
+            assert "One place to build, run and work together." in mp.inner_text("h1") and mp.locator(".ms-card").count() == 6 and "open-source maintainers" in mp.inner_text("body"); mp.close()
             assert "Anthropic" not in pg.inner_text("body")
             assert pg.evaluate("document.querySelectorAll('.reveal.is-in').length") > 6
             # start from something: tabs switch, cards carry chips, an idea fills the hero's chat box
@@ -238,9 +238,9 @@ def main():
             assert pg.evaluate("getComputedStyle(document.querySelector('.flint-hello__top b')).fontFamily").startswith("Silkscreen")
             # Show me around: Flint rings one section at a time; Next / Back / Esc
             pg.click("[data-hello=tour]"); pg.wait_for_selector(".ftour-ring.on")
-            assert "1 / 10" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
-            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 10')")
-            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 10')")
+            assert "1 / 11" in pg.inner_text(".ftour-card") and pg.is_hidden("#flint-bubble")
+            pg.click(".ftour-card [data-t=next]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('2 / 11')")
+            pg.click(".ftour-card [data-t=back]"); pg.wait_for_function("document.querySelector('.ftour-card').textContent.includes('1 / 11')")
             pg.keyboard.press("Escape"); assert pg.locator(".ftour-card, .ftour-ring").count() == 0
             pg.reload(); pg.wait_for_load_state("load"); pg.wait_for_timeout(4000)
             assert not pg.is_visible("#flint-bubble"), "the bubble shows once"

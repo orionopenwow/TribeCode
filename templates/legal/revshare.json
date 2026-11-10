@@ -1,0 +1,149 @@
+{
+  "id": "revshare",
+  "title": "Revenue-share agreement",
+  "emoji": "🔁",
+  "category": "Founders",
+  "blurb": "For tribe members who share income from a project instead of (or before) owning shares.",
+  "fields": [
+    {
+      "key": "project",
+      "label": "Project or product",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Garden (the game)"
+    },
+    {
+      "key": "owner",
+      "label": "Who receives the revenue",
+      "type": "text",
+      "required": true,
+      "placeholder": "Alex Kim, trading as Firefly Studio"
+    },
+    {
+      "key": "members",
+      "label": "Members and shares",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Jordan Lee: 20%\nSam Rivera: 10%",
+      "help": "One per line. Percentages of Net Revenue."
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "net_def",
+      "label": "What counts as Net Revenue",
+      "type": "textarea",
+      "required": false,
+      "default": "money actually received from sales of the project, minus refunds, chargebacks, platform and payment fees, and sales taxes or VAT collected"
+    },
+    {
+      "key": "period",
+      "label": "How often payouts happen",
+      "type": "text",
+      "required": false,
+      "default": "every three months, within 30 days of the end of each quarter"
+    },
+    {
+      "key": "min_payout",
+      "label": "Minimum payout",
+      "type": "text",
+      "required": false,
+      "placeholder": "$20 (smaller amounts roll over)"
+    },
+    {
+      "key": "term",
+      "label": "How long it lasts",
+      "type": "text",
+      "required": false,
+      "default": "for as long as the project earns revenue, unless ended as described below"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Parties and project",
+      "text": "This Revenue-Share Agreement starts on {{effective_date}}. **{{owner}}** (the \"Owner\") receives revenue from **{{project}}** (the \"Project\"). The people listed below (the \"Members\") contributed to the Project and will share in its revenue as set out here.",
+      "note": "Who earns the revenue and who shares it."
+    },
+    {
+      "heading": "Shares",
+      "text": "The Owner will pay each Member this share of Net Revenue:\n{{members}}\nShares are of Net Revenue, not profit, and do not give ownership of the Project or any company.",
+      "note": "A revenue share is not equity: members get income, not ownership."
+    },
+    {
+      "heading": "Net Revenue",
+      "text": "\"Net Revenue\" means {{net_def}}.",
+      "note": "Define this carefully. Most disputes are about what gets deducted."
+    },
+    {
+      "heading": "Payouts and statements",
+      "text": "The Owner will pay Members {{period}}, with a short statement showing gross revenue, deductions and each share. Amounts under {{min_payout}} roll over to the next payout. Each Member is responsible for their own taxes, and may need to provide tax details before being paid.",
+      "note": "Regular, transparent payouts build trust."
+    },
+    {
+      "heading": "Records and checking",
+      "text": "The Owner will keep accurate records of Project revenue for at least the period required by tax law, and will let any Member see the records relevant to their share once a year on reasonable notice.",
+      "note": "Members can check the numbers."
+    },
+    {
+      "heading": "Contributions and IP",
+      "text": "Each Member confirms that the work they contributed to the Project is their own (apart from disclosed third-party materials), and grants the Owner the rights needed to use, change and sell it as part of the Project. [Choose: either assign ownership to the Owner, or grant a perpetual licence; a lawyer can help you decide.]",
+      "note": "Pick one model of IP and write it clearly."
+    },
+    {
+      "heading": "Decisions",
+      "text": "The Owner makes decisions about the Project, including pricing, distribution and changes, and will consult Members on major decisions such as selling the Project or changing the revenue model.",
+      "note": "Clarifies who decides, while keeping members informed."
+    },
+    {
+      "heading": "Duration and ending",
+      "text": "This agreement lasts {{term}}. If the Project is sold, the Owner will either pay each Member a fair share of the sale proceeds based on their revenue share, or make the buyer take over this agreement, as the parties agree at the time. Shares already earned remain payable.",
+      "note": "What happens if the project is sold or wound down."
+    },
+    {
+      "heading": "General",
+      "text": "This agreement is governed by the laws of {{governing_law}}. It does not create a partnership, joint venture or employment relationship. Changes must be in writing signed by the Owner and the affected Members.",
+      "note": "Avoids accidentally creating a legal partnership."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Owner: ____________________   Date: __________\nMember: ____________________   Date: __________\nMember: ____________________   Date: __________",
+      "note": "Owner and each member sign."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Revenue shares that look like investments can raise securities-law questions; payouts may need tax reporting forms. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Profit-sharing arrangements can sometimes amount to a partnership in law if not structured carefully. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Tax withholding and invoicing obligations depend on each member's country. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

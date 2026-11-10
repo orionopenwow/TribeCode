@@ -24,3 +24,8 @@ body[data-mode="intermediate"] [data-mode-min="advanced"] { display: none !impor
 .set-row .set-l small { font-size: 12.5px; color: var(--muted); }
 .set-row:hover { background: color-mix(in srgb, var(--text) 2%, transparent); }
 @media (max-width: 760px) { #settings-modal .set-row, .set-row { grid-template-columns: 1fr; gap: 10px; padding: 14px 18px; } }
+/* v0.27 Company mode in the experience ladder: autopilot, connectors and compute sharing are Advanced; Money and Work Intermediate.
+   A panel someone turned on at their request (TribeMode.unlock) shows anyway: body[data-unlocked~="key"]. */
+body[data-mode="beginner"]:not([data-unlocked~="autopilot"]) #co-autopilot-slot, body[data-mode="intermediate"]:not([data-unlocked~="autopilot"]) #co-autopilot-slot,
+body[data-mode="beginner"]:not([data-unlocked~="autopilot"]) #co-seat-autopilot-slot, body[data-mode="intermediate"]:not([data-unlocked~="autopilot"]) #co-seat-autopilot-slot,
+body[data-mode="beginner"]:not([data-unlocked~="money"]) #co-ledger-slot, body[data-mode="beginner"]:not([data-unlocked~="money"]) #co-seat-ledger-slot { display: none !important; }

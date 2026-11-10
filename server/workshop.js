@@ -569,6 +569,13 @@ module.exports = function workshop({ store, P, approvals, getMembers, nameOf, po
     return { status: res.status, data };
   }
   async function openPr(it, pm, files, me, r) {
+    return prFiles({ r, me, branch: `workshop/${it.id}-${it.version}`, message: `Workshop: ${it.title} ${it.version}`,
+      title: `Add ${it.title} ${it.version} (${it.kind}, ${it.license})`,
+      body: `${it.summary || ''}\n\n- kind: ${it.kind}\n- license: ${it.license}\n- author: ${it.author}\n- files: ${it.files.length}\n\nDonated from a TribeCode Workshop.`,
+      files: [{ rel: `items/${it.id}/workshop.json`, buf: Buffer.from(JSON.stringify(pm, null, 2) + '\n') }, ...files.map(f => ({ rel: `items/${it.id}/${f.rel}`, buf: f.buf }))] });
+  }
+  // v0.27 company: the fork -> branch -> upload -> pull request path, shared with the public gig board (server/talent.js)
+  async function prFiles({ r, me, branch, message, title, body, files }) {
     const token = readSecret && (readSecret(me.id) || {}).githubToken;
     if (!token) throw err(400, 'save a GitHub token in Settings first, or use the upload link');
     const must = (x, what) => { if (x.status >= 300) throw err(502, `GitHub ${what}: ${String((x.data && x.data.message) || x.status).slice(0, 160)}`); return x.data; };
@@ -579,18 +586,16 @@ module.exports = function workshop({ store, P, approvals, getMembers, nameOf, po
     const fork = must(await gh('POST', `/repos/${r}/forks`, token, { default_branch_only: true }), 'fork');
     const forkName = fork.full_name || `${user.login}/${r.split('/')[1]}`;
     for (let i = 0; i < 10; i++) { const f = await gh('GET', `/repos/${forkName}`, token); if (f.status === 200) break; await new Promise(z => setTimeout(z, 1500)); }
-    const branch = `workshop/${it.id}-${it.version}`.replace(/[^\w./-]/g, '-');
+    branch = String(branch).replace(/[^\w./-]/g, '-');
     const ref = await gh('POST', `/repos/${forkName}/git/refs`, token, { ref: `refs/heads/${branch}`, sha: head.object.sha });
     if (ref.status >= 300 && ref.status !== 422) must(ref, 'branch');
     const put = async (rel, buf) => {
       const p = `/repos/${forkName}/contents/${rel.split('/').map(encodeURIComponent).join('/')}`;
       const cur = await gh('GET', `${p}?ref=${encodeURIComponent(branch)}`, token);
-      must(await gh('PUT', p, token, { message: `Workshop: ${it.title} ${it.version}`, content: buf.toString('base64'), branch, ...(cur.status === 200 && cur.data.sha ? { sha: cur.data.sha } : {}) }), `upload ${rel}`);
+      must(await gh('PUT', p, token, { message, content: buf.toString('base64'), branch, ...(cur.status === 200 && cur.data.sha ? { sha: cur.data.sha } : {}) }), `upload ${rel}`);
     };
-    await put(`items/${it.id}/workshop.json`, Buffer.from(JSON.stringify(pm, null, 2) + '\n'));
-    for (const f of files) await put(`items/${it.id}/${f.rel}`, f.buf);
-    const pr = await gh('POST', `/repos/${r}/pulls`, token, { title: `Add ${it.title} ${it.version} (${it.kind}, ${it.license})`, head: `${user.login}:${branch}`, base,
-      body: `${it.summary || ''}\n\n- kind: ${it.kind}\n- license: ${it.license}\n- author: ${it.author}\n- files: ${it.files.length}\n\nDonated from a TribeCode Workshop.` });
+    for (const f of files) await put(f.rel, f.buf);
+    const pr = await gh('POST', `/repos/${r}/pulls`, token, { title, head: `${user.login}:${branch}`, base, body });
     if (pr.status === 422 && /already exists/i.test(JSON.stringify(pr.data))) return { url: `${GH_WEB}/${r}/pulls`, branch, existing: true };
     const d = must(pr, 'pull request');
     return { url: d.html_url, number: d.number, branch };
@@ -666,7 +671,8 @@ module.exports = function workshop({ store, P, approvals, getMembers, nameOf, po
     return null;
   }
 
-  return { route, publish, use, list, search: (me, q, kind) => list(me, q, kind), community, getCommunity, donate, remove, sweep, pendingList, browse, loadItem, view, KINDS, LICENSES, LIMITS, stop: () => clearInterval(sweeper) };
+  return { repo, cdnUrl, fetchCapped, prFiles,   // v0.27 company: shared with server/talent.js (public gig board)
+    route, publish, use, list, search: (me, q, kind) => list(me, q, kind), community, getCommunity, donate, remove, sweep, pendingList, browse, loadItem, view, KINDS, LICENSES, LIMITS, stop: () => clearInterval(sweeper) };
 };
 module.exports.safeRel = safeRel;
 module.exports.cleanMeta = cleanMeta;

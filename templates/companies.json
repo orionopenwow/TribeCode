@@ -1,0 +1,192 @@
+{
+  "_about": "Company templates (server/company.js). Each sets seats with charters, 1-3 goals, starter tasks and rhythms. Plain starting points: edit everything after you pick one. Budgets start at 0 so nothing assumes money you haven't set.",
+  "templates": [
+    {
+      "id": "blank",
+      "name": "Blank company",
+      "emoji": "🏢",
+      "blurb": "Four lean seats: CEO, Build, Grow, Run. Fill in the rest yourself.",
+      "mission": "",
+      "seats": [
+        { "kind": "ceo", "title": "CEO", "charter": { "goal": "Pick one goal for this month and say it out loud", "owns": ["vision", "decisions"], "mayDo": ["set goals", "make calls", "assign seats"], "needsApproval": ["spend money", "sign contracts"], "done": "Everyone knows this month's goal and who owns what." } },
+        { "kind": "cto", "title": "Build", "charter": { "goal": "Ship the first version people can try", "owns": ["code", "tasks:build"], "mayDo": ["write code", "fix bugs", "open pull requests"], "needsApproval": ["deploy to production", "add paid services"], "done": "A link someone outside the team can open and use." } },
+        { "kind": "growth", "title": "Grow", "charter": { "goal": "Find the first 10 people who want this", "owns": ["website", "tasks:growth"], "mayDo": ["draft posts", "research where users hang out", "write landing copy"], "needsApproval": ["publish", "email customers", "spend money"], "done": "10 real people said yes (signed up, replied or paid)." } },
+        { "kind": "ops", "title": "Run", "charter": { "goal": "Keep the week calm: tasks current, nothing waiting", "owns": ["tasks", "calendar"], "mayDo": ["tidy the task board", "write the weekly notes", "chase blockers"], "needsApproval": ["spend money", "change who has access"], "done": "No task older than a week without an owner." } }
+      ],
+      "goals": [
+        { "title": "Get the first version into people's hands", "seat": "cto", "results": [{ "text": "People who tried it", "target": 10, "unit": "people" }] }
+      ],
+      "tasks": [
+        { "title": "Write the mission in one sentence", "seat": "ceo", "type": "write" },
+        { "title": "List the 3 things the first version must do", "seat": "cto", "type": "build" }
+      ],
+      "rhythms": { "standup": true, "weekly": true, "board": true }
+    },
+    {
+      "id": "saas",
+      "name": "Software product",
+      "emoji": "💻",
+      "blurb": "A small online tool people pay for. Build, grow, support, and know your numbers.",
+      "mission": "Make a small online tool that saves people time, and keep the people who use it happy.",
+      "seats": [
+        { "kind": "ceo", "title": "CEO", "charter": { "goal": "Decide who the product is for and the one problem it solves", "owns": ["vision", "pricing", "decisions"], "mayDo": ["set goals", "make calls", "talk to users"], "needsApproval": ["change prices", "spend money", "sign contracts"], "done": "A one-line pitch everyone on the team repeats the same way." } },
+        { "kind": "cto", "title": "Build", "charter": { "goal": "Ship the smallest version that solves the problem", "owns": ["code", "tasks:build", "uptime"], "mayDo": ["write code", "fix bugs", "write tests", "open pull requests"], "needsApproval": ["deploy to production", "add paid services", "touch customer data"], "done": "Signed-up users can do the main job without help." } },
+        { "kind": "growth", "title": "Grow", "charter": { "goal": "Get the first 25 sign-ups from people who aren't friends", "owns": ["website", "launch posts", "tasks:growth"], "mayDo": ["draft posts", "write landing copy", "list places to launch"], "needsApproval": ["publish", "email customers", "spend money on ads"], "done": "25 sign-ups, and we know where each one came from." } },
+        { "kind": "support", "title": "Support", "charter": { "goal": "Answer every user question within a day", "owns": ["help docs", "user feedback"], "mayDo": ["draft replies", "write help pages", "turn complaints into tasks"], "needsApproval": ["email customers", "give refunds"], "done": "No question older than 24 hours; repeat questions have a help page." } },
+        { "kind": "finance", "title": "Money", "charter": { "goal": "Know what we spend and earn each week", "owns": ["budget", "payments setup"], "mayDo": ["track costs", "draft a simple budget", "compare plans of the tools we use"], "needsApproval": ["spend money", "change prices", "connect payments"], "done": "A weekly line: spent, earned, left. (A starting point, not financial advice.)" } }
+      ],
+      "goals": [
+        { "title": "Launch to the first real users", "seat": "growth", "results": [{ "text": "Sign-ups", "target": 25, "unit": "sign-ups" }, { "text": "People who used it twice", "target": 10, "unit": "people" }] },
+        { "title": "A product that does one job well", "seat": "cto", "results": [{ "text": "Main flow works end to end", "target": 1, "unit": "done" }] }
+      ],
+      "tasks": [
+        { "title": "Write the one-line pitch: who it's for and what it fixes", "seat": "ceo", "type": "write" },
+        { "title": "Build the sign-up and the main screen", "seat": "cto", "type": "build" },
+        { "title": "Draft a landing page with one button", "seat": "growth", "type": "write" },
+        { "title": "List 5 places our users already hang out", "seat": "growth", "type": "research" },
+        { "title": "Write the first help page: getting started", "seat": "support", "type": "write" }
+      ],
+      "rhythms": { "standup": true, "weekly": true, "board": true }
+    },
+    {
+      "id": "agency",
+      "name": "Agency or studio",
+      "emoji": "🎯",
+      "blurb": "Do work for clients: find them, deliver well, get paid on time.",
+      "mission": "Do excellent work for a few good clients, deliver on time, and get paid fairly.",
+      "seats": [
+        { "kind": "ceo", "title": "CEO", "charter": { "goal": "Pick the kind of client we serve best", "owns": ["vision", "pricing", "decisions"], "mayDo": ["set goals", "make calls", "review proposals"], "needsApproval": ["sign contracts", "spend money", "change prices"], "done": "A clear 'we help X do Y' line on the website." } },
+        { "kind": "sales", "title": "Sales", "charter": { "goal": "Book 3 discovery calls", "owns": ["leads list", "proposals"], "mayDo": ["research leads", "draft outreach", "draft proposals"], "needsApproval": ["email customers", "send proposals", "sign contracts"], "done": "3 calls on the calendar with people who could hire us." } },
+        { "kind": "design", "title": "Design", "charter": { "goal": "A portfolio page with our 3 best pieces", "owns": ["portfolio", "brand"], "mayDo": ["design mockups", "pick fonts and colors", "prepare case studies"], "needsApproval": ["publish", "use client work publicly"], "done": "Portfolio live, every piece cleared with its client." } },
+        { "kind": "cto", "title": "Delivery", "charter": { "goal": "Deliver every client project on the agreed date", "owns": ["client projects", "tasks:build"], "mayDo": ["build", "fix", "share previews with the team"], "needsApproval": ["deploy to production", "send work to clients"], "done": "Every project has a date, an owner and a preview link." } },
+        { "kind": "finance", "title": "Money", "charter": { "goal": "Every invoice sent and tracked", "owns": ["invoices", "budget"], "mayDo": ["draft invoices", "track who has paid", "remind the CEO of late payments"], "needsApproval": ["send invoices", "spend money", "give discounts"], "done": "No unpaid invoice older than 30 days without a follow-up. (A starting point, not financial advice.)" } }
+      ],
+      "goals": [
+        { "title": "Fill the pipeline", "seat": "sales", "results": [{ "text": "Discovery calls", "target": 3, "unit": "calls" }, { "text": "Proposals sent", "target": 2, "unit": "proposals" }] },
+        { "title": "Show our best work", "seat": "design", "results": [{ "text": "Case studies published", "target": 3, "unit": "pieces" }] }
+      ],
+      "tasks": [
+        { "title": "Write 'we help X do Y' in one sentence", "seat": "ceo", "type": "write" },
+        { "title": "List 20 businesses we'd love to work with", "seat": "sales", "type": "research" },
+        { "title": "Pick 3 pieces for the portfolio and ask the clients if we may show them", "seat": "design", "type": "design" },
+        { "title": "Make a simple proposal template", "seat": "sales", "type": "write" }
+      ],
+      "rhythms": { "standup": true, "weekly": true, "board": true }
+    },
+    {
+      "id": "creator",
+      "name": "Creator business",
+      "emoji": "🎬",
+      "blurb": "Videos, posts or a newsletter: make things regularly and grow an audience.",
+      "mission": "Make things people look forward to, regularly, and turn the audience into a small, steady income.",
+      "seats": [
+        { "kind": "ceo", "title": "Creator", "charter": { "goal": "Pick the topic and the posting rhythm we can keep", "owns": ["voice", "topics", "decisions"], "mayDo": ["set goals", "make calls", "approve ideas"], "needsApproval": ["brand deals", "spend money", "sign contracts"], "done": "A posting calendar we've kept for 4 weeks straight." } },
+        { "kind": "design", "title": "Make", "charter": { "goal": "One finished piece every week", "owns": ["scripts", "edits", "thumbnails"], "mayDo": ["draft scripts", "edit", "make thumbnails"], "needsApproval": ["publish", "use music or clips we didn't make"], "done": "4 pieces done, each with its sources and licenses noted." } },
+        { "kind": "growth", "title": "Grow", "charter": { "goal": "Grow the email list: the audience we own", "owns": ["newsletter", "posts", "tasks:growth"], "mayDo": ["draft posts", "repurpose pieces", "write the newsletter"], "needsApproval": ["publish", "email subscribers", "spend money on ads"], "done": "Every piece also goes out as a newsletter issue." } },
+        { "kind": "sales", "title": "Partners", "charter": { "goal": "A simple page for sponsors and partners", "owns": ["media kit", "sponsor list"], "mayDo": ["research brands that fit", "draft a media kit", "draft pitches"], "needsApproval": ["email brands", "accept deals", "sign contracts"], "done": "A media kit with real numbers only, and 10 brands that fit." } }
+      ],
+      "goals": [
+        { "title": "Keep a steady rhythm", "seat": "design", "results": [{ "text": "Pieces published", "target": 8, "unit": "pieces" }] },
+        { "title": "Own the audience", "seat": "growth", "results": [{ "text": "Newsletter subscribers", "target": 100, "unit": "subscribers" }] }
+      ],
+      "tasks": [
+        { "title": "Pick the topic and write it in one line", "seat": "ceo", "type": "write" },
+        { "title": "Plan the next 4 pieces", "seat": "design", "type": "write" },
+        { "title": "Set up the newsletter sign-up", "seat": "growth", "type": "build" }
+      ],
+      "rhythms": { "standup": true, "weekly": true, "board": true }
+    },
+    {
+      "id": "game-studio",
+      "name": "Game studio",
+      "emoji": "🎮",
+      "blurb": "Make a game, build a community around it, and release it.",
+      "mission": "Make a game people play with their friends, and release it to a community that helped shape it.",
+      "seats": [
+        { "kind": "ceo", "title": "Director", "charter": { "goal": "Lock the core loop and the release date", "owns": ["vision", "scope", "decisions"], "mayDo": ["set goals", "make calls", "cut features"], "needsApproval": ["spend money", "sign contracts", "change the release date"], "done": "A one-page game pitch and a date everyone agrees on." } },
+        { "kind": "cto", "title": "Build", "charter": { "goal": "A playable build with the core loop", "owns": ["code", "builds", "tasks:build"], "mayDo": ["write code", "fix bugs", "make test builds"], "needsApproval": ["publish builds", "add paid services"], "done": "A friend can play 5 minutes without a crash or help." } },
+        { "kind": "design", "title": "Art & sound", "charter": { "goal": "One finished level's look and sound", "owns": ["art", "sound", "style guide"], "mayDo": ["draw sprites", "pick palettes", "find open-licensed sounds"], "needsApproval": ["use assets with unclear licenses", "spend money on assets"], "done": "Level 1 looks and sounds finished; every asset's license is credited." } },
+        { "kind": "growth", "title": "Community", "charter": { "goal": "Gather the first playtesters", "owns": ["devlog", "store page", "community"], "mayDo": ["draft devlogs", "make gifs", "collect feedback"], "needsApproval": ["publish", "spend money", "run giveaways"], "done": "20 people played a build and told us what they think." } }
+      ],
+      "goals": [
+        { "title": "A fun first level", "seat": "cto", "results": [{ "text": "Playtests with feedback", "target": 10, "unit": "playtests" }] },
+        { "title": "People waiting for the game", "seat": "growth", "results": [{ "text": "Wishlists or sign-ups", "target": 100, "unit": "people" }] }
+      ],
+      "tasks": [
+        { "title": "Write the one-page game pitch", "seat": "ceo", "type": "write" },
+        { "title": "Build the core loop in one test level", "seat": "cto", "type": "build" },
+        { "title": "Pick the palette and draw the player", "seat": "design", "type": "design" },
+        { "title": "Post the first devlog with a gif", "seat": "growth", "type": "write" }
+      ],
+      "rhythms": { "standup": true, "weekly": true, "board": true }
+    },
+    {
+      "id": "local",
+      "name": "Local business",
+      "emoji": "🏪",
+      "blurb": "A shop, café, salon or service: be easy to find, book and recommend.",
+      "mission": "Be the place people nearby recommend: easy to find, easy to book, a pleasure to visit.",
+      "seats": [
+        { "kind": "ceo", "title": "Owner", "charter": { "goal": "Decide this month's one improvement", "owns": ["decisions", "prices", "hours"], "mayDo": ["set goals", "make calls"], "needsApproval": ["spend money", "change prices", "sign contracts"], "done": "One clear improvement that customers notice." } },
+        { "kind": "growth", "title": "Get found", "charter": { "goal": "Up-to-date listings and a simple website", "owns": ["website", "map listings", "social posts"], "mayDo": ["draft posts", "update the website", "write the menu or price list"], "needsApproval": ["publish", "reply to reviews", "spend money on ads"], "done": "Hours, address and prices are right everywhere people look." } },
+        { "kind": "support", "title": "Customers", "charter": { "goal": "Every message and booking answered the same day", "owns": ["bookings", "messages", "reviews"], "mayDo": ["draft replies", "keep the FAQ current", "collect feedback"], "needsApproval": ["email customers", "give refunds", "reply to reviews"], "done": "Nothing unanswered at the end of the day." } },
+        { "kind": "ops", "title": "Run", "charter": { "goal": "Stock, staff and the week planned", "owns": ["calendar", "suppliers", "tasks"], "mayDo": ["plan the week", "list what to reorder", "track tasks"], "needsApproval": ["place orders", "spend money"], "done": "The week's plan is written down by Monday." } }
+      ],
+      "goals": [
+        { "title": "Easy to find online", "seat": "growth", "results": [{ "text": "Listings checked and correct", "target": 3, "unit": "listings" }] },
+        { "title": "Happy regulars", "seat": "support", "results": [{ "text": "Bookings or orders through the site", "target": 20, "unit": "bookings" }] }
+      ],
+      "tasks": [
+        { "title": "Check hours, address and phone on every listing", "seat": "growth", "type": "research" },
+        { "title": "Make a one-page website with a booking or contact button", "seat": "growth", "type": "build" },
+        { "title": "Write answers to the 5 questions customers ask most", "seat": "support", "type": "write" }
+      ],
+      "rhythms": { "standup": true, "weekly": true, "board": true }
+    },
+    {
+      "id": "nonprofit",
+      "name": "Nonprofit or cause",
+      "emoji": "🌱",
+      "blurb": "Do good on purpose: programs, volunteers and donors, with honest reports.",
+      "mission": "Help the people we serve in a way we can measure, and tell supporters honestly how it's going.",
+      "seats": [
+        { "kind": "ceo", "title": "Director", "charter": { "goal": "Agree the one outcome we measure this quarter", "owns": ["mission", "decisions", "board updates"], "mayDo": ["set goals", "make calls", "speak for the group"], "needsApproval": ["spend money", "sign agreements", "accept large gifts"], "done": "One outcome, how we count it, and who counts it." } },
+        { "kind": "ops", "title": "Programs", "charter": { "goal": "Run this month's program and count who it helped", "owns": ["programs", "volunteer schedule"], "mayDo": ["plan sessions", "schedule volunteers", "record attendance"], "needsApproval": ["spend money", "share participants' details"], "done": "The program ran and the numbers are written down." } },
+        { "kind": "growth", "title": "Supporters", "charter": { "goal": "Thank every supporter and grow the list", "owns": ["newsletter", "donor list", "website"], "mayDo": ["draft updates", "write thank-you notes", "draft appeals"], "needsApproval": ["publish", "email supporters", "run fundraisers"], "done": "Every gift thanked within a week; one honest update a month." } },
+        { "kind": "finance", "title": "Treasurer", "charter": { "goal": "Know every coin in and out", "owns": ["budget", "receipts"], "mayDo": ["track income and costs", "draft a budget", "prepare reports"], "needsApproval": ["spend money", "open accounts"], "done": "A monthly in/out sheet that matches the bank. (A starting point, not financial or legal advice: check local rules.)" } }
+      ],
+      "goals": [
+        { "title": "Help the people we serve", "seat": "ops", "results": [{ "text": "People helped", "target": 50, "unit": "people" }] },
+        { "title": "A steady group of supporters", "seat": "growth", "results": [{ "text": "Supporters on the list", "target": 100, "unit": "supporters" }] }
+      ],
+      "tasks": [
+        { "title": "Write the outcome we measure and how we count it", "seat": "ceo", "type": "write" },
+        { "title": "Plan the next program session", "seat": "ops", "type": "write" },
+        { "title": "Draft a thank-you note template", "seat": "growth", "type": "write" }
+      ],
+      "rhythms": { "standup": false, "weekly": true, "board": true }
+    },
+    {
+      "id": "club",
+      "name": "Club or community",
+      "emoji": "🎲",
+      "blurb": "A group that meets: events, members and a friendly place to talk.",
+      "mission": "Bring people together around something we love, regularly, and make newcomers feel at home.",
+      "seats": [
+        { "kind": "ceo", "title": "Organizer", "charter": { "goal": "Set the meeting rhythm and this season's plan", "owns": ["decisions", "rules"], "mayDo": ["set goals", "make calls", "welcome people"], "needsApproval": ["spend club money", "change the rules"], "done": "Everyone knows when we meet and what's coming." } },
+        { "kind": "ops", "title": "Events", "charter": { "goal": "The next two events booked", "owns": ["calendar", "venues"], "mayDo": ["plan events", "draft invites", "make checklists"], "needsApproval": ["book paid venues", "spend money"], "done": "Two dates, places and hosts set." } },
+        { "kind": "growth", "title": "Members", "charter": { "goal": "Welcome every newcomer personally", "owns": ["sign-up page", "announcements"], "mayDo": ["draft announcements", "write the welcome note", "keep the member list"], "needsApproval": ["publish", "email members"], "done": "Every new member got a welcome within two days." } }
+      ],
+      "goals": [
+        { "title": "Meet regularly", "seat": "ops", "results": [{ "text": "Events held", "target": 4, "unit": "events" }] },
+        { "title": "Grow the group", "seat": "growth", "results": [{ "text": "Members", "target": 30, "unit": "members" }] }
+      ],
+      "tasks": [
+        { "title": "Pick the regular meeting day and time", "seat": "ceo", "type": "write" },
+        { "title": "Book the next event", "seat": "ops", "type": "research" },
+        { "title": "Write a short welcome note for newcomers", "seat": "growth", "type": "write" }
+      ],
+      "rhythms": { "standup": false, "weekly": true, "board": false }
+    }
+  ]
+}

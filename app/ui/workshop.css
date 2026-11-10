@@ -3,6 +3,7 @@
 .ws-layer { position: absolute; top: 0; right: 0; bottom: 0; left: 76px; z-index: 45; display: flex; flex-direction: column; background: var(--main, var(--canvas)); color: var(--text); min-width: 0; }
 .ws-layer.hidden { display: none; }
 body.ws-open .shell .window > .titlebar, body.ws-open .shell .window > .side, body.ws-open .shell .window > .main, body.ws-open .shell .window > .panel { visibility: hidden; }
+body.ws-open .userbar { visibility: hidden; }   /* v0.27: the you-bar sat on top of the Workshop/Marketplace cards */
 
 .ws-eyebrow { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
 .ws-icon { width: 36px; height: 36px; border-radius: var(--r-sm); display: inline-grid; place-items: center; color: var(--muted); border: 1px solid transparent; flex: none; }

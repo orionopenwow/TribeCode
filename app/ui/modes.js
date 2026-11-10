@@ -16,9 +16,9 @@
 // In markup, data-mode-min="intermediate|advanced" hides an element below that mode (CSS in readability.css).
 (function () {
   const MODES = [
-    { k: 'beginner', e: '🌱', t: 'Beginner', s: 'Chat, Flint, templates and one-tap shipping. The rest waits until you want it.' },
-    { k: 'intermediate', e: '🌿', t: 'Intermediate', s: 'Adds the code repository, reviews, milestones, your own agents and remixing starters.' },
-    { k: 'advanced', e: '🌳', t: 'Advanced', s: 'Everything: ownership, conflicts, hand-offs, MCP, the agent fleet and Turbo.' },
+    { k: 'beginner', e: '🌱', t: 'Beginner', s: 'Chat, Flint, templates, the Academy, the Marketplace and one-tap shipping. A company starts simple: seats and today\'s updates.' },
+    { k: 'intermediate', e: '🌿', t: 'Intermediate', s: 'Adds the code repository, reviews, milestones, your own agents, Money, Work (gigs and hiring) and company goals.' },
+    { k: 'advanced', e: '🌳', t: 'Advanced', s: 'Everything: seat autopilot, connectors, compute sharing, ownership, conflicts, hand-offs, MCP, the agent fleet and Turbo.' },
   ];
   const RANK = { beginner: 0, intermediate: 1, advanced: 2 };
   // the least mode each sidebar section needs; anything not listed is for everyone
@@ -26,7 +26,12 @@
     repo: 'intermediate', 'repos-all': 'intermediate', visuals: 'intermediate', captures: 'intermediate', milestones: 'intermediate',
     agents: 'intermediate', 'agents-hub': 'intermediate', reviews: 'intermediate', plan: 'intermediate', roles: 'intermediate', bugs: 'intermediate',
     ownership: 'advanced', conflicts: 'advanced', handoffs: 'advanced', 'mcp-directory': 'advanced', fleet: 'advanced', secretary: 'advanced',
+    money: 'intermediate', work: 'intermediate',   // v0.27 company: Company, Academy and the Marketplace are for everyone
   };
+  // v0.27: features stack at your request. "Turn it on" (a recommendation, Flint, or a locked row) unlocks one feature for
+  // you without changing your whole mode. Saved per device: localStorage 'tribecode.mode.unlocked'.
+  const UKEY = 'tribecode.mode.unlocked';
+  const unlocked = () => { try { return new Set(JSON.parse(lsGet(UKEY) || '[]')); } catch { return new Set(); } };
   const LKEY = 'tribecode.mode';
   const C = () => window.TribeClient;
   const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -50,12 +55,16 @@
   }
   const get = () => own() || roleDefault() || fromWelcome() || 'advanced';
   const allows = min => !min || RANK[get()] >= (RANK[min] || 0);
-  const minFor = key => MIN[key] || '';
+  const minFor = key => (unlocked().has(key) ? '' : MIN[key] || '');
+  const allowsKey = key => allows(minFor(key));
+  function unlock(key) { const u = unlocked(); u.add(String(key)); lsSet(UKEY, JSON.stringify([...u].slice(-60))); last = ''; apply(); document.dispatchEvent(new CustomEvent('tribe:mode', { detail: { mode: get(), unlocked: key } })); }
+  const isUnlocked = key => unlocked().has(key);
   const source = () => own() ? 'yours' : roleDefault() ? 'role' : fromWelcome() ? 'welcome' : 'default';
 
   let last = '';
   function apply() {
     const m = get(); document.body.dataset.mode = m;
+    document.body.dataset.unlocked = [...unlocked()].join(' ');   // v0.27: CSS can show an unlocked panel below its mode
     if (m === last) return; const first = !last; last = m;
     if (!first) {
       if (window.TribeShell && window.TribeShell.render) try { window.TribeShell.render(); } catch {}
@@ -100,5 +109,5 @@
     const c = C(); if (c && c.on) { c.on('hello', apply); c.on('tribe', apply); c.on('presence', apply); }
   }
   if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot);
-  window.TribeMode = { MODES, get, allows, set, minFor, source, picker, rolePicker, apply };
+  window.TribeMode = { MODES, get, allows, allowsKey, set, minFor, unlock, isUnlocked, source, picker, rolePicker, apply };
 })();

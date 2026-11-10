@@ -96,7 +96,7 @@ def main():
             assert pg.locator("#home-ai-cards [data-ai-card-go]:has-text('Choose Flint')").count() == 1
             assert pg.locator("#home-ai-cards .ai-card b:text-is('Connect your AI')").count() == 0, "the panel's own Connect your AI card is enough on desktop"
             pg.click("#home-ai-cards details.ai-dev > summary"); pg.wait_for_selector("#home-ai-cards details.ai-dev[open] .ai-card")
-            assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All code", "Agent fleet"]
+            assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All code", "Work", "Agent fleet"]
             assert "Starts a new project for the two of you" in pg.inner_text("#view-hub")
             pg.unroute_all()
 

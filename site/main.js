@@ -571,9 +571,11 @@
       docs: ['Docs', 'docs.html'],
       make: ['See what you can make', onHome ? '#make' : 'index.html#make'],
       learn: ['Open the Learn guides', 'learn.html'],
+      company: ['See Company mode', onHome ? '#company' : 'index.html#company'],
     };
     const QA = [
       { k: 'make', re: /what can (i|we|you) (make|build|create)|what (do|does) (it|tribecode) (make|build)|kinds? of|games? only|only (for )?games/, a: 'Anything that runs on code: apps, games, websites, tools and dashboards, bots and AI helpers, school projects, open-source libraries. TribeCode is the shared place where you and your friends build it with your AI helpers.', act: 'make' },
+      { k: 'company', re: /compan|business|startup|founder|c-suite|\bceo\b|seats?\b|run (a|my|the) (shop|store|team)/, a: 'Company mode turns a project into a small business. Seats like CEO, Build, Grow and Run each go to a friend or an AI helper, with a short charter. Standups and weekly reviews arrive by themselves, and anything outward or costly waits for a person’s OK.', act: 'company' },
       { k: 'learn', re: /learn|beginner|never coded|new to cod|teach|lesson|quiz|badge|kids?|school/, a: 'You don’t need to know how to code. The Learn guides explain what code is and how an app comes together, slowly and in plain words. Finish a module to earn its badge.', act: 'learn' },
       { k: 'free', re: /free|price|pric|cost|pay|money|subscription|plan/, a: 'Yes. Everything in TribeCode is free and open source (MIT), and what’s free today stays free. You bring your own AI. Paid extras like hosting may come later, but nothing is for sale today.', act: 'pricing' },
       { k: 'ai', re: /\bai\b|which|model|claude|codex|gemini|cursor|llm|agent|ollama|gpt/, a: 'Most coding agents work: Claude Code, Codex, Gemini CLI, Cursor and more. Each friend connects their own, so nobody pays for anyone else.', act: 'docs' },
@@ -646,6 +648,7 @@
     const STEPS = [
       ['.hero', 'This is TribeCode: one shared place where you, your friends and your AI helpers code anything together.'],
       ['#make', 'First, the kind of things people make here. Games, apps, sites, bots, and whatever you thought of in the shower.'],
+      ['#company', 'Built something people use? Company mode turns the project into a small business: seats for friends or AI helpers, short check-ins, and real numbers. People still make the big calls.'],
       ['#story', 'Here’s how any of those comes together, in six steps: an idea, friends, a plan, AI helpers doing the tasks, trying it together, and sharing it.'],
       ['#learn', 'New to code? The Learn modules go slowly and skip the jargon, and finishing one earns your first badge.'],
       ['#room', 'Everyone shares one room: chat, tasks, and what each agent is doing right now. Watch an agent pick up a task and report back.'],
@@ -779,7 +782,7 @@
 /* ---------- Learn panel on the home page: your progress from learn.html (this device) ---------- */
 (function () {
   const ring = document.querySelector('[data-learn-ring]'); if (!ring) return;
-  const MODS = [['m1', 'What code is', 4], ['m2', 'Your first app', 6], ['m3', 'Building together', 6], ['m4', 'Languages, simply', 7]];
+  const MODS = [['m1', 'What code is', 4], ['m2', 'Your first app', 6], ['m3', 'Building together', 6], ['m4', 'Languages, simply', 7], ['m5', 'From project to business', 6]];
   let P = null; try { P = JSON.parse(localStorage.getItem('tribecode.learn.v2') || 'null'); } catch {}
   if (!P) return;
   // v0.26: no end-of-module quiz; a module is done when its lessons are
@@ -802,7 +805,7 @@
     const go = document.querySelector('[data-learn-go]'); go.textContent = 'Continue'; go.href = `learn.html#${at}`;
   } else if (pct === 100) {
     document.querySelector('[data-learn-title]').textContent = 'Course complete 🎉';
-    document.querySelector('[data-learn-sub]').textContent = 'All four badges earned. Now build something with your tribe.';
+    document.querySelector('[data-learn-sub]').textContent = 'All five badges earned. Now build something with your tribe.';
     const go = document.querySelector('[data-learn-go]'); go.textContent = 'Open the app'; go.href = 'app/?welcome=1';
   }
 })();
@@ -837,4 +840,22 @@
   addEventListener('resize', () => { size(); draw(0); });
   if (still || !('IntersectionObserver' in window)) return;
   new IntersectionObserver(es => { const vis = es.some(e => e.isIntersecting); if (vis && !on) { on = true; last = 0; raf = requestAnimationFrame(loop); } else if (!vis) { on = false; cancelAnimationFrame(raf); } }).observe(cv);
+})();
+
+/* ---------- Feedback (v0.27): build a prefilled GitHub issue (template feedback.yml, label "feedback") ---------- */
+(function () {
+  const f = document.getElementById('fbk-form'); if (!f) return;
+  let facet = 'Idea';
+  f.querySelectorAll('[data-facet]').forEach(b => b.addEventListener('click', () => {
+    facet = b.dataset.facet; f.querySelectorAll('[data-facet]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', String(x === b)); });
+  }));
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const msg = (document.getElementById('fbk-msg').value || '').trim();
+    if (!msg) { document.getElementById('fbk-msg').focus(); return; }
+    const repo = (document.querySelector('a[href*="github.com/"][href*="/issues"]') || {}).href || 'https://github.com/orionopenwow/TribeCode/issues';
+    const base = repo.replace(/\/issues.*$/, '');
+    const q = new URLSearchParams({ template: 'feedback.yml', title: `Feedback (${facet}): ${msg.split('\n')[0].slice(0, 60)}`, facet, message: msg, where: 'tribecode.org' });
+    window.open(`${base}/issues/new?${q}`, '_blank', 'noopener');
+  });
 })();

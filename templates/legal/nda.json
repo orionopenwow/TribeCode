@@ -1,0 +1,145 @@
+{
+  "id": "nda",
+  "title": "Mutual NDA",
+  "emoji": "🤫",
+  "category": "Agreements",
+  "blurb": "Both sides keep each other's confidential information private while you explore working together.",
+  "credit": "Original text. Structure informed by the Common Paper Mutual NDA (CC BY 4.0, commonpaper.com).",
+  "fields": [
+    {
+      "key": "party_a",
+      "label": "First party (you)",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio Ltd"
+    },
+    {
+      "key": "party_b",
+      "label": "Second party",
+      "type": "text",
+      "required": true,
+      "placeholder": "Acme Bakeries LLC"
+    },
+    {
+      "key": "purpose",
+      "label": "Why you are sharing information",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "discussing a possible software partnership"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "term_years",
+      "label": "How long confidentiality lasts (years)",
+      "type": "number",
+      "required": false,
+      "default": "2"
+    },
+    {
+      "key": "notice_email_a",
+      "label": "Notice email for the first party",
+      "type": "text",
+      "required": false
+    },
+    {
+      "key": "notice_email_b",
+      "label": "Notice email for the second party",
+      "type": "text",
+      "required": false
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Parties and purpose",
+      "text": "This Mutual Non-Disclosure Agreement (\"Agreement\") starts on {{effective_date}} between **{{party_a}}** and **{{party_b}}** (each a \"Party\"). The Parties want to share information with each other for this purpose: {{purpose}} (the \"Purpose\").",
+      "note": "Who is agreeing and why they are sharing information."
+    },
+    {
+      "heading": "What counts as confidential",
+      "text": "\"Confidential Information\" means any non-public information one Party (the \"Discloser\") shares with the other (the \"Recipient\") for the Purpose, in any form, that is marked confidential or that a reasonable person would understand to be confidential given its nature and the circumstances.",
+      "note": "Defines what is protected. Marking documents \"confidential\" helps avoid arguments later."
+    },
+    {
+      "heading": "What is not confidential",
+      "text": "Confidential Information does not include information that: (a) is or becomes public through no fault of the Recipient; (b) the Recipient already knew without a duty of confidentiality; (c) the Recipient receives lawfully from someone else without a duty of confidentiality; or (d) the Recipient develops independently without using the Discloser's information.",
+      "note": "Standard exceptions so the Recipient is not punished for things it knew or built on its own."
+    },
+    {
+      "heading": "How the Recipient must treat it",
+      "text": "The Recipient will: (a) use Confidential Information only for the Purpose; (b) not disclose it to anyone except its employees, contractors and advisers who need to know it for the Purpose and are bound by confidentiality duties at least as protective as these; and (c) protect it with at least reasonable care, and no less care than it uses for its own similar information.",
+      "note": "The core promise: use it only for the Purpose and share it only with people who need it."
+    },
+    {
+      "heading": "Disclosure required by law",
+      "text": "The Recipient may disclose Confidential Information if required by law, regulation or court order, but, where legally allowed, it will first tell the Discloser promptly and disclose only what is required.",
+      "note": "Nobody can be forced to break the law to keep a secret."
+    },
+    {
+      "heading": "Length of the duty",
+      "text": "This Agreement covers information shared during the Purpose. The Recipient's duties last for {{term_years}} years after the last disclosure, except that duties for trade secrets last for as long as the information remains a trade secret under applicable law.",
+      "note": "How long the promise lasts. Trade secrets often get longer protection."
+    },
+    {
+      "heading": "Returning or deleting",
+      "text": "When the Discloser asks, or when the Purpose ends, the Recipient will return or delete the Discloser's Confidential Information, except copies kept in routine backups or required by law, which remain protected by this Agreement.",
+      "note": "What happens to the information at the end."
+    },
+    {
+      "heading": "No other rights",
+      "text": "All Confidential Information stays the property of the Discloser. This Agreement does not grant any licence or other rights, and does not oblige either Party to enter into any further deal. Information is shared \"as is\".",
+      "note": "Sharing information does not transfer ownership or commit anyone to a deal."
+    },
+    {
+      "heading": "Remedies",
+      "text": "Unauthorised use or disclosure could cause harm that money alone cannot fix, so the Discloser may seek a court order to stop it, in addition to any other remedies available by law.",
+      "note": "Lets the Discloser ask a court to stop a leak quickly."
+    },
+    {
+      "heading": "General",
+      "text": "This Agreement is governed by the laws of {{governing_law}}. It is the whole agreement on this subject and can be changed only in writing signed by both Parties. If any part is unenforceable, the rest stays in effect. Notices go to {{notice_email_a}} for {{party_a}} and {{notice_email_b}} for {{party_b}}.",
+      "note": "Housekeeping: which law applies, how to change the agreement, where notices go."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Signed by the parties on the dates below.\n**{{party_a}}**\nSignature: ____________________   Name: ____________________   Date: __________\n**{{party_b}}**\nSignature: ____________________   Name: ____________________   Date: __________",
+      "note": "Check whether your jurisdiction needs witnesses or a particular signing method for this kind of document."
+    }
+  ],
+  "jurisdiction": {
+    "US": "If one Party is an individual employee or contractor, US federal law may require a notice about whistleblower immunity for trade-secret disclosures to authorities. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Trade secrets have EU-wide protection rules, implemented differently by each country. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

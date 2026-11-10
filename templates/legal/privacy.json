@@ -1,0 +1,158 @@
+{
+  "id": "privacy",
+  "title": "Privacy policy (web app)",
+  "emoji": "🔒",
+  "category": "Website",
+  "blurb": "Tell people what personal data your app collects, why, who sees it and what rights they have.",
+  "fields": [
+    {
+      "key": "company",
+      "label": "Your business name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio Ltd"
+    },
+    {
+      "key": "app_name",
+      "label": "App or site name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Orders"
+    },
+    {
+      "key": "contact_email",
+      "label": "Privacy contact email",
+      "type": "text",
+      "required": true,
+      "placeholder": "privacy@example.com"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "data_collected",
+      "label": "What personal data you collect",
+      "type": "textarea",
+      "required": true,
+      "default": "account details (name, email), content you add, payment status (card details are handled by our payment provider), basic usage data (pages viewed, device and browser type, approximate location from IP address)"
+    },
+    {
+      "key": "processors",
+      "label": "Service providers you use",
+      "type": "textarea",
+      "required": false,
+      "default": "hosting, email delivery, payment processing and privacy-friendly analytics providers"
+    },
+    {
+      "key": "retention",
+      "label": "How long you keep data",
+      "type": "text",
+      "required": false,
+      "default": "for as long as your account is active, then up to 90 days to delete it from backups, unless the law requires longer"
+    },
+    {
+      "key": "location",
+      "label": "Where data is stored",
+      "type": "text",
+      "required": false,
+      "placeholder": "the United States / the EU"
+    },
+    {
+      "key": "address",
+      "label": "Business address",
+      "type": "text",
+      "required": false
+    },
+    {
+      "key": "min_age",
+      "label": "Minimum age to use the app",
+      "type": "number",
+      "required": false,
+      "default": "16"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Who we are",
+      "text": "This privacy policy explains how **{{company}}** (\"we\") handles personal data when you use **{{app_name}}**. It applies from {{effective_date}}. Contact us about privacy at {{contact_email}}{{#address}} or by post at {{address}}{{/address}}.",
+      "note": "Name the business responsible for the data and how to reach it."
+    },
+    {
+      "heading": "What we collect",
+      "text": "We collect: {{data_collected}}. We collect only what we need to run and improve the service.",
+      "note": "List what you really collect. It must match what the app does."
+    },
+    {
+      "heading": "Why we use it",
+      "text": "We use personal data to: provide and secure your account; deliver the features you use; process payments; send service messages (like receipts and security alerts); answer support requests; understand how the service is used so we can improve it; and meet legal obligations. We send marketing emails only if you agree, and you can unsubscribe at any time.",
+      "note": "Explain each purpose. Some laws also require the legal basis for each."
+    },
+    {
+      "heading": "Who we share it with",
+      "text": "We share personal data only with service providers that help us run {{app_name}}: {{processors}}. They may use it only to provide their service to us. We may also share data when required by law or to protect people's safety, or with a buyer if our business is sold (and we will tell you). We do not sell your personal data.",
+      "note": "Name categories of providers, or the providers themselves, and keep this list current."
+    },
+    {
+      "heading": "Where it is stored",
+      "text": "Your data is stored in {{location}}. If it is transferred to other countries, we use appropriate safeguards required by applicable law.",
+      "note": "Cross-border transfers have special rules in several places, notably the EU and UK."
+    },
+    {
+      "heading": "How long we keep it",
+      "text": "We keep personal data {{retention}}.",
+      "note": "Keep data no longer than necessary."
+    },
+    {
+      "heading": "Your rights",
+      "text": "Depending on where you live, you may have the right to access, correct, delete or export your data, to object to or restrict some uses, and to withdraw consent. Email {{contact_email}} to make a request; we may need to verify your identity. You may also complain to your local data protection authority.",
+      "note": "Rights differ by country and state; describe the process for exercising them."
+    },
+    {
+      "heading": "Cookies",
+      "text": "We use cookies and similar technologies that are needed to sign you in and keep the service secure. Any optional cookies (such as analytics) are described in our cookie notice and, where required, used only with your consent.",
+      "note": "Link your cookie notice here."
+    },
+    {
+      "heading": "Security",
+      "text": "We use reasonable technical and organisational measures to protect personal data, such as encryption in transit and access controls. No system is perfectly secure; we will notify you and authorities of a breach where the law requires.",
+      "note": "Describe your real measures in general terms."
+    },
+    {
+      "heading": "Children",
+      "text": "{{app_name}} is not meant for children under {{min_age}}. If you believe a child has given us personal data, contact us and we will delete it.",
+      "note": "Children's data has stricter rules in many places."
+    },
+    {
+      "heading": "Changes",
+      "text": "We may update this policy. We will post the new version here with its date and, for significant changes, tell you in the app or by email.",
+      "note": "How you will tell people about changes."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Several states have their own consumer privacy laws with specific notice and opt-out rights; children's data under 13 has federal rules. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "The UK GDPR and the Data Protection Act apply; many businesses must pay a fee to the ICO. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "The GDPR requires stating the legal basis for each purpose, contact details of any data protection officer and EU representative where required. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Federal privacy law applies to most private businesses, with provincial laws in some provinces. Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The Privacy Act and Australian Privacy Principles apply to many businesses, with some small-business exemptions. The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

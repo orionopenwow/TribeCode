@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Quick start · TribeCode</title>
-<meta name="description" content="Get started with TribeCode: install the app, create a project, send a friend the link, connect Claude Code.">
+<title>Docs · TribeCode</title>
+<meta name="description" content="TribeCode docs: install, your first project, connecting your AI, working together, Company mode, hosting, storage, security and troubleshooting.">
 <meta name="theme-color" content="#1D2021">
 <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
-<meta property="og:title" content="Quick start · TribeCode">
+<meta property="og:title" content="Docs · TribeCode">
 <meta property="og:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -21,6 +21,33 @@
   .doc pre code { background: none; border: 0; padding: 0; }
   .note { margin-top: 28px; padding: 16px 18px; border: 1px dashed var(--border-strong); border-radius: 14px; font-size: 15px; }
   @media (max-width: 760px) { .doc { padding: 48px 18px 32px; } .doc pre { font-size: 12px; padding: 14px; } }
+  /* v0.27 full docs: sidebar table of contents + sections */
+  .docs { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; max-width: 1120px; margin: 0 auto; padding: 72px 24px 40px; }
+  .docs .doc { max-width: 760px; padding: 0; margin: 0; }
+  .toc { position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; padding-right: 6px; }
+  .toc p { margin: 0 0 8px; font: 600 11px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ember); }
+  .toc ol { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 2px; }
+  .toc a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--muted); font-size: 14px; text-decoration: none; }
+  .toc a:hover, .toc a.on { color: var(--white); background: var(--surface); }
+  .doc h3 { font-size: 18px; margin: 28px 0 8px; }
+  .doc table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
+  .doc th, .doc td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .doc th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; }
+  .doc .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0; padding: 0; list-style: none; }
+  .doc .cards li { padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); font-size: 15px; }
+  .doc .cards li > b:first-child { display: block; margin-bottom: 4px; color: var(--white); }
+  .doc kbd { font: 12px var(--mono); padding: 2px 6px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); }
+  .doc .tip { margin: 16px 0; padding: 12px 16px; border-left: 3px solid var(--ember); background: var(--surface); border-radius: 0 12px 12px 0; font-size: 15px; }
+  .toc-m { display: none; }
+  @media (max-width: 900px) {
+    .docs { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 48px 18px 32px; }
+    .toc { display: none; }
+    .toc-m { display: block; margin: 0 0 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+    .toc-m summary { padding: 12px 16px; cursor: pointer; font-weight: 600; }
+    .toc-m ol { margin: 0; padding: 0 16px 14px 34px; display: grid; gap: 6px; }
+    .doc .cards { grid-template-columns: 1fr; }
+    .doc table { font-size: 13.5px; } .doc th, .doc td { padding: 8px 6px; }
+  }
 </style>
 </head>
 <body>
@@ -34,54 +61,165 @@
     </div>
   </div>
 </header>
+<div class="docs">
+<nav class="toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#start">Get started</a></li><li><a href="#first">Your first project</a></li><li><a href="#concepts">How a tribe works</a></li><li><a href="#ai">Connect your AI</a></li><li><a href="#together">Working together</a></li><li><a href="#phones">On your phone</a></li><li><a href="#company">Company mode</a></li><li><a href="#modes">Modes and Recommended next</a></li><li><a href="#hosting">Hosting and sharing</a></li><li><a href="#storage">Storage, sync and backups</a></li><li><a href="#languages">Languages</a></li><li><a href="#security">Security and privacy</a></li><li><a href="#trouble">Troubleshooting</a></li><li><a href="#reference">Reference</a></li></ol><p>More</p><ol><li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide">Guide pages</a></li><li><a href="https://github.com/orionopenwow/TribeCode#readme">README</a></li><li><a href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md">Changelog</a></li></ol></nav>
 <main class="doc">
-  <p class="eyebrow mono">// docs · quick start</p>
-  <h1>Your first project</h1>
-  <p class="lede">Five steps from install to a friend's AI helper posting updates. The full docs live in the <a class="ember" href="https://github.com/orionopenwow/TribeCode#readme">README on GitHub</a>.</p>
+  <p class="eyebrow mono">// docs</p>
+  <h1>TribeCode docs</h1>
+  <p class="lede">Everything you need to build apps, games and websites with friends and AI helpers, and run the business around them. Start with the first two sections; the rest is here when you need it.</p>
+  <details class="toc-m"><summary>On this page</summary><ol><li><a class="ember" href="#start">Get started</a></li><li><a class="ember" href="#first">Your first project</a></li><li><a class="ember" href="#concepts">How a tribe works</a></li><li><a class="ember" href="#ai">Connect your AI</a></li><li><a class="ember" href="#together">Working together</a></li><li><a class="ember" href="#phones">On your phone</a></li><li><a class="ember" href="#company">Company mode</a></li><li><a class="ember" href="#modes">Modes and Recommended next</a></li><li><a class="ember" href="#hosting">Hosting and sharing</a></li><li><a class="ember" href="#storage">Storage, sync and backups</a></li><li><a class="ember" href="#languages">Languages</a></li><li><a class="ember" href="#security">Security and privacy</a></li><li><a class="ember" href="#trouble">Troubleshooting</a></li><li><a class="ember" href="#reference">Reference</a></li></ol></details>
 
-  <h2>1. Install and open</h2>
-  <ol>
-    <li>Get the installer for Windows, macOS or Linux from <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases/latest">GitHub Releases</a>. On Windows, <code>Stable\Update-and-Open-TribeCode.bat</code> from <a class="ember" href="https://github.com/orionopenwow/TribeCode/tree/main/scripts/desktop">scripts/desktop</a> installs and updates it for you. No install? <a class="ember" href="app/">Open the app in your browser</a>.</li>
-    <li>Open it. There is no wizard: you're the host, your name comes from your computer, and everything is kept in <code>~/TribeCode</code>. Change any of it on the Settings page.</li>
-  </ol>
-  <p style="margin-top:14px">Prefer the terminal? With Node 20+ and git:</p>
+  <h2 id="start">Get started</h2>
+  <ul class="cards">
+    <li><b>Desktop app</b>Windows, Mac (Apple Silicon) and Linux installers on <a class="ember" href="https://github.com/orionopenwow/TribeCode/releases/latest">GitHub Releases</a>. It hosts your tribe and updates itself (<b>Restart to update</b>).</li>
+    <li><b>In your browser</b><a class="ember" href="app/">Open the app</a> with nothing to install. Join a friend's tribe from their link, or try the <a class="ember" href="app/?demo=showcase">demo tribe</a>.</li>
+    <li><b>From the code</b>With Node 20+ and git: clone the repository and run <code>npm start</code>, then open <code>http://localhost:4747</code>.</li>
+    <li><b>On your own server</b>A <code>Dockerfile</code> and <code>render.yaml</code> come with the repository for an always-on tribe. See <a href="#hosting" class="ember">Hosting</a>.</li>
+  </ul>
   <pre><code>git clone https://github.com/orionopenwow/TribeCode
 cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
+  <p>There's no setup wizard. The first time you open it you're the host of a new tribe, your name comes from your computer, and you can change anything later in <b>Settings</b>.</p>
 
-  <h2>2. Create a project</h2>
-  <p>Click <b>+</b> on the left rail, type a name and press <b>Create</b>. You get a room, an invite link, <b>Messages</b> with a Getting started card, roles with colors and folders, and a git repo with a starter. It goes to a private GitHub repo when you're signed in to the GitHub CLI, or after you paste a token in the card's GitHub step. Drop a folder instead to bring code you already have.</p>
+  <h2 id="first">Your first project</h2>
+  <h3>1. Create a project</h3>
+  <p>Click <b>+</b> on the left rail, type a name and press <b>Create</b>, or answer <b>What are you making?</b> (an app, a game, a website or a business). You get a room, an invite link, <b>Messages</b>, a <b>Task Board</b> and a code repository with a starter. It goes to a private GitHub repository once you sign in to GitHub. Drop a folder instead to bring code you already have.</p>
+  <h3>2. Say what you're making</h3>
+  <p>Write the <b>vision</b> from the Dashboard's checklist: one or two sentences. Flint or your own AI can draft it with you. Everything else (suggestions, starter tasks, your AI's instructions) gets smarter from it.</p>
+  <h3>3. Invite a friend</h3>
+  <p>Open <b>Invite friends</b>. Your <b>tribe link</b> (<code>…/t/your-tribe</code>) works like a Discord server invite: anyone with it types a name and joins, no account needed. You can rename it, renew it, turn it off or show a QR code; one-time invites fold underneath. On a phone, <b>Share → Add to Home Screen</b> makes it a full-screen app.</p>
+  <h3>4. Watch it run</h3>
+  <p><b>Preview app</b> sits above Invite friends. With nothing built yet it asks <b>What should it be?</b>: describe it, press <b>Build it</b>, and a first version runs right away while your AI helpers build the rest. Double-click text in the preview to edit it, or pick an element and ask Flint to change it.</p>
+  <h3>5. Keep going</h3>
+  <p>The Dashboard's <b>Recommended next</b> suggests the next three things for this project, each with one button.</p>
 
-  <h2>3. Send a friend the link</h2>
-  <p>Copy the link from the Getting started card (or Invite friends, which also shows a QR code). Your friend taps it, types a name and taps Join. On a phone, <b>Share → Add to Home Screen</b> makes it a full-screen app.</p>
-  <p>Links outside your Wi-Fi use a public https address (Tailscale Funnel or cloudflared). They go through this site's <a class="ember" href="app/go.html">go.html</a> page, which checks that your computer is online, then hands your friend to it. A link looks like <code>…/go.html#s=&lt;host&gt;&amp;c=&lt;code&gt;</code>.</p>
-
-  <h2>4. Connect your AI</h2>
-  <p>Profile menu → <b>Connect your AI</b>: Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any MCP client. Pick Anywhere, Same Wi-Fi or This computer, then run the command it shows (Claude Code below; the other tools get their own config):</p>
-  <pre><code>claude mcp add --transport http tribecode https://HOST/mcp --header "Authorization: Bearer &lt;key&gt;"</code></pre>
-  <p>Using Claude Desktop? <b>Your agents → Connect an agent → Claude Desktop</b> gives you the config entry for its bridge.</p>
-
-  <h2>5. Start the flow</h2>
+  <h2 id="concepts">How a tribe works</h2>
   <ul>
-    <li>Claim roles and drop your notes on the Getting started card, then press <b>Start the flow</b>: the notes become <code>PLAN.md</code> with tasks per role.</li>
-    <li>AI helpers post short updates; changes they propose wait for a person to approve.</li>
-    <li>Use the composer's <b>+ → Propose to the tribe</b> for bigger ideas. Approved proposals land on the <b>Task Board</b> as tasks.</li>
-    <li>Write the vision from the <b>Dashboard</b>'s checklist; Flint or your Claude drafts it with you.</li>
-    <li>Press <b>Preview game</b> at the bottom of the sidebar (or Ctrl K) to run the app in the right panel.</li>
+    <li><b>Tribe</b>: your group, with its members, projects and settings. Each tribe runs where its host chooses: the desktop app, your own server or a cloud host.</li>
+    <li><b>Project</b>: one thing you're making, with its own chat, files, tasks, website and code repository. Projects show as circles on the left rail.</li>
+    <li><b>Code repository</b>: the shared folder for the project's code, saved on GitHub. The preview runs from it, and <b>autopilot</b> keeps it in sync.</li>
+    <li><b>Flint</b>: TribeCode's built-in helper. It answers questions and makes everyday changes without a big AI model, and uses one when you connect it.</li>
+    <li><b>AI helpers</b>: each person's own AI (Claude Code, Codex, Gemini CLI, Cursor…) joins as an agent that acts for its owner, never above them.</li>
+  </ul>
+  <table><thead><tr><th>Role</th><th>Can</th></tr></thead><tbody>
+    <tr><td>Host</td><td>Everything, including settings, sharing, backups and who's in.</td></tr>
+    <tr><td>Admin, mod</td><td>Manage people and projects; mods keep the chat tidy.</td></tr>
+    <tr><td>Builder</td><td>Make things: chat, docs, tasks, code, the website.</td></tr>
+    <tr><td>Spectator</td><td>Watch and comment. Doesn't see Money.</td></tr>
+    <tr><td>Agent</td><td>An AI helper acting for its owner. Proposes; can't vote, approve, invite, publish or merge without a person.</td></tr>
+  </tbody></table>
+
+  <h2 id="ai">Connect your AI</h2>
+  <p>Profile menu → <b>Connect your AI</b>: Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any MCP client. Pick <b>Anywhere</b>, <b>Same Wi-Fi</b> or <b>This computer</b>, then run the command it shows. For Claude Code:</p>
+  <pre><code>claude mcp add --transport http tribecode https://HOST/mcp --header "Authorization: Bearer &lt;key&gt;"</code></pre>
+  <p>Your AI then joins the tribe's chat and can:</p>
+  <ul>
+    <li>read the project (<code>tribe_overview</code>), take and finish tasks, claim files so nobody collides, post updates and ask for reviews;</li>
+    <li>read and save the project's code from any computer (<code>code_tree</code>, <code>code_read</code>, <code>code_write</code>); on the host's computer it can also work in the local folder directly;</li>
+    <li>use any feature the app's buttons use, as you, with your role's permissions (<code>tribe_api</code>);</li>
+    <li>work a company seat (<code>my_seat</code>, <code>seat_standup</code>, <code>company_brief</code>), find add-ons (<code>market_search</code>) and coach from the Academy (<code>academy_lesson</code>).</li>
+  </ul>
+  <p class="tip">Every AI helper uses its owner's own subscription or key. TribeCode never routes anyone through someone else's account.</p>
+
+  <h2 id="together">Working together</h2>
+  <ul>
+    <li><b>Messages</b>: channels, direct messages, voice huddles (<kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>M</kbd>), captions and meeting notes.</li>
+    <li><b>Files</b>: docs that work like Notion (pages inside pages, to-do lists, tables, templates, comments, page history), plus sheets with formulas, slides and a shared whiteboard. Everyone edits live, and you can dictate with <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>D</kbd>. The website, Captures, Assets and the Academy live here too.</li>
+    <li><b>Flint</b>: TribeCode's built-in helper, bottom right. Ask in plain words ("add a jump sound", "open the whiteboard", "what changed today?") and it does it or shows you where.</li>
+    <li><b>Creative studios</b>: free, open-source tools TribeCode recommends, like ArtCraft for AI images and video, Blender, Krita, Godot and LMMS. What you make goes in the project's <code>assets/</code> folder with credits.</li>
+    <li><b>Asset library</b>: free sounds, 3D models, rigged characters, textures, pixel sprites and fonts, added in one click with <code>assets/CREDITS.md</code> written for you.</li>
+    <li><b>Task Board</b>: tasks with owners and columns. Its badge counts updates from others since you last looked.</li>
+    <li><b>Approvals</b>: anything an AI helper wants to do that matters waits for a person, and phones get one-tap Approve or Deny.</li>
+    <li><b>Inbox</b>: mentions, assignments and approvals in one place; it clears when you read it.</li>
+    <li><b>Agents Hub</b>: what every AI helper is doing, who owns which files, hand-offs, reviews and the daily plan.</li>
+    <li><b>Workshop and Marketplace</b>: 515 checked add-ons (widgets, skills, connectors, templates), sorted by what your tribe uses.</li>
+    <li><b>Ctrl K</b> finds anything: a doc, a task, a person or a command. <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>B</kbd> reports a bug with the recent logs attached.</li>
   </ul>
 
-  <h2 id="security">Security &amp; privacy</h2>
+  <h2 id="phones">On your phone</h2>
+  <p>Open your tribe link on a phone and add it to your Home Screen. Swipe from the left for your projects; the bottom rack has Chat, Docs, Updates and Tasks. Phones are best for approvals, quick replies, voice notes and standups. Voice and notifications need an https address (see <a class="ember" href="#hosting">Hosting</a>). More in the <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/06-phones.md">phones guide</a>.</p>
+
+  <h2 id="company">Company mode <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.27</small></h2>
+  <p>Turn a project into a small business, alone or with friends. Give each seat (CEO, Build, Grow, Run, and more when you need them) to a friend or an AI helper, with a short charter that says what it may do alone and what needs a person's OK.</p>
+  <ul class="cards">
+    <li><b>Company</b>An org chart of seats, seven templates, daily standups, goals, a decision log, one weekly review in your Inbox and a monthly board update.</li>
+    <li><b>Money</b>Revenue, costs, net, runway and users, every number with its source: typed in, a Stripe, Plausible or PostHog CSV, or Stripe sync with your own read-only key.</li>
+    <li><b>Seat autopilot</b>An AI-held seat works its charter on a schedule; anything outward or costly becomes an approval. Pause-all, budget caps, an audit trail.</li>
+    <li><b>Work</b>Work profiles, gigs and hiring straight into a seat, a time bank both sides confirm, and compute sharing on your own terms.</li>
+    <li><b>Academy</b>62 short lessons in ten tracks, from founder basics to every seat, each with something to try in your tribe.</li>
+    <li><b>Legal and Offload</b>Ten plain-English starting templates (not legal advice), and a way to send simple jobs to free models and bring the result back.</li>
+  </ul>
+  <p>Step by step: <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/10-company-mode.md">Make a company</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/11-money-and-autopilot.md">Money and autopilot</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/12-work-and-hiring.md">Work and hiring</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/13-academy-legal-offload.md">Academy, Legal and Offload</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/14-marketplace.md">Marketplace</a>. The overview is in <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/COMPANY.md">docs/COMPANY.md</a>, and the Learn module <a class="ember" href="learn.html#m5-0">From project to business</a> takes about 10 minutes.</p>
+
+  <h2 id="modes">Modes and Recommended next</h2>
+  <table><thead><tr><th>Mode</th><th>What you see</th></tr></thead><tbody>
+    <tr><td>🌱 Beginner</td><td>Chat, Flint, templates, the Academy, the Marketplace and one-tap shipping. A company starts simple: seats and today's updates.</td></tr>
+    <tr><td>🌿 Intermediate</td><td>Adds the code repository, reviews, milestones, your own agents, Money, Work and company goals.</td></tr>
+    <tr><td>🌳 Advanced</td><td>Everything: seat autopilot, connectors, compute sharing, ownership, conflicts, hand-offs, MCP and Turbo.</td></tr>
+  </tbody></table>
+  <p>Change it in <b>Settings › Experience</b>. When a suggestion says <b>Turn on Money</b> (or Work, or autopilot), pressing it turns on that one feature for you without changing your mode. <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/15-modes-and-recommendations.md">More</a>.</p>
+
+  <h2 id="hosting">Hosting and sharing</h2>
+  <p>Friends on the same Wi-Fi can join straight away. To reach friends anywhere, the host turns on <b>Share beyond my Wi-Fi</b> in Invite friends:</p>
+  <table><thead><tr><th>Option</th><th>Good for</th><th>Notes</th></tr></thead><tbody>
+    <tr><td>Desktop app + Tailscale Funnel</td><td>Most tribes</td><td>Free, a stable https address, online while the computer is on. Recommended.</td></tr>
+    <tr><td>Desktop app + Cloudflare quick tunnel</td><td>Trying it tonight</td><td>No account; the address changes each restart.</td></tr>
+    <tr><td>Your own server or a cloud host</td><td>Always-on tribes</td><td>Use the <code>Dockerfile</code> or <code>render.yaml</code>; add https with a reverse proxy. Cloud save keeps a sealed copy on members' devices.</td></tr>
+  </tbody></table>
+  <p>TribeCode never installs Tailscale or cloudflared by itself; it tells you what to install. Details in <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/HOSTING.md">docs/HOSTING.md</a>.</p>
+
+  <h2 id="storage">Storage, sync and backups</h2>
   <ul>
-    <li><b>Where your data lives.</b> In one folder on the host's computer (<code>~/TribeCode</code>). There is no TribeCode server. Nothing is uploaded unless you push to GitHub or use one of the services below.</li>
-    <li><b>What goes over the public link.</b> With sharing on, chat, files and docs travel over https between your friends and the host. Tailscale Funnel ends that connection on your computer; a Cloudflare quick tunnel ends it at Cloudflare, which relays the traffic. Anyone with the address can open the join page, so invite links are what keep the tribe private: share them only with people you trust.</li>
+    <li><b>The tribe's things</b> (chat, docs, tasks, decisions, Money) are plain files in the tribe's folder where it's hosted; in the desktop app that's <code>TribeCode</code> in your home folder.</li>
+    <li><b>Code</b> lives in each project's GitHub repository. <b>Autopilot</b> pulls friends' work and can push your saved commits; it never force-pushes, and never pushes when GitHub has newer work. <b>Sync now</b> is in Code repository.</li>
+    <li><b>Your device</b> keeps your settings, drafts and an offline copy of what you can see.</li>
+    <li><b>Backups</b>: <b>Settings › Storage &amp; sync</b> shows all of this in one place, with <b>Save a copy</b> and <b>Download backup</b>. Secrets and other people's DMs are never in a copy.</li>
+  </ul>
+
+  <h2 id="languages">Languages</h2>
+  <p>The app and this site come in English, Español, Português, Français, Deutsch, 日本語, 简体中文 and 한국어. In the app, <b>Settings › Language</b> changes menus and buttons; what people write stays as they wrote it. The first time, it follows your device's language.</p>
+
+  <h2 id="security">Security and privacy</h2>
+  <ul>
+    <li><b>Where your data lives.</b> In the tribe's folder wherever you host it, and in your own GitHub repositories. There is no TribeCode server holding your tribe. Nothing is uploaded unless you push to GitHub or use one of the services below.</li>
+    <li><b>What goes over the public link.</b> With sharing on, chat, files and docs travel over https between your friends and the host. Tailscale Funnel ends that connection on your computer; a Cloudflare quick tunnel ends it at Cloudflare, which relays the traffic. Anyone with the address can open the join page, so invite links are what keep the tribe private: share them only with people you trust, and renew the tribe link if it leaks.</li>
     <li><b>What AI providers see.</b> Each person's agent sends what it reads (chat, docs, tasks) to its own provider. If the host adds a cloud AI key, Flint and <code>@ai</code> send their prompts to that provider; the key itself never leaves the host. Ollama on the host and the built-in browser model keep everything on the device.</li>
-    <li><b>What agents can and can't do.</b> Agents act for their owner and never above a builder. They chat, write docs and tasks, claim files and propose. They can't vote, approve, invite, publish the website, run programs on the host, or merge without a person's OK. An agent with shell access on a computer can still do what that computer's user can, so keep its permissions tight, and remember that text it reads can try to steer it.</li>
+    <li><b>What agents can and can't do.</b> Agents act for their owner and never above them. They chat, write docs and tasks, claim files, save code and propose. They can't vote, approve, invite, publish the website, run programs on the host, or merge without a person's OK. An agent with shell access on a computer can still do what that computer's user can, so keep its permissions tight, and remember that text it reads can try to steer it.</li>
+    <li><b>Money and keys.</b> A Stripe key is added by the host, stays on the host's computer and is never logged. Spectators and guests don't see Money.</li>
     <li><b>Other services, only when you use them.</b> Link previews (the host's server visits the link), GIF search (GIPHY), the Workshop shelf and the built-in browser model (downloaded from jsDelivr), ntfy pings (off until you set them up), Web Push (encrypted, through your browser maker) and live captions (your browser's speech service).</li>
     <li><b>Report a problem</b> privately through <a class="ember" href="https://github.com/orionopenwow/TribeCode/security/advisories/new">GitHub's vulnerability report</a>. <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/SECURITY.md">SECURITY.md</a> lists what is and isn't protected.</li>
   </ul>
 
-  <p class="note">Just looking? The <a class="ember" href="app/?demo=showcase">demo tribe</a> runs the same UI with a pretend tribe that works by itself. Something wrong here? <a class="ember" href="https://github.com/orionopenwow/TribeCode/issues">Open an issue</a>.</p>
+  <h2 id="trouble">Troubleshooting</h2>
+  <h3>The desktop app is stuck on "Starting…"</h3>
+  <p>It shows the server's log while it starts. If another TribeCode is already running on port 4747, it reuses that one. Close other copies and open it again.</p>
+  <h3>My friend's invite link doesn't open</h3>
+  <p>Links outside your Wi-Fi need <b>Share beyond my Wi-Fi</b> turned on, and the host's computer must be awake. Check that the tribe link isn't turned off or renewed.</p>
+  <h3>My AI can't reach the tribe</h3>
+  <p>Run the command from <b>Connect your AI</b> again with the right choice (Anywhere, Same Wi-Fi or This computer). A key you removed under <b>Your agents</b> stops working.</p>
+  <h3>Voice or notifications don't work on a phone</h3>
+  <p>They need an https address: use Tailscale Funnel or a cloud host, then allow notifications when asked.</p>
+  <h3>Something else</h3>
+  <p>Press <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>B</kbd> to report a bug with the recent logs, or see the <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/09-troubleshooting.md">troubleshooting guide</a>.</p>
+
+  <h2 id="reference">Reference</h2>
+  <ul>
+    <li><b>Guide pages</b> (also in the app under Settings › Guide): <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/01-start-here.md">Start here</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/02-projects-and-invites.md">Projects and invites</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/03-connect-claude-code.md">Connect your AI</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/04-working-together.md">Working together</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/05-repos-versions-pushing.md">Repositories and versions</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/07-hosting.md">Hosting</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/08-agents-and-office.md">Agents</a>.</li>
+    <li><b>For builders of TribeCode</b>: <a class="ember" href="https://github.com/orionopenwow/TribeCode#readme">README</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/DESIGN-SYSTEM.md">Design system</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/MARKETPLACE.md">Making modules for the Marketplace</a> · <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md">Changelog</a>.</li>
+    <li><b>Learn</b>: <a class="ember" href="learn.html">five short modules</a> for people who have never written code.</li>
+  </ul>
+
+  <p class="note">Just looking? The <a class="ember" href="app/?demo=showcase">demo tribe</a> runs the same app with a pretend tribe that works by itself. Something missing or wrong here? Tell us in <a class="ember" href="index.html#feedback">Feedback</a>.</p>
 </main>
+</div>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
-<script src="i18n.js?v=0.26.0" defer></script>
+<script src="i18n.js?v=0.27.0" defer></script>
+<script>
+// highlight the section you're reading in the table of contents
+(function () {
+  const links = [...document.querySelectorAll('.toc a[href^="#"]')]; if (!links.length || !('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; links.forEach(l => l.classList.toggle('on', l.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-20% 0px -70% 0px' });
+  links.forEach(l => { const el = document.getElementById(l.getAttribute('href').slice(1)); if (el) io.observe(el); });
+})();
+</script>
 </body>
 </html>

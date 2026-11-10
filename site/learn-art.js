@@ -27,6 +27,10 @@
   const editor = (name, src, o = {}) => win(`<span class="lv-file">${esc(name)}</span>`, `<pre class="lv-code">${code(src)}</pre>`, { right: o.right || '', cls: 'lv-ed ' + (o.cls || '') });
   const task = (t, tag, c, k, st) => `<div class="lv-card"><span class="lv-tag" style="color:${c};border-color:${c}66">${tag}</span><p>${t}</p><div class="lv-card-f">${k ? av(k, true) : '<span class="lv-un">Unassigned</span>'}${st ? `<span class="lv-st">${st}</span>` : ''}</div></div>`;
   const commit = (k, m, time, hash, on) => `<li class="${on ? 'on' : ''}"><span class="lv-node"></span>${av(k, true)}<span class="lv-cm"><b>${m}</b><small>${nameOf(k)} · ${time}</small></span><code>${hash}</code></li>`;
+  // v0.27 company scenes: a seat chip (title, holder) and a charter row
+  const seat = (t, c, k) => `<div class="lv-seat" style="--c:${c}"><span class="lv-seat-k">${t}</span><span class="lv-seat-h">${av(k, true)}<small>${nameOf(k)}</small></span></div>`;
+  const row = (k, v, cls = '') => `<div class="lv-ch-row"><b>${k}</b><span class="${cls}">${v}</span></div>`;
+  const co = (page, c = '#F26B1D') => `${pill('Firefly Studio', c)}<span class="lv-sep">/</span>${page}`;
   let EYEBROW = '';
   const fig = (scene, cap) => `<figure class="lx-fig"><div class="lv" role="img" aria-label="${esc(cap)}"><div class="lv-eyebrow"><i></i>${EYEBROW}</div><div class="lv-stage">${scene}</div></div><figcaption>${esc(cap)}</figcaption></figure>`;
 
@@ -48,7 +52,7 @@
       <div><p class="lv-col">In progress <em>1</em></p>${task('Add a recipe form', 'Feature', '#6C7CFF', 'claude', 'working…')}</div><div><p class="lv-col">Done <em>1</em></p>${task('Show the recipe list', 'Feature', '#6C7CFF', 'maya', '✓ done')}</div></div>`, { cls: 'wide' }),
       'One big idea becomes small tasks on the board: easy to finish, easy to share out.'),
     'm2-2': () => fig(win('Agents Hub <small>1 working</small>', `<div class="lv-agent">${av('claude')}<div><p class="lv-who">${who('claude')}<span class="lv-live">● live</span></p><p class="lv-sub">Task · <b>Add a recipe form</b></p>
-      <ol class="lv-steps"><li class="ok">Read the vision and the task</li><li class="ok">Wrote src/recipes/new.js</li><li class="ok">Ran it in the preview: it works</li><li class="now">Posting what changed…</li></ol></div></div>`, { cls: 'wide' }),
+      <ol class="lv-steps"><li class="lv-yes">Read the vision and the task</li><li class="lv-yes">Wrote src/recipes/new.js</li><li class="lv-yes">Ran it in the preview: it works</li><li class="now">Posting what changed…</li></ol></div></div>`, { cls: 'wide' }),
       'Give an AI helper one task: it reads the plan, writes the code, runs it, and reports what changed.'),
     'm2-3': () => fig(`${win('Preview <small>Family Recipes · live</small>', `<div class="lv-site"><p class="lv-site-h">Family Recipes</p><div class="lv-site-cards"><span>🥧 Grandma’s pie</span><span>🍝 Sunday pasta</span><span class="cut">🍪 Cookies</span></div><span class="lv-site-btn">+ Add a recipe</span></div>`, { right: '<span class="lv-dev">▭ ▯</span>' })}
       <div class="lv-note">${av('jay', true)}<div><b>Jay</b><p>The cookie card is cut off on my phone</p></div></div>`,
@@ -89,6 +93,21 @@
       'SQL asks questions of a database: show every recipe with chocolate in its name.'),
     'm4-6': () => fig(`<div class="lv-term lv-term--big"><p class="lv-tbar"><i></i><i></i><i></i>terminal</p><p><em>$</em> cd pixel-quest</p><p><em>$</em> git status</p><p class="dim">On branch main · 2 files changed</p><p><em>$</em> claude</p><p class="t">✦ Claude Code · ready. What should we build?</p><p><em>›</em> <span class="caret"></span></p></div>`,
       'The terminal is a text window for commands. AI helpers like Claude Code run there.'),
+    'm5-0': () => fig(win(co('Company'), `<p class="lv-k">Mission</p><p class="lv-big">Cozy pixel games that friends play together.</p>
+      <div class="lv-seats">${seat('CEO', '#F26B1D', 'orion')}${seat('Build', '#38C6B1', 'claude')}${seat('Grow', '#FABD2F', 'codex')}${seat('Run', '#94A3B8', 'maya')}</div>`, { cls: 'wide' }),
+      'A company is a project with a mission and seats. Here Orion is CEO, two AI helpers hold Build and Grow, and Maya runs things.'),
+    'm5-1': () => fig(win(co('Seat · Grow', '#FABD2F'), `<div class="lv-charter">${row('Held by', `${av('codex', true)} Maya’s Codex`)}${row('Goal this month', '200 people on the waiting list')}${row('Looks after', 'the website · growth tasks')}${row('May do alone', 'draft posts · sort feedback · suggest ideas', 'lv-yes')}${row('Needs an OK', 'publish · spend money · email customers', 'lv-no')}</div>`, { cls: 'wide', right: '<span class="lv-dev">charter</span>' }),
+      'A charter is a few lines: the seat’s goal, what it looks after, what it may do alone, and what needs a person’s OK.'),
+    'm5-2': () => fig(`<div class="lv-phone lv-phone--big"><div class="lv-ph-screen lv-ph-app"><p class="lv-k">Needs you</p><p class="lv-ph-t">${av('codex', true)} Grow wants to publish a post</p><p class="lv-sub">Demo day post · 1 picture</p><div class="lv-yn"><span class="y">Approve</span><span class="n">Deny</span></div><p class="lv-ph-c">Add a comment…</p></div></div>
+      ${win('Grow · what it may do', `<ul class="lv-may"><li class="lv-yes">Draft posts</li><li class="lv-yes">Sort feedback</li><li class="lv-yes">Suggest ideas</li><li class="lv-no">Publish</li><li class="lv-no">Spend money</li><li class="lv-no">Email customers</li></ul>`, { cls: 'sm' })}`,
+      'An AI helper in a seat drafts and suggests on its own. Publishing, spending or emailing customers waits for a person’s tap.'),
+    'm5-3': () => fig(win('# company <small>standup · Monday</small>', msg('claude', '9:00', '<b>Build:</b> the sign-up page works on the test site. Next: password reset. Nothing stuck.') + msg('codex', '9:00', '<b>Grow:</b> three post drafts are ready. Next: a better landing page. <b>Needs you:</b> pick a draft.') + msg('maya', '9:14', '<b>Run:</b> backups checked ✓ Picking draft 2 now.'), { cls: 'wide lv-chat' }),
+      'A standup is a few lines from each seat: what got done, what’s next, and what needs a person.'),
+    'm5-4': () => fig(win(co('Money'), `<table class="lv-mt"><tr><th>number</th><th>this month</th><th>from</th></tr><tr><td>Sign-ups</td><td>48</td><td><span class="lv-src">Plausible</span></td></tr><tr><td>Income</td><td>$120</td><td><span class="lv-src">Stripe</span></td></tr><tr><td>Hosting</td><td>$6</td><td><span class="lv-src">${av('maya', true)} typed by Maya</span></td></tr><tr class="off"><td>Ad spend</td><td>·</td><td>no source yet, so it’s hidden</td></tr></table><p class="lv-sub lv-gap">Pretend numbers, just for this lesson.</p>`, { cls: 'wide' }),
+      'Every number in the Money view says where it came from. No source, no number.'),
+    'm5-5': () => fig(`${win('Legal · starting points', `<ul class="lv-docs"><li><span>📄</span>Privacy policy<em>draft</em></li><li><span>📄</span>Terms of use<em>draft</em></li><li><span>📄</span>Co-founder agreement<em>draft</em></li></ul><p class="lv-sub lv-gap">Starting points, not legal advice. Check with a professional where you live.</p>`, { cls: 'sm' })}
+      ${win('Work', `<ul class="lv-docs"><li><span>🔎</span>Find vibecoding work</li><li><span>🤝</span>Invite a builder</li><li><span>⏱️</span>Trade time</li></ul>`, { cls: 'sm' })}`,
+      'Legal drafts give you a head start to check with a professional. The Work area helps you find work and more hands.'),
   };
   const QUIZ = (badge, name) => fig(`<div class="lv-badge"><span>${badge}</span><b>${esc(name)}</b><small>Get two of three right to earn it</small></div>`, `A badge for passing the check: ${name}.`);
   window.TribeLearnArt = (key, mod, title) => {

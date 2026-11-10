@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TribeCode · 34-second ad</title>
+<meta name="robots" content="noindex">
+<!-- The 34-second TribeCode ad (v0.27), in the style of Camp's campfire concept: a pixel campsite at night, friends
+     pulling up a seat, the fire's sparks swirling into the real website, then the real app (every app frame is a
+     screenshot of TribeCode running a real "Kombucha Empire" tribe: friends joined, AI helpers posted through MCP,
+     the preview runs the project's own index.html, the company has real seats and standups).
+     Self-contained, no libraries. Everything is drawn from the time t: ad30.html?t=12.5 or window.adSeek(12.5).
+     ?still=1 (or reduced motion) shows the end card. Landscape (16:9) and vertical (9:16) switch on the window's shape. -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("../site/assets/fonts/Inter-Regular.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("../site/assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("../site/assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("../site/assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  :root { --ember: #F26B1D; --teal: #38C6B1; --indigo: #6C7CFF; --canvas: #0E1219; --surface: #1B2028; --border: #2A313C; --border2: #3A4350;
+    --white: #F8FAFC; --text: #CBD5E1; --muted: #94A3B8; --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Menlo, Consolas, monospace; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: var(--white); font-family: Inter, system-ui, sans-serif; }
+  .ad { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--canvas); overflow: hidden; }
+  .ad.v { width: 1080px; height: 1920px; }
+  .layer { position: absolute; inset: 0; }
+  /* campsite */
+  #camp { position: absolute; left: 0; top: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+  #camp-me { position: absolute; image-rendering: pixelated; }
+  .say { position: absolute; background: #1B2028; border: 3px solid #3A4350; border-radius: 26px; padding: 22px 30px; font: 500 38px/1.3 Inter; color: var(--white); max-width: 560px; }
+  .v .say { font-size: 40px; max-width: 760px; }
+  .say::after { content: ""; position: absolute; left: 36px; bottom: -15px; width: 24px; height: 24px; background: #1B2028; border-right: 3px solid #3A4350; border-bottom: 3px solid #3A4350; transform: rotate(45deg); }
+  .say .caret { display: inline-block; width: 4px; height: 40px; background: var(--ember); vertical-align: -7px; margin-left: 4px; }
+  .say small { display: block; font: 600 18px var(--mono); color: var(--teal); letter-spacing: .06em; margin-bottom: 8px; }
+  .wave { position: absolute; display: flex; align-items: center; gap: 6px; height: 70px; }
+  .wave i { width: 8px; border-radius: 3px; background: var(--teal); }
+  .headline { position: absolute; left: 0; right: 0; text-align: center; font: 600 92px/1.05 Inter; letter-spacing: -.02em; color: #F4F1EA; }
+  .headline .caret { display: inline-block; width: 6px; height: 84px; background: #F4F1EA; vertical-align: -10px; margin-left: 6px; }
+  /* screenshots */
+  .shot { position: absolute; inset: 0; overflow: hidden; opacity: 0; background: var(--canvas); }
+  .shot img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #site-rect { position: absolute; overflow: hidden; border-radius: 22px; opacity: 0; background: #12151A; }
+  #site-rect img { position: absolute; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #embers { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .frame { position: absolute; border-radius: 22px; border: 3px solid #2A313C; overflow: hidden; background: #FBF7EF; opacity: 0; }
+  .frame .bar { height: 54px; background: #1B2028; border-bottom: 2px solid #2A313C; display: flex; align-items: center; gap: 10px; padding: 0 22px; font: 500 20px var(--mono); color: var(--muted); }
+  .frame .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3A4350; } .frame .bar i:nth-child(1) { background: #FF6F8E; } .frame .bar i:nth-child(2) { background: #FABD2F; } .frame .bar i:nth-child(3) { background: #3BD16F; }
+  .frame .bar span { margin-left: 12px; } .frame .bar b { margin-left: auto; color: var(--teal); font-weight: 600; display: flex; align-items: center; gap: 8px; } .frame .bar b::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--teal); }
+  .frame img { display: block; width: 100%; }
+  /* caption card */
+  .cap { position: absolute; left: 80px; bottom: 80px; max-width: 900px; padding: 26px 34px; background: #12151A; border: 2px solid #2A313C; border-radius: 22px; opacity: 0; }
+  .v .cap { left: 60px; right: 60px; bottom: 120px; max-width: none; }
+  .cap p { font: 600 22px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ember); }
+  .cap h2 { font: 800 60px/1.08 InterDisplay, Inter, sans-serif; letter-spacing: -.02em; margin-top: 10px; }
+  .cap span { display: block; font: 400 28px/1.4 Inter; color: var(--muted); margin-top: 10px; }
+  .v .cap h2 { font-size: 64px; } .v .cap span { font-size: 32px; }
+  .cursor { position: absolute; width: 42px; height: 54px; opacity: 0; z-index: 5; }
+  .ring { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; border: 4px solid var(--ember); opacity: 0; z-index: 4; }
+  /* end card */
+  .dim { position: absolute; inset: 0; background: #0B0E13; opacity: 0; }
+  .end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center; opacity: 0; }
+  .end .mark { display: flex; align-items: center; gap: 24px; } .end .mark img.f { width: 110px; height: 110px; image-rendering: pixelated; } .end .mark img.w { width: 600px; height: auto; }
+  .v .end .mark { flex-direction: column; } .v .end .mark img.w { width: 760px; }
+  .end h2 { font: 600 64px/1.15 Inter; letter-spacing: -.01em; color: #F4F1EA; } .v .end h2 { font-size: 66px; max-width: 900px; }
+  .end .url { padding: 14px 36px; border: 2px solid #3A4350; border-radius: 999px; font: 600 34px var(--mono); color: var(--white); background: #12151A; }
+  .end .free { font: 500 26px var(--mono); color: var(--muted); letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div class="ad" id="ad" role="img" aria-label="TribeCode in 34 seconds: friends gather around a campfire at night while Camp asks for an app to manage his kombucha empire. The fire's sparks swirl into the TribeCode website; a click opens the real app, where the idea becomes a running batch-and-orders app in the preview, friends and their AI helpers talk it through in one chat, agents and tasks keep track, and the project becomes a company with seats and standups. Ends with: TribeCode. Bring an idea and send a link. tribecode.org">
+  <!-- 1 · the campsite -->
+  <section class="layer" id="b1">
+    <canvas id="camp"></canvas>
+    <img id="camp-me" src="../site/assets/creator/campton.png" alt="">
+    <div class="wave" id="wave"></div>
+    <div class="say" id="say"><small>CAMP · VOICE</small>“<span id="say-t"></span>”<i class="caret" id="say-c"></i></div>
+    <h1 class="headline" id="hl"><span id="hl-t"></span><i class="caret" id="hl-c"></i></h1>
+  </section>
+  <!-- 2 · sparks into the website -->
+  <div id="site-rect"><img id="site-img" src="assets/ad30/site.jpg" alt=""></div>
+  <!-- 3–8 · the real app -->
+  <div class="shot" id="s-site"><img src="assets/ad30/site.jpg" alt=""></div>
+  <div class="shot" id="s-build"><img src="assets/ad30/build.jpg" alt=""></div>
+  <div class="shot" id="s-running"><img src="assets/ad30/running.jpg" alt=""></div>
+  <div class="frame" id="kfr"><div class="bar"><i></i><i></i><i></i><span>Preview · kombucha-empire</span><b>LIVE</b></div><img src="assets/ad30/kombucha.jpg" alt=""></div>
+  <div class="shot" id="s-chat"><img src="assets/ad30/chat.jpg" alt=""></div>
+  <div class="shot" id="s-agents"><img src="assets/ad30/agents.jpg" alt=""></div>
+  <div class="shot" id="s-tasks"><img src="assets/ad30/tasks.jpg" alt=""></div>
+  <div class="shot" id="s-company"><img src="assets/ad30/company.jpg" alt=""></div>
+  <div class="shot" id="s-company2"><img src="assets/ad30/company2.jpg" alt=""></div>
+  <canvas id="embers"></canvas>
+  <div class="ring" id="ring"></div>
+  <svg class="cursor" id="cur" viewBox="0 0 17 22"><path d="M1 1v17l5-4 3 7 3-1-3-7h7z" fill="#F8FAFC" stroke="#12151A" stroke-width="1.5" stroke-linejoin="round"/></svg>
+  <div class="cap" id="cap"><p id="cap-k"></p><h2 id="cap-h"></h2><span id="cap-s"></span></div>
+  <!-- 9 · end card -->
+  <div class="dim" id="dim"></div>
+  <div class="end" id="end">
+    <div class="mark"><img class="f" src="../site/assets/brand/logo-flame.gif" alt=""><img class="w" src="../site/assets/brand/wordmark.svg" alt="TribeCode"></div>
+    <h2>Bring an idea and send a link.</h2>
+    <p class="url">tribecode.org</p>
+    <p class="free">Free and open source</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const D = 34.5;
+  const $ = id => document.getElementById(id);
+  const ad = $('ad');
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const k = (t, a, d) => clamp((t - a) / d);
+  const ease = x => 1 - Math.pow(1 - x, 3);
+  const io = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const lerp = (a, b, x) => a + (b - a) * x;
+  const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  const IDEA = 'build me an app to manage my kombucha empire';
+  const HEAD = 'Build together.';
+  let V = false, W = 1920, H = 1080;
+
+  // ---------------- layout ----------------
+  const CS = 6;                                  // campsite: one canvas pixel = 6 screen pixels
+  let CL;                                        // campsite layout in canvas pixels
+  function fit() {
+    V = innerHeight > innerWidth; ad.classList.toggle('v', V);
+    W = V ? 1080 : 1920; H = V ? 1920 : 1080;
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    ad.style.transform = `scale(${s}) translate(-50%, -50%)`;
+    const cw = W / CS, ch = H / CS, cv = $('camp'); cv.width = cw; cv.height = ch;
+    const em = $('embers'); em.width = W; em.height = H;
+    CL = V ? { w: cw, h: ch, gy: 222, fx: 88, fb: 264, me: { cx: 42, bot: 270, hgt: 46 }, fr: [100, 118, 136], log: [96, 158], tents: [[8, 224, 44], [122, 222, 40]], moon: [146, 40], c1: [[20, 70], [34, 62], [48, 74], [42, 90]], c2: [[110, 130], [124, 122], [138, 134]], star: [30, 26] }
+           : { w: cw, h: ch, gy: 122, fx: 150, fb: 152, me: { cx: 104, bot: 158, hgt: 46 }, fr: [168, 186, 204], log: [163, 224], tents: [[238, 126, 44], [278, 128, 36]], moon: [292, 24], c1: [[30, 26], [46, 18], [60, 30], [56, 44], [72, 50]], c2: [[214, 40], [228, 34], [240, 44], [254, 38]], star: [20, 10] };
+    const me = $('camp-me'), hpx = CL.me.hgt * CS, wpx = hpx * 280 / 528;
+    me.style.width = wpx + 'px'; me.style.height = hpx + 'px'; me.style.left = (CL.me.cx * CS - wpx / 2) + 'px'; me.style.top = (CL.me.bot * CS - hpx) + 'px';
+    const say = $('say'), wave = $('wave');
+    if (V) { say.style.left = '80px'; say.style.top = '1060px'; wave.style.left = '90px'; wave.style.top = '960px'; $('hl').style.top = '520px'; }
+    else { say.style.left = (CL.me.cx * CS + 130) + 'px'; say.style.top = '420px'; wave.style.left = (CL.me.cx * CS + 140) + 'px'; wave.style.top = '330px'; $('hl').style.top = '150px'; }
+    document.querySelectorAll('.frame').forEach(f => { const fw = V ? 980 : 1340; f.style.width = fw + 'px'; f.style.left = (W - fw) / 2 + 'px'; f.style.top = (V ? 620 : 120) + 'px'; });
+  }
+
+  // ---------------- the campsite (pixel canvas) ----------------
+  const FR = [
+    { n: 'Maya', at: .7, hair: '#3B2418', skin: '#C98F66', shirt: '#6C7CFF', pants: '#343B4A' },
+    { n: 'Jay', at: 1.3, hair: '#15161A', skin: '#8D5A3B', shirt: '#0EA5A0', pants: '#2F3846' },
+    { n: 'Orion', at: 1.9, hair: '#D9B26A', skin: '#E8B48A', shirt: '#F26B1D', pants: '#2A313C' },
+  ];
+  const sh = (hex, m) => '#' + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * m))).toString(16).padStart(2, '0')).join('');
+  function seated(f, lit) {
+    const R = [], r = (x, y, w, h, c) => R.push([x, y, w, h, c]);
+    r(4, 0, 7, 3, f.hair); r(4, 3, 2, 3, f.hair); r(5, 0, 4, 1, sh(f.hair, 1.5));
+    r(6, 3, 5, 5, f.skin); r(9, 4, 1, 1, '#12151A'); r(10, 6, 1, 1, '#A8664A'); r(6, 7, 4, 1, sh(f.skin, .85)); r(7, 8, 2, 1, f.skin);
+    r(4, 9, 7, 8, f.shirt); r(4, 15, 7, 2, sh(f.shirt, .72)); r(4, 9, 1, 6, sh(f.shirt, .82));
+    r(8, 11, 3, 3, f.shirt); r(10, 13, 3, 2, f.skin);
+    r(9, 15, 7, 1, '#8A94A6'); r(14, 9, 2, 6, '#4A5262'); if (lit) r(14, 10, 1, 4, '#38C6B1');
+    r(4, 17, 9, 2, f.pants); r(11, 19, 2, 4, f.pants); r(11, 23, 4, 1, '#12151A');
+    r(10, 3, 1, 3, '#F5C08A'); r(10, 9, 1, 2, '#FFB27A');
+    return R;
+  }
+  function drawCampsite(t) {
+    const cv = $('camp'), x = cv.getContext('2d'), L = CL;
+    const R = (c, X, Y, w = 1, h = 1) => { x.fillStyle = c; x.fillRect(Math.round(X), Math.round(Y), w, h); };
+    // sky in flat bands
+    R('#0B0F18', 0, 0, L.w, L.h); R('#0E1320', 0, L.h * .35, L.w, L.h); R('#111727', 0, L.gy - 40, L.w, L.h);
+    // stars + constellations
+    for (let i = 0; i < 90; i++) { const sx = hash(i) * L.w, sy = hash(i + 50) * (L.gy - 50); const tw = hash(i + 9) > .7 ? (Math.sin(t * 3 + i) > .3 ? 1 : .35) : .8; x.globalAlpha = tw; R(hash(i + 3) > .85 ? '#FFFFFF' : '#9AA6C0', sx, sy); }
+    x.globalAlpha = 1;
+    const cons = L.c1;
+    x.strokeStyle = '#2A3550'; x.lineWidth = 1; x.beginPath(); cons.forEach(([a, b], i) => i ? x.lineTo(a + .5, b + .5) : x.moveTo(a + .5, b + .5)); x.stroke(); cons.forEach(([a, b]) => R('#DDE6F5', a, b));
+    const cons2 = L.c2;
+    x.beginPath(); cons2.forEach(([a, b], i) => i ? x.lineTo(a + .5, b + .5) : x.moveTo(a + .5, b + .5)); x.stroke(); cons2.forEach(([a, b]) => R('#DDE6F5', a, b));
+    // twinkle cross star
+    const [sx, sy] = L.star; R('#FABD2F', sx, sy - 2, 1, 5); R('#FABD2F', sx - 2, sy, 5, 1);
+    // crescent moon
+    const [mx, my] = L.moon; x.fillStyle = '#E6E9F0'; x.beginPath(); x.arc(mx, my, 9, 0, Math.PI * 2); x.fill(); x.fillStyle = '#0B0F18'; x.beginPath(); x.arc(mx + 5, my - 3, 8, 0, Math.PI * 2); x.fill();
+    // pines, two layers
+    const pine = (px, base, hgt, c) => { for (let yy = 0; yy < hgt; yy++) { const w = Math.max(1, Math.round((yy / hgt) * hgt * .42)); R(c, px - w, base - hgt + yy, w * 2 + 1, 1); } R(c, px, base - 2, 1, 3); };
+    for (let i = 0; i < 24; i++) pine(i * (L.w / 22) + hash(i + 70) * 8, L.gy + 2, 22 + hash(i + 80) * 20, '#1A2233');
+    for (let i = 0; i < 16; i++) pine(i * (L.w / 14) + 6 + hash(i + 90) * 10, L.gy + 4, 14 + hash(i + 95) * 14, '#202A3E');
+    // ground
+    R('#1C1F26', 0, L.gy, L.w, L.h); R('#20242C', 0, L.gy + 6, L.w, L.h);
+    for (let i = 0; i < 34; i++) { const gx = hash(i + 200) * L.w, gyy = L.gy + 8 + hash(i + 210) * (L.h - L.gy - 10); R(hash(i) > .5 ? '#2A2E36' : '#262A31', gx, gyy, 3 + Math.round(hash(i + 3) * 4), 2); }
+    // tents, lit flap on the fire side
+    L.tents.forEach(([tx, tb, tw], j) => { for (let yy = 0; yy < tw * .55; yy++) { const half = Math.round(yy * .9); R('#4A3B33', tx + tw / 2 - half, tb - tw * .55 + yy, half * 2, 1); R('#5E4A3E', tx + tw / 2 - half, tb - tw * .55 + yy, Math.max(1, Math.round(half * .7)), 1); }
+      const fl = Math.round(tw * .18); for (let yy = 0; yy < tw * .3; yy++) { const half = Math.round(yy * .5); R(j === 0 ? '#F26B1D' : '#C9561A', tx + tw / 2 - half, tb - tw * .3 + yy, half * 2 + 1, 1); } });
+    // firelight on the ground: flat steps
+    const flick = Math.sin(t * 13) * 1.5 + Math.sin(t * 7.3);
+    x.fillStyle = '#26221F'; x.beginPath(); x.ellipse(L.fx, L.fb, 64 + flick, 12, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#332A23'; x.beginPath(); x.ellipse(L.fx, L.fb, 38 + flick, 7, 0, 0, Math.PI * 2); x.fill();
+    // log to sit on
+    R('#5B3A29', L.log[0], L.fb - 2, L.log[1] - L.log[0], 4); R('#7A5236', L.log[0], L.fb - 2, L.log[1] - L.log[0], 1); R('#8A6244', L.log[0], L.fb - 2, 2, 4);
+    // friends arrive and sit (face the fire, on its right)
+    FR.forEach((f, i) => { const a = ease(k(t, f.at, .5)); if (a <= 0) return; const fx0 = L.fr[i] + (1 - a) * 40, top = L.fb - 2 - 24;
+      x.globalAlpha = a; seated(f, t > f.at + .6).forEach(([cx, cy, w, h, c]) => R(c, fx0 + (16 - cx - w), top + cy, w, h)); x.globalAlpha = 1; });
+    // the fire
+    R('#4A2F22', L.fx - 10, L.fb - 3, 20, 3); R('#6B4430', L.fx - 8, L.fb - 5, 16, 2);
+    const fr = Math.floor(t * 10);
+    const flame = (w, hh, c, ph) => { for (let i = 0; i < w; i++) { const mid = 1 - Math.abs(i - (w - 1) / 2) / (w / 2); const h2 = Math.max(1, Math.round(hh * mid * (.7 + .3 * Math.sin(fr * 1.7 + i * 2.3 + ph)))); R(c, L.fx - w / 2 + i, L.fb - 5 - h2, 1, h2); } };
+    flame(14, 16, '#E8542A', 0); flame(10, 12, '#F26B1D', 1); flame(6, 7, '#FABD2F', 2);
+    // little sparks drifting up
+    for (let i = 0; i < 8; i++) { const p = (t * .6 + i / 8) % 1; x.globalAlpha = 1 - p; R(i % 2 ? '#FABD2F' : '#F59E2B', L.fx - 5 + (i * 7) % 11 + Math.sin(p * 8 + i) * 3, L.fb - 18 - p * 40); } x.globalAlpha = 1;
+  }
+
+  // ---------------- screenshots with pan/zoom ----------------
+  // keyframes: [t, fx, fy, z] in screenshot pixels; z = 1 covers the window
+  const SHOTS = {
+    site: { a: 8.2, b: 11.9, kf: [[8.2, 960, 540, 1], [11.0, 760, 500, 1.22], [11.9, 746, 482, 2.4]] },
+    build: { a: 11.6, b: 15.1, kf: [[11.6, 1150, 560, 1.0], [12.9, 1540, 640, 1.55], [15.1, 1500, 700, 1.7]] },
+    running: { a: 14.8, b: 17.0, kf: [[14.8, 1500, 640, 1.6], [17.0, 1560, 620, 1.9]] },
+    chat: { a: 19.2, b: 23.0, vdx: -300, kf: [[19.2, 1000, 360, 1.45], [23.0, 1000, 760, 1.45]] },
+    agents: { a: 22.7, b: 24.9, kf: [[22.7, 1126, 380, 1.5], [24.9, 1126, 430, 1.75]] },
+    tasks: { a: 24.6, b: 26.6, kf: [[24.6, 1126, 460, 1.45], [26.6, 1126, 460, 1.6]] },
+    company: { a: 26.3, b: 28.9, kf: [[26.3, 1126, 420, 1.2], [28.9, 1126, 520, 1.35]] },
+    company2: { a: 28.6, b: D, kf: [[28.6, 1220, 520, 1.3], [31.5, 1220, 600, 1.38], [D, 1220, 610, 1.4]] },
+  };
+  function camAt(s, t) {
+    const kf = s.kf; let i = 0; while (i < kf.length - 2 && t > kf[i + 1][0]) i++;
+    const [t0, x0, y0, z0] = kf[i], [t1, x1, y1, z1] = kf[i + 1], p = io(clamp((t - t0) / (t1 - t0)));
+    return { fx: lerp(x0, x1, p) + (V && s.vdx ? s.vdx : 0), fy: lerp(y0, y1, p), z: lerp(z0, z1, p) };
+  }
+  function xform(cam) {
+    // landscape: z = 1 covers the window. Vertical: z scales from "the full width fits", and the picture sits a little
+    // above the middle on the dark canvas, so a whole screen stays readable on a phone.
+    const s = V ? (W / 1920) * (1.5 + (cam.z - 1) * 1.2) : Math.max(W / 1920, H / 1080) * cam.z;
+    let tx = W / 2 - cam.fx * s, ty = (V ? H * .4 : H / 2) - cam.fy * s;
+    tx = Math.min(0, Math.max(W - 1920 * s, tx));
+    if (1080 * s >= H) ty = Math.min(0, Math.max(H - 1080 * s, ty)); else ty = H * .4 - 540 * s;
+    return { s, tx, ty, map: (x, y) => [tx + x * s, ty + y * s] };
+  }
+  function drawShot(id, t, fade = .35) {
+    const s = SHOTS[id], el = $('s-' + id);
+    const o = Math.min(k(t, s.a, fade), 1 - k(t, s.b - fade, fade));
+    el.style.opacity = o; el.style.visibility = o > 0 ? 'visible' : 'hidden';
+    if (o <= 0) return null;
+    const X = xform(camAt(s, t)); el.firstElementChild.style.transform = `translate(${X.tx}px, ${X.ty}px) scale(${X.s})`;
+    return X;
+  }
+
+  // ---------------- embers: sparks swirl into the browser window ----------------
+  function rectAt(t) {                                     // the window the sparks draw, then it grows to the full screen
+    const r0 = V ? { w: 920, h: 518 } : { w: 1180, h: 664 };
+    const g = io(k(t, 7.55, .75));
+    const w = lerp(r0.w, W, g), h = lerp(r0.h, H, g), cx = W / 2, cy = lerp(V ? 840 : 500, H / 2, g);
+    return { x: cx - w / 2, y: cy - h / 2, w, h, r: lerp(22, 0, g) };
+  }
+  function perim(r, u) {                                   // a point at fraction u along the rectangle's edge
+    const L2 = 2 * (r.w + r.h); let d = ((u % 1) + 1) % 1 * L2;
+    if (d < r.w) return [r.x + d, r.y]; d -= r.w; if (d < r.h) return [r.x + r.w, r.y + d]; d -= r.h; if (d < r.w) return [r.x + r.w - d, r.y + r.h]; d -= r.w; return [r.x, r.y + r.h - d];
+  }
+  const COL = ['#FFE2A0', '#FABD2F', '#F59E2B', '#F26B1D', '#E8542A'];
+  function drawEmbers(t) {
+    const cv = $('embers'), x = cv.getContext('2d'); x.clearRect(0, 0, W, H);
+    if (t < 5.4 || t > 9.0) return;
+    const F = [CL.fx * CS, (CL.fb - 12) * CS], r = rectAt(t);
+    const N = 320;
+    for (let i = 0; i < N; i++) {
+      const st = 5.6 + hash(i) * 1.3, u = clamp((t - st) / (1.0 + hash(i + 1) * .5));
+      if (u <= 0) continue;
+      const target = perim(r, i / N + t * .03);
+      const e = io(u), sw = (hash(i + 2) - .5) * (V ? 700 : 1100);
+      const c1 = [F[0] + sw, F[1] - 380 - hash(i + 3) * 300];
+      const bx = (1 - e) * (1 - e) * F[0] + 2 * (1 - e) * e * c1[0] + e * e * target[0];
+      const by = (1 - e) * (1 - e) * F[1] + 2 * (1 - e) * e * c1[1] + e * e * target[1];
+      const fade = 1 - k(t, 8.0 + hash(i + 4) * .6, .4);
+      const size = Math.round(6 + hash(i + 5) * 10) * (u < 1 ? 1 : .7);
+      x.globalAlpha = fade * (u < 1 ? 1 : .55 + .45 * Math.abs(Math.sin(t * 9 + i)));
+      x.fillStyle = COL[i % COL.length]; x.fillRect(Math.round(bx - size / 2), Math.round(by - size / 2), size, size);
+    }
+    // the bright edge of the window, drawn as the sparks arrive
+    const pr = k(t, 6.5, .9), fo = 1 - k(t, 8.1, .5);
+    if (pr > 0 && fo > 0) {
+      x.globalAlpha = fo; x.strokeStyle = '#F59E2B'; x.lineWidth = 6; const L2 = 2 * (r.w + r.h);
+      x.setLineDash([L2 * pr, L2]); x.beginPath(); x.roundRect ? x.roundRect(r.x, r.y, r.w, r.h, r.r) : x.rect(r.x, r.y, r.w, r.h); x.stroke(); x.setLineDash([]);
+    }
+    x.globalAlpha = 1;
+  }
+
+  // ---------------- captions ----------------
+  const CAPS = [
+    [11.9, 15.0, '// say it', 'Say what it should be.', 'Type the idea or say it out loud. A first version runs right away.'],
+    [15.2, 19.0, '// watch it run', 'It runs while it’s built.', 'The preview updates the moment anyone’s change lands.'],
+    [19.4, 22.8, '// your tribe', 'Friends and their AI, in one chat.', 'Everyone brings their own helper. Each one works for its owner.'],
+    [22.9, 26.5, '// stay in sync', 'Nobody steps on anybody.', 'Agents claim files, and tasks write themselves from the chat.'],
+    [26.6, 30.2, '// company mode', 'Make it a company.', 'Seats for friends and AI helpers, daily standups and goals.'],
+  ];
+  function drawCap(t) {
+    const c = CAPS.find(([a, b]) => t >= a - .1 && t < b);
+    const el = $('cap');
+    if (!c) { el.style.opacity = 0; return; }
+    const [a, b, kk, h, s] = c, o = Math.min(ease(k(t, a, .35)), 1 - k(t, b - .3, .3));
+    el.style.opacity = o; el.style.transform = `translateY(${(1 - ease(k(t, a, .4))) * 24}px)`;
+    if ($('cap-h').textContent !== h) { $('cap-k').textContent = kk; $('cap-h').textContent = h; $('cap-s').textContent = s; }
+  }
+  // cursor: [t-start, t-click, shot, x, y]
+  const CLICKS = [[9.6, 10.9, 'site', 746, 482], [13.0, 14.1, 'build', 1410, 780]];
+  function drawCursor(t, maps) {
+    const cur = $('cur'), ring = $('ring'); let shown = false;
+    for (const [a, c, id, ix, iy] of CLICKS) {
+      if (t < a || t > c + .7 || !maps[id]) continue;
+      const [tx, ty] = maps[id].map(ix, iy), m = io(k(t, a, c - a - .15));
+      const x = lerp(tx + (V ? 260 : 420), tx, m), y = lerp(ty + (V ? 380 : 260), ty, m);
+      cur.style.left = x + 'px'; cur.style.top = y + 'px'; cur.style.opacity = 1; shown = true;
+      cur.style.transform = t > c - .05 && t < c + .08 ? 'scale(.9)' : '';
+      const rp = k(t, c, .5); ring.style.left = tx + 'px'; ring.style.top = ty + 'px'; ring.style.opacity = rp > 0 && rp < 1 ? 1 - rp : 0; ring.style.transform = `scale(${.5 + rp})`;
+    }
+    if (!shown) { cur.style.opacity = 0; ring.style.opacity = 0; }
+  }
+
+  // ---------------- one frame ----------------
+  function render(T) {
+    const t = ((T % D) + D) % D;
+    // 1 · campsite
+    const b1 = $('b1'), o1 = 1 - k(t, 7.6, .6); b1.style.opacity = o1; b1.style.visibility = o1 > 0 ? 'visible' : 'hidden';
+    if (o1 > 0) {
+      drawCampsite(t);
+      const talk = t > 1.1 && t < 3.9, me = $('camp-me'); me.style.transform = talk && Math.floor(t * 7) % 2 ? 'translateY(-4px)' : '';
+      let w = ''; for (let i = 0; i < 16; i++) { const h = talk ? 8 + Math.abs(Math.sin(t * 10 + i * 1.3)) * 52 * (.35 + .65 * Math.abs(Math.sin(i * .7))) * (1 - Math.abs(i - 7.5) / 11) : 5; w += `<i style="height:${h.toFixed(1)}px"></i>`; } $('wave').innerHTML = w;
+      $('wave').style.opacity = talk ? 1 : .3;
+      const n = Math.round(IDEA.length * clamp((t - 1.3) / 2.2)); $('say-t').textContent = IDEA.slice(0, n);
+      $('say-c').style.opacity = n < IDEA.length || Math.floor(t * 3) % 2 ? 1 : 0;
+      const so = Math.min(ease(k(t, 1.1, .3)), 1 - k(t, 5.2, .4)); $('say').style.opacity = so; $('say').style.transform = `scale(${.94 + .06 * ease(k(t, 1.1, .3))})`; $('say').style.transformOrigin = '40px 100%';
+      const hn = Math.round(HEAD.length * clamp((t - 3.4) / 1.0)); $('hl-t').textContent = HEAD.slice(0, hn);
+      $('hl-c').style.opacity = t > 3.2 && (hn < HEAD.length || Math.floor(t * 3) % 2) ? 1 : 0;
+      $('hl').style.opacity = 1 - k(t, 6.6, .4);
+    }
+    // 2 · sparks + the website appearing inside the window they draw
+    drawEmbers(t);
+    const sr = $('site-rect'), so2 = Math.min(k(t, 7.2, .45), 1 - k(t, 8.3, .1));
+    sr.style.opacity = so2; sr.style.visibility = so2 > 0 ? 'visible' : 'hidden';
+    if (so2 > 0) { const r = rectAt(t); sr.style.left = r.x + 'px'; sr.style.top = r.y + 'px'; sr.style.width = r.w + 'px'; sr.style.height = r.h + 'px'; sr.style.borderRadius = r.r + 'px';
+      const X = xform({ fx: 960, fy: 540, z: 1 }); $('site-img').style.transform = `translate(${X.tx - r.x}px, ${X.ty - r.y}px) scale(${X.s})`; }
+    // 3–8 · the real app
+    const maps = {};
+    for (const id of Object.keys(SHOTS)) { const m = drawShot(id, t, id === 'site' ? .1 : .35); if (m) maps[id] = m; }
+    // the kombucha app up close
+    const kf = $('kfr'), ko = Math.min(ease(k(t, 16.7, .4)), 1 - k(t, 19.2, .35)); kf.style.opacity = ko; kf.style.visibility = ko > 0 ? 'visible' : 'hidden';
+    kf.style.transform = `translateY(${(1 - ease(k(t, 16.7, .5))) * 40}px) scale(${1 + .03 * k(t, 16.7, 2.5)})`;
+    drawCap(t); drawCursor(t, maps);
+    // 9 · end card
+    $('dim').style.opacity = .82 * ease(k(t, 30.3, .6));
+    const e = $('end'), eo = ease(k(t, 30.6, .6)); e.style.opacity = eo; e.style.transform = `translateY(${(1 - eo) * 30}px)`;
+  }
+
+  let seekT = null;
+  window.adSeek = t => { seekT = t; render(t); return document.fonts ? document.fonts.ready.then(() => true) : Promise.resolve(true); };
+  const q = new URLSearchParams(location.search);
+  const still = q.has('still') || (matchMedia('(prefers-reduced-motion: reduce)').matches && !q.has('t'));
+  addEventListener('resize', () => { fit(); render(seekT ?? 0); });
+  fit();
+  if (q.has('t')) { seekT = parseFloat(q.get('t')) || 0; render(seekT); }
+  else if (still) render(33.5);
+  else { const t0 = performance.now(); const loop = now => { if (seekT === null) render((now - t0) / 1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+})();
+</script>
+</body>
+</html>

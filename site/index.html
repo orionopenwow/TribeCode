@@ -11,7 +11,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TribeCode · Build apps, games and websites with your friends</title>
-<meta name="description" content="TribeCode is a free, open-source app for making games, apps and websites with your friends. Bring the AI helpers you already use (Claude Code, Codex, Gemini CLI and others), send one link, and build it together. Your code stays in your own GitHub repository.">
+<meta name="description" content="TribeCode is a free, open-source app for making games, apps and websites with your friends. Bring the AI helpers you already use (Claude Code, Codex, Gemini CLI and others), send one link, and build it together, then run the business around it with seats for friends or AI helpers. Your code stays in your own GitHub repository.">
 <meta name="theme-color" content="#1D2021">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="app/manifest.webmanifest">
@@ -33,7 +33,8 @@
 <meta name="twitter:title" content="TribeCode · Build apps, games and websites with your friends">
 <meta name="twitter:description" content="Make games, apps and websites with your friends and the AI helpers you already use. Free and open source.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.26.0">
+<link rel="stylesheet" href="styles.css?v=0.27.0">
+<link rel="stylesheet" href="kit.css?v=0.27.0">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -63,6 +64,7 @@
         <button class="nav__link nav__drop" type="button" aria-expanded="false" aria-controls="menu-features">Features<svg class="i i--xs" aria-hidden="true"><use href="#i-chevron"/></svg></button>
         <ul class="menu" id="menu-features" hidden>
           <li><a href="#vibecoding"><b>Vibecoding, explained</b><span>The new way to make software, in plain words</span></a></li>
+          <li><a href="#company"><b>Company mode</b><span>Seats, rhythms and real numbers for a business</span></a></li>
           <li><a href="#make"><b>What you can make</b><span>Apps, games, websites, tools and more</span></a></li>
           <li><a href="#room"><b>One chat for everyone</b><span>People and their AI, in the same room</span></a></li>
           <li><a href="#phone"><b>Your phone as a remote</b><span>One-tap approvals, voice notes, tasks</span></a></li>
@@ -100,7 +102,6 @@
           <span class="hero__ask-t" data-typer aria-hidden="true">make a budget app with my roommates</span><span class="hero__caret" aria-hidden="true"></span>
         </p>
       </div>
-      <p class="hero__vibe mono reveal"><span>Multiplayer vibecoding</span> · <a href="#vibecoding">what's that?</a></p>
       <h1 id="hero-title" class="hero__title reveal">Build apps, games and websites with your friends.</h1>
       <p class="hero__sub reveal">Bring an idea and send a link. Your friends and the AI helpers you already use work in the same project, and nobody has to be an expert to help.</p>
       <div class="hero__ctas reveal">
@@ -250,8 +251,8 @@
   <section class="make" id="make" aria-labelledby="make-title">
     <div class="wrap">
       <p class="eyebrow mono">// what you can make</p>
-      <h2 id="make-title">A game for your younger brother. A website for the local bakery.</h2>
-      <p class="make__lead">Friends build small, real products here: a sign-up page for a running club, a Discord bot for your community, a dashboard the whole team ends up relying on. If you can describe it in a sentence, you can start building tonight.</p>
+      <h2 id="make-title">Games, websites and tools, built for the people around you.</h2>
+      <p class="make__lead">Build a game for a younger sibling, a website with online orders for the local bakery, a sign-up page for a running club, a Discord bot for your community, or a dashboard your team relies on every day. Describe what you need in plain language, and TribeCode and your AI helpers turn it into working software you can test, share and keep improving together.</p>
       <ul class="make__grid reveal">
         <li class="make__card" style="--i:0"><div class="make__pic"><svg class="make__art" viewBox="0 0 24 14" width="96" height="56" shape-rendering="crispEdges" aria-hidden="true"><rect x="9" y="0" width="6" height="1" fill="#3A4350"/><rect x="8" y="1" width="1" height="1" fill="#3A4350"/><rect x="9" y="1" width="6" height="1" fill="#1E242D"/><rect x="15" y="1" width="1" height="1" fill="#3A4350"/><rect x="8" y="2" width="1" height="1" fill="#3A4350"/><rect x="9" y="2" width="1" height="1" fill="#1E242D"/><rect x="10" y="2" width="1" height="1" fill="#38C6B1"/><rect x="11" y="2" width="1" height="1" fill="#1E242D"/><rect x="12" y="2" width="1" height="1" fill="#F26B1D"/><rect x="13" y="2" width="1" height="1" fill="#1E242D"/><rect x="14" y="2" width="1" height="1" fill="#F26B1D"/><rect x="15" y="2" width="1" height="1" fill="#3A4350"/><rect x="8" y="3" width="1" height="1" fill="#3A4350"/><rect x="9" y="3" width="6" height="1" fill="#1E242D"/><rect x="15" y="3" width="1" height="1" fill="#3A4350"/><rect x="8" y="4" width="1" height="1" fill="#3A4350"/><rect x="9" y="4" width="1" height="1" fill="#1E242D"/><rect x="10" y="4" width="1" height="1" fill="#6C7CFF"/><rect x="11" y="4" width="1" height="1" fill="#1E242D"/><rect x="12" y="4" width="1" height="1" fill="#3BD16F"/><rect x="13" y="4" width="2" height="1" fill="#1E242D"/><rect x="15" y="4" width="1" height="1" fill="#3A4350"/><rect x="8" y="5" width="1" height="1" fill="#3A4350"/><rect x="9" y="5" width="6" height="1" fill="#1E242D"/><rect x="15" y="5" width="1" height="1" fill="#3A4350"/><rect x="8" y="6" width="1" height="1" fill="#3A4350"/><rect x="9" y="6" width="1" height="1" fill="#1E242D"/><rect x="10" y="6" width="1" height="1" fill="#FABD2F"/><rect x="11" y="6" width="1" height="1" fill="#1E242D"/><rect x="12" y="6" width="1" height="1" fill="#FF6F8E"/><rect x="13" y="6" width="2" height="1" fill="#1E242D"/><rect x="15" y="6" width="1" height="1" fill="#3A4350"/><rect x="8" y="7" width="1" height="1" fill="#3A4350"/><rect x="9" y="7" width="6" height="1" fill="#1E242D"/><rect x="15" y="7" width="1" height="1" fill="#3A4350"/><rect x="8" y="8" width="1" height="1" fill="#3A4350"/><rect x="9" y="8" width="1" height="1" fill="#1E242D"/><rect x="10" y="8" width="4" height="1" fill="#F8FAFC"/><rect x="14" y="8" width="1" height="1" fill="#1E242D"/><rect x="15" y="8" width="1" height="1" fill="#3A4350"/><rect x="8" y="9" width="1" height="1" fill="#3A4350"/><rect x="9" y="9" width="6" height="1" fill="#1E242D"/><rect x="15" y="9" width="1" height="1" fill="#3A4350"/><rect x="8" y="10" width="1" height="1" fill="#3A4350"/><rect x="9" y="10" width="1" height="1" fill="#1E242D"/><rect x="10" y="10" width="2" height="1" fill="#F8FAFC"/><rect x="12" y="10" width="3" height="1" fill="#1E242D"/><rect x="15" y="10" width="1" height="1" fill="#3A4350"/><rect x="8" y="11" width="1" height="1" fill="#3A4350"/><rect x="9" y="11" width="6" height="1" fill="#1E242D"/><rect x="15" y="11" width="1" height="1" fill="#3A4350"/><rect x="8" y="12" width="1" height="1" fill="#3A4350"/><rect x="9" y="12" width="2" height="1" fill="#1E242D"/><rect x="11" y="12" width="2" height="1" fill="#94A3B8"/><rect x="13" y="12" width="2" height="1" fill="#1E242D"/><rect x="15" y="12" width="1" height="1" fill="#3A4350"/><rect x="8" y="13" width="8" height="1" fill="#3A4350"/></svg></div><h3>Apps</h3><p class="make__sub">On your phone or in a browser.</p><p class="make__ex"><span class="mono">e.g.</span> A budget tracker, a recipe box, a habit app for your team.</p></li>
         <li class="make__card" style="--i:1"><div class="make__pic"><svg class="make__art" viewBox="0 0 24 14" width="96" height="56" shape-rendering="crispEdges" aria-hidden="true"><rect x="4" y="1" width="16" height="1" fill="#3A4350"/><rect x="3" y="2" width="1" height="1" fill="#3A4350"/><rect x="4" y="2" width="16" height="1" fill="#1E242D"/><rect x="20" y="2" width="1" height="1" fill="#3A4350"/><rect x="2" y="3" width="1" height="1" fill="#3A4350"/><rect x="3" y="3" width="3" height="1" fill="#1E242D"/><rect x="6" y="3" width="1" height="1" fill="#F8FAFC"/><rect x="7" y="3" width="10" height="1" fill="#1E242D"/><rect x="17" y="3" width="1" height="1" fill="#FF6F8E"/><rect x="18" y="3" width="3" height="1" fill="#1E242D"/><rect x="21" y="3" width="1" height="1" fill="#3A4350"/><rect x="2" y="4" width="1" height="1" fill="#3A4350"/><rect x="3" y="4" width="2" height="1" fill="#1E242D"/><rect x="5" y="4" width="3" height="1" fill="#F8FAFC"/><rect x="8" y="4" width="8" height="1" fill="#1E242D"/><rect x="16" y="4" width="1" height="1" fill="#FF6F8E"/><rect x="17" y="4" width="1" height="1" fill="#1E242D"/><rect x="18" y="4" width="1" height="1" fill="#FF6F8E"/><rect x="19" y="4" width="2" height="1" fill="#1E242D"/><rect x="21" y="4" width="1" height="1" fill="#3A4350"/><rect x="2" y="5" width="1" height="1" fill="#3A4350"/><rect x="3" y="5" width="3" height="1" fill="#1E242D"/><rect x="6" y="5" width="1" height="1" fill="#F8FAFC"/><rect x="7" y="5" width="10" height="1" fill="#1E242D"/><rect x="17" y="5" width="1" height="1" fill="#FF6F8E"/><rect x="18" y="5" width="3" height="1" fill="#1E242D"/><rect x="21" y="5" width="1" height="1" fill="#3A4350"/><rect x="2" y="6" width="1" height="1" fill="#3A4350"/><rect x="3" y="6" width="7" height="1" fill="#1E242D"/><rect x="10" y="6" width="2" height="1" fill="#94A3B8"/><rect x="12" y="6" width="1" height="1" fill="#1E242D"/><rect x="13" y="6" width="2" height="1" fill="#94A3B8"/><rect x="15" y="6" width="6" height="1" fill="#1E242D"/><rect x="21" y="6" width="1" height="1" fill="#3A4350"/><rect x="2" y="7" width="1" height="1" fill="#3A4350"/><rect x="3" y="7" width="18" height="1" fill="#1E242D"/><rect x="21" y="7" width="1" height="1" fill="#3A4350"/><rect x="3" y="8" width="1" height="1" fill="#3A4350"/><rect x="4" y="8" width="5" height="1" fill="#1E242D"/><rect x="9" y="8" width="6" height="1" fill="#3A4350"/><rect x="15" y="8" width="5" height="1" fill="#1E242D"/><rect x="20" y="8" width="1" height="1" fill="#3A4350"/><rect x="4" y="9" width="5" height="1" fill="#3A4350"/><rect x="15" y="9" width="5" height="1" fill="#3A4350"/><rect x="5" y="11" width="2" height="1" fill="#FABD2F"/><rect x="17" y="11" width="2" height="1" fill="#F26B1D"/><rect x="4" y="12" width="4" height="1" fill="#FABD2F"/><rect x="16" y="12" width="4" height="1" fill="#F26B1D"/><rect x="5" y="13" width="2" height="1" fill="#FABD2F"/><rect x="17" y="13" width="2" height="1" fill="#F26B1D"/></svg></div><h3>Games</h3><p class="make__sub">Something to play, alone or together.</p><p class="make__ex"><span class="mono">e.g.</span> A pixel platformer, a party quiz, a puzzle for your class.</p></li>
@@ -267,22 +268,119 @@
   </section>
 
   <!-- ================= STORY: how an app comes together (pixel art, six steps) ================= -->
-  <!-- ================= VIBECODING: the new way to make software, in plain words ================= -->
-  <section class="vibe" id="vibecoding" aria-labelledby="vibe-title">
+  <!-- ================= COMPANY MODE (v0.27): run the business around what you build ================= -->
+  <section class="biz" id="company" aria-labelledby="biz-title">
     <div class="wrap">
-      <p class="eyebrow mono">// the new way to code</p>
-      <h2 id="vibe-title">What is vibecoding?</h2>
-      <p class="vibe__lead">Vibecoding is making software by describing what you want in plain words and letting an AI write the code, while you steer: you try it, say what to change, and keep going until it feels right. You still decide what gets built. You just don't have to type every line.</p>
-      <ol class="vibe__grid reveal">
-        <li class="vibe__card" style="--i:0"><span class="vibe__n mono">01</span><h3>Say it</h3><p class="vibe__text">“A pixel game where a little flame lights lanterns.” A sentence is enough to start.</p></li>
-        <li class="vibe__card" style="--i:1"><span class="vibe__n mono">02</span><h3>Watch it appear</h3><p class="vibe__text">Your AI writes the code and the app runs right there, so you see it instead of reading it.</p></li>
-        <li class="vibe__card" style="--i:2"><span class="vibe__n mono">03</span><h3>Steer it</h3><p class="vibe__text">“Make the jump floatier.” “Add a title screen.” Change it in words, or click and edit it yourself.</p></li>
-        <li class="vibe__card" style="--i:3"><span class="vibe__n mono">04</span><h3>Ship it</h3><p class="vibe__text">Every change is saved to GitHub. Send a link and people can use it today.</p></li>
-      </ol>
-      <div class="vibe__then">
-        <div><span class="eyebrow mono">before</span><p class="vibe__text">Learn a language for months, set up tools, then build alone.</p></div>
-        <div><span class="eyebrow mono">now</span><p class="vibe__text">Describe it, try it, fix it in words. Learn the code as you go, if you want to.</p></div>
-        <div class="vibe__us"><span class="eyebrow mono">with TribeCode</span><p class="vibe__text">Do it together: friends and each person's own AI build the same app in one shared room.</p></div>
+      <div class="biz__top">
+        <div class="biz__intro">
+          <p class="eyebrow mono">// vibe-run a business</p>
+          <h2 id="biz-title">Run a company, not just a project</h2>
+          <p class="biz__lead">Turn a project into a small business. On your own, you get a one-person C‑suite: AI helpers take the seats you can’t fill yet. With friends, each person takes a role. Either way, every seat has a clear job, and the big decisions stay with people.</p>
+          <p class="biz__note"><span class="biz__dot" aria-hidden="true"></span>Anything outward or costly, like spending money, publishing or emailing customers, waits for a person’s OK.</p>
+        </div>
+        <!-- live mock of a company in the app, played by company-show.js (example data, not TribeCode prices) -->
+        <figure class="cs" id="cs" aria-labelledby="cs-desc">
+          <div class="cs__win" aria-hidden="true">
+            <div class="cs__bar"><span class="cs__dots"><i></i><i></i><i></i></span><b>Lantern Games</b><span class="cs__crumb">Company</span><span class="cs__day mono">Mon · 9:12</span></div>
+            <div class="cs__body">
+              <ul class="cs__seats">
+                <li class="cs__seat" data-seat="ceo" style="--c:#F26B1D"><i class="cs__av" style="--a:#F26B1D">C</i><span><b>Camp</b><small>CEO</small></span><em class="cs__tag">you</em></li>
+                <li class="cs__seat" data-seat="build" style="--c:#38C6B1"><i class="cs__av cs__av--ai">✦</i><span><b>Camp’s Claude</b><small>Build</small></span><em class="cs__tag cs__tag--ai">autopilot</em></li>
+                <li class="cs__seat" data-seat="grow" style="--c:#FABD2F"><i class="cs__av" style="--a:#6C7CFF">M</i><span><b>Maya</b><small>Grow</small></span><em class="cs__tag">friend</em></li>
+                <li class="cs__seat" data-seat="run" style="--c:#94A3B8"><i class="cs__av cs__av--flint"><img src="assets/brand/flint.svg" alt="" width="16" height="16"></i><span><b>Flint</b><small>Run</small></span><em class="cs__tag cs__tag--ai">AI</em></li>
+              </ul>
+              <div class="cs__main">
+                <p class="cs__h mono">Morning standup <span class="cs__live">live</span></p>
+                <ol class="cs__feed">
+                  <li class="cs__line" data-cs="1" data-for="build"><b style="--c:#38C6B1">Build</b><span data-type>Shipped the save-slot fix. Next up: the level 3 boss.</span></li>
+                  <li class="cs__line" data-cs="2" data-for="grow"><b style="--c:#FABD2F">Grow</b><span data-type>Launch email is ready for 120 customers. Needs an OK to send.</span></li>
+                  <li class="cs__line" data-cs="3" data-for="run"><b style="--c:#94A3B8">Run</b><span data-type>Imported October’s Stripe CSV. Two refunds, both handled.</span></li>
+                  <li class="cs__line" data-cs="4" data-for="ceo"><b style="--c:#F26B1D">CEO</b><span data-type>This week: launch on Friday. Everything else can wait.</span></li>
+                </ol>
+                <div class="cs__money" data-cs="5">
+                  <div class="cs__tile"><small>Revenue this month</small><b class="mono"><span data-count="412" data-pre="$">$412</span></b><span class="cs__bars"><i style="--h:30%"></i><i style="--h:45%"></i><i style="--h:38%"></i><i style="--h:60%"></i><i style="--h:72%"></i><i style="--h:90%"></i></span><em class="cs__src">from Stripe CSV</em></div>
+                  <div class="cs__tile"><small>Runway</small><b class="mono"><span data-count="9">9</span> months</b><span class="cs__meter"><i></i></span><em class="cs__src">from your numbers</em></div>
+                </div>
+              </div>
+            </div>
+            <div class="cs__ask" data-cs="6">
+              <p class="cs__ask-k mono">Approval · waits for a person</p>
+              <p class="cs__ask-t"><i class="cs__av cs__av--sm" style="--a:#6C7CFF">M</i><span><b>Grow</b> wants to email 120 customers about the launch</span></p>
+              <p class="cs__ask-btns"><span class="cs__btn cs__btn--ok">Approve</span><span class="cs__btn">Deny</span></p>
+              <p class="cs__ask-done mono">✓ Approved by Camp · sent 9:14</p>
+            </div>
+            <div class="cs__toast" data-cs="8"><span class="cs__toast-ic">✉</span><span><b>Weekly review is in your Inbox</b><small>3 wins · 1 decision · runway steady</small></span></div>
+          </div>
+          <figcaption class="sr-only" id="cs-desc">An animated mock of a company in TribeCode called Lantern Games. Four seats: Camp is the CEO, Camp’s Claude holds Build on autopilot, Maya holds Grow, and Flint runs operations. A morning standup types in seat by seat while each seat lights up. A Money panel shows 412 dollars of revenue this month from a Stripe CSV and nine months of runway from your own numbers. Then Grow asks to email 120 customers about the launch; it waits for a person, and Camp approves it. Finally the weekly review arrives in the Inbox.</figcaption>
+        </figure>
+      </div>
+
+      <!-- three animated explainers: each cycles through its beats while on screen -->
+      <ul class="bx reveal" role="list">
+        <li class="bx__card" style="--i:0;--c:#F26B1D" data-bx="4">
+          <span class="biz__k mono">seats</span><h3>How a seat works</h3>
+          <div class="bx__pic" aria-hidden="true">
+            <div class="bx__seat">
+              <p class="bx__row"><i class="cs__av cs__av--ai cs__av--sm">✦</i><b>Grow</b><span class="bx__sub">Maya’s Claude</span></p>
+              <ul class="bx__charter mono" data-b="1"><li>goal · 100 sign-ups</li><li>may · draft posts</li><li>ask first · emails, spending</li></ul>
+              <p class="bx__act" data-b="2">✓ Drafted 3 posts · scheduled 2</p>
+              <p class="bx__wait" data-b="3">⏳ Wants to email 120 people</p>
+              <p class="bx__ok" data-b="4">✓ Approved by you</p>
+            </div>
+          </div>
+          <ol class="bx__beats">
+            <li class="bx__cap">Give the seat a short charter: its goal, what it may do, and what needs your OK.</li>
+            <li class="bx__cap">It works on its own and reports in the standup.</li>
+            <li class="bx__cap">Anything outward or costly waits for a person.</li>
+            <li class="bx__cap">You approve with one tap, and it goes ahead.</li>
+          </ol>
+        </li>
+        <li class="bx__card" style="--i:1;--c:#FABD2F" data-bx="3">
+          <span class="biz__k mono">money</span><h3>Numbers with sources</h3>
+          <div class="bx__pic" aria-hidden="true">
+            <div class="bx__flow">
+              <ul class="bx__srcs mono"><li data-b="1">Stripe CSV</li><li data-b="1">Analytics</li><li data-b="1">Typed in</li></ul>
+              <span class="bx__arrow" data-b="2">→</span>
+              <ul class="bx__nums">
+                <li data-b="2"><span>Revenue</span><b class="mono">$412</b><em data-b="3">Stripe CSV</em></li>
+                <li data-b="2"><span>Visitors</span><b class="mono">2,310</b><em data-b="3">Analytics</em></li>
+                <li data-b="2"><span>Costs</span><b class="mono">$38</b><em data-b="3">typed in</em></li>
+              </ul>
+            </div>
+          </div>
+          <ol class="bx__beats">
+            <li class="bx__cap">Bring numbers from a CSV, a connected tool, or type them in.</li>
+            <li class="bx__cap">They land in one Money view with your runway.</li>
+            <li class="bx__cap">Every number says where it came from. Nothing is made up.</li>
+          </ol>
+        </li>
+        <li class="bx__card" style="--i:2;--c:#6C7CFF" data-bx="3">
+          <span class="biz__k mono">work</span><h3>Work together</h3>
+          <div class="bx__pic" aria-hidden="true">
+            <div class="bx__gig">
+              <p class="bx__row" data-b="1"><span class="bx__pill mono">gig</span><b>Pixel art for level 3</b><span class="bx__sub">about 6 h</span></p>
+              <p class="bx__join" data-b="2"><i class="cs__av cs__av--sm" style="--a:#38C6B1">J</i><span><b>Jay</b> joined the Art seat</span></p>
+              <p class="bx__bank" data-b="3"><span class="mono">time bank</span><b class="mono">+6 h</b><span class="bx__checks">✓ Jay · ✓ Camp</span></p>
+            </div>
+          </div>
+          <ol class="bx__beats">
+            <li class="bx__cap">Post a gig for the seat you can’t fill, or offer your own time.</li>
+            <li class="bx__cap">Someone joins your tribe and takes the seat.</li>
+            <li class="bx__cap">Hours go in a time bank that both sides confirm.</li>
+          </ol>
+        </li>
+      </ul>
+
+      <!-- learn it: how we teach it -->
+      <div class="biz__learn">
+        <a class="biz__lesson" href="learn.html#m5-0"><span class="biz__k mono" style="--c:#38C6B1">learn it</span><b class="biz__sk">From project to business</b><span class="biz__ss">A 10-minute lesson with pictures, free on any phone</span><svg class="i biz__go" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <ul class="biz__strip" role="list">
+          <li><b class="biz__sk">Academy</b><span class="biz__ss">62 lessons in ten tracks, one for every seat</span></li>
+          <li><b class="biz__sk">Legal starting points</b><span class="biz__ss">drafts to check with a professional</span></li>
+          <li><b class="biz__sk">Offload</b><span class="biz__ss">send simple jobs to free models</span></li>
+          <li><b class="biz__sk">Marketplace</b><span class="biz__ss">500+ add-ons, connectors and skills</span></li>
+        </ul>
+        <a class="biz__docs" href="docs.html#company">Read the Company docs<svg class="i i--xs" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </div>
     </div>
   </section>
@@ -304,29 +402,155 @@
     </div>
   </section>
 
+  <!-- ================= ONE PLACE (v0.27): docs, Flint, widgets, studios, game and app tools — site/kit.js + kit.css ================= -->
+  <section class="kit" id="kit" aria-labelledby="kit-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// everything in one place</p>
+      <h2 id="kit-title">The whole studio, in one app.</h2>
+      <p class="kit__lead">Your docs, your AI helpers, your tools and your code live side by side, so nobody juggles ten tabs and five logins. Here's what comes with every tribe.</p>
+      <div class="kit__box reveal" data-kit>
+        <div class="kit__tabs" role="tablist" aria-label="What comes with every tribe">
+          <button class="kit__tab" role="tab" id="kt-docs" aria-controls="kp-docs" aria-selected="true"><span class="kit__ti" aria-hidden="true">📄</span><b>Docs</b><small>pages, sheets, slides</small></button>
+          <button class="kit__tab" role="tab" id="kt-flint" aria-controls="kp-flint" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true"><img src="assets/brand/flint.svg" alt="" width="18" height="18"></span><b>Flint</b><small>the built-in helper</small></button>
+          <button class="kit__tab" role="tab" id="kt-market" aria-controls="kp-market" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🧩</span><b>Widgets</b><small>515 add-ons</small></button>
+          <button class="kit__tab" role="tab" id="kt-studio" aria-controls="kp-studio" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🎨</span><b>Studios</b><small>ArtCraft and friends</small></button>
+          <button class="kit__tab" role="tab" id="kt-game" aria-controls="kp-game" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🎮</span><b>Games &amp; apps</b><small>assets and engines</small></button>
+        </div>
+
+        <!-- Docs -->
+        <div class="kit__panel" role="tabpanel" id="kp-docs" aria-labelledby="kt-docs">
+          <div class="kit__mock kd" aria-hidden="true">
+            <div class="kd__tree"><p class="kit__eb">Files</p><span class="on">📄 Launch plan</span><span class="sub">☑ Checklist</span><span class="sub">💬 Meeting notes · Tue</span><span>📊 Budget</span><span>🎞 Pitch</span><span>🖍 Whiteboard</span><span>✨ Vision</span></div>
+            <div class="kd__page">
+              <div class="kd__crumb">Pixel Quest › Launch plan <span class="kd__who"><i style="--c:#6C7CFF">M</i><i style="--c:#38C6B1">✦</i><i style="--c:#F26B1D">C</i></span></div>
+              <h4>Launch plan</h4>
+              <p class="kd__line" data-k="1">We ship the demo on Friday and post it on itch.io.</p>
+              <div class="kd__todo" data-k="2"><span class="ck on"></span>Title screen <em>@Orion's Claude</em></div>
+              <div class="kd__todo" data-k="3"><span class="ck"></span>Trailer, 20 seconds <em>@Maya</em><span class="kd__cur" style="--c:#6C7CFF"></span></div>
+              <div class="kd__slash" data-k="4"><span class="kd__q">/ta</span><b class="on">▦ Table</b><b>☑ To-do list</b><b>📊 Sheet</b><b>🎞 Slides</b><b>🔗 Link preview</b></div>
+              <table class="kd__tbl" data-k="5"><tr><th>Task</th><th>Who</th><th>Status</th></tr><tr><td>Sound pass</td><td>Maya's Codex</td><td><span class="kd__st kd__st--g">Done</span></td></tr><tr><td>Level 3</td><td>Jay</td><td><span class="kd__st">Doing</span></td></tr></table>
+              <p class="kd__cmt" data-k="6"><b>Jay</b> Can the trailer show the lantern? <span>Reply</span></p>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>Docs that work like Notion, right next to your code</h3><p class="kit__text">Pages inside pages, to-do lists, tables, sheets with formulas, slides, templates, comments, page history and a shared whiteboard. Everyone edits live, AI helpers included, and you can dictate instead of typing.</p></div>
+        </div>
+
+        <!-- Flint -->
+        <div class="kit__panel" role="tabpanel" id="kp-flint" aria-labelledby="kt-flint" hidden>
+          <div class="kit__mock kf" aria-hidden="true">
+            <div class="kf__msg kf__me" data-k="1">add a jump sound and make the title bigger</div>
+            <div class="kf__msg kf__bot" data-k="2"><img src="assets/brand/flint.svg" alt="" width="22" height="22"><div><b>Flint</b><p>Done. I added <code>jump.wav</code> from the asset library (free to use, credited in CREDITS.md) and made the title 48px. Want it to bounce too?</p>
+              <div class="kf__acts"><span>▶ Play sound</span><span>Undo</span></div></div></div>
+            <div class="kf__msg kf__me" data-k="3">what changed today?</div>
+            <div class="kf__msg kf__bot" data-k="4"><img src="assets/brand/flint.svg" alt="" width="22" height="22"><div><b>Flint</b><p>3 changes: Orion's Claude finished the title screen, Maya added the trailer task, Jay is on level 3. One approval is waiting for you.</p></div></div>
+            <div class="kf__chips" data-k="5"><span>open the whiteboard</span><span>invite Sam</span><span>start a huddle</span><span>make it a company</span></div>
+          </div>
+          <div class="kit__copy"><h3>Flint runs the app for you</h3><p class="kit__text">Flint is TribeCode's own helper. Ask in plain words and it opens things, makes everyday changes, finds files and catches you up. It works without a paid AI, and gets smarter when you connect one.</p></div>
+        </div>
+
+        <!-- Widgets & Marketplace -->
+        <div class="kit__panel" role="tabpanel" id="kp-market" aria-labelledby="kt-market" hidden>
+          <div class="kit__mock km" aria-hidden="true">
+            <div class="km__bar"><span class="on">🔥 Hot</span><span>📈 Rising</span><span>✨ New</span><span>🏆 Top</span><span class="km__q">Search 515 add-ons</span></div>
+            <div class="km__grid">
+              <div class="km__it" data-k="1"><i>💳</i><b>Stripe dashboard</b><small>widget · money</small><span class="km__add">Added ✓</span></div>
+              <div class="km__it" data-k="1"><i>📊</i><b>Plausible</b><small>widget · traffic</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="2"><i>💬</i><b>Discord</b><small>connector</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="2"><i>🎮</i><b>itch.io</b><small>widget · games</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="3"><i>🎨</i><b>Figma</b><small>widget · design</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="3"><i>🗄</i><b>Supabase</b><small>connector · data</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="4"><i>🧠</i><b>Code review skill</b><small>skill for your AI</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="4"><i>🚀</i><b>Launch playbook</b><small>playbook · grow</small><span class="km__add">Add</span></div>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>Widgets for the tools you already use</h3><p class="kit__text">Add a Stripe, analytics, Discord or Figma widget to the sidebar with the + button, or give your AI new skills. 515 checked add-ons, sorted by what tribes like yours use. Anyone can make one and share it.</p></div>
+        </div>
+
+        <!-- Creative studios -->
+        <div class="kit__panel" role="tabpanel" id="kp-studio" aria-labelledby="kt-studio" hidden>
+          <div class="kit__mock ks" aria-hidden="true">
+            <div class="ks__hero" data-k="1"><div class="ks__art"><i></i><i></i><i></i><i></i><i></i><i></i></div><div><p class="kit__eb">Recommended studio</p><b>ArtCraft</b><p>Open-source studio for AI images and video. Make the art, then drop it into the project.</p><span class="ks__btn">Open ArtCraft</span></div></div>
+            <div class="ks__row">
+              <span data-k="2"><i>🧊</i>Blender<small>3D</small></span><span data-k="2"><i>🖌</i>Krita<small>painting</small></span><span data-k="3"><i>🟪</i>Pixelorama<small>pixel art</small></span><span data-k="3"><i>🤖</i>Godot<small>engine</small></span><span data-k="4"><i>🎹</i>LMMS<small>music</small></span><span data-k="4"><i>🎙</i>Audacity<small>sound</small></span><span data-k="5"><i>🎬</i>Kdenlive<small>video</small></span><span data-k="5"><i>📐</i>Penpot<small>design</small></span>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>Bring your own studio</h3><p class="kit__text">TribeCode points you to free, open-source creative tools like ArtCraft, Blender, Krita and Godot. What you make lands in the project's assets folder, with credit to whoever made it.</p></div>
+        </div>
+
+        <!-- Games & apps -->
+        <div class="kit__panel" role="tabpanel" id="kp-game" aria-labelledby="kt-game" hidden>
+          <div class="kit__mock kg" aria-hidden="true">
+            <div class="kg__cats"><span class="on">🔊 Sounds</span><span>🧊 3D models</span><span>🕺 Rigged characters</span><span>🧱 Textures</span><span>👾 Pixel sprites</span><span>🔤 Fonts</span></div>
+            <div class="kg__list">
+              <div class="kg__it" data-k="1"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>jump_02.ogg</b><small>CC0 · Kenney</small><span class="kg__add">+ Add</span></div>
+              <div class="kg__it" data-k="2"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>coin_pickup.wav</b><small>CC0</small><span class="kg__add">+ Add</span></div>
+              <div class="kg__it" data-k="3"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>lantern_creak.ogg</b><small>CC-BY · credited</small><span class="kg__add on">Added ✓</span></div>
+            </div>
+            <div class="kg__eng" data-k="4"><p class="kit__eb">Start in</p><span>Godot</span><span>three.js</span><span>Phaser</span><span>Bevy</span><span>Expo</span><span>Astro</span></div>
+          </div>
+          <div class="kit__copy"><h3>From a pixel game to full 3D</h3><p class="kit__text">A library of free sounds, 3D models, rigged characters, textures and sprites, added in one click with credits written for you. Start from engines and frameworks people already trust, for games, phone apps and websites.</p></div>
+        </div>
+      </div>
+      <p class="kit__more"><a href="docs.html#together">See everything in the docs →</a></p>
+    </div>
+  </section>
+
   <!-- ================= LEARN: one compact course panel (site/learn.html is the course) ================= -->
   <section class="learn" id="learn" aria-labelledby="learn-title">
     <div class="wrap">
       <p class="eyebrow mono">// learn as you build</p>
-      <h2 id="learn-title">New to code? So was everyone.</h2>
-      <p class="learn__lead">Four short modules for people who have never opened a code editor. Read one on the bus. There’s nothing to install.</p>
-      <div class="lc reveal">
-        <div class="lc-me">
-          <div class="lc-top">
-            <div class="lc-ring" data-learn-ring><b data-learn-pct>0%</b></div>
-            <div><span class="lc-k mono">Your path</span><b class="lc-t" data-learn-title>Four short modules · about 45 min</b></div>
+      <h2 id="learn-title">New to code?</h2>
+      <p class="learn__lead">TribeCode teaches as you go. Free, plain-language lessons walk you from what code is to building your first app with friends, and on to running it like a business. Every lesson takes a few minutes, works on your phone, and gives you something real to try in your own tribe.</p>
+      <div class="vf reveal" id="vibecoding" aria-labelledby="vf-title">
+        <p class="vf__k mono" id="vf-title">How vibecoding works</p>
+        <figure class="vs" id="vf-scene" aria-labelledby="vf-desc">
+          <div class="vs__side vs__side--a" aria-hidden="true">
+            <div class="vs-bubbles">
+              <div class="vs-bubble" data-s="a1"><span class="vs-who"><i class="vs-mic"></i>Maya · voice note</span><p data-t>Make a page for our bake sale on Saturday.</p></div>
+              <div class="vs-bubble" data-s="a2"><span class="vs-who"><i class="vs-mic"></i>Maya · voice note</span><p data-t>Add the lemon bars and a reserve button.</p></div>
+            </div>
+            <svg class="vs-px vs-px--a" viewBox="0 0 20 35" shape-rendering="crispEdges" aria-hidden="true"><rect x="6" y="0" width="6" height="1" fill="#3B2A20"/><rect x="5" y="1" width="1" height="1" fill="#3B2A20"/><rect x="6" y="1" width="6" height="1" fill="#5B3A29"/><rect x="12" y="1" width="1" height="1" fill="#3B2A20"/><rect x="4" y="2" width="1" height="1" fill="#3B2A20"/><rect x="5" y="2" width="2" height="1" fill="#5B3A29"/><rect x="7" y="2" width="7" height="1" fill="#3B2A20"/><rect x="4" y="3" width="3" height="1" fill="#3B2A20"/><rect x="7" y="3" width="5" height="1" fill="#E8B48A"/><rect x="12" y="3" width="1" height="1" fill="#3B2A20"/><rect x="17" y="3" width="3" height="1" fill="#0F1216"/><rect x="4" y="4" width="2" height="1" fill="#3B2A20"/><rect x="6" y="4" width="7" height="1" fill="#E8B48A"/><rect x="17" y="4" width="1" height="1" fill="#0F1216"/><rect x="18" y="4" width="1" height="1" fill="#38C6B1"/><rect x="19" y="4" width="1" height="1" fill="#0F1216"/><rect x="4" y="5" width="1" height="1" fill="#3B2A20"/><rect x="5" y="5" width="3" height="1" fill="#E8B48A"/><rect x="8" y="5" width="1" height="1" fill="#12151A" class="vs-eye"/><rect x="9" y="5" width="1" height="1" fill="#C98F66"/><rect x="10" y="5" width="1" height="1" fill="#E8B48A"/><rect x="11" y="5" width="1" height="1" fill="#12151A" class="vs-eye"/><rect x="12" y="5" width="1" height="1" fill="#E8B48A"/><rect x="13" y="5" width="1" height="1" fill="#C98F66"/><rect x="17" y="5" width="1" height="1" fill="#0F1216"/><rect x="18" y="5" width="1" height="1" fill="#38C6B1"/><rect x="19" y="5" width="1" height="1" fill="#0F1216"/><rect x="4" y="6" width="1" height="1" fill="#C98F66"/><rect x="5" y="6" width="8" height="1" fill="#E8B48A"/><rect x="17" y="6" width="1" height="1" fill="#0F1216"/><rect x="18" y="6" width="1" height="1" fill="#38C6B1"/><rect x="19" y="6" width="1" height="1" fill="#0F1216"/><rect x="4" y="7" width="1" height="1" fill="#C98F66"/><rect x="5" y="7" width="8" height="1" fill="#E8B48A"/><rect x="17" y="7" width="1" height="1" fill="#0F1216"/><rect x="18" y="7" width="1" height="1" fill="#2A9C8B"/><rect x="19" y="7" width="1" height="1" fill="#0F1216"/><rect x="4" y="8" width="1" height="1" fill="#C98F66"/><rect x="5" y="8" width="4" height="1" fill="#E8B48A"/><rect x="9" y="8" width="1" height="1" fill="#8A4A3A" class="vs-mouth"/><rect x="10" y="8" width="1" height="1" fill="#8A4A3A" class="vs-mouth"/><rect x="11" y="8" width="1" height="1" fill="#E8B48A"/><rect x="12" y="8" width="1" height="1" fill="#C98F66"/><rect x="16" y="8" width="2" height="1" fill="#E8B48A"/><rect x="18" y="8" width="2" height="1" fill="#0F1216"/><rect x="5" y="9" width="2" height="1" fill="#C98F66"/><rect x="7" y="9" width="5" height="1" fill="#E8B48A"/><rect x="12" y="9" width="1" height="1" fill="#C98F66"/><rect x="15" y="9" width="3" height="1" fill="#E8B48A"/><rect x="18" y="9" width="1" height="1" fill="#C98F66"/><rect x="6" y="10" width="6" height="1" fill="#C98F66"/><rect x="15" y="10" width="2" height="1" fill="#E8B48A"/><rect x="17" y="10" width="1" height="1" fill="#C98F66"/><rect x="7" y="11" width="3" height="1" fill="#E8B48A"/><rect x="10" y="11" width="1" height="1" fill="#C98F66"/><rect x="15" y="11" width="1" height="1" fill="#F26B1D"/><rect x="16" y="11" width="1" height="1" fill="#C4521A"/><rect x="4" y="12" width="13" height="1" fill="#F26B1D"/><rect x="17" y="12" width="1" height="1" fill="#C4521A"/><rect x="3" y="13" width="13" height="1" fill="#F26B1D"/><rect x="16" y="13" width="1" height="1" fill="#C4521A"/><rect x="2" y="14" width="1" height="1" fill="#F26B1D"/><rect x="3" y="14" width="1" height="1" fill="#C4521A"/><rect x="4" y="14" width="10" height="1" fill="#F26B1D"/><rect x="14" y="14" width="2" height="1" fill="#C4521A"/><rect x="2" y="15" width="1" height="1" fill="#F26B1D"/><rect x="3" y="15" width="1" height="1" fill="#C4521A"/><rect x="4" y="15" width="9" height="1" fill="#F26B1D"/><rect x="13" y="15" width="1" height="1" fill="#C4521A"/><rect x="2" y="16" width="1" height="1" fill="#F26B1D"/><rect x="3" y="16" width="1" height="1" fill="#C4521A"/><rect x="4" y="16" width="9" height="1" fill="#F26B1D"/><rect x="13" y="16" width="1" height="1" fill="#C4521A"/><rect x="2" y="17" width="1" height="1" fill="#F26B1D"/><rect x="3" y="17" width="1" height="1" fill="#C4521A"/><rect x="4" y="17" width="9" height="1" fill="#F26B1D"/><rect x="13" y="17" width="1" height="1" fill="#C4521A"/><rect x="2" y="18" width="1" height="1" fill="#F26B1D"/><rect x="3" y="18" width="1" height="1" fill="#C4521A"/><rect x="4" y="18" width="9" height="1" fill="#F26B1D"/><rect x="13" y="18" width="1" height="1" fill="#C4521A"/><rect x="2" y="19" width="1" height="1" fill="#F26B1D"/><rect x="3" y="19" width="1" height="1" fill="#C4521A"/><rect x="4" y="19" width="9" height="1" fill="#F26B1D"/><rect x="13" y="19" width="1" height="1" fill="#C4521A"/><rect x="2" y="20" width="2" height="1" fill="#E8B48A"/><rect x="4" y="20" width="9" height="1" fill="#F26B1D"/><rect x="13" y="20" width="1" height="1" fill="#C4521A"/><rect x="2" y="21" width="2" height="1" fill="#E8B48A"/><rect x="4" y="21" width="10" height="1" fill="#252C38"/><rect x="4" y="22" width="8" height="1" fill="#2F3846"/><rect x="12" y="22" width="1" height="1" fill="#252C38"/><rect x="4" y="23" width="8" height="1" fill="#2F3846"/><rect x="12" y="23" width="1" height="1" fill="#252C38"/><rect x="4" y="24" width="3" height="1" fill="#2F3846"/><rect x="7" y="24" width="1" height="1" fill="#252C38"/><rect x="9" y="24" width="3" height="1" fill="#2F3846"/><rect x="12" y="24" width="1" height="1" fill="#252C38"/><rect x="4" y="25" width="3" height="1" fill="#2F3846"/><rect x="7" y="25" width="1" height="1" fill="#252C38"/><rect x="9" y="25" width="3" height="1" fill="#2F3846"/><rect x="12" y="25" width="1" height="1" fill="#252C38"/><rect x="4" y="26" width="3" height="1" fill="#2F3846"/><rect x="7" y="26" width="1" height="1" fill="#252C38"/><rect x="9" y="26" width="3" height="1" fill="#2F3846"/><rect x="12" y="26" width="1" height="1" fill="#252C38"/><rect x="4" y="27" width="3" height="1" fill="#2F3846"/><rect x="7" y="27" width="1" height="1" fill="#252C38"/><rect x="9" y="27" width="3" height="1" fill="#2F3846"/><rect x="12" y="27" width="1" height="1" fill="#252C38"/><rect x="4" y="28" width="3" height="1" fill="#2F3846"/><rect x="7" y="28" width="1" height="1" fill="#252C38"/><rect x="9" y="28" width="3" height="1" fill="#2F3846"/><rect x="12" y="28" width="1" height="1" fill="#252C38"/><rect x="4" y="29" width="3" height="1" fill="#2F3846"/><rect x="7" y="29" width="1" height="1" fill="#252C38"/><rect x="9" y="29" width="3" height="1" fill="#2F3846"/><rect x="12" y="29" width="1" height="1" fill="#252C38"/><rect x="4" y="30" width="3" height="1" fill="#2F3846"/><rect x="7" y="30" width="1" height="1" fill="#252C38"/><rect x="9" y="30" width="3" height="1" fill="#2F3846"/><rect x="12" y="30" width="1" height="1" fill="#252C38"/><rect x="4" y="31" width="3" height="1" fill="#2F3846"/><rect x="7" y="31" width="1" height="1" fill="#252C38"/><rect x="9" y="31" width="3" height="1" fill="#2F3846"/><rect x="12" y="31" width="1" height="1" fill="#252C38"/><rect x="4" y="32" width="3" height="1" fill="#2F3846"/><rect x="7" y="32" width="1" height="1" fill="#252C38"/><rect x="9" y="32" width="3" height="1" fill="#2F3846"/><rect x="12" y="32" width="1" height="1" fill="#252C38"/><rect x="3" y="33" width="5" height="1" fill="#15181D"/><rect x="9" y="33" width="5" height="1" fill="#15181D"/><rect x="3" y="34" width="5" height="1" fill="#15181D"/><rect x="9" y="34" width="5" height="1" fill="#15181D"/></svg>
+            <span class="vs-name"><b>Maya</b> talks to her phone</span>
           </div>
-          <span class="lc-s" data-learn-sub>One lesson at a time, in plain words. Finishing a module earns its badge.</span>
-          <ul class="lc-facts" role="list"><li><b>4</b><span>modules</span></li><li><b>23</b><span>lessons</span></li><li><b>45</b><span>minutes</span></li><li><b>4</b><span>badges</span></li></ul>
-          <a class="btn btn--light lc-go" href="learn.html#m1-0" data-learn-go>Start module 1</a>
-        </div>
-        <ol class="lc-mods">
-          <li data-learn-mod="m1"><a href="learn.html#m1-0"><span class="lc-n mono">01</span><span class="lc-e" aria-hidden="true">💡</span><span class="lc-x"><b>What code is</b><small>4 lessons · 8 min</small></span><em data-learn-st>Start</em></a></li>
-          <li data-learn-mod="m2"><a href="learn.html#m2-0"><span class="lc-n mono">02</span><span class="lc-e" aria-hidden="true">🧱</span><span class="lc-x"><b>Your first app</b><small>6 lessons · 12 min</small></span><em data-learn-st>Start</em></a></li>
-          <li data-learn-mod="m3"><a href="learn.html#m3-0"><span class="lc-n mono">03</span><span class="lc-e" aria-hidden="true">🤝</span><span class="lc-x"><b>Building together</b><small>6 lessons · 10 min</small></span><em data-learn-st>Start</em></a></li>
-          <li data-learn-mod="m4"><a href="learn.html#m4-0"><span class="lc-n mono">04</span><span class="lc-e" aria-hidden="true">🗣️</span><span class="lc-x"><b>Languages, simply</b><small>7 lessons · 15 min</small></span><em data-learn-st>Start</em></a></li>
-        </ol>
+          <div class="vs__mid" aria-hidden="true">
+            <div class="vs-ai">
+              <div class="vs-ai__head"><i class="vs-ai__av">✦</i><b>Flint + Claude</b><span class="vs-ai__st" id="vs-st">Done. It’s live, send the link.</span></div>
+              <div class="vs-tools">
+                <div class="vs-tool" data-s="t1"><span class="vs-tool__k">Read</span><span class="vs-tool__v">the vision</span></div>
+                <div class="vs-tool" data-s="t2"><span class="vs-tool__k">Created</span><span class="vs-tool__v">index.html</span><span class="vs-diff"><ins>+64</ins></span></div>
+                <div class="vs-tool" data-s="t3"><span class="vs-tool__k">Edited</span><span class="vs-tool__v">countdown.js <em>from Jay</em></span><span class="vs-diff"><ins>+18</ins> <del>−2</del></span></div>
+                <div class="vs-tool" data-s="t4"><span class="vs-tool__k">Edited</span><span class="vs-tool__v">index.html</span><span class="vs-diff"><ins>+27</ins> <del>−3</del></span></div>
+                <div class="vs-tool" data-s="t5"><span class="vs-tool__k">Tests</span><span class="vs-tool__v">6 passed</span><span class="vs-ok">✓</span></div>
+              </div>
+            </div>
+            <div class="vs-app">
+              <div class="vs-app__bar"><i></i><i></i><i></i><span class="vs-url">bakesale.tribe.page</span><span class="vs-live" data-s="live"><i></i>Live · 3 viewing</span></div>
+              <div class="vs-app__body">
+                <p class="vs-empty">Waiting for the first change…</p>
+                <div class="vs-nav" data-s="nav"><b>Oak St. Bakers</b><span>Menu</span><span>Find us</span></div>
+                <div class="vs-hero" data-s="title"><h4>Saturday Bake Sale</h4><p>Sat 9am · Oak Street Park · for the school library</p></div>
+                <div class="vs-count" data-s="count"><span><b id="vs-d">1</b>days</span><span><b id="vs-h">14</b>hrs</span><span><b id="vs-m">22</b>min</span><span><b id="vs-s">08</b>sec</span></div>
+                <div class="vs-items">
+                  <div class="vs-item" data-s="i1"><svg class="vs-treat" viewBox="0 0 6 6" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#FABD2F"/><rect x="3" y="0" width="1" height="1" fill="#FABD2F"/><rect x="1" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="2" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="3" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="4" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="0" y="2" width="1" height="1" fill="#F8FAFC"/><rect x="1" y="2" width="1" height="1" fill="#F8FAFC"/><rect x="2" y="2" width="1" height="1" fill="#F8FAFC"/><rect x="3" y="2" width="1" height="1" fill="#F8FAFC"/><rect x="4" y="2" width="1" height="1" fill="#F8FAFC"/><rect x="5" y="2" width="1" height="1" fill="#F8FAFC"/><rect x="0" y="3" width="1" height="1" fill="#F26B1D"/><rect x="1" y="3" width="1" height="1" fill="#C4521A"/><rect x="2" y="3" width="1" height="1" fill="#F26B1D"/><rect x="3" y="3" width="1" height="1" fill="#C4521A"/><rect x="4" y="3" width="1" height="1" fill="#F26B1D"/><rect x="5" y="3" width="1" height="1" fill="#C4521A"/><rect x="1" y="4" width="1" height="1" fill="#F26B1D"/><rect x="2" y="4" width="1" height="1" fill="#C4521A"/><rect x="3" y="4" width="1" height="1" fill="#F26B1D"/><rect x="4" y="4" width="1" height="1" fill="#C4521A"/><rect x="1" y="5" width="1" height="1" fill="#F26B1D"/><rect x="2" y="5" width="1" height="1" fill="#C4521A"/><rect x="3" y="5" width="1" height="1" fill="#F26B1D"/><rect x="4" y="5" width="1" height="1" fill="#C4521A"/></svg><b>Cupcakes</b><small>vanilla, chocolate</small></div>
+                  <div class="vs-item" data-s="i2"><svg class="vs-treat" viewBox="0 0 6 5" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="1" height="1" fill="#5B3A29"/><rect x="2" y="0" width="1" height="1" fill="#5B3A29"/><rect x="3" y="0" width="1" height="1" fill="#5B3A29"/><rect x="4" y="0" width="1" height="1" fill="#5B3A29"/><rect x="0" y="1" width="1" height="1" fill="#5B3A29"/><rect x="1" y="1" width="1" height="1" fill="#5B3A29"/><rect x="2" y="1" width="1" height="1" fill="#12151A"/><rect x="3" y="1" width="1" height="1" fill="#5B3A29"/><rect x="4" y="1" width="1" height="1" fill="#5B3A29"/><rect x="5" y="1" width="1" height="1" fill="#5B3A29"/><rect x="0" y="2" width="1" height="1" fill="#5B3A29"/><rect x="1" y="2" width="1" height="1" fill="#5B3A29"/><rect x="2" y="2" width="1" height="1" fill="#5B3A29"/><rect x="3" y="2" width="1" height="1" fill="#5B3A29"/><rect x="4" y="2" width="1" height="1" fill="#12151A"/><rect x="5" y="2" width="1" height="1" fill="#5B3A29"/><rect x="0" y="3" width="1" height="1" fill="#5B3A29"/><rect x="1" y="3" width="1" height="1" fill="#12151A"/><rect x="2" y="3" width="1" height="1" fill="#5B3A29"/><rect x="3" y="3" width="1" height="1" fill="#5B3A29"/><rect x="4" y="3" width="1" height="1" fill="#5B3A29"/><rect x="5" y="3" width="1" height="1" fill="#5B3A29"/><rect x="1" y="4" width="1" height="1" fill="#5B3A29"/><rect x="2" y="4" width="1" height="1" fill="#5B3A29"/><rect x="3" y="4" width="1" height="1" fill="#5B3A29"/><rect x="4" y="4" width="1" height="1" fill="#5B3A29"/></svg><b>Cookies</b><small>choc chip</small></div>
+                  <div class="vs-item" data-s="i3"><svg class="vs-treat" viewBox="0 0 6 5" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="0" width="1" height="1" fill="#FABD2F"/><rect x="1" y="0" width="1" height="1" fill="#FABD2F"/><rect x="2" y="0" width="1" height="1" fill="#FABD2F"/><rect x="3" y="0" width="1" height="1" fill="#FABD2F"/><rect x="4" y="0" width="1" height="1" fill="#FABD2F"/><rect x="5" y="0" width="1" height="1" fill="#FABD2F"/><rect x="0" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="1" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="2" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="3" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="4" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="5" y="1" width="1" height="1" fill="#F8FAFC"/><rect x="0" y="2" width="1" height="1" fill="#FABD2F"/><rect x="1" y="2" width="1" height="1" fill="#FABD2F"/><rect x="2" y="2" width="1" height="1" fill="#FABD2F"/><rect x="3" y="2" width="1" height="1" fill="#FABD2F"/><rect x="4" y="2" width="1" height="1" fill="#FABD2F"/><rect x="5" y="2" width="1" height="1" fill="#FABD2F"/><rect x="0" y="3" width="1" height="1" fill="#FABD2F"/><rect x="1" y="3" width="1" height="1" fill="#FABD2F"/><rect x="2" y="3" width="1" height="1" fill="#FABD2F"/><rect x="3" y="3" width="1" height="1" fill="#FABD2F"/><rect x="4" y="3" width="1" height="1" fill="#FABD2F"/><rect x="5" y="3" width="1" height="1" fill="#FABD2F"/><rect x="0" y="4" width="1" height="1" fill="#5B3A29"/><rect x="1" y="4" width="1" height="1" fill="#5B3A29"/><rect x="2" y="4" width="1" height="1" fill="#5B3A29"/><rect x="3" y="4" width="1" height="1" fill="#5B3A29"/><rect x="4" y="4" width="1" height="1" fill="#5B3A29"/><rect x="5" y="4" width="1" height="1" fill="#5B3A29"/></svg><b>Lemon bars</b><small class="vs-new">new</small></div>
+                </div>
+                <span class="vs-btn" data-s="btn">Reserve a box</span>
+              </div>
+            </div>
+          </div>
+          <div class="vs__side vs__side--b" aria-hidden="true">
+            <div class="vs-code"><div class="vs-code__bar"><span>countdown.js</span><em>Jay</em></div><pre><code><span class="vs-c">// count down to the sale</span>
+<span data-s="b1" data-t>countdown('Sat 9am');</span><span class="vs-caret"></span></code></pre></div>
+            <svg class="vs-px vs-px--b" viewBox="0 0 30 33" shape-rendering="crispEdges" aria-hidden="true"><rect x="19" y="0" width="6" height="1" fill="#1E1E28"/><rect x="18" y="1" width="1" height="1" fill="#1E1E28"/><rect x="19" y="1" width="6" height="1" fill="#34344A"/><rect x="25" y="1" width="1" height="1" fill="#1E1E28"/><rect x="17" y="2" width="1" height="1" fill="#1E1E28"/><rect x="18" y="2" width="2" height="1" fill="#34344A"/><rect x="20" y="2" width="7" height="1" fill="#1E1E28"/><rect x="17" y="3" width="2" height="1" fill="#1E1E28"/><rect x="19" y="3" width="5" height="1" fill="#E8B48A"/><rect x="24" y="3" width="3" height="1" fill="#1E1E28"/><rect x="17" y="4" width="8" height="1" fill="#E8B48A"/><rect x="25" y="4" width="2" height="1" fill="#1E1E28"/><rect x="17" y="5" width="1" height="1" fill="#E8B48A"/><rect x="18" y="5" width="1" height="1" fill="#12151A" class="vs-eye"/><rect x="19" y="5" width="1" height="1" fill="#C98F66"/><rect x="20" y="5" width="4" height="1" fill="#E8B48A"/><rect x="24" y="5" width="1" height="1" fill="#C98F66"/><rect x="25" y="5" width="2" height="1" fill="#1E1E28"/><rect x="16" y="6" width="9" height="1" fill="#E8B48A"/><rect x="25" y="6" width="2" height="1" fill="#1E1E28"/><rect x="17" y="7" width="6" height="1" fill="#E8B48A"/><rect x="23" y="7" width="2" height="1" fill="#C98F66"/><rect x="25" y="7" width="1" height="1" fill="#1E1E28"/><rect x="17" y="8" width="1" height="1" fill="#E8B48A"/><rect x="18" y="8" width="1" height="1" fill="#8A4A3A" class="vs-mouth"/><rect x="19" y="8" width="1" height="1" fill="#C98F66"/><rect x="20" y="8" width="4" height="1" fill="#E8B48A"/><rect x="24" y="8" width="1" height="1" fill="#C98F66"/><rect x="3" y="9" width="2" height="1" fill="#8A94A6"/><rect x="18" y="9" width="2" height="1" fill="#C98F66"/><rect x="20" y="9" width="1" height="1" fill="#E8B48A"/><rect x="21" y="9" width="3" height="1" fill="#C98F66"/><rect x="3" y="10" width="1" height="1" fill="#8A94A6"/><rect x="4" y="10" width="1" height="1" fill="#5C6576"/><rect x="5" y="10" width="1" height="1" fill="#8A94A6"/><rect x="20" y="10" width="1" height="1" fill="#E8B48A"/><rect x="21" y="10" width="1" height="1" fill="#C98F66"/><rect x="3" y="11" width="1" height="1" fill="#8A94A6"/><rect x="4" y="11" width="1" height="1" fill="#5C6576"/><rect x="5" y="11" width="2" height="1" fill="#8A94A6"/><rect x="18" y="11" width="7" height="1" fill="#6C7CFF"/><rect x="3" y="12" width="1" height="1" fill="#8A94A6"/><rect x="4" y="12" width="1" height="1" fill="#5C6576"/><rect x="5" y="12" width="3" height="1" fill="#8A94A6"/><rect x="17" y="12" width="9" height="1" fill="#6C7CFF"/><rect x="26" y="12" width="1" height="1" fill="#5562D6"/><rect x="3" y="13" width="1" height="1" fill="#8A94A6"/><rect x="4" y="13" width="1" height="1" fill="#5C6576"/><rect x="5" y="13" width="1" height="1" fill="#8A94A6"/><rect x="6" y="13" width="1" height="1" fill="#F26B1D"/><rect x="7" y="13" width="1" height="1" fill="#8A94A6"/><rect x="16" y="13" width="10" height="1" fill="#6C7CFF"/><rect x="26" y="13" width="1" height="1" fill="#5562D6"/><rect x="3" y="14" width="1" height="1" fill="#8A94A6"/><rect x="4" y="14" width="1" height="1" fill="#5C6576"/><rect x="5" y="14" width="4" height="1" fill="#8A94A6"/><rect x="14" y="14" width="2" height="1" fill="#E8B48A"/><rect x="16" y="14" width="1" height="1" fill="#5562D6"/><rect x="17" y="14" width="9" height="1" fill="#6C7CFF"/><rect x="26" y="14" width="1" height="1" fill="#5562D6"/><rect x="3" y="15" width="1" height="1" fill="#8A94A6"/><rect x="4" y="15" width="1" height="1" fill="#5C6576"/><rect x="5" y="15" width="4" height="1" fill="#8A94A6"/><rect x="12" y="15" width="1" height="1" fill="#E8B48A" class="vs-tap"/><rect x="13" y="15" width="1" height="1" fill="#E8B48A"/><rect x="14" y="15" width="1" height="1" fill="#E8B48A" class="vs-tap2"/><rect x="15" y="15" width="2" height="1" fill="#5562D6"/><rect x="17" y="15" width="9" height="1" fill="#6C7CFF"/><rect x="26" y="15" width="1" height="1" fill="#5562D6"/><rect x="3" y="16" width="1" height="1" fill="#8A94A6"/><rect x="4" y="16" width="1" height="1" fill="#5C6576"/><rect x="5" y="16" width="4" height="1" fill="#8A94A6"/><rect x="12" y="16" width="2" height="1" fill="#E8B48A"/><rect x="14" y="16" width="2" height="1" fill="#5C6576"/><rect x="16" y="16" width="10" height="1" fill="#6C7CFF"/><rect x="26" y="16" width="1" height="1" fill="#5562D6"/><rect x="28" y="16" width="2" height="1" fill="#4A5262"/><rect x="2" y="17" width="16" height="1" fill="#5C6576"/><rect x="18" y="17" width="7" height="1" fill="#6C7CFF"/><rect x="25" y="17" width="1" height="1" fill="#5562D6"/><rect x="28" y="17" width="2" height="1" fill="#4A5262"/><rect x="0" y="18" width="22" height="1" fill="#3A4350"/><rect x="28" y="18" width="2" height="1" fill="#4A5262"/><rect x="0" y="19" width="22" height="1" fill="#2A313C"/><rect x="24" y="19" width="4" height="1" fill="#2F3846"/><rect x="28" y="19" width="2" height="1" fill="#4A5262"/><rect x="2" y="20" width="2" height="1" fill="#2A313C"/><rect x="15" y="20" width="12" height="1" fill="#2F3846"/><rect x="27" y="20" width="2" height="1" fill="#4A5262"/><rect x="2" y="21" width="2" height="1" fill="#2A313C"/><rect x="15" y="21" width="12" height="1" fill="#2F3846"/><rect x="27" y="21" width="2" height="1" fill="#4A5262"/><rect x="2" y="22" width="2" height="1" fill="#2A313C"/><rect x="15" y="22" width="3" height="1" fill="#2F3846"/><rect x="18" y="22" width="1" height="1" fill="#252C38"/><rect x="22" y="22" width="6" height="1" fill="#3A414E"/><rect x="28" y="22" width="2" height="1" fill="#4A5262"/><rect x="2" y="23" width="2" height="1" fill="#2A313C"/><rect x="15" y="23" width="3" height="1" fill="#2F3846"/><rect x="18" y="23" width="1" height="1" fill="#252C38"/><rect x="26" y="23" width="1" height="1" fill="#3A414E"/><rect x="28" y="23" width="2" height="1" fill="#4A5262"/><rect x="2" y="24" width="2" height="1" fill="#2A313C"/><rect x="15" y="24" width="3" height="1" fill="#2F3846"/><rect x="18" y="24" width="1" height="1" fill="#252C38"/><rect x="26" y="24" width="1" height="1" fill="#3A414E"/><rect x="2" y="25" width="2" height="1" fill="#2A313C"/><rect x="15" y="25" width="3" height="1" fill="#2F3846"/><rect x="18" y="25" width="1" height="1" fill="#252C38"/><rect x="26" y="25" width="1" height="1" fill="#3A414E"/><rect x="2" y="26" width="2" height="1" fill="#2A313C"/><rect x="15" y="26" width="3" height="1" fill="#2F3846"/><rect x="18" y="26" width="1" height="1" fill="#252C38"/><rect x="26" y="26" width="1" height="1" fill="#3A414E"/><rect x="2" y="27" width="2" height="1" fill="#2A313C"/><rect x="15" y="27" width="3" height="1" fill="#2F3846"/><rect x="18" y="27" width="1" height="1" fill="#252C38"/><rect x="26" y="27" width="1" height="1" fill="#3A414E"/><rect x="2" y="28" width="2" height="1" fill="#2A313C"/><rect x="15" y="28" width="3" height="1" fill="#2F3846"/><rect x="18" y="28" width="1" height="1" fill="#252C38"/><rect x="26" y="28" width="1" height="1" fill="#3A414E"/><rect x="2" y="29" width="2" height="1" fill="#2A313C"/><rect x="15" y="29" width="3" height="1" fill="#2F3846"/><rect x="18" y="29" width="1" height="1" fill="#252C38"/><rect x="26" y="29" width="1" height="1" fill="#3A414E"/><rect x="2" y="30" width="2" height="1" fill="#2A313C"/><rect x="15" y="30" width="3" height="1" fill="#2F3846"/><rect x="18" y="30" width="1" height="1" fill="#252C38"/><rect x="25" y="30" width="3" height="1" fill="#3A414E"/><rect x="2" y="31" width="2" height="1" fill="#2A313C"/><rect x="14" y="31" width="5" height="1" fill="#15181D"/><rect x="2" y="32" width="2" height="1" fill="#2A313C"/><rect x="14" y="32" width="5" height="1" fill="#15181D"/></svg>
+            <span class="vs-name"><b>Jay</b> types on his laptop</span>
+          </div>
+          <span class="vs-chip" id="vs-chip" aria-hidden="true"></span>
+          <figcaption class="sr-only" id="vf-desc">An animated scene. Maya says to her phone, “Make a page for our bake sale on Saturday.” Her idea travels to the AI in the middle, Flint and Claude, which reads the project’s vision and creates the page: a title, “Saturday Bake Sale”, and cards for cupcakes and cookies. Her friend Jay types countdown('Sat 9am') on his laptop, and the AI adds a ticking countdown. Maya asks for lemon bars and a reserve button; they appear, the tests pass, and the page goes live with three people viewing.</figcaption>
+        </figure>
+        <ol class="vf__flow" role="list"><li class="vf__step"><span class="vf__ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Say it</b><span class="vf__cap">Describe it in a sentence</span></li><li class="vf__arrow" aria-hidden="true">→</li><li class="vf__step"><span class="vf__ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M10 9l-2 2 2 2M14 9l2 2-2 2"/></svg></span><b>Watch it appear</b><span class="vf__cap">Your AI writes it; it runs</span></li><li class="vf__arrow" aria-hidden="true">→</li><li class="vf__step"><span class="vf__ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></span><b>Steer it</b><span class="vf__cap">Change it in plain words</span></li><li class="vf__arrow" aria-hidden="true">→</li><li class="vf__step"><span class="vf__ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><b>Ship it</b><span class="vf__cap">Share a link</span></li></ol>
       </div>
+      <a class="btn btn--light learn__go" href="learn.html#m1-0">Start learning<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
   </section>
 
@@ -470,9 +694,9 @@
             <p class="rx__by mono">by <a href="https://github.com/gabrielecirulli/2048" target="_blank" rel="noopener">Gabriele Cirulli</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=gabrielecirulli/2048">Start from this</a></li>
           <li class="rx__card" data-kind="game"><img class="rx__img" src="assets/remix/phaser-vite.jpg" alt="A screenshot of Phaser + Vite template" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🕹️</span><div class="rx__t"><b>Phaser + Vite template</b><p>The official Phaser 3 starter: a boot scene, a menu, a game scene and hot reload. The usual base for a 2D pixel game.</p>
             <p class="rx__by mono">by <a href="https://github.com/phaserjs/template-vite" target="_blank" rel="noopener">Phaser Studio</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=phaserjs/template-vite">Start from this</a></li>
-          <li class="rx__card" data-kind="game"><span class="rx__tile" data-kind="game" aria-hidden="true">🍈</span><span class="rx__e" aria-hidden="true">🍈</span><div class="rx__t"><b>melonJS boilerplate</b><p>A ready-made melonJS project for tile-map games: load a level made in Tiled and walk around it.</p>
+          <li class="rx__card" data-kind="game"><img class="rx__img" src="assets/remix/melonjs.jpg" alt="The melonJS boilerplate running: Hello World in a pixel font" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🍈</span><div class="rx__t"><b>melonJS boilerplate</b><p>A ready-made melonJS project for tile-map games: load a level made in Tiled and walk around it.</p>
             <p class="rx__by mono">by <a href="https://github.com/melonjs/es6-boilerplate" target="_blank" rel="noopener">melonJS</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=melonjs/es6-boilerplate">Start from this</a></li>
-          <li class="rx__card" data-kind="game"><span class="rx__tile" data-kind="game" aria-hidden="true">🧩</span><span class="rx__e" aria-hidden="true">🧩</span><div class="rx__t"><b>PixiJS open games</b><p>Complete, polished small games from the PixiJS team (a bubble shooter, a match-3 puzzle) with menus and sound.</p>
+          <li class="rx__card" data-kind="game"><img class="rx__img" src="assets/remix/pixi-open-games.jpg" alt="Art from the PixiJS open games Bubbo Bubbo and Puzzling Potions" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🧩</span><div class="rx__t"><b>PixiJS open games</b><p>Complete, polished small games from the PixiJS team (a bubble shooter, a match-3 puzzle) with menus and sound.</p>
             <p class="rx__by mono">by <a href="https://github.com/pixijs/open-games" target="_blank" rel="noopener">PixiJS</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=pixijs/open-games">Start from this</a></li>
           <li class="rx__card" data-kind="game"><img class="rx__img" src="assets/remix/littlejs.jpg" alt="A screenshot of LittleJS examples" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🎯</span><div class="rx__t"><b>LittleJS examples</b><p>A tiny, fast engine for pixel games with many short examples: a breakout, a platformer, a puzzle, particles.</p>
             <p class="rx__by mono">by <a href="https://github.com/KilledByAPixel/LittleJS" target="_blank" rel="noopener">Frank Force</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://killedbyapixel.github.io/LittleJS/examples/" target="_blank" rel="noopener">Browse</a></li>
@@ -484,15 +708,16 @@
             <p class="rx__by mono">by <a href="https://github.com/mrdoob/three.js" target="_blank" rel="noopener">three.js authors</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://threejs.org/examples/" target="_blank" rel="noopener">Browse</a></li>
           <li class="rx__card" data-kind="app"><img class="rx__img" src="assets/remix/todomvc.jpg" alt="A screenshot of TodoMVC" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">✅</span><div class="rx__t"><b>TodoMVC</b><p>The same to-do app written in many frameworks. A clear way to see how an app is put together, then grow your own.</p>
             <p class="rx__by mono">by <a href="https://github.com/tastejs/todomvc" target="_blank" rel="noopener">TasteJS</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://todomvc.com/" target="_blank" rel="noopener">Browse</a></li>
-          <li class="rx__card" data-kind="app"><span class="rx__tile" data-kind="app" aria-hidden="true">📱</span><span class="rx__e" aria-hidden="true">📱</span><div class="rx__t"><b>Expo phone app</b><p>Make a real iPhone and Android app in JavaScript. One command creates a starter with tabs and screens.</p>
+          <li class="rx__card" data-kind="app"><img class="rx__img" src="assets/remix/expo.jpg" alt="A re-creation of the Expo tabs starter app in light and dark mode" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">📱</span><div class="rx__t"><b>Expo phone app</b><p>Make a real iPhone and Android app in JavaScript. One command creates a starter with tabs and screens.</p>
             <p class="rx__by mono">by <a href="https://github.com/expo/expo" target="_blank" rel="noopener">Expo</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://docs.expo.dev/get-started/create-a-project/" target="_blank" rel="noopener">Browse</a></li>
-          <li class="rx__card" data-kind="site"><span class="rx__tile" data-kind="site" aria-hidden="true">🌐</span><span class="rx__e" aria-hidden="true">🌐</span><div class="rx__t"><b>HTML5 Boilerplate</b><p>A clean, well-commented starting point for a website: one index.html, sensible defaults, nothing extra.</p>
+          <li class="rx__card" data-kind="site"><img class="rx__img" src="assets/remix/h5bp.jpg" alt="The HTML5 Boilerplate page next to its index.html" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🌐</span><div class="rx__t"><b>HTML5 Boilerplate</b><p>A clean, well-commented starting point for a website: one index.html, sensible defaults, nothing extra.</p>
             <p class="rx__by mono">by <a href="https://github.com/h5bp/html5-boilerplate" target="_blank" rel="noopener">H5BP</a> · <span class="rx__lic">MIT</span></p></div><a class="btn btn--light rx__go" href="app/?remix=h5bp/html5-boilerplate">Start from this</a></li>
-          <li class="rx__card" data-kind="site"><span class="rx__tile" data-kind="site" aria-hidden="true">🚀</span><span class="rx__e" aria-hidden="true">🚀</span><div class="rx__t"><b>Astro site templates</b><p>Fast content sites: a blog, docs and a portfolio, written in Markdown. Its examples folder holds the official starters.</p>
+          <li class="rx__card" data-kind="site"><img class="rx__img" src="assets/remix/astro.jpg" alt="A re-creation of the Astro blog template" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🚀</span><div class="rx__t"><b>Astro site templates</b><p>Fast content sites: a blog, docs and a portfolio, written in Markdown. Its examples folder holds the official starters.</p>
             <p class="rx__by mono">by <a href="https://github.com/withastro/astro" target="_blank" rel="noopener">Astro</a> · <span class="rx__lic">MIT</span></p></div><a class="btn rx__go" href="https://astro.build/themes/" target="_blank" rel="noopener">Browse</a></li>
-          <li class="rx__card" data-kind="asset"><span class="rx__tile" data-kind="asset" aria-hidden="true">🎨</span><span class="rx__e" aria-hidden="true">🎨</span><div class="rx__t"><b>Kenney game art</b><p>Thousands of free sprites, tiles, sounds and fonts, including &#x27;Platformer pixel&#x27;. Public domain (CC0): use them anywhere, credit welcome.</p>
+          <li class="rx__card" data-kind="asset"><img class="rx__img" src="assets/remix/kenney.jpg" alt="Kenney&#x27;s free 3D platformer starter kit" loading="lazy" width="800" height="500"><span class="rx__e" aria-hidden="true">🎨</span><div class="rx__t"><b>Kenney game art</b><p>Thousands of free sprites, tiles, sounds and fonts, including &#x27;Platformer pixel&#x27;. Public domain (CC0): use them anywhere, credit welcome.</p>
             <p class="rx__by mono">by <a href="https://kenney.nl/assets" target="_blank" rel="noopener">Kenney</a> · <span class="rx__lic">CC0</span></p></div><a class="btn rx__go" href="https://kenney.nl/assets" target="_blank" rel="noopener">Browse</a></li>
         </ul>
+        <p class="rx__all"><button type="button" class="btn btn--dark" data-rx-all aria-expanded="false">Show all 13</button></p>
       </div>
     </div>
   </section>
@@ -544,6 +769,24 @@
   </section>
 
   <!-- ================= THE MAKER ================= -->
+  <!-- ================= FEEDBACK: tell us; it goes to GitHub where the team (and Claude) read it ================= -->
+  <section class="fbk" id="feedback" aria-labelledby="fbk-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// feedback</p>
+      <h2 id="fbk-title">Tell us what to build next</h2>
+      <p class="fbk__lead">Ideas, bugs, wishes. Pick what it's about, write a line, and it opens as a public note on GitHub, where every one gets read.</p>
+      <form class="fbk__card" id="fbk-form" autocomplete="off">
+        <div class="fbk__facets" role="radiogroup" aria-label="What is it about?">
+          <button type="button" class="fbk__chip on" data-facet="Idea" role="radio" aria-checked="true">💡 Idea</button><button type="button" class="fbk__chip" data-facet="Bug" role="radio" aria-checked="false">🐞 Bug</button><button type="button" class="fbk__chip" data-facet="Company mode" role="radio" aria-checked="false">🏢 Company</button><button type="button" class="fbk__chip" data-facet="Work and hiring" role="radio" aria-checked="false">🤝 Work</button><button type="button" class="fbk__chip" data-facet="Learn and Academy" role="radio" aria-checked="false">🎓 Learn</button><button type="button" class="fbk__chip" data-facet="Design and look" role="radio" aria-checked="false">🎨 Design</button><button type="button" class="fbk__chip" data-facet="Phones" role="radio" aria-checked="false">📱 Phones</button><button type="button" class="fbk__chip" data-facet="Something else" role="radio" aria-checked="false">✳️ Other</button>
+        </div>
+        <label class="fbk__label" for="fbk-msg">Your note</label>
+        <textarea id="fbk-msg" rows="3" maxlength="2000" placeholder="I wish my AI helper could…"></textarea>
+        <div class="fbk__row"><span class="fbk__note">Opens GitHub with your note filled in. You'll need a free GitHub account to send it.</span><button type="submit" class="btn btn--light">Send feedback<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+      </form>
+      <p class="fbk__more"><a href="https://github.com/orionopenwow/TribeCode/issues?q=label%3Afeedback">See what others asked for</a></p>
+    </div>
+  </section>
+
   <section class="maker" id="maker" aria-labelledby="maker-title">
     <canvas class="maker__sky" aria-hidden="true"></canvas>
     <div class="wrap maker__in reveal">
@@ -580,6 +823,8 @@
       <a href="app/?demo=showcase">Demo tribe</a>
       <a href="pricing.html">Pricing</a>
       <a href="mission.html">Mission</a>
+      <a href="#company">Company mode</a>
+      <a href="#feedback">Feedback</a>
       <a href="docs.html">Quick start</a>
       <a href="docs.html#security">Security &amp; privacy</a>
       <a href="https://github.com/orionopenwow/TribeCode">GitHub</a>
@@ -594,7 +839,10 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.26.0" defer></script>
-<script src="i18n.js?v=0.26.0" defer></script>
+<script src="main.js?v=0.27.0" defer></script>
+<script src="kit.js?v=0.27.0" defer></script>
+<script src="vibe-anim.js?v=0.27.0" defer></script>
+<script src="company-show.js?v=0.27.0" defer></script>
+<script src="i18n.js?v=0.27.0" defer></script>
 </body>
 </html>
