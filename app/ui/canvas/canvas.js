@@ -231,6 +231,7 @@
         <div class="cv-stage" id="cv-stage" tabindex="0" aria-label="${esc(T('Design canvas'))}">
           <div class="cv-world" id="cv-world"></div>
           <div class="cv-ov" id="cv-ov" aria-hidden="true"></div>
+          <div class="cv-hint" id="cv-hint" role="status" hidden></div>
           <div class="cv-empty" id="cv-empty" hidden>
             <span class="eyebrow">${esc(T('A blank canvas'))}</span>
             <b>${esc(T('Draw a frame to start'))}</b>
@@ -257,7 +258,8 @@
     if (P.layers) P.layers.mount($('#cv-left'), E);
     if (P.props) P.props.mount($('#cv-props'), E);
     if (window.TribeCanvasCode) window.TribeCanvasCode.mount(E);
-    if (window.TribeCanvasFlint) window.TribeCanvasFlint.mount(E);   // P1-F: Flint's prompt bar (app/ui/canvas/flint.js)
+    if (window.TribeCanvasFlint) window.TribeCanvasFlint.mount(E);
+    if (window.TribeCanvasExtras) window.TribeCanvasExtras.mount(E);   // polish: right-click menu, align, selection colors, frame presets   // P1-F: Flint's prompt bar (app/ui/canvas/flint.js)
     if (window.TribeCanvasFlintPane) window.TribeCanvasFlintPane.mount(E);   // Flint's Make-style pane, Simple / Advanced (app/ui/canvas/flintpane.js)
     $('#cv-tools').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
@@ -283,7 +285,13 @@
     stage.addEventListener('pointerleave', () => { hoverId = null; paintOv(); C.send({ type: 'cnv-cursor', file: fileId, x: 1e6, y: 1e6 }); });
     stage.addEventListener('dblclick', onDbl);
     stage.addEventListener('wheel', onWheel, { passive: false });
-    stage.addEventListener('contextmenu', e => e.preventDefault());
+    stage.addEventListener('contextmenu', e => {   // polish: right-click menu (app/ui/canvas/extras.js)
+      e.preventDefault(); if (e.target.closest('.cv-tools, .cvf')) return;
+      const hit = hitAt(e.clientX, e.clientY);
+      if (hit && hit.id) { const id = pick(hit.id, e.ctrlKey || e.metaKey); if (!sel.includes(id)) { sel = [id]; inner = null; } } else if (!e.target.closest('[data-h],[data-rot]')) { sel = []; inner = null; }
+      paintOv(); panels();
+      if (window.TribeCanvasExtras) window.TribeCanvasExtras.context(e.clientX, e.clientY);
+    });
     document.addEventListener('pointerdown', e => { const m = $('#cv-menu'); if (m && !m.hidden && !m.contains(e.target) && !e.target.closest('#cv-file,#cv-zoom')) m.hidden = true; });
   }
   function sheet(side) {
@@ -385,10 +393,16 @@
     const s = stageRect(), out = [];
     const scr = b => ({ x: b.x * view.z + view.x, y: b.y * view.z + view.y, w: b.w * view.z, h: b.h * view.z });
     // frame names above top-level frames
-    for (const n of S.roots()) {
+    const placed = [];   // polish: frame names never overlap (the selected one wins its spot)
+    const roots = S.roots().slice().sort((a, b) => (sel.includes(b.id) ? 1 : 0) - (sel.includes(a.id) ? 1 : 0));
+    for (const n of roots) {
       if (!['frame', 'component', 'instance'].includes(n.t) || n.hide) continue;
       const b = wbox(n.id); if (!b) continue; const q = scr(b);
       if (q.x > s.width || q.y > s.height || q.x + q.w < 0 || q.y < -20) continue;
+      const lw = Math.min(Math.max(40, q.w), 8 + 7 * String(n.name || 'Frame').length), lb = { x: q.x, y: q.y - 20, w: lw, h: 18 };
+      const hitsBox = p => p.x < lb.x + lb.w && lb.x < p.x + p.w && p.y < lb.y + lb.h && lb.y < p.y + p.h;
+      if (q.w < 24 || placed.some(hitsBox) || roots.some(o => o.id !== n.id && !o.hide && (() => { const ob = wbox(o.id); return ob && hitsBox(scr(ob)); })())) continue;
+      placed.push(lb);
       const comp = n.t === 'component' ? ' comp' : n.t === 'instance' ? ' inst' : '';
       out.push(`<div class="cv-fname${comp}${sel.includes(n.id) ? ' on' : ''}" data-fname="${esc(n.id)}" style="left:${q.x}px;top:${q.y - 20}px;max-width:${Math.max(40, q.w)}px">${n.t === 'component' ? '◇ ' : n.t === 'instance' ? '◆ ' : ''}${esc(n.name || 'Frame')}</div>`);
     }
@@ -413,6 +427,7 @@
           const hy = h.includes('n') ? q.y : h.includes('s') ? q.y + q.h : q.y + q.h / 2;
           out.push(`<div class="cv-h cv-h-${h}" data-h="${h}" style="left:${hx}px;top:${hy}px"></div>`);
         }
+        if (canEdit && !locked && !editing && sel.length === 1 && !S.inFlow(S.get(sel[0]) || {}) && (S.get(sel[0]) || {}).t !== 'group') out.push(`<div class="cv-rot" data-rot title="${esc(T('Rotate'))} (Shift: 15°)" style="left:${q.x + q.w + 14}px;top:${q.y - 14}px"></div>`);   // polish: rotate handle
         const n0 = S.get(sel[0]);
         const label = `${Math.round(u.w)} × ${Math.round(u.h)}${sel.length === 1 && n0 && n0.sz && (n0.sz.h === 'hug' || n0.sz.v === 'hug') ? ' Hug' : ''}`;
         out.push(`<div class="cv-size" style="left:${q.x + q.w / 2}px;top:${q.y + q.h + 8}px">${esc(label)}</div>`);
@@ -568,6 +583,9 @@
     }
     const h = e.target.closest('[data-h]');
     if (h && canEdit) { startResize(e, h.dataset.h, w); return; }
+    if (e.target.closest('[data-rot]') && canEdit && sel.length === 1) {   // polish: drag to rotate around the layer's centre
+      const n = S.get(sel[0]), b = wbox(sel[0]); if (n && b) { gesture = { kind: 'rotate', id: n.id, c: { x: b.x + b.w / 2, y: b.y + b.h / 2 }, r0: n.rot || 0, a0: Math.atan2(w.y - (b.y + b.h / 2), w.x - (b.x + b.w / 2)) }; begin(); return; }
+    }
     const hit = hitAt(e.clientX, e.clientY);
     if (hit && hit.id) {
       let id = pick(hit.id, e.ctrlKey || e.metaKey);
@@ -654,9 +672,17 @@
         const el = elOf(s.id); if (el && !S.inFlow(n)) { el.style.left = n.x + 'px'; el.style.top = n.y + 'px'; }
       }
       boxCache.clear();
+      sendDrag(g.start.map(s => S.get(s.id)).filter(n => n && !S.inFlow(n)).map(n => ({ id: n.id, x: n.x, y: n.y })));
       paintOv(); return;
     }
     if (g.kind === 'resize') { resizeMove(g, w, e.shiftKey || g.shift, e.altKey); return; }
+    if (g.kind === 'rotate') {
+      const n = S.get(g.id); if (!n) return;
+      let r = g.r0 + (Math.atan2(w.y - g.c.y, w.x - g.c.x) - g.a0) * 180 / Math.PI;
+      r = ((Math.round(r) % 360) + 540) % 360 - 180; if (e.shiftKey) r = Math.round(r / 15) * 15;
+      n.rot = r; const el = elOf(n.id); if (el) el.style.transform = r ? `rotate(${r}deg)` : '';
+      g.moved = true; paintOv(); return;
+    }
   }
   function onUp(e) {
     touches.delete(e.pointerId); if (touches.size < 2) pinch = null;
@@ -678,6 +704,7 @@
       end(); return;
     }
     if (g.kind === 'resize') { guides = []; distances = []; end(); return; }
+    if (g.kind === 'rotate') { const n = S.get(g.id); if (n && g.moved) { const r = n.rot || 0; n.rot = g.r0; const c = clone(n); if (r) c.rot = r; else delete c.rot; put(c); } end(true); return; }
   }
   function onDbl(e) {
     if (!canEdit) return;
@@ -713,7 +740,11 @@
     applyView();
   }
   let lastCur = 0;
-  function sendCursor(w) { const now = Date.now(); if (now - lastCur < 50) return; lastCur = now; C.send({ type: 'cnv-cursor', file: fileId, x: w.x, y: w.y }); }
+  let lastDrag = 0;
+  function sendDrag(list) { const now = Date.now(); if (now - lastDrag < 60 || !list.length) return; lastDrag = now; C.send({ type: 'cnv-cursor', file: fileId, x: lastW.x, y: lastW.y, drag: list.slice(0, 40) }); }
+  let lastW = { x: 0, y: 0 };
+  function sendCursor(w) { lastW = w; if (gesture && gesture.kind === 'move' && gesture.moved) return; sendCursor0(w); }   // while dragging, the drag message carries the cursor
+  function sendCursor0(w) { const now = Date.now(); if (now - lastCur < 50) return; lastCur = now; C.send({ type: 'cnv-cursor', file: fileId, x: w.x, y: w.y }); }
 
   // ---------- snapping + smart guides ----------
   function snapBox(b, moving, showDist) {
@@ -1137,7 +1168,9 @@
     tool = t;
     document.querySelectorAll('#cv-tools [data-tool]').forEach(b => { const on = b.dataset.tool === t; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
     if (stage) stage.dataset.tool = t;
+    const hint = $('#cv-hint'); if (hint) { const m = TOOLHINT[t]; hint.textContent = m ? T(m) : ''; hint.hidden = !m; }   // polish: say what the tool does
   }
+  const TOOLHINT = { frame: 'Drag to draw a frame. Shift keeps it square. Presets are in the right panel.', rect: 'Drag to draw a rectangle. Shift keeps it square.', ellipse: 'Drag to draw an ellipse. Shift keeps it round.', text: 'Click to type, or drag to make a text box.', scale: 'Drag a corner: text size and corners scale with it.' };
 
   // ---------- zoom ----------
   function zoomTo(z, cx, cy) {
@@ -1197,6 +1230,7 @@
     }
     if (m.type === 'cnv-cursor' && m.by) {
       if (m.gone || m.x > 9e5) peers.delete(m.by); else peers.set(m.by, { name: m.name, color: m.color, x: m.x, y: m.y, at: Date.now() });
+      if (Array.isArray(m.drag) && !gesture) for (const d of m.drag) { const n = S.get(d.id), el = elOf(d.id); if (n && el && !S.inFlow(n)) { el.style.left = d.x + 'px'; el.style.top = d.y + 'px'; el.classList.add('cv-peerdrag'); el.style.setProperty('--pc', m.color || ''); boxCache.clear(); } }
       drawPeers(); paintOv(); return;
     }
     if (m.type === 'cnv-error') { toast(m.error); loadedFor = ''; if (open) load(); }
@@ -1276,6 +1310,7 @@
     rename(id, name) { if (!canEdit) return; patch(id, { name: String(name).slice(0, 80) }); end(true); },
     toggle(id, key) { if (!canEdit) return; const n = S.get(id); if (!n) return; const c = clone(n); if (c[key]) delete c[key]; else c[key] = true; put(c); end(true); },
     insertInstance, makeComponent, autoLayout, group, ungroup, duplicate, removeSel,
+    copy: copySel, paste, order, toggleSel: toggle, get clip() { return clip; }, renderAll, paintOv, get scale() { return tool === 'scale'; },
     detach(id) { if (!canEdit) return; const f = detach(id); if (f) { sel = [f.id]; inner = null; end(); } },
     goToMain(id) { const n = S.get(id); if (!n) return; const cid = n.t === 'instance' ? n.comp : id; sel = [cid]; inner = null; fit(true); paintOv(); panels(); },
     wbox, fit, zoomTo, toHTML: id => SC.toHTML(S, id),

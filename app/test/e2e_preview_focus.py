@@ -160,6 +160,11 @@ def main():
             host.keyboard.press("Escape")
             host.wait_for_selector("#pvw-more.hidden", state="attached", timeout=2000)
             assert host.evaluate(FOCUS)
+            # Ctrl / while previewing: the Preview shortcuts come first (polish, docs/POLISH-AUDIT.md)
+            host.evaluate("document.activeElement && document.activeElement.blur && document.activeElement.blur()")
+            host.keyboard.press("Control+/"); host.wait_for_selector("#help-keys .hk-here", timeout=3000)
+            assert "preview" in host.inner_text("#help-keys .hk-here").lower(), host.inner_text("#help-keys .hk-here")
+            host.click("#hk-close")
             host.keyboard.press("Escape")
             host.wait_for_function("!" + FOCUS, timeout=3000)
 

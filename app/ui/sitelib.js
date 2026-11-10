@@ -8,6 +8,7 @@
 // Edits are saved to site.json (and the pages re-rendered) as you go; Done saves a version (a git commit).
 // Public: window.TribeSiteLib = { open({ pid }), edit({ pid, dir, level }), close() }
 (function () {
+  const nice = n => /[A-Z ]/.test(n) ? n : String(n).replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());   // polish: a folder name like ember-socks reads as Ember Socks
   'use strict';
   const C = window.TribeClient;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -76,7 +77,7 @@
       ${x.thumb ? `<img class="slx-big" src="${esc(C.base() + x.thumb)}" alt="" width="640" height="400">` : ''}
       <h3>${esc(x.title)}</h3><p class="slx-sum">${esc(x.summary)}</p>
       ${(x.goodFor || []).length ? `<p class="slx-good"><span>${t('Good for')}</span>${x.goodFor.map(g => `<i>${esc(g)}</i>`).join('')}</p>` : ''}
-      <label class="slx-f"><span>${t('Your site name')}</span><input id="slx-name" value="${esc(p.name || '')}" maxlength="80"></label>
+      <label class="slx-f"><span>${t('Your site name')}</span><input id="slx-name" value="${esc(nice(p.name || ''))}" maxlength="80" placeholder="${t('Your site name')}"></label>
       <fieldset class="slx-levels"><legend>${t('How do you want to customize it?')}</legend>${LEVELS.map(l => `<label class="slx-lv"><input type="radio" name="slx-lv" value="${l.id}" ${l.id === level ? 'checked' : ''}><span><b>${t(l.label)}</b><small>${t(l.sub)}</small></span></label>`).join('')}</fieldset>
       <button class="btn primary slx-use" type="button" id="slx-use">${t('Use this template')}</button>
       <p class="slx-fine">${t('It goes into your project\'s code. Nothing you already have gets overwritten.')}</p>`;
