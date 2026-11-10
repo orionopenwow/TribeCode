@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{name}}</title>
+  <link rel="icon" href="data:,">
+  <!-- TribeCode build kit (templates/buildkit.json › video). Editing works offline with the browser's own video APIs;
+       Mediabunny (MPL-2.0, pinned) is loaded only to turn an export into MP4, and the export stays WebM without it. -->
+  <script type="importmap">
+    { "imports": { "mediabunny": "https://cdn.jsdelivr.net/npm/mediabunny@1.62.1/+esm" } }
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>:root { {{palette}} }</style>
+</head>
+<body>
+  <header class="top">
+    <div><div class="eyebrow">Video editor</div><h1>{{name}}</h1></div>
+    <div class="actions">
+      <label class="btn ghost">Add clips<input id="files" type="file" accept="video/*" multiple hidden></label>
+      <button id="sample" class="btn ghost">Sample clips</button>
+      <button id="export" class="btn" disabled>Export</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <section class="viewer">
+      <canvas id="view" width="1280" height="720" aria-label="Preview"></canvas>
+      <div class="transport">
+        <button id="play" class="btn ghost" aria-label="Play">Play</button>
+        <span id="time" class="mono">0:00.0 / 0:00.0</span>
+        <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Playhead">
+      </div>
+    </section>
+    <aside class="inspector" aria-label="Selected clip">
+      <div class="eyebrow">Selected clip</div>
+      <p id="none" class="dim">Add clips, then pick one on the timeline to trim it or give it a title.</p>
+      <div id="edit" hidden>
+        <h2 id="clip-name">Clip</h2>
+        <label>In <span id="in-v" class="mono"></span><input id="in" type="range" min="0" max="1000" step="1"></label>
+        <label>Out <span id="out-v" class="mono"></span><input id="out" type="range" min="0" max="1000" step="1"></label>
+        <label>Title on this clip<input id="title" type="text" maxlength="80" placeholder="Type a title"></label>
+        <div class="row">
+          <button id="left" class="btn ghost" aria-label="Move clip earlier">◀ Earlier</button>
+          <button id="right" class="btn ghost" aria-label="Move clip later">Later ▶</button>
+          <button id="del" class="btn danger">Remove</button>
+        </div>
+      </div>
+      <p class="keys dim"><b>Space</b> play · <b>J K L</b> shuttle · <b>I</b>/<b>O</b> in/out · <b>S</b> split · <b>Delete</b> remove</p>
+    </aside>
+  </main>
+
+  <section class="timeline" aria-label="Timeline">
+    <div class="eyebrow">Timeline</div>
+    <div id="track" class="track"><p class="dim empty">Your clips line up here, in order. Drop video files anywhere.</p></div>
+  </section>
+
+  <div id="busy" class="toast" hidden></div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

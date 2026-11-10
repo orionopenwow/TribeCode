@@ -1,0 +1,120 @@
+{
+  "about": "TribeCode's build kit: one curated, open-source stack per kind of project, so what Flint, the AI helpers and the starters build reaches a studio-quality bar. Generated projects load these from a pinned CDN version through an import map (no install, no build step); TribeCode itself stays zero-dependency. Every library is permissively licensed (MIT, ISC, BSD, Zlib, Apache-2.0 or MPL-2.0); licenses and versions were read from the npm registry on 2026-11-10, and every pinned version is at least two weeks old. GPL pieces are left out on purpose (for example the ffmpeg.wasm core, which is GPL-2.0-or-later). 'rules' is the quality bar an AI helper checks its work against.",
+  "checked": "2026-11-10",
+  "pick": { "3d": "3d-game", "game": "2d-game", "site": "site", "app": "app-ui", "tool": "app-ui", "bot": "app-ui", "api": "app-ui", "notes": "site", "other": "app-ui", "tags": { "video": "video", "dashboard": "data-viz", "3d": "3d-game" } },
+  "stacks": [
+    {
+      "id": "3d-game", "title": "3D game or world", "glyph": "◆", "starter": "starter-3d",
+      "what": "Real-time 3D in the browser: a lit, shadowed scene with physics, controls, sound and a loading screen.",
+      "libs": [
+        { "name": "three.js", "pkg": "three", "version": "0.186.1", "license": "MIT", "repo": "mrdoob/three.js", "role": "Renderer, scenes, glTF models, cameras, controls (addons)", "import": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/" } },
+        { "name": "postprocessing", "pkg": "postprocessing", "version": "6.39.5", "license": "Zlib", "repo": "pmndrs/postprocessing", "role": "Bloom-free polish: SMAA, tone mapping, vignette, depth of field", "import": { "postprocessing": "https://cdn.jsdelivr.net/npm/postprocessing@6.39.5/build/index.js" } },
+        { "name": "cannon-es", "pkg": "cannon-es", "version": "0.20.0", "license": "MIT", "repo": "pmndrs/cannon-es", "role": "Light rigid-body physics in plain JS (the default)", "import": { "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js" } },
+        { "name": "Rapier", "pkg": "@dimforge/rapier3d-compat", "version": "0.21.0", "license": "Apache-2.0", "repo": "dimforge/rapier.js", "role": "Fast WASM physics for many bodies, character controllers and vehicles", "import": { "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/dist/rapier.mjs" } },
+        { "name": "three-mesh-bvh", "pkg": "three-mesh-bvh", "version": "0.9.16", "license": "MIT", "repo": "gkjohnson/three-mesh-bvh", "role": "Fast raycasts and collisions against big meshes", "import": { "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.16/build/index.module.js" } },
+        { "name": "howler.js", "pkg": "howler", "version": "2.2.4", "license": "MIT", "repo": "goldfire/howler.js", "role": "Sound: sprites, 3D positional audio, unlock on first tap", "import": { "howler": "https://cdn.jsdelivr.net/npm/howler@2.2.4/+esm" } },
+        { "name": "lil-gui", "pkg": "lil-gui", "version": "0.21.0", "license": "MIT", "repo": "georgealways/lil-gui", "role": "A tuning panel for designers (hidden behind a key)", "import": { "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.21.0/dist/lil-gui.esm.js" } }
+      ],
+      "rules": [
+        "Renderer: ACESFilmic (or AgX) tone mapping, sRGB output, physically correct lights; one key light with soft shadows plus a hemisphere fill.",
+        "Hold 60 fps on a mid-range laptop and a recent phone: cap pixel ratio at 2, reuse geometries and materials, keep draw calls under ~150, use instancing for repeats.",
+        "Input feels tight: fixed-step physics (1/60 s) with interpolation, camera smoothing, pointer lock on desktop, touch sticks on phones.",
+        "A real loading screen with progress from the LoadingManager; never a black screen. Say clearly when WebGL or the CDN is unavailable.",
+        "Sound from the first interaction (unlock audio on tap/click), a mute key, and volume that ducks in menus.",
+        "Models as compressed glTF (.glb, Draco or Meshopt); textures power-of-two, KTX2 when large.",
+        "Pause when the tab is hidden; resize correctly; respect prefers-reduced-motion for camera shake."
+      ]
+    },
+    {
+      "id": "2d-game", "title": "2D game", "glyph": "▦", "starter": "starter-game",
+      "what": "Crisp 2D games with scenes, sprites, tilemaps, physics and juice.",
+      "libs": [
+        { "name": "Phaser", "pkg": "phaser", "version": "4.2.1", "license": "MIT", "repo": "phaserjs/phaser", "role": "Full 2D engine: scenes, arcade/matter physics, tilemaps, cameras, input", "import": { "phaser": "https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.esm.js" } },
+        { "name": "KAPLAY", "pkg": "kaplay", "version": "3001.0.19", "license": "MIT", "repo": "kaplayjs/kaplay", "role": "The friendly pick for small games and game jams", "import": { "kaplay": "https://cdn.jsdelivr.net/npm/kaplay@3001.0.19/dist/kaplay.mjs" } },
+        { "name": "PixiJS", "pkg": "pixi.js", "version": "8.22.0", "license": "MIT", "repo": "pixijs/pixijs", "role": "The fastest 2D renderer, for custom engines and heavy effects", "import": { "pixi.js": "https://cdn.jsdelivr.net/npm/pixi.js@8.22.0/+esm" } },
+        { "name": "matter-js", "pkg": "matter-js", "version": "0.20.0", "license": "MIT", "repo": "liabru/matter-js", "role": "Rigid-body 2D physics for physics toys and puzzles", "import": { "matter-js": "https://cdn.jsdelivr.net/npm/matter-js@0.20.0/+esm" } },
+        { "name": "howler.js", "pkg": "howler", "version": "2.2.4", "license": "MIT", "repo": "goldfire/howler.js", "role": "Sound effects and music", "import": { "howler": "https://cdn.jsdelivr.net/npm/howler@2.2.4/+esm" } }
+      ],
+      "rules": [
+        "Pixel art: integer scaling, image-rendering: pixelated, no sub-pixel camera jitter (round the camera).",
+        "Game feel: coyote time and jump buffering, hit-stop on impacts, small screen shake, particles on every important event, squash and stretch.",
+        "Fixed timestep for physics; 60 fps target with no garbage in the hot loop (pool bullets and particles).",
+        "Every action has a sound; music loops cleanly; a mute key.",
+        "Title screen, pause menu, game over and restart in one key press; controls shown on screen; touch controls on phones.",
+        "Keyboard and gamepad both work; remappable keys when there are more than four."
+      ]
+    },
+    {
+      "id": "video", "title": "Video editor or motion", "glyph": "▶", "starter": "starter-video",
+      "what": "Edit and export video in the browser: trim, join, titles and export, with WebCodecs.",
+      "libs": [
+        { "name": "Mediabunny", "pkg": "mediabunny", "version": "1.62.1", "license": "MPL-2.0", "repo": "Vanilagy/mediabunny", "role": "Read, write and convert MP4/WebM with WebCodecs: decode frames, encode, mux", "import": { "mediabunny": "https://cdn.jsdelivr.net/npm/mediabunny@1.62.1/+esm" } },
+        { "name": "wavesurfer.js", "pkg": "wavesurfer.js", "version": "8.0.3", "license": "BSD-3-Clause", "repo": "katspaugh/wavesurfer.js", "role": "Audio waveforms, regions and a scrubbable timeline", "import": { "wavesurfer.js": "https://cdn.jsdelivr.net/npm/wavesurfer.js@8.0.3/dist/wavesurfer.esm.js" } },
+        { "name": "Motion", "pkg": "motion", "version": "14.7.1", "license": "MIT", "repo": "motiondivision/motion", "role": "Keyframes and springs for titles and motion graphics", "import": { "motion": "https://cdn.jsdelivr.net/npm/motion@14.7.1/+esm" } }
+      ],
+      "rules": [
+        "Edit on a timeline of clips (source, in, out, track); never re-encode until Export.",
+        "Preview on a canvas at the project frame rate; scrubbing is frame-accurate and instant.",
+        "Export with WebCodecs (H.264/AAC in MP4, or VP9/Opus in WebM), with a progress bar and a Cancel button; check VideoEncoder support first and say what to use instead.",
+        "Titles are drawn on the canvas with real fonts, safe margins and a fade in/out.",
+        "Keyboard: Space play/pause, J/K/L shuttle, I/O in/out, S split, Delete removes.",
+        "Large files stay local in the browser; nothing is uploaded unless the person asks.",
+        "Leave out GPL code (the ffmpeg.wasm core is GPL-2.0-or-later); people can add it themselves if they accept that license."
+      ]
+    },
+    {
+      "id": "app-ui", "title": "App or tool", "glyph": "▣", "starter": "starter-site",
+      "what": "Calm, fast app screens with the tribe's palette, real icons and gentle motion.",
+      "libs": [
+        { "name": "TribeCode design tokens", "pkg": "", "version": "built-in", "license": "MIT", "repo": "orionopenwow/TribeCode", "role": "Colors, spacing, type and radius as CSS variables (docs/DESIGN-SYSTEM.md)", "import": {} },
+        { "name": "Lucide", "pkg": "lucide", "version": "1.62.0", "license": "ISC", "repo": "lucide-icons/lucide", "role": "Clean, consistent icons", "import": { "lucide": "https://cdn.jsdelivr.net/npm/lucide@1.62.0/+esm" } },
+        { "name": "Motion", "pkg": "motion", "version": "14.7.1", "license": "MIT", "repo": "motiondivision/motion", "role": "Small, purposeful transitions and springs", "import": { "motion": "https://cdn.jsdelivr.net/npm/motion@14.7.1/+esm" } },
+        { "name": "Floating UI", "pkg": "@floating-ui/dom", "version": "1.8.0", "license": "MIT", "repo": "floating-ui/floating-ui", "role": "Menus, tooltips and popovers that stay on screen", "import": { "@floating-ui/dom": "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.8.0/+esm" } },
+        { "name": "SortableJS", "pkg": "sortablejs", "version": "1.15.7", "license": "MIT", "repo": "SortableJS/Sortable", "role": "Drag to reorder lists and boards, touch included", "import": { "sortablejs": "https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/+esm" } }
+      ],
+      "rules": [
+        "One clear primary action per screen; a mono eyebrow and a plain title for each section.",
+        "Flat surfaces, 1px borders, depth from luminance steps only; colors from the palette variables.",
+        "Every list has an empty state that says what goes there and how to add the first one.",
+        "Keyboard reachable, visible focus rings, labels on every control, contrast at least 4.5:1.",
+        "Works at 360 px wide: thumb-sized targets (44 px), no horizontal scroll.",
+        "Motion 150–250 ms, ease-out, only for state changes; none when prefers-reduced-motion is set.",
+        "Instant feedback: optimistic updates with undo instead of confirm dialogs."
+      ]
+    },
+    {
+      "id": "site", "title": "Website", "glyph": "◎", "starter": "starter-site",
+      "what": "Fast, accessible pages that read well and load in a blink.",
+      "libs": [
+        { "name": "TribeCode design tokens", "pkg": "", "version": "built-in", "license": "MIT", "repo": "orionopenwow/TribeCode", "role": "Palette, type scale and spacing as CSS variables", "import": {} },
+        { "name": "Lucide", "pkg": "lucide", "version": "1.62.0", "license": "ISC", "repo": "lucide-icons/lucide", "role": "Icons", "import": { "lucide": "https://cdn.jsdelivr.net/npm/lucide@1.62.0/+esm" } },
+        { "name": "Motion", "pkg": "motion", "version": "14.7.1", "license": "MIT", "repo": "motiondivision/motion", "role": "Scroll-linked reveals and gentle hero motion", "import": { "motion": "https://cdn.jsdelivr.net/npm/motion@14.7.1/+esm" } }
+      ],
+      "rules": [
+        "Semantic HTML first; the page works with JavaScript off.",
+        "Largest content in under 2.5 s on 4G: compressed images (WebP/AVIF) with width and height, lazy below the fold, at most two font files.",
+        "Reading layout: line-height 1.6, about 65 characters per line, a clear type scale.",
+        "One hero with one call to action; real copy, never lorem ipsum.",
+        "Meta title, description and a share image; alt text on every meaningful image.",
+        "No scroll-jacking; reveals are subtle and skipped for prefers-reduced-motion."
+      ]
+    },
+    {
+      "id": "data-viz", "title": "Dashboard or data", "glyph": "▤", "starter": "starter-site",
+      "what": "Charts and dashboards that are fast with real data and honest by default.",
+      "libs": [
+        { "name": "uPlot", "pkg": "uplot", "version": "1.6.32", "license": "MIT", "repo": "leeoniya/uPlot", "role": "Tiny, very fast time-series charts", "import": { "uplot": "https://cdn.jsdelivr.net/npm/uplot@1.6.32/dist/uPlot.esm.js" } },
+        { "name": "Chart.js", "pkg": "chart.js", "version": "4.6.1", "license": "MIT", "repo": "chartjs/Chart.js", "role": "The common chart types with good defaults", "import": { "chart.js": "https://cdn.jsdelivr.net/npm/chart.js@4.6.1/+esm" } },
+        { "name": "Apache ECharts", "pkg": "echarts", "version": "6.1.0", "license": "Apache-2.0", "repo": "apache/echarts", "role": "Big, interactive dashboards and maps", "import": { "echarts": "https://cdn.jsdelivr.net/npm/echarts@6.1.0/+esm" } },
+        { "name": "D3", "pkg": "d3", "version": "7.9.0", "license": "ISC", "repo": "d3/d3", "role": "Custom, one-of-a-kind visualizations", "import": { "d3": "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm" } }
+      ],
+      "rules": [
+        "Few numbers, big and clear; one date-range picker; the most important number first.",
+        "Bars start at zero; label axes and units; no 3D or dual axes that mislead.",
+        "One color per series, from the palette; colorblind-safe; a legend only when there are 2+ series.",
+        "Every chart has an empty state and a loading state; tooltips show exact values.",
+        "Stay smooth with 100k points (uPlot or ECharts sampling); never block the page while loading."
+      ]
+    }
+  ]
+}

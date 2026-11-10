@@ -131,3 +131,6 @@
 .su-tpls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 12px; }
 .su-tpl { border: 1px solid var(--border, #2A313C); background: var(--surface, #1B2028); color: inherit; border-radius: 999px; padding: 5px 11px; font-size: 13px; cursor: pointer; }
 .su-tpl.on { border-color: #F26B1D; background: var(--raised, #1E242D); }
+/* build kit chips under "Make the starter" (server/buildkit.js) */
+.su-kit { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.su-kit i { font: 500 11px/1 var(--mono); font-style: normal; color: var(--live-ink); background: var(--live-tint); border-radius: 99px; padding: 4px 8px; }

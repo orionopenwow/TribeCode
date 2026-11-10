@@ -92,10 +92,10 @@ const LINES = {
   bot: ['Your group chat, a little smarter.', 'Ask it. It answers.', 'One command away.', 'Made by friends, for friends.'],
   other: ['Something small we made together.', 'Built in a weekend, kept for good.', 'A tiny thing, done well.', 'Made by friends, for friends.'],
 };
-const STARTER = { game: 'starter-game', '3d': 'tavern-3d' };   // everything else: starter-site
+const STARTER = { game: 'starter-game', '3d': 'starter-3d', video: 'starter-video' };   // everything else: starter-site (video: the sense tag)
 const one = (s, n = 200) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; };
 
-module.exports = function setup({ P, W, base, sense, readVision, createTask, broadcast, resetHub, getMembers, siteTpl = () => null, company = () => null }) {
+module.exports = function setup({ P, W, base, sense, buildKit = null, readVision, createTask, broadcast, resetHub, getMembers, siteTpl = () => null, company = () => null }) {
   let all = base.readJSON(FILE, {}); if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
   const save = () => base.writeJSON(FILE, all);
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -114,6 +114,8 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
   const hasVision = v => !!v.replace(/^#.*$/gm, '').replace(/Replace these lines together[\s\S]*/, '').replace(/\s+/g, ' ').trim();
   const gistOf = v => { const m = v.match(/##\s*What\s*\n+([^\n#]+)/i); return one(m ? m[1] : v.replace(/^#.*$/gm, '').trim().split('\n').find(Boolean) || '', 160); };
 
+  // the starter template: by kind, else a video editor when the project sounds like one (sense tag), else the site starter
+  const tplFor = (pid, kind) => STARTER[kind] || (kind !== 'game' && kind !== '3d' && senseOf(pid).tags.includes('video') ? STARTER.video : 'starter-site');
   function palettesFor(kind, tags) {
     const want = new Set([kind, ...tags].filter(Boolean));
     return PALETTES.map((p, i) => ({ p, s: p.when.filter(w => want.has(w)).length * 10 - i + (p.when.includes('*') ? 5 : 0) }))
@@ -144,7 +146,7 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
       kind: o.kind, label: o.label, vision: hasVision(v), canEdit: canEdit(me, pid), canHost: isHost(me, pid), choices: e.choices || {},
       roles: ROLES(o).map(r => ({ ...r, options: o[r.id], done: !!(e.choices || {})[r.id] })),
       repo: { has: !!p.repo, git: repoOk },
-      starter: { ready: hasVision(v) && !!o.kind, made: !!e.starter, template: STARTER[o.kind] || 'starter-site', at: (e.starter || {}).at || null,
+      starter: { ready: hasVision(v) && !!o.kind, made: !!e.starter, template: tplFor(pid, o.kind), kit: buildKit ? buildKit.brief(pid) : null, at: (e.starter || {}).at || null,
         templates: ((siteTpl() && siteTpl().list()) || []).map(t => ({ slug: t.slug, name: t.name, summary: t.summary, from: t.from })) },
     };
   }
@@ -208,7 +210,7 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
     if (!hasVision(v)) throw err(400, 'write the vision first');
     const { repo } = await ensureRepo(pid, me);
     const p = P.get(pid), e = entry(pid), pal = (e.choices || {}).artist ? PALETTES.find(x => x.id === e.choices.artist.id) : PALETTES[0];
-    const tpl = STARTER[o.kind] || 'starter-site', engine = (e.choices || {}).engineer;
+    const tpl = tplFor(pid, o.kind), engine = (e.choices || {}).engineer;
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const vars = ['--canvas', '--surface', '--accent', '--second', '--ink'];
     const fill = t => t.replace(/\{\{name\}\}/g, esc(p.name)).replace(/\{\{gist\}\}/g, esc(gistOf(v) || p.bio || ''))

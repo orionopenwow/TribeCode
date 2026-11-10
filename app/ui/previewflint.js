@@ -159,10 +159,17 @@
     }
     feed({ k: 'flint', text: 'Asked Flint: the answer is in the Flint panel.' });
   }
+  const kitCache = {};
+  async function kitHint() {
+    const p = project(); if (!p) return '';
+    if (!(p in kitCache)) { try { kitCache[p] = (await C.api(`/projects/${encodeURIComponent(p)}/buildkit`)).hint || ''; } catch { kitCache[p] = ''; } }
+    return kitCache[p];
+  }
   async function askAgents(text, pickNow) {
     const where = (ctx && ctx.href && ctx.href()) ? ` (page: ${String(ctx.href()).replace(/^\/preview\/[^/]+\/pv1\.[^/]+\/?/, '/') || '/'})` : '';
     const about = pickNow ? ` About the ${pickNow.tag} “${(pickNow.text || '').slice(0, 80)}”.` : '';
-    const msg = `@agents In the live preview${where}: ${text}.${about} Save the change in the project's code; the preview reloads by itself.`;
+    const kit = await kitHint();   // the project's open-source stack + quality bar (server/buildkit.js)
+    const msg = `@agents In the live preview${where}: ${text}.${about} Save the change in the project's code; the preview reloads by itself.${kit ? ' ' + kit : ''}`;
     if (window.TribeFlintFly) window.TribeFlintFly.done(document.querySelector('#pvf-feed') || document.querySelector('#pvw'), 'Sent to your AI');
     try { await C.api('/agents/channel', { method: 'POST', body: { text: msg } }); }
     catch { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + msg.replace(/^@agents /, '') } }); }
