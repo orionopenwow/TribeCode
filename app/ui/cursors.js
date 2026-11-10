@@ -33,6 +33,7 @@
 
   // ---------- draw theirs ----------
   const els = new Map();   // memberId -> { el, timer, view }
+  let following = null;   // P1-E: the friend you follow (set from the preview's viewer avatars, app/ui/pins.js)
   let layer = null;
   function ensure() { if (layer && layer.isConnected) return layer; layer = document.createElement('div'); layer.className = 'lc-layer'; layer.setAttribute('aria-hidden', 'true'); document.body.appendChild(layer); return layer; }
   function drop(id) { const c = els.get(id); if (c) { clearTimeout(c.timer); c.el.remove(); els.delete(id); } }
@@ -53,6 +54,8 @@
       ensure().appendChild(el); c = { el }; els.set(m.by, c);
     }
     Object.assign(c, { x: m.x, y: m.y, view: m.view });
+    if (following === m.by && m.view && m.view !== view() && window.TribeApp && window.TribeApp.show) { try { window.TribeApp.show(m.view); } catch {} }   // P1-E: follow a friend to the screen they're on
+    c.el.classList.toggle('is-followed', following === m.by);
     place(c);
     clearTimeout(c.timer); c.timer = setTimeout(() => drop(m.by), 8000);   // idle pointers fade away
   });
@@ -63,5 +66,5 @@
   C.on('project', () => [...els.keys()].forEach(drop));
   C.on('presence', ms => { const here = new Set((ms || []).filter(x => x.online).map(x => x.id)); [...els.keys()].forEach(id => { if (!here.has(id)) drop(id); }); });
 
-  window.TribeCursors = { on, set: v => { try { localStorage.setItem(KEY, v ? 'on' : 'off'); } catch {} if (!v) { bye(); [...els.keys()].forEach(drop); } } };
+  window.TribeCursors = { following: () => following, follow: id => { following = id || null; els.forEach((c, k) => c.el.classList.toggle('is-followed', k === following)); }, on, set: v => { try { localStorage.setItem(KEY, v ? 'on' : 'off'); } catch {} if (!v) { bye(); [...els.keys()].forEach(drop); } } };
 })();

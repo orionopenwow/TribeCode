@@ -554,6 +554,7 @@ const studios = require('./studios')({ P, base: baseStore, root: require('./tpld
 const trending = require('./trending')({ store: baseStore, root: require('./tpldir').root() });   // daily "Trending on GitHub" feed (server/trending.js)
 const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str, trending });   // v0.27 company: the Marketplace (server/market.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
+const pinsHub = require('./pins')({ P, base: baseStore, broadcast, bus, getMembers: () => members, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-E comment pins + preview presence (server/pins.js)
 const company = companyHub = require('./company')({ P, base: baseStore, store, broadcast, postChat, nameOf, perms, getMembers: () => members, approvals, bus, coord, createTask: o => createTask(o), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), docs });   // v0.27 company: seats, goals, decisions, rhythms (server/company.js)
 company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x => x.events) ? { spentWeek: w.total, currency: w.currency } : null; });   // v0.27 company: real AI spend from Money (ledger.js) in the weekly review
 mcpFlow = makeMcpFlow({ flow, P });
@@ -580,7 +581,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...buildKit.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -909,6 +910,7 @@ async function apiInProject(req, res, url) {
   if ((a === 'flint' && (b === 'tiers' || b === 'tier')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)
   if (a === 'buildkit' || (a === 'projects' && c === 'buildkit')) return buildKit.route(req, res, ctx());   // build kit (server/buildkit.js)
   if (a === 'projects' && c === 'studios') return studios.route(req, res, ctx());   // v0.27: Studios (server/studios.js)   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
+  if (a === 'pins') return pinsHub.route(req, res, ctx());   // P1-E comment pins (server/pins.js)
   if (a === 'whiteboard') return whiteboard.route(req, res, ctx());   // feat/whiteboard (server/whiteboard.js)
   if (a === 'market') return market.route(req, res, ctx());   // v0.27 company: the Marketplace (server/market.js)
   if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
@@ -1180,6 +1182,7 @@ server.on('upgrade', (req, sock) => {
       return;
     }
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
+    if (msg.type === 'pin-view') { pinsHub.handle(s, me, msg); return; }   // P1-E: who's looking at the preview, follow a friend
     if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting

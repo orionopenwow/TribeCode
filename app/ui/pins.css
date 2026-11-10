@@ -1,0 +1,87 @@
+/* Comment pins + presence (P1-E, app/ui/pins.js). Flat matte: 1px borders, depth from luminance steps only. */
+.pvw-body { position: relative; }
+.pin-bar { display: inline-flex; align-items: center; gap: 2px; }
+.pin-viewers { display: inline-flex; align-items: center; margin-right: 4px; }
+.pin-viewers:empty { display: none; }
+.pin-vw { width: 24px; height: 24px; margin-left: -4px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--surface); background: var(--c); color: var(--canvas); font: 600 11px/1 var(--font); cursor: pointer; transition: transform var(--dur-quick) var(--ease-out); }
+.pin-vw:first-child { margin-left: 0; }
+.pin-vw:hover { transform: translateY(-1px); }
+.pin-vw.is-on { border-color: var(--text); }
+.pin-vw:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pin-cbtn { position: relative; }
+.pin-cbtn[aria-pressed="true"], .pin-bar [data-pin-act="list"][aria-pressed="true"] { background: var(--surface-2); color: var(--text); outline: 1px solid var(--edge); outline-offset: -1px; }
+.pin-count { position: absolute; top: 2px; right: 1px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--ember); color: var(--canvas); font: 700 9.5px/15px var(--font); text-align: center; }
+
+/* markers over the preview iframe */
+.pin-layer { position: absolute; z-index: 3; pointer-events: none; overflow: hidden; }
+.pin-mk { position: absolute; left: 0; top: 0; width: 28px; height: 28px; margin: -28px 0 0 0; padding: 0; display: grid; place-items: center; border-radius: 14px 14px 14px 2px; background: var(--c, var(--ember)); color: var(--canvas); border: 2px solid var(--canvas); pointer-events: auto; cursor: pointer; font: 700 12px/1 var(--font); transition: transform var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out); }
+.pin-mk em { position: absolute; top: -7px; right: -9px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--edge); font: 600 9.5px/14px var(--font); font-style: normal; }
+.pin-mk.is-open { border-color: var(--text); z-index: 2; }
+.pin-mk.is-gone { opacity: .6; border-style: dashed; }
+.pin-mk.is-res { opacity: .5; }
+.pin-mk.off { opacity: 0; pointer-events: none; }
+.pin-mk:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pvw.pin-commenting .pvw-frame { outline: 2px solid var(--ember); outline-offset: -1px; }
+.pvw.pin-follow .pvw-frame { outline: 2px solid var(--peer); outline-offset: -1px; }
+
+.pin-extras { position: absolute; left: 0; right: 0; top: 10px; display: flex; justify-content: center; pointer-events: none; z-index: 4; }
+.pin-hint, .pin-following { margin: 0; display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12.5px; pointer-events: auto; }
+.pin-hint span { color: var(--faint); }
+.pin-hint { padding-right: 12px; border-color: var(--ember); }
+.pin-following { border-color: var(--c, var(--peer)); }
+.pin-following .btn { height: 26px; }
+
+/* popover: new comment / thread */
+.pin-pop { position: fixed; z-index: 90; display: grid; gap: 10px; max-height: min(520px, calc(100vh - 24px)); padding: 12px; border: 1px solid var(--edge); border-radius: var(--r-lg, 14px); background: var(--surface); color: var(--text); animation: pin-in var(--dur-base) var(--ease-out) both; }
+@keyframes pin-in { from { opacity: 0; transform: translateY(4px); } }
+.pin-pop .eyebrow { margin: 0; }
+.pin-form { display: grid; gap: 8px; position: relative; }
+.pin-pop .pin-form textarea { width: 100%; height: auto; min-height: 44px; max-height: 140px; padding: 8px 12px; resize: vertical; font: 13.5px/1.5 var(--font); }
+.pin-pop { align-content: start; }
+.pin-acts { display: flex; justify-content: flex-end; gap: 8px; }
+.pin-on { color: var(--muted); font: 12px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pin-th-h { display: flex; align-items: center; gap: 4px; }
+.pin-sp { flex: 1; }
+.pin-ib { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; color: var(--muted); font-size: 13px; }
+.pin-ib:hover { background: var(--surface-2); color: var(--text); }
+.pin-th { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; overflow: auto; min-height: 0; }
+.pin-th li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; }
+.pin-th b { font-size: 13px; font-weight: 600; }
+.pin-th .faint { font-size: 11.5px; }
+.pin-th p { margin: 2px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--text); overflow-wrap: anywhere; }
+.pin-at { color: var(--peer); font-weight: 600; }
+.pin-av { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--canvas); font: 700 11px/1 var(--font); font-style: normal; flex: none; }
+.pin-resby { margin: 0; color: var(--online); font-size: 12px; }
+.pin-mention { position: absolute; left: 0; right: 0; top: 100%; z-index: 2; margin-top: 2px; display: grid; padding: 4px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); }
+.pin-mention button { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; color: var(--text); font-size: 13px; text-align: left; }
+.pin-mention button:hover { background: var(--surface-3); }
+.pin-mention i { width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; color: var(--canvas); font: 700 10px/1 var(--font); font-style: normal; }
+
+/* the list */
+.pin-list { position: absolute; top: 0; right: 0; bottom: 0; z-index: 5; width: min(320px, 100%); display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 10px; padding: 12px; border-left: 1px solid var(--edge); background: var(--surface); animation: pin-slide var(--dur-base) var(--ease-out) both; }
+@keyframes pin-slide { from { transform: translateX(12px); opacity: 0; } }
+.pin-list header { display: flex; align-items: center; }
+.pin-list .eyebrow { margin: 0; }
+.pin-seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--edge); border-radius: 9px; }
+.pin-seg button { flex: 1; height: 28px; border-radius: 7px; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.pin-seg button[aria-selected="true"] { background: var(--surface-2); color: var(--text); }
+.pin-list ol { list-style: none; margin: 0; padding: 0; overflow: auto; display: grid; align-content: start; gap: 6px; }
+.pin-list li button { width: 100%; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; padding: 10px; border: 1px solid var(--edge); border-radius: 10px; text-align: left; color: var(--text); }
+.pin-list li button:hover { background: var(--surface-2); }
+.pin-list li button.is-res { opacity: .65; }
+.pin-list li span { display: grid; gap: 3px; min-width: 0; font-size: 12.5px; }
+.pin-list li em { font-style: normal; font-size: 13px; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
+.pin-list li small { color: var(--faint); font-size: 11px; }
+.pin-none { padding: 18px 8px; color: var(--faint); font-size: 13px; line-height: 1.55; text-align: center; }
+
+.lc.is-followed span { outline: 2px solid var(--text); outline-offset: 1px; }
+
+@media (max-width: 820px) {
+  .pin-bar { flex: none; }
+  .pin-pop { border-radius: 16px 16px 12px 12px; }
+  .pin-list { width: 100%; border-left: 0; z-index: 80; }
+  .pin-pop { z-index: 96; }
+  .pin-vw { width: 28px; height: 28px; }
+  .pin-mk { width: 32px; height: 32px; margin-top: -32px; border-radius: 16px 16px 16px 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .pin-pop, .pin-list { animation: none; } .pin-mk, .pin-vw { transition: none; } }
