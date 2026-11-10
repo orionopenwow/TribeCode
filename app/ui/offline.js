@@ -8,6 +8,9 @@
 // Leaving restores your real settings exactly (server URL and token, hosting); the demo survives reloads until reset.
 // Showcase mode (app/ui/showcase.js): the same backend seeded with a lively "Campfire Crew" tribe and a script that
 // plays out by itself (db.mode === 'showcase'). start() with no mode asks which one you want.
+// Solo mode (db.mode === 'solo', docs/PHONE-HOSTING.md): a REAL tribe that lives on this phone only. Same backend, but
+// no pretend people and no demo data: you, Flint and an empty first project. exportSolo() packs it for the move to a
+// real host (POST /api/import/solo, server/soloimport.js); app/ui/phonehost.js draws the chooser and the move sheet.
 //   window.TribeOffline = { active(), start(mode), choose(), leave(), reset(), hostForReal(), socket(url), state(), _k }
 (function () {
   'use strict';
@@ -38,6 +41,7 @@
   const AGENT = 'claude';
   function seed(mode) {
     if (mode === 'showcase' && window.TribeShowcase) return window.TribeShowcase.seed({ iso, rid, st: S.get() });
+    if (mode === 'solo') return seedSolo();
     const st = S.get(), now = Date.now();
     const name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
     const pid = 'lantern-run';
@@ -74,6 +78,33 @@
       gists: { [pid]: [] },
       scratch: [], uploads: [], invites: [], friends: [], prefs: { pins: [] }, joinedRio: false,
     };
+  }
+
+  // A real tribe on this phone: just you and an empty first project (Flint answers from the Flint panel, no model needed).
+  function seedSolo() {
+    const st = S.get(), now = Date.now(), name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
+    const tname = (ls.get('tribecode.welcome.tribe') || {}).name || `${first}’s tribe`, pid = 'first-project';
+    return {
+      on: true, v: 1, mode: 'solo', created: iso(now), seq: 0,
+      tribe: { name: String(tname).slice(0, 40), created: iso(now) },
+      members: [{ id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) }],
+      current: pid,
+      projects: [{ id: pid, name: 'My first project', emoji: '✨', image: null, bio: '', color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
+      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: `${first} started **${String(tname).slice(0, 40)}** on this phone. It lives only here for now: add tasks and notes, ask Flint for help, and move it to a host when friends should join.` }] },
+      tasks: { [pid]: [] }, docs: { [pid]: [] }, vision: { [pid]: '' }, gists: { [pid]: [] },
+      scratch: [], uploads: [], invites: [], friends: [], prefs: { pins: [] }, joinedRio: true, mayaHi: true,
+    };
+  }
+  const solo = () => db?.mode === 'solo';
+  // Everything a host needs to take the phone tribe over (server/soloimport.js reads exactly this shape).
+  function exportSolo() {
+    if (!db) return null;
+    return { tribe: { name: db.tribe.name }, projects: db.projects.map(p => ({
+      name: p.name, emoji: p.emoji || '', color: p.color, bio: p.bio || '', vision: db.vision[p.id] || '',
+      tasks: (db.tasks[p.id] || []).map(t => ({ title: t.title, status: t.status, body: t.body || '', due: t.due || null, type: t.type, subtasks: t.subtasks })),
+      docs: (db.docs[p.id] || []).map(d => ({ title: d.title, body: d.body || '' })),
+      chat: (db.chat[p.id] || []).filter(m => m.text).map(m => ({ by: m.by === 'me' ? 'me' : m.by === 'tribecode' ? 'tribecode' : m.by, name: nameOf(m.by), at: m.at, text: m.text })),
+    })) };
   }
 
   // ---------- views of the state (the same shapes the real server sends) ----------
@@ -140,7 +171,7 @@
       recent, taskCount: tasks.length, upcoming: [], repo: (db.repo || {})[pid] || null, bio: p.bio || '',
       vision: { has: !!db.vision[pid], excerpt: String(db.vision[pid] || '').replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 160) },
       living: { mood: db?.mode === 'showcase' ? 'buzzing' : chat.length ? 'steady' : 'fresh', by: 'tribecode',
-        summary: `${p.name} is a pretend project in the ${db?.mode === 'showcase' ? 'showcase' : 'offline demo'}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
+        summary: `${p.name} ${solo() ? 'lives on this phone for now' : `is a pretend project in the ${db?.mode === 'showcase' ? 'showcase' : 'offline demo'}`}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
         lines: { lately: recent[0] ? `Last: ${recent[0].text}` : 'Nothing yet', chat: chat.length ? `${chat.length} message${chat.length === 1 ? '' : 's'}` : 'No messages yet',
           next: doing.length ? `In progress: ${doing[0].title}` : todo.length ? `Up next: ${todo[0].title}` : 'No tasks yet', soon: 'Nothing on the calendar' } } };
   }
@@ -237,6 +268,7 @@
   ];
   let said = 0;
   function onChat(pid, text) {
+    if (solo()) return;   // a real phone tribe: nobody pretends to answer
     const t = String(text);
     if (/@(claude|ai|agent)\b/i.test(t) || /\bclaude\b/i.test(t)) {
       const ask = t.replace(/@\w+/g, '').trim();
@@ -319,7 +351,7 @@
     });
   }
   function friendJoins() {
-    if (db.joinedRio) return; db.joinedRio = true; save();
+    if (db.joinedRio || solo()) return; db.joinedRio = true; save();
     later(6000, () => {
       if (!db.members.some(m => m.id === 'rio')) db.members.push({ id: 'rio', name: 'Rio', color: '#9AE66E', role: 'builder', joined: iso(), online: true, where: 'Chat' });
       for (const p of db.projects) p.members.rio = 'builder';
@@ -646,6 +678,7 @@
         break;
       }
       case 'invites': {
+        if (solo() && !b && POST) { setTimeout(() => window.TribePhoneHost && window.TribePhoneHost.move(), 50); return no(409, 'This tribe lives on this phone. Move it to a host first, then friends can join.'); }
         if (!b && POST) {
           const inv = { code: 'DEMO' + rid(4).toUpperCase(), by: 'me', role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Number(body.maxUses) || 5, uses: 0, created: iso(), expires: iso(Date.now() + (Number(body.hours) || 24) * 3600e3), demo: true, ...(body.project && body.project !== 'tribe' ? { project: body.project } : {}) };
           db.invites.push(inv); save(); friendJoins(); noteInvite();
@@ -656,7 +689,7 @@
         if (b && DEL) { db.invites = db.invites.filter(i => i.code !== b); save(); return ok({ ok: true }); }
         break;
       }
-      case 'join': return no(410, 'This is a pretend link from the offline demo: it only works in the browser that made it.');
+      case 'join': return no(410, solo() ? 'This tribe lives on one phone, so it has no links yet.' : 'This is a pretend link from the offline demo: it only works in the browser that made it.');
       case 'github': {   // a pretend GitHub sign-in, so the demo shows Connect GitHub end to end (nothing leaves the browser)
         const g = db.gh || (db.gh = { signedIn: false, login: null, polls: 0, state: 'none' });
         const view = () => ({ configured: true, source: 'tribecode', signedIn: g.signedIn, login: g.login, via: g.signedIn ? 'oauth' : null, flow: { state: g.state }, local: true, canConfigure: false, demo: true });
@@ -824,7 +857,7 @@
   }
   // start(): ask which demo (Explore quietly / Watch it come alive). start('quiet' | 'showcase') starts that one.
   function start(mode) {
-    if (mode !== 'quiet' && mode !== 'showcase') return choose();
+    if (mode !== 'quiet' && mode !== 'showcase' && mode !== 'solo') return choose();
     closeChooser();
     if (active() && (db?.mode || 'quiet') === mode) { enterUi(); return; }
     const wasReal = !!(C() && C().hasToken()), wasDemo = active();
@@ -858,7 +891,7 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? `${db?.tribe?.name} is ready on this phone.` : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }
@@ -895,8 +928,10 @@
     pill = document.createElement('button'); pill.id = 'demo-pill'; pill.className = 'od-pill'; pill.setAttribute('aria-haspopup', 'dialog');
     const sc = db?.mode === 'showcase';
     if (sc) pill.classList.add('sc');
-    pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : 'Offline demo: nothing leaves this device';
+    if (solo()) pill.classList.add('solo');
+    pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
     pill.innerHTML = sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
+      : solo() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>'
       : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();
     pill.onclick = e => { e.stopPropagation(); pop ? closePop() : openPop(); };
@@ -918,6 +953,19 @@
       pop = window.TribeShowcase.pop({ leave, close: closePop, quiet: () => { closePop(); db.mode = 'quiet'; save(); location.reload(); } });
       if (!pop) return;
       document.body.appendChild(pop); placePop(); return;
+    }
+    if (solo()) {
+      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'On this phone');
+      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On this phone only</span><b>${esc(db.tribe.name)} lives on this phone</b></div></header>
+        <p>It's a real tribe: tasks, notes and chat are kept here and survive reloads. Friends can join once it moves to a host (a computer, a free cloud server or an Android phone).</p>
+        <div class="od-acts">
+          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>Move to a host</span></button>
+          <button id="od-del"><svg class="i"><use href="#i-x"/></svg><span>Delete this phone tribe</span></button>
+        </div>`;
+      document.body.appendChild(pop);
+      pop.querySelector('#od-move').onclick = () => { closePop(); window.TribePhoneHost && window.TribePhoneHost.move(); };
+      pop.querySelector('#od-del').onclick = () => { if (confirm(`Delete ${db.tribe.name} from this phone? Its tasks, notes and chat are gone for good unless you moved it to a host first.`)) leave(); };
+      placePop(); return;
     }
     pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Offline demo');
     pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Offline demo</span><b>${esc(db.tribe.name)} lives in this browser</b></div></header>
@@ -964,14 +1012,17 @@
 
   window.TribeOffline = {
     active, start, choose, boot, leave, reset, hostForReal,
+    solo: () => active() && solo(), exportSolo,
+    // After a move: forget the phone copy and sign in to the real host (no restore of the old settings).
+    finishMove: (server, token, name, go) => { closePop(); ls.del(KEY); ls.del(BKEY); blobClear(); try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} if (go) { try { const k = 'tribecode.settings.v1', v = JSON.parse(localStorage.getItem(k) || '{}'); localStorage.setItem(k, JSON.stringify({ ...v, name, server: { url: '', token: '' }, hosting: false })); } catch {} location.href = go; return; } for (const s of [...sockets]) s.close(); db = null; S.set({ name, server: { url: server, token }, hosting: false }); location.reload(); },   // go: a web page on another origin opens the host's own page (a device link signs it in there)
     socket: url => new FakeSocket(url),
     state: () => db,
     mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use
     _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },
     // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".
-    label: () => (active() ? 'Leave the offline demo' : 'Try a demo tribe (offline)'),
-    toggle: () => (active() ? leave() : start()),
+    label: () => (active() ? (solo() ? 'Move this phone tribe to a host' : 'Leave the offline demo') : 'Try a demo tribe (offline)'),
+    toggle: () => (active() ? (solo() ? window.TribePhoneHost && window.TribePhoneHost.move() : leave()) : start()),
     tile: () => `<button class="od-tile" id="hub-demo" data-od="start"><span class="od-tic"><svg class="i"><use href="#i-play"/></svg></span><span class="od-tt"><b>Try a demo tribe (offline)</b><small>Be the host of a pretend tribe right here: a project, two friends and a Claude. No setup, no network, nothing leaves this device.</small></span><em class="gs-go">Start demo<svg class="i"><use href="#i-chev"/></svg></em></button>`,
   };
 })();

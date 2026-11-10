@@ -36,11 +36,12 @@ const healthy = async () => { try { return (await request('GET', '/api/health'))
 
 function open(url) {
   if (noOpen) return;
-  const cmd = process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]] : process.platform === 'darwin' ? ['open', [url]] : ['xdg-open', [url]];
+  if (process.platform === 'android' && !/^https?:/.test(url)) return;   // Termux: browsers can't open files in Termux's home
+  const cmd = process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]] : process.platform === 'darwin' ? ['open', [url]] : process.platform === 'android' ? ['termux-open-url', [url]] : ['xdg-open', [url]];
   try { spawn(cmd[0], cmd[1], { stdio: 'ignore', detached: true }).unref(); } catch {}
 }
 function copy(text) {
-  const tries = process.platform === 'win32' ? [['clip', []]] : process.platform === 'darwin' ? [['pbcopy', []]] : [['wl-copy', []], ['xclip', ['-selection', 'clipboard']]];
+  const tries = process.platform === 'win32' ? [['clip', []]] : process.platform === 'darwin' ? [['pbcopy', []]] : process.platform === 'android' ? [['termux-clipboard-set', []]] : [['wl-copy', []], ['xclip', ['-selection', 'clipboard']]];
   for (const [c, a] of tries) { try { execFileSync(c, a, { input: text, stdio: ['pipe', 'ignore', 'ignore'] }); return true; } catch {} }
   return false;
 }
