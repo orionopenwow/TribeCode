@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original soundtrack for site/ad-launch.html ("Introducing TribeCode", 75 s). Everything is synthesized here with
+"""Original soundtrack for promo/ad-launch.html ("Introducing TribeCode", 75 s). Everything is synthesized here with
 numpy: no samples, no outside music. An unhurried, warm piece: soft pad chords, a plucked piano-like melody, gentle
 percussion that enters when the tribe gathers (~21 s), tiny UI clicks on the cursor taps, soft chimes on the status
 cards, and a resolve on the end card.
@@ -117,7 +117,7 @@ bass(41, END_T, 3.6)
 for j, m in enumerate((65, 69, 72, 77)): pluck(m, END_T + 0.25 + j * 0.22, 1.0, pan=-0.3 + 0.2 * j, dur=3.2)
 kick(END_T, 0.8)
 
-# UI sounds, in time with site/ad-launch.html
+# UI sounds, in time with promo/ad-launch.html
 for t in (1.1, 5.0, 27.5, 42.8): click(t)
 for t in (6.0, 21.4, 44.4): chime(t)
 chime(END_T + 0.1, 89)

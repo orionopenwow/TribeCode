@@ -12,10 +12,10 @@
      renders exactly: ad-launch.html?t=31.2 or window.adSeek(31.2). Landscape (16:9) and vertical (9:16) layouts switch
      on the window's shape. Soundtrack: scripts/dev/ad-launch-sound.py. Not linked from the site. -->
 <style>
-  @font-face { font-family: "Inter"; font-weight: 400; src: url("assets/fonts/Inter-Regular.woff") format("woff"); }
-  @font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.woff") format("woff"); }
-  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("assets/fonts/Inter-SemiBold.woff") format("woff"); }
-  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("../site/assets/fonts/Inter-Regular.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("../site/assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("../site/assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("../site/assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
   :root { --canvas: #12151A; --surface: #1B2028; --raised: #1E242D; --border: #2A313C; --border2: #3A4350; --ember: #F26B1D; --teal: #38C6B1; --indigo: #6C7CFF;
     --white: #F8FAFC; --text: #CBD5E1; --muted: #94A3B8; --faint: #64748B; --green: #3BD16F;
     --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
@@ -93,7 +93,7 @@
       <div class="row"><span class="chip">A pixel platformer game</span><span class="chip">A website for a local bakery</span><span class="go" id="go">▶ Build it</span></div></div>
   </section>
 
-  <section class="layer" id="L-status"><div class="status"><span class="spin" id="spin"></span><img src="assets/brand/flint.svg" alt=""><span class="w" id="sw"></span></div></section>
+  <section class="layer" id="L-status"><div class="status"><span class="spin" id="spin"></span><img src="../site/assets/brand/flint.svg" alt=""><span class="w" id="sw"></span></div></section>
 
   <section class="layer" id="L-shot"></section>
 
@@ -103,7 +103,7 @@
 
 
   <section class="layer end" id="L-end">
-    <div class="mark"><img class="f" src="assets/brand/logo-flame.gif" alt=""><img class="w" src="assets/brand/wordmark.svg" alt="TribeCode"></div>
+    <div class="mark"><img class="f" src="../site/assets/brand/logo-flame.gif" alt=""><img class="w" src="../site/assets/brand/wordmark.svg" alt="TribeCode"></div>
     <h2 id="end-h">Build together.</h2>
     <p id="end-p">Free and open source · <b>tribecode.org</b></p>
   </section>
@@ -199,7 +199,7 @@
       'remix/kaplay', 'starters/club-signups', 'ad-launch/market', 'remix/littlejs', 'starters/endless-runner', 'remix/astro', 'ad-launch/money',
       'starters/party-quiz', 'remix/pixi-open-games', 'ad-launch/tasks', 'starters/shared-list', 'remix/todomvc', 'starters/devlog', 'remix/expo',
       'starters/discord-bot', 'ad-launch/doc', 'remix/melonjs', 'starters/small-api', 'ad-launch/settings', 'remix/h5bp', 'starters/cli-helper'];
-    $('wall').innerHTML = src.map(s => `<div><img src="assets/${s}.jpg" alt=""></div>`).join('');
+    $('wall').innerHTML = src.map(s => `<div><img src="${/^ad(30|-launch)\//.test(s) ? "assets/" : "../site/assets/"}${s}.jpg" alt=""></div>`).join('');
   }
 
   function cursorAt(x, y, on) { const c = $('cur'); c.style.opacity = on ? 1 : 0; c.style.transform = `translate(${x - 4}px, ${y - 2}px)`; }

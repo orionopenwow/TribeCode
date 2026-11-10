@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original soundtrack for site/ad-type.html (the 41-second type ad). Everything is synthesised here with numpy:
+"""Original soundtrack for promo/ad-type.html (the 41-second type ad). Everything is synthesised here with numpy:
 no samples, no outside music. 120 BPM, 48 kHz stereo. The hits line up with the page's timeline:
 
   0.35-1.75  five plucks as the intro words land
@@ -145,7 +145,7 @@ def blip(m):
     tt = t_(0.14)
     return np.sin(2 * np.pi * note(m) * tt) * np.exp(-tt * 30) * 0.5
 
-# ---------- arrangement (times match site/ad-type.html) ----------
+# ---------- arrangement (times match promo/ad-type.html) ----------
 BEAT = 0.5
 CHORDS = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]   # Am F C G (one per bar of 2 s)
 ROOTS = [45, 41, 36, 43]

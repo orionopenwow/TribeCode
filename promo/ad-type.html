@@ -11,9 +11,9 @@
      ad-type.html?t=9.5, or window.adSeek(9.5). Landscape 16:9 and vertical 9:16 (text kept out of the bottom 20% and the
      right-hand UI strip) switch on the window's shape. Music: scripts/dev/ad-type-sound.py, 120 BPM, synced to the beats here. -->
 <style>
-  @font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.woff") format("woff"); }
-  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("assets/fonts/Inter-SemiBold.woff") format("woff"); }
-  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("../site/assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("../site/assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("../site/assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
   :root { --canvas: #12151A; --surface: #1B2028; --raised: #232A34; --border: #2A313C; --ember: #F26B1D; --ember-d: #C9530F; --teal: #38C6B1; --indigo: #6C7CFF; --white: #F8FAFC; --muted: #94A3B8; --green: #3BD16F; --yellow: #FABD2F; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
@@ -201,7 +201,7 @@
   <div class="center" id="buildLine"><p class="h"><span class="sw"><span class="w">Build</span><span class="sp"></span><span class="slot" id="slotB"></span><span class="sp"></span><span class="w">together.</span></span></p></div>
   <div class="center" id="featLine"><p class="h" id="featH"></p></div>
   <div class="ex" id="ex"></div>
-  <div class="logo" id="logo"><img class="mark" src="assets/brand/icon.svg" alt=""><span class="wm-clip" id="wmClip"><img class="wm" id="wm" src="assets/brand/wordmark.svg" alt="TribeCode"></span></div>
+  <div class="logo" id="logo"><img class="mark" src="../site/assets/brand/icon.svg" alt=""><span class="wm-clip" id="wmClip"><img class="wm" id="wm" src="../site/assets/brand/wordmark.svg" alt="TribeCode"></span></div>
   <div class="center" id="urlRow"><p class="url"><b>tribecode.org</b></p></div>
   <div class="center" id="foss" style="font:600 30px Inter, sans-serif;color:var(--white)">Free and open source</div>
 </div>
@@ -505,7 +505,7 @@
     else { const t0 = performance.now(); const loop = now => { if (seekT === null) render(((now - t0) / 1000) % D); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
   };
   // on Ember, the wordmark's ember "Code" would vanish: draw it all in white with its dark outline (same drawing, one colour swapped)
-  const wmReady = fetch('assets/brand/wordmark.svg').then(r => r.text()).then(svg => new Promise(res => {
+  const wmReady = fetch('../site/assets/brand/wordmark.svg').then(r => r.text()).then(svg => new Promise(res => {
     const im = $('wm'); im.onload = res; im.onerror = res;
     im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace(/#F26B1D/gi, '#F8FAFC').replace(/#A8471B/gi, '#A8A29E'));
   })).catch(() => {});

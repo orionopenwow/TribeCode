@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Original soundtrack for site/ad-slow.html (v0.27): a warm lo-fi / chiptune bed, generated from nothing.
+"""Original soundtrack for promo/ad-slow.html (v0.27): a warm lo-fi / chiptune bed, generated from nothing.
 
 No samples, no loops from anywhere else: every sound here is synthesized with numpy. Layers:
   campfire crackle (filtered noise + random pops), soft pad chords, a round bass, a gentle triangle melody,
   light drums that start when the friends' AI helpers get to work and build a little into the company beat,
   tiny UI blips on the moments the picture shows (message lands, tool lines, approve click), and a resolve
   on the end card that fades out.
-The beat and event times match BEATS / the timeline in site/ad-slow.html.
+The beat and event times match BEATS / the timeline in promo/ad-slow.html.
 
 Usage:  python3 scripts/dev/ad-soundtrack.py OUT.wav      (48 kHz stereo, 16-bit, peak-limited)
 Then loudness-normalise with ffmpeg (two-pass loudnorm to -16 LUFS), as scripts/dev comments in the playbook show.

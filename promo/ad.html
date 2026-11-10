@@ -9,11 +9,11 @@
      can be rendered exactly: open ad.html?t=12.5, or call window.adSeek(12.5). ?still=1 (or reduced motion) shows the end card.
      Landscape (16:9) and vertical (9:16) layouts switch on the window's shape. Not linked from the site yet. -->
 <style>
-  @font-face { font-family: "Inter"; font-weight: 400; src: url("assets/fonts/Inter-Regular.woff") format("woff"); }
-  @font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.woff") format("woff"); }
-  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("assets/fonts/Inter-SemiBold.woff") format("woff"); }
-  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
-  @font-face { font-family: "Silkscreen"; src: url("assets/fonts/Silkscreen-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("../site/assets/fonts/Inter-Regular.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("../site/assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("../site/assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("../site/assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  @font-face { font-family: "Silkscreen"; src: url("../site/assets/fonts/Silkscreen-Regular.woff2") format("woff2"); }
   :root { --ember: #F26B1D; --teal: #38C6B1; --indigo: #6C7CFF; --canvas: #12151A; --surface: #1B2028; --raised: #1E242D; --border: #2A313C; --border2: #3A4350;
     --white: #F8FAFC; --text: #CBD5E1; --muted: #94A3B8; --faint: #64748B; --green: #3BD16F; --rose: #FF6F8E; --yellow: #FABD2F;
     --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
@@ -159,7 +159,7 @@
     <div class="scene">
       <svg class="px" id="camp" viewBox="0 0 980 840" width="980" height="840" style="position:absolute;left:0;top:0;overflow:visible"></svg>
       <div id="p1" style="position:absolute;left:40px;top:280px;width:320px;height:480px">
-        <img src="assets/creator/campton.png" alt="" width="254" height="480" style="position:absolute;left:33px;top:0;image-rendering:pixelated">
+        <img src="../site/assets/creator/campton.png" alt="" width="254" height="480" style="position:absolute;left:33px;top:0;image-rendering:pixelated">
 
       </div>
       <svg class="px" id="arcs" viewBox="0 0 980 840" width="980" height="840" style="position:absolute;left:0;top:0;overflow:visible"></svg>
@@ -201,7 +201,7 @@
               <div class="tool" id="t4"><span class="k">Tests</span>12 passed<span class="ok">✓</span></div>
             </div></div></div>
           <div class="msg" id="m3"><span class="av ai" style="border-color:var(--indigo);color:var(--indigo)">◎</span><div><p class="who">Maya’s Codex <em style="color:var(--indigo);border-color:var(--indigo)">Codex</em><time>7:04 PM</time></p><p class="txt">I’ll add a soft creak when it swings. 🔔</p><span class="react" id="rx">👍 2</span></div></div>
-          <div class="flintline" id="fl"><img src="assets/brand/flint.svg" alt="">Flint made 3 tasks from the chat: <b style="color:var(--white)">&nbsp;coins, title screen, sound</b></div>
+          <div class="flintline" id="fl"><img src="../site/assets/brand/flint.svg" alt="">Flint made 3 tasks from the chat: <b style="color:var(--white)">&nbsp;coins, title screen, sound</b></div>
         </div>
       </div>
     </div>
@@ -228,14 +228,14 @@
 
   <!-- 5 · end card -->
   <section class="beat end" id="b5">
-    <div class="mark"><img class="f" src="assets/brand/logo-flame.gif" alt=""><img class="w" src="assets/brand/wordmark.svg" alt="TribeCode"></div>
+    <div class="mark"><img class="f" src="../site/assets/brand/logo-flame.gif" alt=""><img class="w" src="../site/assets/brand/wordmark.svg" alt="TribeCode"></div>
     <h2>Build apps, games and <em>companies</em> with your friends.</h2>
     <div class="chips"><span>💬 One chat</span><span>✦ Your own AI</span><span>▶ Live preview</span><span>🏢 Company mode</span><span>📱 On your phone</span></div>
     <p class="foot">Free and open source · <b>tribecode.org</b></p>
   </section>
 
   <div class="ticks" id="ticks"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
-  <div class="brand" id="brand"><img class="f" src="assets/brand/logo-flame-sm.gif" alt=""><img class="w" src="assets/brand/wordmark.svg" alt=""></div>
+  <div class="brand" id="brand"><img class="f" src="../site/assets/brand/logo-flame-sm.gif" alt=""><img class="w" src="../site/assets/brand/wordmark.svg" alt=""></div>
 </div>
 
 <script>
@@ -468,7 +468,7 @@
     { id: 'run', t: 'Run', c: '#94A3B8', who: 'Flint', sub: 'AI helper', av: 'flint', ai: '#F26B1D', at: 2.1 },
   ];
   function seatHTML(s) {
-    const av = s.av === 'flint' ? `<span class="av ai" style="border-color:${s.ai}"><img src="assets/brand/flint.svg" alt="" style="width:24px;height:31px"></span>` : s.ai ? `<span class="av ai" style="border-color:${s.ai};color:${s.ai}">${s.av}</span>` : `<span class="av" style="background:${s.bg}">${s.av}</span>`;
+    const av = s.av === 'flint' ? `<span class="av ai" style="border-color:${s.ai}"><img src="../site/assets/brand/flint.svg" alt="" style="width:24px;height:31px"></span>` : s.ai ? `<span class="av ai" style="border-color:${s.ai};color:${s.ai}">${s.av}</span>` : `<span class="av" style="background:${s.bg}">${s.av}</span>`;
     return `<div class="seat" id="s-${s.id}" style="--c:${s.c}"><p class="t">${s.t}</p><div class="h" id="sh-${s.id}">${av}<div><b>${s.who}</b><small>${s.sub}</small></div></div><div class="empty" id="se-${s.id}">open seat</div></div>`;
   }
   let coV = null;
