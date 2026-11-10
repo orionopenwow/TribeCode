@@ -28,7 +28,7 @@
   const SRC_LABEL = { manual: 'typed in', connector: 'connector', 'ai-spend': 'AI spend', ai: 'agent' };
   const CAT = { hosting: 'Hosting', tools: 'Tools', ai: 'AI', ads: 'Ads', fees: 'Fees', people: 'People', other: 'Other' };
   const chip = s => `<span class="lg-chip" data-t="${esc(s.type)}" title="${esc(`${SRC_LABEL[s.type] || s.type} · last added ${when(s.last)}`)}">${esc(s.type === 'manual' ? 'Typed in' : s.name)}${s.count > 1 ? ` <i>${s.count}</i>` : ''}</span>`;
-  const chips = list => (list && list.length ? list.slice(0, 3).map(chip).join('') + (list.length > 3 ? `<span class="lg-chip more">+${list.length - 3}</span>` : '') : '<span class="lg-none">nothing recorded</span>');
+  const chips = list => (list && list.length ? list.slice(0, 2).map(chip).join('') + (list.length > 2 ? `<span class="lg-chip more" title="${esc(list.slice(2).map(x => x.name).join(', '))}">+${list.length - 2}</span>` : '') : '<span class="lg-none">nothing recorded</span>');
   const ICON = '<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M14.6 9.2c-.5-.8-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 2s1.1 1.7 2.6 2c1.5.3 2.7.8 2.7 2.1s-1.2 2.1-2.7 2.1c-1.2 0-2.2-.5-2.7-1.4M12 6.4v1.5M12 16.1v1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>';
   function ensureIcon() { const s = document.querySelector('svg symbol[id^="i-"]'); if (s && !document.getElementById('i-coin')) s.parentNode.insertAdjacentHTML('beforeend', ICON); }
 
@@ -106,7 +106,7 @@
           </div>
         </div>
         ${w && inst.adding ? addForm(L, cur) : ''}
-        <div class="lg-list" id="lg-list">${L.entries.length ? L.entries.map(e => row(e, w)).join('') : `<p class="lg-emptyrow">${nFilt ? 'Nothing matches these filters.' : w ? 'No entries this month. Add one, drop a CSV export below, or connect Stripe.' : 'No entries this month.'}</p>`}</div>
+        <div class="lg-list" id="lg-list">${L.entries.length ? L.entries.slice(0, inst.all ? L.entries.length : 8).map(e => row(e, w)).join('') + (!inst.all && L.entries.length > 8 ? `<button class="lg-showall" id="lg-showall">Show all ${L.entries.length}</button>` : '') : `<p class="lg-emptyrow">${nFilt ? 'Nothing matches these filters.' : w ? 'No entries this month. Add one, drop a CSV export below, or connect Stripe.' : 'No entries this month.'}</p>`}</div>
         ${L.total > L.entries.length ? `<p class="lg-more">Showing ${L.entries.length} of ${L.total}. Export CSV for all of them.</p>` : ''}
       </section>
 
@@ -204,6 +204,7 @@
       try { const r = await api(pid, `/ledger.csv?month=${inst.month}&format=json`); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([r.csv], { type: 'text/csv' })); a.download = r.filename; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast(`Exported ${r.rows} row${r.rows === 1 ? '' : 's'}`); }
       catch (e) { toast(e.message); }
     };
+    const sa = $('#lg-showall', el); if (sa) sa.onclick = () => { inst.all = true; render(inst); };
     const ad = $('#lg-add', el); if (ad) ad.onclick = () => { inst.adding = !inst.adding; render(inst); const f = $('#lg-addform', el); if (f) f.label.focus(); };
     const af = $('#lg-addform', el);
     if (af) {
