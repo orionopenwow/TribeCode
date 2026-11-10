@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TribeCode · type ad</title>
+<meta name="robots" content="noindex">
+<!-- A 22-second kinetic-type ad (v0.27), after a classic motion-graphics pattern: a short headline types in word by word,
+     a cut to the brand color with the logo, a line whose last word swaps in place, then one feature per line, each with one
+     small flat icon. Self-contained (no libraries). Everything is drawn from the time t, so any frame renders exactly:
+     ad-type.html?t=9.5, or window.adSeek(9.5). Landscape 16:9 and vertical 9:16 (text kept out of the bottom 20% and the
+     right-hand UI strip) switch on the window's shape. Music: scripts/dev/ad-type-sound.py, 120 BPM, synced to the beats here. -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  :root { --canvas: #12151A; --surface: #1B2028; --raised: #232A34; --border: #2A313C; --ember: #F26B1D; --ember-d: #C9530F; --teal: #38C6B1; --indigo: #6C7CFF; --white: #F8FAFC; --muted: #94A3B8; --green: #3BD16F; --yellow: #FABD2F; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  .ad { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--canvas); overflow: hidden; color: var(--white); font-family: Inter, system-ui, sans-serif; }
+  .ad.v { width: 1080px; height: 1920px; }
+  .layer { position: absolute; inset: 0; }
+  .panel { position: absolute; left: 0; right: 0; bottom: 0; height: 0; }
+  .center { position: absolute; left: 0; right: 0; display: flex; justify-content: center; align-items: center; }
+  .h { font: 800 112px/1.12 InterDisplay, Inter, sans-serif; letter-spacing: -.025em; white-space: nowrap; }
+  .v .h { font-size: 104px; }
+  .w { display: inline-block; will-change: transform, opacity; }
+  /* intro headline: wraps on the vertical layout */
+  #intro { top: 0; bottom: 0; }
+  #intro .h { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .26em; max-width: 1500px; text-align: center; }
+  .v #intro .h { max-width: 860px; }
+  /* a line with one slot whose word swaps in place */
+  .sw { display: inline-flex; align-items: flex-start; line-height: 1.12; }
+  .sw .w { height: 1.12em; }
+  .v .sw { flex-direction: column; align-items: center; } .v .sw .sp { display: none; }
+  .v #buildLine .h { font-size: 128px; }
+  .slot { position: relative; display: inline-block; height: 1.12em; overflow: hidden; vertical-align: bottom; }
+  .slot b { position: absolute; left: 0; top: 0; font: inherit; line-height: 1.12; white-space: nowrap; }
+  .sp { display: inline-block; width: .26em; }
+  /* logo */
+  .logo { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; transform-origin: 0 0; }
+  .logo .mark { width: 168px; height: 168px; display: block; image-rendering: pixelated; flex: none; }
+  .logo .wm-clip { overflow: hidden; height: 140px; display: flex; align-items: center; }
+  .logo .wm { height: 118px; width: auto; display: block; margin-left: 34px; }
+  .logo.dark .wm { filter: none; }
+  .url { font: 600 46px/1 Inter, sans-serif; letter-spacing: .01em; color: var(--white); }
+  .url b { font-weight: 600; color: var(--canvas); background: var(--white); padding: 14px 26px; border-radius: 999px; }
+  /* feature icon area */
+  .icon { position: absolute; left: 50%; width: 520px; height: 300px; margin-left: -260px; transform-origin: 50% 0; }
+  .v .icon { width: 560px; height: 340px; margin-left: -280px; }
+  .card { position: absolute; background: var(--surface); border: 3px solid var(--border); border-radius: 22px; }
+  .chip { position: absolute; display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-radius: 18px; background: var(--surface); border: 3px solid var(--border); font: 600 30px Inter, sans-serif; white-space: nowrap; }
+  .av { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font: 700 26px Inter, sans-serif; color: #fff; flex: none; }
+  .av.ai { border-radius: 50%; background: var(--canvas); border: 3px solid var(--teal); color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="ad" id="ad" role="img" aria-label="TribeCode type ad: Build apps with your friends. Build apps, games, websites and companies together. One chat for friends and their AI. Bring your own Claude, Codex or Gemini. A live preview while it's built. Docs, tasks and a whiteboard. Run it as a company. Free and open source. tribecode.org">
+  <div class="layer" id="bgEmber" style="background:var(--ember);opacity:0"></div>
+  <div class="panel" id="wipe1" style="background:var(--ember)"></div>
+  <div class="panel" id="wipe2" style="background:var(--canvas)"></div>
+  <div class="panel" id="wipe3" style="background:var(--ember)"></div>
+
+  <div class="center" id="intro"><p class="h" id="introH"></p></div>
+  <div class="center" id="buildLine"><p class="h"><span class="sw"><span class="w">Build</span><span class="sp"></span><span class="slot" id="slotB"></span><span class="sp"></span><span class="w">together.</span></span></p></div>
+  <div class="center" id="featLine"><p class="h" id="featH"></p></div>
+  <div class="icon" id="icon"></div>
+  <div class="logo" id="logo"><img class="mark" src="assets/brand/icon.svg" alt=""><span class="wm-clip" id="wmClip"><img class="wm" id="wm" src="assets/brand/wordmark.svg" alt="TribeCode"></span></div>
+  <div class="center" id="urlRow"><p class="url"><b>tribecode.org</b></p></div>
+  <div class="center" id="foss" style="font:600 30px Inter, sans-serif;color:var(--white)">Free and open source</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const D = 22, BEAT = .5, WMW = 562;                         // seconds; 120 BPM, matches the soundtrack
+  const $ = id => document.getElementById(id);
+  const ad = $('ad');
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const k = (t, a, d) => clamp((t - a) / d);
+  const outC = x => 1 - Math.pow(1 - x, 3);
+  const outQ = x => 1 - Math.pow(1 - x, 5);
+  const inC = x => x * x * x;
+  const back = x => { const c = 1.25; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const lerp = (a, b, x) => a + (b - a) * x;
+  let V = false, W = 1920, H = 1080;
+
+  // ---------- timeline (seconds) ----------
+  const INTRO = ['Build', 'apps', 'with', 'your', 'friends.'];
+  const INTRO_AT = [.35, .7, 1.05, 1.4, 1.75];      // words land on 8th notes
+  const T_TILT = 2.55, T_WIPE1 = 2.75, T_LOGO = 3.0, T_WM = 3.45, T_UP = 4.0;
+  const BUILD = ['apps', 'games', 'websites', 'companies'];
+  const BUILD_AT = [4.5, 5.25, 6.0, 6.75];          // swaps on the beat (1.5 beats apart)
+  const T_WIPE2 = 7.75;                             // to the dark canvas for the features
+  const FEATS = [
+    { at: 8.0, words: ['One chat for friends and their AI.'], icon: iconChat },
+    { at: 10.0, pre: 'Bring your own', swap: ['Claude.', 'Codex.', 'Gemini.'], swapAt: [10.0, 10.75, 11.5], icon: iconAgents },
+    { at: 12.0, words: ['A live preview while it’s built.'], icon: iconPreview },
+    { at: 14.0, words: ['Docs, tasks and a whiteboard.'], icon: iconDocs },
+    { at: 16.0, words: ['Run it as a company.'], icon: iconCompany },
+    { at: 18.0, words: ['Free and open source.'], icon: iconOpen },
+  ];
+  const T_WIPE3 = 19.75, T_END = 20.0, T_COLLAPSE = 21.2;
+
+  // ---------- layout ----------
+  function fit() {
+    V = innerHeight > innerWidth; ad.classList.toggle('v', V);
+    W = V ? 1080 : 1920; H = V ? 1920 : 1080;
+    const s = Math.min(innerWidth / W, innerHeight / H);
+    ad.style.transform = `translate(${(innerWidth - W * s) / 2}px, ${(innerHeight - H * s) / 2}px) scale(${s})`;
+    widths = {};
+  }
+  // the vertical cut keeps text in the safe middle: away from the bottom ~20% and the right-hand UI strip
+  const lineY = () => V ? 860 : 560;             // centre of the main line
+  const iconY = () => V ? 420 : 170;             // top of the icon box
+
+  // ---------- word widths (for slots that glide between words) ----------
+  let widths = {};
+  const meas = document.createElement('span'); meas.className = 'h'; meas.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden';
+  ad.appendChild(meas);
+  function wOf(word, el) { const fs = getComputedStyle(el).fontSize, key = fs + '|' + word; if (widths[key] == null) { meas.style.fontSize = fs; meas.textContent = word; widths[key] = meas.getBoundingClientRect().width / (ad.getBoundingClientRect().width / W); } return widths[key]; }
+
+  // A slot showing words[i] at times at[i]: the old word slides up and out, the new one rises in with a little overshoot,
+  // and the slot's width glides so the words around it move smoothly instead of jumping.
+  function slot(el, words, at, t) {
+    let i = -1; for (let j = 0; j < at.length; j++) if (t >= at[j]) i = j;
+    if (i < 0) { el.innerHTML = ''; el.style.width = '0px'; return; }
+    const p = k(t, at[i], .32), prev = i > 0 ? words[i - 1] : null;
+    const wNew = wOf(words[i], el), wOld = prev ? wOf(prev, el) : wNew;
+    el.style.width = lerp(wOld, wNew, outQ(k(t, at[i], .38))).toFixed(1) + 'px';
+    const yIn = (1 - back(p)) * 100, yOut = -outC(p) * 100;
+    el.innerHTML = (prev && p < 1 ? `<b style="transform:translateY(${yOut.toFixed(2)}%);opacity:${(1 - outC(p)).toFixed(3)}">${prev}</b>` : '') +
+      `<b style="transform:translateY(${yIn.toFixed(2)}%);opacity:${outC(k(t, at[i], .2)).toFixed(3)}">${words[i]}</b>`;
+  }
+  const pop = (t, a) => { const p = k(t, a, .34); return `transform:translateY(${((1 - back(p)) * 60).toFixed(1)}px);opacity:${outC(k(t, a, .2)).toFixed(3)}`; };
+
+  // ---------- icons: one small flat thing per feature, drawn from local time lt ----------
+  function iconChat(lt) {
+    const m = (a, x, y, av, txt, c) => { const p = k(lt, a, .35); return `<div class="chip" style="left:${x}px;top:${y}px;transform:translateY(${((1 - back(p)) * 40).toFixed(1)}px);opacity:${outC(p).toFixed(3)}">${av}<span style="color:${c || 'var(--white)'}">${txt}</span></div>`; };
+    return m(.15, 10, 20, '<span class="av" style="background:var(--indigo)">M</span>', 'add a lantern 🏮') +
+      m(.55, 120, 118, '<span class="av ai">✦</span>', 'On it. 2 files changed ✓', 'var(--teal)') +
+      m(.95, 40, 216, '<span class="av" style="background:var(--ember)">C</span>', 'ship it 🚀');
+  }
+  function iconAgents(lt) {
+    const L = [['✦', 'var(--ember)', 'Claude'], ['◎', 'var(--indigo)', 'Codex'], ['◆', 'var(--teal)', 'Gemini']];
+    let s = '';
+    L.forEach(([g, c, n], i) => { const a = .1 + i * .75, p = k(lt, a, .35), on = lt >= a;
+      s += `<div style="position:absolute;left:${30 + i * 165}px;top:40px;width:130px;text-align:center;transform:scale(${(.6 + .4 * back(p)).toFixed(3)});opacity:${on ? (i === Math.min(2, Math.floor((lt - .1) / .75)) ? 1 : .45) : 0}">
+        <div style="width:130px;height:130px;border-radius:50%;border:5px solid ${c};display:grid;place-items:center;font:700 58px Inter;color:${c};background:var(--surface)">${g}</div>
+        <div style="margin-top:16px;font:600 28px Inter;color:var(--white)">${n}</div></div>`; });
+    return s;
+  }
+  function iconPreview(lt) {
+    const b = (a, x, y, w, h, c) => { const p = outC(k(lt, a, .25)); return `<div style="position:absolute;left:${x}px;top:${y}px;width:${(w * p).toFixed(1)}px;height:${h}px;border-radius:8px;background:${c}"></div>`; };
+    const live = lt > 1.2;
+    return `<div class="card" style="left:40px;top:0;width:440px;height:290px;overflow:hidden">
+      <div style="height:44px;border-bottom:3px solid var(--border);display:flex;align-items:center;gap:9px;padding:0 16px"><i style="width:12px;height:12px;border-radius:50%;background:#FF6F8E"></i><i style="width:12px;height:12px;border-radius:50%;background:var(--yellow)"></i><i style="width:12px;height:12px;border-radius:50%;background:var(--green)"></i>
+        <span style="margin-left:auto;font:600 20px Inter;color:${live ? 'var(--teal)' : 'var(--muted)'}">${live ? '● LIVE' : 'building…'}</span></div>
+      ${b(.15, 24, 66, 250, 34, 'var(--ember)')}${b(.4, 24, 120, 180, 120, 'var(--raised)')}${b(.6, 222, 124, 190, 16, 'var(--muted)')}${b(.72, 222, 156, 150, 16, 'var(--muted)')}${b(.84, 222, 188, 170, 16, 'var(--muted)')}${b(1.0, 222, 222, 120, 26, 'var(--teal)')}
+    </div>`;
+  }
+  function iconDocs(lt) {
+    const c = (i, inner) => { const a = .1 + i * .3, p = k(lt, a, .35); return `<div class="card" style="left:${i * 175}px;top:20px;width:155px;height:200px;padding:18px;transform:translateY(${((1 - back(p)) * 50).toFixed(1)}px) rotate(${(i - 1) * 3}deg);opacity:${outC(p).toFixed(3)}">${inner}</div>`; };
+    const line = (w, c) => `<i style="display:block;height:12px;width:${w}%;border-radius:6px;background:${c || 'var(--muted)'};margin-bottom:14px"></i>`;
+    const ck = (on, w) => `<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><i style="width:22px;height:22px;border-radius:6px;border:3px solid ${on ? 'var(--green)' : 'var(--muted)'};background:${on ? 'var(--green)' : 'none'}"></i><i style="height:12px;width:${w}%;border-radius:6px;background:var(--muted)"></i></div>`;
+    const tick = lt > 1.1;
+    return c(0, line(80, 'var(--white)') + line(95) + line(70) + line(85)) +
+      c(1, ck(true, 70) + ck(tick, 60) + ck(false, 75)) +
+      c(2, `<svg viewBox="0 0 120 150" width="119" height="150"><path d="M10 110 C 30 40, 60 40, 70 90 S 105 120, 112 30" fill="none" stroke="var(--yellow)" stroke-width="9" stroke-linecap="round" stroke-dasharray="260" stroke-dashoffset="${(260 * (1 - outC(k(lt, .8, .7)))).toFixed(1)}"/><rect x="62" y="96" width="44" height="40" rx="6" fill="var(--indigo)" opacity="${outC(k(lt, 1.2, .3)).toFixed(2)}"/></svg>`) +
+      `<div style="position:absolute;left:0;top:250px;width:520px;text-align:center;font:600 24px Inter;color:var(--muted)">${''}</div>`;
+  }
+  function iconCompany(lt) {
+    const seat = (x, y, t0, label, c, who, ai) => { const p = k(lt, t0, .35), on = lt > t0 + .25;
+      return `<div class="card" style="left:${x}px;top:${y}px;width:150px;height:96px;padding:14px 16px;border-color:${on ? c : 'var(--border)'};transform:scale(${(.7 + .3 * back(p)).toFixed(3)});opacity:${outC(p).toFixed(3)}">
+        <div style="font:700 17px Inter;letter-spacing:.08em;color:${c}">${label}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="av ${ai ? 'ai' : ''}" style="width:36px;height:36px;font-size:17px;${ai ? '' : 'background:' + c}">${who}</span><i style="height:10px;width:56px;border-radius:5px;background:var(--muted)"></i></div></div>`; };
+    const ln = outC(k(lt, .35, .3));
+    return `<div style="position:absolute;left:259px;top:96px;width:3px;height:${(30 * ln).toFixed(1)}px;background:var(--border)"></div><div style="position:absolute;left:${260 - 175 * ln}px;top:126px;width:${(350 * ln).toFixed(1)}px;height:3px;background:var(--border)"></div>` +
+      seat(185, 0, .1, 'CEO', 'var(--ember)', 'C') + seat(10, 150, .5, 'BUILD', 'var(--teal)', '✦', true) + seat(185, 150, .7, 'GROW', 'var(--yellow)', 'M') + seat(360, 150, .9, 'RUN', 'var(--indigo)', '◎', true);
+  }
+  function iconOpen(lt) {
+    const p = k(lt, .15, .35), q = k(lt, .6, .35);
+    return `<div style="position:absolute;left:60px;top:40px;transform:scale(${(.6 + .4 * back(p)).toFixed(3)});opacity:${outC(p).toFixed(3)};font:800 150px/1 InterDisplay, Inter;color:var(--ember);letter-spacing:-.02em">{ }</div>
+      <div class="chip" style="left:290px;top:52px;transform:translateY(${((1 - back(q)) * 40).toFixed(1)}px);opacity:${outC(q).toFixed(3)}"><span style="color:var(--yellow);font-size:34px">★</span>MIT license</div>
+      <div class="chip" style="left:290px;top:146px;transform:translateY(${((1 - back(k(lt, .85, .35))) * 40).toFixed(1)}px);opacity:${outC(k(lt, .85, .3)).toFixed(3)}"><span style="color:var(--teal)">⑂</span>Fork it on GitHub</div>`;
+  }
+
+  // ---------- one frame ----------
+  function render(T) {
+    const t = Math.max(0, Math.min(D - 1e-3, T));
+    // background wipes: panels rise from the bottom (ember → dark → ember)
+    const wipe = (id, a) => { const p = k(t, a, .32); $(id).style.height = (outC(p) * 100).toFixed(2) + '%'; };
+    wipe('wipe1', T_WIPE1); wipe('wipe2', T_WIPE2); wipe('wipe3', T_WIPE3);
+
+    // intro: words land one by one, then the whole line tilts and drops away
+    const intro = $('intro');
+    if (t < T_WIPE1 + .35) {
+      intro.style.display = 'flex';
+      $('introH').innerHTML = INTRO.map((w, i) => `<span class="w" style="${pop(t, INTRO_AT[i])}">${w}</span>`).join('');
+      const p = inC(k(t, T_TILT, .45));
+      intro.style.transform = `translateY(${(p * 260).toFixed(1)}px) rotate(${(-7 * p).toFixed(2)}deg) scale(${(1 - .35 * p).toFixed(3)})`;
+      intro.style.opacity = (1 - k(t, T_TILT + .2, .25)).toFixed(3);
+    } else intro.style.display = 'none';
+
+    // logo: the mark drops in with a bounce, the wordmark slides out from behind it, then it all moves up small
+    const logo = $('logo');
+    const logoOn = (t >= T_LOGO && t < T_WIPE2 + .3) || t >= T_END;
+    logo.style.display = logoOn ? 'flex' : 'none';
+    if (logoOn) {
+      const end = t >= T_END;
+      const a0 = end ? T_END : T_LOGO, aW = end ? T_END + .25 : T_WM;
+      const drop = back(k(t, a0, .45));
+      const wmP = outQ(k(t, aW, .45));
+      const wmW = WMW * wmP;
+      $('wmClip').style.width = wmW.toFixed(1) + 'px';
+      // end card: the wordmark tucks back behind the mark (like the classic sign-off)
+      if (end) { const c = outQ(k(t, T_COLLAPSE, .4)); $('wmClip').style.width = (WMW * wmP * (1 - c)).toFixed(1) + 'px'; }
+      const fullW = 168 + parseFloat($('wmClip').style.width);
+      const up = end ? 0 : outQ(k(t, T_UP, .45));
+      const sc = lerp(1, .42, up);
+      const cy = lerp(H / 2 - (end ? 70 : 0), V ? 250 : 120, up);
+      logo.style.transform = `translate(${(-fullW * sc / 2).toFixed(1)}px, ${(cy - 84 * sc - (1 - drop) * 180).toFixed(1)}px) scale(${sc.toFixed(4)})`;
+      logo.style.left = '50%'; logo.style.top = '0px';
+      logo.style.opacity = outC(k(t, a0, .15)).toFixed(3);
+      // over the dark canvas wipe, fade the small header logo out
+      if (!end) logo.style.opacity = (outC(k(t, a0, .15)) * (1 - k(t, T_WIPE2, .25))).toFixed(3);
+    }
+
+    // "Build ___ together." with the swapping word
+    const bl = $('buildLine');
+    const blOn = t >= BUILD_AT[0] - .05 && t < T_WIPE2 + .3;
+    bl.style.display = blOn ? 'flex' : 'none';
+    if (blOn) {
+      bl.style.top = (lineY() - 70) + 'px';
+      slot($('slotB'), BUILD, BUILD_AT, t);
+      const p = k(t, BUILD_AT[0], .34);
+      bl.firstElementChild.style.cssText = `transform:translateY(${((1 - back(p)) * 50).toFixed(1)}px);opacity:${(outC(k(t, BUILD_AT[0], .2)) * (1 - k(t, T_WIPE2, .2))).toFixed(3)}`;
+    }
+
+    // features: one line + one icon each; lines rise in and leave upward
+    const fl = $('featLine'), ic = $('icon');
+    let f = null; for (const x of FEATS) if (t >= x.at) f = x;
+    const featOn = f && t < T_WIPE3 + .3;
+    fl.style.display = ic.style.display = featOn ? '' : 'none';
+    if (featOn) {
+      const lt = t - f.at, next = FEATS[FEATS.indexOf(f) + 1], outAt = next ? next.at - .22 : T_WIPE3 - .1;
+      const o = outC(k(t, outAt, .22));
+      fl.style.top = (lineY() + (V ? 40 : 110)) + 'px'; ic.style.top = iconY() + 'px';
+      const fh = fl.firstElementChild;
+      fh.style.fontSize = V ? (f.swap ? '104px' : '92px') : (f.words && f.words[0].length > 30 ? '100px' : '');
+      fh.style.whiteSpace = V && !f.swap ? 'normal' : ''; fh.style.maxWidth = V ? '940px' : ''; fh.style.textAlign = 'center';
+      if (f.swap) {
+        fl.firstElementChild.innerHTML = `<span class="sw" style="${pop(t, f.at)}"><span class="w">${f.pre}</span><span class="sp"></span><span class="slot" id="slotF"></span></span>`;
+        slot($('slotF'), f.swap, f.swapAt, t);
+      } else {
+        fl.firstElementChild.innerHTML = `<span class="w" style="${pop(t, f.at)}">${f.words[0]}</span>`;
+      }
+      fl.style.transform = `translateY(${(-o * 70).toFixed(1)}px)`; fl.style.opacity = (1 - o).toFixed(3);
+      ic.innerHTML = f.icon(lt); ic.style.transform = `translateY(${(-o * 50).toFixed(1)}px) scale(${V ? 1.25 : 1.4})`; ic.style.opacity = (1 - o).toFixed(3);
+    }
+
+    // end card: url and line under the logo
+    const u = $('urlRow'), fo = $('foss');
+    const uOn = t >= T_END + .45;
+    u.style.display = fo.style.display = uOn ? 'flex' : 'none';
+    if (uOn) {
+      u.style.top = (H / 2 + 80) + 'px'; u.style.cssText += `;${pop(t, T_END + .45)}`;
+      fo.style.top = (H / 2 + 200) + 'px'; fo.style.opacity = outC(k(t, T_END + .7, .3)).toFixed(3);
+    }
+  }
+
+  let seekT = null;
+  window.adSeek = t => { seekT = t; render(t); return document.fonts ? document.fonts.ready.then(() => true) : true; };
+  const q = new URLSearchParams(location.search);
+  addEventListener('resize', () => { fit(); render(seekT ?? 0); });
+  fit();
+  const go = () => {
+    widths = {};
+    if (q.has('t')) { seekT = parseFloat(q.get('t')) || 0; render(seekT); }
+    else if (q.has('still') || matchMedia('(prefers-reduced-motion: reduce)').matches) render(20.9);
+    else { const t0 = performance.now(); const loop = now => { if (seekT === null) render(((now - t0) / 1000) % D); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  };
+  // on Ember, the wordmark's ember "Code" would vanish: draw it all in white with its dark outline (same drawing, one colour swapped)
+  const wmReady = fetch('assets/brand/wordmark.svg').then(r => r.text()).then(svg => new Promise(res => {
+    const im = $('wm'); im.onload = res; im.onerror = res;
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace(/#F26B1D/gi, '#F8FAFC').replace(/#A8471B/gi, '#A8A29E'));
+  })).catch(() => {});
+  Promise.all([document.fonts ? document.fonts.ready : 0, wmReady]).then(go);
+})();
+</script>
+</body>
+</html>
