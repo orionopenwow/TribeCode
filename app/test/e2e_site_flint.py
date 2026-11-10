@@ -34,15 +34,28 @@ def main():
             pg.hover('[data-mm="company"]'); pg.wait_for_timeout(150)
             assert pg.text_content("#mm-t") == "Company mode" and pg.locator("#mm-view .sp-seats").count() == 1, f"{page}: spotlight follows hover"
             pg.keyboard.press("Escape"); pg.mouse.move(5, 600)
-        # Meet Flint: the live chat
-        pg.goto(f"{base}/flint.html"); pg.wait_for_selector("#ft-chips .ft-chip")
+        # Meet Flint: the live chat, in a copy of the real app
+        pg.goto(f"{base}/flint.html"); pg.wait_for_selector('[data-app=try] .fa-chip')
         assert pg.text_content("h1").strip() == "Meet Flint"
-        pg.click('#ft-chips [data-ask="add a jump sound"]')
-        pg.wait_for_function("document.querySelector('#ft-thread').textContent.includes('assets/sounds/jump.wav')", timeout=5000)
-        assert "Files › Assets" in pg.text_content("#ft-where")
-        pg.fill("#ft-in", "teach me what an API is"); pg.press("#ft-in", "Enter")
-        pg.wait_for_function("document.querySelectorAll('#ft-view .fv-tabs button').length === 4", timeout=5000)
-        assert pg.locator(".fx").count() == 8, "eight exhibits"
+        tr = '[data-app=try]'
+        pg.click(f'{tr} .fa-chip[data-ask="add a jump sound"]')
+        pg.wait_for_function("document.querySelector('[data-app=try] .fa-fl__thread').textContent.includes('assets/sounds/jump.wav')", timeout=6000)
+        assert pg.get_attribute(f'{tr} .mk-row[data-row=preview]', "aria-selected") == "true", "the Preview row lights up"
+        pg.fill(f"{tr} .fa-ask input", "teach me what an API is"); pg.press(f"{tr} .fa-ask input", "Enter")
+        pg.wait_for_function("document.querySelectorAll('[data-app=try] #fv-tabs span').length === 4", timeout=6000)
+        # sidebar rows are tabs: click and arrow keys switch the view, Flint says where it lives
+        run = '[data-app=run]'
+        pg.locator(run).scroll_into_view_if_needed(); pg.wait_for_timeout(400)
+        pg.click(f'{run} .mk-row[data-row=tasks]')
+        assert pg.locator(f'{run} .fv-cols').count() == 1 and pg.get_attribute(f'{run} .mk-row[data-row=tasks]', "aria-selected") == "true"
+        pg.wait_for_function("document.querySelector('[data-app=run] .fa-fl__thread').textContent.includes('Task Board lives here')", timeout=4000)
+        pg.focus(f'{run} .mk-row[data-row=tasks]'); pg.keyboard.press("ArrowDown")
+        assert pg.locator(f'{run} .fv-wb').count() == 1, "arrow key opens the whiteboard"
+        st = pg.locator(f'{run} .fv-sticky').first; bb = st.bounding_box()
+        pg.mouse.move(bb["x"] + 20, bb["y"] + 15); pg.mouse.down(); pg.mouse.move(bb["x"] + 90, bb["y"] + 60, steps=5); pg.mouse.up()
+        assert abs(st.bounding_box()["x"] - bb["x"]) > 30, "stickies drag"
+        assert pg.locator(".fx").count() == 8 and pg.locator(".fx-steps").count() == 8, "eight exhibits with steps"
+        assert pg.locator("[data-build] .fb__phone .ha-row").count() == 5, "the habit tracker runs on a phone"
         assert pg.locator(".fq details").count() >= 4
         # Spanish menu
         pg.goto(f"{base}/index.html"); pg.wait_for_selector("#menu-features .mm__a", state="attached")
@@ -57,6 +70,8 @@ def main():
             ph.evaluate("document.querySelector('.nav__toggle').click()"); ph.evaluate("document.querySelector('.nav__drop').click()"); ph.wait_for_timeout(150)
             w = ph.evaluate("document.documentElement.scrollWidth"); assert w <= 391, f"{page} 390: scrollWidth {w}"
             assert not ph.locator(".mm-spot").is_visible(), "no spotlight on phones"
+        ph.goto(f"{base}/flint.html"); ph.wait_for_timeout(600)
+        assert "is-phone" in ph.get_attribute("[data-app=try]", "class"), "the app copies switch to the phone layout"
         b.close()
     assert not errs, errs
     print("ok e2e_site_flint")
