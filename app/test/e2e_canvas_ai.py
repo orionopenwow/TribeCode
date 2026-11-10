@@ -82,12 +82,15 @@ def open_canvas(page):
 
 
 def ask(page, text):
-    if page.is_hidden("#cv-flint"): page.click("#cv-flint-btn")
-    page.fill("#cvf-in", text)
-    page.press("#cvf-in", "Enter")
-    page.wait_for_function("!document.querySelector('#cv-flint').classList.contains('is-busy') && !document.querySelector('#cvf-out .is-wait')", timeout=15000)
+    # Flint lives in the pane beside the canvas now (app/ui/canvas/flintpane.js); in Advanced it's the Flint tab
+    page.evaluate("TribeCanvasFlintPane.open()")
+    page.wait_for_selector("#cv-fpane #fp-in", state="visible", timeout=5000)
+    n = page.evaluate("document.querySelectorAll('#fp-log .fp-flint:not(.is-wait)').length")
+    page.fill("#fp-in", text)
+    page.press("#fp-in", "Enter")
+    page.wait_for_function("n => !document.querySelector('#fp-log .is-wait') && document.querySelectorAll('#fp-log .fp-flint:not(.is-wait)').length > n", arg=n, timeout=15000)
     page.wait_for_timeout(250)
-    return page.inner_text("#cvf-out")
+    return page.locator("#fp-log .fp-flint").last.inner_text()
 
 
 def select(page, ids):
@@ -195,8 +198,8 @@ def main():
 
             # ---- dark mode version and variants
             select(o, [ember["id"]])
-            o.wait_for_selector("#cvf-chips [data-cvf-chip='Dark mode version']", timeout=5000)
-            o.click("#cvf-chips [data-cvf-chip='Dark mode version']")
+            o.wait_for_selector("#fp-chips [data-text='Dark mode version']", timeout=5000)
+            o.click("#fp-chips [data-text='Dark mode version']")
             o.wait_for_function("TribeCanvas.state().nodes.some(n => n.name === 'Ember · Sign in · Dark')", timeout=8000)
             dark = nodes(o, name="Ember · Sign in · Dark")[0]
             assert dark["fill"] == "#111318", dark
@@ -213,12 +216,12 @@ def main():
 
             # ---- honest cards
             out = ask(o, "rewrite the whole app in react with a database")
-            assert "Bigger than my free tier" in out and o.is_visible("#cvf-out [data-cvf='hand']"), out
+            assert "Bigger than my free tier" in out and o.locator("#fp-log .fp-flint").last.locator("[data-fp='hand']").is_visible(), out
             out = ask(o, "a cat wearing a tiny hat")
             assert "freeform" in out.lower(), out
-            o.click("#cvf-out [data-cvf='hand']")
-            o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#cvf-out').textContent)", timeout=8000)
-            o.click("#cv-flint-btn"); assert o.is_hidden("#cv-flint"), "the button closes the bar"
+            o.locator("#fp-log [data-fp='hand']").last.click()
+            o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#fp-log').textContent)", timeout=8000)
+            o.click("#cv-flint-btn"); o.wait_for_timeout(200); assert o.is_hidden("#cv-fpane"), "the flame button closes Flint's pane"
 
             # ---- phone
             pctx = b.new_context(**PHONE); pctx.add_init_script(settings_js("Orion", orion, pid))
@@ -227,8 +230,9 @@ def main():
             ph.wait_for_function("window.TribeCanvas && TribeCanvas.state().open", timeout=20000)
             ph.wait_for_selector("#cv-flint-btn", timeout=10000)
             ph.click("#cv-flint-btn")
-            ph.wait_for_selector("#cv-flint:not([hidden])", timeout=5000)
-            bx = ph.eval_on_selector("#cv-flint", "e => e.getBoundingClientRect().toJSON()")
+            ph.wait_for_function("document.querySelector('#cv').classList.contains('sheet-flint')", timeout=5000)
+            ph.wait_for_timeout(450)
+            bx = ph.eval_on_selector("#cv-fpane", "e => e.getBoundingClientRect().toJSON()")
             assert bx["left"] >= 0 and bx["right"] <= 391, bx
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll"
             shot(ph, "phone")

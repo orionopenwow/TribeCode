@@ -258,6 +258,7 @@
     if (P.props) P.props.mount($('#cv-props'), E);
     if (window.TribeCanvasCode) window.TribeCanvasCode.mount(E);
     if (window.TribeCanvasFlint) window.TribeCanvasFlint.mount(E);   // P1-F: Flint's prompt bar (app/ui/canvas/flint.js)
+    if (window.TribeCanvasFlintPane) window.TribeCanvasFlintPane.mount(E);   // Flint's Make-style pane, Simple / Advanced (app/ui/canvas/flintpane.js)
     $('#cv-tools').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.tool) setTool(b.dataset.tool);
@@ -1287,6 +1288,17 @@
     get file() { return fileId; },
     elOf: id => elOf(id),
     insert(nodes, focus) { if (!canEdit || !Array.isArray(nodes) || !nodes.length) return; for (const n of nodes) { const c = clone(n); delete c.v; put(c); } sel = focus && S.get(focus) ? [focus] : []; inner = null; end(); if (focus) requestAnimationFrame(() => { fit(true); if (view.z > 1) zoomTo(1); }); },
+    // Flint pane (flintpane.js): the last undo step, and undoing any one step later (Flint's "Undo" on an older message)
+    step: () => (undo.length ? undo[undo.length - 1] : null),
+    revert(pairs) {
+      if (!canEdit || !Array.isArray(pairs) || !pairs.length) return;
+      commitEdit(true);
+      for (const p of pairs) {
+        if (p.before) put(clone(p.before));
+        else { const cur = S.get(p.id); if (!cur) continue; begin(); if (!tx.has(p.id)) tx.set(p.id, clone(cur)); const t = { id: p.id, del: true, v: (cur.v || 0) + 1 }; S.nodes.set(p.id, t); queue(t); }
+      }
+      sel = sel.filter(id => S.get(id)); inner = null; end(true); renderAll();
+    },
     apply(nodes) { if (!canEdit || !Array.isArray(nodes) || !nodes.length) return; for (const n of nodes) { if (!S.nodes.get(n.id)) continue; const c = clone(n); delete c.v; put(c); } end(true); },
   };
 
