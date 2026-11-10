@@ -1,0 +1,32 @@
+{ "id": "home", "title": "App home screen", "keys": ["home ?screen", "mobile home", "app home", "home for", "main screen"], "size": [390, 844], "accent": "#E0663A",
+  "root": { "n": "{{name}} · Home", "lay": "col 20 56,22,0,22 stretch start", "k": [
+    { "n": "Top bar", "lay": "row 12 0 center between", "sz": "fill", "k": [
+      { "n": "Greeting", "lay": "col 2 0 start start", "sz": "hug", "k": [
+        { "t": "text", "n": "Hello", "c": "{{greeting}}", "s": 14, "col": "{{muted}}" },
+        { "t": "text", "n": "Name", "c": "Sam", "s": 26, "wt": 700 } ] },
+      { "t": "ellipse", "n": "Avatar", "w": 42, "h": 42, "fill": "{{soft}}", "stroke": "{{line}}" } ] },
+    { "n": "Search", "fill": "{{surface}}", "stroke": "{{line}}", "r": 14, "lay": "row 10 13,16 center start", "sz": "fill", "k": [
+      { "t": "ellipse", "n": "Search icon", "w": 14, "h": 14, "stroke": "{{muted}}", "sw": 2 },
+      { "t": "text", "n": "Search placeholder", "c": "Search {{thing}}", "s": 15, "col": "{{muted}}" } ] },
+    { "n": "Featured", "fill": "{{ink}}", "r": 20, "lay": "col 6 20 start start", "sz": "fill", "k": [
+      { "t": "text", "n": "Eyebrow", "c": "THIS WEEK", "s": 11, "wt": 700, "col": "{{accent}}" },
+      { "t": "text", "n": "Featured title", "c": "{{item1}} is back", "s": 22, "wt": 700, "col": "{{onInk}}" },
+      { "t": "text", "n": "Featured body", "c": "{{tagline}}", "s": 14, "col": "{{onInkMuted}}", "sz": "fill" } ] },
+    { "t": "text", "n": "Section title", "c": "Popular {{thing}}", "s": 18, "wt": 700 },
+    { "n": "List", "lay": "col 10 0 stretch start", "sz": "fill", "k": [
+      { "t": "instance", "ref": "row", "n": "List row" },
+      { "t": "instance", "ref": "row", "n": "List row", "ov": { "title": { "c": "{{item2}}" }, "sub": { "c": "{{item2sub}}" }, "meta": { "c": "{{price2}}" } } },
+      { "t": "instance", "ref": "row", "n": "List row", "ov": { "title": { "c": "{{item3}}" }, "sub": { "c": "{{item3sub}}" }, "meta": { "c": "{{price3}}" } } } ] },
+    { "n": "Spacer", "h": 1, "sz": "fill fill" },
+    { "n": "Tab bar", "fill": "{{surface}}", "stroke": "{{line}}", "lay": "row 0 12,8,26,8 center between", "sz": "fill", "k": [
+      { "t": "text", "n": "Tab Home", "c": "Home", "s": 12, "wt": 700, "col": "{{accent}}", "al": "center", "sz": "fill" },
+      { "t": "text", "n": "Tab Search", "c": "Search", "s": 12, "col": "{{muted}}", "al": "center", "sz": "fill" },
+      { "t": "text", "n": "Tab Saved", "c": "Saved", "s": 12, "col": "{{muted}}", "al": "center", "sz": "fill" },
+      { "t": "text", "n": "Tab Profile", "c": "Profile", "s": 12, "col": "{{muted}}", "al": "center", "sz": "fill" } ] } ] },
+  "components": [
+    { "t": "component", "key": "row", "n": "List row", "w": 346, "h": 80, "fill": "{{surface}}", "stroke": "{{line}}", "r": 16, "lay": "row 14 12,16,12,12 center start", "sz": "fixed hug", "k": [
+      { "t": "rect", "key": "thumb", "n": "Thumb", "w": 56, "h": 56, "r": 12, "fill": "{{soft}}" },
+      { "n": "Info", "lay": "col 3 0 start start", "sz": "fill", "k": [
+        { "t": "text", "key": "title", "n": "Row title", "c": "{{item1}}", "s": 16, "wt": 600 },
+        { "t": "text", "key": "sub", "n": "Row subtitle", "c": "{{item1sub}}", "s": 13, "col": "{{muted}}" } ] },
+      { "t": "text", "key": "meta", "n": "Row meta", "c": "{{price1}}", "s": 15, "wt": 700 } ] } ] }

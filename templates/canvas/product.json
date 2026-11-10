@@ -1,0 +1,27 @@
+{ "id": "product", "title": "Product page", "keys": ["product", "item page", "shop item", "listing", "product card", "merch"], "size": [1280, 800], "accent": "#1F7A4D",
+  "root": { "n": "{{name}} · Product", "lay": "col 0 0 stretch start", "k": [
+    { "n": "Nav", "lay": "row 24 20,48 center between", "sz": "fill", "stroke": "{{line}}", "k": [
+      { "t": "text", "n": "Store name", "c": "{{name}}", "s": 20, "wt": 700, "f": "Georgia" },
+      { "n": "Nav links", "lay": "row 28 0 center end", "sz": "hug", "k": [
+        { "t": "text", "n": "Link Shop", "c": "Shop", "s": 14 },
+        { "t": "text", "n": "Link About", "c": "About", "s": 14 },
+        { "t": "text", "n": "Cart", "c": "Cart (1)", "s": 14, "wt": 600 } ] } ] },
+    { "n": "Body", "lay": "row 56 40,48 start start", "sz": "fill fill", "k": [
+      { "n": "Gallery", "lay": "col 12 0 stretch start", "sz": "fill", "k": [
+        { "t": "rect", "n": "Main photo", "h": 480, "w": 560, "r": 6, "fill": "{{soft}}", "sz": "fill fixed" },
+        { "n": "Thumbs", "lay": "row 12 0 start start", "sz": "fill", "k": [
+          { "t": "rect", "n": "Thumb", "w": 88, "h": 88, "r": 6, "fill": "{{soft}}", "stroke": "{{fg}}", "sw": 2 },
+          { "t": "rect", "n": "Thumb", "w": 88, "h": 88, "r": 6, "fill": "{{line}}" },
+          { "t": "rect", "n": "Thumb", "w": 88, "h": 88, "r": 6, "fill": "{{line}}" } ] } ] },
+      { "n": "Details", "lay": "col 18 8,0 stretch start", "sz": "fill", "k": [
+        { "t": "text", "n": "Category", "c": "{{thing}}", "s": 12, "wt": 600, "col": "{{muted}}", "f": "JetBrains Mono" },
+        { "t": "text", "n": "Product title", "c": "{{item1}}", "s": 40, "wt": 500, "f": "Georgia", "sz": "fill" },
+        { "t": "text", "n": "Price", "c": "{{price1}}", "s": 22, "wt": 600 },
+        { "t": "text", "n": "Description", "c": "{{item1sub}}. Made in small runs, so each batch is a little different. Ships in recycled packaging within two days.", "s": 15, "lh": 1.6, "col": "{{muted}}", "sz": "fill" },
+        { "n": "Options", "lay": "row 8 0 start start", "sz": "fill", "k": [
+          { "n": "Option on", "stroke": "{{fg}}", "sw": 2, "r": 6, "lay": "row 0 10,16 center center", "sz": "hug", "k": [ { "t": "text", "n": "Option label", "c": "Small", "s": 14, "wt": 600 } ] },
+          { "n": "Option", "stroke": "{{line}}", "r": 6, "lay": "row 0 10,16 center center", "sz": "hug", "k": [ { "t": "text", "n": "Option label", "c": "Medium", "s": 14 } ] },
+          { "n": "Option", "stroke": "{{line}}", "r": 6, "lay": "row 0 10,16 center center", "sz": "hug", "k": [ { "t": "text", "n": "Option label", "c": "Large", "s": 14 } ] } ] },
+        { "n": "Add to cart", "fill": "{{accent}}", "r": 6, "lay": "row 8 16,24 center center", "sz": "fill", "k": [
+          { "t": "text", "n": "Add label", "c": "Add to cart", "s": 16, "wt": 600, "col": "{{onAccent}}" } ] },
+        { "t": "text", "n": "Shipping note", "c": "Free returns within 30 days.", "s": 13, "col": "{{muted}}" } ] } ] } ] } }

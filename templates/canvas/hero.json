@@ -1,0 +1,21 @@
+{ "id": "hero", "title": "Landing hero", "keys": ["landing", "hero", "homepage", "website", "web ?site", "home ?page", "header section"], "size": [1280, 800], "accent": "#D9480F",
+  "root": { "n": "{{name}} · Landing", "lay": "col 0 0 stretch start", "k": [
+    { "n": "Nav", "lay": "row 24 24,64 center between", "sz": "fill", "k": [
+      { "t": "text", "n": "Logo", "c": "{{name}}", "s": 22, "wt": 700, "f": "Georgia" },
+      { "n": "Links", "lay": "row 32 0 center end", "sz": "hug", "k": [
+        { "t": "text", "n": "Link", "c": "{{link1}}", "s": 15 },
+        { "t": "text", "n": "Link", "c": "{{link2}}", "s": 15 },
+        { "t": "text", "n": "Link", "c": "Contact", "s": 15 },
+        { "n": "Nav button", "stroke": "{{fg}}", "r": 999, "lay": "row 0 9,18 center center", "sz": "hug", "k": [ { "t": "text", "n": "Nav button label", "c": "{{cta}}", "s": 14, "wt": 600 } ] } ] } ] },
+    { "n": "Hero", "lay": "row 56 48,64,64,64 center start", "sz": "fill fill", "k": [
+      { "n": "Copy", "lay": "col 22 0 start start", "sz": "fill", "k": [
+        { "t": "text", "n": "Eyebrow", "c": "{{place}}", "s": 13, "wt": 600, "col": "{{accent}}", "f": "JetBrains Mono" },
+        { "t": "text", "n": "Headline", "c": "{{headline}}", "s": 60, "wt": 400, "lh": 1.05, "f": "Georgia", "sz": "fill" },
+        { "t": "text", "n": "Lede", "c": "{{tagline}}", "s": 18, "lh": 1.55, "col": "{{muted}}", "sz": "fill" },
+        { "n": "Buttons", "lay": "row 14 8,0,0,0 center start", "sz": "hug", "k": [
+          { "n": "Primary", "fill": "{{accent}}", "r": 6, "lay": "row 0 15,24 center center", "sz": "hug", "k": [ { "t": "text", "n": "Primary label", "c": "{{cta}}", "s": 16, "wt": 600, "col": "{{onAccent}}" } ] },
+          { "t": "text", "n": "Secondary link", "c": "See how it works →", "s": 16, "wt": 600 } ] } ] },
+      { "n": "Picture", "fill": "{{soft}}", "r": 4, "w": 520, "h": 520, "clip": true, "k": [
+        { "t": "rect", "n": "Block", "x": 60, "y": 300, "w": 400, "h": 160, "fill": "{{accent}}" },
+        { "t": "ellipse", "n": "Circle", "x": 300, "y": 70, "w": 150, "h": 150, "fill": "{{surface}}" },
+        { "t": "rect", "n": "Bar", "x": 60, "y": 90, "w": 180, "h": 18, "fill": "{{fg}}" } ] } ] } ] } }

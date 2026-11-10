@@ -1,0 +1,8 @@
+{ "id": "empty", "title": "Empty state", "keys": ["empty state", "no results", "nothing (here|yet)", "zero state", "404", "error (page|screen|state)", "not found"], "size": [390, 844], "accent": "#B45309",
+  "root": { "n": "{{name}} · Empty", "lay": "col 18 40,36 center center", "k": [
+    { "n": "Mark", "w": 112, "h": 112, "r": 56, "fill": "{{soft}}", "lay": "col 0 0 center center", "k": [
+      { "t": "rect", "n": "Box", "w": 46, "h": 36, "r": 6, "stroke": "{{accent}}", "sw": 3 } ] },
+    { "t": "text", "n": "Title", "c": "No {{thing}} yet", "s": 22, "wt": 700, "al": "center", "f": "system-ui" },
+    { "t": "text", "n": "Body", "c": "When you add {{thing}} to {{name}}, they show up here. It only takes a minute.", "s": 15, "lh": 1.5, "col": "{{muted}}", "al": "center", "w": 300, "sz": "fixed hug" },
+    { "n": "Add button", "fill": "{{accent}}", "r": 10, "lay": "row 0 13,22 center center", "sz": "hug", "k": [ { "t": "text", "n": "Add label", "c": "Add your first", "s": 15, "wt": 600, "col": "{{onAccent}}" } ] },
+    { "t": "text", "n": "Help link", "c": "How does this work?", "s": 14, "wt": 600, "col": "{{muted}}" } ] } }

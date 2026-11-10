@@ -171,6 +171,7 @@
     if (P.layers) P.layers.mount($('#cv-left'), E);
     if (P.props) P.props.mount($('#cv-props'), E);
     if (window.TribeCanvasCode) window.TribeCanvasCode.mount(E);
+    if (window.TribeCanvasFlint) window.TribeCanvasFlint.mount(E);   // P1-F: Flint's prompt bar (app/ui/canvas/flint.js)
     $('#cv-tools').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.tool) setTool(b.dataset.tool);
@@ -453,7 +454,7 @@
     return ch[0];
   }
   function onDown(e) {
-    if (e.target.closest('.cv-tools, .cv-empty')) return;
+    if (e.target.closest('.cv-tools, .cv-empty, .cvf')) return;
     stage.focus({ preventScroll: true });
     if (editing && e.target.closest('[contenteditable="true"]')) return;
     commitEdit();
@@ -1186,6 +1187,11 @@
     // P1-C: drop a set of new nodes in (first one is the top), one undo step, select and show it
     addNodes(list) { if (!canEdit || !list || !list.length) return null; for (const n of list) put(Object.assign({ v: 0 }, n)); sel = [list[0].id]; inner = null; end(); requestAnimationFrame(() => fit(true)); return list[0].id; },
     focus: () => stage && stage.focus({ preventScroll: true }),
+    // P1-F hooks (app/ui/canvas/flint.js): Flint's free moves land as this person's own change, so Ctrl Z undoes them
+    get file() { return fileId; },
+    elOf: id => elOf(id),
+    insert(nodes, focus) { if (!canEdit || !Array.isArray(nodes) || !nodes.length) return; for (const n of nodes) { const c = clone(n); delete c.v; put(c); } sel = focus && S.get(focus) ? [focus] : []; inner = null; end(); if (focus) requestAnimationFrame(() => { fit(true); if (view.z > 1) zoomTo(1); }); },
+    apply(nodes) { if (!canEdit || !Array.isArray(nodes) || !nodes.length) return; for (const n of nodes) { if (!S.nodes.get(n.id)) continue; const c = clone(n); delete c.v; put(c); } end(true); },
   };
 
   // ---------- keep in step ----------

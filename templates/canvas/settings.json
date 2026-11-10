@@ -1,0 +1,25 @@
+{ "id": "settings", "title": "Settings screen", "keys": ["settings", "preferences", "options screen", "account settings"], "size": [390, 844], "accent": "#0E8F7E",
+  "root": { "n": "{{name}} · Settings", "lay": "col 22 60,20,32,20 stretch start", "k": [
+    { "t": "text", "n": "Title", "c": "Settings", "s": 30, "wt": 700 },
+    { "n": "Account card", "fill": "{{surface}}", "stroke": "{{line}}", "r": 14, "lay": "row 14 14 center start", "sz": "fill", "k": [
+      { "t": "ellipse", "n": "Avatar", "w": 48, "h": 48, "fill": "{{soft}}" },
+      { "n": "Who", "lay": "col 2 0 start start", "sz": "fill", "k": [
+        { "t": "text", "n": "Account name", "c": "Sam Rivera", "s": 16, "wt": 600 },
+        { "t": "text", "n": "Account email", "c": "sam@example.com", "s": 13, "col": "{{muted}}" } ] },
+      { "t": "text", "n": "Chevron", "c": "›", "s": 22, "col": "{{muted}}" } ] },
+    { "t": "text", "n": "Group label", "c": "PREFERENCES", "s": 12, "wt": 700, "col": "{{muted}}" },
+    { "n": "Preferences", "fill": "{{surface}}", "stroke": "{{line}}", "r": 14, "lay": "col 0 0 stretch start", "sz": "fill", "clip": true, "k": [
+      { "t": "instance", "ref": "toggle", "n": "Setting row", "ov": { "label": { "c": "Notifications" } } },
+      { "t": "instance", "ref": "toggle", "n": "Setting row", "ov": { "label": { "c": "Dark mode" }, "knob": { "fill": "{{line}}" } } },
+      { "t": "instance", "ref": "toggle", "n": "Setting row", "ov": { "label": { "c": "Weekly summary email" } } } ] },
+    { "t": "text", "n": "Group label", "c": "ABOUT", "s": 12, "wt": 700, "col": "{{muted}}" },
+    { "n": "About", "fill": "{{surface}}", "stroke": "{{line}}", "r": 14, "lay": "col 0 0 stretch start", "sz": "fill", "k": [
+      { "n": "Row", "lay": "row 0 16 center between", "sz": "fill", "k": [ { "t": "text", "n": "Label", "c": "Privacy", "s": 15 }, { "t": "text", "n": "Chevron", "c": "›", "s": 20, "col": "{{muted}}" } ] },
+      { "n": "Row", "lay": "row 0 16 center between", "sz": "fill", "k": [ { "t": "text", "n": "Label", "c": "Version", "s": 15 }, { "t": "text", "n": "Value", "c": "1.0.0", "s": 15, "col": "{{muted}}" } ] } ] },
+    { "n": "Spacer", "h": 1, "sz": "fill fill" },
+    { "t": "text", "n": "Sign out", "c": "Sign out", "s": 15, "wt": 600, "col": "#D64545", "al": "center", "sz": "fill" } ] },
+  "components": [
+    { "t": "component", "key": "toggle", "n": "Setting row", "w": 350, "h": 56, "lay": "row 12 16 center between", "sz": "fixed hug", "k": [
+      { "t": "text", "key": "label", "n": "Setting label", "c": "Setting", "s": 15 },
+      { "key": "knob", "n": "Switch", "w": 44, "h": 26, "r": 13, "fill": "{{accent}}", "lay": "row 0 3 center end", "k": [
+        { "t": "ellipse", "n": "Knob", "w": 20, "h": 20, "fill": "#FFFFFF" } ] } ] } ] }

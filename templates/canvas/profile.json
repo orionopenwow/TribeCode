@@ -1,0 +1,24 @@
+{ "id": "profile", "title": "Profile page", "keys": ["profile", "user page", "bio page", "account page", "creator page"], "size": [390, 844], "accent": "#C2410C",
+  "root": { "n": "{{name}} · Profile", "lay": "col 0 0 stretch start", "k": [
+    { "t": "rect", "n": "Cover", "w": 390, "h": 150, "fill": "{{soft}}", "sz": "fill fixed" },
+    { "n": "Identity", "lay": "col 10 0,22,0,22 start start", "sz": "fill", "k": [
+      { "t": "ellipse", "n": "Avatar", "w": 88, "h": 88, "fill": "{{accent}}", "stroke": "{{bg}}", "sw": 4 },
+      { "n": "Names", "lay": "col 2 0 start start", "sz": "fill", "k": [
+        { "t": "text", "n": "Display name", "c": "{{name}}", "s": 24, "wt": 700, "f": "Inter Display" },
+        { "t": "text", "n": "Handle", "c": "@{{handle}}", "s": 14, "col": "{{muted}}" } ] },
+      { "t": "text", "n": "Bio", "c": "{{tagline}}", "s": 15, "lh": 1.5, "sz": "fill" },
+      { "n": "Stats", "lay": "row 24 4,0 start start", "sz": "fill", "k": [
+        { "t": "text", "n": "Stat", "c": "128 posts", "s": 14, "wt": 600 },
+        { "t": "text", "n": "Stat", "c": "2.4k followers", "s": 14, "wt": 600 },
+        { "t": "text", "n": "Stat", "c": "311 following", "s": 14, "wt": 600 } ] },
+      { "n": "Buttons", "lay": "row 10 4,0 center start", "sz": "fill", "k": [
+        { "n": "Follow", "fill": "{{accent}}", "r": 8, "lay": "row 0 11,16 center center", "sz": "fill", "k": [ { "t": "text", "n": "Follow label", "c": "Follow", "s": 15, "wt": 600, "col": "{{onAccent}}" } ] },
+        { "n": "Message", "stroke": "{{line}}", "r": 8, "lay": "row 0 11,16 center center", "sz": "fill", "k": [ { "t": "text", "n": "Message label", "c": "Message", "s": 15, "wt": 600 } ] } ] } ] },
+    { "n": "Grid", "lay": "row 3 18,0,0,0 start start", "sz": "fill", "k": [
+      { "t": "rect", "n": "Tile", "w": 128, "h": 128, "fill": "{{soft}}", "sz": "fill fixed" },
+      { "t": "rect", "n": "Tile", "w": 128, "h": 128, "fill": "{{line}}", "sz": "fill fixed" },
+      { "t": "rect", "n": "Tile", "w": 128, "h": 128, "fill": "{{soft}}", "sz": "fill fixed" } ] },
+    { "n": "Grid", "lay": "row 3 3,0,0,0 start start", "sz": "fill", "k": [
+      { "t": "rect", "n": "Tile", "w": 128, "h": 128, "fill": "{{line}}", "sz": "fill fixed" },
+      { "t": "rect", "n": "Tile", "w": 128, "h": 128, "fill": "{{soft}}", "sz": "fill fixed" },
+      { "t": "rect", "n": "Tile", "w": 128, "h": 128, "fill": "{{line}}", "sz": "fill fixed" } ] } ] } }

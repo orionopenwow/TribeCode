@@ -1,0 +1,19 @@
+{ "id": "onboarding", "title": "Onboarding screen", "keys": ["onboarding", "welcome screen", "intro screen", "walkthrough", "first run", "get started screen"], "size": [390, 844], "accent": "#7C5CFF",
+  "root": { "n": "{{name}} · Welcome", "lay": "col 24 64,28,36,28 stretch start", "k": [
+    { "n": "Illustration", "fill": "{{soft}}", "r": 28, "h": 340, "sz": "fill fixed", "clip": true, "k": [
+      { "t": "ellipse", "n": "Sun", "x": 220, "y": 48, "w": 72, "h": 72, "fill": "{{accent}}" },
+      { "t": "rect", "n": "Hill back", "x": -40, "y": 220, "w": 300, "h": 200, "r": 150, "fill": "{{surface}}" },
+      { "t": "rect", "n": "Hill front", "x": 120, "y": 250, "w": 300, "h": 200, "r": 150, "fill": "{{line}}" },
+      { "t": "rect", "n": "Card", "x": 56, "y": 120, "w": 150, "h": 96, "r": 16, "fill": "{{surface}}", "stroke": "{{line}}" } ] },
+    { "n": "Steps", "lay": "row 6 0 center start", "sz": "hug", "k": [
+      { "t": "rect", "n": "Step on", "w": 22, "h": 6, "r": 3, "fill": "{{accent}}" },
+      { "t": "rect", "n": "Step", "w": 6, "h": 6, "r": 3, "fill": "{{line}}" },
+      { "t": "rect", "n": "Step", "w": 6, "h": 6, "r": 3, "fill": "{{line}}" } ] },
+    { "n": "Copy", "lay": "col 10 0 start start", "sz": "fill", "k": [
+      { "t": "text", "n": "Title", "c": "All your {{thing}}, in one calm place", "s": 28, "wt": 700, "lh": 1.2, "f": "Inter Display", "sz": "fill" },
+      { "t": "text", "n": "Body", "c": "{{name}} keeps track for you, so nothing slips through the cracks.", "s": 16, "col": "{{muted}}", "lh": 1.5, "sz": "fill" } ] },
+    { "n": "Spacer", "h": 1, "sz": "fill fill" },
+    { "n": "Actions", "lay": "row 12 0 center between", "sz": "fill", "k": [
+      { "t": "text", "n": "Skip", "c": "Skip", "s": 15, "wt": 600, "col": "{{muted}}" },
+      { "n": "Next button", "fill": "{{accent}}", "r": 999, "lay": "row 8 14,26 center center", "sz": "hug", "k": [
+        { "t": "text", "n": "Next label", "c": "Next", "s": 16, "wt": 600, "col": "{{onAccent}}" } ] } ] } ] } }
