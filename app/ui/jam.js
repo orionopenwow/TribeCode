@@ -98,7 +98,7 @@
 
   C.on('ws', m => { if (m && m.type === 'jam') load(); });
   C.on('hello', load);
-  setTimeout(load, 1200);
+  C.on('hello', () => setTimeout(load, 300));   // only once a tribe answers: never at boot, before there is one
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => [
     { kind: 'Action', label: 'Jam board', keys: 'jam game jam theme countdown vote entries', run: open },
     ...(S && S.canRun ? [{ kind: 'Action', label: 'Start a jam', keys: 'jam start game jam theme host', run: start }] : []),

@@ -1,0 +1,41 @@
+/* TribeCode motion tokens (see docs/DESIGN-SYSTEM.md §10, machine-readable copy in docs/design-tokens.json).
+   Name the property you animate (never `transition: all`), use a token instead of a raw duration,
+   and let prefers-reduced-motion switch it off. Movement is small (2–8px) and opacity-led: flat matte, no blur. */
+:root {
+  --dur-instant: 80ms;   /* press feedback, tooltip out */
+  --dur-quick: 140ms;    /* hover, toggles, section cross-fade */
+  --dur-base: 200ms;     /* drawers, sheets, toasts, menus */
+  --dur-slow: 320ms;     /* large panels, first paint of a view */
+  --ease-out: cubic-bezier(.2, .7, .3, 1);       /* things arriving (same curve as --ease) */
+  --ease-in: cubic-bezier(.4, 0, 1, 1);          /* things leaving: quicker, no lingering */
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);   /* things moving from A to B */
+  --rise: 4px;                                   /* the standard entrance distance */
+}
+
+@keyframes tm-rise { from { opacity: 0; transform: translateY(var(--rise)); } to { opacity: 1; transform: none; } }
+@keyframes tm-toast { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes tm-fade-in { from { opacity: 0; } }
+@keyframes tm-fade-out { to { opacity: 0; } }
+
+/* Shared entrances: any view, sheet or popover can opt in with .tm-rise. */
+.tm-rise { animation: tm-rise var(--dur-base) var(--ease-out) both; }
+
+/* Toasts arrive from just below and settle. */
+.toast { animation: tm-toast var(--dur-base) var(--ease-out); }
+
+/* Phone section drawer: arrive on the ease-out curve, leave faster on ease-in. */
+@media (max-width: 760px) {
+  .side { transition: transform var(--dur-base) var(--ease-in); }
+  body.drawer-open .side { transition-timing-function: var(--ease-out); }
+  body.drawer-open::after { animation: tm-fade-in var(--dur-base) var(--ease-out); }
+}
+
+/* Section switches (TribeMotion.swap): a quick cross-fade of the whole page, no slide, no blur. */
+::view-transition-old(root) { animation: tm-fade-out var(--dur-quick) var(--ease-in) both; }
+::view-transition-new(root) { animation: tm-fade-in var(--dur-quick) var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-instant: 0ms; --dur-quick: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --rise: 0px; }
+  .tm-rise, .toast { animation: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}

@@ -107,3 +107,25 @@ Every explainer, infographic or illustration on the site or in the app is built 
 - **Words for everyone.** Mark the visuals `aria-hidden` and describe the whole story in a figcaption or `aria-label`.
 - **Flat matte rules apply.** 1px borders, depth from luminance steps, palette colors only. Pixel art uses `shape-rendering: crispEdges` and shades with darker steps of the same color, never glows, blur or gradients.
 - **Lightweight.** No libraries. DOM and inline SVG, a little CSS, one small script. Animate only while the scene is on screen (IntersectionObserver), and stop timers when it leaves.
+
+## 10. Motion and agent-ready tokens
+
+**Motion tokens** live in `app/ui/motion.css`. Use them instead of raw durations:
+
+| Token | Value | For |
+|---|---|---|
+| `--dur-instant` | 80ms | press feedback, tooltip out |
+| `--dur-quick` | 140ms | hover, toggles, section cross-fade |
+| `--dur-base` | 200ms | drawers, sheets, toasts, menus |
+| `--dur-slow` | 320ms | large panels |
+| `--ease-out` / `--ease-in` / `--ease-in-out` | curves | arriving / leaving / moving A to B |
+
+- Animate named properties, never `transition: all`. Lead with opacity and move 2 to 8px (`--rise`), no blur and no scale bounce.
+- Things arrive on `--ease-out` and leave faster on `--ease-in`.
+- Section switches go through `TribeMotion.swap(fn)` (`app/ui/motion.js`): a short View Transition cross-fade where the browser supports it, an instant swap otherwise.
+- `prefers-reduced-motion` sets every duration to 0. The finished state must always read without motion (see §9).
+
+**Agent-ready tokens.** `docs/design-tokens.json` is the machine-readable copy of this system (W3C Design Tokens format: `$value`, `$type`, a short `$description` of what each token is for, dark and light values, and the `var(--…)` to use). It also lists the core rules. AI agents read it, together with `AGENTS.md`, before they write UI, so every member's agent builds screens that match.
+
+- The CSS is the source of truth. After changing a color, radius, font or motion token, run `node scripts/dev/design-tokens.js`.
+- `npm test` runs it with `--check` and fails if the JSON is out of date.
