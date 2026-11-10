@@ -1,0 +1,24 @@
+{
+  "meta": { "title": "Coming soon / waitlist", "category": "business", "order": 16, "summary": "One screen: what's coming, when, a countdown and a waitlist form that connects to your email service.", "goodFor": ["Launches", "New shops", "Products in progress"], "tags": ["coming soon", "waitlist", "launch", "countdown", "pre-launch"] },
+  "form": [
+    { "key": "name", "label": "Name", "type": "text" },
+    { "key": "tagline", "label": "What's coming", "type": "textarea" },
+    { "key": "launch", "label": "Launch date (YYYY-MM-DD)", "type": "text" },
+    { "key": "launchText", "label": "Launch date as people say it", "type": "text" },
+    { "key": "object", "label": "Picture", "type": "image" },
+    { "key": "waitlist.url", "label": "Where sign-ups go (Mailchimp, Buttondown, ConvertKit form link)", "type": "url" }
+  ],
+  "name": "Okra Studio",
+  "tagline": "A small type foundry opening in the spring. Three typefaces, drawn slowly, licensed simply.",
+  "launch": "2027-03-01",
+  "launchText": "March 1, 2027",
+  "object": "img/object.svg",
+  "waitlist": { "url": "", "note": "One email when we open. That's it." },
+  "theme": { "colors": { "bg": "#EAE6F2", "ink": "#1F1838", "muted": "#5A527A", "line": "#1F1838", "accent": "#E8512E" }, "fonts": { "display": "Fraunces", "body": "Space Grotesk" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "lilac", "name": "Lilac", "colors": { "bg": "#EAE6F2", "ink": "#1F1838", "muted": "#5A527A", "line": "#1F1838", "accent": "#E8512E" }, "fonts": { "display": "Fraunces", "body": "Space Grotesk" } },
+    { "id": "ink", "name": "Ink", "colors": { "bg": "#0A0A0A", "ink": "#F5F5F0", "muted": "#9A9A92", "line": "#F5F5F0", "accent": "#FF4D2E" }, "fonts": { "display": "Instrument Serif", "body": "Space Grotesk" } },
+    { "id": "lemon", "name": "Lemon", "colors": { "bg": "#FFF27A", "ink": "#151515", "muted": "#4A4524", "line": "#151515", "accent": "#151515" }, "fonts": { "display": "Bricolage Grotesque", "body": "System sans" } }
+  ],
+  "sections": [ { "id": "signup", "label": "Waitlist", "on": true } ]
+}

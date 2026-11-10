@@ -1,0 +1,31 @@
+{
+  "meta": { "title": "Nonprofit / donate", "category": "business", "order": 14, "summary": "For a cause or community group: the mission in plain words, what you've done, ways to help and a donate button for your own donation page.", "goodFor": ["Nonprofits", "Community groups", "Fundraisers", "Mutual aid"], "tags": ["nonprofit", "charity", "donate", "community", "volunteer", "cause", "fundraiser"] },
+  "form": [
+    { "key": "name", "label": "Organization name", "type": "text" },
+    { "key": "mission", "label": "Your mission in one or two sentences", "type": "textarea" },
+    { "key": "photo", "label": "Photo", "type": "image" },
+    { "key": "impact", "label": "What you've done (real numbers only)", "type": "list", "fields": [{ "key": "n", "label": "Number" }, { "key": "t", "label": "Of what" }], "add": { "n": "", "t": "" } },
+    { "key": "ways", "label": "Ways to help", "type": "list", "fields": [{ "key": "t", "label": "Way" }, { "key": "d", "label": "How", "type": "textarea" }, { "key": "url", "label": "Link", "type": "url" }], "add": { "t": "", "d": "", "url": "" } },
+    { "key": "donate.url", "label": "Donation page link (Givebutter, Every.org, PayPal Giving…)", "type": "url" },
+    { "key": "email", "label": "Email", "type": "text" }
+  ],
+  "name": "Eastside Seed Library",
+  "mission": "We lend seeds for free to anyone in Eastside, teach people to grow food in small spaces, and ask them to bring back a few seeds at the end of the season.",
+  "photo": "img/field.svg",
+  "impact": [ { "n": "1,240", "t": "seed packets lent this year" }, { "n": "36", "t": "free workshops" }, { "n": "9", "t": "school gardens supplied" } ],
+  "story": "It started in 2021 as a card catalog of seeds in the back of the Eastside branch library. Now it's 300 varieties, a Saturday stall at the market, and about forty volunteers who mostly found us by borrowing tomatoes.",
+  "ways": [
+    { "t": "Give", "d": "Every $25 covers seeds and soil for one family's first season.", "url": "" },
+    { "t": "Volunteer", "d": "Sort and pack seeds on Tuesday evenings, or help at the Saturday stall.", "url": "mailto:hello@example.com" },
+    { "t": "Return seeds", "d": "Save a few seeds from what you grew and drop them in the box at the library.", "url": "" }
+  ],
+  "donate": { "url": "", "label": "Donate", "note": "We're a registered 501(c)(3). Donations are tax-deductible in the US." },
+  "email": "hello@example.com",
+  "theme": { "colors": { "bg": "#F5F0E1", "ink": "#21301C", "muted": "#5A6650", "line": "#D6CDB4", "panel": "#E8DFC6", "accent": "#C9541D", "leaf": "#3E5E34" }, "fonts": { "display": "Bricolage Grotesque", "body": "Humanist" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "garden", "name": "Garden", "colors": { "bg": "#F5F0E1", "ink": "#21301C", "muted": "#5A6650", "line": "#D6CDB4", "panel": "#E8DFC6", "accent": "#C9541D", "leaf": "#3E5E34" }, "fonts": { "display": "Bricolage Grotesque", "body": "Humanist" } },
+    { "id": "harbor", "name": "Harbor", "colors": { "bg": "#EEF3F6", "ink": "#0F2A3A", "muted": "#4C6575", "line": "#CBD9E2", "panel": "#DCE8EF", "accent": "#E0663A", "leaf": "#1E5F8A" }, "fonts": { "display": "Fraunces", "body": "System sans" } },
+    { "id": "bold", "name": "Bold", "colors": { "bg": "#FFFFFF", "ink": "#111111", "muted": "#555555", "line": "#111111", "panel": "#FFE14D", "accent": "#111111", "leaf": "#111111" }, "fonts": { "display": "Bricolage Grotesque", "body": "System sans" } }
+  ],
+  "sections": [ { "id": "impact", "label": "What we've done", "on": true }, { "id": "story", "label": "Our story", "on": true }, { "id": "help", "label": "Ways to help", "on": true } ]
+}

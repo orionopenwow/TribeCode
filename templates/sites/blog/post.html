@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="post.title">What a frost in May actually costs</title>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body class="reading">
+  <header class="mast small">
+    <p class="home"><a href="index.html" data-s="name">Field Notes from a Small Farm</a></p>
+  </header>
+  <!-- One post. Copy this file for each new post, or write the words straight into the HTML below. -->
+  <article class="article">
+    <time data-s="post.date">Nov 2, 2026</time>
+    <h1 data-s="post.title">What a frost in May actually costs</h1>
+    <p class="by">by <span data-s="author">Hannah Lindqvist</span></p>
+    <div class="body">
+      <template data-s-for="post.body">{{#h}}<h2>{{h}}</h2>{{/h}}{{#p}}<p>{{p}}</p>{{/p}}</template>
+      <!--/s-for-->
+    </div>
+  </article>
+  <section class="sub end">
+    <h2>Get the next letter</h2>
+    <p data-s="subscribe.note">Every other Sunday. No ads.</p>
+    <form class="sf" method="post" data-s-attr="action:subscribe.url" action="">
+      <label class="sr" for="em">Email</label>
+      <input id="em" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="sf-note" hidden>Subscriptions aren't connected yet. Set site.json › subscribe › url to your newsletter's form.</p>
+  </section>
+  <footer class="foot"><a href="index.html">← All letters</a></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="subscribe.js"></script>
+</body>
+</html>

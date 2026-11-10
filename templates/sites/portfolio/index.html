@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Ines Duarte</title>
+  <meta name="description" data-s-attr="content:statement" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="mast">
+    <a class="nm" href="#" data-s="name">Ines Duarte</a>
+    <span class="rl" data-s="role">Interiors and spatial design</span>
+    <nav aria-label="Sections"><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
+  </header>
+
+  <p class="statement" data-s="statement">I design small rooms that people stay in longer than they planned.</p>
+
+  <main data-s-sections>
+    <section class="work" id="work" data-section="work" aria-label="Selected work">
+      <template data-s-for="work"><article class="case"><div class="num">{{@n}}</div><figure><img src="{{img}}" alt="{{title}}" loading="lazy" width="1200" height="900"></figure><div class="cap"><h2>{{title}}</h2><p class="meta">{{client}} · {{year}}</p><p>{{summary}}</p></div></article></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="about" id="about" data-section="about">
+      <h2 class="lbl">About</h2>
+      <p class="lead" data-s="about">I studied architecture in Porto.</p>
+      <ul class="svc">
+        <template data-s-for="services"><li>{{s}}</li></template>
+        <!--/s-for-->
+      </ul>
+    </section>
+
+    <section class="contact" id="contact" data-section="contact">
+      <h2 class="lbl">Contact</h2>
+      <p class="big">Have a small room in mind? <a data-s-attr="href:mailto:email" href="mailto:studio@example.com"><span data-s="email">studio@example.com</span></a></p>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Ines Duarte</span><span>Lisbon</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

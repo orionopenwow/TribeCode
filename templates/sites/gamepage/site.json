@@ -1,0 +1,29 @@
+{
+  "meta": { "title": "Indie game page", "category": "creative", "order": 12, "summary": "A page for your game: trailer, screenshots, a wishlist or play button, the facts press needs and a devlog.", "goodFor": ["Indie games", "Game jams", "Demos"], "tags": ["game", "indie", "press kit", "trailer", "steam", "itch", "devlog"] },
+  "form": [
+    { "key": "name", "label": "Game title", "type": "text" },
+    { "key": "tagline", "label": "The pitch in one line", "type": "textarea" },
+    { "key": "trailer", "label": "Trailer link (YouTube, Vimeo…)", "type": "url" },
+    { "key": "play.url", "label": "Play or wishlist link", "type": "url" },
+    { "key": "play.label", "label": "Button text", "type": "text" },
+    { "key": "shots", "label": "Screenshots", "type": "list", "fields": [{ "key": "img", "label": "Picture", "type": "image" }, { "key": "alt", "label": "What it shows" }], "add": { "img": "img/shot-1.svg", "alt": "" } },
+    { "key": "facts", "label": "Press facts", "type": "list", "fields": [{ "key": "k", "label": "Fact" }, { "key": "v", "label": "Value" }], "add": { "k": "", "v": "" } },
+    { "key": "press", "label": "Press email", "type": "text" }
+  ],
+  "name": "LANTERN RUN",
+  "tagline": "A tiny platformer about carrying a light through a cave that remembers every time you fell.",
+  "trailer": "https://example.com/trailer",
+  "play": { "url": "https://example.com/play", "label": "Play the free demo" },
+  "shots": [ { "img": "img/shot-1.svg", "alt": "The first cave, lit by the lantern" }, { "img": "img/shot-2.svg", "alt": "A boss room full of purple crystals" }, { "img": "img/shot-3.svg", "alt": "The underground lake" } ],
+  "features": [ { "t": "20 handmade levels", "d": "Each one about two minutes long, if you don't fall." }, { "t": "A cave that remembers", "d": "Every fall leaves a little ghost light. Your old mistakes light the way." }, { "t": "Plays on anything", "d": "Browser, Steam Deck, and phones with a controller." } ],
+  "facts": [ { "k": "Developer", "v": "Two friends in Leeds" }, { "k": "Release", "v": "Spring 2027" }, { "k": "Platforms", "v": "Web, Windows, Mac, Linux, Steam Deck" }, { "k": "Price", "v": "Demo free, full game TBA" }, { "k": "Players", "v": "1" } ],
+  "devlog": [ { "date": "Nov 1", "t": "Ghost lights are in, and they're beautiful and a little sad" }, { "date": "Oct 12", "t": "Rebuilt the jump. It finally feels right" }, { "date": "Sep 28", "t": "First playtest: 11 people, 340 falls" } ],
+  "press": "press@example.com",
+  "theme": { "colors": { "bg": "#0E1A30", "ink": "#F4E9C8", "muted": "#A9B1C4", "panel": "#152544", "line": "#2A3D63", "accent": "#FF6B8B", "pop": "#7FBF5A" }, "fonts": { "display": "Silkscreen", "body": "Inter" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "cave", "name": "Cave", "colors": { "bg": "#0E1A30", "ink": "#F4E9C8", "muted": "#A9B1C4", "panel": "#152544", "line": "#2A3D63", "accent": "#FF6B8B", "pop": "#7FBF5A" }, "fonts": { "display": "Silkscreen", "body": "Inter" } },
+    { "id": "gameboy", "name": "Handheld", "colors": { "bg": "#C4CFA1", "ink": "#1F2A14", "muted": "#3E4D2A", "panel": "#AEBB86", "line": "#1F2A14", "accent": "#1F2A14", "pop": "#5A6E36" }, "fonts": { "display": "Silkscreen", "body": "Monospace" } },
+    { "id": "neon", "name": "Neon", "colors": { "bg": "#120A1E", "ink": "#F3EAFF", "muted": "#B39CD0", "panel": "#1E1230", "line": "#3B2559", "accent": "#00F5D4", "pop": "#FEE440" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } }
+  ],
+  "sections": [ { "id": "shots", "label": "Screenshots", "on": true }, { "id": "features", "label": "Features", "on": true }, { "id": "press", "label": "Press kit", "on": true }, { "id": "devlog", "label": "Devlog", "on": true } ]
+}

@@ -1,0 +1,48 @@
+/* Band / musician: a gig poster. Huge uppercase name over the photo, a tour list you can read from the back of the room.
+   Colors and fonts: site.json › theme. */
+:root { --bg: #0F0F0F; --ink: #F4F1E8; --muted: #9C988C; --line: #2E2E2E; --accent: #F7D13D; --hot: #E2462C;
+  --font-display: Impact, 'Arial Narrow', sans-serif; --font-body: system-ui, sans-serif; --gut: clamp(16px, 4vw, 56px); }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 16px/1.55 var(--font-body); }
+a { color: inherit; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+.poster { position: relative; min-height: min(86vh, 760px); display: grid; align-content: end; overflow: hidden; border-bottom: 6px solid var(--accent); }
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.over { position: relative; padding: 0 var(--gut) 28px; }
+h1 { margin: 0; font: 800 clamp(64px, 15vw, 240px)/0.8 var(--font-display); letter-spacing: -0.04em; text-transform: uppercase; color: var(--accent); }
+.over p { margin: 14px 0 0; font-size: clamp(16px, 2vw, 22px); max-width: 40ch; }
+.tabs { position: absolute; top: 0; right: 0; display: flex; }
+.tabs a { padding: 14px 18px; background: var(--bg); text-decoration: none; text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; border-left: 1px solid var(--line); }
+.tabs a:hover { background: var(--accent); color: var(--bg); }
+
+main { padding: 0 var(--gut); }
+section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+h2 { margin: 0 0 22px; font: 800 clamp(36px, 5vw, 64px)/0.9 var(--font-display); text-transform: uppercase; letter-spacing: -0.02em; }
+.dates { list-style: none; margin: 0; padding: 0; }
+.dates li { display: grid; grid-template-columns: 110px minmax(0, 1.2fr) minmax(0, 1fr) 120px; align-items: center; gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); font-size: 18px; }
+.d { font: 800 22px/1 var(--font-display); text-transform: uppercase; color: var(--accent); }
+.c { font-weight: 700; } .v { color: var(--muted); }
+.tk, .st { justify-self: end; padding: 8px 16px; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: .08em; text-decoration: none; }
+.tk { background: var(--accent); color: var(--bg); } .tk:hover { background: var(--hot); color: var(--ink); }
+.st { border: 1px solid var(--muted); color: var(--muted); }
+.recs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
+.rec { display: grid; gap: 6px; text-decoration: none; }
+.rec img { width: 100%; height: auto; display: block; transition: transform .25s ease; }
+.rec:hover img { transform: rotate(-2deg) scale(1.02); }
+.rt { font: 800 24px/1 var(--font-display); text-transform: uppercase; } .rk { color: var(--muted); font-size: 14px; }
+.bio p { max-width: 58ch; font-size: 19px; margin: 0 0 16px; }
+.bio .bk { color: var(--muted); font-size: 16px; } .bio .bk a { color: var(--accent); }
+.foot { padding: 28px var(--gut); } .foot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 22px; }
+.foot a { text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 700; text-decoration: none; } .foot a:hover { color: var(--accent); }
+
+[data-preset="folk"] h1, [data-preset="folk"] h2, [data-preset="folk"] .d, [data-preset="folk"] .rt { text-transform: none; letter-spacing: -0.02em; }
+[data-preset="folk"] .poster { border-bottom-width: 1px; } [data-preset="folk"] h1 { color: var(--bg); }
+[data-preset="synth"] h1 { -webkit-text-stroke: 2px var(--accent); color: transparent; }
+
+@media (max-width: 760px) {
+  .dates li { grid-template-columns: 80px 1fr; gap: 4px 12px; } .v { grid-column: 2; } .tk, .st { grid-column: 2; justify-self: start; }
+  .tabs a { padding: 10px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

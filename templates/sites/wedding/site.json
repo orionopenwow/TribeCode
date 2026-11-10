@@ -1,0 +1,38 @@
+{
+  "meta": { "title": "Event / wedding RSVP", "category": "events", "order": 8, "summary": "Everything guests need: the date and place, a day-of schedule, travel and stays, a few questions answered and an RSVP form.", "goodFor": ["Weddings", "Reunions", "Retreats", "Birthday weekends"], "tags": ["wedding", "event", "rsvp", "party", "reunion", "retreat", "save the date"] },
+  "form": [
+    { "key": "name", "label": "Names or event title", "type": "text" },
+    { "key": "date", "label": "Date", "type": "text" },
+    { "key": "place", "label": "Place", "type": "text" },
+    { "key": "note", "label": "A note to guests", "type": "textarea" },
+    { "key": "photo", "label": "Photo", "type": "image" },
+    { "key": "schedule", "label": "Schedule", "type": "list", "fields": [{ "key": "time", "label": "Time" }, { "key": "what", "label": "What" }, { "key": "where", "label": "Where" }], "add": { "time": "", "what": "", "where": "" } },
+    { "key": "rsvp.url", "label": "Where RSVPs go (a Google Form, Tally or Formspree link)", "type": "url" },
+    { "key": "rsvp.by", "label": "RSVP by", "type": "text" }
+  ],
+  "name": "Priya & Sam",
+  "date": "Saturday, June 13, 2027",
+  "place": "Hollow Creek Farm, Hudson Valley, NY",
+  "note": "We're getting married in the orchard where we had our first picnic. Come for the ceremony, stay for the dancing, and please bring shoes you can walk on grass in.",
+  "photo": "img/venue.svg",
+  "schedule": [
+    { "time": "3:30 pm", "what": "Ceremony", "where": "The orchard" },
+    { "time": "4:30 pm", "what": "Drinks and lawn games", "where": "The big barn porch" },
+    { "time": "6:00 pm", "what": "Dinner", "where": "Long tables in the barn" },
+    { "time": "8:00 pm", "what": "Dancing until late", "where": "The barn" }
+  ],
+  "travel": [
+    { "t": "Getting there", "d": "Two hours from the city by car, or the train to Hudson and a 15-minute shuttle we'll run every half hour from 2pm." },
+    { "t": "Where to stay", "d": "We've held rooms at The Wren Inn and the Hudson Lodge until May 1. Mention our names when you book." },
+    { "t": "What to wear", "d": "Garden party. It gets cool after sunset, so bring a layer." }
+  ],
+  "faq": [ { "q": "Can I bring a plus-one?", "a": "If your invitation says so, yes. We're keeping it small, thank you for understanding." }, { "q": "Are kids welcome?", "a": "Yes, there'll be a kids' table and a sitter for the evening." } ],
+  "rsvp": { "url": "", "by": "April 15, 2027" },
+  "theme": { "colors": { "bg": "#F7F2EA", "ink": "#3B3A30", "muted": "#6E6B5C", "line": "#DCD2C2", "accent": "#7A8C5C", "rose": "#C48E7F" }, "fonts": { "display": "Instrument Serif", "body": "System serif" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "orchard", "name": "Orchard", "colors": { "bg": "#F7F2EA", "ink": "#3B3A30", "muted": "#6E6B5C", "line": "#DCD2C2", "accent": "#7A8C5C", "rose": "#C48E7F" }, "fonts": { "display": "Instrument Serif", "body": "System serif" } },
+    { "id": "evening", "name": "Evening", "colors": { "bg": "#1F2430", "ink": "#EDE6DA", "muted": "#AFA79A", "line": "#3A4152", "accent": "#D8B27A", "rose": "#D8B27A" }, "fonts": { "display": "Fraunces", "body": "System serif" } },
+    { "id": "confetti", "name": "Confetti", "colors": { "bg": "#FFF9F1", "ink": "#2A2342", "muted": "#5F5878", "line": "#2A2342", "accent": "#E4572E", "rose": "#3A86FF" }, "fonts": { "display": "Bricolage Grotesque", "body": "Humanist" } }
+  ],
+  "sections": [ { "id": "day", "label": "The day", "on": true }, { "id": "travel", "label": "Travel and stays", "on": true }, { "id": "faq", "label": "Questions", "on": true }, { "id": "rsvp", "label": "RSVP", "on": true } ]
+}

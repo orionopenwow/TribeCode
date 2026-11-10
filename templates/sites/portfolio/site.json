@@ -1,0 +1,30 @@
+{
+  "meta": { "title": "Portfolio", "category": "creative", "order": 3, "summary": "An editorial portfolio for a designer, illustrator or studio: numbered case studies, a short bio and how to hire you.", "goodFor": ["Designers", "Illustrators", "Architects", "Small studios"], "tags": ["portfolio", "designer", "case studies", "freelance", "studio", "agency"] },
+  "form": [
+    { "key": "name", "label": "Your name or studio", "type": "text" },
+    { "key": "role", "label": "What you do", "type": "text" },
+    { "key": "statement", "label": "Opening line", "type": "textarea" },
+    { "key": "work", "label": "Projects", "type": "list", "fields": [{ "key": "title", "label": "Project" }, { "key": "client", "label": "Client" }, { "key": "year", "label": "Year" }, { "key": "img", "label": "Image", "type": "image" }, { "key": "summary", "label": "What you did", "type": "textarea" }], "add": { "title": "New project", "client": "", "year": "2026", "img": "img/work-1.svg", "summary": "" } },
+    { "key": "about", "label": "About you", "type": "textarea" },
+    { "key": "email", "label": "Email", "type": "text" }
+  ],
+  "name": "Ines Duarte",
+  "role": "Interiors and spatial design, Lisbon",
+  "statement": "I design small rooms that people stay in longer than they planned: cafés, bookshops, and one very good dentist's office.",
+  "work": [
+    { "title": "Casa Lenta café", "client": "Casa Lenta", "year": "2026", "img": "img/work-1.svg", "summary": "A 38 m² café with one long oak counter and seating built into the window. Opened in March." },
+    { "title": "Booking flow for a clinic", "client": "Clínica Sol", "year": "2025", "img": "img/work-2.svg", "summary": "Signage, wayfinding and the online booking screens, so the waiting room became the quiet part." },
+    { "title": "Still life series", "client": "Self-initiated", "year": "2025", "img": "img/work-3.svg", "summary": "Twelve material studies in plaster, cork and tile, shown at Galeria Rua Nova." },
+    { "title": "Livraria Norte", "client": "Livraria Norte", "year": "2024", "img": "img/work-4.svg", "summary": "A bookshop refit on a small budget: reused shelving, a reading nook and a new storefront." }
+  ],
+  "about": "I studied architecture in Porto and spent six years at a hospitality studio before going on my own in 2022. I take two or three projects at a time, and I'm on site for all of them.",
+  "services": [ { "s": "Interiors for cafés, shops and clinics" }, { "s": "Signage and wayfinding" }, { "s": "Furniture and joinery details" }, { "s": "Small refits on tight budgets" } ],
+  "email": "studio@example.com",
+  "theme": { "colors": { "bg": "#F3EEE6", "ink": "#2A211B", "muted": "#6F6255", "line": "#CDBFAA", "accent": "#A8471F" }, "fonts": { "display": "Fraunces", "body": "System serif" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "linen", "name": "Linen", "colors": { "bg": "#F3EEE6", "ink": "#2A211B", "muted": "#6F6255", "line": "#CDBFAA", "accent": "#A8471F" }, "fonts": { "display": "Fraunces", "body": "System serif" } },
+    { "id": "ink", "name": "Ink", "colors": { "bg": "#1C1A17", "ink": "#EEE7DA", "muted": "#A89D8C", "line": "#3B362F", "accent": "#E0A060" }, "fonts": { "display": "Fraunces", "body": "Inter" } },
+    { "id": "gallery", "name": "Gallery white", "colors": { "bg": "#FFFFFF", "ink": "#111111", "muted": "#6B6B6B", "line": "#E2E2E2", "accent": "#1A47D6" }, "fonts": { "display": "Instrument Serif", "body": "System sans" } }
+  ],
+  "sections": [ { "id": "work", "label": "Selected work", "on": true }, { "id": "about", "label": "About", "on": true }, { "id": "contact", "label": "Contact", "on": true } ]
+}

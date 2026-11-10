@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Jonah Whitfield</title>
+  <meta name="description" data-s-attr="content:summary" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <div class="sheet">
+    <header class="head">
+      <img class="photo" data-s-attr="src:photo" src="img/me.svg" alt="" width="800" height="800">
+      <div>
+        <h1 data-s="name">Jonah Whitfield</h1>
+        <p class="role" data-s="role">Operations manager</p>
+      </div>
+      <ul class="contact">
+        <li><a data-s-attr="href:mailto:email" href="mailto:jonah@example.com"><span data-s="email">jonah@example.com</span></a></li>
+        <li data-s="where">Columbus, Ohio</li>
+        <template data-s-for="links"><li><a href="{{url}}">{{label}}</a></li></template>
+        <!--/s-for-->
+      </ul>
+    </header>
+
+    <p class="summary" data-s="summary">Eight years running warehouse floors.</p>
+
+    <main data-s-sections>
+      <section data-section="experience" aria-labelledby="h-x">
+        <h2 id="h-x">Experience</h2>
+        <template data-s-for="jobs"><article class="job"><div class="when">{{when}}</div><div><h3>{{title}}<span>{{org}}</span></h3><p>{{did}}</p></div></article></template>
+        <!--/s-for-->
+      </section>
+
+      <section data-section="skills" aria-labelledby="h-s">
+        <h2 id="h-s">Skills</h2>
+        <ul class="skills">
+          <template data-s-for="skills"><li>{{s}}</li></template>
+          <!--/s-for-->
+        </ul>
+      </section>
+
+      <section data-section="education" aria-labelledby="h-e">
+        <h2 id="h-e">Education</h2>
+        <template data-s-for="school"><article class="job"><div class="when">{{when}}</div><div><h3>{{what}}<span>{{where}}</span></h3></div></article></template>
+        <!--/s-for-->
+      </section>
+    </main>
+  </div>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script>document.addEventListener('click', function (e) { var a = e.target.closest('a[href="#print"]'); if (a) { e.preventDefault(); window.print(); } });</script>
+</body>
+</html>

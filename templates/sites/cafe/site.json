@@ -1,0 +1,33 @@
+{
+  "meta": { "title": "Restaurant / café", "category": "business", "order": 6, "summary": "A warm site for a café, bakery or restaurant: the menu with prices, opening hours, the address and a reservations link.", "goodFor": ["Cafés", "Bakeries", "Restaurants", "Food trucks"], "tags": ["restaurant", "cafe", "café", "bakery", "menu", "hours", "food", "coffee"] },
+  "form": [
+    { "key": "name", "label": "Name", "type": "text" },
+    { "key": "tagline", "label": "One line", "type": "textarea" },
+    { "key": "photo", "label": "Photo", "type": "image" },
+    { "key": "menu", "label": "Menu", "type": "list", "fields": [{ "key": "section", "label": "Menu section" }, { "key": "items", "label": "Dishes (one per line: name · price · note)", "type": "lines" }], "add": { "section": "Specials", "items": [] } },
+    { "key": "hours", "label": "Hours", "type": "list", "fields": [{ "key": "d", "label": "Days" }, { "key": "h", "label": "Hours" }], "add": { "d": "Sun", "h": "Closed" } },
+    { "key": "address", "label": "Address", "type": "textarea" },
+    { "key": "reserve", "label": "Reservations or ordering link", "type": "url" },
+    { "key": "phone", "label": "Phone", "type": "text" }
+  ],
+  "name": "Fern & Ash",
+  "tagline": "A neighborhood café in Portland's Sellwood. Wood-fired bread from 7am, soup at noon, and a long table that's yours on a slow afternoon.",
+  "photo": "img/room.svg",
+  "menu": [
+    { "section": "Mornings", "items": [ { "n": "Sourdough toast, cultured butter, jam", "p": "7", "d": "Our bread, baked at 5am" }, { "n": "Eggs on rye with greens", "p": "13", "d": "" }, { "n": "Cardamom bun", "p": "5", "d": "Until they run out" } ] },
+    { "section": "Lunch", "items": [ { "n": "Soup of the day with bread", "p": "11", "d": "Ask what's on" }, { "n": "Roast squash, farro, herbs", "p": "15", "d": "Vegan" }, { "n": "Ham, cheddar, pickles on a baguette", "p": "14", "d": "" } ] },
+    { "section": "To drink", "items": [ { "n": "Coffee from Heart Roasters", "p": "4", "d": "Drip or espresso" }, { "n": "Chai, made here", "p": "5", "d": "" }, { "n": "Local cider", "p": "8", "d": "From 4pm" } ] }
+  ],
+  "hours": [ { "d": "Tue to Fri", "h": "7am to 4pm" }, { "d": "Sat and Sun", "h": "8am to 3pm" }, { "d": "Mon", "h": "Closed" } ],
+  "address": "1414 SE Bybee Blvd, Portland, OR",
+  "reserve": "https://example.com/reserve",
+  "phone": "(503) 555-0142",
+  "gallery": [ { "img": "img/plate-1.svg", "alt": "A bowl of soup" }, { "img": "img/plate-2.svg", "alt": "Toast and jam" } ],
+  "theme": { "colors": { "bg": "#F4EDE0", "ink": "#22301F", "muted": "#5E6B57", "line": "#CDBF9F", "panel": "#22301F", "accent": "#A84D27" }, "fonts": { "display": "Instrument Serif", "body": "Humanist" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "fern", "name": "Fern", "colors": { "bg": "#F4EDE0", "ink": "#22301F", "muted": "#5E6B57", "line": "#CDBF9F", "panel": "#22301F", "accent": "#A84D27" }, "fonts": { "display": "Instrument Serif", "body": "Humanist" } },
+    { "id": "diner", "name": "Diner", "colors": { "bg": "#FFFDF7", "ink": "#1C1C1C", "muted": "#5A5A5A", "line": "#1C1C1C", "panel": "#C8102E", "accent": "#C8102E" }, "fonts": { "display": "Bricolage Grotesque", "body": "System sans" } },
+    { "id": "candle", "name": "Candlelight", "colors": { "bg": "#1B1714", "ink": "#EFE4D2", "muted": "#B3A58F", "line": "#3E352C", "panel": "#2A231D", "accent": "#D9A55B" }, "fonts": { "display": "Fraunces", "body": "System serif" } }
+  ],
+  "sections": [ { "id": "menu", "label": "Menu", "on": true }, { "id": "visit", "label": "Hours and address", "on": true }, { "id": "gallery", "label": "Photos", "on": true } ]
+}

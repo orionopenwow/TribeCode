@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">THE LOW HUM</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="poster">
+    <img class="bg" data-s-attr="src:hero" src="img/stage.svg" alt="" width="1400" height="800">
+    <div class="over">
+      <h1 data-s="name">THE LOW HUM</h1>
+      <p data-s="tagline">Four-piece from Detroit.</p>
+    </div>
+    <nav class="tabs" aria-label="Sections"><a href="#shows">Tour</a><a href="#music">Music</a><a href="#bio">Bio</a></nav>
+  </header>
+
+  <main data-s-sections>
+    <section class="shows" id="shows" data-section="shows" aria-labelledby="h-t">
+      <h2 id="h-t">On tour</h2>
+      <ol class="dates">
+        <template data-s-for="shows"><li><span class="d">{{date}}</span><span class="c">{{city}}</span><span class="v">{{venue}}</span>{{#status}}<span class="st">{{status}}</span>{{/status}}{{^status}}<a class="tk" href="{{url}}">Tickets</a>{{/status}}</li></template>
+        <!--/s-for-->
+      </ol>
+    </section>
+
+    <section class="music" id="music" data-section="music" aria-labelledby="h-m">
+      <h2 id="h-m">Records</h2>
+      <div class="recs">
+        <template data-s-for="releases"><a class="rec" href="{{url}}"><img src="{{img}}" alt="{{title}} cover" loading="lazy" width="800" height="800"><span class="rt">{{title}}</span><span class="rk">{{kind}} · {{year}}</span></a></template>
+        <!--/s-for-->
+      </div>
+    </section>
+
+    <section class="bio" id="bio" data-section="bio">
+      <h2>About</h2>
+      <p data-s="bio">We met at a garage sale in 2019.</p>
+      <p class="bk">Booking: <a data-s-attr="href:mailto:booking" href="mailto:booking@example.com"><span data-s="booking">booking@example.com</span></a></p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <ul>
+      <template data-s-for="socials"><li><a href="{{url}}">{{label}}</a></li></template>
+      <!--/s-for-->
+    </ul>
+  </footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

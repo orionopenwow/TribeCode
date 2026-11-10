@@ -1,0 +1,40 @@
+{
+  "meta": { "title": "Newsletter / blog", "category": "writing", "order": 10, "summary": "A quiet reading site: a list of posts, a post page set for long reading, and a subscribe box for your newsletter service.", "goodFor": ["Writers", "Newsletters", "Devlogs", "Journals"], "tags": ["blog", "newsletter", "writing", "posts", "journal", "devlog", "substack"] },
+  "form": [
+    { "key": "name", "label": "Publication name", "type": "text" },
+    { "key": "tagline", "label": "What you write about", "type": "textarea" },
+    { "key": "author", "label": "Your name", "type": "text" },
+    { "key": "posts", "label": "Posts", "type": "list", "fields": [{ "key": "title", "label": "Title" }, { "key": "date", "label": "Date" }, { "key": "dek", "label": "One-line summary", "type": "textarea" }, { "key": "img", "label": "Picture", "type": "image" }, { "key": "url", "label": "Link", "type": "url" }], "add": { "title": "New post", "date": "", "dek": "", "img": "", "url": "post.html" } },
+    { "key": "subscribe.url", "label": "Subscribe form link (Buttondown, beehiiv, Substack…)", "type": "url" }
+  ],
+  "name": "Field Notes from a Small Farm",
+  "tagline": "A letter every other Sunday about growing vegetables on two acres in Vermont, the economics of it, and the weather, which is always the main character.",
+  "author": "Hannah Lindqvist",
+  "posts": [
+    { "title": "What a frost in May actually costs", "date": "Nov 2, 2026", "dek": "I did the math on the tomatoes. Then I did it again, because I didn't like the answer.", "img": "img/post-1.svg", "url": "post.html" },
+    { "title": "The case for growing fewer things", "date": "Oct 19, 2026", "dek": "We dropped from 41 crops to 18 this year, and the farm finally made sense.", "img": "img/post-2.svg", "url": "post.html" },
+    { "title": "A short history of our worst rototiller", "date": "Oct 5, 2026", "dek": "", "img": "", "url": "post.html" },
+    { "title": "Farmers market math", "date": "Sep 21, 2026", "dek": "Seven Saturdays, one spreadsheet, and the strange economics of selling kale.", "img": "", "url": "post.html" }
+  ],
+  "post": {
+    "title": "What a frost in May actually costs",
+    "date": "Nov 2, 2026",
+    "body": [
+      { "p": "On the night of May 19 it dropped to 29°F for about three hours. By morning, roughly a third of the tomato starts we'd set out the week before were black at the tips." },
+      { "p": "People ask what a frost like that costs, and the honest answer is: more than the plants. It's the plants, plus the two weeks we lost, plus the early-season prices we missed at market, plus the time spent replanting instead of weeding everything else." },
+      { "h": "The plants" },
+      { "p": "We lost 212 starts. At what it costs us to grow them, that's a few hundred dollars of seed, soil and greenhouse heat. Annoying, but not the real number." },
+      { "h": "The two weeks" },
+      { "p": "Our first tomatoes usually reach market the second week of July, when they sell for nearly double what they fetch in August. This year they arrived on July 28. That gap is where the money went." },
+      { "p": "Next spring we're trying row cover on every bed, every night, until June. It's tedious. It's also cheaper than another May like this one." }
+    ]
+  },
+  "subscribe": { "url": "", "note": "Every other Sunday. No ads, unsubscribe any time." },
+  "theme": { "colors": { "bg": "#FAF8F3", "ink": "#24221E", "muted": "#6B665B", "line": "#E2DDD1", "accent": "#A2462C" }, "fonts": { "display": "Instrument Serif", "body": "System serif" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "page", "name": "Page", "colors": { "bg": "#FAF8F3", "ink": "#24221E", "muted": "#6B665B", "line": "#E2DDD1", "accent": "#A2462C" }, "fonts": { "display": "Instrument Serif", "body": "System serif" } },
+    { "id": "dusk", "name": "Dusk", "colors": { "bg": "#1A1C1E", "ink": "#E6E2D9", "muted": "#A29C90", "line": "#33363A", "accent": "#E3A869" }, "fonts": { "display": "Fraunces", "body": "System serif" } },
+    { "id": "plain", "name": "Plain", "colors": { "bg": "#FFFFFF", "ink": "#111111", "muted": "#666666", "line": "#E6E6E6", "accent": "#0B57D0" }, "fonts": { "display": "Inter", "body": "System sans" } }
+  ],
+  "sections": [ { "id": "posts", "label": "Posts", "on": true }, { "id": "subscribe", "label": "Subscribe", "on": true } ]
+}

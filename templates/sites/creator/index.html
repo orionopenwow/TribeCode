@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">PIXELBRUNCH</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <a class="ticker" data-s-attr="href:watch" href="#"><span class="dot" aria-hidden="true"></span><span data-s="next">Next stream: Tuesday 7pm</span><span class="arr" aria-hidden="true">↗</span></a>
+
+  <header class="hero">
+    <div class="hero-t">
+      <h1 data-s="name">PIXELBRUNCH</h1>
+      <p data-s="tagline">Cozy games and a Sunday cooking stream.</p>
+      <ul class="soc">
+        <template data-s-for="socials"><li><a href="{{url}}">{{label}}</a></li></template>
+        <!--/s-for-->
+      </ul>
+    </div>
+    <img class="face" data-s-attr="src:face" src="img/face.svg" alt="" width="800" height="800">
+  </header>
+
+  <main data-s-sections>
+    <section class="sched" data-section="schedule" aria-labelledby="h-s">
+      <h2 id="h-s">This week</h2>
+      <ol class="days">
+        <template data-s-for="schedule"><li><b>{{day}}</b><span class="tm">{{time}}</span><span>{{what}}</span></li></template>
+        <!--/s-for-->
+      </ol>
+    </section>
+
+    <section class="vids" data-section="videos" aria-labelledby="h-v">
+      <h2 id="h-v">Latest videos</h2>
+      <div class="vgrid">
+        <template data-s-for="videos"><a class="vid" href="{{url}}"><span class="th"><img src="{{img}}" alt="" loading="lazy" width="1400" height="900">{{#len}}<i>{{len}}</i>{{/len}}</span><span class="vt">{{title}}</span></a></template>
+        <!--/s-for-->
+      </div>
+    </section>
+
+    <section class="about" data-section="about" aria-label="About and setup">
+      <div class="stats">
+        <template data-s-for="stats"><p><b>{{n}}</b><span>{{t}}</span></p></template>
+        <!--/s-for-->
+      </div>
+      <dl class="kit">
+        <template data-s-for="kit"><div><dt>{{k}}</dt><dd>{{v}}</dd></div></template>
+        <!--/s-for-->
+      </dl>
+    </section>
+
+    <section class="work" data-section="work">
+      <h2>Brand work</h2>
+      <p>I only take sponsors I'd use off stream. Send the brief, the dates and what you'd like to see.</p>
+      <a class="btn" data-s-attr="href:mailto:email" href="mailto:biz@example.com"><span data-s="email">biz@example.com</span></a>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">PIXELBRUNCH</span> · thanks for hanging out</footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

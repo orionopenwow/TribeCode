@@ -1,0 +1,34 @@
+{
+  "meta": { "title": "Resume / personal", "category": "personal", "order": 13, "summary": "A clean one-page resume that prints well: summary, experience, skills, education and how to reach you.", "goodFor": ["Job seekers", "Freelancers", "Students"], "tags": ["resume", "cv", "personal", "about me", "job"] },
+  "form": [
+    { "key": "name", "label": "Your name", "type": "text" },
+    { "key": "role", "label": "What you do", "type": "text" },
+    { "key": "summary", "label": "A short summary", "type": "textarea" },
+    { "key": "photo", "label": "Photo (optional)", "type": "image" },
+    { "key": "jobs", "label": "Experience", "type": "list", "fields": [{ "key": "title", "label": "Role" }, { "key": "org", "label": "Where" }, { "key": "when", "label": "When" }, { "key": "did", "label": "What you did", "type": "textarea" }], "add": { "title": "", "org": "", "when": "", "did": "" } },
+    { "key": "skills", "label": "Skills", "type": "list", "fields": [{ "key": "s", "label": "Skill" }], "add": { "s": "" } },
+    { "key": "email", "label": "Email", "type": "text" },
+    { "key": "where", "label": "Location", "type": "text" }
+  ],
+  "name": "Jonah Whitfield",
+  "role": "Operations manager · logistics and warehouses",
+  "summary": "Eight years running warehouse floors and the systems behind them. I'm good at the unglamorous part: schedules people can live with, inventory counts that match, and fewer 2am phone calls.",
+  "photo": "img/me.svg",
+  "email": "jonah@example.com",
+  "where": "Columbus, Ohio",
+  "links": [ { "label": "LinkedIn", "url": "https://example.com/in" }, { "label": "Download PDF", "url": "#print" } ],
+  "jobs": [
+    { "title": "Operations Manager", "org": "Riverside Distribution", "when": "2022 to now", "did": "Run a 140,000 sq ft site with 60 people across two shifts. Cut mis-picks by 38% by redesigning slotting and the pick-path." },
+    { "title": "Shift Lead", "org": "Riverside Distribution", "when": "2019 to 2022", "did": "Led the night shift of 22. Built the cross-training plan that's still used site-wide." },
+    { "title": "Inventory Coordinator", "org": "Buckeye Supply Co.", "when": "2017 to 2019", "did": "Owned cycle counts and the move to barcode scanning across three warehouses." }
+  ],
+  "skills": [ { "s": "Warehouse management systems" }, { "s": "Scheduling and labor planning" }, { "s": "Lean and 5S" }, { "s": "Forklift certified" }, { "s": "Excel, SQL basics" }, { "s": "Spanish (conversational)" } ],
+  "school": [ { "what": "B.S. Supply Chain Management", "where": "Ohio State University", "when": "2017" } ],
+  "theme": { "colors": { "bg": "#FFFFFF", "ink": "#1B2633", "muted": "#5D6B79", "line": "#D9DFE5", "accent": "#A33A24" }, "fonts": { "display": "System serif", "body": "System sans" }, "easy": ["accent"] },
+  "presets": [
+    { "id": "classic", "name": "Classic", "colors": { "bg": "#FFFFFF", "ink": "#1B2633", "muted": "#5D6B79", "line": "#D9DFE5", "accent": "#A33A24" }, "fonts": { "display": "System serif", "body": "System sans" } },
+    { "id": "modern", "name": "Modern", "colors": { "bg": "#F4F4F1", "ink": "#121212", "muted": "#5F5F5A", "line": "#121212", "accent": "#2B59C3" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+    { "id": "mono", "name": "Monospace", "colors": { "bg": "#FFFEF8", "ink": "#222222", "muted": "#666666", "line": "#CCCCCC", "accent": "#222222" }, "fonts": { "display": "JetBrains Mono", "body": "JetBrains Mono" } }
+  ],
+  "sections": [ { "id": "experience", "label": "Experience", "on": true }, { "id": "skills", "label": "Skills", "on": true }, { "id": "education", "label": "Education", "on": true } ]
+}

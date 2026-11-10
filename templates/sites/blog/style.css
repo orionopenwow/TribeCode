@@ -1,0 +1,45 @@
+/* Newsletter / blog: a reading layout. One narrow column, a serif display face, about 65 characters a line.
+   Colors and fonts: site.json › theme. */
+:root { --bg: #FAF8F3; --ink: #24221E; --muted: #6B665B; --line: #E2DDD1; --accent: #A2462C;
+  --font-display: Georgia, serif; --font-body: Georgia, serif; --col: 680px; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 19px/1.65 var(--font-body); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.mast { max-width: var(--col); margin: 0 auto; padding: clamp(48px, 9vw, 112px) 22px 40px; border-bottom: 1px solid var(--line); }
+.mast h1 { margin: 0; font: 400 clamp(40px, 6vw, 64px)/1.02 var(--font-display); letter-spacing: -0.01em; }
+.mast h1 a { text-decoration: none; }
+.by { margin: 14px 0 0; color: var(--muted); font-size: 16px; font-style: italic; }
+.about { margin: 18px 0 0; color: var(--ink); }
+.mast.small { padding: 28px 22px; } .home { margin: 0; font: 400 22px/1.2 var(--font-display); } .home a { text-decoration: none; }
+
+main, .article, .end { max-width: var(--col); margin: 0 auto; padding: 0 22px; }
+.post { border-bottom: 1px solid var(--line); }
+.post a { display: block; padding: 34px 0; text-decoration: none; }
+.post img { width: 100%; height: auto; display: block; margin-bottom: 18px; }
+.post time, .article time { display: block; color: var(--muted); font: 13px/1 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.post h2 { margin: 10px 0 0; font: 400 34px/1.15 var(--font-display); }
+.post a:hover h2 { color: var(--accent); }
+.post p { margin: 10px 0 0; color: var(--muted); }
+
+.sub { margin: 48px 0 64px; padding: 32px; background: var(--ink); color: var(--bg); }
+.sub h2 { margin: 0; font: 400 32px/1.1 var(--font-display); }
+.sub p { margin: 8px 0 18px; opacity: .8; font-size: 17px; }
+.sf { display: flex; gap: 8px; flex-wrap: wrap; }
+.sf input { flex: 1 1 220px; min-width: 0; padding: 12px 14px; font: 16px system-ui, sans-serif; border: 0; background: var(--bg); color: var(--ink); }
+.sf button { padding: 12px 20px; border: 0; background: var(--accent); color: #fff; font: 600 16px system-ui, sans-serif; cursor: pointer; }
+.sf-note { margin: 10px 0 0 !important; font-size: 14px !important; }
+
+.article { padding-top: 40px; }
+.article h1 { margin: 14px 0 0; font: 400 clamp(38px, 6vw, 58px)/1.05 var(--font-display); letter-spacing: -0.01em; }
+.body { margin-top: 32px; }
+.body p { margin: 0 0 1.1em; }
+.body p:first-of-type::first-letter { float: left; font: 400 76px/0.8 var(--font-display); padding: 6px 8px 0 0; color: var(--accent); }
+.body h2 { margin: 1.6em 0 .5em; font: 400 28px/1.2 var(--font-display); }
+.end { margin-top: 56px; }
+.foot { max-width: var(--col); margin: 0 auto; padding: 0 22px 56px; color: var(--muted); font-size: 15px; }
+[data-preset="dusk"] .sub { background: #26292C; color: var(--ink); }
+[data-preset="dusk"] .sf input { background: var(--bg); }

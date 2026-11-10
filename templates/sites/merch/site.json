@@ -1,0 +1,42 @@
+{
+  "meta": { "title": "Merch shop", "category": "shop", "order": 2, "summary": "A small shop: product grid, product details with sizes, a cart drawer and a hand-off to your own checkout link.", "goodFor": ["Band and creator merch", "Makers", "A first product line"], "tags": ["merch", "shop", "store", "ecommerce", "products", "cart"] },
+  "form": [
+    { "key": "name", "label": "Shop name", "type": "text" },
+    { "key": "tagline", "label": "Headline", "type": "textarea" },
+    { "key": "intro", "label": "Short intro", "type": "textarea" },
+    { "key": "products", "label": "Products", "type": "list", "fields": [{ "key": "name", "label": "Name" }, { "key": "price", "label": "Price" }, { "key": "note", "label": "Color or detail" }, { "key": "img", "label": "Photo", "type": "image" }, { "key": "desc", "label": "Description", "type": "textarea" }, { "key": "sizes", "label": "Sizes (comma separated)" }], "add": { "name": "New product", "price": "20", "note": "", "img": "img/tee.svg", "desc": "", "sizes": "" } },
+    { "key": "checkout.url", "label": "Checkout link (Stripe Payment Link, Shopify, Gumroad…)", "type": "url" },
+    { "key": "contact", "label": "Contact email", "type": "text" }
+  ],
+  "name": "Loop & Thread",
+  "tagline": "Wool socks knit in Asheville, in batches of two hundred.",
+  "intro": "We run four old knitting machines in a converted bakery. Every pair is merino from one farm in Virginia, and every batch sells out, so sign up for the next drop.",
+  "currency": "$",
+  "products": [
+    { "id": "ember", "name": "Ember crew", "price": "24", "note": "Rust with a cream heel", "img": "img/socks-ember.svg", "desc": "Our everyday crew sock. Cushioned sole, reinforced heel and toe, and a cuff that stays up.", "sizes": "S, M, L, XL" },
+    { "id": "moss", "name": "Moss hiker", "price": "28", "note": "Green, heavier knit", "img": "img/socks-moss.svg", "desc": "Thicker merino for boots and cold mornings. Fits a half size bigger, so size down if you're between.", "sizes": "S, M, L, XL" },
+    { "id": "tee", "name": "Shop tee", "price": "32", "note": "Black, organic cotton", "img": "img/tee.svg", "desc": "A heavyweight tee with our little loop on the chest. Printed by Blue Ridge Print Co.", "sizes": "S, M, L, XL, 2XL" },
+    { "id": "tote", "name": "Market tote", "price": "18", "note": "Natural canvas", "img": "img/tote.svg", "desc": "Fits a week of groceries or four dozen pairs of socks.", "sizes": "" },
+    { "id": "mug", "name": "Machine-room mug", "price": "16", "note": "12 oz stoneware", "img": "img/mug.svg", "desc": "The mug we drink coffee from while the machines run. Dishwasher safe.", "sizes": "" },
+    { "id": "cap", "name": "Six-panel cap", "price": "26", "note": "Navy, adjustable", "img": "img/cap.svg", "desc": "Unstructured cotton cap with an embroidered loop.", "sizes": "" }
+  ],
+  "facts": [
+    { "title": "Shipping", "text": "Ships in 2 to 4 days from Asheville. Free over $60 in the US." },
+    { "title": "Returns", "text": "Unworn items within 30 days. Email us and we'll send a label." },
+    { "title": "Made by", "text": "Four people and four machines. Say hi if you're ever in town." }
+  ],
+  "faq": [
+    { "q": "How do the socks fit?", "a": "True to shoe size, except the Moss hiker, which runs a little big." },
+    { "q": "Do you restock?", "a": "Every batch is different. Join the drop list and you'll hear first." },
+    { "q": "Can I order for a team or a shop?", "a": "Yes. Email us with how many and when you need them." }
+  ],
+  "checkout": { "url": "", "label": "Go to checkout", "note": "Payments open on our checkout page. Connect yours in site.json › checkout › url." },
+  "contact": "hello@example.com",
+  "theme": { "colors": { "bg": "#F6F3EE", "ink": "#151515", "muted": "#5E5A54", "line": "#151515", "card": "#ECE7DF", "accent": "#C93A1F" }, "fonts": { "display": "Space Grotesk", "body": "System sans" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "studio", "name": "Studio", "colors": { "bg": "#F6F3EE", "ink": "#151515", "muted": "#5E5A54", "line": "#151515", "card": "#ECE7DF", "accent": "#C93A1F" }, "fonts": { "display": "Space Grotesk", "body": "System sans" } },
+    { "id": "night", "name": "After dark", "colors": { "bg": "#121212", "ink": "#F4F1EA", "muted": "#A8A39A", "line": "#3A3A3A", "card": "#1E1E1E", "accent": "#FF7A45" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+    { "id": "market", "name": "Market", "colors": { "bg": "#FFF8EC", "ink": "#2A2016", "muted": "#6B5B48", "line": "#2A2016", "card": "#F2E6CF", "accent": "#2F6B3B" }, "fonts": { "display": "Fraunces", "body": "Humanist" } }
+  ],
+  "sections": [ { "id": "intro", "label": "Intro", "on": true }, { "id": "shop", "label": "Products", "on": true }, { "id": "facts", "label": "Shipping and returns", "on": true }, { "id": "faq", "label": "Questions", "on": true } ]
+}

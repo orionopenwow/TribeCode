@@ -1,0 +1,44 @@
+/* Indie game page: pixel display type, the game's own art full-bleed, chunky borders.
+   Colors and fonts: site.json › theme. */
+:root { --bg: #0E1A30; --ink: #F4E9C8; --muted: #A9B1C4; --panel: #152544; --line: #2A3D63; --accent: #FF6B8B; --pop: #7FBF5A;
+  --font-display: ui-monospace, monospace; --font-body: system-ui, sans-serif; --gut: clamp(16px, 4vw, 56px); }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 17px/1.6 var(--font-body); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--pop); outline-offset: 2px; }
+
+.hero { position: relative; min-height: min(80vh, 720px); display: grid; align-items: end; overflow: hidden; border-bottom: 4px solid var(--ink); }
+.hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.hero-in { position: relative; padding: 40px var(--gut); background: linear-gradient(transparent, var(--bg) 70%); }
+h1 { margin: 0; font: 400 clamp(44px, 9vw, 128px)/1 var(--font-display); letter-spacing: 0.01em; text-shadow: 4px 4px 0 var(--accent); }
+.hero-in p { margin: 14px 0 0; max-width: 46ch; font-size: 19px; }
+.acts { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.btn { display: inline-block; padding: 14px 22px; background: var(--accent); color: var(--bg); font: 400 15px/1 var(--font-display); text-decoration: none; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.btn.ghost { background: var(--bg); color: var(--ink); }
+
+main { padding: 0 var(--gut) 40px; }
+section { padding-top: 56px; }
+section > h2 { margin: 0 0 20px; font: 400 26px/1 var(--font-display); color: var(--pop); }
+.shots { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 12px; }
+.shots figure { margin: 0; border: 3px solid var(--ink); }
+.shots figure:first-of-type { grid-row: span 2; }
+.shots img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: pixelated; }
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.features div { padding: 22px; background: var(--panel); border: 3px solid var(--line); }
+.features h2 { margin: 0 0 8px; font: 400 17px/1.3 var(--font-display); color: var(--ink); }
+.features p { margin: 0; color: var(--muted); font-size: 16px; }
+.press dl { margin: 0 0 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.press dl div { padding: 14px 16px; border: 3px solid var(--line); }
+.press dt { font: 400 12px/1 var(--font-display); color: var(--muted); margin-bottom: 6px; } .press dd { margin: 0; }
+.press p { color: var(--muted); } .press p a { color: var(--accent); }
+.devlog ol { list-style: none; margin: 0; padding: 0; max-width: 720px; }
+.devlog li { display: grid; grid-template-columns: 80px 1fr; gap: 14px; padding: 12px 0; border-top: 2px dashed var(--line); }
+.devlog time { font: 400 13px/1.6 var(--font-display); color: var(--accent); }
+.foot { padding: 22px var(--gut); font: 400 12px/1 var(--font-display); color: var(--muted); border-top: 4px solid var(--ink); }
+[data-preset="gameboy"] h1 { text-shadow: 3px 3px 0 var(--pop); }
+[data-preset="neon"] h1 { text-shadow: 0 0 0 transparent, 3px 3px 0 var(--accent); letter-spacing: -0.03em; font-weight: 700; }
+
+@media (max-width: 760px) { .shots { grid-template-columns: 1fr; } .shots figure:first-of-type { grid-row: auto; } .features { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .btn:hover { transform: none; } }

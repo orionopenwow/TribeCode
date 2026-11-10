@@ -13,6 +13,7 @@
     return [
       { kind: 'Action', label: 'New task', keys: 'add todo create', run: () => { A.show('tasks'); setTimeout(() => document.querySelector('#task-new').click(), 50); } },
       { kind: 'Action', label: 'New doc', keys: 'page write note', run: () => { A.show('docs'); window.TribeDocs.create(); } },
+      { kind: 'Action', label: 'Website templates', keys: 'site template link in bio linktree shop merch portfolio blog cafe restaurant band wedding podcast resume', run: () => window.TribeSiteLib && window.TribeSiteLib.open() },
       { kind: 'Action', label: 'New proposal', keys: 'vote board idea', run: () => { A.show('board'); setTimeout(() => document.querySelector('#prop-new').click(), 50); } },
       { kind: 'Action', label: 'Share my screen', keys: 'present screenshare', run: () => window.TribeHuddle.share() },
       { kind: 'Action', label: 'Dictate into chat', keys: 'voice speech mic talk type', hint: 'Ctrl Shift D', run: () => window.TribeSpeech && window.TribeSpeech.dictate(document.querySelector('#chat-input')) },
