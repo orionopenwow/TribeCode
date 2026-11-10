@@ -147,5 +147,7 @@
   .tl-two { grid-template-columns: 1fr; }
   .tl-bal-n b { font-size: 36px; }
   .tl-tx { flex-wrap: wrap; }
-  .tl-tabs button { padding: 9px 10px; font-size: 13.5px; }
+  .tl-tabs { overflow: visible; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }   /* v0.27: all five tabs fit at 390px, no hidden Public */
+  .tl-tabs button { padding: 9px 2px; font-size: 13px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tl-tabs small { display: none; }
 }
