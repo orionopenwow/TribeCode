@@ -841,3 +841,21 @@
   if (still || !('IntersectionObserver' in window)) return;
   new IntersectionObserver(es => { const vis = es.some(e => e.isIntersecting); if (vis && !on) { on = true; last = 0; raf = requestAnimationFrame(loop); } else if (!vis) { on = false; cancelAnimationFrame(raf); } }).observe(cv);
 })();
+
+/* ---------- Feedback (v0.27): build a prefilled GitHub issue (template feedback.yml, label "feedback") ---------- */
+(function () {
+  const f = document.getElementById('fbk-form'); if (!f) return;
+  let facet = 'Idea';
+  f.querySelectorAll('[data-facet]').forEach(b => b.addEventListener('click', () => {
+    facet = b.dataset.facet; f.querySelectorAll('[data-facet]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', String(x === b)); });
+  }));
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const msg = (document.getElementById('fbk-msg').value || '').trim();
+    if (!msg) { document.getElementById('fbk-msg').focus(); return; }
+    const repo = (document.querySelector('a[href*="github.com/"][href*="/issues"]') || {}).href || 'https://github.com/orionopenwow/TribeCode/issues';
+    const base = repo.replace(/\/issues.*$/, '');
+    const q = new URLSearchParams({ template: 'feedback.yml', title: `Feedback (${facet}): ${msg.split('\n')[0].slice(0, 60)}`, facet, message: msg, where: 'tribecode.org' });
+    window.open(`${base}/issues/new?${q}`, '_blank', 'noopener');
+  });
+})();

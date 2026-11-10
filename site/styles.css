@@ -1282,3 +1282,19 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 @media (max-width: 520px) { .biz { padding-top: 56px; } .biz__grid { grid-template-columns: 1fr; gap: 10px; } .biz__card { padding: 14px 14px 16px; } .biz__strip { grid-template-columns: 1fr; } .biz__strip li { padding: 10px 14px; } .biz__strip li + li { border-left: 0; border-top: 1px solid var(--edge); } .biz__pic { padding: 16px 12px 12px; } }
 @media (prefers-reduced-motion: reduce) { .js .biz__grid.reveal .biz__card { opacity: 1; transform: none; transition: none; } }
 .ms-biz { margin-top: 56px; } .ms-biz p { margin: 0 0 12px; font-size: 16px; line-height: 1.6; max-width: 62ch; } .ms-biz .eyebrow { margin: 0 0 6px; } .ms-biz a { color: #E58A5E; } .ms-biz .ms-note p { font-size: 15px; }
+
+/* ---- Feedback (v0.27): facet chips + a note, sent as a prefilled GitHub issue ---- */
+.fbk { padding: 64px 0 24px; }
+.fbk h2 { margin: 6px 0 8px; color: var(--text); font: 700 clamp(26px, 3vw, 36px)/1.15 'Inter Display', Inter, sans-serif; letter-spacing: -.015em; }
+.fbk__lead { margin: 0 0 18px; max-width: 62ch; color: var(--muted); font-size: 16.5px; line-height: 1.6; }
+.fbk__card { display: grid; gap: 10px; max-width: 760px; padding: 18px; border: 1px solid var(--edge); border-radius: 16px; background: var(--surface); }
+.fbk__facets { display: flex; flex-wrap: wrap; gap: 6px; }
+.fbk__chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; color: var(--muted); font: 500 13.5px/1.2 Inter, sans-serif; cursor: pointer; }
+.fbk__chip:hover { color: var(--text); }
+.fbk__chip.on { color: var(--text); border-color: var(--ember); background: color-mix(in srgb, var(--ember) 14%, transparent); }
+.fbk__label { font-size: 13px; color: var(--muted); }
+.fbk__card textarea { width: 100%; box-sizing: border-box; min-height: 88px; resize: vertical; padding: 12px; border-radius: 12px; border: 1px solid var(--edge); background: var(--main, #1D2021); color: var(--text); font: 15px/1.5 Inter, sans-serif; }
+.fbk__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.fbk__note { color: var(--faint); font-size: 12.5px; }
+.fbk__more { margin: 12px 0 0; } .fbk__more a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 520px) { .fbk { padding-top: 48px; } .fbk__row .btn { width: 100%; justify-content: center; } }

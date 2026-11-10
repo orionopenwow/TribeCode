@@ -576,6 +576,24 @@
   </section>
 
   <!-- ================= THE MAKER ================= -->
+  <!-- ================= FEEDBACK: tell us; it goes to GitHub where the team (and Claude) read it ================= -->
+  <section class="fbk" id="feedback" aria-labelledby="fbk-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// feedback</p>
+      <h2 id="fbk-title">Tell us what to build next</h2>
+      <p class="fbk__lead">Ideas, bugs, wishes. Pick what it's about, write a line, and it opens as a public note on GitHub, where every one gets read.</p>
+      <form class="fbk__card" id="fbk-form" autocomplete="off">
+        <div class="fbk__facets" role="radiogroup" aria-label="What is it about?">
+          <button type="button" class="fbk__chip on" data-facet="Idea" role="radio" aria-checked="true">💡 Idea</button><button type="button" class="fbk__chip" data-facet="Bug" role="radio" aria-checked="false">🐞 Bug</button><button type="button" class="fbk__chip" data-facet="Company mode" role="radio" aria-checked="false">🏢 Company</button><button type="button" class="fbk__chip" data-facet="Work and hiring" role="radio" aria-checked="false">🤝 Work</button><button type="button" class="fbk__chip" data-facet="Learn and Academy" role="radio" aria-checked="false">🎓 Learn</button><button type="button" class="fbk__chip" data-facet="Design and look" role="radio" aria-checked="false">🎨 Design</button><button type="button" class="fbk__chip" data-facet="Phones" role="radio" aria-checked="false">📱 Phones</button><button type="button" class="fbk__chip" data-facet="Something else" role="radio" aria-checked="false">✳️ Other</button>
+        </div>
+        <label class="fbk__label" for="fbk-msg">Your note</label>
+        <textarea id="fbk-msg" rows="3" maxlength="2000" placeholder="I wish my AI helper could…"></textarea>
+        <div class="fbk__row"><span class="fbk__note">Opens GitHub with your note filled in. You'll need a free GitHub account to send it.</span><button type="submit" class="btn btn--light">Send feedback<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+      </form>
+      <p class="fbk__more"><a href="https://github.com/orionopenwow/TribeCode/issues?q=label%3Afeedback">See what others asked for</a></p>
+    </div>
+  </section>
+
   <section class="maker" id="maker" aria-labelledby="maker-title">
     <canvas class="maker__sky" aria-hidden="true"></canvas>
     <div class="wrap maker__in reveal">
@@ -613,6 +631,7 @@
       <a href="pricing.html">Pricing</a>
       <a href="mission.html">Mission</a>
       <a href="#company">Company mode</a>
+      <a href="#feedback">Feedback</a>
       <a href="docs.html">Quick start</a>
       <a href="docs.html#security">Security &amp; privacy</a>
       <a href="https://github.com/orionopenwow/TribeCode">GitHub</a>
