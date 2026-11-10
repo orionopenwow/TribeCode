@@ -33,11 +33,17 @@ def main():
         assert ys == sorted(ys), ys
         assert pg.text_content("#biz-title").strip() == "Run a company, not just a project"
         assert pg.text_content("#company .eyebrow").strip() == "// vibe-run a business"
-        assert pg.locator("#company .biz__card").count() == 4 and pg.locator("#company .biz__strip li").count() == 4
-        assert pg.locator("#company svg.biz__art rect").count() > 40, "the pixel org chart is drawn"
+        # the live company mock (final frame under reduced motion), three explainers and the Learn-it strip
+        assert pg.locator("#cs .cs__seat").count() == 4 and pg.locator("#cs .cs__line").count() == 4
+        assert "Approved by Camp" in pg.text_content("#cs .cs__ask") and pg.is_visible("#cs .cs__ask-done") and pg.is_visible("#cs .cs__toast")
+        assert pg.get_attribute("#cs .cs__win", "aria-hidden") == "true" and "Lantern Games" in pg.text_content("#cs-desc")
+        assert pg.locator("#company .bx__card").count() == 3 and pg.locator("#company .bx__cap").count() == 10
+        assert pg.locator("#company .biz__strip li").count() == 4
+        assert pg.locator("#company a[href='learn.html#m5-0']").count() == 1 and pg.locator("#company a[href='docs.html#company']").count() == 1
         assert "person’s OK" in pg.text_content("#company .biz__note")
         assert pg.locator("#menu-features a[href='#company']").count() == 1 and pg.locator(".footer__links a[href='#company']").count() == 1
-        body = pg.text_content("#company")
+        # the mock's example revenue aside, the section names no prices
+        body = pg.evaluate("(() => { const c = document.querySelector('#company').cloneNode(true); c.querySelectorAll('.cs, .bx__pic').forEach(e => e.remove()); return c.textContent })()")
         assert "$" not in body and "price" not in body.lower(), "no prices in the section"
         # Learn: one simple section with the "How vibecoding works" infographic (four steps) and one button
         assert pg.locator("#learn #vibecoding .vf__step").count() == 4 and pg.locator("#learn a[href='learn.html#m1-0']").count() == 1
@@ -45,11 +51,11 @@ def main():
             pg.locator("#company").scroll_into_view_if_needed(); pg.wait_for_timeout(300)
             pg.locator("#company").screenshot(path=f"{SHOTS}/sitebiz-section-1440.png")
         # Spanish: heading, lead, cards and strip are translated
-        en_cards = pg.eval_on_selector_all("#company .biz__text, #company .biz__sk, #company .biz__ss, #company h3", "els => els.map(e => e.textContent.trim())")
+        en_cards = pg.eval_on_selector_all("#company .bx__cap, #company .biz__sk, #company .biz__ss, #company h3, #company .biz__docs", "els => els.map(e => e.textContent.trim())")
         pg.evaluate("TribeLang.set('es')")
         assert pg.text_content("#biz-title").strip() == "Dirige una empresa, no solo un proyecto", pg.text_content("#biz-title")
         assert pg.text_content("#company .biz__lead").strip().startswith("Convierte un proyecto")
-        es_cards = pg.eval_on_selector_all("#company .biz__text, #company .biz__sk, #company .biz__ss, #company h3", "els => els.map(e => e.textContent.trim())")
+        es_cards = pg.eval_on_selector_all("#company .bx__cap, #company .biz__sk, #company .biz__ss, #company h3, #company .biz__docs", "els => els.map(e => e.textContent.trim())")
         same = [e for e, s in zip(en_cards, es_cards) if e == s]
         assert not same, f"untranslated in es: {same}"
         assert "Modo empresa" in pg.text_content("#menu-features")
@@ -72,7 +78,9 @@ def main():
         ph = b.new_context(viewport={"width": 390, "height": 844}, locale="en-US", reduced_motion="reduce").new_page(); ph.on("pageerror", lambda e: errs.append(str(e)))
         ph.goto(base + "/index.html"); ph.wait_for_selector("#company")
         no_overflow(ph, "home 390")
-        r = ph.evaluate("(() => { const c = document.querySelector('#company .biz__grid').getBoundingClientRect(); return [c.left, c.right] })()")
+        r = ph.evaluate("(() => { const c = document.querySelector('#company .bx').getBoundingClientRect(); return [c.left, c.right] })()")
+        assert r[0] >= 0 and r[1] <= 390, r
+        r = ph.evaluate("(() => { const c = document.querySelector('#cs').getBoundingClientRect(); return [c.left, c.right] })()")
         assert r[0] >= 0 and r[1] <= 390, r
         if SHOTS:
             ph.locator("#company").screenshot(path=f"{SHOTS}/sitebiz-section-390.png")
