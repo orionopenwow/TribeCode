@@ -348,3 +348,25 @@
 @media (prefers-reduced-motion: reduce) { .fp-big__bob.is-hop .fp-big__svg, .fp-big__bob.is-squish .fp-big__svg, .fp-spark { animation: none; } }
 
 .fv-task.is-moved { border-color: #3BD16F !important; }
+
+/* How Flint thinks: a live routing diagram (site/flint.js cycles three real requests) */
+.fw { margin: 32px 0 0; padding: 26px; border: 1px solid var(--edge); border-radius: 18px; background: var(--surface); display: grid; grid-template-columns: 170px minmax(0, 1fr) 190px; gap: 22px; align-items: center; }
+.fw__k { display: block; margin-bottom: 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.fw__chip { display: inline-block; padding: 10px 14px; border-radius: 12px 12px 4px 12px; border: 1px solid #45403D; background: #2E2C2B; color: #F8FAFC; font-size: 15px; line-height: 1.35; transition: opacity .3s; }
+.fw__res { display: inline-block; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--c, #45403D); background: #1E242D; color: #F8FAFC; font-size: 14.5px; line-height: 1.35; transition: border-color .3s, opacity .3s; }
+.fw__lane { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.fw__lane::before { content: ""; position: absolute; left: 0; right: 0; top: 38px; height: 2px; background: #2A313C; }
+.fw__st { position: relative; display: grid; align-content: start; gap: 10px; padding: 16px; border: 1px solid var(--edge); border-radius: 14px; background: var(--main, #232526); transition: border-color .3s, background-color .3s, opacity .3s; }
+.fw__ic { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; border: 1px solid var(--edge); background: #1B2028; color: var(--c); font-size: 20px; position: relative; z-index: 1; transition: border-color .3s, background-color .3s; }
+.fw__ic img { image-rendering: pixelated; }
+.fw__n { font-size: 11.5px; color: var(--c); } .fw__st b { display: block; margin-top: 2px; color: var(--text); font-size: 16px; } .fw__st p { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.fw__st code { font: 12.5px var(--mono); padding: 1px 5px; border-radius: 5px; background: #2A313C; color: #F8FAFC; }
+.fw__st.is-pass .fw__ic { border-color: var(--c); }
+.fw__st.is-stop { border-color: var(--c); background: #1E242D; }
+.fw__st.is-stop .fw__ic { border-color: var(--c); background: #12151A; }
+.fw__st.is-skip { opacity: .45; }
+.fw__legend { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: 13.5px; }
+.fw__legend i { display: inline-block; width: 10px; height: 10px; margin-right: 7px; border-radius: 3px; background: var(--c); }
+@media (max-width: 1100px) { .fw { grid-template-columns: minmax(0, 1fr); } .fw__lane { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fw__lane::before { display: none; } }
+@media (max-width: 560px) { .fw { padding: 16px; } .fw__lane { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .fw__st, .fw__ic, .fw__chip, .fw__res { transition: none; } }

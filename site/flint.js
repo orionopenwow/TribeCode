@@ -451,4 +451,29 @@
       }, 5000 + Math.random() * 7000);
     })();
   })();
+
+  // How Flint thinks: three real requests travel the lane and stop where they really would
+  (function () {
+    const fw = document.querySelector('[data-fw]'); if (!fw) return;
+    const st = [...fw.querySelectorAll('.fw__st')], chip = fw.querySelector('#fw-chip'), res = fw.querySelector('#fw-res');
+    const RUNS = [
+      ['“add a jump sound”', 2, 'Added jump.wav · 0.2\u00a0s', '#38C6B1'],
+      ['“build a loyalty card page”', 3, 'Your Claude built it · preview updated', '#6C7CFF'],
+      ['“email 120 customers”', 4, 'Waiting for your OK · Approve / Deny', '#3BD16F'],
+    ];
+    const paint = (stop, upto) => st.forEach((li, i) => { const n = i + 1; li.classList.toggle('is-pass', n <= upto && n < stop); li.classList.toggle('is-stop', n === stop && upto >= stop); li.classList.toggle('is-skip', upto >= stop && n > stop); });
+    if (still) { chip.textContent = RUNS[0][0]; res.textContent = RUNS[0][2]; res.style.setProperty('--c', RUNS[0][3]); paint(2, 4); return; }
+    let r = 0, k = 0, on = false, tm = 0;
+    function tick() {
+      clearTimeout(tm); if (!on) return;
+      const [ask, stop, out, col] = RUNS[r];
+      if (k === 0) { chip.textContent = ask; res.style.opacity = 0; paint(stop, 0); }
+      paint(stop, k);
+      if (k === stop) { res.textContent = out; res.style.setProperty('--c', col); res.style.opacity = 1; }
+      k++; if (k > 4) { k = 0; r = (r + 1) % RUNS.length; tm = setTimeout(tick, 2600 * PACE); return; }
+      tm = setTimeout(tick, (k > stop ? 250 : 750) * PACE);
+    }
+    if ('IntersectionObserver' in window) new IntersectionObserver(es => { const v = es.some(e => e.isIntersecting); if (v && !on) { on = true; tick(); } else if (!v) { on = false; clearTimeout(tm); } }, { threshold: .3 }).observe(fw);
+    else { on = true; tick(); }
+  })();
 })();
