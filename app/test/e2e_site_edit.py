@@ -110,16 +110,16 @@ def main():
             pg.evaluate(f"TribeClient.switchProject && TribeClient.switchProject('{pid}')"); time.sleep(1)
             pg.evaluate("TribePreview.open()"); pg.wait_for_selector("#pvw.ready, .pvw.ready", timeout=15000)
             pg.click(".pvw-edit"); pg.wait_for_selector("#pvw-edbar:not(.hidden)")
-            fr = next(f for f in pg.frames if "/preview/" in f.url)
+            fr = next(f for f in pg.frames if "/preview/" in f.url.split('#')[0])
             fr.wait_for_function("!!document.querySelector('[data-tribe-preview][data-tribe-preview=\"\"]') || document.querySelectorAll('style[data-tribe-preview]').length > 0", timeout=5000)
-            time.sleep(2.5); fr = next(f for f in pg.frames if "/preview/" in f.url); fr.wait_for_selector("style[data-tribe-preview]", state="attached", timeout=8000)
+            time.sleep(2.5); fr = next(f for f in pg.frames if "/preview/" in f.url.split('#')[0]); fr.wait_for_selector("style[data-tribe-preview]", state="attached", timeout=8000)
             fr.dispatch_event("h1", "dblclick"); fr.wait_for_selector("h1[contenteditable=true]", timeout=3000); fr.evaluate("(() => { const r = document.createRange(); const h = document.querySelector('h1'); r.selectNodeContents(h); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('insertText', false, ' & Cafe'); })()"); fr.press("h1", "Enter")
             for _ in range(40):
                 if "Corner Bakery &amp; Cafe" in (repo / "index.html").read_text(): break
                 time.sleep(0.25)
             assert "Corner Bakery &amp; Cafe" in (repo / "index.html").read_text(), (repo / "index.html").read_text()
             # pick an element: the Ask box wakes up
-            time.sleep(1.5); fr = next(f for f in pg.frames if "/preview/" in f.url)
+            time.sleep(1.5); fr = next(f for f in pg.frames if "/preview/" in f.url.split('#')[0])
             fr.wait_for_selector("ul li", timeout=8000); fr.dispatch_event("ul li", "click")
             pg.wait_for_function("!document.querySelector('#pvw-edask').disabled", timeout=5000)
             assert "<li>" in pg.text_content("#pvw-edpick")

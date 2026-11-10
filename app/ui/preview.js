@@ -26,8 +26,13 @@
     shot: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     gear: '<path d="M10.3 2.6h3.4l.5 2.6a7.3 7.3 0 0 1 1.9 1.1l2.5-.9 1.7 2.9-2 1.8a7.4 7.4 0 0 1 0 2.2l2 1.8-1.7 2.9-2.5-.9a7.3 7.3 0 0 1-1.9 1.1l-.5 2.6h-3.4l-.5-2.6a7.3 7.3 0 0 1-1.9-1.1l-2.5.9-1.7-2.9 2-1.8a7.4 7.4 0 0 1 0-2.2l-2-1.8 1.7-2.9 2.5.9a7.3 7.3 0 0 1 1.9-1.1z"/><circle cx="12" cy="12" r="2.8"/>',
     play: '<path d="M8 5v14l11-7z"/>',
+    back: '<path d="M15 18l-6-6 6-6"/>',
+    chev: '<path d="m7 10 5 5 5-5"/>',
+    more: '<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',
     home: '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 8v6M9 11h6"/>',
   };
+  // quick jumps from the focused preview back into the app (TribeShell.go keys); badges come from the sidebar's counters
+  const JUMPS = [{ key: 'chat', label: 'Chat', icon: 'i-chat', n: '#nn-chat' }, { key: 'ws-tasks', label: 'Tasks', icon: 'i-check', n: '#nn-tasks' }, { key: 'docs', label: 'Docs & files', icon: 'i-doc' }, { key: 'repo', label: 'Code', icon: 'i-git' }];
   const lsGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 
@@ -49,17 +54,25 @@
   function shell() {
     const el = document.createElement('div');
     el.className = 'pvw'; el.id = 'pvw';
-    el.innerHTML = `<div class="pvw-bar">
+    el.innerHTML = `<div class="pvw-bar" data-tauri-drag-region>
+        <button class="pvw-back" data-act="back" title="Back to the app (Esc)" aria-label="Back to the app">${ico(I.back)}<span>Back to app</span></button>
+        <button class="pvw-proj" data-act="proj" aria-haspopup="menu" title="Switch project"><span class="pvw-face" id="pvw-face"></span><b id="pvw-pname"></b>${ico(I.chev)}</button>
+        <form class="pvw-path" id="pvw-path" autocomplete="off"><span class="pvw-path-k" aria-hidden="true">/</span><input id="pvw-path-in" spellcheck="false" aria-label="Page to show" placeholder="index.html"></form>
         <div class="pvw-seg" role="tablist" aria-label="Device size">${Object.entries(DEVICES).map(([k, d]) => `<button role="tab" data-dev="${k}" title="${d.label}${k === 'desktop' ? '' : ' · ' + d.w + 'px'}" aria-label="${d.label}">${ico(I[k])}<span>${d.label}</span></button>`).join('')}</div>
         <span class="pvw-meta" id="pvw-meta"></span>
-        <span class="pvw-sp"></span>
+        <span class="pvw-sp" data-tauri-drag-region></span>
+        <span class="pvw-jump" role="group" aria-label="Back to a part of the app">${JUMPS.map(j => `<button class="pvw-btn" data-jump="${j.key}" title="${j.label}" aria-label="${j.label}"><svg class="pvw-i pvw-u"><use href="#${j.icon}"/></svg><b class="pvw-badge hidden" data-badge="${j.key}"></b></button>`).join('')}</span>
+        <span class="pvw-div" aria-hidden="true"></span>
         <button class="pvw-btn" data-act="reload" title="Reload" aria-label="Reload">${ico(I.reload)}</button>
         <button class="pvw-btn" data-act="tab" title="Open in a new browser tab" aria-label="Open in a new browser tab">${ico(I.tab)}</button>
         <button class="pvw-btn" data-act="share" title="Copy a link friends can open on their phone" aria-label="Copy share link">${ico(I.link)}</button>
         <button class="pvw-btn pvw-edit" data-act="edit" title="Edit the page: double-click text to change it, or pick anything and ask Flint" aria-label="Edit the page" aria-pressed="false">✏️<span>Edit</span></button>
-        <button class="pvw-btn" data-act="shot" title="Screenshot to Visuals" aria-label="Screenshot to Visuals">${ico(I.shot)}</button>
-        <button class="pvw-btn" data-act="home" title="${isPhone() ? 'Add to Home Screen' : 'Desktop shortcut / Home Screen'}" aria-label="Add to Home Screen">${ico(I.home)}</button>
-        <button class="pvw-btn hidden" data-act="gear" title="How the preview runs (host)" aria-label="Preview settings">${ico(I.gear)}</button>
+        <span class="pvw-morew"><button class="pvw-btn" data-act="more" title="More" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico(I.more)}</button>
+          <span class="pvw-more hidden" id="pvw-more" role="menu">
+            <button class="pvw-btn" role="menuitem" data-act="shot" title="Screenshot to Visuals" aria-label="Screenshot to Visuals">${ico(I.shot)}<span>Screenshot to Visuals</span></button>
+            <button class="pvw-btn" role="menuitem" data-act="home" title="${isPhone() ? 'Add to Home Screen' : 'Desktop shortcut / Home Screen'}" aria-label="Add to Home Screen">${ico(I.home)}<span>${isPhone() ? 'Add to Home Screen' : 'Desktop shortcut'}</span></button>
+            <button class="pvw-btn hidden" role="menuitem" data-act="gear" title="How the preview runs (host)" aria-label="Preview settings">${ico(I.gear)}<span>How the preview runs</span></button>
+          </span></span>
       </div>
       <form class="pvw-set hidden" id="pvw-set"></form>
       <form class="pvw-edbar hidden" id="pvw-edbar" autocomplete="off"><span class="pvw-edhint" id="pvw-edhint"><b>Editing.</b> Double-click any text to change it. Or click something and tell Flint what to change.</span>
@@ -67,18 +80,161 @@
       <div class="pvw-body"><div class="pvw-stage" id="pvw-stage"><div class="pvw-frame" id="pvw-frame"></div></div></div>`;
     el.addEventListener('click', e => {
       const d = e.target.closest('[data-dev]'); if (d) return setDevice(d.dataset.dev);
+      const j = e.target.closest('[data-jump]'); if (j) return jump(j.dataset.jump);
       const a = e.target.closest('[data-act]'); if (!a) return;
-      ({ edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
+      if (a.dataset.act !== 'more') moreMenu(false);
+      ({ back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
         home: () => window.TribeFolders && window.TribeFolders.home() })[a.dataset.act]?.();   // Home Screen / desktop shortcut (app/ui/folders.js)
     });
     return el;
   }
+  // ---------- the focused workspace (v0.28): just the preview and Flint, full window ----------
+  // Opening the preview hides the circle rail, the sidebar and the page (body.pvw-focus, preview.css); the bar has Back,
+  // quick jumps into the app and everything else. Back / Esc / browser Back return exactly where you were.
+  let backTo = null, pushed = false, returning = false, retPill = null;
+  const PREV_RE = /^#\/preview(?:\/([^/?#]+))?$/;
+  function enterFocus() {
+    if (!backTo) backTo = { hash: PREV_RE.test(location.hash) ? '' : location.hash, view: document.body.dataset.view || '' };
+    document.body.classList.add('pvw-focus');
+    hidePill();
+    const want = '#/preview/' + encodeURIComponent(C.project() || '');
+    if (location.hash !== want) {
+      try { history.pushState({ pvw: 1 }, '', location.pathname + location.search + want); pushed = true; } catch { pushed = false; }
+    }
+  }
+  function leaveFocus() {
+    if (!document.body.classList.contains('pvw-focus')) return;
+    document.body.classList.remove('pvw-focus');
+    moreMenu(false);
+    const to = backTo; backTo = null;
+    if (PREV_RE.test(location.hash)) {
+      if (pushed && history.state && history.state.pvw) { returning = true; history.back(); }
+      else { try { history.replaceState(null, '', location.pathname + location.search + ((to && to.hash) || '')); } catch {} }
+    }
+    pushed = false;
+  }
+  function exit() { close(); }
+  addEventListener('popstate', () => {
+    if (returning) { returning = false; return; }
+    if (document.body.classList.contains('pvw-focus') && !PREV_RE.test(location.hash)) { pushed = false; close(); }
+    else if (!document.body.classList.contains('pvw-focus') && PREV_RE.test(location.hash)) fromHash();
+  });
+  // deep link: #/preview/<project>
+  let deep = false;
+  async function fromHash() {
+    const m = PREV_RE.exec(location.hash); if (!m || deep) return;
+    if (pane && pane.isConnected) return;
+    if (!C.connected() && !C.hasToken()) return;
+    deep = true;
+    try {
+      const pid = m[1] ? decodeURIComponent(m[1]) : '';
+      if (pid && pid !== C.project() && window.TribeProjects && window.TribeProjects.switchTo) { await window.TribeProjects.switchTo(pid, 'home'); await new Promise(r => setTimeout(r, 250)); }
+      backTo = { hash: '', view: document.body.dataset.view || '' };
+      pushed = false;
+      await open();
+    } finally { deep = false; }
+  }
+  addEventListener('hashchange', () => { if (PREV_RE.test(location.hash) && !document.body.classList.contains('pvw-focus')) fromHash(); });
+  if (C.on) C.on('hello', () => setTimeout(fromHash, 120));
+
+  // quick jump: leave the workspace for a part of the app; a slim pill brings you straight back
+  function jump(key) {
+    close();
+    const S = window.TribeShell;
+    setTimeout(() => { if (S && S.go) S.go(key); showPill(); }, 0);
+  }
+  function showPill() {
+    if (isPhone()) return;
+    if (!retPill) {
+      retPill = document.createElement('div'); retPill.className = 'pvw-ret'; retPill.id = 'pvw-ret';
+      retPill.innerHTML = `<button type="button" class="pvw-ret-go" data-ret="go">${ico(I.play)}<span>Back to preview</span></button><button type="button" class="pvw-ret-x" data-ret="x" title="Dismiss" aria-label="Dismiss">✕</button>`;
+      retPill.addEventListener('click', e => { const b = e.target.closest('[data-ret]'); if (!b) return; hidePill(); if (b.dataset.ret === 'go') open(); });
+      document.body.appendChild(retPill);
+    }
+    retPill.classList.remove('hidden');
+  }
+  function hidePill() { if (retPill) retPill.classList.add('hidden'); }
+  function moreMenu(on) {
+    const m = pane && pane.querySelector('#pvw-more'), b = pane && pane.querySelector('[data-act="more"]'); if (!m) return;
+    const want = on === undefined ? m.classList.contains('hidden') : !!on;
+    m.classList.toggle('hidden', !want); if (b) b.setAttribute('aria-expanded', String(want));
+  }
+  document.addEventListener('pointerdown', e => { if (pane && !e.target.closest('.pvw-morew')) moreMenu(false); if (!e.target.closest('.pvw-pmenu, [data-act="proj"]')) projMenu(null, false); }, true);
+  let pmenu = null;
+  function projMenu(anchor, on) {
+    if (on === false || (pmenu && on !== true)) { if (pmenu) { pmenu.remove(); pmenu = null; } return; }
+    if (!anchor) return;
+    const list = (C.state().projects || []), cur = C.project(), F = window.TribeProjects && window.TribeProjects.face;
+    pmenu = document.createElement('div'); pmenu.className = 'pvw-pmenu'; pmenu.setAttribute('role', 'menu');
+    pmenu.innerHTML = `<p class="pvw-pmenu-k">Preview a project</p>` + list.map(p => `<button type="button" role="menuitem" data-pp="${esc(p.id)}" class="${p.id === cur ? 'on' : ''}">${F ? F(p, 'sm') : ''}<span>${esc(p.name)}</span></button>`).join('');
+    const r = anchor.getBoundingClientRect(); pmenu.style.left = Math.round(r.left) + 'px'; pmenu.style.top = Math.round(r.bottom + 6) + 'px';
+    pmenu.addEventListener('click', async e => {
+      const b = e.target.closest('[data-pp]'); if (!b) return; const id = b.dataset.pp; projMenu(null, false);
+      if (id === C.project()) return;
+      backTo = backTo || { hash: '', view: '' };
+      const keep = backTo; close();
+      if (window.TribeProjects && window.TribeProjects.switchTo) await window.TribeProjects.switchTo(id, 'home');
+      setTimeout(() => { backTo = keep; open(); }, 250);
+    });
+    document.body.appendChild(pmenu);
+  }
+  function paintBar() {
+    if (!pane) return;
+    const p = (C.state().projects || []).find(x => x.id === C.project()) || {};
+    const n = pane.querySelector('#pvw-pname'); if (n) n.textContent = p.name || 'App';
+    const f = pane.querySelector('#pvw-face'), F = window.TribeProjects && window.TribeProjects.face;
+    if (f) f.innerHTML = F && p.id ? F(p, 'sm') : '';
+    JUMPS.forEach(j => {
+      const b = pane.querySelector(`[data-badge="${j.key}"]`); if (!b) return;
+      const src = j.n && document.querySelector(j.n), t = src ? src.textContent.trim() : '';
+      b.textContent = t; b.classList.toggle('hidden', !t || t === '0');
+    });
+    // comment pins (pins.js) join the editing tools beside Edit, apart from the quick jumps
+    const pb = pane.querySelector('.pvw-bar > .pin-bar'), ed = pane.querySelector('.pvw-bar > .pvw-edit');
+    if (pb && ed && pb.nextElementSibling !== ed) ed.before(pb);
+    const pi = pane.querySelector('#pvw-path-in');
+    if (pi && document.activeElement !== pi) pi.value = relPath(lastHref);
+  }
+  const relPath = h => { if (!h || !info || !info.path) return ''; const i = h.indexOf(info.path); return (i >= 0 ? h.slice(i + info.path.length) : '').replace(/^\/+/, ''); };
+  function afterMount() {
+    if (!pane) return;
+    // Flint's toggle sits at the far right, then the window buttons (frameless desktop app) when the shell shows them
+    const bar = pane.querySelector('.pvw-bar'), fl = bar && bar.querySelector('[data-pvf-toggle]');
+    if (fl) bar.appendChild(fl);
+    const wc = document.getElementById('win-ctl');
+    if (bar && wc && !bar.querySelector('.pvw-wc') && getComputedStyle(wc).display !== 'none' && wc.offsetParent !== null) {
+      const c = document.createElement('span'); c.className = 'pvw-wc'; c.innerHTML = wc.innerHTML;
+      c.addEventListener('click', e => { const b = e.target.closest('[data-w]'); if (!b) return; const o = wc.querySelector(`[data-w="${b.dataset.w}"]`); if (o) o.click(); });
+      bar.appendChild(c);
+    }
+    const form = pane.querySelector('#pvw-path');
+    if (form) form.addEventListener('submit', e => { e.preventDefault(); const v = pane.querySelector('#pvw-path-in').value.trim(); show(v); pane.querySelector('#pvw-path-in').blur(); });
+    paintBar(); setTimeout(paintBar, 400);
+  }
+  setInterval(() => { if (pane && document.body.classList.contains('pvw-focus')) paintBar(); }, 2000);
+  // going somewhere else in the app (Ctrl K, a notification, a link) while the workspace is up leaves it, with the pill to come back
+  new MutationObserver(() => { if (pane && pane.isConnected && document.body.classList.contains('pvw-focus') && !isPhone()) { close(); showPill(); } })
+    .observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
+  // Esc peels the innermost layer first: pin thread → picker/edit mode → a text box → the workspace.
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !pane || !pane.isConnected) return;
+    if (document.querySelector('.modal:not(.hidden)')) return;
+    const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+    if (pmenu) { projMenu(null, false); return stop(); }
+    const mm = pane.querySelector('#pvw-more'); if (mm && !mm.classList.contains('hidden')) { moreMenu(false); return stop(); }
+    if (window.TribePins && window.TribePins.escape && window.TribePins.escape()) return stop();
+    if (editing) { toggleEdit(); return stop(); }
+    const tg = e.target; if (tg && pane.contains(tg) && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) { tg.blur(); return stop(); }
+    // otherwise the shell's Esc closes the preview panel; cleanup() leaves focus mode
+  }, true);
+
   function mount(el) {
     const S = window.TribeShell;
     const title = ((C.state().projects || []).find(p => p.id === C.project()) || {}).name || 'App';
     if (S && S.preview && $('#preview-body')) {
       S.preview({ kind: 'Preview', title, node: el });
       document.body.classList.add('pvw-on');
+      enterFocus();
       const host = $('#preview-body');
       const mo = new MutationObserver(() => { if (!el.isConnected) { mo.disconnect(); cleanup(); } });
       mo.observe(host, { childList: true });
@@ -92,6 +248,8 @@
   }
   function cleanup() {
     document.body.classList.remove('pvw-on');
+    leaveFocus(); projMenu(null, false);
+    if (editing) { editing = false; picked = null; }
     if (ro) { ro.disconnect(); ro = null; }
     pane = null; frame = null; helperAlive = false;
   }
@@ -107,6 +265,7 @@
       pane = shell(); mount(pane);
       // v0.27: Flint stays open beside the preview (app/ui/previewflint.js)
       if (window.TribePreviewFlint) window.TribePreviewFlint.mount(pane, { project: () => (info && info.project) || C.project(), href: () => lastHref, relayout: () => layout(), kind: () => (window.TribeSense && window.TribeSense.kind && window.TribeSense.kind()) || '' });
+      afterMount();
     }
     pane.classList.add('loading');
     try { await token(); }
@@ -279,7 +438,7 @@
     if (m.tc === 'pick' && editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(picked);
     if (m.tc === 'error' && window.TribePreviewFlint) window.TribePreviewFlint.error({ msg: `${String(m.msg || 'error').slice(0, 240)}${m.src ? ` (${String(m.src).slice(0, 60)}${m.line ? ':' + Number(m.line) : ''})` : ''}`, line: Number(m.line) || 0 });   // no auto-focus: it would pull focus out of text you're editing in the page
     if (m.tc === 'text' && editing) editApi('edit', { href: m.href || lastHref, tag: String(m.tag || ''), before: String(m.before || ''), after: String(m.after || '') });
-    if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string' && !(want && Date.now() < want.until && !m.href.includes(want.sub))) lastHref = m.href.slice(0, 500); if (pane) pane.classList.add('ready'); }
+    if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string' && !(want && Date.now() < want.until && !m.href.includes(want.sub))) lastHref = m.href.slice(0, 500); if (pane) { pane.classList.add('ready'); paintBar(); } }
     if (m.tc === 'shot' && shots.has(m.id)) { const p = shots.get(m.id); shots.delete(m.id); m.error ? p.reject(new Error(m.error)) : p.resolve(String(m.data || '')); }
   });
 

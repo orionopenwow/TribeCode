@@ -413,5 +413,13 @@
     { kind: 'Action', label: t('Comment on the preview'), keys: 'comment pin feedback note review preview', run: async () => { if (window.TribePreview) await window.TribePreview.open(); setTimeout(() => pv && pv.h.comment(true), 400); } },
   ]);
 
-  window.TribePins = { mount, open: openThread, openRef, toggle: on => pv && pv.h.comment(on), list: () => pins.slice(), follow, unfollow };
+  // escape(): close the innermost pin thing (thread popover → comment list → comment mode); true when something closed.
+  // The focused preview workspace (preview.js) asks this first, so Esc peels layers instead of closing the preview.
+  function escape() {
+    if (pop) { closePop(); return true; }
+    if (pv && pv.list) { toggleList(false); return true; }
+    if (pv && pv.h.isCommenting()) { pv.h.comment(false); return true; }
+    return false;
+  }
+  window.TribePins = { mount, open: openThread, openRef, toggle: on => pv && pv.h.comment(on), list: () => pins.slice(), follow, unfollow, escape };
 })();

@@ -10,6 +10,22 @@
   const IDX = { es: 0, pt: 1, fr: 2, de: 3, ja: 4, zh: 5, ko: 6 };
   // English -> [es, pt, fr, de, ja, zh, ko]
   const D = {
+    // The focused preview workspace (preview.js v0.28)
+    'Switch project': ['Cambiar de proyecto', 'Trocar de projeto', 'Changer de projet', 'Projekt wechseln', 'プロジェクトを切り替え', '切换项目', '프로젝트 전환'],
+    'Dismiss': ['Descartar', 'Dispensar', 'Ignorer', 'Ausblenden', '閉じる', '关闭', '닫기'],
+    'More': ['Más', 'Mais', 'Plus', 'Mehr', 'その他', '更多', '더보기'],
+    'Code': ['Código', 'Código', 'Code', 'Code', 'コード', '代码', '코드'],
+    'Back to app': ['Volver a la app', 'Voltar ao app', 'Retour à l’app', 'Zurück zur App', 'アプリに戻る', '返回应用', '앱으로 돌아가기'],
+    'Back to the app': ['Volver a la app', 'Voltar ao app', 'Retour à l’app', 'Zurück zur App', 'アプリに戻る', '返回应用', '앱으로 돌아가기'],
+    'Back to the app (Esc)': ['Volver a la app (Esc)', 'Voltar ao app (Esc)', 'Retour à l’app (Échap)', 'Zurück zur App (Esc)', 'アプリに戻る（Esc）', '返回应用（Esc）', '앱으로 돌아가기 (Esc)'],
+    'Back to preview': ['Volver a la vista previa', 'Voltar à prévia', 'Retour à l’aperçu', 'Zurück zur Vorschau', 'プレビューに戻る', '返回预览', '미리보기로 돌아가기'],
+    'Back to a part of the app': ['Ir a una parte de la app', 'Ir para uma parte do app', 'Aller à une partie de l’app', 'Zu einem Teil der App', 'アプリの各画面へ', '前往应用的某个部分', '앱의 다른 화면으로'],
+    'Page to show': ['Página a mostrar', 'Página a mostrar', 'Page à afficher', 'Anzuzeigende Seite', '表示するページ', '要显示的页面', '표시할 페이지'],
+    'Docs & files': ['Docs y archivos', 'Docs e arquivos', 'Docs et fichiers', 'Docs & Dateien', 'ドキュメントとファイル', '文档和文件', '문서와 파일'],
+    'Screenshot to Visuals': ['Captura a Visuales', 'Captura para Visuais', 'Capture vers Visuels', 'Screenshot zu Visuals', 'スクリーンショットをビジュアルへ', '截图到视觉素材', '스크린샷을 비주얼로'],
+    'Desktop shortcut': ['Acceso directo', 'Atalho na área de trabalho', 'Raccourci bureau', 'Desktop-Verknüpfung', 'デスクトップのショートカット', '桌面快捷方式', '바탕화면 바로가기'],
+    'How the preview runs': ['Cómo funciona la vista previa', 'Como a prévia roda', 'Fonctionnement de l’aperçu', 'So läuft die Vorschau', 'プレビューの動かし方', '预览的运行方式', '미리보기 실행 방식'],
+    'Preview a project': ['Vista previa de un proyecto', 'Prévia de um projeto', 'Aperçu d’un projet', 'Projekt-Vorschau', 'プロジェクトをプレビュー', '预览一个项目', '프로젝트 미리보기'],
     // Phone hosting (phonehost.js, offline.js solo mode): where should your tribe live?
     'Start a tribe': ['Crear una tribu', 'Criar uma tribo', 'Créer une tribu', 'Tribe gründen', 'トライブを始める', '创建部落', '트라이브 시작'],
     'Where should your tribe live?': ['¿Dónde vivirá tu tribu?', 'Onde sua tribo vai ficar?', 'Où vivra votre tribu ?', 'Wo soll deine Tribe laufen?', 'トライブをどこで動かす？', '你的部落放在哪里？', '트라이브를 어디에 둘까요?'],
