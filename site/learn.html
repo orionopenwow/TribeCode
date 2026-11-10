@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Learn · TribeCode</title>
-<meta name="description" content="Learn to make apps, games and websites with friends, one short lesson at a time: what code is, your first app, building together, and coding languages explained simply. Free, with quick checks and badges.">
+<meta name="description" content="Learn to make apps, games and websites with friends, one short lesson at a time: what code is, your first app, building together, and coding languages explained simply. Free, with a badge for each module.">
 <meta name="theme-color" content="#1D2021">
 <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
@@ -204,10 +204,6 @@
       ['Languages are ways to write the steps', '<p>Like spoken languages, each coding language has its own words and grammar. Some are best for web pages, some for phones, some for data. You can start with any of them.</p>'],
       ['Code lives in files and folders', '<p>A small website might be three files. A big game might be thousands. A project’s folder of code, with every saved change, is its <b>code repository</b>.</p>'],
       ['AI helpers can do the typing', '<p>Tools like Claude Code, Codex and Gemini CLI read your project and write code when you describe what you want in plain words.</p><div class="lx-tip">You still decide what to build and check that it works. That part is the craft.</div>'],
-    ], quiz: [
-      ['What is code?', ['A list of instructions a computer follows', 'A secret password', 'A kind of picture'], 0, 'Code spells out, step by step, what the computer should do.'],
-      ['What is a code repository?', ['A coding contest', 'The shared folder with a project’s code and its saved changes', 'A type of computer'], 1, 'It keeps every version, so everyone works from one place.'],
-      ['What does an AI helper do?', ['Writes code from what you describe', 'Decides what your app is for', 'Replaces your friends'], 0, 'It types; you and your tribe decide and check.'],
     ] },
     { id: 'm2', e: '🧱', t: 'Your first app', min: 12, badge: '🧱', bname: 'Builder', lessons: [
       ['Write the idea down', '<p>One or two sentences: what it is and who it’s for. “A recipe app for our family, so everyone can add their favorites.” That’s your <b>vision</b>.</p>'],
@@ -216,10 +212,6 @@
       ['Try it in the preview', '<p>Click around like a user would. If something looks wrong, say what you saw. Fixing is part of making.</p>'],
       ['Save the change', '<p>Each working step is saved in the code repository with a short note, so you can always go back.</p>'],
       ['Share it', '<p>Send friends a link, put the website online, or publish the app. Then start the next small task.</p><div class="lx-tip">In TribeCode, the Getting started checklist walks you through the first four steps.</div>'],
-    ], quiz: [
-      ['What is a vision?', ['A sentence or two: what it is and who it’s for', 'The app’s logo', 'A long technical spec'], 0, 'Short and clear beats long.'],
-      ['Why split work into small tasks?', ['They’re easier to finish and share out', 'Computers need it', 'It looks busier'], 0, 'Small tasks keep everyone moving.'],
-      ['What should you do after a small change works?', ['Save it with a short note', 'Delete the old files', 'Wait until the whole app is done'], 0, 'Small saved changes are easy to review and undo.'],
     ] },
     { id: 'm3', e: '🤝', t: 'Building together', min: 10, badge: '🤝', bname: 'Teammate', lessons: [
       ['One shared folder', '<p>Everyone works from the same <b>code repository</b> on GitHub, so nobody emails files around.</p>'],
@@ -228,10 +220,6 @@
       ['Claim your part', '<p>Say which files or features you’re working on. Your AI helper stays in that part, so changes don’t collide.</p>'],
       ['A second pair of eyes', '<p>Before a change joins the main version, someone looks and approves. In TribeCode that’s one tap, or a vote.</p>'],
       ['Ask, don’t assume', '<p>Post what you’re doing, ask before changing someone else’s part, and thank people for reviews.</p>'],
-    ], quiz: [
-      ['What is a branch?', ['A side copy where you try things', 'A backup drive', 'A chat channel'], 0, 'It’s merged back when it works.'],
-      ['Why claim your part before your AI starts?', ['So changes don’t collide', 'It makes code faster', 'It’s required by law'], 0, 'Staying in lanes keeps merges smooth.'],
-      ['What happens before a change joins the main version?', ['Someone reviews and approves it', 'Nothing', 'It’s deleted'], 0, 'A quick look catches mistakes early.'],
     ] },
     { id: 'm4', e: '🗣️', t: 'Languages, simply', min: 15, badge: '🗣️', bname: 'Polyglot', lessons: [
       ['HTML and CSS · websites', '<p>HTML says what’s on a page (a heading, a button). CSS says how it looks (colors, sizes, layout).</p><pre>&lt;button class="go"&gt;Start&lt;/button&gt;\n.go { background: orange; }</pre><details><summary>Deeper</summary><p>Every web page is built on these two. They describe structure and style; JavaScript makes decisions.</p></details>'],
@@ -241,10 +229,6 @@
       ['C#, GDScript, Phaser · games', '<p>C# powers Unity games. GDScript is the simple language of the free Godot engine. Phaser makes browser games in JavaScript.</p><pre>func _on_jump():\n    velocity.y = -400</pre>'],
       ['SQL · saving data', '<p>Asks questions of a database: “show every recipe with chocolate in it.”</p><pre>SELECT name FROM recipes WHERE name LIKE \'%chocolate%\';</pre>'],
       ['The terminal · glue', '<p>A text window where you type commands. AI helpers like Claude Code run there.</p><pre>cd my-game\ngit status</pre>'],
-    ], quiz: [
-      ['Which language describes what is on a web page?', ['HTML', 'SQL', 'Swift'], 0, 'HTML lists it; CSS styles it; JavaScript makes it act.'],
-      ['Which is popular for data and AI scripts?', ['Python', 'CSS', 'GDScript'], 0, 'Python reads almost like English.'],
-      ['What does SQL do?', ['Asks questions of a database', 'Draws buttons', 'Makes sounds'], 0, 'It finds and saves data.'],
     ] },
   ];
   const WORDS = [['Code repository', 'The shared online folder with a project’s code and every saved change. Often on GitHub.'], ['Saved change (commit)', 'A snapshot of the code with a short note about what changed.'], ['Branch', 'A side copy for trying things without touching the main version.'], ['Merge', 'Bringing a branch’s changes back into the main version.'], ['AI helper (agent)', 'An AI tool that reads your project and writes code from plain words.'], ['Preview', 'A live view of your app that updates as the code changes.'], ['Bug', 'Something that doesn’t work as it should. Fixing bugs is normal.'], ['Open source', 'Code anyone can read, use and improve. TribeCode is open source (MIT).']];
@@ -254,24 +238,26 @@
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
   const P = Object.assign({ done: {}, passed: {}, at: 'm1-0' }, load());
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch {} };
-  const steps = M.flatMap(m => [...m.lessons.map((_, i) => `${m.id}-${i}`), `${m.id}-q`]);
+  // v0.26: no quiz at the end; finishing a module's lessons earns its badge
+  const steps = M.flatMap(m => m.lessons.map((_, i) => `${m.id}-${i}`));
+  const finished = m => m.lessons.every((_, i) => P.done[`${m.id}-${i}`]);
   const $ = s => document.querySelector(s);
   const modOf = k => M.find(m => k.startsWith(m.id + '-'));
-  const total = steps.length, doneCount = () => steps.filter(k => (k.endsWith('-q') ? P.passed[k.slice(0, 2)] : P.done[k])).length;
+  const total = steps.length, doneCount = () => steps.filter(k => P.done[k]).length;
 
   function side(cur) {
     const pct = Math.round(doneCount() / total * 100);
     $('#lx-ring').style.setProperty('--p', pct); $('#lx-pct').textContent = pct + '%';
-    const nPass = M.filter(m => P.passed[m.id]).length;
+    const nPass = M.filter(finished).length;
     $('#lx-sum').textContent = `${nPass} of ${M.length} modules · about 45 min`;
-    $('#lx-badges').innerHTML = M.map(m => `<i class="${P.passed[m.id] ? 'on' : ''}" title="${m.bname}${P.passed[m.id] ? ' · earned' : ''}">${m.badge}</i>`).join('');
+    $('#lx-badges').innerHTML = M.map(m => `<i class="${finished(m) ? 'on' : ''}" title="${m.bname}${finished(m) ? ' · earned' : ''}">${m.badge}</i>`).join('');
     const cm = modOf(cur);
     $('#lx-mods').innerHTML = M.map(m => {
-      const n = m.lessons.filter((_, i) => P.done[`${m.id}-${i}`]).length, all = P.passed[m.id];
+      const n = m.lessons.filter((_, i) => P.done[`${m.id}-${i}`]).length, all = finished(m);
       return `<li class="lx-mod ${m === cm ? 'open' : ''} ${all ? 'done' : ''}"><button type="button" data-mod="${m.id}"><span class="e">${m.e}</span><span><b>${m.t}</b><small>${m.lessons.length} lessons · ${m.min} min</small></span><span class="st">${all ? '✓ ' + m.badge : n ? `${n}/${m.lessons.length}` : 'Start'}</span></button>
-        <ol class="lx-less">${m.lessons.map((l, i) => `<li><a href="#${m.id}-${i}" class="${cur === `${m.id}-${i}` ? 'cur' : ''} ${P.done[`${m.id}-${i}`] ? 'done' : ''}"><i>●</i>${l[0]}</a></li>`).join('')}<li><a href="#${m.id}-q" class="${cur === `${m.id}-q` ? 'cur' : ''} ${all ? 'done' : ''}"><i>●</i>✅ Quick check</a></li></ol></li>`;
+        <ol class="lx-less">${m.lessons.map((l, i) => `<li><a href="#${m.id}-${i}" class="${cur === `${m.id}-${i}` ? 'cur' : ''} ${P.done[`${m.id}-${i}`] ? 'done' : ''}"><i>●</i>${l[0]}</a></li>`).join('')}</ol></li>`;
     }).join('');
-    $('#lx-mods').querySelectorAll('[data-mod]').forEach(b => b.onclick = () => { const m = M.find(x => x.id === b.dataset.mod); const first = m.lessons.findIndex((_, i) => !P.done[`${m.id}-${i}`]); go(first < 0 ? `${m.id}-q` : `${m.id}-${first}`); });
+    $('#lx-mods').querySelectorAll('[data-mod]').forEach(b => b.onclick = () => { const m = M.find(x => x.id === b.dataset.mod); const first = m.lessons.findIndex((_, i) => !P.done[`${m.id}-${i}`]); go(`${m.id}-${first < 0 ? 0 : first}`); });
   }
 
   function go(k, push = true) {
@@ -281,34 +267,19 @@
     $('#lx-crumb').textContent = `Module ${M.indexOf(m) + 1} · ${m.t}`;
     $('#lx-bar').style.width = Math.round(doneCount() / total * 100) + '%';
     card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
-    if (k.endsWith('-q')) {
-      const got = {};
-      card.innerHTML = `<span class="k">Quick check · ${m.t}</span><h1>Three questions</h1>${window.TribeLearnArt ? window.TribeLearnArt(k, m) : ''}<p>No timer and no penalty. Get two right to earn the <b>${m.bname}</b> badge ${m.badge}.</p>` +
-        m.quiz.map((q, qi) => `<div class="lx-q" data-q="${qi}"><b>${qi + 1}. ${q[0]}</b><div class="lx-opts">${q[1].map((o, oi) => `<button type="button" data-a="${oi}">${o}</button>`).join('')}</div><p class="lx-why" hidden></p></div>`).join('') +
-        `<div id="lx-earn">${P.passed[m.id] ? `<span class="lx-badge">${m.badge} ${m.bname} badge earned</span>` : ''}</div>`;
-      card.querySelectorAll('.lx-q').forEach(el => el.addEventListener('click', e => {
-        const b = e.target.closest('button'); if (!b || b.disabled) return;
-        const qi = +el.dataset.q, ok = +b.dataset.a === m.quiz[qi][2];
-        el.querySelectorAll('button').forEach(x => { x.disabled = true; if (+x.dataset.a === m.quiz[qi][2]) x.classList.add('right'); });
-        if (!ok) b.classList.add('wrong');
-        const w = el.querySelector('.lx-why'); w.hidden = false; w.textContent = (ok ? '✓ Right. ' : 'Not quite. ') + m.quiz[qi][3];
-        got[qi] = ok;
-        if (Object.keys(got).length === m.quiz.length && Object.values(got).filter(Boolean).length >= 2 && !P.passed[m.id]) {
-          P.passed[m.id] = true; save(); $('#lx-earn').innerHTML = `<span class="lx-badge">${m.badge} ${m.bname} badge earned</span>`; side(k);
-        }
-      }));
-    } else {
+    {
       const li = +k.split('-')[1], l = m.lessons[li];
       card.innerHTML = `<span class="k">Lesson ${li + 1} of ${m.lessons.length} · ${m.min} min module</span><h1>${l[0]}</h1>${window.TribeLearnArt ? window.TribeLearnArt(k, m, l[0]) : ''}${l[1]}`;
     }
     $('#lx-back').disabled = i === 0;
-    $('#lx-next').textContent = k.endsWith('-q') ? (i === total - 1 ? 'Finish 🎉' : 'Next module →') : 'Got it, next →';
+    const lastOfMod = +k.split('-')[1] === m.lessons.length - 1;
+    $('#lx-next').textContent = i === total - 1 ? 'Finish 🎉' : lastOfMod ? 'Next module →' : 'Got it, next →';
     side(k);
     if (matchMedia('(max-width: 860px)').matches && push) $('#lx-crumb').scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
   $('#lx-next').onclick = () => {
     const k = P.at, i = steps.indexOf(k);
-    if (!k.endsWith('-q')) P.done[k] = true;
+    P.done[k] = true;
     save();
     if (i < total - 1) go(steps[i + 1]); else location.href = 'app/?welcome=1';
   };
@@ -317,7 +288,7 @@
   addEventListener('keydown', e => { if (e.target.closest && e.target.closest('input, textarea')) return; if (e.key === 'ArrowRight') $('#lx-next').click(); if (e.key === 'ArrowLeft') $('#lx-back').click(); });
   $('#lx-words').innerHTML = WORDS.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join('');
   const h = location.hash.slice(1);
-  go(steps.includes(h) ? h : h === 'quiz' ? 'm1-q' : (P.at || 'm1-0'), false);
+  go(steps.includes(h) ? h : (steps.includes(P.at) ? P.at : 'm1-0'), false);
   window.TribeLearn = { M, steps, progress: () => P };
 })();
 </script>

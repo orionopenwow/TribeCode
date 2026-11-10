@@ -75,6 +75,7 @@ def wait_until(fn, timeout=20, what="condition"):
 def invite_link(page):
     # web.js may turn on the public address and re-create the link once: wait until it settles
     last = None
+    page.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)")   # v0.26: one-time invites fold under the tribe link
     for _ in range(40):
         page.wait_for_function("document.querySelector('#inv-link') && document.querySelector('#inv-link').innerText.includes('/join/')", timeout=15000)
         page.wait_for_timeout(400)
@@ -222,7 +223,7 @@ def main():
             assert "Old campfire task" not in host.inner_text("#board"), (host.inner_text("#board"), host.evaluate("TribeClient.project()"))
 
             # ---- nest badges: only non-empty sections show a count; requests surface in Project Hub
-            wait_text(host, "#nn-tasks", "1")
+            assert host.inner_text("#nn-tasks") == "", "your own tasks are not news (v0.26 task badge)"
             api("/vision", "PUT", {"text": "# Pixel Quest\n\nA tiny platformer."}, token=token, project="pixel-quest")   # vision + tasks + repo: "going", so the tab row shows (feat/setup-flow)
             host.wait_for_function("document.body.dataset.stage === 'going'", timeout=10000)
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
@@ -237,7 +238,7 @@ def main():
             host.click("#wt-repo"); host.wait_for_selector("#pj-repo-ws")
 
             # ---- project-scoped invite: the friend only sees Pixel Quest
-            host.click("#tour-invite"); host.wait_for_selector("#inv-project")
+            host.click("#tour-invite"); host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#inv-project")
             assert host.input_value("#inv-project") == "pixel-quest"
             link = invite_link(host); host.click("[data-close]")
             friend = b.new_context(viewport={"width": 1500, "height": 950}).new_page(); watch(friend, "friend")
@@ -320,7 +321,7 @@ def main():
             shot(host, "project-cascade")
 
             # ---- mobile: a whole-tribe invite, the project switcher sheet, tab bar scoped to the project
-            host.click("#tour-invite"); host.wait_for_selector("#inv-project")
+            host.click("#tour-invite"); host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#inv-project")
             host.select_option("#inv-project", "tribe")
             plink = invite_link(host); host.click("[data-close]")
             phone = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA).new_page(); watch(phone, "phone")

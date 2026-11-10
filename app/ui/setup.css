@@ -103,8 +103,7 @@
 #as-tasks .as-ideas.compact .as-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 #as-tasks .as-ideas.compact .as-it small { display: none; }
 
-/* the sidebar's "+ Add" waits for the vision */
-body[data-vision="0"] #nest-add { display: none; }
+/* the sidebar's "+ Add" is always there once a project is open (v0.26: the user's ask) */
 
 @media (max-width: 1100px) { .su-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 820px) {

@@ -64,6 +64,11 @@
       const p = window.__TAURI__ && window.__TAURI__.path;
       try { return p ? await p.homeDir() : null; } catch { return null; }
     },
+    async openPath(p) {   // v0.26 (Settings › Storage): open a folder in File Explorer / Finder; else copy its path
+      try { const sh = window.__TAURI__ && window.__TAURI__.shell; if (sh && sh.open) { await sh.open(p); return true; } } catch {}
+      try { await navigator.clipboard.writeText(p); window.TribeApp && window.TribeApp.toast('Folder path copied. Paste it into File Explorer.'); } catch {}
+      return false;
+    },
     async setAutostart(on) {
       const a = window.__TAURI__ && window.__TAURI__.autostart;
       if (!a) return;

@@ -14,7 +14,7 @@ const makeContext = require('./context');
 const makeIntegrator = require('./integrator');
 
 const DEFAULTS = {
-  autopilot: { enabled: false, autoPull: true, commitContext: false, reportTags: true },
+  autopilot: { enabled: false, autoPull: true, autoPush: false, commitContext: false, reportTags: true },
   checkCommand: '',          // empty: `npm test` when package.json has a real test script
   checkTimeoutSec: 600,
   allowNoChecks: false,      // integrate even when no check command exists
@@ -42,7 +42,7 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
     return out;
   }
   const saveSettings = () => { store.writeJSON('repo/settings.json', settings); broadcast({ type: 'repo-settings', settings: publicSettings() }); };
-  const publicSettings = () => { const { reportedTags, lastPush, lastContextCommit, ...s } = settings; return s; };
+  const publicSettings = () => { const { reportedTags, lastContextCommit, ...s } = settings; return s; };
   function updateSettings(body) {
     const s = settings, b = body || {};
     if (b.autopilot && typeof b.autopilot === 'object') for (const k of Object.keys(DEFAULTS.autopilot)) if (typeof b.autopilot[k] === 'boolean') s.autopilot[k] = b.autopilot[k];
@@ -147,6 +147,13 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
       const r = await G.locked(() => G.gitTry(['merge', '--ff-only', '--quiet', st.upstream]));
       if (r.code === 0) { log('pull', `Autopilot pulled ${st.behind} commit${st.behind > 1 ? 's' : ''} into ${st.main}`); changed = true; }
       else log('pull-failed', `Autopilot could not fast-forward ${st.main}: ${(r.err || r.out).split('\n')[0]}`);
+    }
+    // 1b. v0.26: push saved commits on main to origin (fast-forward only; never force, never with uncommitted work or
+    //     when origin has commits we don't, so nobody's work is ever overwritten).
+    if (o.autoPush && st.branch === st.main && st.upstream && st.ahead > 0 && st.behind === 0) {
+      const pa = auth(); const r = await G.locked(() => G.gitTry([...pa.args, 'push', '--quiet', 'origin', st.main], repo, { timeout: 60_000, env: pa.env }));
+      if (r.code === 0) { settings.lastPush = new Date().toISOString(); saveSettings(); log('push', `Autopilot pushed ${st.ahead} saved commit${st.ahead > 1 ? 's' : ''} on ${st.main} to origin`); changed = true; }
+      else log('push-failed', `Autopilot could not push ${st.main}: ${(r.err || r.out).split('\n')[0]}`);
     }
     // 2. Commit + push TRIBE_CONTEXT.md and the tribe folder docs (only when on main and in sync).
     if (o.commitContext && st.branch === st.main && st.behind === 0 && Date.now() - (settings.lastContextCommit || 0) > COMMIT_EVERY_MS) {
@@ -288,6 +295,26 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
       if (m === 'GET' && !b) return send(res, 200, { status, settings: publicSettings(), activity: activity(40), master: integrator.masterAgent(), gitVersion: (await G.gitVersion()).join('.') });
       if (m === 'GET' && b === 'activity') return send(res, 200, { activity: activity(200) });
       if (m === 'GET' && b === 'branches') return send(res, 200, enabled() ? await integrator.collect() : { enabled: false, branches: [], pairs: [] });
+      // v0.26 "Sync now": fetch, fast-forward main when clean, push saved commits when ahead; same safety rules as autopilot
+      if (m === 'POST' && b === 'sync') {
+        if (!can(me, 'repo.merge') && me.role !== 'host') return fail(res, 403, 'only the host or an admin syncs the code repository');
+        if (!enabled()) return fail(res, 400, 'this project has no code repository yet');
+        lastFetch = 0; let st = await poll({ force: true }); const done = [];
+        if (!st.upstream) return send(res, 200, { status: st, done, note: 'No GitHub (origin) is connected, so there is nothing to sync with. Connect GitHub under Code repository.' });
+        if (st.behind > 0) {
+          if (st.dirtyCount || st.ahead || st.branch !== st.main) done.push(`origin has ${st.behind} new commit${st.behind > 1 ? 's' : ''}, but ${st.branch !== st.main ? `you're on ${st.branch}` : st.dirtyCount ? 'there are unsaved changes' : 'both sides have new commits'}, so nothing was pulled`);
+          else { const r = await G.locked(() => G.gitTry(['merge', '--ff-only', '--quiet', st.upstream])); done.push(r.code === 0 ? `pulled ${st.behind} commit${st.behind > 1 ? 's' : ''}` : 'pull failed: ' + (r.err || r.out).split('\n')[0]); }
+          st = await poll({ force: true });
+        }
+        if (st.ahead > 0 && st.behind === 0 && st.branch === st.main) {
+          const pa = auth(); const r = await G.locked(() => G.gitTry([...pa.args, 'push', '--quiet', 'origin', st.main], repo, { timeout: 60_000, env: pa.env }));
+          if (r.code === 0) { settings.lastPush = new Date().toISOString(); saveSettings(); done.push(`pushed ${st.ahead} commit${st.ahead > 1 ? 's' : ''}`); } else done.push('push failed: ' + (r.err || r.out).split('\n')[0]);
+          st = await poll({ force: true });
+        }
+        settings.lastSync = new Date().toISOString(); saveSettings();
+        log('sync', `${me.name} synced the code repository: ${done.join(', ') || 'already up to date'}`);
+        return send(res, 200, { status: st, done, lastSync: settings.lastSync });
+      }
       if (m === 'POST' && b === 'refresh') { lastFetch = 0; return send(res, 200, { status: await poll({ force: true }) }); }
       if (b === 'settings' && (m === 'PUT' || m === 'PATCH')) {
         if (me.role !== 'host') return fail(res, 403, 'only the host changes repo settings');

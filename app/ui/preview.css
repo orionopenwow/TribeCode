@@ -99,3 +99,14 @@
 .pvw-edpick { font: 12px/1.4 var(--mono, ui-monospace, monospace); color: #38C6B1; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pvw-edpick.hidden { display: none; }
 .pvw-edask { flex: 1 1 200px; min-width: 0; }
+/* v0.26: the "What should it be?" start screen */
+.pvw-build { max-width: 620px; margin: 0 auto; padding-top: 40px; }
+.pvw-build h3 { font-size: 22px; }
+.pvw-bform { display: grid; gap: 10px; width: 100%; }
+.pvw-build .pvw-bform textarea { width: 100%; resize: vertical; min-height: 84px; height: 96px; max-height: 260px; font: 14px/1.5 var(--sans, inherit); padding: 10px 12px; }
+.pvw-bchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pvw-build .pvw-bchips .chip { display: inline-flex; width: auto; flex: none; font-family: var(--sans, inherit); }
+.pvw-bchips .chip { font-size: 12.5px; padding: 5px 10px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; }
+.pvw-bchips .chip:hover { color: var(--text); border-color: var(--edge-pop, var(--edge)); }
+.pvw-brow { display: flex; gap: 8px; flex-wrap: wrap; }
+.pvw-bstat:empty { display: none; }

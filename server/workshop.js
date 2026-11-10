@@ -35,7 +35,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const KINDS = ['skill', 'recipe', 'template', 'asset', 'script'];
+const KINDS = ['module', 'skill', 'recipe', 'template', 'asset', 'script'];   // v0.26 'module': a TribeCode add-on (docs/MARKETPLACE.md)
 const LICENSES = ['CC0-1.0', 'CC-BY-4.0', 'MIT', 'Apache-2.0'];
 const MB = 1024 * 1024;
 const LIMITS = { file: 25 * MB, item: 100 * MB, files: 300 };

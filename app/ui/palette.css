@@ -316,3 +316,17 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .pj-overview .pj-row-line .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pj-overview .pj-row-line .faint { font-size: 12px; white-space: nowrap; }
 .gl-top small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* v0.26 Settings › Storage & sync */
+#settings-modal .set-row.set-row-wide, .set-row.set-row-wide { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+#set-lang { width: 100%; max-width: 100%; box-sizing: border-box; }
+.set-row-wide .set-c { width: 100%; }
+.stg { display: grid; gap: 10px; }
+.stg-t { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.stg-t > div { display: grid; gap: 3px; min-width: 0; }
+.stg-t .eyebrow { margin: 0; }
+.stg-t b { font-size: 14px; }
+.stg-t span, .stg-t code { font-size: 12.5px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
+.stg-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; font-size: 18px; border-radius: 10px; background: var(--raised, var(--canvas)); border: 1px solid var(--edge); }
+.stg-list { margin: 2px 0 4px; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 13px; }
+.stg-acts { display: flex; flex-wrap: wrap; gap: 8px; }

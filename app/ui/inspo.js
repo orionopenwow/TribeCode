@@ -89,7 +89,7 @@
         ${items.length ? `<span class="ib-n">${items.length} on the board</span>` : ''}</div>
       <div class="ib-drop ${busy ? 'busy' : ''}" id="ib-drop" tabindex="0" role="button" aria-label="Drop pictures, or paste a link">
         <span class="ib-drop-ic" aria-hidden="true">${busy ? '⏳' : '📌'}</span>
-        <div><b>${busy ? 'Reading it…' : 'Drop pictures here, or paste a link'}</b><small>Pinterest boards and pins, Dribbble, Behance, Instagram posts, any website or gallery, Google Fonts, or a font name like “Fraunces” or “pixel”.</small></div>
+        <div><b>${busy ? 'Reading it…' : 'Drop pictures here, or paste a link'}</b><small>Pinterest boards and pins, Dribbble, Behance, Instagram posts, any website or gallery, Google Fonts, or a font name like “Fraunces” or “pixel”. Making your own art? <a href="https://getartcraft.com/" target="_blank" rel="noopener">ArtCraft</a> is a free, open-source studio for it.</small></div>
         <form class="ib-form" id="ib-form"><input class="input" id="ib-url" placeholder="https://pinterest.com/…  or  a font name" autocomplete="off" aria-label="A link or a font name"><button class="btn" type="submit">Add</button><button class="btn" type="button" id="ib-pick">Pictures…</button></form></div>
       ${items.length ? `<div class="ib-grid">${items.map(tile).join('')}</div>` : ''}
       ${pal ? `<div class="ib-result"><div class="ib-pal">${ROLE.map(([k, l]) => `<div class="ib-sw" style="--c:${esc(pal[k])}"><i></i><span><b>${l}</b><code>${esc(pal[k])}</code></span></div>`).join('')}</div>

@@ -87,7 +87,8 @@ def main():
             assert "create the code repository" in host.text_content("#pj-check [data-step=repo]").lower() and host.locator("#pj-check [data-step=repo] .ock-ghm").count() == 1   # the GitHub mark
             assert host.locator("#pj-check [data-step=friend]").count() == 0
             host.wait_for_function("document.body.dataset.stage === 'new' && document.body.dataset.vision === '0'", timeout=5000)
-            assert host.evaluate("!document.querySelector('#nest-add') || getComputedStyle(document.querySelector('#nest-add')).display === 'none'"), "+ Add waits for the vision"
+            host.wait_for_selector("#nest-add", state="visible", timeout=8000)   # v0.26: + Add is always there once a project is open (the user's ask)
+            assert host.locator("#nest-preview").is_visible(), "Preview app sits above Invite friends from the start"
             host.evaluate("TribeApp.show('tasks')"); host.wait_for_timeout(300)
             assert host.locator("#view-tabs").is_hidden(), "no sub-tab row until the project is going"
             host.evaluate("TribeApp.show('bugs')"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-bugs", timeout=5000)   # deep links still work

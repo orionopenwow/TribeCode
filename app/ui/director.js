@@ -223,15 +223,55 @@
     const w = Math.min(innerWidth - x - 4, r.width + pad * 2), h = Math.min(innerHeight - y - 4, r.height + pad * 2);
     spotEl.classList.remove('wide'); spotEl.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; spotEl.style.width = Math.round(w) + 'px'; spotEl.style.height = Math.round(h) + 'px';
   }
-  function live(text, { lead = '' } = {}) {
-    if (!liveOn() || !text) return;
+  // v0.26: Flint's card says, at a glance, which chapter this is (n of N, a progress bar), what it shows, what Flint is
+  // explaining, and what is happening on screen right now (a separate "On screen" line, so clicks and typing never
+  // replace the explanation). After each chapter it grows into a recap with what's next and the Next button.
+  function sayBox() {
     if (!sayEl || !sayEl.isConnected) {
       sayEl = document.createElement('div'); sayEl.className = 'dt-say'; sayEl.id = 'dt-say'; sayEl.setAttribute('role', 'status'); sayEl.setAttribute('aria-live', 'polite');
-      sayEl.innerHTML = '<img src="assets/flint.svg" alt="" width="34" height="34"><div><span class="dt-say-who">Flint</span><span class="dt-say-t" id="dt-say-t"></span></div>';
+      sayEl.innerHTML = `<div class="dt-say-head"><img src="assets/flint.svg" alt="" width="34" height="34"><div class="dt-say-meta"><span class="dt-say-who" id="dt-say-who">Flint</span><b class="dt-say-title" id="dt-say-title"></b></div><span class="dt-say-done" id="dt-say-done" hidden>✓ Done</span></div>
+        <div class="dt-say-prog" aria-hidden="true"><i id="dt-say-bar"></i></div>
+        <p class="dt-say-cap" id="dt-say-cap"></p>
+        <p class="dt-say-t" id="dt-say-t"></p>
+        <div class="dt-say-act" id="dt-say-act" hidden><span class="dt-say-act-k">On screen</span><span id="dt-say-act-t"></span></div>
+        <div class="dt-say-foot" id="dt-say-foot" hidden><span class="dt-say-up" id="dt-say-up"></span></div>`;
       document.body.appendChild(sayEl);
     }
-    const t = sayEl.querySelector('#dt-say-t'); sayEl.classList.remove('in'); void sayEl.offsetWidth;
-    t.innerHTML = (lead ? `<b>${esc(lead)}</b> ` : '') + esc(text); sayEl.classList.add('in');
+    return sayEl;
+  }
+  function chapter(s, n) {
+    if (!liveOn() || !s) return;
+    const b = sayBox(), N = list.length;
+    b.querySelector('#dt-say-who').textContent = `Flint · Chapter ${n + 1} of ${N}`;
+    b.querySelector('#dt-say-title').textContent = s.title || '';
+    b.querySelector('#dt-say-cap').textContent = s.cap || '';
+    b.querySelector('#dt-say-bar').style.width = Math.round((n + 1) / N * 100) + '%';
+    b.querySelector('#dt-say-done').hidden = true; b.querySelector('#dt-say-foot').hidden = true; b.querySelector('#dt-say-act').hidden = true;
+    b.classList.remove('big');
+  }
+  function live(text, { lead = '' } = {}) {
+    if (!liveOn() || !text) return;
+    const b = sayBox();
+    if (lead === '▶' || lead === '⌨') {   // what's happening on screen: its own line, under the explanation
+      const a = b.querySelector('#dt-say-act'); a.hidden = false; a.dataset.k = lead === '⌨' ? 'type' : 'click';
+      const at = b.querySelector('#dt-say-act-t'); at.textContent = text; a.classList.remove('flash'); void a.offsetWidth; a.classList.add('flash');
+      b.classList.add('in'); return;
+    }
+    const t = b.querySelector('#dt-say-t'); b.classList.remove('in'); void b.offsetWidth;
+    if (lead === '✓') {   // the recap: bigger, with what's next
+      b.classList.add('big'); b.querySelector('#dt-say-done').hidden = false; b.querySelector('#dt-say-act').hidden = true;
+      const nx = list[idx + 1], up = b.querySelector('#dt-say-up'), foot = b.querySelector('#dt-say-foot');
+      up.innerHTML = nx ? `<span class="k">Up next</span> <b>${esc(nx.title)}</b><span class="faint"> · ${esc(nx.cap || '')}</span>` : '<span class="k">Last one</span> <b>Your turn</b>';
+      foot.hidden = false;
+      t.textContent = text;
+    } else {
+      // the chapter label used to be glued to the front of the line ("3/15 · Write the vision"); it lives in the header now
+      const m = /^(\d+)\/(\d+) · (.*)$/.exec(lead || '');
+      if (m && cur) chapter(cur, Number(m[1]) - 1);
+      t.innerHTML = (lead && !m ? `<b>${esc(lead)}</b> ` : '') + esc(text);
+      if (m) t.dataset.step = `${m[1]}/${m[2]}`;
+    }
+    b.classList.add('in');
   }
   const labelOf = el => { if (!el) return ''; const t = (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || el.placeholder || '').replace(/\s+/g, ' ').trim(); return t.length > 42 ? t.slice(0, 40) + '…' : t; };
   const readMs = text => Math.max(2600, String(text || '').split(/\s+/).length * 300);
@@ -243,7 +283,8 @@
     return new Promise((res, rej) => {
       if (!sayEl || !sayEl.isConnected) return res();
       let b = sayEl.querySelector('#dt-say-next');
-      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm primary dt-say-next'; b.id = 'dt-say-next'; sayEl.appendChild(b); }
+      if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'btn primary dt-say-next'; b.id = 'dt-say-next'; (sayEl.querySelector('#dt-say-foot') || sayEl).appendChild(b); }
+      const ft = sayEl.querySelector('#dt-say-foot'); if (ft) ft.hidden = false;
       b.textContent = label || 'Next →'; b.hidden = false; sayEl.classList.add('wait');
       const key = e => { if ((e.key === 'Enter' || e.key === 'ArrowRight') && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); go(); } };
       const iv = setInterval(() => { if (t !== token || !running) { off(); rej(ABORT); } else if (jump != null) { off(); res(); } }, 100);
@@ -716,6 +757,7 @@
     const cap = $('#dt-cap');
     if (cap) { cap.classList.remove('in'); cap.innerHTML = `<span class="eyebrow">${n + 1} / ${list.length} · ${esc(s.title)}</span><span class="dt-cap-t">${esc(s.cap)}</span>`; void cap.offsetWidth; cap.classList.add('in'); }
     const t = $('#dt-title'); if (t) t.textContent = s.title;
+    chapter(s, n);
     document.querySelectorAll('#dt-chaps [data-i]').forEach(b => { const i = Number(b.dataset.i); b.classList.toggle('past', i < n); b.classList.toggle('on', i === n); b.setAttribute('aria-current', i === n ? 'step' : 'false'); });
     log.push({ scene: s.id, name: 'reached', ok: true, view: view(), at: Math.round(vt) });
   }

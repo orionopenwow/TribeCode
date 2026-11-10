@@ -121,8 +121,9 @@
   }
 
   function bind() {
-    document.querySelectorAll('.task').forEach(el => {
+    document.querySelectorAll('#board .task').forEach(el => {   // v0.26: only the board's cards (other views use .task too)
       const id = el.dataset.id;
+      if (!el.querySelector('[data-title]')) return;
       el.addEventListener('dragstart', e => { dragId = id; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); });
       el.addEventListener('dragend', () => { dragId = null; el.classList.remove('dragging'); document.querySelectorAll('.col').forEach(c => c.classList.remove('over')); });
       const title = el.querySelector('[data-title]');
