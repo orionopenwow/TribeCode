@@ -17,6 +17,8 @@
     const typed = [...cs.querySelectorAll('[data-type]')].map(el => ({ el, text: el.textContent }));
     const counts = [...cs.querySelectorAll('[data-count]')];
     const ask = cs.querySelector('.cs__ask');
+    const NOW = { ceo: 'Writing to the standup…', build: 'Posting an update…', grow: 'Posting an update…', run: 'Posting an update…' };
+    const setNow = (who, txt) => { const n = seats[who] && seats[who].querySelector('.cs__now'); if (n) n.textContent = txt || n.dataset.now; };
     // when each step happens (ms from the start); 7 is the person pressing Approve
     const AT = { 1: 600, 2: 2900, 3: 5200, 4: 7300, 5: 9200, 6: 11000, 7: 13100, 8: 14600 };
     const LOOP = 20000;
@@ -25,7 +27,7 @@
     function reset() {
       timers.forEach(clearTimeout); timers = [];
       steps.forEach(s => s.classList.remove('is-on'));
-      Object.values(seats).forEach(s => s.classList.remove('is-talk', 'is-done'));
+      Object.values(seats).forEach(s => s.classList.remove('is-talk', 'is-done')); Object.keys(seats).forEach(k => setNow(k));
       typed.forEach(t => { t.el.textContent = ''; });
       counts.forEach(c => { c.textContent = (c.dataset.pre || '') + '0'; });
       ask && ask.classList.remove('is-approved');
@@ -48,9 +50,9 @@
           const who = s.dataset.for, t = typed.find(x => s.contains(x.el));
           if (who && seats[who]) {
             Object.values(seats).forEach(x => x.classList.remove('is-talk'));
-            seats[who].classList.add('is-talk');
+            seats[who].classList.add('is-talk'); setNow(who, NOW[who]);
             const d = t ? type(t, 1500) : 0;
-            later(d + 250, () => { seats[who].classList.remove('is-talk'); seats[who].classList.add('is-done'); });
+            later(d + 250, () => { seats[who].classList.remove('is-talk'); seats[who].classList.add('is-done'); setNow(who); });
           }
           if (s.classList.contains('cs__money')) s.querySelectorAll('[data-count]').forEach(count);
         });
