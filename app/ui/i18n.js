@@ -128,7 +128,9 @@
   function swapText(n) {
     const raw = n.nodeValue; if (!raw) return;
     const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s || s.length > 60) return;
-    const en = orig.get(n) || (D[s] ? s : REV.get(s)); if (!en) return;
+    // v0.27 fix: only English keys (or a node we translated before) count; inferring English from a translation turned
+    // the word "Design" into "Theme" (it's German for Theme) on English screens
+    const en = orig.get(n) || (D[s] ? s : null); if (!en) return;
     orig.set(n, en);
     const want = tr(en) || en; if (s !== want) n.nodeValue = raw.replace(s, want);
   }
@@ -136,7 +138,7 @@
     for (const a of ATTRS) {
       const v = el.getAttribute(a); if (!v) continue;
       const key = 'data-en-' + a; let en = el.getAttribute(key);
-      if (!en || (v !== en && v !== tr(en))) { en = D[v] ? v : REV.get(v); if (!en) continue; el.setAttribute(key, en); }
+      if (!en || (v !== en && v !== tr(en))) { en = D[v] ? v : null; if (!en) continue; el.setAttribute(key, en); }
       const want = tr(en) || en; if (v !== want) el.setAttribute(a, want);
     }
   }
