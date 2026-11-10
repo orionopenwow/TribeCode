@@ -922,6 +922,14 @@
   }
   function renderSugg(box, view) {
     const items = sugg.items || [], ag = myAgent();
+    if (view === 'tasks') {   // v0.28: the Task Board is the hero here; one slim "Up next" line, no second add box (the board has one)
+      const top = items.slice(0, 2);
+      box.classList.add('m2-sugg--slim');
+      box.innerHTML = top.length ? `<div class="m2-sl">${top.map(i => `<div class="m2-si m2-si--slim" data-st="${esc(i.id)}"><span class="m2-si-k">Up next</span><b class="m2-si-tt">${esc(i.title)}</b><button class="take" data-take>${ic('hand', 15)}Take it</button>${ag ? `<button class="claude" data-give aria-label="Give to my AI" title="Give to my AI">${ic('spark', 15)}</button>` : ''}</div>`).join('')}</div>` : '';
+      box.hidden = !top.length && !(window.TribeAssist && (window.TribeTasks && window.TribeTasks.all() || []).length < 3);
+      if (window.TribeAssist) window.TribeAssist.ideas(box, { compact: true });
+      return;
+    }
     box.innerHTML = `<div class="sec-head"><span class="eyebrow">Suggested</span><h2>Up next</h2></div>
       <div class="m2-sl">${items.map(i => `<div class="m2-si" data-st="${esc(i.id)}"><div class="m2-si-t"><b>${esc(i.title)}</b><small>${esc(i.why)}</small></div>
         <div class="m2-si-b"><button class="take" data-take>${ic('hand', 16)}Take it</button>${ag ? `<button class="claude" data-give>${ic('spark', 15)}Give to my AI</button>` : ''}</div></div>`).join('')

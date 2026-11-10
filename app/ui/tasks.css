@@ -20,15 +20,15 @@
 #board.tkb .tk-stat__s { display: none; }
 
 /* the add line */
-#board.tkb .tk-top { position: relative; z-index: 6; display: grid; gap: 8px; margin: 0 0 14px; padding: 0; border: 0; background: none; }
+#board.tkb .tk-top { display: grid; gap: 10px; margin: 0 0 20px; padding: 0; border: 0; background: none; }
 #board.tkb .tk-add { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 12px 0 16px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); cursor: text; transition: border-color .15s; }
 #board.tkb .tk-add:focus-within { border-color: var(--accent); }
 #board.tkb .tk-add__plus { font: 600 20px/1 var(--font); color: var(--accent-ink, var(--accent)); }
 #board.tkb .tk-add .quick-add { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; padding: 0; margin: 0; font-size: 15px; color: var(--text); box-shadow: none; }
 #board.tkb .tk-add__kbd { font: 500 11px var(--mono); color: var(--faint); padding: 3px 6px; border: 1px solid var(--edge); border-radius: 6px; }
-#board.tkb .tk-top__more { position: absolute; top: calc(100% + 6px); left: 0; right: 0; display: none; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised, var(--surface)); }
-#board.tkb .tk-top:focus-within .tk-top__more, #board.tkb .tk-top:has(.quick-add:not(:placeholder-shown)) .tk-top__more { display: flex; }
-#board.tkb .tk-top__more .tk-types { margin: 0; }
+#board.tkb .tk-top__more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 2px; }   /* always there: no layout jump when the add line loses focus */
+#board.tkb .tk-top__more .tk-types { margin: 0; gap: 6px; }
+#board.tkb .tk-top__more .tk-type { height: 30px; padding: 0 10px; font-size: 13px; }
 #board.tkb .tk-top__sep { width: 1px; height: 20px; background: var(--edge); }
 #board.tkb .tk-pill { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 999px; color: var(--muted); font-size: 13px; cursor: pointer; }
 #board.tkb .tk-pill svg { width: 14px; height: 14px; }
@@ -38,7 +38,8 @@
 #board.tkb .tk-chip:hover { border-color: var(--accent); color: var(--text); }
 
 /* filter line + List | Board */
-#board.tkb .tk-bar { display: flex; align-items: center; gap: 12px; min-height: 32px; margin: 0 0 10px; }
+#board.tkb .tk-bar { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
+#board.tkb .tk-bar:has(.tk-bar__f[hidden]) { display: none; }
 #board.tkb .tk-bar__f { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--muted); }
 #board.tkb .tk-bar__f[hidden] { display: none; }
 #board.tkb .tkf-k { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
@@ -142,7 +143,8 @@
 
 /* Board view: columns wide enough for real titles; rows become cards */
 #board.tkb[data-view="board"] { max-width: none; }
-#board.tkb[data-view="board"] .tk-cols { grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: 12px; align-items: start; overflow-x: auto; padding-bottom: 4px; }
+#board.tkb[data-view="board"] .tk-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@container tkb (max-width: 1000px) { #board.tkb[data-view="board"] .tk-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; } }
 #board.tkb[data-view="board"] .tk-list { gap: 8px; padding: 8px; border-radius: 14px; }
 #board.tkb[data-view="board"] .task { grid-template-columns: 24px minmax(0, 1fr); grid-template-areas: "c m" "w a"; row-gap: 10px; column-gap: 10px; padding: 12px; min-height: 0; border: 1px solid var(--edge); border-radius: 10px; background: var(--raised, var(--canvas)); align-items: start; }
 #board.tkb[data-view="board"] .task:hover { border-color: var(--edge-pop, var(--faint)); }
@@ -181,15 +183,16 @@
   #board.tkb .tk-bar:has(.tk-bar__f[hidden]) { display: none; }
   #board.tkb .tk-bar__f { margin-bottom: 10px; }
   #board.tkb .tk-cols { gap: 18px; }
-  #board.tkb .task { grid-template-columns: 26px minmax(0, 1fr); grid-template-areas: "c m" ". w" "a a"; row-gap: 10px; column-gap: 12px; padding: 14px 14px 12px; align-items: start; }
-  #board.tkb .tk-check { grid-area: c; margin-top: 1px; }
+  #board.tkb .task { grid-template-columns: 36px minmax(0, 1fr); grid-template-areas: "c m" "w a"; row-gap: 12px; column-gap: 10px; padding: 14px 12px 12px; align-items: start; }
+  #board.tkb .tk-check { grid-area: c; justify-self: center; margin-top: 1px; }
   #board.tkb .tk-main { grid-area: m; }
-  #board.tkb .tk-own { grid-area: w; }
+  #board.tkb .tk-own { grid-area: w; justify-self: center; align-self: center; }
+  #board.tkb .tk-own__n, #board.tkb .tk-own--btn span, #board.tkb .tk-own--none { display: none; }
+  #board.tkb .tk-own--btn { width: 36px; height: 36px; padding: 0; justify-content: center; }
   #board.tkb .tk-acts { grid-area: a; }
   #board.tkb .tk-acts .tk-btn:not(.tk-btn--back) { flex: 1; height: 44px; font-size: 14px; }
   #board.tkb .tk-acts .tk-btn--back { height: 44px; }
   #board.tkb .tk-more { width: 44px; height: 44px; border-color: var(--edge); }
-  #board.tkb .task.is-done { grid-template-areas: "c m" ". a"; }
   #board.tkb .task.is-done .tk-own { display: none; }
   #board.tkb .task.is-done .tk-acts { justify-content: flex-start; }
   #board.tkb .task.is-done .tk-acts .tk-btn { flex: 0 0 auto; height: 36px; }

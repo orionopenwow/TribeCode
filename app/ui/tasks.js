@@ -84,7 +84,7 @@
   const weekAgo = () => Date.now() - 7 * 864e5;
   const doneWeek = t => t.status === 'done' && (!t.updated || new Date(t.updated).getTime() >= weekAgo());
   const STATS = [
-    ['needs', 'Needs someone', 'Unassigned', t => t.status !== 'done' && !hasOwner(t)],
+    ['needs', 'Needs someone', 'No one', t => t.status !== 'done' && !hasOwner(t)],
     ['doing', 'In progress', 'Doing', t => t.status === 'doing'],
     ['review', 'Waiting for review', 'Review', t => t.status === 'review'],
     ['done', 'Done this week', 'Done', doneWeek],
@@ -93,7 +93,7 @@
   const statOf = k => STATS.find(s => s[0] === k);
   // list sections, in the order you act on them; both backlog sections drop tasks into "backlog"
   const SECTIONS = [
-    ['needs', 'backlog', 'Needs someone', 'Nobody is on these yet. Pick one up or hand it to a friend or an AI.', t => t.status === 'backlog' && !hasOwner(t)],
+    ['needs', 'backlog', 'Needs someone', 'Nobody\'s on these yet. Take one or hand it off.', t => t.status === 'backlog' && !hasOwner(t)],
     ['doing', 'doing', 'In progress', 'Being built right now.', t => t.status === 'doing'],
     ['review', 'review', 'Waiting for review', 'Ready for a second look. Approve or send back.', t => t.status === 'review'],
     ['ready', 'backlog', 'Up next', 'Someone has these. Not started yet.', t => t.status === 'backlog' && hasOwner(t)],
@@ -126,10 +126,9 @@
         <div class="tk-top__more">${typeChips('', 'sm')}<span class="tk-top__sep" aria-hidden="true"></span>
           <button type="button" class="tk-pill" data-forme aria-pressed="false">${IC.user}<span>For me</span></button>
           <label class="tk-pill tk-pill--due">${IC.cal}<span>Due</span><input type="date" id="tk-add-due" aria-label="Due date"></label>
-          <span class="tk-top__flint" id="tk-flint"></span></div>
+          <span class="tk-top__flint" id="tk-flint"></span><div class="tk-views" role="radiogroup" aria-label="View"><button type="button" role="radio" data-view="list" aria-checked="true">${IC.list}<span>List</span></button><button type="button" role="radio" data-view="board" aria-checked="false">${IC.board}<span>Board</span></button></div></div>
       </div>
-      <div class="tk-bar"><p class="tk-bar__f" id="tk-filter" hidden></p>
-        <div class="tk-views" role="radiogroup" aria-label="View"><button type="button" role="radio" data-view="list" aria-checked="true">${IC.list}<span>List</span></button><button type="button" role="radio" data-view="board" aria-checked="false">${IC.board}<span>Board</span></button></div></div>
+      <div class="tk-bar"><p class="tk-bar__f" id="tk-filter" hidden></p></div>
       <div class="tk-cols"></div>`;
     const inp = board.querySelector('#tk-add'), top = board.querySelector('.tk-top'), dueIn = board.querySelector('#tk-add-due'), forMe = board.querySelector('[data-forme]');
     let topType = '';
@@ -513,7 +512,7 @@
     if (d && !d.contains(e.target) && !e.target.closest('#board .task') && !e.target.closest('#tk-pop, .flint-panel, #flint-panel, .ff-pill')) close();
   });
   addEventListener('resize', () => { closeMenu(); const b = $('#board'); if (b && b.classList.contains('tkb') && b.dataset.view !== (phone() ? 'list' : view)) { lastSig = ''; render(); } });
-  addEventListener('scroll', e => { if (!(e.target && e.target.closest && e.target.closest('#tk-pop'))) closeMenu(); }, true);
+  addEventListener('wheel', e => { if (!(e.target && e.target.closest && e.target.closest('#tk-pop'))) closeMenu(); }, { passive: true });   // scrolling the page closes the menu (it's fixed in place)
 
   window.TribeTasks = { load, render, create, patch, all: () => tasks, open, close, typeChips, TYPES, filter: setFilter, view: setView };
 })();

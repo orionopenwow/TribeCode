@@ -167,14 +167,14 @@ def main():
             card = host.locator(f"#board .task[data-id='{t5['id']}']")
             card.locator(".tk-ty").wait_for(timeout=5000)
             shot(host, "board")
-            assert card.locator("button:visible, select").count() == 0, "a calm card: no buttons or menus until you hover or open it"
-            card.click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=5000)   # v0.27.2: the task drawer
+            assert card.locator("select").count() == 0 and card.locator(".tk-acts .tk-btn:visible").count() == 1, "v0.28: a row shows one next-step button, no menus"
+            card.locator(".t").click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=5000)   # v0.27.2: the task drawer
             labels = host.locator("#tk-drawer [data-who] span:last-child").all_text_contents()
             assert {"Me", "Flint", "Ask an AI helper", "Nobody yet"} <= set(l.strip() for l in labels), labels
             host.keyboard.press("Escape"); host.wait_for_selector("#tk-drawer", state="hidden")
             build = next(t for t in api("/tasks", token=tok, project=pid)[1]["tasks"] if t["title"] == "Set up KAPLAY")
             bcard = host.locator(f"#board .task[data-id='{build['id']}']")
-            bcard.click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=5000)
+            bcard.locator(".t").click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=5000)
             assert host.locator("#tk-drawer [data-who=flint]").count() == 0, "Flint is only for text tasks"
             me_id = host.evaluate("TribeClient.state().me.id")
             host.click(f"#tk-drawer [data-who='{me_id}']")

@@ -193,12 +193,12 @@ def main():
             pg.drag_and_drop(f'#board .task[data-id="{fx["id"]}"]', '#board [data-sec="review"]')
             wait(lambda: task(host, "Fix the totals rounding on the receipt")["status"] == "review", what="dragged to review")
 
-            # 10. Board view: four columns side by side, wide enough for titles; the choice sticks
+            # 10. Board view: four columns (two by two on a narrow board), wide enough for titles; the choice sticks
             pg.click('#board [data-view="board"]')
             pg.wait_for_function("document.querySelector('#board').dataset.view === 'board'")
             tops = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => Math.round(c.getBoundingClientRect().top))")
             widths = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => c.getBoundingClientRect().width)")
-            assert len(tops) == 4 and len(set(tops)) == 1 and min(widths) >= 230, (tops, widths)
+            assert len(tops) == 4 and len(set(tops)) <= 2 and min(widths) >= 230, (tops, widths)
             shot(pg, "tasks-dashboard-board.png")
             pg.reload(); pg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000); time.sleep(0.8)
             pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_function("document.querySelector('#board').dataset.view === 'board'", timeout=8000)
