@@ -174,10 +174,25 @@ def main():
                     host.set_viewport_size({"width": vw, "height": vh})
                     host.evaluate("TribePreview.show('builds/sunrise-bakery/')"); host.wait_for_function(FOCUS, timeout=8000)
                     host.wait_for_selector("#pvw #pvw-iframe", timeout=10000); host.wait_for_timeout(1200)
-                    host.evaluate("TribePreviewFlint.pick({ tag: 'h1', text: 'Fresh bread every morning', rect: { left: 60, top: 120, width: 420, height: 60 } })")
+                    h1 = host.frame_locator('#pvw-iframe').locator('h1').first.inner_text().strip()
+                    host.evaluate("t => TribePreviewFlint.pick({ tag: 'h1', text: t, rect: { left: 60, top: 120, width: 420, height: 60 } })", h1)
+                    host.wait_for_function("(document.querySelector(\"#pvf-props input[data-prop='font-size']\") || {}).value", timeout=5000)
                     shot(host, nm)
                     host.evaluate("TribePreview.close()"); host.wait_for_timeout(300)
                 host.set_viewport_size({"width": 1440, "height": 900})
+
+            # ---- 4b: the Properties sheet follows the live element: a pick without styles is looked up again; a gone one clears ----
+            host.evaluate("TribePreview.open()"); host.wait_for_function(FOCUS, timeout=8000)
+            host.wait_for_selector("#pvw.ready #pvw-iframe", timeout=10000)
+            host.evaluate("TribePreviewFlint.pick({ tag: 'h1', text: 'Gems', rect: { left: 10, top: 10, width: 100, height: 40 } })")
+            host.wait_for_function("(document.querySelector(\"#pvf-props input[data-prop='font-size']\") || {}).value === '32px'", timeout=5000)
+            assert host.evaluate("TribePreviewFlint.picked().path").startswith('body>'), 'the fresh pick carries a path to find it again'
+            host.evaluate("TribePreviewFlint.pick({ tag: 'h2', text: 'Not on this page', rect: { left: 10, top: 10, width: 100, height: 40 } })")
+            host.wait_for_function("!TribePreviewFlint.picked() && document.querySelector('#pvf-pick').classList.contains('hidden')", timeout=5000)
+            # centred: the device frame sits in the middle of the canvas, no dead band
+            g = host.evaluate("(() => { const s = document.querySelector('#pvw-stage').getBoundingClientRect(), f = document.querySelector('#pvw-frame').getBoundingClientRect(); return [f.left - s.left, s.right - f.right, f.top - s.top, s.bottom - f.bottom]; })()")
+            assert abs(g[0] - g[1]) <= 3 and abs(g[2] - g[3]) <= 3 and g[2] <= 30, f'frame centred and filling the canvas: {g}'
+            host.evaluate("TribePreview.close()"); host.wait_for_function("!" + FOCUS, timeout=3000)
 
             # ---- 6: deep link ----
             dl = ctx.new_page(); watch(dl, "deeplink")

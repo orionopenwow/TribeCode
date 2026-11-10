@@ -338,10 +338,10 @@
     if (!frame || pane.dataset.device === 'fill' || pane.classList.contains('is-empty')) {
       holder.style.width = holder.style.height = ''; if (frame) { frame.style.width = frame.style.height = frame.style.transform = ''; } return;
     }
-    const d = DEVICES[device], pad = device === 'desktop' ? 2 : 14, sw = stage.clientWidth - 24, sh = stage.clientHeight - 24;
+    const d = DEVICES[device], pad = device === 'desktop' ? 2 : 14, cs = getComputedStyle(stage), px = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0), py = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0), sw = stage.clientWidth - px - 2, sh = stage.clientHeight - py - 2;   // the stage's real padding, so the frame fits and centres
     if (sw <= 0 || sh <= 0) return;
     const s = Math.min(1, (sw - pad * 2) / d.w, device === 'desktop' ? Infinity : (sh - pad * 2) / d.h);
-    const h = device === 'desktop' ? Math.max(Math.min(d.h, (sh - pad * 2) / s), 200) : d.h;
+    const h = device === 'desktop' ? Math.max(Math.floor((sh - pad * 2) / s), 200) : d.h;   // desktop fills the canvas height: no dead band above and below
     frame.style.width = d.w + 'px'; frame.style.height = h + 'px'; frame.style.transform = `scale(${s})`;
     holder.style.width = Math.round(d.w * s + pad * 2) + 'px'; holder.style.height = Math.round(h * s + pad * 2) + 'px';
   }
@@ -401,6 +401,13 @@
   let editing = false, picked = null;
   const boxOf = r => (r && [r.left, r.top, r.width, r.height].every(n => typeof n === 'number' && isFinite(n)) ? { left: r.left, top: r.top, width: r.width, height: r.height } : null);
   const flyTarget = p => (p && p.rect && frame ? { frame, rect: p.rect } : (pane && pane.querySelector('#pvw-frame')));   // where Flint works: the picked element inside the preview
+  const asPick = m => ({ path: typeof m.path === 'string' ? m.path.slice(0, 400) : '', tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000), rect: boxOf(m.rect),
+    cs: m.cs && typeof m.cs === 'object' ? Object.fromEntries(Object.entries(m.cs).filter(([k, v]) => typeof v === 'string').map(([k, v]) => [String(k).slice(0, 30), v.slice(0, 120)]).slice(0, 14)) : null });
+  // look the picked element up again on the (re)loaded page: by its path, else by tag + words
+  function repick(p) {
+    if (!p || !frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage({ tc: 'repick', path: p.path || '', tag: p.tag || '', text: p.text || '' }, '*');
+  }
   function toggleEdit() {
     editing = !editing; picked = null;
     if (!editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(null);
@@ -434,11 +441,20 @@
     if (!frame || e.source !== frame.contentWindow || !e.data || typeof e.data !== 'object') return;
     const m = e.data;
     if (m.tc === 'ready' && editing && frame && frame.contentWindow) { frame.contentWindow.postMessage({ tc: 'edit', on: true }, '*'); picked = null; paintPick(); }
-    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000), rect: boxOf(m.rect), cs: m.cs && typeof m.cs === 'object' ? Object.fromEntries(Object.entries(m.cs).filter(([k, v]) => typeof v === 'string').map(([k, v]) => [String(k).slice(0, 30), v.slice(0, 120)]).slice(0, 14)) : null }; paintPick(); }
+    if (m.tc === 'pick' && m.re) {   // the answer to repick(): the same element after a reload, with its live styles; gone → clear the card
+      const was = window.TribePreviewFlint && window.TribePreviewFlint.picked && window.TribePreviewFlint.picked();
+      if (!was) return;
+      const np = m.none ? null : asPick(m);
+      if (editing) { picked = np; paintPick(); }
+      window.TribePreviewFlint.pick(np);
+      if (!np) window.TribePreviewFlint.feed && window.TribePreviewFlint.feed({ k: 'flint', text: 'The element you picked isn’t on the page any more, so I let it go. Pick it again with Edit.' });
+      return;
+    }
+    if (m.tc === 'pick' && editing) { picked = m.none ? null : { path: typeof m.path === 'string' ? m.path.slice(0, 400) : '', tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000), rect: boxOf(m.rect), cs: m.cs && typeof m.cs === 'object' ? Object.fromEntries(Object.entries(m.cs).filter(([k, v]) => typeof v === 'string').map(([k, v]) => [String(k).slice(0, 30), v.slice(0, 120)]).slice(0, 14)) : null }; paintPick(); }
     if (m.tc === 'pick' && editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(picked);
     if (m.tc === 'error' && window.TribePreviewFlint) window.TribePreviewFlint.error({ msg: `${String(m.msg || 'error').slice(0, 240)}${m.src ? ` (${String(m.src).slice(0, 60)}${m.line ? ':' + Number(m.line) : ''})` : ''}`, line: Number(m.line) || 0 });   // no auto-focus: it would pull focus out of text you're editing in the page
     if (m.tc === 'text' && editing) editApi('edit', { href: m.href || lastHref, tag: String(m.tag || ''), before: String(m.before || ''), after: String(m.after || '') });
-    if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string' && !(want && Date.now() < want.until && !m.href.includes(want.sub))) lastHref = m.href.slice(0, 500); if (pane) { pane.classList.add('ready'); paintBar(); } }
+    if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string' && !(want && Date.now() < want.until && !m.href.includes(want.sub))) lastHref = m.href.slice(0, 500); if (pane) { pane.classList.add('ready'); paintBar(); } const fp = window.TribePreviewFlint && window.TribePreviewFlint.picked && window.TribePreviewFlint.picked(); if (fp) repick(fp); }
     if (m.tc === 'shot' && shots.has(m.id)) { const p = shots.get(m.id); shots.delete(m.id); m.error ? p.reject(new Error(m.error)) : p.resolve(String(m.data || '')); }
   });
 
@@ -555,5 +571,5 @@
     want = sub ? { sub, until: Date.now() + 5000 } : null;
     lastHref = info.path + sub; load(url() + sub);
   }
-  window.TribePreview = { open, openTab, refresh, close, url, show, info: () => info };
+  window.TribePreview = { open, openTab, refresh, close, url, show, repick: p => repick(p), info: () => info };
 })();
