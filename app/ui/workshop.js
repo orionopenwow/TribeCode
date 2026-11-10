@@ -49,7 +49,7 @@
         <button class="btn primary ws-add" id="ws-add">${ico('i-plus', 15)}<span>Add</span></button>
       </header>
       <div class="ws-bar">
-        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="shelf">Starter shelf</button><button role="tab" data-wt="library">Tribe library</button><button role="tab" data-wt="community">Community</button></nav>
+        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="market">Marketplace</button><button role="tab" data-wt="shelf">Starter shelf</button><button role="tab" data-wt="library">Tribe library</button><button role="tab" data-wt="community">Community</button></nav>
         <div class="ws-chips" id="ws-chips">${KINDS.map(([k, l]) => `<button class="ws-chip" data-k="${k}">${l}</button>`).join('')}</div>
       </div>
       <div class="ws-scroll" id="ws-scroll"><div class="ws-inner" id="ws-body"></div></div>
@@ -69,7 +69,7 @@
   }
 
   function open(which) {
-    if (typeof which === 'string' && ['shelf', 'library', 'community'].includes(which)) tab = which;
+    if (typeof which === 'string' && ['market', 'shelf', 'library', 'community'].includes(which)) tab = which;   // v0.27 company: + market
     const root = frame(); open_ = true;
     root.classList.remove('hidden'); document.body.classList.add('ws-open'); document.body.classList.remove('drawer-open');
     if (location.hash !== '#/workshop') history.replaceState(null, '', location.pathname + location.search + '#/workshop');
@@ -79,7 +79,7 @@
   }
   function close() {
     const root = document.getElementById('workshop'); if (!root) return;
-    open_ = false; root.classList.add('hidden'); document.body.classList.remove('ws-open'); closeDetail(); closeModal();
+    open_ = false; root.classList.add('hidden'); if (window.TribeMarket) window.TribeMarket.close(); document.body.classList.remove('ws-open'); closeDetail(); closeModal();
     if (location.hash === '#/workshop') history.replaceState(null, '', location.pathname + location.search);
     if (window.TribeApp && window.TribeApp.view) { const v = window.TribeApp.view(); const crumb = document.getElementById('crumb-label'); if (crumb && v) crumb.textContent = v[0].toUpperCase() + v.slice(1); }
   }
@@ -92,12 +92,14 @@
     const root = frame();
     root.querySelectorAll('[data-wt]').forEach(b => { b.classList.toggle('on', b.dataset.wt === tab); b.setAttribute('aria-selected', String(b.dataset.wt === tab)); });
     root.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === kind));
-    root.querySelector('#ws-title').textContent = tab === 'library' ? 'Tribe library' : tab === 'shelf' ? 'Starter shelf' : 'Community shelf';
-    root.querySelector('#ws-chips').classList.toggle('hidden', tab === 'shelf');
+    root.querySelector('#ws-title').textContent = tab === 'market' ? 'Marketplace' : tab === 'library' ? 'Tribe library' : tab === 'shelf' ? 'Starter shelf' : 'Community shelf';
+    root.querySelector('.ws-search').classList.toggle('hidden', tab === 'market');   // v0.27 company: the Marketplace has its own search + filters
+    root.querySelector('#ws-chips').classList.toggle('hidden', tab === 'shelf' || tab === 'market');
     root.querySelector('#ws-add').classList.toggle('hidden', !(me().role && me().role !== 'spectator') || tab !== 'library');
     const body = root.querySelector('#ws-body');
     if (!C.hasToken()) { body.innerHTML = empty('Needs a tribe', 'The Workshop is shared, so it lives on the tribe host. Host or join a tribe first.'); return; }
     try {
+      if (tab === 'market') { if (window.TribeMarket) window.TribeMarket.mount(body); else body.innerHTML = empty('Marketplace unavailable', 'Reload the app.'); return; }   // v0.27 company (market.js)
       if (tab === 'shelf') { const pid = window.TribeProjects && window.TribeProjects.current(); drawShelf(body, await C.api('/shelf' + (pid ? `?project=${encodeURIComponent(pid)}` : '')), pid); return; }
       if (tab === 'library') {
         const qs = new URLSearchParams(); if (q) qs.set('q', q); if (kind) qs.set('kind', kind);
