@@ -176,6 +176,7 @@ def main():
             pg.wait_for_selector(".pvw-btn.pb-tool", timeout=10000)
             pg.click(".pvw-btn.pb-tool"); pg.wait_for_selector("#pb-url", timeout=10000)
             pg.click("#invite-body [data-close]")
+            pg.evaluate("window.TribePreview.close()")   # v0.28: the preview is a full-window workspace; leave it to see the dashboard
             # the dashboard card
             if pg.evaluate("!!(window.TribeShell && window.TribeShell.go)"):
                 pg.evaluate("window.TribeShell.go('dashboard')")

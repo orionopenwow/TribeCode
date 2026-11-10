@@ -376,7 +376,10 @@
 
   window.TribePreviewFlint = {
     mount,
-    pick(p) { picked = p && p.tag ? p : null; paintPick(); if (picked && el && !el.classList.contains('is-open') && !isPhone()) setOpen(true, true); },
+    // a pick without the element's live styles (an old pick, or one handed in by code) is looked up on the page again,
+    // so the Properties sheet always shows the real values (preview.js repick → the page's helper answers with a fresh pick)
+    pick(p) { picked = p && p.tag ? p : null; paintPick(); if (picked && el && !el.classList.contains('is-open') && !isPhone()) setOpen(true, true); if (picked && !picked.cs && window.TribePreview && window.TribePreview.repick) window.TribePreview.repick(picked); },
+    picked: () => picked,
     reloaded(files) { feed({ k: 'reload', text: 'Reloaded the preview ✓', html: null, files }); },
     error(e) { feed({ k: 'error', text: String(e && e.msg || e || 'error').slice(0, 300), key: 'e' + String(e && e.msg) + (e && e.line) }); },
     feed,

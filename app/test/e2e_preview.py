@@ -290,7 +290,7 @@ def main():
             assert f"/preview/{hp}/pv1." in share, share
             host.wait_for_selector(".toast", timeout=3000)
             # host settings form
-            host.click("#pvw [data-act='gear']"); host.wait_for_selector("#pvw-set:not(.hidden) select[name=root]")
+            host.click("#pvw [data-act='more']"); host.click("#pvw [data-act='gear']"); host.wait_for_selector("#pvw-set:not(.hidden) select[name=root]")
             host.click("#pvw-set [data-set=cancel]")
 
             # Pixel Quest in the right panel, screenshot to Visuals
@@ -306,7 +306,7 @@ def main():
             shot(host, "desktop")
             host.click("#pvw [data-dev='phone']"); host.wait_for_timeout(500)
             shot(host, "desktop-phone")
-            host.click("#pvw [data-act='shot']")
+            host.click("#pvw [data-act='more']"); host.click("#pvw [data-act='shot']")
             wait_text(host, ".toast", "Screenshot saved", timeout=12000)
             screens = ok(api("/visuals", token=orion, project=pp))["screens"]
             assert any(s["slug"] == "app-preview" for s in screens), screens

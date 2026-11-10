@@ -141,7 +141,7 @@ def main():
             host.click("#nest-preview")
             host.wait_for_selector("body.pvw-on #pvw", timeout=15000)
             assert host.text_content("#preview-kind") == "Preview"
-            host.click("#preview-close"); host.wait_for_function("!document.body.classList.contains('pvw-on')")
+            host.click("#pvw .pvw-back"); host.wait_for_function("!document.body.classList.contains('pvw-on')")   # v0.28: the focused preview's Back
 
             # ---- Website: shows only once the site is built
             ok(api(f"/projects/{pid}/website/build", "POST", {}, token=orion), "build")

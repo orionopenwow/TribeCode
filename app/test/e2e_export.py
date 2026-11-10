@@ -376,7 +376,7 @@ def main():
             # ---------------- desktop UI: preview pane button + Folder sheet ----------------
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             host.evaluate("TribePreview.open()")
-            host.wait_for_selector("#pvw [data-act='home']", timeout=10000)
+            host.wait_for_selector("#pvw [data-act='more']", timeout=10000); host.click("#pvw [data-act='more']")
             host.click("#pvw [data-act='home']")
             host.wait_for_selector("#fld-modal:not(.hidden) #fld-desk", timeout=10000)
             assert host.locator("#fld-modal .fld-qr .qr svg").count() == 1, "a QR for the phone"
