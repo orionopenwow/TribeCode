@@ -54,6 +54,7 @@
     el.innerHTML = `<div class="mk" id="market">
       <div class="mk-hero" id="mk-hero"><div><span class="mk-eyebrow">Curated · every link and license checked</span><h2>Add tools, skills and templates</h2>
         <p>Real, open things your crew can use. <b>Hot</b> and <b>Rising</b> come from what your tribe uses, not a global chart.</p></div></div>
+      <section class="mk-trend" id="mk-trend" hidden aria-labelledby="mk-trend-t"></section>
       <div class="mk-bar">
         <label class="mk-search">${ico('i-search', 15)}<input id="mk-q" type="search" placeholder="Search the marketplace" autocomplete="off" aria-label="Search the marketplace" value="${esc(st.q)}"></label>
         <button class="mk-filter-btn" id="mk-filters" aria-haspopup="dialog" aria-expanded="false">${ico('i-list', 15)}<span>Filters</span><b class="mk-count" id="mk-fcount" hidden></b></button>
@@ -78,7 +79,39 @@
       const x = e.target.closest('[data-chip]'); if (x) { const [k, v] = x.dataset.chip.split(':'); st[k] = st[k].filter(y => y !== v); load(true); }
       if (e.target.closest('[data-clear]')) { st.kind = []; st.for = []; st.seat = []; st.tag = []; load(true); }
     });
+    el.querySelector('#mk-trend').addEventListener('click', e => {
+      const f = e.target.closest('[data-tf]'); if (f) { trend.focus = f.dataset.tf; return drawTrend(); }
+      if (e.target.closest('[data-tall]')) { st.tag = ['trending']; st.kind = []; st.for = []; st.seat = []; return load(true); }
+      const u = e.target.closest('[data-use]'); if (u) { e.stopPropagation(); return use(u.dataset.use, u); }
+      const c = e.target.closest('.mk-tcard'); if (c) openDetail(c.dataset.id);
+    });
     load(true);
+    loadTrend();
+  }
+
+  // ---------- Trending on GitHub (server/trending.js: a daily feed of viral, permissively licensed repos) ----------
+  const trend = { items: [], updated: '', focus: 'all' };
+  const FOCUS = [['all', 'All'], ['agents', 'Agents'], ['ui', 'UI & design'], ['video', 'Video'], ['threejs', '3D & games'], ['skill', 'Skills']];
+  const inFocus = (it, f) => f === 'all' || (it.tags || []).some(t => f === 'ui' ? ['ui', 'design', 'animation', 'css'].includes(t) : f === 'threejs' ? ['threejs', '3d', 'game'].includes(t) : f === 'video' ? ['video', 'audio', 'images'].includes(t) : t === f);
+  const fmtStars = n => n == null ? '' : n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n);
+  async function loadTrend() {
+    try { const r = await C.api('/market/trending'); trend.items = r.items || []; trend.updated = r.updated || ''; } catch { trend.items = []; }
+    drawTrend();
+  }
+  function drawTrend() {
+    const box = host && host.querySelector('#mk-trend'); if (!box) return;
+    box.hidden = !trend.items.length || !!(st.q || active());
+    if (box.hidden) { box.innerHTML = ''; return; }
+    const list = trend.items.filter(it => inFocus(it, trend.focus)).sort((a, b) => (b.stars || 0) - (a.stars || 0)).slice(0, 10);
+    box.innerHTML = `<div class="mk-trend-head"><div><span class="mk-eyebrow">Trending on GitHub · updated ${esc(trend.updated)}</span>
+        <h3 id="mk-trend-t">New open source people are talking about</h3></div>
+        <button class="btn sm" data-tall>See all ${trend.items.length}</button></div>
+      <div class="mk-seg mk-tfocus" role="tablist" aria-label="Trending topic">${FOCUS.map(([k, l]) => `<button role="tab" data-tf="${k}" class="${trend.focus === k ? 'on' : ''}" aria-selected="${trend.focus === k}">${l}</button>`).join('')}</div>
+      <div class="mk-trow">${list.map(it => `<article class="mk-tcard" data-id="${esc(it.id)}" tabindex="0" aria-label="${esc(it.title)}">
+        <div class="mk-card-top"><span class="mk-emo" aria-hidden="true">${esc(it.emoji || '✨')}</span><span class="mk-kind k-${esc(it.kind)}">${esc(KIND_LABEL[it.kind] || it.kind)}</span>${it.stars != null ? `<span class="mk-stars" title="Stars reported by the trend source">★ ${fmtStars(it.stars)}</span>` : ''}</div>
+        <b class="mk-t">${esc(it.title)}</b><p class="mk-s">${esc(it.why || it.summary)}</p>
+        <div class="mk-card-foot"><span class="mk-lic">${esc(String(it.license || ''))}</span><span class="mk-sp"></span>${canUse() ? `<button class="btn sm" data-use="${esc(it.id)}" title="${esc(actionHint(it))}">${actionLabel(it)}</button>` : ''}</div>
+      </article>`).join('') || '<div class="mk-empty faint">Nothing trending in this topic today.</div>'}</div>`;
   }
   function chrome() {
     if (!host) return;
@@ -90,6 +123,7 @@
     chips.hidden = !list.length;
     chips.innerHTML = list.map(([k, v, l]) => `<button class="mk-chip on" data-title data-chip="${k}:${esc(v)}" aria-label="Remove ${esc(l)}">${esc(l)}<span aria-hidden="true">×</span></button>`).join('') + (list.length > 1 ? '<button class="mk-clear" data-clear>Clear</button>' : '');
     host.querySelector('#mk-hero').hidden = !!(st.q || n);
+    drawTrend();
   }
 
   // ---------- data ----------
@@ -182,8 +216,11 @@
         ${it.seat ? `<dt>Seat</dt><dd data-title>${esc(SEAT_LABEL[it.seat] || it.seat)}</dd>` : ''}
         <dt>In your tribe</dt><dd>${u.all ? `${u.week} this week · ${u.all} in all` : 'Not used yet'}</dd>
         <dt>Added</dt><dd>${esc(it.added || '')}</dd>
+        ${it.stars != null ? `<dt>Stars</dt><dd>${fmtStars(it.stars)} <span class="faint">as reported by the trend source</span></dd>` : ''}
         ${link ? `<dt>Source</dt><dd><a href="${esc(link)}" target="_blank" rel="noopener" data-visit>${esc(link.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a></dd>` : ''}
       </dl>
+      ${it.why ? `<p class="mk-why"><b>Why it’s here</b> ${esc(it.why)}</p>` : ''}
+      ${(it.seenOn || []).length ? `<div class="mk-seen"><span class="mk-eyebrow">Seen on</span>${it.seenOn.map(x => { let h = ''; try { h = new URL(x.url).hostname.replace(/^www\./, ''); } catch {} return `<a href="${esc(x.url)}" target="_blank" rel="noopener" title="${esc(x.url)}">${esc(x.site)}${['Blog', 'News', 'Forum'].includes(x.site) && h ? ` · ${esc(h)}` : ''}</a>`; }).join('')}</div>` : ''}
       ${(it.tags || []).length ? `<div class="mk-tags">${it.tags.map(t => `<button class="mk-chip" data-dtag="${esc(t)}">#${esc(t)}</button>`).join('')}</div>` : ''}
       ${it.kind === 'legal' ? '<p class="mk-fine">A starting point, not legal advice. Check local law or ask a professional.</p>' : ''}
       <div class="mk-dacts">${canUse() ? `<button class="btn primary" data-duse>${actionLabel(it)}</button>` : ''}<span class="faint">${esc(actionHint(it))}</span></div>

@@ -16,6 +16,7 @@
 // week, or recently added items with a high curated score; New = date added to the catalog; Top = curated score plus
 // all-time tribe usage. "score" is TribeCode's own curated score, never a rating or download count.
 'use strict';
+const { toMarket } = require('./trendcheck');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -32,7 +33,7 @@ const INSTALL = new Set(['widget', 'skill', 'library', 'tool', 'studio', 'connec
 const TOOLBOX = new Set(['skill', 'library', 'tool', 'studio', 'connector']);
 const DAY = 864e5;
 
-module.exports = function market({ P, store, root, approvals, widgets, shelf, docs, postChat, nameOf = id => id, getMembers = () => [], str = (v, n) => String(v == null ? '' : v).slice(0, n), now = () => Date.now(), tick = true }) {
+module.exports = function market({ P, store, root, approvals, widgets, shelf, docs, postChat, nameOf = id => id, getMembers = () => [], str = (v, n) => String(v == null ? '' : v).slice(0, n), now = () => Date.now(), tick = true, trending = null }) {
   const catalog = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'marketplace.json'), 'utf8')).items || []; } catch { return []; } })();
   const byId = new Map(catalog.map((it, i) => [it.id, Object.assign(it, { _i: i })]));
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -87,6 +88,8 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
   function view(it) {
     const c = counts(it.id), o = {};
     for (const [k, v] of Object.entries(it)) if (k[0] !== '_') o[k] = v;
+    const t = it.id.startsWith('tr-') && trending ? (trending.get().items || []).find(x => x.id === it.id) : null;   // trending extras for the detail sheet
+    if (t) Object.assign(o, { stars: t.stars == null ? null : t.stars, why: t.why || '', seenOn: Array.isArray(t.seenOn) ? t.seenOn : [] });
     return { ...o, kindLabel: (KIND[it.kind] || {}).label || it.kind, uses: { week: c.week, lastWeek: c.prev, all: c.all } };
   }
   function search(sp) {
@@ -186,11 +189,24 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
   }
   if (tick) { const t = setInterval(() => { sweep().catch(() => {}); }, 3000); if (t.unref) t.unref(); }
 
+  // "Trending on GitHub" (server/trending.js): the daily feed, shown as Marketplace cards so Add works the same.
+  // A repo the daily download added after this release isn't in marketplace.json yet, so it joins the catalog here.
+  function trendingView() {
+    const f = trending ? trending.get() : { updated: '', items: [], source: 'none' };
+    const items = (f.items || []).map(t => {
+      let it = byId.get(t.id);
+      if (!it) { it = Object.assign(toMarket(t), { _i: catalog.length }); catalog.push(it); byId.set(it.id, it); }
+      return view(it);
+    });
+    return { updated: f.updated, source: f.source, items };
+  }
+
   async function route(req, res, { m, b, c, me, url, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     try {
       sweep().catch(() => {});
       if (m === 'GET' && !b) return send(res, 200, search(url.searchParams));
+      if (m === 'GET' && b === 'trending') return send(res, 200, trendingView());
       if (m === 'GET' && b === 'facets') return send(res, 200, facets(url.searchParams));
       if (m === 'GET' && b === 'items' && c) { const it = byId.get(str(c, 80)); return it ? send(res, 200, { item: view(it) }) : fail(res, 404, 'not in the marketplace'); }
       if (m === 'POST' && b && c === 'use') return send(res, 200, await use(b, await readBody(req, 8 * 1024), me));

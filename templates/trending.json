@@ -1,0 +1,1780 @@
+{
+ "updated": "2026-11-10",
+ "about": "Trending on GitHub: open source repos that were going viral recently and help people build apps, games and sites. Refreshed by a daily job: candidates come from public trend lists and articles found with web search (no scraping, no logins), each repo is checked to exist on GitHub and to have a permissive license (MIT, Apache-2.0, BSD, ISC, MPL-2.0, CC0, Unlicense), then scripts/dev/trending-check.js validates this file. \"stars\" is the count reported by the linked trend source on its date (null when none gave one), not a live number. \"seenOn\" lists public posts and articles where the repo was being talked about. Running TribeCode apps fetch this file daily from GitHub (host only) and fall back to the bundled copy.",
+ "items": [
+  {
+   "id": "tr-opencode",
+   "repo": "anomalyco/opencode",
+   "title": "opencode",
+   "emoji": "🤖",
+   "summary": "An open source coding agent for the terminal that works with many model providers, plus a big plugin system.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 213922,
+   "why": "The most-starred open source terminal coding agent this autumn; a good second agent next to Claude Code.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    },
+    {
+     "site": "Blog",
+     "url": "https://dev.to/max_quimby/opencode-review-the-open-source-ai-coding-agent-that-took-1-on-hacker-news-4ola",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "News",
+     "url": "https://www.infoq.com/news/2026/02/opencode-coding-agent",
+     "date": "2026-11-10"
+    }
+   ],
+   "install": "npm i -g opencode-ai",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-codex",
+   "repo": "openai/codex",
+   "title": "Codex CLI",
+   "emoji": "🤖",
+   "summary": "OpenAI’s lightweight coding agent that runs in your terminal, written in Rust.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 129395,
+   "why": "Lets a friend who uses ChatGPT join the build with their own agent.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "install": "npm i -g @openai/codex",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-gemini-cli",
+   "repo": "google-gemini/gemini-cli",
+   "title": "Gemini CLI",
+   "emoji": "🤖",
+   "summary": "Google’s Gemini coding agent for the terminal: reads your repo, edits files, runs commands.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 107389,
+   "why": "A free-tier friendly agent for members who use Gemini.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "install": "npm i -g @google/gemini-cli",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-openhands",
+   "repo": "OpenHands/OpenHands",
+   "title": "OpenHands",
+   "emoji": "🤖",
+   "summary": "A software development agent with a full task loop and its own web UI. Runs locally or in the cloud.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "MIT",
+   "stars": 91004,
+   "why": "Good for long, hands-off coding tasks while the tribe works on other things.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-cline",
+   "repo": "cline/cline",
+   "title": "Cline",
+   "emoji": "🤖",
+   "summary": "An autonomous coding agent as a VS Code extension, a CLI or an SDK, with approval for each step.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "ide",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 70370,
+   "why": "For members who like to watch and approve every edit inside their editor.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-goose",
+   "repo": "aaif-goose/goose",
+   "title": "goose",
+   "emoji": "🪿",
+   "summary": "An extensible local agent that edits, runs and tests code, and plugs into MCP servers.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "mcp",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 55324,
+   "why": "Runs on your own machine with local or hosted models.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-pi",
+   "repo": "earendil-works/pi",
+   "title": "pi agent toolkit",
+   "emoji": "🥧",
+   "summary": "An agent toolkit: one API for many models, an agent loop, a terminal UI and a coding CLI.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Small and hackable if your tribe wants to build its own agent.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-orca",
+   "repo": "stablyai/orca",
+   "title": "Orca",
+   "emoji": "🐋",
+   "summary": "Run a fleet of coding agents on your own subscriptions, from desktop, phone or a remote machine.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "ai",
+    "mobile",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 25000,
+   "why": "Close to how TribeCode thinks about many agents at once; worth knowing.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-spec-kit",
+   "repo": "github/spec-kit",
+   "title": "Spec Kit",
+   "emoji": "📐",
+   "summary": "GitHub’s toolkit for spec-driven development: write the spec first, then let agents build to it.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "planning",
+    "docs",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 141439,
+   "why": "Pairs well with TribeCode docs: one shared spec every member’s agent builds from.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-claude-mem",
+   "repo": "thedotmack/claude-mem",
+   "title": "claude-mem",
+   "emoji": "🧠",
+   "summary": "Records Claude Code sessions and brings back the relevant history in later sessions.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "memory",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 101052,
+   "why": "Agents stop forgetting what was decided yesterday.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-beads",
+   "repo": "gastownhall/beads",
+   "title": "Beads",
+   "emoji": "📿",
+   "summary": "A git-backed store for agent tasks, plans and dependencies.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "tasks",
+    "git",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 27917,
+   "why": "A tidy task list that lives in the repo, so every agent sees the same plan.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-ecc",
+   "repo": "affaan-m/ECC",
+   "title": "ECC agent harness",
+   "emoji": "🧰",
+   "summary": "A harness that adds skills, memory and safety checks to several coding agents.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "skills",
+    "security",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "One setup that makes Claude Code, Codex and others behave more consistently.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-cc-switch",
+   "repo": "farion1231/cc-switch",
+   "title": "CC Switch",
+   "emoji": "🔀",
+   "summary": "A desktop app for managing Claude Code, Codex and other agent tools and their settings.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "desktop",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Handy when one person juggles several agents and providers.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-thinkrail",
+   "repo": "JetBrains/thinkrail",
+   "title": "Thinkrail",
+   "emoji": "🛤️",
+   "summary": "An agent-first IDE built around the pi agent, with isolated git worktrees and living spec files.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "ide",
+    "git",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "Apache-2.0",
+   "stars": 3662,
+   "why": "New from JetBrains; worktrees per agent mirror how TribeCode splits work.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130003&slug=github-trending-october-2026-from-a-90k-star-design-language-to-a-self-learning-",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-mem0",
+   "repo": "mem0ai/mem0",
+   "title": "Mem0",
+   "emoji": "🧠",
+   "summary": "A memory layer for agents and apps: remember users and facts across sessions.",
+   "kind": "library",
+   "tags": [
+    "agents",
+    "memory",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "Apache-2.0",
+   "stars": 67243,
+   "why": "Add memory to the AI features of the app you are building.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-agent-reach",
+   "repo": "Panniantong/Agent-Reach",
+   "title": "Agent Reach",
+   "emoji": "📡",
+   "summary": "A CLI that lets agents read and search public sites like Reddit and YouTube.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "research",
+    "browse",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Lets agents research what people are saying before you build.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-graphify",
+   "repo": "Graphify-Labs/graphify",
+   "title": "Graphify",
+   "emoji": "🕸️",
+   "summary": "Turns a codebase and its documents into a knowledge graph agents can query.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "code",
+    "docs",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": null,
+   "why": "Helps agents find their way around a big repo quickly.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-moli",
+   "repo": "lexmount/moli",
+   "title": "Moli",
+   "emoji": "🌐",
+   "summary": "A headless browser for AI agents, built in Rust.",
+   "kind": "tool",
+   "tags": [
+    "agents",
+    "browser",
+    "testing",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0 OR MIT",
+   "stars": 18300,
+   "why": "Fast browser for agents that test the app they just built.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-xerj",
+   "repo": "xerj-org/xerj",
+   "title": "xerj",
+   "emoji": "🔎",
+   "summary": "A local-first search engine with an MCP server, so agents can search your files and notes.",
+   "kind": "connector",
+   "tags": [
+    "mcp",
+    "search",
+    "local-first",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 14400,
+   "why": "Private search over the tribe’s docs for every member’s agent.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-strata",
+   "repo": "Niko1221/Strata",
+   "title": "Strata",
+   "emoji": "🪨",
+   "summary": "A local inference engine with a one-click install and a localhost API for open models.",
+   "kind": "tool",
+   "tags": [
+    "local",
+    "models",
+    "ai",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 30900,
+   "why": "An easy way to run local models next to TribeCode’s Qwen brain.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-vllm",
+   "repo": "vllm-project/vllm",
+   "title": "vLLM",
+   "emoji": "⚡",
+   "summary": "A high-throughput engine for serving open models on GPUs.",
+   "kind": "tool",
+   "tags": [
+    "local",
+    "models",
+    "ai",
+    "server",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "Apache-2.0",
+   "stars": 93870,
+   "why": "For a tribe with a GPU box that wants to serve a model to everyone.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.glukhov.org/developer-tools/comparisons/trending-open-source-ai-projects/",
+     "date": "2026-10-16"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-impeccable",
+   "repo": "pbakaus/impeccable",
+   "title": "Impeccable design skill",
+   "emoji": "💎",
+   "summary": "A design vocabulary and checks for coding agents that flag generic, machine-made visual patterns.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "design",
+    "ui",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 90051,
+   "why": "The most popular way to stop AI-built screens from all looking the same.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130003&slug=github-trending-october-2026-from-a-90k-star-design-language-to-a-self-learning-",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "Blog",
+     "url": "https://www.latent.space/p/skill-engineering-design",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": ".claude/skills/impeccable",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-hallmark",
+   "repo": "Nutlope/hallmark",
+   "title": "Hallmark design skill",
+   "emoji": "🎨",
+   "summary": "A design skill with 48 themes and a lint step that screens out AI design defaults.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "design",
+    "ui",
+    "css",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 38249,
+   "why": "Gives agents taste: pick a theme, and the lint keeps them on it.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130003&slug=github-trending-october-2026-from-a-90k-star-design-language-to-a-self-learning-",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "X",
+     "url": "https://x.com/nutlope/status/2113316017510191578",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/hallmark",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-taste-skill",
+   "repo": "Leonxlnx/taste-skill",
+   "title": "Taste skill",
+   "emoji": "👅",
+   "summary": "Art direction for agents: makes generated UIs feel designed, not default.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "design",
+    "ui",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "A short, focused skill for better-looking first drafts.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/taste-skill",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-ui-ux-pro-max-skill",
+   "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+   "title": "UI/UX Pro Max skill",
+   "emoji": "🖌️",
+   "summary": "UI and UX guidance for agents across web and mobile: styles, palettes, type and layout rules.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "design",
+    "ui",
+    "mobile",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "A broad reference agents can follow when designing screens.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": ".claude/skills/ui-ux-pro-max",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-emilkowalski-skills",
+   "repo": "emilkowalski/skills",
+   "title": "Animate skill (Emil Kowalski)",
+   "emoji": "✨",
+   "summary": "Animation skills for designers and engineers: easing, choreography and performance.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "animation",
+    "motion",
+    "ui",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Smooth, tasteful motion in the apps your agents build.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/animate",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-garden-skills",
+   "repo": "ConardLi/garden-skills",
+   "title": "Web design engineer skill",
+   "emoji": "🌿",
+   "summary": "From the Garden skills set: web design and front-end craft for agents.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "design",
+    "web",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 14254,
+   "why": "Good for landing pages and sites.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130023&slug=github-trending-november-2026-from-a-56k-star-voice-ai-to-a-22k-star-google-skil",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/web-design-engineer",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-diagram-design",
+   "repo": "cathrynlavery/diagram-design",
+   "title": "Diagram design skill",
+   "emoji": "📊",
+   "summary": "Lets agents draw 45 kinds of diagrams as clean HTML and SVG.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "diagram",
+    "docs",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Architecture and flow diagrams for your project docs.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/diagram-design",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-archify",
+   "repo": "tt-a1i/archify",
+   "title": "Archify",
+   "emoji": "🏛️",
+   "summary": "Turns ideas, plans or a codebase into interactive diagrams.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "diagram",
+    "docs",
+    "code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": null,
+   "why": "Helps new members understand how the app fits together.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "archify",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-mattpocock-skills",
+   "repo": "mattpocock/skills",
+   "title": "Code review skill (Matt Pocock)",
+   "emoji": "🔍",
+   "summary": "From Matt Pocock’s engineering skills: a careful code review routine for agents.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "review",
+    "code",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 31300,
+   "why": "A popular, practical review step before merging agent work.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130023&slug=github-trending-november-2026-from-a-56k-star-voice-ai-to-a-22k-star-google-skil",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/engineering/code-review",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-addyosmani-agent-skills",
+   "repo": "addyosmani/agent-skills",
+   "title": "Browser testing skill (Addy Osmani)",
+   "emoji": "🧪",
+   "summary": "From Addy Osmani’s agent skills: test the app in a real browser with DevTools.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "testing",
+    "browser",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Agents check their own work in the browser before you look.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/browser-testing-with-devtools",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-security-audit-skill",
+   "repo": "cloudflare/security-audit-skill",
+   "title": "Security audit skill",
+   "emoji": "🛡️",
+   "summary": "Cloudflare’s multi-phase security audit for coding agents.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "security",
+    "review",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 25400,
+   "why": "A second check before you publish, next to TribeCode’s own pre-publish scan.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/security-audit",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-ponytail",
+   "repo": "DietrichGebert/ponytail",
+   "title": "Ponytail",
+   "emoji": "🎀",
+   "summary": "A skill that pushes agents to write less code and keep things simple.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "code",
+    "refactor",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 28300,
+   "why": "Smaller diffs that friends can actually review.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/ponytail",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-caveman",
+   "repo": "JuliusBrussee/caveman",
+   "title": "Caveman",
+   "emoji": "🪨",
+   "summary": "A skill that makes agents answer tersely to save tokens.",
+   "kind": "skill",
+   "tags": [
+    "skill",
+    "performance",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": null,
+   "why": "Stretches everyone’s usage further on long builds.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/caveman",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-google-skills",
+   "repo": "google/skills",
+   "title": "Google agent skills",
+   "emoji": "🧩",
+   "summary": "Google’s collection of agent skills for Google Cloud, Workspace, its AI products and developer tools.",
+   "kind": "library",
+   "tags": [
+    "skills",
+    "cloud",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "Apache-2.0",
+   "stars": 22470,
+   "why": "Browse it when your app uses Firebase, Cloud or Workspace.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130023&slug=github-trending-november-2026-from-a-56k-star-voice-ai-to-a-22k-star-google-skil",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-awesome-design-md",
+   "repo": "VoltAgent/awesome-design-md",
+   "title": "Awesome DESIGN.md",
+   "emoji": "📘",
+   "summary": "A collection of DESIGN.md files taken from real brand design systems, ready for agents to read.",
+   "kind": "library",
+   "tags": [
+    "design",
+    "reference",
+    "ui",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Start your project’s design rules from a real example.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-public-apis",
+   "repo": "public-apis/public-apis",
+   "title": "Public APIs",
+   "emoji": "🔌",
+   "summary": "A huge community list of free APIs for weather, games, maps, finance and more.",
+   "kind": "library",
+   "tags": [
+    "api",
+    "reference",
+    "data",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Find a free data source for the app your tribe is building.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-opencut",
+   "repo": "OpenCut-app/OpenCut",
+   "title": "OpenCut",
+   "emoji": "🎬",
+   "summary": "A free, open source video editor in the spirit of CapCut: timeline, text, music, export.",
+   "kind": "studio",
+   "tags": [
+    "video",
+    "editor",
+    "studio",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 75000,
+   "why": "Cut trailers and launch videos for what you build.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "Blog",
+     "url": "https://themenonlab.blog/blog/opencut-open-source-capcut-alternative-video-editor",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=512936&slug=opencut-the-open-source-video-editor-with-75-000-github-stars-that-s-rebuilding-",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/OpenCut-app/OpenCut",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-filmcraft",
+   "repo": "storytold/filmcraft",
+   "title": "FilmCraft",
+   "emoji": "🎞️",
+   "summary": "A nonlinear video editor built from scratch in Rust, from the ArtCraft team.",
+   "kind": "studio",
+   "tags": [
+    "video",
+    "editor",
+    "studio",
+    "rust",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT OR Apache-2.0",
+   "stars": 16400,
+   "why": "A new desktop video editor that fits next to ArtCraft.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "News",
+     "url": "https://www.phoronix.com/news/Photocraft-Filmcraft-AI",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/storytold/filmcraft",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-photocraft",
+   "repo": "storytold/photocraft",
+   "title": "PhotoCraft",
+   "emoji": "🖼️",
+   "summary": "A photo editor built from scratch in Rust, with an MCP server so agents can edit images.",
+   "kind": "studio",
+   "tags": [
+    "images",
+    "editor",
+    "studio",
+    "rust",
+    "mcp",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT OR Apache-2.0",
+   "stars": 78300,
+   "why": "Agents can touch up screenshots and art through its MCP server.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/trending/video-editing",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "News",
+     "url": "https://www.phoronix.com/news/Photocraft-Filmcraft-AI",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "News",
+     "url": "https://aiweekly.co/alerts/photocraft-ships-rust-photoshop-clone-with-mcp-agent-server",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/storytold/photocraft",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-pdfcraft",
+   "repo": "storytold/pdfcraft",
+   "title": "PdfCraft",
+   "emoji": "📄",
+   "summary": "A PDF reader and editor built from scratch in Rust.",
+   "kind": "studio",
+   "tags": [
+    "pdf",
+    "editor",
+    "studio",
+    "rust",
+    "trending"
+   ],
+   "for": [
+    "app"
+   ],
+   "license": "MIT OR Apache-2.0",
+   "stars": 18100,
+   "why": "Edit pitch decks and one-pagers without a paid app.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/storytold/pdfcraft",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-openfilm",
+   "repo": "openfilm/openfilm",
+   "title": "OpenFilm",
+   "emoji": "🎥",
+   "summary": "An AI video agent that turns coding agents into video makers, with an editor to tweak the result.",
+   "kind": "studio",
+   "tags": [
+    "video",
+    "agents",
+    "studio",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 5500,
+   "why": "Make product videos by describing them.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/trending/video-editing",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/openfilm/openfilm",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-open-design",
+   "repo": "nexu-io/open-design",
+   "title": "Open Design",
+   "emoji": "📐",
+   "summary": "A local-first, shared workspace where AI design agents and people design together.",
+   "kind": "studio",
+   "tags": [
+    "design",
+    "ui",
+    "agents",
+    "studio",
+    "collaboration",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": null,
+   "why": "Design screens together before agents build them.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/nexu-io/open-design",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-vibevoice",
+   "repo": "microsoft/VibeVoice",
+   "title": "VibeVoice",
+   "emoji": "🎙️",
+   "summary": "Open source voice AI from Microsoft: multi-speaker speech and real-time streaming.",
+   "kind": "studio",
+   "tags": [
+    "audio",
+    "voice",
+    "ai",
+    "studio",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 56118,
+   "why": "Voice lines for games and narration for videos.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130023&slug=github-trending-november-2026-from-a-56k-star-voice-ai-to-a-22k-star-google-skil",
+     "date": "2026-11-10"
+    }
+   ],
+   "url": "https://github.com/microsoft/VibeVoice",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-filee",
+   "repo": "KnifeLemon/Filee",
+   "title": "Filee",
+   "emoji": "🔁",
+   "summary": "An offline, drag-and-drop converter for hundreds of file formats: video, audio, images and documents.",
+   "kind": "tool",
+   "tags": [
+    "convert",
+    "files",
+    "video",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 24800,
+   "why": "Convert assets without uploading them to a stranger’s website.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/trending/video-editing",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "News",
+     "url": "https://www.netzwelt.de/news/259962-vertrag-pdf-dubiose-online-konverter-laden-kostenloses-tool-filee-wandelt-dateien-lokal-ohne-upload.html",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-anydoc",
+   "repo": "firecrawl/anydoc",
+   "title": "anydoc",
+   "emoji": "📑",
+   "summary": "Converts Office files, PDFs and other documents to Markdown.",
+   "kind": "tool",
+   "tags": [
+    "convert",
+    "docs",
+    "files",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Bring old docs into TribeCode docs and agent context.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-video-shotcraft",
+   "repo": "Vincentwei1021/video-shotcraft",
+   "title": "Video ShotCraft",
+   "emoji": "🎞️",
+   "summary": "An agent skill for Claude Code and Codex that makes editable product promo videos.",
+   "kind": "tool",
+   "tags": [
+    "video",
+    "skill",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "Apache-2.0",
+   "stars": 18200,
+   "why": "A launch promo for your app without a video editor.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/trending/video-editing",
+     "date": "2026-11-10"
+    }
+   ],
+   "install": "npx skills add Vincentwei1021/video-shotcraft",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-herk-edit-kit",
+   "repo": "nateherkai/herk-edit-kit",
+   "title": "Edit video skill (Herk edit kit)",
+   "emoji": "✂️",
+   "summary": "Edit videos, reels and Shorts with an agent: transcript-driven cuts and motion graphics.",
+   "kind": "skill",
+   "tags": [
+    "video",
+    "skill",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 2700,
+   "why": "Turn a screen recording of your build into a clean short.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/trending/video-editing",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": ".agents/skills/edit-video",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-claude-shorts",
+   "repo": "AgriciDaniel/claude-shorts",
+   "title": "Claude Shorts",
+   "emoji": "📱",
+   "summary": "A Claude Code skill that turns long videos into short clips with animated captions.",
+   "kind": "tool",
+   "tags": [
+    "video",
+    "skill",
+    "claude-code",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 357,
+   "why": "Clips of your devlog for social posts.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/trending/video-editing",
+     "date": "2026-11-10"
+    }
+   ],
+   "install": "npx skills add AgriciDaniel/claude-shorts",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-anatomy",
+   "repo": "wheresryan22/anatomy",
+   "title": "Anatomy",
+   "emoji": "🧊",
+   "summary": "An agent skill that draws isometric illustrations as SVG.",
+   "kind": "tool",
+   "tags": [
+    "art",
+    "svg",
+    "skill",
+    "design",
+    "trending"
+   ],
+   "for": [
+    "app",
+    "game",
+    "site"
+   ],
+   "license": "MIT",
+   "stars": 21100,
+   "why": "Clean isometric art for your site and docs.",
+   "seenOn": [
+    {
+     "site": "Trendshift",
+     "url": "https://trendshift.io/monthly",
+     "date": "2026-11-10"
+    }
+   ],
+   "install": "npx skills add wheresryan22/anatomy",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-threedog-js-game-engine",
+   "repo": "penstic123-code/ThreeDog.js-Game-Engine",
+   "title": "ThreeDog.js",
+   "emoji": "🐕",
+   "summary": "A 3D game engine on three.js made for coding agents: an MCP server lets agents inspect state, move characters and take screenshots.",
+   "kind": "library",
+   "tags": [
+    "threejs",
+    "3d",
+    "game",
+    "engine",
+    "mcp",
+    "trending"
+   ],
+   "for": [
+    "game"
+   ],
+   "license": "MIT",
+   "stars": null,
+   "why": "Brand new and early, but built for exactly how tribes make 3D games with agents.",
+   "seenOn": [
+    {
+     "site": "Forum",
+     "url": "https://discourse.threejs.org/t/threedog-js-an-open-source-three-js-game-engine-built-for-ai-coding-agents/96718",
+     "date": "2026-11-07"
+    }
+   ],
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-img2threejs",
+   "repo": "img2threejs/img2threejs",
+   "title": "img2threejs",
+   "emoji": "🧱",
+   "summary": "An agent skill that rebuilds an object from a reference image as editable, animatable three.js code.",
+   "kind": "tool",
+   "tags": [
+    "threejs",
+    "3d",
+    "game",
+    "skill",
+    "trending"
+   ],
+   "for": [
+    "game"
+   ],
+   "license": "Apache-2.0",
+   "stars": null,
+   "why": "Concept art in, a three.js model your agent can keep editing out.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "Blog",
+     "url": "https://wavect.io/blog/img2threejs-image-to-editable-3d/",
+     "date": "2026-11-10"
+    },
+    {
+     "site": "Product Hunt",
+     "url": "https://www.producthunt.com/p/img2threejs/img2threejs-2",
+     "date": "2026-11-10"
+    }
+   ],
+   "install": "npx skills add img2threejs/img2threejs",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-scenario-labs-skills",
+   "repo": "scenario-labs/skills",
+   "title": "Blender animation skill (Scenario)",
+   "emoji": "🎭",
+   "summary": "From Scenario’s skills for image, video, audio and 3D: animate in Blender with an agent.",
+   "kind": "skill",
+   "tags": [
+    "3d",
+    "animation",
+    "skill",
+    "game",
+    "trending"
+   ],
+   "for": [
+    "game"
+   ],
+   "license": "MIT",
+   "stars": 3184,
+   "why": "Game-ready 3D motion without learning Blender first.",
+   "seenOn": [
+    {
+     "site": "Blog",
+     "url": "https://www.coddykit.com/pages/blog-detail?id=5130023&slug=github-trending-november-2026-from-a-56k-star-voice-ai-to-a-22k-star-google-skil",
+     "date": "2026-11-10"
+    }
+   ],
+   "path": "skills/dcc/blender/scenario-blender-animation",
+   "added": "2026-11-10"
+  },
+  {
+   "id": "tr-gods-eye-view",
+   "repo": "bilawalsidhu/gods-eye-view",
+   "title": "God’s Eye View",
+   "emoji": "🌍",
+   "summary": "A browser 3D globe that shows live real-world data, built with three.js.",
+   "kind": "site-template",
+   "tags": [
+    "threejs",
+    "3d",
+    "maps",
+    "data",
+    "site",
+    "trending"
+   ],
+   "for": [
+    "site",
+    "game"
+   ],
+   "license": "CC0-1.0",
+   "stars": null,
+   "why": "A strong starting point for a 3D data site or globe game.",
+   "seenOn": [
+    {
+     "site": "GitTrend",
+     "url": "https://gittrend.io/monthly/2026-08",
+     "date": "2026-11-10"
+    }
+   ],
+   "added": "2026-11-10"
+  }
+ ]
+}
