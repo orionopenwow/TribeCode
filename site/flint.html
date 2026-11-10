@@ -35,7 +35,7 @@
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css?v=0.27.0">
 <link rel="stylesheet" href="nav.css?v=0.27.1">
-<link rel="stylesheet" href="flint.css?v=0.27.7">
+<link rel="stylesheet" href="flint.css?v=0.27.9">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body data-page="flint">
@@ -190,18 +190,43 @@
       <p class="eyebrow mono">// how flint thinks</p>
       <h2 id="how-title">From your words to done</h2>
       <p class="fp-section__lead">Every request takes the shortest safe path. Everyday things Flint just does. New things go to your own AI. Anything that spends money or reaches people waits for you.</p>
-      <figure class="fw reveal" data-fw aria-labelledby="fw-cap">
-        <div class="fw__req" aria-hidden="true"><span class="fw__k mono">you ask</span><span class="fw__chip" id="fw-chip">“add a jump sound”</span></div>
-        <ol class="fw__lane" role="list">
-          <li class="fw__st" style="--c:#F26B1D" data-st="1"><span class="fw__ic" aria-hidden="true">💬</span><div><span class="fw__n mono">01</span><b>Your words</b><p>Plain language, a chip, or a saved skill like <code>/ship-friday</code>.</p></div></li>
-          <li class="fw__st" style="--c:#38C6B1" data-st="2"><span class="fw__ic" aria-hidden="true"><img src="assets/brand/flint.svg" alt="" width="22" height="28"></span><div><span class="fw__n mono">02</span><b>Flint knows it by heart</b><p>Open things, add assets, edit text and styles, write docs. Instant, no AI needed.</p></div></li>
-          <li class="fw__st" style="--c:#6C7CFF" data-st="3"><span class="fw__ic" aria-hidden="true">✦</span><div><span class="fw__n mono">03</span><b>Your own AI takes it</b><p>Claude, Codex, Gemini or a local Qwen builds anything new, with your project and notes.</p></div></li>
-          <li class="fw__st" style="--c:#3BD16F" data-st="4"><span class="fw__ic" aria-hidden="true">✓</span><div><span class="fw__n mono">04</span><b>You decide the big things</b><p>Spending, publishing and emailing customers wait for a person’s one-tap OK.</p></div></li>
-        </ol>
-        <div class="fw__out" aria-hidden="true"><span class="fw__k mono">result</span><span class="fw__res" id="fw-res">Added jump.wav · 0.2 s</span></div>
-        <figcaption class="sr-only" id="fw-cap">Three examples: “add a jump sound” is handled by Flint itself in a fraction of a second; “build a loyalty card page” goes on to your own AI, which builds it; “email 120 customers” goes all the way to you and waits for your approval.</figcaption>
-      </figure>
-      <ul class="fw__legend" role="list"><li><i style="--c:#38C6B1"></i>Everyday: Flint</li><li><i style="--c:#6C7CFF"></i>New: your AI</li><li><i style="--c:#3BD16F"></i>Big: you</li></ul>
+      <div class="fw2 reveal" data-fw2>
+        <div class="fw2__phone" aria-hidden="true"><div class="fw2__screen"><span class="fb__notch"></span><div class="fw2__sb"><span>9:41</span><i>●●● ▮</i></div>
+          <div class="fw2__scene" data-sc="1">
+            <p class="fw2__k">TribeCode · Corner Café</p>
+            <div class="fw2__mic"><span class="fw2__ring"></span><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+            <div class="fw2__wave"></div>
+            <p class="fw2__said" id="fw2-said"></p>
+          </div>
+          <div class="fw2__scene" data-sc="2">
+            <div class="fw2__chat"><p class="fw2__me">Make a loyalty card page for the café</p>
+              <div class="fw2__fl"><img src="assets/brand/flint.svg" alt="" width="18" height="23"><div><b>Flint</b><p>On it. The everyday part I do myself:</p></div></div>
+              <ul class="fw2__tools"><li data-t="1"><span>Opened</span>Corner Café</li><li data-t="2"><span>Wrote</span>the vision</li><li data-t="3"><span>Started</span>a page from a starter</li></ul></div>
+          </div>
+          <div class="fw2__scene" data-sc="3">
+            <div class="fw2__chat"><div class="fw2__fl fw2__fl--ai"><i>✦</i><div><b>Your Claude</b><p>The new part is mine: stamps, rewards and a sign-up.</p></div></div>
+              <ul class="fw2__tools fw2__tools--ai"><li data-t="1"><span>Created</span>card.html <em>+96</em></li><li data-t="2"><span>Created</span>stamps.js <em>+58</em></li><li data-t="3"><span>Tests</span>5 passed ✓</li></ul></div>
+          </div>
+          <div class="fw2__scene" data-sc="4">
+            <div class="fw2__appr"><p class="fw2__ak">Needs your OK</p><b>Email 120 regulars about the new card?</b><p>It reaches real people, so Flint asks first.</p><div class="fw2__btns"><span class="fw2__ok" id="fw2-ok">Approve</span><span>Deny</span></div><p class="fw2__done" id="fw2-done">✓ Approved by you · sending</p></div>
+          </div>
+          <div class="fw2__scene fw2__scene--app" data-sc="5">
+            <div class="ca"><p class="ca__brand">☕ Corner Café</p><h6>Your loyalty card</h6>
+              <div class="ca__card"><div class="ca__stamps"></div><p>7 of 10 · your 10th drink is free</p></div>
+              <span class="ca__btn">Add a stamp</span><p class="ca__note">Live · 120 regulars invited</p></div>
+          </div>
+          <span class="ha-home"></span></div></div>
+        <div class="fw2__side">
+          <ol class="fx-steps fw2__steps">
+            <li>You say it into your phone</li>
+            <li>Flint does the everyday part, instantly</li>
+            <li>Your own AI builds what's new</li>
+            <li>You decide anything that reaches people</li>
+            <li>It's live, on everyone's phone</li>
+          </ol>
+          <p class="fw2__cap" id="fw2-cap" aria-live="polite"></p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -263,7 +288,7 @@
 
 <script src="main.js?v=0.27.1" defer></script>
 <script src="nav.js?v=0.27.1" defer></script>
-<script src="flint.js?v=0.27.7" defer></script>
+<script src="flint.js?v=0.27.9" defer></script>
 <script src="i18n.js?v=0.27.1" defer></script>
 </body>
 </html>

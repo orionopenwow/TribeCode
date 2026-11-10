@@ -452,28 +452,49 @@
     })();
   })();
 
-  // How Flint thinks: three real requests travel the lane and stop where they really would
+  // How Flint thinks: one phone, from a voice note to the live app; the steps beside it can be clicked (jump + pause)
   (function () {
-    const fw = document.querySelector('[data-fw]'); if (!fw) return;
-    const st = [...fw.querySelectorAll('.fw__st')], chip = fw.querySelector('#fw-chip'), res = fw.querySelector('#fw-res');
-    const RUNS = [
-      ['“add a jump sound”', 2, 'Added jump.wav · 0.2\u00a0s', '#38C6B1'],
-      ['“build a loyalty card page”', 3, 'Your Claude built it · preview updated', '#6C7CFF'],
-      ['“email 120 customers”', 4, 'Waiting for your OK · Approve / Deny', '#3BD16F'],
+    const fw = document.querySelector('[data-fw2]'); if (!fw) return;
+    const scr = fw.querySelector('.fw2__screen'), scenes = [...fw.querySelectorAll('.fw2__scene')], cap = fw.querySelector('#fw2-cap');
+    const said = fw.querySelector('#fw2-said'), wave = fw.querySelector('.fw2__wave'), appr = fw.querySelector('.fw2__appr'), okb = fw.querySelector('#fw2-ok');
+    wave.innerHTML = '<i></i>'.repeat(16);
+    fw.querySelector('.ca__stamps').innerHTML = Array.from({ length: 10 }, (_, i) => `<i class="${i < 6 ? 'on' : ''}">${i < 6 ? '☕' : ''}</i>`).join('');
+    const lis = [...fw.querySelectorAll('.fw2__steps li')];
+    const CAPS = [
+      'You talk to TribeCode like you’d text a friend. No forms, no menus: just say what you want.',
+      'Flint handles the everyday part on his own: opening the project, writing the plan and starting a page. No AI needed, so it’s instant.',
+      'What’s genuinely new goes to your own AI (Claude, Codex, Gemini or a local Qwen). It writes the code and checks it works.',
+      'Anything that spends money or reaches real people waits for you. One tap, and it goes ahead.',
+      'Done. The café’s loyalty card is live, and everyone in your tribe sees it update on their phone.',
     ];
-    const paint = (stop, upto) => st.forEach((li, i) => { const n = i + 1; li.classList.toggle('is-pass', n <= upto && n < stop); li.classList.toggle('is-stop', n === stop && upto >= stop); li.classList.toggle('is-skip', upto >= stop && n > stop); });
-    if (still) { chip.textContent = RUNS[0][0]; res.textContent = RUNS[0][2]; res.style.setProperty('--c', RUNS[0][3]); paint(2, 4); return; }
-    let r = 0, k = 0, on = false, tm = 0;
-    function tick() {
-      clearTimeout(tm); if (!on) return;
-      const [ask, stop, out, col] = RUNS[r];
-      if (k === 0) { chip.textContent = ask; res.style.opacity = 0; paint(stop, 0); }
-      paint(stop, k);
-      if (k === stop) { res.textContent = out; res.style.setProperty('--c', col); res.style.opacity = 1; }
-      k++; if (k > 4) { k = 0; r = (r + 1) % RUNS.length; tm = setTimeout(tick, 2600 * PACE); return; }
-      tm = setTimeout(tick, (k > stop ? 250 : 750) * PACE);
+    const o = { fast: false, paused: false };
+    let tok = 0, visible = false, running = false;
+    const ctl = controls(lis, o, () => { tok++; if (visible) setTimeout(run, 0); });
+    const step = n => { lis.forEach((li, i) => { li.classList.toggle('on', i === n - 1); li.classList.toggle('done', i < n - 1); }); cap.textContent = CAPS[n - 1] || ''; };
+    const end = n => ctl.reached(n);   // a picked step pauses once its scene is fully built
+    const wait = (ms, t) => gate(o, ms, () => t !== tok);
+    const show = n => { scenes.forEach(x => x.classList.toggle('is-on', +x.dataset.sc === n)); scr.classList.toggle('is-app', n === 5); };
+    function reset() { said.textContent = ''; fw.querySelectorAll('.fw2__tools li').forEach(li => li.classList.remove('is-on')); appr.classList.remove('is-done'); wave.querySelectorAll('i').forEach(i => { i.style.height = '6px'; }); }
+    async function story(t) {
+      reset(); show(1); step(1);
+      const text = '“Make a loyalty card page for the café”';
+      for (let i = 0; i <= text.length; i++) { said.textContent = text.slice(0, i); wave.querySelectorAll('i').forEach((b, k) => { b.style.height = (6 + Math.abs(Math.sin(i * .7 + k)) * 26) + 'px'; }); await wait(45, t); }
+      wave.querySelectorAll('i').forEach(i => { i.style.height = '6px'; }); end(1); await wait(1400, t);
+      show(2); step(2); await wait(700, t);
+      for (const li of fw.querySelectorAll('[data-sc="2"] .fw2__tools li')) { li.classList.add('is-on'); await wait(650, t); }
+      end(2); await wait(1300, t);
+      show(3); step(3); await wait(700, t);
+      for (const li of fw.querySelectorAll('[data-sc="3"] .fw2__tools li')) { li.classList.add('is-on'); await wait(750, t); }
+      end(3); await wait(1300, t);
+      show(4); step(4); end(4); await wait(1600, t);
+      okb.classList.add('is-press'); await wait(160, t); okb.classList.remove('is-press'); appr.classList.add('is-done'); await wait(1400, t);
+      show(5); step(5); end(5); await wait(4200, t);
     }
-    if ('IntersectionObserver' in window) new IntersectionObserver(es => { const v = es.some(e => e.isIntersecting); if (v && !on) { on = true; tick(); } else if (!v) { on = false; clearTimeout(tm); } }, { threshold: .3 }).observe(fw);
-    else { on = true; tick(); }
+    async function run() {
+      if (running) return; running = true;
+      try { while (visible) { const t = ++tok; try { await story(t); } catch (e) { if (e !== STOP) throw e; if (t === tok) break; } } } finally { running = false; }
+    }
+    if (still || !('IntersectionObserver' in window)) { o.fast = true; visible = true; story(++tok).catch(() => {}); return; }
+    new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible) run(); else { tok++; ctl.reset(); } }), { threshold: .3 }).observe(fw);
   })();
 })();
