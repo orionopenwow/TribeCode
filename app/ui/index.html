@@ -86,6 +86,7 @@
 <link rel="stylesheet" href="sitegen.css"><link rel="stylesheet" href="look.css"><!-- feat/customize: site generator + Customize -->
 <link rel="stylesheet" href="widgets.css"><!-- feat/sidebar-widgets: sidebar widgets + the calmer right panel -->
 <link rel="stylesheet" href="whiteboard.css"><!-- feat/whiteboard -->
+<link rel="stylesheet" href="canvas/canvas.css"><!-- P1-A design canvas -->
 <link rel="stylesheet" href="sense.css"><!-- feat/project-sense: Inspiration card -->
 <link rel="stylesheet" href="setup.css"><link rel="stylesheet" href="firstrun.css"><link rel="stylesheet" href="personalize.css"><!-- feat/setup-flow: vision chips, role cards, task types -->
 <link rel="stylesheet" href="oauth.css">
@@ -151,6 +152,7 @@
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"/></symbol>
   <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></symbol>
+  <symbol id="i-canvas" viewBox="0 0 24 24"><path d="M7 3v18M17 3v18M3 7h18M3 17h18"/></symbol><!-- P1-A design canvas -->
   <symbol id="i-whiteboard" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 13c1.5-2 2.5-4 4-4s1 3 2.5 3 2-2 3.5-3M9 21l3-4 3 4"/></symbol><!-- feat/whiteboard -->
 </svg>
 
@@ -204,6 +206,7 @@
           <div class="nest-line"><button class="nest-row core" data-nav="chat" data-pnav="chat" id="nest-chat"><svg class="i"><use href="#i-chat"/></svg><span>Messages</span><span class="n" id="nn-chat"></span></button><button class="nest-sub-toggle" id="streams-toggle" aria-expanded="false" aria-controls="nest-streams" title="Channels and direct messages" aria-label="Show channels"><svg class="i"><use href="#i-chev"/></svg></button></div>
           <div class="nest-streams" id="nest-streams" role="group" aria-label="Channels and direct messages"></div>
           <button class="nest-row core" data-nav="docs" data-pnav="docs" id="nest-docs"><svg class="i"><use href="#i-doc"/></svg><span>Files</span></button>
+          <button class="nest-row core" data-pnav="canvas" id="nest-canvas" title="Design: frames, components and auto layout"><svg class="i"><use href="#i-canvas"/></svg><span>Design</span></button>
           <button class="nest-row core" data-nav="tasks" data-pnav="ws-tasks" id="nest-ws-tasks"><svg class="i"><use href="#i-check"/></svg><span>Task Board</span><span class="n" id="nn-tasks"></span></button>
           <button class="nest-row core" data-pnav="ws-agents" id="nest-ws-agents"><svg class="i"><use href="#i-robot"/></svg><span>Agents Hub</span><span class="n" id="nn-agents"></span></button>
           <div class="nest-extra" id="nest-extra" role="group" aria-label="More for this project"></div><!-- feat/sidebar-widgets: Preview · Website · added widgets · + Add (widgets.js) -->
@@ -463,6 +466,7 @@
 <script src="look.js"></script><!-- feat/customize: Settings > Look, the project menu's Customize -->
 <script src="widgets.js"></script><!-- feat/sidebar-widgets -->
 <script src="whiteboard.js"></script><!-- feat/whiteboard -->
+<script src="canvas/scene.js"></script><script src="canvas/layers.js"></script><script src="canvas/props.js"></script><script src="canvas/canvas.js"></script><!-- P1-A/B/D design canvas -->
 <script src="sense.js"></script><!-- feat/project-sense: what the project is + Inspiration -->
 <script src="setup.js"></script><!-- feat/setup-flow: role flows + Make the starter -->
 <script src="viewers.js"></script><!-- feat/viewers: 3D + pixel-art viewers -->

@@ -20,7 +20,7 @@ SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
-CORE = ["Dashboard", "Messages", "Files", "Task Board", "Agents Hub"]
+CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
 TASK_TABS = ["📋 Board", "🐞 Bugs", "🗳️ Proposals", "🏁 Milestones", "📅 Calendar", "🌿 Code repository", "📸 Visuals"]
 AGENT_KEYS = ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]   # the Agents Hub shows Dashboard + pinned tabs (feat/agents-dash)
 # tab key -> how to tell its view is on screen
@@ -189,7 +189,7 @@ def main():
             # ---- breadcrumb menu mirrors the hierarchy
             host.evaluate("document.querySelector('#crumb-section').click()"); host.wait_for_selector("#section-menu")
             menu = host.evaluate("[...document.querySelectorAll('#section-menu h6, #section-menu button')].map(e => (e.tagName === 'H6' ? '# ' : '') + (e.querySelector('span') || e).textContent.trim())")
-            assert menu[:5] == CORE, menu
+            assert menu[:len(CORE)] == CORE, menu
             assert "# Task Board" in menu and "# Agents Hub" in menu, menu
             assert menu[menu.index("# Agents Hub") + 1:] == ["Agents dashboard", "Your agents", "TribeCode MCP", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
             host.click("#section-menu [data-dest='calendar']"); host.wait_for_selector("#view-calendar:not(.hidden)")

@@ -1,6 +1,6 @@
 """Sidebar widgets + the calmer right panel (app/ui/widgets.js, server/widgets.js, widgets.css).
 
-  Rows: Dashboard · Messages · Files · Task Board · Agents Hub, then Preview game (a game-template project, opens the
+  Rows: Dashboard · Messages · Files · Design · Task Board · Agents Hub, then Preview game (a game-template project, opens the
         preview pane), Website (only once the site is built), the tribe's widgets, and + Add (host and builders).
   + Add: the picker; Calendar adds a row that opens the calendar; a custom link opens in the preview pane; Remove
         (right-click) works; widgets persist across a reload and show for a second member; a spectator gets no + and a 403.
@@ -18,7 +18,7 @@ PORT = 4993 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 BASE = f"http://localhost:{PORT}"
 SHOTS = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 PHONE = dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
-CORE = ["Dashboard", "Messages", "Files", "Task Board", "Agents Hub"]
+CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
 errors = []
 
 
@@ -229,7 +229,7 @@ def main():
             ph.click("#menu-btn"); ph.wait_for_selector("#nest-preview", state="visible", timeout=15000)
             ph.wait_for_selector("#nest-extra [data-wopen]:has-text('Level map')", state="visible")
             ph.wait_for_timeout(400)
-            assert rows(ph)[:5] == CORE and ph.is_visible("#nest-preview") and ph.is_visible("#nest-add"), rows(ph)   # phones: Preview at the bottom, + Add below Repo
+            assert rows(ph)[:len(CORE)] == CORE and ph.is_visible("#nest-preview") and ph.is_visible("#nest-add"), rows(ph)   # phones: Preview at the bottom, + Add below Repo
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             shot(ph, "phone")
             ph.click("#nest-add"); ph.wait_for_selector("#wg-picker.sheet", state="visible")
