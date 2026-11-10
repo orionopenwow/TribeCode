@@ -1453,7 +1453,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .vs__side { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
 .vs-name { font-size: 12px; color: var(--faint); text-align: center; } .vs-name b { color: var(--text); font-weight: 600; }
 .vs-px { display: block; height: auto; image-rendering: pixelated; }
-.vs-px--a { width: 110px; } .vs-px--b { width: 200px; }
+.vs-px--a { width: 120px; } .vs-px--b { width: 200px; }
 /* speech bubbles */
 .vs-bubbles { display: grid; gap: 8px; width: 100%; align-self: stretch; }
 .vs-bubble { position: relative; padding: 9px 11px; border-radius: 12px 12px 12px 4px; background: var(--raised); border: 1px solid var(--edge); }
@@ -1540,29 +1540,69 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 /* Company section: parts tucked away with the hidden attribute stay hidden */
 #company [hidden] { display: none !important; }
 
-/* Maya's floating phone (v0.27.1): no phone in her hand; a small phone floats at her shoulder and listens while she talks */
+/* Maya talks to the phone in her hand (v0.27.1): sound dots from her mouth to the phone, and a tiny voice-note chip above it */
 .vs-fig { position: relative; display: inline-block; }
-.vs-phone { position: absolute; top: 30%; left: calc(100% + 10px); width: 30px; height: 52px; border: 2px solid #0F1216; border-radius: 7px; background: #12151A;
-  box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: vs-bob 2.6s ease-in-out infinite; }
-.vs-phone__notch { position: absolute; top: 3px; width: 8px; height: 2px; border-radius: 2px; background: #2A313C; }
-.vs-phone__bar { position: absolute; bottom: 4px; width: 10px; height: 2px; border-radius: 2px; background: #2A313C; }
-.vs-phone__wave { display: flex; align-items: center; gap: 2px; height: 16px; }
-.vs-phone__wave i { width: 3px; height: 3px; border-radius: 1px; background: #38C6B1; opacity: .55; }
-.vs--talk .vs-phone { border-color: #38C6B1; }
-.vs--talk .vs-phone__wave i { opacity: 1; animation: vs-wave .42s ease-in-out infinite alternate; }
-.vs--talk .vs-phone__wave i:nth-child(2) { animation-delay: -.12s; } .vs--talk .vs-phone__wave i:nth-child(3) { animation-delay: -.3s; }
-.vs--talk .vs-phone__wave i:nth-child(4) { animation-delay: -.2s; } .vs--talk .vs-phone__wave i:nth-child(5) { animation-delay: -.06s; }
-@keyframes vs-wave { from { height: 3px; } to { height: 15px; } }
-@keyframes vs-bob { 50% { transform: translateY(-4px); } }
-.vs-sound { position: absolute; top: calc(30% + 22px); left: calc(100% - 4px); display: flex; gap: 3px; opacity: 0; }
-.vs-sound i { width: 3px; height: 3px; background: #38C6B1; }
-.vs--talk .vs-sound { opacity: 1; } .vs--talk .vs-sound i { animation: vs-dot .6s steps(1) infinite; }
-.vs--talk .vs-sound i:nth-child(2) { animation-delay: .2s; } .vs--talk .vs-sound i:nth-child(3) { animation-delay: .4s; }
-@keyframes vs-dot { 50% { opacity: .2; } }
-@media (prefers-reduced-motion: reduce) { .vs-phone, .vs-phone__wave i, .vs-sound i { animation: none !important; } }
-@media (max-width: 960px) {
-  .vs-phone { width: 20px; height: 34px; border-radius: 5px; left: calc(100% + 8px); } .vs-phone__wave { gap: 1px; } .vs-phone__wave i { width: 2px; } .vs-sound { top: calc(30% + 14px); left: calc(100% - 3px); } .vs-sound i { width: 2px; height: 2px; }
-  @keyframes vs-wave { from { height: 2px; } to { height: 10px; } }
+.vs-sd { opacity: 0; }
+.vs--talk .vs-sd { animation: vs-sd .5s steps(1) infinite; } .vs--talk .vs-sd2 { animation-delay: .25s; }
+@keyframes vs-sd { 0% { opacity: 1; } 50% { opacity: 0; } }
+.vs-vn { position: absolute; top: -5%; left: 74%; display: flex; align-items: center; gap: 4px; padding: 3px 6px; border: 1px solid #38C6B1; border-radius: 999px;
+  background: #12151A; opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; }
+.vs-vn__dot { width: 5px; height: 5px; border-radius: 50%; background: #FF6F8E; }
+.vs-vn__wave { display: flex; align-items: center; gap: 2px; height: 12px; }
+.vs-vn__wave i { width: 2px; height: 3px; border-radius: 1px; background: #38C6B1; }
+.vs--talk .vs-vn { opacity: 1; transform: none; }
+.vs--talk .vs-vn__wave i { animation: vs-wave .42s ease-in-out infinite alternate; }
+.vs--talk .vs-vn__wave i:nth-child(2) { animation-delay: -.12s; } .vs--talk .vs-vn__wave i:nth-child(3) { animation-delay: -.3s; }
+.vs--talk .vs-vn__wave i:nth-child(4) { animation-delay: -.2s; } .vs--talk .vs-vn__wave i:nth-child(5) { animation-delay: -.06s; } .vs--talk .vs-vn__wave i:nth-child(6) { animation-delay: -.24s; }
+@keyframes vs-wave { from { height: 3px; } to { height: 12px; } }
+@media (max-width: 960px) { .vs-px--a { width: 64px; } .vs-vn { top: -9%; left: 66%; padding: 2px 4px; gap: 3px; } .vs-vn__dot { width: 4px; height: 4px; } .vs-vn__wave { height: 8px; } @keyframes vs-wave { from { height: 2px; } to { height: 8px; } } }
+@media (prefers-reduced-motion: reduce) { .vs-sd, .vs-vn__wave i { animation: none !important; } }
+
+/* The bakery site in the vibecoding scene (v0.27.1): a real small-business page, warm and light, not a dark dev mock */
+.vs-app--site { background: #FBF6EE; border-color: #3A4350; }
+.vs-app--site .vs-url { display: inline-flex; align-items: center; gap: 5px; }
+.vs-lock { width: 9px; height: 11px; flex: none; }
+.vs-app--site .vs-app__body { background: #FBF6EE; color: #2A1F1A; gap: 10px; padding: 0 0 0; min-height: 300px; font-family: Inter, system-ui, sans-serif; }
+.vs-app--site .vs-empty { color: #A89888; }
+.vs-app--site .vs-nav { padding: 10px 14px; margin: 0; border-bottom: 1px solid #EADFD2; background: #FFFDF9; color: #6E5E52; gap: 12px; font-size: 11.5px; }
+.vs-logo { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; }
+.vs-logo__mark { width: 13px; height: 13px; }
+.vs-app--site .vs-logo b { font: 700 italic 15px/1 Georgia, "Times New Roman", serif; color: #2A1F1A; letter-spacing: -.01em; margin: 0; }
+.vs-pill { padding: 4px 10px; border-radius: 999px; background: #B23A57; color: #FFF6F2; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.vs-app--site .vs-hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 10px; margin: 0 14px; padding: 14px 14px 12px; border-radius: 10px; background: #F6E1DF; }
+.vs-kicker { display: block; font: 600 9.5px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #B23A57; }
+.vs-app--site .vs-hero h4 { margin: 2px 0 4px; font: 700 23px/1.1 Georgia, "Times New Roman", serif; color: #2A1F1A; letter-spacing: -.01em; }
+.vs-app--site .vs-hero p { margin: 0; font-size: 11px; line-height: 1.45; color: #6E5E52; }
+.vs-band__art { width: 100%; max-width: 150px; height: auto; justify-self: center; image-rendering: pixelated; }
+.vs-app--site .vs-count { grid-template-columns: auto repeat(4, minmax(0, 1fr)); align-items: center; gap: 6px; margin: 0 14px; }
+.vs-count em { font-style: normal; font-size: 10.5px; color: #6E5E52; padding-right: 2px; white-space: nowrap; }
+.vs-app--site .vs-count span { background: #FFFFFF; border: 1px solid #EADFD2; color: #8A7A6E; padding: 4px 0 3px; }
+.vs-app--site .vs-count b { color: #B23A57; font: 700 15px/1.15 Georgia, "Times New Roman", serif; }
+.vs-app--site .vs-items { margin: 0 14px; gap: 8px; }
+.vs-app--site .vs-item { padding: 0 0 9px; gap: 1px; background: #FFFFFF; border: 1px solid #EADFD2; border-radius: 10px; overflow: hidden; }
+.vs-pic { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 16 / 9; margin-bottom: 6px; background: var(--bg); }
+.vs-pic__art { width: 58%; height: auto; image-rendering: pixelated; }
+.vs-tag { position: absolute; top: 6px; right: 6px; padding: 1px 7px; border-radius: 999px; background: #2F7A4A; color: #FFFFFF; font: 600 9.5px/1.6 Inter, system-ui, sans-serif; font-style: normal; }
+.vs-app--site .vs-item b { padding: 0 9px; font: 700 13px/1.25 Georgia, "Times New Roman", serif; color: #2A1F1A; }
+.vs-app--site .vs-item small { padding: 0 9px; font-size: 10px; color: #8A7A6E; white-space: normal; }
+.vs-price { padding: 3px 9px 0; font-size: 11px; font-weight: 600; color: #B23A57; }
+.vs-cta { display: grid; justify-items: start; gap: 4px; }
+.vs-app--site .vs-btn { margin: 2px 14px 0; padding: 8px 18px; border-radius: 8px; background: #B23A57; color: #FFF6F2; font-size: 12.5px; font-weight: 700; }
+.vs-cta__note { margin: 0 14px; font-size: 10px; color: #8A7A6E; }
+.vs-foot { justify-self: stretch; display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; padding: 8px 14px; border-top: 1px solid #EADFD2; background: #F3EBDF; font-size: 10px; color: #6E5E52; }
+.vs-foot__ig { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; color: #B23A57; }
+.vs-ig { width: 11px; height: 11px; }
+@media (max-width: 520px) {
+  .vs-app--site .vs-app__body { min-height: 0; padding: 0; }
+  .vs-app--site .vs-url { display: inline-flex; font-size: 9.5px; padding: 2px 6px; }
+  .vs-app--site .vs-nav { padding: 8px 10px; gap: 8px; font-size: 10.5px; } .vs-nav__l:nth-of-type(n+3) { display: none; }
+  .vs-app--site .vs-logo b { font-size: 13px; } .vs-pill { padding: 3px 8px; font-size: 9.5px; }
+  .vs-app--site .vs-hero { margin: 0 10px; padding: 10px; } .vs-app--site .vs-hero h4 { font-size: 18px; } .vs-app--site .vs-hero p { font-size: 10px; }
+  .vs-app--site .vs-count { margin: 0 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); } .vs-count em { display: none; }
+  .vs-app--site .vs-items { margin: 0 10px; gap: 6px; } .vs-app--site .vs-item small { display: none; }
+  .vs-app--site .vs-item b { font-size: 11.5px; padding: 0 7px; } .vs-price { padding: 2px 7px 0; font-size: 10px; }
+  .vs-app--site .vs-btn { margin: 2px 10px 0; } .vs-cta__note { margin: 0 10px; }
+  .vs-foot { padding: 7px 10px; gap: 3px 10px; } .vs-foot__ig { margin-left: 0; }
 }
 
 /* "One chat for people and their ___." word roll (site/aiswap.js) */
@@ -1571,3 +1611,9 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .aiswap__w.is-on { transform: none; opacity: 1; }
 .aiswap__w.is-out { transform: translateY(-110%); opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .aiswap, .aiswap__w { transition: none; } }
+.vs-app--site { min-width: 0; max-width: 100%; } .vs-app--site .vs-app__bar { min-width: 0; overflow: hidden; }
+.vs-app--site .vs-url { min-width: 0; flex: 0 1 auto; }
+@media (max-width: 520px) { .vs-app--site .vs-live { font-size: 9.5px; gap: 4px; } .vs-app--site .vs-app__bar { gap: 5px; padding: 0 8px; } }
+.vs-app--site { width: 100%; box-sizing: border-box; } .vs-app--site .vs-app__body > * { min-width: 0; }
+@media (max-width: 520px) { .vs-app--site .vs-hero { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+.vs__mid { grid-template-columns: minmax(0, 1fr); }
