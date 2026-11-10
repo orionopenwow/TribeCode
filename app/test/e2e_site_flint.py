@@ -48,7 +48,7 @@ def main():
         st = pg.locator(f'{run} .fv-sticky').first; bb = st.bounding_box()
         pg.mouse.move(bb["x"] + 20, bb["y"] + 15); pg.mouse.down(); pg.mouse.move(bb["x"] + 90, bb["y"] + 60, steps=5); pg.mouse.up()
         assert abs(st.bounding_box()["x"] - bb["x"]) > 30, "stickies drag"
-        assert pg.locator(".fx").count() == 8 and pg.locator(".fx-steps").count() == 8, "eight exhibits with steps"
+        assert pg.locator(".fx").count() == 8 and pg.locator(".fx .fx-steps").count() == 8 and pg.locator(".fw2__steps li").count() == 5, "eight exhibits with steps"
         assert pg.locator("[data-build] .fb__phone .ha-row").count() == 5, "the habit tracker runs on a phone"
         assert pg.locator(".fq details").count() >= 4
         # Spanish menu
