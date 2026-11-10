@@ -556,6 +556,7 @@ const market = require('./market')({ P, store: baseStore, root: require('./tpldi
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const pinsHub = require('./pins')({ P, base: baseStore, broadcast, bus, getMembers: () => members, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-E comment pins + preview presence (server/pins.js)
 const designCanvas = require('./canvas')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-A: the design canvas (server/canvas.js)   // feat/whiteboard: the shared team board (server/whiteboard.js)
+const canvasCode = require('./canvascode')({ P, W, base: baseStore, getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // P1-C: design frame -> HTML/CSS in the project (server/canvascode.js)
 const company = companyHub = require('./company')({ P, base: baseStore, store, broadcast, postChat, nameOf, perms, getMembers: () => members, approvals, bus, coord, createTask: o => createTask(o), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), docs });   // v0.27 company: seats, goals, decisions, rhythms (server/company.js)
 company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x => x.events) ? { spentWeek: w.total, currency: w.currency } : null; });   // v0.27 company: real AI spend from Money (ledger.js) in the weekly review
 mcpFlow = makeMcpFlow({ flow, P });
@@ -914,6 +915,7 @@ async function apiInProject(req, res, url) {
   if (a === 'pins') return pinsHub.route(req, res, ctx());   // P1-E comment pins (server/pins.js)
   if (a === 'whiteboard') return whiteboard.route(req, res, ctx());   // feat/whiteboard (server/whiteboard.js)
   if (a === 'canvas') return designCanvas.route(req, res, ctx());   // P1-A design canvas   // feat/whiteboard (server/whiteboard.js)
+  if (a === 'canvascode') return canvasCode.route(req, res, ctx());   // P1-C send a frame to the app
   if (a === 'market') return market.route(req, res, ctx());   // v0.27 company: the Marketplace (server/market.js)
   if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }

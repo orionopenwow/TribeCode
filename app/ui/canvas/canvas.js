@@ -34,6 +34,7 @@
     redo: '<path d="M13 7h3V4"/><path d="M15.5 7A6 6 0 1010 16"/>',
     down: '<path d="M6 8l4 4 4-4"/>', layers: '<path d="M10 3l7 4-7 4-7-4z"/><path d="M3 11l7 4 7-4"/>', sliders: '<path d="M4 6h12M4 14h12"/><circle cx="8" cy="6" r="1.8"/><circle cx="13" cy="14" r="1.8"/>',
     plus: '<path d="M5 10h10M10 5v10"/>', minus: '<path d="M5 10h10"/>',
+    comment: '<path d="M4 4.5h12v8.5H9l-3.5 3v-3H4z"/>', export: '<path d="M10 3v9M6.5 6.5L10 3l3.5 3.5"/><path d="M4 12v4h12v-4"/>',
   };
   const svg = (k, sz = 20) => `<svg class="cv-i" width="${sz}" height="${sz}" viewBox="0 0 20 20" aria-hidden="true">${ICON[k]}</svg>`;
   const TOOLS = [['move', 'Move', 'V'], ['frame', 'Frame', 'F'], ['rect', 'Rectangle', 'R'], ['ellipse', 'Ellipse', 'O'], ['text', 'Text', 'T'], ['scale', 'Scale', 'K']];
@@ -133,6 +134,9 @@
         <div class="cv-head-acts">
           <button class="cv-hbtn cv-phone" id="cv-show-layers" aria-label="${esc(T('Layers'))}">${svg('layers', 18)}</button>
           <button class="cv-hbtn cv-phone" id="cv-show-props" aria-label="${esc(T('Design'))}">${svg('sliders', 18)}</button>
+          <button class="cv-hbtn" id="cv-comment" aria-pressed="false" title="${esc(T('Comment'))} (C)" aria-label="${esc(T('Comment'))}">${svg('comment', 18)}</button>
+          <button class="cv-hbtn" id="cv-export" aria-haspopup="menu" title="${esc(T('Export'))}" aria-label="${esc(T('Export'))}">${svg('export', 18)}</button>
+          <button class="btn primary cv-send" id="cv-send" disabled title="${esc(T('Send the selected frame to the app as HTML and CSS'))}">${esc(T('Send to app'))}</button>
           <button class="cv-zoom" id="cv-zoom" aria-haspopup="menu" title="${esc(T('Zoom'))}"><span id="cv-zoom-t">100%</span>${svg('down', 14)}</button>
         </div>
       </header>
@@ -154,14 +158,19 @@
             <button class="cv-tool" id="cv-redo" title="${esc(T('Redo'))} (Ctrl Shift Z)" aria-label="${esc(T('Redo'))}">${svg('redo')}</button>
           </nav>
         </div>
-        <aside class="cv-right" id="cv-right" aria-label="${esc(T('Design'))}"></aside>
+        <aside class="cv-right" id="cv-right" aria-label="${esc(T('Design'))}">
+          <div class="cv-rtabs" role="tablist"><button role="tab" class="on" aria-selected="true" data-rtab="design">${esc(T('Design'))}</button><button role="tab" aria-selected="false" data-rtab="inspect">${esc(T('Inspect'))}</button></div>
+          <div class="cv-rpane" id="cv-props"></div>
+          <div class="cv-rpane" id="cv-inspect" hidden></div>
+        </aside>
       </div>
       <div class="cv-menu" id="cv-menu" role="menu" hidden></div>
     </div>`;
     stage = $('#cv-stage'); world = $('#cv-world'); ov = $('#cv-ov');
     const P = window.TribeCanvasPanels || {};
     if (P.layers) P.layers.mount($('#cv-left'), E);
-    if (P.props) P.props.mount($('#cv-right'), E);
+    if (P.props) P.props.mount($('#cv-props'), E);
+    if (window.TribeCanvasCode) window.TribeCanvasCode.mount(E);
     $('#cv-tools').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.tool) setTool(b.dataset.tool);
@@ -254,6 +263,7 @@
       const P = window.TribeCanvasPanels || {};
       try { P.layers && P.layers.render(); } catch (e) { console.error(e); }
       try { P.props && P.props.render(); } catch (e) { console.error(e); }
+      try { window.TribeCanvasCode && window.TribeCanvasCode.render(); } catch (e) { console.error(e); }
       const u = $('#cv-undo'), r = $('#cv-redo'); if (u) u.disabled = !undo.length; if (r) r.disabled = !redo.length;
     });
   }
@@ -1008,7 +1018,9 @@
     if (e.shiftKey && e.code === 'Digit0') { done(); zoomTo(1); return; }
     if (e.shiftKey && k === 'a') { done(); autoLayout(); return; }
     if (k === 'delete' || k === 'backspace') { done(); removeSel(); return; }
+    if (k === 'c' && !e.altKey && !e.shiftKey && window.TribeCanvasCode) { done(); window.TribeCanvasCode.comment(); return; }
     if (k === 'escape') {
+      if (window.TribeCanvasCode && window.TribeCanvasCode.commenting()) { done(); window.TribeCanvasCode.comment(false); return; }
       if (inner) { inner = null; } else if (sel.length === 1 && S.get(sel[0]) && S.get(sel[0]).p) sel = [S.get(sel[0]).p]; else sel = [];
       if (tool !== 'move') setTool('move');
       paintOv(); panels(); return;
@@ -1169,6 +1181,10 @@
     detach(id) { if (!canEdit) return; const f = detach(id); if (f) { sel = [f.id]; inner = null; end(); } },
     goToMain(id) { const n = S.get(id); if (!n) return; const cid = n.t === 'instance' ? n.comp : id; sel = [cid]; inner = null; fit(true); paintOv(); panels(); },
     wbox, fit, zoomTo, toHTML: id => SC.toHTML(S, id),
+    get view() { return view; }, get stage() { return stage; }, get world() { return world; }, get file() { return fileId; }, get fileName() { return fileName; }, menu, toast,
+    elOf: id => elMap.get(id) || null,
+    // P1-C: drop a set of new nodes in (first one is the top), one undo step, select and show it
+    addNodes(list) { if (!canEdit || !list || !list.length) return null; for (const n of list) put(Object.assign({ v: 0 }, n)); sel = [list[0].id]; inner = null; end(); requestAnimationFrame(() => fit(true)); return list[0].id; },
     focus: () => stage && stage.focus({ preventScroll: true }),
   };
 

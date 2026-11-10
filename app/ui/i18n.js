@@ -84,6 +84,38 @@
     'On this phone only': ['Solo en este teléfono', 'Só neste celular', 'Sur ce téléphone uniquement', 'Nur auf diesem Handy', 'このスマホだけ', '仅在这部手机上', '이 휴대폰에만'],
     'Delete this phone tribe': ['Borrar esta tribu del teléfono', 'Apagar esta tribo do celular', 'Supprimer cette tribu du téléphone', 'Diese Handy-Tribe löschen', 'このスマホのトライブを削除', '删除这部手机上的部落', '이 휴대폰 트라이브 삭제'],
     'Move this phone tribe to a host': ['Pasar esta tribu del teléfono a un host', 'Mover esta tribo do celular para um host', 'Passer cette tribu du téléphone sur un hôte', 'Diese Handy-Tribe auf einen Host bringen', 'このスマホのトライブをホストへ移す', '把这部手机上的部落迁到主机', '이 휴대폰 트라이브를 호스트로 옮기기'],
+    // P1-C canvas <-> code (canvas/code.js)
+    "Export": ["Exportar", "Exportar", "Exporter", "Exportieren", "書き出し", "导出", "내보내기"],
+    "Inspect": ["Inspeccionar", "Inspecionar", "Inspecter", "Untersuchen", "インスペクト", "检查", "검사"],
+    "Colors": ["Colores", "Cores", "Couleurs", "Farben", "色", "颜色", "색상"],
+    "Send to app": ["Enviar a la app", "Enviar para o app", "Envoyer dans l’app", "In die App senden", "アプリに送る", "发送到应用", "앱으로 보내기"],
+    "Send the selected frame to the app as HTML and CSS": ["Envía el marco seleccionado a la app como HTML y CSS", "Envia o quadro selecionado para o app como HTML e CSS", "Envoie le cadre sélectionné dans l’app en HTML et CSS", "Sendet den gewählten Rahmen als HTML und CSS in die App", "選んだフレームを HTML と CSS としてアプリに送る", "将选中的画框以 HTML 和 CSS 发送到应用", "선택한 프레임을 HTML과 CSS로 앱에 보내기"],
+    "Send “{name}” to the app as HTML and CSS": ["Enviar “{name}” a la app como HTML y CSS", "Enviar “{name}” para o app como HTML e CSS", "Envoyer « {name} » dans l’app en HTML et CSS", "„{name}“ als HTML und CSS in die App senden", "「{name}」を HTML と CSS としてアプリに送る", "将“{name}”以 HTML 和 CSS 发送到应用", "“{name}”을 HTML과 CSS로 앱에 보내기"],
+    "Select a frame to send it to the app": ["Elige un marco para enviarlo a la app", "Escolha um quadro para enviá-lo ao app", "Choisissez un cadre pour l’envoyer dans l’app", "Wähle einen Rahmen, um ihn in die App zu senden", "アプリに送るフレームを選んでください", "选择一个画框发送到应用", "앱으로 보낼 프레임을 선택하세요"],
+    "Select a layer to see its code": ["Elige una capa para ver su código", "Escolha uma camada para ver o código", "Choisissez un calque pour voir son code", "Wähle eine Ebene, um ihren Code zu sehen", "レイヤーを選ぶとコードが見られます", "选择一个图层查看它的代码", "레이어를 선택하면 코드를 볼 수 있어요"],
+    "Hold Alt and point at another layer to measure the distance.": ["Mantén Alt y señala otra capa para medir la distancia.", "Segure Alt e aponte para outra camada para medir a distância.", "Maintenez Alt et pointez un autre calque pour mesurer la distance.", "Halte Alt und zeige auf eine andere Ebene, um den Abstand zu messen.", "Alt を押しながら別のレイヤーを指すと距離を測れます。", "按住 Alt 并指向另一个图层来测量距离。", "Alt를 누른 채 다른 레이어를 가리키면 거리를 잴 수 있어요."],
+    "Spacing to parent": ["Espacio hasta el contenedor", "Espaço até o contêiner", "Espace jusqu’au parent", "Abstand zum Elternteil", "親までの間隔", "到父级的间距", "부모까지의 간격"],
+    "Copy as HTML/CSS": ["Copiar como HTML/CSS", "Copiar como HTML/CSS", "Copier en HTML/CSS", "Als HTML/CSS kopieren", "HTML/CSS としてコピー", "复制为 HTML/CSS", "HTML/CSS로 복사"],
+    "In the app": ["En la app", "No app", "Dans l’app", "In der App", "アプリ内", "在应用中", "앱에서"],
+    "Send “{name}” to": ["Enviar “{name}” a", "Enviar “{name}” para", "Envoyer « {name} » vers", "„{name}“ senden an", "「{name}」の送り先", "将“{name}”发送到", "“{name}” 보낼 곳"],
+    "A new page in design/": ["Una página nueva en design/", "Uma página nova em design/", "Une nouvelle page dans design/", "Eine neue Seite in design/", "design/ の新しいページ", "design/ 中的新页面", "design/의 새 페이지"],
+    "Update in the app": ["Actualizar en la app", "Atualizar no app", "Mettre à jour dans l’app", "In der App aktualisieren", "アプリで更新", "在应用中更新", "앱에서 업데이트"],
+    "Open in preview": ["Abrir en la vista previa", "Abrir na prévia", "Ouvrir dans l’aperçu", "In der Vorschau öffnen", "プレビューで開く", "在预览中打开", "미리보기에서 열기"],
+    "Lives in {path}. Sending again replaces only the marked parts of that file.": ["Está en {path}. Al enviarlo de nuevo solo se reemplazan las partes marcadas de ese archivo.", "Fica em {path}. Enviar de novo troca só as partes marcadas desse arquivo.", "Se trouve dans {path}. Un nouvel envoi ne remplace que les parties marquées de ce fichier.", "Liegt in {path}. Erneutes Senden ersetzt nur die markierten Teile dieser Datei.", "{path} にあります。もう一度送ると、そのファイルの印の付いた部分だけが置き換わります。", "位于 {path}。再次发送只会替换该文件中标记的部分。", "{path}에 있어요. 다시 보내면 그 파일의 표시된 부분만 바뀌어요."],
+    "Copied {what}": ["{what} copiado", "{what} copiado", "{what} copié", "{what} kopiert", "{what} をコピーしました", "已复制 {what}", "{what} 복사됨"],
+    "Already up to date in {path}": ["Ya está al día en {path}", "Já está atualizado em {path}", "Déjà à jour dans {path}", "Bereits aktuell in {path}", "{path} はすでに最新です", "{path} 已是最新", "{path}은(는) 이미 최신이에요"],
+    "Sent to the app: {path}": ["Enviado a la app: {path}", "Enviado para o app: {path}", "Envoyé dans l’app : {path}", "In die App gesendet: {path}", "アプリに送りました: {path}", "已发送到应用：{path}", "앱으로 보냈어요: {path}"],
+    "Updated in the app: {path}": ["Actualizado en la app: {path}", "Atualizado no app: {path}", "Mis à jour dans l’app : {path}", "In der App aktualisiert: {path}", "アプリで更新しました: {path}", "已在应用中更新：{path}", "앱에서 업데이트했어요: {path}"],
+    "Select a layer to export": ["Elige una capa para exportar", "Escolha uma camada para exportar", "Choisissez un calque à exporter", "Wähle eine Ebene zum Exportieren", "書き出すレイヤーを選んでください", "选择要导出的图层", "내보낼 레이어를 선택하세요"],
+    "Couldn’t draw that layer as a picture": ["No se pudo dibujar esa capa como imagen", "Não foi possível desenhar essa camada como imagem", "Impossible de dessiner ce calque en image", "Diese Ebene ließ sich nicht als Bild zeichnen", "そのレイヤーを画像にできませんでした", "无法把该图层绘制成图片", "그 레이어를 그림으로 그릴 수 없었어요"],
+    "Export as PNG": ["Exportar como PNG", "Exportar como PNG", "Exporter en PNG", "Als PNG exportieren", "PNG で書き出し", "导出为 PNG", "PNG로 내보내기"],
+    "Export as PNG 2x": ["Exportar como PNG 2x", "Exportar como PNG 2x", "Exporter en PNG 2x", "Als PNG 2x exportieren", "PNG 2x で書き出し", "导出为 PNG 2x", "PNG 2x로 내보내기"],
+    "Export as SVG": ["Exportar como SVG", "Exportar como SVG", "Exporter en SVG", "Als SVG exportieren", "SVG で書き出し", "导出为 SVG", "SVG로 내보내기"],
+    "Comments aren’t available here": ["Los comentarios no están disponibles aquí", "Comentários não estão disponíveis aqui", "Les commentaires ne sont pas disponibles ici", "Kommentare sind hier nicht verfügbar", "ここではコメントを使えません", "这里无法评论", "여기서는 댓글을 쓸 수 없어요"],
+    "Pick something in the preview first": ["Primero elige algo en la vista previa", "Primeiro escolha algo na prévia", "Choisissez d’abord un élément dans l’aperçu", "Wähle zuerst etwas in der Vorschau", "先にプレビューで何かを選んでください", "请先在预览中选中某个元素", "먼저 미리보기에서 무언가를 선택하세요"],
+    "Only builders can add layers": ["Solo quienes construyen pueden añadir capas", "Só quem constrói pode adicionar camadas", "Seuls les bâtisseurs peuvent ajouter des calques", "Nur Bauende können Ebenen hinzufügen", "レイヤーを追加できるのはビルダーだけです", "只有构建者可以添加图层", "빌더만 레이어를 추가할 수 있어요"],
+    "Added to the canvas. Change it, then Send to app": ["Añadido al lienzo. Cámbialo y luego envíalo a la app", "Adicionado à tela. Mude e depois envie para o app", "Ajouté au canevas. Modifiez-le, puis envoyez-le dans l’app", "Zur Leinwand hinzugefügt. Ändere es und sende es dann in die App", "キャンバスに追加しました。変更してからアプリに送ってください", "已添加到画布。修改后再发送到应用", "캔버스에 추가했어요. 바꾼 뒤 앱으로 보내세요"],
+    "Open in canvas": ["Abrir en el lienzo", "Abrir na tela", "Ouvrir dans le canevas", "Auf der Leinwand öffnen", "キャンバスで開く", "在画布中打开", "캔버스에서 열기"],
     // P1-E comment pins (pins.js)
     'New comment': ['Nuevo comentario', 'Novo comentário', 'Nouveau commentaire', 'Neuer Kommentar', '新しいコメント', '新评论', '새 댓글'],
     'Add a comment. Type @ to mention someone': ['Escribe un comentario. Usa @ para mencionar a alguien', 'Escreva um comentário. Use @ para mencionar alguém', 'Ajoutez un commentaire. Tapez @ pour mentionner quelqu’un', 'Kommentar schreiben. Mit @ jemanden erwähnen', 'コメントを追加。@で誰かをメンション', '添加评论。输入 @ 提及某人', '댓글을 남기세요. @로 사람을 멘션할 수 있어요'],
@@ -570,7 +602,7 @@
   const REV = new Map(); Object.entries(D).forEach(([en, row]) => row.forEach(x => REV.set(x, en)));
   const orig = new WeakMap();   // text node -> English
   const ATTRS = ['placeholder', 'title', 'aria-label'];
-  const SKIP = '.cv-world,.cv-lname,.cv-fname,.cv-aname b,.cv-phead b,script,style,textarea,code,pre,.msg-body,.msg .body,.md,.doc-body,.rt,.pvw-frame,.tk-title,.card .title,[contenteditable],[data-title],.pj-name,.pc-name,#chat-list,.dm-body,.nf-item .nf-t';
+  const SKIP = '.cv-world,.cv-lname,.cv-fname,.cv-aname b,.cv-phead b,.cv-ins-name,script,style,textarea,code,pre,.msg-body,.msg .body,.md,.doc-body,.rt,.pvw-frame,.tk-title,.card .title,[contenteditable],[data-title],.pj-name,.pc-name,#chat-list,.dm-body,.nf-item .nf-t';
   function swapText(n) {
     const raw = n.nodeValue; if (!raw) return;
     const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s || s.length > 60) return;

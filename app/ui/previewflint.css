@@ -51,6 +51,8 @@
 .pvf-pick > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pvf-pick b { color: var(--text, #F8FAFC); font-weight: 600; }
 .pvf-pick button { width: 22px; height: 22px; border-radius: 6px; color: var(--muted, #94A3B8); }
+.pvf-pick .pvf-tocanvas { width: auto; padding: 0 8px; border: 1px solid var(--edge); font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.pvf-pick .pvf-tocanvas:hover { background: var(--surface-3); }
 .pvf-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
 .pvf-chips .chip { font: 500 12px/1.4 var(--font, Inter, system-ui, sans-serif); }
 .pvf-form { display: flex; gap: 8px; align-items: flex-end; padding: 10px 12px 12px; border-top: 1px solid var(--edge, #2A313C); flex: none; }
