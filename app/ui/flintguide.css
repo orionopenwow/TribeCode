@@ -42,3 +42,21 @@
 .fg-intro .fg-acts { display: flex; align-items: center; margin-top: 12px; }
 @media (max-width: 640px) { .fg-intro { padding: 20px 16px 16px; } .fg-intro-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fg-intro h2 { font-size: 21px; } }
 .fg-root:has(#fg-intro) .fg-sprite, .fg-root:has(#fg-intro) .fg-bubble, .fg-root:has(#fg-intro) .fg-ring { display: none; }
+/* Flint's tour (flinttour.js): the small "Inside a project" frame shown before your first project, and the
+   "Continue the tour" chip once you have one. Flat matte: 1px borders, luminance steps only. */
+.ft-mock { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 139; width: min(300px, calc(100vw - 32px)); padding: 14px 12px 12px; border: 1px solid var(--edge); border-radius: var(--r-lg, 14px); background: var(--surface); pointer-events: none; }
+.ft-mk-head { display: flex; flex-direction: column; gap: 3px; padding: 0 6px 10px; border-bottom: 1px solid var(--edge); margin-bottom: 8px; }
+.ft-mk-head small { color: var(--faint); font-size: 12px; }
+.ft-mk-rows { display: flex; flex-direction: column; gap: 2px; }
+.ft-mk-row { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px; color: var(--text); font-size: 14px; }
+.ft-mk-row .i { color: var(--muted); }
+.ft-mk-flint { display: flex; align-items: center; gap: 8px; height: 36px; margin-top: 10px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 999px; background: var(--raised); color: var(--faint); font-size: 13.5px; }
+.ft-chip { position: fixed; right: 18px; bottom: 84px; z-index: 120; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); color: var(--text); animation: ft-in var(--dur-base, .2s) var(--ease-out, ease-out) both; }
+.ft-chip-go { border: 0; background: none; color: var(--text); font: inherit; font-weight: 650; font-size: 14px; cursor: pointer; padding: 0; }
+.ft-chip-go:hover { color: var(--accent); }
+.ft-chip-sub { color: var(--faint); font-size: 12.5px; }
+.ft-chip-x { width: 28px; height: 28px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised); color: var(--muted); font-size: 16px; line-height: 1; cursor: pointer; }
+.ft-chip-x:hover { color: var(--text); background: var(--hover); }
+@keyframes ft-in { from { opacity: 0; transform: translateY(6px); } }
+@media (max-width: 820px) { .ft-chip { left: 12px; right: 12px; bottom: 76px; } .ft-chip-sub { display: none; } .ft-chip-go { flex: 1; text-align: left; } }
+@media (prefers-reduced-motion: reduce) { .ft-chip { animation: none; } }

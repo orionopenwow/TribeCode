@@ -389,6 +389,30 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
   .hub-gs .gs-tile b { font-size: 18px; }
 }
 .hub-hero.hub-gs::before { display: none; }
+/* Not in a tribe yet: one honest empty state (copy + one primary action on the left, what happens next on the right) */
+.hub-gs.hub-empty { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr); align-items: stretch; }
+.hub-empty .he-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 28px 28px 22px; }
+.hub-empty .he-copy h2 { margin: 0; font-family: var(--display); font-size: 28px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.15; color: var(--text); }
+.hub-empty .he-sub { margin: 0; max-width: 56ch; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+.hub-empty .he-acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.hub-empty .he-acts .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; font-weight: 650; }
+.hub-empty .gs-links { justify-content: flex-start; padding: 6px 0 0; border-top: 0; }
+.hub-empty .gs-links { flex-wrap: wrap; }
+.hub-empty .gs-links .linkish { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.hub-empty .he-steps { list-style: none; margin: 0; padding: 22px 24px; display: flex; flex-direction: column; justify-content: center; gap: 16px; background: var(--raised); border-left: 1px solid var(--edge); }
+.hub-empty .he-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.hub-empty .he-steps li > b { flex: none; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); font: 600 12px/1 var(--mono); color: var(--accent); }
+.hub-empty .he-steps span { display: flex; flex-direction: column; gap: 3px; }
+.hub-empty .he-steps strong { font-size: 14px; font-weight: 650; color: var(--text); }
+.hub-empty .he-steps small { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.hub-empty .gs-err { grid-column: 1 / -1; margin: 0 20px 16px; }
+@media (max-width: 820px) {
+  .hub-gs.hub-empty { grid-template-columns: 1fr; }
+  .hub-empty .he-copy { padding: 18px 16px 14px; }
+  .hub-empty .he-copy h2 { font-size: 22px; }
+  .hub-empty .he-acts .btn { flex: 1 1 auto; justify-content: center; }
+  .hub-empty .he-steps { padding: 14px 16px; gap: 12px; border-left: 0; border-top: 1px solid var(--edge); }
+}
 /* Phone Home: a header with the logo, and the projects as rows */
 .hub-thumb { width: 100%; height: 96px; margin-bottom: 14px; border: 1px solid var(--edge); border-radius: 16px; background: var(--raised); display: grid; place-items: center; }
 .hub-thumb img { width: 56px; height: 56px; }

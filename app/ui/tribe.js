@@ -177,7 +177,9 @@
   function sendActivity(w) { if (w) where = w; if (sock && sock.readyState === 1) sock.send(JSON.stringify({ type: 'activity', where })); }
 
   // Called after first-run setup on the host machine (UI served by the server, no token yet).
-  async function ensureMember({ name, color, reclaim = false }) {
+  // defer: an empty local tribe (no members yet, not a cloud server) is not claimed on open. The person sees their
+  // Dashboard first and becomes host when they start their first project (app.js startFirst). Returns 'fresh'.
+  async function ensureMember({ name, color, reclaim = false, defer = false }) {
     if (token()) {   // cloud: a napping host comes back empty; restore from this device, or wait for a friend's copy
       const r = await cloudRevive(); if (r === 'empty') await waitForTribe();
       return 'member';
@@ -185,6 +187,8 @@
     try {
       const h = await api('/health'); cloud = !!h.cloud;
       if (h.members === 0) {
+        if (defer && !h.cloud) { window.__tribeFresh = true; return 'fresh'; }
+        window.__tribeFresh = false;
         const body = { name, color };
         if (h.cloud) {   // a new cloud tribe server: the first person claims it with its setup code (docs/CLOUD.md)
           const sc = window.prompt('This is a new TribeCode cloud server. Enter its setup code to become the host.\n\nIt is TRIBE_SETUP_CODE in your hosting dashboard (or in the server log).');

@@ -114,6 +114,8 @@
   ];
   function shouldShowIntro() {
     if (desktopApp || deviceKey || location.protocol === 'file:') return false;
+    // the computer running TribeCode (npm start, the Working window): its own Dashboard, Make it yours and Flint's tour welcome you
+    if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !params.has('intro')) return false;
     if (params.has('reset') || params.has('skipIntro') || params.has('demo')) return false;
     if (/\/join\//.test(location.pathname) || params.has('code')) return false;
     const st = S.get();

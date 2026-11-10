@@ -32,13 +32,13 @@ def main():
             assert box[0] < 30 and -20 < box[1] < 60, ("Flint sits beside the target", box)
             assert pg.evaluate("document.querySelector('#fg-ring').classList.contains('on')")
             pg.click("#fg-next"); pg.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=5000)
-            # the tour: several steps, Next advances, Skip ends it, it's remembered
+            # the tour (flinttour.js): several steps, Next advances, Pause keeps your place
             pg.evaluate("void TribeFlintGuide.tour()"); pg.wait_for_selector("#fg-bubble.on .fg-steps", timeout=5000)
             n = int(pg.inner_text(".fg-steps").split("/")[1]); assert n >= 3, n
             assert pg.evaluate("document.querySelectorAll('.fg-ember').length") > 0, "pixel embers while he flies"
             pg.click("#fg-next"); pg.wait_for_function("document.querySelector('.fg-steps') && document.querySelector('.fg-steps').textContent.trim().startsWith('2')", timeout=5000)
             pg.click("#fg-skip"); pg.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=5000)
-            assert pg.evaluate("localStorage.getItem('tribecode.flint.tour')") == "done"
+            st = pg.evaluate("TribeFlintTour.state()"); assert st.get("paused") and st.get("i") == 1, ("Pause keeps your place", st)   # v0.28.1: flinttour.js
             # the ? menu replays it
             pg.click("#tb-help"); pg.click("[data-help=tour]"); pg.wait_for_selector("#fg-bubble.on .fg-steps", timeout=5000); pg.keyboard.press("Escape")
             pg.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=5000)

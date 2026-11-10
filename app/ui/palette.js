@@ -21,7 +21,9 @@
       { kind: 'Action', label: 'Report a bug', keys: 'issue problem crash', hint: 'Ctrl Shift B', run: () => window.TribeBugs.capture() },
       { kind: 'Action', label: "Write today's standup", keys: 'brain recap summary', run: () => { A.show('home'); document.querySelector('#standup-go').click(); } },
       { kind: 'Action', label: 'Toggle dark / light', keys: 'theme mode', hint: 'Ctrl Shift L', run: () => { const st = S.get(), next = document.body.classList.contains('dark') ? (st.themeLight || 'light') : (st.themePicked && st.themeDark ? st.themeDark : (st.themeDark && st.themeDark !== 'dark' ? st.themeDark : 'campfire')); S.set(window.TribeThemes ? { ...window.TribeThemes.pick(next), themeSystem: false } : { theme: next }); A.refresh(); } },
-      { kind: 'Action', label: 'Take the tour', keys: 'help tutorial', run: () => window.TribeTour.start() },
+      { kind: 'Action', label: 'Tour with Flint', keys: 'help tutorial tour guide look around show me', run: () => window.TribeFlintTour && window.TribeFlintTour.start() },
+      // the demo only ever starts when someone asks for it (never on open)
+      ...(window.TribeOffline ? [{ kind: 'Action', label: 'Start demo', keys: 'demo try pretend sample tribe offline example', run: () => window.TribeOffline.start() }] : []),
       { kind: 'Action', label: 'Check for updates', keys: 'version upgrade', run: () => window.TribeUpdater.check({ manual: true }) },
       ...(window.TribePaletteActions || []).flatMap(f => { try { return f() || []; } catch { return []; } }),   // feature modules add commands here
     ];

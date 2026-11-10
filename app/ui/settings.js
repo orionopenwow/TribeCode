@@ -98,7 +98,7 @@
       ${isHost() && window.TribePacks ? row('Packs', '<div id="set-packs"></div>', 'Optional tools for video captions and local transcripts. Downloaded on this computer, checked by sha256.') : ''}
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
       </details>
-      <div class="set-links"><button class="linkish" id="set-tour">Take a quick tour</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
+      <div class="set-links"><button class="linkish" id="set-tour">Tour with Flint</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
     const sm = $('#set-more'); if (sm) sm.ontoggle = () => { try { localStorage.setItem('tribecode.set.more', sm.open ? '1' : '0'); } catch {} };   // qa-qol-2
     const sp = $('#set-profile'); if (sp) sp.onclick = () => { close(); window.TribeProfiles.edit(); };   // feat/profiles
@@ -164,7 +164,7 @@
     const rf = $('#set-refresh'); if (rf) rf.onclick = () => { rf.disabled = true; rf.textContent = 'Refreshing…'; (window.TribeSelfHeal && window.TribeSelfHeal.refresh ? window.TribeSelfHeal.refresh() : location.reload()); };
     const hs = $('#set-host'); if (hs) hs.onclick = async () => { hs.disabled = true; await window.TribeApp.setHosting(hs.getAttribute('aria-checked') !== 'true'); draw(); };
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
-    $('#set-tour').onclick = () => { close(); window.TribeTour.start(); };
+    $('#set-tour').onclick = () => { close(); window.TribeFlintTour && window.TribeFlintTour.start(); };
     $('#set-join').onclick = () => { close(); joinPrompt(); };
     const sd = $('#set-demo'); if (sd) sd.onclick = () => { close(); window.TribeOffline.toggle(); };   // feat/offline-demo
     const lk = $('#set-look'); if (lk) lk.onclick = () => { close(); window.TribeLook.open(C().connected() ? 'tribe' : 'me'); };   // feat/customize (app/ui/look.js)

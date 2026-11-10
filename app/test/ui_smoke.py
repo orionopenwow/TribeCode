@@ -50,17 +50,17 @@ def main():
         assert page.inner_text("#room-me") == "RP"
         assert page.evaluate("TribeStore.get().color") == "#FFB86B"
 
-        # ---- the tour is optional, from Settings ----
+        # ---- the tour is optional, from Settings: Flint flies you round (flinttour.js) ----
         page.click("#set-tour")
-        page.wait_for_selector("#tour:not(.hidden)")
-        page.wait_for_timeout(500)
-        assert "STEP 1 OF" in page.inner_text("#tour-tip")
+        page.wait_for_selector("#fg-bubble.on .fg-steps", timeout=8000)
+        assert page.inner_text(".fg-steps").replace(" ", "").startswith("1/")
         shot(page, "tour")
-        for _ in range(8):
-            page.keyboard.press("ArrowRight")
-        page.wait_for_timeout(200)
-        if page.is_visible("#tour"): page.click("#tour-tip .btn.primary")  # Finish
-        assert page.is_hidden("#tour")
+        for _ in range(20):
+            try: page.wait_for_selector("#fg-bubble.on #fg-next", timeout=3000)
+            except Exception: break
+            page.click("#fg-next"); page.wait_for_timeout(200)
+        page.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=8000)
+        assert page.evaluate("TribeFlintTour.state().done")
 
         page.reload()
         page.wait_for_timeout(300)

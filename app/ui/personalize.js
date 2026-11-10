@@ -39,8 +39,12 @@
   const forced = () => /[?&]personalize=1/.test(location.search) || lsGet('tribecode.personalize.test') === '1';
   const blocked = () => /[?&](skipIntro|demo=|welcome|tour=)/.test(location.search) || /^\/m\//.test(location.pathname)
     || (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active()) || (navigator.webdriver && !forced());
+  // No tribe yet (a fresh open: the desktop app before its first project, or the computer running a server nobody
+  // has claimed): Make it yours still comes first, saved on this device, and moves into your profile once you have one.
+  const noTribe = () => !!(window.TribeApp && window.TribeApp.fresh && window.TribeApp.fresh());
   function eligible() {
     if (lsGet(DONE)) return false;
+    if (noTribe()) return forced() || !blocked();
     const m = me(); if (!m.id || m.role !== 'host') return false;
     if (forced()) return true;
     if (blocked()) return false;
@@ -56,7 +60,7 @@
   let d = null, step = 0, el = null, opener = null;
   function fresh() {
     const m = me(), mine = (P() && C.state().members || []).find(x => x.id === m.id) || m;
-    const a = (mine.profile && mine.profile.avatar) || { kind: 'initials' };
+    const ps = S.get(), a = (mine.profile && mine.profile.avatar) || (ps.pendingPhoto ? { kind: 'photo', file: ps.pendingPhoto } : ps.pendingAvatar) || { kind: 'initials' };
     const tintOf = c => (P() && Object.keys(P().palette).find(k => P().palette[k].toLowerCase() === String(c || '').toLowerCase())) || 'teal';
     return { name: mine.name || S.get().name || '', avatar: a, tint: a.tint || tintOf(mine.color), color: mine.color || S.get().color, photo: a.kind === 'photo' ? a : null };
   }
@@ -68,9 +72,13 @@
   function saveProfile(now) {
     clearTimeout(saveT);
     const run = async () => {
-      const m = me(); if (!m.id) return;
+      const m = me();
       const name = (d.name || '').trim().slice(0, 32);
       const color = P() ? P().palette[d.tint] : null;
+      if (!m.id) {   // no tribe yet: keep it on this device; it becomes your profile when you start or join one
+        S.set({ ...(name ? { name } : {}), ...(d.avatar.kind === 'initials' && color ? { color } : {}), ...(d.avatar.kind === 'photo' ? {} : { pendingPhoto: null, pendingAvatar: d.avatar.kind === 'initials' ? { kind: 'initials' } : { ...d.avatar, tint: d.tint } }) });
+        return;
+      }
       try {
         const body = {}; if (name && name !== m.name) body.name = name; if (d.avatar.kind === 'initials' && color && color !== m.color) body.color = color;
         if (body.name || body.color) { await C.api('/me', { method: 'PATCH', body: { name: name || m.name, ...(body.color ? { color: body.color } : {}) } }); S.set({ name: name || m.name, ...(body.color ? { color: body.color } : {}) }); }
@@ -190,6 +198,9 @@
       try {
         const image = window.TribeCropper ? await window.TribeCropper.pick({ file: f, size: 256, title: t('Frame your avatar') }) : null;
         if (!image) return;
+        if (!me().id) {   // no tribe yet: the picture waits on this device and becomes your profile photo later
+          S.set({ pendingPhoto: image, pendingAvatar: null }); d.avatar = { kind: 'photo', file: image }; draw(); return;
+        }
         const r = await C.api('/profile/avatar', { method: 'POST', body: { image, still: null } });
         d.avatar = (r && r.profile && r.profile.avatar) || { kind: 'photo' };
         if (!d.avatar.file) d.avatar = { kind: 'emoji', emoji: '🔥', tint: d.tint };
@@ -210,7 +221,7 @@
   }
 
   function open(at, how) {
-    if (!C.connected || !C.connected()) return;
+    if ((!C.connected || !C.connected()) && !noTribe()) return;
     if (el) { go(typeof at === 'number' ? at : step); return; }
     opener = how || 'menu';
     d = fresh(); step = typeof at === 'number' ? Math.max(0, Math.min(STEPS.length - 1, at)) : 0;
@@ -238,6 +249,14 @@
   let booted = false;
   function boot() { if (booted) return; booted = true; setTimeout(() => { if (eligible()) open(0, 'first'); }, 200); }
   if (C.on) C.on('hello', boot);
+  window.addEventListener('tribe-fresh', boot);
+  // what you picked before you had a tribe becomes your profile on the first hello
+  if (C.on) C.on('hello', () => {
+    const st = S.get(), pa = st.pendingAvatar, ph = st.pendingPhoto; if ((!pa && !ph) || !me().id) return;
+    S.set({ pendingAvatar: null, pendingPhoto: null });
+    if (ph) C.api('/profile/avatar', { method: 'POST', body: { image: ph, still: null } }).catch(() => {});
+    else C.api('/profile', { method: 'PATCH', body: { avatar: pa } }).catch(() => {});
+  });
   if (C.connected && C.connected()) boot();
   window.addEventListener('tribe-lang', () => { if (el) draw(); });
   window.TribePersonalize = { open: s => open(s, 'menu'), close, pending, isOpen, then };

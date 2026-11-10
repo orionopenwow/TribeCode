@@ -52,7 +52,7 @@ def main():
             # ---- 1. fresh browser: intro -> straight into the app (zero-step setup) ----
             host = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(host, "host")
             named(host, "Orion")
-            host.goto(BASE)
+            host.goto(BASE + "/?intro=1")   # on the computer running TribeCode the slide intro opens only on request now
             host.wait_for_selector("#intro")
             assert host.get_attribute("#intro", "data-panel") == "0"
             assert host.locator("#intro .intro-panel").count() == 5
@@ -97,7 +97,7 @@ def main():
             assert friend.locator("#intro").count() == 0, "joined via link: no intro"
             # ...and the intro's own "Have an invite link?" field joins too
             fresh = b.new_context(viewport={"width": 1440, "height": 900}).new_page(); watch(fresh, "fresh")
-            fresh.goto(BASE); fresh.wait_for_selector("#intro")
+            fresh.goto(BASE + "/?intro=1"); fresh.wait_for_selector("#intro")
             fresh.click('[data-dot="4"]'); fresh.fill("#intro-link", f"{BASE}/join/{code}"); fresh.click("#intro-join")
             fresh.wait_for_selector("#jn-name"); fresh.fill("#jn-name", "Kai"); fresh.click("#jn-go")
             connected(fresh)

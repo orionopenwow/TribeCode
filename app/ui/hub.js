@@ -158,24 +158,39 @@
     </header>`;
   }
   function gsHero(on) {
-    const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
+    const desk = canHost();
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
     const tile = (id, title, sub, faceHtml = '', ic = '', go = '', k = '') => `<button class="gs-tile${k ? ' k-' + k : ''}" id="${id}">${ic ? `<span class="gs-ic"><svg class="i"><use href="#i-${ic}"/></svg></span>` : faceHtml}<b>${title}</b><span>${sub}</span>${go ? `<em class="gs-go">${go}<svg class="i"><use href="#i-chev"/></svg></em>` : ''}</button>`;
-    const tiles = !on
-      ? tile('hub-host', 'Create your first project', desk ? 'Your work lives in a shared GitHub repository. Pick a name, invite friends, connect your AI.' : 'Projects live in a shared GitHub repository; a desktop app or a server keeps the tribe online.', '', 'plus', desk ? 'Start a project' : 'Get the desktop app', 'ember')
-        + tile('hub-join', 'Join a friend\'s tribe', 'Got an invite link? Paste it and you\'re in, on this computer or your phone.', '', 'link', 'Paste a link', 'indigo')
-      : (lp || p1
+    const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
+        <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
+    // Not in a tribe yet: one honest empty state with one clear way in, and the way to join a friend beside it.
+    // Nothing is made until you press Start (no demo, no pretend tribe: the demo lives in the ? menu and Ctrl K).
+    if (!on) {
+      const tourBtn = window.TribeFlintTour ? `<button class="linkish" id="hub-tour">${ico('i-flint', 13)}${esc(window.TribeFlintTour.label())}</button>` : '';
+      return `<section class="hero-card hub-hero hub-gs hub-empty" id="hub-hero">
+        <div class="he-copy"><span class="eyebrow">Getting started</span>
+          <h2>Make your first project</h2>
+          <p class="he-sub">${desk ? 'A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.' : 'Projects run on a computer with the TribeCode desktop app, or on a free cloud server. Here you can join a friend\'s tribe with their link.'}</p>
+          <div class="he-acts"><button class="btn primary he-go" id="hub-host">${ico('i-plus', 15)}${desk ? 'Start your first project' : 'Get the desktop app'}</button><button class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div>
+          <div class="gs-links">${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>
+        </div>
+        <ol class="he-steps" aria-label="What happens next">
+          <li><b>1</b><span><strong>Say what you want to make</strong><small>Flint builds a first version you can run, no AI needed.</small></span></li>
+          <li><b>2</b><span><strong>Invite friends</strong><small>One link. They join from a phone or a laptop.</small></span></li>
+          <li><b>3</b><span><strong>Connect your AI</strong><small>Claude Code, Codex, Gemini or a local model builds with you.</small></span></li>
+        </ol>
+        ${err}</section>`;
+    }
+    const tiles = (lp || p1
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Its chat, files and tasks, all in one place.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
           : tile('hub-new', 'Create a project', 'A room, a link and a code repository, in one click.', '', 'plus', 'Start a project', 'ember'))
         + tile('hub-instant', 'Invite a friend', 'Starts a new project for the two of you and copies a link they can open anywhere.', '', 'link', 'Copy a link', 'teal');
-    // Not in a tribe yet (often a first visit from the website): the showcase page explains what this is.
-    const links = on ? `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`
-      : `<div class="gs-links"><a class="linkish" id="hub-about" href="https://tribecode.org/" target="_blank" rel="noopener">${ico('i-link', 13)}About TribeCode</a></div>`;
-    const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
-        <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
-    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">${on ? 'Quick start' : 'Getting started'}</span><span class="gs-band-r">${on ? 'Pick up, or bring someone in' : 'Two ways in · about a minute'}</span></div>
-      ${err}<div class="gs-grid">${tiles}</div>${!on && window.TribeOffline ? window.TribeOffline.tile() : ''}${links}</section>`;   // feat/offline-demo: Try a demo tribe (offline.js)
+    const links = `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`;
+    return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">Quick start</span><span class="gs-band-r">Pick up, or bring someone in</span></div>
+      ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;
   }
+  // Can this device make a tribe right now? The desktop app, or the computer running a TribeCode server (fresh open).
+  const canHost = () => !!(window.TribeHost && window.TribeHost.isDesktop) || !!(App() && App().fresh && App().fresh());
 
   // ---------- the hero: Suggestions | Ask | Join or start ----------
   function hero(on) {
@@ -823,18 +838,20 @@
     if (prefill) { const i = $('#pal-input'); if (i) { i.value = prefill; i.dispatchEvent(new Event('input', { bubbles: true })); } }
   }
   function host() {
+    if (App().fresh && App().fresh() && App().startFirst) return App().startFirst();
     if (window.TribeHost && window.TribeHost.isDesktop && App().hostHere) return App().hostHere();
     if (window.TribeHost && window.TribeHost.isDesktop) return App().openInvite();
     window.open((window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest', '_blank', 'noopener');
   }
   const join = () => window.TribeSettings && window.TribeSettings.joinPrompt();
-  function newProject() { if (!connected()) return window.TribeHost && window.TribeHost.isDesktop ? host() : join(); PJ().openNew(); }
+  function newProject() { if (!connected()) return canHost() ? host() : join(); PJ().openNew(); }
 
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
     el.querySelectorAll('[data-pj-go]').forEach(b => b.onclick = () => { const id = b.dataset.pjGo; if (PJ().current() === id) App().show('home'); else PJ().switchTo(id, 'home'); });
     on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-resume', resume);
     on('#hub-cc', () => App().connectClaude());
+    on('#hub-tour', () => window.TribeFlintTour && window.TribeFlintTour.start());
     on('#hub-sug-more', () => { sugOpen = !sugOpen; render(); });
     on('#hub-feed-more', () => { feedOpen = !feedOpen; render(); });
     // Ask

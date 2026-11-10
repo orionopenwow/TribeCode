@@ -181,8 +181,8 @@ def main():
             assert pg.locator("#demo-pill").count() == 0 and pg.locator("#sc-cele").count() == 0
 
             # the chooser: Watch it come alive
-            pg.wait_for_function("window.TribeHub", timeout=10000); pg.evaluate("TribeHub.open('home')"); pg.wait_for_selector("#hub-demo", state="visible", timeout=10000)
-            pg.click("#hub-demo"); pg.wait_for_selector("#od-pick-alive", state="visible")
+            pg.wait_for_function("window.TribeHub", timeout=10000); pg.evaluate("TribeHub.open('home')"); pg.wait_for_selector("#hub-hero", state="visible", timeout=10000)
+            pg.click("#tb-help"); pg.click("[data-help=demo]"); pg.wait_for_selector("#od-pick-alive", state="visible")   # v0.28.1: the demo starts only when asked (the ? menu)
             assert pg.locator("#od-pick-quiet").is_visible()
             pg.click("#od-pick-alive"); ready(pg)
             assert pg.evaluate("TribeClient.state().tribe.name") == "Campfire Crew"

@@ -1,7 +1,7 @@
 // Flint, the guide: the mascot (assets/flint.svg, the logo's flame with blinking pixel eyes) flies across the screen
 // to whatever he's showing you, points at it with a short speech bubble, and leaves a trail of rising pixel embers.
 //   TribeFlintGuide.point(target, text, { side, next, done })   target: a selector or an element; resolves when closed
-//   TribeFlintGuide.tour(name?)                                    the first-run tour (offered once; replay from the ? menu)
+//   TribeFlintGuide.tour()                                         opens Flint's tour (flinttour.js)
 //   TribeFlintGuide.hide()
 // Flat matte: the bubble is a card with a 1px border; the embers are square pixels that rise and fade (no glow).
 // Reduced motion: Flint jumps instead of flying and there are no embers.
@@ -11,7 +11,6 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const phone = () => matchMedia('(max-width: 820px)').matches;
-  const KEY = 'tribecode.flint.tour';
   const SIZE = 44;
 
   let root = null, sprite = null, bubble = null, pos = null, emberT = null, resolveCur = null;
@@ -75,7 +74,7 @@
   }
   function showBubble(p, opts) {
     const steps = opts.steps ? `<span class="fg-steps">${opts.step + 1} / ${opts.steps}</span>` : '';
-    bubble.innerHTML = `<p>${esc(p.text)}</p><div class="fg-acts">${steps}<span style="flex:1"></span>${opts.skip ? '<button class="fg-skip" id="fg-skip">Skip tour</button>' : ''}<button class="btn primary fg-next" id="fg-next">${esc(opts.next || 'Got it')}</button></div>`;
+    bubble.innerHTML = `<p>${esc(p.text)}</p><div class="fg-acts">${steps}<span style="flex:1"></span>${opts.skip ? `<button class="fg-skip" id="fg-skip">${esc(opts.skipLabel || 'Skip tour')}</button>` : ''}<button class="btn primary fg-next" id="fg-next">${esc(opts.next || 'Got it')}</button></div>`;
     const bw = Math.min(280, innerWidth - 24); bubble.style.width = bw + 'px';
     let bx = p.side === 'left' ? p.fx - bw - 10 : p.fx + SIZE + 10, by = p.fy - 6;
     if (p.side === 'below' || p.side === 'above' || bx + bw > innerWidth - 8 || bx < 8) { bx = Math.max(12, Math.min(innerWidth - bw - 12, p.fx + SIZE / 2 - bw / 2)); by = p.side === 'above' ? p.fy - 10 - 110 : p.fy + SIZE + 10; }
@@ -109,43 +108,7 @@
     }
   }
 
-  // ---------- the tour: the main places, for someone new ----------
-  const TOURS = {
-    start: () => [
-      ['#tour-side .nest, #nest', "Hi, I'm Flint! These are your project's places: Dashboard, Messages, Files, Task Board and Agents Hub."],
-      ['#tour-invite', 'Invite friends with one link. They join from a phone or a laptop, no account.'],
-      ['#cc-connect, [data-cc-connect], #home-share', 'Connect your AI: Claude Code, Codex, Gemini CLI, Cursor… It joins the room and builds with you.'],
-      ['#nest-add', 'Add more to the sidebar: a calendar, bugs, a link, anything your tribe needs.'],
-      ['#flint-bar, [data-flbar]', "And I live here. Ask me anything, or say 'note: …' or 'task …' and I'll do it."],
-      ['#tb-help', 'Lost? The ? has the Guide, shortcuts, and this tour again.'],
-    ],
-    phone: () => [
-      ['#m2-homebar, .m2-rack, #tabbar', "Hi, I'm Flint! Your places live down here: Home, Messages, Files, Agents and Projects."],
-      ['#hpt-brand', 'Tap TribeCode to switch projects or start a new one.'],
-      ['#hpt-bell, #m2-bell', 'Approvals and updates land here: one tap to say yes.'],
-    ],
-  };
-  async function tour(name) {
-    const list = (TOURS[name] || (phone() ? TOURS.phone : TOURS.start))().map(([sel, text]) => [[...document.querySelectorAll(sel.split(',').map(x => x.trim()).join(','))].find(visible), text]).filter(([el]) => el);
-    if (!list.length) return;
-    ensure(); root.classList.add('on', 'touring', 'dim');
-    for (let i = 0; i < list.length; i++) {
-      const r = await point(list[i][0], list[i][1], { keep: true, dim: true, steps: list.length, step: i, skip: i < list.length - 1, next: i === list.length - 1 ? "Let's go" : 'Next' });
-      if (r !== 'next') break;
-    }
-    try { localStorage.setItem(KEY, 'done'); } catch {}
-    root.classList.remove('touring'); close();
-  }
-  // offered once, a little after a first real session starts (never during tests or the showcase autoplay)
-  function maybeOffer() {
-    let done = null; try { done = localStorage.getItem(KEY); } catch {}
-    if (done || /[?&](skipIntro|demo=showcase|notour|welcome)/.test(location.search) || navigator.webdriver) return;
-    setTimeout(async () => {
-      if (document.getElementById('wl') || document.getElementById('pz') || document.getElementById('fr-start') || (window.TribePersonalize && window.TribePersonalize.pending())) return;   // one onboarding thing at a time   // feat/welcome: Flint is already showing them around
-      const r = await point('#rail-logo, #hpt-brand', "Hi, I'm Flint, your tribe's helper. Want a 30-second tour?", { next: 'Show me', skip: true, keep: true });
-      if (r === 'next') tour(); else { try { localStorage.setItem(KEY, 'skipped'); } catch {} close(); }
-    }, 2500);
-  }
+  // The offer and the full tour now live in flinttour.js (one guided look around, after Make it yours).
   // ---------- Flint's own intro: the first time someone clicks into "Ask Flint…" ----------
   // A dimmed, skippable one-screen guide: what Flint does, how to talk to him, how he learns. Shown once.
   const INTRO = 'tribecode.flint.intro';
@@ -185,8 +148,6 @@
     i.blur(); intro(i);
   });
 
-  const hook = () => { const C = window.TribeClient; if (!C || !C.on) return setTimeout(hook, 300); C.on('hello', () => maybeOffer()); };
-  hook();
 
-  window.TribeFlintGuide = { point, tour, intro, hide: () => { const c = document.getElementById('fg-intro'); if (c) c.remove(); close(); }, _burst: burst };
+  window.TribeFlintGuide = { point, tour: () => window.TribeFlintTour && window.TribeFlintTour.start(), intro, hide: () => { const c = document.getElementById('fg-intro'); if (c) c.remove(); close(); }, _burst: burst };
 })();

@@ -45,11 +45,13 @@ def flow(page, tag, phone, tmp):
     page.goto(BASE + "/?skipIntro=1")
     page.wait_for_function("window.TribeOffline && window.TribeHub", timeout=15000)
     if not page.evaluate("document.body.dataset.view === 'hub'"): page.evaluate("TribeHub.open('home')")
-    page.wait_for_selector("#hub-demo", state="visible", timeout=10000)
+    page.wait_for_selector("#hub-hero", state="visible", timeout=10000)
+    assert page.locator("#hub-demo").count() == 0, "the demo only starts when asked (v0.28.1: not offered on Home)"
     sideways(page, tag + " home")
-    if "--shots" in sys.argv:
-        page.locator("#hub-demo").scroll_into_view_if_needed(); page.screenshot(path=str(SHOTS / f"offline-demo-{'phone' if phone else 'desktop'}-start.png"))
-    page.click("#hub-demo")
+    if "--shots" in sys.argv: page.screenshot(path=str(SHOTS / f"offline-demo-{'phone' if phone else 'desktop'}-start.png"))
+    # asked for: the ? menu's "Try a demo tribe" on a computer (Ctrl K "Start demo" is in e2e_fresh_open.py)
+    if not phone and page.locator("#tb-help").is_visible(): page.click("#tb-help"); page.click("[data-help=demo]")
+    else: page.evaluate("TribeOffline.start()")
     page.click("#od-pick-quiet")   # the chooser: Explore quietly (Watch it come alive is e2e_showcase_demo.py)
     page.wait_for_function("TribeOffline.active() && window.TribeClient && TribeClient.connected()", timeout=10000)
     assert page.evaluate("document.body.classList.contains('offline-demo')")

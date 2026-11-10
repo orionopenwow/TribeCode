@@ -80,5 +80,4 @@
   .palette { padding-top: calc(10px + env(safe-area-inset-top)); }
   .toast { bottom: calc(80px + env(safe-area-inset-bottom)); max-width: calc(100vw - 32px); }
   .screen-win { right: 8px; left: 8px; width: auto; bottom: calc(80px + env(safe-area-inset-bottom)); }
-  .tour .tip { width: calc(100vw - 24px); }
 }

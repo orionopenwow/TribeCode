@@ -15,7 +15,9 @@
   const myAgent = () => { const st = C() && C().state(); const id = st && st.me && st.me.id; return !!(id && (st.members || []).some(m => m.role === 'agent' && m.owner === id)); };
   function state() {
     const s = get();
-    return { flint: !!s.flint, brain: !!s.brain || brainOn(), ai: !!s.ai || myAgent() };
+    // Meet Flint is done once you've been round with him (flinttour.js): no second introduction
+    const toured = (() => { const t = window.TribeFlintTour && window.TribeFlintTour.state(); return !!(t && (t.done || t.started)); })();
+    return { flint: !!s.flint || toured, brain: !!s.brain || brainOn(), ai: !!s.ai || myAgent() };
   }
   const allDone = () => { const s = state(); return s.flint && s.brain && s.ai; };
 
@@ -58,6 +60,7 @@
     render();
     const c = C(); if (c && c.on) { c.on('hello', render); c.on('presence', () => { if (myAgent() && !get().ai) mark('ai'); }); }
     setInterval(() => { if (document.getElementById('helper-setup') && (brainOn() && !get().brain)) mark('brain'); }, 3000);
+    window.addEventListener('tribe-flinttour', render);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   window.TribeHelpers = { render, state, reset: () => { put({}); render(); } };

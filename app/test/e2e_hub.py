@@ -148,9 +148,10 @@ def main():
             off = octx.new_page(); watch(off, "offline")
             off.goto(BASE + "/?skipIntro=1")
             off.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
-            # Home is simple: one hero (Getting started: two big choices), then Scratchpad | Recent activity
-            wait_text(off, "#hub-hero .gs-band", "GETTING STARTED")
-            wait_text(off, "#hub-hero", "Create your first project"); wait_text(off, "#hub-hero", "Join a friend")
+            # Home is simple: one hero (Getting started: one honest empty state, one primary action), then Scratchpad | Recent activity
+            wait_text(off, "#hub-hero .eyebrow", "GETTING STARTED")
+            wait_text(off, "#hub-hero", "Make your first project"); wait_text(off, "#hub-hero", "Join with a link")
+            assert off.locator("#hub-demo").count() == 0, "the demo isn't pushed on Home (it's in the ? menu and Ctrl K)"
             for gone in ["#hub-suggest", "#hub-ask-in", "#hub-start", "#hub-fleet"]: assert off.locator(gone).count() == 0, f"{gone} is gone from Home"
             for sel in ["#hub-join", "#hub-host", "#hub-note-new", "#hub-stream", "#grp-global"]: off.wait_for_selector(sel, state="visible")   # no "Your home" card: you are in the bar
             wait_text(off, ".hub-head .eyebrow", "YOUR COMMAND CENTER")   # eyebrows render uppercase

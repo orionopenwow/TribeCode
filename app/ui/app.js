@@ -27,7 +27,7 @@
 
   const CHECKS = [
     { key: 'setup', label: 'Set up this computer', go: 'Open', run: () => window.TribeOnboarding.open({ fromSettings: true }) },
-    { key: 'tour', label: 'Take the 60-second tour', go: 'Start', run: () => window.TribeTour.start() },
+    { key: 'tour', label: 'Take the 60-second tour', go: 'Start', run: () => window.TribeFlintTour && window.TribeFlintTour.start() },
     { key: 'drop', label: 'Drop your first file into the drop zone', go: 'Show me', run: () => { const d = $('#dropzone'); d.classList.add('over'); d.scrollIntoView({ block: 'center' }); setTimeout(() => d.classList.remove('over'), 1400); } },
     { key: 'brain', label: 'Connect a local brain (Ollama + Qwen)', go: 'Connect', run: async () => { await window.TribeOnboarding.open({ fromSettings: true }); window.TribeOnboarding.goTo(4); } },
     { key: 'invite', label: 'Invite a friend', go: 'Invite', run: () => openInvite() },
@@ -569,6 +569,21 @@
     };
   }
 
+  // ---- fresh open: no tribe yet. The Dashboard stands in until "Start your first project" ----
+  function announceFresh() {
+    if (window.TribeHub) { try { window.TribeHub.open('home'); } catch {} }   // (re)draw it: it can now offer Start your first project
+    window.dispatchEvent(new CustomEvent('tribe-fresh'));
+  }
+  // The one way to make your first tribe: the desktop app starts its server; a local server page claims it (host).
+  async function startFirst() {
+    if (window.TribeHost.isDesktop && window.__TAURI__) return hostHere();
+    const st = S.get();
+    const r = await C.ensureMember({ name: st.name, color: st.color });
+    if (r) window.__tribeFresh = false;   // ensureMember connects on success
+    else if (window.__authError) toast(window.__authError, 'err');
+    return r;
+  }
+
   // ---- desktop: host the tribe server on this computer (bundled sidecar) ----
   async function hostHere(opts) {
     const quiet = !!(opts && opts.quiet === true);
@@ -788,9 +803,17 @@
     const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
     // The desktop server runs only when you've made a tribe here (hosting) and the Host switch is on. A fresh install,
     // or Host switched off, starts no server; Create your first project starts it.
+    // Fresh open (no tribe yet): nothing is created and no demo starts. The Dashboard shows, Make it yours and Flint's
+    // tour follow (personalize.js, flinttour.js), and "Start your first project" makes the tribe (startFirst below).
+    // Automated tests keep the old auto-claim unless ?freshopen=1.
+    const freshOpen = !navigator.webdriver || params.has('freshopen');
     if (window.TribeHost.isDesktop && !served && !remote && st.hosting && !st.hostOff) hostHere({ quiet: true });
-    else if (window.TribeHost.isDesktop && !served && !remote) stopHost();
-    else if ((await C.ensureMember({ name: st.name, color: st.color })) !== 'host') C.connect();
+    else if (window.TribeHost.isDesktop && !served && !remote) { stopHost(); if (!st.hosting && !C.hasToken()) { window.__tribeFresh = true; announceFresh(); } }
+    else {
+      const r = await C.ensureMember({ name: st.name, color: st.color, defer: freshOpen && !C.hasToken() });
+      if (r === 'fresh') announceFresh();
+      else if (r !== 'host') C.connect();
+    }
   })();
   window.TribeUpdater.init();
   let autoHub = false;   // the hub was shown only because there was no tribe yet
@@ -803,5 +826,5 @@
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
   C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();
