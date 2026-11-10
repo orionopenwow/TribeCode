@@ -231,7 +231,7 @@
       { k: 'tasks', label: 'Tasks', icon: 'i-check', n: openT.length, line: openT.length ? `open${mineT.length ? ` · ${mineT.length} yours` : ''}${doneT ? ` · ${doneT} done` : ''}` : doneT ? `all ${doneT} done` : 'None yet', act: openT.length ? 'Open the board' : 'Add a task', go: 'tasks', hot: mineT.length > 0, c: '#38C6B1', pct: tasksAll.length ? Math.round(doneT / tasksAll.length * 100) : 0 },
       { k: 'files', label: 'New files', icon: 'i-doc', n: newFiles.length, line: newFiles.length ? 'added this week' : 'Nothing new this week', act: newFiles.length ? 'See them' : 'Add a file', go: 'docs', hot: false, c: '#FABD2F' },
     ];
-    if (window.TribeCompany) { if (!window.TribeCompany.get() && C.project() === p.id) await window.TribeCompany.refresh(p.id).catch(() => null); const ct = curP() === p && window.TribeCompany.tile(); if (ct) tiles.push(ct); }   // v0.27 company: one At a glance tile when the project is a company
+    if (window.TribeCompany) { if (window.TribeCompany.loadedFor() !== p.id && C.project() === p.id) await window.TribeCompany.refresh(p.id).catch(() => null); const ct = curP() === p && window.TribeCompany.tile(); if (ct) tiles.push(ct); }   // v0.27 company: one At a glance tile when the project is a company
     const r = d.repo;
     if (naming) return;
     const visFocus = document.activeElement && document.activeElement.id === 'ock-vis-in';

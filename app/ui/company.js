@@ -383,5 +383,5 @@
   C.on('hello', () => setTimeout(() => load(), 300));
   if (C.connected && C.connected()) setTimeout(() => load(), 600);
 
-  window.TribeCompany = { open: show, go, close: hide, refresh: load, get: () => co(), view: () => st.d, tile, flint, openSeat, create };
+  window.TribeCompany = { open: show, go, close: hide, refresh: load, get: () => co(), view: () => st.d, loadedFor: () => (st.d ? st.pid : ''), tile, flint, openSeat, create };
 })();
