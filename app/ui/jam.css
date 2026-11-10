@@ -1,0 +1,36 @@
+/* Jam mode (v0.27): the countdown banner and the jam board (app/ui/jam.js). Flat matte. */
+.jam-banner { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 24px);
+  padding: 6px 6px 6px 12px; border: 1px solid #6A4A36; border-radius: 999px; background: var(--surface); color: var(--text); font-size: 13px; }
+.jam-banner__i { color: var(--accent); display: grid; }
+.jam-banner b { font-weight: 600; }
+.jam-banner__th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.jam-banner__t { font: 600 12.5px var(--mono); color: var(--accent); padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--edge); white-space: nowrap; }
+.jam-banner__go { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 600; font-size: 12.5px; }
+.jam-banner__go:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.modal-card.jam-sheet { width: min(640px, calc(100vw - 32px)); max-height: 88vh; overflow: auto; }
+.jam-h { font-family: var(--display); font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 6px; }
+.jam-meta { margin: 0 0 8px; color: var(--muted); font-size: 14px; } .jam-meta b { color: var(--accent); }
+.jam-rules { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface-2); font-size: 13.5px; line-height: 1.5; }
+.jam-acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 14px; } .jam-acts .btn svg { vertical-align: -3px; margin-right: 4px; }
+.jam-eh { margin: 8px 0 8px; }
+.jam-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.jam-e { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
+.jam-e.is-win { border-color: #FABD2F; }
+.jam-e__pic { width: 84px; height: 52px; border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: var(--surface-3); font-size: 20px; }
+.jam-e__pic img { width: 100%; height: 100%; object-fit: cover; }
+.jam-e__t { display: grid; gap: 1px; min-width: 0; } .jam-e__t b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .jam-e__t small { color: var(--muted); font-size: 12px; }
+.jam-e__v { font: 600 12px var(--mono); color: #FABD2F; }
+.jam-e__a { display: flex; gap: 6px; align-items: center; }
+.jam-own { font-size: 12px; }
+.jam-empty { margin: 0 0 10px; }
+.jam-win { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; margin: 4px 0 12px; border: 1px solid #5E4C24; border-radius: 12px; background: var(--surface-2); }
+.jam-win > span { font-size: 26px; } .jam-win b { display: block; font-size: 16px; } .jam-win div span { color: var(--muted); font-size: 12.5px; }
+.jam-form { display: grid; gap: 10px; margin: 10px 0 4px; } .jam-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 820px) {
+  .jam-banner { top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .jam-banner__th { max-width: 120px; }
+  .modal-card.jam-sheet { width: 100%; max-height: 92dvh; }
+  .jam-e { grid-template-columns: 64px minmax(0, 1fr); } .jam-e__pic { width: 64px; height: 44px; } .jam-e__a { grid-column: 1 / -1; justify-content: flex-end; }
+  .jam-row { grid-template-columns: 1fr; }
+}
+body:has(#invite-modal:not(.hidden)) .jam-banner { display: none; }   /* the board (or any sheet) is open: no banner on top of it */

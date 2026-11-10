@@ -405,8 +405,9 @@ const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postC
   dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
+let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
@@ -537,6 +538,12 @@ const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid =>
 talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name,   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
+// v0.27 breakout: one-click Publish to a public play link (with a safety check) and tribe game jams (server/publish.js, server/jam.js)
+const visualCard = pid => P.inProject(pid, () => { let best = null; const root = store.p('visuals'); try { for (const d of fs.readdirSync(root)) { let fl = []; try { fl = fs.readdirSync(path.join(root, d)); } catch { continue; } for (const f of fl) if (f.endsWith('.png')) { const full = path.join(root, d, f), t = fs.statSync(full).mtimeMs; if (!best || t > best.t) best = { full, t }; } } } catch {} return best && best.full; });
+const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupFlow, getMembers: () => members, broadcast, postChat, approvals, nameOf, visualCard, log: m => console.error('  ' + m),
+  baseUrl: () => { const pub = share.publicUrl && share.publicUrl(), lan = (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url; return (pub || lan || `http://localhost:${PORT}`).replace(/\/+$/, ''); } });
+publishOnApproval = a => publishHub.onApproval(a);
+const jamHub = require('./jam')({ P, W, base: baseStore, setupFlow, publish: publishHub, getMembers: () => members, broadcast, postChat, nameOf });
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str });   // v0.27 company: the Marketplace (server/market.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
@@ -566,7 +573,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -1034,6 +1041,8 @@ async function apiInProject(req, res, url) {
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
+  if (a === 'publish') { const h = await publishHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 publish: play links
+  if (a === 'jam') { const h = await jamHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 jams
   if (a === 'applink' || a === 'export' || a === 'shortcut' || a === 'github') { const h = await (a === 'applink' ? applink : a === 'github' ? githubAuth : exporter).route(req, res, ctx()); if (h !== null) return; }   // Home Screen app links, Desktop folders, GitHub sign-in
   if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
@@ -1087,6 +1096,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
+    if (publishHub.match(req, url)) return publishHub.serve(req, res, url);   // /play/<slug>/… public play links (server/publish.js)
     if (req.method === 'GET') return serveStatic(req, res, url);
     fail(res, 405, 'method not allowed');
   } catch (e) {
