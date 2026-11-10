@@ -10,6 +10,22 @@
   const IDX = { es: 0, pt: 1, fr: 2, de: 3, ja: 4, zh: 5, ko: 6 };
   // English -> [es, pt, fr, de, ja, zh, ko]
   const D = {
+    // v0.27.1 Settings › Flint and Flint's lesson buttons
+    "What Flint remembers about you": ["Lo que Flint recuerda de ti", "O que o Flint lembra de você", "Ce dont Flint se souvient sur vous", "Was Flint über dich weiß", "Flint が覚えているあなたのこと", "Flint 记得的关于你的事", "Flint가 기억하는 나"],
+    "Tribe skills": ["Habilidades de la tribu", "Habilidades da tribo", "Compétences de la tribu", "Tribe-Skills", "トライブのスキル", "部落技能", "트라이브 스킬"],
+    "How you like to learn": ["Cómo te gusta aprender", "Como você gosta de aprender", "Comment vous aimez apprendre", "Wie du gern lernst", "好きな学び方", "你喜欢的学习方式", "좋아하는 학습 방식"],
+    "Forget everything": ["Olvidar todo", "Esquecer tudo", "Tout oublier", "Alles vergessen", "すべて忘れる", "全部忘记", "모두 잊기"],
+    "Save skill": ["Guardar habilidad", "Salvar habilidade", "Enregistrer la compétence", "Skill speichern", "スキルを保存", "保存技能", "스킬 저장"],
+    "Save steps": ["Guardar pasos", "Salvar passos", "Enregistrer les étapes", "Schritte speichern", "手順を保存", "保存步骤", "단계 저장"],
+    "Another way": ["De otra forma", "De outro jeito", "Autrement", "Anders erklärt", "別の説明", "换个方式", "다른 방식으로"],
+    "Quiz me lightly": ["Pregúntame algo fácil", "Faça um quiz leve", "Petit quiz", "Kleines Quiz", "軽くクイズ", "来个小测验", "가볍게 퀴즈"],
+    "Flint picks": ["Flint elige", "Flint escolhe", "Flint choisit", "Flint wählt", "Flint におまかせ", "由 Flint 决定", "Flint가 선택"],
+    "As a picture": ["Con un dibujo", "Com uma imagem", "En image", "Als Bild", "絵で", "用图", "그림으로"],
+    "As an analogy": ["Con una analogía", "Com uma analogia", "Par analogie", "Als Vergleich", "たとえで", "用类比", "비유로"],
+    "As code": ["Con código", "Com código", "En code", "Als Code", "コードで", "用代码", "코드로"],
+    "Step by step": ["Paso a paso", "Passo a passo", "Pas à pas", "Schritt für Schritt", "ステップごとに", "一步一步", "단계별로"],
+    "Nothing yet.": ["Nada todavía.", "Nada ainda.", "Rien pour l’instant.", "Noch nichts.", "まだありません。", "还没有。", "아직 없어요."],
+    "No skills yet.": ["Aún no hay habilidades.", "Ainda não há habilidades.", "Aucune compétence pour l’instant.", "Noch keine Skills.", "スキルはまだありません。", "还没有技能。", "아직 스킬이 없어요."],
     // sidebar + nav
     'Dashboard': ['Panel', 'Painel', 'Tableau de bord', 'Übersicht', 'ダッシュボード', '仪表板', '대시보드'],
     'Messages': ['Mensajes', 'Mensagens', 'Messages', 'Nachrichten', 'メッセージ', '消息', '메시지'],

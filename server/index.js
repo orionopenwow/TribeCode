@@ -533,6 +533,7 @@ const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => bas
 const inspoBoard = require('./inspo')({ P, base: baseStore, embeds, showcase, assets: assetLib, postChat, nameOf, broadcast });   // v0.25: the inspiration board (server/inspo.js)
 const ledger = require('./ledger')({ P, base: baseStore, broadcast, postChat, nameOf, perms, getMembers: () => members }), seatpilot = require('./seatpilot')({ P, base: baseStore, broadcast, nameOf, perms, getMembers: () => members, approvals, coord, bus, ledger });   // v0.27 company: Money + seat autopilot (server/ledger.js, server/seatpilot.js)
 const academy = require('./academy')({ P, base: baseStore, store, docs, captures, nameOf, broadcast }), legalDocs = require('./legal')({ P, base: baseStore, store, docs, approvals, postChat, nameOf, broadcast });   // v0.27 company: Role Academy + Offload (server/academy.js), Legal documents (server/legal.js)
+const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
 talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name,   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
@@ -566,7 +567,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -959,6 +960,7 @@ async function apiInProject(req, res, url) {
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
   }
 
+  if (a === 'flint' && ['memory', 'skills', 'vocab', 'draft'].includes(b)) return flintMem.route(req, res, ctx());   // v0.27.1
   if (a === 'flint') return flint.route(req, res, ctx());   // feat/flint: GET status, POST /ask streams the local model's reply
   if (a === 'look') return look.route(req, res, ctx());   // feat/customize: Settings › Look + the project menu's Customize (server/look.js)
   if (a === 'llm') return llm.route(req, res, ctx());   // feat/any-llm: Settings › Flint's brain (host sets provider + key; key never leaves the host)

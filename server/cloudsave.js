@@ -28,6 +28,8 @@ module.exports = function cloudsave({ root, key, log = () => {} }) {
   const abs = rel => path.join(root, rel);
   const isDm = rel => /^(.*\/)?chat\/dm-/.test(rel);
   const dmMine = (rel, id) => { const ch = path.basename(rel, '.jsonl'); return ch.startsWith(`dm-${id}-`) || ch.endsWith(`-${id}`); };
+  // Flint's memory of a person (.tribe/flint/memory/<id>.json) is theirs alone: never in anyone else's copy (v0.27.1)
+  const memOther = (rel, id) => { const m = /^\.tribe\/flint\/memory\/([^/]+)\.json$/.exec(rel); return !!m && m[1] !== id; };
 
   function walk(dir = '', out = []) {
     let ents = []; try { ents = fs.readdirSync(abs(dir), { withFileTypes: true }); } catch { return out; }
@@ -44,7 +46,7 @@ module.exports = function cloudsave({ root, key, log = () => {} }) {
   function snapshot(me) {
     if (!enabled) return { enabled: false };
     const files = {}, sigs = {}; let total = 0;
-    const rels = walk().filter(r => !isDm(r) || dmMine(r, me.id) || me.role === 'host')
+    const rels = walk().filter(r => (!isDm(r) || dmMine(r, me.id) || me.role === 'host') && !memOther(r, me.id))
       .sort((a, b) => (a.startsWith('.tribe/') ? -1 : 0) - (b.startsWith('.tribe/') ? -1 : 0));
     for (const rel of rels) {
       let text; try { const st = fs.statSync(abs(rel)); if (st.size > MAX_FILE * 4) continue; text = fs.readFileSync(abs(rel), 'utf8'); } catch { continue; }

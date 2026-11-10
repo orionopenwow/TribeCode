@@ -85,3 +85,24 @@ body.flint-open { overflow: hidden; }
 .fl-menu button:hover, .fl-menu button:focus-visible { background: var(--surface-2); outline: none; }
 .fl-menu .fm-e { font-size: 18px; width: 24px; text-align: center; }
 .fl-menu b { display: block; font-size: 13.5px; font-weight: 600; } .fl-menu small { display: block; font-size: 12px; color: var(--faint); }
+
+/* v0.27.1: lessons show small code blocks; Settings › Flint (flintmem.js) */
+.fl-code { margin: 6px 0; padding: 8px 10px; border: 1px solid var(--line, #2A313C); border-radius: 8px; background: var(--surface-2, #1B2028); font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; white-space: pre; overflow-x: auto; }
+.fl-t code { font: 12px ui-monospace, Menlo, Consolas, monospace; padding: 0 4px; border-radius: 4px; background: var(--surface-2, #1B2028); }
+.fm { display: grid; gap: 18px; width: 100%; }
+.fm-sec h4 { margin: 0 0 4px; font-size: 14px; }
+.fm-hint { margin: 0 0 8px; font-size: 12.5px; color: var(--faint, #94A3B8); }
+.fm-notes, .fm-skills { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.fm-notes li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 6px; align-items: center; }
+.fm-kind { font: 600 10.5px ui-monospace, Menlo, monospace; text-transform: uppercase; color: var(--faint, #94A3B8); min-width: 52px; }
+.fm-empty { color: var(--faint, #94A3B8); font-size: 13px; }
+.fm-add, .fm-newskill { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin-bottom: 8px; }
+.fm-newskill { grid-template-columns: minmax(0, 1fr); }
+.fm-newskill .btn { justify-self: start; }
+.fm-style { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 6px 0; }
+.fm-skills > li { padding: 10px; border: 1px solid var(--line, #2A313C); border-radius: 10px; display: grid; gap: 6px; }
+.fm-skills > li > b { font: 600 13px ui-monospace, Menlo, monospace; }
+.fm-runs { font-size: 12px; color: var(--faint, #94A3B8); }
+.fm-skills ol { margin: 0; padding-left: 18px; font-size: 13px; }
+.fm-row { display: flex; gap: 6px; }
+@media (max-width: 600px) { .fm-notes li { grid-template-columns: minmax(0, 1fr) auto auto; } .fm-kind { display: none; } }

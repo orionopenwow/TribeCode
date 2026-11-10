@@ -16,6 +16,7 @@ const SYSTEM = 'You are Flint, the small built-in helper of TribeCode, a self-ho
 
 module.exports = function flint({ brain, str, llm }) {
   const clip = (s, n) => String(s || '').slice(0, n);
+  let briefOf = null;   // v0.27.1: what this person asked Flint to remember (server/flintmem.js), so answers fit them
 
   // ---------- Flint writes docs, sheets and slides (feat/crafts) ----------
   const FORMAT = {
@@ -63,7 +64,8 @@ module.exports = function flint({ brain, str, llm }) {
     const hist = (Array.isArray(body.history) ? body.history : []).slice(-8)
       .map(h => `${h && h.who === 'flint' ? 'Flint' : 'Them'}: ${clip(h && h.text, 400)}`).join('\n');
     const room = clip(typeof body.room === 'string' ? body.room : '', 1500);
-    return `Room facts:\n${room || '(none)'}\n\n${hist ? `Conversation so far:\n${hist}\n\n` : ''}${me.name || 'They'} asks Flint: ${text}\n\nFlint:`;
+    const about = briefOf ? clip(briefOf(me), 1200) : '';
+    return `${about ? about + '\n\n' : ''}Room facts:\n${room || '(none)'}\n\n${hist ? `Conversation so far:\n${hist}\n\n` : ''}${me.name || 'They'} asks Flint: ${text}\n\nFlint:`;
   }
 
   async function route(req, res, { m, b, me, readBody, send, fail }) {
@@ -87,5 +89,5 @@ module.exports = function flint({ brain, str, llm }) {
     }
     return fail(res, 404, 'no such Flint route');
   }
-  return { route, SYSTEM, make };
+  return { route, SYSTEM, make, useBrief: fn => { briefOf = fn; } };
 };

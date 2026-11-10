@@ -76,7 +76,7 @@ def main():
             # nav
             assert pg.is_visible(".nav__logo img")
             labels = pg.evaluate("[...document.querySelectorAll('.nav__links > .nav__item > button, .nav__links > a')].map(e => e.textContent.trim())")
-            assert labels == ["Features", "Learn", "Pricing", "Mission", "Docs"], labels   # no repeats: Download, Star and the Guide live elsewhere
+            assert labels == ["Features", "Learn", "Pricing", "Flint", "Mission", "Docs"], labels   # no repeats: Download, Star and the Guide live elsewhere
             assert pg.is_visible(".nav__end a:has-text('Open the app')") and pg.is_visible(".nav__end .btn:has-text('Download')")
             pg.wait_for_function("document.querySelector('.nav [data-gh=stars]').textContent === '2.3k'", timeout=8000)
             assert pg.is_visible(".nav [data-gh=stars]")
@@ -355,7 +355,7 @@ def main():
             assert pq.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"); pq.close()
             for y in [0.25, 0.5, 0.75, 1.0]:
                 ph.evaluate(f"scrollTo({{top: document.body.scrollHeight * {y}, behavior: 'instant'}})"); ph.wait_for_timeout(150); no_overflow(ph, f"phone at {int(y * 100)}%")
-            ph.evaluate("scrollTo(0, 0)"); ph.click(".nav__toggle"); assert ph.is_visible("#nav-links a[href='docs.html']"); no_overflow(ph, "phone menu")
+            ph.evaluate("scrollTo(0, 0)"); ph.click(".nav__toggle"); assert ph.is_visible("#nav-links > a[href='docs.html']"); no_overflow(ph, "phone menu")
             assert ph.get_attribute(".nav__toggle", "aria-expanded") == "true"
             ph.click(".nav__toggle"); assert not ph.is_visible("#nav-links")
             if SHOTS:
