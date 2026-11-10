@@ -350,8 +350,9 @@
     let b = document.getElementById('nest-money');
     const on = !!has[curPid()];
     if (!b && on) { after.insertAdjacentHTML('afterend', '<button class="nest-row core" data-pnav="money" id="nest-money"><svg class="i"><use href="#i-coin"/></svg><span>Money</span></button>'); b = document.getElementById('nest-money'); }
-    if (b) b.classList.toggle('hidden', !on);
+    if (b) b.classList.toggle('hidden', !on || !!(window.TribeMode && window.TribeMode.allowsKey && !window.TribeMode.allowsKey('money')));   // v0.27: Intermediate and up, or turned on at your request
   }
+  document.addEventListener('tribe:mode', () => navRow());
   async function probe() {
     const pid = curPid(); if (!pid || !C || !C.hasToken || !C.hasToken()) return;
     try { const l = await api(pid, '/ledger?limit=1'); setHas(pid, !!l.company); } catch { setHas(pid, false); }

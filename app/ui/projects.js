@@ -248,6 +248,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
             <span class="gl-num">${t.n}</span><span class="gl-line">${esc(t.line)}</span>
             ${t.pct != null && (tasksAll.length || t.k === 'company') ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
             <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
+      <div id="pj-reco-slot"></div><!-- v0.27: recommended next for this project (reco.js) -->
       ${canEdit ? '<div id="pj-board-slot"></div>' : ''}<!-- v0.25: the inspiration board (inspo.js) -->
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">
         <section class="card" id="pj-recent"><h3>${ico('i-refresh', 16)}Recent changes</h3>
@@ -306,6 +307,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     el.querySelectorAll('[data-doc]').forEach(x => x.onclick = () => window.TribeShell ? window.TribeShell.previewDoc(x.dataset.doc) : (App().show('docs'), setTimeout(() => window.TribeDocs.open(x.dataset.doc), 150)));
     workspacePanel($('#pj-ws'));
     if (window.TribeInspo) window.TribeInspo.draw(p.id);
+    if (window.TribeReco) window.TribeReco.draw(p.id);   // v0.27
     toolbox(p);
     if (window.TribeSense) window.TribeSense.card(p);   // feat/project-sense: the Inspiration card (sense.js)
     if (window.TribeSetup) window.TribeSetup.card(p, d);   // feat/setup-flow: role flows + Make the starter (setup.js)
