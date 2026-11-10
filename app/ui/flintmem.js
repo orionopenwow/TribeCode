@@ -25,6 +25,8 @@
 
   // ---------- state ----------
   let mem = { notes: [], style: '' }, skills = [], canCreate = false, words = [], loaded = 0;
+  const FF = () => window.TribeFlintFly && window.TribeFlintFly.enabled() ? window.TribeFlintFly : null;   // v0.27.2 Flint at work
+  const seen = q => { const e = document.querySelector(q); return e && e.offsetParent !== null ? e : null; };
   async function load(force) {
     if (!on() || (!force && Date.now() - loaded < 30000)) return;
     loaded = Date.now();
@@ -177,7 +179,7 @@
     if (running > 2) return { text: 'That skill calls itself, so I stopped.' };
     F().say(`Running **/${sk.name}**: ${sk.steps.length} step${sk.steps.length > 1 ? 's' : ''}. Anything outward or costly still asks you first.`);
     running++;
-    try { for (const st of sk.steps) { await new Promise(r => setTimeout(r, 450)); await F().step(st); } }
+    try { let i = 0; for (const st of sk.steps) { i++; const th = seen('#flint .fl-thread') || seen('.ff-thread'); if (FF() && th) FF().to(th, `/${sk.name} · ${i}/${sk.steps.length}`); await new Promise(r => setTimeout(r, 450)); await F().step(st); } }
     finally { running--; }
     try { await C.api(`/flint/skills/${encodeURIComponent(sk.id)}/ran`, { method: 'POST', body: {} }); } catch {}
     return true;
@@ -188,13 +190,15 @@
   async function draft(kind, t) {
     if (!on()) return { text: 'Connect to your tribe first, then I can write it into Files.' };
     F().say(`Writing the ${kind === 'readme' ? 'README' : kind === 'notes' ? 'meeting notes' : kind === 'changelog' ? 'changelog' : 'launch doc'} from your vision, tasks, decisions and chat…`);
-    try { const r = await C.api('/flint/draft', { method: 'POST', body: { kind, ask: t } }); const pid = C.project && C.project();
+    const fd = seen('#nest-docs') || seen('#view-docs') || seen('#flint .fl-thread'); if (FF() && fd) FF().work(fd, 'Writing…');
+    try { const r = await C.api('/flint/draft', { method: 'POST', body: { kind, ask: t } }); const pid = C.project && C.project(); if (FF() && fd) FF().done(fd, 'Saved to Files ✓');
       return { text: `Done: **${(r.title)}** is in Files, marked as a Flint draft${r.basic ? ' (written from a template and your project; give me a brain and I write it in full)' : ` (written with ${(r.via || 'the tribe\'s AI')})`}. Read it over before you share it.`, acts: [act('Open it', 'doc', `${pid}|${r.slug}`)] }; }
-    catch (e) { return { text: `I couldn't write it: ${(e.message)}` }; }
+    catch (e) { if (FF()) FF().home(); return { text: `I couldn't write it: ${(e.message)}` }; }
   }
   async function build(what) {
     if (!on()) return { text: 'Connect to your tribe first, then I can start it.' };
     const pid = C.project(), done = [], need = [];
+    const bt = seen('#pvw') || seen('#nest-preview-slot') || seen('#view-home') || seen('#main'); if (FF() && bt) FF().work(bt, 'Building');
     try { const v = await C.api('/vision'); if (!String(v.text || '').trim()) { const name = ((C.state().projects || []).find(p => p.id === pid) || {}).name || 'Our project'; await C.api('/vision', { method: 'PUT', body: { text: `# ${name}\n\n${what}\n` } }); done.push('wrote it down as the project vision'); } } catch {}
     let made = false; try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }); made = !!(r.written && r.written.length); } catch {}
     if (made) done.push('started a first version you can run in the Preview');
@@ -203,6 +207,7 @@
     let asked = false; try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); asked = true; } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); asked = true; } catch {} }
     if (asked) done.push(agents.length ? `handed the brief to ${agents.length === 1 ? agents[0].name : agents.length + ' AI helpers'}` : 'posted the brief for your AI helpers');
     if (!agents.length) need.push('an AI helper to build the rest: connect Claude Code, Codex or Gemini (I can open that)');
+    if (FF()) FF().done(seen('#pvw') || bt, made ? 'First version ✓' : 'Brief sent ✓');
     return { text: `On it: “${(what)}”. I ${done.length ? done.join(', ') : 'tried, but couldn\'t reach the project'}.${need.length ? ` Still needed: ${need.join('; ')}.` : ' It refreshes in the Preview as they work.'}`,
       acts: [act('Open the Preview', 'preview'), ...(agents.length ? [] : [act('Connect my AI', 'connect')])] };
   }
@@ -216,6 +221,7 @@
     }
     let acts = [];
     try { const pid = C.project && C.project(); if (pid && window.TribeReco) { const r = await window.TribeReco.list(pid); recoCache = r; if (r[0]) bits.push(`next up: ${(r[0].t.toLowerCase())}`); acts = r.slice(0, 2).map(x => act(x.b, 'flintmem', `reco:${x.id}`)); } } catch {}
+    if (FF()) setTimeout(() => { const last = seen('#flint .fl-thread .fl-msg:last-child') || seen('.ff-thread .fl-msg:last-child'); if (last) FF().done(last, 'Your brief'); }, 120);
     return { text: `${hi}${nm ? ' ' + nm : ''}. ${bits.length ? bits.join('; ') + '.' : 'All quiet. Want to start something?'}`, acts: acts.length ? acts : [act('What\'s happening?', 'ask', 'What\'s happening?')] };
   }
   let recoCache = [];
@@ -277,6 +283,7 @@
   async function rememberIt(textIn, kind, reply) {
     if (!on()) return { text: 'Connect to your tribe first, then I can remember things for you.' };
     try { const r = await C.api('/flint/memory', { method: 'POST', body: { text: textIn, kind } }); loaded = 0; await load(true); drawSettings();
+      if (FF()) setTimeout(() => { const at = seen('#set-flintmem') || seen('#flint .fl-thread .fl-msg:last-child') || seen('.ff-thread .fl-msg:last-child') || seen('#flint'); if (at) FF().done(at, 'Remembered ✓'); }, 150);
       return { text: r.same ? 'I already remember that.' : (reply || `Okay, I'll remember: “${(r.note.text)}”. Only you can see it, in Settings › Flint.`), acts: [act('What do you know about me?', 'ask', 'What do you know about me?')] }; }
     catch (e) { return { text: `I couldn't save that: ${(e.message)}` }; }
   }
@@ -302,7 +309,9 @@
   function drawSettings() {
     if (!setEl || !document.body.contains(setEl)) return;
     const mine = meId(), boss = ((C.state().me || {}).role === 'host') || ((C.state().me || {}).role === 'admin');
+    const flyOn = !window.TribeFlintFly || window.TribeFlintFly.enabled();
     setEl.innerHTML = `<div class="fm">
+      ${window.TribeFlintFly ? `<label class="fm-fly"><input type="checkbox" id="fm-fly" ${flyOn ? 'checked' : ''}><span><b>Show Flint moving around</b><small>When Flint changes something, a small flame flies there so you can see what he's doing. Just on this device.</small></span></label>` : ''}
       <section class="fm-sec"><h4>What Flint remembers about you</h4><p class="fm-hint">Only you can see these. Tell Flint “remember I'm learning CSS” or edit them here.</p>
         <ul class="fm-notes">${mem.notes.length ? mem.notes.map(n => `<li data-id="${(n.id)}"><span class="fm-kind">${(n.kind)}</span><input class="input fm-in" value="${(n.text)}" maxlength="300" aria-label="Note"><button class="btn sm fm-save">Save</button><button class="btn sm ghost fm-del" aria-label="Delete note">Delete</button></li>`).join('') : '<li class="fm-empty">Nothing yet.</li>'}</ul>
         <form class="fm-add"><input class="input" name="t" placeholder="Add a note, e.g. I like code examples" maxlength="300" aria-label="New note"><button class="btn sm">Add</button></form>
@@ -318,6 +327,7 @@
     });
     const add = q('.fm-add'); if (add) add.onsubmit = async e => { e.preventDefault(); const v = add.t.value.trim(); if (!v) return; try { await C.api('/flint/memory', { method: 'POST', body: { text: v } }); loaded = 0; await load(true); drawSettings(); } catch (er) { alertish(er); } };
     const st = q('#fm-style'); if (st) st.onchange = async () => { await setStyle(st.value); };
+    const fy = q('#fm-fly'); if (fy) fy.onchange = () => window.TribeFlintFly.setEnabled(fy.checked);
     const fg = q('.fm-forget'); if (fg) fg.onclick = () => doAct('forget!');
     qa('.fm-skills > li[data-id]').forEach(li => {
       const sv = li.querySelector('.fm-ssave'), dl = li.querySelector('.fm-sdel');
