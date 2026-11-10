@@ -216,3 +216,59 @@
 @media (prefers-reduced-motion: reduce) {
   .cv-left, .cv-right, .cv-caret svg, .cv-tool, .cv-pbtn, .cv-zoom, .cv-hbtn { transition: none; }
 }
+
+/* ---------- the focused Design workspace (body.cv-focus, canvas.js): the canvas is the whole window ----------
+   The rail, the project sidebar, the user bar and the right panel step aside; the canvas header becomes the one bar:
+   Back to app · layers toggle · project / design file … quick jumps · tools · properties toggle (its two edges). */
+.cv-back, .cv-tog, .cv-proj, .cv-crumb-sep, .cv-jump, .cv-hdiv, .cv-wc { display: none; }
+body.cv-focus:not(.pvw-focus) .shell .window { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr) !important; }
+body.cv-focus:not(.pvw-focus) .window > .rail, body.cv-focus:not(.pvw-focus) .window > .titlebar, body.cv-focus:not(.pvw-focus) .window > .side,
+body.cv-focus:not(.pvw-focus) .window > .panel, body.cv-focus:not(.pvw-focus) .panel-reopen, body.cv-focus:not(.pvw-focus) #userbar,
+body.cv-focus:not(.pvw-focus) #tabbar, body.cv-focus:not(.pvw-focus) .m2-rack, body.cv-focus:not(.pvw-focus) .m2-homebar { display: none !important; }
+body.cv-focus:not(.pvw-focus) .window > .main { grid-column: 1 / -1; grid-row: 1 / -1; padding: 0; }
+body.cv-focus #view-canvas { height: 100%; display: flex; }
+body.cv-focus .cv-head { gap: 8px; min-height: 52px; padding: 0 10px 0 8px; background: var(--rail, var(--canvas)); }
+body.cv-focus .cv-title .eyebrow { display: none; }
+body.cv-focus .cv-file { font-size: 14px; font-weight: 600; }
+body.cv-focus .cv-back { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px 0 8px; border: 1px solid var(--edge); border-radius: 9px; background: none; color: var(--text); font-size: 13px; font-weight: 600; white-space: nowrap; flex: none; cursor: pointer; }
+body.cv-focus .cv-back:hover { background: var(--hover); border-color: var(--edge-pop, var(--edge)); }
+body.cv-focus .cv-tog { display: inline-flex; justify-content: center; width: 34px; padding: 0; flex: none; }
+.cv-tog[aria-pressed="true"] { color: var(--text); background: var(--surface-3); }
+.cv-tog[aria-pressed="false"] { color: var(--faint); background: none; }
+body.cv-focus .cv-proj { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 200px; margin-left: 4px; }
+body.cv-focus .cv-proj b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; color: var(--text); }
+body.cv-focus .cv-proj:has(b:empty) { display: none; }
+body.cv-focus .cv-crumb-sep { display: inline; color: var(--faint); }
+body.cv-focus .cv-proj:has(b:empty) + .cv-crumb-sep { display: none; }
+body.cv-focus .cv-jump { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--edge); border-radius: 9px; }
+.cv-jbtn { position: relative; width: 30px; height: 28px; display: grid; place-items: center; border-radius: 7px; background: none; border: 0; color: var(--muted); cursor: pointer; }
+.cv-jbtn:hover { background: var(--hover); color: var(--text); }
+.cv-jbtn:focus-visible, .cv-back:focus-visible, .cv-tog:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cv-ju { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.cv-badge { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: var(--canvas); font: 700 9.5px/15px var(--font, inherit); text-align: center; pointer-events: none; }
+.cv-badge.hidden { display: none; }
+body.cv-focus .cv-hdiv { display: block; width: 1px; height: 22px; margin: 0 4px; background: var(--edge); flex: none; }
+body.cv-focus .cv-wc { display: inline-flex; gap: 6px; margin-left: 4px; padding-left: 10px; border-left: 1px solid var(--edge); }
+@media (min-width: 821px) {
+  .cv.no-left .cv-left, .cv.no-right .cv-right { display: none; }
+  .cv.no-left .cv-body { grid-template-columns: minmax(0, 1fr) 264px; }
+  .cv.no-right .cv-body { grid-template-columns: 240px minmax(0, 1fr); }
+  .cv.no-left.no-right .cv-body { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1180px) and (min-width: 821px) {
+  body.cv-focus .cv-back span { display: none; }
+  body.cv-focus .cv-back { padding: 0 8px; }
+  body.cv-focus .cv-proj { max-width: 130px; }
+}
+@media (max-width: 820px) {
+  body.cv-focus:not(.pvw-focus) .window > .main { padding-bottom: 0; }
+  body.cv-focus .cv-head { padding-top: env(safe-area-inset-top); min-height: calc(52px + env(safe-area-inset-top)); }
+  body.cv-focus .cv-back { padding: 0 8px; } body.cv-focus .cv-back span { display: none; }
+  body.cv-focus .cv-tog, body.cv-focus .cv-jump, body.cv-focus .cv-hdiv, body.cv-focus .cv-proj, body.cv-focus .cv-crumb-sep, body.cv-focus .cv-peers { display: none; }
+  body.cv-focus .cv-title { flex: 1 1 auto; min-width: 56px; }
+  body.cv-focus .cv-file { max-width: 100%; }
+  body.cv-focus .cv-head-acts { margin-left: 0; gap: 4px; }
+  body.cv-focus .cv-zoom { display: none; }   /* pinch to zoom on phones */
+  body.cv-focus .cv-send { padding: 0 12px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: no-preference) { .cv-jbtn, .cv-back, .cv-tog { transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); } }

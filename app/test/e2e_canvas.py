@@ -272,6 +272,56 @@ def main():
             host.evaluate("TribeCanvas._e.fit()"); host.wait_for_timeout(200)
             shot(host, "sample")
 
+            # ---- the focused Design workspace: only the canvas, Back, pane toggles in the bar, quick jumps, Esc order
+            vis = lambda pg, sel: pg.evaluate("s => { const e = document.querySelector(s); return !!e && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0; }", sel)
+            assert host.evaluate("document.body.classList.contains('cv-focus')"), "Design opens as a focused workspace"
+            for sel_ in (".window > .rail", ".window > .side", ".window > .titlebar", "#userbar"):
+                assert not vis(host, sel_), ("hidden while designing", sel_)
+            assert vis(host, "#cv-back") and vis(host, "#cv-tog-left") and vis(host, "#cv-tog-right") and vis(host, ".cv-jump"), "the bar has Back, both pane toggles and quick jumps"
+            cvw = host.evaluate("document.querySelector('#cv').getBoundingClientRect().width")
+            assert cvw >= 1440 - 4, ("the editor is full-window", cvw)
+            host.click("#cv-tog-left"); host.wait_for_timeout(150)
+            assert not vis(host, "#cv-left") and host.get_attribute("#cv-tog-left", "aria-pressed") == "false", "the layers pane hides from the bar"
+            host.click("#cv-tog-right"); host.wait_for_timeout(150)
+            assert not vis(host, "#cv-right"), "the properties pane hides from the bar"
+            sw = host.evaluate("document.querySelector('#cv-stage').getBoundingClientRect().width")
+            assert sw >= 1440 - 4, ("the stage takes the room", sw)
+            host.focus("#cv-stage"); host.keyboard.press("Control+Backslash"); host.wait_for_timeout(150)
+            assert vis(host, "#cv-left"), "Ctrl backslash brings the layers back"
+            host.click("#cv-tog-right"); host.wait_for_timeout(150)
+            assert vis(host, "#cv-right"), "and the toggle brings properties back"
+            fdir = os.environ.get("CANVAS_FOCUS_SHOTS")
+            if fdir:
+                host.evaluate("id => TribeCanvas._e.select([id])", scr_id); host.wait_for_timeout(150)
+                host.screenshot(path=os.path.join(fdir, "canvas-focus-1440.png"))
+                host.set_viewport_size({"width": 1235, "height": 776}); host.wait_for_timeout(400)
+                host.evaluate("TribeCanvas._e.fit()"); host.wait_for_timeout(300)
+                host.screenshot(path=os.path.join(fdir, "canvas-focus-1235.png"))
+                host.set_viewport_size({"width": 1440, "height": 900}); host.wait_for_timeout(300)
+            # Esc lets go of the selection first; only with nothing selected does it leave the workspace
+            host.evaluate("id => TribeCanvas._e.select([id])", scr_id)
+            host.focus("#cv-stage")
+            for _ in range(8):
+                if not st(host)["selected"]: break
+                host.keyboard.press("Escape"); host.wait_for_timeout(120)
+                assert host.evaluate("document.body.dataset.view") == "canvas", "Esc with a selection stays in Design"
+            assert not st(host)["selected"], "Esc let go of the selection"
+            host.keyboard.press("Escape"); host.wait_for_timeout(200)
+            assert host.evaluate("document.body.dataset.view") == "canvas", "a quick second Esc right after letting go stays"
+            host.wait_for_timeout(900); host.keyboard.press("Escape"); host.wait_for_timeout(400)
+            assert host.evaluate("document.body.dataset.view") != "canvas" and not host.evaluate("document.body.classList.contains('cv-focus')"), "Esc with nothing selected goes back to the app"
+            assert vis(host, ".window > .side"), "the sidebar is back"
+            came_from = host.evaluate("document.body.dataset.view")
+            open_canvas(host)
+            # a quick jump to Chat leaves a pill that brings you back; Back then returns where you first came from
+            host.click('.cv-jump [data-jump="chat"]'); host.wait_for_timeout(400)
+            assert host.evaluate("document.body.dataset.view") == "chat" and vis(host, "#cv-ret"), "Chat, with a Back to design pill"
+            host.click('#cv-ret [data-ret="go"]')
+            host.wait_for_function("() => TribeCanvas.state().open && document.body.classList.contains('cv-focus')", timeout=8000)
+            host.click("#cv-back"); host.wait_for_timeout(400)
+            assert host.evaluate("document.body.dataset.view") == came_from, ("Back returns where you were", host.evaluate("document.body.dataset.view"), came_from)
+            open_canvas(host)
+
             # ---- 1,000 layers still pan smoothly (the overlay moves as one layer while the view is moving)
             pf = ok(api("/canvas", "POST", {"name": "Perf"}, token=orion, project=pid))["file"]["id"]
             host.evaluate("id => TribeCanvas.open(id)", pf)
@@ -318,6 +368,12 @@ def main():
             ph.click("#cv-show-props"); ph.wait_for_timeout(350)
             assert ph.evaluate("getComputedStyle(document.querySelector('#cv-right')).visibility") == "visible", "properties open as a sheet"
             if SHOTS: ph.screenshot(path=str(ROOT / "docs" / "screenshots" / "canvas-phone.png"))
+            assert ph.evaluate("document.body.classList.contains('cv-focus')") and ph.is_visible("#cv-back"), "phone: full screen with Back"
+            assert ph.evaluate("[...document.querySelectorAll('#tabbar, .m2-rack, .m2-homebar')].every(e => getComputedStyle(e).display === 'none')"), "phone: the bottom rack steps aside"
+            if os.environ.get("CANVAS_FOCUS_SHOTS"): ph.screenshot(path=os.path.join(os.environ["CANVAS_FOCUS_SHOTS"], "canvas-focus-phone.png"))
+            ph.click("#cv-show-props"); ph.wait_for_timeout(300)
+            ph.click("#cv-back"); ph.wait_for_timeout(400)
+            assert ph.evaluate("document.body.dataset.view") != "canvas", "phone: Back leaves Design"
             pctx.close(); mctx.close(); hctx.close(); b.close()
 
         bad = [e for e in errors if "WebSocket" not in e]

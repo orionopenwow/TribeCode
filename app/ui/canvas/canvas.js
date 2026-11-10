@@ -36,6 +36,8 @@
     plus: '<path d="M5 10h10M10 5v10"/>', minus: '<path d="M5 10h10"/>',
     comment: '<path d="M4 4.5h12v8.5H9l-3.5 3v-3H4z"/>', export: '<path d="M10 3v9M6.5 6.5L10 3l3.5 3.5"/><path d="M4 12v4h12v-4"/>',
   };
+  // quick jumps out of the focused Design workspace (TribeShell.go keys); badges copy the sidebar's counters
+  const JUMPS = [{ key: 'chat', label: 'Chat', icon: 'i-chat', n: '#nn-chat' }, { key: 'ws-tasks', label: 'Tasks', icon: 'i-check', n: '#nn-tasks' }, { key: 'preview', label: 'Preview', icon: 'i-play' }, { key: 'docs', label: 'Docs & files', icon: 'i-doc' }];
   const svg = (k, sz = 20) => `<svg class="cv-i" width="${sz}" height="${sz}" viewBox="0 0 20 20" aria-hidden="true">${ICON[k]}</svg>`;
   const TOOLS = [['move', 'Move', 'V'], ['frame', 'Frame', 'F'], ['rect', 'Rectangle', 'R'], ['ellipse', 'Ellipse', 'O'], ['text', 'Text', 'T'], ['scale', 'Scale', 'K']];
   const KEYTOOL = { v: 'move', f: 'frame', a: 'frame', r: 'rect', o: 'ellipse', t: 'text', k: 'scale' };
@@ -93,11 +95,13 @@
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
     sec.classList.remove('hidden');
     document.body.classList.remove('mobile-chat', 'drawer-open');
+    const prevView = document.body.dataset.view || '', prevHash = location.hash;
     document.body.dataset.view = NAME; open = true;
     const crumb = $('#crumb-label'); if (crumb) crumb.textContent = T('Design');
     if (location.hash !== '#/' + NAME) history.replaceState(null, '', location.pathname + location.search + '#/' + NAME);
     try { C.sendActivity && C.sendActivity('Design'); } catch {}
     if (!built) build();
+    enterFocus(prevView === NAME ? '' : prevView, prevHash === '#/' + NAME ? '' : prevHash);
     fitRack(); setTimeout(fitRack, 400);
     srCache = null;
     load();
@@ -105,9 +109,84 @@
   function hide() {
     const sec = section(); if (sec) sec.classList.add('hidden');
     if (open) { commitEdit(); C.send({ type: 'cnv-leave', file: fileId }); }
-    open = false;
+    open = false; leaveFocus();
     if (location.hash === '#/' + NAME) history.replaceState(null, '', location.pathname + location.search);
   }
+  // ---------- the focused Design workspace (like the focused preview, preview.js) ----------
+  // While designing, the circle rail, the project sidebar, the user bar and the right panel step aside (body.cv-focus,
+  // canvas.css): the canvas header becomes the one bar, with Back to app, the project and design file, quick jumps and
+  // the layers / properties toggles at its two edges. Back (or Esc with nothing selected) returns where you were.
+  let backTo = null, retPill = null, pillBack = null, escAt = 0, wasBusy = false;
+  const PANES_KEY = 'tribecode.canvas.panes';
+  function panes() { try { const p = JSON.parse(localStorage.getItem(PANES_KEY) || 'null'); return p && typeof p === 'object' ? p : { l: 1, r: 1 }; } catch { return { l: 1, r: 1 }; } }
+  function applyPanes() {
+    const cv = $('#cv'); if (!cv) return;
+    const p = panes();
+    cv.classList.toggle('no-left', !p.l); cv.classList.toggle('no-right', !p.r);
+    const a = $('#cv-tog-left'), b = $('#cv-tog-right');
+    if (a) a.setAttribute('aria-pressed', String(!!p.l)); if (b) b.setAttribute('aria-pressed', String(!!p.r));
+    srCache = null; boxCache.clear(); if (open) setTimeout(paintOv, 0);
+  }
+  function togglePane(side) {
+    const p = panes(); if (side === 'left') p.l = p.l ? 0 : 1; else p.r = p.r ? 0 : 1;
+    try { localStorage.setItem(PANES_KEY, JSON.stringify(p)); } catch {}
+    applyPanes();
+  }
+  function copyWinCtl() {   // the frameless desktop window's buttons, while the title bar is hidden
+    const head = $('#cv') && $('#cv').querySelector('.cv-head'), wc = document.getElementById('win-ctl');
+    if (!head || !wc || head.querySelector('.cv-wc') || getComputedStyle(wc).display === 'none' || wc.offsetParent === null) return;
+    const c = document.createElement('span'); c.className = 'cv-wc'; c.innerHTML = wc.innerHTML;
+    c.addEventListener('click', e => { const b = e.target.closest('[data-w]'); if (!b) return; const o = wc.querySelector(`[data-w="${b.dataset.w}"]`); if (o) o.click(); });
+    head.appendChild(c);
+  }
+  function paintFocusBar() {
+    if (!built || !document.body.classList.contains('cv-focus')) return;
+    const p = ((C.state && C.state().projects) || []).find(x => x.id === C.project()) || {};
+    const n = $('#cv-pname'); if (n) n.textContent = p.name || '';
+    const f = $('#cv-face'), F = window.TribeProjects && window.TribeProjects.face;
+    if (f) f.innerHTML = F && p.id ? F(p, 'sm') : '';
+    JUMPS.forEach(j => {
+      const b = $('#cv') && $('#cv').querySelector(`[data-badge="${j.key}"]`); if (!b) return;
+      const src = j.n && document.querySelector(j.n), t = src ? src.textContent.trim() : '';
+      b.textContent = t; b.classList.toggle('hidden', !t || t === '0');
+    });
+  }
+  setInterval(() => { if (open) paintFocusBar(); }, 2000);
+  function enterFocus(prevView, prevHash) {
+    if (!backTo) backTo = pillBack || { view: prevView, hash: prevHash };
+    pillBack = null;
+    document.body.classList.add('cv-focus');
+    hidePill(); paintFocusBar();
+  }
+  function leaveFocus() { document.body.classList.remove('cv-focus'); }
+  function back() {
+    const to = backTo || { view: '', hash: '' }; backTo = null;
+    const A = window.TribeApp;
+    const go = () => {
+      if (to.view && to.view !== NAME && A && A.show) A.show(to.view);
+      if (document.body.dataset.view === NAME && to.hash && to.hash !== '#/' + NAME) location.hash = to.hash;
+      if (document.body.dataset.view === NAME && A && A.show) A.show('home');
+      if (document.body.dataset.view === NAME) { hide(); }
+    };
+    window.TribeMotion && window.TribeMotion.swap ? window.TribeMotion.swap(go) : go();
+  }
+  function jump(key) {
+    if (key === 'preview') { if (window.TribePreview && window.TribePreview.open) window.TribePreview.open(); return; }   // the preview opens over the canvas; closing it comes back here
+    const keep = backTo, S = window.TribeShell;
+    if (S && S.go) S.go(key);
+    setTimeout(() => { if (!open) { pillBack = keep; showPill(); } }, 0);
+  }
+  function showPill() {
+    if (isPhone()) return;
+    if (!retPill) {
+      retPill = document.createElement('div'); retPill.className = 'pvw-ret cv-ret'; retPill.id = 'cv-ret';
+      retPill.innerHTML = `<button type="button" class="pvw-ret-go" data-ret="go">${svg('frame', 14)}<span>${esc(T('Back to design'))}</span></button><button type="button" class="pvw-ret-x" data-ret="x" title="${esc(T('Dismiss'))}" aria-label="${esc(T('Dismiss'))}">✕</button>`;
+      retPill.addEventListener('click', e => { const b = e.target.closest('[data-ret]'); if (!b) return; hidePill(); if (b.dataset.ret === 'go') show(); else pillBack = null; });
+      document.body.appendChild(retPill);
+    }
+    retPill.classList.remove('hidden');
+  }
+  function hidePill() { if (retPill) retPill.classList.add('hidden'); }
   new MutationObserver(() => { if (open && document.body.dataset.view !== NAME) hide(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
   const fromHash = () => { if (location.hash === '#/' + NAME && !open && C.hasToken && C.hasToken()) show(); };
   addEventListener('hashchange', fromHash);
@@ -126,18 +205,25 @@
   function build() {
     const sec = ensureSection(); built = true;
     sec.innerHTML = `<div class="cv" id="cv">
-      <header class="cv-head">
+      <header class="cv-head" data-tauri-drag-region>
+        <button class="cv-back" id="cv-back" title="${esc(T('Back to the app'))} (Esc)" aria-label="${esc(T('Back to the app'))}"><svg class="cv-i" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4l-6 6 6 6"/></svg><span>${esc(T('Back to app'))}</span></button>
+        <button class="cv-hbtn cv-tog" id="cv-tog-left" aria-pressed="true" title="${esc(T('Show or hide layers'))} (Ctrl \\)" aria-label="${esc(T('Show or hide layers'))}"><svg class="cv-i" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M8 4v12"/></svg></button>
+        <span class="cv-proj" id="cv-proj"><span class="cv-face" id="cv-face"></span><b id="cv-pname"></b></span>
+        <span class="cv-crumb-sep" aria-hidden="true">/</span>
         <div class="cv-title"><span class="eyebrow">${esc(T('Design'))}</span>
           <button class="cv-file" id="cv-file" aria-haspopup="menu" title="${esc(T('Design files'))}"><span id="cv-file-t">Design</span>${svg('down', 16)}</button></div>
         <div class="cv-peers" id="cv-peers" aria-label="${esc(T('Here now'))}"></div>
         <span class="cv-ro" id="cv-ro" hidden>${esc(T('View only'))}</span>
         <div class="cv-head-acts">
+          <span class="cv-jump" role="group" aria-label="${esc(T('Back to a part of the app'))}">${JUMPS.map(j => `<button class="cv-jbtn" data-jump="${j.key}" title="${esc(T(j.label))}" aria-label="${esc(T(j.label))}"><svg class="cv-ju"><use href="#${j.icon}"/></svg><b class="cv-badge hidden" data-badge="${j.key}"></b></button>`).join('')}</span>
+          <span class="cv-hdiv" aria-hidden="true"></span>
           <button class="cv-hbtn cv-phone" id="cv-show-layers" aria-label="${esc(T('Layers'))}">${svg('layers', 18)}</button>
           <button class="cv-hbtn cv-phone" id="cv-show-props" aria-label="${esc(T('Design'))}">${svg('sliders', 18)}</button>
           <button class="cv-hbtn" id="cv-comment" aria-pressed="false" title="${esc(T('Comment'))} (C)" aria-label="${esc(T('Comment'))}">${svg('comment', 18)}</button>
           <button class="cv-hbtn" id="cv-export" aria-haspopup="menu" title="${esc(T('Export'))}" aria-label="${esc(T('Export'))}">${svg('export', 18)}</button>
           <button class="btn primary cv-send" id="cv-send" disabled title="${esc(T('Send the selected frame to the app as HTML and CSS'))}">${esc(T('Send to app'))}</button>
           <button class="cv-zoom" id="cv-zoom" aria-haspopup="menu" title="${esc(T('Zoom'))}"><span id="cv-zoom-t">100%</span>${svg('down', 14)}</button>
+          <button class="cv-hbtn cv-tog" id="cv-tog-right" aria-pressed="true" title="${esc(T('Show or hide properties'))} (Ctrl Alt \\)" aria-label="${esc(T('Show or hide properties'))}"><svg class="cv-i" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M12 4v12"/></svg></button>
         </div>
       </header>
       <div class="cv-body">
@@ -183,6 +269,12 @@
     $('#cv-zoom').onclick = e => zoomMenu(e.currentTarget);
     $('#cv-show-layers').onclick = () => sheet('left');
     $('#cv-show-props').onclick = () => sheet('right');
+    // focused workspace: Back, the pane toggles at the bar's edges and quick jumps (see "the focused Design workspace")
+    $('#cv-back').onclick = () => back();
+    $('#cv-tog-left').onclick = () => togglePane('left');
+    $('#cv-tog-right').onclick = () => togglePane('right');
+    $('#cv').querySelector('.cv-jump').addEventListener('click', e => { const b = e.target.closest('[data-jump]'); if (b) jump(b.dataset.jump); });
+    copyWinCtl(); applyPanes();
     stage.addEventListener('pointerdown', onDown);
     stage.addEventListener('pointermove', onMove);
     stage.addEventListener('pointerup', onUp);
@@ -285,6 +377,7 @@
   // ---------- the overlay: selection, handles, guides, frame names, cursors ----------
   let guides = [], distances = [], marquee = null, dropLine = null;
   function paintOv() {
+    if (sel.length || inner) wasBusy = true; else if (wasBusy) { wasBusy = false; escAt = Date.now(); }   // when the selection was let go: Esc leaves the workspace only a moment later
     if (!ov) return;
     clearTimeout(ovT); ovView = { ...view }; ov.style.transform = '';
     const zt = $('#cv-zoom-t'), zs = Math.round(view.z * 100) + '%'; if (zt && zt.textContent !== zs) zt.textContent = zs;
@@ -999,6 +1092,7 @@
     if (mod && k === 'y') { done(); travel(redo, undo); return; }
     if (mod && e.altKey && k === 'k') { done(); makeComponent(); return; }
     if (mod && e.altKey && k === 'b') { done(); if (sel.length === 1 && S.get(sel[0]) && S.get(sel[0]).t === 'instance') { detach(sel[0]); end(); } return; }
+    if (mod && e.key === '\\') { done(); togglePane(e.altKey ? 'right' : 'left'); return; }   // show / hide the layers (Ctrl \\) or properties (Ctrl Alt \\) pane
     if (mod && k === 'g') { done(); e.shiftKey ? ungroup() : group(); return; }
     if (mod && k === 'd') { done(); duplicate(); return; }
     if (mod && k === 'c') { done(); copySel(); return; }
@@ -1022,6 +1116,8 @@
     if (k === 'c' && !e.altKey && !e.shiftKey && window.TribeCanvasCode) { done(); window.TribeCanvasCode.comment(); return; }
     if (k === 'escape') {
       if (window.TribeCanvasCode && window.TribeCanvasCode.commenting()) { done(); window.TribeCanvasCode.comment(false); return; }
+      // nothing left to let go of: leave the workspace (not right after a selection was let go, so a double Esc or a click on empty canvas then Esc stays)
+      if (!inner && !sel.length && tool === 'move' && document.body.classList.contains('cv-focus') && Date.now() - escAt > 800) { done(); back(); return; }
       if (inner) { inner = null; } else if (sel.length === 1 && S.get(sel[0]) && S.get(sel[0]).p) sel = [S.get(sel[0]).p]; else sel = [];
       if (tool !== 'move') setTool('move');
       paintOv(); panels(); return;
