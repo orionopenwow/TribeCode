@@ -355,6 +355,7 @@
   document.addEventListener('tribe:mode', () => navRow());
   async function probe() {
     const pid = curPid(); if (!pid || !C || !C.hasToken || !C.hasToken()) return;
+    const me = (C.state && C.state().me) || {}; if (me.role === 'spectator' || me.guest || me.guestUntil) return setHas(pid, false);   // v0.27: money isn't shown to spectators and guests: don't ask (it would 403)
     try { const l = await api(pid, '/ledger?limit=1'); setHas(pid, !!l.company); } catch { setHas(pid, false); }
   }
   let t = null;
