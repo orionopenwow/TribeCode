@@ -147,7 +147,16 @@
       return inner ? `${pad}<${tag} class="${c}">\n${inner}\n${pad}</${tag}>` : `${pad}<${tag} class="${c}"></${tag}>`;
     }
     const html = emit(top, null, 0, null);
-    const css = (opts.reset === false ? '' : '.tc-design * { margin: 0; }\n') + rules.join('\n');
+    // colors become CSS variables on .tc-design (polish: one place to retheme the exported design)
+    const vars = new Map(); let nv = 0;
+    
+    const out = rules.map(r => r.replace(/([a-z-]+): ([^;]*?)(#[0-9A-Fa-f]{6})\b/g, (m, prop, pre, h) => {
+      const key = h.toUpperCase();
+      if (!vars.has(key)) vars.set(key, `--color-${++nv}`);
+      return `${prop}: ${pre}var(${vars.get(key)})`;
+    }));
+    const root = vars.size && opts.vars !== false ? `.tc-design { ${[...vars].map(([h, v]) => `${v}: ${h};`).join(' ')} }\n` : '';
+    const css = (opts.reset === false ? '' : '.tc-design * { margin: 0; }\n') + (opts.vars === false ? rules : (root + out.join('\n')).split('\n')).join('\n');
     return { name: top.name || 'Frame', html: `<div class="tc-design">\n${html}\n</div>`, css };
   }
 

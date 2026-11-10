@@ -228,7 +228,7 @@ module.exports = function canvas({ P, base, broadcast, perms, nameOf, memberColo
     if (msg.type === 'cnv-cursor' || msg.type === 'cnv-leave') {
       if (!okId(id) || me.role === 'agent') return;
       const now = Date.now(); if (msg.type === 'cnv-cursor' && now - (lastCursor.get(s) || 0) < 30) return; lastCursor.set(s, now);
-      broadcast({ type: 'cnv-cursor', project: pid, file: id, by: me.id, name: nameOf(me.id), color: memberColor(me.id), x: num(msg.x), y: num(msg.y), ...(msg.type === 'cnv-leave' ? { gone: true } : {}) }, s);
+      broadcast({ type: 'cnv-cursor', project: pid, file: id, by: me.id, name: nameOf(me.id), color: memberColor(me.id), x: num(msg.x), y: num(msg.y), ...(msg.type === 'cnv-leave' ? { gone: true } : {}), ...(Array.isArray(msg.drag) && canEdit(me, pid) ? { drag: msg.drag.slice(0, 40).filter(d => d && okId(String(d.id || ''))).map(d => ({ id: String(d.id), x: num(d.x), y: num(d.y) })) } : {}) }, s);   // polish: live drag preview for friends
       return;
     }
     if (msg.type === 'cnv-op') {
