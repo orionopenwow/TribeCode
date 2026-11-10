@@ -133,10 +133,13 @@
     const pickNow = picked;
     try {
       if (LOOK.test(text) || (pickNow && !ASSET.test(text) && !QUESTION.test(text))) {
+        const FF = window.TribeFlintFly, fr = document.querySelector('#pvw-frame iframe'), tgt = pickNow && pickNow.rect && fr ? { frame: fr, rect: pickNow.rect } : (document.querySelector('#pvw-frame') || document.querySelector('#pvw'));
+        if (FF) FF.work(tgt, 'Editing');
         try {
           const r = await C.api('/preview/flint', { method: 'POST', body: { href: (ctx && ctx.href && ctx.href()) || '', pick: pickNow || {}, ask: text } });
+          if (FF) FF.done(tgt, 'Done ✓');
           return feed({ k: 'flint', text: r.say ? `${r.say} Saved to ${r.file}.` : `Saved to ${r.file}.` });
-        } catch (e) { if (!/AI|503|couldn/i.test(e.message || '')) return feed({ k: 'flint', text: e.message }); }
+        } catch (e) { if (FF) FF.home(); if (!/AI|503|couldn/i.test(e.message || '')) return feed({ k: 'flint', text: e.message }); }
       }
       if ((ASSET.test(text) || QUESTION.test(text)) && window.TribeFlint && window.TribeFlint.ask) return askFlint(text);
       return askAgents(text, pickNow);
@@ -160,6 +163,7 @@
     const where = (ctx && ctx.href && ctx.href()) ? ` (page: ${String(ctx.href()).replace(/^\/preview\/[^/]+\/pv1\.[^/]+\/?/, '/') || '/'})` : '';
     const about = pickNow ? ` About the ${pickNow.tag} “${(pickNow.text || '').slice(0, 80)}”.` : '';
     const msg = `@agents In the live preview${where}: ${text}.${about} Save the change in the project's code; the preview reloads by itself.`;
+    if (window.TribeFlintFly) window.TribeFlintFly.done(document.querySelector('#pvf-feed') || document.querySelector('#pvw'), 'Sent to your AI');
     try { await C.api('/agents/channel', { method: 'POST', body: { text: msg } }); }
     catch { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + msg.replace(/^@agents /, '') } }); }
     const online = (C.state().members || []).some(m => m.role === 'agent' && m.online);

@@ -1,0 +1,12 @@
+/* Flint at work (app/ui/flintfly.js): a small flame pill that glides to what Flint is changing, plus a quiet outline. */
+.ffly { position: fixed; left: 0; top: 0; z-index: 9000; display: flex; align-items: center; gap: 5px; padding: 3px 9px 3px 5px; border-radius: 999px; border: 1px solid var(--ember, #F26B1D); background: var(--surface, #1B2028); color: var(--text, #F8FAFC); font: 600 11.5px/1 Inter, system-ui, sans-serif; white-space: nowrap; opacity: 0; pointer-events: none; transition: transform .75s cubic-bezier(.3, .7, .2, 1), opacity .3s; will-change: transform; }
+.ffly img { width: 14px; height: 18px; image-rendering: pixelated; }
+.ffly.on { opacity: 1; }
+.ffly.ffly-jump { transition: none; }
+.ffly.ffly-sm { padding: 2px 7px 2px 4px; font-size: 10.5px; }
+.ffly.ffly-sm img { width: 11px; height: 14px; }
+.ffly.is-working .ffly-l::after { content: ""; display: inline-block; width: 4px; height: 4px; margin-left: 5px; border-radius: 50%; background: var(--ember, #F26B1D); vertical-align: middle; animation: ffly-blink 1s steps(2, start) infinite; }
+.ffly-sel { outline: 1.5px dashed var(--ember, #F26B1D) !important; outline-offset: 3px; border-radius: 6px; }
+@keyframes ffly-blink { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .ffly { transition: opacity .2s; } .ffly.is-working .ffly-l::after { animation: none; } }
+.fm-fly { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 14px; cursor: pointer; } .fm-fly input { margin-top: 3px; accent-color: var(--ember, #F26B1D); } .fm-fly b { display: block; font-weight: 600; } .fm-fly small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.5; }

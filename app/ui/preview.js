@@ -240,6 +240,8 @@
   }
   // ---------- v0.25: edit the page in the preview ----------
   let editing = false, picked = null;
+  const boxOf = r => (r && [r.left, r.top, r.width, r.height].every(n => typeof n === 'number' && isFinite(n)) ? { left: r.left, top: r.top, width: r.width, height: r.height } : null);
+  const flyTarget = p => (p && p.rect && frame ? { frame, rect: p.rect } : (pane && pane.querySelector('#pvw-frame')));   // where Flint works: the picked element inside the preview
   function toggleEdit() {
     editing = !editing; picked = null;
     if (!editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(null);
@@ -264,14 +266,16 @@
     const ask = e.target.querySelector('#pvw-edask'), go = e.target.querySelector('#pvw-edgo');
     if (!picked || !ask.value.trim()) return;
     go.disabled = true; go.textContent = 'Flint is on it…';
+    const FF = window.TribeFlintFly, tgt = flyTarget(picked); if (FF) FF.work(tgt, 'Editing');
     const r = await editApi('flint', { href: lastHref, pick: picked, ask: ask.value.trim() });
+    if (FF) { if (r) FF.done(tgt, 'Done ✓'); else FF.home(); }
     go.textContent = 'Ask Flint'; go.disabled = false; if (r) { ask.value = ''; }
   });
   window.addEventListener('message', e => {
     if (!frame || e.source !== frame.contentWindow || !e.data || typeof e.data !== 'object') return;
     const m = e.data;
     if (m.tc === 'ready' && editing && frame && frame.contentWindow) { frame.contentWindow.postMessage({ tc: 'edit', on: true }, '*'); picked = null; paintPick(); }
-    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000) }; paintPick(); }
+    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000), rect: boxOf(m.rect) }; paintPick(); }
     if (m.tc === 'pick' && editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(picked);
     if (m.tc === 'error' && window.TribePreviewFlint) window.TribePreviewFlint.error({ msg: `${String(m.msg || 'error').slice(0, 240)}${m.src ? ` (${String(m.src).slice(0, 60)}${m.line ? ':' + Number(m.line) : ''})` : ''}`, line: Number(m.line) || 0 });   // no auto-focus: it would pull focus out of text you're editing in the page
     if (m.tc === 'text' && editing) editApi('edit', { href: m.href || lastHref, tag: String(m.tag || ''), before: String(m.before || ''), after: String(m.after || '') });

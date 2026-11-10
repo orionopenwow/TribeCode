@@ -71,6 +71,11 @@
     preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
+  // v0.27.2 Flint at work: a small flame flies to whatever he's changing (app/ui/flintfly.js)
+  const FF = () => window.TribeFlintFly && window.TribeFlintFly.enabled() ? window.TribeFlintFly : null;
+  const seen = s => { const e = typeof s === 'string' ? document.querySelector(s) : s; return e && e.offsetParent !== null && e.getClientRects().length ? e : null; };
+  const curView = () => [...document.querySelectorAll('#main [id^="view-"]')].find(e => e.id !== 'view-tabs' && seen(e)) || seen('#main');
+  const later = (ms, f) => setTimeout(() => { try { f(); } catch {} }, ms);
 
   // ---------- the Guide (server/guide.js) ----------
   let guidePages = null;
@@ -155,11 +160,12 @@
     const BUILT = { sound: ['sfx', ['jump', 'coin', 'hit', 'explosion', 'powerup', 'laser', 'click', 'select', 'blip', 'hurt', 'pickup', 'door']], pixel: ['sprites', ['hero', 'slime', 'coin', 'heart', 'gem', 'key', 'chest', 'lantern', 'flame', 'star', 'sword', 'potion', 'tree', 'cloud', 'door', 'block']] };
     const b = BUILT[kind], hit = b && b[1].find(n => q === n || q.split(' ').includes(n) || q.split(' ').includes(n + 's') || (n === 'powerup' && /power ?up/.test(q)));
     if (hit && C && C.connected()) {
-      try { const r = await C.api('/assets/add', { method: 'POST', body: { project: C.project(), items: [{ pack: b[0], name: hit }] } });
+      const at = seen('#pvw-frame') || seen('#pvw') || seen('#nest-docs') || curView(); if (FF() && at) FF().work(at, `Adding ${hit}`);
+      try { const r = await C.api('/assets/add', { method: 'POST', body: { project: C.project(), items: [{ pack: b[0], name: hit }] } }); if (FF() && at) FF().done(at, `Added ${hit} ✓`);
         return say(`Added ${kind === 'sound' ? 'a' : 'the'} ${hit} ${kind === 'sound' ? 'sound' : 'sprite'}: \`${r.where}${r.files[0]}\` (credits in ${r.where}CREDITS.md). Want more?`, [act('Open the asset library', 'assets', { kind })]); }
-      catch (e) { return say(`I couldn't add it: ${esc(e.message)}`, [act('Open the asset library', 'assets', { kind, q })]); }
+      catch (e) { if (FF()) FF().home(); return say(`I couldn't add it: ${esc(e.message)}`, [act('Open the asset library', 'assets', { kind, q })]); }
     }
-    ACTS.assets({ q, kind });
+    ACTS.assets({ q, kind }); if (FF()) later(350, () => { const lib = seen('.as-modal') || seen('#assets') || curView(); if (lib) FF().done(lib, 'Asset library'); });
     return say(`Opened the asset library${q ? ` searching for “${esc(q)}”` : ''}. Tap what you like (sounds play when you tap), then Add to project. Everything is open-licensed and credited.`, [act('Open it again', 'assets', { q, kind })]);
   }
 
@@ -178,7 +184,7 @@
     if (RX.website.test(t)) return website(t);
     if (RX.focus.test(t)) return focusReply();
     if (RX.prompt.test(t)) { await ACTS.prompt(); return say('I copied a prompt for your AI helper: your task, your part of the code, the branch to use, and what to leave alone so nothing collides. Paste it into Claude Code, Codex or Cursor.', [act('Copy it again', 'prompt')]); }
-    if (RX.preview.test(t)) { ACTS.preview(); return say('Opened the preview, right next to the work.', [act('Open it again', 'preview')]); }
+    if (RX.preview.test(t)) { ACTS.preview(); if (FF()) later(350, () => { const p = seen('#pvw'); if (p) FF().done(p, 'Preview'); }); return say('Opened the preview, right next to the work.', [act('Open it again', 'preview')]); }
     if ((m = RX.inspo.exec(text))) { const u = m[1] || m[2]; if (window.TribeInspo) { if (App() && App().show) App().show('home'); setTimeout(() => window.TribeInspo.addLink(u), 400); } return say(`Pinned it to the inspiration board on the dashboard. I'm reading the colors and fonts now; say "dress it up" when you like the palette.`, [act('Dress it up', 'inspoApply', 'both')]); }
     if (RX.dress.test(t)) { const to = /\b(site|website)\b/.test(t) ? 'site' : /\b(app|game)\b/.test(t) ? 'app' : 'both'; if (window.TribeInspo) { const r = await window.TribeInspo.apply(to); if (r) return say(`Done: ${esc(r.changed.join(', '))}. Accent ${esc(r.palette.accent)} on ${r.palette.mode === 'dark' ? 'a dark' : 'a light'} background.`, [act('Open the preview', 'preview')]); } return say('Drop a few pictures or a Pinterest link on the inspiration board (on the dashboard) first, then I can dress it up.'); }
     if ((m = RX.asset.exec(t))) return asset(m);
@@ -193,11 +199,13 @@
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
       const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
       const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Code repository', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
-      if (v === 'agents' || v === 'mcp') { if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
+      if (v === 'agents' || v === 'mcp') { if (FF()) { if (seen(row)) FF().done(row, 'Opening'); } else if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
         if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const r = document.querySelector('#nest-ws-agents'); if (r) r.click(); }
         return say(`Opened ${NAME[v].replace(/^The /, 'the ')}.`); }
-      if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v] || m[1]} lives here. Opening it for you.`, { next: 'Thanks' });
-      ACTS.nav(v); return say(`Opened ${m[1] === 'home' ? 'Home' : v === 'whiteboard' ? 'the whiteboard' : m[1]}.`); }
+      if (FF()) { if (seen(row)) { FF().to(row, 'Opening'); await FF().beat(420); } }
+      else if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v] || m[1]} lives here. Opening it for you.`, { next: 'Thanks' });
+      ACTS.nav(v); if (FF()) later(260, () => { const w = v === 'whiteboard' ? seen('.wb') || seen('#whiteboard') || curView() : curView(); if (w) FF().done(w, NAME[v] ? NAME[v].replace(/^The /, '') : 'Here'); });
+      return say(`Opened ${m[1] === 'home' ? 'Home' : v === 'whiteboard' ? 'the whiteboard' : m[1]}.`); }
     if ((m = RX.find.exec(t)) && !RX.help.test(t.replace(/^where('s| is)/, ''))) return find(text.slice(text.length - m[1].length).trim());
     if (RX.help.test(t) || /\b(guide|how do i|how to)\b/.test(t)) { const g = await guideSearch(text); if (g) return guideReply(g); if (RX.invite.test(t)) return invite(); return fallback(text, true); }
     if (RX.invite.test(t)) return invite();
@@ -211,15 +219,17 @@
     if (!body) return say('What should I write down? Say "note: …", or start a blank one.', [act('Start a blank note', 'newnote')]);
     const S = Hub() && Hub().scratch; if (!S) return say('Notes are not ready yet. Try again in a moment.');
     body = body.replace(/^(that|to)\s+/i, (x, w) => (w.toLowerCase() === 'to' ? 'To ' : ''));
-    try { const id = await S.create(body.charAt(0).toUpperCase() + body.slice(1)); return say(`Saved to your notes: “${body}”.`, id ? [act('Open note', 'note', id)] : [], { link: id ? 'note:' + id : '' }); }
+    try { const id = await S.create(body.charAt(0).toUpperCase() + body.slice(1)); if (FF()) { const n = seen('#room-notes') || seen('#nest-docs') || curView(); if (n) FF().done(n, 'Noted ✓'); } return say(`Saved to your notes: “${body}”.`, id ? [act('Open note', 'note', id)] : [], { link: id ? 'note:' + id : '' }); }
     catch (e) { return say('I could not save that note: ' + e.message); }
   }
   async function task(title) {
     if (!connected()) return say('Tasks live in a tribe. Host one on this computer or join a friend, then ask me again.', [act('Host or join', 'invite')]);
     title = title.charAt(0).toUpperCase() + title.slice(1);
+    const tr = seen('#board') || seen('#nest-ws-tasks') || curView(); if (FF() && tr) FF().work(tr, 'Adding a task');
     try { const { task: tk } = await C.api('/tasks', { method: 'POST', body: { title: title.slice(0, 200) } }); const p = PJ() && PJ().cur && PJ().cur();
+      if (FF()) later(450, () => { const card = seen(`#board .task[data-id="${CSS.escape(tk.id)}"]`); FF().done(card || tr, card ? 'Added ✓' : 'Task added ✓'); });
       return say(`Added to Tasks${p ? ` in ${p.name}` : ''}: “${tk.title}”.`, [act('Open Tasks', 'nav', 'tasks')], { link: 'task:' + tk.id }); }
-    catch (e) { return say('I could not add that task: ' + e.message); }
+    catch (e) { if (FF()) FF().home(); return say('I could not add that task: ' + e.message); }
   }
   // feat/customize: the site generator (server/sitegen.js). A draft only; the host or the project lead publishes.
   async function website(t) {
@@ -232,7 +242,7 @@
         const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/instant`, { method: 'POST', body: { hint: t } });
         const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a', T = (G.types.find(x => x.id === r.type) || {}).name || 'site';
         if (window.TribeSiteGen && window.TribeSiteGen.mode) window.TribeSiteGen.mode('instant');
-        ACTS.website();
+        ACTS.website(); if (FF()) later(400, () => { const w = seen('#pvw') || curView(); if (w) FF().done(w, 'Website draft ✓'); });
         return say(`Here's a draft in the ${L} layout as ${/^[aeiou]/i.test(T) ? 'an' : 'a'} ${T.toLowerCase()}, filled from what the project has. It's in the preview now. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
           [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
       }
@@ -259,16 +269,18 @@
     if (!D) return say('Files are not ready yet. Try again in a moment.');
     if (!connected()) return say(`I write ${name} with the tribe's brain. Host or join a tribe first.`, [act('Host or join', 'invite')]);
     const msg = say(`Writing the ${name}…`, [], { streaming: true });
+    const fd = seen('#nest-docs') || curView(); if (FF() && fd) FF().work(fd, 'Writing…');
     try {
       const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask: text } });
       const doc = await D.create(r.title || 'Untitled', r.body || '', undefined, kind === 'doc' ? undefined : kind);
       App().show('docs'); setTimeout(() => D.open(doc.slug), 60);
+      if (FF()) { later(380, () => { const ed = seen('#doc-body') || seen('#view-docs'); if (ed) FF().work(ed, 'Writing…'); }); later(1500, () => { const ed = seen('#doc-body') || seen('#view-docs'); FF().done(ed, 'Done ✓'); }); }
       msg.text = `${r.basic ? (r.note || 'Basic mode: I started you from a template.') : `Done: “${doc.title}” is in Files.`} ${kind === 'sheet' ? 'Click a cell to change it; = starts a formula.' : kind === 'deck' ? 'Press Present when it looks right.' : 'Edit away, the tribe sees it live.'}`;
       msg.acts = [act(`Open the ${name}`, 'doc', `${(PJ() && PJ().current && PJ().current()) || ''}|${doc.slug}`), ...(r.basic ? [act('Give Flint a brain', 'brain')] : [])];
-    } catch (e) { msg.text = `I could not write that ${name}: ${e.message}`; }
+    } catch (e) { msg.text = `I could not write that ${name}: ${e.message}`; if (FF()) FF().home(); }
     delete msg.streaming; save(); draw(); return msg;
   }
-  function invite() { ACTS.invite(); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
+  function invite() { ACTS.invite(); if (FF()) later(300, () => { const ib = seen('#invite-body'); if (ib) FF().done(ib, 'Invite ready'); }); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {
     const desk = !!(window.TribeHost && window.TribeHost.isDesktop);
     if (/\b(stop|turn off|end)\b/.test(t)) return desk ? say('Stop hosting on this computer? Friends lose the room until you start again. Nothing is deleted.', [act('Stop hosting', 'stophost')]) : say('Hosting runs in the desktop app on the host\'s computer. Stop it there.', [act('About hosting', 'guide', 'hosting')]);
