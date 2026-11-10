@@ -34,6 +34,7 @@
 <meta name="twitter:description" content="Make games, apps and websites with your friends and the AI helpers you already use. Free and open source.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css?v=0.26.0">
+<link rel="stylesheet" href="kit.css?v=0.27.0">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -311,6 +312,99 @@
         <li class="story__step" style="--i:5"><div class="story__pic"><svg class="story__art" viewBox="0 0 24 18" width="96" height="72" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="#FABD2F"/><rect x="22" y="0" width="1" height="1" fill="#FABD2F"/><rect x="7" y="1" width="9" height="1" fill="#3A4350"/><rect x="7" y="2" width="1" height="1" fill="#3A4350"/><rect x="8" y="2" width="7" height="1" fill="#F8FAFC"/><rect x="15" y="2" width="1" height="1" fill="#3A4350"/><rect x="20" y="2" width="1" height="1" fill="#FABD2F"/><rect x="7" y="3" width="1" height="1" fill="#3A4350"/><rect x="8" y="3" width="1" height="1" fill="#12151A"/><rect x="9" y="3" width="2" height="1" fill="#FF6F8E"/><rect x="11" y="3" width="1" height="1" fill="#12151A"/><rect x="12" y="3" width="2" height="1" fill="#FF6F8E"/><rect x="14" y="3" width="1" height="1" fill="#12151A"/><rect x="15" y="3" width="1" height="1" fill="#3A4350"/><rect x="7" y="4" width="1" height="1" fill="#3A4350"/><rect x="8" y="4" width="7" height="1" fill="#FF6F8E"/><rect x="15" y="4" width="1" height="1" fill="#3A4350"/><rect x="7" y="5" width="1" height="1" fill="#3A4350"/><rect x="8" y="5" width="7" height="1" fill="#FF6F8E"/><rect x="15" y="5" width="1" height="1" fill="#3A4350"/><rect x="7" y="6" width="1" height="1" fill="#3A4350"/><rect x="8" y="6" width="1" height="1" fill="#12151A"/><rect x="9" y="6" width="5" height="1" fill="#FF6F8E"/><rect x="14" y="6" width="1" height="1" fill="#12151A"/><rect x="15" y="6" width="1" height="1" fill="#3A4350"/><rect x="7" y="7" width="1" height="1" fill="#3A4350"/><rect x="8" y="7" width="2" height="1" fill="#12151A"/><rect x="10" y="7" width="3" height="1" fill="#FF6F8E"/><rect x="13" y="7" width="2" height="1" fill="#12151A"/><rect x="15" y="7" width="1" height="1" fill="#3A4350"/><rect x="7" y="8" width="1" height="1" fill="#3A4350"/><rect x="8" y="8" width="3" height="1" fill="#12151A"/><rect x="11" y="8" width="1" height="1" fill="#FF6F8E"/><rect x="12" y="8" width="3" height="1" fill="#12151A"/><rect x="15" y="8" width="1" height="1" fill="#3A4350"/><rect x="7" y="9" width="1" height="1" fill="#3A4350"/><rect x="8" y="9" width="7" height="1" fill="#12151A"/><rect x="15" y="9" width="1" height="1" fill="#3A4350"/><rect x="7" y="10" width="1" height="1" fill="#3A4350"/><rect x="8" y="10" width="7" height="1" fill="#38C6B1"/><rect x="15" y="10" width="1" height="1" fill="#3A4350"/><rect x="7" y="11" width="1" height="1" fill="#3A4350"/><rect x="8" y="11" width="7" height="1" fill="#12151A"/><rect x="15" y="11" width="1" height="1" fill="#3A4350"/><rect x="7" y="12" width="9" height="1" fill="#3A4350"/><rect x="2" y="13" width="1" height="1" fill="#F26B1D"/><rect x="21" y="13" width="1" height="1" fill="#F26B1D"/><rect x="4" y="15" width="1" height="1" fill="#3BD16F"/><rect x="12" y="15" width="1" height="1" fill="#FABD2F"/><rect x="20" y="15" width="1" height="1" fill="#6C7CFF"/></svg></div><p class="story__n mono">06</p><h3>Share it</h3><p>Put it online, send it around, keep fixing things.</p></li>
       </ol>
       <p class="story__cta"><a class="btn btn--light" href="app/?welcome=1">Try it in your browser</a><button type="button" class="btn btn--dark" data-story-tour>Show me around</button></p>
+    </div>
+  </section>
+
+  <!-- ================= ONE PLACE (v0.27): docs, Flint, widgets, studios, game and app tools — site/kit.js + kit.css ================= -->
+  <section class="kit" id="kit" aria-labelledby="kit-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// everything in one place</p>
+      <h2 id="kit-title">The whole studio, in one app.</h2>
+      <p class="kit__lead">Your docs, your AI helpers, your tools and your code live side by side, so nobody juggles ten tabs and five logins. Here's what comes with every tribe.</p>
+      <div class="kit__box reveal" data-kit>
+        <div class="kit__tabs" role="tablist" aria-label="What comes with every tribe">
+          <button class="kit__tab" role="tab" id="kt-docs" aria-controls="kp-docs" aria-selected="true"><span class="kit__ti" aria-hidden="true">📄</span><b>Docs</b><small>pages, sheets, slides</small></button>
+          <button class="kit__tab" role="tab" id="kt-flint" aria-controls="kp-flint" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true"><img src="assets/brand/flint.svg" alt="" width="18" height="18"></span><b>Flint</b><small>the built-in helper</small></button>
+          <button class="kit__tab" role="tab" id="kt-market" aria-controls="kp-market" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🧩</span><b>Widgets</b><small>515 add-ons</small></button>
+          <button class="kit__tab" role="tab" id="kt-studio" aria-controls="kp-studio" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🎨</span><b>Studios</b><small>ArtCraft and friends</small></button>
+          <button class="kit__tab" role="tab" id="kt-game" aria-controls="kp-game" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🎮</span><b>Games &amp; apps</b><small>assets and engines</small></button>
+        </div>
+
+        <!-- Docs -->
+        <div class="kit__panel" role="tabpanel" id="kp-docs" aria-labelledby="kt-docs">
+          <div class="kit__mock kd" aria-hidden="true">
+            <div class="kd__tree"><p class="kit__eb">Files</p><span class="on">📄 Launch plan</span><span class="sub">☑ Checklist</span><span class="sub">💬 Meeting notes · Tue</span><span>📊 Budget</span><span>🎞 Pitch</span><span>🖍 Whiteboard</span><span>✨ Vision</span></div>
+            <div class="kd__page">
+              <div class="kd__crumb">Pixel Quest › Launch plan <span class="kd__who"><i style="--c:#6C7CFF">M</i><i style="--c:#38C6B1">✦</i><i style="--c:#F26B1D">C</i></span></div>
+              <h4>Launch plan</h4>
+              <p class="kd__line" data-k="1">We ship the demo on Friday and post it on itch.io.</p>
+              <div class="kd__todo" data-k="2"><span class="ck on"></span>Title screen <em>@Orion's Claude</em></div>
+              <div class="kd__todo" data-k="3"><span class="ck"></span>Trailer, 20 seconds <em>@Maya</em><span class="kd__cur" style="--c:#6C7CFF"></span></div>
+              <div class="kd__slash" data-k="4"><span class="kd__q">/ta</span><b class="on">▦ Table</b><b>☑ To-do list</b><b>📊 Sheet</b><b>🎞 Slides</b><b>🔗 Link preview</b></div>
+              <table class="kd__tbl" data-k="5"><tr><th>Task</th><th>Who</th><th>Status</th></tr><tr><td>Sound pass</td><td>Maya's Codex</td><td><span class="kd__st kd__st--g">Done</span></td></tr><tr><td>Level 3</td><td>Jay</td><td><span class="kd__st">Doing</span></td></tr></table>
+              <p class="kd__cmt" data-k="6"><b>Jay</b> Can the trailer show the lantern? <span>Reply</span></p>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>Docs that work like Notion, right next to your code</h3><p class="kit__text">Pages inside pages, to-do lists, tables, sheets with formulas, slides, templates, comments, page history and a shared whiteboard. Everyone edits live, AI helpers included, and you can dictate instead of typing.</p></div>
+        </div>
+
+        <!-- Flint -->
+        <div class="kit__panel" role="tabpanel" id="kp-flint" aria-labelledby="kt-flint" hidden>
+          <div class="kit__mock kf" aria-hidden="true">
+            <div class="kf__msg kf__me" data-k="1">add a jump sound and make the title bigger</div>
+            <div class="kf__msg kf__bot" data-k="2"><img src="assets/brand/flint.svg" alt="" width="22" height="22"><div><b>Flint</b><p>Done. I added <code>jump.wav</code> from the asset library (free to use, credited in CREDITS.md) and made the title 48px. Want it to bounce too?</p>
+              <div class="kf__acts"><span>▶ Play sound</span><span>Undo</span></div></div></div>
+            <div class="kf__msg kf__me" data-k="3">what changed today?</div>
+            <div class="kf__msg kf__bot" data-k="4"><img src="assets/brand/flint.svg" alt="" width="22" height="22"><div><b>Flint</b><p>3 changes: Orion's Claude finished the title screen, Maya added the trailer task, Jay is on level 3. One approval is waiting for you.</p></div></div>
+            <div class="kf__chips" data-k="5"><span>open the whiteboard</span><span>invite Sam</span><span>start a huddle</span><span>make it a company</span></div>
+          </div>
+          <div class="kit__copy"><h3>Flint runs the app for you</h3><p class="kit__text">Flint is TribeCode's own helper. Ask in plain words and it opens things, makes everyday changes, finds files and catches you up. It works without a paid AI, and gets smarter when you connect one.</p></div>
+        </div>
+
+        <!-- Widgets & Marketplace -->
+        <div class="kit__panel" role="tabpanel" id="kp-market" aria-labelledby="kt-market" hidden>
+          <div class="kit__mock km" aria-hidden="true">
+            <div class="km__bar"><span class="on">🔥 Hot</span><span>📈 Rising</span><span>✨ New</span><span>🏆 Top</span><span class="km__q">Search 515 add-ons</span></div>
+            <div class="km__grid">
+              <div class="km__it" data-k="1"><i>💳</i><b>Stripe dashboard</b><small>widget · money</small><span class="km__add">Added ✓</span></div>
+              <div class="km__it" data-k="1"><i>📊</i><b>Plausible</b><small>widget · traffic</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="2"><i>💬</i><b>Discord</b><small>connector</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="2"><i>🎮</i><b>itch.io</b><small>widget · games</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="3"><i>🎨</i><b>Figma</b><small>widget · design</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="3"><i>🗄</i><b>Supabase</b><small>connector · data</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="4"><i>🧠</i><b>Code review skill</b><small>skill for your AI</small><span class="km__add">Add</span></div>
+              <div class="km__it" data-k="4"><i>🚀</i><b>Launch playbook</b><small>playbook · grow</small><span class="km__add">Add</span></div>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>Widgets for the tools you already use</h3><p class="kit__text">Add a Stripe, analytics, Discord or Figma widget to the sidebar with the + button, or give your AI new skills. 515 checked add-ons, sorted by what tribes like yours use. Anyone can make one and share it.</p></div>
+        </div>
+
+        <!-- Creative studios -->
+        <div class="kit__panel" role="tabpanel" id="kp-studio" aria-labelledby="kt-studio" hidden>
+          <div class="kit__mock ks" aria-hidden="true">
+            <div class="ks__hero" data-k="1"><div class="ks__art"><i></i><i></i><i></i><i></i><i></i><i></i></div><div><p class="kit__eb">Recommended studio</p><b>ArtCraft</b><p>Open-source studio for AI images and video. Make the art, then drop it into the project.</p><span class="ks__btn">Open ArtCraft</span></div></div>
+            <div class="ks__row">
+              <span data-k="2"><i>🧊</i>Blender<small>3D</small></span><span data-k="2"><i>🖌</i>Krita<small>painting</small></span><span data-k="3"><i>🟪</i>Pixelorama<small>pixel art</small></span><span data-k="3"><i>🤖</i>Godot<small>engine</small></span><span data-k="4"><i>🎹</i>LMMS<small>music</small></span><span data-k="4"><i>🎙</i>Audacity<small>sound</small></span><span data-k="5"><i>🎬</i>Kdenlive<small>video</small></span><span data-k="5"><i>📐</i>Penpot<small>design</small></span>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>Bring your own studio</h3><p class="kit__text">TribeCode points you to free, open-source creative tools like ArtCraft, Blender, Krita and Godot. What you make lands in the project's assets folder, with credit to whoever made it.</p></div>
+        </div>
+
+        <!-- Games & apps -->
+        <div class="kit__panel" role="tabpanel" id="kp-game" aria-labelledby="kt-game" hidden>
+          <div class="kit__mock kg" aria-hidden="true">
+            <div class="kg__cats"><span class="on">🔊 Sounds</span><span>🧊 3D models</span><span>🕺 Rigged characters</span><span>🧱 Textures</span><span>👾 Pixel sprites</span><span>🔤 Fonts</span></div>
+            <div class="kg__list">
+              <div class="kg__it" data-k="1"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>jump_02.ogg</b><small>CC0 · Kenney</small><span class="kg__add">+ Add</span></div>
+              <div class="kg__it" data-k="2"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>coin_pickup.wav</b><small>CC0</small><span class="kg__add">+ Add</span></div>
+              <div class="kg__it" data-k="3"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>lantern_creak.ogg</b><small>CC-BY · credited</small><span class="kg__add on">Added ✓</span></div>
+            </div>
+            <div class="kg__eng" data-k="4"><p class="kit__eb">Start in</p><span>Godot</span><span>three.js</span><span>Phaser</span><span>Bevy</span><span>Expo</span><span>Astro</span></div>
+          </div>
+          <div class="kit__copy"><h3>From a pixel game to full 3D</h3><p class="kit__text">A library of free sounds, 3D models, rigged characters, textures and sprites, added in one click with credits written for you. Start from engines and frameworks people already trust, for games, phone apps and websites.</p></div>
+        </div>
+      </div>
+      <p class="kit__more"><a href="docs.html#together">See everything in the docs →</a></p>
     </div>
   </section>
 
@@ -614,6 +708,7 @@
 </footer>
 
 <script src="main.js?v=0.26.0" defer></script>
+<script src="kit.js?v=0.27.0" defer></script>
   <script src="vibe-anim.js?v=0.27.0" defer></script>
 <script src="i18n.js?v=0.26.0" defer></script>
 </body>
