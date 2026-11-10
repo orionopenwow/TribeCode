@@ -90,6 +90,7 @@
     return { r, pairs: after && after !== before ? after : null };
   }
   async function ask(text) {
+    if (hook && hook.send) return hook.send(text);   // the Flint pane is the one place to talk to Flint on the canvas
     if (!E || busy) return;
     if (!E.canEdit) return say(T('View only: ask the host to make you a builder to design here.'));
     open(); busy = true; last = text;

@@ -140,6 +140,11 @@ def main():
             m.wait_for_selector("#fp-log .fp-flint.is-undone", timeout=8000)
             m.wait_for_function("!TribeCanvas.state().nodes.some(n => n.name === 'Ember · Sign in')", timeout=8000)
             ask(o, "a pricing section")   # something on the canvas for the screenshots
+            # ---- the local brain: a non-design ask (a task) is done right here in the pane, no model
+            out = ask(o, "add a task to order samples for friday")
+            assert "order samples" in out.lower(), out
+            ts = ok(api("/tasks", token=orion, project=pid)).get("tasks", [])
+            assert any("order samples" in t.get("title", "").lower() for t in ts), ts
 
             # ---- the right toggle hides and shows Flint in Simple
             o.click("#cv-tog-right"); o.wait_for_timeout(150); assert o.is_hidden("#cv-fpane"), "toggle hides Flint"

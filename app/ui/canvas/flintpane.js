@@ -36,10 +36,34 @@
   function setMode(m) { ls.set(MODE_KEY, m === 'advanced' ? 'advanced' : 'simple'); place(); }
 
   // ---------- the one door to Flint ----------
+  // 1. Flint's local brain (app/ui/flintnlu.js) reads the ask with what's on screen (the canvas selection, the frame).
+  // 2. Design asks (screens, tidy, rename, dark/light version, variants) go to the free canvas engine (flint.js run()).
+  //    "Send this to the app" / "export as png" press those buttons. Anything else local (a task, a message, the theme,
+  //    a question about TribeCode) goes to Flint's local hands (app/ui/flintlocal.js), answered here in the pane.
+  // 3. What nothing local can do comes back from the canvas engine as the honest card (hand it to your AI helper).
+  // Returns { r, pairs } like run(): r.kind 'build' | 'tidy' | ... | 'tier' | 'freeform' | 'note', r.say the reply.
   async function askFlint(text, ctx) {
-    const N = window.TribeFlintNLU;
-    if (N && typeof N.canvas === 'function') { const r = await N.canvas(text, ctx); if (r) return r; }
-    return window.TribeCanvasFlint.run(text);
+    const NL = window.TribeNLU, L = window.TribeFlintLocal, CF = window.TribeCanvasFlint;
+    let s = null;
+    try { const c = Object.assign({}, L && L.ctx ? L.ctx() : {}, { view: 'canvas', selection: !!(ctx && ctx.sel && ctx.sel.length), frame: ctx && ctx.frame }); const P = NL && NL.parse(text, c); s = P && P.steps && P.steps.length === 1 ? P.steps[0] : null; } catch { s = null; }
+    const sure = s && s.intent && s.conf >= 0.6;
+    if (sure && (s.intent === 'canvas.send' || s.intent === 'canvas.export')) {
+      const b = document.getElementById(s.intent === 'canvas.send' ? 'cv-send' : 'cv-export');
+      if (b && !b.disabled) { b.click(); return { r: { kind: 'note', say: s.intent === 'canvas.send' ? T('Sending the selected frame to the app.') : T('Pick a format in the Export menu.') } }; }
+      return { r: { kind: 'note', say: T('Select a frame first, then ask again.') } };
+    }
+    if (sure && L && L.handle && !/^(canvas\.|edit\.picked|build\.|site\.)/.test(s.intent)) {
+      const said = [];
+      const H = {
+        say: t => { said.push(String(t || '').replace(/<[^>]+>/g, '')); return true; },
+        act: l => l,
+        legacy: async t => { if (window.TribeFlint && window.TribeFlint.ask) window.TribeFlint.ask(t); said.push(T('Done in Flint\'s chat.')); return true; },
+        special: async () => false, legacyHit: () => false, modelOnline: () => false,
+        task: async (title, extra) => { try { const { task } = await C.api('/tasks', { method: 'POST', body: { title: String(title).charAt(0).toUpperCase() + String(title).slice(1, 200), ...(extra || {}) } }); return task; } catch (e) { said.push(e.message); return null; } },
+      };
+      try { const ok = await L.handle(text, H); if (ok && said.length) return { r: { kind: 'note', say: said.join(' ') } }; } catch {}
+    }
+    return CF.run(text);
   }
 
   function mount(editor) {
@@ -84,7 +108,7 @@
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd' && window.TribeSpeech) { e.preventDefault(); window.TribeSpeech.dictate(inp); }
     });
     pane.addEventListener('click', onClick);
-    window.TribeCanvasFlint && window.TribeCanvasFlint.use({ open, toggle });
+    window.TribeCanvasFlint && window.TribeCanvasFlint.use({ open, toggle, send: t => { open(); return send(t); } });
     // Ctrl Shift \ switches Simple / Advanced
     addEventListener('keydown', e => {
       if (document.body.dataset.view !== 'canvas' || !(e.ctrlKey || e.metaKey) || !e.shiftKey || e.altKey || e.code !== 'Backslash') return;
@@ -249,7 +273,7 @@
     const ff = FF(); if (ff) ff.work(E.stage, T('Designing…'));
     let item;
     try {
-      const { r, pairs } = await askFlint(text, { sel: E.sel.slice(), file: E.file });
+      const { r, pairs } = await askFlint(text, { sel: E.sel.slice(), file: E.file, frame: frameOfSel() });
       if (r.kind === 'tier' || r.kind === 'freeform') { if (ff) ff.home(); item = await post({ role: 'flint', kind: r.kind, text: r.why || r.say || '', ref: text }); }
       else {
         const ids = (r.create || []).map(n => n.id).filter(Boolean);
@@ -285,6 +309,7 @@
     }
   }
 
+  function frameOfSel() { let n = E.S.get(E.sel[0]); let k = 0; while (n && n.p && E.S.get(n.p) && k++ < 50) n = E.S.get(n.p); return n ? n.id : ''; }
   // ---------- the quick bar over a selection (Simple) ----------
   function paintQuick() {
     if (!quick || !E) return;

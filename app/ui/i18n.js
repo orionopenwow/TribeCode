@@ -11,6 +11,10 @@
   // English -> [es, pt, fr, de, ja, zh, ko]
   const D = {
     // Flint's pane beside the Design canvas (canvas/flintpane.js)
+    "Sending the selected frame to the app.": ['Enviando el marco seleccionado a la app.', 'Enviando o quadro selecionado para o app.', 'J’envoie le cadre sélectionné vers l’app.', 'Ich schicke den gewählten Frame an die App.', '選んだフレームをアプリに送ります。', '正在把选中的框架发送到应用。', '선택한 프레임을 앱으로 보내요.'],
+    "Pick a format in the Export menu.": ['Elige un formato en el menú Exportar.', 'Escolha um formato no menu Exportar.', 'Choisissez un format dans le menu Exporter.', 'Wähle ein Format im Export-Menü.', 'エクスポートメニューで形式を選んでください。', '在导出菜单中选择格式。', '내보내기 메뉴에서 형식을 고르세요.'],
+    "Select a frame first, then ask again.": ['Selecciona primero un marco y vuelve a pedirlo.', 'Selecione um quadro primeiro e peça de novo.', 'Sélectionnez d’abord un cadre, puis redemandez.', 'Wähle zuerst einen Frame und frag dann noch mal.', 'まずフレームを選んでから、もう一度どうぞ。', '先选中一个框架，再问一次。', '먼저 프레임을 선택한 뒤 다시 요청하세요.'],
+    "Done in Flint's chat.": ['Hecho en el chat de Flint.', 'Feito no chat do Flint.', 'Fait dans le chat de Flint.', 'Erledigt in Flints Chat.', 'Flintのチャットで実行しました。', '已在 Flint 的聊天中完成。', 'Flint 채팅에서 처리했어요.'],
     'designs with you': ['diseña contigo', 'desenha com você', 'conçoit avec vous', 'gestaltet mit dir', '一緒にデザイン', '和你一起设计', '함께 디자인해요'],
     'Screens, tidy, rename, themes and variants need no AI': ['Pantallas, ordenar, renombrar, temas y variantes no necesitan IA', 'Telas, organizar, renomear, temas e variantes não precisam de IA', 'Écrans, rangement, renommage, thèmes et variantes sans IA', 'Screens, Aufräumen, Umbenennen, Themes und Varianten brauchen keine KI', '画面・整理・名前変更・テーマ・バリエーションはAI不要', '页面、整理、重命名、主题和变体都不需要 AI', '화면, 정리, 이름 바꾸기, 테마, 변형은 AI가 필요 없어요'],
     'Describe a screen or a change…': ['Describe una pantalla o un cambio…', 'Descreva uma tela ou uma mudança…', 'Décrivez un écran ou un changement…', 'Beschreib einen Screen oder eine Änderung…', '画面や変更を説明…', '描述一个页面或一处修改…', '화면이나 변경을 설명해 주세요…'],
