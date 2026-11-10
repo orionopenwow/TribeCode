@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Original soundtrack for site/ad-type.html (the 22-second type ad). Everything is synthesised here with numpy:
+"""Original soundtrack for site/ad-type.html (the 41-second type ad). Everything is synthesised here with numpy:
 no samples, no outside music. 120 BPM, 48 kHz stereo. The hits line up with the page's timeline:
 
   0.35-1.75  five plucks as the intro words land
   2.0-2.75   a riser into the cut to Ember, an impact at 2.75
-  3.0-20.0   a minimal beat: kick on every beat, clap on 2 and 4, soft hats, bass on Am-F-C-G, a quiet pad that ducks
-             under the kick; a short chord stab on every word swap and every new feature line
-  19.0-19.75 a second riser, then one big chord at 20.0 that rings out to the end (22.0)
+  3.0-38.0   a minimal beat: kick on every beat, clap on 2 and 4, soft hats, bass on Am-F-C-G, a quiet pad that ducks
+             under the kick; a short chord stab on every word swap and every new exhibit (8, 13, 18, 23, 28, 33 s), a clap
+             roll into each exhibit, a busier hat in the second half, and small blips on what happens inside each exhibit
+  37.0-37.75 a second riser, then one big chord at 38.0 that rings out to the end (41.0)
 
 Usage: python3 scripts/dev/ad-type-sound.py out.wav    (then loudnorm with ffmpeg to about -16 LUFS)
 """
@@ -16,7 +17,7 @@ import numpy as np
 from scipy.signal import lfilter
 
 SR = 48000
-D = 22.0
+D = 41.0
 N = int(SR * D)
 rng = np.random.default_rng(7)
 L = np.zeros(N); R = np.zeros(N)
@@ -161,50 +162,63 @@ add(impact(), 2.75, 0.9)
 add(stab([57, 60, 64, 69]), 2.75, 0.55)
 add(whoosh(0.45), 3.95, 0.8)          # the logo moves up
 
-# the beat: 3.0 -> 20.0, with a half-beat drop at 7.5 (the cut to the features)
-kick_times = [3.0 + i * BEAT for i in range(int((20.0 - 3.0) / BEAT))]
-kick_times = [x for x in kick_times if not (7.5 <= x < 8.0)]
+# the beat: 3.0 -> END, with a half-beat drop at 7.5 (the cut to the features) and a clap roll into every new exhibit
+END = 38.0
+FEATS = [8.0, 13.0, 18.0, 23.0, 28.0, 33.0]
+def gap(x): return 7.5 <= x < 8.0
+kick_times = [3.0 + i * BEAT for i in range(int((END - 3.0) / BEAT))]
+kick_times = [x for x in kick_times if not gap(x)]
 for x in kick_times: add(kick(), x, 0.95)
-for i in range(int((20.0 - 4.5) / BEAT)):
+for i in range(int((END - 4.5) / BEAT)):
     x = 4.5 + i * BEAT
-    if 7.5 <= x < 8.0: continue
+    if gap(x): continue
     if i % 2 == 1: add(clap(), x, 0.45, pan=0.05)
-for i in range(int((20.0 - 4.5) / (BEAT / 2))):
+for f in FEATS[1:]:                              # 16th-note clap roll in the half beat before each exhibit
+    for j in range(4): add(clap(), f - 0.5 + j * BEAT / 4, 0.12 + 0.07 * j, pan=-0.1)
+for i in range(int((END - 4.5) / (BEAT / 2))):
     x = 4.5 + i * BEAT / 2
-    if 7.5 <= x < 8.0: continue
+    if gap(x): continue
+    late = x >= 23.0                              # the second half gets a busier hat
     add(hat(open_=(i % 4 == 2)), x, 0.26 if i % 2 else 0.16, pan=0.35)
+    if late and i % 2: add(hat(), x + BEAT / 4, 0.1, pan=0.4)
 # bass: 8ths on the root with an octave pop on the off-beat of beat 4
-for i in range(int((20.0 - 3.0) / (BEAT / 2))):
+for i in range(int((END - 3.0) / (BEAT / 2))):
     x = 3.0 + i * BEAT / 2
-    if 7.5 <= x < 8.0: continue
+    if gap(x): continue
     m = root_at(x) + (12 if i % 8 == 7 else 0)
     add(bass(m, BEAT / 2 * 0.9), x, 0.42)
 # pad per bar
-for b in range(int((20.0 - 3.0) / 2)):
+for b in range(int((END - 3.0) / 2) + 1):
     x = 3.0 + b * 2
-    add(pad([c + 12 for c in CHORDS[b % 4]], 2.0), x, 0.09, pan=-0.2)
+    add(pad([c + 12 for c in CHORDS[b % 4]], min(2.0, END - x)), x, 0.09, pan=-0.2) if END - x > 0.3 else None
 
-# stabs on every word swap and every new feature line (and the Claude/Codex/Gemini swaps)
+# stabs on every word swap and every new exhibit (and the Claude/Codex/Gemini swaps)
 for x in [4.5, 5.25, 6.0, 6.75]:
     add(stab([c + 12 for c in chord_at(x)]), x, 0.5, pan=0.15)
-for x in [8.0, 10.0, 12.0, 14.0, 16.0, 18.0]:
+for x in FEATS:
     add(stab([c + 12 for c in chord_at(x)] + [chord_at(x)[0] + 24]), x, 0.55)
     add(whoosh(0.3), x - 0.3, 0.5)
-for x, m in [(10.75, 76), (11.5, 79)]:
+for x, m in [(16.5, 76), (17.1, 79)]:
     add(stab([c + 12 for c in chord_at(x)]), x, 0.4, pan=-0.15)
     add(blip(m + 12), x, 0.25)
-# small UI blips inside the icons (messages landing, the approve-ish ticks)
-for x, m in [(8.15, 84), (8.55, 88), (8.95, 91), (13.0, 88), (15.2, 86), (16.9, 91), (18.6, 88), (18.85, 91)]:
-    add(blip(m), x, 0.18, pan=0.25)
+# small UI blips on what happens inside each exhibit (messages land, tools run, cards drop, approve, the app opens)
+BLIPS = [(8.3, 84), (9.1, 88), (10.1, 86), (10.55, 88), (11.0, 91), (11.6, 84), (12.2, 93),          # chat
+         (13.5, 84), (15.3, 91), (15.9, 88),                                                            # connect your AI
+         (18.8, 84), (18.95, 86), (19.1, 88), (19.25, 91), (19.7, 84), (20.8, 86), (21.7, 93), (22.1, 88),  # preview
+         (23.6, 84), (24.5, 88), (25.8, 91), (26.2, 86), (26.6, 84),                                    # docs, board, whiteboard
+         (28.3, 81), (28.7, 84), (29.1, 86), (29.5, 88), (30.0, 84), (30.4, 86), (30.9, 88), (31.95, 93), (32.4, 88),  # company
+         (33.2, 84), (34.0, 91), (34.3, 84), (36.1, 93), (36.4, 88)]                                    # open source
+for x, m in BLIPS: add(blip(m), x, 0.18, pan=0.25)
+add(whoosh(0.8), 25.0, 0.45)                     # the task card is dragged to Done
 
 # outro: riser, then one big chord that rings to the end
-add(riser(0.75), 19.0, 0.5)
-add(impact(), 20.0, 0.6)
+add(riser(0.75), END - 1.0, 0.5)
+add(impact(), END, 0.6)
 final = [45, 57, 60, 64, 67, 71]               # A minor 9: warm, settled
-add(pad(final, 2.0), 20.0, 0.32)
-add(stab([60, 64, 67, 72]), 20.0, 0.6)
-add(pluck(81, 1.6), 20.25, 0.3)
-add(blip(93), 21.2, 0.25)                       # the wordmark tucks back
+add(pad(final, 2.4), END, 0.32)
+add(stab([60, 64, 67, 72]), END, 0.6)
+add(pluck(81, 1.6), END + 0.25, 0.3)
+add(blip(93), END + 1.6, 0.25)                   # the wordmark tucks back
 
 # ---------- mix: kick ducks the pad and bass a little, simple stereo echo, soft clip, fades ----------
 duck = np.ones(N)
