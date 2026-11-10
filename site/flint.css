@@ -336,3 +336,13 @@
 .fa-sel { outline: 1.5px dashed #F26B1D !important; outline-offset: 3px; border-radius: 6px; transition: outline-color .2s; }
 @keyframes fa-blink { to { visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .fa-flier { transition: none; } .fa-flier.is-working span::after { animation: none; } }
+
+/* big Flint's occasional idle moves (site/flint.js) */
+.fp-big__bob.is-hop .fp-big__svg { animation: fp-hop .6s cubic-bezier(.3, .7, .3, 1); }
+.fp-big__bob.is-squish .fp-big__svg { animation: fp-squish .5s ease-in-out; transform-origin: 50% 100%; }
+.fp-eyes.is-shut { transform: scaleY(.15); transform-box: fill-box; transform-origin: 50% 70%; }
+.fp-spark { position: absolute; top: 4%; width: 10px; height: 10px; background: #FABD2F; animation: fp-spark 1.4s steps(7, end) forwards; pointer-events: none; }
+@keyframes fp-hop { 30% { transform: translateY(-22px); } 55% { transform: translateY(0); } 70% { transform: translateY(-6px); } 100% { transform: none; } }
+@keyframes fp-squish { 35% { transform: scale(1.06, .92); } 70% { transform: scale(.97, 1.04); } 100% { transform: none; } }
+@keyframes fp-spark { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fp-big__bob.is-hop .fp-big__svg, .fp-big__bob.is-squish .fp-big__svg, .fp-spark { animation: none; } }

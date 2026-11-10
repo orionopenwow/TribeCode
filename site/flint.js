@@ -405,7 +405,25 @@
       raf = 0; const r = box.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
       const cx = r.left + r.width * .5, cy = r.top + r.height * .6, dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy);
       const sx = d < 40 ? 0 : Math.round(dx / d * 1.2), sy = d < 40 ? 0 : Math.max(-1, Math.min(1, Math.round(dy / d * 1.2)));
-      eyes.setAttribute('transform', `translate(${Math.max(-1, Math.min(1, sx))} ${sy})`);
+      eyes.setAttribute('transform', `translate(${Math.max(-1, Math.min(1, sx))} ${sy})`); idleAt = Date.now();
     }
+    // now and then, while nobody is moving the pointer: a hop, a glance around, a little spark, a slow blink
+    let idleAt = Date.now();
+    const bob = document.querySelector('.fp-big__bob'), big = document.querySelector('.fp-big');
+    const moves = {
+      hop() { bob.classList.remove('is-hop'); void bob.offsetWidth; bob.classList.add('is-hop'); },
+      glance() { const seq = [[-1, 0], [1, 0], [0, 0]]; seq.forEach((m, i) => setTimeout(() => eyes.setAttribute('transform', `translate(${m[0]} ${m[1]})`), 500 + i * 650)); },
+      spark() { const sp = document.createElement('i'); sp.className = 'fp-spark'; sp.style.left = (40 + Math.random() * 20) + '%'; big.appendChild(sp); setTimeout(() => sp.remove(), 1400); },
+      blink() { eyes.classList.add('is-shut'); setTimeout(() => eyes.classList.remove('is-shut'), 180); setTimeout(() => { eyes.classList.add('is-shut'); setTimeout(() => eyes.classList.remove('is-shut'), 160); }, 360); },
+      squish() { bob.classList.remove('is-squish'); void bob.offsetWidth; bob.classList.add('is-squish'); },
+    };
+    const names = Object.keys(moves);
+    (function idle() {
+      setTimeout(() => {
+        const r = box.getBoundingClientRect();
+        if (!document.hidden && r.bottom > 0 && r.top < innerHeight && Date.now() - idleAt > 2500) moves[names[Math.floor(Math.random() * names.length)]]();
+        idle();
+      }, 5000 + Math.random() * 7000);
+    })();
   })();
 })();
