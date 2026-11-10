@@ -1,0 +1,157 @@
+{
+  "id": "terms",
+  "title": "Terms of service (web app)",
+  "emoji": "📋",
+  "category": "Website",
+  "blurb": "The rules for using your app: accounts, payments, acceptable use, ownership and limits.",
+  "fields": [
+    {
+      "key": "company",
+      "label": "Your business name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio Ltd"
+    },
+    {
+      "key": "app_name",
+      "label": "App name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Orders"
+    },
+    {
+      "key": "contact_email",
+      "label": "Contact email",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "pricing",
+      "label": "How paid plans work",
+      "type": "textarea",
+      "required": false,
+      "default": "Paid plans renew automatically each month or year until you cancel. Prices are shown before you buy and include or exclude taxes as stated at checkout."
+    },
+    {
+      "key": "refunds",
+      "label": "Refund policy",
+      "type": "text",
+      "required": false,
+      "default": "You can cancel at any time; cancellation takes effect at the end of the current billing period. We do not refund partial periods except where the law requires."
+    },
+    {
+      "key": "min_age",
+      "label": "Minimum age",
+      "type": "number",
+      "required": false,
+      "default": "16"
+    },
+    {
+      "key": "notice_days",
+      "label": "Days of notice before changes",
+      "type": "number",
+      "required": false,
+      "default": "30"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Agreement",
+      "text": "These terms are an agreement between you and **{{company}}** (\"we\") for using **{{app_name}}** (the \"Service\"), effective {{effective_date}}. By creating an account or using the Service, you agree to them. If you use the Service for an organisation, you confirm you may bind it to these terms.",
+      "note": "Make sure people clearly agree, for example with a checkbox at sign-up."
+    },
+    {
+      "heading": "Who can use it",
+      "text": "You must be at least {{min_age}} years old and able to form a binding contract. You are responsible for keeping your account secure and for activity under it. Tell us at {{contact_email}} if you think your account is compromised.",
+      "note": "Basic eligibility and account security."
+    },
+    {
+      "heading": "Acceptable use",
+      "text": "You will not use the Service to: break the law; infringe others' rights; upload malware; harass or harm anyone; attempt to access accounts or systems without permission; overload or disrupt the Service; or resell it without our written permission. We may suspend accounts that break these rules.",
+      "note": "Lists what is not allowed. Add rules specific to your product."
+    },
+    {
+      "heading": "Your content",
+      "text": "You keep ownership of content you add to the Service. You give us a licence to host, copy, display and process it only as needed to run and improve the Service for you. You confirm you have the rights to the content you add.",
+      "note": "Users keep their content; you get only the rights needed to run the service."
+    },
+    {
+      "heading": "Our property",
+      "text": "We own the Service, including its software, design and brand. These terms do not give you any rights to them except to use the Service as allowed here. Feedback you give us may be used freely to improve the Service.",
+      "note": "Clarifies who owns the product itself."
+    },
+    {
+      "heading": "Payments",
+      "text": "{{pricing}} {{refunds}}",
+      "note": "Make renewal and cancellation crystal clear; many places have specific rules for subscriptions."
+    },
+    {
+      "heading": "Availability and changes",
+      "text": "We work to keep the Service available but do not promise it will always be uninterrupted or error-free. We may change features. For changes that materially reduce what paid users get, we will give at least {{notice_days}} days' notice.",
+      "note": "Sets expectations about uptime and changes."
+    },
+    {
+      "heading": "Disclaimers",
+      "text": "Except as stated in these terms and to the extent allowed by law, the Service is provided \"as is\" without warranties of any kind. Nothing in these terms limits rights you have under consumer protection laws that cannot be excluded.",
+      "note": "Consumer laws often give rights that cannot be removed by terms."
+    },
+    {
+      "heading": "Limitation of liability",
+      "text": "To the extent allowed by law, we are not liable for indirect or consequential losses, and our total liability for any claim is limited to the amount you paid us in the 12 months before the claim. This does not limit liability that cannot be limited by law, such as for death or personal injury caused by negligence or for fraud.",
+      "note": "Caps your risk. How far you can limit liability depends on the law and on whether users are consumers."
+    },
+    {
+      "heading": "Ending",
+      "text": "You can stop using the Service and close your account at any time. We may suspend or end your access if you seriously or repeatedly break these terms, with notice where reasonable. On closure we will delete or return your content as described in our privacy policy.",
+      "note": "How either side can end the relationship."
+    },
+    {
+      "heading": "Changes to these terms",
+      "text": "We may update these terms. We will give at least {{notice_days}} days' notice of material changes. If you keep using the Service after the change, the new terms apply; if you do not agree, you can close your account.",
+      "note": "How you will notify changes."
+    },
+    {
+      "heading": "Law and disputes",
+      "text": "These terms are governed by the laws of {{governing_law}}. If you are a consumer, you may also have the protection of mandatory laws and courts where you live. Please contact us first at {{contact_email}} so we can try to resolve any problem.",
+      "note": "Choice of law. Consumer protections where users live may still apply."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Arbitration clauses and class-action waivers are common but have specific enforceability requirements; automatic-renewal laws in several states require clear disclosure and easy cancellation. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Consumers have statutory rights for digital content and services, and cancellation rights for online purchases with specific conditions. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Consumers generally have a withdrawal right for online purchases, with specific conditions for digital content; the Digital Services Act may apply to platforms hosting user content. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "Consumer guarantees under the Australian Consumer Law cannot be excluded. The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

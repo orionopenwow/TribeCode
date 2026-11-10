@@ -166,6 +166,7 @@
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
     if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) return say(co.text, co.open ? [act('Open Company', 'company')] : []); }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
+    if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) return say(ac.text); }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
     if (window.TribeCaptures) { const cap = await window.TribeCaptures.flint(text); if (cap) return say(cap.text, cap.capture ? [act('Open notes', 'capture', cap.capture)] : []); }   // feat/captures: summarize <url>, what did we decide about X
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();

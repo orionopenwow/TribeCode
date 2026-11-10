@@ -1,0 +1,164 @@
+{
+  "id": "contractor",
+  "title": "Contractor agreement",
+  "emoji": "🧑‍💻",
+  "category": "Agreements",
+  "blurb": "Hire a freelancer for a defined job, with clear pay, deadlines and who owns the work.",
+  "fields": [
+    {
+      "key": "company",
+      "label": "Your company",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio Ltd"
+    },
+    {
+      "key": "contractor",
+      "label": "Contractor",
+      "type": "text",
+      "required": true,
+      "placeholder": "Sam Rivera"
+    },
+    {
+      "key": "services",
+      "label": "What the contractor will do",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Design and build the landing page and three email templates"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "fee",
+      "label": "Fee",
+      "type": "text",
+      "required": true,
+      "placeholder": "$2,400 total / $60 per hour"
+    },
+    {
+      "key": "payment_terms",
+      "label": "When invoices are paid",
+      "type": "text",
+      "required": false,
+      "default": "within 14 days of receiving a correct invoice"
+    },
+    {
+      "key": "end_date",
+      "label": "Expected end date",
+      "type": "date",
+      "required": false
+    },
+    {
+      "key": "notice_days",
+      "label": "Days of notice to end early",
+      "type": "number",
+      "required": false,
+      "default": "14"
+    },
+    {
+      "key": "expenses",
+      "label": "Expenses",
+      "type": "text",
+      "required": false,
+      "default": "only expenses agreed in writing in advance"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Parties and start",
+      "text": "This Contractor Agreement starts on {{effective_date}} between **{{company}}** (the \"Company\") and **{{contractor}}** (the \"Contractor\").",
+      "note": "Who is agreeing and when it starts."
+    },
+    {
+      "heading": "The services",
+      "text": "The Contractor will provide these services: {{services}} (the \"Services\"), and will deliver the work products described or reasonably implied by them (the \"Deliverables\"). The Contractor expects to finish by {{end_date}}. Changes to the Services must be agreed in writing, including any change to the fee or dates.",
+      "note": "Be specific. Vague scope is the most common source of disputes."
+    },
+    {
+      "heading": "Payment",
+      "text": "The Company will pay the Contractor {{fee}}. The Contractor will invoice as agreed, and the Company will pay {{payment_terms}}. The Company will reimburse {{expenses}}. The Contractor is responsible for their own taxes and any registrations required to invoice.",
+      "note": "How much, when and for what. Put any deposit or milestones here too."
+    },
+    {
+      "heading": "Independent contractor",
+      "text": "The Contractor is an independent contractor, not an employee, partner or agent of the Company. The Contractor decides how, when and where to do the work (within the agreed deadlines), provides their own equipment, and may work for others as long as it does not breach this Agreement.",
+      "note": "Whether someone is legally a contractor depends on how the work actually happens, not just this clause."
+    },
+    {
+      "heading": "Ownership of the work",
+      "text": "When the Company has paid for them, the Contractor assigns to the Company all rights, including intellectual property rights, in the Deliverables. The Contractor keeps ownership of their pre-existing tools, know-how and materials (\"Background Materials\"), and grants the Company a non-exclusive, perpetual, worldwide, royalty-free licence to use any Background Materials included in the Deliverables. Where the law allows, the Contractor waives moral rights in the Deliverables, or agrees not to assert them.",
+      "note": "Without a written assignment, a contractor may keep rights you assumed you had."
+    },
+    {
+      "heading": "Third-party and open-source materials",
+      "text": "The Contractor will tell the Company in writing before including any third-party or open-source material in the Deliverables, along with its licence, and will not include material whose licence would require the Company to publish its own source code unless the Company agrees in writing.",
+      "note": "Avoids surprises from licences that come with conditions."
+    },
+    {
+      "heading": "Confidentiality",
+      "text": "The Contractor will keep the Company's non-public information confidential, use it only to provide the Services, and return or delete it at the end of the engagement, except as required by law.",
+      "note": "A short confidentiality promise. Use a separate NDA for complex cases."
+    },
+    {
+      "heading": "Quality and warranties",
+      "text": "The Contractor will perform the Services with reasonable skill and care, and confirms that, to their knowledge, the Deliverables are their original work (apart from disclosed third-party materials) and do not infringe anyone else's rights.",
+      "note": "Basic promises about the quality and originality of the work."
+    },
+    {
+      "heading": "Ending the agreement",
+      "text": "Either party may end this Agreement with {{notice_days}} days' written notice, or immediately if the other seriously breaches it and does not fix the breach within 7 days of being told. The Company will pay for Services properly performed up to the end date.",
+      "note": "How either side can stop, and what gets paid."
+    },
+    {
+      "heading": "Limits on liability",
+      "text": "Neither party is liable for indirect or consequential losses. Each party's total liability under this Agreement is limited to the total fees paid or payable under it, except for breach of confidentiality, infringement, or anything that cannot be limited by law.",
+      "note": "Caps the risk on both sides. Some liabilities cannot legally be limited."
+    },
+    {
+      "heading": "General",
+      "text": "This Agreement is governed by the laws of {{governing_law}}. It is the whole agreement on this subject and can only be changed in writing signed by both parties. The Contractor may not subcontract without the Company's written consent.",
+      "note": "Housekeeping."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Signed by the parties on the dates below.\n**{{company}}**\nSignature: ____________________   Name: ____________________   Date: __________\n**{{contractor}}**\nSignature: ____________________   Name: ____________________   Date: __________",
+      "note": "Check whether your jurisdiction needs witnesses or a particular signing method for this kind of document."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Worker classification tests differ between federal law and states; some states use stricter tests. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Off-payroll working (IR35) rules may affect contractors working through their own company. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Several countries presume employment where the work looks like employment, whatever the contract says. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Federal and provincial tests look at control, tools, chance of profit and integration into the business. Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The courts look at the whole relationship; superannuation can apply to some contractors. The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "id": "ip",
+  "title": "IP assignment",
+  "emoji": "📜",
+  "category": "Agreements",
+  "blurb": "Transfer ownership of code, designs or content to the company, for founders, friends or past contractors.",
+  "fields": [
+    {
+      "key": "assignor",
+      "label": "Person giving the rights",
+      "type": "text",
+      "required": true,
+      "placeholder": "Jordan Lee"
+    },
+    {
+      "key": "company",
+      "label": "Company receiving the rights",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio Ltd"
+    },
+    {
+      "key": "works",
+      "label": "What is being assigned",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "All code, designs and content created for the Firefly Garden game between March and June"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "consideration",
+      "label": "What the person receives in return",
+      "type": "text",
+      "required": false,
+      "default": "the sum of $1 and other good and valuable consideration, the receipt of which is acknowledged"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Parties",
+      "text": "This IP Assignment is made on {{effective_date}} between **{{assignor}}** (the \"Assignor\") and **{{company}}** (the \"Company\").",
+      "note": "Who is transferring and who receives."
+    },
+    {
+      "heading": "What is assigned",
+      "text": "The \"Assigned Works\" are: {{works}}, together with all drafts, versions, source files and documentation of them.",
+      "note": "Describe the works precisely, including dates if possible."
+    },
+    {
+      "heading": "Assignment",
+      "text": "In return for {{consideration}}, the Assignor assigns to the Company all rights, title and interest worldwide in the Assigned Works, including copyright, design rights, rights in inventions, trademarks and domain names, and the right to sue for past infringement.",
+      "note": "The transfer itself. Many legal systems need some consideration for a valid contract."
+    },
+    {
+      "heading": "Moral rights",
+      "text": "Where the law allows, the Assignor waives, or agrees not to assert, any moral rights in the Assigned Works.",
+      "note": "Moral rights (like the right to be named) cannot be transferred in some countries, only waived."
+    },
+    {
+      "heading": "Further help",
+      "text": "The Assignor will sign any further documents and do anything reasonably needed, at the Company's cost, to confirm or register the Company's rights.",
+      "note": "Helps if registrations or confirmations are needed later."
+    },
+    {
+      "heading": "Promises by the Assignor",
+      "text": "The Assignor confirms that, to their knowledge, they created the Assigned Works themselves (apart from third-party materials they have disclosed in writing), have not given the rights to anyone else, and that the Assigned Works do not infringe anyone else's rights.",
+      "note": "Basic promises that the person actually has the rights they are giving."
+    },
+    {
+      "heading": "General",
+      "text": "This assignment is governed by the laws of {{governing_law}} and is the whole agreement on this subject.",
+      "note": "Housekeeping."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Signed by the parties on the dates below.\n**{{assignor}}**\nSignature: ____________________   Name: ____________________   Date: __________\n**{{company}}**\nSignature: ____________________   Name: ____________________   Date: __________",
+      "note": "Check whether your jurisdiction needs witnesses or a particular signing method for this kind of document."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Some countries limit assignment of future works or require specific descriptions of the rights transferred. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Moral rights cannot be assigned in Canada but can be waived. Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

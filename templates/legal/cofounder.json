@@ -1,0 +1,165 @@
+{
+  "id": "cofounder",
+  "title": "Co-founder agreement",
+  "emoji": "🤝",
+  "category": "Founders",
+  "blurb": "Who owns what, how shares vest, who does what, and how IP and departures work. Write it while everyone is friendly.",
+  "fields": [
+    {
+      "key": "company",
+      "label": "Company name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio"
+    },
+    {
+      "key": "founders",
+      "label": "Founders and shares",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Alex Kim: 50%\nJordan Lee: 50%",
+      "help": "One founder per line with their percentage."
+    },
+    {
+      "key": "roles",
+      "label": "Roles and time commitment",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Alex: CEO, full time\nJordan: CTO, 20 hours a week until funding"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "vest_years",
+      "label": "Vesting period (years)",
+      "type": "number",
+      "required": false,
+      "default": "4"
+    },
+    {
+      "key": "cliff_months",
+      "label": "Cliff (months)",
+      "type": "number",
+      "required": false,
+      "default": "12"
+    },
+    {
+      "key": "decisions",
+      "label": "How big decisions are made",
+      "type": "text",
+      "required": false,
+      "default": "by agreement of founders holding a majority of founder shares, except the matters listed below which need all founders"
+    },
+    {
+      "key": "unanimous",
+      "label": "Decisions needing everyone",
+      "type": "text",
+      "required": false,
+      "default": "taking investment, selling the company, adding a founder, taking on debt over an agreed amount"
+    },
+    {
+      "key": "company_formed",
+      "label": "Is the company already formed?",
+      "type": "select",
+      "required": false,
+      "options": [
+        "Not yet",
+        "Yes"
+      ],
+      "default": "Not yet"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Founders and purpose",
+      "text": "This Co-founder Agreement starts on {{effective_date}}. The people listed below (the \"Founders\") are working together to build **{{company}}** (the \"Company\"). They make this agreement to set out ownership, roles and what happens if things change. If the Company is not yet formed, the Founders will form it and transfer their rights into it as described here, and this agreement guides that process.",
+      "note": "Sets the scene. Many founders sign this before the company is formed."
+    },
+    {
+      "heading": "Ownership",
+      "text": "The Founders will hold the Company's founder shares as follows:\n{{founders}}\nOwnership may be diluted later by investment or employee share plans approved under the decision rules below.",
+      "note": "Writing down percentages early avoids the most common founder fight."
+    },
+    {
+      "heading": "Vesting",
+      "text": "Each Founder's shares vest over {{vest_years}} years from {{effective_date}}, with a cliff of {{cliff_months}} months: no shares vest before the cliff, then the shares that would have vested by then vest at once, and the rest vest monthly. Unvested shares can be bought back by the Company at the lower of the price paid or their fair value if the Founder leaves. The Founders will put the vesting in the Company's formal share documents.",
+      "note": "Vesting means shares are earned over time, protecting the others if someone leaves early."
+    },
+    {
+      "heading": "Roles and commitment",
+      "text": "The Founders' roles and expected time commitment are:\n{{roles}}\nThe Founders will review roles at least every six months and record changes in writing.",
+      "note": "Clear roles prevent \"I thought you were doing that\". Revisit as the company grows."
+    },
+    {
+      "heading": "Decisions",
+      "text": "Day-to-day decisions belong to the Founder responsible for that area. Other significant decisions are made {{decisions}}. The following require all Founders to agree: {{unanimous}}. If the Founders cannot agree, they will first try a structured discussion, then mediation, before any other step.",
+      "note": "Who decides what, and a path for disagreements."
+    },
+    {
+      "heading": "Intellectual property",
+      "text": "Each Founder assigns to the Company (or, until it is formed, agrees to assign) all rights, including intellectual property, in work they create for the Company's business, including code, designs, content, names and domains. Each Founder lists below any prior inventions or materials they keep, and grants the Company a licence to use any such materials already built into the Company's product.",
+      "note": "Investors check that the company owns its product. This is where that starts."
+    },
+    {
+      "heading": "Confidentiality",
+      "text": "Each Founder will keep the Company's non-public information confidential during and after their involvement.",
+      "note": "A simple confidentiality promise between founders."
+    },
+    {
+      "heading": "Money and expenses",
+      "text": "No Founder receives a salary until the Founders agree otherwise in writing. Reasonable expenses approved in advance are reimbursed when the Company can afford it. Any loans from a Founder to the Company are documented separately.",
+      "note": "Avoids misunderstandings about pay and money put in."
+    },
+    {
+      "heading": "Leaving the company",
+      "text": "A Founder may leave with reasonable written notice and will help hand over their work. On leaving, unvested shares are handled as in the vesting clause, and the Founder keeps their vested shares unless the Founders agree otherwise or the Founder seriously breached this agreement, as set out in the Company's formal documents.",
+      "note": "What happens to shares and work when someone leaves."
+    },
+    {
+      "heading": "General",
+      "text": "This agreement is governed by the laws of {{governing_law}}. It is intended to be replaced by the Company's formal constitutional and share documents; where those conflict with this agreement, the formal documents win. Changes must be in writing signed by all Founders.",
+      "note": "Formal company documents normally replace this once the company exists."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Signed by each Founder:\nName: ____________________   Signature: ____________________   Date: __________\nName: ____________________   Signature: ____________________   Date: __________\nPrior inventions or materials each Founder keeps (or \"none\"):\n____________________________________________",
+      "note": "Each founder signs and lists anything they keep."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Founders receiving restricted stock often consider a time-sensitive tax election (an 83(b) election); ask a tax adviser promptly after shares are issued. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Share vesting is often done through the articles of association and a shareholders' agreement; tax treatment of founder shares has specific rules. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Vesting and share buy-back may be restricted by local company law; some countries use different instruments to achieve the same effect. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Corporate law differs federally and by province; a unanimous shareholder agreement is common. Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "A shareholders' agreement and the company constitution usually hold these terms. The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "id": "service",
+  "title": "Service agreement / SOW",
+  "emoji": "🧾",
+  "category": "Agreements",
+  "blurb": "Agree a piece of work with a client: what you deliver, when, for how much and how it is accepted.",
+  "credit": "Original text. Structure informed by Common Paper standard agreements (CC BY 4.0, commonpaper.com).",
+  "fields": [
+    {
+      "key": "provider",
+      "label": "You (the provider)",
+      "type": "text",
+      "required": true,
+      "placeholder": "Firefly Studio Ltd"
+    },
+    {
+      "key": "client",
+      "label": "Client",
+      "type": "text",
+      "required": true,
+      "placeholder": "Acme Bakeries LLC"
+    },
+    {
+      "key": "deliverables",
+      "label": "What you will deliver",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "1. Online ordering page\n2. Admin dashboard\n3. Two rounds of revisions"
+    },
+    {
+      "key": "fee",
+      "label": "Price",
+      "type": "text",
+      "required": true,
+      "placeholder": "$6,000"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "governing_law",
+      "label": "Governing law",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g. the State of New York / England and Wales / Ontario",
+      "help": "Which place's laws apply. Ask a lawyer if you are unsure."
+    },
+    {
+      "key": "milestones",
+      "label": "Milestones and payments",
+      "type": "textarea",
+      "required": false,
+      "default": "30% on signing, 40% on delivery of the first version, 30% on acceptance"
+    },
+    {
+      "key": "timeline",
+      "label": "Timeline",
+      "type": "text",
+      "required": false,
+      "placeholder": "First version by 15 March; final by 5 April"
+    },
+    {
+      "key": "out_of_scope",
+      "label": "Not included",
+      "type": "textarea",
+      "required": false,
+      "placeholder": "hosting costs, content writing, ongoing maintenance"
+    },
+    {
+      "key": "accept_days",
+      "label": "Days the client has to review",
+      "type": "number",
+      "required": false,
+      "default": "5"
+    },
+    {
+      "key": "payment_days",
+      "label": "Days to pay an invoice",
+      "type": "number",
+      "required": false,
+      "default": "14"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "Parties",
+      "text": "This Service Agreement starts on {{effective_date}} between **{{provider}}** (the \"Provider\") and **{{client}}** (the \"Client\").",
+      "note": "Who is agreeing."
+    },
+    {
+      "heading": "Statement of work",
+      "text": "The Provider will deliver:\n{{deliverables}}\nTimeline: {{timeline}}.\nNot included: {{out_of_scope}}.",
+      "note": "The heart of the agreement. Spell out what is and is not included."
+    },
+    {
+      "heading": "Changes",
+      "text": "Either party may request changes. Changes that affect price or timeline must be agreed in writing (email is fine) before work on them starts.",
+      "note": "Stops scope creep becoming unpaid work."
+    },
+    {
+      "heading": "Fees and payment",
+      "text": "The Client will pay {{fee}} plus any applicable taxes, as follows: {{milestones}}. Invoices are due within {{payment_days}} days. The Provider may pause work if an invoice is more than 14 days overdue, after giving written notice.",
+      "note": "Payment schedule and what happens if invoices are late."
+    },
+    {
+      "heading": "Client responsibilities",
+      "text": "The Client will provide information, content, access and feedback the Provider reasonably needs, on time. Delays caused by the Client may move the timeline.",
+      "note": "Projects often slip because inputs arrive late."
+    },
+    {
+      "heading": "Acceptance",
+      "text": "The Client will review each deliverable within {{accept_days}} business days and either accept it or describe in writing how it does not meet this statement of work. The Provider will fix such issues and resubmit. A deliverable is accepted if the Client does not respond within that time or uses it in live operation.",
+      "note": "A clear way to agree that something is done."
+    },
+    {
+      "heading": "Ownership",
+      "text": "When the Client has paid in full, the Provider assigns to the Client the rights in the deliverables created specifically for the Client. The Provider keeps its pre-existing tools, code libraries and know-how, and grants the Client a perpetual, non-exclusive licence to use any of them included in the deliverables. The Provider may show the work in its portfolio unless the Client objects in writing.",
+      "note": "Who owns the results, and what the provider keeps."
+    },
+    {
+      "heading": "Confidentiality",
+      "text": "Each party will keep the other's non-public information confidential and use it only for this agreement.",
+      "note": "Short confidentiality promise."
+    },
+    {
+      "heading": "Warranties and liability",
+      "text": "The Provider will perform the work with reasonable skill and care and fix defects reported within 30 days of acceptance at no charge. Neither party is liable for indirect losses, and each party's total liability is limited to the fees paid under this agreement, except for liabilities that cannot be limited by law.",
+      "note": "A short warranty period and a cap on liability."
+    },
+    {
+      "heading": "Ending",
+      "text": "Either party may end this agreement with 14 days' written notice. The Client will pay for work done up to the end date. Either party may end immediately if the other seriously breaches the agreement and does not fix it within 7 days of notice.",
+      "note": "How to stop the project fairly."
+    },
+    {
+      "heading": "General",
+      "text": "This agreement is governed by the laws of {{governing_law}}. It is the whole agreement on this subject and can only be changed in writing.",
+      "note": "Housekeeping."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Signed by the parties on the dates below.\n**{{provider}}**\nSignature: ____________________   Name: ____________________   Date: __________\n**{{client}}**\nSignature: ____________________   Name: ____________________   Date: __________",
+      "note": "Check whether your jurisdiction needs witnesses or a particular signing method for this kind of document."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Statutory late-payment interest can apply to business-to-business debts. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Late-payment rules for business-to-business invoices set default interest and payment periods in many countries. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

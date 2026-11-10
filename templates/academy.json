@@ -1,0 +1,1780 @@
+{
+  "version": 1,
+  "updated": "2026-11-09",
+  "note": "Educational content written for TribeCode. Not legal, financial or tax advice: check your local rules and a qualified professional.",
+  "tracks": [
+    {
+      "id": "founder",
+      "kind": "founder",
+      "title": "Founder basics",
+      "emoji": "🌱",
+      "color": "#F26B1D",
+      "blurb": "From a hunch to your first paying customers: testing an idea, pricing, finding people, and the legal shape of a business.",
+      "lessons": [
+        {
+          "title": "Start with a problem, not an idea",
+          "minutes": 4,
+          "body": [
+            "Most new businesses fail for one plain reason: they build something nobody needed badly enough. The fix is to start from a problem you can see, ideally one you or people near you already have. A good problem is painful (people complain about it), frequent (it happens every week, not once a year) and already costing time or money (people use clumsy workarounds like spreadsheets, sticky notes or copying between apps).",
+            "Write the problem in one sentence without mentioning your solution: \"Small bakeries lose orders because phone messages get forgotten.\" If you can't write that sentence, you don't have a problem yet, you have a feature.",
+            "Then name who has it, as narrowly as you can. \"Everyone\" is not a customer. \"Owners of one-shop bakeries who take custom cake orders\" is. A narrow group is easier to find, easier to talk to, and easier to delight. You can widen later.",
+            "Keep a short list of three to five problems and pick the one where you can reach the people who have it this week."
+          ],
+          "try": {
+            "label": "Write the problem in your vision",
+            "do": "vision",
+            "hint": "Put the one-sentence problem and who has it at the top of the vision."
+          },
+          "id": "founder-1"
+        },
+        {
+          "title": "Validate before you build",
+          "minutes": 5,
+          "body": [
+            "Validating means collecting evidence that real people want this, before you spend months building. Opinions are cheap; behaviour is evidence. \"That sounds cool\" from a friend is not validation. Someone giving you their time, their email, a pre-order or a letter of intent is.",
+            "The simplest method is a conversation. Ask people about the last time the problem happened: what did they do, what did it cost, what have they tried? Avoid pitching. Questions about the past give honest answers; questions about the future (\"would you use…?\") invite polite lies.",
+            "After ten or so conversations, look for patterns. Did most people describe the same pain? Are they already paying for a workaround? If yes, try a small test: a one-page website that explains the promise with a \"Join the waitlist\" or \"Pre-order\" button, then share it where your people gather. Count real sign-ups, not page views.",
+            "Decide in advance what result would make you continue, change direction, or stop. Writing the bar down first stops you from moving it later."
+          ],
+          "try": {
+            "label": "Make a one-page site for the test",
+            "do": "website",
+            "hint": "Website builds a simple page you can share with a waitlist button."
+          },
+          "id": "founder-2"
+        },
+        {
+          "title": "Your first customers",
+          "minutes": 5,
+          "body": [
+            "Your first ten customers will almost never come from ads. They come from you, personally, reaching out. That feels slow, but it teaches you more than anything else: why people buy, what words they use, and what nearly stopped them.",
+            "Make a list of fifty people or businesses who have the problem. Sources: your own network, online communities where they already talk, local groups, and people who answered your validation questions. Contact them one by one with a short, specific message that names their problem and offers to help. Respect each platform's rules and people's inboxes: no bulk messages to people who never agreed to hear from you.",
+            "Do things by hand that won't scale later: set up their account with them on a call, fix their issue the same day, send a personal thank-you. Early customers who feel looked after tell others.",
+            "Track every conversation in one simple place: who, when, what they said, what happens next. A list you actually use beats a fancy tool you don't."
+          ],
+          "try": {
+            "label": "Make a task for your outreach list",
+            "do": "task",
+            "hint": "Create a task like \"Contact 10 bakeries this week\" and assign it to someone."
+          },
+          "id": "founder-3"
+        },
+        {
+          "title": "Pricing without fear",
+          "minutes": 5,
+          "body": [
+            "New founders usually charge too little. A low price attracts customers who value you least, leaves no money to improve the product, and is hard to raise later. Price is part of the message: it tells people how seriously to take you.",
+            "Start from value, not cost. If your tool saves a shop two hours a week, what are two hours worth to them? Your price can be a fraction of that value and still feel like a bargain. Then check what people already pay for alternatives, including the \"free\" workaround that costs them time.",
+            "Keep it simple at first: one or two plans with a clear difference, such as a limit on users or projects. Fewer choices make deciding easier. Monthly plans lower the barrier; yearly plans with a discount improve cash flow.",
+            "Test by asking for money early. If nobody objects to your price, it is probably too low. If everybody objects, either the price or the value isn't clear yet. Write down every reaction and adjust in small steps. Remember to check what sales taxes apply where your customers live."
+          ],
+          "try": {
+            "label": "Open Money to sketch plans",
+            "do": "money",
+            "hint": "Money (in Company mode) is where plans and prices live."
+          },
+          "id": "founder-4"
+        },
+        {
+          "title": "Picking a legal structure (overview)",
+          "minutes": 6,
+          "body": [
+            "A legal structure decides who owns the business, who is personally responsible for its debts, and how it is taxed. The names differ by country, but the ideas are similar everywhere. This is a general overview: check your local rules and talk to an accountant or lawyer before you choose.",
+            "A sole trader or sole proprietor is just you doing business. It is simple and cheap, but you are personally responsible for the business's debts. A partnership is similar with two or more people, usually with a partnership agreement.",
+            "A limited company separates the business from the people in it. Common forms include the LLC or corporation in the United States, the private limited company (Ltd) in the UK, Australia and Canada (where it is often called a corporation), and forms such as the GmbH, SARL or BV in parts of the EU. Owners' personal assets are generally protected, but there is more paperwork, separate accounts and annual filings. Investors usually expect a company.",
+            "Non-profits, co-operatives and clubs have their own forms with their own rules.",
+            "Whatever you pick, keep business money separate from personal money from day one, and write down who owns what."
+          ],
+          "try": {
+            "label": "Read the co-founder agreement template",
+            "do": "legal:cofounder",
+            "hint": "If you start with friends, write down who owns what before money arrives."
+          },
+          "id": "founder-5"
+        },
+        {
+          "title": "Your first week plan",
+          "minutes": 4,
+          "body": [
+            "Momentum matters more than perfection. A simple week plan keeps a new venture moving without overwhelming anyone.",
+            "Day one: write the problem, the customer and one measurable goal for the month, for example \"five paying customers\" or \"a hundred waitlist sign-ups\". Day two: list who you will talk to and send the first messages. Day three: build or improve the smallest thing that shows the promise, often a landing page or a hand-run version of the service. Day four: talk to people and note what you hear. Day five: review honestly. What did you learn? What will you change next week?",
+            "Give each part a clear owner. In a tribe, that might be one person and their AI helper per area: building, growing, running the money. Agree on what anyone may do alone and what needs a quick yes from the group, especially anything that spends money, publishes in your name or contacts customers.",
+            "Keep the plan visible where everyone sees it daily, and celebrate small wins. Tiny progress, repeated, compounds."
+          ],
+          "try": {
+            "label": "Add a goal for this month",
+            "do": "goal",
+            "hint": "Company › Goals: one goal with one number you can check."
+          },
+          "id": "founder-6"
+        },
+        {
+          "title": "Money basics for founders",
+          "minutes": 5,
+          "body": [
+            "You don't need to be an accountant, but you do need to know three numbers: how much money you have, how much goes out each month, and how much comes in. Money out divided into money in the bank tells you your runway, the number of months you can keep going.",
+            "Open a separate bank account for the business as early as your structure allows. Mixing personal and business spending makes taxes painful and can weaken the legal protection of a company.",
+            "Keep every receipt and invoice, ideally as a photo or PDF the day you get it. Most tax authorities expect records to be kept for several years; the exact period depends on your country.",
+            "Know the difference between revenue (money customers pay you), profit (what's left after costs) and cash (what's actually in the account today). A business can be \"profitable\" on paper and still run out of cash if customers pay late.",
+            "Set aside a share of income for taxes rather than spending it. Ask a local accountant what share makes sense for your situation."
+          ],
+          "try": {
+            "label": "Open Money",
+            "do": "money",
+            "hint": "Money shows what comes in and goes out once a connector is set up."
+          },
+          "id": "founder-7"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Validation",
+          "def": "Evidence from real behaviour (sign-ups, pre-orders, payments) that people want what you plan to make."
+        },
+        {
+          "term": "MVP",
+          "def": "Minimum viable product: the smallest version that delivers the core promise, so you can learn from real use."
+        },
+        {
+          "term": "Runway",
+          "def": "How many months the money in the bank lasts at the current rate of spending."
+        },
+        {
+          "term": "Revenue",
+          "def": "Money customers pay you, before any costs are taken off."
+        },
+        {
+          "term": "Profit",
+          "def": "Revenue minus costs over a period."
+        },
+        {
+          "term": "Limited liability",
+          "def": "A legal shield that generally keeps owners' personal assets separate from the company's debts."
+        },
+        {
+          "term": "Letter of intent",
+          "def": "A short written statement that a customer plans to buy, usually not binding, but a strong signal."
+        }
+      ],
+      "links": [
+        {
+          "title": "Startup School",
+          "url": "https://www.startupschool.org/",
+          "by": "Y Combinator",
+          "why": "A free online course on starting a startup: ideas, MVPs, growth and co-founders.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "How to Get Startup Ideas",
+          "url": "https://paulgraham.com/startupideas.html",
+          "by": "Paul Graham",
+          "why": "Why good ideas come from noticing real problems.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Startup pricing 101",
+          "url": "https://www.ycombinator.com/library/6h-how-to-get-your-first-customers",
+          "by": "Y Combinator",
+          "why": "A short talk on pricing basics and how price shapes who buys.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Plan your business",
+          "url": "https://www.sba.gov/business-guide/plan-your-business",
+          "by": "U.S. Small Business Administration",
+          "why": "Market research, business plans and startup costs (US).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Set up a business",
+          "url": "https://www.gov.uk/set-up-business",
+          "by": "GOV.UK",
+          "why": "Sole trader vs limited company in the UK.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Business structures",
+          "url": "https://business.gov.au/planning/business-structures-and-types/business-structures",
+          "by": "business.gov.au",
+          "why": "Sole trader, company, partnership and more in Australia.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Starting a business",
+          "url": "https://www.canada.ca/en/services/business/start.html",
+          "by": "Government of Canada",
+          "why": "Planning, registering and permits in Canada.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Doing business in Europe",
+          "url": "https://europa.eu/youreurope/business/index_en.htm",
+          "by": "Your Europe (European Union)",
+          "why": "Starting and running a business across EU countries.",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "ceo",
+      "kind": "ceo",
+      "title": "CEO",
+      "emoji": "🧭",
+      "color": "#F26B1D",
+      "blurb": "Set the direction, pick the few things that matter, keep everyone pulling the same way, and make the calls nobody else can.",
+      "lessons": [
+        {
+          "title": "What a CEO actually does",
+          "minutes": 4,
+          "body": [
+            "In a small company the CEO's job is not to do everything; it is to make sure the right things get done. Most of the work falls into three parts.",
+            "First, set direction: what are we building, for whom, and why now? This lives in a short vision and a few goals that anyone in the tribe could repeat.",
+            "Second, make sure the company has what it needs: the right people (and AI helpers) in the right seats, enough money to keep going, and the tools to work. That includes recruiting, fundraising if you choose to, and removing blockers.",
+            "Third, decide. Many questions have no perfect answer, and waiting is itself a choice. A good CEO gathers input, makes a call, writes it down with the reason, and is willing to revisit it when new facts arrive.",
+            "In a one-person company you wear this hat alongside the others. Schedule time for it, perhaps one hour a week, to step back from the doing and ask: are we still working on the most important thing?"
+          ],
+          "try": {
+            "label": "Open Company",
+            "do": "company",
+            "hint": "Company shows every seat, who holds it, and what needs you."
+          },
+          "id": "ceo-1"
+        },
+        {
+          "title": "Goals that people can act on",
+          "minutes": 5,
+          "body": [
+            "A goal is useful only if people can tell whether today's work moves it. A popular format pairs an objective (what you want, in words) with two to four key results (how you will know, in numbers). For example: \"Become the easiest way for bakeries to take custom orders\", measured by \"20 bakeries using it weekly\" and \"orders lost to missed messages fall to zero for those shops\".",
+            "Keep the number of goals small, one to three per month or quarter. Too many goals means no goals. Each key result should have one owner, a starting value and a target.",
+            "Write results as outcomes, not tasks. \"Launch the newsletter\" is a task; \"300 subscribers\" is a result. Tasks are how you hope to get there, and you may change them.",
+            "Review weekly. Update the current numbers, mark what's on track or at risk, and decide what to change. An honest \"we're behind\" early is worth more than a surprise at the end of the month."
+          ],
+          "try": {
+            "label": "Add a goal with a number",
+            "do": "goal",
+            "hint": "Company › Goals: add one goal and one result you can measure."
+          },
+          "id": "ceo-2"
+        },
+        {
+          "title": "Running a good weekly rhythm",
+          "minutes": 4,
+          "body": [
+            "A steady rhythm replaces most meetings. Three habits work well for small teams, human or AI.",
+            "A short daily standup, written or spoken: what moved yesterday, what's next today, what's blocked. Keep it under ten minutes, and handle problems afterwards with only the people involved.",
+            "A weekly review: look at the goals, celebrate wins, name what slipped and why, and pick the top priorities for next week. Ask each seat for a one-paragraph update before the review so the time is spent deciding, not reporting.",
+            "A monthly look at the bigger picture: are the goals still right? Is money on track? What did customers say? This is where you change direction if you need to.",
+            "Write decisions down in one place with the date and the reason. Six weeks later nobody remembers why you chose the cheaper supplier or dropped a feature, and the log saves you from arguing about it twice."
+          ],
+          "try": {
+            "label": "Put the weekly review on the calendar",
+            "do": "calendar",
+            "hint": "Calendar: a repeating event everyone can see."
+          },
+          "id": "ceo-3"
+        },
+        {
+          "title": "Delegating to people and AI helpers",
+          "minutes": 5,
+          "body": [
+            "Delegating well means handing over an outcome, not a list of steps. A clear handover answers five questions: what result do we want, by when, what's in bounds, what needs a check-in first, and how will we know it's done.",
+            "A charter for each seat captures this. For a growth seat it might say: goal for the month, what it owns (the website copy, the newsletter), what it may do alone (draft posts, research competitors) and what needs approval (publishing, spending money, emailing customers).",
+            "The same idea works for AI helpers. An agent with a clear charter and an approval step for anything outward or costly can do a lot of the groundwork safely. You review and approve; it drafts and checks.",
+            "Then actually let go. Asking for constant updates or redoing the work teaches people, and agents, to wait for you. Check the result against the definition of done, give specific feedback, and adjust the charter if the boundaries were wrong."
+          ],
+          "try": {
+            "label": "Write a charter for a seat",
+            "do": "seat",
+            "hint": "Company › a seat › Charter: goal, owns, may do, needs approval."
+          },
+          "id": "ceo-4"
+        },
+        {
+          "title": "Making decisions under uncertainty",
+          "minutes": 5,
+          "body": [
+            "Most business decisions are made with incomplete information. A useful first question: is this decision easy to undo? Choosing a logo colour or a blog topic is reversible, so decide quickly and move on. Signing a long lease, taking investment or firing someone is hard to reverse, so slow down, gather input and sleep on it.",
+            "For bigger decisions, write a short note: the question, the options, what you know, what you don't, and what you recommend. Ask the people closest to the work. Set a deadline for deciding, so the discussion doesn't drift.",
+            "When you decide, say who decided, what, and why, and log it. If you later learn something that changes the picture, revisit openly. Changing your mind on new evidence is a strength, not a weakness.",
+            "Watch for common traps: continuing something only because you've already invested in it, listening only to evidence that agrees with you, and letting the loudest voice win. A quick \"what would make us wrong?\" question catches many of them."
+          ],
+          "try": {
+            "label": "Ask the group in chat",
+            "do": "chat",
+            "hint": "Post the question with options; use /decide to log the outcome."
+          },
+          "id": "ceo-5"
+        },
+        {
+          "title": "Telling the story: investors, partners, team",
+          "minutes": 5,
+          "body": [
+            "A CEO explains the company over and over: to new teammates, customers, partners and possibly investors. A clear story usually has the same backbone: the problem, who has it, your solution, why now, proof it's working, and what you need next.",
+            "Keep a living one-page summary. Update it monthly with fresh numbers and customer quotes (with permission). It doubles as the start of a pitch deck and an onboarding note for new tribe members.",
+            "Be precise and honest about numbers. Say \"12 paying customers\" rather than \"lots of interest\". Never present projections as results, and never invent quotes or logos. Trust is the CEO's most valuable asset and it's slow to rebuild.",
+            "If you raise money, understand what you are giving up. Instruments like the SAFE, created by Y Combinator, are common for early rounds; read the documents yourself and get advice from a lawyer in your jurisdiction. Many good businesses never raise outside money at all and grow from customer revenue instead."
+          ],
+          "try": {
+            "label": "Make a one-page company summary doc",
+            "do": "doc",
+            "hint": "Files › New doc: problem, customer, solution, proof, next."
+          },
+          "id": "ceo-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Objective",
+          "def": "What you want to achieve, written in words that inspire and guide."
+        },
+        {
+          "term": "Key result",
+          "def": "A number that shows progress toward an objective, with a start and a target."
+        },
+        {
+          "term": "Charter",
+          "def": "A seat's written mandate: goal, what it owns, what it may do, what needs approval."
+        },
+        {
+          "term": "Reversible decision",
+          "def": "A choice that is cheap to undo, so it can be made quickly."
+        },
+        {
+          "term": "SAFE",
+          "def": "Simple Agreement for Future Equity: a common early-stage investment document published by Y Combinator."
+        },
+        {
+          "term": "Burn rate",
+          "def": "How much money the company spends each month beyond what it earns."
+        }
+      ],
+      "links": [
+        {
+          "title": "Startup School",
+          "url": "https://www.startupschool.org/",
+          "by": "Y Combinator",
+          "why": "Free course for founders and CEOs of new companies.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "YC Startup Library",
+          "url": "https://www.ycombinator.com/library",
+          "by": "Y Combinator",
+          "why": "Essays and talks on running an early company.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "The SAFE",
+          "url": "https://www.ycombinator.com/documents",
+          "by": "Y Combinator",
+          "why": "How the SAFE works, with the standard forms.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Plan your business",
+          "url": "https://www.sba.gov/business-guide/plan-your-business",
+          "by": "U.S. Small Business Administration",
+          "why": "Business plans, market research and funding options.",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "cto",
+      "kind": "cto",
+      "title": "CTO · Build",
+      "emoji": "🛠️",
+      "color": "#38C6B1",
+      "blurb": "Choose sensible tools, ship small and often, keep it safe and backed up, and steer the AI helpers that write code with you.",
+      "lessons": [
+        {
+          "title": "Boring technology is a feature",
+          "minutes": 4,
+          "body": [
+            "The technical lead's first job is to pick tools that let the company move fast for years, not just this week. For most small products that means well-known, widely used technology: a mainstream language, a popular framework, a standard database. These have answers online, many people who know them, and AI helpers that write them well.",
+            "Every unusual choice costs \"innovation tokens\": time spent learning, debugging and explaining. Spend them only where it makes your product special, not on plumbing.",
+            "Write a short tech note that lists the main choices and why: language, hosting, database, how you deploy, where secrets live. New tribe members and agents read it first. Keep it in the code repository so it changes with the code.",
+            "Avoid building what you can rent cheaply or borrow from open source, such as sign-in, payments or email delivery. Check licences before you copy code: permissive licences such as MIT, Apache 2.0 and BSD are usually easy to use in a product; others come with conditions you must follow."
+          ],
+          "try": {
+            "label": "Open the code repository",
+            "do": "repo",
+            "hint": "Code repository: where the code and the tech note live."
+          },
+          "id": "cto-1"
+        },
+        {
+          "title": "Ship small, ship often",
+          "minutes": 5,
+          "body": [
+            "Big releases are risky: many changes at once, many ways to break, hard to find what went wrong. Small, frequent changes are safer and give feedback sooner.",
+            "Work in branches: each change gets its own copy of the code, is checked, and then merged back into the main line. Keep each change small enough to review in a few minutes. If a feature is big, hide unfinished parts behind a switch (a \"feature flag\") so the main line always works.",
+            "Automate the boring checks. A test suite that runs on every change catches regressions before customers do. Start with a few tests for the most important flows, such as sign-up, payment and the core action, rather than aiming for perfect coverage.",
+            "Keep a way back. Know how to undo a release quickly if something breaks, and practise it once before you need it. In a tribe, agree that anything going to production needs a human yes. Fast is good; careful and fast is better."
+          ],
+          "try": {
+            "label": "Make a task for your next small change",
+            "do": "task",
+            "hint": "Tasks: one small change per task keeps reviews quick."
+          },
+          "id": "cto-2"
+        },
+        {
+          "title": "Security basics every builder needs",
+          "minutes": 6,
+          "body": [
+            "Most security problems in small products are not clever hacks; they're common mistakes. The OWASP Top 10 is a well-known list of the most frequent web application risks and is worth reading once.",
+            "A few habits prevent a lot of trouble. Never put passwords, API keys or tokens in the code or chat; keep them in environment variables or a secrets manager, and rotate them if they leak. Check every input that comes from outside, from forms, links or uploads, on the server, not just in the browser. Use well-tested libraries for sign-in, passwords and encryption instead of writing your own.",
+            "Give each person and tool only the access they need. An AI helper that drafts code doesn't need production database access. Turn on two-factor sign-in for your code host, email and payment accounts.",
+            "Keep dependencies updated; many breaches use old, known bugs. Finally, plan for the day something goes wrong: who gets told, how you stop the damage, and how you tell affected users. Some laws require prompt notice after a data breach, so know your local rules."
+          ],
+          "try": {
+            "label": "Ask an agent for a security review task",
+            "do": "task",
+            "hint": "Create a task \"Review sign-in and uploads against OWASP Top 10\"."
+          },
+          "id": "cto-3"
+        },
+        {
+          "title": "Backups, monitoring and incidents",
+          "minutes": 5,
+          "body": [
+            "Two questions every technical lead should answer calmly: \"If the server disappeared today, how would we get our data back?\" and \"How would we know if the product stopped working at 3am?\"",
+            "Back up anything you can't recreate: the database, uploaded files, configuration. Keep copies in a different place from the original, and test a restore now and then. A backup you have never restored is only a hope.",
+            "Monitoring can start simple: an uptime checker that pings your site and alerts someone, plus error logging that collects crashes in one place. Add a few business signals too, such as sign-ups per day, so you notice when something quietly breaks.",
+            "When an incident happens, focus on restoring service first and understanding later. Afterwards, write a short, blameless review: what happened, the timeline, why it happened, and what you'll change. Blameless means asking how the system allowed the mistake, not who to blame, which makes people more willing to report problems early."
+          ],
+          "try": {
+            "label": "Download a backup of the tribe",
+            "do": "settings",
+            "hint": "Settings › Storage & sync has a one-click backup for the host."
+          },
+          "id": "cto-4"
+        },
+        {
+          "title": "Working with AI coding helpers",
+          "minutes": 5,
+          "body": [
+            "AI helpers can write a lot of code quickly. The technical lead's job shifts toward giving them good context, clear boundaries and careful review.",
+            "Context: a short project brief, the tech note, and the task's goal and acceptance criteria. The more specific the request, the better the result. \"Add a password reset flow using our existing email helper; tests for expired links\" beats \"add password reset\".",
+            "Boundaries: decide which parts of the code each helper may touch, so two agents don't edit the same files at once. Keep secrets and production access out of their reach. Anything that deploys, spends money or touches customer data should wait for a human approval.",
+            "Review: read the change like you would a new teammate's. Does it do what was asked? Are there tests? Did it add a dependency, and is its licence acceptable? Run it. AI output can look confident and still be wrong, so trust, but verify.",
+            "Finally, keep the human understanding of the system alive. If nobody can explain how a part works, that part is a risk."
+          ],
+          "try": {
+            "label": "Open the Agents Hub",
+            "do": "agents",
+            "hint": "See which agents are working on what, and what they have claimed."
+          },
+          "id": "cto-5"
+        },
+        {
+          "title": "Technical debt and when to pay it",
+          "minutes": 4,
+          "body": [
+            "Technical debt is the extra work you create when you take a shortcut: a quick fix, a copied function, a missing test. Like money debt, a little can be smart, because it lets you learn faster. Too much makes every change slow and risky.",
+            "Make debt visible. When you take a shortcut on purpose, write a short task describing it and why. Then you can choose when to repay it, instead of discovering it during an outage.",
+            "A practical rule is to spend a steady slice of each week, say one day in ten, cleaning up the parts you touch most often. Prioritise debt that slows down work you do regularly or that creates real risk, such as an unpatched library or a fragile payment flow. Ignore ugliness in code nobody touches.",
+            "Explain debt in business terms when you need time for it: \"this cleanup makes new pricing plans a one-day change instead of a week\" is more convincing than \"the code is messy\". Good technical leads keep the product fast to change; that is the real asset."
+          ],
+          "try": {
+            "label": "Log a shortcut as a task",
+            "do": "task",
+            "hint": "Tasks: \"Debt: …\" with why it matters and when to fix it."
+          },
+          "id": "cto-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Branch",
+          "def": "A separate line of changes in the code repository, merged back when ready."
+        },
+        {
+          "term": "Deploy",
+          "def": "Putting a new version of the software where users can reach it."
+        },
+        {
+          "term": "Feature flag",
+          "def": "A switch that turns a feature on or off without a new release."
+        },
+        {
+          "term": "Environment variable",
+          "def": "A setting given to a program from outside the code; a common home for secrets."
+        },
+        {
+          "term": "OWASP Top 10",
+          "def": "A widely used list of the most common web application security risks."
+        },
+        {
+          "term": "Postmortem",
+          "def": "A written review after an incident: what happened, why, and what changes."
+        },
+        {
+          "term": "Technical debt",
+          "def": "Future work created by shortcuts taken now."
+        }
+      ],
+      "links": [
+        {
+          "title": "OWASP Top 10",
+          "url": "https://owasp.org/www-project-top-ten/",
+          "by": "OWASP Foundation",
+          "why": "The most common web application security risks.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "OWASP Cheat Sheet Series",
+          "url": "https://cheatsheetseries.owasp.org/",
+          "by": "OWASP Foundation",
+          "why": "Short, practical security guides by topic.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Learn web development",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development",
+          "by": "MDN Web Docs",
+          "why": "Structured, free tutorials for building for the web.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "The Twelve-Factor App",
+          "url": "https://12factor.net/",
+          "by": "12factor.net",
+          "why": "Principles for apps that are easy to deploy and grow.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Blameless postmortems",
+          "url": "https://sre.google/sre-book/postmortem-culture/",
+          "by": "Google SRE book",
+          "why": "How to learn from incidents without blame.",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "kind": "design",
+      "title": "Design",
+      "emoji": "🎨",
+      "color": "#E86A92",
+      "blurb": "Make it clear, usable and consistent: start from what people need, test with real users, and keep it accessible for everyone.",
+      "lessons": [
+        {
+          "title": "Design starts with user needs",
+          "minutes": 4,
+          "body": [
+            "Good design is less about how something looks and more about whether people can do what they came to do, easily and confidently. The first step is understanding what they need, in their words.",
+            "Write down the main jobs people hire your product for: \"send an invoice\", \"book a table\", \"share my game with friends\". For each, ask: who is doing it, where are they (on a phone in a hurry, at a desk), and what does success look like for them?",
+            "Then design the shortest path to that success. Remove steps, fields and choices that don't help. Every extra question in a form loses some people. Every extra button competes for attention.",
+            "Use plain words. Label things by what they do for the person, not by internal names. \"Send invoice\" beats \"Submit document\". If you need a paragraph to explain a screen, the screen probably needs to change.",
+            "Keep a list of the top three jobs visible while you design, and check every new idea against it."
+          ],
+          "try": {
+            "label": "Add the top three jobs to the vision",
+            "do": "vision",
+            "hint": "The vision is where everyone sees who you design for."
+          },
+          "id": "design-1"
+        },
+        {
+          "title": "Hierarchy, spacing and consistency",
+          "minutes": 5,
+          "body": [
+            "People scan screens before they read them. Visual hierarchy guides their eyes: the most important thing is biggest or boldest, related things sit together, and less important things step back.",
+            "Give each screen one main action and make it obvious. Secondary actions can be quieter, such as outlined buttons or text links. If everything shouts, nothing is heard.",
+            "Spacing groups things. Elements close together look related; space separates sections. Use a small set of spacing sizes, for example 4, 8, 16 and 32 pixels, and stick to them. The same goes for colours and type sizes. A short list of design tokens keeps the product consistent even when many people, or AI helpers, build it.",
+            "Consistency lowers effort. If a pencil icon means edit on one screen, it should mean edit everywhere. Reuse components instead of drawing new variations.",
+            "Write your choices in a small design system document: colours, type, spacing, buttons, cards and how to use them. It saves arguments and makes new screens faster."
+          ],
+          "try": {
+            "label": "Make a design system doc",
+            "do": "doc",
+            "hint": "Files › New doc: colours, type, spacing and components."
+          },
+          "id": "design-2"
+        },
+        {
+          "title": "Accessibility is for everyone",
+          "minutes": 5,
+          "body": [
+            "Accessibility means people with different abilities can use your product: low vision, colour blindness, motor difficulties, hearing loss, or simply a cracked phone screen in bright sunlight. It is the right thing to do, it widens your audience, and in many places public-facing services face legal accessibility requirements, so check what applies to you.",
+            "The Web Content Accessibility Guidelines (WCAG) are the common reference. A few basics cover a lot. Text needs enough contrast against its background. Don't use colour alone to carry meaning; add text or an icon. Every image that matters needs a text alternative. Everything should work with a keyboard, and focus should be visible. Buttons and links need clear names, not \"click here\".",
+            "Make tap targets large enough for a thumb, let text resize without breaking layouts, and respect people's reduced-motion settings.",
+            "Test with real tools: navigate a screen using only the keyboard, try a screen reader built into your phone or computer, and run an automated checker. Automated tools catch some issues, not all, so real testing matters."
+          ],
+          "try": {
+            "label": "Make a task to check accessibility",
+            "do": "task",
+            "hint": "Task: \"Keyboard-only and contrast check of the sign-up flow\"."
+          },
+          "id": "design-3"
+        },
+        {
+          "title": "Test with five real people",
+          "minutes": 5,
+          "body": [
+            "You can't judge your own design objectively; you already know how it works. Usability testing means watching real people try to do a real task while thinking aloud.",
+            "You don't need a lab. Five people from your target group often reveal most of the big problems in a flow. Give each a realistic task (\"You want to order a birthday cake for Saturday; show me how you'd do it\") and then stay quiet. Don't help, don't explain. Note where they hesitate, misclick or say \"hmm\".",
+            "Ask about what they did, not what they think they'd like: \"What did you expect to happen there?\" is better than \"Do you like this button?\"",
+            "After the sessions, list the problems by how many people hit them and how badly. Fix the worst first, then test again. Small rounds, repeated, beat one big study.",
+            "Always ask for consent before recording, explain how you'll use what they share, and keep personal details private."
+          ],
+          "try": {
+            "label": "Capture a test session as a voice note",
+            "do": "captures",
+            "hint": "Captures records a voice note and turns it into notes and action items."
+          },
+          "id": "design-4"
+        },
+        {
+          "title": "Copy is design too",
+          "minutes": 4,
+          "body": [
+            "The words on a screen are often more important than the pixels. Buttons, error messages, empty states and emails shape how people feel about your product.",
+            "Write for the person in the moment. On a button, say what happens: \"Save changes\", \"Send invite\". In an error, say what went wrong and how to fix it: \"That email is already registered. Sign in instead?\" rather than \"Error 409\".",
+            "Empty states are a chance to guide: when a list is empty, explain what goes there and offer the first action. Confirmation messages should reassure without fuss.",
+            "Keep the voice consistent. Decide a few words that describe how you sound, such as friendly, clear and calm, and check copy against them. Avoid jargon, internal names and blame (\"You entered an invalid date\").",
+            "Read every screen aloud. If it sounds like a robot or a lawyer, rewrite it. Plain language is not dumbing down; it respects people's time."
+          ],
+          "try": {
+            "label": "Ask a free model for copy ideas",
+            "do": "offload:copy",
+            "hint": "Offload: draft button and error copy for free elsewhere, then bring it back."
+          },
+          "id": "design-5"
+        },
+        {
+          "title": "Working with brand and inspiration",
+          "minutes": 4,
+          "body": [
+            "A brand is the feeling people get from every touch with you: the name, colours, type, words and how you treat them. For a small company, consistency beats complexity. A simple logo, two or three colours, one or two typefaces and a clear voice go a long way.",
+            "Collect inspiration on purpose. Save screens, photos and sites you like and note what you like about each: the calm spacing, the warm colours, the playful type. Patterns emerge, and they help you explain your taste to teammates and AI helpers.",
+            "Then turn inspiration into rules: exact colour values with enough contrast, font choices with sizes, and examples of do and don't. Respect other people's work: use inspiration to understand principles, not to copy a design, logo or illustration. Check licences on fonts, icons and images; many free ones require credit or have limits.",
+            "Revisit the brand only when something is truly broken. Constant tweaking confuses customers more than it helps."
+          ],
+          "try": {
+            "label": "Pin inspiration on the dashboard",
+            "do": "home",
+            "hint": "The inspiration board turns pictures and links into a palette."
+          },
+          "id": "design-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Visual hierarchy",
+          "def": "Arranging size, weight and position so the most important thing is noticed first."
+        },
+        {
+          "term": "Design tokens",
+          "def": "Named values for colours, spacing and type, reused everywhere for consistency."
+        },
+        {
+          "term": "WCAG",
+          "def": "Web Content Accessibility Guidelines, the common standard for accessible web content."
+        },
+        {
+          "term": "Contrast ratio",
+          "def": "How different text and background colours are in brightness; higher is easier to read."
+        },
+        {
+          "term": "Usability test",
+          "def": "Watching real people try real tasks to find where a design confuses them."
+        },
+        {
+          "term": "Empty state",
+          "def": "What a screen shows before there is any content; a chance to guide the first step."
+        }
+      ],
+      "links": [
+        {
+          "title": "Government design principles",
+          "url": "https://www.gov.uk/guidance/government-design-principles",
+          "by": "GOV.UK",
+          "why": "Start with user needs, do less, and make things simple.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "How to Meet WCAG (Quick Reference)",
+          "url": "https://www.w3.org/WAI/WCAG22/quickref/",
+          "by": "W3C Web Accessibility Initiative",
+          "why": "The accessibility success criteria with techniques.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "10 Usability Heuristics",
+          "url": "https://www.nngroup.com/articles/ten-usability-heuristics/",
+          "by": "Nielsen Norman Group",
+          "why": "Ten broadly applicable principles for usable interfaces.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Laws of UX",
+          "url": "https://lawsofux.com/",
+          "by": "Jon Yablonski",
+          "why": "Psychology principles designers can apply.",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "growth",
+      "kind": "growth",
+      "title": "Growth",
+      "emoji": "📈",
+      "color": "#FABD2F",
+      "blurb": "Help the right people find you, try you and stay: positioning, content, search, measuring honestly and growing without tricks.",
+      "lessons": [
+        {
+          "title": "Positioning: who it is for and why",
+          "minutes": 4,
+          "body": [
+            "Growth starts before any marketing: with a clear answer to \"who is this for, and why should they pick it over the alternatives?\" That answer is your positioning.",
+            "Write it as a short statement: for [specific customer] who [has this problem], [product] is a [category] that [main benefit]. Unlike [main alternative], it [key difference]. The alternative is often not a competitor but a spreadsheet, a notebook or doing nothing.",
+            "Good positioning is narrow and concrete. \"The fastest way for small bakeries to take custom cake orders\" is easier to market than \"an ordering platform for businesses\". Narrow positioning makes every later choice easier: which words go on the website, which communities to join, which features matter.",
+            "Test it. Show the statement to a few people in your target group and ask them to explain back what you do. If they can't, or they describe something else, adjust the words. Your best customers' own phrases are often the best copy you will ever get."
+          ],
+          "try": {
+            "label": "Put the positioning in the vision",
+            "do": "vision",
+            "hint": "One sentence at the top keeps everyone telling the same story."
+          },
+          "id": "growth-1"
+        },
+        {
+          "title": "Channels: go where your people already are",
+          "minutes": 5,
+          "body": [
+            "A channel is a way people discover you: search, social media, communities, newsletters, partnerships, word of mouth, events or ads. Early on, pick one or two channels and do them well rather than spreading thin across ten.",
+            "Choose by asking where your specific customers already spend time and look for help. Bakery owners might gather in local business groups and trade forums; indie game players in game communities and video platforms.",
+            "In communities, contribute before you promote. Answer questions, share what you learn, and follow each place's rules about self-promotion. Being genuinely helpful builds trust that no ad can buy.",
+            "Treat each channel as an experiment: decide what you'll try, for how long, and what result would make it worth continuing. Measure where sign-ups actually come from, for example with simple tracking links or by asking \"How did you hear about us?\" during sign-up.",
+            "Double down on what works, drop what doesn't, and revisit every month or two."
+          ],
+          "try": {
+            "label": "Make a task for one channel experiment",
+            "do": "task",
+            "hint": "Task: \"Two weeks answering questions in [community]; measure sign-ups\"."
+          },
+          "id": "growth-2"
+        },
+        {
+          "title": "Search basics (SEO)",
+          "minutes": 5,
+          "body": [
+            "Search engine optimisation means helping search engines understand your pages so the right people find them. It's slow but compounding: a helpful page can bring visitors for years.",
+            "Start with what Google's own starter guide emphasises: make pages for people first. Each page should answer a real question clearly. Use words your customers use, in the page title, the main heading and the text. A short, descriptive title and a one-sentence summary help both search engines and people decide to click.",
+            "Make sure the basics work: pages load fast on phones, every page has a unique title, images have descriptive alternative text, and links between your own pages make sense. A sitemap helps search engines find everything.",
+            "Avoid shortcuts that promise quick rankings: buying links, stuffing keywords or copying others' content. They can get a site demoted.",
+            "Write helpful guides around your product's problem, such as \"How to price custom cakes\", and link them to your product naturally. Then be patient; results often take months."
+          ],
+          "try": {
+            "label": "Open Website",
+            "do": "website",
+            "hint": "Website: page titles, descriptions and copy live here."
+          },
+          "id": "growth-3"
+        },
+        {
+          "title": "Measure what matters (honestly)",
+          "minutes": 5,
+          "body": [
+            "Growth needs numbers, but the right ones. Vanity metrics like page views or followers feel good and rarely tell you what to do. Useful metrics track the steps a customer takes: visits, sign-ups, activation (reached the first \"aha\" moment), retention (came back) and revenue.",
+            "Pick one main metric that best reflects value delivered, for example \"weekly active bakeries taking orders\". Then watch the steps that lead to it to find where people drop off.",
+            "Choose privacy-respecting analytics and collect only what you need. Many places have rules about cookies and tracking, especially in the EU and UK, so check what consent you need and say clearly what you collect in your privacy policy.",
+            "Look at trends over weeks, not single days. Small numbers jump around. When you change something, change one thing at a time where you can, and give it enough time to show a real difference.",
+            "Never fake numbers, reviews or testimonials. Consumer protection rules in many countries forbid misleading claims and fake reviews."
+          ],
+          "try": {
+            "label": "Add a growth result to your goals",
+            "do": "goal",
+            "hint": "Company › Goals: one result like \"40 weekly active shops\"."
+          },
+          "id": "growth-4"
+        },
+        {
+          "title": "Content and newsletters",
+          "minutes": 4,
+          "body": [
+            "Content means useful things you publish: guides, short videos, case studies, templates, behind-the-scenes posts. Done well, it attracts the right people, builds trust and gives you something to share in every channel.",
+            "Plan around your customers' questions. List the twenty questions they ask most, before and after buying, and answer one each week. Repurpose: a guide becomes a short post, a thread, a video and a newsletter section.",
+            "A newsletter gives you a direct line to people who asked to hear from you. Only email people who opted in, include a clear unsubscribe link, and include your real contact details; anti-spam laws in many countries require these. Write like a person: one idea, one call to action, a subject line that says what's inside.",
+            "Keep a steady, sustainable pace. A short monthly email you actually send beats an ambitious weekly plan you abandon. Track replies and clicks rather than just opens; replies show you're starting conversations."
+          ],
+          "try": {
+            "label": "Get a free model to draft the newsletter",
+            "do": "offload:copy",
+            "hint": "Offload: draft it elsewhere for free, then bring the draft into Files."
+          },
+          "id": "growth-5"
+        },
+        {
+          "title": "Growing without dark patterns",
+          "minutes": 4,
+          "body": [
+            "Dark patterns are design tricks that push people into things they didn't intend: hidden fees revealed at checkout, pre-ticked boxes, fake countdown timers, cancellation flows that hide the cancel button. They may lift numbers briefly, but they destroy trust and increasingly break consumer protection laws in many countries.",
+            "Grow by making the product genuinely better and easier to recommend. Some honest levers work well: a quick, clear onboarding that gets people to value fast; reminders that actually help; referral programs that reward both sides and are clearly explained; and asking happy customers for reviews without paying for positive ones or hiding negative ones.",
+            "If you work with influencers or affiliates, they must clearly disclose the relationship. Regulators such as the US Federal Trade Commission publish guidance on endorsements and reviews; similar rules exist elsewhere.",
+            "A simple test: would you be comfortable if a customer saw exactly how and why this feature works? If not, redesign it."
+          ],
+          "try": {
+            "label": "Ask the group to review your sign-up flow",
+            "do": "chat",
+            "hint": "Post a link in chat and ask: is anything confusing or pushy?"
+          },
+          "id": "growth-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Positioning",
+          "def": "Who the product is for, the problem it solves, and how it differs from the alternatives."
+        },
+        {
+          "term": "Channel",
+          "def": "A route by which people discover you, such as search, communities or referrals."
+        },
+        {
+          "term": "SEO",
+          "def": "Search engine optimisation: helping search engines understand and show your pages."
+        },
+        {
+          "term": "Activation",
+          "def": "The moment a new user first gets real value from the product."
+        },
+        {
+          "term": "Retention",
+          "def": "The share of people who keep using the product over time."
+        },
+        {
+          "term": "Opt-in",
+          "def": "A person actively agreeing to receive something, such as emails."
+        },
+        {
+          "term": "Dark pattern",
+          "def": "A design trick that pushes people into choices they didn't intend."
+        }
+      ],
+      "links": [
+        {
+          "title": "SEO Starter Guide",
+          "url": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+          "by": "Google Search Central",
+          "why": "The basics of helping people find your site in search.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Endorsements, Influencers, and Reviews",
+          "url": "https://www.ftc.gov/business-guidance/advertising-marketing/endorsements-influencers-reviews",
+          "by": "U.S. Federal Trade Commission",
+          "why": "Rules for endorsements, influencer disclosure and reviews (US).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Founders hub",
+          "url": "https://posthog.com/founders",
+          "by": "PostHog",
+          "why": "Candid notes on launches, product-market fit and pricing.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Do Things that Don't Scale",
+          "url": "https://paulgraham.com/ds.html",
+          "by": "Paul Graham",
+          "why": "Why early growth often comes from hands-on effort.",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "sales",
+      "kind": "sales",
+      "title": "Sales",
+      "emoji": "🤝",
+      "color": "#6C7CFF",
+      "blurb": "Turn interest into customers: understand what people need, follow up reliably, handle objections honestly and close with clear terms.",
+      "lessons": [
+        {
+          "title": "Selling is helping someone decide",
+          "minutes": 4,
+          "body": [
+            "Good selling is not pressure; it's helping a person decide whether your product solves their problem, and making it easy to say yes if it does. That mindset changes everything: you listen more than you talk, and you're comfortable hearing \"no, not for us\".",
+            "Start every conversation by understanding their situation. What are they trying to do? What have they tried? What would make this worth paying for? What happens if they do nothing? Take notes in their words.",
+            "Only then explain how you help, linking each point to something they said. \"You mentioned orders get lost in voicemail; here's how a customer request lands straight in one list.\" Specific beats general.",
+            "Be honest about fit. If your product isn't right for them, say so, and point them somewhere better if you can. They will remember, and they may come back or refer others.",
+            "End each conversation with a clear next step agreed by both sides: a trial, a second call, a proposal by Friday."
+          ],
+          "try": {
+            "label": "Make a task for your next sales call",
+            "do": "task",
+            "hint": "Task with the person, the date and the one question you most need answered."
+          },
+          "id": "sales-1"
+        },
+        {
+          "title": "A simple pipeline you will actually use",
+          "minutes": 5,
+          "body": [
+            "A pipeline is a list of potential customers and where each one stands. It keeps follow-ups from slipping and shows whether you're likely to hit your goal.",
+            "Keep the stages few and clear, for example: contacted, talking, trial or proposal, won, lost. For each lead note the name, company, what they need, the next step and its date. A shared sheet or task board is enough for a long time.",
+            "Follow up. Many deals are won simply because someone followed up politely when others didn't. Set the next step during every conversation, and if a lead goes quiet, check in a couple of times with something useful before letting it go.",
+            "Record why you lost deals. Price? Missing feature? Bad timing? Patterns tell your product and pricing seats what to change.",
+            "Review the pipeline weekly: which deals moved, which are stuck, and what will you do about the stuck ones? Remove dead leads so the list stays honest."
+          ],
+          "try": {
+            "label": "Make a pipeline sheet",
+            "do": "doc",
+            "hint": "Files › New sheet: name, need, stage, next step, date."
+          },
+          "id": "sales-2"
+        },
+        {
+          "title": "Handling objections honestly",
+          "minutes": 5,
+          "body": [
+            "Objections are questions in disguise. \"It's too expensive\" might mean \"I don't see the value yet\", \"I don't have budget this month\" or \"I need to convince my partner\". Ask a gentle follow-up before answering: \"Compared to what?\" or \"What would make it worth it?\"",
+            "Common objections and honest responses:",
+            "Price: connect it to the value they described, offer a smaller plan if there is one, or agree it's not the right time. Don't invent discounts you can't sustain.",
+            "Missing feature: say whether it's planned, never promise something that isn't decided. Ask how they work around it now; sometimes there's a simpler answer.",
+            "Trust: offer a trial, a reference customer who has agreed to talk, or a clear refund policy. Never fake testimonials, logos or numbers.",
+            "Timing: agree a date to check back and actually do it.",
+            "Write down every objection you hear. The ones that come up again and again are product, pricing or messaging problems to fix, not just sales problems."
+          ],
+          "try": {
+            "label": "Log common objections in a doc",
+            "do": "doc",
+            "hint": "Files › New doc: objection, what it really meant, best answer."
+          },
+          "id": "sales-3"
+        },
+        {
+          "title": "Proposals, quotes and clear terms",
+          "minutes": 5,
+          "body": [
+            "When someone is ready to buy, make the terms clear and written. A simple proposal or quote states what you will deliver, what's not included, the price and how it's paid, the timeline, and how either side can end the agreement.",
+            "For services, a statement of work describes deliverables, milestones and acceptance: how both sides agree something is done. Vague scope is the most common cause of disputes and unpaid invoices.",
+            "Keep proposals short and in plain language, and use the customer's own words for their goals. Offer two or three options when it helps, such as basic, standard and premium, with clear differences.",
+            "Agree payment terms upfront: deposit, due dates and what happens if payment is late. Check what sales tax or VAT applies, which can depend on where the customer is.",
+            "Use a written agreement for anything significant, and have a lawyer review your standard terms once. TribeCode's legal templates are a starting point, not legal advice."
+          ],
+          "try": {
+            "label": "Draft a service agreement",
+            "do": "legal:service",
+            "hint": "Legal: a plain-English service agreement / statement of work to start from."
+          },
+          "id": "sales-4"
+        },
+        {
+          "title": "Outreach that respects people",
+          "minutes": 4,
+          "body": [
+            "Reaching out to people who haven't heard of you is part of early sales, but it must be respectful and legal. Rules differ by country: some allow business email outreach with a clear way to opt out, others require prior consent, especially for individuals. Check the rules where your recipients are before you start.",
+            "Some good practices apply almost everywhere. Contact people one at a time with a message written for them, not a blast. Say who you are and why you're writing, in the first line. Make it easy to say no, and honour every opt-out immediately. Never buy email lists.",
+            "Keep messages short: one sentence about their likely problem, one about how you help, one simple question. \"Worth a 15-minute chat next week?\" is better than a long pitch with attachments.",
+            "Follow up once or twice, spaced out, then stop. Track replies and learn which messages resonate. Warm introductions from mutual contacts nearly always beat cold messages, so ask happy customers who else might benefit."
+          ],
+          "try": {
+            "label": "Ask a free model to draft outreach",
+            "do": "offload:copy",
+            "hint": "Offload: get a few short message drafts, then edit them in your voice."
+          },
+          "id": "sales-5"
+        },
+        {
+          "title": "After the sale",
+          "minutes": 4,
+          "body": [
+            "The sale is the beginning of the relationship, not the end. Customers who get value quickly stay longer, buy more and tell others.",
+            "Make the first week great. Send a welcome message with the one thing they should do first. Check in after a few days to see how it's going. Help them reach the moment where the product clearly pays off.",
+            "Hand over smoothly to whoever supports them. Share the notes from the sales conversation so the customer never has to repeat themselves.",
+            "Ask for feedback at natural moments: after onboarding, after a month, at renewal. When customers are happy, ask whether they'd be willing to give a testimonial or a referral, with permission to use their name and words exactly as approved.",
+            "Watch for signs of trouble: logins dropping, support tickets piling up, invoices paid late. Reach out early, before they quietly leave.",
+            "Keep promises you made during the sale. If something changed, tell them first."
+          ],
+          "try": {
+            "label": "Put a check-in on the calendar",
+            "do": "calendar",
+            "hint": "Calendar: a reminder to check in with each new customer after a week."
+          },
+          "id": "sales-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Lead",
+          "def": "A person or business who might become a customer."
+        },
+        {
+          "term": "Pipeline",
+          "def": "The list of leads and the stage each one is at."
+        },
+        {
+          "term": "Objection",
+          "def": "A concern raised by a potential customer, often hiding a real question."
+        },
+        {
+          "term": "Statement of work (SOW)",
+          "def": "A document describing deliverables, timeline and acceptance for a service."
+        },
+        {
+          "term": "Churn",
+          "def": "Customers who stop paying or using the product in a period."
+        },
+        {
+          "term": "Opt-out",
+          "def": "A person asking to stop receiving messages; honour it promptly."
+        }
+      ],
+      "links": [
+        {
+          "title": "SaaS business model",
+          "url": "https://stripe.com/guides/atlas/business-of-saas",
+          "by": "Stripe Atlas guides",
+          "why": "Low-touch vs high-touch sales and key SaaS metrics.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Startup pricing 101",
+          "url": "https://www.ycombinator.com/library/6h-how-to-get-your-first-customers",
+          "by": "Y Combinator",
+          "why": "How pricing shapes who buys and how you sell.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Do Things that Don't Scale",
+          "url": "https://paulgraham.com/ds.html",
+          "by": "Paul Graham",
+          "why": "Recruiting early customers by hand.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Manage your business",
+          "url": "https://www.sba.gov/business-guide/manage-your-business",
+          "by": "U.S. Small Business Administration",
+          "why": "Marketing, sales, finances and compliance basics (US).",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "support",
+      "kind": "support",
+      "title": "Support",
+      "emoji": "💬",
+      "color": "#3BD16F",
+      "blurb": "Help customers quickly and kindly, turn questions into better docs and product fixes, and handle bad days calmly.",
+      "lessons": [
+        {
+          "title": "What great support looks like",
+          "minutes": 4,
+          "body": [
+            "Support is often the only time a customer talks to a real person at your company. Done well, it turns a frustrated user into a loyal one. Three qualities matter most: fast, clear and kind.",
+            "Fast means people know when they'll hear back, and you keep that promise. A quick \"Got it, looking into this now\" beats a perfect answer two days later. Set a realistic response time and show it where people ask for help.",
+            "Clear means plain language, specific steps and one question at a time. Avoid jargon and blame. If you need information, ask for exactly what you need and why.",
+            "Kind means acknowledging the person's situation before the fix: \"That's frustrating when you're in the middle of an order. Let's sort it out.\" Stay calm even when they're not.",
+            "Close the loop: confirm the issue is solved, and if it was a bug, tell them when the fix ships. Customers remember being kept in the loop more than they remember the problem."
+          ],
+          "try": {
+            "label": "Open Bugs",
+            "do": "bugs",
+            "hint": "Bugs: where reported problems land so the build seat can fix them."
+          },
+          "id": "support-1"
+        },
+        {
+          "title": "One inbox, tagged and tracked",
+          "minutes": 4,
+          "body": [
+            "Support breaks down when questions arrive in five places and nobody knows who's answering what. Start with one shared place where every question lands, whether it's an email address, a form or a chat widget, and one person or helper on duty at a time.",
+            "Tag each request with a few simple labels: question, bug, billing, feature request, urgent. Tags show patterns: if half your requests are \"how do I reset my password?\", the reset flow needs work.",
+            "Write down who owns each request and its status. When someone hands over, the next person should be able to pick it up without asking the customer to repeat themselves.",
+            "Agree what counts as urgent, such as payments failing, data loss or a security issue, and how to escalate it, including outside working hours if you promise that.",
+            "Review weekly: how many requests, how fast you answered, what the top themes were, and which product changes would remove the most requests. The best support ticket is the one that never needs to be written."
+          ],
+          "try": {
+            "label": "Make a task for a weekly support review",
+            "do": "task",
+            "hint": "Task: \"Weekly: top 3 support themes and one fix each\"."
+          },
+          "id": "support-2"
+        },
+        {
+          "title": "Help docs and saved replies",
+          "minutes": 5,
+          "body": [
+            "Most customers prefer to solve problems themselves if the answer is easy to find. A small help centre with clear articles saves everyone time.",
+            "Write an article for each question you answer more than twice. Use the customer's words in the title (\"I didn't get the confirmation email\"), then give short numbered steps and a screenshot where it helps. Keep each article focused on one task.",
+            "Saved replies, short templates for common answers, keep responses fast and consistent. Always personalise the first line and check the details fit the situation; a reply that obviously wasn't read feels worse than a slow one.",
+            "Link articles from inside the product where people get stuck, such as next to a confusing setting.",
+            "Review the help docs whenever the product changes. Outdated instructions are worse than none. A quick monthly pass, or a task attached to each release, keeps them honest. AI helpers can draft articles from your support history; a person should check them before publishing."
+          ],
+          "try": {
+            "label": "Start a help article doc",
+            "do": "doc",
+            "hint": "Files › New doc: the question, the steps, a screenshot."
+          },
+          "id": "support-3"
+        },
+        {
+          "title": "Difficult conversations",
+          "minutes": 5,
+          "body": [
+            "Sometimes customers are angry, and sometimes they're right. Difficult conversations go better with a simple pattern: listen, acknowledge, act, follow up.",
+            "Listen fully before responding. Let them explain; ask clarifying questions. Acknowledge the impact in plain words: \"You were charged twice and that's not okay.\" You can acknowledge feelings without admitting fault for things you're unsure about.",
+            "Act: say exactly what you'll do and when. If you can't do what they ask, explain why and offer what you can. Refunds, credits and exceptions should follow a written policy so everyone is treated fairly.",
+            "Follow up when you said you would, even if the news isn't final.",
+            "Set boundaries for abuse. You can be firm and polite: explain you want to help and will continue when the conversation is respectful. Protect your team and helpers from harassment.",
+            "Never share another customer's information, and verify identity before discussing account details. When a request touches legal threats or data protection rights, involve whoever handles legal."
+          ],
+          "try": {
+            "label": "Ask an agent to draft a reply for approval",
+            "do": "approvals",
+            "hint": "Agents draft; a person approves anything sent to customers."
+          },
+          "id": "support-4"
+        },
+        {
+          "title": "Privacy requests and account safety",
+          "minutes": 5,
+          "body": [
+            "Support often handles personal data, so a few privacy basics matter. In many places people have rights over their data, such as asking what you hold about them, correcting it, or asking you to delete it. The EU and UK GDPR are well-known examples; other countries and US states have their own rules. Check which apply to you.",
+            "Have a simple process: one place to receive requests, a way to verify the person is who they say they are, a log of what you did and when, and a deadline you meet. Many laws set time limits for responding.",
+            "Verify identity before changing account details or sharing information. Attackers sometimes pose as customers to take over accounts. Ask the person to confirm from the email address on file, rather than accepting a new one.",
+            "Never ask customers to send passwords. Keep support notes factual and minimal; don't store sensitive details you don't need.",
+            "If you suspect a data breach, escalate immediately to whoever owns security and legal. Some laws require notifying authorities and affected people quickly."
+          ],
+          "try": {
+            "label": "Read the privacy policy template",
+            "do": "legal:privacy",
+            "hint": "Legal: a plain-English privacy policy to start from, then get it reviewed."
+          },
+          "id": "support-5"
+        },
+        {
+          "title": "Turning feedback into product",
+          "minutes": 4,
+          "body": [
+            "Support hears what customers struggle with before anyone else. Feeding that back into the product is one of the most valuable things the support seat does.",
+            "Capture feedback in a consistent way: what the customer was trying to do, what got in the way, how often it comes up, and who asked (so you can tell them when it's fixed). Quote their words; they're more persuasive than summaries.",
+            "Separate problems from proposed solutions. A customer asking for \"an export button\" might really need \"a way to send totals to my accountant\". The underlying need may have a better answer.",
+            "Share a short summary with the build and growth seats regularly: top problems, top requests, and any quick wins. Agree together which to tackle.",
+            "When something ships because of feedback, tell the customers who asked. It shows you listen, and they often become your biggest fans. Keep a public changelog or update note so everyone sees progress."
+          ],
+          "try": {
+            "label": "Capture feedback from a call",
+            "do": "captures",
+            "hint": "Captures turns a voice note or link into notes with action items."
+          },
+          "id": "support-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "First response time",
+          "def": "How long a customer waits for the first human reply."
+        },
+        {
+          "term": "Saved reply",
+          "def": "A reusable answer template, personalised before sending."
+        },
+        {
+          "term": "Escalation",
+          "def": "Passing a request to someone with more authority or expertise."
+        },
+        {
+          "term": "Data subject request",
+          "def": "A person exercising rights over their personal data, such as access or deletion."
+        },
+        {
+          "term": "Changelog",
+          "def": "A dated list of what changed in the product."
+        }
+      ],
+      "links": [
+        {
+          "title": "Plain language guide series",
+          "url": "https://digital.gov/guides/plain-language",
+          "by": "Digital.gov",
+          "why": "How to write clear help content people understand.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "10 Usability Heuristics",
+          "url": "https://www.nngroup.com/articles/ten-usability-heuristics/",
+          "by": "Nielsen Norman Group",
+          "why": "Includes help, documentation and error recovery.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Data protection and your business",
+          "url": "https://www.gov.uk/data-protection-your-business",
+          "by": "GOV.UK",
+          "why": "Your responsibilities for customer data (UK).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Incident management",
+          "url": "https://www.atlassian.com/incident-management",
+          "by": "Atlassian",
+          "why": "Responding to outages and communicating with customers.",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "ops",
+      "kind": "ops",
+      "title": "Operations · Run",
+      "emoji": "⚙️",
+      "color": "#94A3B8",
+      "blurb": "Keep the machine running: clear processes, good tools, steady rhythms, suppliers and the small details that stop things breaking.",
+      "lessons": [
+        {
+          "title": "Operations is making things repeatable",
+          "minutes": 4,
+          "body": [
+            "Operations is everything that keeps the company running day to day: processes, tools, suppliers, schedules, and the checklists that stop important things from slipping. Good ops is mostly invisible; you notice it when it's missing.",
+            "Start by spotting work that happens more than once: onboarding a customer, paying a supplier, publishing a release, sending the monthly invoice. For each, write down the steps as they happen today. That written process is the foundation: it can be improved, delegated or automated.",
+            "Keep processes short and owned. One owner per process, a checklist with the steps, and a note on where things live. If a step needs judgement, say what to consider; if it needs approval, say whose.",
+            "Automate only after a process is stable and understood. Automating a messy process just makes mess faster.",
+            "In a tribe with AI helpers, written processes are especially powerful: an agent can follow a clear checklist and ask for approval at the right step."
+          ],
+          "try": {
+            "label": "Write your first checklist doc",
+            "do": "doc",
+            "hint": "Files › New doc: \"How we onboard a customer\", step by step."
+          },
+          "id": "ops-1"
+        },
+        {
+          "title": "Tasks, owners and due dates",
+          "minutes": 4,
+          "body": [
+            "Every piece of work needs three things to actually happen: a clear description, one owner and a date. \"Someone should update the pricing page\" never gets done; \"Sam updates the pricing page by Thursday\" usually does.",
+            "Use one task board for the whole company so work is visible. Keep columns simple, such as to do, doing, waiting and done. Limit how much any one person or agent has in \"doing\" at once; finishing beats starting.",
+            "Write tasks as outcomes with a definition of done: \"Pricing page shows both plans and the yearly discount; reviewed by CEO.\" That avoids the \"I thought you meant…\" conversation.",
+            "Review the board briefly each day or in the standup. Waiting tasks need attention: who are they waiting on, and can you unblock it?",
+            "Archive or delete tasks nobody will do. A board full of stale tasks hides the important ones and wears people down."
+          ],
+          "try": {
+            "label": "Open the Task Board",
+            "do": "tasks",
+            "hint": "Task Board: one place for every task, owner and date."
+          },
+          "id": "ops-2"
+        },
+        {
+          "title": "Tools and accounts hygiene",
+          "minutes": 5,
+          "body": [
+            "Small companies collect tools quickly: email, chat, code hosting, payments, analytics, design, storage. Without care, nobody knows what you pay for, who has access, or where the passwords are.",
+            "Keep a simple list of every tool: what it's for, who owns it, the plan and cost, the renewal date and who has access. Review it every few months and cancel what you don't use.",
+            "Use company accounts, not personal ones, for anything important, so access survives when someone leaves. Use a shared password manager and turn on two-factor sign-in everywhere it's offered. Give people the lowest access level that lets them do their job.",
+            "When someone joins, follow an onboarding checklist; when someone leaves, an offboarding checklist that removes access the same day.",
+            "Pay attention to where data lives. Some tools store data in other countries, which can matter for privacy rules. Note this in the tool list so whoever handles legal can check."
+          ],
+          "try": {
+            "label": "Review who has access",
+            "do": "settings",
+            "hint": "Settings › Roles & privileges shows who can do what in the tribe."
+          },
+          "id": "ops-3"
+        },
+        {
+          "title": "Suppliers, contractors and agreements",
+          "minutes": 5,
+          "body": [
+            "Most companies rely on others: freelancers, agencies, hosting providers, manufacturers. Operations makes sure these relationships are clear and reliable.",
+            "Before work starts, agree in writing: what will be delivered, by when, for how much, how payment works, who owns the result, and how either side can end the arrangement. For creative and software work, the ownership of the work (intellectual property) matters a lot; without a written assignment, the creator may keep rights you assumed you had.",
+            "Keep a list of key suppliers with contacts, contract dates and renewal terms. Know what you'd do if a critical supplier disappeared: is there an alternative, and how long would switching take?",
+            "Pay on time. It builds goodwill that you'll need on the day you ask for a favour.",
+            "When working with contractors, follow local rules on who counts as an employee versus an independent contractor; misclassification can have tax and legal consequences. Check your local rules or ask an advisor."
+          ],
+          "try": {
+            "label": "Draft a contractor agreement",
+            "do": "legal:contractor",
+            "hint": "Legal: a plain-English contractor agreement with IP terms to start from."
+          },
+          "id": "ops-4"
+        },
+        {
+          "title": "Rhythms, reviews and retrospectives",
+          "minutes": 4,
+          "body": [
+            "A regular rhythm keeps a company healthy without constant meetings. Operations usually owns the calendar of rhythms: daily standups, weekly reviews, monthly finance checks, quarterly planning.",
+            "Make each rhythm short and purposeful, with a standard agenda. A weekly review might be: goals and numbers, wins, problems, decisions needed, priorities for next week. Prepare updates in writing beforehand so the time goes to discussion.",
+            "Retrospectives look back at how you worked, not just what you did. A simple format: what went well, what didn't, what we'll try differently. Pick one or two changes and actually try them. Keep it blameless: focus on the process, not on who messed up.",
+            "Write down decisions and owners from each rhythm in one place. Follow up at the next session.",
+            "Protect focus time, too. Rhythms should reduce interruptions by giving questions a predictable home."
+          ],
+          "try": {
+            "label": "Turn on company rhythms",
+            "do": "company",
+            "hint": "Company › Rhythms: daily standup, weekly review and a board meeting."
+          },
+          "id": "ops-5"
+        },
+        {
+          "title": "When things go wrong",
+          "minutes": 5,
+          "body": [
+            "Things will go wrong: a payment provider goes down, a supplier misses a deadline, someone is ill on launch day. Operations prepares the company to respond calmly.",
+            "List your most likely and most damaging risks, perhaps the top five. For each, write a short plan: how you'd notice, who decides, what you'd do first, and how you'd tell customers. Keep the plans where everyone can find them.",
+            "When an incident happens, name one person in charge of coordinating. Others focus on fixing. Communicate early and honestly with customers: what's affected, what you're doing, when you'll update next. A simple status page or pinned message helps.",
+            "Afterwards, review blamelessly: timeline, causes, what helped, what to change. Turn changes into tasks with owners.",
+            "Insurance can cover some risks, such as liability, property or cyber incidents. Requirements and options vary by country and industry, so ask a local broker or advisor what makes sense for you."
+          ],
+          "try": {
+            "label": "Write a risk plan doc",
+            "do": "doc",
+            "hint": "Files › New doc: top five risks, how we notice, who decides, first steps."
+          },
+          "id": "ops-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Process",
+          "def": "A repeatable sequence of steps for a recurring piece of work."
+        },
+        {
+          "term": "Definition of done",
+          "def": "A clear statement of what must be true for a task to count as finished."
+        },
+        {
+          "term": "Offboarding",
+          "def": "Removing access and handing over work when someone leaves."
+        },
+        {
+          "term": "Retrospective",
+          "def": "A regular look back at how the team worked, to improve the process."
+        },
+        {
+          "term": "Misclassification",
+          "def": "Treating a worker as a contractor when the law sees them as an employee, or vice versa."
+        },
+        {
+          "term": "Status page",
+          "def": "A public page showing whether a service is working and updates on incidents."
+        }
+      ],
+      "links": [
+        {
+          "title": "Shape Up",
+          "url": "https://basecamp.com/shapeup",
+          "by": "Basecamp (Ryan Singer)",
+          "why": "A method for shaping work and shipping in fixed cycles, readable online.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Incident management",
+          "url": "https://www.atlassian.com/incident-management",
+          "by": "Atlassian",
+          "why": "Processes and practices for responding to disruptions.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Incident postmortems",
+          "url": "https://www.atlassian.com/incident-management/postmortem",
+          "by": "Atlassian",
+          "why": "Running blameless reviews with tracked follow-ups.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Manage your business",
+          "url": "https://www.sba.gov/business-guide/manage-your-business",
+          "by": "U.S. Small Business Administration",
+          "why": "Running a small business day to day (US).",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "kind": "finance",
+      "title": "Finance",
+      "emoji": "💰",
+      "color": "#2DD4BF",
+      "blurb": "Know where money comes from and goes, keep tidy records, plan cash, invoice well and stay on top of taxes. Educational, not financial advice.",
+      "lessons": [
+        {
+          "title": "The three numbers to watch",
+          "minutes": 4,
+          "body": [
+            "Finance can look complicated, but a small company can stay healthy watching three numbers closely: cash in the bank, money in each month and money out each month.",
+            "Cash is what you actually have today. Money in includes customer payments; money out includes tools, contractors, rent, taxes and any salaries. The difference between them each month is your net burn (if negative) or net income (if positive).",
+            "Runway is cash divided by monthly net burn: how many months you can keep going if nothing changes. Many founders like to keep a comfortable cushion of runway and start acting well before it gets short, by cutting costs, increasing revenue or raising money.",
+            "Update these numbers monthly in a simple sheet. Look at the trend: is burn shrinking? Is revenue growing? Share the numbers openly with the team; people make better decisions when they understand the money.",
+            "This is general education. For decisions about your own situation, talk to a qualified accountant or financial advisor."
+          ],
+          "try": {
+            "label": "Open Money",
+            "do": "money",
+            "hint": "Money: cash, money in and money out once a connector is set up."
+          },
+          "id": "finance-1"
+        },
+        {
+          "title": "Bookkeeping and records",
+          "minutes": 5,
+          "body": [
+            "Bookkeeping means recording every money movement: sales, expenses, transfers. Good records make taxes easier, help you understand the business and are often legally required.",
+            "Use a separate business bank account and card. Mixing personal and business money is the most common mess small founders make.",
+            "Keep every receipt and invoice, ideally as a digital copy saved the day you get it, named consistently (date, supplier, amount). Tax authorities generally require records to be kept for a number of years; the IRS in the US and HMRC in the UK, for example, publish guidance on what to keep and for how long.",
+            "Categorise transactions each week or month rather than once a year. Accounting software can import bank transactions and suggest categories, but a person should review them.",
+            "Reconcile monthly: check that your records match the bank statement. Small errors caught early are easy; a year of them is painful.",
+            "Consider an accountant for year-end filings and advice, especially once you have employees, sell in several countries or form a company."
+          ],
+          "try": {
+            "label": "Make a monthly bookkeeping task",
+            "do": "task",
+            "hint": "Task: \"Monthly: categorise transactions and reconcile with the bank\"."
+          },
+          "id": "finance-2"
+        },
+        {
+          "title": "Invoicing and getting paid",
+          "minutes": 4,
+          "body": [
+            "Getting paid on time is one of the biggest factors in a small company's survival. Good invoicing helps.",
+            "A clear invoice includes: your business name and contact details, the customer's details, a unique invoice number, the date, a description of what was delivered, amounts, any tax shown separately where required, the total, the due date and how to pay. Some countries require specific details on invoices, such as tax registration numbers, so check your local rules.",
+            "Send invoices promptly, as soon as work is delivered or at the agreed time. Agree payment terms before work starts and put them in writing.",
+            "Make paying easy: accept common methods, include a payment link, and send gentle reminders before and after the due date. Online payment providers can automate subscriptions, receipts and reminders.",
+            "Track what's outstanding. A simple list of unpaid invoices and their age shows who to follow up with. For larger projects, ask for a deposit or milestone payments to reduce risk."
+          ],
+          "try": {
+            "label": "Draft a service agreement with payment terms",
+            "do": "legal:service",
+            "hint": "Legal: payment terms are part of the service agreement template."
+          },
+          "id": "finance-3"
+        },
+        {
+          "title": "Budgets and forecasts",
+          "minutes": 5,
+          "body": [
+            "A budget is a plan for what you expect to spend and earn; a forecast is your best current guess of how the coming months will actually go. Both help you decide before money runs short.",
+            "Start simple: a sheet with months across the top and lines for each type of income and cost. Fill in known costs first, such as tools, hosting and contractors, then estimate revenue conservatively. It's safer to plan with modest revenue and be pleasantly surprised.",
+            "Make your assumptions explicit: \"10 new customers a month at the basic plan, 5% leave each month\". Then you can see which assumptions matter most and test them against reality.",
+            "Compare actual results to the budget monthly. Big differences aren't failures; they're information. Update the forecast with what you've learned.",
+            "Plan a few scenarios: expected, slower and faster. Ask what you'd do in the slower case before it happens.",
+            "Give each seat a weekly or monthly budget for its spending, and require approval for anything above it."
+          ],
+          "try": {
+            "label": "Make a budget sheet",
+            "do": "doc",
+            "hint": "Files › New sheet: months across, income and costs down."
+          },
+          "id": "finance-4"
+        },
+        {
+          "title": "Taxes: what to know early",
+          "minutes": 5,
+          "body": [
+            "Taxes differ widely by country, region and business type, so this lesson covers general ideas only. Check official sources, such as the IRS small business pages in the US or GOV.UK in the UK, and get advice from a qualified tax professional.",
+            "Income or profit taxes: businesses and self-employed people generally pay tax on profit. Some structures pay tax at the company level; others pass profit through to the owners' personal returns.",
+            "Sales taxes, VAT and GST: many places require businesses to charge tax on sales once they pass a threshold, or immediately for some digital services. Selling to customers in other countries can create obligations there too. Payment providers sometimes help calculate and collect this; you're still responsible.",
+            "Payroll taxes apply when you employ people. Contractors and employees are treated differently.",
+            "Practical habits: set aside a portion of income for taxes in a separate account, keep good records, note filing deadlines in the calendar, and ask an accountant early. Penalties for late filing often cost more than the advice."
+          ],
+          "try": {
+            "label": "Put tax deadlines on the calendar",
+            "do": "calendar",
+            "hint": "Calendar: add your filing dates with a reminder a few weeks before."
+          },
+          "id": "finance-5"
+        },
+        {
+          "title": "Pricing, margins and unit economics",
+          "minutes": 5,
+          "body": [
+            "Unit economics asks: does each customer make you money over time? Two numbers matter: how much it costs to win a customer, and how much profit they bring before they leave.",
+            "Customer acquisition cost (CAC) is everything you spend on marketing and sales in a period divided by the new customers you won. Lifetime value (LTV) is roughly the average monthly profit per customer multiplied by how many months they stay. If LTV comfortably exceeds CAC, growth makes you healthier; if not, each new customer digs the hole deeper.",
+            "Gross margin is revenue minus the direct costs of delivering the product (hosting, payment fees, AI usage, support), as a share of revenue. Software often has high margins, but costs per customer, such as AI model usage, can grow quietly. Watch them.",
+            "Small changes in price, retention or cost can transform these numbers. Revisit pricing at least yearly, and grandfather or clearly notify existing customers about changes.",
+            "These are estimates, not precise science, and early numbers are noisy. Use them to spot direction, not to fake precision."
+          ],
+          "try": {
+            "label": "Add a revenue result to your goals",
+            "do": "goal",
+            "hint": "Company › Goals: a revenue or margin result you can check monthly."
+          },
+          "id": "finance-6"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "Cash flow",
+          "def": "Money moving in and out of the business over a period."
+        },
+        {
+          "term": "Reconciliation",
+          "def": "Checking your records match the bank statement."
+        },
+        {
+          "term": "Accounts receivable",
+          "def": "Money customers owe you for invoices not yet paid."
+        },
+        {
+          "term": "Forecast",
+          "def": "Your current best estimate of future income and costs."
+        },
+        {
+          "term": "VAT / GST / sales tax",
+          "def": "Taxes charged on sales, with rules that vary by country and region."
+        },
+        {
+          "term": "CAC",
+          "def": "Customer acquisition cost: sales and marketing spend divided by new customers."
+        },
+        {
+          "term": "LTV",
+          "def": "Lifetime value: the profit a customer brings over the whole time they stay."
+        },
+        {
+          "term": "Gross margin",
+          "def": "Revenue minus direct delivery costs, as a share of revenue."
+        }
+      ],
+      "links": [
+        {
+          "title": "Small business and self-employed",
+          "url": "https://www.irs.gov/businesses/small-businesses-self-employed",
+          "by": "U.S. Internal Revenue Service",
+          "why": "Tax forms, publications and learning for small businesses (US).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Recordkeeping",
+          "url": "https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping",
+          "by": "U.S. Internal Revenue Service",
+          "why": "What records to keep and for how long (US).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Become a sole trader",
+          "url": "https://www.gov.uk/set-up-sole-trader",
+          "by": "GOV.UK",
+          "why": "Tax, records and responsibilities for sole traders (UK).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "SaaS business model",
+          "url": "https://stripe.com/guides/atlas/business-of-saas",
+          "by": "Stripe Atlas guides",
+          "why": "Key metrics and benchmarks for subscription businesses.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Manage your business",
+          "url": "https://www.sba.gov/business-guide/manage-your-business",
+          "by": "U.S. Small Business Administration",
+          "why": "Finances, payroll and taxes for small businesses (US).",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "legal",
+      "kind": "legal",
+      "title": "Legal",
+      "emoji": "⚖️",
+      "color": "#A78BFA",
+      "blurb": "Know the basics: agreements, ownership of work, privacy, terms and trademarks, and when to call a lawyer. Educational, not legal advice.",
+      "lessons": [
+        {
+          "title": "The legal seat: what it is (and isn't)",
+          "minutes": 4,
+          "body": [
+            "In a small company the legal seat keeps track of the agreements, rights and rules the business depends on. It doesn't replace a lawyer; it makes sure the right questions get asked early and that important things are written down.",
+            "Its typical concerns: the company's legal structure and filings, agreements with founders, contractors, customers and suppliers, who owns the work (intellectual property), privacy and data protection, website terms, trademarks, and compliance with industry rules.",
+            "A practical approach is to keep a simple legal register: a list of every agreement, with the parties, date, key terms, renewal dates and where the signed copy lives. Add reminders for renewals and filing deadlines.",
+            "Templates can save time and money as a starting point, like the ones in TribeCode's Legal section. But laws differ by country and situation, so have a lawyer in your jurisdiction review anything important, especially founder agreements, investment documents and your standard customer terms.",
+            "When something feels risky, such as a legal threat, a data breach or a large contract, pause and get professional advice."
+          ],
+          "try": {
+            "label": "Open the legal templates",
+            "do": "legal",
+            "hint": "Legal: plain-English starting points with fill-in fields."
+          },
+          "id": "legal-1"
+        },
+        {
+          "title": "Founders: write it down early",
+          "minutes": 5,
+          "body": [
+            "Disagreements between co-founders are one of the most common reasons young companies fall apart. Writing down the key points while everyone is friendly is far easier than later.",
+            "A co-founder agreement typically covers: who owns what share of the company, how shares vest over time, each person's role and time commitment, how decisions are made, what happens if someone leaves, and confirmation that work done for the company belongs to the company.",
+            "Vesting means shares are earned gradually, often over several years with a waiting period (a \"cliff\") before any vest. It protects everyone: if a co-founder leaves early, they keep only what they've earned. Many founders use a four-year schedule with a one-year cliff, but terms vary.",
+            "Make sure each founder assigns their relevant intellectual property, such as code, designs and the name, to the company. Investors will check this.",
+            "Have the agreement reviewed by a lawyer where you're based, and revisit it when things change, for example when someone goes full time."
+          ],
+          "try": {
+            "label": "Draft a co-founder agreement",
+            "do": "legal:cofounder",
+            "hint": "Legal: equity, vesting, roles and IP in plain English, to review with a lawyer."
+          },
+          "id": "legal-2"
+        },
+        {
+          "title": "Who owns the work? (IP basics)",
+          "minutes": 5,
+          "body": [
+            "Intellectual property (IP) covers creations of the mind: code, designs, writing, music, inventions, brand names. For a company, owning the IP in its product is essential.",
+            "The default rules vary by country, but a common pattern is: employees' work done as part of their job often belongs to the employer, while independent contractors usually own what they create unless a written agreement transfers it. That's why contractor agreements and IP assignment documents matter.",
+            "Copyright generally protects original works automatically when they're created; you don't need to register to have it, though registration can help in some places. Trademarks protect names and logos used in trade; registering one in your markets gives stronger protection. Patents protect inventions and require an application.",
+            "Using others' work: open-source software comes with licences. Permissive licences (MIT, Apache 2.0, BSD) mostly require keeping notices; others impose conditions such as sharing your changes. Fonts, images and music have licences too.",
+            "AI-generated content raises evolving questions about ownership and copyright that differ between countries. Keep track of what was AI-assisted and check current local guidance."
+          ],
+          "try": {
+            "label": "Draft an IP assignment",
+            "do": "legal:ip",
+            "hint": "Legal: a simple assignment so the company owns the work."
+          },
+          "id": "legal-3"
+        },
+        {
+          "title": "Privacy policies and data protection",
+          "minutes": 5,
+          "body": [
+            "If your website or app collects personal information, even just email addresses or analytics, you likely need a privacy policy, and you may have legal duties about how you handle that data.",
+            "Data protection laws differ: the EU and UK GDPR, Canada's privacy laws, Australia's Privacy Act and various US state laws are examples. Common themes: tell people what you collect and why, collect only what you need, keep it secure, don't keep it longer than necessary, and respect people's rights to access or delete their data.",
+            "A privacy policy should say in plain language: who you are and how to contact you, what data you collect, why, the legal basis where required, who you share it with (including service providers like hosting and analytics), where data is stored, how long you keep it, people's rights, and how you handle children's data if relevant.",
+            "Cookies and similar tracking often need a separate notice and, in some places, consent before non-essential cookies are set.",
+            "Your policy must match what you actually do. Review it whenever you add a new tool that touches personal data."
+          ],
+          "try": {
+            "label": "Draft a privacy policy",
+            "do": "legal:privacy",
+            "hint": "Legal: a web app privacy policy template with fill-in fields."
+          },
+          "id": "legal-4"
+        },
+        {
+          "title": "Terms of service and customer contracts",
+          "minutes": 5,
+          "body": [
+            "Terms of service are the agreement between you and the people who use your product. They set expectations and can limit misunderstandings and some risks.",
+            "Typical sections: who can use the service, accounts and security, acceptable use (what's not allowed), payment and renewals, cancellation and refunds, intellectual property (who owns what, including content users upload), availability and changes, disclaimers, limits on liability, ending accounts, governing law and how disputes are handled, and how you'll notify changes.",
+            "Consumer protection laws in many countries override some terms. For example, certain cancellation rights or guarantees can't be signed away by consumers, and unfair terms may be unenforceable. Business-to-business terms usually have more flexibility.",
+            "Write terms in plain language where you can. Make them easy to find, and get clear agreement, such as a checkbox at sign-up, rather than burying them.",
+            "For bigger customers, you may sign individual contracts. Standard, balanced templates such as Common Paper's (published under CC BY 4.0) can be a helpful starting point for business agreements."
+          ],
+          "try": {
+            "label": "Draft terms of service",
+            "do": "legal:terms",
+            "hint": "Legal: web app terms to start from, then have them reviewed."
+          },
+          "id": "legal-5"
+        },
+        {
+          "title": "Confidentiality, NDAs and when to use them",
+          "minutes": 4,
+          "body": [
+            "A non-disclosure agreement (NDA) is a contract where one or both sides promise to keep certain information confidential. A mutual NDA protects both sides.",
+            "NDAs are useful when you share genuinely sensitive information: unreleased product details, finances during a partnership discussion, customer data or source code with a contractor. They define what counts as confidential, what the recipient may do with it, how long the duty lasts, and what happens at the end, such as returning or deleting information.",
+            "They're not always needed or welcome. Many investors won't sign NDAs for early pitches, and asking can seem naive. Ideas alone are rarely the valuable part; execution is.",
+            "A good NDA is clear and proportionate: it excludes information that's already public or independently developed, allows disclosure when required by law, and has a reasonable duration.",
+            "Remember that an NDA is only as useful as your ability to enforce it. Limit what you share to what's needed, label confidential documents, and keep a record of what you disclosed and when."
+          ],
+          "try": {
+            "label": "Draft a mutual NDA",
+            "do": "legal:nda",
+            "hint": "Legal: a plain-English mutual NDA with fill-in fields."
+          },
+          "id": "legal-6"
+        },
+        {
+          "title": "Trademarks and your name",
+          "minutes": 4,
+          "body": [
+            "Your company and product names are valuable. Before investing in a name, check that nobody is already using something confusingly similar for related goods or services.",
+            "Search official trademark databases in the countries where you'll operate (for example the USPTO in the US, the UK IPO, or EUIPO for EU trade marks), plus a general web and app store search, and check domain name and social handle availability.",
+            "A trademark protects a name, logo or slogan used to identify your goods or services. Distinctive, invented names are easier to protect than descriptive ones; \"Quick Bakery Orders\" is hard to protect, while an invented word is easier.",
+            "You may get some rights simply by using a mark in trade in some countries, but registration usually gives stronger, clearer protection. Registration is per country or region and per class of goods and services.",
+            "If you receive a complaint that your name infringes someone's mark, don't ignore it and don't panic. Get advice from a lawyer or trademark attorney."
+          ],
+          "try": {
+            "label": "Make a task to check your name",
+            "do": "task",
+            "hint": "Task: \"Search trademark databases and domains for our name\"."
+          },
+          "id": "legal-7"
+        }
+      ],
+      "glossary": [
+        {
+          "term": "NDA",
+          "def": "Non-disclosure agreement: a promise to keep certain information confidential."
+        },
+        {
+          "term": "Vesting",
+          "def": "Earning ownership of shares gradually over time."
+        },
+        {
+          "term": "Cliff",
+          "def": "A waiting period before any shares vest."
+        },
+        {
+          "term": "IP assignment",
+          "def": "A document transferring ownership of intellectual property to someone else, often the company."
+        },
+        {
+          "term": "Governing law",
+          "def": "Which jurisdiction's laws apply to an agreement."
+        },
+        {
+          "term": "Limitation of liability",
+          "def": "A clause capping how much one side can owe the other if things go wrong."
+        },
+        {
+          "term": "GDPR",
+          "def": "The EU (and UK) General Data Protection Regulation, a major data protection law."
+        },
+        {
+          "term": "Trademark",
+          "def": "A protected name, logo or slogan that identifies goods or services."
+        }
+      ],
+      "links": [
+        {
+          "title": "Launch your business",
+          "url": "https://www.sba.gov/business-guide/launch-your-business",
+          "by": "U.S. Small Business Administration",
+          "why": "Structure, registration, permits and licences (US).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Set up a business",
+          "url": "https://www.gov.uk/set-up-business",
+          "by": "GOV.UK",
+          "why": "Sole trader vs limited company (UK).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Data protection",
+          "url": "https://commission.europa.eu/law/law-topic/data-protection_en",
+          "by": "European Commission",
+          "why": "The GDPR and related EU rules.",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Trademark basics",
+          "url": "https://www.uspto.gov/trademarks/basics",
+          "by": "USPTO",
+          "why": "What a trademark is and how registration works (US).",
+          "checked": "2026-11-09"
+        },
+        {
+          "title": "Standard agreements",
+          "url": "https://commonpaper.com/standards/",
+          "by": "Common Paper",
+          "why": "Free standard business contracts under CC BY 4.0.",
+          "checked": "2026-11-09"
+        }
+      ]
+    }
+  ]
+}
