@@ -88,7 +88,11 @@ module.exports = function repoHub({ repo, store, str, broadcast, postChat, creat
     let ahead = 0, behind = 0;
     if (upstream) { const c = await G.gitTry(['rev-list', '--left-right', '--count', `${upstream}...HEAD`]); if (c.code === 0) [behind, ahead] = c.out.split(/\s+/).map(Number); }
     const porcelain = (await G.gitTry(['--no-optional-locks', 'status', '--porcelain=v1'])).out.split('\n').filter(Boolean)
-      .map(l => ({ code: l.slice(0, 2), path: l.slice(3).replace(/^"|"$/g, '') }));
+      // gitTry trims its output, so a first line like " M TRIBE_CONTEXT.md" arrives as "M TRIBE_CONTEXT.md": one space
+      // after the code means the leading space was eaten (it made the context file look like an unsaved change and
+      // blocked "Sync now" pulls)
+      .map(l => (l[1] === ' ' && l[2] !== ' ' ? { code: ' ' + l[0], path: l.slice(2) } : { code: l.slice(0, 2), path: l.slice(3) }))
+      .map(f => ({ code: f.code, path: f.path.replace(/^"|"$/g, '') }));
     const managed = p => p === CONTEXT_FILE || (tribeRel() && (p + '/').startsWith(tribeRel() + '/'));
     const dirty = porcelain.filter(f => f.code !== '??' && !managed(f.path));
     const untracked = porcelain.filter(f => f.code === '??' && !managed(f.path));

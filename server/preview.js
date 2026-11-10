@@ -51,14 +51,17 @@ const PT_RE = /^pv1\.[A-Za-z0-9_-]{10,400}\.[A-Za-z0-9_-]{20,100}$/;
 
 // Injected at the top of previewed HTML pages: storage that works in the sandbox, live reload (SSE),
 // "ready" and screenshots for the TribeCode pane (postMessage to the parent; it checks event.source).
-const HELPER = `<script data-tribe-preview>(function(){
+const HELPER_SRC = `<script data-tribe-preview>(function(){
 var mem=function(){var d={};return{getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[String(k)]=String(v)},removeItem:function(k){delete d[String(k)]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}};
 ['localStorage','sessionStorage'].forEach(function(n){try{window[n].getItem('x')}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});
 var m=location.pathname.match(/^\\/preview\\/[a-z0-9-]+\\/pv1\\.[^/]+\\//);
-if(m&&window.EventSource){try{var es=new EventSource(m[0]+'${RESERVED}/live');es.onmessage=function(e){if(e.data==='reload')location.reload()}}catch(_){}}
+var pend=false;function busy(){return !!document.querySelector('[contenteditable=true]')}
+window.__tcReload=function(){if(busy()){pend=true;return}location.reload()};
+if(m&&window.EventSource){try{var es=new EventSource(m[0]+'${RESERVED}/live');es.onmessage=function(e){if(e.data==='reload')window.__tcReload();else if(/^v[0-9]+$/.test(e.data)&&e.data!=='v__TCV__')window.__tcReload()}}catch(_){}}
 var up=window.parent!==window?window.parent:null;
 function say(o){if(up)try{up.postMessage(o,'*')}catch(_){}}
 function ready(){say({tc:'ready',title:document.title,href:location.pathname})}
+window.addEventListener('error',function(e){say({tc:'error',msg:String(e.message||'error'),src:String(e.filename||'').split('/').pop(),line:e.lineno||0})});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();
 function toData(u){return fetch(u).then(function(r){return r.blob()}).then(function(b){return new Promise(function(res){var f=new FileReader();f.onload=function(){res(f.result)};f.onerror=function(){res(u)};f.readAsDataURL(b)})}).catch(function(){return u})}
 function bigCanvas(){var best=null,a=0;[].forEach.call(document.querySelectorAll('canvas'),function(c){var r=c.getBoundingClientRect(),s=r.width*r.height;if(s>a){a=s;best=c}});return best}
@@ -78,8 +81,8 @@ function over(e){var t=e.target;if(t===hov)return;if(hov)hov.removeAttribute('da
 function pick(t){if(sel&&sel!==t){finish(sel);sel.removeAttribute('data-tc-sel')}sel=t;t.setAttribute('data-tc-sel','');var h=t.outerHTML.replace(/ data-tc-(hov|sel)=""/g,'');say({tc:'pick',tag:t.tagName.toLowerCase(),text:t.textContent.trim().slice(0,600),html:h.slice(0,2000),editable:leaf(t),href:location.pathname})}
 function click(e){if(e.target.closest&&e.target.closest('[contenteditable=true]'))return;e.preventDefault();e.stopPropagation();var t=e.target;if(t.nodeType!==1)return;pick(t)}
 function dbl(e){var t=e.target;if(!leaf(t))return;e.preventDefault();pick(t);before=t.textContent;t.setAttribute('contenteditable','true');t.focus()}
-function finish(t){if(t.getAttribute('contenteditable')!=='true')return;t.removeAttribute('contenteditable');var after=t.textContent;if(after!==before&&before)say({tc:'text',tag:t.tagName.toLowerCase(),before:before.trim(),after:after.trim(),href:location.pathname});before=''}
-function key(e){if(!sel)return;if(e.key==='Enter'&&sel.getAttribute('contenteditable')==='true'&&!e.shiftKey){e.preventDefault();finish(sel)}if(e.key==='Escape'){if(sel.getAttribute('contenteditable')==='true'){sel.textContent=before;sel.removeAttribute('contenteditable');before=''}else{sel.removeAttribute('data-tc-sel');sel=null;say({tc:'pick',none:true})}}}
+function finish(t){if(t.getAttribute('contenteditable')!=='true')return;t.removeAttribute('contenteditable');var after=t.textContent;if(after!==before&&before)say({tc:'text',tag:t.tagName.toLowerCase(),before:before.trim(),after:after.trim(),href:location.pathname});before='';if(pend){pend=false;setTimeout(function(){location.reload()},150)}}
+function key(e){if(!sel)return;if(e.key==='Enter'&&sel.getAttribute('contenteditable')==='true'&&!e.shiftKey){e.preventDefault();finish(sel)}if(e.key==='Escape'){if(sel.getAttribute('contenteditable')==='true'){sel.textContent=before;sel.removeAttribute('contenteditable');before='';if(pend){pend=false;location.reload()}}else{sel.removeAttribute('data-tc-sel');sel=null;say({tc:'pick',none:true})}}}
 function blur(e){if(sel&&e.target===sel)finish(sel)}
 document.addEventListener('mouseover',over,true);document.addEventListener('click',click,true);document.addEventListener('dblclick',dbl,true);document.addEventListener('keydown',key,true);document.addEventListener('focusout',blur,true);
 ED={off:function(){document.removeEventListener('mouseover',over,true);document.removeEventListener('click',click,true);document.removeEventListener('dblclick',dbl,true);document.removeEventListener('keydown',key,true);document.removeEventListener('focusout',blur,true);if(sel){finish(sel);sel.removeAttribute('data-tc-sel')}if(hov)hov.removeAttribute('data-tc-hov');st.remove()}}}
@@ -161,6 +164,9 @@ module.exports = function preview({ P, store, getMembers, broadcast, share, lanU
     const entry = { root: dir, until: Date.now() + TTL_MS + 600_000, timer: null, files: new Set() };
     const fire = f => {
       if (f && /(^|[\\/])(\.git|\.tribe|node_modules)([\\/]|$)/.test(f)) return;
+      // TribeCode's own living context file is rewritten as the tribe chats and works: it isn't part of the app, and
+      // reloading on it restarted games mid-play. Editor swap/backup files are noise too.
+      if (f && /(^|[\\/])(TRIBE_CONTEXT\.md|[^\\/]*\.swp|[^\\/]*~|\.#[^\\/]*|4913)$/.test(f)) return;
       if (f) entry.files.add(String(f).replace(/\\/g, '/'));
       clearTimeout(entry.timer);
       entry.timer = setTimeout(() => {
@@ -188,7 +194,9 @@ module.exports = function preview({ P, store, getMembers, broadcast, share, lanU
     }
     return { close: () => list.forEach(w => { try { w.close(); } catch {} }) };
   }
+  const gen = new Map();   // pid -> how many changes so far (pages compare it when their live stream connects)
   function changed(pid, files = []) {
+    gen.set(pid, (gen.get(pid) || 0) + 1);
     broadcast({ type: 'preview', project: pid, at: new Date().toISOString(), files });
     for (const res of sse.get(pid) || []) { try { res.write('data: reload\n\n'); } catch {} }
   }
@@ -211,18 +219,18 @@ module.exports = function preview({ P, store, getMembers, broadcast, share, lanU
   // ---------- HTTP: serving ----------
   const baseHeaders = mode => ({ 'Content-Security-Policy': CSP, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-cache', 'Access-Control-Allow-Origin': '*',
     'Referrer-Policy': mode === 'dev' ? 'unsafe-url' : 'no-referrer', 'X-Robots-Tag': 'noindex', 'Cross-Origin-Resource-Policy': 'cross-origin' });
-  function page(res, status, title, text, extra = {}) {
+  function page(res, status, title, text, extra = {}, livePrefix = null, livePid = null) {
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     res.writeHead(status, { ...baseHeaders('static'), 'Content-Type': 'text/html; charset=utf-8', ...extra });
     res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
 <style>html,body{margin:0;height:100%;background:#12151A;color:#94A3B8;font:14px/1.6 Inter,system-ui,sans-serif}body{display:grid;place-items:center;padding:16px;box-sizing:border-box}
 div{max-width:46ch;border:1px solid #2A313C;background:#1B2028;border-radius:12px;padding:20px 22px}small{font:10.5px ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#6B7A90}
 h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,monospace;color:#F8FAFC;background:#12151A;border:1px solid #2A313C;border-radius:6px;padding:1px 6px}</style>
-<div><small>Preview</small><h1>${esc(title)}</h1><p>${text}</p></div>`);
+<div><small>Preview</small><h1>${esc(title)}</h1><p>${text}</p></div>${livePrefix ? `<script>var V='v${livePid ? gen.get(livePid) || 0 : 0}';try{new EventSource(${JSON.stringify(livePrefix + RESERVED + '/live')}).onmessage=function(e){if(e.data==='reload'||(/^v[0-9]+$/.test(e.data)&&e.data!==V))location.reload()}}catch(_){}setInterval(function(){fetch(location.href,{method:'HEAD',cache:'no-store'}).then(function(r){if(r.ok)location.reload()}).catch(function(){})},4000)</script>` : ''}`);
   }
   const deny = (res, status, msg) => page(res, status, status === 404 ? 'Not found' : 'No access', msg);
-  function injectHelper(html) {
-    const s = String(html);
+  function injectHelper(html, pid) {
+    const s = String(html); const HELPER = HELPER_SRC.replace('__TCV__', String(gen.get(pid) || 0));
     const m = /<head\b[^>]*>/i.exec(s);
     if (m) return s.slice(0, m.index + m[0].length) + HELPER + s.slice(m.index + m[0].length);
     const h = /<html\b[^>]*>/i.exec(s);
@@ -272,13 +280,13 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     const set = sse.get(pid) || new Set(); sse.set(pid, set);
     if (set.size >= 100) { res.writeHead(429); return res.end(); }
     res.writeHead(200, { ...baseHeaders('static'), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
-    res.write('retry: 3000\n\n'); set.add(res); watch(pid);
+    res.write(`retry: 3000\ndata: v${gen.get(pid) || 0}\n\n`); set.add(res); watch(pid);
     req.on('close', () => set.delete(res));
   }
 
   function serveFile(req, res, url, q) {
     const r = rootOf(q.pid);
-    if (!r.root || !hasIndex(r.root)) return page(res, 404, 'No index.html yet', 'This project has no web page to show yet. Ask your Claude to start one: an <code>index.html</code> at the repo root (or in <code>public/</code>).');
+    if (!r.root || !hasIndex(r.root)) { watch(q.pid); return page(res, 404, 'No index.html yet', 'This project has no web page to show yet. Ask your Claude to start one: an <code>index.html</code> at the repo root (or in <code>public/</code>). This page shows it by itself the moment it exists.', {}, q.prefix, q.pid); }
     let rel; try { rel = decodeURIComponent(q.rest || ''); } catch { return deny(res, 400, 'Bad path.'); }
     if (rel.includes('\0')) return deny(res, 400, 'Bad path.');
     const segs = rel.split(/[\\/]+/).filter(Boolean);
@@ -303,7 +311,7 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
       if (st.size > 8 * 1024 * 1024) return deny(res, 413, 'This page is too large to preview.');
       return fs.readFile(file, 'utf8', (err, txt) => {
         if (err) return deny(res, 404, 'Not found.');
-        const body = Buffer.from(injectHelper(txt));
+        const body = Buffer.from(injectHelper(txt, q.pid));
         res.writeHead(200, { ...baseHeaders('static'), 'Content-Type': type, 'Content-Length': body.length });
         res.end(req.method === 'HEAD' ? undefined : body);
       });
@@ -344,7 +352,7 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
       if (/text\/html/i.test(ct) && req.method !== 'HEAD' && !ur.headers['content-encoding']) {
         const chunks = []; let size = 0;
         ur.on('data', c => { size += c.length; if (size <= 8 * 1024 * 1024) chunks.push(c); });
-        ur.on('end', () => { const body = size > 8 * 1024 * 1024 ? Buffer.concat(chunks) : Buffer.from(injectHelper(Buffer.concat(chunks).toString('utf8'))); res.writeHead(ur.statusCode, { ...out, 'content-length': body.length }); res.end(body); });
+        ur.on('end', () => { const body = size > 8 * 1024 * 1024 ? Buffer.concat(chunks) : Buffer.from(injectHelper(Buffer.concat(chunks).toString('utf8'), q.pid)); res.writeHead(ur.statusCode, { ...out, 'content-length': body.length }); res.end(body); });
         ur.on('error', () => res.destroy());
         return;
       }
@@ -447,6 +455,39 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     const re = new RegExp(words.map(reEsc).join('(?:\\s|&nbsp;)+'), 'g'); const all = [...src.matchAll(re)];
     return all.length === 1 ? { i: all[0].index, len: all[0][0].length } : null;
   }
+  // ---------- simple looks without an AI ----------
+  const COLORS = { red: '#E5484D', orange: '#F26B1D', yellow: '#FABD2F', green: '#3BD16F', teal: '#38C6B1', blue: '#3B82F6', indigo: '#6C7CFF', purple: '#8B5CF6', pink: '#FF6F8E', white: '#FFFFFF', black: '#111111', gray: '#94A3B8', grey: '#94A3B8' };
+  function styleRule(ask) {
+    const a = ask.toLowerCase();
+    if (/\b(bigger|larger|huge|grow)\b/.test(a)) return { zoom: /\b(much|a lot|huge|way)\b/.test(a) ? 1.6 : 1.25, say: 'Made it bigger.' };
+    if (/\b(smaller|tiny|shrink)\b/.test(a)) return { zoom: 0.8, say: 'Made it smaller.' };
+    if (/\bbold\b/.test(a)) return { set: { 'font-weight': '700' }, say: 'Made it bold.' };
+    if (/\bcent(er|re)(ed)?\b/.test(a)) return { set: { 'text-align': 'center' }, say: 'Centered it.' };
+    const c = /\b(red|orange|yellow|green|teal|blue|indigo|purple|pink|white|black|gr[ae]y)\b/.exec(a);
+    if (c && /\b(make|turn|color|colour|paint)\b/.test(a)) return { set: { [/\b(background|bg)\b/.test(a) ? 'background-color' : 'color']: COLORS[c[1]] }, say: `Made it ${c[1]}.` };
+    return null;
+  }
+  // the opening tag of the element to restyle: the picked one (found by its text) or the first title/button the ask names
+  function openTagFor(src, text, tag, ask) {
+    const close = i => { const e = src.indexOf('>', i); return e > i ? { start: i, end: e + 1 } : null; };
+    if (text && /^[a-z][a-z0-9]{0,9}$/.test(tag)) {
+      const at = findOnce(src, text); if (!at) return null;
+      const re = new RegExp(`<${tag}\\b`, 'gi'); let m, last = -1; while ((m = re.exec(src)) && m.index < at.i) last = m.index;
+      return last >= 0 ? close(last) : null;
+    }
+    const want = /\b(title|heading|headline|header)\b/i.test(ask) ? /<h1\b|<h2\b/i : /\bbutton\b/i.test(ask) ? /<button\b|<a\b[^>]*class=["'][^"']*\bbtn/i : null;
+    if (!want) return null;
+    const body = src.search(/<body\b/i), from = body < 0 ? 0 : body, m = want.exec(src.slice(from));
+    return m ? close(from + m.index) : null;
+  }
+  function restyle(tag, look) {
+    const m = /\sstyle=(["'])([\s\S]*?)\1/i.exec(tag), cur = {};
+    if (m) m[2].split(';').forEach(d => { const i = d.indexOf(':'); if (i > 0) cur[d.slice(0, i).trim().toLowerCase()] = d.slice(i + 1).trim(); });
+    if (look.zoom) cur.zoom = String(Math.round((parseFloat(cur.zoom) || 1) * look.zoom * 100) / 100);
+    Object.assign(cur, look.set || {});
+    const css = Object.entries(cur).map(([k, v]) => `${k}: ${v}`).join('; ').replace(/"/g, "'");
+    return m ? tag.slice(0, m.index) + ` style="${css}"` + tag.slice(m.index + m[0].length) : tag.replace(/\s*(\/?)>$/, ` style="${css}"$1>`);
+  }
   function textEdit(f, before, after, tag) {
     before = before.trim(); after = after.trim();
     if (!before || before.length > 2000 || after.length > 4000) throw Object.assign(new Error('nothing to change'), { status: 400 });
@@ -474,6 +515,13 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
         const open = src.lastIndexOf('<' + pick.tag, at.i), close = src.indexOf('</' + pick.tag + '>', at.i + at.len);
         if (open >= 0 && close > 0 && src.slice(open, at.i).indexOf('<' + pick.tag, 1) < 0) { fs.writeFileSync(f.file, src.slice(0, open) + src.slice(close + pick.tag.length + 3)); return { changed: 1, say: 'Took it out.', via: 'rules' }; }
       }
+    }
+    // no AI needed for simple looks either: bigger / smaller / bold / centered / a named color, on the picked element
+    // (or "the title" / "the button" when nothing is picked)
+    const look = styleRule(ask);
+    if (look) {
+      const src = fs.readFileSync(f.file, 'utf8'), at = openTagFor(src, text, String(pick.tag || '').toLowerCase(), ask);
+      if (at) { fs.writeFileSync(f.file, src.slice(0, at.start) + restyle(src.slice(at.start, at.end), look) + src.slice(at.end)); log(`preview flint look: ${f.rel}`); return { changed: 1, say: look.say, via: 'rules' }; }
     }
     if (!llm || !llm.status || !llm.status().online) throw Object.assign(new Error('Flint needs an AI for that one. Choose Flint\'s AI in Settings, or say "change it to …" for new words.'), { status: 503 });
     const src = fs.readFileSync(f.file, 'utf8');
