@@ -64,7 +64,7 @@
       <form class="pvw-set hidden" id="pvw-set"></form>
       <form class="pvw-edbar hidden" id="pvw-edbar" autocomplete="off"><span class="pvw-edhint" id="pvw-edhint"><b>Editing.</b> Double-click any text to change it. Or click something and tell Flint what to change.</span>
         <span class="pvw-edpick hidden" id="pvw-edpick"></span><input class="input pvw-edask" id="pvw-edask" placeholder="Click something on the page first" disabled maxlength="600" aria-label="What should Flint change?"><button class="btn sm primary" id="pvw-edgo" disabled>Ask Flint</button><button type="button" class="btn sm" data-act="edit">Done</button></form>
-      <div class="pvw-stage" id="pvw-stage"><div class="pvw-frame" id="pvw-frame"></div></div>`;
+      <div class="pvw-body"><div class="pvw-stage" id="pvw-stage"><div class="pvw-frame" id="pvw-frame"></div></div></div>`;
     el.addEventListener('click', e => {
       const d = e.target.closest('[data-dev]'); if (d) return setDevice(d.dataset.dev);
       const a = e.target.closest('[data-act]'); if (!a) return;
@@ -103,7 +103,11 @@
 
   async function open() {
     if (!C.connected() && !C.hasToken()) return toast('Connect to your tribe first.');
-    if (!pane || !pane.isConnected) { pane = shell(); mount(pane); }
+    if (!pane || !pane.isConnected) {
+      pane = shell(); mount(pane);
+      // v0.27: Flint stays open beside the preview (app/ui/previewflint.js)
+      if (window.TribePreviewFlint) window.TribePreviewFlint.mount(pane, { project: () => (info && info.project) || C.project(), href: () => lastHref, relayout: () => layout(), kind: () => (window.TribeSense && window.TribeSense.kind && window.TribeSense.kind()) || '' });
+    }
     pane.classList.add('loading');
     try { await token(); }
     catch (e) { pane.classList.remove('loading'); return renderError(e.message); }
@@ -159,7 +163,14 @@
     layout();
     if (!ro && window.ResizeObserver) { ro = new ResizeObserver(() => layout()); ro.observe(pane.querySelector('#pvw-stage')); }
   }
-  function load(u) { if (!frame) return; helperAlive = false; frame.src = u; }
+  // A change that lands while the page is still loading waits for that load to finish (restarting the load on
+  // every save kept a busy page from ever showing up); the page's own live reload (SSE) covers the rest.
+  let loadingSince = 0, pendingReload = false;
+  function load(u) {
+    if (!frame) return; helperAlive = false; loadingSince = Date.now(); frame.src = u;
+    frame.onload = () => { loadingSince = 0; if (pendingReload) { pendingReload = false; setTimeout(() => reload(), 50); } };
+  }
+  function softReload() { if (loadingSince && Date.now() - loadingSince < 8000) { pendingReload = true; return; } reload(); }
   // Device frames: the iframe keeps the device's real width (so the app sees 390 / 768 / 1280 px) and is
   // scaled down with a transform to fit the pane. On phones it just fills the sheet.
   function layout() {
@@ -231,6 +242,7 @@
   let editing = false, picked = null;
   function toggleEdit() {
     editing = !editing; picked = null;
+    if (!editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(null);
     const b = pane && pane.querySelector('.pvw-edit'), bar = pane && pane.querySelector('#pvw-edbar');
     if (b) { b.classList.toggle('on', editing); b.setAttribute('aria-pressed', String(editing)); }
     if (bar) { bar.classList.toggle('hidden', !editing); paintPick(); }
@@ -259,7 +271,9 @@
     if (!frame || e.source !== frame.contentWindow || !e.data || typeof e.data !== 'object') return;
     const m = e.data;
     if (m.tc === 'ready' && editing && frame && frame.contentWindow) { frame.contentWindow.postMessage({ tc: 'edit', on: true }, '*'); picked = null; paintPick(); }
-    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000) }; paintPick(); }   // no auto-focus: it would pull focus out of text you're editing in the page
+    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000) }; paintPick(); }
+    if (m.tc === 'pick' && editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(picked);
+    if (m.tc === 'error' && window.TribePreviewFlint) window.TribePreviewFlint.error({ msg: `${String(m.msg || 'error').slice(0, 240)}${m.src ? ` (${String(m.src).slice(0, 60)}${m.line ? ':' + Number(m.line) : ''})` : ''}`, line: Number(m.line) || 0 });   // no auto-focus: it would pull focus out of text you're editing in the page
     if (m.tc === 'text' && editing) editApi('edit', { href: m.href || lastHref, tag: String(m.tag || ''), before: String(m.before || ''), after: String(m.after || '') });
     if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string') lastHref = m.href.slice(0, 500); if (pane) pane.classList.add('ready'); }
     if (m.tc === 'shot' && shots.has(m.id)) { const p = shots.get(m.id); shots.delete(m.id); m.error ? p.reject(new Error(m.error)) : p.resolve(String(m.data || '')); }
@@ -310,6 +324,7 @@
       const ask = `please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${text}${made ? ' A starter is already in the repo; build on it.' : ''}`;
       try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); } catch {} }
       say(made ? 'A first version is running. Your agents were asked to build the rest; it refreshes here as they work.' : 'Asked your agents to build it. It appears here the moment there is a page.');
+      if (made) toast('A first version is running. Your agents were asked to build the rest; it refreshes here as they work.');   // the start screen gives way to the app, so say it where it stays
       if (made) setTimeout(() => open(), 600);
     } finally { if (go) go.disabled = false; }
   }
@@ -326,12 +341,21 @@
     if (!m || !info || m.project && m.project !== info.project) return;
     if (m.type === 'preview') {
       if (!pane) return;
-      if (pane.classList.contains('is-empty') || !(m.files || []).length) return status().then(() => { if (info.hasIndex && info.hasRepo && !frame) render(); else if (!info.hasIndex) render(); }).catch(() => {});
-      if (!helperAlive) reload();   // the page reloads itself through SSE when the helper runs
+      if (pane.classList.contains('is-empty') || !(m.files || []).length) {
+        const was = `${info.mode}|${info.port}|${info.root}`;
+        return status().then(() => {
+          if (`${info.mode}|${info.port}|${info.root}` !== was && info.hasIndex && info.hasRepo) { frame = null; render(); return; }   // dev server / web root changed
+          if (info.hasIndex && info.hasRepo && !frame) render(); else if (!info.hasIndex) render();
+          else if (frame && !helperAlive) softReload();
+        }).catch(() => {});
+      }
+      if (!helperAlive) softReload();   // the page reloads itself through SSE when the helper runs
+      if ((m.files || []).some(f => /(^|\/)index\.html?$/i.test(f))) status().then(() => { if (!info.hasIndex) render(); }).catch(() => {});   // index.html deleted or moved: back to the start screen
+      if (window.TribePreviewFlint && (m.files || []).length) window.TribePreviewFlint.reloaded(m.files);
     }
     if (m.type === 'repo' && m.status && pane) {   // a commit landed (pull, merge): show it
       const sha = ((m.status.commits || [])[0] || {}).sha;
-      if (sha && pane.dataset.head && pane.dataset.head !== sha && !helperAlive) reload();
+      if (sha && pane.dataset.head && pane.dataset.head !== sha && !helperAlive) softReload();
       if (sha) pane.dataset.head = sha;
     }
   });

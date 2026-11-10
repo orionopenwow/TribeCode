@@ -202,7 +202,8 @@ module.exports = function setup({ P, W, base, sense, readVision, createTask, bro
     }
   }
   async function starter(pid, me, body = {}) {
-    if (!isHost(me, pid)) throw err(403, 'only the host can add files to the repo');
+    // the host, or a builder once the project has its repo (they can write code anyway; only the host creates repos)
+    if (!isHost(me, pid) && !(canEdit(me, pid) && (P.get(pid) || {}).repo && W.isRepo(P.get(pid).repo))) throw err(403, 'only the host can add files to a project without a repo');
     const v = visionOf(pid), o = options(pid);
     if (!hasVision(v)) throw err(400, 'write the vision first');
     const { repo } = await ensureRepo(pid, me);
