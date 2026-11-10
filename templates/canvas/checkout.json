@@ -1,0 +1,28 @@
+{ "id": "checkout", "title": "Checkout page", "keys": ["checkout", "cart", "order summary", "payment (form|screen|page)", "shipping form"], "size": [1280, 800], "accent": "#111827",
+  "root": { "n": "{{name}} · Checkout", "lay": "row 48 48,72 start start", "k": [
+    { "n": "Form", "lay": "col 22 0 stretch start", "sz": "fill", "k": [
+      { "t": "text", "n": "Store", "c": "{{name}}", "s": 20, "wt": 700, "f": "Georgia" },
+      { "t": "text", "n": "Step", "c": "Contact · Shipping · Payment", "s": 13, "col": "{{muted}}", "f": "JetBrains Mono" },
+      { "t": "text", "n": "Section", "c": "Contact", "s": 18, "wt": 700 },
+      { "t": "instance", "ref": "field", "n": "Field", "ov": { "flabel": { "c": "Email" }, "fval": { "c": "you@example.com" } } },
+      { "t": "text", "n": "Section", "c": "Shipping", "s": 18, "wt": 700 },
+      { "n": "Name row", "lay": "row 12 0 start start", "sz": "fill", "k": [
+        { "t": "instance", "ref": "field", "n": "Field", "sz": "fill", "ov": { "flabel": { "c": "First name" }, "fval": { "c": "Sam" } } },
+        { "t": "instance", "ref": "field", "n": "Field", "sz": "fill", "ov": { "flabel": { "c": "Last name" }, "fval": { "c": "Rivera" } } } ] },
+      { "t": "instance", "ref": "field", "n": "Field", "ov": { "flabel": { "c": "Address" }, "fval": { "c": "12 Lantern Way" } } },
+      { "t": "text", "n": "Section", "c": "Payment", "s": 18, "wt": 700 },
+      { "n": "Payment slot", "stroke": "{{line}}", "r": 10, "lay": "col 4 16 start start", "sz": "fill", "k": [
+        { "t": "text", "n": "Payment title", "c": "Card details", "s": 15, "wt": 600 },
+        { "t": "text", "n": "Payment note", "c": "Your payment provider's secure form goes here (Stripe, Shopify, PayPal).", "s": 13, "col": "{{muted}}", "sz": "fill" } ] } ] },
+    { "n": "Summary", "fill": "{{surface}}", "stroke": "{{line}}", "r": 14, "w": 420, "lay": "col 16 28 stretch start", "sz": "fixed hug", "k": [
+      { "t": "text", "n": "Summary title", "c": "Your order", "s": 18, "wt": 700 },
+      { "n": "Line", "lay": "row 12 0 center between", "sz": "fill", "k": [ { "t": "text", "n": "Item", "c": "{{item1}}", "s": 15 }, { "t": "text", "n": "Amount", "c": "{{price1}}", "s": 15 } ] },
+      { "n": "Line", "lay": "row 12 0 center between", "sz": "fill", "k": [ { "t": "text", "n": "Item", "c": "{{item2}}", "s": 15 }, { "t": "text", "n": "Amount", "c": "{{price2}}", "s": 15 } ] },
+      { "t": "rect", "n": "Rule", "w": 360, "h": 1, "fill": "{{line}}", "sz": "fill fixed" },
+      { "n": "Total", "lay": "row 12 0 center between", "sz": "fill", "k": [ { "t": "text", "n": "Total label", "c": "Total", "s": 16, "wt": 700 }, { "t": "text", "n": "Total amount", "c": "{{total}}", "s": 16, "wt": 700 } ] },
+      { "n": "Pay button", "fill": "{{accent}}", "r": 10, "lay": "row 0 15,20 center center", "sz": "fill", "k": [ { "t": "text", "n": "Pay label", "c": "Continue to payment", "s": 16, "wt": 600, "col": "{{onAccent}}" } ] } ] } ] },
+  "components": [
+    { "t": "component", "key": "field", "n": "Field", "w": 560, "h": 70, "lay": "col 6 0 stretch start", "sz": "fill hug", "k": [
+      { "t": "text", "key": "flabel", "n": "Field label", "c": "Label", "s": 13, "wt": 600 },
+      { "n": "Input", "fill": "{{surface}}", "stroke": "{{line}}", "r": 8, "lay": "row 0 12,14 center start", "sz": "fill", "k": [
+        { "t": "text", "key": "fval", "n": "Field value", "c": "Value", "s": 15, "col": "{{muted}}" } ] } ] } ] }

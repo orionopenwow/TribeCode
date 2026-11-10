@@ -1,0 +1,19 @@
+{ "id": "chat", "title": "Chat screen", "keys": ["chat", "messag(es|ing)", "inbox", "\\bdm\\b", "conversation", "support chat"], "size": [390, 844], "accent": "#0A84FF",
+  "root": { "n": "{{name}} · Chat", "lay": "col 0 0 stretch start", "k": [
+    { "n": "Header", "stroke": "{{line}}", "lay": "row 12 56,16,12,16 center start", "sz": "fill", "k": [
+      { "t": "text", "n": "Back", "c": "‹", "s": 26, "col": "{{accent}}" },
+      { "t": "ellipse", "n": "Avatar", "w": 36, "h": 36, "fill": "{{soft}}" },
+      { "n": "Who", "lay": "col 1 0 start start", "sz": "fill", "k": [
+        { "t": "text", "n": "Contact name", "c": "{{name}}", "s": 16, "wt": 600 },
+        { "t": "text", "n": "Status", "c": "Usually replies in a few minutes", "s": 12, "col": "{{muted}}" } ] } ] },
+    { "n": "Messages", "lay": "col 10 16 stretch end", "sz": "fill fill", "k": [
+      { "t": "text", "n": "Day", "c": "Today 9:41", "s": 12, "col": "{{muted}}", "al": "center", "sz": "fill" },
+      { "n": "Them", "lay": "row 0 0 start start", "sz": "fill", "k": [
+        { "n": "Bubble in", "fill": "{{soft}}", "r": 18, "w": 260, "lay": "col 0 10,14 start start", "sz": "fixed hug", "k": [ { "t": "text", "n": "Text", "c": "Hi! Is {{item1}} still available today?", "s": 15, "lh": 1.4, "sz": "fill" } ] } ] },
+      { "n": "Me", "lay": "row 0 0 start end", "sz": "fill", "k": [
+        { "n": "Bubble out", "fill": "{{accent}}", "r": 18, "w": 230, "lay": "col 0 10,14 start start", "sz": "fixed hug", "k": [ { "t": "text", "n": "Text", "c": "It is. Want me to hold one for you?", "s": 15, "lh": 1.4, "col": "{{onAccent}}", "sz": "fill" } ] } ] },
+      { "n": "Them", "lay": "row 0 0 start start", "sz": "fill", "k": [
+        { "n": "Bubble in", "fill": "{{soft}}", "r": 18, "w": 200, "lay": "col 0 10,14 start start", "sz": "fixed hug", "k": [ { "t": "text", "n": "Text", "c": "Yes please, see you at 5.", "s": 15, "lh": 1.4, "sz": "fill" } ] } ] } ] },
+    { "n": "Composer", "stroke": "{{line}}", "lay": "row 10 10,14,30,14 center start", "sz": "fill", "k": [
+      { "n": "Input", "fill": "{{surface}}", "stroke": "{{line}}", "r": 20, "lay": "row 0 10,14 center start", "sz": "fill", "k": [ { "t": "text", "n": "Placeholder", "c": "Message", "s": 15, "col": "{{muted}}" } ] },
+      { "t": "ellipse", "n": "Send", "w": 36, "h": 36, "fill": "{{accent}}" } ] } ] } }

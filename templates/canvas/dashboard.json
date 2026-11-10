@@ -1,0 +1,31 @@
+{ "id": "dashboard", "title": "Dashboard", "keys": ["dashboard", "analytics", "metrics", "admin", "stats", "overview screen", "kpi"], "size": [1280, 800], "accent": "#2563EB",
+  "root": { "n": "{{name}} · Dashboard", "lay": "row 0 0 stretch start", "k": [
+    { "n": "Sidebar", "fill": "{{surface}}", "stroke": "{{line}}", "w": 232, "lay": "col 6 24,16 stretch start", "sz": "fixed fill", "k": [
+      { "t": "text", "n": "Product name", "c": "{{name}}", "s": 18, "wt": 700, "lh": 2 },
+      { "n": "Nav on", "fill": "{{soft}}", "r": 8, "lay": "row 0 9,12 center start", "sz": "fill", "k": [ { "t": "text", "n": "Nav label", "c": "Overview", "s": 14, "wt": 600 } ] },
+      { "n": "Nav", "r": 8, "lay": "row 0 9,12 center start", "sz": "fill", "k": [ { "t": "text", "n": "Nav label", "c": "{{thing}}", "s": 14, "col": "{{muted}}" } ] },
+      { "n": "Nav", "r": 8, "lay": "row 0 9,12 center start", "sz": "fill", "k": [ { "t": "text", "n": "Nav label", "c": "People", "s": 14, "col": "{{muted}}" } ] },
+      { "n": "Nav", "r": 8, "lay": "row 0 9,12 center start", "sz": "fill", "k": [ { "t": "text", "n": "Nav label", "c": "Settings", "s": 14, "col": "{{muted}}" } ] } ] },
+    { "n": "Main", "lay": "col 24 28,32 stretch start", "sz": "fill fill", "k": [
+      { "n": "Header", "lay": "row 12 0 center between", "sz": "fill", "k": [
+        { "t": "text", "n": "Page title", "c": "Overview", "s": 26, "wt": 700 },
+        { "t": "text", "n": "Range", "c": "Last 30 days", "s": 13, "col": "{{muted}}", "f": "JetBrains Mono" } ] },
+      { "n": "Stats", "lay": "row 16 0 stretch start", "sz": "fill", "k": [
+        { "t": "instance", "ref": "stat", "n": "Stat", "sz": "fill", "ov": { "slabel": { "c": "Visitors" }, "sval": { "c": "12,480" }, "sdelta": { "c": "+8% vs last month" } } },
+        { "t": "instance", "ref": "stat", "n": "Stat", "sz": "fill", "ov": { "slabel": { "c": "Sign-ups" }, "sval": { "c": "1,204" }, "sdelta": { "c": "+3%" } } },
+        { "t": "instance", "ref": "stat", "n": "Stat", "sz": "fill", "ov": { "slabel": { "c": "Active today" }, "sval": { "c": "386" }, "sdelta": { "c": "−2%" } } },
+        { "t": "instance", "ref": "stat", "n": "Stat", "sz": "fill", "ov": { "slabel": { "c": "Open issues" }, "sval": { "c": "14" }, "sdelta": { "c": "4 closed this week" } } } ] },
+      { "n": "Chart card", "fill": "{{surface}}", "stroke": "{{line}}", "r": 12, "lay": "col 16 20 stretch start", "sz": "fill fill", "k": [
+        { "t": "text", "n": "Chart title", "c": "Visitors per week", "s": 15, "wt": 600 },
+        { "n": "Bars", "lay": "row 14 0 end start", "sz": "fill fill", "k": [
+          { "t": "rect", "n": "Bar", "w": 40, "h": 90, "r": 4, "fill": "{{soft}}", "sz": "fill fixed" },
+          { "t": "rect", "n": "Bar", "w": 40, "h": 140, "r": 4, "fill": "{{soft}}", "sz": "fill fixed" },
+          { "t": "rect", "n": "Bar", "w": 40, "h": 120, "r": 4, "fill": "{{soft}}", "sz": "fill fixed" },
+          { "t": "rect", "n": "Bar", "w": 40, "h": 180, "r": 4, "fill": "{{soft}}", "sz": "fill fixed" },
+          { "t": "rect", "n": "Bar", "w": 40, "h": 160, "r": 4, "fill": "{{soft}}", "sz": "fill fixed" },
+          { "t": "rect", "n": "Bar", "w": 40, "h": 230, "r": 4, "fill": "{{accent}}", "sz": "fill fixed" } ] } ] } ] } ] },
+  "components": [
+    { "t": "component", "key": "stat", "n": "Stat card", "w": 230, "h": 110, "fill": "{{surface}}", "stroke": "{{line}}", "r": 12, "lay": "col 6 18 start start", "sz": "fixed hug", "k": [
+      { "t": "text", "key": "slabel", "n": "Stat label", "c": "Label", "s": 13, "col": "{{muted}}" },
+      { "t": "text", "key": "sval", "n": "Stat value", "c": "0", "s": 28, "wt": 700, "f": "JetBrains Mono" },
+      { "t": "text", "key": "sdelta", "n": "Stat change", "c": "+0%", "s": 12, "col": "{{accent}}" } ] } ] }

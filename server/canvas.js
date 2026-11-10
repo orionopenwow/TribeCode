@@ -242,5 +242,19 @@ module.exports = function canvas({ P, base, broadcast, perms, nameOf, memberColo
     }
   }
 
-  return { route, handle, flush, list, load, canEdit, canManage };
+  // P1-F (server/canvasai.js): agents and Flint change a design from the server. Same rules as the socket: the caller's
+  // permissions, versions win, everyone (the caller's own tabs too) gets the change live.
+  function ops(pid, id, list, me) {
+    if (!canEdit(me, pid)) throw err(403, 'spectators can look but not edit');
+    const file = load(pid, id || 'main', (id || 'main') === 'main'); if (!file) throw err(404, 'no such design file');
+    const r = apply(pid, file, list, me);
+    if (r.applied.length) broadcast({ type: 'cnv', project: pid, file: file.id, ops: r.applied, by: me.id });
+    return { file, applied: r.applied, rejected: r.rejected };
+  }
+  // an agent's (or Flint's) cursor on the canvas: { by, name, color, x, y } in canvas space; gone hides it
+  function cursor(pid, id, who, x, y, gone) {
+    broadcast({ type: 'cnv-cursor', project: pid, file: id || 'main', by: who.id, name: who.name, color: who.color, agent: true, x: num(x), y: num(y), ...(gone ? { gone: true } : {}) });
+  }
+
+  return { route, handle, flush, list, load, canEdit, canManage, ops, cursor };
 };

@@ -1,0 +1,20 @@
+{ "id": "pricing", "title": "Pricing section", "keys": ["pricing", "plans", "price table", "tiers", "subscription page"], "size": [1280, 800], "accent": "#5B4BDB",
+  "root": { "n": "{{name}} · Pricing", "lay": "col 40 72,96,72,96 center start", "k": [
+    { "n": "Heading", "lay": "col 10 0 center start", "sz": "hug", "k": [
+      { "t": "text", "n": "Eyebrow", "c": "PLANS", "s": 12, "wt": 700, "col": "{{accent}}", "f": "JetBrains Mono" },
+      { "t": "text", "n": "Title", "c": "Pick the plan that fits {{name}} today", "s": 36, "wt": 700, "f": "Inter Display", "al": "center" },
+      { "t": "text", "n": "Subtitle", "c": "Switch or cancel any time. Example plans for your design.", "s": 16, "col": "{{muted}}", "al": "center" } ] },
+    { "n": "Plans", "lay": "row 20 0 stretch start", "sz": "fill", "k": [
+      { "t": "instance", "ref": "plan", "n": "Plan", "ov": { "pname": { "c": "Starter" }, "price": { "c": "Free" }, "f1": { "c": "1 project" }, "f2": { "c": "Up to 3 people" }, "f3": { "c": "Community help" } } },
+      { "t": "instance", "ref": "plan", "n": "Plan · featured", "ov": { "self": { "fill": "{{soft}}" }, "pname": { "c": "Team" }, "price": { "c": "Popular" }, "f1": { "c": "Unlimited projects" }, "f2": { "c": "Up to 20 people" }, "f3": { "c": "Priority help" } } },
+      { "t": "instance", "ref": "plan", "n": "Plan", "ov": { "pname": { "c": "Studio" }, "price": { "c": "Custom" }, "f1": { "c": "Everything in Team" }, "f2": { "c": "Single sign-on" }, "f3": { "c": "A named contact" } } } ] } ] },
+  "components": [
+    { "t": "component", "key": "plan", "n": "Plan card", "w": 340, "h": 360, "fill": "{{surface}}", "stroke": "{{line}}", "r": 14, "lay": "col 14 28 stretch start", "sz": "fill hug", "k": [
+      { "t": "text", "key": "pname", "n": "Plan name", "c": "Plan", "s": 16, "wt": 700 },
+      { "t": "text", "key": "price", "n": "Plan price", "c": "Free", "s": 34, "wt": 700, "f": "Inter Display" },
+      { "t": "rect", "n": "Rule", "w": 280, "h": 1, "fill": "{{line}}", "sz": "fill fixed" },
+      { "t": "text", "key": "f1", "n": "Feature", "c": "✓  Feature one", "s": 14, "col": "{{muted}}" },
+      { "t": "text", "key": "f2", "n": "Feature", "c": "✓  Feature two", "s": 14, "col": "{{muted}}" },
+      { "t": "text", "key": "f3", "n": "Feature", "c": "✓  Feature three", "s": 14, "col": "{{muted}}" },
+      { "n": "Choose button", "fill": "{{accent}}", "r": 8, "lay": "row 0 12,16 center center", "sz": "fill", "k": [
+        { "t": "text", "n": "Choose label", "c": "Choose plan", "s": 15, "wt": 600, "col": "{{onAccent}}" } ] } ] } ] }

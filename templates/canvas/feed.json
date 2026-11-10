@@ -1,0 +1,31 @@
+{ "id": "feed", "title": "Social feed", "keys": ["feed", "timeline", "social", "posts", "stories"], "size": [390, 844], "accent": "#E8456B",
+  "root": { "n": "{{name}} · Feed", "lay": "col 0 0 stretch start", "k": [
+    { "n": "Header", "lay": "row 12 56,20,12,20 center between", "sz": "fill", "k": [
+      { "t": "text", "n": "Wordmark", "c": "{{name}}", "s": 24, "wt": 700, "f": "Georgia" },
+      { "n": "Header actions", "lay": "row 14 0 center end", "sz": "hug", "k": [
+        { "t": "ellipse", "n": "New post", "w": 26, "h": 26, "stroke": "{{fg}}", "sw": 2 },
+        { "t": "rect", "n": "Messages", "w": 26, "h": 22, "r": 6, "stroke": "{{fg}}", "sw": 2 } ] } ] },
+    { "n": "Stories", "lay": "row 14 8,20,16,20 start start", "sz": "fill", "clip": true, "k": [
+      { "t": "instance", "ref": "story", "n": "Story", "ov": { "who": { "c": "You" } } },
+      { "t": "instance", "ref": "story", "n": "Story", "ov": { "who": { "c": "Maya" } } },
+      { "t": "instance", "ref": "story", "n": "Story", "ov": { "who": { "c": "Jay" } } },
+      { "t": "instance", "ref": "story", "n": "Story", "ov": { "who": { "c": "Rae" } } },
+      { "t": "instance", "ref": "story", "n": "Story", "ov": { "who": { "c": "Orion" } } } ] },
+    { "t": "rect", "n": "Rule", "h": 1, "w": 390, "fill": "{{line}}", "sz": "fill fixed" },
+    { "n": "Post", "lay": "col 12 16,0,16,0 stretch start", "sz": "fill", "k": [
+      { "n": "Post header", "lay": "row 10 0,20 center start", "sz": "fill", "k": [
+        { "t": "ellipse", "n": "Author avatar", "w": 36, "h": 36, "fill": "{{soft}}" },
+        { "n": "Author", "lay": "col 1 0 start start", "sz": "fill", "k": [
+          { "t": "text", "n": "Author name", "c": "Maya Lin", "s": 15, "wt": 600 },
+          { "t": "text", "n": "Post time", "c": "{{place}} · 2h", "s": 12, "col": "{{muted}}" } ] },
+        { "t": "text", "n": "More", "c": "•••", "s": 14, "col": "{{muted}}" } ] },
+      { "t": "rect", "n": "Photo", "w": 390, "h": 390, "fill": "{{soft}}", "sz": "fill fixed" },
+      { "n": "Post actions", "lay": "row 16 0,20 center start", "sz": "fill", "k": [
+        { "t": "text", "n": "Like", "c": "♥ 128", "s": 14, "wt": 600, "col": "{{accent}}" },
+        { "t": "text", "n": "Comments", "c": "24 comments", "s": 14, "col": "{{muted}}" },
+        { "t": "text", "n": "Share", "c": "Share", "s": 14, "col": "{{muted}}" } ] },
+      { "t": "text", "n": "Caption", "c": "{{item1}} turned out better than planned. {{tagline}}", "s": 14, "lh": 1.45, "sz": "fill", "col": "{{fg}}" } ] } ] },
+  "components": [
+    { "t": "component", "key": "story", "n": "Story", "lay": "col 6 0 center start", "sz": "hug", "w": 62, "h": 84, "k": [
+      { "t": "ellipse", "n": "Ring", "w": 60, "h": 60, "fill": "{{soft}}", "stroke": "{{accent}}", "sw": 2 },
+      { "t": "text", "key": "who", "n": "Story name", "c": "Name", "s": 12, "col": "{{muted}}" } ] } ] }
