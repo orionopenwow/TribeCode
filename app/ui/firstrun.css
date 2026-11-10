@@ -1,0 +1,53 @@
+/* Focused first run (app/ui/firstrun.js): one question, one next step, a calm sidebar. Flat matte. */
+.fr { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; padding: 24px 16px; background: var(--canvas, #12151A); overflow-y: auto; }
+.fr-box { width: min(720px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.fr-mark { width: 56px; height: 56px; }
+.fr-eb { margin: 0; font: 600 11.5px/1.4 var(--mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink, #FF7A33); }
+.fr-t { margin: 0; font: 800 clamp(28px, 4.4vw, 44px)/1.1 var(--display, Inter, system-ui, sans-serif); letter-spacing: -.02em; color: var(--text, #F8FAFC); }
+.fr-form { width: 100%; display: flex; gap: 10px; align-items: stretch; margin-top: 8px; padding: 8px; border: 1px solid var(--border, #2A313C); border-radius: 18px; background: var(--surface, #1B2028); }
+.fr-form:focus-within { border-color: var(--accent, #F26B1D); }
+.fr-in { flex: 1; min-width: 0; resize: none; border: 0; outline: 0; background: transparent; color: var(--text, #F8FAFC); font: 400 18px/1.45 Inter, system-ui, sans-serif; padding: 10px 12px; }
+.fr-in::placeholder { color: var(--faint, #7C8796); }
+.fr-go { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; font-size: 15px; border-radius: 12px; }
+.fr-go .i { width: 16px; height: 16px; }
+.fr-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.fr-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border, #2A313C); background: var(--raised, #1E242D); color: var(--text, #E2E8F0); font: 500 14px Inter, system-ui, sans-serif; cursor: pointer; }
+.fr-chip:hover, .fr-chip:focus-visible { border-color: var(--accent, #F26B1D); outline: none; }
+.fr-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; text-align: left; font: 500 14.5px Inter, system-ui, sans-serif; color: var(--muted, #94A3B8); }
+.fr-steps li.ok { color: var(--green, #3BD16F); } .fr-steps li.run { color: var(--text, #F8FAFC); } .fr-steps li.fail { color: var(--ember, #FF6F8E); }
+.fr-steps .spin { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; }
+.fr-note { margin: 4px 0 0; max-width: 520px; color: var(--muted, #94A3B8); font-size: 14px; line-height: 1.55; }
+.fr-foot { margin-top: 4px; }
+
+.fr-next { position: fixed; z-index: 880; left: 16px; bottom: 16px; width: min(340px, calc(100vw - 32px)); padding: 16px 16px 14px; border: 1px solid var(--border, #2A313C); border-left: 3px solid var(--accent, #F26B1D); border-radius: 14px; background: var(--surface, #1B2028); color: var(--text, #F8FAFC); }
+.fr-next h3 { margin: 4px 0 6px; font-size: 17px; }
+.fr-p { margin: 0 0 10px; color: var(--muted, #94A3B8); font-size: 13.5px; line-height: 1.5; }
+.fr-link { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.fr-link code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 7px 10px; border-radius: 8px; background: var(--canvas, #12151A); border: 1px solid var(--border, #2A313C); font: 12.5px var(--mono, ui-monospace, monospace); }
+.fr-acts { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fr-x { position: absolute; top: 8px; right: 10px; border: 0; background: none; color: var(--faint, #7C8796); font-size: 18px; cursor: pointer; }
+
+.fr-all { position: fixed; z-index: 870; left: 16px; bottom: 16px; display: inline-flex; gap: 6px; align-items: center; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border, #2A313C); background: var(--raised, #1E242D); color: var(--muted, #CBD5E1); font: 500 12.5px Inter, system-ui, sans-serif; cursor: pointer; }
+.fr-all:hover, .fr-all:focus-visible { color: var(--text, #F8FAFC); border-color: var(--accent, #F26B1D); }
+body:has(#fr-next) .fr-all { bottom: auto; top: 12px; left: auto; right: 16px; }
+
+.fr-hi { position: fixed; z-index: 880; left: 50%; top: 14px; transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border, #2A313C); border-left: 3px solid var(--teal, #38C6B1); border-radius: 14px; background: var(--surface, #1B2028); color: var(--text, #F8FAFC); }
+.fr-hi-e { font-size: 22px; } .fr-hi-t { flex: 1; min-width: 0; } .fr-hi-t b { display: block; font-size: 15px; } .fr-hi-t small { color: var(--muted, #94A3B8); font-size: 13px; }
+body.fr-guest .fr-all { display: none; }
+
+.fr-prog { margin: 0 0 14px; padding: 14px 16px; border: 1px solid var(--border, #2A313C); border-radius: 14px; background: var(--surface, #1B2028); }
+.fr-prog-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .fr-prog-h b { font-size: 14px; }
+.fr-bar { height: 6px; border-radius: 3px; background: var(--raised, #2A313C); overflow: hidden; } .fr-bar i { display: block; height: 100%; background: var(--accent, #F26B1D); }
+.fr-prog ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted, #94A3B8); } .fr-prog li.ok { color: var(--green, #3BD16F); }
+
+@media (max-width: 640px) {
+  .fr-form { flex-direction: column; } .fr-go { align-self: stretch; justify-content: center; }
+  .fr-chip { font-size: 13px; padding: 7px 12px; }
+  .fr-next { left: 8px; right: 8px; width: auto; bottom: 76px; }
+  .fr-hi { flex-wrap: wrap; top: 8px; } .fr-hi-t { flex-basis: calc(100% - 40px); }
+  .fr-all { bottom: 76px; left: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .fr-mark { content: url(assets/icon-mark.svg); } }
+/* focus: the sidebar keeps Chat, Files, Tasks and the preview; the code row and + Add come back with Show everything */
+body.focus-run:not([data-unlocked~="repo"]) #pin-repo, body.focus-run #nest-add, body.focus-run #nest-add-slot { display: none !important; }
+body.focus-run:not([data-unlocked~="ws-agents"]) #nest-ws-agents, body.focus-run:not([data-unlocked~="company"]) .nest-row[data-pnav="company"], body.focus-run:not([data-unlocked~="money"]) .nest-row[data-pnav="money"] { display: none !important; }

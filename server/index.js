@@ -750,6 +750,25 @@ async function apiInProject(req, res, url) {
     return send(res, 200, { member: publicMember(h), token, tribe });
   }
 
+  // Getting started (focused first run): local-only activation milestones for this tribe, never sent anywhere.
+  //   GET /api/activation   people: { firstSeen, firstProject, firstPreview, invited, friendJoined, aiConnected, published, done, total }
+  //   POST /api/activation { event }   records the first time (firstProject | firstPreview | invited | published)
+  if (a === 'activation') {
+    if (!need()) return; if (me.role === 'agent' || me.guest) return fail(res, 403, 'people only');
+    const f = '.tribe/activation.json', act = baseStore.readJSON(f, null) || { firstSeen: new Date().toISOString() };
+    if (m === 'POST') {
+      const body = await readBody(req), ev = str(body.event, 24);
+      if (!['firstProject', 'firstPreview', 'invited', 'published'].includes(ev)) return fail(res, 400, 'unknown event');
+      if (!act[ev]) { act[ev] = new Date().toISOString(); baseStore.writeJSON(f, act); }
+    } else if (m !== 'GET') return fail(res, 405, 'GET or POST');
+    if (!baseStore.readJSON(f, null)) baseStore.writeJSON(f, act);
+    const host = members.find(x => x.role === 'host'), people = members.filter(x => x.role !== 'agent' && (!host || x.id !== host.id));
+    const friend = people.map(x => x.joined || x.created).filter(Boolean).sort()[0] || (people.length ? act.firstSeen : null);
+    const agent = members.filter(x => x.role === 'agent').map(x => x.created || x.joined).filter(Boolean).sort()[0] || (members.some(x => x.role === 'agent') ? act.firstSeen : null);
+    const view = { ...act, friendJoined: friend || null, aiConnected: agent || null };
+    const steps = ['firstPreview', 'invited', 'friendJoined', 'aiConnected', 'published'];
+    return send(res, 200, { ...view, steps, done: steps.filter(k => view[k]).length, total: steps.length });
+  }
   if (a === 'tribe-link') {
     if (!need()) return; if (me.role === 'agent' || me.guest) return fail(res, 403, 'people only');
     if (m === 'GET') return send(res, 200, tribeLinkView());
