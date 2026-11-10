@@ -144,6 +144,23 @@
     'Search files': ['Buscar archivos', 'Buscar arquivos', 'Rechercher des fichiers', 'Dateien suchen', 'ファイルを検索', '搜索文件', '파일 검색'],
     'Type a command, doc, task or person…': ['Escribe un comando, doc, tarea o persona…', 'Digite um comando, doc, tarefa ou pessoa…', 'Tapez une commande, un doc, une tâche ou une personne…', 'Befehl, Dok, Aufgabe oder Person eingeben…', 'コマンド、ドキュメント、タスク、人を入力…', '输入命令、文档、任务或人…', '명령, 문서, 작업 또는 사람 입력…'],
     'In the room': ['En la sala', 'Na sala', 'Dans la salle', 'Im Raum', 'ルームにいる人', '在房间里', '방에 있는 사람'],
+    // v0.27 publish + jams (app/ui/publish.js, app/ui/jam.js)
+    'Publish': ['Publicar', 'Publicar', 'Publier', 'Veröffentlichen', '公開', '发布', '게시'],
+    'Publish to a play link': ['Publicar con un enlace para jugar', 'Publicar com um link para jogar', 'Publier avec un lien de jeu', 'Als Spiel-Link veröffentlichen', 'プレイ用リンクで公開', '发布为可玩链接', '플레이 링크로 게시'],
+    'Share it': ['Compártelo', 'Compartilhe', 'Partagez-le', 'Teil es', '共有する', '分享', '공유하기'],
+    'Update the link': ['Actualizar el enlace', 'Atualizar o link', 'Mettre à jour le lien', 'Link aktualisieren', 'リンクを更新', '更新链接', '링크 업데이트'],
+    'Publish anyway': ['Publicar de todos modos', 'Publicar mesmo assim', 'Publier quand même', 'Trotzdem veröffentlichen', 'このまま公開', '仍然发布', '그래도 게시'],
+    'Unpublish': ['Despublicar', 'Despublicar', 'Dépublier', 'Zurückziehen', '公開を取り消す', '取消发布', '게시 취소'],
+    'Fix it': ['Arréglalo', 'Corrigir', 'Corriger', 'Beheben', '直す', '修复', '고치기'],
+    'Remix it': ['Remezclar', 'Remixar', 'Remixer', 'Remixen', 'リミックスする', '翻作', '리믹스하기'],
+    'Not now': ['Ahora no', 'Agora não', 'Pas maintenant', 'Nicht jetzt', '今はしない', '以后再说', '나중에'],
+    'Jam board': ['Tablero de la jam', 'Quadro da jam', 'Tableau de la jam', 'Jam-Board', 'ジャムボード', '创作赛看板', '잼 보드'],
+    'Start a jam': ['Empezar una jam', 'Começar uma jam', 'Lancer une jam', 'Jam starten', 'ジャムを始める', '开始创作赛', '잼 시작'],
+    'Start the jam': ['Empezar la jam', 'Começar a jam', 'Lancer la jam', 'Jam starten', 'ジャムを始める', '开始创作赛', '잼 시작하기'],
+    'Submit this project': ['Enviar este proyecto', 'Enviar este projeto', 'Soumettre ce projet', 'Dieses Projekt einreichen', 'このプロジェクトを提出', '提交这个项目', '이 프로젝트 제출'],
+    'Vote': ['Votar', 'Votar', 'Voter', 'Abstimmen', '投票', '投票', '투표'],
+    'Play': ['Jugar', 'Jogar', 'Jouer', 'Spielen', 'プレイ', '玩', '플레이'],
+    'See results': ['Ver resultados', 'Ver resultados', 'Voir les résultats', 'Ergebnisse', '結果を見る', '查看结果', '결과 보기'],
   };
   // Storage card keys (storage.js asks t('st.*', English)): translated by the same English text.
   const KEY = 'tribecode.lang';
