@@ -64,6 +64,7 @@
     { key: 'handoffs', label: 'Hand-offs', tab: 'Hand-offs', slug: 'handoffs', icon: 'i-hand', group: 'agents', keys: 'handoff park take', run: () => coord('handoffs') },
     { key: 'reviews', label: 'Reviews', tab: 'Reviews', slug: 'reviews', icon: 'i-eye', group: 'agents', keys: 'review approve', run: () => coord('reviews') },
     { key: 'plan', label: 'Daily plan', tab: 'Daily plan', slug: 'plan', icon: 'i-sun', group: 'agents', keys: 'today standup plan', run: () => coord('plan') },
+    { key: 'money', label: 'Money', icon: 'i-coin', kind: 'Go to', keys: 'money ledger revenue costs runway users stripe finance books csv export autopilot seats budget ai spend', when: () => !!(window.TribeLedger && window.TribeLedger.hasCompany()), run: () => window.TribeLedger && window.TribeLedger.open() },   // v0.27 company: Money (app/ui/ledger.js adds its own sidebar row when a company exists)
     { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
     { key: 'docs-all', label: 'All files', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
