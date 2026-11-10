@@ -1,15 +1,20 @@
-"""The calm Task Board (v0.27.2): one "Add a task" line, slim columns side by side, calm cards (no buttons or menus on
-a card until you hover), a side drawer for who does it / status / due / labels / checklist / notes, drag between
-columns, quick "move on" on hover, keyboard (Enter opens, Esc closes), and on phones one column at a time with a
-segmented control and the drawer as a bottom sheet.
-Usage: python app/test/e2e_tasks_calm.py   (honours TRIBE_PORT_OFFSET)"""
+"""The Task Board dashboard (v0.28): stat tiles that filter (Needs someone · In progress · Waiting for review · Done this
+week · Overdue), one "Add a task" line with type / for me / due chips, full-width rows grouped by what happens next
+(Needs someone, In progress, Waiting for review, Up next, Done collapsed to three), one always-visible next-step button
+per row (Assign → Start → Send for review → Approve / Send back → Reopen), the "⋯" menu, the drawer, drag between
+sections, keyboard (↑/↓, Enter, Esc, X), a List | Board toggle, and on phones the same rows stacked with thumb-size
+buttons and the drawer as a bottom sheet.
+Usage: python app/test/e2e_tasks_calm.py   (honours TRIBE_PORT_OFFSET; TRIBE_SHOTS=1 saves screenshots)"""
 import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
+from datetime import date, timedelta
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
 PORT = 4870 + int(os.environ.get('TRIBE_PORT_OFFSET', '0'))
 BASE = f"http://localhost:{PORT}"
+SHOTS = os.environ.get("TRIBE_SHOTS")
+SHOT_DIR = Path(os.environ.get("TRIBE_SHOT_DIR", str(ROOT / "docs" / "screenshots")))
 errors = []
 http = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
@@ -33,11 +38,13 @@ def wait(fn, timeout=10, what="condition"):
     raise AssertionError("timed out waiting for " + what)
 
 
-def open_as(browser, name, token, vp, mobile=False):
-    page = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile).new_page()
+def open_as(browser, name, token, vp, mobile=False, lang=None):
+    page = browser.new_context(viewport=vp, is_mobile=mobile, has_touch=mobile, device_scale_factor=2 if SHOTS else 1).new_page()
     page.on("pageerror", lambda e: errors.append(f"{name}: {e}"))
     settings = {"onboarded": True, "name": name, "server": {"url": BASE, "token": token}, "tour": {"done": True}, "checklist": {"setup": True, "tour": True}}
-    page.add_init_script(f"localStorage.setItem('tribecode.settings.v1', {json.dumps(json.dumps(settings))});")
+    init = f"localStorage.setItem('tribecode.settings.v1', {json.dumps(json.dumps(settings))});"
+    if lang: init += f"localStorage.setItem('tribecode.lang', '{lang}');"
+    page.add_init_script(init)
     page.goto(BASE + "/?skipIntro=1")
     page.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
     time.sleep(1.0)
@@ -49,8 +56,12 @@ def task(tok, title):
     return next(t for t in api("/api/tasks", token=tok)[1]["tasks"] if t["title"] == title)
 
 
+def shot(page, name):
+    if SHOTS: page.screenshot(path=str(SHOT_DIR / name))
+
+
 def main():
-    tmp = tempfile.mkdtemp(prefix="tribe-calm-")
+    tmp = tempfile.mkdtemp(prefix="tribe-dash-")
     env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost"}
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--ollama", "http://localhost:9"], stdout=subprocess.DEVNULL, env=env)
     try:
@@ -58,74 +69,167 @@ def main():
         host = api("/api/bootstrap", "POST", {"name": "Camp"})[1]["token"]
         code = api("/api/invites", "POST", {}, host)[1]["invite"]["code"]
         maya = api("/api/join", "POST", {"code": code, "name": "Maya"})[1]["token"]
-        for t, st in [("Orders page", "doing"), ("Delivery routes", "review"), ("Batch counter", "done")]:
-            api("/api/tasks", "POST", {"title": t, "status": st}, host)
+        ms = api("/api/members", token=host)[1]["members"]
+        camp_id = next(m["id"] for m in ms if m["name"] == "Camp"); maya_id = next(m["id"] for m in ms if m["name"] == "Maya")
+        yday = (date.today() - timedelta(days=1)).isoformat()
+        seed = [("Orders page with a daily total and a print button", "doing", camp_id, "build", None),
+                ("Delivery routes", "review", maya_id, "build", None),
+                ("Price sheet for cafés", "backlog", None, "write", yday),
+                ("Flavor photos", "backlog", None, "design", None),
+                ("Fix the totals rounding on the receipt", "backlog", maya_id, "fix", None),
+                ("Batch counter", "done", camp_id, "build", None),
+                ("Write the how-to text", "done", maya_id, "write", None),
+                ("Pick the app colors", "done", None, "design", None),
+                ("Logo sketch", "done", maya_id, "design", None)]
+        for title, st, who, ty, due in seed:
+            t = api("/api/tasks", "POST", {"title": title, "status": st, "type": ty, "due": due}, host)[1]["task"]
+            if who: api(f"/api/tasks/{t['id']}", "PATCH", {"assignee": who}, host)
+        orders = task(host, "Orders page with a daily total and a print button")
+        api(f"/api/tasks/{orders['id']}", "PATCH", {"subtasks": [{"t": "Table", "done": True}, {"t": "Total", "done": True}, {"t": "Print", "done": False}]}, host)
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
-            pg = open_as(b, "Camp", host, {"width": 1440, "height": 900})
+            pg = open_as(b, "Camp", host, {"width": 1280, "height": 900})
 
-            # 1. one Add line: Enter makes a backlog task
+            # 1. stat tiles count what needs doing
+            n = lambda k: int(pg.inner_text(f'#tk-seg [data-segn="{k}"]'))
+            wait(lambda: n("doing") == 1 and n("review") == 1 and n("needs") == 2 and n("overdue") == 1 and n("done") == 4, what="stat tiles")
+            # sections in the order you act on them; Done shows three until you ask for all
+            secs = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => c.dataset.sec)")
+            assert secs == ["needs", "doing", "review", "ready", "done"], secs
+            assert pg.locator('#board .col[data-sec="done"] .task').count() == 3, "Done is collapsed to three"
+            assert pg.locator('#board .col[data-sec="done"] [data-done-toggle]').is_visible()
+            # rows are full-width and one per line, titles never cut to a word
+            rows = pg.evaluate("[...document.querySelectorAll('#board .task')].map(r => r.getBoundingClientRect().width)")
+            bw = pg.evaluate("document.querySelector('#board').getBoundingClientRect().width")
+            assert min(rows) >= bw - 4 and bw > 500, (rows, bw)
+            assert "print button" in pg.inner_text(f'#board .task[data-id="{orders["id"]}"] .t')
+            assert "2/3" in pg.inner_text(f'#board .task[data-id="{orders["id"]}"]'), "checklist progress on the row"
+            # every row shows its next step without hovering
+            pg.mouse.move(5, 5)
+            for title, label in [("Flavor photos", "Assign"), ("Fix the totals rounding on the receipt", "Start"), ("Orders page with a daily total and a print button", "Send for review"), ("Delivery routes", "Approve")]:
+                btn = pg.locator(f'#board .task[data-id="{task(host, title)["id"]}"] .tk-acts .tk-btn:not(.tk-btn--back)')
+                assert btn.is_visible() and btn.inner_text().strip() == label, (title, btn.inner_text())
+            pr = task(host, "Price sheet for cafés")
+            assert pg.locator(f'#board .task[data-id="{pr["id"]}"] .due-chip.overdue').count() == 1, "overdue chip"
+            shot(pg, "tasks-dashboard-desktop.png")
+
+            # 2. tiles filter; tap again to clear
+            pg.click('#tk-seg [data-seg="overdue"]')
+            wait(lambda: pg.evaluate("[...document.querySelectorAll('#board .task')].map(t => t.dataset.id)") == [pr["id"]], what="overdue filter")
+            assert pg.locator("#tk-filter").is_visible()
+            pg.click('#tk-seg [data-seg="overdue"]')
+            wait(lambda: pg.locator("#board .task").count() == 8, what="filter cleared")
+
+            # 3. one Add line: Enter makes a task that needs someone; "For me" + due assign it on the way in
             pg.fill("#tk-add", "Label the ginger batch"); pg.press("#tk-add", "Enter")
-            pg.wait_for_selector('#board [data-col="backlog"] .task:has-text("Label the ginger batch")', timeout=8000)
-            t1 = task(host, "Label the ginger batch"); assert t1["status"] == "backlog", t1
+            pg.wait_for_selector('#board [data-sec="needs"] .task:has-text("Label the ginger batch")', timeout=8000)
+            t1 = task(host, "Label the ginger batch"); assert t1["status"] == "backlog" and not t1.get("assignee"), t1
+            pg.click("#tk-add"); pg.click("#board [data-forme]"); pg.fill("#tk-add", "Order more bottles"); pg.press("#tk-add", "Enter")
+            wait(lambda: task(host, "Order more bottles").get("assignee") == camp_id, what="For me assigns on create")
+            pg.wait_for_selector('#board [data-sec="ready"] .task:has-text("Order more bottles")', timeout=8000)
 
-            # 2. four columns side by side, and calm cards: no menus, buttons only in the hover row
-            tops = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => Math.round(c.getBoundingClientRect().top))")
-            assert len(tops) == 4 and len(set(tops)) == 1, f"four columns across at 1440: {tops}"
-            assert pg.locator("#board .task select").count() == 0, "no menus on a card"
-            assert pg.locator("#board .task button:not(.tk-qa button):not(.due-chip)").count() == 0, "no buttons on a card outside the hover row"
-            pg.mouse.move(5, 5); assert not pg.locator(f'#board .task[data-id="{t1["id"]}"] .tk-qa').is_visible(), "quick actions wait for hover"
-            card = pg.locator(f'#board .task[data-id="{t1["id"]}"]')
-            card.hover(); assert card.locator(".tk-qa").is_visible(), "quick actions on hover"
+            # 4. assign from the row: Assign → a short menu → Maya; the row moves to Up next with Start
+            row = pg.locator(f'#board .task[data-id="{t1["id"]}"]')
+            row.locator('[data-qa="assign"]').click()
+            pg.wait_for_selector("#tk-pop .tkp-i", timeout=3000)
+            pg.click('#tk-pop .tkp-i:has-text("Maya")')
+            wait(lambda: task(host, "Label the ginger batch").get("assignee") == maya_id, what="assigned from the row")
+            pg.wait_for_selector(f'#board [data-sec="ready"] .task[data-id="{t1["id"]}"] .tk-av[title="Maya"]', timeout=5000)
+            assert pg.locator("#tk-drawer").is_hidden() or pg.locator("#tk-drawer").count() == 0, "assigning doesn't open the drawer"
 
-            # 3. the drawer: who does it, status, labels, checklist, notes
-            card.click(); pg.wait_for_selector("#tk-drawer:not([hidden]) #tkd-title", timeout=5000)
-            assert pg.input_value("#tkd-title") == "Label the ginger batch"
-            pg.click('#tk-drawer .tkd-who:has-text("Maya")')
-            maya_id = next(m["id"] for m in api("/api/members", token=host)[1]["members"] if m["name"] == "Maya")
-            wait(lambda: task(host, "Label the ginger batch").get("assignee") == maya_id, what="assigned to Maya")
-            card.locator('.tk-av[title="Maya"]').wait_for(timeout=5000)
-            pg.fill("#tkd-label", "design"); pg.press("#tkd-label", "Enter")
-            wait(lambda: task(host, "Label the ginger batch").get("labels") == ["design"], what="label saved")
-            pg.fill("#tkd-sub", "Pick a font"); pg.press("#tkd-sub", "Enter")
-            wait(lambda: (task(host, "Label the ginger batch").get("subtasks") or [{}])[0].get("t") == "Pick a font", what="checklist step saved")
-            pg.check("#tk-drawer [data-sub='0']")
-            wait(lambda: task(host, "Label the ginger batch")["subtasks"][0]["done"] is True, what="checklist step done")
-            pg.fill("#tkd-notes", "Kraft paper, two colours."); pg.locator("#tkd-notes").blur()
-            wait(lambda: task(host, "Label the ginger batch").get("body") == "Kraft paper, two colours.", what="notes saved")
-            pg.click('#tk-drawer [data-status="review"]')
-            wait(lambda: task(host, "Label the ginger batch")["status"] == "review", what="status from the drawer")
-            card = pg.locator(f'#board .task[data-id="{t1["id"]}"]')
-            assert "1/1" in card.inner_text(), "the card shows the checklist count"
-            pg.keyboard.press("Escape"); pg.wait_for_selector("#tk-drawer", state="hidden")
+            # 5. the primary button walks the task along: Start → Send for review → Approve
+            def press(label):
+                pg.locator(f'#board .task[data-id="{t1["id"]}"] .tk-acts .tk-btn:has-text("{label}")').click()
+            press("Start"); wait(lambda: task(host, "Label the ginger batch")["status"] == "doing", what="started")
+            press("Send for review"); wait(lambda: task(host, "Label the ginger batch")["status"] == "review", what="sent for review")
+            pg.locator(f'#board .task[data-id="{t1["id"]}"] [data-qa="back"]').click(); wait(lambda: task(host, "Label the ginger batch")["status"] == "doing", what="sent back")
+            press("Send for review"); wait(lambda: task(host, "Label the ginger batch")["status"] == "review", what="review again")
+            press("Approve"); wait(lambda: task(host, "Label the ginger batch")["status"] == "done", what="approved")
+            # done collapses: newest first, "Show all" opens the rest
+            pg.wait_for_selector(f'#board [data-sec="done"] .task[data-id="{t1["id"]}"]', timeout=5000)
+            assert pg.locator('#board [data-sec="done"] .task').count() == 3
+            pg.click('#board [data-done-toggle]'); wait(lambda: pg.locator('#board [data-sec="done"] .task').count() == 5, what="show all done")
+            pg.click('#board [data-done-toggle]'); wait(lambda: pg.locator('#board [data-sec="done"] .task').count() == 3, what="collapse done")
+            # the check circle marks done / not done
+            fl = task(host, "Flavor photos")
+            pg.locator(f'#board .task[data-id="{fl["id"]}"] .tk-check').click(); wait(lambda: task(host, "Flavor photos")["status"] == "done", what="check marks done")
+            pg.click('#tk-seg [data-seg="done"]')
+            pg.locator(f'#board .task[data-id="{fl["id"]}"] .tk-check').click(); wait(lambda: task(host, "Flavor photos")["status"] == "backlog", what="check again reopens")
+            pg.click('#tk-seg [data-seg="done"]')
 
-            # 4. keyboard: Enter opens, Esc closes
-            card.focus(); pg.keyboard.press("Enter"); pg.wait_for_selector("#tk-drawer:not([hidden])", timeout=3000)
-            pg.keyboard.press("Escape"); pg.wait_for_selector("#tk-drawer", state="hidden")
-
-            # 5. drag between columns, and "move on" from the hover row
-            op = task(host, "Orders page")
-            pg.drag_and_drop(f'#board .task[data-id="{op["id"]}"]', '#board [data-col="done"]')
-            wait(lambda: task(host, "Orders page")["status"] == "done", what="dragged to Done")
+            # 6. the ⋯ menu: move and delete
             dr = task(host, "Delivery routes")
-            c2 = pg.locator(f'#board .task[data-id="{dr["id"]}"]'); c2.hover(); c2.locator('[data-qa="next"]').click()
-            wait(lambda: task(host, "Delivery routes")["status"] == "done", what="moved on")
-            assert pg.locator("#tk-drawer").is_hidden(), "move on doesn't open the drawer"
+            pg.locator(f'#board .task[data-id="{dr["id"]}"] [data-qa="more"]').click()
+            pg.wait_for_selector('#tk-pop [data-m="move:backlog"]'); pg.click('#tk-pop [data-m="move:backlog"]')
+            wait(lambda: task(host, "Delivery routes")["status"] == "backlog", what="moved from the menu")
+            ob = task(host, "Order more bottles")
+            pg.locator(f'#board .task[data-id="{ob["id"]}"] [data-qa="more"]').click(); pg.click('#tk-pop [data-m="delete"]')
+            wait(lambda: not any(t["title"] == "Order more bottles" for t in api("/api/tasks", token=host)[1]["tasks"]), what="deleted from the menu")
 
-            # 6. a friend sees the change live
+            # 7. the drawer: open from the row, labels, checklist, notes, next step
+            row = pg.locator(f'#board .task[data-id="{fl["id"]}"]')
+            row.locator(".t").click(); pg.wait_for_selector("#tk-drawer:not([hidden]) #tkd-title", timeout=5000)
+            assert pg.input_value("#tkd-title") == "Flavor photos"
+            pg.fill("#tkd-label", "design"); pg.press("#tkd-label", "Enter")
+            wait(lambda: task(host, "Flavor photos").get("labels") == ["design"], what="label saved")
+            pg.fill("#tkd-sub", "Shoot the ginger one"); pg.press("#tkd-sub", "Enter")
+            wait(lambda: (task(host, "Flavor photos").get("subtasks") or [{}])[0].get("t") == "Shoot the ginger one", what="checklist step saved")
+            pg.fill("#tkd-notes", "Daylight, kraft paper."); pg.locator("#tkd-notes").blur()
+            wait(lambda: task(host, "Flavor photos").get("body") == "Daylight, kraft paper.", what="notes saved")
+            pg.click('#tk-drawer .tkd-who:has-text("Maya")')
+            wait(lambda: task(host, "Flavor photos").get("assignee") == maya_id, what="assigned in the drawer")
+            pg.click('#tk-drawer [data-step="start"]'); wait(lambda: task(host, "Flavor photos")["status"] == "doing", what="next step in the drawer")
+            shot(pg, "tasks-dashboard-drawer.png")
+            pg.keyboard.press("Escape"); pg.wait_for_selector("#tk-drawer", state="hidden")
+
+            # 8. keyboard: ↓ moves between rows, Enter opens, Esc closes
+            first = pg.locator("#board .task").first; first.focus(); pg.keyboard.press("ArrowDown")
+            assert pg.evaluate("document.activeElement.classList.contains('task') && document.activeElement !== document.querySelector('#board .task')"), "arrow down moves focus"
+            pg.keyboard.press("Enter"); pg.wait_for_selector("#tk-drawer:not([hidden])", timeout=3000)
+            pg.keyboard.press("Escape"); pg.wait_for_selector("#tk-drawer", state="hidden")
+
+            # 9. drag a row into another section
+            fx = task(host, "Fix the totals rounding on the receipt")
+            pg.drag_and_drop(f'#board .task[data-id="{fx["id"]}"]', '#board [data-sec="review"]')
+            wait(lambda: task(host, "Fix the totals rounding on the receipt")["status"] == "review", what="dragged to review")
+
+            # 10. Board view: four columns side by side, wide enough for titles; the choice sticks
+            pg.click('#board [data-view="board"]')
+            pg.wait_for_function("document.querySelector('#board').dataset.view === 'board'")
+            tops = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => Math.round(c.getBoundingClientRect().top))")
+            widths = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => c.getBoundingClientRect().width)")
+            assert len(tops) == 4 and len(set(tops)) == 1 and min(widths) >= 230, (tops, widths)
+            shot(pg, "tasks-dashboard-board.png")
+            pg.reload(); pg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000); time.sleep(0.8)
+            pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_function("document.querySelector('#board').dataset.view === 'board'", timeout=8000)
+            pg.click('#board [data-view="list"]')
+
+            # 11. a friend sees the change live
             mp = open_as(b, "Maya", maya, {"width": 1280, "height": 800})
-            mp.wait_for_selector(f'#board [data-col="review"] .task[data-id="{t1["id"]}"] .tk-av[title="Maya"]', timeout=8000)
+            mp.wait_for_selector(f'#board [data-col="doing"] .task[data-id="{fl["id"]}"] .tk-av[title="Maya"]', timeout=8000)
 
-            # 7. phones: one column at a time, segmented control, bottom sheet
+            # 12. phones: same rows stacked, thumb-size next step, tiles filter, bottom sheet
             ph = open_as(b, "Camp", host, {"width": 390, "height": 844}, mobile=True)
             assert ph.locator("#tk-seg").is_visible()
-            vis = ph.evaluate("[...document.querySelectorAll('#board .col')].filter(c => c.offsetParent).map(c => c.dataset.col)")
-            assert vis == ["backlog"], vis
-            ph.click('#tk-seg [data-seg="review"]')
-            ph.wait_for_selector(f'#board [data-col="review"] .task[data-id="{t1["id"]}"]', state="visible", timeout=5000)
             assert ph.evaluate("document.documentElement.scrollWidth") <= 391
-            ph.click(f'#board .task[data-id="{t1["id"]}"]'); ph.wait_for_selector("#tk-drawer:not([hidden])", timeout=5000)
+            prow = ph.locator(f'#board .task[data-id="{pr["id"]}"]')
+            btn = prow.locator('.tk-acts .tk-btn').bounding_box(); rb = prow.bounding_box()
+            assert btn["height"] >= 44 and btn["width"] >= rb["width"] * 0.6, ("thumb-size button", btn, rb)
+            shot(ph, "tasks-dashboard-phone.png")
+            ph.click('#tk-seg [data-seg="doing"]')
+            ph.wait_for_selector(f'#board [data-col="doing"] .task[data-id="{fl["id"]}"]', state="visible", timeout=5000)
+            assert ph.locator('#board [data-sec="needs"]').count() == 0, "filtered to in progress"
+            ph.locator(f'#board .task[data-id="{fl["id"]}"] .t').click(); ph.wait_for_selector("#tk-drawer:not([hidden])", timeout=5000)
             box = ph.locator("#tk-drawer").bounding_box(); assert box["y"] + box["height"] >= 840 and box["width"] >= 385, ("bottom sheet", box)
+            ph.keyboard.press("Escape")
+
+            # 13. Spanish: the board's chrome is translated
+            es = open_as(b, "Camp", host, {"width": 1280, "height": 900}, lang="es")
+            es.wait_for_function("document.querySelector('#board [data-sec=needs] .tk-sec__l') && document.querySelector('#board [data-sec=needs] .tk-sec__l').textContent !== 'Needs someone'", timeout=8000)
+            assert "Asignar" in es.inner_text("#board"), "Assign button translated"
+            es.locator(f'#board .task[data-id="{pr["id"]}"] .t').click(); es.wait_for_selector("#tk-drawer:not([hidden])", timeout=5000)
+            assert "¿Quién lo hace?" in es.inner_text("#tk-drawer")
+            shot(es, "tasks-dashboard-drawer-es.png")
             b.close()
     finally:
         srv.terminate()
