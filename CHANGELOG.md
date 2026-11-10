@@ -1,6 +1,7 @@
 # Changelog
 
-## v0.26.0 (unreleased)
+## v0.26.0
+- **Phones**: the rack's Tasks and Updates badges count up and clear when you look; Updates mark as read when opened, with a dot on each new one; Flint's demo card fits the screen with its recap; the website's Learn panel stacks again.
 - **Preview app** is always in the sidebar, above Invite friends: the play button for the code under your app, game or site. With nothing to run yet it opens a "What should it be?" screen: describe it (or tap an idea), press Build it, and you get a first version you can run right away while your Claude and the tribe's agents build the rest, live.
 - **+ Add** is always in the sidebar once a project is open, to add tabs (whiteboard, calendar, bugs, links, docs…) to the left pane.
 - **Tribe link**: every tribe gets one permanent link, like a Discord server invite (`<your address>/t/<name>`). Anyone with it picks a name and they're in, no AI needed. The host can rename it, renew it, turn it off and show a QR. One-time invites fold underneath.
