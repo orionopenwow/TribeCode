@@ -293,3 +293,15 @@ html { -webkit-tap-highlight-color: transparent; }
 /* instant first paint: last-seen content shows at once, a touch quieter and not clickable until fresh data lands */
 #chat-list.from-cache, #pj-overview.from-cache { opacity: .78; transition: opacity .2s; }
 #pj-overview.from-cache { pointer-events: none; }
+/* v0.26 tribe link in Invite friends */
+.tl-box { display: grid; gap: 8px; margin: 4px 0 14px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.tl-box .eyebrow { margin: 0; }
+.tl-sub { margin: 0; font-size: 12.5px; line-height: 1.5; }
+.tl-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tl-row:empty { display: none; }
+.tl-name { display: inline-flex; align-items: center; gap: 2px; font: 12px var(--mono, monospace); color: var(--muted); flex: 1 1 260px; min-width: 0; overflow: hidden; }
+.tl-name .input { min-width: 90px; flex: 1; height: 30px; font: 12.5px var(--mono, monospace); }
+.tl-more { margin-top: 4px; }
+.tl-more > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 0; }
+.tl-more[open] > summary { margin-bottom: 8px; }
+.tl-qr { width: 160px; justify-self: start; } .tl-qr svg { width: 100%; height: auto; }

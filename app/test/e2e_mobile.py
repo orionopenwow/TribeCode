@@ -48,6 +48,7 @@ def main():
             host.goto(BASE + "/?skipIntro=1")
             wait_text(host, "#sync-status", "connected")
             host.click("#tour-invite")
+            host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)")
             host.wait_for_selector("#inv-qr svg")
             link = host.inner_text("#inv-link")
             assert "localhost" not in link, f"phone link must use a network address, got {link}"

@@ -68,6 +68,8 @@
       "summary": "Free HDRIs (skies and lighting for 3D), PBR textures (wood, stone, metal) and realistic 3D models. Flint takes the 1k size so projects stay small." }
   ],
   "sources": [
+    { "id": "artcraft", "kinds": ["pixel", "model", "ui"], "title": "ArtCraft", "license": "MIT or Apache-2.0 (the app)", "url": "https://getartcraft.com/",
+      "summary": "Make your own art: compose in 2D, stage scenes in 3D and pose characters, then drop the results into Files or the inspiration board." },
     { "id": "kenney", "kinds": ["sound", "pixel", "model", "ui", "music"], "title": "Kenney", "license": "CC0-1.0", "url": "https://kenney.nl/assets",
       "summary": "Thousands of game assets in matching styles: 2D and pixel tilesets, 3D kits, UI packs, sound effects and jingles. Download a pack, drop it in Files." },
     { "id": "quaternius", "kinds": ["model", "rigged"], "title": "Quaternius", "license": "CC0-1.0", "url": "https://quaternius.com",

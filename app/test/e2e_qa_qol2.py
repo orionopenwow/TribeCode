@@ -136,7 +136,7 @@ def main():
             # ---- Preview: plain headline, the file names tucked away
             pg.evaluate("TribePreview.open()"); pg.wait_for_selector(".pvw-empty", timeout=10000)
             pv = pg.inner_text(".pvw-empty")
-            assert "index.html yet" not in pv and ("No page to show yet" in pv or "Nothing to show yet" in pv), pv
+            assert "index.html yet" not in pv and ("No page to show yet" in pv or "Nothing to show yet" in pv or "What should it be?" in pv), pv
             pg.keyboard.press("Escape"); pg.evaluate("window.TribePreview && TribePreview.close && TribePreview.close()")
 
             # ---- Connect your AI: a hint for "terminal"
@@ -153,7 +153,7 @@ def main():
             close_sheets(pg)
 
             # ---- Invite: plain options; no "files stay on this computer"
-            pg.evaluate("TribeShell.go('invite')"); pg.wait_for_selector("#inv-hours", timeout=10000)
+            pg.evaluate("TribeShell.go('invite')"); pg.wait_for_selector("#tl-box", timeout=10000); pg.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); pg.wait_for_selector("#inv-hours", timeout=10000)
             assert pg.locator("#inv-hours option").first.inner_text().startswith("Lasts"), "the expiry says what it is"
             assert pg.locator("#inv-role option[value=builder]").inner_text() == "They can build"
             pg.wait_for_timeout(400)

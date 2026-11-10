@@ -433,3 +433,5 @@
   .m2-composer #chat-form, .composer-dock.m2-composer:not(.rec) #chat-form { height: auto; min-height: 42px; align-items: center; }
   .m2-composer #chat-form textarea#chat-input { font-size: 16px; line-height: 22px; padding: 10px 6px; height: 42px; }
 }
+/* v0.26: unread updates carry a dot until you've seen them */
+.m2-fi.unread .m2-ft b::after { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--action, #F26B1D); vertical-align: middle; }

@@ -384,7 +384,7 @@
     $('#nest-sub').textContent = here > 1 ? `${here} here · Dashboard` : 'Dashboard';
     const set = (id, v, hot) => { const el = $(id); if (!el) return; el.textContent = v ? (v > 99 ? '99+' : v) : ''; el.classList.toggle('hot', !!(v && hot)); };
     const pulse = h ? (h.pulses[p.id] || 0) : 0;
-    set('#nn-chat', pulse, true); set('#nn-tasks', k.tasks);
+    set('#nn-chat', pulse, true); if (window.TribeTaskNews) window.TribeTaskNews.paint();   // v0.26: task updates you haven't seen (tasknews.js), not the open-task count
     counts.bugs = k.bugs || 0; counts.requests = k.requests || 0;
     paintCounts();
     pinned(p); paintSwitch();

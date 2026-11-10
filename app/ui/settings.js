@@ -71,8 +71,10 @@
       ${window.TribeMode ? row('Experience', '<div id="set-mode"></div>', 'How much of TribeCode you see. Your role still decides what you can do.') : ''}
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off">`)}
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
+      ${window.TribeI18n ? row('Language', `<select class="input set-select" id="set-lang" aria-label="Language">${window.TribeI18n.LANGS.map(([k, n]) => `<option value="${k}" ${k === window.TribeI18n.lang() ? 'selected' : ''}>${n}</option>`).join('')}</select>`, 'Menus and buttons. What people write stays as they wrote it.') : ''}
       ${themeRow(st)}
       ${window.TribeLook ? row('Look', '<button class="btn" id="set-look">Customize…</button>', 'Accent, background, spacing, font size, and the tribe\'s name and icon.') : ''}
+      ${C() && C().connected() && window.TribeStorage ? `<div class="set-row set-row-wide"><div class="set-l"><b>Storage &amp; sync</b><small>Where your tribe, code and drafts are kept, and what keeps them safe.</small></div><div class="set-c" id="set-storage"></div></div>` : ''}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
       ${window.TribeBrain ? row('Flint\'s brain', '<div id="set-flintbrain"></div>', 'Built in, Ollama, or a cloud model with your key. Also writes summaries, drafts and standups.') : row('Local brain', `<span class="set-brain">${brainTxt}</span>${probe.state === 'found' && probe.models.length ? `<select id="set-model">${['', ...probe.models].map(m => `<option value="${esc(m)}" ${(st.brain.enabled ? st.brain.model : '') === m ? 'selected' : ''}>${m ? esc(m) : 'Off'}</option>`).join('')}</select>` : ''}`, 'Writes summaries and standups on this computer.')}
       ${desk ? row('Host on this computer', `<button class="toggle set-toggle" role="switch" id="set-host" aria-label="Host on this computer" aria-checked="${!!(st.hosting && !st.hostOff)}" ${st.hosting ? '' : 'disabled'}><span class="switch"></span></button>`, st.hosting ? 'Your tribe runs here only while this is on. Off stops the server; nothing is deleted.' : 'Starts when you create your first project.') : ''}
@@ -101,6 +103,8 @@
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;
+    const lng = $('#set-lang'); if (lng) lng.onchange = () => { window.TribeI18n.set(lng.value); toast('✓'); };   // v0.26 app languages (i18n.js)
+    const stg = $('#set-storage'); if (stg) window.TribeStorage.mount(stg);   // v0.26 Storage & sync (storage.js)
     const pk = $('#set-packs'); if (pk) window.TribePacks.mount(pk);   // feat/captures (app/ui/captures.js)
     const rl = $('#set-roles'); if (rl) rl.onclick = () => { close(); window.TribeRoles.open(); };   // feat/roles (roles.js)
     // Theme picker (themes.js): a chip sets the theme; with "Match system" on it becomes your light or dark theme.

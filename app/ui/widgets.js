@@ -52,7 +52,7 @@
   function rowOf(w) {
     if (w.kind === 'builtin') {
       const b = BUILT[w.key]; if (!b) return '';
-      if ((w.key === 'website' && autoSite()) || (w.key === 'preview' && autoPreview())) return '';   // already a row of its own
+      if ((w.key === 'website' && autoSite()) || (w.key === 'preview' && pid())) return '';   // already a row of its own
       return `<button class="nest-row wg-row" draggable="${st.canEdit && !isPhone()}" data-wid="${esc(w.id)}" ${b.go ? `data-pnav="${esc(b.go)}"` : `data-wrun="${esc(w.key)}"`} id="wg-${esc(w.key)}">${ico(b.icon)}<span>${esc(b.label)}</span>${more(w)}</button>`;
     }
     const glyph = w.emoji ? `<span class="wg-emo" aria-hidden="true">${esc(w.emoji)}</span>` : ico(w.kind === 'doc' ? 'i-doc' : 'i-link');
@@ -68,7 +68,10 @@
     if (box.innerHTML !== html) box.innerHTML = html;
     box.classList.toggle('empty', !rows.length);
     // Preview game / app: its own button at the bottom of the pane, above Invite friends (not among the rows)
-    const pslot = $('#nest-preview-slot'), prev = autoPreview() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(st.preview.kind || '')}" title="Run it and see it here">${ico('i-play')}<span>${esc(st.preview.label || 'Preview')}</span></button>` : '';
+    // Always there once a project is open (the user's ask): the play button for the code under the whole app or game.
+    // Before there is code, the preview opens on its "nothing to run yet" start screen.
+    const pk = (st.preview && st.preview.kind) || '', plabel = (st.preview && st.preview.show && st.preview.label) || ({ game: 'Play the game', site: 'Preview the site', app: 'Preview the app' }[pk] || 'Preview app');
+    const pslot = $('#nest-preview-slot'), prev = pid() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(pk)}" title="Run the project's code and see it live">${ico('i-play')}<span>${esc(plabel)}</span></button>` : '';
     if (pslot && pslot.innerHTML !== prev) pslot.innerHTML = prev;
     // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows
     const slot = $('#nest-add-slot') || box, add = st.canEdit ? `<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>` : '';
@@ -159,7 +162,7 @@
     if (!st.canEdit) return;
     closePop(); closeGallery();
     const have = new Set((st.widgets || []).filter(w => w.kind === 'builtin').map(w => w.key));
-    if (autoSite()) have.add('website'); if (autoPreview()) have.add('preview');
+    if (autoSite()) have.add('website'); if (pid()) have.add('preview');
     const P = ((window.TribeProjects && window.TribeProjects.list()) || []).find(x => x.id === pid()) || {};
     const scrim = document.createElement('div'); scrim.className = 'wgx-scrim';
     scrim.innerHTML = `<div class="wgx ${isPhone() ? 'sheet' : ''}" id="wg-picker" role="dialog" aria-modal="true" aria-label="Add to this project">

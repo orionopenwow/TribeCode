@@ -318,15 +318,18 @@ def main():
             host.wait_for_function("TribeClient.project() === %r" % ep, timeout=8000)
             host.evaluate("TribePreview.open()")
             host.wait_for_selector("#pvw.is-empty .pvw-empty", timeout=10000)
-            wait_text(host, "#pvw", "No page to show yet")
+            wait_text(host, "#pvw", "What should it be?")   # v0.26: the AI Studio style start screen
             assert host.locator("#pvw [data-act='tab']").is_disabled()
-            host.click("#pvw [data-act='ask']")
-            wait_text(host, ".toast", "Asked", timeout=5000)
+            host.click("#pvw [data-bchip]")
+            assert host.input_value("#pvw-bprompt") == "A pixel platformer game"
+            host.click("#pvw-bgo")
+            host.wait_for_function("/(Asked|running)/.test(document.querySelector('#pvw-bstat') ? document.querySelector('#pvw-bstat').innerText : '')", timeout=15000)
             msgs = ok(api("/chat/general", token=orion, project=ep))["messages"] + ok(api("/agents/channel", token=orion, project=ep))["messages"]
             assert any("index.html" in (m.get("text") or "") for m in msgs), msgs[-3:]
             shot(host, "empty")
             Path(empty, "index.html").write_text("<!doctype html><title>New</title><h1 id=new>brand new page</h1>")
             host.wait_for_selector("#pvw:not(.is-empty) #pvw-iframe", timeout=10000)
+            host.evaluate("TribePreview.refresh && TribePreview.refresh()")
             host.frame_locator("#pvw-iframe").locator("#new").wait_for(timeout=10000)
             host.keyboard.press("Escape")
             host.wait_for_function("!document.body.classList.contains('pvw-on')", timeout=3000)

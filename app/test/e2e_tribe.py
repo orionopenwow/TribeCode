@@ -105,6 +105,7 @@ def main():
 
             # invite via UI
             host.click("#tour-invite")
+            host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)")
             try:
                 host.wait_for_function("document.querySelector('#inv-link') && document.querySelector('#inv-link').innerText.includes('/join/')", timeout=5000)
             except Exception:

@@ -469,13 +469,33 @@
       else { $('#join-go').onclick = () => joinLink($('#join-link').value); $('#join-link').onkeydown = e => { if (e.key === 'Enter') joinLink($('#join-link').value); }; }
     } else {
       body.innerHTML = `<h2>Invite friends</h2>
+        <section class="tl-box" id="tl-box"><span class="eyebrow">Your tribe link</span><p class="faint tl-sub">One link for your whole tribe, like a Discord server invite. Anyone with it picks a name and they're in. No AI needed.</p><div class="linkbox"><code id="tl-link">…</code><button class="btn" id="tl-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code">QR</button><button class="btn primary" id="tl-copy" disabled>Copy</button></div><div class="qr tl-qr hidden" id="tl-qr"></div><div class="tl-row" id="tl-row"></div></section>
+        <details class="tl-more"><summary>Or make a one-time invite</summary>
         <div class="opts"><select id="inv-hours" title="Link expires after" aria-label="Link expires after"><option value="24">Lasts 24 hours</option><option value="168">Lasts 7 days</option><option value="1">Lasts 1 hour</option></select>
           <select id="inv-uses" title="How many people can use it" aria-label="How many people can use it"><option value="5">Up to 5 people</option><option value="1">Just 1 person</option><option value="20">Up to 20 people</option></select>
           <select id="inv-role" title="Builders can edit; spectators can only watch" aria-label="What they can do"><option value="builder">They can build</option><option value="spectator">They can only watch</option></select></div>
         ${window.TribeProjects ? window.TribeProjects.invitePicker() : ''}
         <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
-        <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p>Scan to join from a phone.<br><span class="faint" id="inv-net"></span></p></div>
+        <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p>Scan to join from a phone.<br><span class="faint" id="inv-net"></span></p></div></details>
         <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
+      // v0.26 tribe link: <host>/t/<name>, permanent until the host renames, renews or turns it off
+      const tl = async (patch) => {
+        try {
+          const r = patch ? await C.api('/tribe-link', { method: 'PUT', body: patch }) : await C.api('/tribe-link');
+          const host = (C.state().me || {}).role === 'host', on = r.on !== false;
+          $('#tl-link').textContent = on ? r.short : 'The tribe link is off'; $('#tl-copy').disabled = !on; $('#tl-copy').dataset.v = r.short || '';
+          $('#tl-row').innerHTML = host ? `<label class="tl-name">${esc((r.short || '').replace(/\/t\/[^/]*$/, '/t/'))}<input class="input" id="tl-slug" value="${esc(r.slug || '')}" maxlength="32" aria-label="Tribe link name" spellcheck="false"></label><button class="btn sm" id="tl-save">Rename</button><button class="btn sm" id="tl-renew" title="The old link stops working">New link</button><button class="btn sm" id="tl-onoff">${on ? 'Turn off' : 'Turn on'}</button>` : '';
+          if (host) {
+            $('#tl-save').onclick = () => tl({ slug: $('#tl-slug').value });
+            $('#tl-slug').onkeydown = e => { if (e.key === 'Enter') tl({ slug: $('#tl-slug').value }); };
+            $('#tl-renew').onclick = () => tl({ renew: true }).then(() => toast('New tribe link made. The old one stopped working.'));
+            $('#tl-onoff').onclick = () => tl({ on: !on });
+          }
+        } catch (e) { $('#tl-link').textContent = e.message; }
+      };
+      $('#tl-qrb').onclick = () => { const q = $('#tl-qr'), v = $('#tl-copy').dataset.v; if (!v) return; q.innerHTML = window.TribeQR.svg(v); q.classList.toggle('hidden'); };
+      $('#tl-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#tl-copy').dataset.v); toast('Tribe link copied'); } catch { getSelection().selectAllChildren($('#tl-link')); } };
+      tl();
       const make = async () => {
         $('#inv-copy').disabled = true; $('#inv-link').textContent = 'Creating link…';
         try {

@@ -3,13 +3,50 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), projects = () => [], VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {}, coordTools = null }) {
+module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), projects = () => [], VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {}, coordTools = null, port = 4747 }) {
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
   const str = (d) => ({ type: 'string', description: d });
 
+  // v0.26: everything in the app, as you. tribe_api calls the same HTTP API the app's buttons use, with your own agent
+  // token, so it can do exactly what your role may do (never more), and code_* reach the project's code repository for
+  // agents that aren't running on the host's computer (on the host, edit the local folder with your own tools).
+  const AUTH = new WeakMap();
+  const callApi = async (auth, method, apiPath, body, project) => {
+    const p = String(apiPath || '').replace(/^\/?(api\/)?/, '');
+    if (!p || /\.\.|^(bootstrap|join|oauth|invites\/accept)/.test(p)) throw new Error('that path is not available to agents');
+    const r = await fetch(`http://127.0.0.1:${port}/api/${p}`, { method, headers: { 'Content-Type': 'application/json', ...(auth ? { Authorization: auth } : {}), ...(project ? { 'X-Project': project } : {}) }, body: body && method !== 'GET' ? JSON.stringify(body) : undefined });
+    const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = t.slice(0, 20000); }
+    if (!r.ok) throw new Error(`${r.status}: ${(j && j.error) || t.slice(0, 300)}`);
+    return j;
+  };
   const TOOLS = {
+    tribe_api: {
+      description: 'Use any TribeCode feature the way the app\'s buttons do, as you (your role\'s permissions apply). method + path under /api, optional JSON body. Common paths: GET tasks · POST tasks {title} · PATCH tasks/:id {status,assignee} · GET docs · GET calendar · POST calendar {title,at} · GET bugs · POST bugs {title} · GET inspo?project= · POST inspo/link {project,url} · POST inspo/apply {project} · GET assets/search?q= · POST assets/add · GET site-templates · POST projects/:id/site-template {slug} · GET projects/:id/setup · POST projects/:id/setup/starter · POST preview/edit · POST preview/flint {ask} · GET repo · POST repo/sync · PUT repo/settings {autopilot:{enabled,autoPull,autoPush}} · GET notify/inbox · GET approvals · GET vision · GET projects · GET members. Read responses before writing; prefer the dedicated tools when one exists.',
+      inputSchema: S({ method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }, path: str('Path under /api, e.g. "tasks" or "projects/abc/setup"'), body: { type: 'object', description: 'JSON body for POST/PUT/PATCH', additionalProperties: true } }, ['method', 'path']),
+      run: async ({ method, path: p, body }, me, ctx = {}) => text(await callApi(ctx.auth, method, p, body, ctx.project)),
+    },
+    code_tree: {
+      description: 'List files in the project\'s code repository (path = folder, empty for the top).',
+      inputSchema: S({ path: str('Folder, e.g. "src" (default: top)'), ref: str('Branch (default: the current one)') }),
+      run: async ({ path: p, ref }, me, ctx = {}) => text(await callApi(ctx.auth, 'GET', `code/tree?path=${encodeURIComponent(p || '')}&ref=${encodeURIComponent(ref || '')}`, null, ctx.project)),
+    },
+    code_read: {
+      description: 'Read a file from the project\'s code repository.',
+      inputSchema: S({ path: str('File path, e.g. index.html'), ref: str('Branch (default: the current one)') }, ['path']),
+      run: async ({ path: p, ref }, me, ctx = {}) => text(await callApi(ctx.auth, 'GET', `code/file?path=${encodeURIComponent(p)}&ref=${encodeURIComponent(ref || '')}`, null, ctx.project)),
+    },
+    code_write: {
+      description: 'Save a file in the project\'s code repository as a commit (claim it first with claim_file). The live preview refreshes by itself. On the host\'s computer you can also edit the local folder directly.',
+      inputSchema: S({ path: str('File path'), text: str('Full new file content'), message: str('Commit message') }, ['path', 'text']),
+      run: async ({ path: p, text: t, message }, me, ctx = {}) => text(await callApi(ctx.auth, 'PUT', 'code/file', { path: p, text: t, message: message || `Update ${p} (via ${me.name})` }, ctx.project)),
+    },
+    code_search: {
+      description: 'Search file names in the project\'s code repository.',
+      inputSchema: S({ q: str('Search text') }, ['q']),
+      run: async ({ q }, me, ctx = {}) => text(await callApi(ctx.auth, 'GET', `code/search?q=${encodeURIComponent(q)}`, null, ctx.project)),
+    },
     tribe_overview: {
       description: 'Start here. Who is online and what they are doing, the project vision, open proposals, active file claims, and tasks assigned to you.',
       inputSchema: S({}),
@@ -109,7 +146,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
       const tool = TOOLS[params.name];
       if (!tool) return { jsonrpc: '2.0', id, error: { code: -32602, message: `Unknown tool: ${params.name}` } };
       const { project, ...args } = params.arguments || {};
-      try { return reply(await scope(me, project, async () => { touchAgent(me, params.name); require('./mcp-people').log(me, params.name, args); return tool.run(args, me); })); } catch (e) { return reply(err(e.message || String(e))); }
+      try { return reply(await scope(me, project, async () => { touchAgent(me, params.name); require('./mcp-people').log(me, params.name, args); return tool.run(args, me, { auth: AUTH.get(me), project }); })); } catch (e) { return reply(err(e.message || String(e))); }
     }
     if (method && method.startsWith('notifications/')) return null;
     return { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not found: ${method}` } };
@@ -120,6 +157,7 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     if (!me) return send(res, 401, { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Missing or invalid TribeCode token' } });
     const body = await readBody(req, 16 * 1024 * 1024);   // screenshots (add_visual) can be large
     const batch = Array.isArray(body) ? body : [body];
+    AUTH.set(me, req.headers.authorization || '');   // tribe_api/code_* act with the caller's own token
     const out = (await Promise.all(batch.map(m => handle(m, me)))).filter(Boolean);
     if (!out.length) { res.writeHead(202, { 'Access-Control-Allow-Origin': '*' }); return res.end(); }
     return send(res, 200, Array.isArray(body) ? out : out[0]);

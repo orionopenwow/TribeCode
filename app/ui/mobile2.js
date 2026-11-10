@@ -244,7 +244,7 @@
   function syncBadges() {
     const num = id => { const e = document.getElementById(id); return e ? Number(String(e.textContent).replace('+', '')) || 0 : 0; };
     setBadge('nn-chat', num('nn-chat'));
-    setBadge('nn-tasks', 0);   // the count of open tasks is not "news"; keep Tasks calm
+    setBadge('nn-tasks', window.TribeTaskNews ? window.TribeTaskNews.count() : 0);   // v0.26: task updates you haven't seen (tasknews.js)
     // The bell's unread count (notify.js #nf-count; the old nest Updates row is gone) — it already includes approval asks.
     const inbox = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state().unread || 0 : num('nf-count');
     setBadge('updates', Math.max(pendingMine().length, inbox));
@@ -272,6 +272,8 @@
     $$('[data-nav]').forEach(b => b.classList.remove('on'));
     cur = 'updates'; paintRack(); enter($('#view-updates'));
     renderUpdates(); loadUpdates();
+    // v0.26: opening Updates is reading them: the badge clears (the dots stay for this visit); new ones count it back up
+    clearTimeout(show.rd); show.rd = setTimeout(() => { if (cur === 'updates' && window.TribeNotify && window.TribeNotify.state().unread && window.TribeNotify.markAllRead) window.TribeNotify.markAllRead(); }, 1200);
     const cl = $('#crumb-label'); if (cl) cl.textContent = 'Updates';
     try { sessionStorage.setItem('tribecode.view', 'home'); } catch {}
   }
@@ -767,7 +769,7 @@
       </section>
       <section class="m2-sect">
         <div class="sec-head"><span class="eyebrow">Recent</span><h2>What happened</h2></div>
-        <div class="m2-feed">${inbox.slice(0, 20).map(i => `<button class="m2-fi" data-fi-view="${esc(i.view || '')}" data-fi-ref="${esc(i.ref || '')}">${avatar(member(i.from) || { name: i.fromName || 'TribeCode', color: '#2A313C' })}<span class="m2-ft"><b>${esc(i.title)}</b>${i.body ? `<small>${esc(String(i.body).slice(0, 140))}</small>` : ''}</span><time>${esc(ago(i.at || i.created))}</time></button>`).join('') || '<p class="m2-empty">Quiet so far.</p>'}</div>
+        <div class="m2-feed">${inbox.slice(0, 20).map(i => `<button class="m2-fi ${window.TribeNotify && window.TribeNotify.isUnread && window.TribeNotify.isUnread(i.id) ? 'unread' : ''}" data-fi-id="${esc(i.id)}" data-fi-view="${esc(i.view || '')}" data-fi-ref="${esc(i.ref || '')}">${avatar(member(i.from) || { name: i.fromName || 'TribeCode', color: '#2A313C' })}<span class="m2-ft"><b>${esc(i.title)}</b>${i.body ? `<small>${esc(String(i.body).slice(0, 140))}</small>` : ''}</span><time>${esc(ago(i.at || i.created))}</time></button>`).join('') || '<p class="m2-empty">Quiet so far.</p>'}</div>
       </section>
       ${decided.length ? `<section class="m2-sect"><div class="sec-head"><span class="eyebrow">Decided</span><h2>Approvals</h2></div><div class="m2-decided">${decided.map(a => apCard(a)).join('')}</div></section>` : ''}`;
     kept.forEach((k, aid) => { const t = v.querySelector(`[data-ap="${CSS.escape(aid)}"] textarea`); if (t) t.value = k.val; });
@@ -789,7 +791,7 @@
       return;
     }
     const fi = e.target.closest('.m2-fi');
-    if (fi) { const v = fi.dataset.fiView; if (v && v !== 'inbox' && v !== 'home') App().show(v); }
+    if (fi) { if (fi.classList.contains('unread') && window.TribeNotify && window.TribeNotify.markRead) { fi.classList.remove('unread'); window.TribeNotify.markRead(fi.dataset.fiId); } const v = fi.dataset.fiView; if (v && v !== 'inbox' && v !== 'home') App().show(v); }
   });
   C.on('approval', m => { if (!m.approval) return; const i = approvals.findIndex(a => a.id === m.approval.id); if (i >= 0) approvals[i] = m.approval; else approvals.unshift(m.approval); syncBadges(); if (cur === 'updates' && !document.querySelector('#view-updates .deciding')) renderUpdates(); });
   C.on('notification', m => { if (m.item && !m.pocket && m.item.type !== 'approval' && !inbox.some(x => x.id === m.item.id)) { inbox.unshift(m.item); if (cur === 'updates') renderUpdates(); } });
