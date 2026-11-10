@@ -170,7 +170,17 @@ A library of skills, recipes, templates, assets and scripts, shared across the t
 
 ### Company mode (new in v0.27)
 
-Turn a project into a small business. **Seats** (CEO, Build, Grow, Run, plus Design, Sales, Support, Finance, Legal or your own) each go to a person or an AI helper, with a short charter that says what the seat may do alone and what needs a person's OK. A daily standup, a weekly review and a board update arrive by themselves. The **Money** view shows only numbers with a source (a connected tool or a person who typed them in). **Work**, the **Academy**, **Legal starting points**, **Offload** to free models and the **Marketplace** round it out. Anything outward or costly (money, publishing, customer emails, contracts, production deploys) waits for a person's approval. See [docs/COMPANY.md](docs/COMPANY.md).
+Turn a project into a small business, alone or with friends:
+
+- **Company**: an org chart of **seats** (CEO, Build, Grow, Run, plus Design, Sales, Support, Money, Legal or your own). Each goes to a person, an AI helper, or both, with a short charter: this month's goal, what it may do alone, what needs a person's OK, a weekly AI budget. Seven templates (SaaS, agency, creator, game studio, local business, nonprofit, club). A daily standup, a weekly review and a monthly board update arrive by themselves; goals and a decision log keep everyone pointed the same way.
+- **Money**: revenue, costs, net, runway and users, every number with its source (typed in, a Stripe/Plausible/PostHog CSV, or Stripe sync with your own key). CSV export for your accountant, AI spend per seat.
+- **Seat autopilot**: an AI-held seat works its charter on a schedule; anything outward or costly becomes an approval, with pause-all and an audit trail.
+- **Work**: work profiles, gigs and hiring straight into a seat, a time bank both sides confirm, compute sharing on your own terms, and an opt-in public gig board.
+- **Academy**: 62 plain-language lessons across ten tracks (founder basics and every seat). **Legal**: ten plain-English starting templates (NDA, contractor, co-founder, privacy, terms…), always marked *not legal advice*. **Offload**: send simple jobs to free models elsewhere and bring the result back.
+- **Marketplace**: 515 checked widgets, skills, libraries, connectors, studios, playbooks and templates, sorted Hot · Rising · New · Top by what your tribe uses.
+- **Recommended next** on the Dashboard senses what the project is and suggests what to do next; **experience modes** (Beginner, Intermediate, Advanced) stack these features as you grow, and any one can be turned on early.
+
+Anything outward or costly (money, publishing, customer emails, contracts, production deploys) waits for a person's approval. Guides: [Company](docs/guide/10-company-mode.md) · [Money and autopilot](docs/guide/11-money-and-autopilot.md) · [Work](docs/guide/12-work-and-hiring.md) · [Academy, Legal, Offload](docs/guide/13-academy-legal-offload.md) · [Marketplace](docs/guide/14-marketplace.md) · [Modes](docs/guide/15-modes-and-recommendations.md) · [docs/COMPANY.md](docs/COMPANY.md).
 
 ### Try it offline
 
