@@ -20,7 +20,11 @@
     { k: 'intermediate', e: '🌿', t: 'Intermediate', s: 'Adds the code repository, reviews, milestones, your own agents, Money, Work (gigs and hiring) and company goals.' },
     { k: 'advanced', e: '🌳', t: 'Advanced', s: 'Everything: seat autopilot, connectors, compute sharing, ownership, conflicts, hand-offs, MCP, the agent fleet and Turbo.' },
   ];
-  const RANK = { beginner: 0, intermediate: 1, advanced: 2 };
+  const RANK = { beginner: 0, intermediate: 1, advanced: 2, focus: 9 };
+  // Focused first run (app/ui/focus.js): while a new person is getting their first thing running, the sidebar keeps only
+  // these; everything else is one "Show everything" (or one "Turn it on") away. Saved per device: 'tribecode.focus'.
+  const FOCUS_KEEP = new Set(['home', 'chat', 'docs', 'docs-files', 'ws-tasks', 'tasks', 'hub', 'docs-all', 'settings', 'invite', 'updates', 'huddle', 'capture', 'guide', 'scratch', 'panel', 'project-settings', 'customize', 'context']);
+  const focusOn = () => lsGet('tribecode.focus') === '1';
   // the least mode each sidebar section needs; anything not listed is for everyone
   const MIN = {
     repo: 'intermediate', 'repos-all': 'intermediate', visuals: 'intermediate', captures: 'intermediate', milestones: 'intermediate',
@@ -55,7 +59,7 @@
   }
   const get = () => own() || roleDefault() || fromWelcome() || 'advanced';
   const allows = min => !min || RANK[get()] >= (RANK[min] || 0);
-  const minFor = key => (unlocked().has(key) ? '' : MIN[key] || '');
+  const minFor = key => (unlocked().has(key) ? '' : focusOn() && !FOCUS_KEEP.has(key) ? 'focus' : MIN[key] || '');
   const allowsKey = key => allows(minFor(key));
   function unlock(key) { const u = unlocked(); u.add(String(key)); lsSet(UKEY, JSON.stringify([...u].slice(-60))); last = ''; apply(); document.dispatchEvent(new CustomEvent('tribe:mode', { detail: { mode: get(), unlocked: key } })); }
   const isUnlocked = key => unlocked().has(key);
@@ -64,8 +68,9 @@
   let last = '';
   function apply() {
     const m = get(); document.body.dataset.mode = m;
+    document.body.classList.toggle('focus-run', focusOn());
     document.body.dataset.unlocked = [...unlocked()].join(' ');   // v0.27: CSS can show an unlocked panel below its mode
-    if (m === last) return; const first = !last; last = m;
+    const sig = m + (focusOn() ? '+f' : ''); if (sig === last) return; const first = !last; last = sig;
     if (!first) {
       if (window.TribeShell && window.TribeShell.render) try { window.TribeShell.render(); } catch {}
       if (window.TribeShell && window.TribeShell.tabs) try { window.TribeShell.tabs(); } catch {}
@@ -109,5 +114,7 @@
     const c = C(); if (c && c.on) { c.on('hello', apply); c.on('tribe', apply); c.on('presence', apply); }
   }
   if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot);
-  window.TribeMode = { MODES, get, allows, allowsKey, set, minFor, unlock, isUnlocked, source, picker, rolePicker, apply };
+  // focus(true|false): the focused first run turns this on for a new person and off with "Show everything"
+  function focus(on) { lsSet('tribecode.focus', on ? '1' : ''); last = '~'; apply(); }
+  window.TribeMode = { MODES, get, allows, allowsKey, set, minFor, unlock, isUnlocked, source, picker, rolePicker, apply, focus, focused: focusOn };
 })();
