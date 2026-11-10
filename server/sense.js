@@ -56,6 +56,7 @@ const TAG_WORDS = [
   ['landing page', /\b(landing pages?|hero section|call to action|cta|above the fold)\b/gi, 'site'],
   ['blog', /\b(blog|posts?|rss|articles?)\b/gi, 'site'],
   ['dashboard', /\b(dashboards?|analytics|charts?|metrics|kpis?|graphs?)\b/gi, 'app'],
+  ['video', /\b(video (editor|editing|clips?)|edit(ing)? videos?|clips?|timeline|trim(ming)?|montage|reels?|vlogs?|motion graphics|webcodecs|ffmpeg)\b/gi, 'app'],
   ['social', /\b(feed|followers|likes|profiles?|friends list|social)\b/gi, 'app'],
   ['productivity', /\b(to-?do|habits?|tracker|planner|reminders?|calendar|focus timer|pomodoro)\b/gi, 'app'],
   ['music', /\b(music|audio|beats?|synth|songs?|playlist)\b/gi, ''],

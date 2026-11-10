@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>{{name}}</title>
+  <link rel="icon" href="data:,">
+  <!-- TribeCode build kit (templates/buildkit.json › 3d-game): pinned, MIT-licensed, loaded from a CDN. No install, no build step. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+        "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>:root { {{palette}} }</style>
+</head>
+<body>
+  <canvas id="game" aria-label="{{name}}: a 3D scene"></canvas>
+
+  <div id="hud" hidden>
+    <div class="pill"><span class="eyebrow">Gems</span> <b id="score">0</b> / <span id="total">0</span></div>
+    <button id="mute" class="pill" aria-label="Mute sound">Sound on</button>
+  </div>
+
+  <div id="loader" class="card" role="status" aria-live="polite">
+    <div class="eyebrow">3D starter · three.js</div>
+    <h1>{{name}}</h1>
+    <p class="dim">{{gist}}</p>
+    <div class="bar"><i id="bar"></i></div>
+    <p id="load-note" class="dim">Loading the engine…</p>
+    <button id="play" hidden>Play</button>
+    <p class="keys"><b>WASD</b> or arrows roll · <b>Space</b> jump · <b>drag</b> look · <b>M</b> mute · <b>P</b> pause</p>
+  </div>
+
+  <div id="stick" aria-hidden="true"><i></i></div>
+
+  <script>
+    if (location.protocol === 'file:') document.getElementById('load-note').textContent = 'Browsers will not load modules from a double-clicked file. Open it in TribeCode\'s Preview, or run any small static server here.';
+    // If the engine can't load (offline, CDN blocked), say so instead of a blank page.
+    window.engineFailed = () => { if (!document.documentElement.dataset.ready) document.getElementById('load-note').textContent = 'Could not load the 3D engine from the CDN. Check the internet connection and reload.'; };
+    window.addEventListener('error', e => { if (/three|cannon|import|module/i.test(String(e.message))) engineFailed(); });
+    setTimeout(engineFailed, 15000);
+  </script>
+  <script type="module" src="src/main.js" onerror="engineFailed()"></script>
+</body>
+</html>

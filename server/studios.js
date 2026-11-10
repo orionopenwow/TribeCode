@@ -3,7 +3,8 @@
 // official download page; nothing is downloaded or bundled. Each project also keeps a small "We use" list so the tribe
 // (and its AI helpers, through tribe_api) can see which tools the team picked.
 //
-//   GET /api/projects/:id/studios        { kind, helps, recommended: [ids], studios: [...], pinned: [ids] }
+//   GET /api/projects/:id/studios        { kind, helps, recommended: [ids], studios: [...], pinned: [ids], kit }
+//                                        kit: the project's open-source build stack (server/buildkit.js) for the chips
 //   PUT /api/projects/:id/studios        { pinned: [ids] }   host and builders (not spectators or agents)
 //
 // The project kind comes from server/sense.js (game, 3d, site, app, …); "recommended" picks 3–4 studios for it,
@@ -12,7 +13,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-module.exports = function studios({ P, base, root, sense, broadcast = () => {} }) {
+module.exports = function studios({ P, base, root, sense, broadcast = () => {}, buildKit = null }) {
   const cat = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'studios.json'), 'utf8')); } catch { return { studios: [], helps: {}, recommend: {} }; } })();
   const list = (cat.studios || []).filter(s => /^https:\/\//.test(s.url || ''));
   const ids = new Set(list.map(s => s.id));
@@ -30,7 +31,7 @@ module.exports = function studios({ P, base, root, sense, broadcast = () => {} }
   function view(pid) {
     const kind = kindOf(pid);
     const rec = (cat.recommend[kind] || cat.recommend.other || []).filter(id => ids.has(id)).slice(0, 4);
-    return { kind, helps: cat.helps[kind] || cat.helps.other || '', recommended: rec, studios: list, pinned: ((pins[pid] || {}).pinned || []).filter(id => ids.has(id)) };
+    return { kind, helps: cat.helps[kind] || cat.helps.other || '', recommended: rec, studios: list, pinned: ((pins[pid] || {}).pinned || []).filter(id => ids.has(id)), kit: buildKit ? buildKit.brief(pid) : null };
   }
 
   async function route(req, res, { m, b, me, readBody, send, fail }) {

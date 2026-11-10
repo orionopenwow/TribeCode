@@ -41,6 +41,13 @@
     </article>`;
   }
 
+  // the project's open-source build stack (server/buildkit.js): what Flint and the AI helpers build with
+  function kitSec(k) {
+    if (!k || !k.libs || !k.libs.length) return '';
+    return `<section class="sto-sec sto-kit" id="sto-kit" aria-label="Build kit"><div class="sto-kithead"><span class="sto-eyebrow">Build kit · ${esc(k.title)}</span>
+      <h3 class="sto-h">What your helpers build with</h3><p class="faint">Open-source libraries, pinned and loaded by the project from a CDN. Flint and every AI helper follow this stack and its quality bar.</p></div>
+      <div class="sto-chips">${k.libs.map(l => `<span class="sto-chip" title="${esc(l.role)}"><b>${esc(l.name)}</b><span class="faint">${esc(l.version === 'built-in' ? 'built-in' : l.version)} · ${esc(l.license)}</span><i>${esc(l.role)}</i></span>`).join('')}</div></section>`;
+  }
   function draw() {
     if (!host || !data) return;
     const kind = data.kind || 'other', noun = NOUN[kind] || 'project';
@@ -51,6 +58,7 @@
     host.innerHTML = `<div class="sto" id="studios">
       <div class="sto-hero"><div><span class="sto-eyebrow">Studios · free and open source</span><h2>Creative tools for this ${esc(noun)}</h2>
         <p>${esc(data.helps)} TribeCode links to each tool's own download page; nothing is installed for you.</p></div></div>
+      ${kitSec(data.kit)}
       ${feat ? `<section class="sto-sec" aria-label="Featured"><h3 class="sto-h">Featured</h3>${card(feat, { wide: true })}</section>` : ''}
       ${rec.length ? `<section class="sto-sec" aria-label="Recommended for this project"><h3 class="sto-h">Recommended for this ${esc(noun)}</h3><div class="sto-row" id="sto-rec">${rec.map(s => card(s)).join('')}</div></section>` : ''}
       ${pinned.length ? `<section class="sto-sec" aria-label="We use"><h3 class="sto-h">We use</h3><div class="sto-row" id="sto-pinned">${pinned.map(s => card(s)).join('')}</div></section>` : ''}
