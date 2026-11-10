@@ -99,7 +99,7 @@ def main():
             host.wait_for_selector(f".task[data-id='{tid}']", timeout=10000)
             assert api(f"/tasks/{tid}", "PATCH", {"status": "doing"}, token=tok, headers={"X-Project": pid})[0] == 200   # desktop moves by dragging
             host.wait_for_selector(f".col[data-col='doing'] .task[data-id='{tid}']", timeout=10000)
-            host.hover(f".task[data-id='{tid}']"); host.click(f".task[data-id='{tid}'] [data-del]")
+            host.click(f".task[data-id='{tid}']"); host.click("#tk-drawer [data-del]")   # v0.27.2: delete lives in the task drawer
             if host.locator(".confirm, #confirm-yes").count(): host.click("#confirm-yes")
             wait_until(lambda: not any(t["id"] == tid for t in api("/tasks", token=tok, headers={"X-Project": pid})[1]["tasks"]), 10, "task deleted")
 

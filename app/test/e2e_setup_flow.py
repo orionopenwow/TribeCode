@@ -165,16 +165,20 @@ def main():
             assert host.locator("#as-tasks").count() == 0, "no Suggested box with 3+ tasks"
             host.keyboard.press("Escape")
             card = host.locator(f"#board .task[data-id='{t5['id']}']")
-            card.locator(".tk-tchip").wait_for(timeout=5000)
+            card.locator(".tk-ty").wait_for(timeout=5000)
             shot(host, "board")
-            labels = card.locator(".tk-do").all_text_contents()
-            assert [l.strip() for l in labels] == ["🙋Me", "👋A friend", "🤖An agent", "🔥Flint"], labels
+            assert card.locator("button:visible, select").count() == 0, "a calm card: no buttons or menus until you hover or open it"
+            card.click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=5000)   # v0.27.2: the task drawer
+            labels = host.locator("#tk-drawer [data-who] span:last-child").all_text_contents()
+            assert {"Me", "Flint", "Ask an AI helper", "Nobody yet"} <= set(l.strip() for l in labels), labels
+            host.keyboard.press("Escape"); host.wait_for_selector("#tk-drawer", state="hidden")
             build = next(t for t in api("/tasks", token=tok, project=pid)[1]["tasks"] if t["title"] == "Set up KAPLAY")
             bcard = host.locator(f"#board .task[data-id='{build['id']}']")
-            assert bcard.locator(".tk-do").count() == 3, "Flint is only for text tasks"
-            bcard.locator("[data-do=me]").click()
-            bcard.locator(".tk-who-chip").wait_for(timeout=5000)
+            bcard.click(); host.wait_for_selector("#tk-drawer:not([hidden]) [data-who]", timeout=5000)
+            assert host.locator("#tk-drawer [data-who=flint]").count() == 0, "Flint is only for text tasks"
             me_id = host.evaluate("TribeClient.state().me.id")
+            host.click(f"#tk-drawer [data-who='{me_id}']")
+            bcard.locator(".tk-av[title]").first.wait_for(timeout=5000); host.keyboard.press("Escape")
             assert next(t for t in api("/tasks", token=tok, project=pid)[1]["tasks"] if t["id"] == build["id"])["assignee"] == me_id
 
             # 7. header: rename inline, the emoji grid

@@ -92,7 +92,7 @@ def flow(page, tag, phone, tmp):
             wait_text(page, "#as-tasks", "title screen", 8000)
         else: assert page.locator("#as-tasks").count() == 0
         page.click("#board [data-add=backlog]")
-    box = "#m2-qt-in" if phone else ".quick-add"   # phones add tasks from a sheet (mobile2.js), desktop inline on the board
+    box = "#m2-qt-in" if phone else "#board .col .quick-add"   # phones add tasks from a sheet (mobile2.js), desktop inline on the board
     page.wait_for_selector(box, state="visible", timeout=5000)
     page.fill(box, "Add a lantern flicker")
     page.press(box, "Enter")

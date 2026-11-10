@@ -100,6 +100,7 @@
 <link rel="stylesheet" href="palette.css"><!-- calmer color: burnt rust actions, tonal list buttons; keep last -->
 <link rel="stylesheet" href="chat2.css"><!-- feat/chat2: channels, compact header, rich messages, GIFs, backgrounds -->
 <link rel="stylesheet" href="readability.css"><!-- v0.19: the readability floor for every pane; keep last -->
+<link rel="stylesheet" href="tasks.css"><!-- v0.27.2: the calm Task Board (cards, drawer, phone segments) -->
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -265,7 +266,7 @@
      <section id="view-requests" class="hidden"><div id="pj-requests"></div></section>
      <section id="view-tasks" class="hidden">
       <div class="view-head"><h1>Tasks</h1><span class="faint" id="tasks-sub"></span>
-        <button class="btn primary" id="task-new" style="margin-left:auto"><svg class="i" style="width:15px;height:15px"><use href="#i-check"/></svg>New task</button></div>
+        <button class="btn sm tk-ideas" id="task-new" title="Add a task, or get suggested ones" style="margin-left:auto"><svg class="i" style="width:14px;height:14px"><use href="#i-check"/></svg>New task</button></div>
       <div class="board" id="board"></div>
      </section>
      <section id="view-docs" class="hidden">

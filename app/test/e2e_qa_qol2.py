@@ -124,8 +124,8 @@ def main():
             assert abs((x["y"] + x["height"] / 2) - (h["y"] + h["height"] / 2)) < 16, ("the x sits on the Next steps row", x, h)
 
             # ---- empty states say what to do
-            pg.wait_for_selector("#board .col-hint", timeout=8000)
-            assert "New task" in pg.inner_text("#board .col-hint")
+            pg.wait_for_selector("#board .tk-empty", timeout=8000)
+            assert "Add a task" in pg.inner_text("#board .tk-empty")
             pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fg-empty", timeout=10000)
             assert "New" in pg.inner_text(".fg-empty")
             pg.evaluate("TribeApp.show('coord')"); pg.wait_for_selector("#ad-hero", timeout=10000)

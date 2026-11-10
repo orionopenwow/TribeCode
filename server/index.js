@@ -982,6 +982,9 @@ async function apiInProject(req, res, url) {
       if (body.due !== undefined) t.due = dueOk(body.due);
       if (body.type !== undefined) { if (TASK_TYPES.includes(body.type)) t.type = body.type; else delete t.type; }   // feat/setup-flow
       if (body.doer !== undefined) { if (TASK_DOERS.includes(body.doer)) t.doer = body.doer; else delete t.doer; }
+      // v0.27.2 task drawer: a small checklist and a few labels
+      if (body.subtasks !== undefined) { const l = Array.isArray(body.subtasks) ? body.subtasks.slice(0, 30).map(s => ({ t: str(s && s.t, 200), done: !!(s && s.done) })).filter(s => s.t) : []; if (l.length) t.subtasks = l; else delete t.subtasks; }
+      if (body.labels !== undefined) { const l = Array.isArray(body.labels) ? [...new Set(body.labels.map(x => str(x, 24).toLowerCase()).filter(Boolean))].slice(0, 6) : []; if (l.length) t.labels = l; else delete t.labels; }
       t.updated = new Date().toISOString(); t.updatedBy = me.id;
       return send(res, 200, { task: saveTask(t) });
     }
