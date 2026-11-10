@@ -1323,4 +1323,96 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .vf__flow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .vf__arrow { display: none; }
 }
-.vf__scene { display: block; width: 100%; max-width: 760px; height: auto; aspect-ratio: 200 / 72; margin: 0 auto 16px; image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 12px; border: 1px solid var(--edge); }
+
+/* ---- "How vibecoding works" scene (v0.27, hero-widget fidelity; site/vibe-anim.js drives it) ----
+   Static markup shows the finished state (no JS, reduced motion). With JS, .vs--run hides every [data-s] step until
+   it gets .on, so the scene builds in beats: Maya speaks, the AI reads and builds, Jay codes, the page goes live. */
+.vs { --vs-ink: #9BCB89; position: relative; margin: 0 0 16px; padding: 22px 22px 18px; display: grid; grid-template-columns: 196px minmax(0, 1fr) 224px; gap: 26px; align-items: end;
+  border: 1px solid var(--edge); border-radius: 14px; background: #1D1F20; overflow: hidden; }
+.vs p, .vs h4 { margin: 0; }
+.vs__side { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
+.vs-name { font-size: 12px; color: var(--faint); text-align: center; } .vs-name b { color: var(--text); font-weight: 600; }
+.vs-px { display: block; height: auto; image-rendering: pixelated; }
+.vs-px--a { width: 120px; } .vs-px--b { width: 180px; }
+/* speech bubbles */
+.vs-bubbles { display: grid; gap: 8px; width: 100%; align-self: stretch; }
+.vs-bubble { position: relative; padding: 9px 11px; border-radius: 12px 12px 12px 4px; background: var(--raised); border: 1px solid var(--edge); }
+.vs-who { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; font: 500 10.5px var(--mono); color: var(--ember); }
+.vs-mic { width: 6px; height: 6px; border-radius: 50%; background: var(--ember); }
+.vs-bubble p { font-size: 13px; line-height: 1.4; color: var(--text); min-height: 1.4em; }
+/* the friend's code window */
+.vs-code { width: 100%; border: 1px solid var(--edge); border-radius: 10px; background: #15181A; overflow: hidden; }
+.vs-code__bar { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid var(--edge); font: 10.5px var(--mono); color: var(--faint); background: var(--raised); }
+.vs-code__bar em { font-style: normal; color: #9AA6FF; }
+.vs-code pre { margin: 0; padding: 9px 10px 11px; font: 11.5px/1.65 var(--mono); color: #E8D6A0; white-space: pre-wrap; word-break: break-word; }
+.vs-code code, .vs-code code span { background: none; border: 0; padding: 0; border-radius: 0; color: inherit; font: inherit; }
+.vs-c { color: #7C8594 !important; }
+.vs-caret { display: inline-block; width: 6px; height: 12px; margin-left: 1px; vertical-align: -2px; background: #9AA6FF; animation: blink 1s steps(1) infinite; }
+/* the AI card (same tool rows as the hero) */
+.vs__mid { display: grid; gap: 12px; min-width: 0; max-width: 470px; width: 100%; justify-self: center; }
+.vs-ai { padding: 10px 12px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.vs-ai__head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+.vs-ai__head b { color: var(--text); font-weight: 600; white-space: nowrap; }
+.vs-ai__av { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; color: #E58A5E; background: #283A35; flex: none; }
+.vs-ai__st { margin-left: auto; font: 11px var(--mono); color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.vs-ai__st.is-busy::after { content: "…"; animation: blink 1.2s infinite both; }
+.vs-tools { display: grid; gap: 4px; }
+.vs-tool { display: flex; align-items: center; gap: 8px; height: 25px; padding: 0 9px; border-radius: 7px; background: #232526; border: 1px solid var(--edge); font-size: 12px; }
+.vs-tool__k { font: 500 10.5px var(--mono); color: var(--vs-ink); min-width: 50px; }
+.vs-tool__v { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-tool__v em { font-style: normal; color: #9AA6FF; }
+.vs-diff { margin-left: auto; font: 10.5px var(--mono); } .vs-diff ins { color: var(--live); text-decoration: none; } .vs-diff del { color: var(--no); text-decoration: none; }
+.vs-ok { margin-left: auto; color: var(--live); font-weight: 700; }
+/* the app being built */
+.vs-app { border: 1px solid #3A4350; border-radius: 12px; background: #12151A; overflow: hidden; }
+.vs-app__bar { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; background: #1E242D; border-bottom: 1px solid #2A313C; }
+.vs-app__bar > i { width: 8px; height: 8px; border-radius: 50%; background: #FF6F8E; } .vs-app__bar > i:nth-child(2) { background: #FABD2F; } .vs-app__bar > i:nth-child(3) { background: #3BD16F; }
+.vs-url { margin-left: 8px; padding: 2px 10px; border-radius: 6px; background: #12151A; font: 10.5px var(--mono); color: #94A3B8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.vs-live { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font: 500 10.5px var(--mono); color: #3BD16F; white-space: nowrap; }
+.vs-live i { width: 6px; height: 6px; border-radius: 50%; background: #3BD16F; }
+.vs-app__body { position: relative; display: grid; gap: 10px; padding: 12px 14px 14px; min-height: 236px; align-content: start; color: #F8FAFC; }
+.vs-empty { display: none; position: absolute; inset: 0; place-items: center; font: 11.5px var(--mono); color: #5C6576; }
+.vs-nav { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #2A313C; font-size: 11.5px; color: #94A3B8; }
+.vs-nav b { margin-right: auto; color: #F26B1D; font-weight: 700; font-size: 12.5px; }
+.vs-hero h4 { font-size: 19px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+.vs-hero p { margin-top: 3px; font-size: 11.5px; color: #94A3B8; }
+.vs-count { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.vs-count span { display: grid; justify-items: center; padding: 5px 0 4px; border-radius: 8px; background: #1E242D; border: 1px solid #2A313C; font: 9.5px var(--mono); color: #94A3B8; text-transform: uppercase; letter-spacing: .04em; }
+.vs-count b { font: 700 16px/1.15 var(--mono); color: #FABD2F; }
+.vs-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.vs-item { display: grid; justify-items: start; gap: 2px; padding: 8px; border-radius: 8px; background: #1B2028; border: 1px solid #2A313C; min-width: 0; }
+.vs-item:not(.on) { min-height: 0; }
+.vs-treat { width: 24px; height: auto; margin-bottom: 3px; image-rendering: pixelated; }
+.vs-item b { font-size: 12px; font-weight: 600; } .vs-item small { font-size: 10.5px; color: #94A3B8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.vs-new { color: #3BD16F !important; font-weight: 600; }
+.vs-btn { justify-self: start; padding: 7px 14px; border-radius: 8px; background: #F26B1D; color: #12151A; font-size: 12px; font-weight: 700; }
+/* the idea in flight */
+.vs-chip { position: absolute; left: 0; top: 0; z-index: 3; padding: 4px 9px; border-radius: 999px; font: 500 10.5px var(--mono); white-space: nowrap; pointer-events: none; opacity: 0; background: var(--ember); color: #12151A; }
+.vs-chip.is-b { background: #6C7CFF; color: #F8FAFC; }
+/* beats */
+.vs--run [data-s]:not(.on) { visibility: hidden; }
+.vs--run .vs-app__body:not(:has(.on)) .vs-empty { display: grid; }
+.vs--run [data-s].on { animation: rise .3s var(--ease) both; }
+.vs--run .vs-caret { display: none; } .vs--run.is-typing-b .vs-caret { display: inline-block; }
+.vs-ai.is-flash { border-color: #38C6B1; }
+.vs--talk .vs-mouth { transform-box: fill-box; transform-origin: top; animation: vs-talk .28s steps(1) infinite; }
+@keyframes vs-talk { 50% { transform: scaleY(2); } }
+.vs-eye { animation: vs-blink 4.2s steps(1) infinite; }
+@keyframes vs-blink { 96% { opacity: 0; } }
+.vs--tap .vs-tap { animation: vs-tap .24s steps(1) infinite; } .vs--tap .vs-tap2 { animation: vs-tap .24s steps(1) infinite reverse; }
+@keyframes vs-tap { 50% { transform: translateY(1px); } }
+@media (max-width: 960px) {
+  .vs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "a b" "mid mid"; gap: 14px 12px; padding: 14px; }
+  .vs__side--a { grid-area: a; } .vs__side--b { grid-area: b; } .vs__mid { grid-area: mid; max-width: none; }
+  .vs-px--a { width: 64px; } .vs-px--b { width: 96px; }
+}
+@media (max-width: 520px) {
+  .vs { margin: 0 -2px 14px; padding: 12px; }
+  .vs-bubble { padding: 7px 9px; } .vs-bubble p { font-size: 12px; }
+  .vs-code pre { font-size: 10.5px; padding: 7px 8px 9px; }
+  .vs-hero h4 { font-size: 16px; } .vs-app__body { padding: 10px; min-height: 214px; }
+  .vs-tool__v em { display: none; } .vs-item small { display: none; } .vs-count b { font-size: 14px; }
+  .vs-url { display: none; }
+  .vs-ai__st { font-size: 10px; } .vs-code pre { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .vs-eye, .vs-caret { animation: none; } }
