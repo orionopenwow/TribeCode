@@ -112,6 +112,36 @@ def main():
             time.sleep(0.3)
         else: raise AssertionError("approved widget never landed")
 
+        # ---- Trending on GitHub (server/trending.js + templates/trending.json): bundled feed in tests, no download ----
+        feed = json.loads((ROOT / "templates" / "trending.json").read_text())
+        chk = subprocess.run(["node", str(ROOT / "scripts" / "dev" / "trending-check.js")], capture_output=True, text=True); assert chk.returncode == 0, chk.stderr
+        tr = ok(api("/market/trending", token=host)); assert tr["source"] == "bundled" and tr["updated"] == feed["updated"] and len(tr["items"]) == len(feed["items"]) >= 30, (tr["source"], len(tr["items"]))
+        assert all("trending" in x["tags"] and x["seenOn"] and x["why"] and x["id"].startswith("tr-") for x in tr["items"])
+        assert not [x for x in tr["items"] if any(b in x["license"] for b in ["GPL", "AGPL", "BSL", "FSL", "SA"])], "permissive only"
+        trc = [x for x in cat if x["id"].startswith("tr-")]; assert len(trc) == len(feed["items"]), "marketplace keeps the trending block in sync (trending-check.js --sync)"
+        assert ok(api("/market?tag=trending", token=host))["total"] == len(trc)
+        one = ok(api("/market/items/tr-opencut", token=host))["item"]; assert one["seenOn"] and one["stars"] and one["license"] == "MIT", one
+        # the refresher: a good download wins, a bad one is ignored, and nothing downloads under TRIBE_TEST
+        unit = subprocess.run(["node", "-e", r'''
+const fs = require('fs'), os = require('os'), path = require('path');
+const T = require('./server/trending'); const feed = JSON.parse(fs.readFileSync('templates/trending.json', 'utf8'));
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tr-'));
+const store = { p: f => path.join(dir, f), readJSON: (f, d) => { try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch { return d; } }, writeJSON: (f, j) => fs.writeFileSync(path.join(dir, f), JSON.stringify(j)) };
+const newer = { ...feed, updated: '2099-01-01', items: feed.items.slice(0, 3) };
+const res = body => ({ ok: true, status: 200, text: async () => JSON.stringify(body) });
+(async () => {
+  const off = T({ store, root: '.', env: { TRIBE_TEST: '1' }, auto: false, fetchFn: async () => { throw new Error('should not fetch'); } });
+  if (!(await off.refresh(true)).skipped) throw new Error('downloads under TRIBE_TEST');
+  const bad = T({ store, root: '.', env: {}, auto: false, fetchFn: async () => res({ ...newer, items: [{ ...newer.items[0], license: 'AGPL-3.0' }] }) });
+  const rb = await bad.refresh(true); if (rb.ok || bad.get().source !== 'bundled') throw new Error('bad feed accepted');
+  const good = T({ store, root: '.', env: {}, auto: false, fetchFn: async () => res(newer) });
+  const rg = await good.refresh(true); if (!rg.ok || good.get().updated !== '2099-01-01' || good.get().items.length !== 3) throw new Error('good feed not used');
+  const again = T({ store, root: '.', env: {}, auto: false, fetchFn: async () => { throw new Error('offline'); } });
+  if (again.get().updated !== '2099-01-01' || again.get().source !== 'downloaded') throw new Error('cache not used offline');
+  console.log('trending unit ok');
+})().catch(e => { console.error(e.message); process.exit(1); });
+'''], capture_output=True, text=True, cwd=str(ROOT)); assert unit.returncode == 0, unit.stderr + unit.stdout
+
         # ---- the UI ----
         shots = Path(os.environ.get("MARKET_SHOTS", "/tmp")); shots.mkdir(parents=True, exist_ok=True)
         with sync_playwright() as pw:
@@ -125,7 +155,18 @@ def main():
             assert pg.locator("#market .mk-card").count() == 24
             assert pg.locator("#mk-chips").is_hidden(), "no chip row without filters"
             assert "your tribe" in pg.inner_text("#mk-note").lower()
+            pg.wait_for_selector("#mk-trend .mk-tcard", timeout=10000)
+            assert "trending on github" in pg.inner_text("#mk-trend").lower()
             pg.screenshot(path=str(shots / "market-1440.png"))
+            pg.click("#mk-trend [data-tf='video']"); pg.wait_for_function("document.querySelector('#mk-trend [data-tf=video]').classList.contains('on')")
+            vids = pg.evaluate("[...document.querySelectorAll('#mk-trend .mk-tcard')].map(c => c.dataset.id)"); assert "tr-opencut" in vids and "tr-opencode" not in vids, vids
+            pg.click("#mk-trend .mk-tcard[data-id='tr-opencut'] .mk-t"); pg.wait_for_selector("#mk-detail .mk-seen a")
+            assert "why it’s here" in pg.inner_text("#mk-detail").lower() and "stars" in pg.inner_text("#mk-detail").lower()
+            pg.screenshot(path=str(shots / "market-trending-detail-1440.png"))
+            pg.keyboard.press("Escape")
+            pg.click("#mk-trend [data-tall]"); pg.wait_for_function("document.querySelector('#mk-trend').hidden && !document.querySelector('#mk-chips').hidden")
+            assert "#trending" in pg.inner_text("#mk-chips")
+            pg.click("#mk-chips [data-chip]"); pg.wait_for_function("!document.querySelector('#mk-trend').hidden")
             # sorts
             pg.click("[data-sort='new']"); pg.wait_for_function("document.querySelector('[data-sort=new]').classList.contains('on')")
             pg.wait_for_function("document.querySelector('#mk-note').textContent.includes('Newest')")
@@ -163,6 +204,8 @@ def main():
             sw = ph.evaluate("[document.documentElement.scrollWidth, document.querySelector('#ws-scroll').scrollWidth, document.querySelector('#ws-scroll').clientWidth]")
             assert sw[0] <= 390 and sw[1] <= sw[2] + 1, sw
             over = ph.evaluate("[...document.querySelectorAll('#market .mk-card')].filter(c => c.getBoundingClientRect().right > 391).length"); assert over == 0, over
+            ph.wait_for_selector("#mk-trend .mk-tcard", timeout=10000)
+            tb = ph.evaluate("(() => { const r = document.querySelector('#mk-trend').getBoundingClientRect(); return [r.left, r.right]; })()"); assert tb[0] >= 0 and tb[1] <= 391, tb
             ph.screenshot(path=str(shots / "market-390.png"))
             ph.click("#mk-filters"); ph.wait_for_selector("#mk-pop.sheet [data-f]")
             box = ph.evaluate("(() => { const r = document.querySelector('#mk-pop').getBoundingClientRect(); return [r.left, r.right, r.bottom]; })()"); assert box[0] >= 0 and box[1] <= 391, box
