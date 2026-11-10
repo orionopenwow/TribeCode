@@ -527,6 +527,7 @@ const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () =
 sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
 const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W, perms });   // feat/customize: tribe + project look (server/look.js)
 const inspoBoard = require('./inspo')({ P, base: baseStore, embeds, showcase, assets: assetLib, postChat, nameOf, broadcast });   // v0.25: the inspiration board (server/inspo.js)
+const academy = require('./academy')({ P, base: baseStore, store, docs, captures, nameOf, broadcast }), legalDocs = require('./legal')({ P, base: baseStore, store, docs, approvals, postChat, nameOf, broadcast });   // v0.27 company: Role Academy + Offload (server/academy.js), Legal documents (server/legal.js)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl });   // feat/setup-flow: role flows, Create the repo, Make the starter
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
@@ -555,7 +556,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...academy.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -839,6 +840,8 @@ async function apiInProject(req, res, url) {
   if (a === 'shelf') return shelf.route(req, res, ctx());
   if (a === 'assets') return assetLib.route(req, res, ctx());
   if (a === 'inspo') return inspoBoard.route(req, res, ctx());
+  if (a === 'academy') return academy.route(req, res, ctx());   // v0.27 company: Role Academy + Offload
+  if (a === 'legal' || (a === 'projects' && c === 'legal')) return legalDocs.route(req, res, ctx());   // v0.27 company: Legal documents
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)

@@ -1,0 +1,118 @@
+{
+  "id": "cookies",
+  "title": "Website cookie notice",
+  "emoji": "🍪",
+  "category": "Website",
+  "blurb": "A short, honest notice about cookies and similar tracking on your site.",
+  "fields": [
+    {
+      "key": "company",
+      "label": "Your business name",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "site",
+      "label": "Website address",
+      "type": "text",
+      "required": true,
+      "placeholder": "https://example.com"
+    },
+    {
+      "key": "contact_email",
+      "label": "Contact email",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "essential",
+      "label": "Essential cookies you use",
+      "type": "textarea",
+      "required": false,
+      "default": "a session cookie to keep you signed in; a security cookie to prevent forged requests; a cookie remembering your cookie choices"
+    },
+    {
+      "key": "analytics",
+      "label": "Analytics or optional cookies (leave empty if none)",
+      "type": "textarea",
+      "required": false,
+      "placeholder": "privacy-friendly analytics that count visits without identifying you"
+    },
+    {
+      "key": "manage",
+      "label": "How people change their choice",
+      "type": "text",
+      "required": false,
+      "default": "using the \"Cookie settings\" link in the footer, or through your browser settings"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "About this notice",
+      "text": "This notice explains how **{{company}}** uses cookies and similar technologies on {{site}}. It applies from {{effective_date}}.",
+      "note": "Keep it short and specific to your site."
+    },
+    {
+      "heading": "What cookies are",
+      "text": "Cookies are small text files a website stores on your device. Similar technologies include local storage and pixels. Some are needed for the site to work; others help us understand how it is used.",
+      "note": "A plain explanation for non-technical readers."
+    },
+    {
+      "heading": "Essential cookies",
+      "text": "We use these cookies because the site cannot work properly without them: {{essential}}. These do not need your consent in most places.",
+      "note": "List each essential cookie and what it does."
+    },
+    {
+      "heading": "Optional cookies",
+      "text": "We also use: {{analytics}}. Where the law requires, we set these only after you agree, and you can change your mind at any time.",
+      "note": "If you have no optional cookies, say so plainly instead.",
+      "when": "analytics"
+    },
+    {
+      "heading": "No optional cookies",
+      "text": "We do not use advertising or tracking cookies.",
+      "note": "Delete this if you add optional cookies later.",
+      "when": "!analytics"
+    },
+    {
+      "heading": "Your choices",
+      "text": "You can change your cookie choices {{manage}}. Blocking essential cookies may stop parts of the site from working.",
+      "note": "Make changing choices as easy as giving consent."
+    },
+    {
+      "heading": "Contact",
+      "text": "Questions? Email {{contact_email}}. For how we handle personal data generally, see our privacy policy.",
+      "note": "Link to your privacy policy."
+    }
+  ],
+  "jurisdiction": {
+    "US": "There is no single federal cookie law, but state privacy laws may require notice and opt-out of certain tracking or \"sale/sharing\" of data. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Consent is generally required before non-essential cookies; the regulator publishes guidance on what counts as essential. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Prior consent is generally required for non-essential cookies, and rejecting should be as easy as accepting. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}

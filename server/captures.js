@@ -157,7 +157,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     fs.mkdirSync(store.p(DIR), { recursive: true });
     store.writeJSON(rel(c.id, 'json'), c);
     const { transcript, text, points, actions, decisions, summaryItems, ...meta } = c;
-    store.writeMd(rel(c.id, 'md'), { id: c.id, source: c.url || (c.kind === 'voice' ? 'voice note' : ''), kind: c.kind, title: c.title, author: c.author || '', published: c.published || '', duration: c.duration || null, thumbnail: c.thumbnail || null, tags: c.tags || [], created: c.created, by: c.byName || '' }, markdown(c));
+    store.writeMd(rel(c.id, 'md'), { id: c.id, source: c.url || (/^offload:/.test(c.source || '') ? c.source : c.kind === 'voice' ? 'voice note' : ''), kind: c.kind, title: c.title, author: c.author || '', published: c.published || '', duration: c.duration || null, thumbnail: c.thumbnail || null, tags: c.tags || [], created: c.created, by: c.byName || '' }, markdown(c));
     notify({ type: 'capture', project: c.project, id: c.id, status: c.status }, c);
     return c;
   }
@@ -392,9 +392,10 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     if (!lines.length && browserText.trim()) lines = browserText.split(/(?<=[.!?])\s+|\n+/).map(t => t.trim()).filter(Boolean).map(text => ({ t: null, text }));
     const r = recipeFor(String(body.recipe || 'voice'), 'voice');
     const title = String(body.title || '').trim().slice(0, 120) || `${r.id === 'voice' ? 'Voice note' : r.title} · ${me.name} · ${new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
-    const c = { id: uniqueId(title), key: null, url: '', source: 'voice note', kind: 'voice', site: 'Voice note', title, author: me.name, published: new Date().toISOString(), duration: dur || null, thumbnail: null,
+    const off = /^offload:[a-z0-9-]{1,30}$/.test(String(body.source || '')) ? String(body.source) : null;   // v0.27 company: a result brought back from a free AI tool (server/academy.js)
+    const c = { id: uniqueId(title), key: null, url: '', source: off || 'voice note', kind: off ? 'note' : 'voice', site: off ? 'Offload' : 'Voice note', title, author: me.name, published: new Date().toISOString(), duration: dur || null, thumbnail: null,
       transcript: lines, text: '', summary: '', points: [], actions: [], decisions: [], tags: [], recipe: r.id, project: pid, dm: channel && dms.isDm(channel) ? channel : null,
-      links: channel ? { channel, message } : null, by: me.id, byName: me.name, created: new Date().toISOString(), status: 'ready', note: '', edited: {}, transcriptVia: lines.length ? 'your browser' : '' };
+      links: channel ? { channel, message } : null, by: me.id, byName: me.name, created: new Date().toISOString(), status: 'ready', note: '', edited: {}, transcriptVia: off ? 'pasted' : lines.length ? 'your browser' : '', ...(off ? { tags: ['offload'] } : {}) };
     if (audio) { fs.mkdirSync(store.p(DIR, 'audio'), { recursive: true }); c.audio = `${c.id}.${AUDIO_EXT[mime] || 'webm'}`; fs.writeFileSync(store.p(DIR, 'audio', c.audio), audio); c.audioMime = mime; }
     const whisper = audio && packs.whisper();
     if (whisper) { c.status = 'working'; c.note = 'Transcribing on the host…'; }
@@ -698,7 +699,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     };
   }
 
-  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
+  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, captureVoice, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
 };
 module.exports.parseVtt = parseVtt;
 module.exports.parseWhisperJson = parseWhisperJson;

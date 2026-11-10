@@ -1,0 +1,128 @@
+{
+  "id": "volunteer",
+  "title": "Volunteer agreement",
+  "emoji": "🙋",
+  "category": "Clubs & nonprofits",
+  "blurb": "For clubs and nonprofits: what a volunteer will do, what you will provide, and that it is not a job.",
+  "fields": [
+    {
+      "key": "org",
+      "label": "Organisation",
+      "type": "text",
+      "required": true,
+      "placeholder": "Riverside Coding Club"
+    },
+    {
+      "key": "volunteer",
+      "label": "Volunteer",
+      "type": "text",
+      "required": true,
+      "placeholder": "Priya Shah"
+    },
+    {
+      "key": "role",
+      "label": "Volunteer role",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Mentor at Saturday coding sessions, about 3 hours a fortnight"
+    },
+    {
+      "key": "effective_date",
+      "label": "Start date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Where the parties are based",
+      "type": "select",
+      "required": true,
+      "options": [
+        "US",
+        "UK",
+        "EU",
+        "CA",
+        "AU",
+        "Other"
+      ],
+      "default": "US",
+      "help": "Used for the notes at the end. It does not make the text fit local law."
+    },
+    {
+      "key": "contact",
+      "label": "Volunteer coordinator",
+      "type": "text",
+      "required": false,
+      "placeholder": "Maria, maria@example.org"
+    },
+    {
+      "key": "expenses",
+      "label": "Expenses the organisation covers",
+      "type": "text",
+      "required": false,
+      "default": "reasonable travel and materials agreed in advance, with receipts"
+    },
+    {
+      "key": "safeguarding",
+      "label": "Does the role involve children or vulnerable adults?",
+      "type": "select",
+      "required": false,
+      "options": [
+        "No",
+        "Yes"
+      ],
+      "default": "No"
+    }
+  ],
+  "clauses": [
+    {
+      "heading": "About this agreement",
+      "text": "This agreement, from {{effective_date}}, describes what **{{org}}** (the \"Organisation\") and **{{volunteer}}** (the \"Volunteer\") can expect from each other. It is a statement of good intentions, not an employment contract.",
+      "note": "Volunteer agreements are usually kept non-binding to avoid creating employment."
+    },
+    {
+      "heading": "The role",
+      "text": "The Volunteer's role: {{role}}. The Volunteer's coordinator is {{contact}}.",
+      "note": "Describe the role and time commitment honestly."
+    },
+    {
+      "heading": "What the Organisation will do",
+      "text": "The Organisation will: explain the role and give any training needed; provide a safe environment; reimburse {{expenses}}; listen to the Volunteer's ideas and concerns; and have suitable insurance in place for volunteers where required.",
+      "note": "What volunteers can expect in return."
+    },
+    {
+      "heading": "What the Volunteer will do",
+      "text": "The Volunteer will: carry out the role in good faith; follow the Organisation's policies, including on safety, conduct and privacy; let the coordinator know in good time if they cannot attend; and keep confidential any personal information they learn through the role.",
+      "note": "Reasonable expectations of volunteers."
+    },
+    {
+      "heading": "Safeguarding",
+      "text": "Because the role involves children or vulnerable adults, the Volunteer agrees to any background checks required by law or the Organisation's policy, and to follow its safeguarding policy, including reporting concerns to the named safeguarding lead.",
+      "note": "Only included when the role involves children or vulnerable adults.",
+      "when": "safeguarding=Yes"
+    },
+    {
+      "heading": "Not employment",
+      "text": "The Volunteer is not paid for their time and this agreement does not create an employment relationship. Reimbursement covers only genuine, documented expenses. Either side can end the arrangement at any time.",
+      "note": "Paying more than real expenses can turn a volunteer into a worker in some places."
+    },
+    {
+      "heading": "Photos and work created",
+      "text": "The Organisation will ask before using the Volunteer's photo or name publicly. Materials the Volunteer creates for the Organisation may be used by it for its purposes; the Volunteer may also reuse their own work unless it contains the Organisation's confidential information.",
+      "note": "Simple rules on photos and materials."
+    },
+    {
+      "heading": "Signatures",
+      "text": "Organisation: ____________________   Date: __________\nVolunteer: ____________________   Date: __________",
+      "note": "Both sign to show they have read it."
+    }
+  ],
+  "jurisdiction": {
+    "US": "Background check requirements vary by state and activity; some states have volunteer protection statutes. Rules differ from state to state. Some states limit certain clauses (for example non-competes or how far liability can be limited). Choose the state whose law governs and check how it treats each clause.",
+    "UK": "Background checks for roles with children are governed by specific schemes in each UK nation. England and Wales, Scotland and Northern Ireland have separate legal systems. Consumer protection and unfair-terms rules can override clauses in contracts with consumers.",
+    "EU": "Rules on volunteer status, insurance and expenses differ by country. Each EU country has its own contract law on top of EU-wide rules (such as data protection and consumer rights). Mandatory local rules can apply whatever the contract says, and a translation may be needed.",
+    "CA": "Vulnerable sector checks are handled through police services. Contract law is mostly provincial, and Quebec follows a civil-law system with its own rules, including on the language of contracts. Federal and provincial privacy laws may both apply.",
+    "AU": "Working with children checks are run by each state and territory. The Australian Consumer Law applies across the country and can make some terms in standard-form contracts unfair and void. States and territories also have their own rules.",
+    "Other": "Laws vary widely. Have a lawyer where the parties are based check every clause, including whether the agreement needs witnesses, stamps, notarising or a particular language to be valid."
+  }
+}
