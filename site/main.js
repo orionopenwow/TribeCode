@@ -616,7 +616,7 @@
     // First visit: Flint says hi and offers a short tour. It stays until you pick something or close it (phones: it
     // tucks away after 20 s). After that it never pops up again; the tour lives in his panel as "Show me around".
     if (ls.get(SEEN) !== '1') setTimeout(() => {
-      if (!panel.hidden || wrap.classList.contains('is-away') || document.body.classList.contains('ftour-on') || document.querySelector('[data-try]')) return;   // Meet Flint has its own chat
+      if (!panel.hidden || wrap.classList.contains('is-away') || document.body.classList.contains('ftour-on') || document.querySelector('.ft[data-try]')) return;   // Meet Flint has its own chat
       bubble.hidden = false; wrap.classList.add('is-hello'); ls.set(SEEN, '1');   // shown once per visitor
       if (matchMedia('(max-width: 640px)').matches) bubbleTimer = setTimeout(() => { bubble.hidden = true; wrap.classList.remove('is-hello'); }, 20000);
     }, 1600);
