@@ -479,14 +479,12 @@
 
         <!-- Games & apps -->
         <div class="kit__panel" role="tabpanel" id="kp-game" aria-labelledby="kt-game" hidden>
-          <div class="kit__mock kg" aria-hidden="true">
-            <div class="kg__cats"><span class="on">🔊 Sounds</span><span>🧊 3D models</span><span>🕺 Rigged characters</span><span>🧱 Textures</span><span>👾 Pixel sprites</span><span>🔤 Fonts</span></div>
-            <div class="kg__list">
-              <div class="kg__it" data-k="1"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>jump_02.ogg</b><small>CC0 · Kenney</small><span class="kg__add">+ Add</span></div>
-              <div class="kg__it" data-k="2"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>coin_pickup.wav</b><small>CC0</small><span class="kg__add">+ Add</span></div>
-              <div class="kg__it" data-k="3"><span class="kg__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>lantern_creak.ogg</b><small>CC-BY · credited</small><span class="kg__add on">Added ✓</span></div>
+          <div class="kit__mock kg" data-kg>
+            <div class="kg__cats" role="tablist" aria-label="Asset library" data-k="1">
+              <button type="button" role="tab" class="kg__cat" data-cat="sound" aria-selected="true" aria-controls="kg-view">🔊 Sounds</button><button type="button" role="tab" class="kg__cat" data-cat="model" aria-selected="false" aria-controls="kg-view" tabindex="-1">🧊 3D models</button><button type="button" role="tab" class="kg__cat" data-cat="rigged" aria-selected="false" aria-controls="kg-view" tabindex="-1">🕺 Rigged characters</button><button type="button" role="tab" class="kg__cat" data-cat="texture" aria-selected="false" aria-controls="kg-view" tabindex="-1">🧱 Textures</button><button type="button" role="tab" class="kg__cat" data-cat="pixel" aria-selected="false" aria-controls="kg-view" tabindex="-1">👾 Pixel sprites</button><button type="button" role="tab" class="kg__cat" data-cat="font" aria-selected="false" aria-controls="kg-view" tabindex="-1">🔤 Fonts</button>
             </div>
-            <div class="kg__eng" data-k="4"><p class="kit__eb">Start in</p><span>Godot</span><span>three.js</span><span>Phaser</span><span>Bevy</span><span>Expo</span><span>Astro</span></div>
+            <div class="kg__view" id="kg-view" role="tabpanel" aria-label="Sounds" data-k="2"><p class="kg__empty">Free sounds, 3D models, rigged characters, textures, pixel sprites and fonts from TribeCode's asset library.</p></div>
+            <div class="kg__eng" data-k="3"><p class="kit__eb">Start in</p><span>Godot</span><span>three.js</span><span>Phaser</span><span>Bevy</span><span>Expo</span><span>Astro</span></div>
           </div>
           <div class="kit__copy"><h3>From a pixel game to full 3D</h3><p class="kit__text">A library of free sounds, 3D models, rigged characters, textures and sprites, added in one click with credits written for you. Start from engines and frameworks people already trust, for games, phone apps and websites.</p></div>
         </div>
