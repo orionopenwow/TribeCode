@@ -48,6 +48,7 @@
     "Bring your own studio": ["Trae tu propio estudio", "Traga seu próprio estúdio", "Apportez votre studio", "Bring dein eigenes Studio mit", "好きなスタジオを持ち込もう", "带上你自己的创作工具", "나만의 스튜디오를 연결하세요"],
     "From a pixel game to full 3D": ["De un juego de píxeles a 3D completo", "De um jogo em pixels a 3D completo", "Du jeu en pixels à la 3D", "Vom Pixelspiel bis zu vollem 3D", "ピクセルゲームから本格3Dまで", "从像素游戏到完整 3D", "픽셀 게임부터 풀 3D까지"],
     "New to vibecoding?": ["¿Nuevo en el vibecoding?", "Novo no vibecoding?", "Débutant en vibecoding ?", "Neu beim Vibecoding?", "バイブコーディングは初めて？", "刚接触氛围编程？", "바이브코딩이 처음인가요?"],
+    'One chat for people and their': ['Un chat para las personas y su', 'Um chat para pessoas e seu', 'Un seul chat pour les gens et leur', 'Ein Chat für Menschen und ihr', '人と、その人の', '一个聊天，属于大家和他们的', '사람과 그들의'],
     'One chat for people and their AI.': ['Un chat para las personas y su IA.', 'Um chat para pessoas e suas IAs.', 'Un seul chat pour les gens et leur IA.', 'Ein Chat für Menschen und ihre KI.', '人とAIのための、ひとつのチャット。', '人和他们的 AI，共用一个聊天。', '사람과 그들의 AI를 위한 하나의 채팅.'],
     'Keep building from your phone.': ['Sigue construyendo desde el móvil.', 'Continue criando pelo celular.', 'Continuez depuis votre téléphone.', 'Bau vom Handy aus weiter.', 'スマホからでも作り続けられる。', '用手机也能继续搭建。', '휴대폰으로도 계속 만들어요.'],
     'Everyone gets their own corner.': ['Cada uno tiene su rincón.', 'Cada um tem seu cantinho.', 'Chacun a son coin.', 'Jeder bekommt seine eigene Ecke.', 'それぞれに自分の持ち場。', '每个人都有自己的一块。', '모두가 자기 자리를 가져요.'],

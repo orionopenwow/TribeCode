@@ -1564,3 +1564,10 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
   .vs-phone { width: 20px; height: 34px; border-radius: 5px; left: calc(100% + 8px); } .vs-phone__wave { gap: 1px; } .vs-phone__wave i { width: 2px; } .vs-sound { top: calc(30% + 14px); left: calc(100% - 3px); } .vs-sound i { width: 2px; height: 2px; }
   @keyframes vs-wave { from { height: 2px; } to { height: 10px; } }
 }
+
+/* "One chat for people and their ___." word roll (site/aiswap.js) */
+.aiswap { position: relative; display: inline-block; vertical-align: bottom; height: 1.15em; overflow: hidden; transition: width .5s cubic-bezier(.2, .8, .2, 1); white-space: nowrap; }
+.aiswap__w { position: absolute; left: 0; bottom: 0; color: var(--c); transform: translateY(110%); opacity: 0; transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity .35s; }
+.aiswap__w.is-on { transform: none; opacity: 1; }
+.aiswap__w.is-out { transform: translateY(-110%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .aiswap, .aiswap__w { transition: none; } }
