@@ -346,3 +346,5 @@
 @keyframes fp-squish { 35% { transform: scale(1.06, .92); } 70% { transform: scale(.97, 1.04); } 100% { transform: none; } }
 @keyframes fp-spark { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fp-big__bob.is-hop .fp-big__svg, .fp-big__bob.is-squish .fp-big__svg, .fp-spark { animation: none; } }
+
+.fv-task.is-moved { border-color: #3BD16F !important; }

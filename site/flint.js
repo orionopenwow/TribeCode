@@ -79,7 +79,7 @@
       return { x: (r.left - w.left) / k, y: (r.top - w.top) / k, w: r.width / k, h: r.height / k };
     }
     function flyTo(t, label) {
-      if (!t || !flier) return; const b = at(t);
+      if (!t || !flier) return; clearTimeout(api && api._rt); const b = at(t);
       flier.querySelector('span').textContent = label || 'Flint';
       flier.style.transform = `translate(${Math.round(b.x + b.w - 14)}px, ${Math.round(b.y - 18)}px)`; flier.classList.add('is-on');
       win.querySelectorAll('.fa-sel').forEach(x => x !== t && x.classList.remove('fa-sel')); t.classList.add('fa-sel');
@@ -87,7 +87,13 @@
     const api = {
       el, q, view, cur: '', token: 0,
       fly(sel, label) { clearTimeout(api._fl); const t = typeof sel === 'string' ? (view.querySelector(sel) || win.querySelector(sel)) : sel; flyTo(t, label); return t; },
-      unsel() { win.querySelectorAll('.fa-sel').forEach(x => x.classList.remove('fa-sel')); if (flier) flier.classList.remove('is-working'); },
+      unsel() { win.querySelectorAll('.fa-sel').forEach(x => x.classList.remove('fa-sel')); if (flier) flier.classList.remove('is-working'); api.retreat(); },
+      // when he's not working, Flint goes home: back to his spot in the bottom-right panel, then out of sight
+      retreat() {
+        clearTimeout(api._rt); if (!flier || !flier.classList.contains('is-on')) return;
+        const home = q('.fa-ask img') || q('.fa-ask'); if (home) { const b = at(home); flier.style.transform = `translate(${Math.round(b.x - 4)}px, ${Math.round(b.y - 2)}px)`; }
+        api._rt = setTimeout(() => flier.classList.remove('is-on'), 850);
+      },
       park() { api.unsel(); if (flier) flier.classList.remove('is-on'); },
       go(name, flash) {
         api.cur = name; view.classList.remove('is-in'); void view.offsetWidth; view.innerHTML = (V[name] || V.dashboard)(); view.classList.add('is-in');
@@ -95,7 +101,7 @@
         qa('.mk-row[role=tab]').forEach(b => { const on = b.dataset.row === r; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; if (on && flash) { b.classList.remove('is-flash'); void b.offsetWidth; b.classList.add('is-flash'); } });
         qa('.fa-rack span[data-rk]').forEach(s => s.classList.toggle('on', s.dataset.rk === r));
         const side = q('.mk-side'), onb = q('.mk-row.is-on'); if (el.classList.contains('is-phone') && side && onb) side.scrollLeft = Math.max(0, onb.offsetLeft - 10);
-        if (flash && !still) { const rowEl = q(`.mk-row[data-row="${r}"]`); if (rowEl) flyTo(rowEl, 'Opening'); clearTimeout(api._fl); api._fl = setTimeout(() => { const m = view.firstElementChild; if (m && api.cur === name) flyTo(m, 'Flint'); }, 650 * PACE); }
+        if (flash && !still) { const rowEl = q(`.mk-row[data-row="${r}"]`); if (rowEl) flyTo(rowEl, 'Opening'); clearTimeout(api._fl); api._fl = setTimeout(() => { const m = view.firstElementChild; if (m && api.cur === name) { flyTo(m, 'Flint'); api._fl = setTimeout(() => api.unsel(), 1100 * PACE); } }, 650 * PACE); }
         const d = view.querySelector('[data-wb]'); if (d) drag(d);
         view.querySelectorAll('[data-open]').forEach(f => f.addEventListener('click', () => { if (o.onUser) o.onUser(); api.go(f.dataset.open, true); api.fill(); }));
       },
@@ -153,12 +159,31 @@
       a.go('dashboard'); a.clear(); a.status('basic mode · no model'); card(a, 0);
       await a.wait(900, t); await a.say('good morning', t);
       a.go('brief', true); await a.fl('**Morning Camp.** 2 new orders came in overnight; the ginger batch is ready to bottle. 2 tasks on you, and next up is filling the Grow seat.', null, t); card(a, 1);
-      await a.wait(1800, t); await a.say('add a jump sound and make the title bigger', t);
-      a.go('preview', true); await a.wait(500, t); card(a, 2);
-      a.toast('Added jump.wav · credited in CREDITS.md'); await a.wait(700, t);
-      const h = a.fly('#fv-title', 'Editing'); await a.wait(700, t); if (h) h.style.fontSize = '34px'; card(a, 3); await a.wait(500, t); a.unsel();
-      await a.fl('Done: added `assets/sounds/jump.wav` (free to use, credited) and made the title 34px in the preview. Undo is one tap.', [['Undo', 'undo'], ['Make it bounce', 'bounce']], t); card(a, 4);
-      await a.wait(3200, t);
+      // 2. write the launch doc
+      await a.wait(1400, t); await a.say('write the launch plan', t);
+      await a.fl('On it: writing **Launch plan** from your vision, tasks and chat.', null, t);
+      a.go('doc', true); await a.wait(700, t); await a.typeInto('#fv-page', DOC.slice(0, 5), t, 300);
+      a.toast('Launch plan saved to Files · Flint draft'); card(a, 2); await a.wait(900, t);
+      // 3. finish a task on the board
+      await a.say('mark the orders page done', t);
+      a.go('tasks', true); await a.wait(900, t);
+      const tk = [...a.view.querySelectorAll('.fv-task')].find(x => x.textContent.includes('Orders page'));
+      if (tk) {
+        a.fly(tk, 'Moving'); await a.wait(900, t);
+        const cols = a.view.querySelectorAll('.fv-col'), done = cols[2], prog = cols[1];
+        if (done) { done.querySelector('h6').after(tk); tk.classList.add('is-moved'); a.fly(tk, 'Done ✓'); }
+        const n = (c, d) => { const e = c && c.querySelector('h6 em'); if (e) e.textContent = String(+e.textContent + d); };
+        n(prog, -1); n(done, 1);
+      }
+      a.toast('Orders page moved to Done'); card(a, 3);
+      await a.fl('Moved **Orders page** to Done and told the tribe in #general.', null, t); await a.wait(800, t); a.unsel();
+      // 4–5. the preview: a jump sound and a bigger title
+      await a.say('add a jump sound and make the title bigger', t);
+      a.go('preview', true); await a.wait(900, t);
+      a.toast('Added jump.wav · credited in CREDITS.md'); card(a, 4); await a.wait(700, t);
+      const h = a.fly('#fv-title', 'Editing'); await a.wait(800, t); if (h) h.style.fontSize = '34px'; card(a, 5); await a.wait(500, t); a.unsel();
+      await a.fl('Done: added `assets/sounds/jump.wav` (free to use, credited) and made the title 34px. Undo is one tap.', [['Undo', 'undo'], ['Make it bounce', 'bounce']], t);
+      await a.wait(3400, t);
     },
     run: async (a, t, step) => {
       a.go('dashboard'); a.clear(); step(0);
@@ -231,9 +256,9 @@
   function card(a, n) {
     const c = a.q('.mk-card'); if (!c) return;
     c.querySelectorAll('.mk-plan li').forEach((li, i) => { li.classList.toggle('done', i < n); li.classList.toggle('is-active', i === n); });
-    const ch = c.querySelector('.mk-chip'); if (ch) { ch.textContent = `${Math.min(n, 4)}/4`; ch.classList.toggle('mk-chip--live', n >= 4); }
+    const ch = c.querySelector('.mk-chip'); if (ch) { const tot = c.querySelectorAll('.mk-plan li').length; ch.textContent = `${Math.min(n, tot)}/${tot}`; ch.classList.toggle('mk-chip--live', n >= tot); }
   }
-  const HERO_CARD = `<div class="mk-card" aria-hidden="true"><div class="mk-card__head"><img src="assets/brand/flint.svg" alt="" width="18" height="23" style="image-rendering:pixelated"><b style="color:var(--fa-act)">Flint</b><span class="mk-chip">0/4</span></div><p class="mk-card__title">Camp’s morning</p><ol class="mk-plan"><li><i></i><span>Catch Camp up</span></li><li><i></i><span>Open the preview</span></li><li><i></i><span>Add a jump sound</span></li><li><i></i><span>Make the title bigger</span></li></ol><div class="mk-follow"><span>+ Ask a follow-up</span><i class="mk-send"></i></div></div>`;
+  const HERO_CARD = `<div class="mk-card" aria-hidden="true"><div class="mk-card__head"><img src="assets/brand/flint.svg" alt="" width="18" height="23" style="image-rendering:pixelated"><b style="color:var(--fa-act)">Flint</b><span class="mk-chip">0/5</span></div><p class="mk-card__title">Camp’s morning</p><ol class="mk-plan"><li><i></i><span>Catch Camp up</span></li><li><i></i><span>Write the launch plan</span></li><li><i></i><span>Finish the orders task</span></li><li><i></i><span>Add a jump sound</span></li><li><i></i><span>Make the title bigger</span></li></ol><div class="mk-follow"><span>+ Ask a follow-up</span><i class="mk-send"></i></div></div>`;
 
   // waits honour "fast" (skipping ahead to a step) and "paused" (the visitor pressed pause or picked a step)
   async function gate(o, ms, gone) {
