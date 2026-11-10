@@ -551,7 +551,8 @@ const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, 
 const studios = require('./studios')({ P, base: baseStore, root: require('./tpldir').root(), sense, broadcast, buildKit });   // v0.27: Studios — creative apps beside TribeCode, linked not bundled (server/studios.js)
 const trending = require('./trending')({ store: baseStore, root: require('./tpldir').root() });   // daily "Trending on GitHub" feed (server/trending.js)
 const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str, trending });   // v0.27 company: the Marketplace (server/market.js)
-const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
+const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });
+const designCanvas = require('./canvas')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-A: the design canvas (server/canvas.js)   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const company = companyHub = require('./company')({ P, base: baseStore, store, broadcast, postChat, nameOf, perms, getMembers: () => members, approvals, bus, coord, createTask: o => createTask(o), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), docs });   // v0.27 company: seats, goals, decisions, rhythms (server/company.js)
 company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x => x.events) ? { spentWeek: w.total, currency: w.currency } : null; });   // v0.27 company: real AI spend from Money (ledger.js) in the weekly review
 mcpFlow = makeMcpFlow({ flow, P });
@@ -906,7 +907,8 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());
   if (a === 'buildkit' || (a === 'projects' && c === 'buildkit')) return buildKit.route(req, res, ctx());   // build kit (server/buildkit.js)
   if (a === 'projects' && c === 'studios') return studios.route(req, res, ctx());   // v0.27: Studios (server/studios.js)   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
-  if (a === 'whiteboard') return whiteboard.route(req, res, ctx());   // feat/whiteboard (server/whiteboard.js)
+  if (a === 'whiteboard') return whiteboard.route(req, res, ctx());
+  if (a === 'canvas') return designCanvas.route(req, res, ctx());   // P1-A design canvas   // feat/whiteboard (server/whiteboard.js)
   if (a === 'market') return market.route(req, res, ctx());   // v0.27 company: the Marketplace (server/market.js)
   if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
@@ -1176,7 +1178,8 @@ server.on('upgrade', (req, sock) => {
       return;
     }
     if (typeof msg.type === 'string' && msg.type.startsWith('doc-')) { docs.live.handle(s, me, msg); return; }
-    if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
+    if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }
+    if (typeof msg.type === 'string' && msg.type.startsWith('cnv-')) { designCanvas.handle(s, me, msg); return; }   // P1-A design canvas   // feat/whiteboard: board edits + cursors
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting
     if (msg.type === 'huddle-join' && me.role !== 'agent' && huddle.size && huddleProject && !P.canSee(me, huddleProject)) s.send({ type: 'huddle-error', error: 'A huddle is on in another project.' });   // fix/security-2

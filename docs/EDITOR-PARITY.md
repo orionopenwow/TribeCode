@@ -94,6 +94,8 @@ days, L ≈ a week or more for one agent. Priority: P1 is what the plan does fir
 
 ### Phase 1: "Figma and Make inside a friends app" (6 work packages, can run in parallel after P1-A)
 
+> **Built (fork/canvas):** P1-A, P1-B and P1-D. `#/canvas` (sidebar: Design), `server/canvas.js`, `app/ui/canvas/{scene,canvas,layers,props}.js` + `canvas.css`, test `app/test/e2e_canvas.py`. For P1-C, `TribeCanvas.exportFrame(id)` (scene.js `toHTML`) returns `{ html, css, name }` with flex CSS for auto layout; the props panel and layers stay in sync through `TribeCanvas._e`.
+
 **P1-A: Design canvas core.**
 - **Files:**
   - new `app/ui/canvas/scene.js`: a JSON scene graph `{ id, type: frame|rect|ellipse|text|image|group|instance, parent, children, x, y, w, h, rotation, fill, stroke, radius, opacity, text{...}, layout{...}, name, locked, hidden }`, with ops for undo
