@@ -53,6 +53,12 @@ def main():
             pg.wait_for_selector("#pz", state="detached", timeout=5000)
             st = pg.evaluate("TribeStore.get()")
             assert st.get("name") == "Camp" and (st.get("pendingAvatar") or {}).get("emoji") == "🦊", st
+            # ...and before any tribe, the user bar, the profile button and Home all show that you
+            pg.wait_for_function("document.querySelector('#ub-name').textContent === 'Camp'", timeout=5000)
+            assert pg.locator("#pf-face.pf-k-emoji").count() == 1 and "🦊" in pg.text_content("#pf-face"), "profile button shows your icon"
+            assert pg.locator(".hub-head .hid-av.pf-k-emoji").count() == 1, "Home's greeting shows your icon"
+            body = pg.evaluate("document.body.innerText")
+            assert "not in a tribe" not in body.lower() and body.count("Just you for now") == 1, "said once, in the user bar (no repeated labels)"
             # 3. Flint offers a look around (alone on screen), then flies to each place
             txt = bubble(pg); assert "quick look around" in txt, txt
             assert pg.locator("#fr-start, #wl, #intro, #pz").count() == 0, "one thing at a time"

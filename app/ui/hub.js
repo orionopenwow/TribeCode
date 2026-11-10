@@ -74,6 +74,7 @@
     return loading;
   }
   addEventListener('tribe-host-error', () => { if (document.body.dataset.view === 'hub') render(); });
+  addEventListener('tribe-local-profile', () => { if (document.body.dataset.view === 'hub' && !connected()) render(); });
   document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#hub-host-retry') && App().hostHere) { e.target.disabled = true; e.target.textContent = 'Starting…'; App().hostHere(); } });
   C.on('ws', m => { if (m && (m.type === 'hub' || m.type === 'dashboard') && (!data || m.rev !== data.rev)) load(true); });
   C.on('hello', () => { load(true); scratch.sync(); setTimeout(fromHash, 30); });
@@ -149,13 +150,20 @@
     const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent' && m.online).length;
     const chip = (k, n, l) => `<span class="hid-chip k-${k}"><b>${n}</b>${l}</span>`;
     const chips = on ? chip('ember', pj.length, pj.length === 1 ? 'project' : 'projects') + chip('indigo', people, people === 1 ? 'friend online' : 'friends online') + chip('teal', agents, agents === 1 ? 'agent working' : 'agents working')
-      : `<span class="hid-chip k-muted">${C.hasToken() ? 'Reconnecting…' : 'Not in a tribe yet'}</span>`;
+      : C.hasToken() ? `<span class="hid-chip k-muted">Reconnecting…</span>` : '';   // no tribe yet: said once, in the user bar
     return `<header class="hub-head hub-id">
       <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
       <div class="hid-t"><span class="eyebrow">Your command center${on && tribe ? ` · ${esc(tribe)}` : ''}</span>
-        <h1><span class="hid-av" style="background:${esc(color)}">${esc(([...name][0] || '').toUpperCase())}</span><span>${greeting()}</span></h1>
-        <div class="hid-chips">${chips}</div></div>
+        <h1>${localFace(on) || `<span class="hid-av" style="background:${esc(color)}">${esc(([...name][0] || '').toUpperCase())}</span>`}<span>${greeting()}</span></h1>
+        ${chips ? `<div class="hid-chips">${chips}</div>` : ''}</div>
     </header>`;
+  }
+  // before any tribe: your Make-it-yours icon (personalize.js), the same as the user bar and the profile button
+  function localFace(on) {
+    const Pz = window.TribePersonalize, P = window.TribeProfiles;
+    if (on || C.hasToken() || !Pz || !Pz.localMember || !P) return '';
+    const lm = Pz.localMember(); if (!lm.profile.avatar || lm.profile.avatar.kind === 'initials') return '';
+    return P.avatar(lm, 'hid-av');
   }
   function gsHero(on) {
     const desk = canHost();

@@ -20,7 +20,7 @@
     const st = (C && C.state()) || {}, m = st.me, on = C && C.connected();
     let name = m && m.name; if (!name) { try { name = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name; } catch {} }
     $('#ub-name').textContent = name || 'You';
-    $('#ub-st').textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : 'Not in a tribe';
+    $('#ub-st').textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : (C && C.hasToken && C.hasToken() ? 'Reconnecting…' : 'Just you for now');
   }
   function place() {
     const pf = $('#pf-btn'), fr = $('#fr-btn'), bell = $('#nf-bell'), tb = $('.titlebar .tb-right'), nest = $('#tour-side');
@@ -45,6 +45,7 @@
   addEventListener('resize', size);
   // the bell and Friends buttons are added by their scripts on load; place once everything is there
   const ready = () => { place(); if (C && C.on) { C.on('status', label); C.on('presence', label); } };
+  addEventListener('tribe-local-profile', label);   // Make it yours before any tribe (personalize.js)
   if (document.readyState === 'complete') setTimeout(ready, 0); else addEventListener('load', ready);
   phone.addEventListener('change', place);
   window.TribeUserbar = { place };

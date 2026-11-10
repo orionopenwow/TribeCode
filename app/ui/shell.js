@@ -425,14 +425,14 @@
       title.dataset.nav = 'hub'; title.title = 'Your home';
       $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face" style="background:${esc(me.color || 'var(--accent)')}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
       $('#nest-name').textContent = 'Home';
-      $('#nest-sub').textContent = on ? 'Everything, every project' : 'Not in a tribe yet';
+      $('#nest-sub').textContent = on ? 'Everything, every project' : '';   // no tribe yet: the user bar says it once
     } else {
       title.dataset.nav = 'home'; title.title = 'Project home';
       if (p) { $('#nest-face').innerHTML = h ? h.face(p, 'sm') : ''; $('#nest-name').textContent = p.name; }
     }
     let enter = $('#nest-enter');
     if (!enter) { enter = document.createElement('div'); enter.id = 'nest-enter'; enter.className = 'nest-enter'; const nav = $('#pj-nav'); nav.insertBefore(enter, nav.firstChild); }
-    enter.innerHTML = g && !on ? `<div class="nest-pick">Not in a tribe yet</div>` : '';   // on Home the rail bubbles are the projects: no list here
+    enter.innerHTML = '';   // on Home the rail bubbles are the projects: no list here
     enter.classList.toggle('below', g);
     if (g) { const groups = $('#nest-groups'); if (groups && enter.previousElementSibling !== groups) groups.after(enter); }
     else { const nav = $('#pj-nav'); if (nav && nav.firstChild !== enter) nav.insertBefore(enter, nav.firstChild); }

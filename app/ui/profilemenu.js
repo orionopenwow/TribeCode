@@ -19,6 +19,8 @@
   document.body.appendChild(menu);
 
   const me = () => (C.state() || {}).me || null;
+  // before any tribe: you as Make it yours left you (personalize.js), so the button matches Home and the user bar
+  const local = () => (!me() && window.TribePersonalize && window.TribePersonalize.localMember) ? window.TribePersonalize.localMember() : null;
   const settingsName = () => { try { return (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name) || ''; } catch { return ''; } };
   const status = () => {
     const st = C.state() || {}, on = C.connected();
@@ -33,6 +35,7 @@
     face.textContent = ([...name.trim()][0] || '').toUpperCase() || '?';
     face.style.background = (m && m.color) || 'var(--surface-2, #262D38)';
     const P = window.TribeProfiles, pm = m && P && (C.state().members || []).find(x => x.id === m.id); if (pm) { P.fill(face, pm); $('#pf-dot').dataset.state = pm.state || ''; }   // feat/profiles: your avatar + presence
+    else { const lm = local(); if (lm && P) { face.style.background = lm.color; delete face.dataset.pfSig; face.classList.remove('pf-filled', 'pf-k-emoji', 'pf-k-pixel', 'pf-k-photo'); P.fill(face, lm); } }
     $('#pf-dot').className = 'pf-dot' + (s.on ? ' on' : '');
     const up = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
     $('#pf-up').classList.toggle('hidden', !(up && up.ready));
@@ -42,17 +45,18 @@
   const item = (act, icon, label, extra = '') => `<button role="menuitem" class="pf-item" data-act="${act}">${ico(icon)}<span>${label}</span>${extra}</button>`;
   function draw() {
     const m = me(), s = status(), name = (m && m.name) || settingsName() || 'You';
-    const role = m ? (m.role === 'host' ? 'Host' : m.role === 'spectator' ? 'Spectator' : 'Builder') : 'Not in a tribe yet';
+    const role = m ? (m.role === 'host' ? 'Host' : m.role === 'spectator' ? 'Spectator' : 'Builder') : 'Just you for now';
+    const lm = local(), P = window.TribeProfiles;
     const capOn = !!(window.TribeCapture && window.TribeCapture.on());
     const upd = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
     menu.innerHTML = `
-      <div class="pf-head"><span class="pf-face lg" style="background:${esc((m && m.color) || 'var(--surface-2, #262D38)')}">${esc(([...name][0] || '').toUpperCase())}</span>
+      <div class="pf-head">${lm && P ? `<span class="pf-face lg" style="background:${esc(lm.color)}">${P.avatar(lm, '')}</span>` : `<span class="pf-face lg" style="background:${esc((m && m.color) || 'var(--surface-2, #262D38)')}">${esc(([...name][0] || '').toUpperCase())}</span>`}
         <div><b>${esc(name)}</b><small>${esc(role)}</small></div></div>
       <div class="pf-status"><span class="pf-dot ${s.on ? 'on' : ''}"></span>${esc(s.text)}</div>
       ${upd && upd.ready ? `<button role="menuitem" class="pf-item pf-update" data-act="restart"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg><span>Update ready · v${esc(upd.version)}</span><b class="pf-restart">Restart</b></button>` : ''}
       <div class="pf-sep"></div>
       ${m && window.TribeProfiles ? item('editprofile', 'i-users', 'Edit profile') + item('status', 'i-smile', 'Set a status') : ''}
-      ${m && window.TribePersonalize ? item('personalize', 'i-sparkle', 'Personalize') : ''}
+      ${window.TribePersonalize ? item('personalize', 'i-sparkle', 'Personalize') : ''}
       ${m ? item('profile', window.TribeProfiles ? 'i-net' : 'i-users', window.TribeProfiles ? 'My activity' : 'My profile and activity') : ''}
       ${item('claude', 'i-sparkle', 'Connect your AI')}
       ${window.TribeAgentsHub ? item('agents', 'i-robot', 'Your agents') : ''}
@@ -102,6 +106,7 @@
     else if (a === 'update') { window.TribeUpdater.check(); window.TribeApp && window.TribeApp.toast('Checking for updates…'); }
   });
 
+  addEventListener('tribe-local-profile', paint);
   C.on('hello', paint); C.on('presence', paint); C.on('ws', m => { if (m && (m.type === 'presence' || m.type === 'members')) paint(); });
   setInterval(paint, 3000); paint();
   window.TribeProfileMenu = { open, close, paint };

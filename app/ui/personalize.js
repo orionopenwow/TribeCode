@@ -8,7 +8,7 @@
 // Never with ?skipIntro / ?demo= / ?welcome / ?tour=, in the offline demo, on a phone device link, or under automation
 // unless ?personalize=1 (or the test flag). Reopen any time: Settings › Personalize, or the profile menu.
 // The focused first run (firstrun.js) waits for this to finish, so only one onboarding thing shows at a time.
-//   window.TribePersonalize = { open(step), close(), pending(), isOpen(), then(fn) }
+//   window.TribePersonalize = { open(step), close(), pending(), isOpen(), then(fn), localMember() }
 (function () {
   'use strict';
   const C = window.TribeClient, S = window.TribeStore; if (!C || !S) return;
@@ -76,8 +76,8 @@
       const name = (d.name || '').trim().slice(0, 32);
       const color = P() ? P().palette[d.tint] : null;
       if (!m.id) {   // no tribe yet: keep it on this device; it becomes your profile when you start or join one
-        S.set({ ...(name ? { name } : {}), ...(d.avatar.kind === 'initials' && color ? { color } : {}), ...(d.avatar.kind === 'photo' ? {} : { pendingPhoto: null, pendingAvatar: d.avatar.kind === 'initials' ? { kind: 'initials' } : { ...d.avatar, tint: d.tint } }) });
-        return;
+        S.set({ ...(name ? { name } : {}), ...(color ? { color } : {}), ...(d.avatar.kind === 'photo' ? {} : { pendingPhoto: null, pendingAvatar: d.avatar.kind === 'initials' ? { kind: 'initials' } : { ...d.avatar, tint: d.tint } }) });
+        localChanged(); return;
       }
       try {
         const body = {}; if (name && name !== m.name) body.name = name; if (d.avatar.kind === 'initials' && color && color !== m.color) body.color = color;
@@ -199,7 +199,7 @@
         const image = window.TribeCropper ? await window.TribeCropper.pick({ file: f, size: 256, title: t('Frame your avatar') }) : null;
         if (!image) return;
         if (!me().id) {   // no tribe yet: the picture waits on this device and becomes your profile photo later
-          S.set({ pendingPhoto: image, pendingAvatar: null }); d.avatar = { kind: 'photo', file: image }; draw(); return;
+          S.set({ pendingPhoto: image, pendingAvatar: null }); d.avatar = { kind: 'photo', file: image }; draw(); localChanged(); return;
         }
         const r = await C.api('/profile/avatar', { method: 'POST', body: { image, still: null } });
         d.avatar = (r && r.profile && r.profile.avatar) || { kind: 'photo' };
@@ -259,5 +259,11 @@
   });
   if (C.connected && C.connected()) boot();
   window.addEventListener('tribe-lang', () => { if (el) draw(); });
-  window.TribePersonalize = { open: s => open(s, 'menu'), close, pending, isOpen, then };
+  // Before any tribe: you as the user bar, the profile button and Home show you (name, icon, color from Make it yours)
+  function localMember() {
+    const st = S.get(), av = st.pendingPhoto ? { kind: 'photo', file: st.pendingPhoto } : (st.pendingAvatar || { kind: 'initials' });
+    return { id: '', name: st.name || '', color: st.color || '#F26B1D', profile: { avatar: av } };
+  }
+  function localChanged() { window.dispatchEvent(new CustomEvent('tribe-local-profile')); }
+  window.TribePersonalize = { open: s => open(s, 'menu'), close, pending, isOpen, then, localMember };
 })();
