@@ -222,7 +222,9 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
   //   POST   /api/code/lock  { path }                  🔒 a claim with your name; others (people and agents) can't save over it
   //   DELETE /api/code/lock?path=                      unlock (yours, or any as host/admin)
   // A file someone else has locked answers 423 with their name. Secrets, .env and hidden folders can't be written.
-  const canEdit = me => me && me.role !== 'agent' && me.role !== 'spectator' && !me.guest;
+  // v0.27: an agent may save code when its owner may (it acts for its owner, never above them); people need builder or up
+  const personCan = m => !!m && m.role !== 'agent' && m.role !== 'spectator' && !m.guest;
+  const canEdit = me => !!me && (me.role === 'agent' ? personCan(member && me.owner ? member(me.owner) : null) : personCan(me));
   const lockedBy = (rel, me) => { if (!claims) return null; const ov = (a, b) => a === b || (b.endsWith('/') && a.startsWith(b)) || (a.endsWith('/') && b.startsWith(a)); return claims.list().find(c => c.by !== me.id && ov(rel, c.path)) || null; };
   let chain = Promise.resolve();
   const serial = fn => { const p = chain.then(fn, fn); chain = p.catch(() => {}); return p; };
