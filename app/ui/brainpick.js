@@ -25,15 +25,20 @@
 
   // ---------- WebGPU + WebLLM ----------
   let gpuInfo = null, engine = null, loading = null, progress = null;
+  const isPhoneDevice = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && matchMedia('(max-width: 820px)').matches);
   async function gpu() {
     if (gpuInfo) return gpuInfo;
-    const no = why => (gpuInfo = { ok: false, why: `${why} Use the host's model or a cloud key instead.` });
-    if (!('gpu' in navigator) || !navigator.gpu) return no('This browser has no WebGPU yet (Safari, iPhone and Firefox often don\'t), so the built-in model can\'t run here.');
+    // phones (flint-free): iPhone Safari has WebGPU from iOS 26, Android Chrome from 121. A phone always gets the smallest
+    // model, with a battery and storage note; without WebGPU Flint still does edits and recipe builds with no model at all.
+    const phone = isPhoneDevice();
+    const no = why => (gpuInfo = { ok: false, phone, why: `${why} ${phone ? 'Flint still edits pages and builds from recipes here with no model; for chat, use the host\'s model.' : 'Use the host\'s model or a cloud key instead.'}` });
+    if (!('gpu' in navigator) || !navigator.gpu) return no(phone ? 'This phone\'s browser has no WebGPU (it needs Safari on iOS 26 or later, or Chrome on Android), so the built-in model can\'t run here.' : 'This browser has no WebGPU yet (older Safari and Firefox often don\'t), so the built-in model can\'t run here.');
     let ad = null; try { ad = await navigator.gpu.requestAdapter(); } catch {}
     if (!ad) return no('WebGPU is here, but no graphics chip answered, so the built-in model can\'t run here.');
     const f16 = !!(ad.features && ad.features.has('shader-f16'));
-    const big = f16 && (navigator.deviceMemory || 8) >= 8 && ((ad.limits && ad.limits.maxBufferSize) || 0) >= 2 ** 30;
-    return (gpuInfo = { ok: true, model: big ? 'Qwen3-1.7B-q4f16_1-MLC' : f16 ? 'Qwen3-0.6B-q4f16_1-MLC' : 'Qwen3-0.6B-q4f32_1-MLC', size: big ? 'about 1 GB' : 'about 500 MB', label: big ? 'Qwen3 1.7B' : 'Qwen3 0.6B' });
+    const big = !phone && f16 && (navigator.deviceMemory || 8) >= 8 && ((ad.limits && ad.limits.maxBufferSize) || 0) >= 2 ** 30;
+    return (gpuInfo = { ok: true, phone, model: big ? 'Qwen3-1.7B-q4f16_1-MLC' : f16 ? 'Qwen3-0.6B-q4f16_1-MLC' : 'Qwen3-0.6B-q4f32_1-MLC', size: big ? 'about 1 GB' : 'about 500 MB', label: big ? 'Qwen3 1.7B' : 'Qwen3 0.6B',
+      note: phone ? 'On a phone: download it on Wi-Fi, it uses some battery while it thinks, and it stays in this browser\'s storage until you clear it.' : '' });
   }
   // fix/security-2: WebLLM runs in app/ui/brainworker.js, a module worker (no localStorage there, so it never sees the sign-in
   // key), from the pinned npm file checked against its SHA-384 before it runs. The page only sends messages.
@@ -122,7 +127,7 @@
     const g = gpuInfo || {};
     if (!g.ok) return `<p class="bp-nogpu" id="bp-gpu">${esc(g.why || 'Checking WebGPU…')}</p>`;
     if (choice() !== 'browser') return '';
-    return `<div class="bp-body"><p class="bp-note">One-time download of ${esc(g.size)} (${esc(g.label)}), kept in this browser's cache. It runs on your graphics chip; nothing you ask leaves this device.</p>
+    return `<div class="bp-body"><p class="bp-note">One-time download of ${esc(g.size)} (${esc(g.label)}), kept in this browser's cache. It runs on your graphics chip; nothing you ask leaves this device.${g.note ? ' ' + esc(g.note) : ''}</p>
       <div class="bp-prog" id="bp-prog">${progHtml()}</div>${engine ? '' : `<button class="btn primary" id="bp-load"${loading ? ' disabled' : ''}>${loading ? 'Downloading…' : 'Download and start'}</button>`}</div>`;
   }
   const progHtml = () => progress ? (progress.error ? `<p class="bp-err">${esc(progress.error)}</p>` : `<div class="bp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress.p * 100)}"><i style="width:${Math.round(progress.p * 100)}%"></i></div><small class="faint">${esc(progress.p >= 1 ? 'Ready: Flint thinks on this device.' : progress.text.slice(0, 90))}</small>`) : '';

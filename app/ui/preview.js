@@ -275,11 +275,11 @@
     if (!frame || e.source !== frame.contentWindow || !e.data || typeof e.data !== 'object') return;
     const m = e.data;
     if (m.tc === 'ready' && editing && frame && frame.contentWindow) { frame.contentWindow.postMessage({ tc: 'edit', on: true }, '*'); picked = null; paintPick(); }
-    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000), rect: boxOf(m.rect) }; paintPick(); }
+    if (m.tc === 'pick' && editing) { picked = m.none ? null : { tag: String(m.tag || '').slice(0, 20), text: String(m.text || '').slice(0, 600), html: String(m.html || '').slice(0, 2000), rect: boxOf(m.rect), cs: m.cs && typeof m.cs === 'object' ? Object.fromEntries(Object.entries(m.cs).filter(([k, v]) => typeof v === 'string').map(([k, v]) => [String(k).slice(0, 30), v.slice(0, 120)]).slice(0, 14)) : null }; paintPick(); }
     if (m.tc === 'pick' && editing && window.TribePreviewFlint) window.TribePreviewFlint.pick(picked);
     if (m.tc === 'error' && window.TribePreviewFlint) window.TribePreviewFlint.error({ msg: `${String(m.msg || 'error').slice(0, 240)}${m.src ? ` (${String(m.src).slice(0, 60)}${m.line ? ':' + Number(m.line) : ''})` : ''}`, line: Number(m.line) || 0 });   // no auto-focus: it would pull focus out of text you're editing in the page
     if (m.tc === 'text' && editing) editApi('edit', { href: m.href || lastHref, tag: String(m.tag || ''), before: String(m.before || ''), after: String(m.after || '') });
-    if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string') lastHref = m.href.slice(0, 500); if (pane) pane.classList.add('ready'); }
+    if (m.tc === 'ready') { helperAlive = true; if (typeof m.href === 'string' && !(want && Date.now() < want.until && !m.href.includes(want.sub))) lastHref = m.href.slice(0, 500); if (pane) pane.classList.add('ready'); }
     if (m.tc === 'shot' && shots.has(m.id)) { const p = shots.get(m.id); shots.delete(m.id); m.error ? p.reject(new Error(m.error)) : p.resolve(String(m.data || '')); }
   });
 
@@ -385,5 +385,16 @@
     band.appendChild(b);
   });
 
-  window.TribePreview = { open, openTab, refresh, close, url, info: () => info };
+  // show a page inside the app's code (a free Flint build lands in builds/<name>/): show('builds/sunrise-bakery/')
+  let want = null;   // the page show() asked for: an older page saying "ready" for a moment doesn't pull the preview back
+  async function show(rel) {
+    if (!pane || !pane.isConnected) await open();
+    try { await token(!(info && info.hasIndex)); } catch {}
+    if (!info || !info.path) return;
+    const sub = String(rel || '').replace(/^\/+/, '');
+    render(); if (!frame) return;
+    want = sub ? { sub, until: Date.now() + 5000 } : null;
+    lastHref = info.path + sub; load(url() + sub);
+  }
+  window.TribePreview = { open, openTab, refresh, close, url, show, info: () => info };
 })();

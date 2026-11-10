@@ -169,9 +169,20 @@
     return say(`Opened the asset library${q ? ` searching for “${esc(q)}”` : ''}. Tap what you like (sounds play when you tap), then Add to project. Everything is open-licensed and credited.`, [act('Open it again', 'assets', { q, kind })]);
   }
 
+  // flint-free (docs/FLINT-TIERS.md): what I do with no AI, with a small free model, and what needs a stronger AI
+  async function tiersReply() {
+    let T = null; try { T = connected() ? await C.api('/flint/tiers') : null; } catch {}
+    const list = (T && T.tiers) || [];
+    if (!list.length) return say('With no AI at all I answer from the Guide, add tasks and notes, open anything, and edit pages you pick in the preview. Connect to your tribe and I can also build first versions from recipes, free.');
+    const host = (T.now && T.now.host) || {};
+    const lines = list.map(x => `**${esc(x.label)}** (${esc(x.where)}): ${x.can.map(esc).join(', ')}.`);
+    return say(`${lines.join('\n\n')}\n\nRight now: ${host.online ? `the tribe's AI is on (${esc(host.via || 'ready')})` : 'no AI is on, so I use the free tiers'}.`,
+      [act('Build something free', 'ask', 'Build a to-do app'), act('Choose Flint\'s AI', 'brain')]);
+  }
   async function route(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
+    if (/^(what can (you|flint) do( for free)?|what('?s| is) free|what do you do for free|what can you build( for free)?|(show )?(your|flint'?s) (free )?tiers?|are you free)\??$/.test(t)) return tiersReply();   // flint-free: the honest capability map
     if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) return r === true ? null : say(r.text, r.acts || []); }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
     if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) return say(co.text, co.open ? [act('Open Company', 'company')] : []); }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
     if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) return say(ac.text); }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"

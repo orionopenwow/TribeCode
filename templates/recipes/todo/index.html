@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{name}}</title>
+<link rel="stylesheet" href="style.css">
+<style>:root { --accent: {{accent}}; }</style>
+</head>
+<body>
+<main class="app">
+  <p class="eyebrow">{{name}}</p>
+  <h1>{{headline}}</h1>
+  <form id="add" autocomplete="off"><input id="new" placeholder="Add a task and press Enter" aria-label="New task"><button>Add</button></form>
+  <nav class="filters" aria-label="Show"><button data-f="all" class="on">All</button><button data-f="active">To do</button><button data-f="done">Done</button></nav>
+  <ul id="list"></ul>
+  <footer class="bar"><span id="left"></span><button id="clear">Clear done</button></footer>
+  <p class="empty" id="empty">Nothing here yet. Add your first task above.</p>
+</main>
+<script src="main.js"></script>
+</body>
+</html>

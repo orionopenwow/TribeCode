@@ -78,7 +78,7 @@ var ED=null;function edOn(on){if(on&&!ED){var st=document.createElement('style')
 var TXT=/^(H[1-6]|P|A|LI|SPAN|BUTTON|FIGCAPTION|BLOCKQUOTE|TD|TH|LABEL|SMALL|STRONG|EM|B|I|DT|DD|SUMMARY|CAPTION)$/,hov=null,sel=null,before='';
 function leaf(el){return el&&TXT.test(el.tagName)&&el.children.length<=2&&el.textContent.trim().length>0&&el.textContent.length<600}
 function over(e){var t=e.target;if(t===hov)return;if(hov)hov.removeAttribute('data-tc-hov');hov=t&&t.nodeType===1&&t!==document.body&&t!==document.documentElement?t:null;if(hov)hov.setAttribute('data-tc-hov','')}
-function pick(t){if(sel&&sel!==t){finish(sel);sel.removeAttribute('data-tc-sel')}sel=t;t.setAttribute('data-tc-sel','');var h=t.outerHTML.replace(/ data-tc-(hov|sel)=""/g,'');var b=t.getBoundingClientRect();say({tc:'pick',tag:t.tagName.toLowerCase(),text:t.textContent.trim().slice(0,600),html:h.slice(0,2000),editable:leaf(t),href:location.pathname,rect:{left:b.left,top:b.top,width:b.width,height:b.height}})}
+function pick(t){if(sel&&sel!==t){finish(sel);sel.removeAttribute('data-tc-sel')}sel=t;t.setAttribute('data-tc-sel','');var h=t.outerHTML.replace(/ data-tc-(hov|sel)=""/g,'');var b=t.getBoundingClientRect();say({tc:'pick',tag:t.tagName.toLowerCase(),text:t.textContent.trim().slice(0,600),html:h.slice(0,2000),editable:leaf(t),href:location.pathname,rect:{left:b.left,top:b.top,width:b.width,height:b.height},cs:(function(){try{var c=getComputedStyle(t),o={};["padding","margin","width","height","color","background-color","font-size","font-weight","border-radius","text-align"].forEach(function(k){o[k]=c.getPropertyValue(k)});o.style=t.getAttribute("style")||"";return o}catch(e){return null}})()})}
 function click(e){if(e.target.closest&&e.target.closest('[contenteditable=true]'))return;e.preventDefault();e.stopPropagation();var t=e.target;if(t.nodeType!==1)return;pick(t)}
 function dbl(e){var t=e.target;if(!leaf(t))return;e.preventDefault();pick(t);before=t.textContent;t.setAttribute('contenteditable','true');t.focus()}
 function finish(t){if(t.getAttribute('contenteditable')!=='true')return;t.removeAttribute('contenteditable');var after=t.textContent;if(after!==before&&before)say({tc:'text',tag:t.tagName.toLowerCase(),before:before.trim(),after:after.trim(),href:location.pathname});before='';if(pend){pend=false;setTimeout(function(){location.reload()},150)}}
@@ -417,16 +417,25 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
       return send(res, 200, { preview: status(pid, me) });
     }
     // v0.25: edit the page right in the preview. Text changes made in place, and "Ask Flint to change this".
-    if ((b === 'edit' || b === 'flint') && m === 'POST') {
+    // P1-G: the point-and-edit property sheet (props) and Undo for every in-preview edit (undo)
+    if ((b === 'edit' || b === 'flint' || b === 'props' || b === 'undo') && m === 'POST') {
       if (!me || ['spectator', 'guest'].includes(me.role)) return fail(res, 403, 'only builders can edit the page');
       if (modeOf(pid) === 'dev') return fail(res, 409, 'this preview runs the project\'s own dev server: edit the source files instead');
       const body = await readBody(req, 128 * 1024);
       const f = pageFile(pid, body.href);
       if (f.error) return fail(res, f.status, f.error);
       try {
-        const out = b === 'edit' ? textEdit(f, String(body.before || ''), String(body.after || ''), String(body.tag || '').toLowerCase()) : await flintEdit(pid, f, body, me);
+        if (b === 'undo') {
+          const st = undos.get(f.file) || [];
+          if (!st.length) return fail(res, 409, 'nothing to undo on this page');
+          fs.writeFileSync(f.file, st.pop()); changed(pid, [f.rel]); log(`preview undo: ${f.rel}`);
+          return send(res, 200, { ok: true, file: f.rel, undone: 1, left: st.length });
+        }
+        const before = fs.readFileSync(f.file, 'utf8');
+        const out = b === 'edit' ? textEdit(f, String(body.before || ''), String(body.after || ''), String(body.tag || '').toLowerCase()) : b === 'props' ? propsEdit(f, body) : await flintEdit(pid, f, body, me);
+        if (fs.readFileSync(f.file, 'utf8') !== before) { const st = undos.get(f.file) || []; st.push(before); if (st.length > 40) st.shift(); undos.set(f.file, st); }
         changed(pid, [f.rel]);
-        return send(res, 200, { ok: true, file: f.rel, ...out });
+        return send(res, 200, { ok: true, file: f.rel, undo: (undos.get(f.file) || []).length, ...out });
       } catch (e) { return fail(res, e.status || 500, e.message); }
     }
     return null;
@@ -456,15 +465,33 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     return all.length === 1 ? { i: all[0].index, len: all[0][0].length } : null;
   }
   // ---------- simple looks without an AI ----------
-  const COLORS = { red: '#E5484D', orange: '#F26B1D', yellow: '#FABD2F', green: '#3BD16F', teal: '#38C6B1', blue: '#3B82F6', indigo: '#6C7CFF', purple: '#8B5CF6', pink: '#FF6F8E', white: '#FFFFFF', black: '#111111', gray: '#94A3B8', grey: '#94A3B8' };
+  const COLORS = { red: '#E5484D', orange: '#F26B1D', yellow: '#FABD2F', gold: '#E9B949', green: '#3BD16F', mint: '#5FD3A5', teal: '#38C6B1', blue: '#3B82F6', sky: '#4FB3F6', navy: '#1E3A8A', indigo: '#6C7CFF', purple: '#8B5CF6', violet: '#8B5CF6', pink: '#FF6F8E', rose: '#FF6F8E', brown: '#B07A4F', white: '#FFFFFF', black: '#111111', gray: '#94A3B8', grey: '#94A3B8' };
+  const COLOR_RX = new RegExp(`\\b(${Object.keys(COLORS).join('|')})\\b|(#[0-9a-f]{6}\\b|#[0-9a-f]{3}\\b)`, 'i');
+  // Flint's free look edits (docs/FLINT-TIERS.md): no AI, just CSS on the picked element (or the whole page for dark/light)
   function styleRule(ask) {
     const a = ask.toLowerCase();
-    if (/\b(bigger|larger|huge|grow)\b/.test(a)) return { zoom: /\b(much|a lot|huge|way)\b/.test(a) ? 1.6 : 1.25, say: 'Made it bigger.' };
+    const more = /\b(much|a lot|way|lots)\b/.test(a);
+    if (/\b(dark (mode|theme|background)|make (it|the page|everything) dark(er)?|go dark)\b|^dark( mode)?$/.test(a)) return { page: true, set: { 'background-color': '#12151A', color: '#E7E9EE' }, say: 'Made the page dark.' };
+    if (/\b(light (mode|theme|background)|make (it|the page|everything) light(er)?)\b|^light( mode)?$/.test(a)) return { page: true, set: { 'background-color': '#FFFFFF', color: '#16181D' }, say: 'Made the page light.' };
+    const px = /\b(?:font(?:\s*size)?|text(?:\s*size)?|size)\s*(?:to\s*)?(\d{1,3})\s*(?:px)?\b|\b(\d{1,3})\s*px\b/.exec(a);
+    if (px && !/\b(padding|space|spacing|margin|corner|round|radius)\b/.test(a)) { const n = Math.max(8, Math.min(160, +(px[1] || px[2]))); return { set: { 'font-size': n + 'px' }, say: `Set the text to ${n}px.` }; }
+    if (/\b(more|bigger|extra|add)\b.*\b(space|spacing|padding|room|breathing)\b|\b(space|spread) (it )?out\b/.test(a)) return { set: { padding: more ? '32px' : '20px' }, say: 'Gave it more room.' };
+    if (/\b(less|smaller|tighter|reduce|remove)\b.*\b(space|spacing|padding|room)\b|\btighten\b/.test(a)) return { set: { padding: '6px' }, say: 'Tightened the spacing.' };
+    if (/\b(round(ed)?|soft(er)?) (the )?corners?\b|\bround(ed)? it\b|\bmake it round(ed)?\b/.test(a)) return { set: { 'border-radius': more ? '24px' : '12px' }, say: 'Rounded the corners.' };
+    if (/\b(square|sharp) (the )?corners?\b/.test(a)) return { set: { 'border-radius': '0' }, say: 'Squared the corners.' };
+    if (/\b(bigger|larger|huge|grow)\b/.test(a)) return { zoom: more || /\bhuge\b/.test(a) ? 1.6 : 1.25, say: 'Made it bigger.' };
     if (/\b(smaller|tiny|shrink)\b/.test(a)) return { zoom: 0.8, say: 'Made it smaller.' };
+    if (/\b(not bold|unbold|normal weight)\b/.test(a)) return { set: { 'font-weight': '400' }, say: 'Made it regular weight.' };
     if (/\bbold\b/.test(a)) return { set: { 'font-weight': '700' }, say: 'Made it bold.' };
+    if (/\bitalic\b/.test(a)) return { set: { 'font-style': 'italic' }, say: 'Made it italic.' };
+    if (/\bunderline\b/.test(a)) return { set: { 'text-decoration': 'underline' }, say: 'Underlined it.' };
+    if (/\b(upper ?case|all caps|capitals)\b/.test(a)) return { set: { 'text-transform': 'uppercase' }, say: 'Made it uppercase.' };
     if (/\bcent(er|re)(ed)?\b/.test(a)) return { set: { 'text-align': 'center' }, say: 'Centered it.' };
-    const c = /\b(red|orange|yellow|green|teal|blue|indigo|purple|pink|white|black|gr[ae]y)\b/.exec(a);
-    if (c && /\b(make|turn|color|colour|paint)\b/.test(a)) return { set: { [/\b(background|bg)\b/.test(a) ? 'background-color' : 'color']: COLORS[c[1]] }, say: `Made it ${c[1]}.` };
+    if (/\b(align|move|put|push)\b.*\bleft\b|\bleft[- ]align/.test(a)) return { set: { 'text-align': 'left' }, say: 'Aligned it left.' };
+    if (/\b(align|move|put|push)\b.*\bright\b|\bright[- ]align/.test(a)) return { set: { 'text-align': 'right' }, say: 'Aligned it right.' };
+    if (/^(hide|hide it|hide this|hide that)$/.test(a.trim())) return { set: { display: 'none' }, say: 'Hid it.' };
+    const c = COLOR_RX.exec(a);
+    if (c && /\b(make|turn|color|colour|paint|change|set|use)\b/.test(a)) { const v = c[2] ? c[2] : COLORS[c[1]]; return { set: { [/\b(background|bg|fill)\b/.test(a) ? 'background-color' : 'color']: v }, say: `Made it ${c[2] || c[1]}.` }; }
     return null;
   }
   // the opening tag of the element to restyle: the picked one (found by its text) or the first title/button the ask names
@@ -480,12 +507,41 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     const body = src.search(/<body\b/i), from = body < 0 ? 0 : body, m = want.exec(src.slice(from));
     return m ? close(from + m.index) : null;
   }
+  // ---------- P1-G: the property sheet. Exact values from the sheet, checked against an allowlist, written as inline
+  // style on the picked element's opening tag (the same deterministic path as the look rules). No AI.
+  const undos = new Map();   // file -> [earlier contents], newest last (in memory; Undo in the preview)
+  const LEN = /^(?:0|auto|-?\d{1,4}(?:\.\d{1,2})?(?:px|rem|em|%|vw|vh))$/;
+  const LEN4 = v => String(v).trim().split(/\s+/).length <= 4 && String(v).trim().split(/\s+/).every(x => LEN.test(x));
+  const COLOR = /^(?:#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\)|transparent|inherit|currentcolor|[a-z]{3,20})$/i;
+  const PROPS = { padding: LEN4, margin: LEN4, width: v => LEN.test(v), height: v => LEN.test(v), 'max-width': v => LEN.test(v), gap: v => LEN.test(v),
+    color: v => COLOR.test(v), 'background-color': v => COLOR.test(v), 'border-color': v => COLOR.test(v), 'font-size': v => LEN.test(v) && v !== 'auto',
+    'font-weight': v => /^(?:[1-9]00|normal|bold)$/.test(v), 'border-radius': LEN4, 'text-align': v => /^(?:left|center|right|justify)$/.test(v),
+    'line-height': v => /^(?:normal|\d(?:\.\d{1,2})?|\d{1,3}px)$/.test(v), 'letter-spacing': v => LEN.test(v) || v === 'normal' };
+  function propsEdit(f, body) {
+    const pick = body.pick || {}, text = String(pick.text || '').trim().slice(0, 600), tag = String(pick.tag || '').toLowerCase();
+    const set = {}, raw = body.set && typeof body.set === 'object' ? body.set : {};
+    for (const [k, v0] of Object.entries(raw)) {
+      const v = String(v0 == null ? '' : v0).trim().slice(0, 60);
+      if (!PROPS[k]) throw Object.assign(new Error(`can't set ${k} here`), { status: 400 });
+      if (v === '') { set[k] = null; continue; }   // empty clears it
+      if (!PROPS[k](v)) throw Object.assign(new Error(`${v} isn't a value ${k} can take`), { status: 400 });
+      set[k] = v;
+    }
+    if (!Object.keys(set).length) throw Object.assign(new Error('nothing to change'), { status: 400 });
+    if (!text || !/^[a-z][a-z0-9]{0,9}$/.test(tag)) throw Object.assign(new Error('pick an element with some text on it first'), { status: 400 });
+    const src = fs.readFileSync(f.file, 'utf8'), at = openTagFor(src, text, tag, '');
+    if (!at) throw Object.assign(new Error('couldn\'t find that element exactly once in the page\'s source (it may come from a script). Edit it in Files › Code.'), { status: 409 });
+    fs.writeFileSync(f.file, src.slice(0, at.start) + restyle(src.slice(at.start, at.end), { set }) + src.slice(at.end));
+    log(`preview props: ${f.rel} ${Object.keys(set).join(',')}`);
+    return { changed: 1, set, say: 'Updated.' , via: 'props' };
+  }
   function restyle(tag, look) {
     const m = /\sstyle=(["'])([\s\S]*?)\1/i.exec(tag), cur = {};
     if (m) m[2].split(';').forEach(d => { const i = d.indexOf(':'); if (i > 0) cur[d.slice(0, i).trim().toLowerCase()] = d.slice(i + 1).trim(); });
     if (look.zoom) cur.zoom = String(Math.round((parseFloat(cur.zoom) || 1) * look.zoom * 100) / 100);
-    Object.assign(cur, look.set || {});
+    for (const [k, v] of Object.entries(look.set || {})) { if (v === null) delete cur[k]; else cur[k] = v; }
     const css = Object.entries(cur).map(([k, v]) => `${k}: ${v}`).join('; ').replace(/"/g, "'");
+    if (!css) return m ? tag.slice(0, m.index) + tag.slice(m.index + m[0].length) : tag;
     return m ? tag.slice(0, m.index) + ` style="${css}"` + tag.slice(m.index + m[0].length) : tag.replace(/\s*(\/?)>$/, ` style="${css}"$1>`);
   }
   function textEdit(f, before, after, tag) {
@@ -520,7 +576,7 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     // (or "the title" / "the button" when nothing is picked)
     const look = styleRule(ask);
     if (look) {
-      const src = fs.readFileSync(f.file, 'utf8'), at = openTagFor(src, text, String(pick.tag || '').toLowerCase(), ask);
+      const src = fs.readFileSync(f.file, 'utf8'), at = look.page ? (() => { const b = /<body\b[^>]*>/i.exec(src); return b ? { start: b.index, end: b.index + b[0].length } : null; })() : openTagFor(src, text, String(pick.tag || '').toLowerCase(), ask);
       if (at) { fs.writeFileSync(f.file, src.slice(0, at.start) + restyle(src.slice(at.start, at.end), look) + src.slice(at.end)); log(`preview flint look: ${f.rel}`); return { changed: 1, say: look.say, via: 'rules' }; }
     }
     if (!llm || !llm.status || !llm.status().online) throw Object.assign(new Error('Flint needs an AI for that one. Choose Flint\'s AI in Settings, or say "change it to …" for new words.'), { status: 503 });
