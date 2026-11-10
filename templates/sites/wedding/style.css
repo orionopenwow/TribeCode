@@ -1,0 +1,48 @@
+/* Event / wedding: a printed invitation. Centered, quiet serif, a timeline, generous space.
+   Colors and fonts: site.json › theme. */
+:root { --bg: #F7F2EA; --ink: #3B3A30; --muted: #6E6B5C; --line: #DCD2C2; --accent: #7A8C5C; --rose: #C48E7F;
+  --font-display: Georgia, serif; --font-body: Georgia, serif; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 18px/1.65 var(--font-body); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.card { max-width: 720px; margin: clamp(28px, 6vw, 72px) auto 0; padding: clamp(36px, 7vw, 80px) 24px; text-align: center; border: 1px solid var(--line); outline: 1px solid var(--line); outline-offset: 6px; }
+.kick { margin: 0; font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 14px 0 10px; font: 400 clamp(56px, 10vw, 112px)/1 var(--font-display); color: var(--accent); }
+.when { margin: 0; font-size: 20px; } .where { margin: 0 0 26px; color: var(--muted); }
+.rs { display: inline-block; padding: 10px 30px; border: 1px solid var(--ink); text-decoration: none; letter-spacing: .2em; text-transform: uppercase; font-size: 13px; }
+.rs:hover { background: var(--ink); color: var(--bg); }
+.ph { margin: 56px auto 0; max-width: 1040px; padding: 0 20px; } .ph img { width: 100%; height: auto; display: block; }
+.note { max-width: 34em; margin: 40px auto 0; padding: 0 24px; text-align: center; font-size: 21px; font-style: italic; }
+
+main { max-width: 760px; margin: 0 auto; padding: 0 24px 40px; }
+section { padding: 64px 0 0; }
+h2 { margin: 0 0 24px; font: 400 44px/1 var(--font-display); text-align: center; }
+h2::after { content: ""; display: block; width: 40px; height: 1px; margin: 18px auto 0; background: var(--rose); }
+.tl { list-style: none; margin: 0; padding: 0; position: relative; }
+.tl::before { content: ""; position: absolute; left: 110px; top: 6px; bottom: 6px; width: 1px; background: var(--line); }
+.tl li { display: grid; grid-template-columns: 96px 1fr; gap: 28px; padding: 12px 0; }
+.t { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.w b { display: block; font-weight: 400; font-size: 21px; } .w small { color: var(--muted); font-size: 15px; }
+.tg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.tg h3 { margin: 0 0 6px; font: 400 22px/1.2 var(--font-display); color: var(--accent); }
+.tg p { margin: 0; font-size: 16px; color: var(--muted); }
+details { border-top: 1px solid var(--line); padding: 14px 0; } details:last-of-type { border-bottom: 1px solid var(--line); }
+summary { cursor: pointer; } details p { margin: 6px 0 0; color: var(--muted); font-size: 16px; }
+.rsvp > p { text-align: center; color: var(--muted); }
+.rf { display: grid; gap: 16px; margin-top: 18px; padding: 28px; border: 1px solid var(--line); background: rgba(255, 255, 255, .35); }
+.rf label { display: grid; gap: 6px; font-size: 15px; }
+.rf input, .rf textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.rf fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; } .rf legend { font-size: 15px; margin-bottom: 4px; }
+.rf .ck { display: flex; gap: 8px; align-items: center; font-size: 17px; }
+.rf button { justify-self: center; padding: 12px 36px; border: 0; background: var(--accent); color: var(--bg); font: inherit; letter-spacing: .12em; text-transform: uppercase; font-size: 14px; cursor: pointer; }
+.rf-note { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
+.foot { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 14px; }
+
+[data-preset="confetti"] .card { outline: 0; border-width: 2px; border-radius: 28px; background: #fff; }
+[data-preset="confetti"] h1 { font-weight: 800; letter-spacing: -0.04em; }
+[data-preset="confetti"] .w b, [data-preset="confetti"] h2 { font-family: var(--font-display); font-weight: 800; }
+
+@media (max-width: 720px) { .tg { grid-template-columns: 1fr; } .tl::before { left: 78px; } .tl li { grid-template-columns: 64px 1fr; } }

@@ -1,0 +1,29 @@
+{
+  "meta": { "title": "Photography gallery", "category": "creative", "order": 15, "summary": "A dark, full-bleed gallery that gets out of the way of the pictures, with a lightbox, series and a booking line.", "goodFor": ["Photographers", "Artists", "Travel journals"], "tags": ["photography", "photos", "gallery", "photographer", "lightbox", "art"] },
+  "form": [
+    { "key": "name", "label": "Your name", "type": "text" },
+    { "key": "tagline", "label": "What you photograph", "type": "text" },
+    { "key": "photos", "label": "Photos", "type": "list", "fields": [{ "key": "img", "label": "Photo", "type": "image" }, { "key": "title", "label": "Title" }, { "key": "place", "label": "Place and year" }], "add": { "img": "img/p-1.svg", "title": "", "place": "" } },
+    { "key": "about", "label": "About", "type": "textarea" },
+    { "key": "email", "label": "Email for bookings and prints", "type": "text" }
+  ],
+  "name": "Teodor Vasile",
+  "tagline": "Landscapes and quiet interiors · Romania and the Carpathians",
+  "photos": [
+    { "img": "img/p-1.svg", "title": "First snow above Sinaia", "place": "Bucegi, 2025" },
+    { "img": "img/p-2.svg", "title": "Kitchen table, morning", "place": "Brașov, 2026" },
+    { "img": "img/p-3.svg", "title": "Grandmother's room", "place": "Viscri, 2024" },
+    { "img": "img/p-4.svg", "title": "Fog on the Olt", "place": "Făgăraș, 2025" },
+    { "img": "img/p-5.svg", "title": "Portrait of Ana", "place": "Cluj, 2026" },
+    { "img": "img/p-6.svg", "title": "Plums, end of August", "place": "Sibiu, 2025" }
+  ],
+  "about": "I shoot on a slow medium-format camera and mostly in the mountains near where I grew up. Prints are made to order on cotton rag paper. I take a few portrait and editorial commissions a year.",
+  "email": "teodor@example.com",
+  "theme": { "colors": { "bg": "#111315", "ink": "#E9E4D9", "muted": "#8E8A80", "line": "#2A2D31", "accent": "#E9E4D9" }, "fonts": { "display": "Inter", "body": "Inter" }, "easy": ["bg"] },
+  "presets": [
+    { "id": "darkroom", "name": "Darkroom", "colors": { "bg": "#111315", "ink": "#E9E4D9", "muted": "#8E8A80", "line": "#2A2D31", "accent": "#E9E4D9" }, "fonts": { "display": "Inter", "body": "Inter" } },
+    { "id": "matte", "name": "Matte white", "colors": { "bg": "#F2F1EE", "ink": "#1A1A1A", "muted": "#77736B", "line": "#DAD7D0", "accent": "#1A1A1A" }, "fonts": { "display": "Instrument Serif", "body": "Inter" } },
+    { "id": "contact", "name": "Contact sheet", "colors": { "bg": "#1B1B1B", "ink": "#F2EAD3", "muted": "#B8A98A", "line": "#3B3B3B", "accent": "#E8B23A" }, "fonts": { "display": "JetBrains Mono", "body": "JetBrains Mono" } }
+  ],
+  "sections": [ { "id": "gallery", "label": "Gallery", "on": true }, { "id": "about", "label": "About", "on": true } ]
+}

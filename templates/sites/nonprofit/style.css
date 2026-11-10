@@ -1,0 +1,36 @@
+/* Nonprofit: the mission set huge, real numbers, and one clear way to help.
+   Colors and fonts: site.json › theme. */
+:root { --bg: #F5F0E1; --ink: #21301C; --muted: #5A6650; --line: #D6CDB4; --panel: #E8DFC6; --accent: #C9541D; --leaf: #3E5E34;
+  --font-display: system-ui, sans-serif; --font-body: system-ui, sans-serif; --gut: clamp(16px, 4vw, 56px); }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 18px/1.6 var(--font-body); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; padding: 16px var(--gut); }
+.logo { font: 800 20px/1 var(--font-display); letter-spacing: -0.02em; color: var(--leaf); }
+.donate { display: inline-block; padding: 12px 22px; border-radius: 6px; background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; }
+.donate:hover { background: var(--ink); } .donate.sm { padding: 9px 16px; font-size: 15px; }
+.hero { padding: clamp(28px, 6vw, 72px) var(--gut) 0; }
+.mission { margin: 0 0 clamp(28px, 5vw, 56px); max-width: 28ch; font: 800 clamp(28px, 4vw, 56px)/1.08 var(--font-display); letter-spacing: -0.035em; }
+.hero img { width: 100%; height: clamp(220px, 40vw, 520px); object-fit: cover; display: block; border-radius: 4px; }
+main { padding: 0 var(--gut); }
+.impact { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 2px solid var(--ink); }
+.impact p { margin: 0; padding: 30px 20px 30px 0; display: grid; gap: 4px; }
+.impact p + p { padding-left: 20px; border-left: 2px solid var(--ink); }
+.impact b { font: 800 clamp(40px, 5vw, 64px)/1 var(--font-display); letter-spacing: -0.03em; color: var(--leaf); }
+.impact span { color: var(--muted); }
+section { padding-top: 64px; }
+h2 { margin: 0 0 16px; font: 800 30px/1.1 var(--font-display); letter-spacing: -0.02em; }
+.story p { margin: 0; max-width: 60ch; font-size: 21px; }
+.hg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.way { padding: 24px; background: var(--panel); border-radius: 4px; }
+.way h3 { margin: 0 0 6px; font: 800 22px/1.2 var(--font-display); } .way p { margin: 0 0 10px; color: var(--muted); font-size: 16px; }
+.way a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.give { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin: 28px 0 64px; }
+.give p { margin: 0; color: var(--muted); font-size: 15px; } .donate.big { font-size: 20px; padding: 16px 32px; }
+.foot { display: flex; justify-content: space-between; gap: 16px; padding: 24px var(--gut); background: var(--leaf); color: var(--bg); font-size: 15px; }
+[data-preset="bold"] .way { border: 2px solid var(--ink); } [data-preset="bold"] .donate { background: var(--panel); color: var(--ink); border: 2px solid var(--ink); }
+
+@media (max-width: 760px) { .impact, .hg { grid-template-columns: 1fr; } .impact p + p { padding-left: 0; border-left: 0; border-top: 2px solid var(--ink); } }

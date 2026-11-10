@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Priya &amp; Sam</title>
+  <meta name="description" data-s-attr="content:note" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="card">
+    <p class="kick">Together with their families</p>
+    <h1 data-s="name">Priya &amp; Sam</h1>
+    <p class="when" data-s="date">Saturday, June 13, 2027</p>
+    <p class="where" data-s="place">Hollow Creek Farm</p>
+    <a class="rs" href="#rsvp">RSVP</a>
+  </header>
+
+  <figure class="ph"><img data-s-attr="src:photo" src="img/venue.svg" alt="The farm" width="1200" height="800"></figure>
+  <p class="note" data-s="note">We're getting married in the orchard.</p>
+
+  <main data-s-sections>
+    <section class="day" data-section="day" aria-labelledby="h-day">
+      <h2 id="h-day">The day</h2>
+      <ol class="tl">
+        <template data-s-for="schedule"><li><span class="t">{{time}}</span><span class="w"><b>{{what}}</b><small>{{where}}</small></span></li></template>
+        <!--/s-for-->
+      </ol>
+    </section>
+
+    <section class="travel" data-section="travel" aria-labelledby="h-tr">
+      <h2 id="h-tr">Travel and stays</h2>
+      <div class="tg">
+        <template data-s-for="travel"><div><h3>{{t}}</h3><p>{{d}}</p></div></template>
+        <!--/s-for-->
+      </div>
+    </section>
+
+    <section class="faq" data-section="faq" aria-labelledby="h-faq">
+      <h2 id="h-faq">Questions</h2>
+      <template data-s-for="faq"><details><summary>{{q}}</summary><p>{{a}}</p></details></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="rsvp" id="rsvp" data-section="rsvp" aria-labelledby="h-rsvp">
+      <h2 id="h-rsvp">RSVP</h2>
+      <p>Please reply by <span data-s="rsvp.by">April 15</span>.</p>
+      <form class="rf" method="post" data-s-attr="action:rsvp.url" action="">
+        <label>Your name(s)<input name="name" required autocomplete="name"></label>
+        <fieldset><legend>Can you come?</legend><label class="ck"><input type="radio" name="coming" value="yes" required> Yes, wouldn't miss it</label><label class="ck"><input type="radio" name="coming" value="no"> Sadly, no</label></fieldset>
+        <label>How many of you?<input name="count" type="number" min="1" max="8" value="1"></label>
+        <label>Anything we should know? (food, access)<textarea name="notes" rows="3"></textarea></label>
+        <button type="submit">Send RSVP</button>
+        <p class="rf-note" hidden>The couple hasn't connected their RSVP form yet. Set site.json › rsvp › url to a Google Form, Tally or Formspree link.</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Priya &amp; Sam</span> · <span data-s="date">June 13, 2027</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="rsvp.js"></script>
+</body>
+</html>

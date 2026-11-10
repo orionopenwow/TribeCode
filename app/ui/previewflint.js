@@ -74,6 +74,7 @@
       if (a.dataset.pvf === 'unpick') { picked = null; paintPick(); }
       if (a.dataset.pvf === 'fix') fix(a.dataset.msg || '');
       if (a.dataset.pvf === 'history') toggleHistory();
+      if (a.dataset.pvf === 'customize' && window.TribeSiteLib) window.TribeSiteLib.edit({ pid: project(), dir: a.dataset.dir || '', level: 'easy' });   // website templates (sitelib.js)
       if (a.dataset.pvf === 'restore') restore(a.dataset.sha, a);
       if (a.dataset.pvf === 'savever') saveVersion(a);
       if (a.dataset.pvf === 'unnote') { notes.splice(+a.dataset.i, 1); paintQueue(); }
@@ -194,7 +195,8 @@
       const r = await C.api(`/projects/${encodeURIComponent(pid)}/flint/build`, { method: 'POST', body: { ask: text } });
       if (!r.built && !r.exists) { if (FF) FF.home(); return feed({ k: 'flint', text: r.why || 'I couldn\'t build that one from a recipe.' }); }
       if (FF) FF.done(tgt, r.built ? 'Built ✓' : 'Here it is');
-      feed({ k: 'flint', text: r.built ? `Built a ${r.title} for ${r.name}, free from the build kit (${r.files.length} files${r.dir ? ` in ${r.dir}/` : ''}). Pick anything on the page to change words, colors, size or spacing: also free.` : r.why });
+      if (r.built && r.customize) feed({ k: 'flint', html: `<span>Built a ${esc(r.title)} for ${esc(r.name)} from a website template, free (${r.files.length} files${r.dir ? ` in ${esc(r.dir)}/` : ''}). Change the name, words, links, photos and colors in a short form, or pick anything on the page.</span><span class="pvf-acts"><button type="button" class="btn sm primary" data-pvf="customize" data-dir="${esc(r.dir || '')}">Customize it</button></span>` });
+      else feed({ k: 'flint', text: r.built ? `Built a ${r.title} for ${r.name}, free from the build kit (${r.files.length} files${r.dir ? ` in ${r.dir}/` : ''}). Pick anything on the page to change words, colors, size or spacing: also free.` : r.why });
       if (window.TribePreview && window.TribePreview.show) setTimeout(() => window.TribePreview.show(r.href || ''), 300);
     } catch (e) { if (FF) FF.home(); feed({ k: 'flint', text: e.message || String(e) }); }
   }

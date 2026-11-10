@@ -1,0 +1,30 @@
+{
+  "meta": { "title": "Podcast", "category": "writing", "order": 9, "summary": "A show page: the cover, where to listen, an episode list with show notes and lengths, the hosts and a way to send in questions.", "goodFor": ["Podcasts", "Radio shows", "Audio series"], "tags": ["podcast", "episodes", "show", "audio", "radio"] },
+  "form": [
+    { "key": "name", "label": "Show name", "type": "text" },
+    { "key": "tagline", "label": "What it's about", "type": "textarea" },
+    { "key": "cover", "label": "Cover art", "type": "image" },
+    { "key": "listen", "label": "Where to listen", "type": "list", "fields": [{ "key": "label", "label": "App" }, { "key": "url", "label": "Link", "type": "url" }], "add": { "label": "RSS", "url": "https://" } },
+    { "key": "episodes", "label": "Episodes", "type": "list", "fields": [{ "key": "no", "label": "Number" }, { "key": "title", "label": "Title" }, { "key": "date", "label": "Date" }, { "key": "len", "label": "Length" }, { "key": "notes", "label": "Show notes", "type": "textarea" }, { "key": "url", "label": "Link", "type": "url" }], "add": { "no": "", "title": "New episode", "date": "", "len": "", "notes": "", "url": "https://" } },
+    { "key": "ask", "label": "Email for listener questions", "type": "text" }
+  ],
+  "name": "Small Engine Repair",
+  "tagline": "A weekly show about fixing things that most people throw away: lawnmowers, toasters, friendships. Two neighbors, one garage, no sponsors.",
+  "cover": "img/cover.svg",
+  "listen": [ { "label": "Apple Podcasts", "url": "https://example.com/apple" }, { "label": "Spotify", "url": "https://example.com/spotify" }, { "label": "Pocket Casts", "url": "https://example.com/pc" }, { "label": "RSS", "url": "https://example.com/rss" } ],
+  "episodes": [
+    { "no": "48", "title": "The toaster that outlived three marriages", "date": "Nov 4, 2026", "len": "52 min", "notes": "A listener sends us a 1961 chrome toaster. We learn what a bimetal strip is, and why nothing is built like this anymore.", "url": "https://example.com/e48" },
+    { "no": "47", "title": "Carburetors, explained badly", "date": "Oct 28, 2026", "len": "47 min", "notes": "Dale finally takes apart the push mower. Rosa reads the manual out loud. Neither helps.", "url": "https://example.com/e47" },
+    { "no": "46", "title": "Mailbag: your worst repair", "date": "Oct 21, 2026", "len": "58 min", "notes": "Your stories about fixes that went wrong, including one involving a garage door and a canoe.", "url": "https://example.com/e46" },
+    { "no": "45", "title": "Why does everything have a screen now", "date": "Oct 14, 2026", "len": "44 min", "notes": "A refrigerator with Wi-Fi visits the garage. We have questions.", "url": "https://example.com/e45" }
+  ],
+  "hosts": [ { "name": "Rosa Delgado", "bio": "Retired shop teacher. Owns more clamps than chairs." }, { "name": "Dale Pruitt", "bio": "Lives next door. Brings the coffee and the problems." } ],
+  "ask": "mailbag@example.com",
+  "theme": { "colors": { "bg": "#F2EDE2", "ink": "#1E1B16", "muted": "#615A4C", "line": "#1E1B16", "panel": "#1E1B16", "accent": "#C98A12" }, "fonts": { "display": "JetBrains Mono", "body": "Inter" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "garage", "name": "Garage", "colors": { "bg": "#F2EDE2", "ink": "#1E1B16", "muted": "#615A4C", "line": "#1E1B16", "panel": "#1E1B16", "accent": "#C98A12" }, "fonts": { "display": "JetBrains Mono", "body": "Inter" } },
+    { "id": "studio", "name": "Late night", "colors": { "bg": "#14161C", "ink": "#ECEEF3", "muted": "#9AA0AE", "line": "#2E323D", "panel": "#1E2129", "accent": "#7AA2FF" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+    { "id": "radio", "name": "Public radio", "colors": { "bg": "#FFFFFF", "ink": "#101010", "muted": "#555555", "line": "#101010", "panel": "#E8F0EC", "accent": "#C0392B" }, "fonts": { "display": "Fraunces", "body": "System sans" } }
+  ],
+  "sections": [ { "id": "episodes", "label": "Episodes", "on": true }, { "id": "hosts", "label": "Hosts", "on": true }, { "id": "ask", "label": "Send a question", "on": true } ]
+}

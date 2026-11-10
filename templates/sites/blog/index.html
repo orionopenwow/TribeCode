@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Field Notes from a Small Farm</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="mast">
+    <h1><a href="index.html" data-s="name">Field Notes from a Small Farm</a></h1>
+    <p class="by">by <span data-s="author">Hannah Lindqvist</span></p>
+    <p class="about" data-s="tagline">A letter every other Sunday.</p>
+  </header>
+
+  <main data-s-sections>
+    <section class="posts" data-section="posts" aria-label="Posts">
+      <template data-s-for="posts"><article class="post"><a href="{{url}}">{{#img}}<img src="{{img}}" alt="" loading="lazy" width="1200" height="800">{{/img}}<time>{{date}}</time><h2>{{title}}</h2>{{#dek}}<p>{{dek}}</p>{{/dek}}</a></article></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="sub" data-section="subscribe" aria-labelledby="h-sub">
+      <h2 id="h-sub">Get the next letter</h2>
+      <p data-s="subscribe.note">Every other Sunday. No ads.</p>
+      <form class="sf" method="post" data-s-attr="action:subscribe.url" action="">
+        <label class="sr" for="em">Email</label>
+        <input id="em" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
+        <button type="submit">Subscribe</button>
+      </form>
+      <p class="sf-note" hidden>Subscriptions aren't connected yet. Set site.json › subscribe › url to your Buttondown, beehiiv or Substack form.</p>
+    </section>
+  </main>
+
+  <footer class="foot">© <span data-s="author">Hannah Lindqvist</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="subscribe.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@ const TIERS = [
   { id: 'rules', label: 'Free · no AI', where: 'Runs anywhere, even on a phone with no signal',
     can: ['Answer how-to questions from the Guide', 'Add tasks, notes and reminders', 'Open any part of the app', 'Edit the picked element in the preview: words, color, size, spacing, corners, alignment, hide or remove', 'Add built-in sounds and sprites', 'Draft docs, sheets and decks from templates and your project'] },
   { id: 'recipe', label: 'Free · recipes', where: 'No AI needed: builds from the open-source build kit',
-    can: ['A landing page for anything', 'A to-do app', 'A 3D game (three.js)', 'A 2D platformer', 'A video editor in the browser', 'Names, words and colors filled in from what you said'] },
+    can: ['A landing page for anything', 'A website from 16 templates: link in bio, merch shop, café, band, portfolio, blog and more', 'A to-do app', 'A 3D game (three.js)', 'A 2D platformer', 'A video editor in the browser', 'Names, words and colors filled in from what you said'] },
   { id: 'small', label: 'Free · small model', where: 'Qwen on this device (WebGPU) or on the host (Ollama)',
     can: ['Chat and quick answers about your project', 'Write and rewrite short copy', 'Fuller docs, sheets and decks', 'Small edits to one page'] },
   { id: 'agent', label: 'A stronger AI', where: "A member's own Claude Code, Codex or Gemini, or the host's AI key",
@@ -37,6 +37,27 @@ const RECIPES = [
   { id: 'todo', tpl: 'recipes/todo', title: 'to-do app', rx: /\b(to-?do|todo|task|checklist|shopping list|chore)s?\s*(list|app|tracker|manager)?\b/ },
   { id: 'landing', tpl: 'recipes/landing', title: 'landing page', rx: /\b(landing page|home ?page|web ?site|site|one[- ]pager|page for)\b/ },
 ];
+// Website templates (templates/sites/<id>, server/sitelib.js): matched before the generic landing page, except when
+// someone says "landing page" (then they get the landing recipe).
+const SITE_RECIPES = [
+  { id: 'site:linkbio', site: 'linkbio', title: 'link-in-bio page', rx: /\b(link[- ]?in[- ]?bio|link ?tree|links? page|bio link|all my links)\b/ },
+  { id: 'site:merch', site: 'merch', title: 'merch shop', rx: /\b(merch|shop|store|online store|e-?commerce|sell (my|our)? ?(stuff|products|things))\b/ },
+  { id: 'site:cafe', site: 'cafe', title: 'restaurant site', rx: /\b(restaurant|caf[eé]|coffee shop|bakery|bistro|diner|food truck|menu)\b/ },
+  { id: 'site:band', site: 'band', title: 'band page', rx: /\b(band|musician|tour dates|album|dj|singer|rapper)\b/ },
+  { id: 'site:podcast', site: 'podcast', title: 'podcast site', rx: /\bpodcast\b/ },
+  { id: 'site:wedding', site: 'wedding', title: 'event page', rx: /\b(wedding|rsvp|reunion|retreat|birthday (party|weekend)|save the date)\b/ },
+  { id: 'site:blog', site: 'blog', title: 'blog', rx: /\b(blog|newsletter|journal|devlog|writing site)\b/ },
+  { id: 'site:portfolio', site: 'portfolio', title: 'portfolio', rx: /\b(portfolio|case stud(y|ies)|design studio|interior design|architect)\b/ },
+  { id: 'site:photography', site: 'photography', title: 'photo gallery', rx: /\b(photograph(y|er)|photo gallery|gallery)\b/ },
+  { id: 'site:resume', site: 'resume', title: 'resume', rx: /\b(resume|r[eé]sum[eé]|cv|about me page)\b/ },
+  { id: 'site:creator', site: 'creator', title: 'creator page', rx: /\b(streamer|stream(ing)? (page|site)|twitch|youtuber|youtube channel|content creator)\b/ },
+  { id: 'site:gamepage', site: 'gamepage', title: 'game page', rx: /\b(press kit|game page|steam page|wishlist page)\b/ },
+  { id: 'site:nonprofit', site: 'nonprofit', title: 'nonprofit site', rx: /\b(nonprofit|non-profit|charity|donat(e|ion)s?|fundrais\w*|community group|mutual aid)\b/ },
+  { id: 'site:service', site: 'service', title: 'local business site', rx: /\b(plumb\w*|salon|barber\w*|cleaning (service|business)|electrician|handyman|landscap\w*|repair shop|hvac|roofer)\b/ },
+  { id: 'site:comingsoon', site: 'comingsoon', title: 'coming-soon page', rx: /\b(coming soon|waitlist|wait list|pre-?launch|launch page)\b/ },
+  { id: 'site:saas', site: 'saas', title: 'product page', rx: /\b(saas|startup|product page|app page|software product)\b/ },
+];
+const siteRecipeFor = a => (/\blanding page\b/.test(a) ? null : SITE_RECIPES.find(x => x.rx.test(a)) || null);
 const BIG = /\b(refactor|rewrite|migrat\w*|multiplayer|online play|log ?in|sign[- ]?(in|up)|accounts?|auth\w*|database|backend|back-end|server|api\b|payments?|stripe|checkout|subscriptions?|chat ?bot|ai (enemies|opponent|chat)|leaderboards?|level editor|inventory system|save (system|games?)|physics engine|across (all|every|the whole)|whole (app|codebase|project|site)|every (file|page)|all (the )?(files|pages)|optimi[sz]e|performance|port (it|this)|convert (it|this|the app) to|typescript|react|vue|svelte|unit tests?|test suite|deploy pipeline|ci\b|debug|crash(es|ing)?|memory leak)\b/i;
 const PICKY = /\b(bigger|larger|smaller|bold|italic|underline|uppercase|cent(er|re)(ed)?|align|left|right|color|colour|background|rounded|corners?|padding|spacing|space|margin|hide|remove|delete|font|size|dark|light|red|orange|yellow|gold|green|mint|teal|blue|sky|navy|indigo|purple|violet|pink|rose|brown|white|black|gr[ae]y)\b|#[0-9a-f]{3,6}\b/i;
 
@@ -45,6 +66,8 @@ function classify(ask, { picked = false } = {}) {
   if (!a) return { tier: 'rules', why: 'Nothing asked yet.' };
   if (BIG.test(a)) return { tier: 'agent', why: 'This touches many parts of the code or needs real engineering (systems, accounts, data, servers or debugging). That is a job for a stronger AI: a member\'s own Claude Code, Codex or Gemini, or the host\'s AI key.' };
   const wantsBuild = /\b(make|build|create|start|give me|set up|spin up|i want|we want|need)\b/.test(a);
+  const sr = wantsBuild && !RECIPES.slice(0, 4).some(x => x.rx.test(a)) && siteRecipeFor(a);
+  if (sr) return { tier: 'recipe', recipe: sr.id, site: sr.site, why: `Free: Flint builds a ${sr.title} from TribeCode's website templates, no AI needed. Customize it in a short form.` };
   const r = wantsBuild && RECIPES.find(x => x.rx.test(a));
   if (r) return { tier: 'recipe', recipe: r.id, why: `Free: Flint builds a ${r.title} from the open-source build kit, no AI needed.` };
   if (picked && PICKY.test(a)) return { tier: 'rules', why: 'Free: a look change on the element you picked, no AI needed.' };
@@ -87,7 +110,7 @@ function accentFrom(ask) {
   const c = new RegExp(`\\b(${Object.keys(COLORS).join('|')})\\b`, 'i').exec(ask); return c ? COLORS[c[1].toLowerCase()] : '#F26B1D';
 }
 
-module.exports = function flintFree({ P, W, root, getMembers = () => [], broadcast = () => {}, ensureRepo = null, llmStatus = () => ({ online: false }), log = () => {} }) {
+module.exports = function flintFree({ P, W, root, getMembers = () => [], broadcast = () => {}, ensureRepo = null, siteLib = null, llmStatus = () => ({ online: false }), log = () => {} }) {
   const TEMPLATES = path.join(root, 'templates');
   const err = (status, m) => Object.assign(new Error(m), { status });
   const roleIn = (me, pid) => ((P.get(pid) || {}).members || {})[me.id] || me.role;
@@ -112,6 +135,11 @@ module.exports = function flintFree({ P, W, root, getMembers = () => [], broadca
     if (!ask) throw err(400, 'say what to build');
     const c = classify(ask);
     if (c.tier !== 'recipe') return { built: false, ...c };
+    if (c.site && siteLib) {   // a website template: name and color from what was said, then Customize takes over
+      const out = await siteLib.create(pid, me, { template: c.site, name: nameFrom(ask, (P.get(pid) || {}).name), accent: /#[0-9a-f]{3,6}\b|\b(red|orange|yellow|gold|green|mint|teal|blue|sky|indigo|purple|violet|pink|rose|brown)\b/i.test(ask) ? accentFrom(ask) : null });
+      const t = SITE_RECIPES.find(x => x.id === c.recipe);
+      return { built: true, tier: 'recipe', recipe: c.recipe, site: c.site, title: t ? t.title : out.title, name: out.name, dir: out.dir, href: out.href, files: out.files, customize: true };
+    }
     const p = P.get(pid);
     let repo = p && p.repo && W.isRepo(p.repo) ? p.repo : null;
     if (!repo) {
@@ -208,7 +236,7 @@ module.exports = function flintFree({ P, W, root, getMembers = () => [], broadca
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return fail(res, 404, 'no such route');
   }
-  return { route, classify, build, TIERS, RECIPES };
+  return { route, classify, build, TIERS, RECIPES, SITE_RECIPES };
 };
 module.exports.classify = classify;
 module.exports.TIERS = TIERS;

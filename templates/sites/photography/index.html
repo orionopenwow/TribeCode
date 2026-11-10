@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Teodor Vasile</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="top">
+    <h1 data-s="name">Teodor Vasile</h1>
+    <p data-s="tagline">Landscapes and quiet interiors</p>
+    <nav aria-label="Sections"><a href="#gallery">Work</a><a href="#about">About</a></nav>
+  </header>
+
+  <main data-s-sections>
+    <section class="gallery" id="gallery" data-section="gallery" aria-label="Photos">
+      <template data-s-for="photos"><figure class="ph"><button type="button" class="open" data-n="{{@n}}" aria-label="Open {{title}}"><img src="{{img}}" alt="{{title}}" loading="lazy"></button><figcaption><span>{{title}}</span><small>{{place}}</small></figcaption></figure></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="about" id="about" data-section="about">
+      <p data-s="about">I shoot on a slow medium-format camera.</p>
+      <p class="mail">Bookings and prints · <a data-s-attr="href:mailto:email" href="mailto:teodor@example.com"><span data-s="email">teodor@example.com</span></a></p>
+    </section>
+  </main>
+
+  <dialog class="lb" aria-label="Photo">
+    <form method="dialog"><button class="lb-x" value="close" aria-label="Close">Close</button></form>
+    <img class="lb-img" alt="">
+    <p class="lb-cap"></p>
+    <button type="button" class="lb-nav prev" aria-label="Previous photo">←</button><button type="button" class="lb-nav next" aria-label="Next photo">→</button>
+  </dialog>
+
+  <footer class="foot">© <span data-s="name">Teodor Vasile</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="lightbox.js"></script>
+</body>
+</html>

@@ -134,3 +134,6 @@
 /* build kit chips under "Make the starter" (server/buildkit.js) */
 .su-kit { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .su-kit i { font: 500 11px/1 var(--mono); font-style: normal; color: var(--live-ink); background: var(--live-tint); border-radius: 99px; padding: 4px 8px; }
+
+/* website templates link under Make the starter (sitelib.js) */
+.su-sitelib { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }

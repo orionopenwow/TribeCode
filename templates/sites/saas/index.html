@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Ledgerly</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="#" data-s="name">Ledgerly</a>
+    <nav aria-label="Sections"><a href="#does">Product</a><a href="#plans">Plans</a><a href="#changelog">Changelog</a></nav>
+    <a class="btn sm" data-s-attr="href:cta.url" href="#">Sign up</a>
+  </header>
+
+  <div class="hero">
+    <h1 data-s="tagline">Ledgerly turns receipts in your inbox into a clean expense sheet.</h1>
+    <div class="acts">
+      <a class="btn" data-s-attr="href:cta.url" href="#"><span data-s="cta.label">Try it with your inbox</span></a>
+      <span class="note" data-s="cta.note">Free for 30 days. No card.</span>
+    </div>
+    <figure class="shot"><img data-s-attr="src:shot" src="img/app.svg" alt="The app: a list of receipts and the expense sheet" width="1400" height="900"></figure>
+  </div>
+
+  <main data-s-sections>
+    <section class="does" id="does" data-section="does" aria-label="What it does">
+      <template data-s-for="does"><div class="f"><span class="n">0{{@n}}</span><h2>{{t}}</h2><p>{{d}}</p></div></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="notyet" data-section="notyet" aria-labelledby="h-ny">
+      <h2 id="h-ny">What it doesn't do yet</h2>
+      <ul>
+        <template data-s-for="notyet"><li>{{t}}</li></template>
+        <!--/s-for-->
+      </ul>
+    </section>
+
+    <section class="plans" id="plans" data-section="plans" aria-labelledby="h-pl">
+      <h2 id="h-pl">Plans</h2>
+      <div class="pg">
+        <template data-s-for="plans"><div class="plan"><h3>{{name}}</h3><p class="pp"><b>{{price}}</b>{{per}}</p><p>{{what}}</p></div></template>
+        <!--/s-for-->
+      </div>
+    </section>
+
+    <section class="changelog" id="changelog" data-section="changelog" aria-labelledby="h-cl">
+      <h2 id="h-cl">Changelog</h2>
+      <ol>
+        <template data-s-for="changelog"><li><time>{{date}}</time><span>{{t}}</span></li></template>
+        <!--/s-for-->
+      </ol>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Ledgerly</span><a data-s-attr="href:cta.url" href="#">Get started</a></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

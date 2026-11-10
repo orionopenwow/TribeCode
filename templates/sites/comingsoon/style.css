@@ -1,0 +1,29 @@
+/* Coming soon: one screen, split in two. Words and a form on the left, an object and the date on the right.
+   Colors and fonts: site.json › theme. */
+:root { --bg: #EAE6F2; --ink: #1F1838; --muted: #5A527A; --line: #1F1838; --accent: #E8512E;
+  --font-display: Georgia, serif; --font-body: system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 17px/1.55 var(--font-body); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.split { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.left { display: grid; align-content: space-between; gap: 40px; padding: clamp(24px, 5vw, 64px); }
+.name { margin: 0; font: 700 15px/1 var(--font-body); text-transform: uppercase; letter-spacing: .14em; }
+h1 { margin: 0; font: 700 clamp(32px, 4.2vw, 64px)/1.04 var(--font-display); letter-spacing: -0.03em; max-width: 17ch; }
+.wl { display: flex; border: 2px solid var(--line); max-width: 480px; }
+.wl input { flex: 1; min-width: 0; padding: 16px; border: 0; background: transparent; font: inherit; color: var(--ink); }
+.wl input::placeholder { color: var(--muted); }
+.wl button { padding: 0 22px; border: 0; background: var(--ink); color: var(--bg); font: 700 15px/1 var(--font-body); cursor: pointer; }
+.wl button:hover { background: var(--accent); }
+.wl-note, .wl-off { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+.right { position: relative; border-left: 2px solid var(--line); overflow: hidden; }
+.right img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.date { position: absolute; left: 0; right: 0; bottom: 0; display: grid; gap: 2px; padding: 22px clamp(20px, 4vw, 40px); background: var(--bg); border-top: 2px solid var(--line); }
+.lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
+.big { font: 700 clamp(28px, 3.4vw, 48px)/1 var(--font-display); letter-spacing: -0.02em; }
+.cd { color: var(--accent); font-weight: 700; }
+[data-preset="lemon"] h1 { font-weight: 800; letter-spacing: -0.05em; }
+
+@media (max-width: 820px) { .split { grid-template-columns: 1fr; } .right { border-left: 0; border-top: 2px solid var(--line); min-height: 60vh; } }

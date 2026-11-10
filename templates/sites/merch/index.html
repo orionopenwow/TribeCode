@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Loop &amp; Thread</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="bar">
+    <a class="logo" href="#top" data-s="name">Loop &amp; Thread</a>
+    <nav class="nav" aria-label="Shop"><a href="#shop">Shop</a><a href="#facts">Shipping</a><a href="#faq">Questions</a></nav>
+    <button class="cart-btn" type="button" aria-controls="cart" aria-expanded="false">Cart <span class="cart-n" aria-live="polite">0</span></button>
+  </header>
+
+  <main id="top" data-s-sections>
+    <section class="intro" data-section="intro">
+      <h1 data-s="tagline">Wool socks knit in Asheville.</h1>
+      <p data-s="intro">We run four old knitting machines in a converted bakery.</p>
+      <a class="go" href="#shop">See this batch</a>
+    </section>
+
+    <section class="shop" id="shop" data-section="shop" aria-label="Products">
+      <ul class="grid">
+        <template data-s-for="products"><li class="item"><button type="button" class="item-btn" data-product="{{@n}}"><span class="ph"><img src="{{img}}" alt="{{name}}" loading="lazy" width="900" height="1100"></span><span class="row"><span class="nm">{{name}}</span><span class="pr">{{currency}}{{price}}</span></span><span class="nt">{{note}}</span></button></li></template>
+        <!--/s-for-->
+      </ul>
+    </section>
+
+    <section class="facts" id="facts" data-section="facts" aria-label="Shipping and returns">
+      <template data-s-for="facts"><div><h2>{{title}}</h2><p>{{text}}</p></div></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="faq" id="faq" data-section="faq">
+      <h2>Questions</h2>
+      <template data-s-for="faq"><details><summary>{{q}}</summary><p>{{a}}</p></details></template>
+      <!--/s-for-->
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span data-s="name">Loop &amp; Thread</span>
+    <a data-s-attr="href:mailto:contact" href="mailto:hello@example.com"><span data-s="contact">hello@example.com</span></a>
+  </footer>
+
+  <!-- product details -->
+  <dialog class="pd" id="pd" aria-labelledby="pd-name">
+    <form method="dialog" class="pd-in">
+      <button class="x" value="close" aria-label="Close">×</button>
+      <img class="pd-img" alt="" width="900" height="1100">
+      <div class="pd-txt">
+        <h2 id="pd-name"></h2>
+        <p class="pd-price"></p>
+        <p class="pd-desc"></p>
+        <fieldset class="pd-sizes"><legend>Size</legend><div class="sz"></div></fieldset>
+        <button type="button" class="add">Add to cart</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- the cart -->
+  <aside class="cart" id="cart" aria-label="Cart" hidden>
+    <div class="cart-in">
+      <div class="cart-h"><h2>Your cart</h2><button type="button" class="x cart-x" aria-label="Close the cart">×</button></div>
+      <ul class="lines"></ul>
+      <p class="empty">Nothing here yet.</p>
+      <div class="cart-f">
+        <p class="sub">Subtotal <b></b></p>
+        <a class="checkout" data-s-attr="href:checkout.url" href="#"><span data-s="checkout.label">Go to checkout</span></a>
+        <p class="ck-note" data-s="checkout.note">Payments open on our checkout page.</p>
+      </div>
+    </div>
+  </aside>
+
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="shop.js"></script>
+</body>
+</html>

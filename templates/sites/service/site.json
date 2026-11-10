@@ -1,0 +1,248 @@
+{
+  "meta": {
+    "title": "Local service",
+    "category": "business",
+    "order": 7,
+    "summary": "For a plumber, salon, cleaner or repair shop: services with prices, the area you cover, booking and real reviews from your customers.",
+    "goodFor": [
+      "Trades",
+      "Salons and barbers",
+      "Cleaners",
+      "Repair shops"
+    ],
+    "tags": [
+      "plumber",
+      "salon",
+      "barber",
+      "cleaning",
+      "electrician",
+      "local",
+      "service",
+      "booking"
+    ]
+  },
+  "form": [
+    {
+      "key": "name",
+      "label": "Business name",
+      "type": "text"
+    },
+    {
+      "key": "headline",
+      "label": "Headline (short)",
+      "type": "text"
+    },
+    {
+      "key": "tagline",
+      "label": "A little more about you",
+      "type": "textarea"
+    },
+    {
+      "key": "phone",
+      "label": "Phone",
+      "type": "text"
+    },
+    {
+      "key": "book",
+      "label": "Booking link",
+      "type": "url"
+    },
+    {
+      "key": "services",
+      "label": "Services",
+      "type": "list",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Service"
+        },
+        {
+          "key": "price",
+          "label": "Price"
+        },
+        {
+          "key": "time",
+          "label": "How long"
+        },
+        {
+          "key": "desc",
+          "label": "Detail"
+        }
+      ],
+      "add": {
+        "name": "New service",
+        "price": "",
+        "time": "",
+        "desc": ""
+      }
+    },
+    {
+      "key": "area",
+      "label": "Areas you cover",
+      "type": "textarea"
+    },
+    {
+      "key": "reviews",
+      "label": "Reviews (paste real ones, with the customer's OK)",
+      "type": "list",
+      "fields": [
+        {
+          "key": "text",
+          "label": "What they said",
+          "type": "textarea"
+        },
+        {
+          "key": "who",
+          "label": "Name"
+        },
+        {
+          "key": "where",
+          "label": "Where it was posted"
+        }
+      ],
+      "add": {
+        "text": "",
+        "who": "",
+        "where": ""
+      }
+    }
+  ],
+  "name": "Harbor Plumbing",
+  "headline": "Plumbing in Duluth, done properly.",
+  "tagline": "Licensed plumbers in Duluth and the North Shore. We answer the phone, show up in the window we give you, and clean up after.",
+  "phone": "(218) 555-0199",
+  "book": "https://example.com/book",
+  "badges": [
+    {
+      "t": "Licensed in Minnesota, #PC-000000"
+    },
+    {
+      "t": "Same-day for leaks"
+    },
+    {
+      "t": "Upfront quotes"
+    }
+  ],
+  "services": [
+    {
+      "name": "Leak or burst pipe",
+      "price": "from $129",
+      "time": "Same day",
+      "desc": "We stop the water first, then fix it properly."
+    },
+    {
+      "name": "Water heater swap",
+      "price": "from $1,450",
+      "time": "Half a day",
+      "desc": "Tank or tankless, haul-away included."
+    },
+    {
+      "name": "Drain cleaning",
+      "price": "from $149",
+      "time": "1 to 2 hours",
+      "desc": "Kitchen, bath or main line, with a camera check."
+    },
+    {
+      "name": "Winterizing a cabin",
+      "price": "from $199",
+      "time": "2 hours",
+      "desc": "Drain, blow out and antifreeze before the first freeze."
+    }
+  ],
+  "area": "Duluth, Hermantown, Proctor, Two Harbors, and cabins up to Silver Bay.",
+  "reviews": [],
+  "reviewsNote": "Reviews will show here. Paste real reviews from Google or Yelp, with the customer's OK; never write your own.",
+  "theme": {
+    "colors": {
+      "bg": "#FFFFFF",
+      "ink": "#0E2235",
+      "muted": "#4D5F70",
+      "soft": "#EEF4F9",
+      "line": "#D5E0EA",
+      "accent": "#0F5FA8",
+      "warn": "#F2B705"
+    },
+    "fonts": {
+      "display": "System sans",
+      "body": "System sans"
+    },
+    "easy": [
+      "accent"
+    ]
+  },
+  "presets": [
+    {
+      "id": "harbor",
+      "name": "Harbor",
+      "colors": {
+        "bg": "#FFFFFF",
+        "ink": "#0E2235",
+        "muted": "#4D5F70",
+        "soft": "#EEF4F9",
+        "line": "#D5E0EA",
+        "accent": "#0F5FA8",
+        "warn": "#F2B705"
+      },
+      "fonts": {
+        "display": "System sans",
+        "body": "System sans"
+      }
+    },
+    {
+      "id": "salon",
+      "name": "Salon",
+      "colors": {
+        "bg": "#FBF6F3",
+        "ink": "#2E1F24",
+        "muted": "#6E5A60",
+        "soft": "#F2E6E1",
+        "line": "#E2D2CB",
+        "accent": "#8E3B57",
+        "warn": "#C9A227"
+      },
+      "fonts": {
+        "display": "Fraunces",
+        "body": "Humanist"
+      }
+    },
+    {
+      "id": "workshop",
+      "name": "Workshop",
+      "colors": {
+        "bg": "#F5F5F0",
+        "ink": "#1D1D1B",
+        "muted": "#555550",
+        "soft": "#E8E8E0",
+        "line": "#1D1D1B",
+        "accent": "#E85D04",
+        "warn": "#E85D04"
+      },
+      "fonts": {
+        "display": "Space Grotesk",
+        "body": "System sans"
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "services",
+      "label": "Services and prices",
+      "on": true
+    },
+    {
+      "id": "area",
+      "label": "Area",
+      "on": true
+    },
+    {
+      "id": "reviews",
+      "label": "Reviews",
+      "on": true
+    },
+    {
+      "id": "cta",
+      "label": "Call to book",
+      "on": true
+    }
+  ]
+}

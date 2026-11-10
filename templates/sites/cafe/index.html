@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Fern &amp; Ash</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#" data-s="name">Fern &amp; Ash</a>
+    <nav aria-label="Sections"><a href="#menu">Menu</a><a href="#visit">Visit</a></nav>
+    <a class="book" data-s-attr="href:reserve" href="#">Book a table</a>
+  </header>
+
+  <div class="hero">
+    <div class="hero-t">
+      <h1 data-s="name">Fern &amp; Ash</h1>
+      <p data-s="tagline">A neighborhood café.</p>
+      <p class="today"><span data-s="hours.0.d">Tue to Fri</span> · <span data-s="hours.0.h">7am to 4pm</span></p>
+    </div>
+    <img class="hero-img" data-s-attr="src:photo" src="img/room.svg" alt="Inside the café" width="1200" height="900">
+  </div>
+
+  <main data-s-sections>
+    <section class="menu" id="menu" data-section="menu" aria-labelledby="h-menu">
+      <h2 id="h-menu">Menu</h2>
+      <div class="cols">
+        <template data-s-for="menu"><div class="msec"><h3>{{section}}</h3><ul>{{#items}}<li><span class="dn">{{n}}</span><span class="dots" aria-hidden="true"></span><span class="dp">{{p}}</span>{{#d}}<small>{{d}}</small>{{/d}}</li>{{/items}}</ul></div></template>
+        <!--/s-for-->
+      </div>
+      <p class="fine">Prices in dollars. Tell us about allergies and we'll walk you through the menu.</p>
+    </section>
+
+    <section class="visit" id="visit" data-section="visit" aria-labelledby="h-visit">
+      <h2 id="h-visit">Visit</h2>
+      <div class="vgrid">
+        <div>
+          <h3>Hours</h3>
+          <dl class="hours">
+            <template data-s-for="hours"><div><dt>{{d}}</dt><dd>{{h}}</dd></div></template>
+            <!--/s-for-->
+          </dl>
+        </div>
+        <div>
+          <h3>Find us</h3>
+          <p class="addr" data-s="address">1414 SE Bybee Blvd</p>
+          <p><a data-s-attr="href:tel:phone" href="#"><span data-s="phone">(503) 555-0142</span></a></p>
+          <a class="book big" data-s-attr="href:reserve" href="#">Book a table</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" data-section="gallery" aria-label="Photos">
+      <template data-s-for="gallery"><img src="{{img}}" alt="{{alt}}" loading="lazy" width="1000" height="800"></template>
+      <!--/s-for-->
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Fern &amp; Ash</span><span data-s="address">1414 SE Bybee Blvd</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

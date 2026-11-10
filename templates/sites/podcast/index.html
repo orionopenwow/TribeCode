@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Small Engine Repair</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="show">
+    <img class="cover" data-s-attr="src:cover;alt:name" src="img/cover.svg" alt="" width="800" height="800">
+    <div class="show-t">
+      <p class="kick">A podcast · new episodes Tuesdays</p>
+      <h1 data-s="name">Small Engine Repair</h1>
+      <p data-s="tagline">A weekly show about fixing things.</p>
+      <ul class="apps">
+        <template data-s-for="listen"><li><a href="{{url}}">{{label}}</a></li></template>
+        <!--/s-for-->
+      </ul>
+    </div>
+  </header>
+
+  <main data-s-sections>
+    <section class="eps" data-section="episodes" aria-labelledby="h-eps">
+      <h2 id="h-eps">Episodes</h2>
+      <ol>
+        <template data-s-for="episodes"><li class="ep"><span class="no">{{no}}</span><div class="ep-t"><h3><a href="{{url}}">{{title}}</a></h3><p class="ep-m">{{date}} · {{len}}</p><p>{{notes}}</p></div><a class="play" href="{{url}}" aria-label="Listen to episode {{no}}">▶</a></li></template>
+        <!--/s-for-->
+      </ol>
+    </section>
+
+    <section class="hosts" data-section="hosts" aria-labelledby="h-hosts">
+      <h2 id="h-hosts">Hosts</h2>
+      <div class="hg">
+        <template data-s-for="hosts"><div><h3>{{name}}</h3><p>{{bio}}</p></div></template>
+        <!--/s-for-->
+      </div>
+    </section>
+
+    <section class="ask" data-section="ask">
+      <h2>Got something broken?</h2>
+      <p>Send us the story and a photo. We read every one, and a few end up on the show.</p>
+      <a class="btn" data-s-attr="href:mailto:ask" href="mailto:mailbag@example.com"><span data-s="ask">mailbag@example.com</span></a>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Small Engine Repair</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

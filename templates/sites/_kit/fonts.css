@@ -1,0 +1,11 @@
+/* The fonts this site can use (switch them in site.json › theme › fonts, or in TribeCode's Customize).
+   All are SIL Open Font License 1.1; the licenses are in fonts/. */
+@font-face { font-family: 'Fraunces'; src: url(fonts/fraunces-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Instrument Serif'; src: url(fonts/instrument-serif-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Bricolage Grotesque'; src: url(fonts/bricolage-grotesque-latin-800-normal.woff2) format('woff2'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(fonts/space-grotesk-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(fonts/jetbrains-mono-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Silkscreen'; src: url(fonts/silkscreen-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url(fonts/inter-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url(fonts/inter-latin-600-normal.woff2) format('woff2'); font-weight: 600; font-display: swap; }

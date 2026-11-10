@@ -1,0 +1,56 @@
+/* Link in bio. Colors and fonts come from site.json › theme (the CSS variables below);
+   each look ("preset") also changes a few shapes, see the [data-preset] blocks at the end. */
+:root { --bg: #F1EADB; --ink: #2B241C; --muted: #6E604E; --card: #FBF7EE; --line: #2B241C; --accent: #B4532C;
+  --font-display: Georgia, serif; --font-body: system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--ink); font: 16px/1.5 var(--font-body); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.page { width: min(460px, 100%); margin: 0 auto; padding: 56px 20px 40px; display: grid; gap: 28px; }
+.who { text-align: center; display: grid; justify-items: center; gap: 6px; }
+.avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); background: var(--card); }
+h1 { margin: 10px 0 0; font: 400 42px/1.05 var(--font-display); letter-spacing: -0.01em; }
+.handle { margin: 0; color: var(--muted); font-size: 14px; }
+.bio { margin: 6px 0 0; max-width: 34ch; }
+main { display: grid; gap: 22px; }
+.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.links a { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "t a" "n a"; align-items: center; column-gap: 12px;
+  padding: 15px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; text-decoration: none; transition: transform .15s ease, background .15s ease; }
+.links a:hover { transform: translateY(-1px); }
+.links a:focus-visible, .socials a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.l-t { grid-area: t; font-weight: 600; }
+.l-n { grid-area: n; color: var(--muted); font-size: 13px; }
+.l-a { grid-area: a; color: var(--accent); font-size: 18px; }
+.socials { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; }
+.socials a { color: var(--muted); font-size: 14px; text-underline-offset: 3px; }
+.socials a:hover { color: var(--accent); }
+.foot { text-align: center; color: var(--muted); font-size: 12px; }
+
+/* ---- Night: hard edges, left-aligned, a lime accent ---- */
+[data-preset="night"] h1 { font-weight: 700; font-size: 34px; letter-spacing: -0.03em; }
+[data-preset="night"] .avatar { border-radius: 4px; }
+[data-preset="night"] .who { text-align: left; justify-items: start; }
+[data-preset="night"] .links a { border-radius: 0; border-width: 0 0 1px; background: transparent; padding: 16px 2px; }
+[data-preset="night"] .links a:hover { transform: none; color: var(--accent); }
+[data-preset="night"] .socials { justify-content: flex-start; }
+
+/* ---- Blocks: chunky offset cards, each link a different color ---- */
+[data-preset="blocks"] h1 { font-weight: 800; font-size: 44px; letter-spacing: -0.04em; }
+[data-preset="blocks"] .avatar { border-radius: 24px; border-width: 2px; }
+[data-preset="blocks"] .links a { border-width: 2px; border-radius: 6px; box-shadow: 4px 4px 0 var(--line); }
+[data-preset="blocks"] .links li:nth-child(4n+2) a { background: #B9E2C4; }
+[data-preset="blocks"] .links li:nth-child(4n+3) a { background: #FFE07A; }
+[data-preset="blocks"] .links li:nth-child(4n+4) a { background: #C9C2FF; }
+[data-preset="blocks"] .links a:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--line); }
+[data-preset="blocks"] .l-n { color: var(--ink); }
+
+/* ---- Terminal: a shell prompt ---- */
+[data-preset="terminal"] body { font-size: 14px; }
+[data-preset="terminal"] h1 { font-size: 22px; font-weight: 700; }
+[data-preset="terminal"] h1::before { content: "~/ "; color: var(--muted); }
+[data-preset="terminal"] .who { text-align: left; justify-items: start; }
+[data-preset="terminal"] .avatar { width: 64px; height: 64px; border-radius: 0; filter: grayscale(1) contrast(1.1); }
+[data-preset="terminal"] .links a { border-radius: 0; border-style: dashed; }
+[data-preset="terminal"] .l-t::before { content: "> "; color: var(--accent); }
+[data-preset="terminal"] .socials { justify-content: flex-start; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

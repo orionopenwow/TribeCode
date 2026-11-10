@@ -77,7 +77,7 @@
         <section class="wb-sec">
           <div class="sec-head"><span class="eyebrow">Publishing</span><h2>Build and keep fresh</h2></div>
           <button class="toggle wb-auto" id="wb-auto" role="switch" aria-checked="false" ${m ? '' : 'disabled'}><span>Keep it updated automatically<small>Rebuilds when the bio, picture, vision, screenshots, people or saved changes change${d.inRepo ? '; the autopilot commits site/' : ''}.</small></span><span class="switch"></span></button>
-          <div class="wb-acts">${m ? '<button class="btn" id="wb-save">Save</button>' : ''}<button class="btn primary" id="wb-build" ${data.canSuggest || m ? '' : 'disabled'}>Build the site</button></div>
+          <div class="wb-acts">${m ? '<button class="btn" id="wb-save">Save</button>' : ''}<button class="btn primary" id="wb-build" ${data.canSuggest || m ? '' : 'disabled'}>Build the site</button><button class="btn" id="wb-tpl" title="16 ready-made website templates you customize in a short form">Start from a template</button></div>
           <p class="wb-status" id="wb-status"></p>
           <p class="wb-hint" id="wb-hint"></p>
         </section>
@@ -109,6 +109,7 @@
       catch (e) { toast(e.message); $('#wb-auto').setAttribute('aria-checked', String(!on)); }
     };
     if ($('#wb-save')) $('#wb-save').onclick = () => save().then(ok => ok && toast('Saved'));
+    const wt = $('#wb-tpl'); if (wt) wt.onclick = () => window.TribeSiteLib && window.TribeSiteLib.open();   // website templates (sitelib.js)
     $('#wb-build').onclick = async () => {
       const b = $('#wb-build'); b.disabled = true; b.textContent = 'Building…';
       try {

@@ -1,0 +1,36 @@
+{
+  "meta": { "title": "Band / musician", "category": "creative", "order": 5, "summary": "A poster-style page for a band or solo artist: tour dates with ticket links, releases, a short bio and booking.", "goodFor": ["Bands", "Solo artists", "DJs", "Choirs"], "tags": ["band", "music", "musician", "tour", "dates", "album", "dj"] },
+  "form": [
+    { "key": "name", "label": "Band or artist name", "type": "text" },
+    { "key": "tagline", "label": "One line", "type": "text" },
+    { "key": "hero", "label": "Big photo", "type": "image" },
+    { "key": "shows", "label": "Shows", "type": "list", "fields": [{ "key": "date", "label": "Date" }, { "key": "city", "label": "City" }, { "key": "venue", "label": "Venue" }, { "key": "url", "label": "Tickets link", "type": "url" }, { "key": "status", "label": "Status (e.g. Sold out)" }], "add": { "date": "Dec 12", "city": "", "venue": "", "url": "https://", "status": "" } },
+    { "key": "releases", "label": "Releases", "type": "list", "fields": [{ "key": "title", "label": "Title" }, { "key": "kind", "label": "Album, EP or single" }, { "key": "year", "label": "Year" }, { "key": "img", "label": "Cover", "type": "image" }, { "key": "url", "label": "Listen link", "type": "url" }], "add": { "title": "New single", "kind": "Single", "year": "2026", "img": "img/album-1.svg", "url": "https://" } },
+    { "key": "bio", "label": "Bio", "type": "textarea" },
+    { "key": "booking", "label": "Booking email", "type": "text" }
+  ],
+  "name": "THE LOW HUM",
+  "tagline": "Four-piece from Detroit. Loud guitars, quiet singer.",
+  "hero": "img/stage.svg",
+  "shows": [
+    { "date": "Nov 21", "city": "Detroit, MI", "venue": "The Lager House", "url": "https://example.com/t1", "status": "Sold out" },
+    { "date": "Nov 22", "city": "Chicago, IL", "venue": "Empty Bottle", "url": "https://example.com/t2", "status": "" },
+    { "date": "Nov 25", "city": "Milwaukee, WI", "venue": "Cactus Club", "url": "https://example.com/t3", "status": "" },
+    { "date": "Dec 02", "city": "Columbus, OH", "venue": "Ace of Cups", "url": "https://example.com/t4", "status": "Few left" },
+    { "date": "Dec 05", "city": "Pittsburgh, PA", "venue": "Mr. Smalls", "url": "https://example.com/t5", "status": "" }
+  ],
+  "releases": [
+    { "title": "Static Weather", "kind": "Album", "year": "2026", "img": "img/album-1.svg", "url": "https://example.com/l1" },
+    { "title": "Porch Light", "kind": "Single", "year": "2025", "img": "img/album-2.svg", "url": "https://example.com/l2" }
+  ],
+  "bio": "We met at a garage sale in 2019 and bought the same amp. Static Weather was recorded live in two days in a church basement on Vernor Highway, and we've been playing it in small rooms ever since.",
+  "booking": "booking@example.com",
+  "socials": [ { "label": "Bandcamp", "url": "https://example.com/bc" }, { "label": "Instagram", "url": "https://example.com/ig" }, { "label": "Spotify", "url": "https://example.com/sp" } ],
+  "theme": { "colors": { "bg": "#0F0F0F", "ink": "#F4F1E8", "muted": "#9C988C", "line": "#2E2E2E", "accent": "#F7D13D", "hot": "#E2462C" }, "fonts": { "display": "Bricolage Grotesque", "body": "System sans" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "poster", "name": "Gig poster", "colors": { "bg": "#0F0F0F", "ink": "#F4F1E8", "muted": "#9C988C", "line": "#2E2E2E", "accent": "#F7D13D", "hot": "#E2462C" }, "fonts": { "display": "Bricolage Grotesque", "body": "System sans" } },
+    { "id": "folk", "name": "Folk", "colors": { "bg": "#EDE4D3", "ink": "#2B2118", "muted": "#6D5D49", "line": "#C9B99E", "accent": "#7A2E1C", "hot": "#2F5D50" }, "fonts": { "display": "Fraunces", "body": "System serif" } },
+    { "id": "synth", "name": "Synth", "colors": { "bg": "#0B0F2A", "ink": "#E9ECFF", "muted": "#9CA3D9", "line": "#262C5E", "accent": "#FF4FD8", "hot": "#3EF0FF" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } }
+  ],
+  "sections": [ { "id": "shows", "label": "Tour dates", "on": true }, { "id": "music", "label": "Releases", "on": true }, { "id": "bio", "label": "Bio", "on": true } ]
+}

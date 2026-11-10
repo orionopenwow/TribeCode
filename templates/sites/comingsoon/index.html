@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Okra Studio</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <div class="split">
+    <div class="left">
+      <p class="name" data-s="name">Okra Studio</p>
+      <h1 data-s="tagline">A small type foundry opening in the spring.</h1>
+      <main data-s-sections>
+        <section data-section="signup" aria-labelledby="h-w">
+          <h2 id="h-w" class="sr">Join the waitlist</h2>
+          <form class="wl" method="post" data-s-attr="action:waitlist.url" action="">
+            <label class="sr" for="em">Email</label>
+            <input id="em" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
+            <button type="submit">Tell me when</button>
+          </form>
+          <p class="wl-note" data-s="waitlist.note">One email when we open.</p>
+          <p class="wl-off" hidden>Sign-ups aren't connected yet. Set site.json › waitlist › url to your email service's form link.</p>
+        </section>
+      </main>
+    </div>
+    <div class="right">
+      <img data-s-attr="src:object" src="img/object.svg" alt="" width="1000" height="1200">
+      <div class="date"><span class="lbl">Opening</span><span class="big" data-s="launchText">March 1, 2027</span><span class="cd" aria-live="polite"></span></div>
+    </div>
+  </div>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="countdown.js"></script>
+</body>
+</html>

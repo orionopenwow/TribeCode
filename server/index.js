@@ -542,7 +542,8 @@ talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
 buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense });   // build kit: the open-source stack + quality bar per project kind (server/buildkit.js)
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
-const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
+const siteLib = require('./sitelib')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // website template library (server/sitelib.js)
+const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
 // v0.27 breakout: one-click Publish to a public play link (with a safety check) and tribe game jams (server/publish.js, server/jam.js)
 const visualCard = pid => P.inProject(pid, () => { let best = null; const root = store.p('visuals'); try { for (const d of fs.readdirSync(root)) { let fl = []; try { fl = fs.readdirSync(path.join(root, d)); } catch { continue; } for (const f of fl) if (f.endsWith('.png')) { const full = path.join(root, d, f), t = fs.statSync(full).mtimeMs; if (!best || t > best.t) best = { full, t }; } } } catch {} return best && best.full; });
 const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupFlow, getMembers: () => members, broadcast, postChat, approvals, nameOf, visualCard, log: m => console.error('  ' + m),
@@ -831,6 +832,7 @@ async function apiInProject(req, res, url) {
   if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
   if (a === 'projects' && c === 'website') { const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
+  if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
@@ -907,6 +909,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && (c === 'ledger' || c === 'ledger.csv')) return ledger.route(req, res, ctx());   // v0.27 company: Money (server/ledger.js)
   if (a === 'projects' && c === 'seatpilot') return seatpilot.route(req, res, ctx());   // v0.27 company: seat autopilot (server/seatpilot.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());
+  if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)
   if ((a === 'flint' && (b === 'tiers' || b === 'tier')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)
   if (a === 'buildkit' || (a === 'projects' && c === 'buildkit')) return buildKit.route(req, res, ctx());   // build kit (server/buildkit.js)
   if (a === 'projects' && c === 'studios') return studios.route(req, res, ctx());   // v0.27: Studios (server/studios.js)   // feat/project-sense: GET what the project is + inspiration, PUT the host's override

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">LANTERN RUN</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="hero">
+    <img class="hero-bg" data-s-attr="src:shots.0.img" src="img/shot-1.svg" alt="" width="1280" height="720">
+    <div class="hero-in">
+      <h1 data-s="name">LANTERN RUN</h1>
+      <p data-s="tagline">A tiny platformer about carrying a light through a cave.</p>
+      <div class="acts">
+        <a class="btn" data-s-attr="href:play.url" href="#"><span data-s="play.label">Play the free demo</span></a>
+        <a class="btn ghost" data-s-attr="href:trailer" href="#">▶ Watch the trailer</a>
+      </div>
+    </div>
+  </header>
+
+  <main data-s-sections>
+    <section class="shots" data-section="shots" aria-label="Screenshots">
+      <template data-s-for="shots"><figure><img src="{{img}}" alt="{{alt}}" loading="lazy" width="1280" height="720"></figure></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="features" data-section="features" aria-label="Features">
+      <template data-s-for="features"><div><h2>{{t}}</h2><p>{{d}}</p></div></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="press" data-section="press" aria-labelledby="h-press">
+      <h2 id="h-press">Press kit</h2>
+      <dl>
+        <template data-s-for="facts"><div><dt>{{k}}</dt><dd>{{v}}</dd></div></template>
+        <!--/s-for-->
+      </dl>
+      <p>Keys, screenshots and logos: <a data-s-attr="href:mailto:press" href="mailto:press@example.com"><span data-s="press">press@example.com</span></a></p>
+    </section>
+
+    <section class="devlog" data-section="devlog" aria-labelledby="h-dev">
+      <h2 id="h-dev">Devlog</h2>
+      <ol>
+        <template data-s-for="devlog"><li><time>{{date}}</time><span>{{t}}</span></li></template>
+        <!--/s-for-->
+      </ol>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">LANTERN RUN</span> · press start</footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

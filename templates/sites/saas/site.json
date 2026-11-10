@@ -1,0 +1,34 @@
+{
+  "meta": { "title": "Startup / app", "category": "business", "order": 11, "summary": "A product page with honest copy: what it does, a real screenshot, what it doesn't do yet, simple plans, a changelog and early access.", "goodFor": ["Apps and tools", "Side projects", "Early-stage startups"], "tags": ["saas", "startup", "app", "software", "product", "tool", "early access"] },
+  "form": [
+    { "key": "name", "label": "Product name", "type": "text" },
+    { "key": "tagline", "label": "What it does, plainly", "type": "textarea" },
+    { "key": "shot", "label": "Screenshot", "type": "image" },
+    { "key": "does", "label": "What it does", "type": "list", "fields": [{ "key": "t", "label": "Feature" }, { "key": "d", "label": "In one sentence", "type": "textarea" }], "add": { "t": "", "d": "" } },
+    { "key": "notyet", "label": "Not yet (be honest)", "type": "list", "fields": [{ "key": "t", "label": "Thing" }], "add": { "t": "" } },
+    { "key": "plans", "label": "Plans", "type": "list", "fields": [{ "key": "name", "label": "Plan" }, { "key": "price", "label": "Price" }, { "key": "per", "label": "Per" }, { "key": "what", "label": "What's in it", "type": "textarea" }], "add": { "name": "Team", "price": "", "per": "/month", "what": "" } },
+    { "key": "cta.url", "label": "Sign-up or waitlist link", "type": "url" }
+  ],
+  "name": "Ledgerly",
+  "tagline": "Ledgerly reads the receipts in your inbox and turns them into a clean expense sheet your accountant will actually accept.",
+  "shot": "img/app.svg",
+  "cta": { "label": "Try it with your inbox", "url": "https://example.com/signup", "note": "Free for 30 days. No card." },
+  "does": [
+    { "t": "Finds receipts for you", "d": "Connect Gmail or Outlook. It pulls out receipts and invoices, and skips the newsletters." },
+    { "t": "Fills in the boring columns", "d": "Date, vendor, amount, tax and category, with the original attached to each row." },
+    { "t": "Exports the way your accountant wants", "d": "CSV, QuickBooks or Xero, with the receipts zipped alongside." }
+  ],
+  "notyet": [ { "t": "Paper receipts (photo upload is coming in January)" }, { "t": "Currencies other than USD, CAD and EUR" }, { "t": "A mobile app. The website works on phones." } ],
+  "plans": [
+    { "name": "Solo", "price": "$9", "per": "/month", "what": "One inbox, unlimited receipts, all exports." },
+    { "name": "Small team", "price": "$29", "per": "/month", "what": "Up to 5 inboxes, approvals, and a shared category list." }
+  ],
+  "changelog": [ { "date": "Nov 3", "t": "Xero export, with tax codes" }, { "date": "Oct 20", "t": "Duplicate receipt detection" }, { "date": "Oct 6", "t": "Outlook support" } ],
+  "theme": { "colors": { "bg": "#F7F7F5", "ink": "#101114", "muted": "#5B5F68", "line": "#DADCE0", "panel": "#FFFFFF", "accent": "#1F4BFF" }, "fonts": { "display": "Space Grotesk", "body": "Inter" }, "easy": ["accent"] },
+  "presets": [
+    { "id": "clean", "name": "Clean", "colors": { "bg": "#F7F7F5", "ink": "#101114", "muted": "#5B5F68", "line": "#DADCE0", "panel": "#FFFFFF", "accent": "#1F4BFF" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+    { "id": "dark", "name": "Dark", "colors": { "bg": "#0C0D10", "ink": "#ECEDEF", "muted": "#9298A3", "line": "#24262C", "panel": "#15171B", "accent": "#7C9CFF" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+    { "id": "warm", "name": "Warm", "colors": { "bg": "#FBF7F0", "ink": "#22201C", "muted": "#6A645A", "line": "#E4DCCD", "panel": "#FFFFFF", "accent": "#D0461B" }, "fonts": { "display": "Fraunces", "body": "Humanist" } }
+  ],
+  "sections": [ { "id": "does", "label": "What it does", "on": true }, { "id": "notyet", "label": "Not yet", "on": true }, { "id": "plans", "label": "Plans", "on": true }, { "id": "changelog", "label": "Changelog", "on": true } ]
+}

@@ -1,0 +1,35 @@
+{
+  "meta": { "title": "Link in bio", "category": "personal", "order": 1, "summary": "One page with all your links, for an Instagram, TikTok or YouTube bio. Four looks to switch between.", "goodFor": ["Creators", "Small brands", "Musicians", "Anyone with a bio link"], "tags": ["linktree", "link tree", "links", "social", "bio", "creator"] },
+  "form": [
+    { "key": "name", "label": "Your name", "type": "text" },
+    { "key": "handle", "label": "Handle", "type": "text" },
+    { "key": "bio", "label": "A line about you", "type": "textarea" },
+    { "key": "avatar", "label": "Photo", "type": "image" },
+    { "key": "links", "label": "Links", "type": "list", "fields": [{ "key": "label", "label": "Text" }, { "key": "url", "label": "Link", "type": "url" }, { "key": "note", "label": "Small note (optional)" }], "add": { "label": "New link", "url": "https://", "note": "" } },
+    { "key": "socials", "label": "Social profiles", "type": "list", "fields": [{ "key": "label", "label": "Name" }, { "key": "url", "label": "Link", "type": "url" }], "add": { "label": "Bluesky", "url": "https://" } }
+  ],
+  "name": "Mara Okafor",
+  "handle": "@maramakespots",
+  "bio": "Ceramics from a garage studio in Tucson. Small batches, mostly mugs, sometimes planters.",
+  "avatar": "img/avatar.svg",
+  "links": [
+    { "label": "Shop the November batch", "url": "https://example.com/shop", "note": "Opens Friday at 10am" },
+    { "label": "Wheel-throwing class, Saturdays", "url": "https://example.com/class", "note": "4 spots left" },
+    { "label": "How I glaze: a 9-minute video", "url": "https://example.com/video", "note": "" },
+    { "label": "Wholesale and cafés", "url": "mailto:hello@example.com", "note": "" }
+  ],
+  "socials": [
+    { "label": "Instagram", "url": "https://example.com/ig" },
+    { "label": "TikTok", "url": "https://example.com/tt" },
+    { "label": "YouTube", "url": "https://example.com/yt" }
+  ],
+  "footer": "Made in Tucson",
+  "theme": { "preset": "paper", "colors": { "bg": "#F1EADB", "ink": "#2B241C", "muted": "#6E604E", "card": "#FBF7EE", "line": "#2B241C", "accent": "#B4532C" }, "fonts": { "display": "Instrument Serif", "body": "System sans" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "paper", "name": "Paper", "colors": { "bg": "#F1EADB", "ink": "#2B241C", "muted": "#6E604E", "card": "#FBF7EE", "line": "#2B241C", "accent": "#B4532C" }, "fonts": { "display": "Instrument Serif", "body": "System sans" } },
+    { "id": "night", "name": "Night", "colors": { "bg": "#0B0B0C", "ink": "#F2F2EE", "muted": "#A3A39B", "card": "#161618", "line": "#34343A", "accent": "#D7FF3A" }, "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+    { "id": "blocks", "name": "Blocks", "colors": { "bg": "#FFF4E8", "ink": "#17140F", "muted": "#5C5246", "card": "#FFB8A1", "line": "#17140F", "accent": "#2440E0" }, "fonts": { "display": "Bricolage Grotesque", "body": "Humanist" } },
+    { "id": "terminal", "name": "Terminal", "colors": { "bg": "#0F1A14", "ink": "#C9F2D0", "muted": "#7FA889", "card": "#0F1A14", "line": "#3A6B49", "accent": "#7CFF9B" }, "fonts": { "display": "JetBrains Mono", "body": "JetBrains Mono" } }
+  ],
+  "sections": [ { "id": "links", "label": "Links", "on": true }, { "id": "socials", "label": "Social profiles", "on": true } ]
+}

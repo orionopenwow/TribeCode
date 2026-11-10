@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Eastside Seed Library</title>
+  <meta name="description" data-s-attr="content:mission" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="top">
+    <span class="logo" data-s="name">Eastside Seed Library</span>
+    <a class="donate sm" data-s-attr="href:donate.url" href="#donate"><span data-s="donate.label">Donate</span></a>
+  </header>
+
+  <div class="hero">
+    <p class="mission" data-s="mission">We lend seeds for free to anyone in Eastside.</p>
+    <img data-s-attr="src:photo" src="img/field.svg" alt="" width="1200" height="800">
+  </div>
+
+  <main data-s-sections>
+    <section class="impact" data-section="impact" aria-label="What we've done">
+      <template data-s-for="impact"><p><b>{{n}}</b><span>{{t}}</span></p></template>
+      <!--/s-for-->
+    </section>
+
+    <section class="story" data-section="story">
+      <h2>How it started</h2>
+      <p data-s="story">It started in 2021.</p>
+    </section>
+
+    <section class="help" id="donate" data-section="help" aria-labelledby="h-help">
+      <h2 id="h-help">Ways to help</h2>
+      <div class="hg">
+        <template data-s-for="ways"><div class="way"><h3>{{t}}</h3><p>{{d}}</p>{{#url}}<a href="{{url}}">{{t}} →</a>{{/url}}</div></template>
+        <!--/s-for-->
+      </div>
+      <div class="give">
+        <a class="donate big" data-s-attr="href:donate.url" href="#"><span data-s="donate.label">Donate</span></a>
+        <p data-s="donate.note">We're a registered 501(c)(3).</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Eastside Seed Library</span><a data-s-attr="href:mailto:email" href="mailto:hello@example.com"><span data-s="email">hello@example.com</span></a></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+</body>
+</html>

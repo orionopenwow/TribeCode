@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-s="name">Harbor Plumbing</title>
+  <meta name="description" data-s-attr="content:tagline" content="">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <style id="s-theme"></style>
+</head>
+<body>
+  <header class="top">
+    <span class="logo"><span class="mk" aria-hidden="true"></span><span data-s="name">Harbor Plumbing</span></span>
+    <a class="call" data-s-attr="href:tel:phone" href="#">Call <span data-s="phone">(218) 555-0199</span></a>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1 data-s="headline">Plumbing in Duluth, done properly.</h1>
+      <p class="sub" data-s="tagline">Licensed plumbers in Duluth and the North Shore.</p>
+      <div class="acts">
+        <a class="btn" data-s-attr="href:book" href="#">Book a visit</a>
+        <a class="btn ghost" data-s-attr="href:tel:phone" href="#">Call <span data-s="phone">(218) 555-0199</span></a>
+      </div>
+      <ul class="badges">
+        <template data-s-for="badges"><li>{{t}}</li></template>
+        <!--/s-for-->
+      </ul>
+    </div>
+    <img class="hero-img" src="img/van.svg" alt="" width="1200" height="800">
+  </div>
+
+  <main data-s-sections>
+    <section class="services" data-section="services" aria-labelledby="h-svc">
+      <h2 id="h-svc">Services and prices</h2>
+      <table>
+        <thead><tr><th scope="col">Service</th><th scope="col">Typical time</th><th scope="col">Price</th></tr></thead>
+        <tbody>
+          <template data-s-for="services"><tr><th scope="row">{{name}}<small>{{desc}}</small></th><td>{{time}}</td><td class="pr">{{price}}</td></tr></template>
+          <!--/s-for-->
+        </tbody>
+      </table>
+      <p class="fine">Every job starts with a written quote. No charge for the quote if you book.</p>
+    </section>
+
+    <section class="area" data-section="area">
+      <h2>Where we work</h2>
+      <p data-s="area">Duluth, Hermantown, Proctor.</p>
+    </section>
+
+    <section class="reviews" data-section="reviews" aria-labelledby="h-rev">
+      <h2 id="h-rev">What customers say</h2>
+      <div class="rv">
+        <template data-s-for="reviews"><figure><blockquote>{{text}}</blockquote><figcaption>{{who}}{{#where}} · {{where}}{{/where}}</figcaption></figure></template>
+        <!--/s-for-->
+      </div>
+      <p class="rv-empty" data-s="reviewsNote">Reviews will show here.</p>
+    </section>
+
+    <section class="cta" data-section="cta">
+      <p>Water where it shouldn't be?</p>
+      <a class="btn big" data-s-attr="href:tel:phone" href="#">Call <span data-s="phone">(218) 555-0199</span></a>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-s="name">Harbor Plumbing</span> · <span data-s="area">Duluth</span></footer>
+  <script type="application/json" id="site-data"></script>
+  <script src="site.js"></script>
+  <script src="reviews.js"></script>
+</body>
+</html>

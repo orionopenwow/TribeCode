@@ -1,0 +1,40 @@
+{
+  "meta": { "title": "Creator / streamer", "category": "creative", "order": 4, "summary": "A home for a streamer or video creator: the weekly schedule, latest videos, sponsors you actually use and a contact for brand work.", "goodFor": ["Streamers", "YouTubers", "Podcasters on video"], "tags": ["streamer", "twitch", "youtube", "creator", "schedule", "videos"] },
+  "form": [
+    { "key": "name", "label": "Channel name", "type": "text" },
+    { "key": "tagline", "label": "What the channel is", "type": "textarea" },
+    { "key": "next", "label": "Next stream (line under the name)", "type": "text" },
+    { "key": "watch", "label": "Where to watch (link)", "type": "url" },
+    { "key": "face", "label": "Your picture", "type": "image" },
+    { "key": "schedule", "label": "Weekly schedule", "type": "list", "fields": [{ "key": "day", "label": "Day" }, { "key": "time", "label": "Time" }, { "key": "what", "label": "What" }], "add": { "day": "Sun", "time": "2pm", "what": "" } },
+    { "key": "videos", "label": "Latest videos", "type": "list", "fields": [{ "key": "title", "label": "Title" }, { "key": "url", "label": "Link", "type": "url" }, { "key": "img", "label": "Thumbnail", "type": "image" }, { "key": "len", "label": "Length" }], "add": { "title": "New video", "url": "https://", "img": "img/video-1.svg", "len": "" } },
+    { "key": "email", "label": "Email for brand work", "type": "text" }
+  ],
+  "name": "PIXELBRUNCH",
+  "tagline": "Cozy games, speedrun attempts that go badly, and a Sunday cooking stream where the food is real and the stakes are not.",
+  "next": "Next stream: Tuesday 7pm Mountain, Stardew co-op with chat",
+  "watch": "https://example.com/live",
+  "face": "img/face.svg",
+  "schedule": [
+    { "day": "Tue", "time": "7pm", "what": "Co-op with chat" },
+    { "day": "Thu", "time": "7pm", "what": "Speedrun practice" },
+    { "day": "Sat", "time": "11am", "what": "New release first look" },
+    { "day": "Sun", "time": "2pm", "what": "Cooking stream" }
+  ],
+  "videos": [
+    { "title": "I tried to 100% a farming game in one weekend", "url": "https://example.com/v1", "img": "img/video-1.svg", "len": "24:10" },
+    { "title": "Building the tiniest playable platformer", "url": "https://example.com/v2", "img": "img/video-2.svg", "len": "18:42" },
+    { "title": "Desk tour: the 2026 cozy setup", "url": "https://example.com/v3", "img": "img/video-3.svg", "len": "11:05" }
+  ],
+  "stats": [ { "n": "4×", "t": "streams a week" }, { "n": "6 yrs", "t": "of Sunday cooking" }, { "n": "0", "t": "speedrun records" } ],
+  "kit": [ { "k": "Mic", "v": "A dynamic mic on a boom arm" }, { "k": "Camera", "v": "An old mirrorless with a dummy battery" }, { "k": "Games", "v": "Mostly indies, mostly cozy" } ],
+  "email": "biz@example.com",
+  "socials": [ { "label": "Twitch", "url": "https://example.com/tw" }, { "label": "YouTube", "url": "https://example.com/yt" }, { "label": "Discord", "url": "https://example.com/dc" } ],
+  "theme": { "colors": { "bg": "#17121F", "ink": "#F4EEFF", "muted": "#B3A7C9", "panel": "#221A2E", "line": "#3A2F4A", "accent": "#C8F04B", "hot": "#FF7A59" }, "fonts": { "display": "Bricolage Grotesque", "body": "Inter" }, "easy": ["accent", "bg"] },
+  "presets": [
+    { "id": "grape", "name": "Grape", "colors": { "bg": "#17121F", "ink": "#F4EEFF", "muted": "#B3A7C9", "panel": "#221A2E", "line": "#3A2F4A", "accent": "#C8F04B", "hot": "#FF7A59" }, "fonts": { "display": "Bricolage Grotesque", "body": "Inter" } },
+    { "id": "arcade", "name": "Arcade", "colors": { "bg": "#0D1B2A", "ink": "#E8F1FF", "muted": "#9AB0C8", "panel": "#13263A", "line": "#24405C", "accent": "#FFD23F", "hot": "#EE4266" }, "fonts": { "display": "Silkscreen", "body": "Inter" } },
+    { "id": "sunny", "name": "Sunny", "colors": { "bg": "#FFF3D6", "ink": "#2B1E0E", "muted": "#7A6343", "panel": "#FFE6A8", "line": "#2B1E0E", "accent": "#2B1E0E", "hot": "#E8501F" }, "fonts": { "display": "Bricolage Grotesque", "body": "Humanist" } }
+  ],
+  "sections": [ { "id": "schedule", "label": "Schedule", "on": true }, { "id": "videos", "label": "Latest videos", "on": true }, { "id": "about", "label": "About and setup", "on": true }, { "id": "work", "label": "Brand work", "on": true } ]
+}
