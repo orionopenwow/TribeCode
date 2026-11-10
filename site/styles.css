@@ -1248,3 +1248,6 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .vibe__us { background: var(--surface); border-color: color-mix(in srgb, var(--ember) 45%, var(--edge)) !important; }
 @media (max-width: 900px) { .vibe__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vibe__then { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .vibe { padding-top: 56px; } .vibe__grid { grid-template-columns: 1fr; } }
+.hero__vibe { margin: 0 0 10px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ember); }
+.hero__vibe a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; text-transform: none; letter-spacing: 0; }
+.hero__vibe a:hover { color: var(--text); }

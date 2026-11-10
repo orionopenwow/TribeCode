@@ -10,7 +10,9 @@
 - **Languages in the app**: Settings › Language (the website's eight languages). Menus and buttons switch; what people write stays as they wrote it. The first time, it follows your device's language.
 - **Your Claude can use everything**: Claude Code gets `tribe_api` (any feature the app's buttons use, as you, with your role's permissions) and `code_tree` / `code_read` / `code_write` / `code_search` for the project's code repository from any computer.
 - **Creative studios** on the shelf: ArtCraft (the open-source IDE for artists), Godot, Pixelorama, Material Maker and BeepBox, recommended beside the asset library and the inspiration board. **Modules** are a new Workshop kind for add-ons people make for TribeCode (docs/MARKETPLACE.md).
-- AI Insights no longer snap shut while you read them.
+- **Demo tour**: Flint's card shows the chapter and a progress bar, what the chapter shows, a separate "On screen" line for clicks and typing, and a bigger recap with what's up next.
+- **Website**: "What is vibecoding?" explains the new way to make software in plain words (all eight languages), with "Multiplayer vibecoding" above the headline; Learn modules drop the end quiz (finishing a module earns its badge); the Learn panel stacks properly on phones.
+- AI Insights no longer snap shut while you read them; the offline demo's chat no longer shows a stuck "Sending…" copy.
 
 ## v0.25.0
 - **Phones**: the demo tour's game shows on phones again and Flint's line fits the screen; the Task Board, dashboard tiles and inspiration board stack neatly; the website's language chips sit in the menu.
