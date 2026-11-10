@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introducing TribeCode</title>
+<meta name="robots" content="noindex">
+<!-- "Introducing TribeCode" (v0.27): a calm, unhurried launch film in the grammar of a modern product launch (a prompt
+     is typed and sent, a whimsical status card, the result, then slow close-ups across the real interface, a wall of
+     things people made, a centered end card). Every UI shot is a real screenshot of TribeCode running a "Kombucha
+     Empire" tribe (assets/ad-launch/). Self-contained: no libraries; every frame is drawn from the time t, so any frame
+     renders exactly: ad-launch.html?t=31.2 or window.adSeek(31.2). Landscape (16:9) and vertical (9:16) layouts switch
+     on the window's shape. Soundtrack: scripts/dev/ad-launch-sound.py. Not linked from the site. -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("assets/fonts/Inter-Regular.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("assets/fonts/Inter-Medium.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600 700; src: url("assets/fonts/Inter-SemiBold.woff") format("woff"); }
+  @font-face { font-family: "InterDisplay"; font-weight: 800; src: url("assets/fonts/InterDisplay-ExtraBold.woff") format("woff"); }
+  :root { --canvas: #12151A; --surface: #1B2028; --raised: #1E242D; --border: #2A313C; --border2: #3A4350; --ember: #F26B1D; --teal: #38C6B1; --indigo: #6C7CFF;
+    --white: #F8FAFC; --text: #CBD5E1; --muted: #94A3B8; --faint: #64748B; --green: #3BD16F;
+    --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--canvas); color: var(--white); font-family: Inter, system-ui, sans-serif; }
+  .ad { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--canvas); overflow: hidden; }
+  .ad.v { width: 1080px; height: 1920px; }
+  .layer { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+
+  /* the prompt (beat 1): the preview's real start card, "What should it be?" */
+  .prompt { position: absolute; left: 50%; top: 50%; width: 1040px; transform: translate(-50%, -50%); background: var(--surface); border: 2px solid var(--border); border-radius: 26px; padding: 34px 38px 30px; }
+  .v .prompt { width: 920px; }
+  .prompt .eb { font: 600 18px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .prompt h3 { font: 600 34px/1.2 Inter; margin: 14px 0 20px; }
+  .prompt .ta { min-height: 150px; padding: 22px 24px; border: 2px solid var(--border2); border-radius: 16px; background: var(--canvas); font: 400 32px/1.4 Inter; color: var(--white); }
+  .prompt .ta.focus { border-color: var(--ember); }
+  .prompt .ph { color: var(--faint); }
+  .prompt .caret { display: inline-block; width: 3px; height: 38px; background: var(--ember); vertical-align: -7px; margin-left: 2px; }
+  .prompt .row { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+  .prompt .chip { padding: 10px 18px; border: 2px solid var(--border); border-radius: 999px; font: 500 20px Inter; color: var(--muted); }
+  .prompt .go { margin-left: auto; padding: 14px 28px; border-radius: 999px; background: var(--ember); color: #fff; font: 600 24px Inter; }
+  .prompt .go.down { transform: scale(.95); background: #D85A12; }
+  .v .prompt .chip:nth-child(n+3) { display: none; }
+
+  /* status cards: Flint + a whimsical word, like "Kindling…" */
+  .status { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 26px; padding: 34px 52px; background: var(--raised); border: 2px solid var(--border); border-radius: 26px; }
+  .status img { width: 58px; height: 74px; }
+  .status .w { font: 500 64px/1 Inter; letter-spacing: -.01em; white-space: nowrap; }
+  .status .w span { transition: none; }
+  .spin { position: relative; width: 46px; height: 46px; }
+  .spin i { position: absolute; left: 20px; top: 0; width: 6px; height: 12px; border-radius: 3px; background: var(--ember); transform-origin: 3px 23px; }
+
+  /* camera shots: a real screenshot inside a window, moved by a focus rectangle */
+  .shot { position: absolute; overflow: hidden; border-radius: 22px; border: 2px solid var(--border); background: var(--canvas); }
+  .shot img { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: block; }
+  .cap { position: absolute; left: 120px; bottom: 74px; display: flex; flex-direction: column; gap: 10px; }
+  .v .cap { left: 80px; right: 80px; bottom: auto; top: 1270px; }
+  .cap .k { font: 600 22px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ember); }
+  .cap .t { font: 600 46px/1.15 Inter; letter-spacing: -.01em; }
+  .v .cap .t { font-size: 58px; }
+  .cursor { position: absolute; width: 38px; height: 50px; left: 0; top: 0; pointer-events: none; z-index: 20; }
+  .ring { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 3px solid var(--white); z-index: 19; opacity: 0; }
+  .toast { position: absolute; padding: 14px 24px; border-radius: 14px; background: var(--raised); border: 2px solid var(--green); font: 600 24px Inter; color: var(--green); z-index: 18; opacity: 0; }
+
+  /* phones */
+  .phone { position: absolute; width: 400px; height: 846px; border-radius: 56px; border: 12px solid #0B0D10; background: #0B0D10; overflow: hidden; outline: 2px solid var(--border2); }
+  .phone img { width: 100%; height: auto; display: block; }
+  .phone::before { content: ""; position: absolute; left: 50%; top: 12px; width: 110px; height: 30px; margin-left: -55px; border-radius: 16px; background: #0B0D10; z-index: 2; }
+
+  /* the wall */
+  .wall { position: absolute; left: 0; top: 0; width: max-content; display: grid; grid-template-columns: repeat(7, 520px); gap: 26px; transform-origin: 0 0; }
+  .wall div { width: 520px; height: 325px; border-radius: 18px; border: 2px solid var(--border); overflow: hidden; background: var(--surface); }
+  .wall img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+
+  /* end card */
+  .end { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center; }
+  .end .mark { display: flex; align-items: center; gap: 26px; }
+  .end .mark img.f { width: 112px; height: 112px; image-rendering: pixelated; }
+  .end .mark img.w { width: 640px; height: auto; }
+  .v .end .mark { flex-direction: column; } .v .end .mark img.w { width: 780px; }
+  .end h2 { font: 800 84px/1.05 InterDisplay, Inter, sans-serif; letter-spacing: -.02em; }
+  .end p { font: 600 30px var(--mono); color: var(--muted); letter-spacing: .03em; } .end p b { color: var(--teal); font-weight: 600; }
+  .title { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center; }
+  .title .k { font: 600 24px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ember); }
+  .title h1 { font: 800 120px/1 InterDisplay, Inter, sans-serif; letter-spacing: -.03em; }
+  .v .title h1 { font-size: 112px; }
+</style>
+</head>
+<body>
+<div class="ad" id="ad" role="img" aria-label="Introducing TribeCode. Someone types 'build me an app to manage my kombucha empire' and presses Build it. Flint says 'Kindling…' and the kombucha app appears running in the preview. Slow close-ups of the real app follow: friends and their AI helpers in one chat, a tribe link with a QR code, a shared doc, the Task Board, an approval being tapped, the company org chart and money, the Marketplace, experience modes and the phone app. Then a wall of things people made, and the end card: TribeCode, Build together, free and open source, tribecode.org.">
+
+  <section class="layer" id="L-prompt">
+    <div class="prompt"><p class="eb">Preview · nothing to run yet</p><h3>What should it be?</h3>
+      <div class="ta" id="ta"><span class="ph" id="ph">Describe what you want</span><span id="typed"></span><i class="caret" id="caret"></i></div>
+      <div class="row"><span class="chip">A pixel platformer game</span><span class="chip">A website for a local bakery</span><span class="go" id="go">▶ Build it</span></div></div>
+  </section>
+
+  <section class="layer" id="L-status"><div class="status"><span class="spin" id="spin"></span><img src="assets/brand/flint.svg" alt=""><span class="w" id="sw"></span></div></section>
+
+  <section class="layer" id="L-shot"></section>
+
+  <section class="layer" id="L-phones"><div class="phone" id="ph1"><img src="assets/ad-launch/phone-home.jpg" alt=""></div><div class="phone" id="ph2"><img src="assets/ad-launch/phone-chat.jpg" alt=""></div></section>
+
+  <section class="layer" id="L-wall"><div class="wall" id="wall"></div></section>
+
+
+  <section class="layer end" id="L-end">
+    <div class="mark"><img class="f" src="assets/brand/logo-flame.gif" alt=""><img class="w" src="assets/brand/wordmark.svg" alt="TribeCode"></div>
+    <h2 id="end-h">Build together.</h2>
+    <p id="end-p">Free and open source · <b>tribecode.org</b></p>
+  </section>
+
+  <div class="cap" id="cap"><span class="k" id="cap-k"></span><span class="t" id="cap-t"></span></div>
+  <div class="toast" id="toast">✓ Approved</div>
+  <div class="ring" id="ring"></div>
+  <svg class="cursor" id="cur" viewBox="0 0 17 22"><path d="M1 1v17l5-4 3 7 3-1-3-7h7z" fill="#F8FAFC" stroke="#12151A" stroke-width="1.4" stroke-linejoin="round"/></svg>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const D = 75;
+  const $ = id => document.getElementById(id);
+  const ad = $('ad');
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const k = (t, a, d) => clamp((t - a) / d);
+  const io = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;      // ease in-out cubic: calm camera
+  const out = x => 1 - Math.pow(1 - x, 3);
+  const lerp = (a, b, x) => a + (b - a) * x;
+  let V = false;
+  const SIZE = () => V ? [1080, 1920] : [1920, 1080];
+
+  // ---------- timeline ----------
+  // shots: src, image size (all 3200×1800), focus keys [t, x, y, w, h] in 0..1 of the image; cap; cursor path; clicks
+  const IMG = { w: 3200, h: 1800 };
+  const S = [
+    { id: 'preview', a: 8.4, b: 15.4, keys: [[0, 0, 0, 1, 1], [2.2, 0, 0, 1, 1], [5.6, .595, .27, .41, .58]], cap: ['Live preview', 'It runs while it’s built.'] },
+    { id: 'chat', a: 15.4, b: 21.4, keys: [[0, .13, .02, .87, .98], [5.8, .2, .26, .58, .62]], cap: ['One chat', 'Friends and their AI, together.'] },
+    { id: 'invite', a: 24.0, b: 29.4, keys: [[0, .2, .02, .6, .96], [4.8, .345, .1, .32, .48]], cap: ['Tribe link', 'One link. Anyone can join.'],
+      cur: [[1.4, .53, .7], [3.2, .815, .13]], clicks: [3.5] },
+    { id: 'doc', a: 29.4, b: 33.8, keys: [[0, .14, .03, .86, .95], [4.2, .22, .14, .52, .56]], cap: ['Docs', 'Plans, notes and docs, written live.'] },
+    { id: 'tasks', a: 33.8, b: 38.2, keys: [[0, .22, .06, .78, .8], [4.2, .2, .2, .52, .6]], cap: ['Task Board', 'Everyone knows who’s on what.'] },
+    { id: 'approval', a: 38.2, b: 44.4, keys: [[0, .1, .04, .9, .92], [1.8, .1, .25, .32, .3], [3.6, .62, .04, .38, .36], [6, .62, .04, .38, .36]], cap: ['Approvals', 'Your AI asks before anything that matters.'],
+      cur: [[2.6, .7, .6], [4.3, .918, .107]], clicks: [4.6], toast: [4.7, .88, .335] },
+    { id: 'company', a: 47.0, b: 51.6, keys: [[0, .2, .05, .8, .85], [4.4, .3, .29, .64, .46]], cap: ['Company mode', 'Run it like a company.'] },
+    { id: 'money', a: 51.6, b: 55.4, keys: [[0, .26, .16, .7, .36], [3.8, .27, .5, .66, .46]], cap: ['Money', 'Every number says where it came from.'] },
+    { id: 'market', a: 55.4, b: 59.6, keys: [[0, .14, .1, .76, .9], [4.2, .17, .4, .72, .5]], cap: ['Marketplace', '515 add-ons, skills and templates.'],
+      cur: [[1.2, .4, .7], [2.6, .245, .45]] },
+    { id: 'settings', a: 59.6, b: 63.4, keys: [[0, .3, .05, .4, .9], [3.8, .315, .2, .36, .45]], cap: ['Experience modes', 'Start simple. Grow into it.'],
+      cur: [[.8, .4, .32], [2.6, .57, .56]] },
+  ];
+  const STATUS = [[6.0, 8.4, 'Kindling…'], [21.4, 24.0, 'Gathering the tribe…'], [44.4, 47.0, 'Pitching tents…']];
+  const PROMPT = [0, 6.0];
+  const PHONES = [63.4, 67.6];
+  const WALL = [67.6, 71.4];
+  const END = [71.4, 75];
+  const IDEA = 'build me an app to manage my kombucha empire';
+  const FADE = .5;
+
+  // ---------- helpers ----------
+  const vis = (el, o) => { el.style.opacity = o; el.style.visibility = o > 0.001 ? 'visible' : 'hidden'; };
+  const win = (t, a, b) => Math.min(k(t, a, FADE), 1 - k(t, b - FADE, FADE));
+  function shotBox() {   // the window the screenshot lives in
+    const [W, H] = SIZE();
+    return V ? { x: 60, y: 200, w: W - 120, h: 1000 } : { x: 120, y: 80, w: W - 240, h: 800 };
+  }
+  // a focus rectangle (0..1 of the image) → scale and offset that fit it inside the box (contain)
+  function cam(f, box) {
+    const fw = f[2] * IMG.w, fh = f[3] * IMG.h;
+    const s = Math.min(box.w / fw, box.h / fh);
+    const ox = (box.w - fw * s) / 2 - f[0] * IMG.w * s, oy = (box.h - fh * s) / 2 - f[1] * IMG.h * s;
+    return { s, ox, oy };
+  }
+  function focusAt(keys, lt) {
+    if (lt <= keys[0][0]) return keys[0].slice(1);
+    for (let i = 1; i < keys.length; i++) if (lt <= keys[i][0]) { const p = io((lt - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0])); return keys[i].slice(1).map((v, j) => lerp(keys[i - 1][j + 1], v, p)); }
+    return keys[keys.length - 1].slice(1);
+  }
+  function pathAt(pts, lt) {
+    if (!pts) return null;
+    if (lt <= pts[0][0]) return null;
+    for (let i = 1; i < pts.length; i++) if (lt <= pts[i][0]) { const p = io((lt - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0])); return [lerp(pts[i - 1][1], pts[i][1], p), lerp(pts[i - 1][2], pts[i][2], p)]; }
+    return pts[pts.length - 1].slice(1);
+  }
+
+  // ---------- fit ----------
+  function fit() {
+    V = innerHeight > innerWidth; ad.classList.toggle('v', V);
+    const [W, H] = SIZE(), s = Math.min(innerWidth / W, innerHeight / H);
+    ad.style.transform = `scale(${s}) translate(-50%, -50%)`;
+    const b = shotBox(); S.forEach(s => Object.assign($('sh-' + s.id).style, { left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px' }));
+    buildWall();
+  }
+  // spinner ticks; one window per shot, every picture loaded up front so any frame renders the same
+  $('spin').innerHTML = Array.from({ length: 8 }, (_, i) => `<i style="transform:rotate(${i * 45}deg)"></i>`).join('');
+  $('L-shot').innerHTML = S.map(s => `<div class="shot" id="sh-${s.id}" style="opacity:0"><img src="assets/ad-launch/${s.id}.jpg" width="${IMG.w}" height="${IMG.h}" alt=""></div>`).join('');
+
+  function buildWall() {
+    const src = ['ad-launch/preview', 'remix/2048', 'starters/pixel-platformer', 'ad-launch/company', 'remix/threejs', 'starters/habit-tracker', 'remix/kenney',
+      'starters/launch-page', 'ad-launch/chat', 'remix/phaser-vite', 'starters/3d-walkaround', 'ad30/kombucha', 'remix/godot-demos', 'starters/portfolio',
+      'remix/kaplay', 'starters/club-signups', 'ad-launch/market', 'remix/littlejs', 'starters/endless-runner', 'remix/astro', 'ad-launch/money',
+      'starters/party-quiz', 'remix/pixi-open-games', 'ad-launch/tasks', 'starters/shared-list', 'remix/todomvc', 'starters/devlog', 'remix/expo',
+      'starters/discord-bot', 'ad-launch/doc', 'remix/melonjs', 'starters/small-api', 'ad-launch/settings', 'remix/h5bp', 'starters/cli-helper'];
+    $('wall').innerHTML = src.map(s => `<div><img src="assets/${s}.jpg" alt=""></div>`).join('');
+  }
+
+  function cursorAt(x, y, on) { const c = $('cur'); c.style.opacity = on ? 1 : 0; c.style.transform = `translate(${x - 4}px, ${y - 2}px)`; }
+
+  // ---------- one frame ----------
+  function render(T) {
+    const t = ((T % D) + D) % D;
+    const [W, H] = SIZE();
+    let curOn = false, cx = 0, cy = 0, ring = 0, rx = 0, ry = 0, toastO = 0, tx = 0, ty = 0;
+
+    // prompt
+    const po = Math.min(k(t, .2, .8), 1 - k(t, PROMPT[1] - FADE, FADE)); vis($('L-prompt'), po);
+    if (po > 0) {
+      const n = Math.round(IDEA.length * clamp((t - 1.6) / 2.6));
+      $('typed').textContent = IDEA.slice(0, n); $('ph').style.display = n ? 'none' : 'inline';
+      $('ta').classList.toggle('focus', t > 1.2);
+      $('caret').style.opacity = t > 1.2 && (n < IDEA.length || Math.floor(t * 2.4) % 2) ? 1 : 0;
+      $('go').classList.toggle('down', t > 5.0 && t < 5.25);
+      // cursor: enters, clicks into the box, then to Build it
+      const pr = $('ta').getBoundingClientRect(), gr = $('go').getBoundingClientRect(), ar = ad.getBoundingClientRect(), sc = ar.width / W;
+      const P = (r, fx, fy) => [(r.left - ar.left) / sc + r.width / sc * fx, (r.top - ar.top) / sc + r.height / sc * fy];
+      const p0 = [W * .72, H * .86], p1 = P(pr, .55, .5), p2 = P(gr, .5, .55);
+      let q = p0;
+      if (t < 1.1) q = [lerp(p0[0], p1[0], io(k(t, .3, .8))), lerp(p0[1], p1[1], io(k(t, .3, .8)))];
+      else if (t < 4.4) q = p1;
+      else q = [lerp(p1[0], p2[0], io(k(t, 4.3, .7))), lerp(p1[1], p2[1], io(k(t, 4.3, .7)))];
+      curOn = t > .3 && t < 5.8; [cx, cy] = q;
+      if (t > 1.1 && t < 1.5) { ring = 1 - k(t, 1.1, .4); [rx, ry] = p1; }
+      if (t > 5.0 && t < 5.5) { ring = 1 - k(t, 5.0, .5); [rx, ry] = p2; }
+    }
+
+    // status cards
+    let so = 0, sword = '';
+    for (const [a, b, w] of STATUS) { const o = win(t, a, b); if (o > so) { so = o; sword = w; } }
+    vis($('L-status'), so);
+    if (so > 0) {
+      const sw = $('sw'), hi = (t * 9) % (sword.length + 6);
+      sw.innerHTML = [...sword].map((ch, i) => `<span style="color:${Math.abs(i - hi) < 1.5 ? '#F26B1D' : '#F8FAFC'}">${ch}</span>`).join('');
+      $('spin').style.transform = `rotate(${Math.floor(t * 12) * 45}deg)`;
+      $('spin').querySelectorAll('i').forEach((el, i) => el.style.opacity = (.25 + .75 * ((i + 8 - Math.floor(t * 12) % 8) % 8) / 7).toFixed(2));
+    }
+
+    // shots (two layers so one can crossfade into the next)
+    let shotO = 0, capK = '', capT = '', capO = 0;
+    S.forEach((s, i) => {
+      const el = $('sh-' + s.id), o = win(t, s.a, s.b);
+      vis(el, o); if (o <= 0) return;
+      const lt = t - s.a, img = el.firstChild;
+      const box = shotBox(), f = focusAt(s.keys, lt), c = cam(f, box);
+      img.style.transform = `translate(${c.ox.toFixed(2)}px, ${c.oy.toFixed(2)}px) scale(${c.s.toFixed(5)})`;
+      el.style.transform = `scale(${(.985 + .015 * out(k(t, s.a, .9))).toFixed(4)})`; el.style.zIndex = i;
+      shotO = Math.max(shotO, o);
+      if (o >= capO) { capO = o; capK = s.cap[0]; capT = s.cap[1]; }
+      const toScreen = (x, y) => [box.x + c.ox + x * IMG.w * c.s, box.y + c.oy + y * IMG.h * c.s];
+      const p = pathAt(s.cur, lt);
+      if (p && o > .5) { curOn = true; [cx, cy] = toScreen(p[0], p[1]); }
+      (s.clicks || []).forEach(ct => { if (lt > ct && lt < ct + .5) { ring = 1 - k(lt, ct, .5); [rx, ry] = [cx, cy]; } });
+      if (s.toast && lt > s.toast[0]) { toastO = Math.min(out(k(lt, s.toast[0], .3)), o); [tx, ty] = toScreen(s.toast[1], s.toast[2]); }
+    });
+    vis($('L-shot'), shotO > 0 ? 1 : 0);
+    const cap = $('cap'); cap.style.opacity = capO; $('cap-k').textContent = capK; $('cap-t').textContent = capT;
+    cap.style.transform = `translateY(${((1 - out(clamp(capO))) * 14).toFixed(1)}px)`;
+
+    // phones
+    const pho = win(t, PHONES[0], PHONES[1]); vis($('L-phones'), pho);
+    if (pho > 0) {
+      const lt = t - PHONES[0], p1 = out(k(lt, .1, 1.2)), p2 = out(k(lt, .5, 1.2));
+      const cxm = W / 2, top = V ? 260 : 70, gap = V ? 30 : 60, sc = V ? 1 : .88;
+      Object.assign($('ph1').style, { left: (cxm - 400 * sc - gap / 2) + 'px', top: top + 'px', transformOrigin: '0 0', transform: `translateY(${(1 - p1) * 60}px) scale(${sc})`, opacity: p1 });
+      Object.assign($('ph2').style, { left: (cxm + gap / 2) + 'px', top: top + 'px', transformOrigin: '0 0', transform: `translateY(${(1 - p2) * 60}px) scale(${sc})`, opacity: p2 });
+      if (pho > capO) { cap.style.opacity = pho; $('cap-k').textContent = 'On your phone'; $('cap-t').textContent = 'Approve, reply and build from anywhere.'; cap.style.transform = ''; }
+    }
+
+    // wall: a slow diagonal drift over many things people made
+    const wo = win(t, WALL[0], WALL[1]); vis($('L-wall'), wo);
+    if (wo > 0) {
+      const lt = t - WALL[0], p = io(clamp(lt / (WALL[1] - WALL[0])));
+      $('wall').style.transform = V ? `translate(${lerp(-380, -1500, p)}px, ${lerp(-20, -40, p)}px) scale(${lerp(1.2, 1.12, p)})`
+        : `translate(${lerp(-260, -620, p)}px, ${lerp(-120, -360, p)}px) scale(${lerp(.78, .6, p)})`;
+      if (wo > capO && wo > pho) { cap.style.opacity = 0; }
+    }
+
+    // end card
+    const eo = k(t, END[0], .7); vis($('L-end'), eo);
+    if (eo > 0) { const lt = t - END[0]; $('end-h').style.opacity = out(k(lt, .5, .6)); $('end-p').style.opacity = out(k(lt, 1.2, .6)); cap.style.opacity = 0; }
+
+    cursorAt(cx, cy, curOn);
+    const r = $('ring'); r.style.opacity = ring; r.style.left = rx + 'px'; r.style.top = ry + 'px'; r.style.transform = `scale(${(1.4 - .6 * ring).toFixed(3)})`;
+    const to = $('toast'); to.style.opacity = toastO; to.style.left = (tx - 70) + 'px'; to.style.top = (ty + 40) + 'px';
+  }
+
+  let seekT = null;
+  window.adSeek = t => { seekT = t; render(t); return document.fonts ? document.fonts.ready.then(() => true) : Promise.resolve(true); };
+  window.adDuration = D;
+  const q = new URLSearchParams(location.search);
+  const still = q.has('still') || (matchMedia('(prefers-reduced-motion: reduce)').matches && !q.has('t'));
+  addEventListener('resize', () => { fit(); render(seekT ?? 0); });
+  fit();
+  if (q.has('t')) { seekT = parseFloat(q.get('t')) || 0; render(seekT); }
+  else if (still) render(74);
+  else { const t0 = performance.now(); const loop = now => { if (seekT === null) render((now - t0) / 1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+})();
+</script>
+</body>
+</html>
