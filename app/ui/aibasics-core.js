@@ -159,7 +159,7 @@
       const num = /^(\s*)\d+[.)]\s+(.*)$/.exec(ln); if (num && !num[1]) { n++; ln = `${n}. ${num[2]}`; } else if (!/^\s*$/.test(ln) && !num) n = 0;
       const li = /^(\s*(?:- (?:\[[ xX]\] )?|\d+\. ))(.*)$/.exec(ln);
       if (li) ln = li[1] + cap(li[2]); else if (ln.trim() && !/^\s*[|>]/.test(ln)) ln = ln.replace(/^(\s*)(\S)/, (x, s, c) => s + c.toUpperCase());
-      if (!/`/.test(ln)) ln = ln.replace(/ {2,}/g, ' ').replace(/\s+([,;:!?])/g, '$1').replace(/\s+\.(?=\s|$)/g, '.').replace(/\bi\b(?=[ ']|$)/g, 'I');
+      if (!/`/.test(ln)) ln = ln.replace(/ {2,}/g, ' ').replace(/\s+([,;:!?])/g, '$1').replace(/([,;])(?=[A-Za-z])/g, '$1 ').replace(/\s+\.(?=\s|$)/g, '.').replace(/\bi\b(?=[ ']|$)/g, 'I');
       out.push(ln);
     }
     return out.join('\n').replace(/\n{3,}/g, '\n\n').replace(/^\n+/, '').replace(/\n*$/, '\n');

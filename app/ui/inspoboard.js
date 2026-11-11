@@ -60,8 +60,7 @@
   }
 
   // ---------- view ----------
-  const credit = it => `<p class="ibd-cred">${it.landing ? `<a href="${esc(it.landing)}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a>` : esc(it.title)}${it.creator ? ` · ${it.creatorUrl ? `<a href="${esc(it.creatorUrl)}" target="_blank" rel="noopener noreferrer">${esc(it.creator)}</a>` : esc(it.creator)}` : ''}
-    · ${it.licenseUrl ? `<a class="ibd-lic" href="${esc(it.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(it.license)}</a>` : `<span class="ibd-lic">${esc(it.license || '')}</span>`}${it.provider ? ` <span class="faint">via ${esc(it.provider)}</span>` : ''}</p>`;
+  const credit = it => `<p class="ibd-cred">${it.creator ? `by ${it.creatorUrl ? `<a href="${esc(it.creatorUrl)}" target="_blank" rel="noopener noreferrer">${esc(it.creator)}</a>` : esc(it.creator)} · ` : ''}${it.licenseUrl ? `<a class="ibd-lic" href="${esc(it.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(it.license)}</a>` : `<span class="ibd-lic">${esc(it.license || '')}</span>`}${it.landing ? ` · <a href="${esc(it.landing)}" target="_blank" rel="noopener noreferrer">source${it.provider ? ` (${esc(it.provider)})` : ''}</a>` : it.provider ? ` · ${esc(it.provider)}` : ''}</p>`;
   const sound = (u, title) => `<div class="ibd-snd"><span class="ibd-snd-ic" aria-hidden="true">♪</span><audio controls preload="none" src="${esc(src(u))}" aria-label="Play ${esc(title)}"></audio></div>`;
   function resultHtml(r) {
     const saved = ((st.view && st.view.items) || []).some(x => x.ref === r.ref);
@@ -77,7 +76,7 @@
   }
   function html() {
     const v = st.view || { items: [] }, items = v.items || [], style = v.style, r = st.results;
-    const tabs = `<div class="ibd-tabs" role="tablist"><button role="tab" aria-selected="${st.board === 'me'}" data-board="me">Mine</button>${pid() ? `<button role="tab" aria-selected="${st.board === pid()}" data-board="${esc(pid())}">${esc(pname() || 'This project')}</button>` : ''}</div>`;
+    const tabs = !pid() ? '' : `<div class="ibd-tabs" role="tablist"><button role="tab" aria-selected="${st.board === 'me'}" data-board="me">Mine</button><button role="tab" aria-selected="${st.board === pid()}" data-board="${esc(pid())}">${esc(pname() || 'This project')}</button></div>`;
     return `<div class="ibd-in" role="dialog" aria-modal="true" aria-label="Inspiration board">
       <header class="ibd-head"><div><span class="eyebrow">Inspiration</span><h2>Your board</h2><p class="faint">Openly licensed pictures and sounds, credited. Flint reads the board to match your style.</p></div>${tabs}<button class="ibd-close" id="ibd-close" aria-label="Close">×</button></header>
       <form class="ibd-search" id="ibd-form" autocomplete="off"><input class="input" id="ibd-q" value="${esc(st.q)}" placeholder="${st.type === 'audio' ? 'Search sounds: coin, rain, crowd…' : 'Search pictures: dusk, forest, neon…'}" aria-label="Search">

@@ -102,6 +102,7 @@
   }
   async function refine(kind, input, draft) {   // ✦ with an AI on: same place, better words; without, the plan stands
     if (!connected()) return null;
+    const on = window.TribeAIBasics ? await window.TribeAIBasics.online() : { online: false }; if (!on.online) return null;
     try { const r = await C().api('/ai/refine', { method: 'POST', body: { kind, input, draft } }); return r && r.text ? r : null; } catch { return null; }
   }
   async function step(arg) {
