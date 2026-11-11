@@ -9,6 +9,7 @@
 4. Live reload without Server-Sent Events (Cloudflare quick tunnels don't stream them): the preview's ?poll=1 answers
    the change count, and a preview page whose EventSource never delivers anything still reloads after a save.
 5. A friend joins from a phone with a one-time invite, gets a task assigned and a DM, and both reach their Inbox.
+6. A link-in-bio template edited in Easy mode (site-data) and published: the play link shows the edit.
 Usage: python app/test/e2e_loops.py
 """
 import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
@@ -118,6 +119,19 @@ def main():
         assert tid in tool(atok, pid, "list_tasks")
         assert "doing" in tool(atok, pid, "update_task", {"id": tid, "take": True, "status": "doing"})
 
+        # ---- 6: a website template, edited in Easy mode, published as a play link ----
+        site_pid = ok(api("/projects", "POST", {"name": "Ember Links"}, token=orion), "site project")["project"]["id"]
+        made = ok(api(f"/projects/{site_pid}/site-library", "POST", {"template": "linkbio", "name": "Ember Links", "level": "easy"}, token=orion, project=site_pid), "template")
+        sd = ok(api(f"/projects/{site_pid}/site-data" + (f"?dir={made['dir']}" if made.get("dir") else ""), token=orion, project=site_pid), "site data")
+        data = sd["data"]; data["name"] = "Ember Links Loop"
+        ok(api(f"/projects/{site_pid}/site-data", "PUT", {"dir": sd.get("dir", ""), "data": data}, token=orion, project=site_pid), "save site data")
+        pub = ok(api("/publish", "POST", {"project": site_pid, "title": "Ember Links"}, token=orion, project=site_pid), "publish")
+        entry = pub.get("entry") or pub.get("published") or pub
+        play = entry.get("url") or entry.get("play") or (f"/play/{entry['slug']}/" if entry.get("slug") else None)
+        assert play, f"publish answered no play link: {pub}"
+        html = raw(play if play.startswith("http") else BASE + play)
+        assert "Ember Links Loop" in html, "the published page shows the Easy-mode edit"
+
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             co = b.new_context(viewport={"width": 1280, "height": 800}); co.add_init_script(settings_js("Orion", orion, pid))
@@ -196,7 +210,7 @@ def main():
             s.wait_for_function("window.TribeNotify && TribeNotify.state().unread > 0", timeout=8000)
             b.close()
         assert not errors, "\n".join(errors[:10])
-        print("e2e_loops: OK (push keys from env, MCP helper takes a task + code_write → preview, pin answered over MCP, live reload by polling without SSE, phone friend task + DM → inbox)")
+        print("e2e_loops: OK (push keys from env, MCP helper takes a task + code_write → preview, pin answered over MCP, live reload by polling without SSE, phone friend task + DM → inbox, link-in-bio template edited in Easy → published play link)")
     finally:
         srv.terminate()
 
