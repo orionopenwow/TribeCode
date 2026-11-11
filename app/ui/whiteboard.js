@@ -8,7 +8,9 @@
 // open for commercial use). Server: server/whiteboard.js (/api/whiteboard, WebSocket 'wbd-*').
 //   window.TribeWhiteboard = { open(boardId?), close(), state() }
 (function () {
-  const C = window.TribeClient;
+  // feat/setup-local: a board kept on this device (localfiles.js) swaps in its own small backend (api/send/state) while open.
+  const RC = window.TribeClient; let LB = null;
+  const C = new Proxy(RC, { get: (t, k) => (LB && k in LB ? LB[k] : t[k]) });
   const NAME = 'whiteboard';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -80,8 +82,9 @@
     sec = document.createElement('section'); sec.id = 'view-' + NAME; sec.className = 'hidden'; main.appendChild(sec);
     return sec;
   }
-  function show(id) {
+  function show(id, opts) {
     const sec = ensureSection(); if (!sec) return;
+    const nb = (opts && opts.backend) || null; if (nb !== LB) { LB = nb; loadedFor = ''; if (!nb && !id) boardId = 'main'; }
     if (id && id !== boardId) { boardId = id; loadedFor = ''; }
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
     sec.classList.remove('hidden');
@@ -836,7 +839,7 @@
   setTimeout(fromHash, 0);
 
   window.TribeWhiteboard = {
-    open: id => show(id), close: () => { if (open && window.TribeApp) window.TribeApp.show('home'); },
+    open: (id, opts) => show(id, opts), local: () => !!LB, close: () => { if (open && window.TribeApp) window.TribeApp.show('home'); },
     state: () => ({ open, board: boardId, name: boardName, canEdit, canManage, tool: curTool(), count: live().length, view: { ...view }, selected: [...sel], undo: undo.length, redo: redo.length, peers: [...peers.keys()],
       elements: live().map(clone) }),
   };

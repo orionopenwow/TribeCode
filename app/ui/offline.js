@@ -81,28 +81,52 @@
   }
 
   // A real tribe on this phone: just you and an empty first project (Flint answers from the Flint panel, no model needed).
-  function seedSolo() {
+  // draft (feat/setup-local, app/ui/setuplocal.js): the project you just named on the dashboard, made instantly here:
+  //   { name, bio, emoji, notes, company: { name, mission, seats: { ceo, cto, growth, ops: 'me' | 'ai' | 'later' } } | null }
+  function seedSolo(draft) {
     const st = S.get(), now = Date.now(), name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
-    const tname = (ls.get('tribecode.welcome.tribe') || {}).name || `${first}’s tribe`, pid = 'first-project';
+    const d = draft || {}, pname = String(d.name || 'My first project').slice(0, 48);
+    const tname = (ls.get('tribecode.welcome.tribe') || {}).name || `${first}’s tribe`, pid = d.name ? (slugify(pname) || 'first-project') : 'first-project';
+    const where = phoneLike() ? 'this phone' : 'this device';
+    const docs = d.notes && String(d.notes).trim() ? [{ slug: 'notes', title: 'Notes', by: 'me', created: iso(now), updated: iso(now), updatedBy: 'me', version: 1, project: pid, body: String(d.notes).slice(0, 400000) }] : [];
     return {
-      on: true, v: 1, mode: 'solo', created: iso(now), seq: 0,
+      on: true, v: 1, mode: 'solo', id: 'd-' + rid(12), created: iso(now), seq: 0,
       tribe: { name: String(tname).slice(0, 40), created: iso(now) },
       members: [{ id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) }],
       current: pid,
-      projects: [{ id: pid, name: 'My first project', emoji: '✨', image: null, bio: '', color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
-      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: `${first} started **${String(tname).slice(0, 40)}** on this phone. It lives only here for now: add tasks and notes, ask Flint for help, and move it to a host when friends should join.` }] },
-      tasks: { [pid]: [] }, docs: { [pid]: [] }, vision: { [pid]: '' }, gists: { [pid]: [] },
+      projects: [{ id: pid, name: pname, emoji: d.emoji || '✨', image: null, bio: String(d.bio || '').slice(0, 400), color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
+      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: d.name ? `${first} started **${pname}** on ${where}. Everything works here already: add tasks, notes and docs, ask Flint for help. Choose where it lives (GitHub, this computer, a free cloud or a phone) whenever you like.` : `${first} started **${String(tname).slice(0, 40)}** on ${where}. It lives only here for now: add tasks and notes, ask Flint for help, and move it to a host when friends should join.` }] },
+      tasks: { [pid]: (Array.isArray(d.tasks) ? d.tasks : []).map(x => String(x || '').trim().slice(0, 200)).filter(Boolean).slice(0, 30).map((title, i) => ({ id: 't-' + rid(6), title, status: 'backlog', assignee: null, by: 'me', created: iso(now), updated: iso(now), order: now + i, source: 'board', body: '', project: pid })) },
+      docs: { [pid]: docs }, vision: { [pid]: String(d.bio || '') }, gists: { [pid]: [] },
+      company: d.company ? { [pid]: companyDraft(d.company, pname) } : {}, whiteboard: {},
       scratch: [], uploads: [], invites: [], friends: [], prefs: { pins: [] }, joinedRio: true, mayaHi: true,
     };
   }
   const solo = () => db?.mode === 'solo';
+  const phoneLike = () => matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '');
+  // ---------- Company basics in a draft (setuplocal.js): name, mission and the four lean seats; anything can be "later" ----------
+  const SEATS = [['ceo', 'CEO', '#F26B1D'], ['cto', 'Build', '#38C6B1'], ['growth', 'Grow', '#FABD2F'], ['ops', 'Run', '#94A3B8']];
+  function companyDraft(c, pname) {
+    const seats = c.seats || {};
+    return { on: true, name: String(c.name || '').slice(0, 60), mission: String(c.mission || '').slice(0, 400), project: pname, seats: Object.fromEntries(SEATS.map(([k]) => [k, ['me', 'ai'].includes(seats[k]) ? seats[k] : 'later'])) };
+  }
+  function companyView(p) {
+    const c = (db.company || {})[p.id]; const meV = { id: 'me', name: me().name, color: me().color, role: 'host' };
+    if (!c || !c.on) return { company: null, canLead: true, canEdit: true, mySeats: [], templates: [], kinds: [], people: [meV], agents: [], myAgent: null };
+    const seats = SEATS.map(([k, title, color]) => { const h = c.seats[k]; return { id: k, kind: k, title, color, status: h === 'me' ? 'on-track' : 'idle', charter: { goal: h === 'ai' ? 'For an AI helper, once one is connected' : '', owns: [], mayDo: [], needsOk: [] }, holder: { person: h === 'me' ? 'me' : null, agent: null }, who: { person: h === 'me' ? meV : null, agent: null }, last: null }; });
+    return { company: { on: true, name: c.name || p.name, mission: c.mission, template: 'blank', seats, goals: [], rhythms: {}, draft: true }, canLead: true, canEdit: true, mySeats: seats.filter(x => x.holder.person === 'me').map(x => x.id),
+      templates: [], kinds: SEATS.map(([id, title, color]) => ({ id, title, color })), people: [meV], agents: [], myAgent: null, today: { standups: {}, missing: [] }, decisions: [], waiting: 0, spend: null };
+  }
   // Everything a host needs to take the phone tribe over (server/soloimport.js reads exactly this shape).
+  // draftId (feat/setup-local): the host remembers it, so sending the same draft twice makes no second copy.
   function exportSolo() {
     if (!db) return null;
-    return { tribe: { name: db.tribe.name }, projects: db.projects.map(p => ({
-      name: p.name, emoji: p.emoji || '', color: p.color, bio: p.bio || '', vision: db.vision[p.id] || '',
+    if (!db.id) { db.id = 'd-' + rid(12); save(); }
+    return { draftId: db.id, tribe: { name: db.tribe.name }, projects: db.projects.map(p => ({
+      key: p.id, name: p.name, emoji: p.emoji || '', color: p.color, bio: p.bio || '', vision: db.vision[p.id] || '',
+      company: (db.company || {})[p.id] || null, github: ((db.homes || {})[p.id] || {}).github || null,
       tasks: (db.tasks[p.id] || []).map(t => ({ title: t.title, status: t.status, body: t.body || '', due: t.due || null, type: t.type, subtasks: t.subtasks })),
-      docs: (db.docs[p.id] || []).map(d => ({ title: d.title, body: d.body || '' })),
+      docs: (db.docs[p.id] || []).map(d => ({ title: d.title, body: d.body || '', ...(d.kind ? { kind: d.kind } : {}) })),
       chat: (db.chat[p.id] || []).filter(m => m.text).map(m => ({ by: m.by === 'me' ? 'me' : m.by === 'tribecode' ? 'tribecode' : m.by, name: nameOf(m.by), at: m.at, text: m.text })),
     })) };
   }
@@ -644,6 +668,14 @@
           if (POST && parts[3] === 'dismiss') { e.gone.push(String(body.id || '')); save(); }
           if (GET || PUT || POST) return ok(senseMock(p, e));
         }
+        if (c === 'company') {   // feat/setup-local: the Company basics you filled in (or left for later) in setup
+          db.company = db.company || {};
+          if (!parts[3] && GET) return ok(companyView(p));
+          if (!parts[3] && (PUT || PATCH)) { if (body.on === false) { delete db.company[p.id]; } else { const cd = db.company[p.id] = db.company[p.id] || companyDraft({}, p.name); if (body.name !== undefined) cd.name = String(body.name).slice(0, 60); if (body.mission !== undefined) cd.mission = String(body.mission).slice(0, 400); } save(); push({ type: 'company', project: p.id }); return ok(companyView(p)); }
+          if (parts[3] === 'template' && POST) { db.company[p.id] = companyDraft({ name: body.name || p.name, seats: { ceo: 'me' } }, p.name); save(); push({ type: 'company', project: p.id }); return ok({ company: companyView(p).company, tasks: [], helper: null }); }
+          if (parts[3] === 'seats' && parts[5] === 'assign' && POST) { const cd = db.company[p.id]; if (cd && cd.seats[parts[4]] !== undefined) { cd.seats[parts[4]] = body.person === 'me' ? 'me' : body.person === null ? 'later' : cd.seats[parts[4]]; save(); push({ type: 'company', project: p.id }); } return ok({ seat: (companyView(p).company || { seats: [] }).seats.find(x => x.id === parts[4]) || null }); }
+          return no(409, 'Goals, standups and decisions start once the project has a home. Choose where it lives from the pill at the top.');
+        }
         if (c === 'workspace' && GET) return ok({ repo: null, github: { installed: false, signedIn: false, user: null }, branch: null, identity: { name: me().name, email: '', custom: false, hasToken: false } });
         break;
       }
@@ -729,7 +761,7 @@
         if (!b && GET) return ok({ docs: list.map(docMeta).sort((x, y) => String(y.updated).localeCompare(String(x.updated))) });
         if (!b && POST) {
           const title = String(body.title || 'Untitled').slice(0, 120); let s = slugify(title), n = 2; while (list.some(d => d.slug === s)) s = `${slugify(title)}-${n++}`;
-          const now = iso(), d = { slug: s, title, by: 'me', created: now, updated: now, updatedBy: 'me', version: 1, project: pid, body: String(body.body || '').slice(0, 400000) };
+          const now = iso(), d = { slug: s, title, by: 'me', created: now, updated: now, updatedBy: 'me', version: 1, project: pid, body: String(body.body || '').slice(0, 400000), ...(['sheet', 'deck'].includes(body.kind) ? { kind: body.kind } : {}) };
           list.push(d); save(); push({ type: 'doc', doc: { slug: s, title, version: 1, updated: now, updatedBy: 'me' } }); return ok({ doc: { ...d, summary: '' } });
         }
         const d = list.find(x => x.slug === b); if (!d) return no(404, 'doc not found');
@@ -776,7 +808,7 @@
         break;
       }
       case 'invites': {
-        if (solo() && !b && POST) { setTimeout(() => window.TribePhoneHost && window.TribePhoneHost.move(), 50); return no(409, 'This tribe lives on this phone. Move it to a host first, then friends can join.'); }
+        if (solo() && !b && POST) { setTimeout(() => (window.TribeLocalSetup && !phoneLike() ? window.TribeLocalSetup.where() : window.TribePhoneHost && window.TribePhoneHost.move()), 50); return no(409, `This tribe lives on ${phoneLike() ? 'this phone' : 'this device'}. Choose where it lives first, then friends can join.`); }
         if (!b && POST) {
           const inv = { code: 'DEMO' + rid(4).toUpperCase(), by: 'me', role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Number(body.maxUses) || 5, uses: 0, created: iso(), expires: iso(Date.now() + (Number(body.hours) || 24) * 3600e3), demo: true, ...(body.project && body.project !== 'tribe' ? { project: body.project } : {}) };
           db.invites.push(inv); save(); friendJoins(); noteInvite();
@@ -900,6 +932,20 @@
         break;
       // v0.28: the Design canvas, Flint beside it, comment pins and the website templates, so the demo shows them too
       case 'canvas': return demoCanvas(method, b, c, body);
+      case 'whiteboard': {   // feat/setup-local: boards in a local draft (the same last-writer-wins rule as server/whiteboard.js)
+        const wb = (db.whiteboard = db.whiteboard || {})[pid] = (db.whiteboard || {})[pid] || {};
+        if (!wb.main) wb.main = { id: 'main', name: 'Team board', created: iso(), updated: iso(), elements: {} };
+        const liveEls = x => Object.fromEntries(Object.entries(x.elements).filter(([, e]) => !e.del));
+        if (!b && GET) return ok({ boards: Object.values(wb).map(x => ({ id: x.id, name: x.name, updated: x.updated, count: Object.keys(liveEls(x)).length })), canEdit: true, canManage: true });
+        if (!b && POST) { const nb = { id: 'b-' + rid(10), name: String(body.name || 'New board').slice(0, 60), created: iso(), updated: iso(), elements: {} }; wb[nb.id] = nb; save(); return ok({ board: nb }); }
+        const x = wb[b]; if (!x) return no(404, 'no such board');
+        if (!c && GET) return ok({ board: { ...x, elements: liveEls(x) }, canEdit: true, canManage: true });
+        if (!c && PATCH) { if (body.name) x.name = String(body.name).slice(0, 60); save(); return ok({ board: x }); }
+        if (c === 'ops' && POST) { const ap = window.TribeLocalFiles ? window.TribeLocalFiles.lww(x.elements, body.ops) : []; if (ap.length) { x.updated = iso(); save(); } return ok({ ok: true, applied: ap.length, rejected: [] }); }
+        if (c === 'clear' && POST) { for (const [k, e] of Object.entries(x.elements)) if (!e.del) x.elements[k] = { id: k, del: true, v: (e.v || 0) + 1 }; save(); return ok({ ok: true }); }
+        if (!c && DEL) { if (b === 'main') return no(400, 'the team board stays; clear it instead'); delete wb[b]; save(); return ok({ ok: true }); }
+        return no();
+      }
       case 'canvaschat': return demoCanvasChat(method, b, c, body);
       case 'canvasai':
         if (b === 'templates' && GET) return ok({ templates: (await demoData()).canvas.map(t => ({ id: t.id, title: t.title })) });
@@ -955,7 +1001,7 @@
       catch (e) { console.warn('offline demo:', e); out = [500, { error: 'The offline demo hit a snag: ' + (e && e.message || e) }]; }
       if (out instanceof Response) return out;
       const [status, data] = out;
-      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => toast('Not in the offline demo. Host for real to use it.'), 50); }
+      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => toast(solo() ? 'That works once the project has a home. Choose where it lives from the pill at the top.' : 'Not in the offline demo. Host for real to use it.'), 50); }
       return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
     })();
   };
@@ -978,13 +1024,13 @@
     return { server: { ...(st.server || {}) }, hosting: st.hosting, hostOff: st.hostOff, projKey: pk, projVal: pkv, at: iso() };
   }
   // start(): ask which demo (Explore quietly / Watch it come alive). start('quiet' | 'showcase') starts that one.
-  function start(mode) {
+  function start(mode, draft) {
     if (mode !== 'quiet' && mode !== 'showcase' && mode !== 'solo') return choose();
     closeChooser();
-    if (active() && (db?.mode || 'quiet') === mode) { enterUi(); return; }
+    if (active() && (db?.mode || 'quiet') === mode && !draft) { enterUi(); return; }
     const wasReal = !!(C() && C().hasToken()), wasDemo = active();
     if (!ls.get(BKEY)) ls.set(BKEY, backup());
-    db = seed(mode); save(); blobClear();
+    db = mode === 'solo' ? seedSolo(draft) : seed(mode); save(); blobClear();
     S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
     if (wasReal || wasDemo) { try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} location.reload(); return; }
     paint(); C().connect();
@@ -1013,7 +1059,7 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? `${db?.tribe?.name} is ready on this phone.` : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? (db.projects[0] && db.projects[0].name !== 'My first project' ? `${db.projects[0].name} is ready. It lives on ${phoneLike() ? 'this phone' : 'this device'} until you choose a home.` : `${db?.tribe?.name} is ready on this phone.`) : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }
@@ -1053,7 +1099,7 @@
     if (solo()) pill.classList.add('solo');
     pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
     pill.innerHTML = sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
-      : solo() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>'
+      : solo() ? (phoneLike() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>' : `<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device</span><span class="od-s"> · ${(db.homes && Object.values(db.homes).some(h => h && h.github)) ? 'live on GitHub' : 'choose where it lives'}</span>`)
       : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();
     pill.onclick = e => { e.stopPropagation(); pop ? closePop() : openPop(); };
@@ -1077,15 +1123,16 @@
       document.body.appendChild(pop); placePop(); return;
     }
     if (solo()) {
-      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'On this phone');
-      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On this phone only</span><b>${esc(db.tribe.name)} lives on this phone</b></div></header>
-        <p>It's a real tribe: tasks, notes and chat are kept here and survive reloads. Friends can join once it moves to a host (a computer, a free cloud server or an Android phone).</p>
+      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', phoneLike() ? 'On this phone' : 'On this device');
+      const dev = phoneLike() ? 'this phone' : 'this device', p0 = db.projects[0] || {}, gh = ((db.homes || {})[p0.id] || {}).github;
+      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On ${dev} only</span><b>${esc(p0.name && p0.name !== 'My first project' ? p0.name : db.tribe.name)} lives on ${dev}</b></div></header>
+        <p>It's real: tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : 'Choose where it lives (a GitHub repo, this computer, a free cloud or a phone) and friends can join.'}</p>
         <div class="od-acts">
-          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>Move to a host</span></button>
+          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>${window.TribeLocalSetup ? 'Choose where it lives' : 'Move to a host'}</span></button>
           <button id="od-del"><svg class="i"><use href="#i-x"/></svg><span>Delete this phone tribe</span></button>
         </div>`;
       document.body.appendChild(pop);
-      pop.querySelector('#od-move').onclick = () => { closePop(); window.TribePhoneHost && window.TribePhoneHost.move(); };
+      pop.querySelector('#od-move').onclick = () => { closePop(); if (window.TribeLocalSetup) window.TribeLocalSetup.where(); else if (window.TribePhoneHost) window.TribePhoneHost.move(); };
       pop.querySelector('#od-del').onclick = () => { if (confirm(`Delete ${db.tribe.name} from this phone? Its tasks, notes and chat are gone for good unless you moved it to a host first.`)) leave(); };
       placePop(); return;
     }
@@ -1134,7 +1181,11 @@
 
   window.TribeOffline = {
     active, start, choose, boot, leave, reset, hostForReal,
-    solo: () => active() && solo(), exportSolo,
+    solo: () => active() && solo(), exportSolo, realFetch: (i, o) => realFetch(i, o),
+    // feat/setup-local: where each draft project lives (github: { repo, branch, synced }), kept in the draft itself
+    homes: () => (db && db.homes) || {}, setHome: (pid, h) => { if (!db) return; db.homes = db.homes || {}; db.homes[pid] = { ...(db.homes[pid] || {}), ...h }; save(); if (pill) { pill.remove(); pill = null; } paint(); },
+    // forget the draft after its home confirmed it has everything (keeps your current sign-in as it is)
+    forget: () => { closePop(); for (const s of [...sockets]) s.close(); ls.del(KEY); ls.del(BKEY); blobClear(); db = null; paint(); },
     // After a move: forget the phone copy and sign in to the real host (no restore of the old settings).
     finishMove: (server, token, name, go) => { closePop(); ls.del(KEY); ls.del(BKEY); blobClear(); try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} if (go) { try { const k = 'tribecode.settings.v1', v = JSON.parse(localStorage.getItem(k) || '{}'); localStorage.setItem(k, JSON.stringify({ ...v, name, server: { url: '', token: '' }, hosting: false })); } catch {} location.href = go; return; } for (const s of [...sockets]) s.close(); db = null; S.set({ name, server: { url: server, token }, hosting: false }); location.reload(); },   // go: a web page on another origin opens the host's own page (a device link signs it in there)
     socket: url => new FakeSocket(url),

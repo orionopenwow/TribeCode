@@ -545,6 +545,6 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
       }) },
   };
 
-  return { route, get, seatOf, seatsOf, list, check, createFrom, onApproval, runRhythm, weeklyReport, decisions, mcpTools, templates: tplList, KINDS, useLedger: fn => { ledgerHook = typeof fn === 'function' ? fn : null; }, sweep };
+  return { route, get, assign, seatOf, seatsOf, list, check, createFrom, onApproval, runRhythm, weeklyReport, decisions, mcpTools, templates: tplList, KINDS, useLedger: fn => { ledgerHook = typeof fn === 'function' ? fn : null; }, sweep };
 };
 module.exports.KINDS = KINDS;

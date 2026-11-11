@@ -582,6 +582,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   ];
   const setup = { tpl: null, image: null };
   function openNew() {
+    if (!C.connected() && window.TribeLocalSetup) return window.TribeLocalSetup.start();   // feat/setup-local: no tribe yet: an instant project on this device, its home chosen last
     dropped = null; setup.tpl = null; setup.image = null;
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
