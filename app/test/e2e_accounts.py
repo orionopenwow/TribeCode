@@ -70,7 +70,7 @@ def state(page):
 
 
 def wait_reloaded(page, cond, timeout=15000):
-    page.wait_for_load_state("load"); page.wait_for_function(f"window.TribeAccounts && ({cond})", timeout=timeout); page.wait_for_timeout(300)
+    page.wait_for_load_state("load"); page.wait_for_function(f"window.TribeAccounts && document.querySelector('#ub-name') && ({cond})", timeout=timeout); page.wait_for_timeout(300)
 
 
 def menu(page, act, acc=None, nav=False):
