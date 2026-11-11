@@ -90,8 +90,15 @@ def main():
                 pg.evaluate("document.querySelector('#flint-home').scrollIntoView({block: 'start'})"); time.sleep(0.3)
                 pg.screenshot(path=str(SHOTS / "flint-home.png"))
 
-            # Start a project from Flint: the tribe gets made on this computer
+            # Start a project from Flint: the optimistic Start sheet (feat/setup-local) makes it on this device with no
+            # server call; choosing "This computer" as its home makes the real tribe here
             ask(pg, "start a project", "Starting your first project")
+            pg.wait_for_selector("#su-start", state="visible", timeout=8000)
+            pg.fill("#su-name", "Flint's project"); pg.click("#su-create")
+            pg.wait_for_function("TribeOffline.solo() && TribeClient.connected()", timeout=8000)
+            assert health()["members"] == 0, "nothing goes to the server before a home is chosen"
+            pg.wait_for_selector("#su-where", state="visible", timeout=8000)
+            pg.click("#su-where [data-su='computer']")
             for _ in range(60):
                 if health()["members"] >= 1: break
                 time.sleep(0.25)

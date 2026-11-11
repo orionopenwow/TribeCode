@@ -135,7 +135,7 @@
   }
   function startProject() {
     const host = document.querySelector('#hub-host');
-    if (!connected() && host) { host.click(); return F().say('Starting your first project on this computer…'); }
+    if (!connected() && host) { host.click(); return F().say(window.TribeLocalSetup ? 'Starting your first project: give it a name. It lives on this device until you choose where it lives.' : 'Starting your first project on this computer…'); }
     if (connected() && window.TribeShell && window.TribeShell.openNew) { window.TribeShell.openNew(); return F().say('Pick a name and I\'ll set it up.'); }
     if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite();
     return F().say('Projects live in a tribe. Get the desktop app to host one, or join a friend with their link.', [act('How hosting works', 'guide', 'hosting')]);
