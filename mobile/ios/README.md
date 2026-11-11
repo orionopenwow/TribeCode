@@ -41,7 +41,7 @@ npx tauri ios dev                            # runs in the iOS Simulator (pick a
 npx tauri ios dev --open                     # or open the Xcode project to run on your own iPhone
 
 # 3. Signing (Xcode: Signing & Capabilities › Team), then a build for App Store Connect
-npx tauri icon ../assets/brand/icon.png --ios-color '#12151A'
+npx tauri icon ../assets/brand/icon-512.png --ios-color '#12151A'
 npx tauri ios build --export-method app-store-connect
 xcrun altool --upload-app --type ios --file "src-tauri/gen/apple/build/arm64/TribeCode.ipa" \
   --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER"   # key file in ~/.appstoreconnect/private_keys/

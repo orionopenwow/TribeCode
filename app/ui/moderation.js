@@ -119,7 +119,8 @@
     anchor.insertAdjacentHTML('beforebegin', `<div class="set-row" id="set-safety-row"><div class="set-l"><b>Privacy &amp; safety</b><small>Blocked people, ${st.staff ? 'reports, ' : ''}your data and deleting your account.</small></div>
       <div class="set-c"><button class="btn" id="set-safety">Open${st.staff && open ? ` <span class="mod-count">${open}</span>` : ''}</button></div></div>`);
     body.querySelector('#set-safety').onclick = () => openSafety();
-    if (!st.loaded) refresh().then(() => { const r = body.querySelector('#set-safety-row'); if (r) { r.remove(); settingsHook(); } });
+    const before = JSON.stringify([st.staff, open]);   // fresh numbers each time Settings opens
+    refresh().then(() => { const r = body.querySelector('#set-safety-row'); if (r && JSON.stringify([st.staff, st.reports.filter(x => x.status === 'open').length]) !== before) { r.remove(); settingsHook(); } });
   }
   function openSafety() { refresh().then(drawSafety); drawSafety(); }
   function drawSafety() {
