@@ -336,7 +336,8 @@
         ${window.TribeCaptures ? window.TribeCaptures.menuItems(m, ch) : ''}
         ${own && !m.media && !m.vote ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
         ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}
-        ${window.TribeRoles ? window.TribeRoles.msgMenuItems(m, ch) : ''}`;   // feat/roles: mod tools (roles.js)
+        ${window.TribePWA ? window.TribePWA.menuItems(m) : ''}${window.TribeModeration ? window.TribeModeration.menuItems(m, ch) : ''}
+        ${window.TribeRoles ? window.TribeRoles.msgMenuItems(m, ch) : ''}`;   // feat/appstore: Share, Report, Block (pwa.js, moderation.js) · feat/roles: mod tools (roles.js)
       bind();
     };
     const fwd = () => {
