@@ -3,7 +3,7 @@
 .kit { padding: 128px 0 0; }
 .kit__lead { max-width: 640px; color: var(--muted); font-size: 17px; line-height: 1.6; margin: 12px 0 0; }
 .kit__box { margin-top: 32px; border: 1px solid var(--edge); border-radius: var(--r-lg, 18px); background: var(--surface); overflow: hidden; }
-.kit__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-bottom: 1px solid var(--edge); background: var(--raised); }
+.kit__tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--edge); background: var(--raised); }
 .kit__tab { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; padding: 14px 16px; border: 0; border-right: 1px solid var(--edge); background: none; color: var(--faint); text-align: left; cursor: pointer; position: relative; font: inherit; }
 .kit__tab:last-child { border-right: 0; }
 .kit__tab b { color: var(--text); font-size: 14.5px; font-weight: 600; }
