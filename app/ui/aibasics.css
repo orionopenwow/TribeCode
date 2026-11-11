@@ -5,7 +5,11 @@
 .ab-spark:focus-visible { outline: 2px solid var(--live); outline-offset: 1px; }
 .ab-spark.wide { border-color: var(--border); background: var(--surface); color: var(--muted); }
 .ab-spark .ab-l { font-size: 12.5px; }
-.tk-acts .ab-spark { opacity: 0; } .task:hover .tk-acts .ab-spark, .task:focus-within .tk-acts .ab-spark, .tk-acts .ab-spark[aria-expanded="true"] { opacity: 1; }
+#board .task[data-id] { position: relative; }
+.ab-spark.ab-corner { position: absolute; top: 2px; right: 6px; min-width: 20px; height: 20px; padding: 0 4px; opacity: 0; }
+.ab-spark.ab-corner > span[aria-hidden] { font-size: 12px; }
+.task:hover > .ab-corner, .task:focus-within > .ab-corner, .ab-corner[aria-expanded="true"], .ab-corner:focus-visible { opacity: 1; }
+@media (hover: none) { .ab-spark.ab-corner { opacity: .7; } }
 .ab-row { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 .ab-pop { position: fixed; z-index: 90; width: min(380px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); color: var(--text); padding: 6px; animation: ab-in var(--dur-base) var(--ease-out); }
 .ab-pop.sheet { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto; border-radius: var(--r-panel); }

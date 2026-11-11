@@ -149,7 +149,7 @@
   function scan() {
     const head = document.querySelector('#chat-head .cb-acts');
     if (head && !head.querySelector('[data-ab="chat"]')) { const b = spark('chat', '✦ Summarize or turn into tasks'); b.classList.add('cb-btn'); b.onclick = () => menu(b, 'chat', chatCtx); head.prepend(b); }
-    document.querySelectorAll('#board .task[data-id] .tk-acts').forEach(a => { if (a.querySelector('[data-ab="task"]')) return; const id = a.closest('.task').dataset.id, b = spark('task', '✦ Split, estimate or suggest an owner'); b.classList.add('tk-btn'); b.onclick = e => { e.stopPropagation(); menu(b, 'task', () => taskCtx(id)); }; b.addEventListener('keydown', e => e.stopPropagation()); a.prepend(b); });
+    document.querySelectorAll('#board .task[data-id]').forEach(row => { if (row.querySelector(':scope > [data-ab="task"]')) return; const id = row.dataset.id, b = spark('task', '✦ Split, estimate or suggest an owner'); b.classList.add('ab-corner'); b.draggable = false; b.onclick = e => { e.stopPropagation(); menu(b, 'task', () => taskCtx(id)); }; b.addEventListener('keydown', e => e.stopPropagation()); b.addEventListener('pointerdown', e => e.stopPropagation()); row.appendChild(b); });   // in the row's top-right corner: it never moves the row's own buttons
     const dt = document.querySelector('#view-docs .doc-toolbar');
     if (dt && document.querySelector('#doc-body') && !dt.querySelector('[data-ab="doc"]')) { const b = spark('doc', '✦ Tidy, outline or continue'); b.onclick = () => menu(b, 'doc', () => docCtx(document.querySelector('#view-docs'))); dt.appendChild(b); }
     const na = document.querySelector('.note-ed .ne-acts');
