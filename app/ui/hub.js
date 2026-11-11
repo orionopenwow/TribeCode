@@ -736,7 +736,7 @@
     const locals = localItems(q);
     let items = [...notes, ...locals, ...pdocs, ...ups].filter(it => docsKind === 'all' || cat(it) === docsKind);
     items.sort(docsSort === 'name' ? (a, b) => String(a.title).localeCompare(String(b.title)) : (a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
-    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : docsKind === 'all' ? 'No files yet' : 'Nothing here yet'}</b><span>${q ? 'Try another word.' : 'Tap + New for a note, doc, sheet, whiteboard or design, or upload any file: pictures, audio, video, PDFs, code, models, zips. It all works on this device, no tribe needed.'}</span></div>`; return; }
+    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : docsKind === 'all' ? 'No files yet' : 'Nothing here yet'}</b><span>${q ? 'Try another word.' : 'Tap + New for a note, doc, sheet, whiteboard or design, or upload any file. No tribe needed.'}</span></div>`; return; }
     const attr = it => it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : it.kind === 'file' ? `data-up="${esc(it.id)}"` : it.kind === 'local' ? `data-local="${esc(it.id)}" data-lk="${esc(it.lk)}"` : `data-gdoc="${esc(it.id)}"`;
     const LIC = { doc: 'i-doc', sheet: 'i-grid', whiteboard: 'i-whiteboard', design: 'i-canvas' };
     const icon = it => it.kind === 'note' ? 'i-quill' : it.kind === 'file' ? (FK_IC[it.f.kind] || 'i-clip') : it.kind === 'local' ? (LIC[it.lk] || FK_IC[it.fk] || 'i-clip') : it.dk === 'sheet' ? 'i-grid' : 'i-doc';
@@ -834,7 +834,7 @@
     w.innerHTML = `<div class="dc-sheet" role="dialog" aria-label="New"><span class="dc-grab"></span>
       <button data-do="note">${ico('i-quill', 22)}<span><b>New note</b><small>Only you, until you share it</small></span></button>
       ${NEW.slice(1, 5).map(([k, ic, t, sub]) => `<button data-do="${k}">${ico(ic, 22)}<span><b>New ${t.toLowerCase()}</b><small>${sub}</small></span></button>`).join('')}
-      <button data-do="me">${ico('i-upload', 22)}<span><b>Upload a file</b><small>Any kind, up to ${Math.round(upCache.max / 1048576)} MB · only you</small></span></button>
+      <button data-do="me">${ico('i-upload', 22)}<span><b>Upload a file</b><small>Any kind, up to ${Math.round(upCache.max / 1048576)} MB · ${connected() ? 'only you' : 'on this device'}</small></span></button>
       ${pj ? `<button data-do="project">${ico('i-folder', 22)}<span><b>Upload to ${esc(pj.name)}</b><small>Everyone in the project sees it</small></span></button>` : ''}</div>`;
     document.body.appendChild(w);
     w.onclick = e => { if (e.target === w) w.remove(); };
