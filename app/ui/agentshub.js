@@ -54,7 +54,7 @@
     clearInterval(timer); timer = setInterval(() => { if (open && !document.hidden) load(true); }, 15000);
   }
   function hide() {
-    const sec = section(); if (sec) sec.classList.add('hidden');
+    const sec = section(); if (sec) { sec.classList.add('hidden'); if (fleet) sec.innerHTML = ''; }   // feat/fleet: no second copy of the fleet's ids behind the project's view
     open = false; clearInterval(timer); delete document.body.dataset.scope;
     if (location.hash === '#/' + NAME || location.hash === '#/fleet') history.replaceState(null, '', location.pathname + location.search);
   }
@@ -63,7 +63,7 @@
   window.addEventListener('hashchange', fromHash);
   if (C && C.on) C.on('hello', () => { setTimeout(fromHash, 50); if (open) load(true); });
   let soon = null;
-  if (C && C.on) C.on('presence', () => { if (open) { clearTimeout(soon); soon = setTimeout(() => load(true), 400); } });
+  if (C && C.on) C.on('presence', () => { if (open) { clearTimeout(soon); soon = setTimeout(() => { if (open) load(true); }, 400); } });
   if (C && C.on) C.on('ws', m => { if (open && m.type === 'openspace') C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); });
   if (C && C.on) C.on('project', () => { if (open) { result = null; load(); } });
   setTimeout(fromHash, 0);
@@ -71,10 +71,19 @@
   // ---------- data ----------
   async function load(quiet) {
     const sec = section(); if (!sec) return;
+    if (fleet && window.TribeFleet) return loadFleet(sec, quiet);   // feat/fleet: the global Agent fleet
     if (!C.hasToken || !C.hasToken()) { sec.innerHTML = `<div class="ah">${head()}<div class="hero-card"><span class="eyebrow">Not connected</span><h2>Start or join a tribe first</h2><p>Your agents connect to a tribe server, even when you're the only one in it.</p></div></div>`; return; }
     try { [data, office] = await Promise.all([C.api('/agents/hub'), C.api('/openspace').catch(() => null)]); } catch (e) { if (!quiet) sec.innerHTML = `<div class="ah">${head()}<p class="faint">${esc(e.message)}</p></div>`; return; }
     if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-agents-hub input, #view-agents-hub select')) return;   // don't redraw under the cursor
     render();
+  }
+  // The global Agent fleet: your agents in every project, the next step, how agents work; the Office stays at the end.
+  function loadFleet(sec, quiet) {
+    if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-agents-hub input, #view-agents-hub select')) return;
+    let root = sec.querySelector('#fl-root');
+    if (!root) { sec.innerHTML = `<div class="ah ah-fleet">${head()}<div id="fl-root"></div></div>`; root = sec.querySelector('#fl-root'); }
+    const officeSec = () => (C.hasToken && C.hasToken() ? `<section class="fl-sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>` : '');
+    return window.TribeFleet.render(root, { scope: 'all', alive: () => open, extra: officeSec, after: () => { wireOffice(); if (C.hasToken && C.hasToken()) C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); } });
   }
   const head = () => fleet ? `<header class="sec-head ah-head"><span class="eyebrow">Every project</span><h1>Agent fleet</h1></header>` : `<header class="sec-head ah-head"><span class="eyebrow">Solo mode</span><h1>Your agents</h1></header>`;
 

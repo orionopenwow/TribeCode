@@ -475,7 +475,8 @@ const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, doc
   votes: chatx.votes, broadcast, str, id, log: m => console.error('  ' + m) });
 require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
-const agentsHub = makeAgentsHub({ P, store: baseStore, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary });
+const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary,
+  approvals, loadTasks: () => loadTasks(), createTask: o => createTask(o), saveTask: t => saveTask(t) });   // + the Agent fleet (feat/fleet)
 // The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
 dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
   isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
@@ -1030,7 +1031,7 @@ async function apiInProject(req, res, url) {
     if (handled !== null) return;
   }
   if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
-  if (a === 'agents' && b === 'hub') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // solo mode: "Your agents" (server/agentshub.js)
+  if (a === 'agents' && (b === 'hub' || b === 'fleet')) { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // + the Agent fleet (feat/fleet)   // solo mode: "Your agents" (server/agentshub.js)
   if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
     // Default (no kind/label): the person's one Claude Code agent, as before. With { kind, label }: one more

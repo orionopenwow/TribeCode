@@ -132,6 +132,7 @@ function runBridge() {
   const say = m => process.stderr.write(`[tribecode-bridge] ${token ? String(m).split(token).join('<token>') : m}\n`);
   if (!/^https?:\/\//.test(url)) { say('usage: node mcp-stdio.js <http(s)://host:port/mcp>   (token in TRIBE_TOKEN)'); process.exit(2); }
   let session = null, pending = 0, ended = false, buf = '';
+  const quit = () => process.stdout.write('', () => process.exit(0));   // let a long answer (tools/list is > 64 KB) reach the pipe first
   const out = obj => process.stdout.write(JSON.stringify(obj) + '\n');
   const errorFor = (msg, code, message) => { const ids = (Array.isArray(msg) ? msg : [msg]).filter(x => x && x.id !== undefined && x.id !== null); ids.forEach(x => out({ jsonrpc: '2.0', id: x.id, error: { code, message } })); };
   async function forward(line) {
@@ -152,14 +153,14 @@ function runBridge() {
       }
       if (text.trim()) process.stdout.write(JSON.stringify(JSON.parse(text)) + '\n');
     } catch (e) { say(`request failed: ${e.message}`); errorFor(msg, -32002, 'Could not reach the TribeCode server'); }
-    finally { pending--; if (ended && !pending) process.exit(0); }
+    finally { pending--; if (ended && !pending) quit(); }
   }
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', d => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (l) forward(l); } });
-  process.stdin.on('end', () => { ended = true; if (buf.trim()) forward(buf.trim()); buf = ''; if (!pending) process.exit(0); });
+  process.stdin.on('end', () => { ended = true; if (buf.trim()) forward(buf.trim()); buf = ''; if (!pending) quit(); });
 }
 
-module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, agentSeen, idleMs, nameOf, people, coord, claims, endpoints, secretary }) {
+module.exports = function agentsHub({ P, store, pstore, brain, getMembers, presenceFor, agentSeen, idleMs, nameOf, people, coord, claims, endpoints, secretary, approvals, loadTasks, createTask, saveTask }) {
   const member = mid => getMembers().find(m => m.id === mid) || null;
   const isAgent = m => !!m && m.role === 'agent';
   const pid = () => P.current() || P.defaultId();
@@ -229,7 +230,101 @@ module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, 
     };
   }
 
-  async function route(req, res, { m, a, b, me, send, fail }) {
+  // ---------- the Agent fleet (app/ui/fleet.js) ----------
+  // One row per agent: kind, owner, status (working / idle / offline / paused, with last seen), task and branch, files
+  // claimed and the last 3 things it did; plus the one next step that matters most. ?scope=all: your agents in every
+  // project you can see (the global Agent fleet); otherwise every agent in this project.
+  // Last seen survives a restart: agentSeen is in memory, so it is copied to .tribe/agents-seen.json now and then.
+  const SEEN = '.tribe/agents-seen.json';
+  let seenDb = {}; try { seenDb = store.readJSON(SEEN, {}) || {}; } catch {}
+  function syncSeen() {
+    let changed = false;
+    for (const [mid, s] of agentSeen) { const at = new Date(s.at).toISOString(); if (seenDb[mid] !== at) { seenDb[mid] = at; changed = true; } }
+    if (changed) try { store.writeJSON(SEEN, seenDb); } catch {}
+  }
+  setInterval(syncSeen, 20_000).unref();
+  const ps = () => pstore || store;
+  const ownerOk = (m, p) => P.canSee(member(m.owner) || m, p);
+  const DONE = new Set(['done']);
+  function recentFor(p) {   // what the agents did in project p: their MCP actions (people log) and their #agents posts
+    const by = new Map(), add = (mid, text, at, kind) => { if (!mid || !text) return; if (!by.has(mid)) by.set(mid, []); by.get(mid).push({ text: String(text).slice(0, 200), at, kind }); };
+    try { for (const r of ps().readJSONL(`.tribe/people/${p}.jsonl`, 600)) if (r.tool !== 'agents_post') add(r.by, r.text, r.at, r.kind || 'call'); } catch {}   // its posts come from #agents below
+    try { for (const r of ps().readJSONL(`chat/agents-${p}.jsonl`, 200)) if (!r.human) add(r.by, r.text, r.at, 'post'); } catch {}
+    for (const v of by.values()) v.sort((x, y) => String(y.at).localeCompare(String(x.at)));
+    return mid => (by.get(mid) || []).slice(0, 3);
+  }
+  function rowsIn(p, me, pick) {   // inside project p
+    return P.inProject(p, () => {
+      const crow = new Map(); try { for (const r of coord.agents(me)) crow.set(r.id, r); } catch {}
+      const recent = recentFor(p), proj = P.get(p) || {};
+      return getMembers().filter(m => isAgent(m) && m.tokenHash && pick(m)).map(m => {
+        const r = crow.get(m.id) || {}, s = agentSeen.get(m.id), k = kindOf(m);
+        const online = !!s && Date.now() - s.at < idleMs;
+        const lastSeen = s ? new Date(s.at).toISOString() : seenDb[m.id] || null;
+        const paused = !!(r.control && r.control.action !== 'resume');
+        const files = r.files || [];
+        const status = paused ? 'paused' : online ? (r.task && r.task.status !== 'done') || files.length ? 'working' : 'idle' : 'offline';   // working: it has a task or claimed files
+        return { id: m.id, name: m.name, kind: k, kindLabel: KINDS[k].label, label: m.label || null, owner: m.owner || null, ownerName: m.owner ? nameOf(m.owner) : '', yours: m.owner === me.id,
+          status, online, lastSeen, everSeen: !!lastSeen, where: online ? s.where || '' : '', task: r.task || null, branch: r.task ? r.branch : null, files: files.slice(0, 12),
+          control: r.control || null, tokens: r.tokens ?? null, budget: r.budget ?? null, recent: recent(m.id), project: p, projectName: proj.name || '', projectColor: proj.color || null };
+      });
+    });
+  }
+  const ORDER = { working: 0, idle: 1, paused: 2, offline: 3 };
+  function nextSteps(list, me, pids) {
+    const out = [], mine = list.filter(a => a.yours);
+    for (const p of pids) P.inProject(p, () => {
+      try {   // an agent waiting on you
+        for (const ap of approvals.list()) {
+          if (ap.status !== 'pending' || (ap.project && ap.project !== p)) continue;
+          const by = member(ap.by); if (!isAgent(by) || !(ap.to.includes(me.id) || me.role === 'host')) continue;
+          out.push({ kind: 'approval', rank: 0, title: `${by.name} is waiting for an approval`, sub: ap.title, approval: ap.id, agent: by.id, project: p });
+        }
+      } catch {}
+      try {   // work the agents suggested that nobody took
+        const open = loadTasks().filter(t => !t.assignee && !DONE.has(t.status) && t.status === 'backlog' && ['agent', 'delegation', 'suggest'].includes(t.source));
+        if (open.length) out.push({ kind: 'tasks', rank: 2, title: `${open.length} suggested task${open.length === 1 ? '' : 's'} nobody took`, sub: open.slice(0, 2).map(t => t.title).join(' · '), tasks: open.slice(0, 5).map(t => ({ id: t.id, title: t.title })), project: p });
+      } catch {}
+    });
+    for (const a of mine.filter(x => x.status === 'paused')) out.push({ kind: 'paused', rank: 1, title: `${a.name} is paused`, sub: 'Resume it when you want it to carry on.', agent: a.id, project: a.project });
+    for (const a of list.filter(x => x.status === 'idle' && (x.yours || me.role === 'host'))) out.push({ kind: 'idle', rank: 3, title: `${a.name} is idle: give it a task`, sub: 'It is connected and waiting for work.', agent: a.id, project: a.project });
+    const offline = mine.filter(x => x.status === 'offline' && x.everSeen);
+    if (offline.length && !mine.some(x => x.online)) out.push({ kind: 'offline', rank: 4, title: `${offline[0].name} is offline`, sub: 'Start it again in its terminal or editor; it rejoins with the same key.', agent: offline[0].id, project: offline[0].project });
+    const working = list.filter(x => x.status === 'working');
+    if (working.length) out.push({ kind: 'working', rank: 5, title: `${working.length} agent${working.length === 1 ? ' is' : 's are'} working`, sub: working.slice(0, 2).map(x => `${x.name}: ${x.task ? x.task.title : x.files[0] || x.where || 'working'}`).join(' · '), project: working[0].project });
+    return out.sort((x, y) => x.rank - y.rank);
+  }
+  function fleetData(req, me, all) {
+    syncSeen();
+    const vis = P.visibleTo(me).map(p => p.id), here = pid();
+    let list = [];
+    if (all) {
+      const mine = getMembers().filter(m => isAgent(m) && m.tokenHash && m.owner === me.id);
+      for (const m of mine) {
+        const s = agentSeen.get(m.id), p = [s && s.project, m.project].find(x => x && vis.includes(x)) || vis[0] || here;
+        list.push(...rowsIn(p, me, x => x.id === m.id));
+      }
+    } else list = rowsIn(here, me, m => ownerOk(m, here));
+    list.sort((x, y) => (y.yours - x.yours) || (ORDER[x.status] - ORDER[y.status]) || x.name.localeCompare(y.name));
+    const mine = list.filter(a => a.yours);
+    return { scope: all ? 'all' : 'project', project: here, you: { id: me.id, host: me.role === 'host', canAct: me.role !== 'spectator' && me.role !== 'agent' },
+      connected: mine.some(a => a.everSeen), agents: list, next: nextSteps(list, me, all ? vis : [here]),
+      projects: P.visibleTo(me).map(p => ({ id: p.id, name: p.name, color: p.color || null })) };
+  }
+  function giveTask(me, agentId, x) {
+    const ag = member(agentId); if (!isAgent(ag)) throw Object.assign(new Error('no such agent'), { status: 404 });
+    if (me.role === 'spectator' || me.role === 'agent') throw Object.assign(new Error('only members give agents tasks'), { status: 403 });
+    let t = x.task ? loadTasks().find(y => y.id === x.task) : null;
+    if (x.task && !t) throw Object.assign(new Error('task not found'), { status: 404 });
+    const title = String(x.title || '').trim().slice(0, 200);
+    if (!t && !title) throw Object.assign(new Error('say what the task is'), { status: 400 });
+    if (!t) t = createTask({ title, by: me.id, assignee: agentId, body: String(x.note || '').slice(0, 2000) });
+    else { t.assignee = agentId; t.updated = new Date().toISOString(); saveTask(t); }
+    coord.tell(agentId, 'task', `${me.name} gave you a task: "${t.title}" (task ${t.id}). Claim the files you need, work on branch task/${t.id}, and ask for a review when it is ready.`, me.id);
+    return t;
+  }
+
+  async function route(req, res, { m, a, b, c, me, send, fail, readBody, url }) {
     if (a !== 'agents') return null;
     if (b === 'bridge.js' && m === 'GET') {   // public on purpose: plain code, no secrets
       res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Content-Disposition': 'attachment; filename="mcp-stdio.js"', 'Access-Control-Allow-Origin': '*' });
@@ -237,6 +332,11 @@ module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, 
     }
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (b === 'hub' && m === 'GET') return send(res, 200, await hub(req, me));
+    if (b === 'fleet' && m === 'GET' && !c) return send(res, 200, fleetData(req, me, (url && url.searchParams.get('scope')) === 'all'));
+    if (b === 'fleet' && c && m === 'POST') {
+      const parts = (url ? url.pathname : '').split('/').filter(Boolean), what = parts[4];
+      if (what === 'task') { try { const t = giveTask(me, c, await readBody(req).catch(() => ({}))); return send(res, 200, { task: { id: t.id, title: t.title, assignee: t.assignee } }); } catch (e) { return fail(res, e.status || 500, e.message); } }
+    }
     return null;
   }
 
@@ -251,7 +351,7 @@ module.exports = function agentsHub({ P, store, brain, getMembers, presenceFor, 
     return { steps: [`Open Claude Desktop's config file: ${d.files[os]} (Settings › Developer › Edit Config).`, 'Paste this and save. Already have servers there? Add the tribecode entry inside mcpServers.', 'Restart Claude Desktop: tribecode shows up in its tools. The bridge runs on this computer with Node.'],
       blocks: [{ label: 'claude_desktop_config.json', lang: 'json', text: d.json }] };
   }
-  return { route, desktopConfig, kindOf, KINDS, bridgePath, bridgeSource, setups, setupFor };
+  return { route, desktopConfig, kindOf, KINDS, bridgePath, bridgeSource, setups, setupFor, fleet: fleetData };
 };
 module.exports.runBridge = runBridge;
 module.exports.KINDS = KINDS;
