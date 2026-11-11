@@ -113,7 +113,7 @@
     const on = connected(), tribe = (C.state().tribe || {}).name;
     const pj = projects(), live = (data && data.status) || {};
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
-      : C.hasToken() ? `${greeting()}. Reconnecting to your tribe…` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
+      : C.hasToken() ? `${greeting()}. ${offlineWord()}` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
@@ -150,7 +150,7 @@
     const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent' && m.online).length;
     const chip = (k, n, l) => `<span class="hid-chip k-${k}"><b>${n}</b>${l}</span>`;
     const chips = on ? chip('ember', pj.length, pj.length === 1 ? 'project' : 'projects') + chip('indigo', people, people === 1 ? 'friend online' : 'friends online') + chip('teal', agents, agents === 1 ? 'agent working' : 'agents working')
-      : C.hasToken() ? `<span class="hid-chip k-muted">Reconnecting…</span>` : '';   // no tribe yet: said once, in the user bar
+      : C.hasToken() ? `<span class="hid-chip k-muted">${offlineChip()}</span>` : '';   // no tribe yet: said once, in the user bar
     return `<header class="hub-head hub-id">
       <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
       <div class="hid-t"><span class="eyebrow">Your command center${on && tribe ? ` · ${esc(tribe)}` : ''}</span>
@@ -169,8 +169,10 @@
     const desk = canHost();
     const l = on ? last() : null, lp = l && projOf(l.project), p1 = on && pj1();
     const tile = (id, title, sub, faceHtml = '', ic = '', go = '', k = '') => `<button class="gs-tile${k ? ' k-' + k : ''}" id="${id}">${ic ? `<span class="gs-ic"><svg class="i"><use href="#i-${ic}"/></svg></span>` : faceHtml}<b>${title}</b><span>${sub}</span>${go ? `<em class="gs-go">${go}<svg class="i"><use href="#i-chev"/></svg></em>` : ''}</button>`;
-    const err = !on && desk && window.__hostError ? `<div class="gs-err" id="hub-host-err"><b>Your tribe didn't start on this computer</b><span>${esc(window.__hostError.split('\n')[0])}</span>
-        <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><button class="btn primary sm" id="hub-host-retry">Try again</button></div>` : '';
+    // Only after setup (a tribe was made on this computer): one actionable line, the host log under Details, Try again and
+    // Keep working offline. Before setup nothing here ever says a server failed (feat/setup-local).
+    const err = !on && desk && hostFailed() ? `<div class="gs-err" id="hub-host-err" role="status"><b>Your tribe is offline on this computer.</b> <span>Changes wait here and send when it's back.</span>
+        <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><div class="gs-err-acts"><button class="btn primary sm" id="hub-host-retry">Try again</button><button class="btn sm" id="hub-host-offline">Keep working offline</button></div></div>` : '';
     // Not in a tribe yet: one honest empty state with one clear way in, and the way to join a friend beside it.
     // Nothing is made until you press Start (no demo, no pretend tribe: the demo lives in the ? menu and Ctrl K).
     if (!on) {
@@ -178,8 +180,8 @@
       return `<section class="hero-card hub-hero hub-gs hub-empty" id="hub-hero">
         <div class="he-copy"><span class="eyebrow">Getting started</span>
           <h2>Make your first project</h2>
-          <p class="he-sub">${desk ? 'A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.' : 'Projects run on a computer with the TribeCode desktop app, or on a free cloud server. Here you can join a friend\'s tribe with their link.'}</p>
-          <div class="he-acts"><button class="btn primary he-go" id="hub-host">${ico('i-plus', 15)}${desk ? 'Start your first project' : 'Get the desktop app'}</button><button class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div>
+          <p class="he-sub">${window.TribeLocalSetup ? 'A project is a room for you, your friends and your AI helpers: chat, files, tasks, a design canvas. It starts right here on this device, no server needed. Choose where it lives later: a GitHub repo, this computer, a free cloud or a phone.' : desk ? 'A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.' : 'Projects run on a computer with the TribeCode desktop app, or on a free cloud server. Here you can join a friend\'s tribe with their link.'}</p>
+          <div class="he-acts"><button class="btn primary he-go" id="hub-host">${ico('i-plus', 15)}${desk || window.TribeLocalSetup ? 'Start your first project' : 'Get the desktop app'}</button><button class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div>
           <div class="gs-links">${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>
         </div>
         <ol class="he-steps" aria-label="What happens next">
@@ -197,6 +199,14 @@
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">Quick start</span><span class="gs-band-r">Pick up, or bring someone in</span></div>
       ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;
   }
+  // A server that genuinely failed after setup (a tribe exists here), and the person hasn't chosen to keep working offline.
+  function hostFailed() {
+    const st = (window.TribeStore && TribeStore.get()) || {};
+    return !!(window.__hostError && st.hosting && (st.tribeHere || (st.server && st.server.token)) && !window.__hostOfflineOk);
+  }
+  const offlineWord = () => (window.__hostError ? 'Working offline: changes wait here and send when your tribe is back.' : (window.TribeStore && TribeStore.get().hostOff) ? 'Hosting is off on this computer.' : 'Reconnecting to your tribe…');
+  const offlineChip = () => (window.__hostError ? 'Working offline' : (window.TribeStore && TribeStore.get().hostOff) ? 'Hosting is off' : 'Reconnecting…');
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#hub-host-offline')) { window.__hostOfflineOk = true; render(); toast('Working offline. Your changes wait on this device.'); } });
   // Can this device make a tribe right now? The desktop app, or the computer running a TribeCode server (fresh open).
   const canHost = () => !!(window.TribeHost && window.TribeHost.isDesktop) || !!(App() && App().fresh && App().fresh());
 
@@ -405,8 +415,11 @@
   //   toolbar, Outline panel, centered page. Phone: Google Docs mobile — 64px header (✓ Done pill; undo, redo, +,
   //   comment, sparkle, ⋮) and a format bar riding on the keyboard. Ids kept: #note-title #note-text #note-done
   //   #note-undo #note-redo; #note-del lives in the ⋮ menu.
-  function noteEditor(id, fresh) {
-    const n = scratch.notes().find(x => x.id === id); if (!n) return;
+  // src (feat/setup-local): any other text kept on this device (localfiles.js docs) opens in the same editor:
+  //   { title, body, where, at, save(title, body), remove(), move(anchor)? }
+  function noteEditor(id, fresh, src) {
+    const n = src ? { text: `${src.title || ''}\n${src.body || ''}`, updated: src.at, at: src.at } : scratch.notes().find(x => x.id === id); if (!n) return;
+    const where = src ? (src.where || 'On this device') : 'Only you';
     let ov = $('#note-ed'); if (ov) ov.remove();
     const lines = fresh ? ['', ''] : String(n.text).split('\n'), title = lines[0] === 'New note' && fresh ? '' : lines[0], body = lines.slice(1).join('\n');
     const L = window.TribeDocLayout, desk = !!(L && L.isDesk());
@@ -417,7 +430,7 @@
         <button class="ne-btn" data-act="more" id="note-more" aria-label="More" title="More">${L.ico('more', 20)}</button>
         <button class="ne-done" id="note-done" aria-label="Done" title="Done (Esc)">${ico('i-tick', 18)}<span>Done</span></button></div>`;
       ov.innerHTML = `<div class="note-ed dl-shell" role="dialog" aria-modal="true" aria-label="Note">
-        <div class="dl-head">${L.top({ kind: 'note', nameId: 'note-name', title, where: 'Only you', statusId: 'note-status', status: fresh ? 'New note' : 'Saved', acts })}
+        <div class="dl-head">${L.top({ kind: src ? 'doc' : 'note', nameId: 'note-name', title, where, statusId: 'note-status', status: fresh ? 'New note' : 'Saved', acts })}
           ${L.toolbar({ ids: { undo: 'note-undo', redo: 'note-redo' } })}</div>
         <div class="dl-body">
           <aside class="dl-side" aria-label="Outline"><section class="dl-outline" style="margin:0;padding:0;border:0"><div class="dl-side-h"><span class="dl-eyebrow">Outline</span></div><nav class="dl-ol" id="note-outline" aria-label="Outline"></nav></section></aside>
@@ -430,7 +443,7 @@
         <div class="gd-fmt-wrap docked">${L.gdBar()}</div></div>`;
     } else {
       ov.innerHTML = `<div class="note-ed" role="dialog" aria-label="Note">
-        <header><button class="ne-done" id="note-done" aria-label="Done">${ico('i-tick', 20)}</button><span class="ne-where">Only you</span><span style="flex:1"></span>
+        <header><button class="ne-done" id="note-done" aria-label="Done">${ico('i-tick', 20)}</button><span class="ne-where">${esc(where)}</span><span style="flex:1"></span>
           <button class="ne-btn" id="note-undo" aria-label="Undo" title="Undo">↶</button><button class="ne-btn" id="note-redo" aria-label="Redo" title="Redo">↷</button>
           <button class="ne-btn" id="note-del" aria-label="Delete note" title="Delete">${ico('i-x', 18)}</button></header>
         <div class="ne-body">${fields('ne-title')}</div></div>`;
@@ -441,17 +454,20 @@
     (fresh || !title ? ti : ta).focus();
     const status = $('#note-status'); let st = null;
     const grow = () => { if (L) { ta.style.height = 'auto'; ta.style.height = Math.max(desk ? ta.parentNode.clientHeight * 0.5 : 240, ta.scrollHeight + 4) + 'px'; } };
+    let srcT = null;
     const save = () => {
-      scratch.quiet(id, `${ti.value.trim() || 'Untitled note'}\n${ta.value}`);
-      if (status) { status.textContent = 'Saving…'; clearTimeout(st); st = setTimeout(async () => { try { await scratch.flush(); } catch {} if (status.isConnected) status.textContent = 'Saved'; }, 700); }
+      if (src) { clearTimeout(srcT); srcT = setTimeout(() => { srcT = null; src.save(ti.value.trim(), ta.value); }, 300); }
+      else scratch.quiet(id, `${ti.value.trim() || 'Untitled note'}\n${ta.value}`);
+      if (status) { status.textContent = 'Saving…'; clearTimeout(st); st = setTimeout(async () => { try { if (!src) await scratch.flush(); } catch {} if (status.isConnected) status.textContent = 'Saved'; }, 700); }
     };
+    const flushSrc = () => { if (src && srcT) { clearTimeout(srcT); srcT = null; return src.save(ti.value.trim(), ta.value); } };
     ti.oninput = save;
     ti.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ta.focus(); } });
     const hist = cmd => { if (ta.rtUndo && document.activeElement !== ti) { if (cmd === 'undo') ta.rtUndo(); else ta.rtRedo(); save(); return; } (document.activeElement === ti ? ti : ta).focus(); document.execCommand(cmd); save(); };
     $('#note-undo').onclick = () => hist('undo');
     $('#note-redo').onclick = () => hist('redo');
     const close = () => { ov.remove(); if (mode === 'docs') drawDocs(); else if (document.body.dataset.view === 'hub') render(); };
-    const del = () => { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); else render(); toast('Note deleted'); };
+    const del = async () => { if (src) { if (!confirm(`Delete “${ti.value.trim() || 'this doc'}” from this device?`)) return; clearTimeout(srcT); srcT = null; await src.remove(); } else scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); else render(); toast(src ? 'Deleted' : 'Note deleted'); };
     let ol = null, sl = null;
     if (L) {
       sl = L.slash(ta, ta.parentNode);
@@ -468,8 +484,9 @@
           { label: 'Download .md', icon: 'download', run: () => L.download(ti.value.trim() || 'note', `# ${ti.value.trim() || 'Untitled note'}\n\n${ta.value}\n`) },
         ] }) },
         { label: 'Outline', icon: 'outline', run: () => L.outlineSheet({ ta: () => ta }) },
-        ...(window.TribeRich ? [window.TribeRich.menuItem(() => { save(); noteEditor(id); })] : []),   // feat/richtext: View Markdown / View formatted
-        { label: 'Details', icon: 'info', run: () => { const s = L.sheet({ title: 'Details', anchor, html: `<dl class="dl-details"><dt>Words</dt><dd>${words()}</dd><dt>Characters</dt><dd>${ta.value.length}</dd><dt>Last edited</dt><dd>${esc(ago((scratch.notes().find(x => x.id === id) || {}).updated || n.updated || n.at) || 'just now')}</dd><dt>Owner</dt><dd>${esc(me().name || 'You')} · only you</dd></dl>` }); return s; } },
+        ...(src && src.move ? [{ label: 'Move to…', icon: 'share', run: () => { flushSrc(); src.move(anchor); } }] : []),
+        ...(window.TribeRich ? [window.TribeRich.menuItem(() => { save(); flushSrc(); src ? noteEditor(null, false, { ...src, title: ti.value.trim(), body: ta.value }) : noteEditor(id); })] : []),   // feat/richtext: View Markdown / View formatted
+        { label: 'Details', icon: 'info', run: () => { const s = L.sheet({ title: 'Details', anchor, html: `<dl class="dl-details"><dt>Words</dt><dd>${words()}</dd><dt>Characters</dt><dd>${ta.value.length}</dd><dt>Last edited</dt><dd>${esc(ago((src ? {} : scratch.notes().find(x => x.id === id) || {}).updated || n.updated || n.at) || 'just now')}</dd><dt>Owner</dt><dd>${esc(me().name || 'You')} · ${esc(where.toLowerCase())}</dd></dl>` }); return s; } },
         { label: 'Rename', icon: 'rename', run: () => { ti.focus(); ti.select(); } },
         '-',
         { label: 'Delete', icon: 'trash', id: 'note-del', danger: true, run: del },
@@ -477,7 +494,7 @@
       ov.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
         const k = b.dataset.act;
         if (k === 'plus') return L.insertSheet(ta, { anchor: b, after: sync });
-        if (k === 'comment') return toast('Comments live on project docs. Move this note into a project to discuss it with your tribe.');
+        if (k === 'comment') return toast(`Comments live on project docs. Move this ${src ? 'doc' : 'note'} into a project to discuss it with your tribe.`);
         if (k === 'sparkle') return L.aiSheet(ta, { anchor: b, title: 'this note', after: sync });
         if (k === 'more') return more(b);
       });
@@ -485,6 +502,7 @@
     ta.oninput = () => { save(); grow(); if (sl) sl.check(); if (ol) ol.refresh(); };
     grow();
     const done = async () => {
+      if (src) { save(); await flushSrc(); return close(); }
       if (!ti.value.trim() && !ta.value.trim()) { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); return; }   // nothing written: no empty note left behind
       save(); await scratch.flush(); close();
     };
@@ -646,16 +664,16 @@
     el.innerHTML = `<div class="hub dc">
       <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your files" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your files">${isPhone() ? `<button class="dc-me" id="dc-me" aria-label="Your profile">${meFace()}</button>` : ''}</div>
       <div class="dc-bar"><button class="dc-sort" id="dc-sort">${docsSort === 'name' ? 'Name A–Z' : 'Last updated'}<span class="dc-arrow">${ico('i-chev', 16)}</span></button><span style="flex:1"></span>
-        <button class="btn dc-up" id="dc-up">${ico('i-upload', 15)}Upload</button><button class="btn primary dc-new" id="dc-new">${ico('i-plus', 15)}New note</button>
+        <button class="btn dc-up" id="dc-up">${ico('i-upload', 15)}Upload</button><button class="btn primary dc-new" id="dc-new" aria-haspopup="menu">${ico('i-plus', 15)}New</button>
         <div class="dc-seg" role="group" aria-label="View"><button data-dv="list" class="${docsView === 'list' ? 'on' : ''}" aria-label="List">${ico('i-list', 18)}</button><button data-dv="grid" class="${docsView === 'grid' ? 'on' : ''}" aria-label="Grid">${ico('i-grid', 18)}</button></div></div>
       <div class="dc-chips" role="group" aria-label="Show">${FKINDS.map(([k, l]) => `<button data-dk="${k}" class="${docsKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div class="dc-items ${docsView}" id="hub-docs"></div>
       <div class="dc-drop" id="dc-drop" aria-hidden="true"><span>${ico('i-upload', 28)}<b>Drop to add to your files</b></span></div>
-      <button class="dc-fab" id="dc-fab" aria-label="New" title="New note or upload">${ico('i-plus', 26)}</button></div>`;
+      <button class="dc-fab" id="dc-fab" aria-label="New" title="New note, doc, sheet, whiteboard, design or upload">${ico('i-plus', 26)}</button></div>`;
     const inp = $('#hub-dq'); inp.oninput = () => { clearTimeout(docsT); docsT = setTimeout(() => { docsQ = inp.value.trim(); docsList(); }, 200); };
     $('#dc-sort').onclick = () => { docsSort = docsSort === 'name' ? 'updated' : 'name'; try { localStorage.setItem('tribecode.docs.sort', docsSort); } catch {} $('#dc-sort').firstChild.textContent = docsSort === 'name' ? 'Name A–Z' : 'Last updated'; drawDocs(); };
     el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { docsView = b.dataset.dv; try { localStorage.setItem('tribecode.docs.view', docsView); } catch {} el.querySelectorAll('[data-dv]').forEach(x => x.classList.toggle('on', x === b)); $('#hub-docs').className = 'dc-items ' + docsView; });
-    $('#dc-fab').onclick = newSheet; $('#dc-new').onclick = startNote; $('#dc-up').onclick = e => upMenu(e.currentTarget);
+    $('#dc-fab').onclick = newSheet; $('#dc-new').onclick = e => newMenu(e.currentTarget); $('#dc-up').onclick = e => (connected() ? upMenu(e.currentTarget) : pickUpload('local'));
     el.querySelectorAll('[data-dk]').forEach(b => b.onclick = () => { docsKind = b.dataset.dk; try { localStorage.setItem('tribecode.files.kind', docsKind); } catch {} el.querySelectorAll('[data-dk]').forEach(x => x.classList.toggle('on', x === b)); drawDocs(); });
     // drag files from the computer onto the Files center
     const dc = el.querySelector('.dc'), drop = $('#dc-drop'); let dragN = 0;
@@ -663,29 +681,80 @@
     dc.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; drop.classList.add('on'); });
     dc.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
     dc.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; drop.classList.remove('on'); } });
-    dc.addEventListener('drop', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.classList.remove('on'); uploadFiles([...e.dataTransfer.files], 'me'); });
+    dc.addEventListener('drop', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.classList.remove('on'); uploadFiles([...e.dataTransfer.files], connected() ? 'me' : 'local'); });
     const dm = $('#dc-me'); if (dm) dm.onclick = () => window.TribeMobile && window.TribeMobile.myProfile && window.TribeMobile.myProfile();
     drawDocs(); docsList(); upList().then(() => { if (mode === 'docs') drawDocs(); });
+    if (LF()) LF().ready.then(() => { if (mode === 'docs') drawDocs(); });
+  }
+  // ---------- feat/setup-local: files kept on this device (localfiles.js), with or without a tribe ----------
+  const LF = () => window.TribeLocalFiles;
+  addEventListener('tribe-local-files', () => { if (mode === 'docs' && document.body.dataset.view === 'hub') drawDocs(); });
+  const NEW = [['note', 'i-quill', 'Note', 'A quick private note'], ['doc', 'i-doc', 'Doc', 'Rich text, headings, lists, checkboxes'], ['sheet', 'i-grid', 'Sheet', 'Cells and formulas like =SUM(B2:B9)'],
+    ['whiteboard', 'i-whiteboard', 'Whiteboard', 'Draw, sticky notes, shapes'], ['design', 'i-canvas', 'Design', 'Frames, layers, text: a design canvas'], ['upload', 'i-upload', 'Upload', 'Pictures, audio, video, PDFs, code, models']];
+  async function makeNew(k) {
+    closeMenus();
+    if (k === 'note') return startNote();
+    if (k === 'upload') return connected() ? upMenu($('#dc-up') || $('#dc-new')) : pickUpload('local');
+    if (!LF()) return toast('Files on this device did not load. Reload the app.');
+    try { const it = await LF().create(k); LF().open(it.id); } catch (e) { toast(e.message); }
+  }
+  function newMenu(anchor) {
+    closeMenus(); if (!anchor) return newSheet();
+    const r = anchor.getBoundingClientRect();
+    const m = document.createElement('div'); m.className = 'dc-menu'; m.id = 'dc-newmenu'; m.setAttribute('role', 'menu');
+    m.innerHTML = NEW.map(([k, ic, t, sub]) => `<button data-new="${k}" role="menuitem">${ico(ic, 16)}<span><b>${t}</b><small>${sub}</small></span></button>`).join('') + `<p class="dc-menu-note">${connected() ? 'Kept on this device until you move it into a project.' : 'Kept on this device. Move it into a project any time.'}</p>`;
+    document.body.appendChild(m);
+    m.style.top = `${r.bottom + 6}px`; m.style.left = `${Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth))}px`;
+    m.querySelectorAll('[data-new]').forEach(b => b.onclick = () => makeNew(b.dataset.new));
+    setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off); } }), 0);
+  }
+  // which filter chip an item belongs to
+  function cat(it) {
+    if (it.kind === 'note') return 'notes';
+    if (it.kind === 'doc') return it.dk === 'sheet' ? 'sheets' : 'docs';
+    const lk = it.kind === 'local' ? it.lk : 'file', fk = it.kind === 'local' ? it.fk : it.f.kind;
+    if (lk === 'doc') return 'docs'; if (lk === 'sheet') return 'sheets'; if (lk === 'whiteboard') return 'boards'; if (lk === 'design') return 'designs';
+    return fk === 'image' ? 'pics' : fk === 'code' ? 'code' : 'other';
+  }
+  function localItems(q) {
+    if (!LF()) return [];
+    return LF().list().filter(x => !q || String(x.title).toLowerCase().includes(q) || String(x.body || '').toLowerCase().includes(q)).map(x => ({
+      kind: 'local', lk: x.kind, fk: x.fkind || '', id: x.id, title: x.title, at: x.updated, where: 'On this device', size: x.size || 0,
+      preview: x.kind === 'doc' ? String(x.body || '').replace(/^#+\s*/gm, '').replace(/\s+/g, ' ').trim()
+        : x.kind === 'sheet' ? String(x.body || '').split('\n').filter(l => !/^\|\s*-/.test(l)).slice(0, 3).map(l => l.replace(/\|/g, ' ').trim()).filter(Boolean).join(' · ')
+        : x.kind === 'whiteboard' ? (n => `${n} thing${n === 1 ? '' : 's'} on the board`)(Object.values(x.elements || {}).filter(e => !e.del).length)
+        : x.kind === 'design' ? (n => `${n} layer${n === 1 ? '' : 's'}`)(Object.values(x.nodes || {}).filter(e => !e.del).length) : '' }));
   }
   function drawDocs() {
     const box = $('#hub-docs'); if (!box) return;
     const q = docsQ.toLowerCase();
     const notes = scratch.notes().filter(n => n.text && n.text.trim() && (!q || n.text.toLowerCase().includes(q)))
       .map(n => ({ kind: 'note', id: n.id, title: noteTitle(n.text), preview: n.text.split('\n').slice(1).join(' ').trim(), at: n.updated || n.at, where: 'Only you' }));
-    const pdocs = docsCache.map(d => ({ kind: 'doc', id: `${d.project}|${d.slug}`, title: d.title, preview: d.snippet || d.preview || '', at: d.at, where: (projOf(d.project) || {}).name || d.projectName || '', color: d.color }));
+    const pdocs = docsCache.map(d => ({ kind: 'doc', dk: d.kind || '', id: `${d.project}|${d.slug}`, title: d.title, preview: d.snippet || d.preview || '', at: d.at, where: (projOf(d.project) || {}).name || d.projectName || '', color: d.color }));
     const ups = [...(upCache.mine || []), ...(upCache.project || [])].filter(f => !q || f.name.toLowerCase().includes(q))
       .map(f => ({ kind: 'file', id: f.id, f, title: f.name, at: f.at, where: f.scope === 'project' ? ((projOf(f.project) || {}).name || 'Project') : 'Only you' }));
-    let items = [...notes, ...pdocs, ...ups].filter(it => docsKind === 'all' || (docsKind === 'notes' ? it.kind === 'note' : docsKind === 'docs' ? it.kind === 'doc'
-      : docsKind === 'pics' ? it.kind === 'file' && it.f.kind === 'image' : it.kind === 'file' && it.f.kind !== 'image'));
+    const locals = localItems(q);
+    let items = [...notes, ...locals, ...pdocs, ...ups].filter(it => docsKind === 'all' || cat(it) === docsKind);
     items.sort(docsSort === 'name' ? (a, b) => String(a.title).localeCompare(String(b.title)) : (a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
-    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : docsKind === 'all' ? 'No files yet' : 'Nothing here yet'}</b><span>${q ? 'Try another word.' : 'Tap + to start a note or upload any file: pictures, audio, video, PDFs, code, models, zips.'}</span></div>`; return; }
-    const attr = it => it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : it.kind === 'file' ? `data-up="${esc(it.id)}"` : `data-gdoc="${esc(it.id)}"`;
-    const icon = it => it.kind === 'note' ? 'i-quill' : it.kind === 'file' ? (FK_IC[it.f.kind] || 'i-clip') : 'i-doc';
-    const prev = it => it.kind === 'file' ? (it.f.kind === 'image' && it.f.size < 4 * 1048576 ? `<img class="dc-thumb" data-thumb="${esc(it.id)}" alt="">` : `<span class="dc-fk">${ico(icon(it), 30)}<small>${esc(FK_LABEL[it.f.kind] || 'File')} · ${esc(fsize(it.f.size))}</small></span>`)
+    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : docsKind === 'all' ? 'No files yet' : 'Nothing here yet'}</b><span>${q ? 'Try another word.' : 'Tap + New for a note, doc, sheet, whiteboard or design, or upload any file. No tribe needed.'}</span></div>`; return; }
+    const attr = it => it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : it.kind === 'file' ? `data-up="${esc(it.id)}"` : it.kind === 'local' ? `data-local="${esc(it.id)}" data-lk="${esc(it.lk)}"` : `data-gdoc="${esc(it.id)}"`;
+    const LIC = { doc: 'i-doc', sheet: 'i-grid', whiteboard: 'i-whiteboard', design: 'i-canvas' };
+    const icon = it => it.kind === 'note' ? 'i-quill' : it.kind === 'file' ? (FK_IC[it.f.kind] || 'i-clip') : it.kind === 'local' ? (LIC[it.lk] || FK_IC[it.fk] || 'i-clip') : it.dk === 'sheet' ? 'i-grid' : 'i-doc';
+    const LLABEL = { doc: 'Doc', sheet: 'Sheet', whiteboard: 'Whiteboard', design: 'Design' };
+    const prev = it => it.kind === 'local' ? (it.lk === 'file' ? (it.fk === 'image' && it.size < 4 * 1048576 ? `<img class="dc-thumb" data-lthumb="${esc(it.id)}" alt="">` : `<span class="dc-fk">${ico(icon(it), 30)}<small>${esc(FK_LABEL[it.fk] || 'File')} · ${esc(fsize(it.size))}</small></span>`)
+        : it.preview ? `<span class="dc-lk">${esc(LLABEL[it.lk])}</span> ${esc(it.preview.slice(0, 240))}` : `<span class="dc-lk">${esc(LLABEL[it.lk])}</span> <i>Empty</i>`)
+      : it.kind === 'file' ? (it.f.kind === 'image' && it.f.size < 4 * 1048576 ? `<img class="dc-thumb" data-thumb="${esc(it.id)}" alt="">` : `<span class="dc-fk">${ico(icon(it), 30)}<small>${esc(FK_LABEL[it.f.kind] || 'File')} · ${esc(fsize(it.f.size))}</small></span>`)
       : it.preview ? esc(it.preview.slice(0, 240)) : '<i>Empty</i>';
-    box.innerHTML = items.map(it => `<button class="dc-card${it.kind === 'file' ? ' file k-' + esc(it.f.kind) : ''}" ${attr(it)}>
+    box.innerHTML = items.map(it => it.kind === 'local'
+      ? `<div class="dc-card local${it.lk === 'file' ? ' file k-' + esc(it.fk) : ''}" role="button" tabindex="0" ${attr(it)}>
+        <span class="dc-head"><span class="dc-ic local">${ico(icon(it), 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span><button class="dc-mv" data-mv="${esc(it.id)}" title="Move to a project" aria-label="Move ${esc(it.title)} to a project">${ico('i-folder', 14)}</button></span>
+        <span class="dc-prev">${prev(it)}</span></div>`
+      : `<button class="dc-card${it.kind === 'file' ? ' file k-' + esc(it.f.kind) : ''}" ${attr(it)}>
         <span class="dc-head"><span class="dc-ic ${it.kind}">${ico(icon(it), 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span></span>
         <span class="dc-prev">${prev(it)}</span></button>`).join('');
+    box.querySelectorAll('[data-local]').forEach(b => { const go = () => LF().open(b.dataset.local); b.onclick = e => { if (!e.target.closest('[data-mv]')) go(); }; b.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === b) { e.preventDefault(); go(); } }; });
+    box.querySelectorAll('[data-mv]').forEach(b => b.onclick = e => { e.stopPropagation(); LF().moveMenu(b, b.dataset.mv); });
+    box.querySelectorAll('img[data-lthumb]').forEach(img => thumb({ id: img.dataset.lthumb, local: true }, img));
     box.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const it = ups.find(x => x.id === b.dataset.up); if (it) openFile(it.f); });
     box.querySelectorAll('img[data-thumb]').forEach(img => { const it = ups.find(x => x.id === img.dataset.thumb); if (it) thumb(it.f, img); });
     box.querySelectorAll('[data-mynote]').forEach(b => b.onclick = () => noteEditor(b.dataset.mynote));
@@ -704,7 +773,7 @@
   }
 
   // ---------- uploads: any kind of file, yours or a project's (server/uploads.js) ----------
-  const FKINDS = [['all', 'All'], ['notes', 'Notes'], ['docs', 'Docs'], ['pics', 'Pictures'], ['other', 'Other files']];
+  const FKINDS = [['all', 'All'], ['notes', 'Notes'], ['docs', 'Docs'], ['sheets', 'Sheets'], ['designs', 'Designs'], ['boards', 'Whiteboards'], ['pics', 'Pictures'], ['code', 'Code'], ['other', 'Other files']];
   const FK_IC = { image: 'i-photo', audio: 'i-mic', video: 'i-play', pdf: 'i-doc', model: 'i-box', archive: 'i-folder', code: 'i-git', text: 'i-doc', file: 'i-clip' };
   const FK_LABEL = { image: 'Picture', audio: 'Audio', video: 'Video', pdf: 'PDF', model: '3D model', archive: 'Archive', code: 'Code', text: 'Text', file: 'File' };
   let docsKind = (() => { try { const k = localStorage.getItem('tribecode.files.kind'); return FKINDS.some(x => x[0] === k) ? k : 'all'; } catch { return 'all'; } })();
@@ -715,13 +784,19 @@
   async function upList() { if (!connected()) { upCache = { mine: [], project: [], max: upCache.max }; return; } try { upCache = await C.api('/uploads?all=1'); } catch {} }
   async function blobUrl(f) {
     if (blobs.has(f.id)) return blobs.get(f.id);
+    if (f.local) { const b = LF() && await LF().blob(f.id); if (!b) throw new Error('That file is gone from this device.'); const u = URL.createObjectURL(b.type || !f.type ? b : new Blob([b], { type: f.type })); blobs.set(f.id, u); return u; }
     const r = await fetch(C.base() + '/api/uploads/' + encodeURIComponent(f.id) + '/raw', { headers: authH() });
     if (!r.ok) throw new Error('Could not open that file.');
     const u = URL.createObjectURL(await r.blob()); blobs.set(f.id, u); return u;
   }
   async function thumb(f, img) { try { img.src = await blobUrl(f); } catch { img.replaceWith(Object.assign(document.createElement('span'), { className: 'dc-fk', innerHTML: ico('i-photo', 30) })); } }
   async function uploadFiles(files, scope) {
-    if (!connected()) return toast('Join or host a tribe to keep files.');
+    if (scope === 'local' || !connected()) {   // feat/setup-local: no tribe needed, kept on this device
+      if (!LF()) return toast('Files on this device did not load. Reload the app.');
+      const made = await LF().addFiles(files);
+      if (made.length) toast(made.length > 1 ? `${made.length} files kept on this device.` : `${made[0].title} is kept on this device.`);
+      if (mode === 'docs') drawDocs(); return;
+    }
     const pid = C.project && C.project();
     for (const file of files) {
       if (file.size > upCache.max) { toast(`${file.name} is over ${Math.round(upCache.max / 1048576)} MB.`); continue; }
@@ -741,13 +816,13 @@
     inp.style.display = 'none'; document.body.appendChild(inp); inp.click();
   }
   const curPj = () => { const pid = C.project && C.project(); return pid ? projOf(pid) : null; };
-  function closeMenus() { document.querySelectorAll('.dc-menu,.dc-sheet-wrap').forEach(x => x.remove()); }
+  function closeMenus() { document.querySelectorAll('.dc-menu:not(.lf-menu),.dc-sheet-wrap').forEach(x => x.remove()); }
   // desktop: Upload -> to my files / to the current project
   function upMenu(anchor) {
     closeMenus(); const pj = curPj(), r = anchor.getBoundingClientRect();
     const m = document.createElement('div'); m.className = 'dc-menu'; m.id = 'dc-upmenu'; m.setAttribute('role', 'menu');
     m.style.top = `${r.bottom + 6}px`; m.style.left = `${Math.max(8, r.left)}px`;
-    m.innerHTML = `<button data-scope="me" role="menuitem">${ico('i-users', 16)}<span><b>To my files</b><small>Only you</small></span></button>${pj ? `<button data-scope="project" role="menuitem">${ico('i-folder', 16)}<span><b>To ${esc(pj.name)}</b><small>Everyone in the project</small></span></button>` : ''}`;
+    m.innerHTML = `<button data-scope="local" role="menuitem">${ico('i-box', 16)}<span><b>On this device</b><small>Works offline · move it later</small></span></button><button data-scope="me" role="menuitem">${ico('i-users', 16)}<span><b>To my files</b><small>Only you</small></span></button>${pj ? `<button data-scope="project" role="menuitem">${ico('i-folder', 16)}<span><b>To ${esc(pj.name)}</b><small>Everyone in the project</small></span></button>` : ''}`;
     document.body.appendChild(m);
     m.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => { closeMenus(); pickUpload(b.dataset.scope); });
     setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off); } }), 0);
@@ -758,27 +833,29 @@
     const w = document.createElement('div'); w.className = 'dc-sheet-wrap'; w.id = 'dc-newsheet';
     w.innerHTML = `<div class="dc-sheet" role="dialog" aria-label="New"><span class="dc-grab"></span>
       <button data-do="note">${ico('i-quill', 22)}<span><b>New note</b><small>Only you, until you share it</small></span></button>
-      <button data-do="me">${ico('i-upload', 22)}<span><b>Upload a file</b><small>Any kind, up to ${Math.round(upCache.max / 1048576)} MB · only you</small></span></button>
+      ${NEW.slice(1, 5).map(([k, ic, t, sub]) => `<button data-do="${k}">${ico(ic, 22)}<span><b>New ${t.toLowerCase()}</b><small>${sub}</small></span></button>`).join('')}
+      <button data-do="me">${ico('i-upload', 22)}<span><b>Upload a file</b><small>Any kind, up to ${Math.round(upCache.max / 1048576)} MB · ${connected() ? 'only you' : 'on this device'}</small></span></button>
       ${pj ? `<button data-do="project">${ico('i-folder', 22)}<span><b>Upload to ${esc(pj.name)}</b><small>Everyone in the project sees it</small></span></button>` : ''}</div>`;
     document.body.appendChild(w);
     w.onclick = e => { if (e.target === w) w.remove(); };
-    w.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { w.remove(); b.dataset.do === 'note' ? startNote() : pickUpload(b.dataset.do); });
+    w.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { w.remove(); const k = b.dataset.do; if (['note', 'doc', 'sheet', 'whiteboard', 'design'].includes(k)) return makeNew(k); pickUpload(k === 'me' && !connected() ? 'local' : k); });
   }
   // open a file: a full-screen viewer with a preview when the browser can show it, Download and Delete
   async function openFile(f) {
-    closeMenus(); const me = (C.state && C.state().me) || {}, canDel = f.by === me.id || me.role === 'host';
+    closeMenus(); const me = (C.state && C.state().me) || {}, canDel = f.local || f.by === me.id || me.role === 'host';
     const w = document.createElement('div'); w.className = 'fv-wrap'; w.id = 'fv';
     w.innerHTML = `<div class="fv" role="dialog" aria-label="${esc(f.name)}">
       <header class="fv-top"><button class="fv-x" id="fv-close" aria-label="Close">${ico('i-x', 22)}</button><span class="fv-t"><b>${esc(f.name)}</b><small>${esc(FK_LABEL[f.kind] || 'File')} · ${esc(fsize(f.size))} · ${esc(f.byName || '')} · ${esc(ago(f.at))}</small></span>
-        <a class="btn fv-dl" id="fv-dl" download="${esc(f.name)}">${ico('i-upload', 15)}Download</a>${canDel ? `<button class="btn fv-del" id="fv-del">Delete</button>` : ''}</header>
+        ${f.local ? `<button class="btn fv-mv" id="fv-mv">${ico('i-folder', 15)}Move to…</button>` : ''}<a class="btn fv-dl" id="fv-dl" download="${esc(f.name)}">${ico('i-upload', 15)}Download</a>${canDel ? `<button class="btn fv-del" id="fv-del">Delete</button>` : ''}</header>
       <div class="fv-body" id="fv-body"><span class="faint">Opening…</span></div></div>`;
     document.body.appendChild(w);
     const close = () => { w.remove(); document.removeEventListener('keydown', key); }, key = e => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', key); $('#fv-close').onclick = close; w.onclick = e => { if (e.target === w) close(); };
     const del = $('#fv-del'); if (del) del.onclick = async () => {
       if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'Tap again to delete'; setTimeout(() => { if (del.isConnected) { del.classList.remove('arm'); del.textContent = 'Delete'; } }, 3000); return; }
-      try { await C.api('/uploads/' + encodeURIComponent(f.id), { method: 'DELETE' }); toast('Deleted.'); close(); await upList(); if (mode === 'docs') drawDocs(); } catch (e) { toast(e.message); }
+      try { if (f.local) await LF().remove(f.id); else await C.api('/uploads/' + encodeURIComponent(f.id), { method: 'DELETE' }); toast('Deleted.'); close(); await upList(); if (mode === 'docs') drawDocs(); } catch (e) { toast(e.message); }
     };
+    const mvb = $('#fv-mv'); if (mvb) mvb.onclick = () => { LF().moveMenu(mvb, f.id); const watch = e => { if (e.detail && e.detail.id === f.id) { removeEventListener('tribe-local-moved', watch); close(); } }; addEventListener('tribe-local-moved', watch); };
     let url; try { url = await blobUrl(f); } catch (e) { $('#fv-body').innerHTML = `<span class="faint">${esc(e.message)}</span>`; return; }
     $('#fv-dl').href = url;
     const body = $('#fv-body'); if (!body) return;
@@ -846,13 +923,14 @@
     if (prefill) { const i = $('#pal-input'); if (i) { i.value = prefill; i.dispatchEvent(new Event('input', { bubbles: true })); } }
   }
   function host() {
+    if (!connected() && window.TribeLocalSetup) return window.TribeLocalSetup.start();   // feat/setup-local: instant, on this device; where it lives comes last
     if (App().fresh && App().fresh() && App().startFirst) return App().startFirst();
     if (window.TribeHost && window.TribeHost.isDesktop && App().hostHere) return App().hostHere();
     if (window.TribeHost && window.TribeHost.isDesktop) return App().openInvite();
     window.open((window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest', '_blank', 'noopener');
   }
   const join = () => window.TribeSettings && window.TribeSettings.joinPrompt();
-  function newProject() { if (!connected()) return canHost() ? host() : join(); PJ().openNew(); }
+  function newProject() { if (!connected()) return window.TribeLocalSetup ? window.TribeLocalSetup.start() : canHost() ? host() : join(); PJ().openNew(); }
 
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
@@ -1106,5 +1184,6 @@
   setTimeout(() => { panel(); scratch.sync(); fromHash(); }, 0);
   if (document.body.dataset.view === 'hub') setTimeout(onShow, 0);   // app.js may have shown the hub before this file loaded
   window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel,
-    openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump };   // feat/flint: Flint opens the note it captured
+    openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump,
+    editText: src => noteEditor(null, false, src), openFile, newMenu: a => newMenu(a) };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
 })();

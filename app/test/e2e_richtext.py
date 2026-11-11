@@ -393,7 +393,8 @@ async def main():
             # the personal note editor is rich too, and its ⋮ More has View Markdown
             await ph.evaluate("TribeHub.open('docs')")
             await ph.wait_for_selector("#dc-new", state="attached")
-            await ph.evaluate("document.querySelector('#dc-new').click()")
+            await ph.evaluate("TribeHub.newMenu(null)")   # phones: the + sheet
+            await ph.evaluate("document.querySelector('#dc-newsheet [data-do=note]').click()")
             await ph.wait_for_selector("#note-ed #note-text.rt")
             await ph.fill("#note-title", "Night list")
             await ph.tap("#note-text")

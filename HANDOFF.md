@@ -65,6 +65,7 @@ Pushing from the Claude cloud sandbox:
   - `shell.js`: project circles, the calm sidebar, breadcrumbs, the right panel.
   - `app.js`: core views; `hostHere` auto-hosts on desktop.
   - `settings.js`: zero-step setup and the Settings page.
+  - `setuplocal.js` + `localfiles.js`: instant setup on this device with the home chosen last (GitHub repo, this computer, free cloud, phone), and All files with no tribe (docs/LIGHT-HOSTING.md).
   - One JS/CSS pair per feature.
 - `app/src-tauri`:
   - `main.rs`: sidecar `host_start`/`host_log`; reuses a server already on the port.

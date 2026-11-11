@@ -282,7 +282,7 @@ async def main():
             # ---------------- a personal note: same layout, saves, Escape / ✓ close ----------------
             await host.evaluate("TribeHub.open('docs')")
             await host.wait_for_selector("#hub-docs")
-            await host.click("#dc-new")
+            await host.click("#dc-new"); await host.click("#dc-newmenu [data-new=note]")   # + New › Note
             await host.wait_for_selector("#note-ed .note-ed.dl-shell #note-text")
             for sel in ["#note-ed .dl-top", "#note-ed .dl-fmt[role=toolbar]", "#note-ed #note-undo", "#note-ed #note-redo", "#note-ed #note-done", "#note-ed #note-ai", "#note-ed #note-more", "#note-ed .dl-page #note-title", "#note-outline"]:
                 assert await host.locator(sel).count() == 1, f"note: missing {sel}"
