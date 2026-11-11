@@ -121,3 +121,4 @@ body.flint-open { overflow: hidden; }
 .flint-home .fh-thread .fl-empty { display: none; }
 .flint-home .fl-bar { margin: 0; }
 @media (max-width: 820px) { .flint-home { margin-bottom: 26px; padding: 14px; } .flint-home .fh-thread { max-height: 52vh; } }
+body[data-view="hub"]:has(#flint-home) #flint .fl-thread { display: none; }   /* on Home the conversation lives in the card, not twice */

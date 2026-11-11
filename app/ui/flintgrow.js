@@ -72,7 +72,7 @@
     if (k === 'doc') return window.open(GH + arg, '_blank', 'noopener');
     if (A && A.toast) A.toast('That isn\'t available here yet.');
   }
-  const resActs = list => list.slice(0, 4).map(r => act(`${r.e} ${r.t.replace(/^[^·]+· /, '')}`, 'res', r.key));
+  const resActs = (list, n = 4) => list.slice(0, n).map(r => act(`${r.e} ${r.t.replace(/^[^·]+· /, '')}`, 'res', r.key));
   const resLines = list => list.map(r => `${r.e} **${r.t}**: ${r.why}`).join('\n');
 
   // ---------- "Grow your idea": three tappable questions, then a plan ----------
@@ -97,7 +97,8 @@
     if (need === 'money') { parts.push('💸 **Next for you**: a weekly money line, then terms and a privacy page from the Legal templates (a starting point, not legal advice).'); use('academy:finance', 'legal:terms', 'legal:privacy'); }
     if (need === 'looks') { parts.push('✨ **Next for you**: the Design lessons and your inspiration board.'); use('academy:design'); }
     if (need === 'clarity') { parts.push('🧭 **Next for you**: Founder basics, then one task per seat for this week.'); use('academy:founder', 'guide:start-here'); }
-    const list = [...keys].map(k => ({ key: k, ...RES[k] }));
+    const first = { users: 'academy:growth', money: 'academy:finance', looks: 'academy:design', clarity: 'academy:founder' }[need];
+    const list = [first, 'board', ...[...keys].filter(k => k !== first && k !== 'board')].map(k => ({ key: k, ...RES[k] }));
     return { text: parts.join('\n\n'), res: list };
   }
   async function refine(kind, input, draft) {   // ✦ with an AI on: same place, better words; without, the plan stands
@@ -112,7 +113,7 @@
     if (k && k !== 'restart' && v) { flow.ans[k] = v; flow.i = Q.findIndex(q => q.id === k) + 1; }
     if (flow.i < Q.length) { const a = ask(flow.i); return F().say(a.text, a.acts); }
     const p = proj(), ans = flow.ans, out = plan(ans, p); flow = null;
-    const msg = F().say(`Here's a short plan for ${p ? p.name : 'your idea'}:\n\n${out.text}`, [...resActs(out.res), act('Start over', 'grow', 'restart')]);
+    const msg = F().say(`Here's a short plan for ${p ? p.name : 'your idea'}:\n\n${out.text}`, [...resActs(out.res, 6), act('Start over', 'grow', 'restart')]);
     const r = await refine('home.plan', { goal: 'grow the idea: company, app and website, as one', project: p ? { name: p.name, bio: p.bio || '' } : null, answers: ans }, out.text);
     if (r && msg) { msg.text = `Here's a short plan for ${p ? p.name : 'your idea'} (✦ ${r.via}):\n\n${r.text}`; msg.via = r.via; F().redraw && F().redraw(); }
     return msg;
