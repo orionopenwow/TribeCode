@@ -183,7 +183,7 @@
     const hook = (n = 0) => { const c = C(); if (!c || !c.on) { if (n < 100) setTimeout(() => hook(n + 1), 150); return; } c.on('hello', () => refresh()); if (c.connected()) refresh(); };
     hook();
     // Watch only the Settings modal (not the whole page: typing in a long doc must stay cheap). settings.js adds it once.
-    const watch = m => { if (m.__tcWatch) return; m.__tcWatch = true; const go = () => { if (!m.classList.contains('hidden')) settingsHook(); }; new MutationObserver(go).observe(m, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); go(); };
+    const watch = m => { if (m.__tcWatchMod) return; m.__tcWatchMod = true; const go = () => { if (!m.classList.contains('hidden')) settingsHook(); }; new MutationObserver(go).observe(m, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); go(); };
     const find = () => { const m = $('#settings-modal'); if (m) { watch(m); return true; } return false; };
     if (!find()) { const mo = new MutationObserver(() => { if (find()) mo.disconnect(); }); mo.observe(document.body, { childList: true }); }
   }

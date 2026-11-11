@@ -260,7 +260,7 @@
     setInterval(() => { badge(); wake(); }, 4000);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { st.wake = null; wake(); badge(); } });
     // Watch only the Settings modal (not the whole page: typing in a long doc must stay cheap). settings.js adds it once.
-    const watch = m => { if (m.__tcWatch) return; m.__tcWatch = true; const go = () => { if (!m.classList.contains('hidden')) settingsHook(); }; new MutationObserver(go).observe(m, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); go(); };
+    const watch = m => { if (m.__tcWatchPwa) return; m.__tcWatchPwa = true; const go = () => { if (!m.classList.contains('hidden')) settingsHook(); }; new MutationObserver(go).observe(m, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); go(); };
     const find = () => { const m = $('#settings-modal'); if (m) { watch(m); return true; } return false; };
     if (!find()) { const mo = new MutationObserver(() => { if (find()) mo.disconnect(); }); mo.observe(document.body, { childList: true }); }
     if (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: window-controls-overlay)').matches) document.documentElement.classList.add('pwa-installed');
