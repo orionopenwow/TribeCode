@@ -467,7 +467,7 @@
       <button type="button" class="fl-ic fl-mic" data-flmic title="Dictate" aria-label="Dictate">${ico('i-mic', 16)}</button>
       <button type="submit" class="fl-ic fl-send" title="Send" aria-label="Send">${SEND}</button></form>`;
   }
-  const threads = () => [...document.querySelectorAll('.fl-thread')];
+  const threads = () => [...document.querySelectorAll('.fl-thread, .fh-thread')];   // feat/flint-ai: the Home card's thread too
   window.addEventListener('tribe:stage', () => { if (!thread.length) draw(); });   // nudges follow the project's progress
   function draw() {
     threads().forEach(el => { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; });
@@ -581,7 +581,7 @@
       el.appendChild(card);
       card.innerHTML = `<div class="fh-head"><span class="fl-av" aria-hidden="true">${flintIco(16)}</span><div class="fh-id"><span class="eyebrow">Flint · ${connected() ? 'your helper' : 'works without a tribe'}</span><h2>Ask Flint</h2></div><span class="fl-st" data-flst>${statusLine()}</span></div>
       <div class="fh-chips" role="group" aria-label="Flint's shortcuts">${dashChips().map(([e, l, q]) => `<button type="button" class="fl-chip fh-chip" data-fhq="${esc(q)}"><span aria-hidden="true">${e}</span>${esc(l)}</button>`).join('')}</div>
-      <div class="fl-thread fh-thread" role="log" aria-live="polite" aria-label="Conversation with Flint"></div>${barHtml('fh-input')}`;
+      <div class="fh-thread" role="log" aria-live="polite" aria-label="Conversation with Flint"></div>${barHtml('fh-input')}`;
     }
     if (!card._wired) { card._wired = true; wire(card); card.addEventListener('click', e => { const b = e.target.closest('[data-fhq]'); if (b) send(b.dataset.fhq); }); }
     draw(); drawStatus(); refreshModel();
