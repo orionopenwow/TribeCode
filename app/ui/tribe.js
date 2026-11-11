@@ -179,7 +179,12 @@
   // Called after first-run setup on the host machine (UI served by the server, no token yet).
   // defer: an empty local tribe (no members yet, not a cloud server) is not claimed on open. The person sees their
   // Dashboard first and becomes host when they start their first project (app.js startFirst). Returns 'fresh'.
-  async function ensureMember({ name, color, reclaim = false, defer = false }) {
+  // Signed out, a guest or a TEST account on this device (accounts.js): nothing signs in on its own (the boot's auto-claim,
+  // the sign-in cookie, the host reclaim). A person's own click (Start your first project, Log in) still does.
+  const autoBlocked = () => { try { const a = JSON.parse(localStorage.getItem('tribecode.accounts.v1') || 'null'); return !!a && !!a.mode && a.mode !== 'signedin'; } catch { return false; } };
+  async function ensureMember(opts) {
+    const { name, color, reclaim = false, defer = false } = opts || {};
+    if (!token() && autoBlocked() && (reclaim || 'defer' in (opts || {}))) return 'signedout';
     if (token()) {   // cloud: a napping host comes back empty; restore from this device, or wait for a friend's copy
       const r = await cloudRevive(); if (r === 'empty') await waitForTribe();
       return 'member';

@@ -90,6 +90,82 @@ def no_dupes(page):
     return labels
 
 
+# ---- the one router (app/ui/router.js, docs/NAVIGATION.md): global sections keep the global dashboard, Back works,
+# Work with no tribe stays global with a next step, the logo is always Home, one pane on screen, no dead ends.
+GLOBAL = [("nest-hub", "hub", "Home", "#/hub"), ("nest-docs-all", "docs-all", "All files", "#/hub/docs"), ("nest-repos-all", "repos-all", "All code", "#/hub/repos"),
+          ("nest-work", "work", "Work", "#/hub/work"), ("nest-fleet", "fleet", "Agent fleet", "#/fleet")]
+STATE = """() => ({ view: document.body.dataset.view, global: document.body.classList.contains('global'), place: TribeRouter.where().place,
+  lit: [...document.querySelectorAll('.side [data-pnav].on')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
+  rows: [...document.querySelectorAll('.side [data-pnav]')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
+  panes: [...document.querySelectorAll('.main > section[id^="view-"]')].filter(s => !s.classList.contains('hidden')).map(s => s.id),
+  crumb: (document.querySelector('#crumb-label') || {}).textContent, hash: location.hash })"""
+
+
+def settled(page):
+    page.wait_for_timeout(260)   # the router settles 140 ms after a move
+    return page.evaluate(STATE)
+
+
+def check_global(page, row, key, crumb, hsh, tribe):
+    page.click("#" + row); page.wait_for_function("k => TribeRouter.where().key === k", arg=key, timeout=8000)
+    st = settled(page)
+    assert st["global"] and st["place"] == "global", (row, st)
+    assert st["rows"] == [g[1] for g in GLOBAL], (row, st["rows"])   # the global sidebar stays: never a tribe's nest
+    assert st["lit"] == [key], (row, st["lit"])
+    assert len(st["panes"]) == 1, (row, st["panes"])   # no stale panes from the previous dashboard
+    assert st["crumb"] == crumb and st["hash"] == hsh, (row, st)
+    return st
+
+
+def global_nav(page, tribe):
+    page.click("#rail-logo"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+    for row, key, crumb, hsh in GLOBAL[1:] + GLOBAL[:1]: check_global(page, row, key, crumb, hsh, tribe)
+    # Work: with no tribe its empty state says what to do, inside the global dashboard; Back to Home works
+    check_global(page, "nest-work", "work", "Work", "#/hub/work", tribe)
+    if not tribe:
+        page.wait_for_selector("#tl-empty #tl-e-start", state="visible"); page.wait_for_selector("#tl-e-join", state="visible")
+        shot(page, "nav-work-empty")
+        page.click("#tl-e-home"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+        page.click("#nest-work"); page.wait_for_selector("#tl-empty")
+    else:
+        page.wait_for_selector("#view-work .tl-tabs", timeout=8000)
+    # Back walks the places you've been, one step at a time
+    page.click("#nest-repos-all"); page.wait_for_function("TribeRouter.where().key === 'repos-all'"); settled(page)
+    page.go_back(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
+    page.go_back(); page.wait_for_function("TribeRouter.where().key === 'hub'", timeout=8000)
+    page.go_forward(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
+    st = settled(page); assert st["global"] and st["rows"] == [g[1] for g in GLOBAL] and len(st["panes"]) == 1, st
+    # the logo is always Home, and it closes the Workshop layer on its way
+    page.click("#rail-workshop"); page.wait_for_function("TribeWorkshop.isOpen()")
+    assert page.locator("#rail-workshop use").get_attribute("href") == "#i-wrench", "the Workshop is a wrench"
+    page.click("#rail-logo"); page.wait_for_function("TribeRouter.where().key === 'hub' && !TribeWorkshop.isOpen()")
+    if not tribe:
+        shot(page, "nav-home")
+        # a project place asked for with no tribe: Home with a next step, never an empty page
+        page.evaluate("TribeShell.go('chat')"); st = settled(page); assert st["view"] == "hub" and st["global"], st
+        page.evaluate("TribeShell.go('ws-tasks')"); st = settled(page); assert st["view"] == "hub", st
+        # the + sheet always has a way out
+        page.click("#pj-plus"); page.wait_for_selector("#invite-modal:not(.hidden) .ns-x", state="visible")
+        page.click("#invite-modal .ns-x"); page.wait_for_selector("#invite-modal", state="hidden")
+        return
+    # with a tribe: into a project from the rail, Back returns to the global section you came from
+    page.click("#nest-work"); page.wait_for_function("TribeRouter.where().key === 'work'"); settled(page)
+    page.locator("#pj-rail [data-pj-open]").first.click(); page.wait_for_function("TribeRouter.where().place === 'project'", timeout=10000)
+    st = settled(page); assert not st["global"] and "home" in st["rows"] and len(st["panes"]) == 1, st
+    page.click("#nest-chat"); page.wait_for_selector("#view-chat:not(.hidden)"); settled(page)
+    page.go_back(); page.wait_for_function("TribeRouter.where().place === 'project' && document.body.dataset.view === 'home'", timeout=8000)
+    page.go_back(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
+    st = settled(page); assert st["global"] and st["lit"] == ["work"] and st["panes"] == ["view-work"], st
+    page.go_forward(); page.wait_for_function("TribeRouter.where().place === 'project'", timeout=8000)
+    page.click("#rail-logo"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+    st = settled(page); assert st["global"] and st["lit"] == ["hub"] and len(st["panes"]) == 1, st
+    # the palette's Marketplace entry is a wrench too
+    assert any(d["key"] == "market" for d in page.evaluate("TribeShell.dests()"))
+    page.keyboard.press("Control+k"); page.fill("#pal-input", "marketplace"); page.wait_for_timeout(80)
+    assert page.evaluate("[...document.querySelectorAll('#pal-list .pal-item')].some(b => b.textContent.includes('Marketplace') && b.querySelector('use') && b.querySelector('use').getAttribute('href') === '#i-wrench')"), page.inner_text("#pal-list")
+    page.keyboard.press("Escape")
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix="tribe-nav-", dir="/tmp")
     log = open(os.path.join(tmp, "server.log"), "w+")
@@ -102,6 +178,10 @@ def main():
             except Exception: time.sleep(0.1)
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
+            # ---- no tribe yet (fresh open): every global button stays on the global dashboard
+            nt = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1); fresh = nt.new_page(); watch(fresh, "fresh")
+            named(fresh, "Orion"); fresh.goto(BASE + "/?skipIntro=1&freshopen=1"); fresh.wait_for_function("window.TribeRouter && TribeApp.fresh()", timeout=15000)
+            fresh.wait_for_selector("#nest-work", state="visible"); global_nav(fresh, tribe=False); nt.close()
             ctx = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
             host = ctx.new_page(); watch(host, "host")
             named(host, "Orion")
@@ -239,6 +319,9 @@ def main():
             host.wait_for_function("document.querySelector('#wt-roles').classList.contains('on')")
             assert tabs(host)[:8] == TASK_TABS + ["👥 Roles"], tabs(host)
             no_dupes(host)
+
+            # ---- with a tribe: global sections still keep the global dashboard; Back crosses into a project and out again
+            global_nav(host, tribe=True)
 
             # ---- phone: the swipe-in panel shows the same four rows, Settings + Invite at the bottom, no overflow
             ph = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2)

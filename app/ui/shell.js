@@ -81,7 +81,7 @@
     { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
     { key: 'panel', label: 'Toggle right panel', icon: 'i-list', kind: 'Action', keys: 'right panel in the room sidebar show hide preview', run: () => setPanel(!document.body.classList.contains('panel-off')) },
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
-    { key: 'market', label: 'Marketplace', icon: 'i-box', kind: 'Go to', keys: 'marketplace market widgets skills templates connectors mcp libraries tools playbooks starters legal academy browse add hot new', run: () => window.TribeMarket && window.TribeMarket.open() },   // v0.27 company: the Marketplace (market.js)
+    { key: 'market', label: 'Marketplace', icon: 'i-wrench', kind: 'Go to', keys: 'marketplace market widgets skills templates connectors mcp libraries tools playbooks starters legal academy browse add hot new', run: () => window.TribeMarket && window.TribeMarket.open() },   // v0.27 company: the Marketplace (market.js)
     { key: 'guide', label: 'Guide', icon: 'i-help', kind: 'Go to', keys: 'help how to wiki manual faq docs guide start troubleshooting tutorial', run: () => window.TribeGuide && window.TribeGuide.open() },   // no group: no row (feat/vision-guide, app/ui/guide.js)
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
     { key: 'customize', label: 'Customize', icon: 'i-sparkle', kind: 'Action', keys: 'look theme background accent banner cover density font size tribe name emoji icon', run: () => window.TribeLook && window.TribeLook.open(isGlobal() ? 'tribe' : 'project') },   // feat/customize (app/ui/look.js)
@@ -106,7 +106,8 @@
   const AD = w => (w === 'agents' && window.TribeAgentsDash) || null;
   const adTabs = (w, list, cur) => (AD(w) ? AD(w).tabs(list, cur) : list);
   // No project selected: the Global Hub is on screen (its sub-pages too).
-  const isGlobal = () => document.body.dataset.view === 'hub' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global');
+  // Work and the Agent fleet belong to your dashboard too: the global sidebar stays (router.js, docs/NAVIGATION.md).
+  const isGlobal = () => window.TribeRouter ? window.TribeRouter.isGlobal() : (document.body.dataset.view === 'hub' || document.body.dataset.view === 'work' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global'));
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
   function openScratch() {
     // Phones, no tribe yet, or already on Home: Home shows the scratchpad in its own page.
@@ -118,7 +119,9 @@
   const HOT = { requests: 1, reviews: 1, handoffs: 1 };
   function go(key) {
     const d = byKey(key); if (!d) return;
-    lastDest = key; closePop(); closeDrawer();
+    closePop(); closeDrawer();
+    const R = window.TribeRouter; if (R && R.blocked(key)) return R.go(key);   // no tribe yet: Home with a next step, never a dead end
+    lastDest = key;
     const run = () => { d.run(); setTimeout(markActive, 0); };
     window.TribeMotion ? window.TribeMotion.swap(run) : run();
   }
@@ -352,7 +355,7 @@
         <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Home · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
         ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Code', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
-        <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-box')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
+        <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-wrench')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
         <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
       { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' + (anchor.id === 'side-switch' ? ' sh-under-switch' : '') });
