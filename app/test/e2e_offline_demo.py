@@ -41,6 +41,41 @@ def settings(page): return page.evaluate("JSON.parse(localStorage.getItem('tribe
 def sideways(page, tag):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"{tag}: sideways scroll ({page.evaluate('document.documentElement.scrollWidth')} > {page.evaluate('innerWidth')})"
 
+def v028(page, tag):
+    """v0.28 in the demo (offline.js + demo/data.json): the Design canvas with Flint beside it, comment pins and the
+    website template gallery all answer with no server."""
+    page.evaluate("location.hash = '#/canvas'")
+    page.wait_for_function("window.TribeCanvas && TribeCanvas.state().open && document.querySelector('#cv-file-t').textContent.length > 0", timeout=15000)
+    page.wait_for_selector("#cv-mode [data-mode=simple]", timeout=10000)
+    page.click("#cv-mode [data-mode=simple]")
+    page.wait_for_selector("#fp-in", state="visible", timeout=8000)
+    page.fill("#fp-in", "make a login screen for Ember")
+    page.press("#fp-in", "Enter")
+    page.wait_for_function("TribeCanvas.state().nodes.some(n => /Ember/.test(n.name || ''))", timeout=15000)
+    page.wait_for_function("TribeClient.api('/canvas/main').then(r => Object.values(r.file.nodes).some(n => /Ember/.test(n.name || '')))", timeout=8000)   # the edit was kept
+    page.wait_for_function("TribeClient.api('/canvaschat/main').then(r => r.items.some(i => i.role === 'flint'))", timeout=8000)
+    if "--shots" in sys.argv: page.screenshot(path=str(SHOTS / "offline-demo-desktop-design.png"))
+    sideways(page, tag + " design")
+    page.click("#cv-mode [data-mode=advanced]")   # leave the next person (and the tests) in the familiar layout
+    page.click("#cv-back")
+    page.wait_for_function("!TribeCanvas.state().open", timeout=8000)
+    # comment pins
+    pin = page.evaluate("TribeClient.api('/pins', { method: 'POST', body: { surface: 'preview', target: { href: '/', sel: 'h1', fx: .5, fy: .2 }, text: 'Bigger title?' } })")["pin"]
+    page.evaluate("id => TribeClient.api(`/pins/${id}/reply`, { method: 'POST', body: { text: 'On it' } })", pin["id"])
+    page.evaluate("id => TribeClient.api(`/pins/${id}/resolve`, { method: 'POST', body: { resolved: true } })", pin["id"])
+    got = page.evaluate("TribeClient.api('/pins?state=resolved')")["pins"]
+    assert any(p["id"] == pin["id"] and len(p["thread"]) == 2 for p in got), got
+    # the website template gallery, with real thumbnails
+    page.evaluate("TribeSiteLib.open()")
+    page.wait_for_selector("#slx .slx-card", timeout=8000)
+    assert page.locator("#slx .slx-card").count() == 16
+    page.wait_for_function("[...document.querySelectorAll('#slx .slx-th img')].every(i => i.complete && i.naturalWidth > 0)", timeout=8000)
+    if "--shots" in sys.argv: page.screenshot(path=str(SHOTS / "offline-demo-desktop-templates.png"))
+    page.evaluate("TribeSiteLib.close()")
+    # Flint's capability map
+    assert len(page.evaluate("TribeClient.api('/flint/tiers')")["tiers"]) == 4
+
+
 def flow(page, tag, phone, tmp):
     page.goto(BASE + "/?skipIntro=1")
     page.wait_for_function("window.TribeOffline && window.TribeHub", timeout=15000)
@@ -73,6 +108,7 @@ def flow(page, tag, phone, tmp):
         page.evaluate("TribeShell.go('website')")
         page.wait_for_selector("#wb-root .sg-modes", timeout=8000)
         page.wait_for_selector("#wb-frame", timeout=8000)
+        v028(page, tag)
 
     # chat: post, and @claude answers
     page.evaluate("TribeApp.show('chat')")

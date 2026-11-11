@@ -308,13 +308,15 @@
     const fresh = () => ({
       setup: [true, true, true, false],
       code: true, file: 0,
+      // the Task Board as it is now (v0.28): one row per task with one next-step button (Assign → Start → Send for review → Approve)
       board: [
-        { t: 'Boss fight for level 3', who: 'J', c: '#F4A64A', col: 0 },
-        { t: 'Pause menu', who: 'M', c: '#6C7CFF', col: 0 },
-        { t: 'Creak when the lantern swings', who: '◎', c: '', col: 1 },
-        { t: 'Level 2 playtest', who: '✦', c: '', col: 1 },
-        { t: 'Title screen', who: '✦', c: '', col: 2 },
+        { t: 'Pause menu', who: '', c: '', s: 0 },
+        { t: 'Boss fight for level 3', who: 'J', c: '#F4A64A', s: 1 },
+        { t: 'Creak when the lantern swings', who: '◎', c: '', s: 2 },
+        { t: 'Level 2 playtest', who: '✦', c: '', s: 3 },
+        { t: 'Title screen', who: '✦', c: '', s: 4 },
       ],
+      sent: false, picked: 'btn',
       asked: '', added: {},
     });
     let st = fresh(), view = 'general';
@@ -323,7 +325,8 @@
       dashboard: ['Dashboard', 'Pixel Quest · overview', 'home'],
       agents: ['# agents', 'where the agents talk shop', 'chat'],
       files: ['Files', 'pixel-quest · main', 'file'],
-      board: ['Task Board', '5 tasks · 2 in progress', 'check'],
+      board: ['Task Board', '5 tasks · 1 needs someone', 'check'],
+      design: ['Design', 'Home screen · Simple mode', 'grid'],
       hub: ['Agents Hub', '3 working · 1 needs you', 'bot'],
       level: ['Level design', 'pinned doc · edited by Jay', 'file'],
       add: ['Add to Pixel Quest', 'widgets for this project', 'home'],
@@ -333,7 +336,7 @@
       code: [['src/scenes/title.js', "edited by Orion's Claude · 2m"], ['src/props/lantern.js', "edited by Orion's Claude · 3m"], ['src/levels/2.json', "edited by Jay's Gemini · 1h"], ['src/audio/creak.js', "Maya's Codex is on it"], ['index.html', 'Orion · yesterday']],
       docs: [['Vision', 'a cozy pixel platformer for friends'], ['Level design', 'pinned · Jay'], ['Story', 'Rio · intro and ending'], ['Huddle notes · Tue', 'decisions and 4 tasks']],
     };
-    const COLS = ['To do', 'Doing', 'Done'];
+    const STAGE = [['Needs someone', 'Assign'], ['Up next', 'Start'], ['In progress', 'Send for review'], ['Waiting for review', 'Approve'], ['Done', '']];
     const WIDGETS = [['🧑‍🎨', 'Whiteboard', 'Sketch levels together'], ['📅', 'Calendar', 'Playtests and deadlines'], ['🌐', 'Website', 'A page for the game'], ['📄', 'Docs', 'Notes everyone edits'], ['🐞', 'Bugs', 'Track what breaks'], ['🎙️', 'Huddle', 'Talk while you build']];
 
     const draw = {
@@ -358,8 +361,20 @@
           ${st.code ? `<pre class="mv-code"><span class="t-dim">12</span>  jump: <span class="t-ember">64</span>,
 <span class="t-dim">13</span>  lantern: <span class="t-live">'swing'</span>,</pre>` : '<p class="mv-hint">Docs are plain Markdown files in the repo.</p>'}`;
       },
-      board: () => `<div class="mv-cols">${COLS.map((c, ci) => `<div class="mv-col"><p class="mk-eyebrow">${c} <span>${st.board.filter(x => x.col === ci).length}</span></p>
-          ${st.board.map((x, i) => x.col !== ci ? '' : `<button type="button" class="mv-task${ci === 2 ? ' is-done' : ''}" data-task="${i}" ${ci === 2 ? 'disabled' : ''}><b>${esc(x.t)}</b><span>${x.c ? `<i class="mk-av mk-av--xs" style="--c:${x.c};--ink:#FFFFFF">${x.who}</i>` : `<i class="mk-av mk-av--agent mk-av--xs"><span>${x.who}</span></i>`}${ci < 2 ? '<em>Move →</em>' : '<em>✓</em>'}</span></button>`).join('')}</div>`).join('')}</div>`,
+      board: () => {
+        const n = k => st.board.filter(x => x.s === k).length;
+        return `<div class="mv-tiles">${[0, 2, 3, 4].map(k => `<span class="mv-tile${k === 0 && n(0) ? ' is-hot' : ''}"><b>${n(k)}</b>${STAGE[k][0]}</span>`).join('')}</div>
+          <div class="mv-rows">${STAGE.map(([label, act], k) => !n(k) ? '' : `<p class="mk-eyebrow">${label} <span>${n(k)}</span></p>` + st.board.map((x, i) => x.s !== k ? '' : `<div class="mv-trow${k === 4 ? ' is-done' : ''}"><i class="mv-ck"></i><b>${esc(x.t)}</b>${x.who ? `<i class="mk-av mk-av--xs" style="--c:${x.c || '#38C6B1'};--ink:#FFFFFF">${x.who}</i>` : ''}${act ? `<button type="button" class="mv-act${k === 3 ? ' mv-act--ok' : ''}" data-task="${i}">${act}</button>` : '<em>✓</em>'}</div>`).join('')).join('')}</div>`;
+      },
+      design: () => `<div class="mv-design">
+          <div class="mv-cv"><div class="mv-qb"><i></i><span>A−</span><span>A+</span><span class="mv-qb__f">Ask Flint</span></div>
+            <div class="mv-frame"><p class="mv-fn">Pixel Quest · Home</p><div class="mv-screen"><b class="mv-s1">Pixel Quest</b><span class="mv-s2">Level 2 is open</span>
+              <button type="button" class="mv-s3${st.picked === 'btn' ? ' is-sel' : ''}" data-pick="btn">Play now</button><span class="mv-s4"><i></i><i></i><i></i></span></div></div></div>
+          <div class="mv-fl"><p class="mk-eyebrow">Flint <span>designs with you</span></p>
+            <p class="mv-fl__me">make a home screen for Pixel Quest</p>
+            <p class="mv-fl__bot">Designed a home screen, free from a template. Real layers with auto layout. <em>Show · Undo</em></p>
+            <button type="button" class="mv-send${st.sent ? ' is-sent' : ''}" data-send="1">${st.sent ? '✓ Sent to the app · design/home.html' : 'Send to app'}</button></div></div>`,
+
       hub: () => `<section class="mv-card mv-needs${st.asked ? ' is-answered' : ''}"><p class="mk-eyebrow">Needs you <span>1</span></p>
           <div class="mv-ask">${AV.codex}<div><b>Maya's Codex wants to add a package</b><p>howler 2.2.4 · plays the creak. 7 kB, MIT.</p></div></div>
           ${st.asked ? `<p class="mv-asked">${st.asked === 'ok' ? '✓ Approved. Maya’s Codex is installing it.' : 'Denied. Maya’s Codex will find another way.'}</p>` : '<div class="mv-btns"><button type="button" class="mv-ok" data-ask="ok">Approve</button><button type="button" class="mv-no" data-ask="no">Deny</button></div>'}</section>
@@ -377,7 +392,7 @@
       view = v;
       const h = HEAD[v] || HEAD.general;
       headT.textContent = h[0]; headI.className = 'mk-ic mk-ic--' + h[2];
-      headS.textContent = v === 'board' ? `${st.board.length} tasks · ${st.board.filter(x => x.col === 1).length} in progress` : h[1];
+      headS.textContent = v === 'board' ? `${st.board.length} tasks · ${st.board.filter(x => x.s === 0).length} needs someone` : h[1];
       const chat = v === 'general';
       main.classList.toggle('is-view', !chat); pane.hidden = chat;
       pane.dataset.view = v;
@@ -397,7 +412,9 @@
       if (b.dataset.setup != null) st.setup[+b.dataset.setup] = true;
       else if (b.dataset.seg) { st.code = b.dataset.seg === 'code'; st.file = 0; }
       else if (b.dataset.file != null) st.file = +b.dataset.file;
-      else if (b.dataset.task != null) { const t = st.board[+b.dataset.task]; if (t.col < 2) t.col++; }
+      else if (b.dataset.task != null) { const t = st.board[+b.dataset.task]; if (t.s === 0) { t.who = 'O'; t.c = '#F26B1D'; } if (t.s < 4) t.s++; }
+      else if (b.dataset.send) st.sent = true;
+      else if (b.dataset.pick) st.picked = b.dataset.pick;
       else if (b.dataset.ask) st.asked = b.dataset.ask;
       else if (b.dataset.add) st.added[b.dataset.add] = !st.added[b.dataset.add];
       else return;

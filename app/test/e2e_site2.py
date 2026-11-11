@@ -135,16 +135,19 @@ def main():
             assert vp.evaluate("document.querySelector('.mk-convo').textContent.length") == frozen, "the story stays paused"
             vp.click(".mk-side [data-go=files]"); assert "src/scenes/title.js" in vp.inner_text("#mk-pane")
             vp.click("#mk-pane [data-seg=docs]"); assert "Level design" in vp.inner_text("#mk-pane") and "src/" not in vp.inner_text("#mk-pane .mv-files")
-            vp.click(".mk-side [data-go=board]"); assert vp.locator("#mk-pane .mv-col").count() == 3
-            todo = "document.querySelectorAll('#mk-pane .mv-col')[0].querySelectorAll('.mv-task').length"
-            n0 = vp.evaluate(todo); vp.locator("#mk-pane .mv-col").nth(0).locator(".mv-task").nth(0).click()
-            assert vp.evaluate(todo) == n0 - 1, "a card moves forward"
+            # v0.28 Task Board: counters and one row per task with one next-step button
+            vp.click(".mk-side [data-go=board]"); assert vp.locator("#mk-pane .mv-tile").count() == 4 and vp.locator("#mk-pane .mv-trow").count() == 5
+            assert vp.inner_text("#mk-pane .mv-act >> nth=0") == "Assign"
+            vp.locator("#mk-pane .mv-act").nth(0).click()
+            assert "Start" in [b.inner_text() for b in vp.locator("#mk-pane .mv-act").all()] and "0 needs someone" in vp.inner_text("#mk-head-s"), "Assign moves it to Up next"
+            # v0.28 Design: the canvas with Flint beside it, then Send to app
+            vp.click(".mk-side [data-go=design]"); assert vp.inner_text("#mk-head-t") == "Design" and vp.is_visible("#mk-pane .mv-cv") and "flint" in vp.inner_text("#mk-pane .mv-fl").lower()
+            vp.click("#mk-pane [data-send]"); assert "Sent to the app" in vp.inner_text("#mk-pane .mv-send")
             vp.click(".mk-side [data-go=hub]"); assert vp.locator("#mk-pane .mv-agent").count() == 3 and "needs you" in vp.inner_text("#mk-pane").lower()
             vp.click("#mk-pane [data-ask=ok]"); assert "Approved" in vp.inner_text("#mk-pane .mv-needs")
             vp.click(".mk-side [data-go=agents]"); assert vp.locator("#mk-pane .mk-msg--agent").count() >= 4 and vp.inner_text("#mk-head-t") == "# agents"
             vp.click(".mk-side [data-go=add]"); assert vp.locator("#mk-pane .mv-wid").count() >= 4
             vp.locator("#mk-pane .mv-wid").nth(0).click(); assert "Added" in vp.locator("#mk-pane .mv-wid").nth(0).inner_text()
-            vp.click(".mk-side [data-go=level]"); assert "Level design" in vp.inner_text("#mk-pane")
             assert "Preview" in vp.inner_text(".mk-pv-bar") and vp.is_visible(".mk-flint .mk-in"), "the right panel stays"
             vp.click("#stage-replay")
             assert not vp.is_visible("#stage-replay") and not vp.is_visible("#mk-pane") and vp.is_visible(".mk-convo") and vp.inner_text("#mk-head-t") == "# general"

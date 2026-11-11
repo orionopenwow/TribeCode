@@ -215,6 +215,7 @@
     if (m.type === 'announce' && m.text) return post(cur(), 'me', String(m.text).slice(0, 400));
     if (m.type === 'huddle-join') return toast('Huddles are ' + NOPE.toLowerCase().replace('not in', 'not in') + '.');
     if (String(m.type).startsWith('doc-')) return live(sock, m);
+    if (m.type === 'cnv-op') { cnvApply(String(m.file || 'main'), m.ops); return; }   // one person, so nobody to tell
   }
 
   // Live docs for one person: a tiny version of server/live.js (no one else edits, so every op lands at the current rev).
@@ -504,6 +505,102 @@
       kinds: ['game', '3d', 'app', 'site', 'tool', 'bot', 'api', 'notes'].map(id => ({ id, label: NOUN[id] })),
       signals: p.bio ? [{ from: 'bio', text: p.bio.slice(0, 90) }] : [], inspiration: (L[kind] || L.other).filter(x => !e.gone.includes(x.id)) };
   }
+  // ---------- v0.28 in the demo: canvas, Flint on the canvas, pins, site templates, Flint's tiers ----------
+  // demo/data.json is made by scripts/dev/demo-data.js from the real templates (canvas plans, the site gallery, the tiers).
+  let demoD = null;
+  async function demoData() {
+    if (demoD) return demoD;
+    try { const r = await realFetch(new URL('demo/data.json', location.href).href); demoD = await r.json(); } catch { demoD = null; }
+    return demoD || { tiers: [], sites: { templates: [], categories: [] }, canvas: [] };
+  }
+  function demoTier(ask) {
+    const a = String(ask || '').toLowerCase();
+    if (/\b(multiplayer|database|login system|accounts?|payments?|server|refactor|port|debug|crash)\b/.test(a)) return { tier: 'agent', why: 'This needs real engineering: a job for a stronger AI, like a member’s own Claude Code, Codex or Gemini.' };
+    if (/\b(make|build|create)\b.*\b(landing|website|site|link in bio|store|shop|to-?do|3d|game|platformer|video editor)\b/.test(a)) return { tier: 'recipe', why: 'Free: Flint builds this from the open-source build kit, no AI needed.' };
+    return { tier: 'small', why: 'A small free model can handle this. With none on, Flint answers what it can without one.' };
+  }
+  const cnvFiles = () => { db.canvas = db.canvas || {}; const d = db.canvas[cur()] = db.canvas[cur()] || {}; if (!d.main) d.main = { id: 'main', name: 'Design', created: iso(), updated: iso(), nodes: {} }; return d; };
+  function cnvApply(fid, ops) {
+    const f = cnvFiles()[fid]; if (!f || !Array.isArray(ops)) return [];
+    const applied = [];
+    for (const op of ops.slice(0, 2000)) {
+      if (!op || typeof op.id !== 'string') continue;
+      const curN = f.nodes[op.id];
+      if (op.del && !curN) continue;
+      if (!curN || (op.v || 0) >= (curN.v || 0)) { f.nodes[op.id] = op.del ? { id: op.id, del: true, v: op.v || 0, at: iso() } : op; applied.push(f.nodes[op.id]); }
+    }
+    if (applied.length) { f.updated = iso(); save(); }
+    return applied;
+  }
+  function demoCanvas(method, id, c, body) {
+    const files = cnvFiles();
+    if (!id && method === 'GET') return ok({ files: Object.values(files).map(f => ({ id: f.id, name: f.name, updated: f.updated, count: Object.values(f.nodes).filter(n => !n.del).length })), canEdit: true, canManage: true });
+    if (!id && method === 'POST') { const nf = { id: 'c-' + rid(6).toLowerCase(), name: String(body.name || 'Untitled').slice(0, 60), created: iso(), updated: iso(), nodes: {} }; files[nf.id] = nf; save(); push({ type: 'cnv-files', project: cur() }); return ok({ file: nf }); }
+    const f = files[id]; if (!f) return no(404, 'no such design file');
+    if (!c && method === 'GET') return ok({ file: { ...f, nodes: Object.fromEntries(Object.entries(f.nodes).filter(([, n]) => !n.del)) }, canEdit: true, canManage: true });
+    if (!c && method === 'PATCH') { if (body.name) f.name = String(body.name).slice(0, 60); save(); push({ type: 'cnv-files', project: cur() }); return ok({ file: f }); }
+    if (!c && method === 'DELETE') { if (id === 'main') return no(400, 'the main design file stays'); delete files[id]; save(); push({ type: 'cnv-files', project: cur() }); return ok({ ok: true }); }
+    if (c === 'ops' && method === 'POST') { const a = cnvApply(id, body.ops); return ok({ ok: true, applied: a.length, rejected: [] }); }
+    return no();
+  }
+  async function demoPlan(body) {
+    const ask = String(body.ask || '').trim(), d = await demoData();
+    if (!ask) return { kind: 'none', say: 'Tell me what to design: "a login screen for Ember", "a pricing section", "a mobile home for a café".' };
+    if (/\b(rename|tidy|clean ?up|variants?|dark|light)\b/i.test(ask) && (body.sel || []).length) return { kind: 'none', say: 'In this demo I design new screens. Tidy up, rename layers, variants and dark versions work in the app, free too.' };
+    let best = null, score = 0;
+    for (const t of d.canvas) { const s = (t.keys || []).reduce((n, k) => { try { return n + (new RegExp('\\b' + k, 'i').test(ask) ? 1 : 0); } catch { return n; } }, 0); if (s > score) { best = t; score = s; } }
+    if (!best) return { kind: 'freeform', tier: 'small', why: `I design for free from ${d.canvas.length} screen templates: sign in, onboarding, home, feed, product, pricing, settings, profile, checkout, landing, dashboard, chat and empty state. Try one of those.`, say: 'Try a screen I know.' };
+    const q = /["“']([^"”']{2,40})["”']/.exec(ask), m = /\b(?:for|called|named)\s+(?:my\s+|our\s+|a\s+|an\s+|the\s+)?([^,.!?]{2,40})/i.exec(ask);
+    let name = q ? q[1].trim() : m ? m[1].replace(/\s+(with|that|which|in|using|where|on|and|please|app|dark|light)\b.*$/i, '').trim() : '';
+    if (!name) name = 'Lantern'; else if (name === name.toLowerCase()) name = name.replace(/\b([a-z])/g, (_, ch) => ch.toUpperCase());
+    const map = {}, fresh = () => Math.random().toString(16).slice(2, 14).padEnd(12, '0');
+    for (const n of best.create) map[n.id] = fresh();
+    const live = Object.values(cnvFiles()[String(body.file || 'main')] ? cnvFiles()[String(body.file || 'main')].nodes : {}).filter(n => !n.del && !n.p);
+    const dx = live.length ? Math.max(...live.map(n => (n.x || 0) + (n.w || 0))) + 120 : 0;
+    const sw = s => typeof s === 'string' ? s.split('Lantern').join(name) : s;
+    const create = best.create.map(n => {
+      const o = JSON.parse(JSON.stringify(n));
+      o.id = map[n.id]; if (o.p) o.p = map[o.p] || o.p; if (o.comp && map[o.comp]) o.comp = map[o.comp];
+      if (o.ov) o.ov = Object.fromEntries(Object.entries(o.ov).map(([k, v]) => [map[k] || k, v.c ? { ...v, c: sw(v.c) } : v]));
+      o.name = sw(o.name); if (o.tx && o.tx.c) o.tx.c = sw(o.tx.c);
+      if (!o.p) o.x = (o.x || 0) + dx;
+      return o;
+    });
+    return { kind: 'build', create, focus: map[best.focus] || create[0].id, template: best.id, say: sw(best.say) };
+  }
+  function demoCanvasChat(method, file, c, body) {
+    db.cchat = db.cchat || {}; const k = cur() + '/' + String(file || 'main'), list = db.cchat[k] = db.cchat[k] || [];
+    if (method === 'GET' && !c) return ok({ items: list, canEdit: true });
+    if (method !== 'POST') return no(405, 'not allowed');
+    if (c === 'undo') { const it = list.find(x => x.id === String(body.id || '')); if (!it) return no(404, 'no such step'); it.undone = true; it.undoneBy = 'me'; save(); return ok({ item: it }); }
+    const text = String(body.text || '').trim().slice(0, 1200); if (!text) return no(400, 'say something');
+    const role = body.role === 'flint' ? 'flint' : 'me';
+    const item = { id: rid(7), role, text, by: 'me', name: me().name, color: me().color, at: iso() };
+    if (role === 'flint') { item.kind = String(body.kind || '').slice(0, 20); if (body.focus) item.focus = String(body.focus).slice(0, 40); if (Array.isArray(body.ids)) item.ids = body.ids.map(String).slice(0, 400); if (body.ref) item.ref = String(body.ref).slice(0, 600); }
+    list.push(item); if (list.length > 200) list.splice(0, list.length - 200); save();
+    return ok({ item });
+  }
+  function demoPins(method, id, c, body, q) {
+    db.pins = db.pins || {}; const list = db.pins[cur()] = db.pins[cur()] || [];
+    const view = p => ({ ...p, byName: me().name, color: me().color, thread: p.thread.map(x => ({ ...x, byName: me().name, color: me().color })) });
+    const live = p => { push({ type: 'pins', project: cur(), pin: view(p) }); return ok({ pin: view(p) }); };
+    if (!id && method === 'GET') {
+      const surface = q.get('surface') || '', href = q.get('href') || '', state = q.get('state') || 'all';
+      return ok({ pins: list.filter(p => (!surface || p.surface === surface) && (!href || !p.target || !p.target.href || p.target.href === href) && (state === 'all' || (state === 'open') === !p.resolved)).map(view), canEdit: true, me: 'me' });
+    }
+    if (!id && method === 'POST') {
+      const text = String(body.text || '').trim().slice(0, 2000); if (!text) return no(400, 'write a comment first');
+      const p = { id: 'p-' + rid(8), surface: ['preview', 'canvas', 'doc'].includes(body.surface) ? body.surface : 'preview', target: body.target || {}, by: 'me', at: iso(), resolved: false, thread: [{ id: 'c-' + rid(8), by: 'me', at: iso(), text }] };
+      list.push(p); save(); return live(p);
+    }
+    const p = list.find(x => x.id === id); if (!p) return no(404, 'that comment is gone');
+    if (c === 'reply' && method === 'POST') { const text = String(body.text || '').trim().slice(0, 2000); if (!text) return no(400, 'write a reply first'); p.thread.push({ id: 'c-' + rid(8), by: 'me', at: iso(), text }); save(); return live(p); }
+    if (c === 'resolve' && method === 'POST') { p.resolved = body.resolved !== false; p.resolvedBy = p.resolved ? 'me' : null; p.resolvedAt = p.resolved ? iso() : null; save(); return live(p); }
+    if (!c && method === 'DELETE') { db.pins[cur()] = list.filter(x => x !== p); save(); push({ type: 'pins', project: cur(), removed: p.id }); return ok({ ok: true }); }
+    if (!c && method === 'GET') return ok({ pin: view(p) });
+    return no();
+  }
+
   async function route(method, path, q, body, headers) {
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = parts;
     for (const h of hooks.route) { const r = h(method, parts, q, body, headers); if (r) return r; }   // feat/demo-tour
@@ -540,6 +637,7 @@
           if (GET || PUT) return ok({ widgets: db.widgets[p.id] || [], canEdit: true, preview: { show: false, label: '' }, website: { show: false } });
         }
         if (c === 'website') return siteMock(p, parts[3], parts[4], method, body || {});   // feat/site-builder
+        if (c === 'site-library' && POST) return no(400, 'In the demo you can browse the 16 templates. In TribeCode, Use this template makes the site in your project and opens the Easy editor.');
         if (c === 'sense') {   // app/ui/sense.js: what the project is + the Inspiration card (server/sense.js, simplified)
           db.sense = db.sense || {}; const e = db.sense[p.id] = db.sense[p.id] || { override: '', notes: true, gone: [] };
           if (PUT) { if (body.kind !== undefined) e.override = String(body.kind || ''); if (body.notes !== undefined) e.notes = !!body.notes; save(); push({ type: 'sense', project: p.id }); }
@@ -730,7 +828,6 @@
         if (!c && DEL) { db.uploads = db.uploads.filter(x => x !== f); await blobDel(f.id); save(); return ok({ ok: true }); }
         break;
       }
-      case 'flint': if (GET && !b) return ok({ model: { online: false, model: '' } }); break;
       case 'llm': if (GET && !b) return ok({ provider: 'none', label: 'None (basic mode)', model: '', via: '', online: false, cloud: false, ready: false, friends: false, cap: 0, ollama: { online: false, model: '' }, you: { host: false, block: '', used: 0 } }); return no(403, 'The offline demo has no tribe brain: pick Built in to try a model in your browser.');   // feat/any-llm
       case 'hub': {
         if (!b && GET) return ok(hubData());
@@ -787,9 +884,34 @@
         if (POST && !b) return ok({ ok: true }); break;
       case 'studios': if (GET && !b) return ok({ studios: [] }); break;
       case 'flint':
+        if (GET && !b) return ok({ model: { online: false, model: '' } });
         if (b === 'memory' && GET) return ok({ notes: [], prefs: {} });
         if (b === 'skills' && GET) return ok({ skills: [], canCreate: false });
         if (b === 'vocab' && GET) return ok({ words: [] });
+        if (b === 'tiers' && GET) return ok({ tiers: (await demoData()).tiers, now: { host: { online: false, via: '' } } });
+        if (b === 'tier' && POST) return ok(demoTier(body.ask));
+        if (b === 'kb' && GET) return ok({ answers: [] });   // the demo has no docs folder: Flint points to the Guide instead
+        if (b === 'learned') {   // "when I say X, do Y": kept in the demo's own storage, like the real per-person list
+          db.learned = db.learned || [];
+          if (POST && body.say && body.means) { db.learned = db.learned.filter(x => x.say !== String(body.say)); db.learned.push({ id: 'l-' + rid(6), say: String(body.say).slice(0, 120), means: String(body.means).slice(0, 200), at: iso() }); db.learned = db.learned.slice(-200); save(); }
+          if (DEL && c) { db.learned = db.learned.filter(x => x.id !== c && x.say !== c); save(); }
+          return ok({ items: db.learned });
+        }
+        break;
+      // v0.28: the Design canvas, Flint beside it, comment pins and the website templates, so the demo shows them too
+      case 'canvas': return demoCanvas(method, b, c, body);
+      case 'canvaschat': return demoCanvasChat(method, b, c, body);
+      case 'canvasai':
+        if (b === 'templates' && GET) return ok({ templates: (await demoData()).canvas.map(t => ({ id: t.id, title: t.title })) });
+        if (b === 'plan' && POST) return ok(await demoPlan(body));
+        break;
+      case 'canvascode':
+        if (GET && !b) return ok({ links: {}, pages: [] });
+        if (b === 'send' && POST) return no(400, 'In the demo the design stays on the canvas. In TribeCode, Send to app writes it into your project as HTML and CSS.');
+        break;
+      case 'pins': return demoPins(method, b, c, body, q);
+      case 'site-library':
+        if (GET && !b) { const s = (await demoData()).sites; return ok({ templates: s.templates.map(x => ({ ...x, thumb: x.thumb ? new URL(x.thumb, location.href).pathname : '' })), categories: s.categories }); }
         break;
       case 'assist': {   // app/ui/assist.js: the vision composer's basic draft and the game template's starter tasks
         const p = proj(pid), name = p.name;

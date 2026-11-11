@@ -731,6 +731,43 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .mv-task.is-done { cursor: default; opacity: .8; }
 .mv-task.is-done b { text-decoration: line-through; text-decoration-color: var(--edge-pop); }
 .mv-task.is-done em { color: var(--live); }
+/* v0.28 Task Board: counters + one row per task with one next-step button */
+.mk-ic--grid { border-radius: 2px; border-style: dashed; }
+.mk-invite--pv { color: var(--text); background: var(--surface-2); }
+.mv-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.mv-tile { display: grid; gap: 2px; padding: 7px 9px; border: 1px solid var(--edge); border-radius: 9px; background: var(--surface); color: var(--muted); font-size: 10.5px; }
+.mv-tile b { color: var(--text); font-size: 16px; font-weight: 600; }
+.mv-tile.is-hot { border-color: var(--ember); } .mv-tile.is-hot b { color: var(--ember); }
+.mv-rows { display: grid; gap: 5px; }
+.mv-rows .mk-eyebrow { margin: 6px 0 0; }
+.mv-trow { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 5px 6px 5px 9px; border: 1px solid var(--stroke); border-radius: 8px; background: var(--surface); animation: rise .25s var(--ease) both; }
+.mv-trow b { flex: 1; min-width: 0; color: var(--text); font-size: 11.5px; font-weight: 500; }
+.mv-ck { width: 12px; height: 12px; flex: none; border: 1.5px solid var(--edge-pop); border-radius: 50%; }
+.mv-trow.is-done b { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--edge-pop); }
+.mv-trow.is-done .mv-ck { border-color: var(--live); background: var(--live); }
+.mv-trow em { color: var(--live); font-style: normal; font-size: 11px; padding-right: 6px; }
+.mv-act { padding: 4px 9px; border: 1px solid var(--edge-pop); border-radius: 7px; background: var(--surface-2); color: var(--text); font: 600 10.5px/1.2 var(--font); cursor: pointer; white-space: nowrap; }
+.mv-act:hover { border-color: var(--ember); }
+.mv-act--ok { background: var(--ok); border-color: var(--ok); color: #10261A; }
+/* v0.28 Design: canvas (Simple mode) with Flint beside it */
+.mv-design { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 8px; height: 100%; }
+.mv-cv { position: relative; display: grid; place-items: center; border: 1px solid var(--stroke); border-radius: 10px; background: var(--canvas); padding: 30px 10px 10px; }
+.mv-qb { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 7px; padding: 4px 8px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 10px; white-space: nowrap; }
+.mv-qb i { width: 9px; height: 9px; border-radius: 50%; background: #FFFFFF; }
+.mv-qb__f { color: var(--text); font-weight: 600; }
+.mv-frame { width: 130px; }
+.mv-fn { margin: 0 0 4px; color: var(--live); font: 500 9px/1 var(--mono); }
+.mv-screen { display: grid; gap: 7px; padding: 14px 10px; border-radius: 4px; background: #FAF8F5; color: #16181D; outline: 1px solid var(--live); }
+.mv-screen b { color: #16181D; }
+.mv-s1 { font-size: 13px; font-weight: 700; } .mv-s2 { font-size: 9.5px; color: #5A5F6B; }
+.mv-s3 { padding: 6px; border: 0; border-radius: 6px; background: var(--ember); color: #FFFFFF; font: 600 10px/1.2 var(--font); cursor: pointer; }
+.mv-s3.is-sel { outline: 1.5px solid var(--live); outline-offset: 2px; }
+.mv-s4 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; } .mv-s4 i { height: 26px; border-radius: 4px; background: #ECE8E1; }
+.mv-fl { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--stroke); border-radius: 10px; background: var(--surface); }
+.mv-fl p { margin: 0; font-size: 10.5px; line-height: 1.4; }
+.mv-fl__me { color: var(--text); } .mv-fl__bot { color: var(--muted); } .mv-fl__bot em { display: block; margin-top: 2px; color: var(--ember); font-style: normal; font-weight: 600; }
+.mv-send { margin-top: auto; padding: 6px; border: 0; border-radius: 7px; background: var(--ember); color: #FFFFFF; font: 600 10.5px/1.3 var(--font); cursor: pointer; }
+.mv-send.is-sent { background: var(--surface-2); color: var(--live); border: 1px solid var(--edge); }
 .mv-task .mk-av--xs { width: 18px; height: 18px; font-size: 9px; }
 .mv-needs { border-color: var(--action); }
 .mv-needs.is-answered { border-color: var(--edge); }
