@@ -249,6 +249,7 @@ function broadcast(msg, except) {
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
 let talent = null;   // v0.27 company: the Work view (server/talent.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
+let moderation = null;   // feat/appstore: report, block, word filter (server/moderation.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 let buildKit = null;   // server/buildkit.js (made below)
 let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
@@ -307,6 +308,7 @@ const cidOf = body => (body && typeof body.cid === 'string' && CID_RE.test(body.
 function postChat(channel, by, text, extra) {
   if (channel === 'general') channel = P.channelOf(P.current() || P.defaultId());   // project rooms: each project has its own channel
   if (extra && extra.cid) { const k = `${channel}:${by}:${extra.cid}`; if (cidSeen.has(k)) return cidSeen.get(k); }
+  if (moderation && by !== 'tribecode') text = moderation.clean(text);   // feat/appstore: the host's word filter
   const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js), cid (outbox)
   if (extra && extra.cid) { cidSeen.set(`${channel}:${by}:${extra.cid}`, msg); if (cidSeen.size > 2000) cidSeen.delete(cidSeen.keys().next().value); }
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
@@ -403,7 +405,7 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
 let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
-  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
+  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
@@ -464,6 +466,8 @@ const codeFiles = require('./codefiles')({ P, claims, identity: W.identity, memb
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, can: (me, cap) => perms.can(me, cap) });   // the Files center: any file type, yours or the project's
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
 profiles = require('./profiles')({ P, store: baseStore, getMembers: () => members, pushPresence: () => pushPresence() });   // feat/profiles
+moderation = require('./moderation')({ store: baseStore, getMembers: () => members, bus, id, limited, log: m => console.log('  moderation: ' + m) });   // feat/appstore (docs/APP-STORE.md)
+const pwaIn = require('./pwa')({ UI });   // feat/appstore: the share target without a service worker (docs/BROWSER-APP.md)
 const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
@@ -641,6 +645,9 @@ async function apiInProject(req, res, url) {
 
   if (!req.headers['x-tribe-ping']) lastActivity = Date.now();
   // the sign-in backup: the cookie set when this browser joined or signed in becomes the key again
+  if (a === 'session' && m === 'DELETE') {   // feat/appstore: "delete from this device" also forgets the sign-in backup cookie
+    res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`); return send(res, 200, { ok: true });
+  }
   if (a === 'session' && m === 'GET') {
     const t = cookieToken(req); if (!t) return send(res, 200, { member: null });
     const who = authed({ headers: { authorization: 'Bearer ' + t }, url: '/api/session' });
@@ -899,6 +906,7 @@ async function apiInProject(req, res, url) {
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
   if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
+  if (a === 'moderation') return moderation.route(req, res, ctx());   // feat/appstore: report, block, filter
   if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
   if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
   if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
@@ -1147,6 +1155,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
     if (publishHub.match(req, url)) return publishHub.serve(req, res, url);   // /play/<slug>/… public play links (server/publish.js)
+    if (req.method === 'POST' && pwaIn.match(url)) return await pwaIn.shareTarget(req, res, url);   // feat/appstore
     if (req.method === 'GET') return serveStatic(req, res, url);
     fail(res, 405, 'method not allowed');
   } catch (e) {

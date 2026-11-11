@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<title>Offline · TribeCode</title>
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="motion.css">
+<!-- The service worker (sw.js) shows this page when a page that isn't cached is opened without a connection.
+     Flat matte: canvas, one surface card, 1px borders. It retries by itself when the connection comes back. -->
+<style>
+  :root { --text: var(--white); --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--canvas); color: var(--body); font: 15px/1.6 var(--font); }
+  main { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom)); }
+  .card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-panel); padding: 28px 24px 22px; }
+  .mark { width: 56px; height: 56px; display: block; image-rendering: pixelated; margin-bottom: 18px; }
+  .eyebrow { font: 500 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--body); display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--body); flex: none; }
+  .online .dot { background: var(--online); }
+  h1 { font: 800 24px/1.2 'Inter Display', 'Inter', system-ui, sans-serif; letter-spacing: -0.02em; color: var(--text); margin: 10px 0 8px; }
+  p { margin: 0 0 14px; max-width: 65ch; }
+  ul { margin: 0 0 18px; padding: 0; list-style: none; border-top: 1px solid var(--border); }
+  li { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
+  li b { color: var(--text); font-weight: 600; }
+  li span[aria-hidden] { flex: none; }
+  .acts { display: flex; gap: 10px; flex-wrap: wrap; }
+  button, a.btn { min-height: 42px; padding: 0 16px; border-radius: var(--r-ctl); font: 600 14px var(--font); cursor: pointer; display: inline-flex; align-items: center; text-decoration: none;
+    transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+  .primary { background: var(--brand); border: 1px solid var(--brand); color: var(--white); }
+  .ghost { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+  .ghost:hover { border-color: var(--body); }
+  .status { margin-top: 14px; font: 12px/1.4 var(--mono); color: var(--body); min-height: 17px; }
+  @media (prefers-reduced-motion: reduce) { button, a.btn { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="card" id="offline" aria-labelledby="off-title">
+    <img class="mark" src="assets/icon-mark.svg" alt="">
+    <span class="eyebrow" id="off-state"><span class="dot" aria-hidden="true"></span><span>No connection</span></span>
+    <h1 id="off-title">You're offline</h1>
+    <p>This page isn't saved on this device yet. TribeCode itself still opens, and picks up where you left off.</p>
+    <ul>
+      <li><span aria-hidden="true">💬</span><span><b>Messages you write wait.</b> They send by themselves when you're back.</span></li>
+      <li><span aria-hidden="true">📝</span><span><b>Your notes and drafts</b> stay on this device.</span></li>
+      <li><span aria-hidden="true">🔁</span><span><b>This page tries again</b> as soon as the connection returns.</span></li>
+    </ul>
+    <div class="acts">
+      <button class="primary" id="off-retry" type="button">Try again</button>
+      <a class="btn ghost" id="off-app" href="./">Open TribeCode</a>
+    </div>
+    <div class="status" id="off-status" role="status" aria-live="polite"></div>
+  </section>
+</main>
+<script>
+(function () {
+  var st = document.getElementById('off-status'), lab = document.getElementById('off-state');
+  function retry() { st.textContent = 'Trying…'; location.reload(); }
+  document.getElementById('off-retry').onclick = retry;
+  addEventListener('online', function () { lab.classList.add('online'); lab.lastChild.textContent = 'Back online'; setTimeout(retry, 400); });
+  if (navigator.onLine === false) st.textContent = 'This device has no network.';
+  else st.textContent = 'The tribe’s server can’t be reached right now.';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<meta name="robots" content="noindex">
+<title>Privacy policy · TribeCode</title>
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="fonts.css">
+<!-- Draft legal page (feat/appstore, docs/APP-STORE.md). Flat matte reading layout: 65ch, line-height 1.6. -->
+<style>
+  :root { color-scheme: dark; --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  html, body { margin: 0; background: var(--canvas); color: var(--body); font: 16px/1.6 var(--font); }
+  main { max-width: 65ch; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 20px 64px; }
+  .top { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .top img { width: 32px; height: 32px; image-rendering: pixelated; }
+  .top a { color: var(--body); text-decoration: none; font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+  .draft { border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: var(--r-ctl); background: var(--surface); padding: 12px 14px; margin: 0 0 24px; font-size: 14.5px; }
+  .draft b { color: var(--white); }
+  .eyebrow { font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--body); }
+  h1 { font: 800 30px/1.15 'Inter Display', 'Inter', system-ui, sans-serif; letter-spacing: -0.02em; color: var(--white); margin: 6px 0 6px; }
+  h2 { font: 700 19px/1.3 'Inter Display', 'Inter', system-ui, sans-serif; color: var(--white); margin: 32px 0 8px; }
+  p, li { max-width: 65ch; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+  a { color: var(--brand); }
+  code { font: 14px var(--mono); color: var(--white); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--surface); color: var(--white); font-weight: 600; }
+  .meta { font: 12.5px var(--mono); color: var(--body); }
+  footer { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 14px; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><img src="assets/icon-mark.svg" alt=""><a href="./">TribeCode</a></div>
+  <div class="draft" role="note"><b>Draft, not legal advice.</b> This page was written to plan the app store submissions. It has not been reviewed by a lawyer, and it will change before TribeCode ships in an app store.</div>
+  <span class="eyebrow">Privacy</span>
+  <h1>Privacy policy</h1>
+  <p class="meta">Draft of 10 November 2026 · applies to the TribeCode web app, desktop app and planned phone apps</p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li><b>TribeCode is self-hosted.</b> Your tribe's chat, tasks, docs, files and accounts are stored on the <b>host's</b> computer or on a server the host chose. The TribeCode project does not run a central server that receives them.</li>
+    <li>We (the TribeCode project) do not sell data, show ads, or track you across apps and websites.</li>
+    <li>Optional services (GitHub, Discord or Google sign-in, an AI provider you pick, a tunnel) only get data when you or your host turn them on.</li>
+    <li>You can delete your account from inside the app: <b>Settings › Privacy &amp; safety › Delete my account</b>.</li>
+  </ul>
+
+  <h2>Who is responsible for what</h2>
+  <p>A <b>tribe</b> is run by its <b>host</b>: the person whose computer or server keeps it online. The host controls the data in their tribe and decides who can join. The TribeCode project makes the software and, for the phone apps, publishes them in the app stores. When this policy says "we", it means the TribeCode project; when it says "the host", it means the person running your tribe.</p>
+
+  <h2>What is stored, and where</h2>
+  <table>
+    <tr><th>Data</th><th>Where it lives</th><th>Why</th></tr>
+    <tr><td>Your name, color, avatar, profile (bio, links, status)</td><td>The host's tribe folder</td><td>So friends see who is who</td></tr>
+    <tr><td>Messages, voice notes and transcripts, pictures, files, docs, tasks, votes</td><td>The host's tribe folder, and the project's Git repository if the tribe uses one (for example on GitHub)</td><td>The core of the app: building together</td></tr>
+    <tr><td>Sign-in keys and device links</td><td>The host's tribe folder (hashed where possible) and your device</td><td>Keeping you signed in</td></tr>
+    <tr><td>Settings, drafts, unsent messages, an offline copy of what you can see</td><td>Your device only</td><td>Fast start-up and working offline</td></tr>
+    <tr><td>Reports you send and people you block</td><td>The host's tribe folder; the host and the tribe's mods can read reports</td><td>Safety (reporting and blocking)</td></tr>
+    <tr><td>Crash reports (on by default, Settings › Crash reports)</td><td>The tribe's own bug inbox on the host</td><td>Fixing problems</td></tr>
+  </table>
+
+  <h2>Optional services</h2>
+  <p>These only receive data when you or your host turn them on. Each has its own privacy policy.</p>
+  <ul>
+    <li><b>GitHub</b>: signing in, pushing and pulling the project's code, and showing repository pictures.</li>
+    <li><b>Discord, GitHub or Google sign-in</b>: your name, email address and avatar from that account, to sign you in. You can sign in without them using an invite link.</li>
+    <li><b>AI models</b>: when you ask an AI, your question and the context TribeCode adds (for example recent chat or a file) go to the model you picked: one running in your browser or on the host's computer (nothing leaves the device), a teammate's Claude Code (with their permission), or a cloud provider such as Anthropic, OpenAI or Google using a key that you or the host added. The phone apps will ask before your messages first go to a cloud model.</li>
+    <li><b>Reaching the host from anywhere</b>: Tailscale or Cloudflare tunnels carry the traffic between your device and the host.</li>
+    <li><b>Push notifications</b>: your browser's or phone's push service (Apple, Google, Mozilla) delivers notifications; the text is encrypted for your device.</li>
+    <li><b>Link previews, GIF search (GIPHY) and embedded videos</b>: the host's server fetches them, so your device doesn't contact those sites directly.</li>
+    <li><b>Downloads</b>: the in-browser AI model, the 3D viewer (three.js) and some fonts load from public CDNs (jsDelivr, Hugging Face) when you first use them.</li>
+  </ul>
+
+  <h2>Phone permissions</h2>
+  <p>The phone apps ask only when you use the feature: the <b>microphone</b> for voice notes and huddles, the <b>camera</b> to scan an invite QR code or take a picture, <b>notifications</b> for approvals and mentions, and <b>Face ID / fingerprint</b> if you lock the app. Everything still works if you say no, except that feature.</p>
+
+  <h2 id="delete">Deleting your data</h2>
+  <ul>
+    <li><b>In the app:</b> Settings › Privacy &amp; safety › Delete my account. This removes your account and what you posted from the tribe (when your tribe's server supports it) and clears everything on your device.</li>
+    <li><b>If you no longer have the app:</b> ask the host of your tribe, or open an issue at <a href="https://github.com/orionopenwow/TribeCode/issues">github.com/orionopenwow/TribeCode/issues</a> and we will help you reach them. [Placeholder: a web deletion form, required by Google Play, before the store launch.]</li>
+    <li>Code you pushed to a Git repository stays in that repository's history unless its owner rewrites it.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>TribeCode is not directed at children under 13 (or the minimum age in your country). Hosts should not invite them without a parent's consent.</p>
+
+  <h2>Changes and contact</h2>
+  <p>We will post changes here and in the release notes. Questions: <a href="https://github.com/orionopenwow/TribeCode/issues">GitHub issues</a> · [placeholder: privacy contact email].</p>
+  <footer><a href="terms.html">Terms of use</a> · <a href="./">Back to TribeCode</a></footer>
+</main>
+</body>
+</html>

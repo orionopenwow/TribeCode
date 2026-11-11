@@ -87,7 +87,8 @@
   function checkWeb() {
     const sim = params.get('simulateUpdate');
     if (sim) return fakeRelease(sim);
-    return null;   // a browser page already runs the server's current code; only the desktop app installs updates
+    // A browser page runs the server's current code; the one web update is a new service-worker shell (pwa.js, feat/appstore).
+    return (window.TribePWA && window.TribePWA.webRelease && window.TribePWA.webRelease()) || null;
   }
 
   function fakeRelease(v) {
