@@ -104,7 +104,6 @@ def main():
 
             # ---- the menu: Add account and Log out
             pg.click("#pf-btn"); pg.wait_for_selector("#pf-menu [data-act='logout']", state="visible"); pg.wait_for_selector("#pf-menu [data-act='acc-add']")
-            shot(pg, "accounts-menu")
             pg.click("#pf-menu [data-act='logout']"); pg.wait_for_selector("#ac-logout #ac-forget")
             pg.keyboard.press("Escape"); pg.wait_for_selector("#ac-logout", state="detached")   # Esc cancels
             assert pg.evaluate("TribeClient.connected()"), "cancel keeps you signed in"
@@ -172,6 +171,10 @@ def main():
             pg.evaluate("document.querySelector('#set-more').open = true"); pg.wait_for_selector("#set-testacc[aria-checked='true']")
             pg.click("#set-testacc"); pg.wait_for_function("!TribeAccounts.list().some(a => a.kind === 'test')")
             pg.click("#set-testacc"); pg.wait_for_function("TribeAccounts.list().filter(a => a.kind === 'test').length === 4")
+            pg.evaluate("TribeSettings.close()"); pg.click("#pf-btn"); pg.wait_for_selector("#pf-menu [data-acc='test:maya']", state="visible")
+            assert pg.locator("#pf-menu .ac-test").count() == 4
+            shot(pg, "accounts-menu"); pg.keyboard.press("Escape")
+            pg.click("#ub-gear"); pg.wait_for_selector("#settings-modal:not(.hidden) #set-account #set-logout")
             # Log out from Settings, forgetting this device's tribes
             pg.evaluate("localStorage.setItem('tribecode.pins:' + TribeClient.base(), '[\"x\"]')")
             pg.click("#set-logout"); pg.wait_for_selector("#ac-forget"); pg.check("#ac-forget"); nav_click(pg, "#ac-lo-go")
