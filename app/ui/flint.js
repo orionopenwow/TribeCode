@@ -70,7 +70,11 @@
     prompt: async () => { const p = window.TribeFocus && window.TribeFocus.prompt(); if (!p) return; try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper.'); } catch { window.prompt('Copy this for your AI helper:', p); } },   // feat/focus
     preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
     dm: id => window.TribeDM && window.TribeDM.open && window.TribeDM.open(id),   // flint-local
-    meant: arg => window.TribeFlintLocal && window.TribeFlintLocal.meant(arg),   // flint-local: a "did you mean" chip teaches Flint the phrase, then runs it
+    meant: arg => window.TribeFlintLocal && window.TribeFlintLocal.meant(arg),
+    res: key => window.TribeFlintGrow && window.TribeFlintGrow.run('res', key),   // feat/flint-ai: open a resource (Academy, Guide, Legal, Marketplace, templates, docs)
+    grow: arg => window.TribeFlintGrow && window.TribeFlintGrow.run('grow', arg),   // feat/flint-ai: the "Grow your idea" questions
+    usestyle: () => window.TribeFlintGrow && window.TribeFlintGrow.run('usestyle'),
+    today: () => window.TribeFlintGrow && window.TribeFlintGrow.run('today'),   // flint-local: a "did you mean" chip teaches Flint the phrase, then runs it
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
   // v0.27.2 Flint at work: a small flame flies to whatever he's changing (app/ui/flintfly.js)
@@ -196,6 +200,7 @@
   }
   let localBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
+    if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
     if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
     if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) { say(co.text, co.open ? [act('Open Company', 'company')] : []); return true; } }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
     if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) { say(ac.text); return true; } }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
@@ -561,6 +566,28 @@
   // a quiet message from Flint with one button (feedback.js asks for a review this way, once)
   const nudge = (text, label, actName, arg) => say(text, [act(label, actName, arg)]);
   function prefill(t) { focus(); setTimeout(() => { const i = document.querySelector('.fl-in, #fl-in, [data-flin]'); if (i) { i.value = t; i.focus(); i.setSelectionRange(t.length, t.length); } }, 60); }
-  window.TribeFlint = { prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
+  // feat/flint-ai: Flint on the Dashboard (Home), with or without a tribe. The same thread as the room panel; the chips
+  // are his dashboard abilities: today's plan, grow your idea, the inspiration board, your files, start a project.
+  function dashChips() {
+    const on = connected();
+    return [['✦', 'Today\'s plan', 'plan my day'], ['🌱', 'Grow my idea', 'grow my idea'], ['🎨', 'Inspiration board', 'open my inspiration board'], ['📁', 'My files', 'open my files'],
+      on ? ['📚', 'Learn something', 'resources to grow my company'] : ['➕', 'Start a project', 'start a project'], ['❔', 'What can you do?', 'what can you do']];
+  }
+  function mountDashboard(el) {
+    if (!el) return null;
+    let card = el.querySelector('#flint-home');
+    if (!card) {
+      card = document.createElement('section'); card.className = 'flint-home'; card.id = 'flint-home'; card.setAttribute('aria-label', 'Flint');
+      el.appendChild(card);
+      card.innerHTML = `<div class="fh-head"><span class="fl-av" aria-hidden="true">${flintIco(16)}</span><div class="fh-id"><span class="eyebrow">Flint · ${connected() ? 'your helper' : 'works without a tribe'}</span><h2>Ask Flint</h2></div><span class="fl-st" data-flst>${statusLine()}</span></div>
+      <div class="fh-chips" role="group" aria-label="Flint's shortcuts">${dashChips().map(([e, l, q]) => `<button type="button" class="fl-chip fh-chip" data-fhq="${esc(q)}"><span aria-hidden="true">${e}</span>${esc(l)}</button>`).join('')}</div>
+      <div class="fl-thread fh-thread" role="log" aria-live="polite" aria-label="Conversation with Flint"></div>${barHtml('fh-input')}`;
+    }
+    if (!card._wired) { card._wired = true; wire(card); card.addEventListener('click', e => { const b = e.target.closest('[data-fhq]'); if (b) send(b.dataset.fhq); }); }
+    draw(); drawStatus(); refreshModel();
+    return card;
+  }
+  { const slot = document.getElementById('hub-flint-slot'); if (slot) setTimeout(() => mountDashboard(slot), 0); }   // Home drew before Flint loaded
+  window.TribeFlint = { mountDashboard, redraw: () => { save(); draw(); }, prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
     say: (text, acts) => say(text, acts || []), act, step: async t => { push('me', t); await route(t); }, think: async t => { await refreshModel(); if (!model.online) return false; await modelReply(t); return true; } };   // v0.27.1: flintmem.js uses say/act/step/think
 })();

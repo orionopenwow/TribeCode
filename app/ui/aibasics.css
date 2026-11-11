@@ -1,0 +1,32 @@
+/* ✦ basic features, supercharged by AI (app/ui/aibasics.js): one quiet affordance where you already are */
+.ab-spark { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 28px; height: 28px; padding: 0 7px; border: 1px solid transparent; border-radius: var(--r-ctl); background: none; color: var(--faint); font: 600 13px/1 inherit; cursor: pointer; transition: color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.ab-spark > span[aria-hidden] { font-size: 14px; color: var(--brand); }
+.ab-spark:hover, .ab-spark[aria-expanded="true"] { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+.ab-spark:focus-visible { outline: 2px solid var(--live); outline-offset: 1px; }
+.ab-spark.wide { border-color: var(--border); background: var(--surface); color: var(--muted); }
+.ab-spark .ab-l { font-size: 12.5px; }
+.tk-acts .ab-spark { opacity: 0; } .task:hover .tk-acts .ab-spark, .task:focus-within .tk-acts .ab-spark, .tk-acts .ab-spark[aria-expanded="true"] { opacity: 1; }
+.ab-row { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+.ab-pop { position: fixed; z-index: 90; width: min(380px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); color: var(--text); padding: 6px; animation: ab-in var(--dur-base) var(--ease-out); }
+.ab-pop.sheet { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto; border-radius: var(--r-panel); }
+@keyframes ab-in { from { opacity: 0; transform: translateY(var(--rise, 4px)); } to { opacity: 1; transform: none; } }
+.ab-menu { display: flex; flex-direction: column; }
+.ab-menu button { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: var(--r-ctl); background: none; color: var(--text); text-align: left; font-size: 14px; cursor: pointer; }
+.ab-menu button:hover, .ab-menu button:focus-visible { background: var(--surface-2); }
+.ab-star { color: var(--brand); }
+.ab-res { padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 10px; }
+.ab-h { display: flex; align-items: center; gap: 8px; } .ab-h b { flex: 1; font-size: 14px; }
+.ab-via { font: 11px/1.2 var(--mono); color: var(--faint); padding: 4px 7px; border: 1px solid var(--border); border-radius: 999px; background: var(--canvas); }
+.ab-via.ai { color: var(--live); } .ab-via.busy { color: var(--muted); }
+.ab-out { font-size: 14px; line-height: 1.55; color: var(--muted); }
+.ab-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; } .ab-list li { color: var(--text); }
+.ab-checks { display: flex; flex-direction: column; gap: 6px; }
+.ab-check { display: flex; gap: 8px; align-items: flex-start; color: var(--text); } .ab-check em { color: var(--faint); font-style: normal; }
+.ab-big { margin: 0; font-size: 16px; color: var(--text); } .ab-big b { font-size: 20px; }
+.ab-md { max-height: 300px; overflow-y: auto; color: var(--text); } .ab-md h1, .ab-md h2 { font-size: 15px; margin: 8px 0 4px; }
+.ab-pre { margin: 0; white-space: pre-wrap; font: 13px/1.5 var(--mono); color: var(--text); background: var(--canvas); border: 1px solid var(--border); border-radius: var(--r-ctl); padding: 8px 10px; }
+.ab-files { display: flex; flex-direction: column; gap: 10px; } .ab-file { display: flex; flex-direction: column; gap: 3px; } .ab-file b { color: var(--text); font-size: 13.5px; }
+.ab-tags { display: flex; flex-wrap: wrap; gap: 4px; } .ab-tags i { font: 11px/1 var(--mono); font-style: normal; color: var(--muted); padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--canvas); }
+.ab-dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; } .ab-dl dt { font: 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--faint); } .ab-dl dd { margin: 0; color: var(--text); }
+.ab-acts { display: flex; flex-wrap: wrap; gap: 6px; } .ab-acts:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .ab-pop { animation: none; } .ab-spark { transition: none; } }

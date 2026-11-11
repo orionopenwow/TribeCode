@@ -120,11 +120,13 @@
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
         ${gsHero(on)}
+        <div id="hub-flint-slot"></div>
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
         ${isPhone() ? sec('AI insights', 'Worth a look', `<div class="ai-cards" id="hub-ins-phone">${insightCards()}</div>`, 'id="hub-insights"') : ''}
       </div>`;
       bind(el);
+      if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));   // feat/flint-ai: Flint on the Dashboard
     });
   }
 

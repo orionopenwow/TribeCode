@@ -106,3 +106,18 @@ body.flint-open { overflow: hidden; }
 .fm-skills ol { margin: 0; padding-left: 18px; font-size: 13px; }
 .fm-row { display: flex; gap: 6px; }
 @media (max-width: 600px) { .fm-notes li { grid-template-columns: minmax(0, 1fr) auto auto; } .fm-kind { display: none; } }
+
+/* feat/flint-ai: Flint on the Dashboard (TribeFlint.mountDashboard, hooked into Home by hub.js) */
+.flint-home { margin: 0 0 32px; padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); display: flex; flex-direction: column; gap: 12px; }
+.fh-head { display: flex; align-items: center; gap: 12px; }
+.fh-head .fh-id { flex: 1; min-width: 0; }
+.fh-head h2 { margin: 2px 0 0; font-size: 18px; line-height: 1.25; color: var(--text); }
+.fh-head .fl-st { font: 11px/1 var(--mono); color: var(--faint); }
+.fh-head .fl-st.ok { color: var(--live); }
+.fh-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fh-chip { display: inline-flex; align-items: center; gap: 6px; }
+.flint-home .fh-thread { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.flint-home .fh-thread:empty { display: none; }
+.flint-home .fh-thread .fl-empty { display: none; }
+.flint-home .fl-bar { margin: 0; }
+@media (max-width: 820px) { .flint-home { margin-bottom: 26px; padding: 14px; } .flint-home .fh-thread { max-height: 52vh; } }
