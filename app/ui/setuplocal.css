@@ -2,7 +2,7 @@
 .su-sheet { width: min(520px, calc(100vw - 32px)); }
 .su-sheet .input { width: 100%; }
 .su-sheet textarea.input { resize: vertical; min-height: 64px; font: inherit; }
-.su-opt { margin-left: 6px; font: 500 10.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.su-sheet .su-opt { display: inline; width: auto; height: auto; min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; margin-left: 6px; font: 500 10.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
 .su-more { margin-top: 12px; border: 1px solid var(--edge); border-radius: 12px; padding: 10px 12px; background: var(--surface); }
 .su-more[open] { background: var(--surface-2); }
 .su-more summary { cursor: pointer; font-size: 13.5px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 4px; }

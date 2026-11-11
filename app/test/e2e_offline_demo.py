@@ -142,7 +142,7 @@ def flow(page, tag, phone, tmp):
     page.evaluate("TribeHub.open('docs')")
     page.wait_for_selector("#hub-docs", timeout=8000)
     if phone: page.click("#dc-fab"); page.click("#dc-newsheet [data-do=note]")
-    else: page.click("#dc-new")
+    else: page.click("#dc-new"); page.click("#dc-newmenu [data-new=note]")   # + New › Note
     page.wait_for_selector("#note-text", state="visible", timeout=8000)
     page.fill("#note-title", "Demo idea")
     page.fill("#note-text", "Fireflies that follow Wick")

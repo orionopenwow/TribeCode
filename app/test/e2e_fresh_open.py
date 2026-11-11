@@ -2,7 +2,7 @@
 no demo. The Dashboard shows an honest empty state (one primary action: Start your first project; Join with a link
 beside it), Make it yours comes first, then Flint offers a quick look around and flies to each place (the project
 places on a small "Inside a project" frame). Pause keeps your place and the Dashboard's link resumes it. The demo runs
-only when asked: Ctrl K "Start demo" or ?demo=showcase. Start your first project then makes the tribe (you're host).
+only when asked: Ctrl K "Start demo" or ?demo=showcase. Start your first project makes it on this device; This computer then makes the tribe (you're host).
 Screenshots go to $FO_SHOTS."""
 import json, os, subprocess, tempfile, time, urllib.request
 from pathlib import Path
@@ -101,8 +101,18 @@ def main():
             pg.wait_for_selector("#invite-body .od-choice", timeout=5000)
             pg.click("#invite-body [data-close]")
             assert not pg.evaluate("TribeOffline.active()"), "choosing nothing starts nothing"
-            # 5. Start your first project makes the tribe, with you as host
-            pg.click("#hub-host")
+            # 5. Start your first project makes the project at once on this device (feat/setup-local); choosing
+            #    "This computer" as its home then makes the tribe, with you as host
+            pg.click("#hub-host"); pg.wait_for_selector("#su-start", timeout=5000)
+            pg.fill("#su-name", "Fox Den"); pg.click("#su-create")
+            pg.wait_for_selector("#su-where", timeout=10000)
+            assert health()["members"] == 0, "making the project waits on no server"
+            pg.click("#su-where [data-su='computer']")
+            for _ in range(80):   # the page reloads into the tribe on this computer
+                try:
+                    if pg.evaluate("!!(window.TribeClient && TribeClient.connected() && !(window.TribeOffline && TribeOffline.active()) && (TribeClient.state().me || {}).role === 'host')"): break
+                except Exception: pass
+                time.sleep(0.25)
             pg.wait_for_function("TribeClient.connected() && (TribeClient.state().me || {}).role === 'host'", timeout=15000)
             assert health()["members"] >= 1
             for _ in range(30):

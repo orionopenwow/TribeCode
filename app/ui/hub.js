@@ -722,8 +722,8 @@
       kind: 'local', lk: x.kind, fk: x.fkind || '', id: x.id, title: x.title, at: x.updated, where: 'On this device', size: x.size || 0,
       preview: x.kind === 'doc' ? String(x.body || '').replace(/^#+\s*/gm, '').replace(/\s+/g, ' ').trim()
         : x.kind === 'sheet' ? String(x.body || '').split('\n').filter(l => !/^\|\s*-/.test(l)).slice(0, 3).map(l => l.replace(/\|/g, ' ').trim()).filter(Boolean).join(' · ')
-        : x.kind === 'whiteboard' ? `${Object.values(x.elements || {}).filter(e => !e.del).length} things on the board`
-        : x.kind === 'design' ? `${Object.values(x.nodes || {}).filter(e => !e.del).length} layers` : '' }));
+        : x.kind === 'whiteboard' ? (n => `${n} thing${n === 1 ? '' : 's'} on the board`)(Object.values(x.elements || {}).filter(e => !e.del).length)
+        : x.kind === 'design' ? (n => `${n} layer${n === 1 ? '' : 's'}`)(Object.values(x.nodes || {}).filter(e => !e.del).length) : '' }));
   }
   function drawDocs() {
     const box = $('#hub-docs'); if (!box) return;

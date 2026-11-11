@@ -152,7 +152,11 @@ def main():
             # ---------- 5. This computer: the draft syncs into the server serving this page ----------
             pg.evaluate("TribeLocalSetup.where()"); pg.wait_for_selector("#su-where")
             pg.click("#su-where [data-su='computer']")
-            pg.wait_for_load_state("load")
+            for _ in range(80):   # the page reloads into the tribe on this computer
+                try:
+                    if pg.evaluate("!!(window.TribeClient && TribeClient.connected() && !(window.TribeOffline && TribeOffline.active()))"): break
+                except Exception: pass
+                time.sleep(0.25)
             pg.wait_for_function("window.TribeClient && TribeClient.connected() && !(window.TribeOffline && TribeOffline.active())", timeout=20000)
             token = pg.evaluate("JSON.parse(localStorage.getItem('tribecode.settings.v1')).server.token")
             assert token and token != "offline-demo", token
