@@ -175,7 +175,7 @@ def main():
             pg.evaluate("document.documentElement.style.scrollBehavior = 'auto'")
             pg.locator("#lanes .mini").scroll_into_view_if_needed(); pg.wait_for_timeout(2500)
             assert pg.evaluate("document.querySelector('.nav').classList.contains('is-scrolled')")
-            assert pg.evaluate("document.querySelectorAll('#lanes [data-step].on').length") >= 2
+            pg.wait_for_function("document.querySelectorAll('#lanes [data-step].on').length >= 2", timeout=6000)
             # host: share the network, honest about 24/7
             host = pg.inner_text("#host .feature__copy")
             assert "It runs where you want it." in host and "GitHub repository" in host and "move it later" in host, host
@@ -213,7 +213,7 @@ def main():
             pg.locator("#sw-panel .sw-idea").nth(0).click(); pg.wait_for_timeout(900)
             assert pg.input_value("[data-try=chat] .mk-in") == idea
             assert pg.evaluate("document.activeElement === document.querySelector('[data-try=chat] .mk-in')")
-            assert pg.evaluate("(() => { const r = document.querySelector('#stage').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; })()"), "scrolled up to the stage"
+            pg.wait_for_function("(() => { const r = document.querySelector('#stage').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; })()", timeout=4000)   # scrolled up to the stage (the page is longer since v0.28)
             pg.evaluate("document.activeElement.blur()")
             # the corner fire: flat pixel frames, flickering, just outside the frame
             assert pg.locator(".stage__fire").count() == 0, "the corner fire is off for now (scripts/site-fire.py can bring it back)"
