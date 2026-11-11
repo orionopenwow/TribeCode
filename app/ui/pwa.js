@@ -31,6 +31,7 @@
     }
     return !!(App() && App().show && (!needTribe || (C() && C().connected())));
   }
+  const signedIn = () => !!(C() && C().hasToken && C().hasToken());
   const cleanUrl = keys => { try { const u = new URL(location.href); keys.forEach(k => u.searchParams.delete(k)); history.replaceState(history.state, '', u.pathname + (u.searchParams.toString() ? '?' + u.searchParams : '') + u.hash); } catch {} };
 
   // ---------------- shortcuts + web+tribecode: ----------------
@@ -126,7 +127,7 @@
       }
     } catch {}
     cleanUrl(['share-target', 'title', 'text', 'url', 'dropped']);
-    await ready(false);
+    await ready(signedIn(), 10000);   // signed in: wait for the tribe so "Send to chat" is ready
     if (q.title || q.text || q.url || q.files.length || q.dropped) incoming(q);
   }
 
@@ -248,7 +249,7 @@
       if (!lp.files || !lp.files.length) return;
       const files = []; for (const h of lp.files) { try { files.push(await h.getFile()); } catch {} }
       cleanUrl(['open-file']);
-      if (files.length) { await ready(false); incoming({ kind: 'file', files }); }
+      if (files.length) { await ready(signedIn(), 10000); incoming({ kind: 'file', files }); }
     });
     const hook = (n = 0) => {
       const c = C(); if (!c || !c.on) { if (n < 100) setTimeout(() => hook(n + 1), 150); return; }

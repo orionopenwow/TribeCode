@@ -54,6 +54,12 @@ async function noteVersion(res) {
   await Promise.all((await c.keys()).filter(r => !r.url.endsWith('/' + OFFLINE)).map(r => c.delete(r)));
   for (const w of await self.clients.matchAll({ type: 'window' })) w.postMessage({ type: 'tribe-sw-updated', version: v, was });
 }
+// offline.html answers any address, so its styles and icon resolve from the app's scope (<base>), from the cache
+async function offlinePage(c) {
+  const r = await c.match(at(OFFLINE)); if (!r) return null;
+  const html = (await r.text()).replace('<head>', `<head><base href="${self.registration.scope}">`);
+  return new Response(html, { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
 async function page(e, u) {
   try {
     const r = (await e.preloadResponse) || await fetch(e.request);
@@ -62,7 +68,7 @@ async function page(e, u) {
   } catch {
     const c = await caches.open(CACHE);
     return (await c.match(e.request, { ignoreSearch: true })) || (isAppPage(u) ? (await c.match(at('./'))) || (await c.match(at('index.html'))) : null)
-      || (await c.match(at(OFFLINE))) || new Response('<!doctype html><meta charset="utf-8"><title>Offline</title><p>You are offline.</p>', { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      || (await offlinePage(c)) || new Response('<!doctype html><meta charset="utf-8"><title>Offline</title><p>You are offline.</p>', { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   }
 }
 async function file(e) {
