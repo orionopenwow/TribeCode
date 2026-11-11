@@ -136,15 +136,16 @@
       C.api('/coord/delegations').catch(() => ({ delegations: [] })),
       C.api('/coord/ownership').catch(() => ({ owners: [], warnings: [] })),
       C.api('/agents/channel?limit=20').catch(() => ({ messages: [] })),
+      window.TribeFleet ? window.TribeFleet.load('project').catch(() => null) : null,   // feat/fleet: hero + one row per agent
     ]); } catch (e) {   // the first call can fail while a tribe (or the demo) is still starting: try again, never leave it blank
       if (n === seq && tries < 8 && el.isConnected) setTimeout(() => { if (n === seq) render(el, tries + 1); }, 500 + tries * 300);
       else if (n === seq) { const w = el.querySelector('.ad-wait'); if (w) w.textContent = 'The agents dashboard could not load. ' + (e && e.message ? e.message : ''); }
       return;
     }
-    const [ag, rv, ho, dl, own, ch] = res;
+    const [ag, rv, ho, dl, own, ch, fl] = res;
     if (n !== seq) return;
     { const w = el.querySelector('.ad-wait'); if (w) w.remove(); }
-    const d = { agents: ag.agents || [], reviews: rv.reviews || [], handoffs: ho.handoffs || [], delegations: dl.delegations || [], owners: own.owners || [], messages: ch.messages || [], conflicts: cfCache.pid === pid() ? cfCache.d : null, plan: null };
+    const d = { fleet: fl, agents: ag.agents || [], reviews: rv.reviews || [], handoffs: ho.handoffs || [], delegations: dl.delegations || [], owners: own.owners || [], messages: ch.messages || [], conflicts: cfCache.pid === pid() ? cfCache.d : null, plan: null };
     paint(el, d);
     const still = () => n === seq && el.isConnected && onView();
     // slower pieces fill in after the first paint
@@ -250,7 +251,13 @@
     const inp = el.querySelector('#talk-input'), keep = inp ? inp.value : '', focused = inp && document.activeElement === inp;
     const right = [ownersCard(d), todayCard(d)].filter(Boolean).join('');
     const left = channelCard(d);
-    el.innerHTML = `<div class="ad-dash" id="ad-dash">${heroCard(d)}${needsCard(d)}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}</div>`;
+    const F = window.TribeFleet;   // feat/fleet: the hero is the next step, then one row per agent, then how agents work
+    if (F) F.setData(d.fleet);
+    const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');
+    const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
+    const top = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
+    el.innerHTML = `<div class="ad-dash" id="ad-dash">${top}${needsCard(d)}${rowsH}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${F ? F.how() : ''}</div>`;
+    if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected) render(el); } });
     const ni = el.querySelector('#talk-input'); if (ni && keep) ni.value = keep; if (ni && focused) ni.focus({ preventScroll: true });
     const form = el.querySelector('#talk-form');
     if (form) form.onsubmit = async e => {
@@ -272,6 +279,7 @@
     const b = t.closest('button');
     const run = async fn => { if (!b) return; b.disabled = true; try { await fn(); setTimeout(() => { if (el && el.isConnected) render(el); }, 350); } catch (err) { toast(err.message); b.disabled = false; } };   // after an action, redraw from the server (a late redraw can't bring the old row back)
     if (b && (b.id === 'ad-connect' || 'adCc' in b.dataset)) return App() && App().connectClaude && App().connectClaude();
+    if (b && b.id === 'ad-tools' && window.TribeFleet) return;   // the fleet hero handles it
     if (b && b.id === 'ad-tools') return go('mcp-directory');
     if (b && b.dataset.adOpen) return go(b.dataset.adOpen);
     if (b && b.dataset.adMore) { if (b.dataset.adMore === 'agents') moreAgents = !moreAgents; else moreOwners = !moreOwners; return paint(el, d); }
