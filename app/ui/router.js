@@ -60,19 +60,21 @@
   // ---------- history: one entry per settled move ----------
   let last = '', restoring = 0, n = 0, settleT = null;
   const native = { push: history.pushState.bind(history), replace: history.replaceState.bind(history) };
-  // keep our route on the entry when another module rewrites only its hash (they pass a null state)
-  history.replaceState = function (s, t, u) { if (s == null && history.state && history.state.tribeRoute) s = history.state; return native.replace(s, t, u); };
+  // Modules rewrite their hash with replaceState(null, …) while they hand over (hub.js on leaving Home), which wipes the
+  // route off the entry we are leaving. Just before pushing the new place, the old entry gets its route and URL back.
+  let lastLoc = null, lastUrl = '';
   const stamp = l => { if (!history.state || history.state.tribeRoute) native.replace({ ...(history.state || {}), tribeRoute: l, n: (history.state && history.state.n) || n }, '', location.href); };
   const trail = [];   // the places this tab has been (tests and the docs read it through history())
   function settle() {
     settleT = null;
     const l = where(), s = sig(l);
-    if (restoring && Date.now() < restoring) { restoring = 0; last = s; stamp(l); sweep(l); return; }
+    if (restoring && Date.now() < restoring) { restoring = 0; last = s; lastLoc = l; lastUrl = location.href; stamp(l); sweep(l); return; }
     restoring = 0;
-    if (s === last) { if (!history.state) stamp(l); return; }
-    const first = !last; last = s; sweep(l);
+    if (s === last) { lastUrl = location.href; if (!history.state) stamp(l); return; }
+    const first = !last, prev = lastLoc, prevUrl = lastUrl, url = location.href; last = s; lastLoc = l; lastUrl = url; sweep(l);
     if (first || (history.state && history.state.pvw)) { stamp(l); trail.push(s); return; }
-    native.push({ tribeRoute: l, n: ++n }, '', location.href);
+    if (prev) native.replace({ tribeRoute: prev, n }, '', prevUrl || url);
+    native.push({ tribeRoute: l, n: ++n }, '', url);
     trail.push(s); if (trail.length > 100) trail.shift();
   }
   const soon = () => { clearTimeout(settleT); settleT = setTimeout(settle, 140); };
@@ -95,8 +97,13 @@
     const has = SH() && SH().dests && SH().dests().some(d => d.key === l.key);
     if (has) SH().go(l.key); else if (App() && App().show) App().show(l.view);
   }
+  // The full-screen preview (preview.js) pushes its own entry and steps back off it when it closes: that Back is its own,
+  // not a move between places, so the place on screen stays.
+  let pvwOn = document.body.classList.contains('pvw-focus'), pvwLeft = 0;
+  new MutationObserver(() => { const on = document.body.classList.contains('pvw-focus'); if (pvwOn && !on) pvwLeft = Date.now(); pvwOn = on; }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   addEventListener('popstate', e => {
     const l = e.state && e.state.tribeRoute; if (!l) return;
+    if (Date.now() - pvwLeft < 1500) { pvwLeft = 0; last = sig(where()); lastLoc = where(); lastUrl = location.href; stamp(lastLoc); return; }
     if (sig(l) === sig(where())) { last = sig(l); return; }
     closeLayers();
     apply(l);
