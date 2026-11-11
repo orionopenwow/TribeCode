@@ -44,10 +44,13 @@
     document.body.classList.remove('mobile-chat', 'drawer-open');
     document.body.dataset.view = NAME; open_ = true;
     document.querySelectorAll('[data-nav].on, [data-go].on').forEach(b => b.classList.remove('on'));
+    // Work is part of your dashboard (router.js): the global sidebar stays, the crumb and the link say Work
+    const cl = $('#crumb-label'); if (cl) cl.textContent = 'Work';
+    if (location.hash !== '#/hub/work') history.replaceState(null, '', location.pathname + location.search + '#/hub/work');
     try { C.sendActivity && C.sendActivity('Work'); } catch {}
     draw(); load();
   }
-  function hide() { const sec = section(); if (sec) sec.classList.add('hidden'); open_ = false; closePop(); }
+  function hide() { const sec = section(); if (sec) sec.classList.add('hidden'); open_ = false; closePop(); if (location.hash === '#/hub/work') history.replaceState(null, '', location.pathname + location.search); }
   new MutationObserver(() => { if (open_ && document.body.dataset.view !== NAME) hide(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
   async function load() {
@@ -167,8 +170,22 @@
     const card = g => { const href = safeHref(g.contact); return `<article class="tl-gig" style="--seat:${g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)'}"><div class="tl-gig-top"><span class="eyebrow">${esc(g.kind)}${g.tribe ? ` · ${esc(g.tribe)}` : ''}</span>${seatChip(g.seatKind)}</div><h3>${esc(g.title)}</h3>${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}<div class="tl-meta">${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, 3)}</div><div class="tl-foot"><small>${esc(g.posted || '')}</small>${g.contact ? (href ? `<a class="btn sm tonal" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Contact</a>` : `<span class="tl-contact">${esc(g.contact)}</span>`) : ''}</div></article>`; };
     return `${toolbar(true)}<p class="tl-fine">From the community repository ${esc(p.repo)}. Read-only; reach posters through the contact they chose.</p>${list.length ? `<div class="tl-grid">${list.map(card).join('')}</div>` : '<p class="tl-none">No public gigs match your filters.</p>'}`;
   }
+  // No tribe on this device yet: Work stays on your dashboard with one clear next step (never a blank or a dead end).
+  function empty(sec) {
+    const waiting = C.hasToken && C.hasToken();
+    sec.innerHTML = `<div class="tl-wrap"><header class="tl-head"><div class="sec-head"><span class="eyebrow">Your dashboard</span><h2>Work</h2></div></header>
+      <section class="card tl-empty" id="tl-empty"><span class="eyebrow">${waiting ? 'Reconnecting' : 'No tribe yet'}</span>
+        <h3>${waiting ? 'Work comes back when your tribe does' : 'Work happens inside a tribe'}</h3>
+        <p>${waiting ? 'Your tribe is reconnecting. Gigs, people and the time bank show up here as soon as it is back.' : 'Gigs, people open to work, the time bank and shared AI time all live in a tribe. Start your first project to make one, or join a friend with their link.'}</p>
+        <div class="tl-empty-acts">${waiting ? '' : '<button class="btn primary" id="tl-e-start">Start your first project</button><button class="btn" id="tl-e-join">Join with a link</button>'}<button class="btn ghost" id="tl-e-home">Back to Home</button></div></section></div>`;
+    const on = (id, fn) => { const b = sec.querySelector('#' + id); if (b) b.onclick = fn; };
+    on('tl-e-start', () => { if (window.TribeProjects && window.TribeProjects.openNew) window.TribeProjects.openNew(); });
+    on('tl-e-join', () => window.TribeSettings && window.TribeSettings.joinPrompt());
+    on('tl-e-home', () => { if (window.TribeHub) window.TribeHub.open('home'); });
+  }
   function draw() {
     const sec = section(); if (!sec) return;
+    if (!C.connected()) return empty(sec);
     const body = st.tab === 'people' ? peopleTab() : st.tab === 'bank' ? bankTab() : st.tab === 'compute' ? computeTab() : st.tab === 'public' ? publicTab() : gigsTab();
     sec.innerHTML = `<div class="tl-wrap">
       <header class="tl-head"><div class="sec-head"><span class="eyebrow">Company · Work</span><h2>Work</h2></div>${st.data && st.data.canPost ? '<button class="btn primary" data-post="1" id="tl-post">Post a gig</button>' : ''}</header>
@@ -382,6 +399,7 @@
   });
   document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('#view-work [data-gig]')) { e.preventDefault(); e.target.click(); } });
   if (C && C.on) C.on('ws', m => { if (open_ && m && (m.type === 'talent' || m.type === 'approval')) load(); });
+  if (C && C.on) C.on('hello', () => { if (open_) { draw(); load(); } });   // the tribe came back (or was just made): Work fills in
 
   // ---------- Company seats (Agent A's #co-hire-slot): an empty seat -> "Hire someone for this seat" ----------
   async function hireSlot(el, pid, seatId) {

@@ -586,7 +586,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
     if (!on || scoped) {
-      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repository; friends join with one link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe, or join a friend.'}</p></div>
+      body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repository; friends join with one link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe, or join a friend.'}</p></div>
         ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>${desk ? 'Host on this computer' : 'Get the desktop app'}</b><small>${desk ? 'Start a tribe here, then make your first project' : 'Windows, Mac and Linux'}</small></span>${ico('i-chev', 16)}</button></div>`}
         ${joinFoot()}`;
       wireStart(); return;

@@ -29,7 +29,7 @@
     visuals: { label: 'Visuals & screenshots', icon: 'i-photo', go: 'visuals' },
     website: { label: 'Website', icon: 'i-link', go: 'website' },
     preview: { label: 'Preview', icon: 'i-play', run: () => window.TribePreview && window.TribePreview.open() },
-    workshop: { label: 'Workshop', icon: 'i-box', run: () => window.TribeWorkshop && window.TribeWorkshop.open() },
+    workshop: { label: 'Workshop', icon: 'i-wrench', run: () => window.TribeWorkshop && window.TribeWorkshop.open() },
     plan: { label: 'Daily plan', icon: 'i-sun', go: 'plan' },
     secretary: { label: 'Secretary', icon: 'i-quill', go: 'secretary' },
     whiteboard: { label: 'Whiteboard', icon: 'i-whiteboard', run: () => window.TribeWhiteboard && window.TribeWhiteboard.open() },   // feat/whiteboard (whiteboard.js)
@@ -37,7 +37,7 @@
     captures: { label: 'Captures', icon: 'i-link', go: 'captures' },
     assets: { label: 'Asset library', icon: 'i-photo', run: () => window.TribeAssets && window.TribeAssets.open() },
     mcp: { label: 'TribeCode MCP', icon: 'i-plug', go: 'mcp-directory' },
-    market: { label: 'Marketplace', icon: 'i-box', run: () => window.TribeMarket && window.TribeMarket.open() },
+    market: { label: 'Marketplace', icon: 'i-wrench', run: () => window.TribeMarket && window.TribeMarket.open() },
   };
   const ORDER = ['whiteboard', 'calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'captures', 'assets', 'mcp', 'market'];
 

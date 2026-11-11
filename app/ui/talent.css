@@ -59,6 +59,8 @@
 .tl-empty { padding: 22px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .tl-empty h3, .tl-cta h3 { margin: 0; font-size: 18px; font-weight: 750; }
 .tl-empty p, .tl-cta p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; max-width: 62ch; }
+.tl-empty { border-left: 3px solid var(--accent); }
+.tl-empty-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .tl-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; }
 .tl-cta > div { display: flex; flex-direction: column; gap: 4px; }
 .tl-contact { font-size: 12.5px; color: var(--muted); font-family: var(--mono); overflow-wrap: anywhere; }

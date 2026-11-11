@@ -46,6 +46,7 @@
 <link rel="stylesheet" href="plan.css">
 <link rel="stylesheet" href="projects.css">
 <link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="accounts.css">
 <link rel="stylesheet" href="coord.css">
 <link rel="stylesheet" href="people.css">
 <link rel="stylesheet" href="votes.css">
@@ -125,6 +126,8 @@
   <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5 12.6 19.9a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.6 6.6l2.8 2.8 4-4a6 6 0 0 1-7.6 7.7L6.9 20a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.7-7.6z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="m15 8 4 4-4 4M19 12H9"/></symbol>
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
@@ -169,7 +172,7 @@
       <button class="logo-btn" id="rail-logo" title="Home: your overview of everything" aria-label="Home"><img class="logo" src="assets/icon-mark-animated.svg" alt="TribeCode"></button>
       <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
       <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
-      <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-box"/></svg></button>
+      <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-wrench"/></svg></button>
       <div class="spacer" data-tauri-drag-region></div>
     </nav>
 
@@ -419,6 +422,7 @@
 <script src="stage.js"></script>
 <script src="projects.js"></script>
 <script src="shell.js"></script>
+  <script src="router.js"></script>
 <script src="coord.js"></script>
 <script src="people.js"></script>
 <script src="profiles.js"></script><!-- feat/profiles: avatars, name colors, status, popout, editor -->
@@ -447,6 +451,7 @@
 <script src="pins.js"></script><!-- P1-E comment pins + preview presence -->
 <script src="github.js"></script>
 <script src="oauth.js"></script>
+  <script src="accounts.js"></script>
 <script src="folders.js"></script>
 <script src="hub.js"></script>
 <script src="connectai.js"></script><!-- feat/any-llm: Connect your AI (any coding agent) -->

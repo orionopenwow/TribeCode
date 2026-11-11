@@ -21,6 +21,8 @@
     let name = m && m.name; if (!name) { try { name = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name; } catch {} }
     $('#ub-name').textContent = name || 'You';
     $('#ub-st').textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : (C && C.hasToken && C.hasToken() ? 'Reconnecting…' : 'Just you for now');
+    const ac = !on && window.TribeAccounts && window.TribeAccounts.status();   // signed out, a guest or a TEST account (accounts.js)
+    if (ac) { $('#ub-st').textContent = ac; if (window.TribeAccounts.mode() === 'signedout') $('#ub-name').textContent = 'Signed out'; }
   }
   function place() {
     const pf = $('#pf-btn'), fr = $('#fr-btn'), bell = $('#nf-bell'), tb = $('.titlebar .tb-right'), nest = $('#tour-side');
