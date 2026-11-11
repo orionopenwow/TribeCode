@@ -483,6 +483,23 @@
     } catch (e) { toast('Could not enable push: ' + e.message); }
   }
 
+  // loops: re-send this device's push subscription on every connection. A server whose files were wiped (a sleeping
+  // free cloud host) forgets subscriptions and may have new keys; the browser already has permission, so this is silent.
+  // Subscriptions are per device and the server keeps each endpoint once, so sending it again is safe.
+  async function resyncPush() {
+    try {
+      if (!pushOk() || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      const reg = await navigator.serviceWorker.getRegistration(); if (!reg) return;
+      let sub = await reg.pushManager.getSubscription(); if (!sub) return;
+      const { publicKey } = await C.api('/notify/vapid');
+      const cur = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null, want = keyBytes(publicKey);
+      if (!cur || cur.length !== want.length || cur.some((v, i) => v !== want[i])) { await sub.unsubscribe(); sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want }); }
+      const r = await C.api('/notify/webpush', { method: 'POST', body: { subscription: sub.toJSON() } });
+      meta.devices = r.devices;
+    } catch (e) { /* quiet: the bell still works, and Settings › Notifications can turn push on again */ }
+  }
+  C.on('hello', () => setTimeout(resyncPush, 1500));
+
   // ---------- deep links: ?open=view from a notification tap, or a message from the service worker ----------
   const params = new URLSearchParams(location.search);
   if (params.get('open')) {
@@ -493,5 +510,5 @@
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'tribe-open') go(e.data.view, e.data.ref); });
 
-  window.TribeNotify = { openInbox, closeInbox, openSettings, closeSettings, reload: load, enableWebPush, pushOk, markAllRead, markRead: id => setMark(id, { read: true }), isUnread: id => isUnread(items.find(i => i.id === id) || {}), state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
+  window.TribeNotify = { resyncPush, openInbox, closeInbox, openSettings, closeSettings, reload: load, enableWebPush, pushOk, markAllRead, markRead: id => setMark(id, { read: true }), isUnread: id => isUnread(items.find(i => i.id === id) || {}), state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
 })();

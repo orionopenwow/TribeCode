@@ -656,7 +656,7 @@ VIS = "(sel) => { const e = document.querySelector(sel); return !!e && window.__
 JOURNEYS = [
     {"id": "invite", "title": "Invite a friend and get a link", "goal": "a join link is on screen", "max": 2,
      "steps": [("click", [{"role": "button", "name": r"^invite"}, {"role": "button", "name": r"invite"}, {"css": "#tour-invite"}], "Invite friends"),
-               ("expect", "[...document.querySelectorAll('input, code, .code, a, pre, span, div, textarea')].some(e => window.__ex.visible(e) && /https?:\\/\\/[^\\s]+(join|go\\.html|#s=|\\/m\\/)/.test(e.value || (e.children.length ? '' : e.textContent)))")]},
+               ("expect", "[...document.querySelectorAll('input, code, .code, a, pre, span, div, textarea')].some(e => window.__ex.visible(e) && /https?:\\/\\/[^\\s]+(join|go\\.html|#s=|\\/m\\/|\\/t\\/)/.test(e.value || (e.children.length ? '' : e.textContent)))")]},
     {"id": "propose", "title": "Propose a feature and get it on the Board", "goal": "the proposal is listed on the Board", "max": 4,
      "start": "TribeApp.show('chat')", "start_label": "chat",
      "steps": [("click", [{"role": "button", "name": r"^add(:|$)"}, {"css": "#m2-plus, #composer-mount [aria-label^=Add]"}], "composer +"),

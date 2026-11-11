@@ -57,7 +57,7 @@ var mem=function(){var d={};return{getItem:function(k){k=String(k);return Object
 var m=location.pathname.match(/^\\/preview\\/[a-z0-9-]+\\/pv1\\.[^/]+\\//);
 var pend=false;function busy(){return !!document.querySelector('[contenteditable=true]')}
 window.__tcReload=function(){if(busy()){pend=true;return}location.reload()};
-if(m&&window.EventSource){try{var es=new EventSource(m[0]+'${RESERVED}/live');es.onmessage=function(e){if(e.data==='reload')window.__tcReload();else if(/^v[0-9]+$/.test(e.data)&&e.data!=='v__TCV__')window.__tcReload()}}catch(_){}}
+if(m){var lv=m[0]+'${RESERVED}/live',last=Date.now(),es=null,pol=0;function seen(d){last=Date.now();if(d==='reload')window.__tcReload();else if(/^v[0-9]+$/.test(d)&&d!=='v__TCV__')window.__tcReload()}function poll(){if(pol)return;try{es&&es.close()}catch(_){}pol=setInterval(function(){fetch(lv+'?poll=1',{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){if(t)seen(t.trim())}).catch(function(){})},3000)}if(window.EventSource){try{es=new EventSource(lv);es.onmessage=function(e){seen(e.data)}}catch(_){es=null}}if(!es)poll();else setInterval(function(){if(!pol&&(es.readyState===2||Date.now()-last>35000))poll()},5000)}
 var up=window.parent!==window?window.parent:null;
 function say(o){if(up)try{up.postMessage(o,'*')}catch(_){}}
 function ready(){say({tc:'ready',title:document.title,href:location.pathname})}
@@ -290,18 +290,22 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
       const sp = new URLSearchParams(url.search); sp.delete('pt'); const qs = sp.toString();
       res.writeHead(302, { ...baseHeaders('static'), Location: `/preview/${q.pid}/${q.pt}/${q.rest || ''}${qs ? '?' + qs : ''}` }); return res.end();
     }
-    if (q.rest === `${RESERVED}/live`) return live(req, res, q.pid);
+    if (q.rest === `${RESERVED}/live`) return live(req, res, q.pid, url);
     if (modeOf(q.pid) === 'dev') return proxy(req, res, url, q);
     if (req.method !== 'GET' && req.method !== 'HEAD') return deny(res, 405, 'Static previews only answer GET.');
     return serveFile(req, res, url, q);
   }
 
-  function live(req, res, pid) {
+  function live(req, res, pid, url) {
+    // loops: ?poll=1 is the fallback for links where Server-Sent Events don't stream (Cloudflare quick tunnels)
+    if (url && url.searchParams.get('poll')) { watch(pid); res.writeHead(200, { ...baseHeaders('static'), 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(`v${gen.get(pid) || 0}`); }
     const set = sse.get(pid) || new Set(); sse.set(pid, set);
     if (set.size >= 100) { res.writeHead(429); return res.end(); }
     res.writeHead(200, { ...baseHeaders('static'), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
     res.write(`retry: 3000\ndata: v${gen.get(pid) || 0}\n\n`); set.add(res); watch(pid);
-    req.on('close', () => set.delete(res));
+    const hb = setInterval(() => { try { res.write(`data: v${gen.get(pid) || 0}\n\n`); } catch {} }, 15000);   // heartbeat: lets the page notice a stalled stream
+    if (hb.unref) hb.unref();
+    req.on('close', () => { clearInterval(hb); set.delete(res); });
   }
 
   function serveFile(req, res, url, q) {

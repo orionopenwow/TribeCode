@@ -12,3 +12,9 @@ services:
         value: "1"
       - key: TRIBE_SETUP_CODE
         generateValue: true
+      # Phone notifications that survive sleep: run `node scripts/dev/vapid-keys.js` and paste both values
+      # (Render can't generate an EC key pair itself). Leave empty to skip; push then needs re-enabling after a wipe.
+      - key: TRIBE_VAPID_PUBLIC
+        sync: false
+      - key: TRIBE_VAPID_PRIVATE
+        sync: false
