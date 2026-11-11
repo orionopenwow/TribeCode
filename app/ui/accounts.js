@@ -83,7 +83,9 @@
   }
   function reloadHome(after) {
     try { if (after) sessionStorage.setItem('tribecode.acc.after', after); } catch {}
-    location.replace(location.pathname + location.search.replace(/([?&])accounts=test(&|$)/, '$1').replace(/[?&]$/, '') + '#/hub');
+    const q = location.search.replace(/([?&])accounts=test(&|$)/, '$1').replace(/[?&]$/, '');
+    try { history.replaceState(null, '', location.pathname + q + '#/hub'); } catch {}
+    location.reload();   // a clean start: no module keeps the old identity in memory
   }
   async function logout({ forget = false } = {}) {
     await clearSession(forget);
@@ -201,10 +203,10 @@
   }
 
   // ---------- what the rest of the app shows ----------
-  function status() {
+  function status(short) {   // short: the user bar, where a TEST chip already says it
     const m = mode(), a = current();
-    if (m === 'signedout') return 'Signed out · Log in';
-    if (m === 'test' && a) return `TEST · ${a.tribes.length ? a.tribes[0] + (a.tribes.length > 1 ? ` +${a.tribes.length - 1}` : '') : 'no tribes'}`;
+    if (m === 'signedout') return short ? 'Log in' : 'Signed out · Log in';
+    if (m === 'test' && a) return `${short ? '' : 'TEST · '}${a.tribes.length ? a.tribes[0] + (a.tribes.length > 1 ? ` +${a.tribes.length - 1}` : '') : 'no tribes'}`;
     if (m === 'guest') return 'Guest on this device';
     return '';
   }
@@ -217,7 +219,8 @@
       let chip = t.querySelector('.ac-test'); const want = m === 'test';
       if (want && !chip) { chip = document.createElement('i'); chip.className = 'ac-test'; chip.textContent = 'TEST'; ubn.after(chip); } else if (!want && chip) chip.remove();
       if (m === 'signedout') ubn.textContent = 'Signed out';
-      const s = status(), ubs = $('#ub-st'); if (s && ubs && ubs.textContent !== s) ubs.textContent = s;
+      else if (ubn.textContent === 'Signed out') ubn.textContent = S.get().name || 'You';
+      const s = status(true), ubs = $('#ub-st'); if (s && ubs && ubs.textContent !== s) ubs.textContent = s;
     }
     if (window.TribeProfileMenu && window.TribeProfileMenu.paint) try { window.TribeProfileMenu.paint(); } catch {}
   }
