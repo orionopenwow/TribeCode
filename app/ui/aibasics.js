@@ -158,8 +158,11 @@
     const sb = document.querySelector('.co-sheet .co-sh-body, .co-sh-body');
     if (sb && sb.querySelector('#cs-goal') && !sb.querySelector('[data-ab="seat"]')) { const row = document.createElement('div'); row.className = 'ab-row'; const b = spark('seat', '✦ Fill in the charter'); b.innerHTML = '<span aria-hidden="true">✦</span><span class="ab-l">Fill in the charter</span>'; b.classList.add('wide'); b.onclick = () => run('seat.charter', () => seatCtx(sb), b); row.appendChild(b); sb.prepend(row); }
   }
-  let raf = 0; const mo = new MutationObserver(() => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; try { scan(); } catch {} }); });
-  mo.observe(document.body, { childList: true, subtree: true });
+  // No MutationObserver on the whole page (it made typing in a 20k-word doc slow): a light poll while the tab is visible,
+  // plus a scan right after clicks and key presses that usually open one of these places.
+  let pend = 0; const soon = () => { if (!pend) pend = setTimeout(() => { pend = 0; try { scan(); } catch {} }, 60); };
+  setInterval(() => { if (document.visibilityState === 'visible') soon(); }, 700);
+  addEventListener('click', soon, true); addEventListener('hashchange', soon);
   scan();
   window.TribeAIBasics = { run, online, scan, menu, close: closePop };
 })();
