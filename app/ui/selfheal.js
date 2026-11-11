@@ -207,6 +207,8 @@
     hook();
     if (pageVersion() && /^https?:$/.test(location.protocol)) setTimeout(() => {
       if (window.TribeClient && window.TribeClient.connected && window.TribeClient.connected()) return;
+      // setting up on this device (docs/LIGHT-HOSTING.md): nothing goes to a server before a home is chosen
+      if ((window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) || document.querySelector('#su-start, #su-where')) return;
       fetch('/api/health', { cache: 'no-store' }).then(r => r.json()).then(h => versionCheck(h.version)).catch(() => {});
     }, 2500);
   }
