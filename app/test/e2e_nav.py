@@ -145,8 +145,9 @@ def global_nav(page, tribe):
         page.evaluate("TribeShell.go('chat')"); st = settled(page); assert st["view"] == "hub" and st["global"], st
         page.evaluate("TribeShell.go('ws-tasks')"); st = settled(page); assert st["view"] == "hub", st
         # the + sheet always has a way out
-        page.click("#pj-plus"); page.wait_for_selector("#invite-modal:not(.hidden) .ns-x", state="visible")
-        page.click("#invite-modal .ns-x"); page.wait_for_selector("#invite-modal", state="hidden")
+        # (feat/setup-local: with no tribe, + is the instant Start sheet on this device)
+        page.click("#pj-plus"); page.wait_for_selector("#su-start .su-x", state="visible")
+        page.click("#su-start .su-x"); page.wait_for_selector("#su-start", state="detached")
         return
     # with a tribe: into a project from the rail, Back returns to the global section you came from
     page.click("#nest-work"); page.wait_for_function("TribeRouter.where().key === 'work'"); settled(page)

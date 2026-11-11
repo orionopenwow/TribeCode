@@ -38,6 +38,8 @@
     scrim = document.createElement('div'); scrim.className = 'ph-scrim'; scrim.onclick = close;
     el = document.createElement('div'); el.className = 'ph-sheet su-sheet'; el.id = id; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', label);
     el.innerHTML = `<div class="ph-grab" aria-hidden="true"></div>${html}`;
+    const h = el.querySelector('.ph-h');   // every sheet has a close X (docs/NAVIGATION.md: the create sheet always has a way out)
+    if (h) h.insertAdjacentHTML('beforeend', '<button type="button" class="su-x" data-su-close aria-label="Close"><svg class="i" width="16" height="16" aria-hidden="true"><use href="#i-x"/></svg></button>');
     document.body.append(scrim, el);
     el.querySelectorAll('[data-su-close]').forEach(b => { b.onclick = close; });
     el.querySelectorAll('[data-su-back]').forEach(b => { b.onclick = () => where(); });
