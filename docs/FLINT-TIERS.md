@@ -94,3 +94,36 @@ and **Undo** takes back the last change on that page (up to 40 steps, kept while
 - The Flint panel is a bottom sheet over the preview at phone width, with full-size buttons.
 
 Tests: `app/test/e2e_flint_free.py`, `app/test/e2e_flint_local.py`, `app/test/flint_nlu_test.js`.
+
+## Flint everywhere: the Dashboard, your idea, your style
+
+- **On Home, with or without a tribe.** Ask Flint sits on the Dashboard (`TribeFlint.mountDashboard(el)`, one slot in
+  `app/ui/hub.js`). It shares the thread with the room panel. With no tribe yet he still plans your day, grows your
+  idea, explains features from the docs (`/api/flint/kb` answers this computer even before a tribe exists), opens your
+  files and the inspiration board, and starts your first project.
+- **Grow your idea.** Three tappable questions (what you're growing, where it is, what would help most), then a short
+  plan that ties the company, the app and the website together, with deep links to the right resources: Academy
+  tracks, Guide pages, Legal templates, the build kit and Studios, the Marketplace, the 16 website templates and the
+  docs (`app/ui/flintgrow.js`). Rules write the plan; an AI, when on, refines it in place.
+- **Your style.** The inspiration board (`app/ui/inspoboard.js`, `server/inspo.js`) holds openly licensed pictures and
+  sounds from Openverse and Wikimedia Commons, each with its license, creator and source, copied through the host
+  (no hotlinking). The server measures each picture's colors (`server/imgcolors.js`: PNG, and a DC-only JPEG average),
+  suggests an accent and a font pairing, and "Use my board's style" applies them to your view and the project's website
+  and app.
+- **✦ everyday help.** See [DESIGN-SYSTEM.md §11](DESIGN-SYSTEM.md#11-basic-features-supercharged-by-ai).
+
+## Abilities log
+
+Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
+
+- **2026-11-10** (feat/flint-ai)
+  - Flint on the Dashboard, working with no tribe (free · no AI).
+  - Today's plan from your tasks, reviews, calendar and note checkboxes (free · no AI; refined by AI when on).
+  - "Grow my idea": 3 tappable questions, then a plan for company + app + website + cohesion with resource links (free · no AI; refined by AI).
+  - Recommends learning resources for a goal (company, app, website, cohesion) with deep links (free · no AI).
+  - Explains a feature from the local knowledge base ("explain the inspiration board") (free · no AI).
+  - Opens your files and the inspiration board; starts your first project (free · no AI).
+  - Searches openly licensed pictures and sounds ("find sounds of rain"), saves them with credits (free · no AI, needs internet).
+  - "Use my board's style": accent, font pairing, website brand kit and design/inspiration.css (free · no AI).
+  - ✦ in chat (summarize, turn into tasks), tasks (split, estimate, suggest an owner), docs and notes (tidy, outline,
+    continue), files (describe and tag), company seats (fill in the charter) (free · no AI; refined by AI).

@@ -53,6 +53,8 @@ Pushing from the Claude cloud sandbox:
   - `repo.js` + `context.js` + `integrator.js`: live repo, TRIBE_CONTEXT.md, gated merges.
   - `board.js`: proposals and milestones.
   - `bugs.js`, `brain.js` (Ollama/Qwen), `mcp.js` (Claude Code tools).
+  - `aibasics.js` + `app/ui/aibasics-core.js`: the ✦ "basic features, supercharged by AI" (rules first, `POST /api/ai/refine` when an AI is on; docs/DESIGN-SYSTEM.md §11, docs/GROK-SCOPE.md).
+  - `inspo.js` + `imgcolors.js`: inspiration boards (per project and per person), Openverse/Wikimedia search, a thumbnail/sound cache in `.tribe/inspo/cache`, server-side palettes.
   - `askai.js`: `@ai` for people without their own Claude (own Claude → a teammate's Claude by owner policy → local model → board).
   - `openspace.js`: optional Open Space office (host-only install/start/stop/open, port 4850).
   - `showcase.js`: per-project website (`site/index.html`), preview, suggestions.

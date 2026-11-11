@@ -541,6 +541,7 @@ const inspoBoard = require('./inspo')({ P, base: baseStore, embeds, showcase, as
 const ledger = require('./ledger')({ P, base: baseStore, broadcast, postChat, nameOf, perms, getMembers: () => members }), seatpilot = require('./seatpilot')({ P, base: baseStore, broadcast, nameOf, perms, getMembers: () => members, approvals, coord, bus, ledger });   // v0.27 company: Money + seat autopilot (server/ledger.js, server/seatpilot.js)
 const academy = require('./academy')({ P, base: baseStore, store, docs, captures, nameOf, broadcast }), legalDocs = require('./legal')({ P, base: baseStore, store, docs, approvals, postChat, nameOf, broadcast });   // v0.27 company: Role Academy + Offload (server/academy.js), Legal documents (server/legal.js)
 const flintKB = require('./flintkb')({ ui: UI, nlu: require(path.join(UI, 'flintnlu.js')) });   // flint-local: Flint's knowledge base (TF-IDF over the Guide and docs)
+const aiBasics = require('./aibasics')({ llm, base: baseStore, P, str });   // feat/flint-ai: ✦ basic features supercharged by AI (server/aibasics.js)
 const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
 const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company });   // phone tribe -> host (docs/PHONE-HOSTING.md)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
@@ -691,6 +692,12 @@ async function apiInProject(req, res, url) {
 
   if (a === 'media' && b === 'key' && m === 'GET') { const th = tokenHashOf(req); return me && th ? send(res, 200, media.issue(me, th)) : fail(res, 401, 'not a member of this tribe'); }   // fix/security-2: key for signed media links (app/ui/media.js)
   if (a === 'guide') return guide.route(req, res, ctx());   // feat/vision-guide: public, read-only how-to pages (server/guide.js)
+  // feat/flint-ai: no tribe yet, on this computer: Flint's how-to answers and your own inspiration board still work (a local you)
+  if (a === 'inspo' && b === 'cache' && m === 'GET') return inspoBoard.cache(req, res, c);   // cached openly licensed thumbnails and sound previews, by content hash (public media)
+  if (!me && isLocal(req) && ((a === 'flint' && b === 'kb') || (a === 'inspo' && (b === 'search' || url.searchParams.get('board') === 'me')))) {
+    const local = { id: 'local', name: 'You', role: 'local' };
+    return a === 'flint' ? flintKB.route(req, res, { ...ctx(), me: local }) : inspoBoard.route(req, res, { ...ctx(), me: local });
+  }
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
   // optionally turns on the public https address, and returns a fresh join link.
@@ -1021,6 +1028,7 @@ async function apiInProject(req, res, url) {
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
   }
 
+  if (a === 'ai' && ['basic', 'refine', 'tags'].includes(b)) return aiBasics.route(req, res, ctx());   // feat/flint-ai: ✦ refine + file tags
   if (a === 'flint' && b === 'kb') return flintKB.route(req, res, ctx());   // flint-local: how-to answers from the docs, no model (server/flintkb.js)
   if (a === 'flint' && ['memory', 'skills', 'vocab', 'draft', 'learned'].includes(b)) return flintMem.route(req, res, ctx());   // v0.27.1; flint-local: phrases people taught Flint
   if (a === 'import' && b === 'solo') return soloImport.route(req, res, { ...ctx(), isBoss: x => x.role === 'host' || perms.can(x, 'project.create') });   // a phone tribe moves to this host (server/soloimport.js)
