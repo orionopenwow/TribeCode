@@ -184,7 +184,7 @@
     const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');   // feat/ship-flow: who is waiting on whom
     return `<section class="ad-card ad-hero" id="ad-hero">${head('Agents', on ? `${plural(on, 'agent')} working now` : 'No agents working right now', 'agents-hub', 'Your agents')}
       <div class="ad-rows">${shown.map(row).join('')}</div>${waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : ''}
-      ${list.length > 5 ? `<button class="linkish ad-more" data-ad-more="agents">${moreAgents ? 'Show fewer' : `Show all ${list.length}`}</button>` : ''}</section>`;
+      <div class="ad-acts ad-acts-sm">${list.length > 5 ? `<button class="linkish ad-more" data-ad-more="agents">${moreAgents ? 'Show fewer' : `Show all ${list.length}`}</button>` : ''}<button class="linkish ad-tools" id="ad-tools">See all tools</button></div></section>`;   // loops: the tools list stays one click away after your first agent
   }
 
   function needsItems(d) {

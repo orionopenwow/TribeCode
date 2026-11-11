@@ -447,7 +447,8 @@
     if (window.TribeDocsX) window.TribeDocsX.afterRead(el, cur);   // [[links]], @mentions, comment highlights
   }
 
-  function autosize(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 4) + 'px'; }
+  // the rich editor (.rt) sizes itself (height: auto !important); measuring it would force a full layout on every key
+  function autosize(ta) { if (!ta || (ta.classList && ta.classList.contains('rt'))) return; ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 4) + 'px'; }
 
   // ---------- slash menu ----------
   function checkSlash() {

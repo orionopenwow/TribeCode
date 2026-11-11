@@ -64,9 +64,9 @@ def main():
             pg.goto(BASE + "/?skipIntro=1", wait_until="domcontentloaded", timeout=90000); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeCompany", timeout=20000)
             pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); pg.wait_for_timeout(800)
             # the sidebar offers it to the host, then the empty state with template cards: one click makes it
-            pg.wait_for_selector("#nest-company:not(.hidden)", timeout=10000)
-            assert "Make it a company" in pg.inner_text("#nest-company")
-            pg.click("#nest-company"); pg.wait_for_selector("#view-company .co-tpl[data-tpl='saas']", timeout=10000)
+            # v0.27 polish: the sidebar stays at five rows until it's a company; making one starts from Ctrl K / Recommended next
+            assert pg.locator("#nest-company:not(.hidden)").count() == 0
+            pg.evaluate("TribeCompany.open()"); pg.wait_for_selector("#view-company .co-tpl[data-tpl='saas']", timeout=10000)
             assert pg.locator("#view-company .co-tpl").count() == 8
             pg.click("#view-company .co-tpl[data-tpl='saas']")
             pg.wait_for_selector("#view-company .co-seat.ceo", timeout=10000)

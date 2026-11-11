@@ -199,7 +199,14 @@
       C.send({ type: 'doc-cursor', slug: this.slug, pos, sel, rev: this.ot.rev });
     }
 
+    // loops: friends' cursors are drawn at most once per frame. Drawing measures the text (a forced layout), and doing
+    // that on every keystroke made typing in a long doc slow while a friend had it open.
     render() {
+      if (this.rafR) return;
+      const go = () => { this.rafR = 0; if (!this.closed) this.renderNow(); };
+      this.rafR = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(go) : setTimeout(go, 16);
+    }
+    renderNow() {
       const ta = this.ta, layer = this.layer;
       if (!ta || !layer || !ta.isConnected) return;
       if (!layer.isConnected) (ta.offsetParent || ta.parentNode).appendChild(layer);

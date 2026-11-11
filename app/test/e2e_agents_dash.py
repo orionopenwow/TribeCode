@@ -110,7 +110,8 @@ def main():
             # Connect your AI opens the existing sheet
             host.click("#ad-connect"); host.wait_for_selector("#invite-modal:not(.hidden)")
             wait_text(host, "#invite-body", "Connect your AI")
-            host.keyboard.press("Escape"); host.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
+            host.evaluate("(document.querySelector('#invite-body [data-close]') || {click(){}}).click(); document.querySelector('#invite-modal').classList.add('hidden')")
+            host.wait_for_selector("#ad-tools", state="visible", timeout=10000)
             # See all tools: the MCP page, as a temporary tab; × closes it back to the dashboard
             host.click("#ad-tools"); host.wait_for_function("window.TribeMcpDir && TribeMcpDir.isOpen()")
             host.wait_for_selector("#wt-mcp-directory.on .wt-x.temp")
