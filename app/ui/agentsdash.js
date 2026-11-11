@@ -143,7 +143,7 @@
       return;
     }
     const [ag, rv, ho, dl, own, ch, fl] = res;
-    if (n !== seq) return;
+    if (n !== seq || !onView()) return;   // the tab changed while it loaded: don't paint over the new one
     { const w = el.querySelector('.ad-wait'); if (w) w.remove(); }
     const d = { fleet: fl, agents: ag.agents || [], reviews: rv.reviews || [], handoffs: ho.handoffs || [], delegations: dl.delegations || [], owners: own.owners || [], messages: ch.messages || [], conflicts: cfCache.pid === pid() ? cfCache.d : null, plan: null };
     paint(el, d);
@@ -229,7 +229,7 @@
   // qa-qol-2: the example names a real agent of this tribe (it said "@maya's-claude" to everyone)
   function talkHint() { const a = (C.state().members || []).find(m => m.role === 'agent'); return a ? `@agents or @${String(a.name || '').toLowerCase().replace(/^claude · (.+)$/, "$1's-claude").replace(/\s+/g, '-')} …` : 'Write to @agents …'; }
   function channelCard(d) {
-    if (!d.messages.length && !d.agents.length) return '';
+    if (!d.messages.length && !d.agents.some(a => a.online || a.lastActive)) return '';   // keys that never connected don't open the channel
     const members = C.state().members || [];
     const nameOf = id => ((members.find(m => m.id === id) || {}).name) || 'someone';
     const msgs = d.messages.slice(-8);
@@ -257,7 +257,7 @@
     const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
     const top = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
     el.innerHTML = `<div class="ad-dash" id="ad-dash">${top}${needsCard(d)}${rowsH}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${F ? F.how() : ''}</div>`;
-    if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected) render(el); } });
+    if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
     const ni = el.querySelector('#talk-input'); if (ni && keep) ni.value = keep; if (ni && focused) ni.focus({ preventScroll: true });
     const form = el.querySelector('#talk-form');
     if (form) form.onsubmit = async e => {

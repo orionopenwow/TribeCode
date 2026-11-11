@@ -132,6 +132,7 @@ function runBridge() {
   const say = m => process.stderr.write(`[tribecode-bridge] ${token ? String(m).split(token).join('<token>') : m}\n`);
   if (!/^https?:\/\//.test(url)) { say('usage: node mcp-stdio.js <http(s)://host:port/mcp>   (token in TRIBE_TOKEN)'); process.exit(2); }
   let session = null, pending = 0, ended = false, buf = '';
+  const quit = () => process.stdout.write('', () => process.exit(0));   // let a long answer (tools/list is > 64 KB) reach the pipe first
   const out = obj => process.stdout.write(JSON.stringify(obj) + '\n');
   const errorFor = (msg, code, message) => { const ids = (Array.isArray(msg) ? msg : [msg]).filter(x => x && x.id !== undefined && x.id !== null); ids.forEach(x => out({ jsonrpc: '2.0', id: x.id, error: { code, message } })); };
   async function forward(line) {
@@ -152,11 +153,11 @@ function runBridge() {
       }
       if (text.trim()) process.stdout.write(JSON.stringify(JSON.parse(text)) + '\n');
     } catch (e) { say(`request failed: ${e.message}`); errorFor(msg, -32002, 'Could not reach the TribeCode server'); }
-    finally { pending--; if (ended && !pending) process.exit(0); }
+    finally { pending--; if (ended && !pending) quit(); }
   }
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', d => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (l) forward(l); } });
-  process.stdin.on('end', () => { ended = true; if (buf.trim()) forward(buf.trim()); buf = ''; if (!pending) process.exit(0); });
+  process.stdin.on('end', () => { ended = true; if (buf.trim()) forward(buf.trim()); buf = ''; if (!pending) quit(); });
 }
 
 module.exports = function agentsHub({ P, store, pstore, brain, getMembers, presenceFor, agentSeen, idleMs, nameOf, people, coord, claims, endpoints, secretary, approvals, loadTasks, createTask, saveTask }) {

@@ -97,20 +97,19 @@ def main():
             oid = host.evaluate("TribeClient.state().me.id")
 
             # ---- a fresh tribe: one calm empty state, one tab, a +
-            host.click("#nest-ws-agents"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero.ad-empty")
-            wait_text(host, "#ad-hero", "No agents yet")
+            host.click("#nest-ws-agents"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero[data-state='connect']")
+            wait_text(host, "#ad-hero", "Connect your AI")   # feat/fleet: the hero is the next step
+            host.wait_for_selector("#ad-hero #fl-cmd")
             assert cards(host) == ["#ad-hero"], cards(host)
             assert tabs(host) == ["Dashboard"], tabs(host)
             host.wait_for_selector("#view-tabs #wt-plus", state="visible")
             assert host.evaluate("location.hash") == "#/agents/agents"
             wait_text(host, "#crumb-label", "Agents Hub › Dashboard")
-            fs = host.evaluate("parseFloat(getComputedStyle(document.querySelector('#ad-hero .ad-title')).fontSize)")
+            fs = host.evaluate("parseFloat(getComputedStyle(document.querySelector('#ad-hero .fl-title')).fontSize)")
             assert fs >= 18, fs
             shot(host, "agents-dash-empty")
-            # Connect your AI opens the existing sheet
-            host.click("#ad-connect"); host.wait_for_selector("#invite-modal:not(.hidden)")
-            wait_text(host, "#invite-body", "Connect your AI")
-            host.keyboard.press("Escape"); host.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
+            # Connect your AI: the tools as tabs, the command right in the hero (e2e_fleet.py covers it in depth)
+            assert host.locator("#ad-hero [data-fl-tab]").count() == 6
             # See all tools: the MCP page, as a temporary tab; × closes it back to the dashboard
             host.click("#ad-tools"); host.wait_for_function("window.TribeMcpDir && TribeMcpDir.isOpen()")
             host.wait_for_selector("#wt-mcp-directory.on .wt-x.temp")
@@ -131,8 +130,9 @@ def main():
             ok(api("/coord/handoffs", "POST", {"title": "Campfire save points", "context": "Saving works; loading is left.", "to": oid}, token=maya, project=pid), "handoff")
             ok(api("/coord/lanes", "POST", {"area": "src/ui/", "owner": mid}, token=token, project=pid), "lane")
             host.evaluate("TribeCoord.refresh()")
-            host.wait_for_selector("#ad-hero:not(.ad-empty)")
-            wait_text(host, "#ad-hero", "1 agent working now"); wait_text(host, "#ad-hero", "Maya")
+            host.wait_for_selector("#fl-agents [data-fl-agent]")
+            wait_text(host, "#fl-agents", "Claude · Maya"); wait_text(host, "#fl-agents h2", "1 agent")
+            wait_text(host, "#ad-hero", "Claude · Maya is waiting for an approval")
             wait_text(host, "#ad-needs", "Speed boots"); wait_text(host, "#ad-needs", "Campfire save points")
             wait_text(host, "#ad-needs", "2 things need you")
             wait_text(host, "#ad-owners", "src/ui/")
@@ -189,7 +189,7 @@ def main():
             phone.goto(BASE + "/?skipIntro=1")
             phone.wait_for_function("TribeClient.connected()")
             phone.evaluate("TribeShell.go('agents')"); phone.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
-            wait_text(phone, "#ad-hero", "Maya")
+            wait_text(phone, "#fl-agents", "Maya")
             phone.wait_for_selector("#ad-chan #talk-input")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
             boxes = phone.evaluate("[...document.querySelectorAll('.ad-card')].map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")

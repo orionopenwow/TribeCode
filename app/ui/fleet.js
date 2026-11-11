@@ -21,6 +21,7 @@
   const toast = m => window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m);
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; return `${Math.floor(s / 86400)}d ago`; };
   const pidNow = () => (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || (C && C.project && C.project()) || 'default';
+  const kfmt = n => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
   const hasTribe = () => !!(C && C.hasToken && C.hasToken());
 
   // ---------- copy that works on iOS (and over plain http on the Wi-Fi, where navigator.clipboard is missing) ----------
@@ -166,7 +167,7 @@
     ].join('');
     return `<article class="fl-row s-${esc(a.status)}" data-fl-agent="${esc(a.id)}" tabindex="0" aria-label="${esc(a.name)}, ${esc(statusText(a))}">
       <div class="fl-r-top"><span class="fl-glyph">${glyph(a.kind)}</span>
-        <div class="fl-id"><b>${esc(a.name)}</b><span>${esc(owner)} · ${esc(a.kindLabel)}${d.scope === 'all' && a.projectName ? ` · ${esc(a.projectName)}` : ''}</span></div>
+        <div class="fl-id"><b>${esc(a.name)}</b><span>${esc(owner)} · ${esc(a.kindLabel)}${d.scope === 'all' && a.projectName ? ` · ${esc(a.projectName)}` : ''}${a.tokens ? ` · ${esc(kfmt(a.tokens))} tokens` : ''}</span></div>
         <span class="fl-st st-${esc(a.status)}"><i aria-hidden="true"></i>${esc(statusText(a))}</span></div>
       ${now}${files}${recent}
       ${acts ? `<div class="fl-r-acts">${acts}</div>` : ''}
