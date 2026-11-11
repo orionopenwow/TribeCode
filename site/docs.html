@@ -11,7 +11,7 @@
 <meta property="og:title" content="Docs · TribeCode">
 <meta property="og:image" content="https://tribecode.org/assets/og-image.png">
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="nav.css?v=0.28.0">
+<link rel="stylesheet" href="nav.css?v=0.28.1">
 <style>
   .doc { max-width: 760px; padding: 72px 24px 40px; margin: 0 auto; }
   .doc h1 { font-size: clamp(34px, 4.6vw, 48px); line-height: 1.12; letter-spacing: -0.025em; margin: 12px 0 16px; }
@@ -22,7 +22,7 @@
   .doc pre code { background: none; border: 0; padding: 0; }
   .note { margin-top: 28px; padding: 16px 18px; border: 1px dashed var(--border-strong); border-radius: 14px; font-size: 15px; }
   @media (max-width: 760px) { .doc { padding: 48px 18px 32px; } .doc pre { font-size: 12px; padding: 14px; } }
-  /* v0.27 full docs: sidebar table of contents + sections */
+  /* full docs: sidebar table of contents + sections */
   .docs { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; max-width: 1120px; margin: 0 auto; padding: 72px 24px 40px; }
   .docs .doc { max-width: 760px; padding: 0; margin: 0; }
   .toc { position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; padding-right: 6px; }
@@ -85,7 +85,7 @@
   </div>
 </header>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#start">Get started</a></li><li><a href="#first">Your first project</a></li><li><a href="#concepts">How a tribe works</a></li><li><a href="#ai">Connect your AI</a></li><li><a href="#together">Working together</a></li><li><a href="#phones">On your phone</a></li><li><a href="#company">Company mode</a></li><li><a href="#modes">Modes and Recommended next</a></li><li><a href="#hosting">Hosting and sharing</a></li><li><a href="#storage">Storage, sync and backups</a></li><li><a href="#languages">Languages</a></li><li><a href="#security">Security and privacy</a></li><li><a href="#trouble">Troubleshooting</a></li><li><a href="#reference">Reference</a></li></ol><p>More</p><ol><li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide">Guide pages</a></li><li><a href="https://github.com/orionopenwow/TribeCode#readme">README</a></li><li><a href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md">Changelog</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#start">Get started</a></li><li><a href="#first">Your first project</a></li><li><a href="#concepts">How a tribe works</a></li><li><a href="#ai">Connect your AI</a></li><li><a href="#together">Working together</a></li><li><a href="#design">Design canvas</a></li><li><a href="#focus">Preview and live editing</a></li><li><a href="#templates">Website templates</a></li><li><a href="#pins">Comment pins</a></li><li><a href="#flint-local">Flint without an AI</a></li><li><a href="#buildkit">Build kit and starters</a></li><li><a href="#phones">On your phone</a></li><li><a href="#company">Company mode</a></li><li><a href="#modes">Modes and Recommended next</a></li><li><a href="#hosting">Hosting and sharing</a></li><li><a href="#storage">Storage, sync and backups</a></li><li><a href="#languages">Languages</a></li><li><a href="#security">Security and privacy</a></li><li><a href="#trouble">Troubleshooting</a></li><li><a href="#reference">Reference</a></li></ol><p>More</p><ol><li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide">Guide pages</a></li><li><a href="https://github.com/orionopenwow/TribeCode#readme">README</a></li><li><a href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md">Changelog</a></li></ol></nav>
 <main class="doc">
   <p class="eyebrow mono">// docs</p>
   <h1>TribeCode docs</h1>
@@ -101,7 +101,9 @@
   </ul>
   <pre><code>git clone https://github.com/orionopenwow/TribeCode
 cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
-  <p>There's no setup wizard. The first time you open it you're the host of a new tribe, your name comes from your computer, and you can change anything later in <b>Settings</b>.</p>
+  <h3 id="first-open">The first time you open it <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h3>
+  <p>You land on your own <b>Dashboard</b>. Nothing is created for you and no demo starts. <b>Make it yours</b> shows once: your name and profile icon (or a photo), the look (nine themes, an accent color, match your system) and your language and text size. Skip it if you like; it's in <b>Settings › Personalize</b> later.</p>
+  <p>Then Flint asks if you want a quick look around. The tour has 14 stops, each with one sentence and a small thing to try. Pause it any time and pick it up again from the Dashboard or the <b>?</b> menu › <b>Tour with Flint</b>. When you're ready, press <b>Start your first project</b> or <b>Join with a link</b>. The demo tribe only runs when you ask: <b>?</b> › <b>Try a demo tribe</b>, or <kbd>Ctrl</kbd> <kbd>K</kbd> › <b>Start demo</b>.</p>
 
   <h2 id="first">Your first project</h2>
   <h3>1. Create a project</h3>
@@ -120,7 +122,7 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
     <li><b>Tribe</b>: your group, with its members, projects and settings. Each tribe runs where its host chooses: the desktop app, your own server or a cloud host.</li>
     <li><b>Project</b>: one thing you're making, with its own chat, files, tasks, website and code repository. Projects show as circles on the left rail.</li>
     <li><b>Code repository</b>: the shared folder for the project's code, saved on GitHub. The preview runs from it, and <b>autopilot</b> keeps it in sync.</li>
-    <li><b>Flint</b>: TribeCode's built-in helper. It answers questions and makes everyday changes without a big AI model, and uses one when you connect it.</li>
+    <li><b>Flint</b>: TribeCode's built-in helper. He understands about 170 everyday actions, builds from templates and answers how-to questions with no AI at all, and uses one when you connect it (see <a class="ember" href="#flint-local">Flint without an AI</a>).</li>
     <li><b>AI helpers</b>: each person's own AI (Claude Code, Codex, Gemini CLI, Cursor…) joins as an agent that acts for its owner, never above them.</li>
   </ul>
   <table><thead><tr><th>Role</th><th>Can</th></tr></thead><tbody>
@@ -150,18 +152,76 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
     <li><b>Flint</b>: TribeCode's built-in helper, bottom right. Ask in plain words ("add a jump sound", "open the whiteboard", "what changed today?") and it does it or shows you where.</li>
     <li><b>Creative studios</b>: free, open-source tools TribeCode recommends, like ArtCraft for AI images and video, Blender, Krita, Godot and LMMS. What you make goes in the project's <code>assets/</code> folder with credits.</li>
     <li><b>Asset library</b>: free sounds, 3D models, rigged characters, textures, pixel sprites and fonts, added in one click with <code>assets/CREDITS.md</code> written for you.</li>
-    <li><b>Task Board</b>: tasks with owners and columns. Its badge counts updates from others since you last looked.</li>
+    <li><b>Task Board</b>: counters along the top (Needs someone, In progress, Waiting for review, Done this week, Overdue) that filter the list, and one row per task with one clear next step: <b>Assign</b>, <b>Start</b>, <b>Send for review</b>, <b>Approve</b>. Done folds away, and a List | Board switch keeps columns if you like them. Its badge counts updates from others since you last looked.</li>
     <li><b>Approvals</b>: anything an AI helper wants to do that matters waits for a person, and phones get one-tap Approve or Deny.</li>
     <li><b>Inbox</b>: mentions, assignments and approvals in one place; it clears when you read it.</li>
     <li><b>Agents Hub</b>: what every AI helper is doing, who owns which files, hand-offs, reviews and the daily plan.</li>
-    <li><b>Workshop and Marketplace</b>: 515 checked add-ons (widgets, skills, connectors, templates), sorted by what your tribe uses.</li>
+    <li><b>Workshop and Marketplace</b>: 575 checked add-ons (widgets, skills, connectors, templates), sorted by what your tribe uses, plus a <b>Trending on GitHub</b> shelf of permissively licensed open-source tools that refreshes every day.</li>
     <li><b>Ctrl K</b> finds anything: a doc, a task, a person or a command. <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>B</kbd> reports a bug with the recent logs attached.</li>
   </ul>
 
+  <h2 id="design">Design canvas <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h2>
+  <p>Every project has a <b>Design</b> row in its sidebar: a canvas for screens, cards and pages, like Figma inside your tribe. It opens full-window with one slim bar on top: <b>Back to app</b>, the design file, quick jumps to Chat, Tasks, Preview and Docs, and <b>Send to app</b>.</p>
+  <ul class="cards">
+    <li><b>Simple mode</b>The canvas and a Flint chat pane. Ask for "a sign-in screen for Ember" or "a pricing section" and he builds it, free, from 13 screen templates. Every step has Show and Undo, and friends see the conversation.</li>
+    <li><b>Advanced mode</b><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>\</kbd> brings back Layers, Properties and Inspect, with Flint as a tab. Frames, shapes and text, snapping, align and distribute, rotate, frame presets and a right-click menu.</li>
+    <li><b>Auto layout is CSS</b>Direction, gap, padding, alignment and Hug, Fill or Fixed sizing are real flexbox, so what you see is what ships.</li>
+    <li><b>Components</b>Make a component and place copies. Each copy keeps its own text, color and visibility; editing the main one updates every copy.</li>
+    <li><b>Send to app</b>Puts a frame in your project as HTML and CSS and the preview updates. Sending again keeps hand edits outside the marked part. <b>Open in canvas</b> does the opposite for anything you pick in the preview.</li>
+    <li><b>Inspect and export</b>Any layer's CSS, with design-token names and measurements, plus PNG, PNG 2x and SVG export.</li>
+  </ul>
+  <p>Flint can also tidy hand-placed layers into auto layout, rename layers, make a dark or light version and make variants, all without an AI. Members' Claude Code can read and edit designs through the canvas tools, and its cursor shows on the canvas while it works.</p>
+
+  <h2 id="focus">Preview and live editing <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h2>
+  <p><b>Preview app</b> opens a focused workspace: just your app and Flint's pane, with <b>Back to app</b>, quick jumps to Chat, Tasks, Docs and Code (with unread badges), device sizes, Publish and Comment. After a quick jump a <b>Back to preview</b> pill brings you straight back, and <kbd>Esc</kbd> closes the innermost thing first.</p>
+  <ul>
+    <li><b>Properties</b>: pick any element and change its spacing, size, font, colors, corners and alignment. The change goes straight into the code, with Undo. No AI needed.</li>
+    <li><b>Plan first</b> shows the steps before an AI helper starts; <b>+ Note</b> queues several asks to send together; <b>History</b> lists every version and restores one without losing anything.</li>
+  </ul>
+
+  <h2 id="templates">Website templates <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h2>
+  <p>Sixteen starter sites, each with its own fonts, layout and colors: link in bio (four looks), merch shop with a product page and cart, portfolio, creator, band, café, local service, wedding RSVP, podcast, newsletter, startup, indie game page, resume, nonprofit, photography and coming soon. Open them from project setup, the Website view or <kbd>Ctrl</kbd> <kbd>K</kbd> › Website templates, or ask Flint ("make me a link in bio for Mara Makes Pots").</p>
+  <table><thead><tr><th>Level</th><th>What you change</th></tr></thead><tbody>
+    <tr><td>Easy</td><td>A short form: name, words, links, photos and main colors, with a live preview.</td></tr>
+    <tr><td>Comfortable</td><td>Looks, fonts, every color, and sections you can hide or reorder.</td></tr>
+    <tr><td>Pro</td><td>The plain, commented code and what each file is for.</td></tr>
+  </tbody></table>
+  <p class="tip">Checkout in the merch shop goes to your own Stripe, Shopify or Gumroad link: the page never takes card details. Review sections are for real reviews only, and signup and RSVP forms say they aren't connected until you add a link.</p>
+
+  <h2 id="pins">Comment pins <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h2>
+  <p>Press <kbd>C</kbd> (or <b>Comment</b>) in the preview or on the Design canvas and click where you mean. A pin sticks to that element or layer, even when the layout moves. Threads have replies, @mentions go to the Inbox and to phones, and you can resolve, reopen and filter by Unresolved, Resolved or Mine. Click a friend's avatar to follow their view. AI helpers can read pins and reply through <code>list_pins</code>, <code>add_pin_reply</code> and <code>resolve_pin</code>.</p>
+
+  <h2 id="flint-local">Flint without an AI <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h2>
+  <p>Flint has his own small brain that runs in the app. With no AI connected he understands about 170 everyday actions across TribeCode, tolerates typos, reads dates, times, people and colors, and runs several steps from one message ("add a task to order samples by Friday and tell Maya"). When a detail is missing he asks one question with tappable answers; when he's unsure he offers three "did you mean" choices. Everything he does can be undone.</p>
+  <ul>
+    <li><b>Teach him</b>: "when I say ship it, publish the site", or "no, I meant…" after a miss. Phrases are kept per person.</li>
+    <li><b>How-to answers</b> come from the Guide and the docs, with the source named.</li>
+    <li><b>Free builds</b>: a landing page, any website template, a to-do app, a 2D platformer, a 3D game or a browser video editor, from one sentence.</li>
+    <li><b>Honest limits</b>: big changes across many files, new game systems, accounts and payments, and hard debugging get a "Bigger than my free tier" card that hands the job to a member's own AI helper.</li>
+  </ul>
+  <p>Ask Flint "what can you do for free?" for the full list. On phones he can use the smallest built-in model when the browser supports WebGPU.</p>
+
+  <h2 id="buildkit">Build kit and starters <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h2>
+  <p>Flint and your AI helpers build with checked, permissively licensed open-source stacks picked for each kind of project, and the project's instructions for AI helpers (<code>TRIBE_CONTEXT.md</code>) list them with a quality bar (lighting, 60fps, input feel, sound, loading screens, accessibility).</p>
+  <table><thead><tr><th>Kind</th><th>Stack</th></tr></thead><tbody>
+    <tr><td>3D game</td><td>three.js, postprocessing, cannon-es or Rapier, howler. Starter: a rolling-ball game with shadows, physics, sound and touch controls.</td></tr>
+    <tr><td>2D game</td><td>Phaser, KAPLAY or PixiJS, matter-js, howler.</td></tr>
+    <tr><td>Video</td><td>Mediabunny, wavesurfer.js, Motion. Starter: a browser editor that trims, splits, reorders, titles and exports.</td></tr>
+    <tr><td>App, site, dashboard</td><td>TribeCode's design tokens, Lucide, Motion, Floating UI; uPlot, Chart.js, ECharts or D3 for data.</td></tr>
+  </tbody></table>
+
   <h2 id="phones">On your phone</h2>
   <p>Open your tribe link on a phone and add it to your Home Screen. Swipe from the left for your projects; the bottom rack has Chat, Docs, Updates and Tasks. Phones are best for approvals, quick replies, voice notes and standups. Voice and notifications need an https address (see <a class="ember" href="#hosting">Hosting</a>). More in the <a class="ember" href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/06-phones.md">phones guide</a>.</p>
+  <h3 id="phone-tribes">Start a tribe from a phone <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.28</small></h3>
+  <p>On a phone with no tribe yet, <b>+</b> asks <b>Where should your tribe live?</b></p>
+  <ul>
+    <li><b>This phone</b>: starts instantly and keeps everything in the phone's browser: chat with Flint, tasks, docs and projects. When friends want in, <b>Move to a host</b> copies it all to a real host in one tap.</li>
+    <li><b>Free cloud</b>: the Render setup (see <a class="ember" href="#hosting">Hosting</a>), always online.</li>
+    <li><b>My Android</b>: one command in Termux runs the server on the phone and copies a friend link. It stays up while Termux is open; keep the phone charging. iPhones can't host a server.</li>
+    <li><b>A computer</b>: the desktop app.</li>
+  </ul>
 
-  <h2 id="company">Company mode <small class="mono" style="font-size:13px;color:var(--ember)">new in v0.27</small></h2>
+  <h2 id="company">Company mode</h2>
   <p>Turn a project into a small business, alone or with friends. Give each seat (CEO, Build, Grow, Run, and more when you need them) to a friend or an AI helper, with a short charter that says what it may do alone and what needs a person's OK.</p>
   <ul class="cards">
     <li><b>Company</b>An org chart of seats, seven templates, daily standups, goals, a decision log, one weekly review in your Inbox and a monthly board update.</li>
@@ -235,9 +295,9 @@ cd TribeCode && npm start      # then open http://localhost:4747</code></pre>
 </main>
 </div>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
-<script src="main.js?v=0.28.0" defer></script>
-<script src="nav.js?v=0.28.0" defer></script>
-<script src="i18n.js?v=0.28.0" defer></script>
+<script src="main.js?v=0.28.1" defer></script>
+<script src="nav.js?v=0.28.1" defer></script>
+<script src="i18n.js?v=0.28.1" defer></script>
 <script>
 // highlight the section you're reading in the table of contents
 (function () {

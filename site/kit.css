@@ -3,7 +3,7 @@
 .kit { padding: 128px 0 0; }
 .kit__lead { max-width: 640px; color: var(--muted); font-size: 17px; line-height: 1.6; margin: 12px 0 0; }
 .kit__box { margin-top: 32px; border: 1px solid var(--edge); border-radius: var(--r-lg, 18px); background: var(--surface); overflow: hidden; }
-.kit__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-bottom: 1px solid var(--edge); background: var(--raised); }
+.kit__tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--edge); background: var(--raised); }
 .kit__tab { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; padding: 14px 16px; border: 0; border-right: 1px solid var(--edge); background: none; color: var(--faint); text-align: left; cursor: pointer; position: relative; font: inherit; }
 .kit__tab:last-child { border-right: 0; }
 .kit__tab b { color: var(--text); font-size: 14.5px; font-weight: 600; }
@@ -165,3 +165,33 @@
 .ks__note { margin: 2px 0 0; color: #7C8796; font-size: 11.5px; }
 .kit__cta { margin-top: 18px; display: inline-flex; align-items: center; gap: 8px; }
 @media (max-width: 900px) { .ks__get { display: none; } .kit__cta { margin-top: 12px; } }
+
+/* Design (v0.28): a frame, its Inspect CSS, a comment pin and Send to app */
+.kz { display: grid; grid-template-columns: minmax(0, 1fr) 210px; }
+.kz__cv { position: relative; display: grid; place-items: center; padding: 22px 16px; background: #12151A; }
+.kz__frame { width: 190px; }
+.kz__fn { margin: 0 0 5px; color: #38C6B1; font: 500 10px/1 var(--mono); }
+.kz__card { display: grid; gap: 8px; padding: 18px 16px; border-radius: 6px; background: #FAF8F5; color: #16181D; outline: 1px solid #38C6B1; }
+.kz__card b { color: #16181D; font-size: 15px; }
+.kz__price { color: #5A5F6B; font-size: 11.5px; }
+.kz__card i { height: 7px; border-radius: 4px; background: #ECE8E1; } .kz__card i:nth-of-type(2) { width: 80%; } .kz__card i:nth-of-type(3) { width: 60%; }
+.kz__btn { margin-top: 4px; padding: 8px; border-radius: 7px; background: #F26B1D; color: #FFFFFF; text-align: center; font-size: 11.5px; font-weight: 600; }
+.kz__pin { position: absolute; right: 12px; bottom: 16px; display: flex; gap: 7px; align-items: flex-start; max-width: 210px; }
+.kz__pn { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50% 50% 50% 2px; background: #6C7CFF; color: #FFFFFF; font: 700 11px/1 var(--mono); }
+.kz__pin p { margin: 0; padding: 7px 9px; border: 1px solid #2A313C; border-radius: 9px; background: #1B2028; font-size: 11px; line-height: 1.4; }
+.kz__pin b { color: #9AA6FF; } .kz__pin em { display: block; margin-top: 3px; color: #38C6B1; font-style: normal; font-size: 10.5px; }
+.kz__side { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-left: 1px solid #2A313C; background: #1B2028; }
+.kz__tabs { display: flex; gap: 4px; margin: 0; } .kz__tabs span { padding: 4px 10px; border-radius: 7px; color: #8B93A1; font-size: 11.5px; font-weight: 600; } .kz__tabs .on { background: #262C36; color: #E2E8F0; }
+.kz__css { margin: 0; padding: 10px; border: 1px solid #2A313C; border-radius: 9px; background: #12151A; color: #C9D1DC; font: 11px/1.6 var(--mono); white-space: pre; overflow: hidden; }
+.kz__sent { margin: auto 0 0; color: #3BD16F; font: 500 11px/1.4 var(--mono); }
+
+/* Websites (v0.28): real template thumbnails and the three skill levels */
+.kw { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.kw__bar { display: flex; align-items: center; gap: 8px; } .kw__bar b { font-size: 13px; } .kw__bar > span:not(.kw__lv) { padding: 1px 7px; border-radius: 999px; background: #262C36; color: #8B93A1; font: 600 10.5px/1.5 var(--mono); }
+.kw__lv { margin-left: auto; display: inline-flex; padding: 2px; border: 1px solid #2A313C; border-radius: 8px; } .kw__lv span { padding: 3px 9px; border-radius: 6px; color: #8B93A1; font-size: 11px; font-weight: 600; } .kw__lv .on { background: #262C36; color: #E2E8F0; }
+.kw__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kw__t { margin: 0; min-width: 0; }
+.kw__t img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border: 1px solid #2A313C; border-radius: 8px; background: #1B2028; }
+.kw__t figcaption { margin-top: 5px; color: #C9D1DC; font-size: 11.5px; }
+.kw__note { margin: 0; color: #8B93A1; font-size: 11.5px; }
+@media (max-width: 640px) { .kz { grid-template-columns: minmax(0, 1fr); } .kz__side { border-left: 0; border-top: 1px solid #2A313C; } .kz__pin { position: static; margin-top: 12px; } .kz__cv { display: flex; flex-direction: column; } .kw__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kw__lv { display: none; } }

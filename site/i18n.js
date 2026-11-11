@@ -172,11 +172,51 @@
     "Change it in plain words": ["Cámbialo con palabras sencillas", "Mude com palavras simples", "Changez-le avec des mots simples", "Ändere es mit einfachen Worten", "普通の言葉で直す", "用平常的话修改", "쉬운 말로 바꾸기"],
     "Share a link": ["Comparte un enlace", "Compartilhe um link", "Partagez un lien", "Teile einen Link", "リンクを共有", "分享一个链接", "링크 공유하기"],
     "Start learning": ["Empieza a aprender", "Comece a aprender", "Commencer à apprendre", "Loslernen", "学び始める", "开始学习", "배우기 시작"],
+    // v0.28: Design canvas, website templates, Flint without an AI, new docs sections
+    'Design it with Flint, then send it to your app.': ['Diséñalo con Flint y envíalo a tu app.', 'Desenhe com o Flint e mande para o seu app.', 'Dessinez-le avec Flint, puis envoyez-le dans votre app.', 'Entwirf es mit Flint und schick es in deine App.', 'Flintとデザインして、そのままアプリへ。', '和 Flint 一起设计，再一键放进你的应用。', 'Flint와 디자인하고, 앱으로 바로 보내세요.'],
+    'Every project has a design canvas. Tell Flint what you need and he lays out the screen for you, free, as real layers you can click and change. When it looks right, one button puts it in your app as code.': [
+      'Cada proyecto tiene un lienzo de diseño. Dile a Flint lo que necesitas y él arma la pantalla gratis, con capas reales que puedes tocar y cambiar. Cuando se vea bien, un botón la pone en tu app como código.',
+      'Cada projeto tem uma tela de design. Diga ao Flint o que você precisa e ele monta a tela de graça, com camadas reais que você pode clicar e mudar. Quando estiver bom, um botão coloca tudo no seu app como código.',
+      'Chaque projet a un canevas de design. Dites à Flint ce qu’il vous faut : il compose l’écran gratuitement, en vrais calques que vous pouvez cliquer et modifier. Quand c’est bon, un bouton le met dans votre app sous forme de code.',
+      'Jedes Projekt hat eine Design-Fläche. Sag Flint, was du brauchst, und er baut den Screen kostenlos auf, aus echten Ebenen, die du anklicken und ändern kannst. Passt es, bringt ein Knopf ihn als Code in deine App.',
+      'どのプロジェクトにもデザインキャンバスがあります。欲しいものをFlintに伝えると、クリックして変えられる本物のレイヤーで画面を無料で組み立てます。よければボタンひとつでコードとしてアプリへ。',
+      '每个项目都有一块设计画布。告诉 Flint 你要什么，他会免费排好界面，全是可以点击修改的真实图层。满意了，一个按钮就把它作为代码放进你的应用。',
+      '모든 프로젝트에는 디자인 캔버스가 있어요. Flint에게 필요한 걸 말하면 클릭해서 바꿀 수 있는 실제 레이어로 화면을 무료로 짜 줍니다. 마음에 들면 버튼 하나로 코드가 되어 앱에 들어가요.'],
+    'Ask': ['Pide', 'Peça', 'Demandez', 'Frag', '頼む', '提出', '요청'],
+    'Flint designs it': ['Flint lo diseña', 'O Flint desenha', 'Flint le dessine', 'Flint entwirft es', 'Flintがデザイン', 'Flint 来设计', 'Flint가 디자인'],
+    'Tweak it': ['Ajústalo', 'Ajuste', 'Ajustez', 'Feinschliff', '微調整', '微调', '다듬기'],
+    'Send to app': ['Enviar a la app', 'Mandar para o app', 'Envoyer dans l’app', 'An die App senden', 'アプリへ送る', '发送到应用', '앱으로 보내기'],
+    '"Make a sign-in screen for Ember." No AI subscription needed.': ['"Haz una pantalla de inicio de sesión para Ember." Sin suscripción de IA.', '"Faça uma tela de login para o Ember." Sem assinatura de IA.', '« Fais un écran de connexion pour Ember. » Aucun abonnement IA requis.', '„Mach einen Anmeldescreen für Ember.“ Kein KI-Abo nötig.', '「Ember用のサインイン画面を作って」。AIのサブスクは不要。', '"给 Ember 做一个登录界面。"不需要 AI 订阅。', '"Ember 로그인 화면 만들어 줘." AI 구독은 필요 없어요.'],
+    'Real layers with auto layout, from 13 screen templates.': ['Capas reales con diseño automático, a partir de 13 plantillas de pantalla.', 'Camadas reais com layout automático, a partir de 13 modelos de tela.', 'De vrais calques en mise en page auto, à partir de 13 modèles d’écran.', 'Echte Ebenen mit Auto-Layout, aus 13 Screen-Vorlagen.', '13種類の画面テンプレートから、オートレイアウトの本物のレイヤーで。', '基于 13 个界面模板，全是带自动布局的真实图层。', '13가지 화면 템플릿에서, 자동 레이아웃이 적용된 실제 레이어로.'],
+    'Click anything for color, size and words. Advanced mode adds layers and properties.': ['Toca lo que quieras para cambiar color, tamaño y textos. El modo avanzado añade capas y propiedades.', 'Clique em qualquer coisa para mudar cor, tamanho e texto. O modo avançado mostra camadas e propriedades.', 'Cliquez sur n’importe quoi pour la couleur, la taille et le texte. Le mode avancé ajoute calques et propriétés.', 'Klick auf irgendwas für Farbe, Größe und Text. Der Profimodus zeigt Ebenen und Eigenschaften.', 'クリックで色・サイズ・文字を変更。詳細モードではレイヤーとプロパティも。', '点任何东西就能改颜色、大小和文字。高级模式还有图层和属性面板。', '아무거나 클릭해 색, 크기, 문구를 바꾸세요. 고급 모드에는 레이어와 속성이 나와요.'],
+    'It lands in your project as HTML and CSS, and the preview updates.': ['Llega a tu proyecto como HTML y CSS, y la vista previa se actualiza.', 'Chega ao seu projeto como HTML e CSS, e a prévia atualiza.', 'Il arrive dans votre projet en HTML et CSS, et l’aperçu se met à jour.', 'Es landet als HTML und CSS in deinem Projekt, und die Vorschau aktualisiert sich.', 'HTMLとCSSとしてプロジェクトに入り、プレビューも更新されます。', '它以 HTML 和 CSS 进入你的项目，预览随之更新。', 'HTML과 CSS로 프로젝트에 들어가고, 미리보기가 바뀌어요.'],
+    'How the Design canvas works': ['Cómo funciona el lienzo de diseño', 'Como funciona a tela de design', 'Comment marche le canevas de design', 'So funktioniert die Design-Fläche', 'デザインキャンバスのしくみ', '设计画布怎么用', '디자인 캔버스 사용법'],
+    "A design canvas that's already code": ['Un lienzo de diseño que ya es código', 'Uma tela de design que já é código', 'Un canevas de design qui est déjà du code', 'Eine Design-Fläche, die schon Code ist', 'そのままコードになるデザインキャンバス', '本身就是代码的设计画布', '이미 코드인 디자인 캔버스'],
+    '16 website templates, each with its own look': ['16 plantillas de sitio web, cada una con su estilo', '16 modelos de site, cada um com seu visual', '16 modèles de site, chacun avec son style', '16 Website-Vorlagen, jede mit eigenem Look', '16種類のWebサイトテンプレート、それぞれ個性的', '16 套网站模板，各有风格', '각자 개성 있는 웹사이트 템플릿 16종'],
+    'See it in action': ['Míralo en acción', 'Veja funcionando', 'Voir en action', 'In Aktion ansehen', '動きを見る', '看看效果', '직접 보기'],
+    'See all 16': ['Ver las 16', 'Ver os 16', 'Voir les 16', 'Alle 16 ansehen', '16種類すべて見る', '查看全部 16 套', '16종 모두 보기'],
+    'Most of what you ask needs no AI at all': ['Casi todo lo que pides no necesita IA', 'Quase tudo que você pede não precisa de IA', 'La plupart de vos demandes ne demandent aucune IA', 'Das meiste, worum du bittest, braucht gar keine KI', '頼むことのほとんどはAIなしでできます', '你的大多数请求根本不需要 AI', '대부분의 요청은 AI 없이도 돼요'],
+    'Flint has his own small brain that runs right in the app. He reads what you typed, typos and all, works out what you mean, and does it. When something is truly bigger than that, he says so plainly and hands it to a stronger AI.': [
+      'Flint tiene su propio cerebro pequeño que funciona dentro de la app. Lee lo que escribiste, con faltas y todo, entiende lo que quieres y lo hace. Si algo es de verdad más grande, lo dice claro y se lo pasa a una IA más potente.',
+      'O Flint tem um cérebro próprio, pequeno, que roda dentro do app. Ele lê o que você digitou, com erros e tudo, entende o que você quer e faz. Quando algo é maior que isso, ele diz com clareza e passa para uma IA mais forte.',
+      'Flint a son propre petit cerveau, qui tourne dans l’app. Il lit ce que vous avez tapé, fautes comprises, comprend ce que vous voulez et le fait. Quand c’est vraiment plus gros, il le dit franchement et passe la main à une IA plus puissante.',
+      'Flint hat ein eigenes kleines Gehirn, das direkt in der App läuft. Er liest, was du getippt hast, samt Tippfehlern, versteht, was du meinst, und macht es. Ist etwas wirklich größer, sagt er das klar und gibt es an eine stärkere KI weiter.',
+      'Flintにはアプリ内で動く小さな頭脳があります。打ち間違いごと読み取り、意図をくみ取って実行します。本当に手に負えないときは、はっきりそう伝えて、より強いAIに渡します。',
+      'Flint 有一个直接在应用里运行的小脑袋。他会读你输入的内容（打错字也没关系），弄明白你的意思然后去做。真遇到更大的事，他会直说，并交给更强的 AI。',
+      'Flint에게는 앱 안에서 돌아가는 작은 두뇌가 있어요. 오타까지 포함해 입력한 걸 읽고, 뜻을 알아내서 해 줍니다. 정말 더 큰 일이면 솔직히 말하고 더 강한 AI에게 넘겨요.'],
+    'Design canvas': ['Lienzo de diseño', 'Tela de design', 'Canevas de design', 'Design-Fläche', 'デザインキャンバス', '设计画布', '디자인 캔버스'],
+    'Preview and live editing': ['Vista previa y edición en vivo', 'Prévia e edição ao vivo', 'Aperçu et édition en direct', 'Vorschau und Live-Bearbeitung', 'プレビューとライブ編集', '预览与实时编辑', '미리보기와 실시간 편집'],
+    'Website templates': ['Plantillas de sitio web', 'Modelos de site', 'Modèles de site', 'Website-Vorlagen', 'Webサイトテンプレート', '网站模板', '웹사이트 템플릿'],
+    'Comment pins': ['Comentarios fijados', 'Comentários fixados', 'Épingles de commentaire', 'Kommentar-Pins', 'コメントピン', '评论图钉', '댓글 핀'],
+    'Flint without an AI': ['Flint sin IA', 'Flint sem IA', 'Flint sans IA', 'Flint ohne KI', 'AIなしのFlint', '不用 AI 的 Flint', 'AI 없는 Flint'],
+    'Build kit and starters': ['Kit de construcción y plantillas', 'Kit de construção e modelos', 'Kit de construction et projets de départ', 'Bau-Kit und Vorlagen', 'ビルドキットとスターター', '构建工具包与起步项目', '빌드 키트와 스타터'],
+    'The first time you open it': ['La primera vez que lo abres', 'Na primeira vez que você abre', 'La première fois que vous l’ouvrez', 'Beim ersten Öffnen', 'はじめて開いたとき', '第一次打开时', '처음 열었을 때'],
+    'Start a tribe from a phone': ['Crea una tribu desde el móvil', 'Crie uma tribo pelo celular', 'Lancez une tribu depuis un téléphone', 'Starte einen Tribe vom Handy aus', 'スマホからトライブを始める', '在手机上创建部落', '휴대폰에서 트라이브 시작하기'],
   };
   const NOTE = ['Algunas partes siguen en inglés.', 'Algumas partes ainda estão em inglês.', 'Certaines parties restent en anglais.', 'Einige Teile sind noch auf Englisch.', '一部はまだ英語です。', '部分内容仍为英文。', '일부는 아직 영어예요.'];
   const KEY = 'tribecode.lang';
   const idx = code => LANGS.findIndex(l => l[0] === code) - 1;   // -1 for English
-  const SEL = 'h1, h2, h3, .hero__sub, .hero__more a, .hero__more-note, [class*="__lead"], .feature__text, .maker__text, .nav__link, .nav__open, .nav__star, [data-dl-label], .btn, .menu b, .footer p, .footer__links a, .lc-go, .vibe__text, .biz__note, .biz__text, .biz__sk, .biz__ss, .bx__cap, .biz__docs, .fbk__more a, .vf__k, .vf__cap, .vf__step b, .kit__text, .mm__d, .mm__eb, .mm-spot__t, .mm-spot__d, .mm-spot__go';
+  const SEL = 'h1, h2, h3, .hero__sub, .hero__more a, .hero__more-note, [class*="__lead"], .feature__text, .maker__text, .nav__link, .nav__open, .nav__star, [data-dl-label], .btn, .menu b, .footer p, .footer__links a, .lc-go, .vibe__text, .biz__note, .biz__text, .biz__sk, .biz__ss, .bx__cap, .biz__docs, .fbk__more a, .vf__k, .vf__cap, .vf__step b, .kit__text, .mm__d, .mm__eb, .mm-spot__t, .mm-spot__d, .mm-spot__go, .dz__steps b, .dz__steps span, .dz__docs, .fl-local__more';
   let cur = 'en';
   function textNode(el) { for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return n; return null; }
   function apply(code) {

@@ -33,9 +33,10 @@
 <meta name="twitter:title" content="TribeCode · Build apps, games and websites with your friends">
 <meta name="twitter:description" content="Make games, apps and websites with your friends and the AI helpers you already use. Free and open source.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.28.0">
+<link rel="stylesheet" href="styles.css?v=0.28.1">
 <link rel="stylesheet" href="nav.css?v=0.28.0">
-<link rel="stylesheet" href="kit.css?v=0.28.0">
+<link rel="stylesheet" href="kit.css?v=0.28.1">
+<link rel="stylesheet" href="design-show.css?v=0.28.1">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -136,11 +137,12 @@
               <button type="button" class="mk-row mk-row--sub is-on" data-go="general"># general</button>
               <button type="button" class="mk-row mk-row--sub" data-go="agents"># agents <em>2</em></button>
               <button type="button" class="mk-row" data-go="files"><i class="mk-ic mk-ic--file"></i>Files</button>
-              <button type="button" class="mk-row" data-go="board"><i class="mk-ic mk-ic--check"></i>Task Board<em>4</em></button>
+              <button type="button" class="mk-row" data-go="design"><i class="mk-ic mk-ic--grid"></i>Design</button>
+              <button type="button" class="mk-row" data-go="board"><i class="mk-ic mk-ic--check"></i>Task Board<em>1</em></button>
               <button type="button" class="mk-row" data-go="hub"><i class="mk-ic mk-ic--bot"></i>Agents Hub<em>3</em></button>
-              <button type="button" class="mk-row mk-row--pin" data-go="level">📌 Level design</button>
               <button type="button" class="mk-row mk-row--add" data-go="add">+ Add</button>
               <div class="mk-side__foot">
+                <span class="mk-invite mk-invite--pv">▶ Preview app</span>
                 <span class="mk-invite">👋 Invite friends</span>
                 <div class="mk-me"><i class="mk-av mk-av--sm" style="--c:#F26B1D">O</i><div><b>Orion</b><span>Hosting</span></div></div>
               </div>
@@ -262,6 +264,65 @@
 
   <!-- ================= STORY: how an app comes together (pixel art, six steps) ================= -->
   <!-- ================= COMPANY MODE (v0.27): run the business around what you build ================= -->
+  <!-- ================= DESIGN (v0.28): the Design canvas with Flint beside it, then Send to app. Played by design-show.js ================= -->
+  <section class="dz" id="design" aria-labelledby="dz-title">
+    <div class="wrap">
+      <div class="dz__top">
+        <div class="dz__intro">
+          <p class="eyebrow mono">// design it, then build it</p>
+          <h2 id="dz-title">Design it with Flint, then send it to your app.</h2>
+          <p class="dz__lead">Every project has a design canvas. Tell Flint what you need and he lays out the screen for you, free, as real layers you can click and change. When it looks right, one button puts it in your app as code.</p>
+          <ol class="dz__steps" aria-label="How it goes">
+            <li data-dz-step="1"><b>Ask</b><span>"Make a sign-in screen for Ember." No AI subscription needed.</span></li>
+            <li data-dz-step="2"><b>Flint designs it</b><span>Real layers with auto layout, from 13 screen templates.</span></li>
+            <li data-dz-step="3"><b>Tweak it</b><span>Click anything for color, size and words. Advanced mode adds layers and properties.</span></li>
+            <li data-dz-step="4"><b>Send to app</b><span>It lands in your project as HTML and CSS, and the preview updates.</span></li>
+          </ol>
+          <a class="dz__docs" href="docs.html#design">How the Design canvas works<svg class="i i--xs" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+        <figure class="dzw" id="dzw" aria-labelledby="dz-desc">
+          <div class="dzw__win is-teal" aria-hidden="true">
+            <div class="dzw__bar"><span class="dzw__dots"><i></i><i></i><i></i></span><span class="dzw__back">‹ Back to app</span><b>Ember</b><span class="dzw__crumb">Design</span><span class="dzw__seg"><span class="on">Simple</span><span>Advanced</span></span><span class="dzw__send">Send to app</span></div>
+            <div class="dzw__body">
+              <div class="dzw__cv">
+                <div class="dzw__qb" data-dz="5"><i class="dzw__sw"></i><span>A−</span><span>A+</span><span class="dzw__qf">Ask Flint</span></div>
+                <div class="dzw__frame" data-dz="3">
+                  <p class="dzw__fn">Ember · Sign in</p>
+                  <div class="dzw__screen">
+                    <div class="dzw__l dzw__brand" data-dzl="1"><i></i><b>Ember</b></div>
+                    <div class="dzw__l" data-dzl="2"><b class="dzw__h">Good to see you</b><span class="dzw__sub">Sign in to pick up where you left off.</span></div>
+                    <div class="dzw__l" data-dzl="3"><span class="dzw__lab">Email</span><span class="dzw__in">you@example.com</span></div>
+                    <div class="dzw__l" data-dzl="4"><span class="dzw__lab">Password</span><span class="dzw__in">••••••••••</span></div>
+                    <div class="dzw__l dzw__btn is-sel" data-dzl="5">Sign in</div>
+                  </div>
+                </div>
+                <span class="dzw__cur" data-dz="3"><i></i><b>Flint</b></span>
+              </div>
+              <div class="dzw__fp">
+                <p class="dzw__fh"><img src="assets/brand/flint.svg" alt="" width="16" height="16"><b>Flint</b><span>designs with you</span></p>
+                <p class="dzw__free"><em>FREE</em>Screens, tidy, rename and variants need no AI</p>
+                <div class="dzw__log">
+                  <p class="dzw__me" data-dz="2"><i>C</i><span>make a sign-in screen for Ember</span></p>
+                  <p class="dzw__bot" data-dz="4"><img src="assets/brand/flint.svg" alt="" width="14" height="14"><span>Designed a sign-in screen for Ember, free from a template. Everything is real layers with auto layout.<em>Show · Undo</em></span></p>
+                  <p class="dzw__me" data-dz="5"><i>C</i><span>make the button teal</span></p>
+                  <p class="dzw__bot" data-dz="6"><img src="assets/brand/flint.svg" alt="" width="14" height="14"><span>Done. One step, so Undo puts it back.<em>Undo</em></span></p>
+                </div>
+                <div class="dzw__chips"><span>Dark mode version</span><span>Make variants</span><span>Tidy up</span></div>
+                <p class="dzw__comp"><span class="dzw__typed" data-dz-type></span><i class="dzw__caret"></i></p>
+              </div>
+            </div>
+            <div class="dzw__pv" data-dz="8">
+              <p class="dzw__pvbar"><i></i><b>Preview</b><span>ember / design/sign-in.html</span></p>
+              <div class="dzw__pvbody"><div class="dzw__screen dzw__screen--live"><div class="dzw__brand"><i></i><b>Ember</b></div><b class="dzw__h">Good to see you</b><span class="dzw__in">you@example.com</span><span class="dzw__in">••••••••••</span><div class="dzw__btn">Sign in</div></div></div>
+              <p class="dzw__pvok">✓ Saved to your project as HTML and CSS · 1 commit</p>
+            </div>
+          </div>
+          <figcaption class="sr-only" id="dz-desc">An animated mock of TribeCode's Design canvas in Simple mode. Camp asks Flint, in the chat pane beside the canvas, to make a sign-in screen for Ember. Flint lays out the screen layer by layer: the brand, a heading, email and password fields and a Sign in button. Camp selects the button, a small quick bar appears, and Flint makes it teal. Then Send to app saves the screen into the project as HTML and CSS, and the live preview shows it.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
   <section class="biz" id="company" aria-labelledby="biz-title">
     <div class="wrap">
       <div class="biz__top">
@@ -408,8 +469,10 @@
       <div class="kit__box reveal" data-kit>
         <div class="kit__tabs" role="tablist" aria-label="What comes with every tribe">
           <button class="kit__tab" role="tab" id="kt-docs" aria-controls="kp-docs" aria-selected="true"><span class="kit__ti" aria-hidden="true">📄</span><b>Docs</b><small>pages, sheets, slides</small></button>
+          <button class="kit__tab" role="tab" id="kt-design" aria-controls="kp-design" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">📐</span><b>Design</b><small>canvas that's code</small></button>
+          <button class="kit__tab" role="tab" id="kt-sites" aria-controls="kp-sites" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🌐</span><b>Websites</b><small>16 templates</small></button>
           <button class="kit__tab" role="tab" id="kt-flint" aria-controls="kp-flint" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true"><img src="assets/brand/flint.svg" alt="" width="18" height="18"></span><b>Flint</b><small>the built-in helper</small></button>
-          <button class="kit__tab" role="tab" id="kt-market" aria-controls="kp-market" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🧩</span><b>Widgets</b><small>515 add-ons</small></button>
+          <button class="kit__tab" role="tab" id="kt-market" aria-controls="kp-market" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🧩</span><b>Widgets</b><small>575 add-ons</small></button>
           <button class="kit__tab" role="tab" id="kt-studio" aria-controls="kp-studio" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🎨</span><b>Studios</b><small>ArtCraft and friends</small></button>
           <button class="kit__tab" role="tab" id="kt-game" aria-controls="kp-game" aria-selected="false" tabindex="-1"><span class="kit__ti" aria-hidden="true">🎮</span><b>Games &amp; apps</b><small>assets and engines</small></button>
         </div>
@@ -432,6 +495,38 @@
           <div class="kit__copy"><h3>Docs that work like Notion, right next to your code</h3><p class="kit__text">Pages inside pages, to-do lists, tables, sheets with formulas, slides, templates, comments, page history and a shared whiteboard. Everyone edits live, AI helpers included, and you can dictate instead of typing.</p><a class="btn btn--light kit__cta" href="app/">Open Docs in the app<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
         </div>
 
+        <!-- Design (v0.28): the canvas and the code stay one thing -->
+        <div class="kit__panel" role="tabpanel" id="kp-design" aria-labelledby="kt-design" hidden>
+          <div class="kit__mock kz" aria-hidden="true">
+            <div class="kz__cv">
+              <div class="kz__frame" data-k="1"><p class="kz__fn">Pricing · Pro card</p><div class="kz__card"><b>Pro</b><span class="kz__price">Unlimited projects</span><i></i><i></i><i></i><span class="kz__btn">Choose Pro</span></div></div>
+              <div class="kz__pin" data-k="3"><span class="kz__pn">1</span><p><b>Maya</b> Can the button say "Start free"?<em>Maya's Codex · On it</em></p></div>
+            </div>
+            <div class="kz__side">
+              <p class="kz__tabs"><span>Design</span><span class="on">Inspect</span></p>
+              <pre class="kz__css" data-k="2"><span class="t-dim">.pro-card {</span>
+  display: <span class="t-live">flex</span>;
+  flex-direction: <span class="t-live">column</span>;
+  gap: <span class="t-ember">12px</span>;
+  padding: <span class="t-ember">24px</span>;
+  background: <span class="t-live">var(--surface)</span>;
+<span class="t-dim">}</span></pre>
+              <p class="kz__sent" data-k="4">✓ Sent to app · pages/pricing.html</p>
+            </div>
+          </div>
+          <div class="kit__copy"><h3>A design canvas that's already code</h3><p class="kit__text">Auto layout is real CSS flex, so what you see is what ships. Send a frame to your app, open anything in the live preview as layers, read any layer's CSS in Inspect, export PNG or SVG, and leave comment pins that friends and their AI can answer.</p><a class="btn btn--light kit__cta" href="#design">See it in action<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+        </div>
+
+        <!-- Websites (v0.28): 16 templates, three skill levels -->
+        <div class="kit__panel" role="tabpanel" id="kp-sites" aria-labelledby="kt-sites" hidden>
+          <div class="kit__mock kw">
+            <div class="kw__bar" aria-hidden="true"><b>Website templates</b><span>16</span><span class="kw__lv"><span class="on">Easy</span><span>Comfortable</span><span>Pro</span></span></div>
+            <div class="kw__grid"><figure class="kw__t" data-k="1"><img src="assets/sites/linkbio.jpg" alt="" width="320" height="200" loading="lazy"><figcaption>Link in bio</figcaption></figure><figure class="kw__t" data-k="1"><img src="assets/sites/merch.jpg" alt="" width="320" height="200" loading="lazy"><figcaption>Merch shop</figcaption></figure><figure class="kw__t" data-k="2"><img src="assets/sites/cafe.jpg" alt="" width="320" height="200" loading="lazy"><figcaption>Café</figcaption></figure><figure class="kw__t" data-k="2"><img src="assets/sites/band.jpg" alt="" width="320" height="200" loading="lazy"><figcaption>Band</figcaption></figure><figure class="kw__t" data-k="3"><img src="assets/sites/portfolio.jpg" alt="" width="320" height="200" loading="lazy"><figcaption>Portfolio</figcaption></figure><figure class="kw__t" data-k="3"><img src="assets/sites/wedding.jpg" alt="" width="320" height="200" loading="lazy"><figcaption>Wedding RSVP</figcaption></figure></div>
+            <p class="kw__note" data-k="4">Pictures are the real templates. Each has its own fonts, layout and colors.</p>
+          </div>
+          <div class="kit__copy"><h3>16 website templates, each with its own look</h3><p class="kit__text">Link in bio, a merch shop with a cart, café, band, portfolio, podcast, wedding RSVP and more. Fill in a short form in Easy, change looks and sections in Comfortable, or open the clean code in Pro. Flint builds any of them free from one sentence.</p><a class="btn btn--light kit__cta" href="docs.html#templates">See all 16<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+        </div>
+
         <!-- Flint -->
         <div class="kit__panel" role="tabpanel" id="kp-flint" aria-labelledby="kt-flint" hidden>
           <div class="kit__mock kf" aria-hidden="true">
@@ -442,13 +537,13 @@
             <div class="kf__msg kf__bot" data-k="4"><img src="assets/brand/flint.svg" alt="" width="22" height="22"><div><b>Flint</b><p>3 changes: Orion's Claude finished the title screen, Maya added the trailer task, Jay is on level 3. One approval is waiting for you.</p></div></div>
             <div class="kf__chips" data-k="5"><span>open the whiteboard</span><span>invite Sam</span><span>start a huddle</span><span>make it a company</span></div>
           </div>
-          <div class="kit__copy"><h3>Flint runs the app for you</h3><p class="kit__text">Flint is TribeCode's own helper. Ask in plain words and it opens things, makes everyday changes, finds files and catches you up. It works without a paid AI, and gets smarter when you connect one.</p><a class="btn btn--light kit__cta" href="flint.html">Meet Flint<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          <div class="kit__copy"><h3>Flint runs the app for you</h3><p class="kit__text">Flint is TribeCode's own helper. Ask in plain words, typos and all: he understands about 170 everyday actions, builds sites and starters from one sentence, answers how-to questions from the docs and learns the phrases you teach him. All of that needs no AI. Connect one and he does more.</p><a class="btn btn--light kit__cta" href="flint.html">Meet Flint<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
         </div>
 
         <!-- Widgets & Marketplace -->
         <div class="kit__panel" role="tabpanel" id="kp-market" aria-labelledby="kt-market" hidden>
           <div class="kit__mock km" aria-hidden="true">
-            <div class="km__bar"><span class="on">🔥 Hot</span><span>📈 Rising</span><span>✨ New</span><span>🏆 Top</span><span class="km__q">Search 515 add-ons</span></div>
+            <div class="km__bar"><span class="on">🔥 Hot</span><span>📈 Rising</span><span>✨ New</span><span>🏆 Top</span><span class="km__q">Search 575 add-ons</span></div>
             <div class="km__grid">
               <div class="km__it" data-k="1"><i>💳</i><b>Stripe dashboard</b><small>widget · money</small><span class="km__add">Added ✓</span></div>
               <div class="km__it" data-k="1"><i>📊</i><b>Plausible</b><small>widget · traffic</small><span class="km__add">Add</span></div>
@@ -460,7 +555,7 @@
               <div class="km__it" data-k="4"><i>🚀</i><b>Launch playbook</b><small>playbook · grow</small><span class="km__add">Add</span></div>
             </div>
           </div>
-          <div class="kit__copy"><h3>Widgets for the tools you already use</h3><p class="kit__text">Add a Stripe, analytics, Discord or Figma widget to the sidebar with the + button, or give your AI new skills. 515 checked add-ons, sorted by what tribes like yours use. Anyone can make one and share it.</p><a class="btn btn--light kit__cta" href="app/">Browse the Marketplace<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          <div class="kit__copy"><h3>Widgets for the tools you already use</h3><p class="kit__text">Add a Stripe, analytics, Discord or Figma widget to the sidebar with the + button, or give your AI new skills. 575 checked add-ons, a daily "Trending on GitHub" shelf of open-source tools, sorted by what tribes like yours use. Anyone can make one and share it.</p><a class="btn btn--light kit__cta" href="app/">Browse the Marketplace<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
         </div>
 
         <!-- Creative studios -->
@@ -579,7 +674,7 @@
         <img class="feature__art" src="assets/art/phone.svg" alt="" width="120" height="90" loading="lazy">
         <p class="eyebrow mono">// on your phone</p>
         <h2 id="phone-title">Keep building from your phone.</h2>
-        <p class="feature__text">Open a friend’s link, type your name and add it to your Home Screen. Approve what your AI wants to do, leave a voice note, or start the next task from the couch.</p>
+        <p class="feature__text">Open a friend’s link, type your name and add it to your Home Screen. Approve what your AI wants to do, leave a voice note, or start the next task from the couch. No tribe yet? Start one right on the phone and move it to a host when friends join.</p>
         <ul class="facts mono"><li>No app store</li><li>One-tap approvals</li><li>Web Push</li></ul>
       </div>
       <div class="mini mini--phone reveal" data-loop="phone" aria-label="A phone mock: Orion's Claude asks to add the howler audio package, the Approve button is tapped, the card says approved from your phone, and the agent replies that footsteps now have sound.">
@@ -641,7 +736,7 @@
         <img class="feature__art" src="assets/art/host.svg" alt="" width="120" height="90" loading="lazy">
         <p class="eyebrow mono">// share the network</p>
         <h2 id="host-title">It runs where you want it.</h2>
-        <p class="feature__text">The work itself lives in your GitHub repository. The tribe runs on someone’s computer, a small server or a free cloud spot, and you can move it later.</p>
+        <p class="feature__text">The work itself lives in your GitHub repository. The tribe runs on someone’s computer, a small server, a free cloud spot or even an Android phone, and you can move it later.</p>
         <p class="feature__text">Friends join with one link, from a laptop or a phone. Chat, docs and code are plain files, so you can take them with you if you ever leave.</p>
         <ul class="facts mono"><li>Zero npm dependencies</li><li>Plain files + git</li><li>MIT licensed</li></ul>
       </div>
@@ -835,12 +930,13 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.28.0" defer></script>
-<script src="kit.js?v=0.28.0" defer></script>
+<script src="main.js?v=0.28.1" defer></script>
+<script src="kit.js?v=0.28.1" defer></script>
 <script src="aiswap.js?v=0.28.0" defer></script>
 <script src="vibe-anim.js?v=0.28.0" defer></script>
 <script src="company-show.js?v=0.28.0" defer></script>
+<script src="design-show.js?v=0.28.1" defer></script>
 <script src="nav.js?v=0.28.0" defer></script>
-<script src="i18n.js?v=0.28.0" defer></script>
+<script src="i18n.js?v=0.28.1" defer></script>
 </body>
 </html>

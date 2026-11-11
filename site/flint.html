@@ -33,9 +33,9 @@
 <meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
 <meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, built around your shared GitHub repo.">
 <meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
-<link rel="stylesheet" href="styles.css?v=0.28.0">
-<link rel="stylesheet" href="nav.css?v=0.28.0">
-<link rel="stylesheet" href="flint.css?v=0.28.0">
+<link rel="stylesheet" href="styles.css?v=0.28.1">
+<link rel="stylesheet" href="nav.css?v=0.28.1">
+<link rel="stylesheet" href="flint.css?v=0.28.1">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body data-page="flint">
@@ -158,9 +158,9 @@
 
     <article class="fx fx--flip" data-fx="brain">
       <div class="wrap fx__in">
-        <div class="fx__copy"><span class="fx__k mono">06 · any brain, or none</span><h3>Works offline, or with any AI</h3>
-          <p class="fx__mean"><b>What this means for you:</b> Flint is free and works straight away. When you want it smarter, plug in an AI: one that runs on your own computer, or a paid one the host already has.</p>
-          <ol class="fx-steps"><li>Basic mode: the everyday things, no AI needed</li><li>A free AI on the host's computer</li><li>Or a cloud AI, with the host's own key</li></ol></div>
+        <div class="fx__copy"><span class="fx__k mono">06 · any brain, or none</span><h3>Works with no AI, or with any AI</h3>
+          <p class="fx__mean"><b>What this means for you:</b> Flint is free and works straight away, even on a phone with no signal. When you want more, plug in an AI: one that runs on your own computer, or one the host already has.</p>
+          <ol class="fx-steps"><li>No AI: about 170 everyday actions, free builds and how-to answers</li><li>A free AI on your device or the host's computer</li><li>Or a cloud AI, with the host's own key</li></ol></div>
         <figure class="fa" data-app="brain" aria-label="Flint's status switches from basic mode, to a free model on the host's computer, to a cloud model, and the same question gets a richer answer each time."></figure>
       </div>
     </article>
@@ -185,6 +185,25 @@
   </section>
 
   <!-- ================= HOW FLINT THINKS ================= -->
+  <!-- v0.28: Flint's local brain (app/ui/flintnlu.js): what he does with no AI at all, and the honest tiers -->
+  <section class="fl-local" id="local" aria-labelledby="local-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// no AI needed</p>
+      <h2 id="local-title">Most of what you ask needs no AI at all</h2>
+      <p class="fl-local__lead">Flint has his own small brain that runs right in the app. He reads what you typed, typos and all, works out what you mean, and does it. When something is truly bigger than that, he says so plainly and hands it to a stronger AI.</p>
+      <div class="fl-parse" aria-hidden="true" data-flparse>
+        <p class="fl-parse__in"><span class="fl-parse__you">You</span><span class="fl-parse__t" data-flp-in>add a taks to order samples by fri and tell maya</span></p>
+        <div class="fl-parse__out" data-flp-out>
+          <p><b>1</b><span>Add task</span><em>"Order samples" · due Friday</em></p>
+          <p><b>2</b><span>Message</span><em>to Maya · "I added Order samples"</em></p>
+          <p class="fl-parse__note">Understood with no AI · one tap undoes both</p>
+        </div>
+      </div>
+      <div class="fl-tiers"><article class="fl-tier fl-tier--live"><p class="fl-tier__k mono">Free · no AI</p><p class="fl-tier__w">Runs anywhere, even on a phone with no signal</p><ul><li>Understands plain requests, typos and several steps at once, in eight languages</li><li>Answers "how do I…" from the Guide and the docs, and says where</li><li>Tasks, notes, reminders, chat, the calendar, themes and settings</li><li>Learns the phrases you teach him, on your device</li><li>Undo for everything he does</li></ul></article><article class="fl-tier fl-tier--ember"><p class="fl-tier__k mono">Free · recipes</p><p class="fl-tier__w">Builds from TribeCode's open-source kit, no AI</p><ul><li>Any of 16 website templates, from one sentence</li><li>A landing page, a to-do app, a 2D platformer</li><li>A 3D game (three.js) or a video editor in the browser</li><li>Design screens on the canvas from 13 templates</li><li>Names, words and colors filled in from what you said</li></ul></article><article class="fl-tier fl-tier--peer"><p class="fl-tier__k mono">Free · small model</p><p class="fl-tier__w">Qwen on your device or on the host</p><ul><li>Chat and quick answers about your project</li><li>Write and rewrite short copy</li><li>Fuller docs, sheets and decks</li><li>Small edits to one page</li></ul></article><article class="fl-tier fl-tier--muted"><p class="fl-tier__k mono">A stronger AI</p><p class="fl-tier__w">A member's own Claude Code, Codex or Gemini</p><ul><li>Changes across many files</li><li>New game systems: multiplayer, saves, enemies</li><li>Accounts, databases, payments and servers</li><li>Refactors and hard debugging</li></ul></article></div>
+      <p class="fl-local__more">Ask Flint "what can you do for free?" any time and he shows this list. <a href="docs.html#flint-local">How the local brain works →</a></p>
+    </div>
+  </section>
+
   <section class="fp-how" aria-labelledby="how-title">
     <div class="wrap">
       <p class="eyebrow mono">// how flint thinks</p>
@@ -236,6 +255,7 @@
       <p class="eyebrow mono">// questions</p>
       <h2 id="faq-title">Good to know</h2>
       <div class="fq">
+        <details><summary>What can Flint do without any AI?</summary><p>A lot: he understands about 170 everyday actions across the app (tasks, messages, the calendar, themes, docs, the design canvas, websites and more), handles typos and several steps in one message, answers how-to questions from the Guide, learns phrases you teach him and builds sites, starters and design screens from templates. Open-ended writing, reasoning about code and free conversation need a model.</p></details>
         <details><summary>Does Flint cost money?</summary><p>No. Flint is part of TribeCode, which is free and open source. It needs no AI to do the everyday things. If you add one, a model in your browser or on the host's computer is free; a cloud model uses the host's own account.</p></details>
         <details><summary>What does Flint remember, and who can see it?</summary><p>Only what you ask it to remember, like your name or how you like to learn. Only you can read those notes. You can edit or delete them in Settings › Flint, and they're never part of anyone else's saved copy.</p></details>
         <details><summary>Does Flint read my private messages?</summary><p>No. Flint works from the project you're in: tasks, docs, the plan and the channels you can see.</p></details>
@@ -286,9 +306,10 @@
   </div>
 </footer>
 
-<script src="main.js?v=0.28.0" defer></script>
-<script src="nav.js?v=0.28.0" defer></script>
-<script src="flint.js?v=0.28.0" defer></script>
-<script src="i18n.js?v=0.28.0" defer></script>
+<script src="main.js?v=0.28.1" defer></script>
+<script src="nav.js?v=0.28.1" defer></script>
+<script src="flint.js?v=0.28.1" defer></script>
+<script src="flint-local.js?v=0.28.1" defer></script>
+<script src="i18n.js?v=0.28.1" defer></script>
 </body>
 </html>
