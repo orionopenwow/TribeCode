@@ -79,6 +79,7 @@
   async function conflicts(el) {
     el.innerHTML = '<div class="faint">Comparing branches…</div>';
     const d = await C.api('/coord/conflicts');
+    if (tab !== 'conflicts') return;   // comparing branches is slow: the tab may have changed meanwhile
     if (!d.enabled) { el.innerHTML = empty('No code repository to compare', esc(d.reason || 'Attach a code repository to this project (+ → drop a folder or paste a GitHub URL).')); return; }
     el.innerHTML = `<p class="coord-lead">${d.branches} branch${d.branches === 1 ? '' : 'es'} compared with <code>${esc(d.main)}</code>. Pairs that change the same files will collide when they merge.</p>
       ${d.pairs.length ? d.pairs.map(p => `<article class="cf-card"><div class="cf-pair"><span><code>${esc(p.a.branch)}</code><small>${esc(p.a.ownerName || '')}${p.a.behind ? ` · ${p.a.behind} behind` : ''}</small></span>${ico('i-merge', 18)}<span><code>${esc(p.b.branch)}</code><small>${esc(p.b.ownerName || '')}${p.b.behind ? ` · ${p.b.behind} behind` : ''}</small></span></div>
