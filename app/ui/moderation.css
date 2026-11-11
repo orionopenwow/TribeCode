@@ -20,7 +20,9 @@
 .mod-reasons label:has(input:checked) { border-color: var(--accent); }
 .mod-reasons input { accent-color: var(--accent); margin: 0; }
 .mod-note { display: flex; flex-direction: column; gap: 6px; }
-.mod-note textarea, .mod-note input, #mod-words { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; }
+.mod-note textarea, .mod-note input, #mod-words { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; min-height: 0; }
+.mod-note textarea, #mod-words { height: 5.2em; }
+.mod-card:focus { outline: none; }
 .mod-acts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .mod-sec { border-top: 1px solid var(--edge); padding: 14px 0 6px; }
 .mod-sec .eyebrow { display: block; margin-bottom: 8px; }

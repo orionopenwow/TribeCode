@@ -85,8 +85,8 @@
     dlg.innerHTML = `<div class="mod-scrim" data-mclose></div><section class="mod-card" role="dialog" aria-modal="true" aria-labelledby="mod-t">${html}</section>`;
     document.body.appendChild(dlg);
     dlg.addEventListener('click', e => { if (e.target.closest('[data-mclose]')) closeDlg(); });
-    dlg.addEventListener('keydown', e => { if (e.key === 'Escape') closeDlg(); });
-    const f = dlg.querySelector('input, textarea, button.primary, button'); if (f) f.focus();
+    const card = dlg.querySelector('.mod-card'); card.tabIndex = -1;
+    const f = cls === 'mod-safety' ? card : dlg.querySelector('button.primary, input[type=radio], button'); if (f) f.focus({ preventScroll: true });   // never a text field: no surprise keyboard on phones
     return dlg;
   }
   function report(o) {
@@ -179,9 +179,13 @@
 
   function start() {
     paint();
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg) closeDlg(); });
     const hook = (n = 0) => { const c = C(); if (!c || !c.on) { if (n < 100) setTimeout(() => hook(n + 1), 150); return; } c.on('hello', () => refresh()); if (c.connected()) refresh(); };
     hook();
-    new MutationObserver(() => { const s = $('#settings-modal'); if (s && !s.classList.contains('hidden')) settingsHook(); }).observe(document.body, { childList: true, subtree: true });
+    // Watch only the Settings modal (not the whole page: typing in a long doc must stay cheap). settings.js adds it once.
+    const watch = m => { if (m.__tcWatch) return; m.__tcWatch = true; const go = () => { if (!m.classList.contains('hidden')) settingsHook(); }; new MutationObserver(go).observe(m, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); go(); };
+    const find = () => { const m = $('#settings-modal'); if (m) { watch(m); return true; } return false; };
+    if (!find()) { const mo = new MutationObserver(() => { if (find()) mo.disconnect(); }); mo.observe(document.body, { childList: true }); }
   }
   window.TribeModeration = { menuItems, profileItems, report, block, blocked: () => st.blocks.slice(), isBlocked, openSafety, deleteAccount, refresh, state: () => ({ ...st }) };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

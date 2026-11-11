@@ -84,7 +84,7 @@
     sheet.innerHTML = `<div class="pwa-in-scrim" data-pin="close"></div>
       <section class="pwa-in-card" role="dialog" aria-modal="true" aria-labelledby="pwa-in-t">
         <span class="eyebrow">${it.kind === 'file' ? 'Opened with TribeCode' : 'Shared to TribeCode'}</span>
-        <h2 id="pwa-in-t">${files.length && !msg ? esc(files.length === 1 ? files[0].name : `${files.length} files`) : esc((it.title || msg || 'Something to keep').slice(0, 90))}</h2>
+        <h2 id="pwa-in-t">${esc((it.title || (files.length ? (files.length === 1 ? files[0].name : `${files.length} files`) : 'Where should it go?')).slice(0, 90))}</h2>
         ${words.length ? `<blockquote class="pwa-in-text">${esc(msg || it.title).slice(0, 600)}</blockquote>` : ''}
         ${files.length ? `<ul class="pwa-in-files">${files.map((f, i) => `<li><span class="pwa-in-name"><b>${esc(f.name)}</b><small>${esc(kb(f.size || 0))}</small></span>
           ${isView(f) && window.TribeViewers ? `<button class="btn sm" data-pin="view" data-i="${i}">View</button>` : ''}${isText(f) ? `<button class="btn sm" data-pin="fnote" data-i="${i}">Open as a note</button>` : ''}</li>`).join('')}</ul>` : ''}
@@ -259,7 +259,10 @@
     hook();
     setInterval(() => { badge(); wake(); }, 4000);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { st.wake = null; wake(); badge(); } });
-    new MutationObserver(() => { const s = $('#settings-modal'); if (s && !s.classList.contains('hidden')) settingsHook(); }).observe(document.body, { childList: true, subtree: true });
+    // Watch only the Settings modal (not the whole page: typing in a long doc must stay cheap). settings.js adds it once.
+    const watch = m => { if (m.__tcWatch) return; m.__tcWatch = true; const go = () => { if (!m.classList.contains('hidden')) settingsHook(); }; new MutationObserver(go).observe(m, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }); go(); };
+    const find = () => { const m = $('#settings-modal'); if (m) { watch(m); return true; } return false; };
+    if (!find()) { const mo = new MutationObserver(() => { if (find()) mo.disconnect(); }); mo.observe(document.body, { childList: true }); }
     if (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: window-controls-overlay)').matches) document.documentElement.classList.add('pwa-installed');
   }
   window.TribePWA = { share, incoming, webRelease, badge, unread, storage, mountStorage, wake, menuItems, protocol, go, mirror,
