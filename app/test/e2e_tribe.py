@@ -263,7 +263,9 @@ def main():
             assert Path(tmp, "docs", "jam-notes.md").exists()
 
             # ---- standup ----
-            host.click('[data-nav="home"]:visible'); host.wait_for_selector("#pj-more", state="attached"); host.evaluate("document.querySelector('#pj-more').open = true"); host.click("#standup-go")
+            host.click('[data-nav="home"]:visible'); host.wait_for_selector("#pj-more", state="attached"); host.evaluate("document.querySelector('#pj-more').open = true")
+            # the dashboard re-renders and moves the button between cards (projects.js), so press it the way Ctrl K does
+            host.wait_for_selector("#standup-go", state="attached"); host.evaluate("document.querySelector('#standup-go').click()")
             wait_text(host, "#standup-text", "Maya: asked for controller support")
             assert list(Path(tmp, "brain").glob("standup-*.md"))
 
