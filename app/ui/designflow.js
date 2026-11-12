@@ -104,6 +104,7 @@
     host = el; scope = opts.scope || 'home';
     kinds();
   }
+  function toTop() { try { let e = host; while (e && e !== document.body) { if (e.scrollTop) e.scrollTop = 0; e = e.parentElement; } window.scrollTo(0, 0); } catch {} }
   function head(eyebrow, title, lead) { return `<header class="dfl-head"><span class="eyebrow">${esc(eyebrow)}</span><h1>${esc(title)}</h1>${lead ? `<p class="dfl-lead">${esc(lead)}</p>` : ''}</header>`; }
   function kinds() {
     if (!host) return; view = 'kinds'; kindNow = '';
@@ -112,6 +113,7 @@
       <div class="dfl-kinds" role="list">${D().KINDS.map(k => `<button type="button" class="dfl-kind" role="listitem" data-kind="${k.id}"><span class="dfl-ki">${icon(k.icon, 22)}</span><span class="dfl-kt"><b>${esc(k.t)}</b><small>${esc(k.d)}</small></span></button>`).join('')}</div>
       ${scope === 'project' ? '<section class="dfl-cont" id="dfl-cont"><span class="eyebrow">Continue</span><h2>In this project</h2><div class="dfl-list" id="dfl-cont-list"><p class="faint">Loading…</p></div></section>' : '<div class="dfl-cont-plans" id="dfl-cont-plans"></div>'}</section>`;
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => swap(() => gallery(b.dataset.kind)));
+    toTop();
     continueList();
   }
   async function continueList() {
@@ -156,6 +158,7 @@
       <label class="dfl-prompt"><span class="dfl-pl">${icon('flame', 16)}Describe it <span class="faint">— optional</span></span><textarea id="dfl-ask" rows="2" maxlength="600" placeholder="${esc(PLACEHOLDER[kind] || '')}"></textarea><small class="faint" id="dfl-ai-note">Flint fills in the name, words and colors from this for free. With an AI connected, he goes further.</small></label>
       <div class="dfl-grid" id="dfl-grid"><p class="faint">Loading…</p></div></section>`;
     host.querySelector('#dfl-back').onclick = () => swap(kinds);
+    toTop();
     const list = await templatesFor(kind), grid = host.querySelector('#dfl-grid'); if (!grid) return;
     grid.innerHTML = `<button type="button" class="dfl-tpl dfl-blank" data-tpl=""><span class="dfl-th">${icon('blank', 34)}</span><b>Blank</b><small>Start from nothing</small></button>` +
       list.map(t => `<button type="button" class="dfl-tpl" data-tpl="${esc(t.id)}"><span class="dfl-th"><img src="${esc(t.img)}" alt="" loading="lazy" width="320" height="200"></span><b>${esc(t.t)}</b><small>${esc(t.d)}</small>${t.lic ? `<span class="dfl-lic">${esc(t.lic)}</span>` : ''}</button>`).join('');
@@ -241,7 +244,6 @@
     if (t.said.length) p.note = `${t.via}: ${t.said.join(' · ')}`;
     await savePlan(p); setActive(p);
     workspace(p, { said: t.said, via: t.via });
-    if (target.type === 'build' && window.TribePreview && window.TribePreview.show) setTimeout(() => window.TribePreview.show(target.href || ''), 300);
   }
   // Screens, posters and logos: a design file on the canvas
   const api = kind => (projectScope() ? (p, o) => C.api(p, o) : (p, o) => LF().backend(kind).api(p, o));
@@ -341,14 +343,18 @@
           ${s ? `<p class="dfl-lead">${esc(s.controls || s.summary)}</p>` : ''}
           ${wsSaid && wsSaid.said && wsSaid.said.length ? `<p class="dfl-said">${icon('flame', 14)}<span><b>${esc(wsSaid.via)}</b> ${esc(wsSaid.said.join(' · '))}</span></p>` : ''}</header>
         <div class="dfl-play" id="dfl-play">${local ? (it ? '<iframe id="dfl-frame" title="Your ' + esc(k.t || 'app') + '" sandbox="allow-scripts allow-pointer-lock"></iframe>' : '<p class="faint">That file is gone from this device.</p>')
-          : `<div class="dfl-pv"><span class="dfl-ki">${icon('play', 22)}</span><div><b>${p.target.type === 'code' ? 'A blank start in the project\'s code' : 'Running in the project\'s preview'}</b><small class="faint">${p.target.dir ? esc(p.target.dir) + '/' : 'the project\'s code'}${s ? ` · from ${esc(s.title)} (${esc(s.license)})` : ''}</small></div><button type="button" class="btn sm primary" id="dfl-pv-open">${icon('play', 14)}Open the preview</button></div>`}</div>
+          : `${p.target.type === 'build' ? '<iframe id="dfl-frame" title="Your ' + esc(k.t || 'app') + '" sandbox="allow-scripts allow-forms allow-pointer-lock allow-popups"></iframe>' : ''}<div class="dfl-pv"><span class="dfl-ki">${icon('play', 22)}</span><div><b>${p.target.type === 'code' ? 'A blank start in the project\'s code' : 'In the project\'s code'}</b><small class="faint">${p.target.dir ? esc(p.target.dir) + '/' : 'the top folder'}${s ? ` · from ${esc(s.title)} (${esc(s.license)})` : ''}</small></div><button type="button" class="btn sm" id="dfl-pv-open">${icon('play', 14)}Open in the preview</button></div>`}</div>
         <div class="dfl-acts">${local ? `<button type="button" class="btn sm" id="dfl-reload">${icon('play', 14)}Restart</button><button type="button" class="btn sm" id="dfl-code">${icon('code', 14)}Edit the code</button><button type="button" class="btn sm" id="dfl-dl">${icon('upload', 14)}Download</button>${LF() ? `<button type="button" class="btn sm" id="dfl-move">Move to a project…</button>` : ''}` : `<button type="button" class="btn sm" id="dfl-code">${icon('code', 14)}Open the code</button>`}</div>
         ${s && s.params.length ? `<section class="dfl-knobs" id="dfl-knobs"><span class="eyebrow">Knobs</span><h2>Tweak it</h2><div class="dfl-kgrid" id="dfl-kgrid"></div></section>` : ''}
         ${s ? `<p class="dfl-credit faint">${s.original ? 'An original TribeCode starter' : `Adapted from <a href="${esc(s.source)}" target="_blank" rel="noopener">${esc(s.source.replace(/^https:\/\/github.com\//, ''))}</a> by ${esc(s.by)}`} · ${esc(s.license)} · the LICENSE file travels with the code.</p>` : ''}
       </div><aside class="dfl-plan-host" id="dfl-plan-host"></aside></div></section>`;
     host.querySelector('#dfl-back').onclick = () => swap(kinds);
     planCard(host.querySelector('#dfl-plan-host'), p, { inline: true });
+    toTop();
     if (local && it) paintFrame(it);
+    if (p.target.type === 'build') {   // the project's own preview (a short-lived signed path, sandboxed like preview.js); it reloads itself when config.js changes
+      try { const inf = await C.api('/preview/token', { method: 'POST' }), f = host.querySelector('#dfl-frame'); if (f && inf && inf.path) f.src = (/^https?:/.test(inf.path) ? inf.path : C.base() + inf.path) + (p.target.href || ''); } catch {}
+    }
     const q = id => host.querySelector(id);
     if (q('#dfl-reload')) q('#dfl-reload').onclick = () => paintFrame(LF().get(p.target.id));
     if (q('#dfl-code')) q('#dfl-code').onclick = () => (local ? LF().open(p.target.id) : window.TribeShell && window.TribeShell.go('repo'));
@@ -404,7 +410,7 @@
     box.querySelectorAll('[data-tick]').forEach(c => c.onchange = async () => { const np = await tick(p, c.dataset.tick, c.checked); Object.assign(p, np || {}); active = p; planCard(box, p, o); });
     box.querySelectorAll('[data-act]').forEach(b => b.onclick = () => act(p, p.steps.find(s => s.id === b.dataset.act)));
     box.querySelector('[data-addtasks]').onclick = () => addTasks(p);
-    box.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { if (b.dataset.pl === 'close') { setActive(null); } else { const d = $('#dfl-dock'); if (d) d.classList.toggle('min'); } });
+    box.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { if (b.dataset.pl === 'close') { setActive(null); } else { const d = $('#dfl-dock'); if (d) { d.classList.toggle('min'); ls.set('tribecode.designflow.fold', d.classList.contains('min')); } } });
   }
   const ACT_ICON = { open: 'chev', play: 'play', tweak: 'sliders', inspo: 'image', canvas: 'canvas', whiteboard: 'whiteboard', flint: 'flame', tribe: 'people', tasks: 'tasks', publish: 'upload' };
   async function act(p, s) {
@@ -439,7 +445,7 @@
     let d = $('#dfl-dock');
     const flowShown = !!(host && host.isConnected && view === 'workspace' && host.offsetParent !== null);
     if (!active || flowShown) { if (d) d.hidden = true; return; }
-    if (!d) { d = document.createElement('aside'); d.id = 'dfl-dock'; d.className = 'dfl-dock'; d.setAttribute('aria-label', 'Plan'); document.body.appendChild(d); }
+    if (!d) { d = document.createElement('aside'); d.id = 'dfl-dock'; d.className = 'dfl-dock'; d.setAttribute('aria-label', 'Plan'); d.classList.toggle('min', !!ls.get('tribecode.designflow.fold', isPhone())); document.body.appendChild(d); }
     d.hidden = false;
     planCard(d, active, {});
   }

@@ -9,8 +9,8 @@
 .dfl-ic { flex: none; display: block; }
 
 /* step 1: the kinds */
-.dfl-kinds { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
-.dfl-kind { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; text-align: left; padding: 18px 16px; min-height: 132px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); cursor: pointer; font: inherit;
+.dfl-kinds { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.dfl-kind { display: flex; flex-direction: row; align-items: flex-start; gap: 14px; text-align: left; padding: 16px; min-height: 84px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); cursor: pointer; font: inherit;
   transition-property: background-color, border-color; transition-duration: var(--dur-quick); transition-timing-function: var(--ease-out); }
 .dfl-kind:hover { background: var(--surface-2); border-color: var(--edge-pop, var(--border)); }
 .dfl-kind:focus-visible, .dfl-tpl:focus-visible, .dfl-row:focus-visible, .dfl-go:focus-visible, .dfl-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -116,9 +116,10 @@ body.dfl-deep #hub-design { display: none; }
 .dfl-plan-f .btn { width: 100%; justify-content: center; display: inline-flex; align-items: center; }
 
 /* the dock: the plan beside any editor */
-.dfl-dock { position: fixed; right: 16px; top: 72px; width: 320px; z-index: 950; }
+.dfl-dock { position: fixed; right: 16px; top: 64px; width: 300px; z-index: 950; }
 .dfl-dock[hidden] { display: none; }
-.dfl-dock .dfl-plan { max-height: calc(100vh - 96px); }
+.dfl-dock .dfl-plan { max-height: calc(100vh - 88px); }
+.dfl-dock .dfl-steps { max-height: min(52vh, 480px); }
 .dfl-dock.min .dfl-bar, .dfl-dock.min .dfl-steps, .dfl-dock.min .dfl-plan-f { display: none; }
 .dfl-dock.min { width: 240px; }
 .dfl-dock.min [data-pl="min"] .dfl-ic { transform: rotate(180deg); }
@@ -130,7 +131,7 @@ body.dfl-deep #hub-design { display: none; }
   .dfl { gap: 16px; }
   .dfl-head h1 { font-size: 22px; }
   .dfl-kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .dfl-kind { min-height: 0; padding: 14px 12px; gap: 10px; }
+  .dfl-kind { min-height: 0; padding: 14px 12px; gap: 10px; flex-direction: column; }
   .dfl-ws-grid > .dfl-plan-host { max-width: none; }
   .dfl-kind .dfl-kt small { font-size: 12px; }
   .dfl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

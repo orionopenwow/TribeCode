@@ -36,7 +36,7 @@ module.exports = function designPlans({ P, base, broadcast = () => {}, perms = n
     const t = raw.target && typeof raw.target === 'object' ? raw.target : {};
     const now = new Date().toISOString();
     return { key, kind: raw.kind, title: str(raw.title, 80) || 'Untitled', template: str(raw.template, 60), prompt: str(raw.prompt, 600),
-      target: { type: str(t.type, 20), id: str(t.id, 80), dir: str(t.dir, 120), href: str(t.href, 200), pid: str(t.pid, 40) },
+      target: { type: str(t.type, 20), id: str(t.id, 80), dir: str(t.dir, 120), href: str(t.href, 200), pid: str(t.pid, 40), starter: str(t.starter, 40) },
       steps, created: (old && old.created) || now, updated: now, by: (old && old.by) || str(me.name || me.id, 60) };
   }
   async function route(req, res, { m, b: pid, parts, me, readBody, send, fail }) {
@@ -59,6 +59,7 @@ module.exports = function designPlans({ P, base, broadcast = () => {}, perms = n
         s.done = !!body.done; s.by = s.done ? str(me.name || me.id, 60) : ''; s.at = s.done ? new Date().toISOString() : '';
         old.updated = new Date().toISOString(); plan = old;
       } else return fail(res, 405, 'method not allowed');
+      fs.mkdirSync(path.dirname(base.p(rel(pid, key))), { recursive: true });
       base.writeJSON(rel(pid, key), plan);
       broadcast({ type: 'design-plans', project: pid, key });
       return send(res, 200, { plan });
