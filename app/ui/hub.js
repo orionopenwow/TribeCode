@@ -647,13 +647,15 @@
   // ---------- Code (feat/files-dash: Home parity): the repos you're in, then your code files ----------
   async function renderRepos(el) {
     el.innerHTML = `<div class="hub hub-code"><header class="hub-head">${hubCrumb('Code')}<h1>Code</h1><p class="faint">The repos of every tribe you're in (what changed last and whether everything is saved), then the code files you keep here.</p></header>
+      ${window.TribeHomeGit ? '<section class="sec hub-sec" id="hub-github"></section>' : ''}
       <section class="sec hub-sec"><div class="sec-head"><div><span class="eyebrow">Repos</span><h2>Repos you're in</h2></div></div><div class="hub-repos" id="hub-repos">${reposCache && connected() ? reposHtml(reposCache) : connected() ? '<div class="hub-empty faint">Loading…</div>' : noTribe('Repos live in tribes', 'Each tribe keeps its code in a shared repo. Start a project or join a friend’s, and it shows up here.')}</div></section>
       <section class="sec hub-sec" id="hub-codefiles"></section></div>`;
+    { const gb = el.querySelector('#hub-github'); if (gb) window.TribeHomeGit.mount(gb, { repos: reposCache }); }   // feat/shell-polish: Connect GitHub
     subset(el.querySelector('#hub-codefiles'), { idp: 'hc', cat: 'code', title: 'Code files', eyebrow: 'On this device and in your tribes', kinds: ['code', 'site', 'upload'] });
     wireNoTribe(el);
     if (!connected()) return;
     { const box = $('#hub-repos'); if (box && reposCache) bindRepos(box); }
-    try { reposCache = (await C.api('/hub/repos')).repos; const box = $('#hub-repos'); if (box && mode === 'repos') { box.innerHTML = reposHtml(reposCache); bindRepos(box); } } catch (e) { const box = $('#hub-repos'); if (box) box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
+    try { reposCache = (await C.api('/hub/repos')).repos; if (window.TribeHomeGit) window.TribeHomeGit.setRepos(reposCache); const box = $('#hub-repos'); if (box && mode === 'repos') { box.innerHTML = reposHtml(reposCache); bindRepos(box); } } catch (e) { const box = $('#hub-repos'); if (box) box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
   }
   // ---------- Design (feat/files-dash: Home parity): every canvas and whiteboard, yours on this device and your tribes' ----------
   function renderDesign(el) {
