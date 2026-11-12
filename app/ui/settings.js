@@ -97,6 +97,7 @@
       ${canRoles() ? row('Roles &amp; privileges', '<button class="btn" id="set-roles">Manage</button>', 'Admins, 🛡️ mods and what each role can do.') : ''}
       ${isHost() && window.TribePacks ? row('Packs', '<div id="set-packs"></div>', 'Optional tools for video captions and local transcripts. Downloaded on this computer, checked by sha256.') : ''}
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
+      ${isHost() && C() && C().connected() ? row('Freesound sounds', '<form class="set-fs" id="set-fs" autocomplete="off"><input class="input" id="set-fs-key" type="password" placeholder="API key" aria-label="Freesound API key" maxlength="80"><button class="btn" type="submit" id="set-fs-save">Save</button></form>', 'With a free key from freesound.org/apiv2/apply, the inspiration board also searches Freesound. The key stays on this server and is never sent to anyone\'s browser. <span id="set-fs-st"></span>') : ''}
       </details>
       <div class="set-links"><button class="linkish" id="set-tour">Tour with Flint</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
@@ -107,6 +108,11 @@
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;
+    const fsf = $('#set-fs'); if (fsf) {   // polish: the Freesound key goes to the server only (server/inspo.js); we learn just whether one is set
+      const stl = $('#set-fs-st'), say = on => { if (stl) stl.textContent = on ? 'On: a key is saved.' : 'Off.'; };
+      C().api('/inspo/freesound').then(r => say(r.configured), () => {});
+      fsf.onsubmit = async e => { e.preventDefault(); const k = $('#set-fs-key'); try { const r = await C().api('/inspo/freesound', { method: 'PUT', body: { key: k.value } }); k.value = ''; say(r.configured); toast(r.configured ? 'Freesound is on for the inspiration board' : 'Freesound key removed'); } catch (err) { toast(err.message); } };
+    }
     const lng = $('#set-lang'); if (lng) lng.onchange = () => { window.TribeI18n.set(lng.value); toast('✓'); };   // v0.26 app languages (i18n.js)
     const stg = $('#set-storage'); if (stg) window.TribeStorage.mount(stg);   // v0.26 Storage & sync (storage.js)
     const pk = $('#set-packs'); if (pk) window.TribePacks.mount(pk);   // feat/captures (app/ui/captures.js)

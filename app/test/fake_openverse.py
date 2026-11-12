@@ -12,6 +12,9 @@ IMAGES = [  # id, title, creator, license, version, color (rgb)
 ]
 SOUNDS = [("snd-coin-0001", "Coin pickup blip", "Leo Park", "cc0", "1.0", 880), ("snd-wind-0002", "Soft wind loop", "Sara Okafor", "by", "4.0", 220)]
 hits = []
+auths = []   # Authorization headers seen on the Freesound routes (the key must arrive as "Token <key>", never in a URL)
+FREESOUND_KEY = "fs0123456789abcdefTEST"
+FS_SOUNDS = [(424242, "rain on a tin roof.wav", "dripdrop", "http://creativecommons.org/licenses/by/4.0/", 330), (515151, "tiny bell.wav", "chimes", "http://creativecommons.org/publicdomain/zero/1.0/", 1320)]
 
 
 def png(rgb, w=96, h=64):
@@ -59,6 +62,21 @@ class H(BaseHTTPRequestHandler):
         if u.path.startswith("/audio/"):
             i = u.path.split("/")[2].replace(".wav", ""); x = next((x for x in SOUNDS if x[0] == i), None)
             return self.out(200, wav(x[5]), "audio/wav") if x else self.out(404, b"no", "text/plain")
+        if u.path.startswith("/apiv2/"):   # Freesound
+            auths.append(self.headers.get("Authorization") or "")
+            if self.headers.get("Authorization") != "Token " + FREESOUND_KEY or "token=" in u.query: return self.out(401, {"detail": "Invalid token"})
+            def fsx(x):
+                i, n, user, lic, f = x
+                return {"id": i, "name": n, "username": user, "license": lic, "duration": 2.4, "url": f"https://freesound.org/people/{user}/sounds/{i}/",
+                        "previews": {"preview-hq-mp3": f"{base}/fsprev/{i}.wav", "preview-lq-mp3": f"{base}/fsprev/{i}.wav"}, "images": {"waveform_m": f"{base}/thumb/img-teal-0003.png"}}
+            if u.path.startswith("/apiv2/search/text"):
+                return self.out(200, {"count": len(FS_SOUNDS), "results": [fsx(x) for x in FS_SOUNDS]})
+            if u.path.startswith("/apiv2/sounds/"):
+                i = int(u.path.split("/")[3]); x = next((x for x in FS_SOUNDS if x[0] == i), None)
+                return self.out(200, fsx(x)) if x else self.out(404, {"detail": "not found"})
+        if u.path.startswith("/fsprev/"):
+            i = int(u.path.split("/")[2].replace(".wav", "")); x = next((x for x in FS_SOUNDS if x[0] == i), None)
+            return self.out(200, wav(x[4]), "audio/wav") if x else self.out(404, b"no", "text/plain")
         if u.path == "/w/api.php":
             pages = {str(100 + k): {"pageid": 100 + k, "index": k, "title": f"File:{x[1]}.png", "imageinfo": [{"thumburl": f"{base}/thumb/{x[0]}.png", "url": f"{base}/thumb/{x[0]}.png", "descriptionurl": f"https://commons.example/{x[0]}", "width": 96, "height": 64,
                      "extmetadata": {"LicenseShortName": {"value": "CC BY-SA 4.0"}, "Artist": {"value": f"<a href='x'>{x[2]}</a>"}, "ObjectName": {"value": x[1]}, "LicenseUrl": {"value": "https://creativecommons.org/licenses/by-sa/4.0"}}}]} for k, x in enumerate(IMAGES)}

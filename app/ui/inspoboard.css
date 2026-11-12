@@ -54,3 +54,8 @@
   .ibd-x { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .ibd, .ibd-x { transition: none; } }
+
+/* polish: Settings › More settings › Freesound sounds (settings.js) */
+.set-fs { display: flex; gap: 8px; align-items: center; }
+.set-fs .input { width: 200px; min-height: 36px; }
+@media (max-width: 820px) { .set-fs { width: 100%; } .set-fs .input { flex: 1; width: auto; } }
