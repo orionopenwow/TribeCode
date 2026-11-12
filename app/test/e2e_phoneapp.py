@@ -187,9 +187,11 @@ def main():
             phone.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % pid, timeout=15000)
             phone.evaluate("TribeApp.show('home')"); phone.wait_for_selector("#pj-more", state="attached", timeout=15000); phone.evaluate("document.querySelector('#pj-more').open = true")
             phone.wait_for_selector("#pa-card .pa-steps", timeout=15000)
-            phone.locator("#pa-card").scroll_into_view_if_needed()
+            # the overview redraws as its slots fill in (a new #pa-card each time), so scroll whichever card is there now
+            phone.wait_for_function("(() => { const c = document.querySelector('#pa-card .pa-steps'); if (c) c.closest('#pa-card').scrollIntoView({ block: 'center' }); return !!c; })()", timeout=10000)
+            phone.wait_for_timeout(300)
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll"
-            cb = phone.locator("#pa-card").bounding_box(); assert cb["x"] >= 0 and cb["x"] + cb["width"] <= 391, cb
+            cb = phone.evaluate("(() => { const r = document.querySelector('#pa-card').getBoundingClientRect(); return { x: r.x, width: r.width }; })()"); assert cb["x"] >= 0 and cb["x"] + cb["width"] <= 391, cb
             b.close()
         assert not errors, errors
         print("e2e_phoneapp: OK (settings switch, stacks card, Expo starter + commit + Toolbox, mobile/ beside code, host-only install with a fake npm, Expo Go QR in Preview)")
