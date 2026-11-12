@@ -18,6 +18,17 @@
   const DOCS = 'https://github.com/orionopenwow/TribeCode/blob/main/docs/PREMIUM.md';
   const FREE = ['Every local feature, forever: projects, chat, docs, tasks, Work, templates, rituals', 'Open source (MIT): read it, fork it, self-host it', 'Your own AI: your Claude Code, any API key, or a local model through Ollama', 'Your own hosting: this computer, your GitHub, a free cloud server, Tailscale or Cloudflare tunnels'];
   const ADDS = ['A hosted relay and cloud, so the tribe stays online without your computer', 'AI credits on our account, for friends who have no AI of their own', 'Bigger teams: more company seats and members, with roles', 'Premium templates (board pack, fundraising data room) and priority builds'];
+  // The planned prices, word for word from the pricing page (site/pricing.html). Nothing is for sale yet: every paid row is
+  // "Planned", and checkout() says so. Change them there first, then here.
+  const PRICING = 'https://orionopenwow.github.io/TribeCode/about/pricing.html';
+  const PRICES = {
+    free: { name: 'Free', price: '$0', per: 'forever', status: 'Available now' },
+    plans: [
+      { id: 'hosted', name: 'Hosted', price: '$6', per: '/month per tribe', status: 'Planned', adds: 'Always on: we host your tribe. Stays up when your laptop sleeps, a stable link, nightly backups.' },
+      { id: 'tribe', name: 'Tribe', price: '$24', per: '/month per tribe', status: 'Planned', adds: 'Everything in Hosted, and AI included for up to 8 people, keys or not, with a shared credit pool that refills weekly. 14-day free trial at launch, no card.' },
+    ],
+    credit: { cents: 1, line: '1 credit is $0.01 of AI', packs: [{ usd: 10, credits: 1000 }, { usd: 25, credits: 2500 }, { usd: 50, credits: 5000 }], terms: 'Shared by the tribe, good for 12 months, with a spending cap.' },
+  };
   const FEATURES = {
     projects: { soft: true, eyebrow: 'Project 4', title: 'Lots going on. Nice.', body: 'Projects stay free and unlimited on your own devices. Premium keeps every one of them online in our cloud, so friends can join any time.', links: [['Keep it online yourself: Tailscale Funnel', 'https://tailscale.com/kb/1223/funnel'], ['Or a free Render server', 'https://render.com/docs/free']] },
     seats: { soft: true, eyebrow: 'A bigger team', title: 'Your company is growing', body: 'Seats keep working on the free plan. Premium adds roles for larger teams and AI credits so seats without their own AI can still help.', links: [['Run a local model for free: Ollama', 'https://ollama.com']] },
@@ -94,5 +105,7 @@
   const footHtml = () => `<p class="pm-foot" id="pm-foot">${active() ? 'Premium' : 'Free plan'} · local, open source, your own AI. <button class="linkish" data-pm-open type="button">What does Premium add?</button></p>`;
   document.addEventListener('click', e => { if (e.target.closest('[data-pm-open]')) sheet('overview'); });
 
-  window.TribePremium = { gate, plan, setPlan, checkout, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES) };
+  // AI credits on this device (feat/shell-polish). There is no credit store yet, so this is honest: 0 until payments open.
+  const credits = () => { const n = Number(read().credits); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; };
+  window.TribePremium = { gate, plan, setPlan, checkout, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
 })();

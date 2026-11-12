@@ -1,0 +1,56 @@
+/* The plan chip and its pop-out (app/ui/plans.js). Flat matte: 1px borders, luminance steps, no shadow; a flat scrim. */
+.plan-chip { display: inline-flex; align-items: center; flex: none; height: 20px; padding: 0 7px; border: 1px solid var(--accent-2); border-radius: 5px; background: transparent;
+  color: var(--accent-2); font: 600 10.5px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out); }
+.plan-chip:hover, .plan-chip[aria-expanded="true"], .plan-chip-up:hover, .plan-chip-up[aria-expanded="true"] { background: var(--live-tint); }
+.plan-chip:focus-visible, .plan-chip-up:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.plan-chip-up { cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out); }
+
+.plp-scrim { position: fixed; inset: 0; z-index: 190; background: transparent; }
+.plp { position: fixed; z-index: 191; width: min(380px, calc(100vw - 16px)); max-height: min(640px, calc(100vh - 16px)); overflow: auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--surface); border: 1px solid var(--edge-pop); border-radius: var(--r-lg);
+  color: var(--text); font-size: 13px; line-height: 1.45; text-align: left; animation: plp-in var(--dur-base) var(--ease-out); }
+@keyframes plp-in { from { opacity: 0; transform: translateY(var(--rise)); } to { opacity: 1; transform: none; } }
+.plp p, .plp ul, .plp h2 { margin: 0; }
+.plp-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.plp-h h2 { margin-top: 3px; font: 800 17px/1.25 var(--display); letter-spacing: -0.01em; }
+.plp-x { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border: 1px solid var(--edge); border-radius: var(--r-sm); background: transparent; color: var(--muted); cursor: pointer; }
+.plp-x:hover { background: var(--surface-2); color: var(--text); }
+.plp-bal { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px; padding: 8px 10px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); color: var(--accent-2); }
+.plp-bal span { color: var(--text); }
+.plp-bal small { grid-column: 2; color: var(--faint); font-size: 12px; }
+.plp-card { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); }
+.plp-card[data-plp="free"] { background: var(--canvas); }
+.plp-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.plp-top > b { font-size: 14px; }
+.plp-price { color: var(--text); font-weight: 700; }
+.plp-price small { color: var(--faint); font-weight: 400; font-size: 12px; }
+.plp-tag { margin-left: auto; padding: 1px 6px; border: 1px solid var(--edge); border-radius: 5px; color: var(--faint); font: 600 10px/1.5 var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+.plp-tag.is-on { border-color: var(--accent); color: var(--accent-ink); }
+.plp-tag.is-free { border-color: var(--accent-2); color: var(--live-ink); }
+.plp ul { list-style: none; padding: 0; display: grid; gap: 5px; color: var(--muted); }
+.plp ul li { display: grid; grid-template-columns: 16px 1fr; gap: 7px; align-items: start; }
+.plp ul li > svg { color: var(--accent-2); margin-top: 1px; }
+.plp-tiers li { grid-template-columns: 1fr !important; gap: 2px !important; }
+.plp-tn { display: flex; align-items: baseline; gap: 8px; }
+.plp-tn b { color: var(--text); }
+.plp-ta { color: var(--muted); font-size: 12.5px; }
+.plp-packs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.plp-pack { display: grid; gap: 1px; padding: 8px 6px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface); color: var(--text); cursor: pointer; text-align: center;
+  transition: border-color var(--dur-quick) var(--ease-out); }
+.plp-pack:hover { border-color: var(--edge-pop); }
+.plp-pack b { font: 700 15px/1.2 var(--display); }
+.plp-pack small { color: var(--faint); font-size: 11.5px; }
+.plp-note { color: var(--faint); font-size: 12px; }
+.plp-own .btn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+.plp-f { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 2px; }
+.plp-f a { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-ink); text-decoration: none; font-size: 12.5px; }
+.plp-f a:hover { text-decoration: underline; }
+.plp-sp { flex: 1; }
+.plp button:focus-visible, .plp a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* phones: a bottom sheet on a flat scrim */
+.plp.is-sheet { left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto; max-height: 86vh; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: 0;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.plp.is-sheet ~ .plp-scrim, .plp-scrim:has(+ .plp.is-sheet) { background: var(--scrim); }
+@media (max-width: 520px) { .plp-scrim { background: var(--scrim); } .plp-f .btn, .plp-own .btn, .plp-x { min-height: 44px; } .plp-x { width: 44px; } .plp-pack { min-height: 52px; } }
+@media (prefers-reduced-motion: reduce) { .plp { animation: none; } .plan-chip, .plan-chip-up, .plp-pack { transition: none; } }
