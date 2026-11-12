@@ -263,6 +263,7 @@ def main():
             assert Path(phone_repo, "index.html").exists()
             ph.evaluate("TribePreviewFlint.close()")
             ph.frame_locator("#pvw-iframe").locator("#add").wait_for(timeout=10000)
+            ph.wait_for_timeout(800); ph.frame_locator("#pvw-iframe").locator("#add").wait_for(timeout=10000)   # the live reload for the new files can land just after the first paint (and wipe what was typed)
             ph.frame_locator("#pvw-iframe").locator("#new").fill("Take out the bins")
             ph.frame_locator("#pvw-iframe").locator("#new").press("Enter")
             ph.frame_locator("#pvw-iframe").locator("#list", has_text="Take out the bins").wait_for(timeout=8000)   # the list redraws after Enter (and after a late reload)
