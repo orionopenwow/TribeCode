@@ -34,4 +34,4 @@ Every knob is in `config.js`. Ask Flint ("Add an eraser") or change a value and 
 
 ## Credit
 
-Adapted from [50projects50days › drawing-app](https://github.com/bradtraversy/50projects50days/tree/master/drawing-app) by Brad Traversy and Florin Pop, under the MIT license (kept in LICENSE). Changes for TribeCode: pointer events for mouse, pen and touch, the canvas scales to the screen, Save PNG, brush and colors from config.js, the flat look.
+Adapted from [50projects50days › drawing-app](https://github.com/bradtraversy/50projects50days/tree/master/drawing-app) by Brad Traversy, under the MIT license (kept in LICENSE). Changes for TribeCode: pointer events for mouse, pen and touch, the canvas scales to the screen, Save PNG, brush and colors from config.js, the flat look.

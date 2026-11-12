@@ -32,14 +32,14 @@ App and game starters (app/ui/starters/, docs/STARTERS.md). Each folder keeps it
 - dashboard: original TribeCode starter, MIT
 - kanban: original TribeCode starter, MIT
 - memory: original TribeCode starter, MIT
-- notes: adapted from https://github.com/bradtraversy/50projects50days/tree/master/notes-app by Brad Traversy and Florin Pop, MIT
+- notes: adapted from https://github.com/bradtraversy/50projects50days/tree/master/notes-app by Brad Traversy, MIT
 - platformer: adapted from https://github.com/jakesgordon/javascript-tiny-platformer by Jake Gordon and contributors, MIT
 - pomodoro: original TribeCode starter, MIT
 - runner: original TribeCode starter, MIT
-- sketch: adapted from https://github.com/bradtraversy/50projects50days/tree/master/drawing-app by Brad Traversy and Florin Pop, MIT
+- sketch: adapted from https://github.com/bradtraversy/50projects50days/tree/master/drawing-app by Brad Traversy, MIT
 - snake: adapted from https://github.com/patorjk/JavaScript-Snake by Patrick Gillespie and contributors, MIT
 - survey: original TribeCode starter, MIT
-- todo: adapted from https://github.com/bradtraversy/50projects50days/tree/master/todo-list by Brad Traversy and Florin Pop, MIT
+- todo: adapted from https://github.com/bradtraversy/50projects50days/tree/master/todo-list by Brad Traversy, MIT
 - topdown: original TribeCode starter, MIT
 - weather: original TribeCode starter, MIT
 <!-- starters:end -->

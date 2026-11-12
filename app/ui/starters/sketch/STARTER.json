@@ -20,7 +20,7 @@
   "repo": "bradtraversy/50projects50days",
   "url": "https://github.com/bradtraversy/50projects50days/tree/master/drawing-app",
   "license": "MIT",
-  "authors": "Brad Traversy and Florin Pop",
+  "authors": "Brad Traversy",
   "changes": "pointer events for mouse, pen and touch, the canvas scales to the screen, Save PNG, brush and colors from config.js, the flat look."
  },
  "params": [

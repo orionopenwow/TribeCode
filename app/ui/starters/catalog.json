@@ -43,7 +43,8 @@
      "key": "c1",
      "label": "I piece",
      "type": "color",
-     "default": "#38C6B1"
+     "default": "#38C6B1",
+     "main": true
     },
     {
      "key": "c2",
@@ -194,7 +195,8 @@
      "key": "brick",
      "label": "Brick color",
      "type": "color",
-     "default": "#38C6B1"
+     "default": "#38C6B1",
+     "main": true
     },
     {
      "key": "brick2",
@@ -278,7 +280,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -405,7 +408,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -518,7 +522,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -606,7 +611,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -718,7 +724,8 @@
      "key": "back",
      "label": "Card back",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "face",
@@ -780,7 +787,7 @@
     "markdown notes app"
    ],
    "license": "MIT",
-   "by": "Brad Traversy and Florin Pop",
+   "by": "Brad Traversy",
    "source": "https://github.com/bradtraversy/50projects50days/tree/master/notes-app",
    "original": false,
    "params": [
@@ -800,7 +807,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -840,7 +848,7 @@
     "Export all notes as a Markdown file"
    ],
    "controls": "New note adds one. Edit switches between writing and reading.",
-   "size": 10549,
+   "size": 10504,
    "files": [
     "app.js",
     "config.js",
@@ -915,7 +923,8 @@
      "key": "player",
      "label": "Player color",
      "type": "color",
-     "default": "#ECD078"
+     "default": "#ECD078",
+     "main": true
     },
     {
      "key": "brick",
@@ -1049,7 +1058,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -1190,7 +1200,8 @@
      "key": "runner",
      "label": "Runner color",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "obstacle",
@@ -1258,7 +1269,7 @@
     "doodle app"
    ],
    "license": "MIT",
-   "by": "Brad Traversy and Florin Pop",
+   "by": "Brad Traversy",
    "source": "https://github.com/bradtraversy/50projects50days/tree/master/drawing-app",
    "original": false,
    "params": [
@@ -1297,7 +1308,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -1337,7 +1349,7 @@
     "Make it multiplayer with the tribe"
    ],
    "controls": "Draw with the mouse, a pen or a finger. − and + change the brush.",
-   "size": 10076,
+   "size": 10031,
    "files": [
     "app.js",
     "config.js",
@@ -1399,7 +1411,8 @@
      "key": "snake",
      "label": "Snake color",
      "type": "color",
-     "default": "#38C6B1"
+     "default": "#38C6B1",
+     "main": true
     },
     {
      "key": "food",
@@ -1500,7 +1513,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -1568,7 +1582,7 @@
     "task list app"
    ],
    "license": "MIT",
-   "by": "Brad Traversy and Florin Pop",
+   "by": "Brad Traversy",
    "source": "https://github.com/bradtraversy/50projects50days/tree/master/todo-list",
    "original": false,
    "params": [
@@ -1588,7 +1602,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",
@@ -1628,7 +1643,7 @@
     "Add a dark and light switch"
    ],
    "controls": "Type and press Enter to add. Click to mark done; ✕ or right-click to delete.",
-   "size": 9876,
+   "size": 9831,
    "files": [
     "app.js",
     "config.js",
@@ -1729,7 +1744,8 @@
      "key": "hero",
      "label": "Hero color",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "foe",
@@ -1817,7 +1833,8 @@
      "key": "accent",
      "label": "Accent",
      "type": "color",
-     "default": "#F26B1D"
+     "default": "#F26B1D",
+     "main": true
     },
     {
      "key": "bg",

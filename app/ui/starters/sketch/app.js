@@ -1,4 +1,4 @@
-// Sketch pad, adapted from 50projects50days › drawing-app by Brad Traversy and Florin Pop (MIT, see LICENSE).
+// Sketch pad, adapted from 50projects50days › drawing-app by Brad Traversy (MIT, see LICENSE).
 // TribeCode: pointer events (mouse, pen and touch), canvas scaling, Save PNG, and the brush and colors from config.js.
 var C = window.CONFIG || {};
 var canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');

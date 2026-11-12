@@ -1,4 +1,4 @@
-// To-do list, adapted from 50projects50days › todo-list by Brad Traversy and Florin Pop (MIT, see LICENSE).
+// To-do list, adapted from 50projects50days › todo-list by Brad Traversy (MIT, see LICENSE).
 // TribeCode: the title and starter items come from config.js, a delete button, a count of what's left, and a store
 // that works in a sandboxed preview.
 var store = (function () { try { var s = window.localStorage; s.getItem('x'); return s; } catch (e) { var m = {}; return { getItem: function (k) { return k in m ? m[k] : null; }, setItem: function (k, v) { m[k] = String(v); } }; } })();   // works in a sandboxed preview too

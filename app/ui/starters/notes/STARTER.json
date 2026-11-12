@@ -20,7 +20,7 @@
   "repo": "bradtraversy/50projects50days",
   "url": "https://github.com/bradtraversy/50projects50days/tree/master/notes-app",
   "license": "MIT",
-  "authors": "Brad Traversy and Florin Pop",
+  "authors": "Brad Traversy",
   "changes": "a small safe Markdown renderer instead of the marked CDN, text buttons instead of the Font Awesome CDN, a grid layout, starter text from config.js, a store that works in a sandboxed preview."
  },
  "params": [

@@ -20,7 +20,7 @@
   "repo": "bradtraversy/50projects50days",
   "url": "https://github.com/bradtraversy/50projects50days/tree/master/todo-list",
   "license": "MIT",
-  "authors": "Brad Traversy and Florin Pop",
+  "authors": "Brad Traversy",
   "changes": "the title and starter items read config.js, a delete button and a \"left to do\" count, the flat look, a store that works in a sandboxed preview."
  },
  "params": [

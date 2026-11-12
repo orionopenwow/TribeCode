@@ -32,4 +32,4 @@ Every knob is in `config.js`. Ask Flint ("Add due dates") or change a value and 
 
 ## Credit
 
-Adapted from [50projects50days › todo-list](https://github.com/bradtraversy/50projects50days/tree/master/todo-list) by Brad Traversy and Florin Pop, under the MIT license (kept in LICENSE). Changes for TribeCode: the title and starter items read config.js, a delete button and a "left to do" count, the flat look, a store that works in a sandboxed preview.
+Adapted from [50projects50days › todo-list](https://github.com/bradtraversy/50projects50days/tree/master/todo-list) by Brad Traversy, under the MIT license (kept in LICENSE). Changes for TribeCode: the title and starter items read config.js, a delete button and a "left to do" count, the flat look, a store that works in a sandboxed preview.

@@ -34,4 +34,4 @@ Write in **Markdown**.
 
 ## Credit
 
-Adapted from [50projects50days › notes-app](https://github.com/bradtraversy/50projects50days/tree/master/notes-app) by Brad Traversy and Florin Pop, under the MIT license (kept in LICENSE). Changes for TribeCode: a small safe Markdown renderer instead of the marked CDN, text buttons instead of the Font Awesome CDN, a grid layout, starter text from config.js, a store that works in a sandboxed preview.
+Adapted from [50projects50days › notes-app](https://github.com/bradtraversy/50projects50days/tree/master/notes-app) by Brad Traversy, under the MIT license (kept in LICENSE). Changes for TribeCode: a small safe Markdown renderer instead of the marked CDN, text buttons instead of the Font Awesome CDN, a grid layout, starter text from config.js, a store that works in a sandboxed preview.

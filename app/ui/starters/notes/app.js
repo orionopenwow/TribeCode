@@ -1,4 +1,4 @@
-// Notes, adapted from 50projects50days › notes-app by Brad Traversy and Florin Pop (MIT, see LICENSE).
+// Notes, adapted from 50projects50days › notes-app by Brad Traversy (MIT, see LICENSE).
 // TribeCode: a tiny safe Markdown renderer instead of the marked CDN, text buttons instead of the Font Awesome CDN,
 // starter notes from config.js and a store that works in a sandboxed preview.
 var store = (function () { try { var s = window.localStorage; s.getItem('x'); return s; } catch (e) { var m = {}; return { getItem: function (k) { return k in m ? m[k] : null; }, setItem: function (k, v) { m[k] = String(v); } }; } })();   // works in a sandboxed preview too
