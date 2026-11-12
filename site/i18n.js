@@ -1,251 +1,148 @@
-// Languages for the website (v0.25): a 🌐 picker in the top bar, like most sites have. The page is written in English;
-// this swaps the main text (menu, hero, section titles and intros, buttons, footer) for a translation. Anything not
-// translated stays in English, so a half-translated page still reads. The choice is remembered on this device; on a
-// first visit the browser's language is used when we have it. Translations are our own, kept short and plain.
+// Languages for the website (v0.25, whole pages since v0.30): a 🌐 picker in the top bar. The pages are written in
+// English; picking a language loads lang/<code>.json (English text -> translation) and swaps every visible string on
+// the page, including text the page's scripts add later (a MutationObserver). Keys are the element's own text with
+// whitespace collapsed; an element that mixes words with inline elements (a link, <b>, <code>) is keyed as a pattern,
+// e.g. "Read the {0} first.", so a translation can move the link where its grammar needs it (the link's own words are
+// keyed separately). Animated mocks of the app (.stage and friends, [data-no-i18n], translate="no") stay as drawn.
+// TribeLang.missing() lists the strings on this page with no translation for the current language; the site test
+// (app/test/e2e_site_i18n.py) fails when it finds any. The choice is remembered on this device; on a first visit the
+// browser's language is used when we have it.
 (function () {
   'use strict';
   const LANGS = [
     ['en', 'English'], ['es', 'Español'], ['pt', 'Português'], ['fr', 'Français'], ['de', 'Deutsch'], ['ja', '日本語'], ['zh', '简体中文'], ['ko', '한국어'],
   ];
-  // English source -> [es, pt, fr, de, ja, zh, ko]
-  const T = {
-    'Features': ['Funciones', 'Recursos', 'Fonctions', 'Funktionen', '機能', '功能', '기능'],
-    'Learn': ['Aprende', 'Aprenda', 'Apprendre', 'Lernen', '学ぶ', '学习', '배우기'],
-    'Pricing': ['Precios', 'Preços', 'Tarifs', 'Preise', '料金', '价格', '요금'],
-    'Mission': ['Misión', 'Missão', 'Mission', 'Mission', 'ミッション', '使命', '미션'],
-    'Docs': ['Documentación', 'Documentação', 'Docs', 'Doku', 'ドキュメント', '文档', '문서'],
-    'Open the app': ['Abrir la app', 'Abrir o app', 'Ouvrir l’app', 'App öffnen', 'アプリを開く', '打开应用', '앱 열기'],
-    'Download': ['Descargar', 'Baixar', 'Télécharger', 'Herunterladen', 'ダウンロード', '下载', '다운로드'],
-    'Star': ['Estrella', 'Estrela', 'Étoile', 'Stern', 'スター', '星标', '스타'],
-    'Star on GitHub': ['Estrella en GitHub', 'Estrela no GitHub', 'Une étoile sur GitHub', 'Stern auf GitHub', 'GitHubでスター', '在 GitHub 上加星', 'GitHub에서 스타'],
-    'What you can make': ['Lo que puedes hacer', 'O que você pode fazer', 'Ce que vous pouvez créer', 'Was du bauen kannst', '作れるもの', '你能做什么', '만들 수 있는 것'],
-    'One chat for everyone': ['Un chat para todos', 'Um chat para todos', 'Un seul chat pour tous', 'Ein Chat für alle', 'みんなでひとつのチャット', '所有人一个聊天', '모두를 위한 하나의 채팅'],
-    'Your phone as a remote': ['Tu móvil como control', 'Seu celular como controle', 'Votre téléphone comme télécommande', 'Dein Handy als Fernbedienung', 'スマホがリモコンに', '手机当遥控器', '휴대폰을 리모컨처럼'],
-    'Lanes': ['Carriles', 'Faixas', 'Couloirs', 'Bahnen', 'レーン', '分工', '레인'],
-    'Where it runs': ['Dónde funciona', 'Onde roda', 'Où ça tourne', 'Wo es läuft', '動かす場所', '在哪里运行', '실행 위치'],
-    'Starters': ['Plantillas', 'Modelos', 'Projets de départ', 'Vorlagen', 'スターター', '起步项目', '스타터'],
-    'Build apps, games and websites with your friends.': ['Crea apps, juegos y sitios web con tus amigos.', 'Crie apps, jogos e sites com seus amigos.', 'Créez des apps, des jeux et des sites avec vos amis.', 'Baue Apps, Spiele und Websites mit deinen Freunden.', '友だちと、アプリやゲーム、Webサイトを作ろう。', '和朋友一起做应用、游戏和网站。', '친구들과 앱, 게임, 웹사이트를 만들어요.'],
-    'Bring an idea and send a link. Your friends and the AI helpers you already use work in the same project, and nobody has to be an expert to help.': [
-      'Trae una idea y envía un enlace. Tus amigos y los asistentes de IA que ya usas trabajan en el mismo proyecto, y nadie tiene que ser experto para ayudar.',
-      'Traga uma ideia e mande um link. Seus amigos e os assistentes de IA que você já usa trabalham no mesmo projeto, e ninguém precisa ser especialista para ajudar.',
-      'Apportez une idée et envoyez un lien. Vos amis et les assistants IA que vous utilisez déjà travaillent sur le même projet, et personne n’a besoin d’être expert pour aider.',
-      'Bring eine Idee mit und schick einen Link. Deine Freunde und die KI-Helfer, die ihr schon nutzt, arbeiten im selben Projekt, und niemand muss Profi sein, um mitzuhelfen.',
-      'アイデアを持ってきて、リンクを送るだけ。友だちと、いつものAIアシスタントが同じプロジェクトで作業します。専門家でなくても手伝えます。',
-      '带上一个想法，发一个链接。你的朋友和你们已经在用的 AI 助手在同一个项目里协作，不需要是专家也能帮忙。',
-      '아이디어를 가져와 링크를 보내세요. 친구들과 이미 쓰고 있는 AI 도우미가 같은 프로젝트에서 함께 일하고, 전문가가 아니어도 도울 수 있어요.'],
-    'Download the desktop app': ['Descargar la app de escritorio', 'Baixar o app para desktop', 'Télécharger l’app de bureau', 'Desktop-App herunterladen', 'デスクトップアプリをダウンロード', '下载桌面应用', '데스크톱 앱 다운로드'],
-    'Open in your browser': ['Abrir en el navegador', 'Abrir no navegador', 'Ouvrir dans le navigateur', 'Im Browser öffnen', 'ブラウザで開く', '在浏览器中打开', '브라우저에서 열기'],
-    'Watch a demo tribe': ['Ver una tribu de demostración', 'Ver uma tribo de demonstração', 'Voir une tribu de démo', 'Demo-Tribe ansehen', 'デモのトライブを見る', '观看演示部落', '데모 트라이브 보기'],
-    'runs by itself in your browser, nothing sent anywhere': ['funciona sola en tu navegador, no se envía nada', 'roda sozinha no seu navegador, nada é enviado', 'tourne seule dans votre navigateur, rien n’est envoyé', 'läuft allein in deinem Browser, nichts wird gesendet', 'ブラウザだけで動き、何も送信されません', '完全在你的浏览器里运行，不发送任何数据', '브라우저에서만 실행되고, 아무것도 전송되지 않아요'],
-    "Games, websites and tools, built for the people around you.": ["Juegos, webs y herramientas, hechos para la gente que te rodea.", "Jogos, sites e ferramentas, feitos para as pessoas ao seu redor.", "Des jeux, des sites et des outils, conçus pour les gens qui vous entourent.", "Spiele, Websites und Tools, gebaut für die Menschen um dich herum.", "身近な人のためのゲーム、ウェブサイト、ツール。", "为身边的人打造的游戏、网站和工具。", "주변 사람들을 위해 만드는 게임, 웹사이트, 도구."],
-    "Build an inventory and order tracker, a booking page that takes payments, a client portal, an internal dashboard on your own data, a Discord or Slack bot, or a multiplayer game you can ship to itch.io. Describe what you need in plain language, and TribeCode and your AI helpers turn it into working software you can test, share and keep improving together.": ["Crea un sistema de inventario y pedidos, una página de reservas con pagos, un portal para clientes, un panel interno con tus propios datos, un bot de Discord o Slack, o un juego multijugador para publicar en itch.io. Describe lo que necesitas con palabras sencillas, y TribeCode y tus ayudantes de IA lo convierten en software que funciona y que puedes probar, compartir y seguir mejorando juntos.", "Crie um controle de estoque e pedidos, uma página de agendamento com pagamentos, um portal de clientes, um painel interno com seus próprios dados, um bot de Discord ou Slack, ou um jogo multiplayer para publicar no itch.io. Descreva o que precisa em linguagem simples, e o TribeCode e seus ajudantes de IA transformam isso em software que funciona e que vocês podem testar, compartilhar e melhorar juntos.", "Créez un suivi des stocks et des commandes, une page de réservation avec paiement, un portail client, un tableau de bord interne sur vos données, un bot Discord ou Slack, ou un jeu multijoueur à publier sur itch.io. Décrivez ce qu'il vous faut en mots simples, et TribeCode et vos assistants IA en font un logiciel qui marche, que vous pouvez tester, partager et améliorer ensemble.", "Baue eine Lager- und Bestellverwaltung, eine Buchungsseite mit Zahlung, ein Kundenportal, ein internes Dashboard mit deinen eigenen Daten, einen Discord- oder Slack-Bot oder ein Multiplayer-Spiel für itch.io. Beschreibe in einfachen Worten, was du brauchst, und TribeCode und deine KI-Helfer machen daraus funktionierende Software, die ihr testen, teilen und gemeinsam verbessern könnt.", "在庫と注文の管理、決済付きの予約ページ、顧客ポータル、自分のデータを使った社内ダッシュボード、Discord や Slack のボット、itch.io で公開できるマルチプレイゲーム。必要なものを普段の言葉で伝えれば、TribeCode と AI ヘルパーが、試して共有し、みんなで改善し続けられる動くソフトウェアにします。", "做一个库存和订单管理工具、带付款的预约页面、客户门户、基于自己数据的内部看板、Discord 或 Slack 机器人，或者能发布到 itch.io 的多人游戏。用平常的话说出你的需求，TribeCode 和你的 AI 助手就会把它变成能用的软件，你们可以一起测试、分享并不断改进。", "재고·주문 관리 도구, 결제가 되는 예약 페이지, 고객 포털, 내 데이터로 만든 내부 대시보드, Discord나 Slack 봇, itch.io에 올릴 멀티플레이 게임까지. 필요한 것을 평소 말로 설명하면 TribeCode와 AI 도우미가 함께 테스트하고 공유하며 계속 개선할 수 있는 실제 소프트웨어로 만들어 줍니다."],
-    'How a night of building usually goes': ['Así suele ir una noche de construir', 'Como costuma ser uma noite de criação', 'Comment se passe une soirée de création', 'So läuft ein Bau-Abend meistens ab', 'ある夜の作り方', '一个晚上的搭建通常是这样的', '만드는 밤은 보통 이렇게 흘러가요'],
-    "The whole studio, in one app.": ["Todo el estudio, en una sola app.", "O estúdio inteiro, em um só app.", "Tout le studio, dans une seule app.", "Das ganze Studio in einer App.", "スタジオのすべてを、ひとつのアプリに。", "整个工作室，尽在一个应用。", "스튜디오 전체를 하나의 앱에."],
-    "Your docs, your AI helpers, your tools and your code live side by side, so nobody juggles ten tabs and five logins. Here's what comes with every tribe.": ["Tus documentos, tus ayudantes de IA, tus herramientas y tu código viven juntos, así nadie hace malabares con diez pestañas y cinco cuentas. Esto viene con cada tribu.", "Seus documentos, seus ajudantes de IA, suas ferramentas e seu código ficam lado a lado, sem dez abas e cinco logins. Veja o que vem com cada tribo.", "Vos docs, vos assistants IA, vos outils et votre code vivent côte à côte : fini les dix onglets et cinq comptes. Voici ce que chaque tribu reçoit.", "Deine Dokumente, KI-Helfer, Werkzeuge und dein Code liegen nebeneinander, ohne zehn Tabs und fünf Logins. Das bekommt jeder Tribe.", "ドキュメント、AIヘルパー、ツール、コードが並んでいるので、タブやログインを行き来する必要はありません。どのトライブにも付いてくるもの：", "文档、AI 助手、工具和代码并排放在一起，不用在十个标签页和五个账号之间来回切换。每个部落都有这些：", "문서, AI 도우미, 도구, 코드가 한곳에 있어 탭 열 개와 로그인 다섯 개를 오갈 필요가 없습니다. 모든 트라이브에 포함된 것:"],
-    "Docs that work like Notion, right next to your code": ["Documentos como Notion, junto a tu código", "Documentos como o Notion, ao lado do seu código", "Des docs comme Notion, à côté de votre code", "Dokumente wie Notion, direkt neben deinem Code", "Notion のようなドキュメントを、コードのすぐ隣に", "像 Notion 一样的文档，就在代码旁边", "코드 바로 옆에서 Notion처럼 쓰는 문서"],
-    "Flint runs the app for you": ["Flint maneja la app por ti", "Flint cuida do app para você", "Flint pilote l'app pour vous", "Flint bedient die App für dich", "Flint がアプリを動かします", "Flint 帮你操作应用", "Flint가 앱을 대신 움직입니다"],
-    "Widgets for the tools you already use": ["Widgets para las herramientas que ya usas", "Widgets para as ferramentas que você já usa", "Des widgets pour vos outils habituels", "Widgets für deine Werkzeuge", "いつものツールのウィジェット", "为你常用的工具准备的小组件", "이미 쓰는 도구를 위한 위젯"],
-    "Bring your own studio": ["Trae tu propio estudio", "Traga seu próprio estúdio", "Apportez votre studio", "Bring dein eigenes Studio mit", "好きなスタジオを持ち込もう", "带上你自己的创作工具", "나만의 스튜디오를 연결하세요"],
-    "From a pixel game to full 3D": ["De un juego de píxeles a 3D completo", "De um jogo em pixels a 3D completo", "Du jeu en pixels à la 3D", "Vom Pixelspiel bis zu vollem 3D", "ピクセルゲームから本格3Dまで", "从像素游戏到完整 3D", "픽셀 게임부터 풀 3D까지"],
-    // v0.27.1 nav mega-menu + Meet Flint
-    "Flint": ["Flint", "Flint", "Flint", "Flint", "Flint", "Flint", "Flint"],
-    "Build": ["Crear", "Criar", "Créer", "Bauen", "つくる", "构建", "만들기"],
-    "Together": ["Juntos", "Juntos", "Ensemble", "Zusammen", "いっしょに", "一起", "함께"],
-    "Run it": ["Gestiónalo", "Toque o negócio", "Faites-le tourner", "Betreiben", "運営する", "运营", "운영하기"],
-    "Games, sites and tools for the people around you": ["Juegos, webs y herramientas para la gente que te rodea", "Jogos, sites e ferramentas para as pessoas ao seu redor", "Des jeux, des sites et des outils pour votre entourage", "Spiele, Websites und Tools für die Menschen um dich herum", "身近な人のためのゲーム、サイト、ツール", "为身边的人做游戏、网站和工具", "주변 사람들을 위한 게임, 사이트, 도구"],
-    "The whole studio": ["Todo el estudio", "O estúdio inteiro", "Tout le studio", "Das ganze Studio", "スタジオのすべて", "整个工作室", "스튜디오 전체"],
-    "Docs, widgets, studios and assets in one app": ["Documentos, widgets, estudios y recursos en una app", "Documentos, widgets, estúdios e recursos em um app", "Docs, widgets, studios et ressources dans une app", "Docs, Widgets, Studios und Assets in einer App", "ドキュメント、ウィジェット、スタジオ、素材をひとつに", "文档、小组件、创作工具和素材，一个应用搞定", "문서, 위젯, 스튜디오, 에셋을 하나의 앱에"],
-    "Working first versions to play with and remix": ["Primeras versiones que funcionan, para jugar y remezclar", "Primeiras versões que funcionam, para brincar e remixar", "Des premières versions qui marchent, à essayer et remixer", "Funktionierende erste Versionen zum Ausprobieren und Remixen", "遊んで改造できる動く最初の版", "能直接玩、能改编的初版", "바로 써 보고 리믹스할 수 있는 첫 버전"],
-    "Friends and their AI helpers in one room": ["Amigos y sus ayudantes de IA en una sala", "Amigos e seus ajudantes de IA em uma sala", "Des amis et leurs assistants IA dans une même pièce", "Freunde und ihre KI-Helfer in einem Raum", "友だちとそのAIヘルパーがひとつの部屋に", "朋友和他们的 AI 助手在同一个房间", "친구와 그들의 AI 도우미가 한 방에"],
-    "Meet Flint": ["Conoce a Flint", "Conheça o Flint", "Voici Flint", "Das ist Flint", "Flint を紹介", "认识 Flint", "Flint를 만나보세요"],
-    "The built-in helper that runs the app with you": ["El ayudante integrado que maneja la app contigo", "O ajudante integrado que cuida do app com você", "L’assistant intégré qui pilote l’app avec vous", "Der eingebaute Helfer, der die App mit dir bedient", "いっしょにアプリを動かす内蔵ヘルパー", "和你一起操作应用的内置助手", "함께 앱을 움직이는 내장 도우미"],
-    "Approve, reply and send voice notes on the go": ["Aprueba, responde y envía notas de voz donde sea", "Aprove, responda e envie áudios em qualquer lugar", "Approuvez, répondez et envoyez des notes vocales partout", "Freigeben, antworten und Sprachnotizen senden, unterwegs", "外出先で承認、返信、ボイスメモ", "随时随地批准、回复、发语音", "이동 중에도 승인, 답장, 음성 메모"],
-    "Each AI works its own part; people approve": ["Cada IA trabaja su parte; las personas aprueban", "Cada IA cuida da sua parte; as pessoas aprovam", "Chaque IA travaille sa partie ; les humains approuvent", "Jede KI arbeitet an ihrem Teil; Menschen geben frei", "AIはそれぞれ自分の担当、承認は人が", "每个 AI 负责自己的部分，由人来批准", "각 AI는 자기 부분을 맡고, 승인은 사람이"],
-    "Seats, money and hiring for a real business": ["Puestos, dinero y contrataciones para un negocio real", "Cargos, dinheiro e contratações para um negócio de verdade", "Des sièges, de l’argent et des embauches pour une vraie entreprise", "Rollen, Geld und Einstellungen für ein echtes Business", "本物のビジネスのための役割、お金、採用", "为真正的生意准备职位、资金和招聘", "진짜 사업을 위한 자리, 돈, 채용"],
-    "Your computer, your own server or the cloud": ["Tu computadora, tu propio servidor o la nube", "Seu computador, seu servidor ou a nuvem", "Votre ordinateur, votre serveur ou le cloud", "Dein Computer, dein Server oder die Cloud", "自分のPC、自分のサーバー、クラウド", "你的电脑、你自己的服务器或云端", "내 컴퓨터, 내 서버, 또는 클라우드"],
-    "Vibecoding, explained": ["El vibecoding, explicado", "Vibecoding, explicado", "Le vibecoding, expliqué", "Vibecoding, erklärt", "バイブコーディングとは", "氛围编程是什么", "바이브코딩이란"],
-    "Make software by saying what you want": ["Crea software diciendo lo que quieres", "Crie software dizendo o que você quer", "Créez des logiciels en disant ce que vous voulez", "Software bauen, indem du sagst, was du willst", "ほしいものを言うだけでソフトをつくる", "说出你想要的，就能做出软件", "원하는 걸 말해서 소프트웨어를 만들기"],
-    "Five short, free lessons from zero": ["Cinco lecciones breves y gratis desde cero", "Cinco aulas curtas e grátis do zero", "Cinq leçons courtes et gratuites, depuis zéro", "Fünf kurze, kostenlose Lektionen von null", "ゼロからの短い無料レッスン5つ", "从零开始的五节免费短课", "처음부터 시작하는 짧은 무료 수업 5개"],
-    "Install, connect your AI, host, fix things": ["Instala, conecta tu IA, aloja, arregla cosas", "Instale, conecte sua IA, hospede, resolva problemas", "Installer, connecter votre IA, héberger, dépanner", "Installieren, KI verbinden, hosten, Fehler beheben", "インストール、AI接続、ホスト、トラブル対応", "安装、连接你的 AI、托管、排错", "설치, AI 연결, 호스팅, 문제 해결"],
-    "See it ↓": ["Verlo ↓", "Ver ↓", "Voir ↓", "Ansehen ↓", "見る ↓", "查看 ↓", "보기 ↓"],
-    "Open →": ["Abrir →", "Abrir →", "Ouvrir →", "Öffnen →", "開く →", "打开 →", "열기 →"],
-    "TribeCode's own helper: it runs the app for you, teaches you, and works without a paid AI.": ["El ayudante propio de TribeCode: maneja la app por ti, te enseña y funciona sin una IA de pago.", "O ajudante do próprio TribeCode: cuida do app para você, ensina você e funciona sem uma IA paga.", "L’assistant de TribeCode : il pilote l’app pour vous, vous apprend des choses et marche sans IA payante.", "TribeCodes eigener Helfer: bedient die App für dich, bringt dir Dinge bei und läuft ohne bezahlte KI.", "TribeCode 自前のヘルパー。アプリを動かし、教えてくれて、有料AIなしでも動きます。", "TribeCode 自己的助手：替你操作应用、教你东西，不用付费 AI 也能用。", "TribeCode의 자체 도우미: 앱을 대신 움직이고, 가르쳐 주고, 유료 AI 없이도 동작합니다."],
-    "Talk to Flint": ["Habla con Flint", "Fale com o Flint", "Parlez à Flint", "Sprich mit Flint", "Flint と話す", "和 Flint 聊聊", "Flint와 대화하기"],
-    "One helper, the whole app": ["Un ayudante, toda la app", "Um ajudante, o app inteiro", "Un assistant, toute l’app", "Ein Helfer, die ganze App", "ひとりのヘルパーで、アプリ全体を", "一个助手，整个应用", "도우미 하나로 앱 전체를"],
-    "Runs the app for you": ["Maneja la app por ti", "Cuida do app para você", "Pilote l’app pour vous", "Bedient die App für dich", "アプリを代わりに動かす", "替你操作应用", "앱을 대신 움직여요"],
-    "Builds anything you can describe": ["Construye lo que puedas describir", "Constrói o que você conseguir descrever", "Construit tout ce que vous savez décrire", "Baut alles, was du beschreiben kannst", "説明できるものは何でもつくる", "你能描述的都能做", "설명할 수 있는 건 뭐든 만들어요"],
-    "Teaches you the way you learn": ["Te enseña como tú aprendes", "Ensina do jeito que você aprende", "Vous apprend à votre façon", "Bringt dir bei, wie du lernst", "あなたの学び方で教える", "按你的学习方式来教", "내가 배우는 방식으로 가르쳐요"],
-    "Writes your docs": ["Escribe tus documentos", "Escreve seus documentos", "Écrit vos docs", "Schreibt deine Doku", "ドキュメントを書く", "帮你写文档", "문서를 써 줘요"],
-    "Remembers you, and knows your tribe": ["Te recuerda y conoce a tu tribu", "Lembra de você e conhece sua tribo", "Se souvient de vous et connaît votre tribu", "Erinnert sich an dich und kennt deinen Tribe", "あなたを覚えて、トライブを知っている", "记得你，也了解你的部落", "나를 기억하고 트라이브를 알아요"],
-    "Learns your tribe's shortcuts": ["Aprende los atajos de tu tribu", "Aprende os atalhos da sua tribo", "Apprend les raccourcis de votre tribu", "Lernt die Abkürzungen deines Tribes", "トライブの近道を覚える", "学会你们部落的快捷方式", "트라이브의 지름길을 배워요"],
-    "Works offline, or with any AI": ["Funciona sin conexión o con cualquier IA", "Funciona offline ou com qualquer IA", "Marche hors ligne ou avec n’importe quelle IA", "Läuft offline oder mit jeder KI", "オフラインでも、どのAIとでも", "离线可用，也能接任何 AI", "오프라인으로도, 어떤 AI와도"],
-    "Asks before anything that matters": ["Pregunta antes de todo lo importante", "Pergunta antes de qualquer coisa importante", "Demande avant tout ce qui compte", "Fragt vor allem, was zählt", "大事なことの前には必ず確認", "重要的事先问你", "중요한 일은 먼저 물어봐요"],
-    "From your words to done": ["De tus palabras a hecho", "Das suas palavras ao feito", "De vos mots au résultat", "Von deinen Worten zum Ergebnis", "あなたの言葉から完成まで", "从一句话到完成", "말 한마디에서 완성까지"],
-    "Good to know": ["Bueno saber", "Bom saber", "Bon à savoir", "Gut zu wissen", "知っておきたいこと", "值得了解", "알아 두면 좋아요"],
-    "Strike up a tribe": ["Enciende una tribu", "Acenda uma tribo", "Allumez une tribu", "Entfache einen Tribe", "トライブに火をつけよう", "点燃一个部落", "트라이브에 불을 붙여요"],
-    "Try Flint here": ["Prueba Flint aquí", "Teste o Flint aqui", "Essayez Flint ici", "Flint hier ausprobieren", "ここで Flint を試す", "在这里试试 Flint", "여기서 Flint 써 보기"],
-    "Try the demo tribe": ["Prueba la tribu demo", "Teste a tribo demo", "Essayez la tribu démo", "Demo-Tribe ausprobieren", "デモトライブを試す", "试试演示部落", "데모 트라이브 써 보기"],
-    "New to vibecoding?": ["¿Nuevo en el vibecoding?", "Novo no vibecoding?", "Débutant en vibecoding ?", "Neu beim Vibecoding?", "バイブコーディングは初めて？", "刚接触氛围编程？", "바이브코딩이 처음인가요?"],
-    'One chat for people and their': ['Un chat para las personas y su', 'Um chat para pessoas e seu', 'Un seul chat pour les gens et leur', 'Ein Chat für Menschen und ihr', '人と、その人の', '一个聊天，属于大家和他们的', '사람과 그들의'],
-    'One chat for people and their AI.': ['Un chat para las personas y su IA.', 'Um chat para pessoas e suas IAs.', 'Un seul chat pour les gens et leur IA.', 'Ein Chat für Menschen und ihre KI.', '人とAIのための、ひとつのチャット。', '人和他们的 AI，共用一个聊天。', '사람과 그들의 AI를 위한 하나의 채팅.'],
-    'Keep building from your phone.': ['Sigue construyendo desde el móvil.', 'Continue criando pelo celular.', 'Continuez depuis votre téléphone.', 'Bau vom Handy aus weiter.', 'スマホからでも作り続けられる。', '用手机也能继续搭建。', '휴대폰으로도 계속 만들어요.'],
-    'Everyone gets their own corner.': ['Cada uno tiene su rincón.', 'Cada um tem seu cantinho.', 'Chacun a son coin.', 'Jeder bekommt seine eigene Ecke.', 'それぞれに自分の持ち場。', '每个人都有自己的一块。', '모두가 자기 자리를 가져요.'],
-    'It runs where you want it.': ['Funciona donde tú quieras.', 'Roda onde você quiser.', 'Ça tourne où vous voulez.', 'Es läuft, wo du willst.', '好きな場所で動かせる。', '想在哪运行就在哪运行。', '원하는 곳에서 실행돼요.'],
-    'Skip the blank page.': ['Olvídate de la página en blanco.', 'Esqueça a página em branco.', 'Adieu la page blanche.', 'Schluss mit der leeren Seite.', '白紙から始めなくていい。', '不必从空白页开始。', '빈 페이지는 이제 그만.'],
-    'Or remix something people already love.': ['O haz un remix de algo que la gente ya adora.', 'Ou faça um remix de algo que as pessoas já amam.', 'Ou remixez quelque chose que les gens adorent déjà.', 'Oder remixe etwas, das alle schon lieben.', 'みんなが好きな作品をリミックスするのもあり。', '或者，改编大家已经喜欢的作品。', '아니면 사람들이 이미 좋아하는 것을 리믹스하세요.'],
-    'Open source, out in the open.': ['Código abierto, a la vista de todos.', 'Código aberto, à vista de todos.', 'Open source, en toute transparence.', 'Open Source, ganz offen.', 'オープンソース、すべて公開。', '开源，一切公开。', '오픈 소스, 모두 공개.'],
-    'Start a tribe tonight.': ['Empieza una tribu esta noche.', 'Comece uma tribo hoje à noite.', 'Lancez une tribu ce soir.', 'Starte heute Abend eine Tribe.', '今夜、トライブを始めよう。', '今晚就建一个部落。', '오늘 밤 트라이브를 시작하세요.'],
-    'Download the app, name your project and text two friends the link. That’s the whole setup, and the app keeps itself up to date.': ['Descarga la app, ponle nombre a tu proyecto y envía el enlace a dos amigos. Esa es toda la configuración, y la app se actualiza sola.', 'Baixe o app, dê um nome ao projeto e mande o link para dois amigos. Essa é toda a configuração, e o app se atualiza sozinho.', 'Téléchargez l’app, nommez votre projet et envoyez le lien à deux amis. C’est toute l’installation, et l’app se met à jour toute seule.', 'Lade die App, gib deinem Projekt einen Namen und schick zwei Freunden den Link. Das ist die ganze Einrichtung, und die App hält sich selbst aktuell.', 'アプリをダウンロードして、プロジェクトに名前を付け、友だち2人にリンクを送るだけ。設定はそれで終わり。アプリは自動で最新に保たれます。', '下载应用，给项目起个名字，把链接发给两个朋友。设置就这么简单，应用会自动更新。', '앱을 내려받고, 프로젝트 이름을 정하고, 친구 두 명에게 링크를 보내세요. 설정은 그게 전부이고, 앱은 알아서 최신 상태를 유지해요.'],
-    'All downloads': ['Todas las descargas', 'Todos os downloads', 'Tous les téléchargements', 'Alle Downloads', 'すべてのダウンロード', '全部下载', '모든 다운로드'],
-    "Hi, I'm Campton.": ['Hola, soy Campton.', 'Oi, eu sou o Campton.', 'Salut, moi c’est Campton.', 'Hi, ich bin Campton.', 'こんにちは、Camptonです。', '你好，我是 Campton。', '안녕하세요, Campton이에요.'],
-    "I make TribeCode, in the open, with my own small tribe of friends and AI agents. It's the app I wanted: one place where people and their AI build the same thing together, and where your work stays in your own GitHub repository.": [
-      'Hago TribeCode en abierto, con mi propia pequeña tribu de amigos y agentes de IA. Es la app que yo quería: un lugar donde las personas y su IA construyen lo mismo juntas, y donde tu trabajo se queda en tu propio repositorio de GitHub.',
-      'Eu faço o TribeCode em aberto, com minha própria pequena tribo de amigos e agentes de IA. É o app que eu queria: um lugar onde pessoas e suas IAs constroem a mesma coisa juntas, e onde seu trabalho fica no seu próprio repositório do GitHub.',
-      'Je fais TribeCode en open source, avec ma propre petite tribu d’amis et d’agents IA. C’est l’app que je voulais : un seul endroit où les gens et leur IA construisent la même chose ensemble, et où votre travail reste dans votre propre dépôt GitHub.',
-      'Ich baue TribeCode offen, mit meiner eigenen kleinen Tribe aus Freunden und KI-Agenten. Es ist die App, die ich wollte: ein Ort, an dem Menschen und ihre KI gemeinsam dasselbe bauen und deine Arbeit in deinem eigenen GitHub-Repository bleibt.',
-      '私は友だちとAIエージェントの小さなトライブと一緒に、TribeCodeをオープンに作っています。人とAIが同じものを一緒に作れて、作品は自分のGitHubリポジトリに残る。そんなアプリが欲しかったんです。',
-      '我和自己的一小群朋友以及 AI 智能体一起，公开地打造 TribeCode。这是我一直想要的应用：人和 AI 在同一个地方一起做同一件事，而你的成果留在你自己的 GitHub 仓库里。',
-      '저는 친구들과 AI 에이전트로 이루어진 저만의 작은 트라이브와 함께 TribeCode를 공개적으로 만들고 있어요. 사람과 AI가 한곳에서 같은 것을 함께 만들고, 작업은 내 GitHub 저장소에 남는 앱. 제가 원했던 앱이에요.'],
-    'If something breaks, or you have an idea, tell me. Every issue gets read.': ['Si algo falla o tienes una idea, cuéntamelo. Leo cada issue.', 'Se algo quebrar ou você tiver uma ideia, me conte. Toda issue é lida.', 'Si quelque chose casse ou si vous avez une idée, dites-le-moi. Chaque issue est lue.', 'Wenn etwas kaputtgeht oder du eine Idee hast, sag Bescheid. Jedes Issue wird gelesen.', '何か壊れたり、アイデアがあったら教えてください。すべてのissueに目を通します。', '如果有东西坏了，或者你有想法，告诉我。每个 issue 我都会看。', '뭔가 고장 나거나 아이디어가 있으면 알려 주세요. 모든 이슈를 읽어요.'],
-    'Send an idea or a bug': ['Enviar una idea o un fallo', 'Enviar uma ideia ou um bug', 'Envoyer une idée ou un bug', 'Idee oder Fehler senden', 'アイデアやバグを送る', '提交想法或问题', '아이디어나 버그 보내기'],
-    'Build one app with your friends and their AI.': ['Construye una app con tus amigos y su IA.', 'Construa um app com seus amigos e suas IAs.', 'Construisez une app avec vos amis et leur IA.', 'Bau eine App mit deinen Freunden und ihrer KI.', '友だちとそのAIと、ひとつのアプリを作ろう。', '和朋友以及他们的 AI 一起做一个应用。', '친구들과 그들의 AI와 함께 하나의 앱을 만들어요.'],
-    'Demo tribe': ['Tribu de demostración', 'Tribo de demonstração', 'Tribu de démo', 'Demo-Tribe', 'デモのトライブ', '演示部落', '데모 트라이브'],
-    'Quick start': ['Inicio rápido', 'Início rápido', 'Démarrage rapide', 'Schnellstart', 'クイックスタート', '快速开始', '빠른 시작'],
-    'Security & privacy': ['Seguridad y privacidad', 'Segurança e privacidade', 'Sécurité et confidentialité', 'Sicherheit & Datenschutz', 'セキュリティとプライバシー', '安全与隐私', '보안 및 개인정보'],
-    'Releases': ['Versiones', 'Versões', 'Versions', 'Versionen', 'リリース', '版本发布', '릴리스'],
-    'Changelog': ['Cambios', 'Novidades', 'Journal des modifications', 'Änderungen', '更新履歴', '更新日志', '변경 내역'],
-    'Start module 1': ['Empezar el módulo 1', 'Começar o módulo 1', 'Commencer le module 1', 'Modul 1 starten', 'モジュール1を始める', '开始模块 1', '모듈 1 시작'],
-    // v0.26: what vibecoding is
-    "What is vibecoding?": ["¿Qué es el vibecoding?", "O que é vibecoding?", "Qu’est-ce que le vibecoding ?", "Was ist Vibecoding?", "バイブコーディングとは？", "什么是氛围编程（vibecoding）？", "바이브코딩이란?"],
-    "Vibecoding is making software by describing what you want in plain words and letting an AI write the code, while you steer: you try it, say what to change, and keep going until it feels right. You still decide what gets built. You just don't have to type every line.": ["El vibecoding es crear software describiendo lo que quieres con palabras sencillas y dejando que una IA escriba el código mientras tú diriges: lo pruebas, dices qué cambiar y sigues hasta que se siente bien. Tú sigues decidiendo qué se construye. Solo que no tienes que escribir cada línea.", "Vibecoding é criar software descrevendo o que você quer em palavras simples e deixando uma IA escrever o código enquanto você conduz: você testa, diz o que mudar e continua até ficar do jeito certo. Você ainda decide o que é construído. Só não precisa digitar cada linha.", "Le vibecoding, c’est créer un logiciel en décrivant ce que vous voulez avec des mots simples et en laissant une IA écrire le code pendant que vous pilotez : vous essayez, vous dites quoi changer, et vous continuez jusqu’à ce que ce soit juste. C’est toujours vous qui décidez. Vous n’avez simplement plus à taper chaque ligne.", "Vibecoding heißt, Software zu bauen, indem du in einfachen Worten beschreibst, was du willst, und eine KI den Code schreiben lässt, während du lenkst: ausprobieren, sagen, was sich ändern soll, weitermachen, bis es sich richtig anfühlt. Du entscheidest weiterhin, was gebaut wird. Du musst nur nicht jede Zeile tippen.", "バイブコーディングとは、作りたいものを普通の言葉で説明し、AI にコードを書かせながら自分が舵を取るソフトウェアの作り方です。試して、変えたいところを伝え、しっくりくるまで続けます。何を作るかを決めるのはあなた。ただ、一行ずつ打つ必要がないだけです。", "氛围编程就是用平常的话描述你想要的东西，让 AI 来写代码，而你来掌舵：试一试，说出要改什么，一直改到感觉对为止。做什么仍由你决定，只是不必亲手敲每一行代码。", "바이브코딩은 원하는 것을 쉬운 말로 설명하고 AI가 코드를 쓰게 하면서 내가 방향을 잡는 소프트웨어 제작 방식이에요. 써 보고, 바꿀 점을 말하고, 마음에 들 때까지 계속하죠. 무엇을 만들지는 여전히 내가 정해요. 다만 한 줄 한 줄 칠 필요가 없을 뿐이에요."],
-    "Say it": ["Dilo", "Diga", "Dites-le", "Sag es", "言う", "说出来", "말하기"],
-    "Watch it appear": ["Míralo aparecer", "Veja aparecer", "Regardez-le apparaître", "Sieh zu, wie es entsteht", "形になるのを見る", "看它出现", "나타나는 걸 보기"],
-    "Steer it": ["Dirígelo", "Conduza", "Pilotez-le", "Lenke es", "舵を取る", "掌舵", "방향 잡기"],
-    "Ship it": ["Publícalo", "Publique", "Publiez-le", "Veröffentliche es", "公開する", "发布", "출시하기"],
-    "“A pixel game where a little flame lights lanterns.” A sentence is enough to start.": ["«Un juego pixelado donde una llamita enciende faroles». Una frase basta para empezar.", "“Um jogo em pixel onde uma chaminha acende lanternas.” Uma frase basta para começar.", "« Un jeu en pixels où une petite flamme allume des lanternes. » Une phrase suffit pour commencer.", "„Ein Pixelspiel, in dem eine kleine Flamme Laternen anzündet.“ Ein Satz reicht zum Anfangen.", "「小さな炎がランタンを灯していくピクセルゲーム」。始めるには一文で十分です。", "“一个小火苗点亮灯笼的像素游戏。”一句话就够开始了。", "“작은 불꽃이 등불을 밝히는 픽셀 게임.” 한 문장이면 시작할 수 있어요."],
-    "Your AI writes the code and the app runs right there, so you see it instead of reading it.": ["Tu IA escribe el código y la app funciona ahí mismo, así que la ves en lugar de leerla.", "Sua IA escreve o código e o app roda ali mesmo, então você vê em vez de ler.", "Votre IA écrit le code et l’app tourne juste là : vous la voyez au lieu de la lire.", "Deine KI schreibt den Code und die App läuft direkt dort, du siehst sie, statt sie zu lesen.", "AI がコードを書き、アプリがその場で動くので、読む代わりに見て確かめられます。", "你的 AI 写代码，应用就在眼前运行，你直接看到它，而不用读代码。", "AI가 코드를 쓰고 앱이 바로 그 자리에서 돌아가니, 읽는 대신 눈으로 봐요."],
-    "“Make the jump floatier.” “Add a title screen.” Change it in words, or click and edit it yourself.": ["«Haz el salto más flotante». «Añade una pantalla de título». Cámbialo con palabras, o haz clic y edítalo tú.", "“Deixe o pulo mais leve.” “Adicione uma tela de título.” Mude com palavras, ou clique e edite você mesmo.", "« Rends le saut plus aérien. » « Ajoute un écran titre. » Changez-le avec des mots, ou cliquez et modifiez-le vous-même.", "„Mach den Sprung schwebender.“ „Füg einen Titelbildschirm hinzu.“ Ändere es mit Worten oder klick und bearbeite es selbst.", "「ジャンプをもっとふわっと」「タイトル画面を追加して」。言葉で変えても、クリックして自分で直してもOK。", "“让跳跃更轻飘一点。”“加个标题画面。”用话来改，或者点一下自己改。", "“점프를 더 둥실하게.” “타이틀 화면 추가해 줘.” 말로 바꾸거나, 클릭해서 직접 고쳐요."],
-    "Every change is saved to GitHub. Send a link and people can use it today.": ["Cada cambio se guarda en GitHub. Envía un enlace y la gente puede usarlo hoy.", "Cada mudança é salva no GitHub. Envie um link e as pessoas já podem usar hoje.", "Chaque changement est enregistré sur GitHub. Envoyez un lien et on peut l’utiliser aujourd’hui.", "Jede Änderung wird auf GitHub gespeichert. Schick einen Link und andere können es heute nutzen.", "変更はすべて GitHub に保存されます。リンクを送れば、今日から使ってもらえます。", "每次改动都保存到 GitHub。发个链接，今天就能让别人用上。", "모든 변경은 GitHub에 저장돼요. 링크를 보내면 오늘 바로 쓸 수 있어요."],
-    "Learn a language for months, set up tools, then build alone.": ["Aprender un lenguaje durante meses, configurar herramientas y luego construir solo.", "Aprender uma linguagem por meses, configurar ferramentas e depois construir sozinho.", "Apprendre un langage pendant des mois, installer des outils, puis construire seul.", "Monatelang eine Sprache lernen, Tools einrichten, dann allein bauen.", "何か月も言語を学び、ツールを整え、一人で作る。", "花几个月学一门语言，配好工具，然后一个人做。", "몇 달 동안 언어를 배우고, 도구를 세팅하고, 혼자 만들기."],
-    "Describe it, try it, fix it in words. Learn the code as you go, if you want to.": ["Descríbelo, pruébalo, arréglalo con palabras. Aprende el código sobre la marcha, si quieres.", "Descreva, teste, corrija com palavras. Aprenda o código no caminho, se quiser.", "Décrivez, essayez, corrigez avec des mots. Apprenez le code en chemin, si vous voulez.", "Beschreiben, ausprobieren, mit Worten verbessern. Den Code nebenbei lernen, wenn du willst.", "説明して、試して、言葉で直す。コードは必要なら作りながら覚えればいい。", "描述它、试一试、用话来修。想学的话，边做边学代码。", "설명하고, 써 보고, 말로 고치기. 원하면 만들면서 코드를 배워요."],
-    "Do it together: friends and each person's own AI build the same app in one shared room.": ["Hacedlo juntos: amigos y la IA de cada uno construyen la misma app en una sala compartida.", "Façam juntos: amigos e a IA de cada um constroem o mesmo app numa sala compartilhada.", "Faites-le ensemble : des amis et l’IA de chacun construisent la même app dans une salle partagée.", "Macht es zusammen: Freunde und die eigene KI jedes Einzelnen bauen dieselbe App in einem gemeinsamen Raum.", "みんなで一緒に。友だちとそれぞれの AI が、ひとつの共有ルームで同じアプリを作ります。", "一起做：朋友们和每个人自己的 AI 在同一个共享空间里做同一个应用。", "함께 해요. 친구들과 각자의 AI가 하나의 공유 공간에서 같은 앱을 만들어요."],
-    // v0.27: Company mode section + the fifth Learn module
-    "Company mode": ["Modo empresa", "Modo empresa", "Mode entreprise", "Firmenmodus", "カンパニーモード", "公司模式", "컴퍼니 모드"],
-    "Run a company, not just a project": ["Dirige una empresa, no solo un proyecto", "Toque uma empresa, não só um projeto", "Dirigez une entreprise, pas seulement un projet", "Führe eine Firma, nicht nur ein Projekt", "プロジェクトだけでなく、会社を動かそう", "不只是做项目，还能经营公司", "프로젝트를 넘어, 회사를 운영하세요"],
-    "Turn a project into a small business. On your own, you get a one-person C‑suite: AI helpers take the seats you can’t fill yet. With friends, each person takes a role. Either way, every seat has a clear job, and the big decisions stay with people.": ["Convierte un proyecto en un pequeño negocio. Si estás solo, tienes una dirección de una sola persona: los asistentes de IA ocupan los puestos que aún no puedes cubrir. Con amigos, cada uno asume un rol. En ambos casos, cada puesto tiene una tarea clara y las grandes decisiones siguen siendo de las personas.", "Transforme um projeto em um pequeno negócio. Sozinho, você tem uma diretoria de uma pessoa só: assistentes de IA ocupam os cargos que você ainda não consegue preencher. Com amigos, cada um assume um papel. De qualquer jeito, cada cargo tem uma função clara, e as grandes decisões continuam com as pessoas.", "Transformez un projet en petite entreprise. Seul, vous avez une direction à une personne : des assistants IA prennent les postes que vous ne pouvez pas encore pourvoir. Entre amis, chacun prend un rôle. Dans les deux cas, chaque poste a une mission claire, et les grandes décisions restent humaines.", "Mach aus einem Projekt ein kleines Unternehmen. Allein bekommst du eine Ein-Personen-Chefetage: KI-Helfer übernehmen die Posten, die du noch nicht besetzen kannst. Mit Freunden übernimmt jeder eine Rolle. So oder so hat jeder Posten eine klare Aufgabe, und die großen Entscheidungen bleiben bei Menschen.", "プロジェクトを小さなビジネスに。一人なら、一人で経営陣をこなせます。まだ埋められない役職はAIアシスタントが担当します。友だちとなら、それぞれが役割を持ちます。どちらでも、どの役職にも明確な仕事があり、大事な判断は人が行います。", "把项目变成一家小公司。一个人时，你就是一人高管团队：还没人担任的职位由 AI 助手来担任。和朋友一起时，每个人各担一个角色。无论哪种方式，每个职位都有明确的职责，重大决定始终由人来做。", "프로젝트를 작은 사업으로 바꿔 보세요. 혼자라면 1인 경영진이 됩니다. 아직 채우지 못한 자리는 AI 도우미가 맡아요. 친구들과 함께라면 각자 역할을 맡습니다. 어느 쪽이든 모든 자리에는 분명한 일이 있고, 큰 결정은 사람이 내립니다."],
-    "Anything outward or costly, like spending money, publishing or emailing customers, waits for a person’s OK.": ["Todo lo que sale hacia fuera o cuesta dinero, como gastar, publicar o escribir a clientes, espera el visto bueno de una persona.", "Tudo o que sai para fora ou custa dinheiro, como gastar, publicar ou mandar e-mail para clientes, espera o OK de uma pessoa.", "Tout ce qui sort vers l’extérieur ou coûte de l’argent, comme dépenser, publier ou écrire aux clients, attend l’accord d’une personne.", "Alles, was nach außen geht oder Geld kostet, etwa Ausgaben, Veröffentlichungen oder E-Mails an Kunden, wartet auf das OK eines Menschen.", "お金を使う、公開する、お客さまにメールするなど、外に出ることや費用がかかることは、必ず人の承認を待ちます。", "凡是对外或花钱的事，比如付款、发布或给客户发邮件，都要等人来批准。", "돈을 쓰거나, 게시하거나, 고객에게 이메일을 보내는 것처럼 밖으로 나가거나 비용이 드는 일은 사람의 승인을 기다려요."],
-    "How a seat works": ["Cómo funciona un puesto", "Como funciona um cargo", "Comment marche un poste", "So funktioniert ein Posten", "役職のしくみ", "职位如何运作", "자리는 이렇게 움직여요"],
-    "Numbers with sources": ["Números con su fuente", "Números com fonte", "Des chiffres sourcés", "Zahlen mit Quelle", "出どころのある数字", "有来源的数字", "출처가 있는 숫자"],
-    "Work together": ["Trabajen juntos", "Trabalhem juntos", "Travaillez ensemble", "Gemeinsam arbeiten", "いっしょに働く", "一起工作", "함께 일하기"],
-    "Give the seat a short charter: its goal, what it may do, and what needs your OK.": ["Dale al puesto un acta breve: su meta, lo que puede hacer y lo que necesita tu visto bueno.", "Dê ao cargo um estatuto curto: a meta, o que pode fazer e o que precisa do seu OK.", "Donnez au poste une courte charte : son but, ce qu’il peut faire et ce qui demande votre accord.", "Gib dem Posten eine kurze Charta: sein Ziel, was er darf und was dein OK braucht.", "役職に短い憲章を：目標、できること、あなたのOKが必要なこと。", "给职位写一份简短章程：目标、可以做什么、哪些需要你同意。", "자리에 짧은 헌장을 주세요: 목표, 할 수 있는 일, 승인이 필요한 일."],
-    "It works on its own and reports in the standup.": ["Trabaja por su cuenta e informa en el standup.", "Ele trabalha sozinho e conta no standup.", "Il travaille seul et fait le point au standup.", "Er arbeitet selbstständig und berichtet im Standup.", "自分で動き、朝会で報告します。", "它自己工作，并在站会上汇报。", "스스로 일하고 스탠드업에서 보고해요."],
-    "Anything outward or costly waits for a person.": ["Todo lo que sale hacia fuera o cuesta dinero espera a una persona.", "Tudo que sai para fora ou custa dinheiro espera uma pessoa.", "Tout ce qui sort ou coûte attend une personne.", "Alles, was nach außen geht oder Geld kostet, wartet auf einen Menschen.", "外に出ることやお金がかかることは、人を待ちます。", "对外或花钱的事，都要等人来确认。", "밖으로 나가거나 돈이 드는 일은 사람을 기다려요."],
-    "You approve with one tap, and it goes ahead.": ["Lo apruebas con un toque y sigue adelante.", "Você aprova com um toque e ele segue.", "Vous validez d’un geste et il continue.", "Ein Tipp von dir, und es geht weiter.", "ワンタップで承認すれば、先へ進みます。", "你一点批准，它就继续。", "한 번 탭해 승인하면 진행돼요."],
-    "Bring numbers from a CSV, a connected tool, or type them in.": ["Trae números de un CSV, de una herramienta conectada o escríbelos.", "Traga números de um CSV, de uma ferramenta conectada ou digite.", "Importez des chiffres d’un CSV, d’un outil connecté, ou tapez-les.", "Hol Zahlen aus einer CSV, einem verbundenen Tool oder tipp sie ein.", "CSV、つないだツール、手入力から数字を取り込みます。", "从CSV、已连接的工具导入数字，或手动输入。", "CSV, 연결한 도구에서 숫자를 가져오거나 직접 입력하세요."],
-    "They land in one Money view with your runway.": ["Llegan a una sola vista de Dinero, con tu margen de meses.", "Eles chegam a uma só visão de Dinheiro, com seu fôlego em meses.", "Ils arrivent dans une seule vue Argent, avec votre autonomie.", "Sie landen in einer Geld-Ansicht, mit deinem Runway.", "ひとつのお金ビューに集まり、残り期間もわかります。", "它们汇入同一个资金视图，还能看到跑道。", "하나의 돈 화면에 모이고, 런웨이도 보여요."],
-    "Every number says where it came from. Nothing is made up.": ["Cada número dice de dónde viene. Nada es inventado.", "Cada número diz de onde veio. Nada é inventado.", "Chaque chiffre dit d’où il vient. Rien n’est inventé.", "Jede Zahl sagt, woher sie kommt. Nichts ist erfunden.", "どの数字にも出どころがあります。作り話はゼロ。", "每个数字都标明来源，没有编造。", "모든 숫자에 출처가 있어요. 지어낸 건 없어요."],
-    "Post a gig for the seat you can’t fill, or offer your own time.": ["Publica un encargo para el puesto que no puedes cubrir, u ofrece tu tiempo.", "Publique um trabalho para o cargo que você não preenche, ou ofereça seu tempo.", "Publiez une mission pour le poste vacant, ou proposez votre temps.", "Schreib einen Auftrag für den offenen Posten aus oder biete deine Zeit an.", "埋まらない役職の仕事を募集、または自分の時間を提供します。", "为空缺的职位发布零活，或提供你自己的时间。", "못 채운 자리에 일을 올리거나, 내 시간을 내놓으세요."],
-    "Someone joins your tribe and takes the seat.": ["Alguien se une a tu tribu y ocupa el puesto.", "Alguém entra na sua tribo e assume o cargo.", "Quelqu’un rejoint votre tribu et prend le poste.", "Jemand tritt deinem Tribe bei und übernimmt den Posten.", "誰かがトライブに入り、その役職につきます。", "有人加入你的部落，接下这个职位。", "누군가 트라이브에 들어와 자리를 맡아요."],
-    "Hours go in a time bank that both sides confirm.": ["Las horas van a un banco de tiempo que ambas partes confirman.", "As horas vão para um banco de tempo que os dois lados confirmam.", "Les heures vont dans une banque de temps confirmée des deux côtés.", "Die Stunden kommen in eine Zeitbank, die beide Seiten bestätigen.", "時間は、双方が確認するタイムバンクに記録されます。", "工时记入双方都确认的时间银行。", "시간은 양쪽이 확인하는 타임뱅크에 쌓여요."],
-    "From project to business": ["Del proyecto al negocio", "Do projeto ao negócio", "Du projet à l’entreprise", "Vom Projekt zum Unternehmen", "プロジェクトからビジネスへ", "从项目到生意", "프로젝트에서 비즈니스로"],
-    "A 10-minute lesson with pictures, free on any phone": ["Una lección de 10 minutos con imágenes, gratis en cualquier móvil", "Uma aula de 10 minutos com imagens, grátis em qualquer celular", "Une leçon de 10 minutes en images, gratuite sur tout téléphone", "Eine 10-Minuten-Lektion mit Bildern, kostenlos auf jedem Handy", "絵で学ぶ10分のレッスン。どのスマホでも無料", "10分钟图文课程，任何手机都免费", "그림으로 보는 10분 수업, 어떤 폰에서도 무료"],
-    "62 lessons in ten tracks, one for every seat": ["62 lecciones en diez rutas, una para cada puesto", "62 aulas em dez trilhas, uma para cada cargo", "62 leçons en dix parcours, un pour chaque poste", "62 Lektionen in zehn Pfaden, einer für jeden Posten", "10コース62レッスン、どの役職にも", "十条路线共62节课，每个职位都有", "10개 트랙 62개 수업, 모든 자리를 위해"],
-    "Read the Company docs": ["Lee la documentación de Empresa", "Leia a documentação de Empresa", "Lire la doc Entreprise", "Die Unternehmens-Doku lesen", "会社モードのドキュメントを読む", "阅读公司模式文档", "회사 모드 문서 읽기"],
-    "Academy": ["Academia", "Academia", "Académie", "Akademie", "アカデミー", "学院", "아카데미"],
-    "Legal starting points": ["Puntos de partida legales", "Pontos de partida jurídicos", "Bases juridiques", "Rechtliche Ausgangspunkte", "法務のたたき台", "法律文件的起点", "법률 출발점"],
-    "drafts to check with a professional": ["borradores para revisar con un profesional", "rascunhos para revisar com um profissional", "des brouillons à faire vérifier par un professionnel", "Entwürfe zum Prüfen mit Fachleuten", "専門家に確認してもらう下書き", "需请专业人士审核的草稿", "전문가와 확인할 초안"],
-    "Offload": ["Delegar", "Delegar", "Délester", "Auslagern", "オフロード", "分流", "오프로드"],
-    "send simple jobs to free models": ["manda tareas simples a modelos gratuitos", "mande tarefas simples para modelos gratuitos", "confiez les tâches simples à des modèles gratuits", "einfache Aufgaben an kostenlose Modelle geben", "簡単な作業は無料のモデルへ", "把简单任务交给免费模型", "간단한 일은 무료 모델에게"],
-    "Marketplace": ["Mercado", "Marketplace", "Marketplace", "Marktplatz", "マーケットプレイス", "市场", "마켓플레이스"],
-    "500+ add-ons, connectors and skills": ["más de 500 complementos, conectores y habilidades", "mais de 500 complementos, conectores e habilidades", "plus de 500 modules, connecteurs et compétences", "über 500 Erweiterungen, Konnektoren und Skills", "500以上のアドオン、コネクタ、スキル", "500 多个插件、连接器和技能", "500개 이상의 애드온, 커넥터, 스킬"],
-    "Five short modules for people who have never opened a code editor, ending with how a project becomes a business. Read one on the bus. There’s nothing to install.": ["Cinco módulos cortos para quien nunca ha abierto un editor de código, y al final, cómo un proyecto se convierte en un negocio. Lee uno en el autobús. No hay nada que instalar.", "Cinco módulos curtos para quem nunca abriu um editor de código, terminando com como um projeto vira um negócio. Leia um no ônibus. Não precisa instalar nada.", "Cinq modules courts pour qui n’a jamais ouvert un éditeur de code, avec pour finir comment un projet devient une entreprise. Lisez-en un dans le bus. Rien à installer.", "Fünf kurze Module für alle, die noch nie einen Code-Editor geöffnet haben, zum Schluss: wie aus einem Projekt ein Unternehmen wird. Lies eins im Bus. Nichts zu installieren.", "コードエディタを開いたことがない人のための短い5つのモジュール。最後は、プロジェクトがビジネスになるまで。バスの中で読めます。インストールは不要です。", "五个短模块，写给从没打开过代码编辑器的人，最后一个讲项目如何变成生意。坐公交时就能读完一个，什么都不用安装。", "코드 편집기를 한 번도 열어 본 적 없는 분을 위한 짧은 모듈 다섯 개. 마지막은 프로젝트가 사업이 되는 과정이에요. 버스에서 하나 읽어 보세요. 설치할 것은 없어요."],
-    // v0.27: feedback
-    "Tell us what to build next": ["Dinos qué construir después", "Diga o que devemos construir a seguir", "Dites-nous quoi construire ensuite", "Sag uns, was wir als Nächstes bauen sollen", "次に作ってほしいものを教えて", "告诉我们接下来做什么", "다음에 만들 것을 알려 주세요"],
-    "Ideas, bugs, wishes. Pick what it's about, write a line, and it opens as a public note on GitHub, where every one gets read.": ["Ideas, errores, deseos. Elige el tema, escribe una línea y se abrirá como nota pública en GitHub, donde se leen todas.", "Ideias, bugs, desejos. Escolha o assunto, escreva uma linha e ela abre como uma nota pública no GitHub, onde todas são lidas.", "Idées, bugs, envies. Choisissez le sujet, écrivez une ligne, et cela s’ouvre comme une note publique sur GitHub, où chacune est lue.", "Ideen, Fehler, Wünsche. Wähle das Thema, schreib eine Zeile, und sie öffnet sich als öffentliche Notiz auf GitHub, wo jede gelesen wird.", "アイデア、バグ、要望。テーマを選んで一行書くと、GitHub の公開メモとして開きます。すべて読んでいます。", "想法、问题、愿望。选好主题，写一句话，它会在 GitHub 上作为公开留言打开，每一条都会被阅读。", "아이디어, 버그, 바람. 주제를 고르고 한 줄 쓰면 GitHub의 공개 메모로 열려요. 모두 읽어요."],
-    "Send feedback": ["Enviar comentarios", "Enviar feedback", "Envoyer un avis", "Feedback senden", "フィードバックを送る", "发送反馈", "피드백 보내기"],
-    "See what others asked for": ["Mira lo que pidieron otros", "Veja o que outros pediram", "Voir ce que d’autres ont demandé", "Sieh, was andere sich wünschen", "ほかの人の要望を見る", "看看别人提了什么", "다른 사람들의 요청 보기"],
-    // v0.27: simpler Learn + vibecoding infographic
-    "TribeCode teaches as you go. Free, plain-language lessons walk you from what code is to building your first app with friends, and on to running it like a business. Every lesson takes a few minutes, works on your phone, and gives you something real to try in your own tribe.": ["TribeCode te enseña sobre la marcha. Lecciones gratuitas y en lenguaje sencillo te llevan desde qué es el código hasta crear tu primera app con amigos, y luego a llevarla como un negocio. Cada lección dura unos minutos, funciona en el móvil y te da algo real que probar en tu propia tribu.", "O TribeCode ensina enquanto você constrói. Lições gratuitas e em linguagem simples levam você do que é código até criar seu primeiro app com amigos e, depois, a tocá-lo como um negócio. Cada lição leva poucos minutos, funciona no celular e traz algo real para testar na sua própria tribo.", "TribeCode vous forme au fil de l’eau. Des leçons gratuites, en langage simple, vous mènent de ce qu’est le code à votre première app entre amis, puis à la gérer comme une entreprise. Chaque leçon prend quelques minutes, marche sur téléphone et propose quelque chose de concret à essayer dans votre tribu.", "TribeCode bringt es dir nebenbei bei. Kostenlose Lektionen in einfacher Sprache führen dich davon, was Code ist, zu deiner ersten App mit Freunden und weiter dazu, sie wie ein Unternehmen zu führen. Jede Lektion dauert ein paar Minuten, läuft auf dem Handy und gibt dir etwas Echtes zum Ausprobieren in deinem eigenen Tribe.", "TribeCode は作りながら学べます。無料でわかりやすいレッスンが、コードとは何かから、友だちと最初のアプリを作り、ビジネスとして運営するところまで案内します。各レッスンは数分、スマホでも読めて、自分のトライブで実際に試せることが付いています。", "TribeCode 边做边教。免费、通俗易懂的课程带你从“代码是什么”开始，到和朋友做出第一个应用，再到把它当成生意来经营。每节课只要几分钟，手机上就能看，还会给你一件能在自己部落里真正动手试试的事。", "TribeCode는 만들면서 배우게 해 줘요. 무료이고 쉬운 말로 된 레슨이 코드가 무엇인지부터 친구들과 첫 앱을 만들고 사업처럼 운영하는 것까지 안내해요. 레슨마다 몇 분이면 되고, 휴대폰에서도 되며, 내 트라이브에서 직접 해 볼 거리를 줘요."],
-    "How vibecoding works": ["Cómo funciona el vibecoding", "Como o vibecoding funciona", "Comment marche le vibecoding", "So funktioniert Vibecoding", "バイブコーディングのしくみ", "氛围编程怎么做", "바이브코딩의 방식"],
-    "Describe it in a sentence": ["Descríbelo en una frase", "Descreva em uma frase", "Décrivez-le en une phrase", "Beschreib es in einem Satz", "一文で説明する", "用一句话描述", "한 문장으로 설명하기"],
-    "Your AI writes it; it runs": ["Tu IA lo escribe y funciona", "Sua IA escreve e já roda", "Votre IA l’écrit, ça tourne", "Deine KI schreibt es, es läuft", "AI が書いて、すぐ動く", "AI 来写，马上能跑", "AI가 쓰고, 바로 돌아가요"],
-    "Change it in plain words": ["Cámbialo con palabras sencillas", "Mude com palavras simples", "Changez-le avec des mots simples", "Ändere es mit einfachen Worten", "普通の言葉で直す", "用平常的话修改", "쉬운 말로 바꾸기"],
-    "Share a link": ["Comparte un enlace", "Compartilhe um link", "Partagez un lien", "Teile einen Link", "リンクを共有", "分享一个链接", "링크 공유하기"],
-    "Start learning": ["Empieza a aprender", "Comece a aprender", "Commencer à apprendre", "Loslernen", "学び始める", "开始学习", "배우기 시작"],
-    // v0.28: Design canvas, website templates, Flint without an AI, new docs sections
-    'Design it with Flint, then send it to your app.': ['Diséñalo con Flint y envíalo a tu app.', 'Desenhe com o Flint e mande para o seu app.', 'Dessinez-le avec Flint, puis envoyez-le dans votre app.', 'Entwirf es mit Flint und schick es in deine App.', 'Flintとデザインして、そのままアプリへ。', '和 Flint 一起设计，再一键放进你的应用。', 'Flint와 디자인하고, 앱으로 바로 보내세요.'],
-    'Every project has a design canvas. Tell Flint what you need and he lays out the screen for you, free, as real layers you can click and change. When it looks right, one button puts it in your app as code.': [
-      'Cada proyecto tiene un lienzo de diseño. Dile a Flint lo que necesitas y él arma la pantalla gratis, con capas reales que puedes tocar y cambiar. Cuando se vea bien, un botón la pone en tu app como código.',
-      'Cada projeto tem uma tela de design. Diga ao Flint o que você precisa e ele monta a tela de graça, com camadas reais que você pode clicar e mudar. Quando estiver bom, um botão coloca tudo no seu app como código.',
-      'Chaque projet a un canevas de design. Dites à Flint ce qu’il vous faut : il compose l’écran gratuitement, en vrais calques que vous pouvez cliquer et modifier. Quand c’est bon, un bouton le met dans votre app sous forme de code.',
-      'Jedes Projekt hat eine Design-Fläche. Sag Flint, was du brauchst, und er baut den Screen kostenlos auf, aus echten Ebenen, die du anklicken und ändern kannst. Passt es, bringt ein Knopf ihn als Code in deine App.',
-      'どのプロジェクトにもデザインキャンバスがあります。欲しいものをFlintに伝えると、クリックして変えられる本物のレイヤーで画面を無料で組み立てます。よければボタンひとつでコードとしてアプリへ。',
-      '每个项目都有一块设计画布。告诉 Flint 你要什么，他会免费排好界面，全是可以点击修改的真实图层。满意了，一个按钮就把它作为代码放进你的应用。',
-      '모든 프로젝트에는 디자인 캔버스가 있어요. Flint에게 필요한 걸 말하면 클릭해서 바꿀 수 있는 실제 레이어로 화면을 무료로 짜 줍니다. 마음에 들면 버튼 하나로 코드가 되어 앱에 들어가요.'],
-    'Ask': ['Pide', 'Peça', 'Demandez', 'Frag', '頼む', '提出', '요청'],
-    'Flint designs it': ['Flint lo diseña', 'O Flint desenha', 'Flint le dessine', 'Flint entwirft es', 'Flintがデザイン', 'Flint 来设计', 'Flint가 디자인'],
-    'Tweak it': ['Ajústalo', 'Ajuste', 'Ajustez', 'Feinschliff', '微調整', '微调', '다듬기'],
-    'Send to app': ['Enviar a la app', 'Mandar para o app', 'Envoyer dans l’app', 'An die App senden', 'アプリへ送る', '发送到应用', '앱으로 보내기'],
-    '"Make a sign-in screen for Ember." No AI subscription needed.': ['"Haz una pantalla de inicio de sesión para Ember." Sin suscripción de IA.', '"Faça uma tela de login para o Ember." Sem assinatura de IA.', '« Fais un écran de connexion pour Ember. » Aucun abonnement IA requis.', '„Mach einen Anmeldescreen für Ember.“ Kein KI-Abo nötig.', '「Ember用のサインイン画面を作って」。AIのサブスクは不要。', '"给 Ember 做一个登录界面。"不需要 AI 订阅。', '"Ember 로그인 화면 만들어 줘." AI 구독은 필요 없어요.'],
-    'Real layers with auto layout, from 13 screen templates.': ['Capas reales con diseño automático, a partir de 13 plantillas de pantalla.', 'Camadas reais com layout automático, a partir de 13 modelos de tela.', 'De vrais calques en mise en page auto, à partir de 13 modèles d’écran.', 'Echte Ebenen mit Auto-Layout, aus 13 Screen-Vorlagen.', '13種類の画面テンプレートから、オートレイアウトの本物のレイヤーで。', '基于 13 个界面模板，全是带自动布局的真实图层。', '13가지 화면 템플릿에서, 자동 레이아웃이 적용된 실제 레이어로.'],
-    'Click anything for color, size and words. Advanced mode adds layers and properties.': ['Toca lo que quieras para cambiar color, tamaño y textos. El modo avanzado añade capas y propiedades.', 'Clique em qualquer coisa para mudar cor, tamanho e texto. O modo avançado mostra camadas e propriedades.', 'Cliquez sur n’importe quoi pour la couleur, la taille et le texte. Le mode avancé ajoute calques et propriétés.', 'Klick auf irgendwas für Farbe, Größe und Text. Der Profimodus zeigt Ebenen und Eigenschaften.', 'クリックで色・サイズ・文字を変更。詳細モードではレイヤーとプロパティも。', '点任何东西就能改颜色、大小和文字。高级模式还有图层和属性面板。', '아무거나 클릭해 색, 크기, 문구를 바꾸세요. 고급 모드에는 레이어와 속성이 나와요.'],
-    'It lands in your project as HTML and CSS, and the preview updates.': ['Llega a tu proyecto como HTML y CSS, y la vista previa se actualiza.', 'Chega ao seu projeto como HTML e CSS, e a prévia atualiza.', 'Il arrive dans votre projet en HTML et CSS, et l’aperçu se met à jour.', 'Es landet als HTML und CSS in deinem Projekt, und die Vorschau aktualisiert sich.', 'HTMLとCSSとしてプロジェクトに入り、プレビューも更新されます。', '它以 HTML 和 CSS 进入你的项目，预览随之更新。', 'HTML과 CSS로 프로젝트에 들어가고, 미리보기가 바뀌어요.'],
-    'How the Design canvas works': ['Cómo funciona el lienzo de diseño', 'Como funciona a tela de design', 'Comment marche le canevas de design', 'So funktioniert die Design-Fläche', 'デザインキャンバスのしくみ', '设计画布怎么用', '디자인 캔버스 사용법'],
-    "A design canvas that's already code": ['Un lienzo de diseño que ya es código', 'Uma tela de design que já é código', 'Un canevas de design qui est déjà du code', 'Eine Design-Fläche, die schon Code ist', 'そのままコードになるデザインキャンバス', '本身就是代码的设计画布', '이미 코드인 디자인 캔버스'],
-    '16 website templates, each with its own look': ['16 plantillas de sitio web, cada una con su estilo', '16 modelos de site, cada um com seu visual', '16 modèles de site, chacun avec son style', '16 Website-Vorlagen, jede mit eigenem Look', '16種類のWebサイトテンプレート、それぞれ個性的', '16 套网站模板，各有风格', '각자 개성 있는 웹사이트 템플릿 16종'],
-    'See it in action': ['Míralo en acción', 'Veja funcionando', 'Voir en action', 'In Aktion ansehen', '動きを見る', '看看效果', '직접 보기'],
-    'See all 16': ['Ver las 16', 'Ver os 16', 'Voir les 16', 'Alle 16 ansehen', '16種類すべて見る', '查看全部 16 套', '16종 모두 보기'],
-    'Most of what you ask needs no AI at all': ['Casi todo lo que pides no necesita IA', 'Quase tudo que você pede não precisa de IA', 'La plupart de vos demandes ne demandent aucune IA', 'Das meiste, worum du bittest, braucht gar keine KI', '頼むことのほとんどはAIなしでできます', '你的大多数请求根本不需要 AI', '대부분의 요청은 AI 없이도 돼요'],
-    'Flint has his own small brain that runs right in the app. He reads what you typed, typos and all, works out what you mean, and does it. When something is truly bigger than that, he says so plainly and hands it to a stronger AI.': [
-      'Flint tiene su propio cerebro pequeño que funciona dentro de la app. Lee lo que escribiste, con faltas y todo, entiende lo que quieres y lo hace. Si algo es de verdad más grande, lo dice claro y se lo pasa a una IA más potente.',
-      'O Flint tem um cérebro próprio, pequeno, que roda dentro do app. Ele lê o que você digitou, com erros e tudo, entende o que você quer e faz. Quando algo é maior que isso, ele diz com clareza e passa para uma IA mais forte.',
-      'Flint a son propre petit cerveau, qui tourne dans l’app. Il lit ce que vous avez tapé, fautes comprises, comprend ce que vous voulez et le fait. Quand c’est vraiment plus gros, il le dit franchement et passe la main à une IA plus puissante.',
-      'Flint hat ein eigenes kleines Gehirn, das direkt in der App läuft. Er liest, was du getippt hast, samt Tippfehlern, versteht, was du meinst, und macht es. Ist etwas wirklich größer, sagt er das klar und gibt es an eine stärkere KI weiter.',
-      'Flintにはアプリ内で動く小さな頭脳があります。打ち間違いごと読み取り、意図をくみ取って実行します。本当に手に負えないときは、はっきりそう伝えて、より強いAIに渡します。',
-      'Flint 有一个直接在应用里运行的小脑袋。他会读你输入的内容（打错字也没关系），弄明白你的意思然后去做。真遇到更大的事，他会直说，并交给更强的 AI。',
-      'Flint에게는 앱 안에서 돌아가는 작은 두뇌가 있어요. 오타까지 포함해 입력한 걸 읽고, 뜻을 알아내서 해 줍니다. 정말 더 큰 일이면 솔직히 말하고 더 강한 AI에게 넘겨요.'],
-    'Design canvas': ['Lienzo de diseño', 'Tela de design', 'Canevas de design', 'Design-Fläche', 'デザインキャンバス', '设计画布', '디자인 캔버스'],
-    'Preview and live editing': ['Vista previa y edición en vivo', 'Prévia e edição ao vivo', 'Aperçu et édition en direct', 'Vorschau und Live-Bearbeitung', 'プレビューとライブ編集', '预览与实时编辑', '미리보기와 실시간 편집'],
-    'Website templates': ['Plantillas de sitio web', 'Modelos de site', 'Modèles de site', 'Website-Vorlagen', 'Webサイトテンプレート', '网站模板', '웹사이트 템플릿'],
-    'Comment pins': ['Comentarios fijados', 'Comentários fixados', 'Épingles de commentaire', 'Kommentar-Pins', 'コメントピン', '评论图钉', '댓글 핀'],
-    'Flint without an AI': ['Flint sin IA', 'Flint sem IA', 'Flint sans IA', 'Flint ohne KI', 'AIなしのFlint', '不用 AI 的 Flint', 'AI 없는 Flint'],
-    'Build kit and starters': ['Kit de construcción y plantillas', 'Kit de construção e modelos', 'Kit de construction et projets de départ', 'Bau-Kit und Vorlagen', 'ビルドキットとスターター', '构建工具包与起步项目', '빌드 키트와 스타터'],
-    'The first time you open it': ['La primera vez que lo abres', 'Na primeira vez que você abre', 'La première fois que vous l’ouvrez', 'Beim ersten Öffnen', 'はじめて開いたとき', '第一次打开时', '처음 열었을 때'],
-    'Start a tribe from a phone': ['Crea una tribu desde el móvil', 'Crie uma tribo pelo celular', 'Lancez une tribu depuis un téléphone', 'Starte einen Tribe vom Handy aus', 'スマホからトライブを始める', '在手机上创建部落', '휴대폰에서 트라이브 시작하기'],
-  };
   const NOTE = ['Algunas partes siguen en inglés.', 'Algumas partes ainda estão em inglês.', 'Certaines parties restent en anglais.', 'Einige Teile sind noch auf Englisch.', '一部はまだ英語です。', '部分内容仍为英文。', '일부는 아직 영어예요.'];
   const KEY = 'tribecode.lang';
+  const BASE = (document.currentScript && document.currentScript.src || location.href).replace(/[^/]*$/, '');
   const idx = code => LANGS.findIndex(l => l[0] === code) - 1;   // -1 for English
-  const SEL = 'h1, h2, h3, .hero__sub, .hero__more a, .hero__more-note, [class*="__lead"], .feature__text, .maker__text, .nav__link, .nav__open, .nav__star, [data-dl-label], .btn, .menu b, .footer p, .footer__links a, .lc-go, .vibe__text, .biz__note, .biz__text, .biz__sk, .biz__ss, .bx__cap, .biz__docs, .fbk__more a, .vf__k, .vf__cap, .vf__step b, .kit__text, .mm__d, .mm__eb, .mm-spot__t, .mm-spot__d, .mm-spot__go, .dz__steps b, .dz__steps span, .dz__docs, .fl-local__more';
-  let cur = 'en';
-  function textNode(el) { for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return n; return null; }
-  function apply(code) {
-    cur = LANGS.some(l => l[0] === code) ? code : 'en';
-    const i = idx(cur);
-    document.documentElement.lang = cur === 'zh' ? 'zh-Hans' : cur === 'pt' ? 'pt-BR' : cur;
-    document.querySelectorAll(SEL).forEach(el => {
-      if (el.closest('[data-no-i18n], .stage, .mk-win, script, style')) return;
-      const n = textNode(el); if (!n) return;
-      if (n.__src === undefined) n.__src = n.nodeValue;
-      const src = n.__src, key = src.trim().replace(/\s+/g, ' ');
-      const tr = i >= 0 && T[key] ? T[key][i] : null;
-      n.nodeValue = tr ? src.replace(src.trim(), tr) : src;
+  // never translated: code, the app mocks (they picture the app's own screens), and names that are the same everywhere
+  const SKIP = 'script, style, noscript, template, svg, code, pre, kbd, samp, textarea, [data-no-i18n], [translate="no"], .sr-only, .stage, .mk-win, .dzw, .cs, .vs, .kit__mock, .mini, .fa-win, .mm-spot__view, [aria-hidden="true"]';
+  const KEEP = new Set(['TribeCode', 'Flint', 'GitHub', 'Claude', 'Claude Code', 'Codex', 'Gemini', 'Gemini CLI', 'Cursor', 'Ollama', 'Qwen', 'Discord', 'Slack', 'Notion', 'Figma', 'Penpot', 'Blender', 'Godot', 'Phaser', 'three.js', 'Expo', 'Tailscale', 'Docker', 'Render', 'Fly.io', 'itch.io', 'MIT', 'Windows', 'macOS', 'Mac', 'Linux', 'iPhone', 'Android', 'iOS', 'JavaScript', 'HTML', 'CSS', 'API', 'Markdown', 'Lovable', 'Bolt', 'Replit', 'v0', 'Pixel Quest', 'Lantern Run', 'Campton', 'Camp', 'Maya', 'Jay', 'Orion', 'Ana', 'EN', 'ZIP', 'PWA', 'MCP', 'GLB', 'OK', 'CEO', 'DeepSeek', 'Llama', 'Mistral', 'KAPLAY', 'Node', 'Node.js', 'Astro', 'Kenney', 'CC0', 'H5BP', 'TasteJS', 'TodoMVC', 'PixiJS', 'melonJS', 'Frank Force', 'Gabriele Cirulli', 'Phaser Studio', 'KAPLAY team', 'Godot Engine contributors', 'Stripe', 'AppImage', 'Apple Silicon', 'ArtCraft', 'Krita', 'Steam', 'Vite', 'Web Push', 'Open Space', 'Grok', 'OpenAI', 'Anthropic', 'Playwright', 'Tauri']);
+  const ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
+  const dicts = { en: {} }; let cur = 'en', D = {}, obs = null, busy = false;
+  const norm = s => String(s).replace(/\s+/g, ' ').trim();
+  const wordy = s => /\p{L}{2,}/u.test(s) && !KEEP.has(s) && !/^(https?:\/\/|[\w.-]+\.(com|org|io|app|md|html|json|js)\b|github\.com\/|@|#\w)/.test(s);
+  const textless = n => n.nodeType === 1 && !/\p{L}/u.test(n.textContent);
+  const skipped = el => !!(el.closest && el.closest(SKIP));
+  // every element that owns a direct text node with words
+  function blocks(root) {
+    const out = [], w = document.createTreeWalker(root || document.body, NodeFilter.SHOW_ELEMENT, { acceptNode: e => e.matches(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    for (let e = w.currentNode; e; e = w.nextNode()) {
+      if (e.nodeType !== 1 || (e === (root || document.body) && skipped(e))) continue;
+      for (const n of e.childNodes) if (n.nodeType === 3 && /\p{L}/u.test(n.nodeValue)) { out.push(e); break; }
+    }
+    return out;
+  }
+  // the element's tokens: inner elements become {0}, {1}…; icons at either end are left out of the key
+  function shape(el) {
+    const kids = [...el.childNodes].filter(n => n.nodeType === 3 || n.nodeType === 1);
+    let a = 0, b = kids.length; while (a < b && kids[a].nodeType === 1 && textless(kids[a])) a++; while (b > a && kids[b - 1].nodeType === 1 && textless(kids[b - 1])) b--;
+    const mid = kids.slice(a, b), els = mid.filter(n => n.nodeType === 1); let k = 0;
+    const key = norm(mid.map(n => n.nodeType === 3 ? n.nodeValue : `{${k++}}`).join(''));
+    return { key, head: kids.slice(0, a), mid, els, tail: kids.slice(b), texts: mid.filter(n => n.nodeType === 3 && /\p{L}/u.test(n.nodeValue)) };
+  }
+  function restore(el) {
+    const s = el.__tl; if (!s) return;
+    const now = [...el.childNodes];
+    const ours = now.length === s.out.length && now.every((n, i) => n === s.out[i] && (n.nodeType !== 3 || n.nodeValue === s.outVals[i]));
+    if (ours) { el.replaceChildren(...s.nodes); s.nodes.forEach((n, i) => { if (n.nodeType === 3) n.nodeValue = s.vals[i]; }); }
+    el.__tl = null;
+  }
+  function translateEl(el) {
+    restore(el);
+    if (cur === 'en') return;
+    const sh = shape(el); if (!sh.key || !wordy(sh.key)) return;
+    const nodes = [...el.childNodes], vals = nodes.map(n => n.nodeType === 3 ? n.nodeValue : null);
+    const tr = D[sh.key];
+    if (tr != null) {
+      if (!sh.els.length) {   // plain text (maybe with icons around it): change the one text node, keep its spacing
+        const t = sh.texts[0]; if (!t) return; let first = true;
+        sh.mid.forEach(n => { if (n.nodeType === 3) { if (first && n === t) { n.nodeValue = n.nodeValue.replace(/\S[\s\S]*\S|\S/, tr); first = false; } else n.nodeValue = ''; } });
+      } else {
+        const parts = tr.split(/\{(\d+)\}/), mid = [];
+        parts.forEach((p, i) => { if (i % 2) { const e = sh.els[+p]; if (e) mid.push(e); } else if (p) mid.push(document.createTextNode(p)); });
+        const lead = sh.mid[0] && sh.mid[0].nodeType === 3 && /^\s/.test(sh.mid[0].nodeValue) ? [document.createTextNode(' ')] : [];
+        el.replaceChildren(...sh.head, ...lead, ...mid, ...sh.tail);
+      }
+    } else {   // no pattern: translate each run of words on its own (older keys)
+      let any = false;
+      sh.texts.forEach(n => { const k = norm(n.nodeValue), t = D[k]; if (t != null) { n.nodeValue = n.nodeValue.replace(/\S[\s\S]*\S|\S/, t); any = true; } });
+      if (!any) return;
+    }
+    const out = [...el.childNodes];
+    el.__tl = { nodes, vals, out, outVals: out.map(n => n.nodeType === 3 ? n.nodeValue : null) };
+  }
+  function translateAttrs(root) {
+    (root || document.body).querySelectorAll(ATTRS.map(a => `[${a}]`).join(',')).forEach(el => {
+      if (skipped(el)) return;
+      const o = el.__tla || (el.__tla = {});
+      ATTRS.forEach(a => {
+        if (!el.hasAttribute(a)) return;
+        const v = el.getAttribute(a);
+        if (!(a in o) || (v !== o[a] && v !== o[a + '#'])) o[a] = v;   // the page changed it: that's the new source
+        const t = cur === 'en' ? null : D[norm(o[a])];
+        const next = t != null ? t : o[a]; o[a + '#'] = next; if (v !== next) el.setAttribute(a, next);
+      });
     });
-    const b = document.getElementById('lang-btn'); if (b) { b.querySelector('b').textContent = cur.toUpperCase(); b.setAttribute('aria-label', `Language: ${LANGS.find(l => l[0] === cur)[1]}`); }
-    document.querySelectorAll('#lang-menu [data-lang]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.lang === cur)));
-    document.querySelectorAll('#lang-chips [data-lang]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.lang === cur)));
-    const note = document.getElementById('lang-note'); if (note) note.textContent = i >= 0 ? NOTE[i] : '';
+  }
+  function run(root) {
+    busy = true;
+    try { blocks(root).forEach(translateEl); translateAttrs(root); if (root === document.body || !root) { const t = document.querySelector('title'); if (t) { t.__src = t.__src || t.textContent; t.textContent = cur !== 'en' && D[norm(t.__src)] || t.__src; } } }
+    finally { if (obs) obs.takeRecords(); busy = false; }
+  }
+  function watch() {
+    if (obs || !window.MutationObserver) return;
+    let roots = new Set(), timer = 0;
+    obs = new MutationObserver(list => {
+      if (busy || cur === 'en') return;
+      for (const m of list) { const t = m.target.nodeType === 3 ? m.target.parentElement : m.target; if (t && !skipped(t)) roots.add(t); }
+      if (roots.size && !timer) timer = setTimeout(() => { timer = 0; const r = [...roots]; roots = new Set(); r.forEach(x => { if (x.isConnected) { run(x); if (x.parentElement && !skipped(x.parentElement)) translateEl(x.parentElement); } }); }, 30);
+    });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  function load(code) {
+    if (dicts[code]) return Promise.resolve(dicts[code]);
+    return fetch(BASE + 'lang/' + code + '.json').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(d => (dicts[code] = d));
+  }
+  let seq = 0;
+  function apply(code) {
+    const want = LANGS.some(l => l[0] === code) ? code : 'en', my = ++seq;
+    return load(want).then(d => {
+      if (my !== seq) return;
+      cur = want; D = d; const i = idx(cur);
+      document.documentElement.lang = cur === 'zh' ? 'zh-Hans' : cur === 'pt' ? 'pt-BR' : cur;
+      run(document.body); watch();
+      const b = document.getElementById('lang-btn'); if (b) { b.querySelector('b').textContent = cur.toUpperCase(); b.setAttribute('aria-label', `Language: ${LANGS.find(l => l[0] === cur)[1]}`); }
+      document.querySelectorAll('#lang-menu [data-lang]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.lang === cur)));
+      document.querySelectorAll('#lang-chips [data-lang]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.lang === cur)));
+      const note = document.getElementById('lang-note'); if (note) note.textContent = i >= 0 && missing().length ? NOTE[i] : '';
+      document.dispatchEvent(new CustomEvent('tribe-lang', { detail: cur }));
+    });
+  }
+  function set(code) { try { localStorage.setItem(KEY, code); } catch {} return apply(code); }
+  // strings on this page (as it is now) with no translation in the current language
+  function missing() {
+    if (cur === 'en') return [];
+    const keep = cur, out = new Set(); cur = 'en'; run(document.body); cur = keep;   // read the English source
+    blocks(document.body).forEach(el => {
+      const sh = shape(el); if (!sh.key || !wordy(sh.key) || D[sh.key] != null) return;
+      sh.texts.forEach(n => { const k = norm(n.nodeValue); if (wordy(k) && D[k] == null) out.add(sh.els.length ? sh.key : k); });
+    });
+    document.body.querySelectorAll('[placeholder]').forEach(el => { const o = (el.__tla && el.__tla.placeholder) || el.getAttribute('placeholder'), k = norm(o); if (!skipped(el) && wordy(k) && D[k] == null) out.add(k); });
+    run(document.body);
+    return [...out];
   }
   function picker() {
     const end = document.querySelector('.nav__end'); if (!end || document.getElementById('lang-btn')) return;
     const wrap = document.createElement('div'); wrap.className = 'lang';
-    wrap.innerHTML = `<button class="lang__btn" id="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Language"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9s1.3-6.3 3.9-9z"/></svg><b>EN</b></button>
-      <ul class="lang__menu" id="lang-menu" role="menu" hidden>${LANGS.map(([c, n]) => `<li><button type="button" role="menuitemradio" aria-checked="false" data-lang="${c}" lang="${c}">${n}</button></li>`).join('')}<li class="lang__note" id="lang-note" aria-live="polite"></li></ul>`;
+    wrap.innerHTML = `<button class="lang__btn" id="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Language" data-no-i18n><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9s1.3-6.3 3.9-9z"/></svg><b>EN</b></button>
+      <ul class="lang__menu" id="lang-menu" role="menu" data-no-i18n hidden>${LANGS.map(([c, n]) => `<li><button type="button" role="menuitemradio" aria-checked="false" data-lang="${c}" lang="${c}">${n}</button></li>`).join('')}<li class="lang__note" id="lang-note" aria-live="polite"></li></ul>`;
     end.insertBefore(wrap, end.firstChild);
     const btn = wrap.querySelector('#lang-btn'), menu = wrap.querySelector('#lang-menu');
     const open = on => { menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); if (on) (menu.querySelector('[aria-checked="true"]') || menu.querySelector('button')).focus(); };
     btn.onclick = e => { e.stopPropagation(); open(menu.hidden); };
-    menu.onclick = e => { const b = e.target.closest('[data-lang]'); if (!b) return; try { localStorage.setItem(KEY, b.dataset.lang); } catch {} apply(b.dataset.lang); open(false); btn.focus(); };
+    menu.onclick = e => { const b = e.target.closest('[data-lang]'); if (!b) return; set(b.dataset.lang); open(false); btn.focus(); };
     menu.addEventListener('keydown', e => {
       const items = [...menu.querySelectorAll('[data-lang]')], k = items.indexOf(document.activeElement);
       if (e.key === 'ArrowDown') { e.preventDefault(); items[(k + 1) % items.length].focus(); }
@@ -256,9 +153,9 @@
     // phones: the top bar is full, so the languages also sit in the menu (☰) as a row of chips
     const extra = document.querySelector('.nav__mobile-extra');
     if (extra && !document.getElementById('lang-chips')) {
-      const row = document.createElement('div'); row.className = 'lang__chips'; row.id = 'lang-chips'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Language');
+      const row = document.createElement('div'); row.className = 'lang__chips'; row.dataset.noI18n = ''; row.id = 'lang-chips'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Language');
       row.innerHTML = LANGS.map(([c, n]) => `<button type="button" data-lang="${c}" lang="${c}" aria-pressed="false">${n}</button>`).join('');
-      row.onclick = e => { const b = e.target.closest('[data-lang]'); if (!b) return; try { localStorage.setItem(KEY, b.dataset.lang); } catch {} apply(b.dataset.lang); };
+      row.onclick = e => { const b = e.target.closest('[data-lang]'); if (!b) return; set(b.dataset.lang); };
       extra.appendChild(row);
     }
   }
@@ -266,8 +163,8 @@
     picker();
     let want = null; try { want = localStorage.getItem(KEY); } catch {}
     if (!want) { const nav = (navigator.languages || [navigator.language || 'en']).map(x => String(x).slice(0, 2).toLowerCase()); want = nav.find(c => LANGS.some(l => l[0] === c)) || 'en'; }
-    if (want !== 'en') apply(want); else apply('en');
+    window.TribeLang.ready = apply(want);
   }
+  window.TribeLang = { set, get: () => cur, langs: LANGS.map(l => l[0]), missing, t: s => { const k = norm(s); return cur !== 'en' && D[k] != null ? D[k] : s; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
-  window.TribeLang = { set: c => { try { localStorage.setItem(KEY, c); } catch {} apply(c); }, get: () => cur, langs: LANGS.map(l => l[0]), t: s => { const i = idx(cur), k = String(s).trim().replace(/\s+/g, ' '); return i >= 0 && T[k] ? T[k][i] : s; } };
 })();

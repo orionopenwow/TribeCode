@@ -128,3 +128,49 @@ the one AI-boost card (Use my AI · Get credits / Premium). Test: `app/test/e2e_
 
 Code: `server/showcase.js` (not `server/site.js`, which is TribeCode's own GitHub Pages friend links), `app/ui/website.js`,
 `app/ui/website.css`. Test: `app/test/e2e_website.py`.
+
+## TribeCode's own website (tribecode.org)
+
+Everything above is the page each *project* gets. TribeCode's own site is the `site/` folder: the Pages workflow
+(`.github/workflows/pages.yml`) publishes it at the root with the web app under `/app/`.
+
+### Why TribeCode (the plan for the home page's `#why` section)
+
+What sets TribeCode apart from Lovable, Bolt, Replit, v0, Cursor, Discord and Notion. Each tool there is very good at
+one slice: an AI that writes an app from a prompt (Lovable, Bolt, v0, Replit), an AI editor for one coder (Cursor),
+a group chat (Discord), a wiki (Notion). We only claim what is built today.
+
+| # | Differentiator | Why it's true (what's built) | Visual |
+| --- | --- | --- | --- |
+| 1 | **A team that includes AIs.** Friends and the AI helpers they already use (Claude Code, Codex, Gemini, Cursor) in one chat; any task can go to a person or to someone's agent, and people approve what lands. | chat + agents, lanes, hand-offs, one-tap approvals (`server/coord.js`, `approvals.js`) | the phone task list with "Give to Claude" |
+| 2 | **Works with no AI, better with one.** Flint builds a website from 16 templates, a to-do app, a video editor, a platformer and company docs with no model; with an AI on, the same buttons get the ✦ version. | `server/flintfree.js` recipes, `doctpl.js`, DESIGN-SYSTEM §11 | Chore Wheel, built from one sentence |
+| 3 | **You own it, and it's free.** Runs on your computer or server; chat, docs and tasks are plain Markdown/JSONL; code in your GitHub repo; MIT. Paid plans (later) only cover hosting and AI credits (docs/PREMIUM.md). | the tribe folder layout | a real tribe folder tree |
+| 4 | **App, website, company and game in one project.** | Watch Flint build makes all of them in one project | four renders from one run |
+| 5 | **Proof of work.** Watch Flint build shows each step, then exports ZIPs with every file, the timeline and who was there. | `flintrun.js`, `server/flintrun.js` | the finished run |
+| 6 | **Your phone is a real seat.** A phone browser can chat, approve a merge, send a voice note and take a task, no app store. | docs/MOBILE.md, PWA | the phone approval card |
+
+Not claimed: hosted plans and AI credits (not live yet), native store apps, anything a stronger AI does on its own.
+
+### The gallery (`#gallery`)
+
+A balanced, filterable gallery (All · Apps · Websites · Docs & company · Design · Games, `site/showcase.js`): a wide
+Watch Flint build card with what's inside its proof ZIP, then apps, websites, company templates, designs and, last,
+two games. Every thumbnail is a real render made by `python3 scripts/dev/showcase-thumbs.py` (a throwaway tribe,
+Watch Flint build, Flint's own free commands, the templates) into `site/assets/showcase/*.webp` + `proof.json`.
+
+Each card's **Make this** opens the app ready to make it:
+
+- `app/?ask=<sentence>`: Flint opens with that sentence typed in (never sent for you), e.g. `make a cafe website`.
+  The build sentences are Flint's free recipes; `app/test/e2e_site_gallery.py` checks each one with
+  `flintfree.classify`.
+- `app/?make=doc:<id>`: Work › Templates opens that company template (works with no tribe).
+- `app/?flintrun=1` (Watch Flint build), `app/#/hub/work` (Work), `app/?demo=showcase` (the demo tribe).
+
+Handled by `app/ui/makelink.js`.
+
+### Languages
+
+`site/i18n.js` + `site/lang/<code>.json` (es, pt, fr, de, ja, zh, ko; English is the source). Every visible string
+on every page is keyed by its English text; animated app mocks, code and names stay as they are. `TribeLang.missing()`
+lists what has no translation, and `app/test/e2e_site_i18n.py` fails on any (`--dump file.json` lists them to
+translate).

@@ -1,0 +1,21 @@
+{
+ "zip": "glowbug-proof.zip",
+ "kb": 307,
+ "files": 57,
+ "groups": {
+  "README.md": 1,
+  "game": 12,
+  "website": 27,
+  "docs": 2,
+  "tasks": 2,
+  "chat": 2,
+  "vision": 1,
+  "proposals": 1,
+  "company": 1,
+  "design": 3,
+  "presentation": 2,
+  "tribe": 1,
+  "timeline.json": 1,
+  "TIMELINE.md": 1
+ }
+}
