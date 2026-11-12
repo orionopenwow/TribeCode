@@ -548,7 +548,21 @@ const academy = require('./academy')({ P, base: baseStore, store, docs, captures
 const flintKB = require('./flintkb')({ ui: UI, nlu: require(path.join(UI, 'flintnlu.js')) });   // flint-local: Flint's knowledge base (TF-IDF over the Guide and docs)
 const aiBasics = require('./aibasics')({ llm, base: baseStore, P, str });   // feat/flint-ai: ✦ basic features supercharged by AI (server/aibasics.js)
 const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
-const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company });   // phone tribe -> host (docs/PHONE-HOSTING.md)
+const repoBinding = new Map();   // pid -> the clone in flight (a GitHub-linked draft moved here, server/soloimport.js)
+function connectRepo(pid, gh) {   // bind owner/name as the project's code repository, the same as connecting a repo by URL
+  if (repoBinding.has(pid)) return repoBinding.get(pid);
+  const job = (async () => {
+    const p = P.get(pid); if (!p) throw new Error('no such project');
+    if (p.repo && W.isRepo(p.repo)) return { already: true, repo: p.repo };
+    const dest = baseStore.p('workspaces', pid);
+    if (!W.isRepo(dest)) await W.clone(process.env.TRIBE_TEST && process.env.TRIBE_GITHUB_GIT ? path.join(process.env.TRIBE_GITHUB_GIT, gh + '.git') : `https://github.com/${gh}.git`, dest);
+    P.update(pid, { repo: dest, workspace: true }); resetHub(pid);
+    try { rooms.pushProjects(); } catch {}
+    return { repo: dest };
+  })().finally(() => repoBinding.delete(pid));
+  repoBinding.set(pid, job); return job;
+}
+const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company, connectRepo });   // phone tribe -> host (docs/PHONE-HOSTING.md)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
 talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name, ledger, loadTasks: () => loadTasks(), saveTask: t => saveTask(t),   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });

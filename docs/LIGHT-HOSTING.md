@@ -45,9 +45,11 @@ The minimal version, shipped now (`app/ui/setuplocal.js`):
   `tribe/*` suggestion branches and the open pull requests, read straight from the GitHub API (cached for a minute).
   No always-on server is needed to view any of it; anyone with the link sees the same thing on github.com.
 
-When the project later moves to a server home, the export carries the repo name, and the host posts it in the
-project's chat so it can be connected under Code repository (the existing workspace, autopilot and GitHub sign-in in
-`server/workspace.js` and `server/github-auth.js` take over from there).
+When the project later moves to a server home and the host moves it, the host clones the repo and binds it as the
+project's code repository at once (the same as connecting a repo by URL: `workspaces/<project>`, `repo` + `workspace` on
+the project; `server/index.js connectRepo`). It is idempotent: a repeated draft returns the first result and a project
+that already has a repository keeps it. A member who isn't the host gets a chat line asking the host to connect it. The
+existing workspace, autopilot and GitHub sign-in (`server/workspace.js`, `server/github-auth.js`) take over from there.
 
 ## Who keeps it live
 
