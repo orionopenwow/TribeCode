@@ -166,7 +166,7 @@
     commit(d.id, all, d.el, '');
   }
   document.addEventListener('pointerdown', e => {
-    if (e.button !== 0 || drag) return;
+    if (e.button !== 0 || drag || !e.isTrusted) return;   // a scripted pointerdown (the tour's ghost clicks) has no pointerup: it would arm a drag that never ends and eat Esc
     const el = e.target.closest && e.target.closest(ITEMS); if (!el) return;
     const id = listOf(el); if (!id || itemsOf(LISTS[id]).length < 2) return;
     drag = { el, id, x: e.clientX, y: e.clientY, pid: e.pointerId, type: e.pointerType, slot: null, timer: 0 };
