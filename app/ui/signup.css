@@ -1,0 +1,88 @@
+/* Sign up (app/ui/signup.js): the three ways in, Create an account, Forgot password, the next step on Home and the
+   "Save your work" nudges. Builds on the Log in sheet (accounts.css: .ac-scrim, .ac-sheet). Flat matte, motion.css timings. */
+.sg-sheet { gap: 12px; }
+.sg-paths { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.sg-path { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--surface-2);
+  border: 1px solid var(--edge); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.sg-path:hover:not(:disabled) { background: var(--surface-3); }
+.sg-path:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sg-path.sg-main { border-color: var(--accent); }
+.sg-path:disabled { cursor: default; opacity: .62; }
+.sg-path > span { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.sg-path b { font-size: 14.5px; font-weight: 650; }
+.sg-path small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.sg-path > .i { color: var(--muted); flex: none; }
+.sg-path.sg-main > .i:first-child { color: var(--accent); }
+.sg-chev { transform: rotate(-90deg); }
+#sg-oa .oa-btns { display: flex; flex-direction: column; gap: 6px; }
+.sg-alt { margin: 2px 0 0; text-align: center; color: var(--muted); font-size: 13px; }
+.sg-back { position: absolute; top: 12px; left: 12px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--r-sm);
+  background: none; border: 1px solid transparent; color: var(--muted); cursor: pointer; }
+.sg-back .i { transform: rotate(90deg); }
+.sg-back:hover { background: var(--surface-2); border-color: var(--edge); color: var(--text); }
+.sg-sheet:has(.sg-back) > .eyebrow { margin-top: 22px; }
+
+.sg-form { display: flex; flex-direction: column; gap: 12px; }
+.sg-f { display: flex; flex-direction: column; gap: 5px; }
+.sg-f label { font-size: 13px; font-weight: 600; color: var(--text); }
+.sg-f label small { font-weight: 400; color: var(--faint); margin-left: 4px; }
+.sg-f .input { width: 100%; box-sizing: border-box; min-height: 42px; }
+.sg-f .input[aria-invalid="true"] { border-color: var(--alert); }
+.sg-hint { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--faint); min-height: 1.45em; }
+.sg-hint[data-kind="good"] { color: var(--online); }
+.sg-hint[data-kind="bad"] { color: var(--alert); }
+.sg-hint[data-kind="wait"] { color: var(--muted); }
+.sg-sugs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sg-sugs[hidden] { display: none; }
+.sg-sug { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface-2); color: var(--text); font: inherit; font-size: 12.5px; cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.sg-sug:hover { background: var(--surface-3); border-color: var(--accent); }
+.sg-pw { position: relative; }
+.sg-pw .input { padding-right: 64px; }
+.sg-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); padding: 4px 8px; border-radius: var(--r-sm); border: 1px solid transparent; background: none;
+  color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.sg-eye:hover { color: var(--text); background: var(--surface-2); border-color: var(--edge); }
+.sg-meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; height: 4px; }
+.sg-meter i { border-radius: 2px; background: var(--surface-3); transition: background-color var(--dur-base) var(--ease-out); }
+.sg-meter[data-score="1"] i:nth-child(-n+1) { background: var(--alert); }
+.sg-meter[data-score="2"] i:nth-child(-n+2) { background: var(--amber); }
+.sg-meter[data-score="3"] i:nth-child(-n+3) { background: var(--online); }
+.sg-meter[data-score="4"] i { background: var(--online); }
+.sg-go { min-height: 44px; margin-top: 2px; }
+.sg-go:disabled { opacity: .55; cursor: not-allowed; }
+.sg-code { font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+
+/* Home: the next step after sign-up */
+.sg-next { border-left-color: var(--online); }
+
+/* "Save your work": one calm card, bottom right (bottom on phones) */
+.sg-nudge { position: fixed; right: 20px; bottom: 20px; z-index: 850; width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 16px; background: var(--surface); border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: var(--r-lg);
+  animation: ac-rise var(--dur-base) var(--ease-out) both; }
+.sg-nudge b { font-size: 14.5px; color: var(--text); }
+.sg-nudge small { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.sg-n-acts { display: flex; gap: 8px; margin-top: 8px; }
+.sg-inline, .ac-save { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--edge); border-left: 3px solid var(--accent);
+  border-radius: var(--r); background: var(--surface-2); }
+.ac-save { margin-bottom: 0; }
+.sg-inline > span, .ac-save > span { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.sg-inline b, .ac-save b { font-size: 13.5px; color: var(--text); }
+.sg-inline small, .ac-save small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.sg-inline .sg-inv-x { position: static; flex: none; }
+
+/* Log in: Forgot password, New here, Signed in as, the host's reset codes */
+.ac-form-acts .ac-forgot { margin-right: auto; font-size: 12.5px; }
+.ac-foot .ac-newlink { margin-right: auto; font-size: 12.5px; }
+.ac-foot .ac-testlink + .ac-newlink { margin-right: 0; }
+.ac-menu-eye.ac-as { text-transform: none; letter-spacing: 0; font-family: inherit; font-size: 12px; color: var(--muted); }
+.ac-menu-eye.ac-as b { color: var(--text); font-weight: 600; }
+.ac-rs-acts { display: flex; gap: 6px; flex: none; }
+.ac-code { font-family: var(--mono); font-size: 15px; letter-spacing: .1em; padding: 4px 8px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); }
+
+@media (max-width: 820px) {
+  .sg-f .input { font-size: 16px; }   /* iOS doesn't zoom into 16px fields */
+  .sg-nudge { left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); width: auto; }
+  .sg-path { padding: 13px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .sg-nudge { animation: none; } .sg-path, .sg-sug, .sg-meter i { transition: none; } }

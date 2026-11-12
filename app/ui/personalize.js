@@ -8,7 +8,7 @@
 // Never with ?skipIntro / ?demo= / ?welcome / ?tour=, in the offline demo, on a phone device link, or under automation
 // unless ?personalize=1 (or the test flag). Reopen any time: Settings › Personalize, or the profile menu.
 // The focused first run (firstrun.js) waits for this to finish, so only one onboarding thing shows at a time.
-//   window.TribePersonalize = { open(step), close(), pending(), isOpen(), then(fn), localMember() }
+//   window.TribePersonalize = { open(step), afterSignup(), close(), pending(), isOpen(), then(fn), localMember() }
 (function () {
   'use strict';
   const C = window.TribeClient, S = window.TribeStore; if (!C || !S) return;
@@ -164,7 +164,7 @@
           <h2 class="pz-t" id="pz-t">${esc(t(s.title))}</h2>
           <div class="pz-body" data-step="${s.k}">${body}</div>
           <footer class="pz-foot">
-            <button class="btn ghost" id="pz-skip">${esc(t(opener === 'first' ? 'Skip' : 'Close'))}</button>
+            <button class="btn ghost" id="pz-skip">${esc(t(opener === 'first' || opener === 'signup' ? 'Skip' : 'Close'))}</button>
             <span class="pz-sp"></span>
             ${step ? `<button class="btn" id="pz-back">${esc(t('Back'))}</button>` : ''}
             <button class="btn primary" id="pz-next">${esc(t(last ? 'Done' : 'Next'))}</button>
@@ -221,7 +221,7 @@
   }
 
   function open(at, how) {
-    if ((!C.connected || !C.connected()) && !noTribe()) return;
+    if ((!C.connected || !C.connected()) && !noTribe() && how !== 'signup') return;   // feat/signup: right after sign-up, connected or not
     if (el) { go(typeof at === 'number' ? at : step); return; }
     opener = how || 'menu';
     d = fresh(); step = typeof at === 'number' ? Math.max(0, Math.min(STEPS.length - 1, at)) : 0;
@@ -265,5 +265,5 @@
     return { id: '', name: st.name || '', color: st.color || '#F26B1D', profile: { avatar: av } };
   }
   function localChanged() { window.dispatchEvent(new CustomEvent('tribe-local-profile')); }
-  window.TribePersonalize = { open: s => open(s, 'menu'), close, pending, isOpen, then, localMember };
+  window.TribePersonalize = { open: s => open(s, 'menu'), afterSignup: () => open(0, 'signup'), close, pending, isOpen, then, localMember };
 })();

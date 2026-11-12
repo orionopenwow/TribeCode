@@ -90,6 +90,7 @@
     if (!OFF() || !OFF().start) return toast('Setup did not load. Reload the app.');
     close();
     OFF().start('solo', draft);   // instant: the local backend answers the app from here on
+    window.dispatchEvent(new CustomEvent('tribe-project-created', { detail: { name, local: true } }));   // signup.js: "Save your work"
     try { localStorage.setItem('tribecode.setup.wherePending', '1'); } catch {}
     const offer = () => { if (window.TribeClient && window.TribeClient.connected()) where({ first: true }); else setTimeout(offer, 120); };
     setTimeout(offer, 700);

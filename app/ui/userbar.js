@@ -36,6 +36,8 @@
     }
     const ac = !on && window.TribeAccounts && window.TribeAccounts.status(true);   // signed out, a guest or a TEST account (accounts.js)
     if (ac) { $('#ub-st').textContent = ac; if (window.TribeAccounts.mode() === 'signedout') $('#ub-name').textContent = 'Signed out'; }
+    const as = window.TribeAccounts && window.TribeAccounts.signedAs && window.TribeAccounts.signedAs();   // feat/signup: who this is
+    if (as) { st_.textContent = local ? `${as} · ${st_.textContent}` : `Signed in as ${as}`; st_.title = `Signed in as ${as}` + (local ? ' · Where should it live?' : ''); }
   }
   function place() {
     const pf = $('#pf-btn'), fr = $('#fr-btn'), bell = $('#nf-bell'), tb = $('.titlebar .tb-right'), nest = $('#tour-side');
