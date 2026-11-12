@@ -69,6 +69,11 @@ Store: `.tribe/accounts.json` = `{ version: 1, accounts: [{ id, username, userna
 - **Sessions**: tokens are shown once (`tca_` + 32 random characters); only their sha256 is stored. 30 days (guests: 1 day), at most 20 live per account.
 - **Passwords**: at least 8 characters, not on the common list, not one repeated character or a straight run, and without the
   username (`weakPassword`, the same rule in signup.js). Still optional on the API while local-only (the sign-up sheet asks for one); when given they are hashed with scrypt (N=16384, r=8, p=1, 16-byte salt) and checked in constant time. Login answers the same for a wrong name and a wrong password.
+- **No login on a username alone** (review 2026-11-11, #4): an account with a password logs in only with it. Real
+  accounts must set a password at sign-up (`400` otherwise). A guest account (`guest: true`) has none: its sign-up answers
+  a `deviceKey` (`tcd_…`, shown once, only its sha256 kept), and `login` with `{ username, deviceKey }` is the only way
+  back in, so only that device gets back in. Accounts mapped from members have no password and can't log in here: they sign in with their tribe key
+  or a provider until they claim the account (signup `link: true`, with a password). Every route stays local-only.
 - **Email**: optional, `email: { address, verified: false, added }`. Nothing is sent yet, so it stays unverified.
 - **Reset codes**: a request lasts 24 hours (one open per account). The host's code is 8 characters, shown once, kept as a
   sha256, good for 30 minutes and 5 tries. The rate-limited bucket covers signup, login and reset.

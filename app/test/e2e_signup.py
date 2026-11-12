@@ -196,6 +196,16 @@ def main():
             st, r = api("/accounts/link", "POST", {"member": lm["token"]}, token=la["token"]); assert st == 200 and lm["member"]["id"] in r["account"]["members"], r
             st, r = api("/accounts/login", "POST", {"username": "lin", "password": "paper lantern 3"}); assert st == 200 and r.get("memberToken"), r
 
+            # ---- fix/review-4: no login on a username alone
+            assert api("/accounts/login", "POST", {"username": "Orion Host"})[0] == 401, "a mapped member's passwordless account can't log in"
+            st, r = api("/accounts/signup", "POST", {"username": "No Password"}); assert st == 400 and "password" in r["error"], (st, r)
+            st, gu = api("/accounts/signup", "POST", {"username": "Couch Guest", "guest": True}); assert st == 200 and gu["deviceKey"].startswith("tcd_"), gu
+            assert api("/accounts/login", "POST", {"username": "couch guest"})[0] == 401, "a guest needs its device key"
+            assert api("/accounts/login", "POST", {"username": "couch guest", "deviceKey": "tcd_wrong"})[0] == 401
+            assert api("/accounts/login", "POST", {"username": "couch guest", "deviceKey": gu["deviceKey"]})[0] == 200, "the device that made it gets back in"
+            acc = json.loads(Path(tmp, ".tribe", "accounts.json").read_text())["accounts"]
+            assert not any(gu["deviceKey"] in json.dumps(a) for a in acc), "only the device key's hash is stored"
+
             # ---- 7. phone at 390px: a bottom sheet with the right keyboards and autofill
             px = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2)
             px.add_init_script(SIGNED_OUT)

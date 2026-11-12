@@ -132,6 +132,7 @@
     const say = t => { if (err) { err.textContent = t; err.hidden = !t; } };
     const username = v('#ac-user').trim(), password = v('#ac-pass');
     if (!username) { say('Type your username.'); return; }
+    if (kind === 'signup' && password.length < 8) { say('Pick a password of at least 8 characters.'); return; }
     form.querySelectorAll('button').forEach(b => { b.disabled = true; });
     try {
       if (kind === 'signup') {

@@ -10,8 +10,11 @@
 // works today keeps working, and an account only adds a way to sign in.
 //
 // Routes (all under /api/accounts):
-//   POST signup   { username, displayName?, password?, guest? }  -> { account, token }
-//   POST login    { username, password? }                        -> { account, token }
+//   POST signup   { username, displayName?, password, guest? }   -> { account, token, deviceKey? }  (guests: no password, a device key)
+//   POST login    { username, password? | deviceKey? }           -> { account, token }
+//        fix/review-4: an account with a password logs in only with it. Without one, only a guest account logs in, and only
+//        with the device key its sign-up handed out (that device). Mapped members and every other passwordless account
+//        can't log in here (they sign in with their tribe key or a provider). Real accounts need a password at sign-up.
 //   POST logout   (Bearer tca_…)                                 -> { ok }        ends this session
 //   GET  me       (Bearer tca_…)                                 -> { account }
 //   GET  sessions (Bearer tca_…)                                 -> { sessions }  DELETE sessions/<id> ends one
@@ -166,6 +169,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
         const clash = byKey(keyOf(username));
         if (clash && clash !== own) { fail(res, 409, 'that username is taken'); return true; }
         if (own && own.password) { fail(res, 409, 'you already have an account: log in with it'); return true; }
+        if (body.password == null) { fail(res, 400, 'pick a password of at least 8 characters'); return true; }   // fix/review-4
         const a = own || { id: 'acct-' + id(10), created: now(), providers: [], sessions: [], members: [mem.id] };
         Object.assign(a, { username, usernameKey: keyOf(username), displayName: normalizeUsername(body.displayName) || a.displayName || username, status: 'active', ...mail, ...(body.password != null ? { password: scryptHash(body.password) } : {}) });
         if (!own) load().accounts.push(a);
@@ -173,16 +177,19 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
         send(res, 200, { account: pub(a), token, linked: mem.id }); return true;
       }
       if (byKey(keyOf(username))) { fail(res, 409, 'that username is taken'); return true; }
+      if (!body.guest && body.password == null) { fail(res, 400, 'pick a password of at least 8 characters'); return true; }   // fix/review-4: real accounts need one
+      const deviceKey = body.guest ? 'tcd_' + id(32) : '';   // a guest logs back in only on this device
       const a = { id: 'acct-' + id(10), username, usernameKey: keyOf(username), displayName: normalizeUsername(body.displayName) || username, created: now(),
-        status: body.guest ? 'guest' : 'active', providers: [], sessions: [], members: [], ...mail, ...(body.password != null ? { password: scryptHash(body.password) } : {}) };
+        status: body.guest ? 'guest' : 'active', providers: [], sessions: [], members: [], ...mail, ...(deviceKey ? { deviceKeyHash: hash(deviceKey) } : {}), ...(body.password != null ? { password: scryptHash(body.password) } : {}) };
       load().accounts.push(a);
       const token = startSession(a, req, !!body.guest);
-      send(res, 200, { account: pub(a), token }); return true;
+      send(res, 200, { account: pub(a), token, ...(deviceKey ? { deviceKey } : {}) }); return true;
     }
     if (b === 'login' && m === 'POST') {
       const a = byKey(keyOf(body.username));
       // one answer for "no such account" and "wrong password", so usernames can't be probed
-      const ok = a && a.status !== 'disabled' && (a.password ? body.password != null && scryptCheck(body.password, a.password) : true);
+      const ok = a && a.status !== 'disabled' && (a.password ? body.password != null && scryptCheck(body.password, a.password)
+        : a.status === 'guest' && !!a.deviceKeyHash && typeof body.deviceKey === 'string' && crypto.timingSafeEqual(Buffer.from(hash(body.deviceKey), 'hex'), Buffer.from(a.deviceKeyHash, 'hex')));   // fix/review-4
       if (!ok) { fail(res, 401, 'that username and password do not match'); return true; }
       const token = startSession(a, req, a.status === 'guest');
       // polish: an account that belongs to a member of this tribe signs that member in on this device (a device link)
