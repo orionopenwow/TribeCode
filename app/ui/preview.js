@@ -309,22 +309,15 @@
       phoneGestures();
       afterMount();
     }
-<<<<<<< HEAD
     const mine = pane; mine.classList.add('loading');
-    try { await token(); }
+    try { await Promise.all([token(), loadSite()]); }
     catch (e) { mine.classList.remove('loading'); return pane === mine ? renderError(e.message) : undefined; }
     mine.classList.remove('loading');
     if (pane !== mine) return;   // closed while the token was on its way (the user went somewhere else)
-=======
-    pane.classList.add('loading');
-    try { await Promise.all([token(), loadSite()]); }
-    catch (e) { pane.classList.remove('loading'); return renderError(e.message); }
-    pane.classList.remove('loading');
     // which one to show: what you picked last time in this project, else the app when it runs, else the website draft
     const saved = lsGet(srcKey(), '');
     src = saved === 'site' || saved === 'app' ? saved : (info.hasRepo && info.hasIndex) ? 'app' : site && site.has ? 'site' : 'app';
     if (window.TribePreviewFlint && window.TribePreviewFlint.source) window.TribePreviewFlint.source(src);
->>>>>>> feat/preview
     render();
   }
   function renderError(msg) {
