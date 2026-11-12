@@ -109,3 +109,4 @@
   .ab-p-h { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { .ab-seg button { transition: none; } }
+.ab-list > .ab-offer { margin: 0; }

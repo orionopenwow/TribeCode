@@ -7,7 +7,7 @@
 //   dashboard's At a glance tile (projects.js asks tile()), and Flint's "make me a company", "who's in charge of X",
 //   "give X to my claude".
 // Mount points for other features (they listen for the events below and fill the slots):
-//   view:  #co-ledger-slot, #co-autopilot-slot                     event 'tribe:company-view'  { project, company }
+//   view:  (v2 draws Money itself; seat autopilot lives in each seat sheet)  event 'tribe:company-view'  { project, company }
 //   sheet: #co-seat-ledger-slot, #co-seat-autopilot-slot, #co-academy-slot ("Learn this role"),
 //          #co-hire-slot (empty seats: "Hire someone for this seat")  event 'tribe:company-sheet' { project, seat, el }
 //   empty seat cards also carry <div class="co-hire-slot" data-seat="…">.
@@ -143,7 +143,7 @@
       ${sec('week', 'calendar', 'This week', 'Standup, approvals, decisions', `<div class="co-week-g">${todayCard(c, d)}${approvalsCard(c, d)}${decisionsCard(c, d, sample)}</div>`)}
       ${sec('money', 'coins', 'Money', 'This month’s books', `<div id="co-money" class="co-money">${sample ? moneyHtml(SAMPLE_MONEY()) : '<p class="faint">Loading the ledger…</p>'}</div>`, `<button class="btn sm" id="co-money-open">Open Money</button>`)}
       ${sec('goals', 'target', 'Charters & goals', 'This month’s goals', goalsCard(c, d))}
-      ${sec('rituals', 'repeat', 'Rituals', 'Next check-ins', ritualsCard(c, d, sample) + '<div id="co-autopilot-slot" data-project="' + esc(st.pid) + '"></div>')}
+      ${sec('rituals', 'repeat', 'Rituals', 'Next check-ins', ritualsCard(c, d, sample))}
       ${sec('activity', 'activity', 'Activity', 'What happened lately', activityCard(c, d))}`;
   }
   function draw() {
