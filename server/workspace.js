@@ -55,8 +55,8 @@ module.exports = function workspace({ store, slug }) {
 
   // ---------- GitHub sign-in on the host (gh CLI, optional) ----------
   let ghCache = null, ghAt = 0;
-  async function ghStatus() {
-    if (Date.now() - ghAt < 60_000 && ghCache) return ghCache;
+  async function ghStatus(force) {
+    if (!force && Date.now() - ghAt < 60_000 && ghCache) return ghCache;
     ghAt = Date.now();
     const r = await run('gh', ['auth', 'status', '--hostname', 'github.com'], { timeout: 8000, env: NOPROMPT });
     const text = `${r.out}\n${r.err}`;

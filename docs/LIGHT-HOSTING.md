@@ -31,6 +31,13 @@ picks a home only when you want friends in. The home can be as light as a GitHub
 
 The minimal version, shipped now (`app/ui/setuplocal.js`):
 
+- **Signed in?** Picking "A GitHub repo" first checks for a way to write to GitHub: a token in this browser,
+  TribeCode's GitHub sign-in, the GitHub CLI (`gh auth status`) or a git credential on this computer
+  (`GET /api/github/detect`, members or the host computer itself; it never returns a token). With none, a short guide:
+  Sign in with GitHub (when the host turned it on), a fine-grained token (the exact steps: Contents read and write), or
+  install git and the GitHub CLI for your system and run `gh auth login`. **Check again** (or coming back to the window)
+  re-checks, and once something is there the GitHub sheet opens by itself. **Continue read-only** is always there.
+
 - **Connect** a repo by name (`owner/name` or its URL). Public repos need no token to view. A fine-grained token with
   Contents read and write lets TribeCode write suggestions; it is kept only on this device (`localStorage`), never in
   the project, an export or a server.

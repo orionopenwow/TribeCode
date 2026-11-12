@@ -41,3 +41,20 @@
 .su-home-live { max-width: 960px; margin: 16px auto 0; padding: 0 24px; }
 @media (max-width: 820px) { .su-sheet { width: auto; } .su-home-live { padding: 0 14px; } .su-seg button { padding: 9px 11px; } }
 @media (prefers-reduced-motion: reduce) { .su-spin { animation: none; } }
+
+/* feat/tasks-company: Sign in to GitHub first (the guide behind "A GitHub repo") */
+.su-checks { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.su-ck { display: flex; gap: 8px; align-items: baseline; color: var(--muted); }
+.su-ck span { width: 14px; flex: none; text-align: center; font-weight: 700; }
+.su-ck.ok { color: var(--text); } .su-ck.ok span { color: var(--online); } .su-ck.no span { color: var(--faint); }
+.su-way { margin: 0 0 10px; padding: 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+.su-way h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 14px; }
+.su-n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--brand); color: var(--brand); font: 600 11px var(--mono); flex: none; }
+.su-steps { margin: 4px 0 10px; padding-left: 20px; display: grid; gap: 4px; font-size: 13px; line-height: 1.5; color: var(--text); }
+.su-steps a, .su-os a, .su-way a { color: var(--accent-ink); }
+.su-cmd { display: flex; gap: 8px; align-items: center; margin: 6px 0 0; }
+.su-cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 7px 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--canvas); font: 12px var(--mono); }
+.su-cmd .input { flex: 1; min-width: 0; }
+.su-os { margin: 4px 0 0; font-size: 13px; }
+.su-more { margin: 8px 0 0; font-size: 13px; } .su-more summary { cursor: pointer; color: var(--muted); }
+.su-gh-acts { flex-wrap: wrap; }

@@ -892,6 +892,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'website') { if ((await siteFlint.route(req, res, ctx())) !== null) return; const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
+  if (a === 'github' && b === 'detect' && m === 'GET' && !me) { const h = await githubAuth.route(req, res, ctx()); if (h !== null) return; }   // feat/tasks-company: setup on the host computer, before a tribe exists
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 

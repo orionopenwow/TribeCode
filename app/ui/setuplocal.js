@@ -123,7 +123,7 @@
     return s;
   }
   function choose(home) {
-    if (home === 'github') return githubSheet();
+    if (home === 'github') return githubGate();
     if (home === 'computer') return computer();
     if (home === 'cloud') return cloud();
     if (home === 'phone') return phone();
@@ -248,7 +248,105 @@
     const m = String(v || '').trim().replace(/\.git$/, '').match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/);
     return m ? `${m[1]}/${m[2]}` : '';
   }
-  function githubSheet() {
+  // ---------- signed in to GitHub? (feat/tasks-company) ----------
+  // Picking "A GitHub repo" first checks for a way to write to GitHub: a token in this browser, TribeCode's GitHub
+  // sign-in, the GitHub CLI (`gh auth status`) or a git credential on this computer (GET /api/github/detect). With
+  // none, a short guide: Sign in with GitHub (when the host turned it on), make a fine-grained token (exact steps and
+  // permissions), or install git + the GitHub CLI and run `gh auth login`. Check again re-checks (and so does coming
+  // back to the window); once something is there, the GitHub sheet opens by itself. Read-only is always one tap away.
+  const serverBases = () => { const st = (S() && S().get()) || {}, out = [];
+    if (/^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/i.test(location.hostname)) out.push(location.origin);
+    if (st.server && st.server.url) out.push(String(st.server.url).replace(/\/+$/, ''));
+    return [...new Set(out)]; };
+  async function detectGitHub(force) {
+    const out = { browser: !!token(), server: null };
+    const tok = ((S() && S().get().server) || {}).token;
+    for (const b of serverBases()) {
+      try {
+        const r = await realFetch(`${b}/api/github/detect${force ? '?force=1' : ''}`, { cache: 'no-store', headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
+        if (r.ok) { out.server = (await r.json()).detect; break; }
+      } catch {}
+    }
+    const sv = out.server || {};
+    out.ready = out.browser ? 'browser' : sv.ready || null;
+    return out;
+  }
+  const OS = () => { const u = navigator.userAgent || ''; return /Windows/i.test(u) ? 'win' : /Mac OS X|Macintosh/i.test(u) && !/iPhone|iPad/i.test(u) ? 'mac' : /Android|iPhone|iPad/i.test(u) ? 'phone' : 'linux'; };
+  const INSTALL = {
+    win: ['Windows', [['Git for Windows', 'https://git-scm.com/download/win'], ['GitHub CLI', 'https://cli.github.com/']], 'winget install --id Git.Git -e && winget install --id GitHub.cli -e'],
+    mac: ['macOS', [['Git (Xcode tools or Homebrew)', 'https://git-scm.com/download/mac'], ['GitHub CLI', 'https://cli.github.com/']], 'brew install git gh'],
+    linux: ['Linux', [['Git', 'https://git-scm.com/download/linux'], ['GitHub CLI', 'https://github.com/cli/cli/blob/trunk/docs/install_linux.md']], 'sudo apt install git gh'],
+  };
+  const TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new';
+  async function githubGate(force) {
+    const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">A GitHub repo</span><h3>Checking GitHub…</h3></div></header><p class="ph-lead">Looking for a GitHub sign-in on this device.</p>`, 'su-gh-check', 'A GitHub repo');
+    let d; try { d = await detectGitHub(force !== false); } catch { d = { browser: false, server: null, ready: null }; }   // always fresh: a sign-in can change any time
+    if (el !== s) return d;   // closed meanwhile
+    if (d.ready) { githubSheet(d); return d; }
+    guideSheet(d); return d;
+  }
+  function guideSheet(d) {
+    const sv = d.server || {}, cli = sv.gh, git = sv.git, oa = sv.oauth || {};
+    const mark = (okk, t) => `<li class="su-ck ${okk ? 'ok' : 'no'}"><span aria-hidden="true">${okk ? '✓' : '✕'}</span>${t}</li>`;
+    const checks = [
+      mark(d.browser, 'A GitHub token in this browser'),
+      ...(d.server ? [mark(oa.signedIn, oa.member ? 'Signed in to GitHub in TribeCode' : 'TribeCode GitHub sign-in (needs a tribe)'),
+        cli ? mark(cli.signedIn, cli.installed ? (cli.signedIn ? `GitHub CLI signed in as @${esc(cli.user || '')}` : 'GitHub CLI installed, not signed in') : 'GitHub CLI (gh) not installed') : '',
+        git ? mark(git.credential === 'stored', git.installed ? `git ${esc(git.version || '')} installed${git.credential ? '' : ', no GitHub login saved'}` : 'git not installed') : ''] : [mark(false, 'TribeCode on this computer isn\'t running, so the GitHub CLI and git can\'t be checked')]),
+    ].join('');
+    const os = OS(), first = INSTALL[os] || INSTALL.linux, others = Object.entries(INSTALL).filter(([k]) => k !== os);
+    const inst = ([name, links, cmd]) => `<p class="su-os"><b>${name}</b> ${links.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`).join(' · ')}</p><div class="su-cmd"><code>${esc(cmd)}</code><button type="button" class="btn sm" data-copy="${esc(cmd)}">Copy</button></div>`;
+    const canOauth = !!(oa.configured && oa.member && window.TribeClient && window.TribeClient.hasToken() && !(OFF() && OFF().solo && OFF().solo()));
+    const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">A GitHub repo</span><h3>Sign in to GitHub first</h3></div></header>
+      <p class="ph-lead">To put ${esc(((OFF() && OFF().state && (OFF().state().projects || []).find(x => x.id === pid())) || {}).name || 'the project')} on GitHub, TribeCode needs a way to write to it. Pick one; each takes a minute.</p>
+      <ul class="su-checks" id="su-gh-checks" aria-label="What TribeCode found">${checks}</ul>
+      ${canOauth ? `<section class="su-way" id="su-way-oauth"><h4><span class="su-n">1</span>Sign in with GitHub</h4><p class="ph-note">The quickest: a short code, approved on github.com.</p><div id="su-gh-oauth"></div></section>` : ''}
+      <section class="su-way" id="su-way-token"><h4><span class="su-n">${canOauth ? 2 : 1}</span>Make a fine-grained token</h4>
+        <ol class="su-steps">
+          <li>Open <a href="${TOKEN_URL}" target="_blank" rel="noopener">github.com › Settings › Fine-grained tokens › Generate new token</a>.</li>
+          <li><b>Token name</b>: TribeCode. <b>Expiration</b>: 90 days is fine.</li>
+          <li><b>Repository access</b>: Only select repositories, then pick the repo (or All repositories).</li>
+          <li><b>Permissions › Repository permissions › Contents</b>: <b>Read and write</b>. (Metadata: Read-only is added by itself.)</li>
+          <li><b>Generate token</b>, copy it (it starts with <code>github_pat_</code>) and paste it here.</li>
+        </ol>
+        <div class="su-cmd"><input class="input" id="su-gh-pat" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-label="Your fine-grained token"><button type="button" class="btn primary" id="su-gh-pat-go">Use this token</button></div>
+        <p class="ph-note">It stays in this browser only, never in the project, an export or a server.</p></section>
+      <section class="su-way" id="su-way-cli"><h4><span class="su-n">${canOauth ? 3 : 2}</span>Install git and the GitHub CLI</h4>
+        ${inst(first)}<details class="su-more"><summary>Other systems</summary>${others.map(([, v]) => inst(v)).join('')}</details>
+        <p class="ph-note">Then sign in once in a terminal:</p><div class="su-cmd"><code>gh auth login</code><button type="button" class="btn sm" data-copy="gh auth login">Copy</button></div>
+        <p class="ph-note">Pick GitHub.com, HTTPS, and “Login with a web browser”. Come back here when it says “Logged in”.</p></section>
+      <p class="ph-err hidden" id="su-gh-gerr" role="alert"></p>
+      <div class="ph-acts su-gh-acts"><button class="btn" id="su-gh-ro" title="Public repos can be viewed without signing in">Continue read-only</button><button class="btn primary" id="su-gh-recheck">Check again</button></div>`, 'su-gh-guide', 'Sign in to GitHub');
+    const err = t => { const e = s.querySelector('#su-gh-gerr'); e.textContent = t; e.classList.toggle('hidden', !t); };
+    s.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Copied'; } catch { toast(b.dataset.copy); } });
+    if (canOauth && window.TribeGitHub) window.TribeGitHub.mount(s.querySelector('#su-gh-oauth'));
+    const recheck = async (quiet) => {
+      const b = s.querySelector('#su-gh-recheck'); if (!quiet) { b.disabled = true; b.textContent = 'Checking…'; }
+      const n = await detectGitHub(true).catch(() => null);
+      if (el !== s) return;
+      if (n && n.ready) { cleanup(); toast(n.ready === 'browser' ? 'GitHub token saved in this browser' : n.ready === 'gh' ? 'Signed in to GitHub through the GitHub CLI' : n.ready === 'oauth' ? 'Signed in to GitHub' : 'Found your GitHub login'); githubSheet(n); return; }
+      if (!quiet) { b.disabled = false; b.textContent = 'Check again'; err('Still not signed in. Finish one of the ways above, then Check again.'); }
+      if (n) { const box = s.querySelector('#su-gh-checks'); if (box) guideSheetChecks(n, box); }
+    };
+    const onFocus = () => recheck(true), onGh = () => recheck(true);
+    const cleanup = () => { removeEventListener('focus', onFocus); removeEventListener('tribe:github', onGh); };
+    addEventListener('focus', onFocus); addEventListener('tribe:github', onGh);
+    s.querySelectorAll('[data-su-close], [data-su-back]').forEach(b => b.addEventListener('click', cleanup));
+    s.querySelector('#su-gh-recheck').onclick = () => recheck(false);
+    s.querySelector('#su-gh-ro').onclick = () => { cleanup(); githubSheet({ ...d, readOnly: true }); };
+    s.querySelector('#su-gh-pat-go').onclick = async () => {
+      const v = s.querySelector('#su-gh-pat').value.trim(); err('');
+      if (!/^(github_pat_|ghp_|gho_)[\w]{10,}$/.test(v)) return err('That doesn\'t look like a GitHub token. A fine-grained one starts with github_pat_.');
+      const b = s.querySelector('#su-gh-pat-go'); b.disabled = true; b.textContent = 'Checking…';
+      try { await gh('/user', { token: v }); try { localStorage.setItem(TKEY, v); } catch {} await recheck(false); }
+      catch (e) { b.disabled = false; b.textContent = 'Use this token'; err(e.status === 401 ? 'GitHub didn\'t accept that token. Make a new one and paste it again.' : `Couldn't reach GitHub: ${e.message}`); }
+    };
+  }
+  function guideSheetChecks(n, box) {   // refresh the ✓/✕ list in place after a quiet re-check
+    const cli = (n.server || {}).gh;
+    const row = box.querySelector('.su-ck:nth-child(3)'); if (row && cli) { row.className = `su-ck ${cli.signedIn ? 'ok' : 'no'}`; }
+  }
+  function githubSheet(d) {
     const cur = homeOf().github || {};
     const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">A GitHub repo</span><h3>Live on GitHub</h3></div></header>
       <p class="ph-lead">The repo is the shared truth: anyone can see it, and suggestions (tasks, the project page, docs) appear as plain files on a <code>${BRANCH}</code> branch. No server needs to stay on.</p>
@@ -256,7 +354,7 @@
       <input class="input" id="su-gh-repo" placeholder="owner/name or https://github.com/owner/name" value="${esc(cur.repo || '')}" spellcheck="false">
       <label class="ph-lab" for="su-gh-tok">Token to write suggestions <span class="su-opt">optional</span></label>
       <input class="input" id="su-gh-tok" type="password" placeholder="A fine-grained token with Contents: read and write" value="${token() ? '••••••••' : ''}" autocomplete="off">
-      <p class="ph-note">Without a token the project shows the live repo (read only). The token stays on this device and never goes into the project or to a server.</p>
+      <p class="ph-note">${d && d.ready === 'gh' && d.server && d.server.gh ? `Signed in through the GitHub CLI on this computer (@${esc(d.server.gh.user || '')}). ` : d && d.ready === 'oauth' ? 'Signed in to GitHub in TribeCode. ' : d && d.ready === 'git' ? 'git on this computer has a GitHub login. ' : ''}Without a token the project shows the live repo (read only). The token stays on this device and never goes into the project or to a server.</p>
       <p class="ph-err hidden" id="su-gh-err" role="alert"></p>
       <div id="su-gh-live"></div>
       <div class="ph-acts"><button class="btn" data-su-close>Not now</button><button class="btn primary" id="su-gh-go">${cur.repo ? 'Update' : 'Connect'}</button></div>`, 'su-github', 'A GitHub repo');
