@@ -901,7 +901,7 @@
     "Give the player a pixel-art sprite"
    ],
    "controls": "Left and Right to run, Space to jump. On a phone: hold the left or right third, tap the middle to jump.",
-   "size": 35698
+   "size": 35878
   },
   {
    "id": "pomodoro",
@@ -1372,10 +1372,10 @@
    ],
    "phrases": [
     "survey app",
-    "form builder",
+    "survey form",
     "feedback form",
-    "signup form",
-    "questionnaire app"
+    "questionnaire app",
+    "questionnaire"
    ],
    "license": "MIT",
    "by": "TribeCode",
@@ -1459,7 +1459,7 @@
     "Add a file upload"
    ],
    "controls": "Answer and press Next or Enter.",
-   "size": 11940
+   "size": 11941
   },
   {
    "id": "todo",
