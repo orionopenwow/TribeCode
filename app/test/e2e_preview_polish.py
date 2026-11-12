@@ -1,7 +1,7 @@
 """End-to-end: the polished preview (feat/preview).
 
 1. Desktop toolbar: App | Website, device sizes (390 / 768 / 1280), reload, new tab, share link, comment pins, Select,
-   Saved and "Ask Flint to change…" are all there, in one bar. The website's empty state has a next step (Make the website).
+   Saved and "Ask Flint to change…" are all there, in one bar. The website's empty state has a next step (Open the website designer).
 2. Flint edits the website locally, no AI (the server's brain is off): "make the headline say …", "change the accent to teal",
    "add a pricing section", "swap to the Studio template", "remove the testimonials", click-to-select + new words, and undo.
    Each change reloads the preview (the frame shows it) and is kept as a version.

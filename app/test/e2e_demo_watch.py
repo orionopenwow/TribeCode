@@ -1,14 +1,16 @@
 """See how TribeCode works (app/ui/demowatch.js): the hands-off tour with Flint. NO tribe server: the Pages layout (site/
 at the root, app/ui under /app/) on a static file server, like e2e_demo_tour.py.
 
-Checks: the website's "See how TribeCode works" link opens app/?demo=watch; at ?speed=4 the tour runs all 16 chapters
-end to end headless, every chapter's targets were found by the watchdog (no skips), the real app reacted (a project
-Ember Café, Maya's reaction and reply in chat, a task Maya accepted and one Rio claimed, the opening doc, the café site
+Checks: the website's "See how TribeCode works" link opens app/?demo=watch; the FIRST FRAME is a blank slate (the empty
+dashboard: "Make your first project", no project circles in the rail, no tribe, no projects in the demo state, none of
+your own name); at ?speed=4 the tour runs all 12 chapters end to end headless, every chapter's targets were found by the
+watchdog (no skips), and Flint made everything from nothing in the real app (the tribe and Ember Café through the real
+Start a project sheet, the vision typed and saved, Maya joined and chatted, a task Maya accepted, a design, the café site
 in dark mode, an approval approved, a company made), and it ends on the "Your turn" card with no dim left. Esc mid-way
 removes every overlay (dim, ring, cursors, caption, Flint's cards). The chapter dots jump to a chapter (and from the end
 card back into the tour). Pause stops the clock, 1x/2x, Skip to end lands on Your turn. Help › "See how TribeCode works"
 and the empty Home's "Tour with Flint" start it. Exit puts your own settings back exactly. No console errors.
-Usage: python app/test/e2e_demo_watch.py [--shots]   (--shots saves docs/screenshots/demo-watch-{1,site,end}.png)
+Usage: python app/test/e2e_demo_watch.py [--shots]   (--shots saves docs/screenshots/demo-blank-start.png, demo-blank-mid.png, demo-watch-end.png)
 """
 import functools, http.server, json, os, sys, threading, time
 from pathlib import Path
@@ -25,7 +27,7 @@ ES.BASE = BASE
 SHOTS = ROOT / "docs" / "screenshots"
 REAL = {"name": "Orion", "color": "#7C5CFF", "onboarded": True, "server": {"url": "http://192.0.2.10:4747", "token": ""}, "hosting": False}
 SEED = "try { if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', %s) } catch (e) {}" % json.dumps(json.dumps(REAL))
-STEPS = ["home", "project", "chat", "tasks", "docs", "files", "canvas", "site", "preview", "work", "agents", "company", "inspo", "huddle", "flint", "end"]
+STEPS = ["blank", "tribe", "project", "vision", "friend", "tasks", "make", "site", "preview", "approve", "company", "end"]
 NO_DIM = "!document.querySelector('#dw-dim.on, #dw-ring.on, .dw-cur, #dw-cap, #dw-pin, #dw-huddle, #dw-boost, #dt-spot:not(.wide), .fg-root.on')"
 
 
@@ -61,22 +63,32 @@ def main():
             pg.goto(BASE + "/index.html")
             assert pg.locator(".hero a:has-text('See how TribeCode works')").get_attribute("href") == "app/?demo=watch"
 
+            # ---- the first frame: a blank slate ----
+            pg.goto(APP + "?demo=watch&speed=1")
+            pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
+            pg.wait_for_selector("#hub-hero.hub-empty", state="visible", timeout=10000)
+            first = pg.evaluate("""() => ({ projects: TribeOffline.state().projects.length, blank: !!TribeOffline.state().blank, tribe: TribeOffline.state().tribe.name,
+              circles: document.querySelectorAll('#pj-rail [data-pj-open]').length, connected: TribeClient.connected(), id: TribeDemoWatch._test.state().id,
+              title: (document.querySelector('#hub-hero h2') || {}).textContent, text: document.body.innerText })""")
+            assert first["id"] == "blank" and first["projects"] == 0 and first["blank"] and not first["tribe"] and first["circles"] == 0 and not first["connected"], {k: v for k, v in first.items() if k != "text"}
+            assert first["title"] == "Make your first project", first["title"]
+            assert REAL["name"] not in first["text"], "your own name shows inside the demo"
+            if shots: time.sleep(1.2); pg.screenshot(path=str(SHOTS / "demo-blank-start.png"))
+            pg.evaluate("TribeDemoWatch.stop()")
+
             # ---- the whole thing at 4x, end to end ----
             pg.goto(APP + "?demo=watch&speed=4")
             pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
             assert "demo=" not in pg.evaluate("location.search")
             assert state(pg)["steps"] == STEPS, state(pg)["steps"]
             assert pg.locator("#demo-pill.wt").count() == 1 and "See how TribeCode works" in pg.text_content("#demo-pill")
-            t0 = time.time(); shot1 = shots2 = False
+            t0 = time.time(); shot1 = False
             while not state(pg)["finished"]:
                 st = state(pg)
                 assert time.time() - t0 < 120, f"the tour did not finish in 120 s: {st}"
-                if shots and not shot1 and st["id"] == "chat":   # Maya's reply in the chat, spotlit
+                if shots and not shot1 and st["id"] == "friend":   # mid-way: Maya's reply in the chat Flint just made
                     pg.wait_for_function("TribeDemoWatch._test.log().some(e => e.target === 'Maya’s reply')", timeout=30000, polling=50)
-                    time.sleep(0.5); pg.screenshot(path=str(SHOTS / "demo-watch-1.png")); shot1 = True
-                if shots and not shots2 and st["id"] == "site":   # the café site, gone dark
-                    pg.wait_for_function("TribeDemoWatch._test.log().some(e => e.target === 'the dark site')", timeout=30000, polling=50)
-                    time.sleep(0.5); pg.screenshot(path=str(SHOTS / "demo-watch-site.png")); shots2 = True
+                    time.sleep(0.4); pg.screenshot(path=str(SHOTS / "demo-blank-mid.png")); shot1 = True
                 time.sleep(0.1)
             took = time.time() - t0
             log = pg.evaluate("TribeDemoWatch._test.log()")
@@ -87,19 +99,21 @@ def main():
             pg.wait_for_selector("#dw-end .dw-end-card", state="visible", timeout=3000)
             assert "Your turn" in pg.text_content("#dw-end")
             for sel in ["#dw-start", "#dw-try", "#dw-again"]: assert pg.locator(sel).is_visible(), sel
-            assert pg.evaluate("!document.querySelector('#dw-dim.on, #dw-ring.on, .dw-cur, #dw-pin, #dw-huddle, #dw-boost')"), "dim left at the end"
-            # the work is real data in the demo backend
+            assert pg.evaluate("!document.querySelector('#dw-dim.on, #dw-ring.on, .dw-cur, #dw-pin')"), "dim left at the end"
+            # everything was made from nothing, in the demo's own state
             d = pg.evaluate("TribeOffline.state()")
-            assert any(p["id"] == "ember-cafe" for p in d["projects"])
+            assert not d.get("blank") and d["tribe"]["name"] == "Flint’s Workshop", d["tribe"]
+            assert [p["id"] for p in d["projects"]] == ["ember-cafe"], d["projects"]
+            assert "café" in (d["vision"].get("ember-cafe") or "").lower(), d["vision"]
+            assert any(m["id"] == "maya" for m in d["members"]), "Maya joined"
             chat = d["chat"]["ember-cafe"]
             assert any((m.get("reactions") or {}).get("🔥") == ["maya"] for m in chat), "Maya's reaction"
             assert any(m.get("by") == "maya" and m.get("replyTo") for m in chat), "Maya's reply"
             ts = {t["title"]: t for t in d["tasks"]["ember-cafe"]}
             assert ts["Design the menu board"]["assignee"] == "maya" and ts["Design the menu board"]["accept"] == "accepted", ts
-            assert ts["Pick the opening playlist"]["claimed"]["by"] == "rio", ts
-            assert any(x["title"] == "Opening week plan" for x in d["docs"]["ember-cafe"])
             assert any(a["status"] == "approved" for a in d["approvals"]), d["approvals"]
             assert (d.get("company") or {}).get("ember-cafe"), "made it a company"
+            assert pg.evaluate("localStorage.getItem('tribecode.setup.wherePending')") is None, "the start sheet left a real flag"
             print(f"  desktop: {len(STEPS)} chapters at 4x in {took:.1f} s, {len(log)} targets all found")
             if shots: time.sleep(0.5); pg.screenshot(path=str(SHOTS / "demo-watch-end.png"))
 
@@ -108,26 +122,26 @@ def main():
             pg.wait_for_function("TribeDemoWatch._test.state().id === 'site' && !TribeDemoWatch._test.state().finished", timeout=3000)
             assert pg.locator("#dw-end").count() == 0
             pg.wait_for_function("TribeDemoWatch._test.log().some(e => e.step === 'site' && e.target === 'the café template' && e.found)", timeout=15000)
-            pg.click("#dw-dots [data-i='13']")
-            pg.wait_for_function("TribeDemoWatch._test.log().some(e => e.step === 'huddle' && e.target === 'the huddle' && e.found)", timeout=15000)
+            pg.click("#dw-dots [data-i='9']")
+            pg.wait_for_function("TribeDemoWatch._test.log().some(e => e.step === 'approve' && e.target === 'the Approve button' && e.found)", timeout=15000)
             assert pg.evaluate("!document.querySelector('#wdz:not([hidden])')"), "the designer closed when the tour moved on"
-            assert pg.locator("#dw-dots [data-i='13'][aria-current='step']").count() == 1
+            assert pg.locator("#dw-dots [data-i='9'][aria-current='step']").count() == 1
             pg.wait_for_selector("#dw-end .dw-end-card", state="visible", timeout=30000)
             assert not [e for e in pg.evaluate("TribeDemoWatch._test.log()") if not e["found"]]
 
             # ---- Esc mid-way: every overlay goes ----
             pg.click("#dw-again")
-            pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running && TribeDemoWatch._test.state().idx >= 3", timeout=30000)
+            pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running && TribeDemoWatch._test.state().idx >= 3", timeout=60000)
             pg.wait_for_selector("#dw-ring.on", timeout=8000)
             pg.keyboard.press("Escape")
             pg.wait_for_function(NO_DIM, timeout=2000)
             assert not state(pg)["running"]
-            assert pg.locator("#dw-ui, #dw-layer, #dw-end, #dw-pin, #dw-huddle, #dw-boost").count() == 0
+            assert pg.locator("#dw-ui, #dw-layer, #dw-end, #dw-pin").count() == 0
 
             # ---- the controls at 1x: pause, speed, skip to end ----
             pg.evaluate("TribeDemoWatch.start({ speed: 1 })")
             pg.wait_for_selector("#dw-play", timeout=5000)
-            for sel in ["#dw-play", "#dw-speed", "#dw-skip", "#dw-exit", "#dw-dots [data-i='15']", "#dw-cap"]: assert pg.locator(sel).count() == 1, sel
+            for sel in ["#dw-play", "#dw-speed", "#dw-skip", "#dw-exit", "#dw-dots [data-i='11']", "#dw-cap"]: assert pg.locator(sel).count() == 1, sel
             assert "/ 2:" in pg.text_content("#dw-time"), pg.text_content("#dw-time")   # about two minutes
             time.sleep(1.0)
             pg.click("#dw-play"); assert state(pg)["paused"]

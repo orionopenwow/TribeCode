@@ -27,6 +27,19 @@
   const t0 = Date.now();
   const log = line => { logs.push(`${new Date().toISOString().slice(11, 19)} ${String(line).slice(0, 400)}`); if (logs.length > 40) logs.shift(); };
 
+  // ---------- one-time clean-up of old UI state (fix/desk-demo, docs/UI-CLEANUP.md) ----------
+  // Keys only old layouts read: left behind, they brought an old view back (the old Docs/Files sort, view and kind, the old
+  // nav, the old site builder's level and step). Run once per clean-up version, before any other script reads them.
+  const CLEANUP = '0.30.1-ui1', DEAD = ['tribecode.docs.sort', 'tribecode.docs.view', 'tribecode.files.kind', 'tribecode.nav', 'tribecode.sitegen.mode', 'tribecode.sitegen.step'];
+  const DEAD_PREFIX = ['tribecode.sitegen.'];
+  try {
+    if (ls.get('tribecode.uiCleanup') !== CLEANUP) {
+      DEAD.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+      for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && DEAD_PREFIX.some(p => k.startsWith(p))) localStorage.removeItem(k); }
+      ls.set('tribecode.uiCleanup', CLEANUP);
+    }
+  } catch {}
+
   // ---------- what counts as ours, and what counts as fatal ----------
   const own = f => !f || f.startsWith(location.origin) || /^(tauri:|https?:\/\/tauri\.localhost)/.test(f);
   const noise = m => /ResizeObserver|^Script error\.?$|chrome-extension:|moz-extension:/.test(String(m || ''));
@@ -145,7 +158,8 @@
     const { base, token } = server();
     const text = [reason, '', ...logs.slice(-15)].join('\n');
     if (auto && !shouldFile('selfheal ' + reason)) return false;
-    if (!base || !token) { try { await navigator.clipboard.writeText(text); } catch {} return false; }
+    const demo = !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());   // fix/desk-demo: a demo never reports into your real tribe
+    if (!base || !token || demo) { try { await navigator.clipboard.writeText(text); } catch {} return false; }
     let project = ''; try { project = localStorage.getItem('tribecode.project:' + base) || ''; } catch {}
     try {
       const r = await fetch(base + '/api/bugs', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(project ? { 'X-Project': project } : {}) },

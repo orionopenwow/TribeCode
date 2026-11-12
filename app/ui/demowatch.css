@@ -52,19 +52,6 @@ body.dw-paused .dw-dim i, body.dw-paused .dw-ring { opacity: 0; }
 .dw-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .dw-time { flex: none; font: 500 12px var(--mono); color: var(--muted); }
 
-/* the cards Flint brings along: the pretend huddle, the AI-boost card */
-.dw-card { position: fixed; z-index: 9985; display: grid; gap: 8px; width: 260px; padding: 14px; box-sizing: border-box; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--text); }
-.dw-card b { font-size: 15px; }
-.dw-huddle { right: 24px; top: 84px; width: 280px; }
-.dw-hps { display: flex; gap: 14px; }
-.dw-hp { display: grid; justify-items: center; gap: 4px; color: var(--muted); }
-.dw-hp i { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--c, var(--peer)); color: var(--canvas); font: 700 15px var(--font); font-style: normal; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color var(--dur-quick) var(--ease-out); }
-.dw-hp.talk i { outline-color: var(--online); }
-.dw-hp small { font: 600 12px var(--font); }
-.dw-hcap { margin: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); font-size: 13px; line-height: 1.45; }
-.dw-hcap b { margin-right: 4px; color: var(--peer-ink); font-size: 13px; }
-.dw-boost { left: 50%; top: 24%; transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); }
-
 /* Maya's comment pin on the preview */
 .dw-pin { position: fixed; z-index: 9985; display: flex; align-items: flex-start; gap: 8px; max-width: 260px; }
 .dw-pin-dot { flex: none; width: 26px; height: 26px; border-radius: 50% 50% 50% 4px; display: grid; place-items: center; background: var(--peer); color: var(--canvas); font: 700 12px var(--font); font-style: normal; }
@@ -89,7 +76,6 @@ body.dw-paused .dw-dim i, body.dw-paused .dw-ring { opacity: 0; }
   .dw-cap { bottom: 60px; padding: 10px 12px; }
   .dw-t { font-size: 15px; } .dw-say { font-size: 14px; }
   .dw-time, #dw-speed { display: none; }
-  .dw-huddle { right: 12px; top: 72px; }
   .dw-dot { min-width: 12px; padding: 0 1px; } .dw-dot.on i { width: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {

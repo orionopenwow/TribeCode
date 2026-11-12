@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[2]
 PORT = 6314 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 BASE = f"http://localhost:{PORT}"
-EMPTY = "Make the project's website"
+EMPTY = "Design the project's website"
 
 def api(path, method="GET", body=None, token=None, project=None):
     h = {"Content-Type": "application/json"}

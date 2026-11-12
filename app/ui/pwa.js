@@ -241,7 +241,20 @@
         if (d.type === 'tribe-strategy') st.strategy = d.strategy;
       });
       navigator.serviceWorker.ready.then(r => { if (r.active) r.active.postMessage({ type: 'tribe-strategy' }); }).catch(() => {});
+      // fix/desk-demo: a new worker took this page (an update): reload once so the page and its scripts are the new version.
+      // Not on the first install (no worker before), and at most once per minute (no reload loops).
+      const had = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!had) return;
+        let last = 0; try { last = Number(sessionStorage.getItem('tribecode.swReload')) || 0; } catch {}
+        if (Date.now() - last < 60000) return;
+        try { sessionStorage.setItem('tribecode.swReload', String(Date.now())); } catch {}
+        location.reload();
+      });
+      navigator.serviceWorker.getRegistration().then(r => { if (r && r.waiting) r.waiting.postMessage({ type: 'SKIP_WAITING' }); }).catch(() => {});
     }
+    // leftovers of older cache names (tribecode-v*, tribecode-cache, shells the worker never got to delete)
+    if (window.caches && caches.keys) caches.keys().then(ks => ks.filter(k => /^tribecode/.test(k) && !/^tribecode-(shell-v\d+|runtime)$/.test(k)).forEach(k => caches.delete(k))).catch(() => {});
     if (params.has('shortcut')) { const w = params.get('shortcut'); cleanUrl(['shortcut', 'source']); go(w); }
     if (params.has('protocol')) { const p = params.get('protocol'); cleanUrl(['protocol']); protocol(p); }
     if (params.has('share-target')) takeShare();

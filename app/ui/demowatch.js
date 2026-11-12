@@ -1,18 +1,17 @@
-// "See how TribeCode works" (feat/demo-tour2): the tour with Flint,: a hands-off, ~2-minute guided tour of what TribeCode is. You do nothing:
-// Flint drives the REAL app in an isolated demo tribe (offline.js, mode 'watch': it lives in this tab only and never
-// touches your own settings) while a caption says what he's doing and a spotlight + his cursor move to each real place.
-// The story: a tribe is a group of friends, people and AIs, making things together in projects. Everything works with
-// no AI, and an AI makes it better. One short chapter per feature:
-//   1 Home and the tribe rail   2 a project   3 chat: a reaction and a reply   4 tasks: assign, accept, council claim
-//   5 docs   6 Files and + Create   7 the design canvas   8 the website designer (template, wire, dark, Download HTML)
-//   9 the preview and a comment pin   10 Work and approvals   11 Claude as a teammate   12 Company   13 the inspiration
-//   board   14 a huddle   15 Flint: a lesson and the AI-boost card   16 Your turn: Start a project / Try it yourself
-// Chapter dots in the bar jump to any chapter (each chapter makes what it needs, so it plays on its own too).
-// No AI and no server: the offline backend answers the API (plus the few watch-only answers in route() below).
+// "See how TribeCode works" (fix/desk-demo): a hands-off, ~2-minute tour that starts from a BLANK SLATE. You do nothing:
+// Flint drives the REAL app in an isolated demo (offline.js, mode 'watch': it lives in this tab only, never touches your
+// own settings, shows none of your data, and is wiped on exit) while a caption says what he's doing and a spotlight + his
+// cursor move to each real place. The first frame is an empty dashboard: no tribe, no projects. Then Flint makes it all:
+//   1 a blank slate   2 make a tribe   3 start a project   4 write the vision   5 a friend joins and chats
+//   6 tasks: assign, accept   7 make something in Files and Design   8 the website from a template   9 preview and a
+//   comment   10 approve   11 the Company card   12 Your turn
+// Chapter dots in the bar jump to any chapter (each chapter makes what it needs, so it plays on its own too; the first one
+// starts over from blank). No AI and no server: the offline backend answers the API (plus the watch-only answers below).
 // Every target is found within 2 s (a watchdog) or skipped with a short note; Esc, Exit, the end and any error always
 // lift the dim. Controls: Pause/Play, 1x/2x, Skip to end, Exit (back to your own app, clean), the chapter dots.
 // Start: app/?demo=watch (the website's "See how TribeCode works"), Help › See how TribeCode works, the empty Home's
-// "Tour with Flint", Welcome's "Just watch it". ?speed=4 plays it faster (tests).
+// "Tour with Flint", Welcome's "Just watch it". The same in the browser, the phone/PWA and the desktop app (inside a demo
+// the desktop app never starts, stops or signs in to its own tribe server: offline.js). ?speed=4 plays it faster (tests).
 //   window.TribeDemoWatch = { start(), stop(), pause(), play(), speed(n), jump(i), skipToEnd(), begin(), exit(), seed(ctx), active(), _test: { log(), state() } }
 (function () {
   'use strict';
@@ -21,45 +20,48 @@
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PID = 'ember-cafe', NAME = 'Ember Café', RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
+  const PID = 'ember-cafe', NAME = 'Ember Café', TRIBE = 'Flint’s Workshop', RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
+  const BIO = 'Our friend’s café: a website, a menu and the opening week.';
+  const VISION = 'A warm little website for Ember Café: the menu, the hours and an order button, made by friends in one weekend.';
   const LABEL = 'See how TribeCode works';
   const on = () => !!(O() && O().mode && O().mode() === 'watch');
   const db = () => K().db();
   const iso = (t = Date.now()) => new Date(t).toISOString();
 
-  // ---------- the tribe: Flint at the keyboard, Maya and Rio (friends) and Claude (an AI teammate) ----------
-  function seed({ iso: iso2, rid }) {
-    const now = Date.now(), first = 'sketchbook';
+  // ---------- the blank slate: Flint alone, no tribe yet, no projects (the socket waits until he makes the tribe) ----------
+  function seed({ iso: iso2 }) {
+    const now = Date.now();
     return {
-      on: true, v: 1, mode: 'watch', created: iso2(now), seq: 0,
-      tribe: { name: 'Flint’s Workshop', created: iso2(now) },
-      members: [
-        { id: 'me', name: 'Flint', color: '#F26B1D', role: 'host', joined: iso2(now) },
-        { id: 'maya', name: 'Maya', color: '#6C7CFF', role: 'builder', joined: iso2(now - 86400e3), online: true, where: 'Chat' },
-        { id: 'rio', name: 'Rio', color: '#9AE66E', role: 'builder', joined: iso2(now - 2 * 86400e3), online: true, where: 'Tasks' },
-        { id: 'claude', name: 'Claude', color: '#38C6B1', role: 'agent', owner: 'me', joined: iso2(now), online: true, where: 'Tasks' },
-      ],
-      current: first,
-      projects: [{ id: first, name: 'Sketchbook', emoji: '✏️', image: null, bio: 'Flint’s scratch space.', color: '#6C7CFF', channel: 'general', default: true, created: iso2(now), members: { me: 'host', maya: 'builder', rio: 'builder' } }],
-      chat: { [first]: [{ id: 'm-' + rid(), at: iso2(now), by: 'tribecode', text: 'Flint’s Workshop is a demo that lives in this tab. Flint is about to show you around. Sit back.' }] },
-      tasks: { [first]: [] }, docs: { [first]: [] }, vision: { [first]: '' }, gists: { [first]: [] },
+      on: true, v: 1, mode: 'watch', blank: true, created: iso2(now), seq: 0,
+      tribe: { name: '', created: iso2(now) },
+      members: [{ id: 'me', name: 'Flint', color: '#F26B1D', role: 'host', joined: iso2(now) }],
+      current: null, projects: [],
+      chat: {}, tasks: {}, docs: {}, vision: {}, gists: {}, company: {}, whiteboard: {},
       scratch: [], uploads: [], invites: [], friends: [], prefs: { pins: [] }, joinedRio: true, mayaHi: true, huddled: true, commented: true, approvals: [], inbox: [],
     };
+  }
+  // what "Create" makes: the tribe (just Flint), its first project, a hello in chat; then the app connects
+  function create(draft) {
+    const d = db(); if (!d) return;
+    const now = iso(), name = String((draft && draft.name) || NAME).slice(0, 48), bio = String((draft && draft.bio) || BIO).slice(0, 300);
+    if (!d.projects.some(p => p.id === PID)) {
+      d.tribe = { name: TRIBE, created: now };
+      d.projects.push({ id: PID, name, emoji: '☕', image: null, bio, color: '#F26B1D', channel: 'general', default: true, created: now, members: { me: 'host' } });
+      d.chat[PID] = [{ id: 'm-' + K().rid(), at: now, by: 'tribecode', text: `Flint started **${TRIBE}** and its first project, **${name}**. It lives only in this tab.` }];
+      d.tasks[PID] = []; d.docs[PID] = []; d.vision[PID] = ''; d.gists[PID] = [];
+      d.current = PID;
+    }
+    K().save(); O().wake();
   }
 
   // ---------- the few answers only this tour needs (the offline backend answers the rest) ----------
   const gameUrl = () => new URL('demo-game.html', location.href).href;
   const W = () => (db().watch = db().watch || {});
-  const svg = (bg, fg, shape) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90"><rect width="120" height="90" fill="${bg}"/>${shape.replace(/FG/g, fg)}</svg>`);
-  const INSPO = [
-    { id: 'i1', kind: 'image', title: 'Lamp light', thumb: svg('#2B1D14', '#F2A541', '<circle cx="60" cy="38" r="18" fill="FG"/><rect x="57" y="56" width="6" height="26" fill="FG" opacity=".6"/>'), colors: ['#2B1D14', '#F2A541', '#7A4B2A'], license: 'CC0', creator: 'Maya' },
-    { id: 'i2', kind: 'image', title: 'Latte art', thumb: svg('#E9DCC8', '#8A5A3B', '<ellipse cx="60" cy="48" rx="34" ry="26" fill="FG"/><path d="M60 30c-10 8-10 20 0 30 10-10 10-22 0-30z" fill="#E9DCC8"/>'), colors: ['#E9DCC8', '#8A5A3B', '#4B2E1E'], license: 'CC0', creator: 'Rio' },
-    { id: 'i3', kind: 'image', title: 'Night street', thumb: svg('#14161F', '#38C6B1', '<rect x="12" y="40" width="26" height="50" fill="#23283A"/><rect x="46" y="28" width="30" height="62" fill="#23283A"/><rect x="84" y="46" width="24" height="44" fill="#23283A"/><rect x="54" y="38" width="6" height="6" fill="FG"/><rect x="18" y="50" width="6" height="6" fill="#F2A541"/>'), colors: ['#14161F', '#23283A', '#38C6B1'], license: 'CC BY', creator: 'Openverse' },
-    { id: 'i4', kind: 'font', title: 'Fraunces', colors: [], site: 'fonts' },
-  ];
   function route(method, parts, q, body, headers) {
     const d = K() && K().db(); if (!d || d.mode !== 'watch') return null;
     const [a, b, c] = parts, ok = x => [200, x], w = d.watch = d.watch || {};
+    // the blank slate has no tribe and no project yet: nothing to read, nothing to change (the app asks very little before it connects)
+    if (d.blank || !d.projects.length) return method === 'GET' ? ok({}) : [404, { error: 'Make a project first' }];
     if (a === 'preview') {
       const pid = (headers['x-project'] && d.projects.some(p => p.id === headers['x-project'])) ? headers['x-project'] : K().cur();
       const built = !!w.built && pid === PID;
@@ -73,20 +75,11 @@
       if (method === 'PUT') { w.work = { ...(w.work || {}), ...body }; K().save(); }
       return ok({ settings: { mode: 'lead', claimLimit: 0, agentAutoAccept: false, ...(w.work || {}) }, lead: true });
     }
-    if (a === 'tasks' && (c === 'accept' || c === 'claim') && method === 'POST') {
+    if (a === 'tasks' && c === 'accept' && method === 'POST') {
       const t = (d.tasks[K().cur()] || []).find(x => x.id === b); if (!t) return [404, { error: 'task not found' }];
-      if (c === 'claim') { t.assignee = 'me'; t.claimed = { by: 'me', at: iso() }; }
       t.accept = 'accepted'; if (t.status === 'backlog') t.status = 'doing'; t.updated = iso(); K().save(); K().push({ type: 'task', task: t });
       return ok({ task: t });
     }
-    if (a === 'agents' && b === 'hub' && method === 'GET') return ok({
-      agents: [{ id: 'claude', name: 'Claude', label: 'Claude', kind: 'claude-code', kindLabel: 'Claude Code', ownerName: 'Flint', yours: false, live: true, doing: 'Building the order page for Ember Café', lane: ['site/order.html', 'site/order.css'], last: { text: 'Order page: the form and the pickup times work', at: iso(Date.now() - 4 * 60e3) } }],
-      models: { list: [], online: false }, secretary: null });
-    if (a === 'talent' && !b && method === 'GET') return ok({
-      canPost: true, balance: 2, me: { name: 'Flint' }, people: [],
-      gigs: [{ id: 'gig-photos', kind: 'bounty', title: 'Photos of the bake for the website', projectName: NAME, description: 'Six warm photos of the counter and the pastries, for the menu page.', pay: { type: 'trade', text: '2 hours back' }, hours: 2, skills: ['photos'], byName: 'Flint', at: iso(Date.now() - 3600e3), status: 'open', applicantCount: 1, mine: true, canManage: true },
-        { id: 'gig-seat', kind: 'seat', seatKind: 'growth', title: 'Grow: the opening week posts', projectName: NAME, description: 'Three posts and the email for the soft opening.', pay: { type: 'share', text: 'Share of the tips jar' }, hours: 4, skills: ['writing'], byName: 'Maya', at: iso(Date.now() - 7200e3), status: 'open', applicantCount: 0 }] });
-    if (a === 'inspo' && !b && method === 'GET') return ok({ board: q.get ? (q.get('board') || 'me') : 'me', items: INSPO.map(x => ({ ...x, at: iso() })), style: { accent: '#F2A541', fonts: ['Fraunces', 'Inter'] }, palette: { bg: '#2B1D14', surface: '#3A2A1E', text: '#F5EBDD', accent: '#F2A541', accent2: '#38C6B1' } });
     return null;
   }
   function hook() { const k = K(); if (k && k.hooks && !k.hooks.route.includes(route)) k.hooks.route.push(route); }
@@ -116,7 +109,7 @@
 
   // ---------- the layer: the dim (four flat panels around a hole), the ring, the cursors, the caption and the bar ----------
   let layer = null, ui = null;
-  const EXTRAS = ['#dw-end', '#dw-pin', '#dw-huddle', '#dw-boost'];
+  const EXTRAS = ['#dw-end', '#dw-pin'];
   function mount() {
     unmount();
     document.body.classList.add('dw-on');
@@ -234,27 +227,31 @@
   }
   // every chapter makes what it needs, so a chapter dot can start anywhere
   async function inProject() {
-    if (!db().projects.some(p => p.id === PID)) {
-      await api('/projects', { method: 'POST', body: { name: NAME, emoji: '☕' } });
-      const p = db().projects.find(x => x.id === PID);
-      if (p) { p.bio = 'Our friends’ café: a website, a menu, an order page and the opening week.'; p.members = { me: 'host', maya: 'builder', rio: 'builder', claude: 'agent' }; K().save(); K().push({ type: 'projects' }); }
-    }
+    if (db().blank || !db().projects.some(p => p.id === PID)) create(null);
+    for (let i = 0; i < 40 && !C().connected(); i++) await real(60);
     const inGlobal = () => document.body.classList.contains('global') || document.body.dataset.view === 'hub' || document.body.dataset.view === 'work';
     if (C().project() !== PID || inGlobal()) { if (window.TribeProjects && window.TribeProjects.switchTo) await window.TribeProjects.switchTo(PID, 'home'); else C().send({ type: 'project', id: PID }); }
     for (let i = 0; i < 40 && C().project() !== PID; i++) await real(60);
   }
+  function friendJoins() {   // Maya joins the tribe and the project
+    const d = db(), p = d.projects.find(x => x.id === PID);
+    if (!d.members.some(m => m.id === 'maya')) {
+      d.members.push({ id: 'maya', name: 'Maya', color: '#6C7CFF', role: 'builder', joined: iso(), online: true, where: 'Chat' });
+      if (p) p.members = { ...(p.members || {}), maya: 'builder' };
+      K().save(); K().pushPresence(); K().push({ type: 'projects' });
+      say2('tribecode', 'Maya joined with an invite link 👋');
+    }
+  }
   function tidy() {   // what the last chapter opened goes away before the next one
     const W2 = window;
+    try { if (W2.TribeLocalSetup && W2.TribeLocalSetup.state().open) W2.TribeLocalSetup.close(); } catch {}
     try { if (W2.TribeSiteDesigner && document.querySelector('#wdz:not([hidden])')) W2.TribeSiteDesigner.close(); } catch {}
-    try { if (W2.TribeInspoBoard && document.body.classList.contains('ibd-open')) W2.TribeInspoBoard.close(); } catch {}
-    try { if (W2.TribeFlintLessons) W2.TribeFlintLessons.close(); } catch {}
     try { if (W2.TribeCanvas && W2.TribeCanvas.state && W2.TribeCanvas.state().open) W2.TribeCanvas.close(); } catch {}
     try { if (W2.TribeNotify && W2.TribeNotify.closeInbox) W2.TribeNotify.closeInbox(); } catch {}
     try { if (W2.TribeFilesView && W2.TribeFilesView.closeMenus) W2.TribeFilesView.closeMenus(); } catch {}
-    try { if (W2.TribeAgentsHub && W2.TribeAgentsHub.isOpen && W2.TribeAgentsHub.isOpen()) W2.TribeAgentsHub.close(); } catch {}
     game({ auto: false }); closePreview();
-    for (const id of ['#dw-pin', '#dw-huddle', '#dw-boost']) { const e = $(id); if (e) e.remove(); }
-    dropCursor('maya'); dropCursor('rio');
+    for (const id of ['#dw-pin']) { const e = $(id); if (e) e.remove(); }
+    dropCursor('maya');
   }
   const task = title => (db().tasks[PID] || []).find(t => t.title === title);
   function taskNow(title, fields) {
@@ -262,88 +259,98 @@
     Object.assign(t, fields, { updated: iso() }); K().save(); K().push({ type: 'task', task: t }); return t;
   }
   const row = id => `#board .task[data-id="${id}"]`;
+  // Flint types into a real field, one letter at a time (input events, so the app sees it as typing)
+  async function typeInto(el, text) {
+    if (!el) return; el.focus();
+    const put = v => { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
+    if (calm()) return put(text);
+    put('');
+    for (let i = 1; i <= text.length; i++) { if (!el.isConnected) return; put(text.slice(0, i)); await hold(28); }
+  }
 
   // ---------- the story (dur: ms at 1x; about two minutes in all) ----------
   const STEPS = [
-    { id: 'home', title: 'Your Home', dur: 8000, say: 'Hi, I’m Flint. A tribe is a group of friends, people and AIs, making things together. This is your Home: everything across your tribes.', async run() {
+    { id: 'blank', title: 'A blank slate', dur: 7000, say: 'Hi, I’m Flint. This is TribeCode with nothing in it: no tribe, no projects. Let’s make something from scratch.', async run() {
       try { if (window.TribeHub) swap(() => window.TribeHub.open('home')); } catch {}
-      await hold(400);
-      await point('your Home', ['#hub-hero', '#view-hub', '#hub-stream']);
-      await hold(1600);
-      note('On the left, the rail: each circle is a project your tribe is making.');
-      await point('the tribe rail', ['#pj-rail', '.rail']);
+      await hold(300);
+      await point('the empty dashboard', ['#hub-hero.hub-empty', '#hub-hero', '#view-hub']);
+      await hold(1400);
+      note('The rail on the left is empty too: every circle there will be a project.');
+      await point('the empty rail', ['#pj-rail', '.rail']);
     } },
-    { id: 'project', title: 'Make a project', dur: 7000, say: 'A project is one thing you make together. Ours: Ember Café, a friend’s café that needs a website and an order page.', async run() {
-      await point('the + button', ['#pj-plus', '#pj-rail']);
-      await typeCmd('start a project called Ember Café');
+    { id: 'tribe', title: 'Make a tribe', dur: 10000, say: 'A tribe is a group of friends, people and AIs, making things together. Mine starts with one click.', async run() {
+      if (!db().blank && db().projects.some(p => p.id === PID)) { note('The tribe is already here.'); await point('the tribe', ['#pj-rail']); return; }
+      try { if (window.TribeHub) swap(() => window.TribeHub.open('home')); } catch {}
+      const go1 = await point('Start your first project', ['#hub-host', '#hub-hero .he-go']);
+      await press(go1);
+      if (!$('#su-start') && window.TribeLocalSetup) { try { window.TribeLocalSetup.start(); } catch {} }
+      await point('the start sheet', ['#su-start', '#su-form'], { ms: 2500 });
+      const nm = await find('#su-name', 1500);
+      await glide('me', nm); await typeInto(nm, NAME);
+      const bio = await find('#su-bio', 1000);
+      if (bio) { await glide('me', bio); await typeInto(bio, BIO); }
+      await hold(400);
+    } },
+    { id: 'project', title: 'Start a project', dur: 7000, say: 'A project is one thing the tribe makes. Ember Café: a friend’s café that needs a website.', async run() {
+      const btn = $('#su-start') ? await point('Create', ['#su-create']) : null;
+      if (btn) await press(btn, 'me', false);
+      try { if (window.TribeLocalSetup && window.TribeLocalSetup.state().open) window.TribeLocalSetup.close(); } catch {}
+      create({ name: NAME, bio: BIO });
       await inProject(); show('home'); await real(350);
       await point('the Ember Café circle', [`#pj-rail [data-pj-open="${PID}"]`, '#pj-rail']);
-      await hold(600);
-      await point('its dashboard', ['#view-home', '#pj-check']);
+      await hold(700);
+      await point('its dashboard', ['#pj-check', '#view-home']);
     } },
-    { id: 'chat', title: 'Chat with friends', dur: 8000, say: 'Chat is where the tribe talks: friends and their AI helpers in one place. Maya reacts and replies.', async run() {
-      await inProject(); show('chat');
+    { id: 'vision', title: 'Write the vision', dur: 11000, say: 'First, the vision: what we’re making and who it’s for. Everyone reads it, AI helpers too.', async run() {
+      await inProject(); show('home'); await real(300);
+      const box = await point('the vision box', ['#ock-vis-in', '#pj-check [data-ck="vision"]', '#pj-check']);
+      if (box && box.tagName === 'TEXTAREA') await typeInto(box, VISION);
+      const save1 = await point('Save vision', ['[data-ock-vis] .ock-save'], { ms: 1200 });
+      if (save1) await press(save1);
+      if (!(db().vision[PID] || '').trim()) { try { await api('/vision', { method: 'PUT', body: { text: `# ${NAME}\n\n${VISION}\n` } }); } catch {} }
+      await hold(500);
+      await point('the checklist, one step done', ['#pj-check', '#view-home'], { scroll: false });
+    } },
+    { id: 'friend', title: 'A friend joins', dur: 12000, say: 'Maya opens an invite link and she’s in. Chat is where the tribe talks: friends and their AI helpers.', async run() {
+      await inProject(); friendJoins(); show('chat');
       await point('the chat', ['#chat-list', '#view-chat']);
-      const mine = say2('me', 'Ember Café is up! Website, menu and an order page this week ☕');
+      const mine = say2('me', 'Welcome Maya! Ember Café needs a menu, a website and an order button ☕');
       await hold(900);
       K().reactAs(K().chanOf('general'), mine, 'maya', '🔥');
-      const rx = await point('Maya’s reaction', [`#chat-list .msg[data-id="${mine.id}"] .rx`, `#chat-list [data-id="${mine.id}"]`], { who: 'maya' });
+      await point('Maya’s reaction', [`#chat-list .msg[data-id="${mine.id}"] .rx`, `#chat-list [data-id="${mine.id}"]`], { who: 'maya' });
       await hold(500);
-      const re = say2('maya', 'Yes! I’ll do the menu board 🎨', { replyTo: { id: mine.id, by: 'me', text: mine.text } });
-      if (rx) await hold(300);
+      const re = say2('maya', 'Yes! I’ll design the menu board 🎨', { replyTo: { id: mine.id, by: 'me', text: mine.text } });
       await point('Maya’s reply', [`#chat-list [data-id="${re.id}"]`, '#chat-list'], { who: 'maya' });
       await hold(800);
     } },
-    { id: 'tasks', title: 'Tasks: assign and accept', dur: 10000, say: 'Tasks say who does what. I assign the menu board to Maya; it waits until she accepts.', async run() {
-      await inProject();
+    { id: 'tasks', title: 'Tasks: assign and accept', dur: 11000, say: 'Tasks say who does what. I assign the menu board to Maya; it waits until she accepts.', async run() {
+      await inProject(); friendJoins();
       W().work = { mode: 'lead' }; K().save();
       const t1 = taskNow('Design the menu board', { assignee: 'maya', status: 'backlog', accept: 'pending', assignedBy: 'me', assignedAt: iso() });
       show('tasks'); if (window.TribeTasks) { try { await window.TribeTasks.load(); } catch {} }
       await typeCmd('add a task “Design the menu board” for Maya');
       await point('the task, waiting for Maya', [`${row(t1.id)} .tk-offer--wait`, row(t1.id), '#board']);
-      await hold(700);
+      await hold(900);
       Object.assign(t1, { accept: 'accepted', acceptedAt: iso(), status: 'doing', updated: iso(), updatedBy: 'maya' }); K().save(); K().push({ type: 'task', task: t1 });
       say2('maya', 'Accepted **Design the menu board** 👍 I’m on it.');
-      note('Maya accepts: it’s hers and in progress. Or switch the tribe to Council: anyone claims an open task.');
+      note('Maya accepts: it’s hers now, and in progress.');
       await point('Maya’s task, accepted', [row(t1.id), '#board'], { who: 'maya' });
-      await hold(700);
-      W().work = { mode: 'council' }; K().save();
-      const t2 = taskNow('Pick the opening playlist', { assignee: null, status: 'backlog' });
-      if (window.TribeTasks) { try { await window.TribeTasks.load(); } catch {} }
-      await point('the open task', [`${row(t2.id)} [data-qa="claim"]`, row(t2.id)]);
-      await hold(500);
-      Object.assign(t2, { assignee: 'rio', accept: 'accepted', claimed: { by: 'rio', at: iso() }, status: 'doing', updated: iso() }); K().save(); K().push({ type: 'task', task: t2 });
-      await point('Rio’s claim', [`${row(t2.id)} .tk-offer--claim`, row(t2.id)], { who: 'rio' });
-      W().work = { mode: 'lead' }; K().save();
+      await hold(600);
     } },
-    { id: 'docs', title: 'Docs and notes', dur: 7000, say: 'Docs hold the plan everyone reads, AI helpers too. We write them together, live.', async run() {
+    { id: 'make', title: 'Make something', dur: 12000, say: 'Files holds everything the project makes. + Create starts a doc, a sheet, a design or a website.', async run() {
       await inProject();
-      let d = (db().docs[PID] || []).find(x => x.title === 'Opening week plan');
-      if (!d) d = (await api('/docs', { method: 'POST', body: { title: 'Opening week plan', body: '# Opening week\n\nSoft open on Friday, 8 am.\n\n- Maya: the menu board\n- Rio: the playlist\n- Claude: the order page\n- Flint: the website\n' } })).doc;
       go('docs'); await real(300);
-      if (window.TribeDocs && window.TribeDocs.open) { try { await window.TribeDocs.open(d.slug); } catch {} }
-      await point('the doc', ['#doc-editor', '#view-docs .doc-body', '#view-docs .ProseMirror', '#view-docs [contenteditable="true"]', '#view-docs']);
-      await hold(1200);
-    } },
-    { id: 'files', title: 'Files', dur: 7000, say: 'Files keeps everything the project knows, sorted by kind: notes, docs, sheets, designs, websites, pictures.', async run() {
-      await inProject();
-      try { if (window.TribeDocs && window.TribeDocs.shelf) window.TribeDocs.shelf(); } catch {}
-      go('docs'); await real(300);
-      await point('the categories', [byText('#view-docs nav, #view-docs [role="tablist"], #view-docs .fv-cats', /Notes.*Docs.*Sheets/s), '#view-docs']);
-      await hold(800);
-      const create = await point('+ Create', [byText('#view-docs button', /^\s*\+?\s*Create\s*$/), byText('#view-docs button', /Create/)]);
-      if (create) { await press(create); await point('what you can make', ['.fv-studio', '[role="menu"]', '.studio', '.fv-menu'], { ms: 1500 }); await hold(900); }
-    } },
-    { id: 'canvas', title: 'The design canvas', dur: 7000, say: 'Design is a real canvas: frames, layers and auto layout. Sketch a screen together before anyone builds it.', async run() {
-      await inProject();
+      const create1 = await point('+ Create', [byText('#view-docs button', /^\s*\+?\s*Create\s*$/), byText('#view-docs button', /Create/), '#view-docs']);
+      if (create1 && create1.tagName === 'BUTTON') { await press(create1); await point('what you can make', ['.fv-studio', '[role="menu"]', '.studio', '.fv-menu'], { ms: 1500 }); await hold(900); }
+      try { if (window.TribeFilesView && window.TribeFilesView.closeMenus) window.TribeFilesView.closeMenus(); } catch {}
+      note('A design: a real canvas with frames and layers. Flint sketches the menu screen.');
       if (window.TribeCanvas) { try { await window.TribeCanvas.open(); } catch {} }
-      for (let i = 0; i < 30 && !(window.TribeCanvas.state() || {}).canEdit; i++) await real(60);
-      if (!((window.TribeCanvas.state() || {}).nodes || []).length) { try { window.TribeCanvas.insertSample(); } catch {} }
-      await point('the canvas', ['#cv-stage', '#cv']);
-      await hold(1200);
-      await point('Flint on the canvas', ['#cv-flint-btn', '#cv-tools'], { dx: 0.5 });
+      for (let i = 0; i < 30 && !((window.TribeCanvas && window.TribeCanvas.state()) || {}).canEdit; i++) await real(60);
+      if (window.TribeCanvas && !((window.TribeCanvas.state() || {}).nodes || []).length) { try { window.TribeCanvas.insertSample(); } catch {} }
+      await point('the design', ['#cv-stage', '#cv']);
+      await hold(1500);
     } },
-    { id: 'site', title: 'The website designer', dur: 13000, say: 'Websites: pick a template, click to change words, wire the buttons, go dark, download. All free, no AI.', async run() {
+    { id: 'site', title: 'The website, from a template', dur: 16000, say: 'Websites: pick a template, change the words, wire the buttons, go dark. All free, no AI.', async run() {
       await inProject();
       const S = window.TribeSiteDesigner; if (!S) return;
       await S.open({ pid: PID, cfg: null });
@@ -362,13 +369,9 @@
       await S.ask('dark mode');
       await point('the dark site', ['#wdz-framewrap', '#wdz-frame'], { dx: 0.3, dy: 0.4 });
       await hold(900);
-      note('Download HTML: one standalone file you can put anywhere.');
-      const dl = await point('Download HTML', ['#wdz-dl']);
-      await press(dl, 'me', false);
-      await hold(600);
     } },
-    { id: 'preview', title: 'Preview and comment', dur: 8000, say: 'Preview runs what you make, live. This one’s a tiny game Rio made for the café’s page. Maya pins a comment right on it.', async run() {
-      await inProject();
+    { id: 'preview', title: 'Preview and comment', dur: 10000, say: 'Preview runs what you make, live: here the little game for the café’s page. Maya pins a comment right on it.', async run() {
+      await inProject(); friendJoins();
       W().built = true; K().save();
       const f = await openPreview();
       await point('the preview', ['#pvw-iframe', '#pvw-stage', '#pvw']);
@@ -386,32 +389,19 @@
       m.classList.add('done'); m.querySelector('.dw-pin-t').innerHTML = '<b>Flint</b> Done, café lamps now. ✓ Resolved';
       await point('the resolved pin', '#dw-pin');
     } },
-    { id: 'work', title: 'Work and approvals', dur: 9000, say: 'Work lists gigs friends can pick up: paid, traded or for credit. And nothing goes out without a person saying yes.', async run() {
-      await inProject();
-      tidy();
-      try { if (window.TribeTalent) window.TribeTalent.open('gigs'); } catch {}
-      await point('a gig', ['#view-work .tl-gig', '#view-work']);
-      await hold(1000);
-      await inProject(); show('home');
-      const t = taskNow('Build the order page', { assignee: 'claude', status: 'review', accept: 'accepted' });
+    { id: 'approve', title: 'Approve', dur: 10000, say: 'Nothing goes out without a person saying yes. Maya’s menu board is ready; I approve it.', async run() {
+      await inProject(); friendJoins(); show('home');
+      const t = taskNow('Design the menu board', { assignee: 'maya', status: 'review', accept: 'accepted' });
       let ap = (db().approvals || []).find(a => a.status === 'pending' && a.project === PID);
-      if (!ap) ap = K().askApproval(PID, t, 'claude');
+      if (!ap) ap = K().askApproval(PID, t, 'maya');
       if (window.TribeNotify && window.TribeNotify.openInbox) { try { window.TribeNotify.openInbox(); } catch {} }
       const btn = ap ? await point('the Approve button', [`[data-decide="approve"][data-ap="${ap.id}"]`]) : null;
       if (btn) { await press(btn); await point('the approved request', () => [...document.querySelectorAll('#nf-list > *, #nf-list > * > *')].filter(e => /Approved by/.test(e.textContent) && e.getBoundingClientRect().height > 40).sort((a, b) => a.getBoundingClientRect().height - b.getBoundingClientRect().height)[0]); }
       if (ap && ap.status === 'pending') { try { await api(`/approvals/${encodeURIComponent(ap.id)}/approve`, { method: 'POST', body: { note: 'Ship it' } }); } catch {} }
       await hold(500);
     } },
-    { id: 'agents', title: 'Claude, a teammate', dur: 7500, say: 'AI helpers join like a friend: Claude takes tasks, works in his own lane of the code and posts what he did.', async run() {
+    { id: 'company', title: 'Run it like a company', dur: 10000, say: 'When it gets serious, make it a company: seats like CEO, Build and Grow, each held by a friend, an AI, or both.', async run() {
       await inProject();
-      try { if (window.TribeAgentsHub) window.TribeAgentsHub.open(); } catch {}
-      await point('Claude', ['#view-agents-hub .ah-card[data-agent="claude"]', '#view-agents-hub .ah-grid', '#view-agents-hub']);
-      await hold(1500);
-      await point('what Claude is doing', ['#view-agents-hub .ah-card[data-agent="claude"] .ah-lane', '#view-agents-hub .ah-card[data-agent="claude"]']);
-    } },
-    { id: 'company', title: 'Run it like a company', dur: 8500, say: 'When it gets serious, make it a company: seats like CEO, Build and Grow, each held by a friend, an AI, or both.', async run() {
-      await inProject();
-      try { if (window.TribeAgentsHub && window.TribeAgentsHub.isOpen && window.TribeAgentsHub.isOpen()) window.TribeAgentsHub.close(); } catch {}
       go('company'); await real(300);
       const make = await find('#co-make', 1500);
       if (make) {
@@ -423,41 +413,7 @@
       await point('the company', ['#view-company .co-seats', '#co-su', '#view-company'], { ms: 2500 });
       await hold(600);
     } },
-    { id: 'inspo', title: 'The inspiration board', dur: 7000, say: 'Save pictures, sounds and fonts you like. TribeCode reads the colors and dresses up your site and app to match.', async run() {
-      await inProject(); show('home');
-      try { if (window.TribeInspoBoard) window.TribeInspoBoard.open({}); } catch {}
-      await point('the board', ['#ibd-board', '#ibd']);
-      await hold(1200);
-      await point('your style, from the board', ['#ibd-style', '#ibd']);
-    } },
-    { id: 'huddle', title: 'A huddle', dur: 7000, say: 'A huddle is a voice room for the project: one click to join. Captions and notes are there if you want them.', async run() {
-      await inProject(); show('chat');
-      const b = await point('the huddle button', ['[data-cb="huddle"]', '#view-chat']);
-      await press(b, 'me', false);
-      const c = document.createElement('div'); c.className = 'dw-card dw-huddle'; c.id = 'dw-huddle'; c.setAttribute('role', 'status');
-      const ppl = [['me', 'Flint'], ['maya', 'Maya'], ['rio', 'Rio']].map(([id, n]) => { const m = db().members.find(x => x.id === id) || {}; return `<span class="dw-hp${id === 'maya' ? ' talk' : ''}" style="--c:${esc(m.color)}"><i>${esc(n[0])}</i><small>${esc(n)}</small></span>`; }).join('');
-      c.innerHTML = `<span class="eyebrow">Huddle · ${esc(NAME)} · pretend</span><b>3 in the room</b><div class="dw-hps">${ppl}</div><p class="dw-hcap"><b>Maya</b> Friday at eight works for the soft open.</p>`;
-      document.body.appendChild(c);
-      await point('the huddle', '#dw-huddle');
-      await hold(1600);
-      const cap = c.querySelector('.dw-hcap'); if (cap) cap.innerHTML = '<b>Rio</b> I’ll bring the speaker.';
-      c.querySelectorAll('.dw-hp').forEach(p => p.classList.toggle('talk', p.textContent.includes('Rio')));
-      await hold(900);
-    } },
-    { id: 'flint', title: 'Flint, and your AI', dur: 10000, say: 'Ask me “teach me” anything and I show you, free. Everything works with no AI; when something needs one, you choose.', async run() {
-      await inProject(); show('home');
-      await typeCmd('teach me the website designer');
-      try { if (window.TribeFlintLessons) window.TribeFlintLessons.open('site'); } catch {}
-      await point('the lesson', ['#fls']);
-      await hold(1800);
-      try { if (window.TribeFlintLessons) window.TribeFlintLessons.close(); } catch {}
-      const c = document.createElement('div'); c.className = 'dw-card dw-boost'; c.id = 'dw-boost';
-      c.innerHTML = window.TribeBoost ? window.TribeBoost.html({ did: 'I wired the buttons and made the site dark.', would: 'Write the menu from Maya’s photos.' }) : '<b>This one needs an AI.</b>';
-      document.body.appendChild(c);
-      await point('Use my AI / Get credits', ['#dw-boost .boost-acts', '#dw-boost']);
-      await hold(1200);
-    } },
-    { id: 'end', title: 'Your turn', dur: 3000, say: 'That’s TribeCode: friends, people and AIs, making things together. Your turn.', async run() {
+    { id: 'end', title: 'Your turn', dur: 5000, say: 'From nothing to a tribe, a project, a site and a company. That’s TribeCode. Your turn.', async run() {
       tidy(); endCard();
       await point('the Your turn card', '#dw-end .dw-end-card', { scroll: false });
     } },
@@ -470,7 +426,7 @@
     e.innerHTML = `<div class="dw-end-card"><img src="assets/flint.svg" alt="" width="48" height="48"><span class="eyebrow">Your turn</span><h2>Make something with your friends</h2>
       <p>A tribe is friends, people and AIs, making things together in projects. Everything works with no AI, and an AI makes it better.</p>
       <div class="dw-end-acts"><button class="btn primary" id="dw-start">Start a project</button><button class="btn" id="dw-try">Try it yourself</button></div>
-      <div class="dw-end-more"><button class="linkish" id="dw-again">Watch again</button><span aria-hidden="true">·</span><a class="linkish" href="${RELEASES}" target="_blank" rel="noopener">Get the desktop app</a></div></div>`;
+      <div class="dw-end-more"><button class="linkish" id="dw-again">Watch again</button>${window.__TAURI__ ? '' : `<span aria-hidden="true">·</span><a class="linkish" href="${RELEASES}" target="_blank" rel="noopener">Get the desktop app</a>`}</div></div>`;
     document.body.appendChild(e);
     e.querySelector('#dw-start').onclick = () => { try { sessionStorage.setItem('tribecode.afterDemo', 'start'); } catch {} exit(); };
     e.querySelector('#dw-try').onclick = () => { stop(); O().start('quiet'); };
@@ -514,6 +470,7 @@
   // a chapter dot: jump straight to that feature (the chapter makes what it needs)
   function jump(i) {
     if (!running || !(i >= 0 && i < STEPS.length)) return;
+    if (i <= 1 && !db().blank) return restart();   // the blank slate and the tribe's making: start over from nothing
     token++; spot(null); tidy();
     const end = $('#dw-end'); if (end) end.remove();
     finished = false; paused = false; clock = offsets[i]; last = performance.now(); paintCtl();
@@ -573,7 +530,8 @@
       if (!want) return;
       hook();
       const go1 = () => { if (!want) return; const w = want; want = null; setTimeout(() => start(w), 700); };
-      if (c.connected()) go1(); else c.on('hello', go1);
+      // the blank slate never says hello (no tribe yet): start once the shell is up
+      if (c.connected()) go1(); else if (db() && db().blank) { const up = (n = 0) => (window.TribeApp && window.TribeApp.show && window.TribeHub && document.body.dataset.view) || n > 100 ? go1() : setTimeout(() => up(n + 1), 60); up(); } else c.on('hello', go1);
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

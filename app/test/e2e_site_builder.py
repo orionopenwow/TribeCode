@@ -252,33 +252,13 @@ def main():
             st, ex, hdr = api(f"/api/projects/{pid}/website/export", token=tok, raw=True)
             assert st == 200 and "attachment" in hdr["Content-Disposition"] and "<style>" in ex and 'href="styles.css"' not in ex and "data:font/woff2" in ex and "data:image/png" in ex
 
-            # ======== UI: Instant -> Guided -> Code ========
+            # ======== UI: the Website page offers the website designer, and the old site builder is gone (fix/desk-demo) ========
             host.evaluate("pid => TribeProjects.refresh().then(() => TribeProjects.switchTo(pid, 'home'))", pid)
             host.wait_for_function("pid => TribeProjects.current() === pid", arg=pid)
             host.evaluate("TribeShell.go('website')")
-            host.wait_for_selector("#wb-root .sg-modes [data-sgmode='code']")   # Advanced (the default experience mode): every level
-            assert host.locator("[data-sgmode='guided'].on").count() == 1, 'Advanced starts at Guided'
-            host.click("[data-sgmode='instant']")
-            host.wait_for_selector("#sg-shuffle")
-            host.click("#sg-ideas")
-            host.wait_for_selector("#sg-idea #sg-idea-apply")
-            assert "suggestion" in host.inner_text("#sg-idea").lower()
-            host.click("#sg-idea-skip"); host.wait_for_selector("#sg-idea", state="detached")
-            host.click("[data-sgmode='guided']")
-            host.wait_for_selector(".sg-step.on[data-sgstep='1']")
-            host.click("[data-sgtype='event']")
-            host.wait_for_function("document.querySelector('[data-sgtype=event]').classList.contains('on') && document.querySelector('[data-sginfo=rsvp]')")
-            host.click("[data-sgstep-go='1']"); host.wait_for_selector("#sg-primary")
-            assert host.locator("[data-sgtheme]").count() >= 8 and host.locator("#sg-font option").count() == 7
-            host.click("[data-sgsw='#7A5CC2']"); host.click("#sg-brand-save")
-            host.wait_for_function("() => (document.querySelector('#sg-primary') || {}).value === '#7A5CC2'")
-            assert W()["gen"]["brand"]["primary"] == "#7A5CC2"
-            host.click("[data-sgstep='3']"); host.wait_for_selector("#sg-secs [data-sgsec='event']")
-            host.wait_for_function("document.querySelector('#wb-frame') && document.querySelector('#wb-frame').dataset.key.startsWith('draft:')")
-            host.click("[data-sgmode='code']")
-            host.wait_for_selector(".sg-code")
-            assert "Brand tokens" in host.inner_text(".sg-code") and host.locator("[data-sgfile='index.html']").count() == 1
-            host.click("[data-sgfile='index.html']"); host.wait_for_function("document.querySelector('.sg-code').textContent.includes('section: hero')")
+            host.wait_for_selector("#wb-root")
+            assert host.locator("#wb-gen, .sg-modes, #sg-shuffle, [data-sgmode]").count() == 0, "the old site builder still shows beside the designer"
+            assert host.evaluate("typeof window.TribeSiteGen") == "undefined"
             # Flint: a sentence no template claims runs Instant ("birthday party" now picks the party/RSVP template: flint_eval)
             host.evaluate("TribeFlint.ask('make a website for our conference')")
             host.wait_for_function("TribeFlint.thread().some(m => m.who === 'flint' && /as an event/.test(m.text))", timeout=15000)
@@ -290,20 +270,9 @@ def main():
             ph.goto(BASE + "/?skipIntro=1")
             ph.wait_for_function("pid => window.TribeProjects && TribeProjects.current() === pid", arg=pid, timeout=20000)
             ph.evaluate("TribeShell.go('website')")
-            # Intermediate (experience mode) starts at Guided: brand kit + sections, no Code view
-            ph.wait_for_selector("#wb-root .sg-type")
-            assert ph.locator("[data-sgmode='guided'].on").count() == 1 and ph.locator("[data-sgmode='code']").count() == 0, "Intermediate: Guided by default, no Code tab"
-
-            assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "the builder fits at 390"
-            ph.click("[data-sgstep='2']"); ph.wait_for_selector(".sg-theme")
-            assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "the brand step fits at 390"
-            # Beginner: Instant only, few buttons (no level tabs, no layout grid, no Regenerate)
-            ph.evaluate("localStorage.setItem('tribecode.mode', 'beginner'); localStorage.removeItem('tribecode.sitegen.mode')")
-            ph.reload(); ph.wait_for_function("pid => window.TribeProjects && TribeProjects.current() === pid", arg=pid, timeout=20000)
-            ph.evaluate("TribeShell.go('website')"); ph.wait_for_selector("#wb-root #sg-shuffle")
-            assert ph.evaluate("document.body.dataset.mode") == "beginner"
-            assert ph.locator(".sg-modes").count() == 0 and not ph.is_visible("#sg-regen") and not ph.is_visible(".sg-layouts") and ph.is_visible("#sg-publish"), "Beginner sees few buttons"
-            assert ph.evaluate("document.documentElement.scrollWidth") <= 390
+            ph.wait_for_selector("#wb-root")
+            assert ph.locator("#wb-gen, .sg-modes, [data-sgmode]").count() == 0
+            assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "the Website page fits at 390"
             b.close()
         assert not errors, "\n".join(errors)
         print("e2e_site_builder: OK")
