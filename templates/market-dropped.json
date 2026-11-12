@@ -1,0 +1,157 @@
+{
+  "about": "Items scripts/dev/market-catalog.js --fetch took out of the Marketplace, with the reason.",
+  "checked": "2026-11-12",
+  "items": [
+    {
+      "id": "w-supabase",
+      "kind": "widget",
+      "title": "Supabase",
+      "url": "https://supabase.com/dashboard",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-excalidraw",
+      "kind": "widget",
+      "title": "Excalidraw",
+      "url": "https://excalidraw.com/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-artcraft",
+      "kind": "widget",
+      "title": "ArtCraft",
+      "url": "https://getartcraft.com/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-penpot",
+      "kind": "widget",
+      "title": "Penpot",
+      "url": "https://penpot.app/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-ambientcg-site",
+      "kind": "widget",
+      "title": "ambientCG",
+      "url": "https://ambientcg.com/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-lucide-site",
+      "kind": "widget",
+      "title": "Lucide icons",
+      "url": "https://lucide.dev/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-beepbox-site",
+      "kind": "widget",
+      "title": "BeepBox",
+      "url": "https://www.beepbox.co/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-jsfxr-site",
+      "kind": "widget",
+      "title": "jsfxr",
+      "url": "https://sfxr.me/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-piskel-site",
+      "kind": "widget",
+      "title": "Piskel",
+      "url": "https://www.piskelapp.com/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "w-squoosh",
+      "kind": "widget",
+      "title": "Squoosh",
+      "url": "https://squoosh.app/",
+      "why": "duplicate: the open-source item with the same name is the real one"
+    },
+    {
+      "id": "sk-doc-coauthoring",
+      "kind": "skill",
+      "title": "Doc co-authoring skill",
+      "repo": "anthropics/skills",
+      "why": "no clear open license (none found)"
+    },
+    {
+      "id": "oss-aos",
+      "kind": "library",
+      "title": "AOS",
+      "repo": "michalsnik/aos",
+      "why": "untouched since 2018-10-03"
+    },
+    {
+      "id": "oss-nes-css",
+      "kind": "library",
+      "title": "NES.css",
+      "repo": "nostalgic-css/NES.css",
+      "why": "untouched since 2021-07-19"
+    },
+    {
+      "id": "oss-meilisearch",
+      "kind": "tool",
+      "title": "Meilisearch",
+      "repo": "meilisearch/meilisearch",
+      "why": "no clear open license (MIT OR source-available)"
+    },
+    {
+      "id": "mcp-figma-official",
+      "kind": "connector",
+      "title": "Figma (official)",
+      "repo": "figma/mcp-server-guide",
+      "why": "no clear open license (none found)"
+    },
+    {
+      "id": "mcp-cal-com",
+      "kind": "connector",
+      "title": "Cal.com",
+      "repo": "calcom/cal-mcp",
+      "why": "no clear open license (none found)"
+    },
+    {
+      "id": "mcp-linear",
+      "kind": "connector",
+      "title": "Linear",
+      "url": "https://linear.app/docs/mcp",
+      "why": "no license"
+    },
+    {
+      "id": "mcp-canva-dev",
+      "kind": "connector",
+      "title": "Canva Dev",
+      "url": "https://www.canva.dev/docs/connect/mcp-server/",
+      "why": "no license"
+    },
+    {
+      "id": "ap-gltf",
+      "kind": "asset-pack",
+      "title": "Khronos glTF sample models",
+      "why": "license differs per file, nothing clear to record"
+    },
+    {
+      "id": "ap-src-gltf-assets",
+      "kind": "asset-pack",
+      "title": "glTF Sample Assets browser",
+      "url": "https://github.khronos.org/glTF-Assets/",
+      "why": "license differs per file, nothing clear to record"
+    },
+    {
+      "id": "lg-ip-assignment",
+      "kind": "legal",
+      "title": "IP assignment",
+      "why": "no source to point to"
+    },
+    {
+      "id": "lg-sow",
+      "kind": "legal",
+      "title": "Statement of work",
+      "why": "no source to point to"
+    }
+  ]
+}
