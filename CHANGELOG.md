@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.30.1
+- **v0.30.0, released properly**: the release workflow now makes one draft before the Windows, Linux and Mac builds start. In v0.30.0 each build made its own draft at the same moment, so the installers split across two drafts and nothing was published. Everything in v0.30.0 below ships in this version.
+- **Phones**: unchanged from v0.30.0.
+
 ## v0.30.0
 - **Flint understands what you mean**: a new set of 390 real phrasings (typos, slang, indirect asks) scores 99.5% with no AI, up from 14%; 87.5% on fresh phrasings he was never tuned on. "link tree website" makes a link-in-bio, "something for my band" the band site, "make the buttons work" wires them, "dark mode" really recolors. On the design canvas: functional buttons link screens, dark mode recolors layers (Ctrl Z undoes), add a screen, replace or round an image.
 - **A new website designer** modeled on OpenPage (MIT, credited in NOTICE), written in plain JS: one site config, 13 kinds of blocks with layout choices, 8 themes each with a real dark mode, edit text in place, drag to reorder, undo/redo, pages, button wiring and image tools. **Download HTML** gives one standalone page; the zip has every page. All 16 templates load in it ([docs/WEBSITE.md](docs/WEBSITE.md)).

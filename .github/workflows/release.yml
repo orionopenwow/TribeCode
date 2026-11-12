@@ -51,8 +51,22 @@ jobs:
           python3 app/test/e2e_journeys.py
           python3 app/test/e2e_fresh.py
 
-  build:
+  # One draft before the builds: when each build made its own, they raced and v0.30.0 ended up as two drafts
+  # (Linux files in one, Windows and Mac in the other), so publish found no Windows installer. tauri-action finds this draft by tag.
+  draft:
     needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make the draft release once
+        env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+        run: |
+          V=$(node -p "require('./app/src-tauri/tauri.conf.json').version")
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then V="${GITHUB_REF_NAME#v}"; fi
+          gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "v$V" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" --title "TribeCode v$V" --notes 'See CHANGELOG.md for what changed. Already installed? TribeCode will show a "Restart to update" pill.'
+
+  build:
+    needs: draft
     strategy:
       fail-fast: false
       matrix:
