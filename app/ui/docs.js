@@ -447,7 +447,12 @@
     if (window.TribeDocsX) window.TribeDocsX.afterRead(el, cur);   // [[links]], @mentions, comment highlights
   }
 
-  function autosize(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 4) + 'px'; }
+  function autosize(ta) {
+    // the rich surface (richtext.js, a contenteditable div) grows by itself; measuring it on every key forced a layout of
+    // the whole doc twice per keystroke (a 20k-word doc typed at ~40 ms per key)
+    if (ta.rtMeasure) { if (ta.style.height) ta.style.height = ''; if (!ta.style.minHeight) ta.style.minHeight = '320px'; return; }
+    ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 4) + 'px';
+  }
 
   // ---------- slash menu ----------
   function checkSlash() {
