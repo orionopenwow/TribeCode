@@ -819,12 +819,15 @@
     if (window.TribeRepoHero) window.TribeRepoHero.refresh();
     if (!C.connected()) return renderHub();
     const p = PJ() && PJ().cur && PJ().cur();
-    const [repo, chat, vis] = await Promise.all([
+    let [repo, chat, vis] = await Promise.all([
       p && p.hasRepo ? C.api('/repo').catch(() => null) : Promise.resolve(null),
       C.api('/chat/general?limit=200').catch(() => ({ messages: [] })),
       C.api('/visuals').catch(() => ({ screens: [] })),
     ]);
-    hub.repo = repo && repo.status && repo.status.enabled ? repo.status : (p && p.hasRepo ? { enabled: false, name: p.name } : null);
+    // the project list can learn about the repo while we wait (hasRepo turns true): read it then rather than leave "reading…" for 15s
+    const p2 = PJ() && PJ().cur && PJ().cur();
+    if (!repo && p2 && p2.hasRepo) repo = await C.api('/repo').catch(() => null);
+    hub.repo = repo && repo.status && repo.status.enabled ? repo.status : (p2 && p2.hasRepo ? { enabled: false, name: p2.name } : null);
     hub.notes = notesFrom(chat.messages || []);
     hub.shots = vis.screens || [];
     renderHub();
