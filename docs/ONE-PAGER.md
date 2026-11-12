@@ -5,9 +5,10 @@
 ## This week
 1. **Try the new build.** Run `Stable\Update-and-Open-TribeCode.bat`, then try these:
    - Start a project from **+**.
-   - Open **Preview › Website**, type "make the headline say Hello", then save a version.
-   - Open **Work › Templates** and run a standup.
-   - Open **Help › Watch Flint build** and download the proof ZIP at the end.
+   - Open **Files › + Create › Website**, pick a template, say "make the buttons work" and "dark mode", then **Download HTML**.
+   - Assign a task to a friend (they Accept), and try **Council** mode where anyone claims.
+   - Open **Help › See how TribeCode works** and watch the two-minute tour.
+   - Ask Flint "teach me the website designer".
    - On your phone, open the friend link and do the same.
 
    Tell me anything that feels off. A screenshot plus one sentence is enough.

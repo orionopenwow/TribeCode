@@ -2,7 +2,7 @@
 
 What has to be true before TribeCode is called launched, what is done, and what is left. Owners: **you** (needs a person, an account or money), **agents** (can be built and tested here). Kept current at every milestone, alongside `HANDOFF.md` and `docs/CONTEXT.md`.
 
-Last updated: 2026-11-11 (after the v0.29 integration and the post-release review, docs/REVIEW-2026-11-11.md: router, accounts, local setup, Flint everywhere, preview editing, Work loop, templates, premium, run-through).
+Last updated: 2026-11-12 (v0.30.0: Flint eval at 99.5% with no AI, the website designer with Download HTML, Files rebuild, task Accept/Council, the hands-off tour; the v0.29 review items still open are listed under Backend).
 
 ## 1. The product works end to end (no dead ends, no bugs)
 

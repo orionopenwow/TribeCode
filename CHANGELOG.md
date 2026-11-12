@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.30.0
+- **Flint understands what you mean**: a new set of 390 real phrasings (typos, slang, indirect asks) scores 99.5% with no AI, up from 14%; 87.5% on fresh phrasings he was never tuned on. "link tree website" makes a link-in-bio, "something for my band" the band site, "make the buttons work" wires them, "dark mode" really recolors. On the design canvas: functional buttons link screens, dark mode recolors layers (Ctrl Z undoes), add a screen, replace or round an image.
+- **A new website designer** modeled on OpenPage (MIT, credited in NOTICE), written in plain JS: one site config, 13 kinds of blocks with layout choices, 8 themes each with a real dark mode, edit text in place, drag to reorder, undo/redo, pages, button wiring and image tools. **Download HTML** gives one standalone page; the zip has every page. All 16 templates load in it ([docs/WEBSITE.md](docs/WEBSITE.md)).
+- **One message when AI is needed**: Flint says what he did for free and what an AI would add, with two buttons: Use my AI (free) and Get credits / Premium.
+- **A Flint lesson for every feature**: "teach me …" or "how do I …" opens a short lesson, and Show me outlines the real button.
+- **Files, rebuilt**: one Files view on Home and in projects, with category tabs and small icons, real previews instead of "Empty", a Where filter (yours first, then each tribe), a ⋯ menu on every card, and one + Create menu for everything, all working on this device with no tribe.
+- **Home is your dashboard**: the logo lights up, a "Home ›" breadcrumb and a full-width Home band show where you are; Files, Design, Code, Work and Agent fleet work across all your stuff. The Marketplace works offline from a bundled catalog instead of "failed to fetch".
+- **Tasks**: descriptions in Markdown; a task a lead assigns waits for Accept or Decline (with a reason); Council mode lets anyone claim open tasks. Agents get `accept_task`, `decline_task` and `claim_task`. Every button in every task board tab now does what it says.
+- **Company**: an infographic shows seats, charters, money, rituals, the Work loop and approvals before a project is a company, with Make it a company and See an example.
+- **Website button** finds a site the team already started. **GitHub repo** checks whether you're signed in and shows a short setup guide if not.
+- **See how TribeCode works**: a hands-off two-minute tour where Flint walks through 16 features in the real app, with pause, 2×, skip and chapter dots. The guided tour's dim never gets stuck. In the offline demo, reactions, replies, tasks, files and approvals work. The demo stays in its own tab and never mixes into the real app.
+- **Website**: every page in 7 languages, a gallery of 23 real apps, sites, docs and designs (not only games), and a Why TribeCode section.
+- **Fixes**: no account check before you choose where a project lives; Work's filter pop stays on screen; the website code view is no longer all caps.
+- **Phones**: the new Files, Home band, tasks Accept/Decline and Company infographic fit at 390px; the tour runs on phones.
+
 ## v0.29.1
 - **Security fixes** from the post-release review ([docs/REVIEW-2026-11-11.md](docs/REVIEW-2026-11-11.md)): another member's private inspiration board can no longer be read or changed; proof-of-work ZIPs are visible only to the person who made them and the host, and can't be overwritten by someone else; ✦ tags can only be written to projects you're in; the Agent fleet only gives tasks to agents in your project; the Blender bridge refuses shell syntax. New `security4_test.py`.
 - **Phones**: unchanged.
