@@ -20,20 +20,9 @@
   const EDIT_CSS = `<style>[data-e]{cursor:text;border-radius:2px}[data-e]:hover{outline:1px dashed var(--muted);outline-offset:2px}[data-e]:focus{outline:2px solid var(--accent);outline-offset:2px}
 [data-block]{position:relative}[data-block]:hover{outline:1px dashed var(--line);outline-offset:-1px}.wdz-sel{outline:2px solid var(--accent)!important;outline-offset:-2px}
 [data-img]{cursor:pointer}.wdz-pin{position:absolute;z-index:5;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50% 50% 50% 0;border:2px solid #fff;background:#F26B1D;color:#fff;font:700 11px/1 system-ui;cursor:pointer;padding:0}.wdz-pin.done{background:#6b7280}.wdz-cm [data-block]{cursor:crosshair}.wdz-cm [data-block]:hover{outline:2px dashed #F26B1D!important}[data-unwired]{outline:1px dashed var(--muted);outline-offset:3px}[data-unwired]::after{content:'not linked';font:600 10px/1 ui-monospace,monospace;margin-left:8px;opacity:.7}</style>`;
-  const EDIT_JS = `<script>(function(){var post=function(m){m.sd=1;parent.postMessage(m,'*')};
-var CM=false;document.addEventListener('click',function(e){var a=e.target.closest('a');if(a)e.preventDefault();var t=e.target;
-var pn=t.closest('.wdz-pin');if(pn){e.preventDefault();return post({t:'pinopen',id:pn.dataset.id})}
-if(CM){e.preventDefault();e.stopPropagation();var sb=t.closest('[data-block]');if(!sb)return;var r=sb.getBoundingClientRect();return post({t:'pin',block:sb.dataset.block,x:Math.round((e.clientX-r.left)/r.width*100),y:Math.round(e.clientY-r.top),cx:e.clientX,cy:e.clientY})}
-var pg=t.closest('[data-page]');if(pg)return post({t:'page',id:pg.dataset.page});
-var b=t.closest('[data-btn]');if(b)return post({t:'select',key:b.dataset.btn,kind:'button'});
-var im=t.closest('[data-img]');if(im)return post({t:'select',key:im.dataset.img,kind:'image'});
-var bl=t.closest('[data-block]');if(bl)post({t:'select',key:bl.dataset.block+'|',kind:'block'})},true);
-document.addEventListener('submit',function(e){e.preventDefault()},true);
-document.addEventListener('input',function(e){var el=e.target.closest('[data-e]');if(el)post({t:'text',key:el.dataset.e,value:el.innerText})});
-document.addEventListener('focusout',function(e){var el=e.target.closest('[data-e]');if(el)post({t:'commit',key:el.dataset.e,value:el.innerText})});
-document.addEventListener('keydown',function(e){var el=e.target.closest('[data-e]');if(el&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();el.blur()}if((e.ctrlKey||e.metaKey)&&!el&&/^[zy]$/i.test(e.key)){e.preventDefault();post({t:(e.key.toLowerCase()==='y'||e.shiftKey)?'redo':'undo'})}});
-addEventListener('message',function(e){var d=e.data||{};if('cm' in d){CM=!!d.cm;document.documentElement.classList.toggle('wdz-cm',CM)}if(d.pins){[].forEach.call(document.querySelectorAll('.wdz-pin'),function(x){x.remove()});d.pins.forEach(function(p,i){var b=document.querySelector('[data-block="'+p.block+'"]');if(!b)return;var s=document.createElement('button');s.className='wdz-pin'+(p.status!=='open'?' done':'');s.dataset.id=p.id;s.type='button';s.textContent=p.n;s.title=p.text;s.style.left=p.x+'%';s.style.top=Math.min(p.y,b.offsetHeight-12)+'px';b.appendChild(s)})}if('sel' in d){[].forEach.call(document.querySelectorAll('.wdz-sel'),function(x){x.classList.remove('wdz-sel')});if(d.sel){var el=document.querySelector(d.sel);if(el){el.classList.add('wdz-sel');if(d.scroll)el.scrollIntoView({block:'center'})}}}if(d.y!=null)scrollTo(0,d.y)});
-addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true});post({t:'ready'})})()<\/script>`;
+  // the frame's helper is a real file loaded from the app's origin, never an inline script: the srcdoc frame inherits the
+  // page's CSP, and the desktop app's has no 'unsafe-inline' (app/src-tauri/tauri.conf.json)
+  const EDIT_JS = () => `<script src="${new URL('sitedesigner-frame.js', document.baseURI).href.replace(/"/g, '%22')}"><\/script>`;
 
   // ---------- state, history, saving ----------
   // feat/site-v2: edits are never lost. Every change goes to a local draft at once (localStorage, per project), and to
@@ -281,7 +270,7 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
     frameT = setTimeout(() => {
       const f = $('#wdz-frame'); if (!f || !st) return;
       const fonts = file => FONTS.get(file) || '';
-      const html = S().render(st.cfg, { page: st.page, edit: true, mode: 'single', fonts, extraHead: EDIT_CSS, extraBody: EDIT_JS });
+      const html = S().render(st.cfg, { page: st.page, edit: true, mode: 'single', fonts, extraHead: EDIT_CSS, extraBody: EDIT_JS() });
       frameReady = false; f.srcdoc = html;
       clearTimeout(frameWd);
       frameWd = setTimeout(() => { if (frameReady || !root || root.hidden) return; const g = $('#wdz-frame'); if (!g) return; const n = g.cloneNode(false); n.removeAttribute('srcdoc'); g.replaceWith(n); n.srcdoc = html; }, 1500);

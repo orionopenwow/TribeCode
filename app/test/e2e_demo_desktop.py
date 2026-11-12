@@ -69,7 +69,7 @@ def main():
           try { if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', %s); localStorage.setItem('tribecode.personalized', '1'); localStorage.setItem('tribecode.flint.tour', 'done'); localStorage.setItem('tribecode.firstrun.done', '1'); } catch (e) {}
         """ % (SRV, PORT, VERSION, json.dumps(json.dumps(real)))
         with sync_playwright() as p:
-            b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server", "--disable-features=LocalNetworkAccessChecks,BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights"])
+            b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server", "--disable-features=LocalNetworkAccessChecks,BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights,IsolateSandboxedIframes"])
             ctx = b.new_context(viewport={"width": 1440, "height": 900}); ctx.add_init_script(stub); ctx.route("http://tauri.localhost/**", serve)
             pg = ctx.new_page()
             pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))

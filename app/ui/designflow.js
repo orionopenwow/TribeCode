@@ -366,7 +366,7 @@
     if (s && s.params.length) knobs(p, s);
     dock();
   }
-  function paintFrame(it) { const f = host && host.querySelector('#dfl-frame'); if (f && it) f.srcdoc = it.body || ''; }
+  function paintFrame(it) { const f = host && host.querySelector('#dfl-frame'); if (f && it) f.srcdoc = window.TribeFrameRun ? window.TribeFrameRun.wrap(it.body) : (it.body || ''); }   // the desktop CSP blocks inline scripts in srcdoc: framerun.js
   // the config.js block inside a copy kept on this device
   const CFG_RX = /(<script>\/\* config\.js \*\/\n)([\s\S]*?)(<\/script>)/;
   async function knobs(p, s) {
