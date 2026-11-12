@@ -64,6 +64,7 @@
   const AGENT = 'claude';
   function seed(mode) {
     if (mode === 'showcase' && window.TribeShowcase) return window.TribeShowcase.seed({ iso, rid, st: S.get() });
+    if (mode === 'watch' && window.TribeDemoWatch) return window.TribeDemoWatch.seed({ iso, rid, st: S.get() });   // feat/demo-auto: Flint builds a game
     if (mode === 'solo') return seedSolo();
     const st = S.get(), now = Date.now();
     const name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
@@ -1220,7 +1221,7 @@
       if (!ls.get(BKEY)) ls.set(BKEY, backup());
       db = seedSolo(draft); save(); blobClear();
       S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
-    } else { if (!eph && db) endDemo(true); eph = true; db = seed(mode); save(); }
+    } else { eph = true; db = seed(mode); save(); }   // a solo tribe in localStorage stays as it is
     if (wasReal || wasDemo) { try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} location.reload(); return; }
     paint(); C().connect();
     enterUi();
@@ -1262,9 +1263,9 @@
   function endDemo(keepBlobs) {
     closePop(); for (const s of [...sockets]) s.close();
     const wasEph = eph; eph = false;
-    if (!wasEph || (S0.get().server || {}).token === TOKEN) restore();
-    ss.del(KEY); ls.del(KEY); db = null; media.forEach(u => { try { URL.revokeObjectURL(u); } catch {} }); media.clear();
-    if (!keepBlobs) blobClear();
+    if (wasEph) ss.del(KEY); else { restore(); ls.del(KEY); }   // a demo in this tab never changed your settings; a solo tribe put back what it changed
+    db = null; media.forEach(u => { try { URL.revokeObjectURL(u); } catch {} }); media.clear();
+    if (!keepBlobs && !(ls.get(KEY) || {}).on) blobClear();   // a phone tribe kept beside the demo keeps its pictures
     cleanKeys();
     try { sessionStorage.removeItem('tribecode.view'); localStorage.removeItem('tribecode.welcome.tribe'); } catch {}
     document.body && document.body.classList.remove('offline-demo', 'od-watch');
@@ -1293,11 +1294,12 @@
     if (!on) { if (pill) pill.remove(); pill = null; return; }
     if (pill && pill.isConnected) return;
     pill = document.createElement('button'); pill.id = 'demo-pill'; pill.className = 'od-pill'; pill.setAttribute('aria-haspopup', 'dialog');
-    const sc = db?.mode === 'showcase';
+    const sc = db?.mode === 'showcase', wt = db?.mode === 'watch';
     if (sc) pill.classList.add('sc');
+    if (wt) pill.classList.add('wt');
     if (solo()) pill.classList.add('solo');
-    pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
-    pill.innerHTML = sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
+    pill.title = wt ? 'A demo that plays by itself in this tab. Exit returns to your own app.' : sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
+    pill.innerHTML = wt ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Demo</span><span class="od-s"> · Flint builds a game</span>' : sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
       : solo() ? (phoneLike() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>' : `<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device</span><span class="od-s"> · ${(db.homes && Object.values(db.homes).some(h => h && h.github)) ? 'live on GitHub' : 'choose where it lives'}</span>`)
       : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();
@@ -1336,12 +1338,12 @@
       placePop(); return;
     }
     pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Offline demo');
-    pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Offline demo</span><b>${esc(db.tribe.name)} lives in this browser</b></div></header>
-      <p>You're the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it stays until you reset it.</p>
+    pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">${db.mode === 'watch' ? 'Demo' : 'Offline demo'}</span><b>${esc(db.tribe.name)} lives in this tab</b></div></header>
+      <p>${db.mode === 'watch' ? 'Flint builds a small game while you watch. Nothing leaves this device, and Exit puts your own app back exactly as it was.' : 'You\'re the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it ends when you leave or close this tab.'}</p>
       <div class="od-acts">
         <button id="od-real" data-od="real"><svg class="i"><use href="#i-zap"/></svg><span>Host this for real</span></button>
         <button id="od-reset"><svg class="i"><use href="#i-refresh"/></svg><span>Reset demo</span></button>
-        <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave demo</span></button>
+        <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>${db.mode === 'watch' ? 'Exit demo' : 'Leave demo'}</span></button>
       </div>`;
     document.body.appendChild(pop);
     pop.querySelector('#od-reset').onclick = reset;
@@ -1393,7 +1395,7 @@
     state: () => db,
     mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use
-    _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },
+    _k: { db: () => db, save, push, post, chanOf, reactAs, askApproval, assigned, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },
     // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".
     label: () => (active() ? (solo() ? 'Move this phone tribe to a host' : 'Leave the offline demo') : 'Try a demo tribe (offline)'),
     toggle: () => (active() ? (solo() ? window.TribePhoneHost && window.TribePhoneHost.move() : leave()) : start()),

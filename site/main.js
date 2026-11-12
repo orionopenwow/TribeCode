@@ -581,7 +581,7 @@
     const onHome = !!$('#download');
     const ACT = {
       app: ['Open the app', 'app/'],
-      demo: ['Watch the demo tribe', 'app/?demo=showcase'],
+      demo: ['Watch the demo tribe', 'app/?demo=watch'],   // feat/demo-auto: Flint builds a game, hands off
       download: ['Download', onHome ? '#download' : 'index.html#download'],
       pricing: ['Pricing', 'pricing.html'],
       mission: ['Mission', 'mission.html'],

@@ -138,7 +138,7 @@ def main():
                     assert status(l["abs"].split("#")[0]) == 200, l
                 else:
                     assert l["abs"].startswith("https://"), l
-            assert pg.locator(".hero a:has-text('Watch a demo tribe')").get_attribute("href") == "app/?demo=showcase"
+            assert pg.locator(".hero a:has-text('Watch a demo tribe')").get_attribute("href") == "app/?demo=watch"
             assert pg.locator(".nav__end a:has-text('Open the app')").get_attribute("href") == "app/?welcome=1"
             assert pg.locator(".hero a:has-text('Open in your browser')").get_attribute("href") == "app/?welcome=1"
             # old addresses still land in the right place

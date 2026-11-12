@@ -1,7 +1,7 @@
 // Flint's welcome: the first thing someone sees after "Open in your browser" on the website (app/?welcome=1), or
 // on a first visit to the hosted web app. Before the app shows, Flint walks them through making a pretend tribe,
 // shows a few features, then asks how they want to see it:
-//   * Build an app with me (the guided, hands-on tour, ?demo=showcase) or Just watch it (?demo=showcase&tour=watch),
+//   * Build an app with me (the guided, hands-on tour, ?demo=showcase) or Just watch it (?demo=watch: Flint builds a game),
 //   * Explore it myself (the calm offline demo tribe),
 //   * Start my real tribe (closes; first-run setup is already underneath).
 // The pretend tribe's name and emoji carry into the demo (offline.js / showcase.js read WKEY).
@@ -195,7 +195,7 @@
     function finish(how) {
       keep();
       if (how === 'auto') { lsSet('tribecode.flint.tour', 'done'); close(); location.href = location.pathname + '?demo=showcase'; return; }
-      if (how === 'watch') { lsSet('tribecode.flint.tour', 'done'); close(); location.href = location.pathname + '?demo=showcase&tour=watch'; return; }
+      if (how === 'watch') { lsSet('tribecode.flint.tour', 'done'); close(); location.href = location.pathname + '?demo=watch'; return; }   // feat/demo-auto: Flint builds a game, hands off
       if (how === 'explore') { close(); const O = window.TribeOffline; if (O && O.start) O.start('quiet'); return; }
       try { localStorage.removeItem(WKEY); } catch {}
       close();
