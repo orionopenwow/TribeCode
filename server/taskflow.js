@@ -99,7 +99,7 @@ module.exports = function makeTaskFlow({ P, store, getMembers, perms, bus, postC
     if (t.status === 'backlog') t.status = 'doing';
     t.updated = now(); t.updatedBy = me.id;
     saveTask(t);
-    try { postChat('general', 'tribecode', `🙋 **${me.name}** claimed **${t.title}**`); } catch {}
+    try { postChat((P.channelOf && P.channelOf(pid())) || 'general', 'tribecode', `🙋 **${me.name}** claimed **${t.title}**`); } catch {}
     const to = [...new Set([t.by, ...getMembers().filter(m => isLead(m) && P.canSee(m, pid())).map(m => m.id)])].filter(x => x && x !== me.id && mem(x));
     if (to.length) bus.notify({ type: 'task-claimed', priority: 'low', to, from: me.id, title: `${me.name} claimed a task`, body: t.title, view: 'tasks', ref: t.id, project: pid() });
     return t;

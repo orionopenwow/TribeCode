@@ -16,6 +16,7 @@
   const LKEY = 'tribecode.localTasks', VKEY = 'tribecode.tasksView';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let lastSig = '', tasks = [], dragId = null, loaded = false, openId = null, justDragged = 0, draggedId = null;
+  let work = { mode: 'lead', claimLimit: 0, agentAutoAccept: false }, workLead = false;   // feat/tasks-company: how work is shared (server/taskflow.js)
   let filter = '', allDone = false, view = (() => { try { return localStorage.getItem(VKEY) === 'board' ? 'board' : 'list'; } catch { return 'list'; } })();
   const TYPES = [['build', '🔨', 'Build'], ['fix', '🩹', 'Fix'], ['design', '🎨', 'Design'], ['write', '✍️', 'Write'], ['research', '🔎', 'Research']];
   const typeOf = k => TYPES.find(t => t[0] === k);
@@ -49,7 +50,10 @@
   };
 
   async function load() {
-    if (remote()) { try { tasks = (await C.api('/tasks')).tasks; } catch (e) { window.TribeApp.toast('Could not load tasks: ' + e.message); } }
+    if (remote()) {
+      try { tasks = (await C.api('/tasks')).tasks; } catch (e) { window.TribeApp.toast('Could not load tasks: ' + e.message); }
+      try { const w = await C.api('/tasks/settings'); work = w.settings; workLead = !!w.lead; } catch {}
+    }
     else tasks = local.all();
     loaded = true; render();
   }
@@ -80,6 +84,10 @@
 
   /* ---------------- what each task needs next ---------------- */
   const hasOwner = t => !!(t.assignee || t.doer === 'flint' || t.doer === 'agent');
+  const council = () => remote() && work.mode === 'council';
+  const pending = t => t.accept === 'pending' && !!t.assignee;
+  const mineToAnswer = t => pending(t) && (t.assignee === meId() || ((mem(t.assignee) || {}).role === 'agent' && (mem(t.assignee) || {}).owner === meId()));
+  const firstName = id => { const m = mem(id); return m ? (m.id === meId() ? 'you' : m.name) : 'someone'; };
   const overdue = t => t.status !== 'done' && t.due && t.due < ymd(new Date());
   const weekAgo = () => Date.now() - 7 * 864e5;
   const doneWeek = t => t.status === 'done' && (!t.updated || new Date(t.updated).getTime() >= weekAgo());
@@ -93,14 +101,18 @@
   const statOf = k => STATS.find(s => s[0] === k);
   // list sections, in the order you act on them; both backlog sections drop tasks into "backlog"
   const SECTIONS = [
+    ['offer', 'backlog', 'Assigned to you', 'Accept to make it yours and start it, or decline with a reason.', t => mineToAnswer(t)],
     ['needs', 'backlog', 'Needs someone', 'Nobody\'s on these yet. Take one or hand it off.', t => t.status === 'backlog' && !hasOwner(t)],
     ['doing', 'doing', 'In progress', 'Being built right now.', t => t.status === 'doing'],
     ['review', 'review', 'Waiting for review', 'Ready for a second look. Approve or send back.', t => t.status === 'review'],
-    ['ready', 'backlog', 'Up next', 'Someone has these. Not started yet.', t => t.status === 'backlog' && hasOwner(t)],
+    ['ready', 'backlog', 'Up next', 'Someone has these. Not started yet.', t => t.status === 'backlog' && hasOwner(t) && !mineToAnswer(t)],
     ['done', 'done', 'Done', '', t => t.status === 'done'],
   ];
   function step(t) {   // the one button a row shows: [action, label, style]
     if (t.status === 'done') return ['reopen', 'Reopen', 'ghost'];
+    if (mineToAnswer(t)) return ['accept', 'Accept', 'go'];
+    if (pending(t)) return ['waiting', `Waiting for ${firstName(t.assignee)}`, 'ghost'];
+    if (council() && t.status === 'backlog' && !hasOwner(t)) return ['claim', 'Claim', 'assign'];
     if (t.status === 'backlog') return hasOwner(t) ? ['start', 'Start', 'go'] : ['assign', 'Assign', 'assign'];
     if (t.status === 'doing') return ['review', 'Send for review', 'next'];
     return ['approve', 'Approve', 'ok'];
@@ -108,6 +120,13 @@
   async function doStep(id, act, anchor) {
     const t = tasks.find(x => x.id === id); if (!t) return;
     if (act === 'assign') return menu(anchor, 'assign', t);
+    if (act === 'accept' || act === 'claim') {
+      try { upsert((await C.api(`/tasks/${encodeURIComponent(id)}/${act}`, { method: 'POST', body: {} })).task); window.TribeApp.toast(act === 'claim' ? 'Claimed. It is yours and in progress.' : 'Accepted. It is yours and in progress.', 'ok'); }
+      catch (e) { window.TribeApp.toast(e.message, 'err'); load(); }
+      return;
+    }
+    if (act === 'decline') return declinePop(anchor, t);
+    if (act === 'waiting') return window.TribeApp.toast(`Waiting for ${firstName(t.assignee)} to accept. It shows in their board and inbox; they can accept or decline with a reason.`);
     const to = { start: 'doing', review: 'review', approve: 'done', back: 'doing', reopen: hasOwner(t) ? 'doing' : 'backlog', done: 'done', undone: hasOwner(t) ? 'doing' : 'backlog' }[act];
     if (!to) return;
     if (act === 'start' && !t.assignee && !t.doer && meId()) return patch(id, { status: to, order: Date.now(), assignee: meId(), doer: 'me' });
@@ -126,7 +145,7 @@
         <div class="tk-top__more">${typeChips('', 'sm')}<span class="tk-top__sep" aria-hidden="true"></span>
           <button type="button" class="tk-pill" data-forme aria-pressed="false">${IC.user}<span>For me</span></button>
           <label class="tk-pill tk-pill--due">${IC.cal}<span>Due</span><input type="date" id="tk-add-due" aria-label="Due date"></label>
-          <span class="tk-top__flint" id="tk-flint"></span><div class="tk-views" role="radiogroup" aria-label="View"><button type="button" role="radio" data-view="list" aria-checked="true">${IC.list}<span>List</span></button><button type="button" role="radio" data-view="board" aria-checked="false">${IC.board}<span>Board</span></button></div></div>
+          <button type="button" class="tk-pill tk-pill--mode" id="tk-mode" aria-haspopup="dialog" title="How work is shared"></button><span class="tk-top__flint" id="tk-flint"></span><div class="tk-views" role="radiogroup" aria-label="View"><button type="button" role="radio" data-view="list" aria-checked="true">${IC.list}<span>List</span></button><button type="button" role="radio" data-view="board" aria-checked="false">${IC.board}<span>Board</span></button></div></div>
       </div>
       <div class="tk-bar"><p class="tk-bar__f" id="tk-filter" hidden></p></div>
       <div class="tk-cols"></div>`;
@@ -150,6 +169,7 @@
     });
     board.querySelectorAll('[data-seg]').forEach(b => b.addEventListener('click', () => setFilter(filter === b.dataset.seg ? '' : b.dataset.seg)));
     board.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+    board.querySelector('#tk-mode').addEventListener('click', e => modePop(e.currentTarget));
     board.querySelector('#tk-filter').addEventListener('click', e => { if (e.target.closest('[data-clear-filter]')) setFilter(''); });
   }
   function setFilter(k) { filter = statOf(k) ? k : ''; if (filter === 'done') allDone = true; lastSig = ''; render(); }
@@ -180,12 +200,15 @@
           ${t.body ? `<span class="tk-cnt" title="Has notes">${IC.notes}</span>` : ''}
           ${(t.labels || []).slice(0, 3).map(l => `<span class="tk-lab">${esc(l)}</span>`).join('')}
           ${t.source === 'chat' ? '<span class="tk-lab tk-lab--src">from chat</span>' : ''}
+          ${mineToAnswer(t) && t.assignedBy ? `<span class="tk-offer">Assigned to ${t.assignee === meId() ? 'you' : esc(firstName(t.assignee))} by ${esc(firstName(t.assignedBy))}</span>` : pending(t) ? `<span class="tk-offer tk-offer--wait">Waiting for ${esc(firstName(t.assignee))} to accept</span>` : ''}
+          ${t.claimed ? `<span class="tk-offer tk-offer--claim">🙋 Claimed by ${esc(firstName(t.claimed.by))}</span>` : ''}
+          ${t.declined && !t.assignee ? `<span class="tk-offer tk-offer--no" title="${esc(t.declined.reason)}">${esc(t.declined.byName || 'Someone')} declined: ${esc(t.declined.reason)}</span>` : ''}
         </div>
       </div>
       ${whoCell(t)}
       <div class="tk-acts">
-        ${t.status === 'review' ? '<button type="button" class="tk-btn tk-btn--back" data-qa="back">Send back</button>' : ''}
-        <button type="button" class="tk-btn tk-btn--${kind}" data-qa="${act}">${label}</button>
+        ${t.status === 'review' ? '<button type="button" class="tk-btn tk-btn--back" data-qa="back">Send back</button>' : ''}${act === 'accept' ? '<button type="button" class="tk-btn tk-btn--back" data-qa="decline">Decline</button>' : ''}
+        <button type="button" class="tk-btn tk-btn--${kind}" data-qa="${act}">${esc(label)}</button>
         <button type="button" class="tk-more" data-qa="more" aria-label="More actions" title="More actions">${IC.more}</button>
       </div>
     </div>`;
@@ -199,12 +222,13 @@
   }
   function sectionHtml(key, status, label, hint, list, totalAll) {
     const F = window.TribeFlint;
+    if (key === 'needs' && council()) { label = 'Open to claim'; hint = `Anyone can claim one. It's yours right away${work.claimLimit ? ` (up to ${work.claimLimit} open at a time)` : ''}.`; }
     const isDone = status === 'done', n = list.length, shown = isDone ? doneList(list.slice()) : sorted(list.slice());
     const empty = !n ? (key === 'needs' && !totalAll
       ? `<div class="tk-empty"><p>No tasks yet. Write one small thing to build.</p><button type="button" class="tk-chip" data-focus-add>Add a task</button>${F && F.ask ? '<button type="button" class="tk-chip" data-flint-plan>🔥 Ask Flint to plan tasks</button>' : ''}</div>`
       : `<p class="tk-empty tk-empty--sm">${key === 'needs' ? 'Everything has someone on it.' : key === 'doing' ? 'Nothing in progress. Press Start on a task.' : key === 'review' ? 'Nothing waiting for review.' : key === 'done' ? 'Finished work lands here.' : 'Nothing waiting.'}</p>`) : '';
     const more = isDone && n > 3 ? `<button type="button" class="tk-showall" data-done-toggle aria-expanded="${allDone}">${allDone ? '<span>Show less</span>' : `<span>Show all</span> <span class="mono">${n}</span>`}</button>` : '';
-    const add = status !== 'done' && key !== 'ready' ? `<button class="add" data-add="${status}" title="Add a task to ${label}" aria-label="Add a task to ${label}">+</button>` : '';
+    const add = status !== 'done' && key !== 'ready' && key !== 'offer' ? `<button class="add" data-add="${status}" title="Add a task to ${label}" aria-label="Add a task to ${label}">+</button>` : '';
     return `<section class="col tk-sec" data-col="${status}" data-sec="${key}" aria-label="${label}">
         <h5><span class="dot"></span><span class="tk-sec__l">${label}</span> <span class="n">${n}</span>${hint && view === 'list' ? `<span class="tk-sec__h">${hint}</span>` : ''}${add}</h5>
         <div class="tk-list">${shown.map(row).join('')}${empty}</div>${more}
@@ -215,6 +239,7 @@
     shell(board);
     const total = tasks.length, done = tasks.filter(t => t.status === 'done').length;
     const sub = $('#tasks-sub'); if (sub) sub.textContent = `${total} task${total === 1 ? '' : 's'} · ${done} done · ${remote() ? 'shared with your tribe' : 'saved on this device'}`;
+    const md = board.querySelector('#tk-mode'); if (md) { md.hidden = !remote(); const l = work.mode === 'council' ? '🙋 Council' : '👑 Lead assigns'; if (md.textContent !== l) md.textContent = l; }
     const F = window.TribeFlint, fl = board.querySelector('#tk-flint');
     if (fl) fl.innerHTML = F && F.ask ? `<button type="button" class="tk-chip" data-flint-plan>🔥 Plan this week with Flint</button>` : '';
     STATS.forEach(([k, , , fn]) => {
@@ -231,7 +256,7 @@
     const html = secs.map(([key, status, label, hint, fn]) => {
       const list = vis.filter(fn);
       if (st && !list.length && !asBoard) return '';
-      if (!asBoard && key === 'ready' && !list.length) return '';
+      if (!asBoard && (key === 'ready' || key === 'offer') && !list.length) return '';
       return sectionHtml(key, status, label, hint, list, total);
     }).join('') || `<p class="tk-empty tk-empty--sm tk-none">Nothing here right now. <button type="button" class="tkd-link" data-clear-filter>Show everything</button></p>`;
     const sig = (asBoard ? 'B' : 'L') + html;
@@ -327,6 +352,10 @@
     inp.addEventListener('blur', () => setTimeout(() => { if (!wrap.contains(document.activeElement)) wrap.remove(); }, 150));
   }
 
+  // Who you may hand a task to: leads anyone; everyone else themselves and their own agents (server/taskflow.js).
+  const pickable = m => !remote() || workLead || m.id === meId() || (m.role === 'agent' && m.owner === meId());
+  const assignNote = () => remote() && !workLead ? `<p class="tkp-note">${council() ? 'Council: people claim tasks themselves.' : 'Only a lead assigns tasks to other people.'}</p>` : '';
+
   /* ---------------- the row menus: Assign and ⋯ ---------------- */
   function closeMenu(refocus) {
     const p = document.getElementById('tk-pop'); if (!p) return;
@@ -342,8 +371,9 @@
     if (kind === 'assign') {
       const meM = mem(me) || { name: (C.state().me || {}).name || 'Me', color: (C.state().me || {}).color };
       html = `<p class="tkp-h">Who does it?</p>${item('who:' + (me || 'me'), 'Me', av(meM))}`
-        + ms.filter(m => m.role !== 'agent' && m.id !== me).map(m => item('who:' + m.id, m.name, av(m))).join('')
-        + ms.filter(m => m.role === 'agent').map(m => item('who:' + m.id, m.name, av(m))).join('')
+        + ms.filter(m => m.role !== 'agent' && m.id !== me && pickable(m)).map(m => item('who:' + m.id, m.name + (remote() ? ' · asks them' : ''), av(m))).join('')
+        + ms.filter(m => m.role === 'agent' && pickable(m)).map(m => item('who:' + m.id, m.name, av(m))).join('')
+        + (council() && !hasOwner(t) ? item('claim', '🙋 Claim it myself') : '') + assignNote()
         + (remote() ? item('who:ask-agent', 'Ask an AI helper', '<span class="tk-av tk-av--ai">✦</span>') : '')
         + (textTask(t) ? item('who:flint', 'Flint', '<span class="tk-av tk-av--flint">🔥</span>') : '')
         + (hasOwner(t) ? item('who:', 'Nobody yet', av(null)) : '')
@@ -379,10 +409,51 @@
       if (m === 'open') return open(t.id);
       if (m === 'assign') { const row = document.querySelector(`#board .task[data-id="${CSS.escape(t.id)}"]`); return menu((row && row.querySelector('.tk-more')) || anchor, 'assign', t); }
       if (m === 'ask-agent') return pickWho(t, 'ask-agent');
+      if (m === 'claim') return doStep(t.id, 'claim', anchor);
       if (m === 'flint-pick') { if (!F) return; try { F.focus && F.focus(); } catch {} return F.ask(`Who should do this task, and why: ${t.title}`); }
       if (m === 'split') return split(t.id);
       if (m === 'delete') return remove(t.id);
     });
+  }
+  // Decline asks for a short reason; it goes back to whoever assigned the task.
+  function declinePop(anchor, t) {
+    closeMenu();
+    const p = document.createElement('div'); p.id = 'tk-pop'; p.className = 'tk-pop tk-pop--why'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Decline this task'); p.dataset.kind = 'decline'; p._anchor = anchor;
+    p.innerHTML = `<p class="tkp-h">Decline “${esc(t.title)}”</p><form class="tkp-why"><input class="tkd-in" id="tk-why" maxlength="300" placeholder="Why? e.g. I'm on the boss fight this week" aria-label="Reason" required>
+      <div class="tkp-row"><button type="button" class="tk-btn tk-btn--ghost" data-x>Cancel</button><button type="submit" class="tk-btn tk-btn--back">Decline</button></div></form>`;
+    document.body.appendChild(p);
+    const r = anchor.getBoundingClientRect(), w = p.offsetWidth;
+    p.style.left = Math.min(innerWidth - w - 8, Math.max(8, r.right - w)) + 'px'; p.style.top = Math.min(innerHeight - p.offsetHeight - 8, r.bottom + 6) + 'px';
+    const inp = p.querySelector('#tk-why'); inp.focus();
+    p.querySelector('[data-x]').onclick = () => closeMenu(true);
+    p.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeMenu(true); } });
+    p.querySelector('form').onsubmit = async e => {
+      e.preventDefault(); const reason = inp.value.trim(); if (!reason) return inp.focus();
+      closeMenu();
+      try { upsert((await C.api(`/tasks/${encodeURIComponent(t.id)}/decline`, { method: 'POST', body: { reason } })).task); window.TribeApp.toast(`Declined. ${t.assignedBy && t.assignedBy !== meId() ? firstName(t.assignedBy) + ' gets it back with your reason.' : 'It is open again.'}`); }
+      catch (err) { window.TribeApp.toast(err.message, 'err'); load(); }
+    };
+  }
+  // "How work is shared": Lead assigns (default) or Council (open claim), a claim limit, agents auto-accept.
+  function modePop(anchor) {
+    const had = document.getElementById('tk-pop'); if (had && had.dataset.kind === 'mode') return closeMenu(true);
+    closeMenu();
+    const p = document.createElement('div'); p.id = 'tk-pop'; p.className = 'tk-pop tk-pop--mode'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'How work is shared'); p.dataset.kind = 'mode'; p._anchor = anchor;
+    const ro = !workLead, opt = (k, t, sub) => `<button type="button" class="tkp-mode" data-wmode="${k}" aria-pressed="${work.mode === k}" ${ro ? 'disabled' : ''}><b>${t}</b><small>${sub}</small></button>`;
+    p.innerHTML = `<p class="tkp-h">How work is shared</p>${opt('lead', 'Lead assigns', 'A lead assigns tasks; the person accepts or declines.')}${opt('council', 'Council (open claim)', 'Tasks are posted openly; anyone claims one and it is theirs.')}
+      <label class="tkp-lim">Claim limit per person <input type="number" class="tkd-in tkd-in--sm" id="tk-lim" min="0" max="20" value="${work.claimLimit || 0}" ${ro ? 'disabled' : ''}><small>0 = no limit</small></label>
+      <label class="tkp-lim"><input type="checkbox" id="tk-aaa" ${work.agentAutoAccept ? 'checked' : ''} ${ro ? 'disabled' : ''}> AI helpers accept on their own<small>Off: the agent's owner accepts for it</small></label>
+      ${ro ? '<p class="tkp-note">Only the host or a project lead changes this.</p>' : ''}`;
+    document.body.appendChild(p);
+    const r = anchor.getBoundingClientRect(); p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.left)) + 'px'; p.style.top = (r.bottom + 6) + 'px';
+    p.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeMenu(true); } });
+    const put = async body => {
+      try { const w = await C.api('/tasks/settings', { method: 'PUT', body }); work = w.settings; lastSig = ''; render(); window.TribeApp.toast(work.mode === 'council' ? 'Council: new tasks are open to claim' : 'Lead assigns: a lead hands out tasks, people accept'); }
+      catch (e) { window.TribeApp.toast(e.message, 'err'); }
+    };
+    p.querySelectorAll('[data-wmode]').forEach(b => b.onclick = async () => { await put({ mode: b.dataset.wmode }); p.querySelectorAll('[data-wmode]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.wmode === work.mode))); });
+    const lim = p.querySelector('#tk-lim'); lim.onchange = () => put({ claimLimit: Number(lim.value) || 0 });
+    const aaa = p.querySelector('#tk-aaa'); aaa.onchange = () => put({ agentAutoAccept: aaa.checked });
   }
   async function split(id, btn) {
     if (btn) btn.disabled = true;
@@ -424,7 +495,12 @@
     if (keep && d.dataset.for === t.id) { syncDrawer(d, t); return; }   // don't redraw under the cursor; update the rest
     d.dataset.for = t.id;
     const me = meId(), ms = members(), a = t.assignee && mem(t.assignee);
-    const friends = ms.filter(m => m.role !== 'agent' && m.id !== me), agents = ms.filter(m => m.role === 'agent');
+    const friends = ms.filter(m => m.role !== 'agent' && m.id !== me && pickable(m)), agents = ms.filter(m => m.role === 'agent' && pickable(m));
+    const offer = mineToAnswer(t) ? `<div class="tkd-offer" role="group" aria-label="Assigned to you"><p><b>Assigned to ${t.assignee === me ? 'you' : esc(firstName(t.assignee))}</b>${t.assignedBy ? ` by ${esc(firstName(t.assignedBy))}` : ''}. Accept to make it yours and start it.</p><div class="tkd-offer__b"><button type="button" class="tk-btn tk-btn--back" data-step="decline">Decline…</button><button type="button" class="tk-btn tk-btn--go" data-step="accept">Accept</button></div></div>`
+      : pending(t) ? `<div class="tkd-offer tkd-offer--wait"><p>Waiting for <b>${esc(firstName(t.assignee))}</b> to accept. It shows in their board and inbox.</p></div>`
+      : t.declined && !t.assignee ? `<div class="tkd-offer tkd-offer--no"><p><b>${esc(t.declined.byName || 'Someone')} declined</b> ${esc(rel(t.declined.at))}: “${esc(t.declined.reason)}”</p></div>`
+      : t.claimed ? `<div class="tkd-offer tkd-offer--claim"><p>🙋 Claimed by <b>${esc(firstName(t.claimed.by))}</b> ${esc(rel(t.claimed.at))}</p></div>`
+      : council() && !hasOwner(t) && t.status !== 'done' ? `<div class="tkd-offer"><p><b>Open to claim.</b> Anyone can take it; it's theirs right away.</p><div class="tkd-offer__b"><button type="button" class="tk-btn tk-btn--assign" data-step="claim">Claim</button></div></div>` : '';
     const opt = (key, label, avatar, on) => `<button type="button" class="tkd-who" data-who="${esc(key)}" aria-pressed="${on}">${avatar}<span>${esc(label)}</span></button>`;
     const whoNow = a ? a.id : t.doer === 'flint' ? 'flint' : t.doer === 'agent' ? 'ask-agent' : '';
     const subs = Array.isArray(t.subtasks) ? t.subtasks : [];
@@ -433,7 +509,8 @@
     d.innerHTML = `<div class="tkd-head"><span class="tkd-k mono">Task</span><button type="button" class="tkd-x" data-tkclose aria-label="Close">✕</button></div>
       <div class="tkd-body">
         <textarea id="tkd-title" class="tkd-title" rows="2" maxlength="200" data-keep="title" aria-label="Title">${esc(t.title)}</textarea>
-        <div class="tkd-next">${t.status === 'review' ? '<button type="button" class="tk-btn tk-btn--back" data-step="back">Send back</button>' : ''}<button type="button" class="tk-btn tk-btn--${kind}" data-step="${act}">${label}</button></div>
+        ${offer}
+        ${['accept', 'waiting', 'claim'].includes(act) ? '' : `<div class="tkd-next">${t.status === 'review' ? '<button type="button" class="tk-btn tk-btn--back" data-step="back">Send back</button>' : ''}<button type="button" class="tk-btn tk-btn--${kind}" data-step="${act}">${label}</button></div>`}
         <div class="tkd-row"><span class="tkd-l">Status</span><div class="tkd-status" role="radiogroup" aria-label="Status">${COLS.map(([k, l]) => `<button type="button" role="radio" data-status="${k}" aria-checked="${t.status === k}" style="--c:var(--tk-${k})">${l}</button>`).join('')}</div></div>
         <div class="tkd-row tkd-row--who"><span class="tkd-l">Who does it?</span>
           <div class="tkd-whos" data-whopick tabindex="-1">
@@ -442,14 +519,16 @@
             ${agents.map(m => opt(m.id, m.name, av(m), whoNow === m.id)).join('')}
             ${remote() ? opt('ask-agent', 'Ask an AI helper', '<span class="tk-av tk-av--ai">✦</span>', whoNow === 'ask-agent') : ''}
             ${textTask(t) ? opt('flint', 'Flint', '<span class="tk-av tk-av--flint">🔥</span>', whoNow === 'flint') : ''}
-            ${opt('', 'Nobody yet', av(null), !whoNow)}
+            ${opt('', 'Nobody yet', av(null), !whoNow)}${assignNote()}
             ${!friends.length && remote() ? '<button type="button" class="tkd-link" data-invite>Invite a friend</button>' : ''}
             ${window.TribeFlint ? '<button type="button" class="tkd-link" data-flint-pick>🔥 Ask Flint to pick</button>' : ''}
           </div></div>
         <div class="tkd-row"><span class="tkd-l">Type</span>${typeChips(t.type || '', 'sm tkd-types')}</div>
         <div class="tkd-row"><span class="tkd-l">Due</span><div class="tkd-due"><input type="date" class="tkd-in" id="tkd-due" data-keep="due" value="${esc(t.due || '')}">${t.due ? '<button type="button" class="tkd-link" data-clear-due>Clear</button>' : ''}</div></div>
         <div class="tkd-row"><span class="tkd-l">Labels</span><div class="tkd-labels">${(t.labels || []).map(l => `<span class="tk-lab">${esc(l)}<button type="button" data-unlabel="${esc(l)}" aria-label="Remove ${esc(l)}">×</button></span>`).join('')}<input class="tkd-in tkd-in--sm" id="tkd-label" data-keep="label" placeholder="Add a label" maxlength="24"></div></div>
-        <div class="tkd-sec"><span class="tkd-l">Notes</span><textarea class="tkd-in tkd-notes" id="tkd-notes" data-keep="notes" rows="4" maxlength="20000" placeholder="What does done look like?">${esc(t.body || '')}</textarea></div>
+        <div class="tkd-sec tkd-desc"><span class="tkd-l">Description <em>Markdown</em>${t.body ? '<button type="button" class="tkd-link" data-desc-edit>Edit</button>' : ''}</span>
+          ${t.body && window.TribeMD ? `<div class="tkd-md md" data-desc-view>${window.TribeMD.render(t.body)}</div>` : ''}
+          <textarea class="tkd-in tkd-notes" id="tkd-notes" data-keep="notes" rows="5" maxlength="20000" placeholder="What is it, and what does done look like? **bold**, - lists, [links](https://…)" ${t.body && window.TribeMD ? 'hidden' : ''}>${esc(t.body || '')}</textarea></div>
         <div class="tkd-sec"><span class="tkd-l">Checklist ${subs.length ? `<em>${subs.filter(s => s.done).length}/${subs.length}</em>` : ''}</span>
           <ul class="tkd-subs">${subs.map((s, i) => `<li><label><input type="checkbox" data-sub="${i}" ${s.done ? 'checked' : ''}><span>${esc(s.t)}</span></label><button type="button" data-unsub="${i}" aria-label="Remove">×</button></li>`).join('')}</ul>
           <input class="tkd-in tkd-in--sm" id="tkd-sub" data-keep="sub" placeholder="Add a step… press Enter" maxlength="200"></div>
@@ -481,7 +560,8 @@
     const lab = d.querySelector('#tkd-label');
     lab.addEventListener('keydown', e => { if (e.key === 'Enter' && lab.value.trim()) { e.preventDefault(); const v = lab.value.trim().toLowerCase(); lab.value = ''; patch(id, { labels: [...new Set([...(t.labels || []), v])].slice(0, 6) }); } });
     d.querySelectorAll('[data-unlabel]').forEach(b => b.onclick = () => patch(id, { labels: (t.labels || []).filter(l => l !== b.dataset.unlabel) }));
-    const notes = d.querySelector('#tkd-notes'); notes.addEventListener('change', () => { if (notes.value !== (t.body || '')) patch(id, { body: notes.value }); });
+    const notes = d.querySelector('#tkd-notes'); notes.addEventListener('change', () => { if (notes.value !== (t.body || '')) { d.dataset.for = ''; patch(id, { body: notes.value }); } });
+    const de = d.querySelector('[data-desc-edit]'); if (de) de.onclick = () => { const v = d.querySelector('[data-desc-view]'); if (v) v.hidden = true; notes.hidden = false; notes.focus(); de.remove(); };
     const subs = () => (Array.isArray(t.subtasks) ? t.subtasks : []).map(s => ({ ...s }));
     d.querySelectorAll('[data-sub]').forEach(c => c.onchange = () => { const l = subs(); l[+c.dataset.sub].done = c.checked; patch(id, { subtasks: l }); });
     d.querySelectorAll('[data-unsub]').forEach(b => b.onclick = () => { const l = subs(); l.splice(+b.dataset.unsub, 1); patch(id, { subtasks: l }); });

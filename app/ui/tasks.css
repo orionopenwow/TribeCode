@@ -245,3 +245,35 @@
   .tkd-row { grid-template-columns: 1fr; gap: 6px; } .tkd-l { padding-top: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .tk-drawer { transition: none; } }
+
+/* feat/tasks-company: assign → accept, Council claims, how work is shared, the description */
+#board.tkb .col[data-sec="offer"] { --colc: var(--brand); }
+.tk-offer { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--brand); color: var(--brand); font-size: 11px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.tk-offer--wait { border-color: var(--edge); color: var(--muted); border-style: dashed; }
+.tk-offer--claim { border-color: var(--live); color: var(--live); }
+.tk-offer--no { border-color: var(--alert); color: var(--alert); }
+#board.tkb .tk-pill--mode { color: var(--text); }
+#board.tkb .tk-pill--mode[hidden] { display: none; }
+.tk-pop--why, .tk-pop--mode { max-width: 340px; width: min(340px, calc(100vw - 16px)); padding: 10px; }
+.tkp-why { display: grid; gap: 8px; }
+.tkp-row { display: flex; justify-content: flex-end; gap: 8px; }
+.tkp-note { margin: 6px 8px 2px; font-size: 12px; color: var(--muted); }
+.tkp-mode { display: grid; gap: 2px; width: 100%; text-align: left; padding: 8px 10px; margin: 0 0 6px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: var(--text); cursor: pointer; transition: border-color var(--dur-quick) var(--ease-out); }
+.tkp-mode small { color: var(--muted); font-size: 12px; }
+.tkp-mode[aria-pressed="true"] { border-color: var(--brand); }
+.tkp-mode:disabled { cursor: default; opacity: .8; }
+.tkp-lim { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 8px 4px 0; font-size: 13px; color: var(--text); }
+.tkp-lim small { flex-basis: 100%; color: var(--faint); font-size: 11px; }
+.tkp-lim input[type="number"] { width: 64px; }
+.tkd-offer { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--brand); border-radius: 12px; background: var(--surface); }
+.tkd-offer p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text); }
+.tkd-offer__b { display: flex; justify-content: flex-end; gap: 8px; }
+.tkd-offer--wait { border-color: var(--edge); border-style: dashed; }
+.tkd-offer--claim { border-color: var(--live); }
+.tkd-offer--no { border-color: var(--alert); }
+.tkd-desc .tkd-l { display: flex; align-items: center; gap: 8px; }
+.tkd-desc .tkd-l em { font: 400 10px var(--mono); color: var(--faint); font-style: normal; }
+.tkd-desc .tkd-l .tkd-link { margin-left: auto; }
+.tkd-md { font-size: 14px; line-height: 1.6; color: var(--text); max-width: 65ch; }
+.tkd-md > :first-child { margin-top: 0; } .tkd-md > :last-child { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .tkp-mode { transition: none; } }

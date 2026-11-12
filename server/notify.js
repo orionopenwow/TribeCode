@@ -245,7 +245,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     for (const mid of recipients(n)) {
       const item = { id: 'n-' + crypto.randomBytes(6).toString('base64url'), at: n.at || new Date(now()).toISOString(), type: n.type, priority: n.priority || 'normal',
         title: String(n.title || n.type).slice(0, 160), body: String(n.body || '').slice(0, 600), view: n.view || null, ref: n.ref || null,
-        from: n.from || null, approval: n.approval || null, actions: n.actions || undefined };
+        from: n.from || null, approval: n.approval || null, actions: n.actions || undefined, ...(n.project ? { project: String(n.project).slice(0, 64) } : {}) };
       if (!n.force) inboxAppend(mid, item);
       sendTo(mid, { type: 'notification', item, unread: unread(mid) });
       const prefs = prefsOf(mid);
