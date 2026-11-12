@@ -264,7 +264,8 @@ function presence() {
 const idleAll = mid => { const o = online.get(mid); return !!o && o.sockets.size > 0 && [...o.sockets].every(s => s.idle); };   // feat/profiles: every tab idle
 function presenceFor(viewer) {
   const fix = list => (profiles ? list.map(e => profiles.forViewer(e, viewer, online.has(e.id))) : list);   // feat/profiles: invisible, nicknames
-  return fix(presenceForRaw(viewer));
+  const out = fix(presenceForRaw(viewer));
+  return places ? places.scrub(out, viewer) : out;   // feat/presence: "Show where I am" off / "Appear away"
 }
 // What one viewer sees: project-scoped friends only see people who share one of their projects.
 function presenceForRaw(viewer) {
@@ -285,10 +286,24 @@ function touchAgent(me, tool) {
   const where = tool === 'connected' ? (prev && Date.now() - prev.at < AGENT_IDLE ? prev.where : 'connected') : `using ${tool.replace(/_/g, ' ')}`;   // comms-smoke: MCP initialize/tools/list (server/mcp.js)
   const changed = !prev || Date.now() - prev.at > AGENT_IDLE || prev.where !== where || prev.project !== project;
   agentSeen.set(me.id, { at: Date.now(), where, project });
-  if (changed) pushPresence();
+  if (changed) { pushPresence(); if (places) places.agentMoved(me.id); }
 }
 setInterval(() => { for (const [k, a] of agentSeen) if (Date.now() - a.at > AGENT_IDLE && !a.off) { a.off = true; pushPresence(); } }, 30_000).unref();
 const pushPresence = () => broadcast({ type: 'presence', members: presence() });
+// feat/presence: where everyone is (server/places.js). A viewer only hears about people they can see, and not about
+// someone who is invisible (online but shown offline).
+function canSeeMember(viewer, mid) {
+  const e = presenceFor(viewer).find(x => x.id === mid); if (!e) return false;
+  const m = memberById(mid); if (m && m.role === 'agent') return true;
+  return !!e.online || !online.has(mid);
+}
+function agentPlace(mid) {
+  const a = agentSeen.get(mid); if (!a || Date.now() - a.at > AGENT_IDLE) return null;
+  const pid = a.project || P.defaultId(); let t = null;
+  try { t = P.inProject(pid, () => loadTasks()).find(x => x.assignee === mid && x.status === 'doing'); } catch {}
+  return t ? { k: 'task', id: t.id, l: String(t.title || 'a task').slice(0, 60), pr: pid || '' } : { k: 'agent', id: '', l: String(a.where || 'working').slice(0, 60), pr: pid || '' };
+}
+let places = null;   // made below, once chans exists
 
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
@@ -429,12 +444,14 @@ let publishOnApproval = null;   // v0.27 publish: an approved "publish" request 
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
-const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: (me, ch) => {   // fix/security-2: typing only in channels you can read
+const canSeeCh = (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
   const pj = P.byChannel(ch); if (pj) return P.canSee(me, pj.id);
   if (chans.isCustom(ch)) return chans.canRead(me, ch);
   const ag = /^agents-(.+)$/.exec(ch); return !!(ag && P.get(ag[1]) && P.canSee(me, ag[1]));
-} });
+};
+const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: canSeeCh });
+places = require('./places')({ P, store: baseStore, getMembers: () => members, online, idleAll, canSeeChannel: canSeeCh, visible: canSeeMember, agentPlace });
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
 const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), pubCmd: (c, mem, t) => askai && askai.command(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
@@ -955,6 +972,7 @@ async function apiInProject(req, res, url) {
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
   if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
   if (a === 'moderation') return moderation.route(req, res, ctx());   // feat/appstore: report, block, filter
+  if (a === 'places') return places.route(req, res, { me, send, fail, readBody, b, m });   // feat/presence: where everyone is
   if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
   if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
   if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
@@ -1242,7 +1260,7 @@ server.on('upgrade', (req, sock) => {
   o.sockets.add(s); online.set(me.id, o);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
-  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me) });
+  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
@@ -1254,7 +1272,8 @@ server.on('upgrade', (req, sock) => {
       s.send({ type: 'project-switched', project: msg.id });
       pushPresence(); return;
     }
-    if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
+    if (msg.type === 'activity' && typeof msg.where === 'string') { const w = msg.where.slice(0, 80); if (w !== o.where) { o.where = w; pushPresence(); } }   // feat/presence: only on change (doc autosaves re-send it)
+    if (msg.type === 'place') { places.set(me, s, msg.p); return; }   // feat/presence
     if (msg.type === 'activity' && typeof msg.idle === 'boolean' && !!s.idle !== msg.idle) { const was = idleAll(me.id); s.idle = msg.idle; if (idleAll(me.id) !== was) pushPresence(); }   // feat/profiles: idle after inactivity
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
     // feat/live-cursors: { type:'cursor', view, x, y } (x, y = 0..1 of the main pane) reaches the others in the same
@@ -1294,6 +1313,7 @@ server.on('upgrade', (req, sock) => {
     voice.socketClosed(me, online.has(me.id));
     docs.live.leaveAll(s);
     const h = huddle.get(me.id); if (h && h.socket === s) { huddle.delete(me.id); pushHuddle(); }
+    places.closed(me, s);   // feat/presence: the last tab takes the place with it, "last seen"
     pushPresence();
   });
 });
