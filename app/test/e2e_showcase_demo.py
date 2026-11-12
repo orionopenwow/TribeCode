@@ -164,7 +164,7 @@ def main():
             assert info["shipped"] == ["v0.2"] and info["season"] == 2 and info["milestone"] == "v0.3", info   # the vote made the next milestone
             until(pg, "TribeClient.api('/milestones').then(r => r.milestones.some(m => m.version === 'v0.2' && m.status === 'released'))", timeout=5000)
             until(pg, "TribeClient.api('/notify/inbox').then(r => r.items.some(i => i.type === 'release'))", timeout=5000)
-            until(pg, "TribeClient.api('/projects/lantern-run/pulse').then(r => !!r.repo && r.recent.some(x => x.kind === 'commit'))", timeout=5000)   # the repo got pinned, commits landed
+            until(pg, "TribeClient.api('/projects/demo_lantern-run/pulse').then(r => !!r.repo && r.recent.some(x => x.kind === 'commit'))", timeout=5000)   # the repo got pinned, commits landed
             pg.wait_for_selector("#pj-check.done", timeout=8000)   # the Onboarding Checklist ticked to All set
             nf = pg.text_content("#nf-count"); assert nf.strip() and int(nf.replace("+", "")) >= 3, f"the bell counts up: {nf!r}"
             if shots: time.sleep(0.5); pg.screenshot(path=str(SHOTS / "showcase-demo-desktop-shipped.png"))
