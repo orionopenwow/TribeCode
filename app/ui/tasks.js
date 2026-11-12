@@ -170,7 +170,20 @@
     board.querySelectorAll('[data-seg]').forEach(b => b.addEventListener('click', () => setFilter(filter === b.dataset.seg ? '' : b.dataset.seg)));
     board.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
     board.querySelector('#tk-mode').addEventListener('click', e => modePop(e.currentTarget));
+    board.addEventListener('click', e => { if (e.target.closest('[data-flint-plan]')) planWeek(board); });   // one delegated handler: the button is redrawn
     board.querySelector('#tk-filter').addEventListener('click', e => { if (e.target.closest('[data-clear-filter]')) setFilter(''); });
+  }
+  // Plan this week with Flint: a few small tasks from the vision, the board and the project (no AI needed; server/assist.js),
+  // each one tap to add. With no suggestions helper, Flint is asked in its dock.
+  function planWeek(board) {
+    const A = window.TribeAssist;
+    if (!A || !A.ideas || !remote()) { const F = window.TribeFlint; if (!F) return; try { F.focus && F.focus(); } catch {} return F.ask('Plan this week: suggest a few small tasks for this project'); }
+    let box = board.querySelector('#tk-plan');
+    if (box) { box.remove(); return; }
+    box = document.createElement('div'); box.id = 'tk-plan'; box.className = 'tk-plan';
+    box.innerHTML = '<p class="tk-empty tk-empty--sm">🔥 Flint is looking at the board…</p>';
+    board.querySelector('.tk-bar').after(box);
+    A.ideas(box, { always: true, force: true, closable: true, eyebrow: '🔥 Flint · this week', title: 'A plan for this week: tap to add' }).then(() => { const w = box.querySelector(':scope > p'); if (w) w.remove(); if (!box.querySelector('.as-ideas')) box.innerHTML = '<p class="tk-empty tk-empty--sm">Flint has no new ideas right now. Write the vision (Dashboard) and it can suggest more.</p>'; });
   }
   function setFilter(k) { filter = statOf(k) ? k : ''; if (filter === 'done') allDone = true; lastSig = ''; render(); }
   function setView(v) { view = v === 'board' ? 'board' : 'list'; try { localStorage.setItem(VKEY, view); } catch {} lastSig = ''; render(); }
@@ -241,7 +254,7 @@
     const sub = $('#tasks-sub'); if (sub) sub.textContent = `${total} task${total === 1 ? '' : 's'} · ${done} done · ${remote() ? 'shared with your tribe' : 'saved on this device'}`;
     const md = board.querySelector('#tk-mode'); if (md) { md.hidden = !remote(); const l = work.mode === 'council' ? '🙋 Council' : '👑 Lead assigns'; if (md.textContent !== l) md.textContent = l; }
     const F = window.TribeFlint, fl = board.querySelector('#tk-flint');
-    if (fl) fl.innerHTML = F && F.ask ? `<button type="button" class="tk-chip" data-flint-plan>🔥 Plan this week with Flint</button>` : '';
+    if (fl) { const h = F && F.ask ? `<button type="button" class="tk-chip" data-flint-plan>🔥 Plan this week with Flint</button>` : ''; if (fl.innerHTML !== h) fl.innerHTML = h; }   // feat/tasks-company: redrawn only when it changes (it lost its click handler on every presence blip)
     STATS.forEach(([k, , , fn]) => {
       const n = tasks.filter(fn).length, el = board.querySelector(`[data-segn="${k}"]`); if (el) el.textContent = n;
       const b = board.querySelector(`[data-seg="${k}"]`); if (b) { b.setAttribute('aria-pressed', String(filter === k)); b.classList.toggle('is-zero', !n); }
@@ -329,7 +342,6 @@
     document.querySelectorAll('#board [data-done-toggle]').forEach(b => b.addEventListener('click', () => { allDone = !allDone; lastSig = ''; render(); }));
     document.querySelectorAll('#board .tk-cols [data-clear-filter]').forEach(b => b.addEventListener('click', () => setFilter('')));
     document.querySelectorAll('#board [data-focus-add]').forEach(b => b.addEventListener('click', () => { const i = $('#tk-add'); if (i) i.focus(); }));
-    document.querySelectorAll('#board [data-flint-plan]').forEach(b => b.addEventListener('click', () => { const F = window.TribeFlint; if (!F) return; try { F.focus && F.focus(); } catch {} F.ask('Plan this week: suggest a few small tasks for this project'); }));
   }
 
   let lastType = '';
@@ -520,7 +532,7 @@
             ${remote() ? opt('ask-agent', 'Ask an AI helper', '<span class="tk-av tk-av--ai">✦</span>', whoNow === 'ask-agent') : ''}
             ${textTask(t) ? opt('flint', 'Flint', '<span class="tk-av tk-av--flint">🔥</span>', whoNow === 'flint') : ''}
             ${opt('', 'Nobody yet', av(null), !whoNow)}${assignNote()}
-            ${!friends.length && remote() ? '<button type="button" class="tkd-link" data-invite>Invite a friend</button>' : ''}
+            ${!ms.some(m => m.role !== 'agent' && m.id !== me) && remote() ? '<button type="button" class="tkd-link" data-invite>Invite a friend</button>' : ''}
             ${window.TribeFlint ? '<button type="button" class="tkd-link" data-flint-pick>🔥 Ask Flint to pick</button>' : ''}
           </div></div>
         <div class="tkd-row"><span class="tkd-l">Type</span>${typeChips(t.type || '', 'sm tkd-types')}</div>

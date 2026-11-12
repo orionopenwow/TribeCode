@@ -490,7 +490,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       : `<div class="pj-gh">${gh.installed ? 'GitHub CLI is not signed in on the host' : 'No GitHub CLI on the host'}: pushes use the host's git credentials. GitHub is optional; everything works with plain git.</div>`;
     let html = '';
     if (!r && box.dataset.quiet) { box.innerHTML = ''; return; }
-    if (!r) html = `<div class="pj-none">No code repository yet. ${isHost() ? 'Start a project from a folder or a GitHub URL with <b>+</b> in the sidebar.' : 'The host can attach one.'}</div>`;
+    if (!r) html = `<div class="pj-none">No code repository yet. ${isHost() ? 'One click makes one on this computer (with a first saved version); GitHub follows when it is set up.' : 'The host can attach one.'}</div>${isHost() ? '<div class="pj-actions"><button class="btn primary" id="pj-mkrepo">Create the code repository</button></div>' : ''}`;   // feat/tasks-company: no dead end
     else if (!r.git) html = `<div class="pj-none">The folder <b>${esc(r.name)}</b> is not a code repository yet.</div>${isHost() ? '<button class="btn primary" id="pj-gitinit">Make it a code repository</button><div class="faint pj-small">Runs git init with a .gitignore for node_modules, build folders and .env, then saves a first version.</div>' : ''}`;
     else {
       html = `<div class="pj-repo"><b>${esc(r.name)}</b>${r.remote ? ` <span class="faint">· ${esc(r.remote.replace(/^https?:\/\//, ''))}</span>` : ' <span class="faint">· local only</span>'}</div>${ghLine}`;
@@ -509,6 +509,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const pid = encodeURIComponent(p.id), again = () => workspacePanel(box);
     const act = (sel, fn) => { const x = box.querySelector(sel); if (x) x.onclick = async () => { x.disabled = true; try { await fn(); } catch (e) { toast(e.message); } x.disabled = false; again(); }; };
     act('#pj-gitinit', async () => { await C.api(`/projects/${pid}/git-init`, { method: 'POST' }); toast('It’s a code repository now, with its first saved version.'); refresh(); });
+    act('#pj-mkrepo', async () => { await createRepo(p); if (window.TribeRepo && window.TribeRepo.load) window.TribeRepo.load(); });   // feat/tasks-company
     act('#pj-mybranch', async () => { const r2 = await C.api(`/projects/${pid}/branch`, { method: 'POST' }); toast(`Your branch ${r2.branch.branch} is ready`); });
     act('#pj-commit', async () => { const msg = prompt('Commit message', 'Work in progress'); if (msg === null) return; await C.api(`/projects/${pid}/branch/commit`, { method: 'POST', body: { message: msg } }); toast('Committed as you'); });
     act('#pj-push', async () => { const r2 = await C.api(`/projects/${pid}/branch/push`, { method: 'POST' }); toast(`Pushed ${r2.branch} with ${r2.as}`); });

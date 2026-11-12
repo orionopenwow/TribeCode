@@ -76,7 +76,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
       out.tagged = true;
       try { await git(['push', 'origin', version], rp); out.pushed = true; }
       catch (e) { out.note = 'Tagged locally; push failed: ' + e.message.split('\n')[0]; }
-    } else out.note = 'No project repo configured (start the server with --repo <path>), so the milestone was recorded without a git tag.';
+    } else out.note = 'This project has no code repository yet, so the milestone was recorded without a git tag. Set one up under Code repository to tag releases.';
     m.status = 'released'; m.released = new Date().toISOString(); m.releasedBy = me.id; m.git = out;
     saveMilestones(ms);
     postChat('general', 'tribecode', `Released **${version}**: ${m.title}${out.pushed ? ' · tag pushed to GitHub 🚀' : out.tagged ? ' · tagged in git' : ''}`);

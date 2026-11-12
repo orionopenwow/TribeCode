@@ -153,7 +153,7 @@
   }
   async function ideas(box, opts = {}) {
     if (!box || !C.connected() || me().role === 'spectator' || me().role === 'agent') return;
-    if (!few()) { const old = box.querySelector(':scope > .as-ideas'); if (old) old.remove(); return; }   // feat/setup-flow: only while the board is nearly empty
+    if (!opts.always && !few()) { const old = box.querySelector(':scope > .as-ideas'); if (old) old.remove(); return; }   // feat/tasks-company: always, when asked for (Plan this week)   // feat/setup-flow: only while the board is nearly empty
     let slot = box.querySelector(':scope > .as-ideas');
     if (!slot) { slot = document.createElement('section'); slot.className = 'as-ideas' + (opts.compact ? ' compact' : ''); box.appendChild(slot); }
     let d; try { d = await load(opts.force); } catch { slot.remove(); return; }
@@ -161,7 +161,7 @@
   }
   const few = () => { const T = window.TribeTasks; return !T || !T.all || T.all().length < 3; };
   function paintIdeas(slot, items, opts) {
-    slot.innerHTML = `<div class="as-head"><span class="eyebrow">Suggested</span><b class="as-t">Ideas for next tasks</b><button type="button" class="linkish as-more" data-as-more>More ideas</button>${opts.closable ? `<button type="button" class="as-close" data-as-close aria-label="Hide the suggestions" title="Hide">${X}</button>` : ''}</div>
+    slot.innerHTML = `<div class="as-head"><span class="eyebrow">${esc(opts.eyebrow || 'Suggested')}</span><b class="as-t">${esc(opts.title || 'Ideas for next tasks')}</b><button type="button" class="linkish as-more" data-as-more>More ideas</button>${opts.closable ? `<button type="button" class="as-close" data-as-close aria-label="Hide the suggestions" title="Hide">${X}</button>` : ''}</div>
       <div class="as-list">${items.length ? items.map(i => `<div class="as-idea" data-sid="${esc(i.id)}"><button type="button" class="as-add" data-as-add title="Add to Backlog">${PLUS}<span class="as-it"><b>${esc(i.title)}</b><small>${esc(i.why || '')}</small></span></button><button type="button" class="as-x" data-as-dismiss aria-label="Dismiss: ${esc(i.title)}" title="Not now">${X}</button></div>`).join('')
         : '<p class="as-empty">No new ideas right now. Try More ideas.</p>'}</div>`;
     slot._items = items; slot._opts = opts;
@@ -175,7 +175,7 @@
     const t = e.target.closest && e.target.closest('[data-as-add], [data-as-dismiss], [data-as-more], [data-as-close]'); if (!t) return;
     const slot = t.closest('.as-ideas'); if (!slot) return;
     e.preventDefault(); e.stopPropagation();
-    if (t.hasAttribute('data-as-close')) { const pane = slot.closest('#as-tasks'); (pane || slot).remove(); return; }
+    if (t.hasAttribute('data-as-close')) { const pane = slot.closest('#as-tasks, #tk-plan'); (pane || slot).remove(); return; }
     if (t.hasAttribute('data-as-more')) {
       t.disabled = true; const was = t.textContent; t.textContent = 'Thinking…'; busy(true);
       try {

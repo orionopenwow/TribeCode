@@ -277,3 +277,4 @@
 .tkd-md { font-size: 14px; line-height: 1.6; color: var(--text); max-width: 65ch; }
 .tkd-md > :first-child { margin-top: 0; } .tkd-md > :last-child { margin-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .tkp-mode { transition: none; } }
+#board.tkb .tk-plan { margin: 0 0 12px; }
