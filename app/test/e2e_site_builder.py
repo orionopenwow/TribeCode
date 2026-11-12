@@ -279,8 +279,8 @@ def main():
             host.wait_for_selector(".sg-code")
             assert "Brand tokens" in host.inner_text(".sg-code") and host.locator("[data-sgfile='index.html']").count() == 1
             host.click("[data-sgfile='index.html']"); host.wait_for_function("document.querySelector('.sg-code').textContent.includes('section: hero')")
-            # Flint: a sentence runs Instant
-            host.evaluate("TribeFlint.ask('make a website for our birthday party')")
+            # Flint: a sentence no template claims runs Instant ("birthday party" now picks the party/RSVP template: flint_eval)
+            host.evaluate("TribeFlint.ask('make a website for our conference')")
             host.wait_for_function("TribeFlint.thread().some(m => m.who === 'flint' && /as an event/.test(m.text))", timeout=15000)
             assert W()["gen"]["draft"]["type"] == "event"
             # phone 390: Website + builder fit

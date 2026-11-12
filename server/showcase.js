@@ -706,6 +706,9 @@ ${blocks.join('\n')}
     // feat/site-builder: the stylesheet and the logo travel inside the preview (its CSP allows inline styles and data: images only)
     page = page.replace(/<link rel="stylesheet" href="styles\.css">/, () => { try { return `<style>\n${fs.readFileSync(path.join(dir, 'styles.css'), 'utf8').replace(/<\/style/gi, '<\\/style')}</style>`; } catch { return ''; } })
       .replace(/(src|href)="logo\.(png|svg|jpg)"/g, (all, a, t) => { try { const b = fs.readFileSync(path.join(dir, `logo.${t}`)); return b.length <= LOGO_MAX ? `${a}="${logoUrl({ type: t, data: b.toString('base64') })}"` : `${a}=""`; } catch { return `${a}=""`; } });
+    // the website designer's Publish keeps pictures in assets/: they travel inline too (the preview's CSP has no 'self')
+    const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
+    page = page.replace(/(src|href)="assets\/([\w.-]+)\.(png|jpe?g|gif|webp|svg)"/gi, (all, a, f, t) => { try { const x = fs.readFileSync(path.join(dir, 'assets', `${f}.${t}`)); return x.length <= 4 * 1024 * 1024 ? `${a}="data:${MIME[t.toLowerCase()]};base64,${x.toString('base64')}"` : `${a}=""`; } catch { return `${a}=""`; } });
     const shots = [...page.matchAll(/src="shots\/([a-z0-9][a-z0-9-]*)\.png"/g)].map(m => ({ slug: m[1], file: path.join(dir, 'shots', m[1] + '.png') }));
     const out = inline(page, shots, opts);
     return opts.keepFrame ? out : out.replace(/href="(?!https:|data:|#)[^"]*"/g, 'href="#"');   // relative links (Play) don't lead anywhere inside TribeCode's preview

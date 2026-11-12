@@ -219,7 +219,7 @@
       <label class="tl-lbl">At most <b id="tl-f-hn">${st.f.hours ? st.f.hours + ' h' : 'any hours'}</b><input type="range" id="tl-f-hours" min="0" max="40" step="1" value="${st.f.hours}"></label>
       <div class="tl-pop-f"><button class="btn ghost sm" data-fclear="1">Clear</button><button class="btn primary sm" data-fdone="1">Done</button></div>`;
     document.body.appendChild(pop);
-    if (!phone()) { const r = btn.getBoundingClientRect(); pop.style.top = `${Math.round(r.bottom + 6)}px`; pop.style.left = `${Math.round(Math.max(12, Math.min(innerWidth - 300, r.right - 288)))}px`; }
+    if (!phone()) { const r = btn.getBoundingClientRect(); const h = pop.offsetHeight, below = r.bottom + 6 + h <= innerHeight - 12; pop.style.top = `${Math.round(below ? r.bottom + 6 : Math.max(12, Math.min(r.top - 6 - h, innerHeight - 12 - h)))}px`;   /* fits on screen: above the button when there's no room below */ pop.style.left = `${Math.round(Math.max(12, Math.min(innerWidth - 300, r.right - 288)))}px`; }
     const redraw = () => { const b = $('#tl-body'); if (b) { draw(); } };
     pop.addEventListener('input', e => {
       if (e.target.id === 'tl-f-skills') st.f.skills = e.target.value;

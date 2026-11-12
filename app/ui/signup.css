@@ -51,7 +51,8 @@
 .sg-meter[data-score="4"] i { background: var(--online); }
 .sg-go { min-height: 44px; margin-top: 2px; }
 .sg-go:disabled { opacity: .55; cursor: not-allowed; }
-.sg-code { font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+input#sg-code {   /* scoped: sitegen.css owns .sg-code for the website code view */
+   font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; }
 
 /* Home: the next step after sign-up */
 .sg-next { border-left-color: var(--online); }

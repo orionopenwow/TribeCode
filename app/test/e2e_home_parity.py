@@ -81,7 +81,7 @@ def click_all(page, key, who):
     n = page.evaluate(f"document.querySelectorAll('{sel} button:not([disabled])').length")
     for i in range(min(n, 40)):
         t = page.evaluate(f"""(() => {{ const b = [...document.querySelectorAll('{sel} button:not([disabled])')][{i}]; if (!b || !b.offsetParent) return null;
-            const t = (b.id || '') + '|' + (b.textContent || '').trim().slice(0, 30); if (/delete|log ?out|remove|clear|dismiss|leave|reset|copy a link|invite|instant/i.test(t)) return null; b.click(); return t; }})()""")
+            const t = (b.id || '') + '|' + (b.textContent || '').trim().slice(0, 30); if (/delete|log ?out|remove|clear|dismiss|leave|reset|copy a link|invite|instant|tour|watch|see how|demo/i.test(t)) return null; b.click(); return t; }})()""")
         if not t: continue
         page.wait_for_timeout(300); page.keyboard.press("Escape"); page.wait_for_timeout(120)
         page.evaluate("document.querySelectorAll('.fx-pop,.dc-menu,#note-ed,#lf-pane,#fv,.lf-float,.dc-sheet-wrap,.mk-detail-wrap,.pj-sheet-wrap').forEach(x => x.remove())")
