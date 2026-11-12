@@ -262,6 +262,7 @@
     const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
     if (pmenu) { projMenu(null, false); return stop(); }
     const mm = pane.querySelector('#pvw-more'); if (mm && !mm.classList.contains('hidden')) { moreMenu(false); return stop(); }
+    if (window.TribeSiteShelf && window.TribeSiteShelf.isOpen()) { window.TribeSiteShelf.close(); return stop(); }
     if (window.TribePins && window.TribePins.escape && window.TribePins.escape()) return stop();
     if (editing) { toggleEdit(); return stop(); }
     const tg = e.target; if (tg && pane.contains(tg) && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) { tg.blur(); return stop(); }
@@ -326,7 +327,7 @@
     if (!pane || !info) return;
     const phone = isPhone();
     pane.dataset.device = phone ? (pdev === 'desktop' ? 'desktop' : 'fill') : device;
-    pane.dataset.src = src; pane.classList.toggle('src-site', src === 'site');
+    pane.dataset.showing = src; pane.classList.toggle('src-site', src === 'site');
     pane.querySelectorAll('[data-src]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.src === src)));
     pane.querySelector('.pvw-saved').classList.toggle('hidden', src !== 'site');
     paintPh();
@@ -655,7 +656,7 @@
   // ---------- the Saved shelf (app/ui/siteshelf.js) ----------
   function toggleShelf(on) {
     const S = window.TribeSiteShelf; if (!S || !pane) return;
-    const open = on === undefined ? !S.isOpen() : on;
+    const open = on === undefined ? !S.isOpen() : on; 
     if (open) S.open(pane, { project: () => C.project(), onClose: () => { const b = pane && pane.querySelector('.pvw-saved'); if (b) b.setAttribute('aria-pressed', 'false'); paintPh(); } }); else S.close();
     const b = pane.querySelector('.pvw-saved'); if (b) b.setAttribute('aria-pressed', String(open));
   }
@@ -691,7 +692,7 @@
     // pinch-zoom (two fingers) and pan (one finger once zoomed) over the page frame; double-tap fits it again
     const z = pane.querySelector('#pvw-zoom'), pts = new Map(); let d0 = 0, z0 = 1, p0 = null, tap = 0;
     const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
-    z.addEventListener('pointerdown', e => { z.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { d0 = dist(); z0 = zoom; } else { p0 = { x: e.clientX, y: e.clientY, zx, zy }; if (Date.now() - tap < 300) resetZoom(); tap = Date.now(); } });
+    z.addEventListener('pointerdown', e => { try { z.setPointerCapture(e.pointerId); } catch {} pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { d0 = dist(); z0 = zoom; } else { p0 = { x: e.clientX, y: e.clientY, zx, zy }; if (Date.now() - tap < 300) resetZoom(); tap = Date.now(); } });
     z.addEventListener('pointermove', e => {
       if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pts.size === 2 && d0) { zoom = Math.max(1, Math.min(5, z0 * dist() / d0)); applyZoom(); }
