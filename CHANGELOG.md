@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.29.1
+- **Security fixes** from the post-release review ([docs/REVIEW-2026-11-11.md](docs/REVIEW-2026-11-11.md)): another member's private inspiration board can no longer be read or changed; proof-of-work ZIPs are visible only to the person who made them and the host, and can't be overwritten by someone else; ✦ tags can only be written to projects you're in; the Agent fleet only gives tasks to agents in your project; the Blender bridge refuses shell syntax. New `security4_test.py`.
+- **Phones**: unchanged.
+
 ## v0.29.0
 - **One router, no dead ends**: the logo always goes Home; Home, All files, All code, Work and Agent fleet stay on your own dashboard (Work with no tribe shows next steps instead of jumping into a tribe); Back and Forward work everywhere; panes no longer glitch into other dashboards ([docs/NAVIGATION.md](docs/NAVIGATION.md)). The Workshop button is a wrench.
 - **Accounts**: Log out, an account switcher, Add account and TEST accounts (Orion, Maya, Jay, Guest) for trying sign-in. With `TRIBE_ACCOUNTS=1` the screens use the real accounts backend: sign up, log in, sessions, delete my account ([docs/ACCOUNTS.md](docs/ACCOUNTS.md)). `scripts/dev/clean-accounts.js` tidies usernames and old data, with a backup and `--dry-run`.
