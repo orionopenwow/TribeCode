@@ -135,11 +135,8 @@ body.panel-off .panel { display: none; }
 #side-pins-list .item { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 10px; border-radius: 9px; font-size: 13px; color: var(--muted); width: 100%; text-align: left; }
 #side-pins-list .item:hover { background: var(--hover); color: var(--text); }
 #side-pins-list .item svg { color: var(--faint); }
-.nest-foot { padding: 8px 10px 14px; border-top: 1px solid var(--stroke); display: flex; flex-direction: column; gap: 8px; }
+.nest-foot { padding: 8px 10px 14px; border-top: 1px solid var(--stroke); display: flex; flex-direction: column; gap: 2px; }
 .nest-foot #nest-settings { min-height: 36px; }
-.nest-foot .invite-pill { width: 100%; justify-content: center; margin: 0; height: 40px; border-radius: 10px; background: none; border: 1px solid var(--edge); color: var(--text); font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
-.nest-foot .invite-pill span { color: var(--accent); font-size: 17px; }
-.nest-foot .invite-pill:hover { background: var(--hover); border-color: var(--edge-pop); }
 .side .pj-strip { display: none; }
 /* retire the old cascade/nest bits if any module still draws them */
 .side > h6, .side .nest-label, .pj-nav-legacy { display: none; }
@@ -483,7 +480,7 @@ body.global .window .rail .logo-btn { background: var(--raised); }
 .rail .rail-status .pp-sep { display: none; }
 
 /* Home is yours, not a project: no project Settings / Invite rows at the bottom of the sidebar */
-body.global .nest-foot { display: none; }
+body.global .nest-foot .nest-preview-slot, body.global .nest-foot #folder-item { display: none; }   /* feat/shell-polish: Home keeps Invite friends */
 /* The logo sits inside the top bar's row instead of touching the top edge */
 .window .rail .logo-btn { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 14px; margin: 8px 0 6px; }
 .window .rail .logo { width: 44px; height: 44px; }

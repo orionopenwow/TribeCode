@@ -76,7 +76,9 @@
     // Always there once a project is open (the user's ask): the play button for the code under the whole app or game.
     // Before there is code, the preview opens on its "nothing to run yet" start screen.
     const pk = (st.preview && st.preview.kind) || '', plabel = (st.preview && st.preview.show && st.preview.label) || ({ game: 'Play the game', site: 'Preview the site', app: 'Preview the app' }[pk] || 'Preview app');
-    const pslot = $('#nest-preview-slot'), prev = pid() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(pk)}" title="Run the project's code and see it live">${ico('i-play')}<span>${esc(plabel)}</span></button>` : '';
+    // feat/shell-polish: a normal sidebar row, "Preview" (or "Preview game" for a game), with a small thumbnail (sidefoot.js)
+    const game = pk === 'game' || pk === '3d', short = game ? 'Preview game' : 'Preview';
+    const pslot = $('#nest-preview-slot'), prev = pid() ? `<button class="nest-row wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(pk)}" title="${esc(plabel)}: run the project's code and see it live" aria-label="${esc(plabel)}"><i class="sf-thumb sf-pv" aria-hidden="true">${window.TribeIcons ? window.TribeIcons.svg('preview', 20, 'i') : ico('i-play')}</i><span>${esc(short)}</span></button>` : '';
     if (pslot && pslot.innerHTML !== prev) pslot.innerHTML = prev;
     // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows
     const slot = $('#nest-add-slot') || box, add = st.canEdit ? `<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>` : '';
