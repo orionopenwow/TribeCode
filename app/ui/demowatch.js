@@ -8,11 +8,14 @@
 // Chapter dots in the bar jump to any chapter (each chapter makes what it needs, so it plays on its own too; the first one
 // starts over from blank). No AI and no server: the offline backend answers the API (plus the watch-only answers below).
 // Every target is found within 2 s (a watchdog) or skipped with a short note; Esc, Exit, the end and any error always
-// lift the dim. Controls: Pause/Play, 1x/2x, Skip to end, Exit (back to your own app, clean), the chapter dots.
+// lift the dim. Step mode is the default (fix/demo-next): Flint plays one beat (a chapter: its caption and its actions),
+// then waits for Next (→ or Enter; ← or Back replays the previous beat); while he acts, Next is off with "Flint is
+// working…". Auto-play ▸ / Pause lets him go on alone at a readable pace (each caption holds 2.5 s plus 200 ms a word),
+// 1x/2x for auto-play, Skip to end, Exit (back to your own app, clean), the chapter dots.
 // Start: app/?demo=watch (the website's "See how TribeCode works"), Help › See how TribeCode works, the empty Home's
 // "Tour with Flint", Welcome's "Just watch it". The same in the browser, the phone/PWA and the desktop app (inside a demo
-// the desktop app never starts, stops or signs in to its own tribe server: offline.js). ?speed=4 plays it faster (tests).
-//   window.TribeDemoWatch = { start(), stop(), pause(), play(), speed(n), jump(i), skipToEnd(), begin(), exit(), seed(ctx), active(), _test: { log(), state() } }
+// the desktop app never starts, stops or signs in to its own tribe server: offline.js). ?speed=4 plays it faster (tests; it auto-plays unless &mode=step).
+//   window.TribeDemoWatch = { start({ speed, mode, at }), stop(), next(), back(), auto(on), pause(), play(), speed(n), jump(i), skipToEnd(), begin(), exit(), seed(ctx), active(), _test: { log(), state() } }
 (function () {
   'use strict';
   const O = () => window.TribeOffline, K = () => window.TribeOffline && window.TribeOffline._k;
@@ -84,14 +87,19 @@
   }
   function hook() { const k = K(); if (k && k.hooks && !k.hooks.route.includes(route)) k.hooks.route.push(route); }
 
-  // ---------- the clock: scaled by the speed, stopped while paused ----------
-  let running = false, paused = false, speedN = 1, turbo = 1, token = 0, clock = 0, last = 0, tick = null, idx = -1, finished = false;
+  // ---------- the clock: scaled by the speed, stopped while Flint waits for Next ----------
+  let running = false, speedN = 1, turbo = 1, token = 0, clock = 0, last = 0, tick = null, idx = -1, finished = false;
+  // step mode: Flint acts (Next off), then rests (waits for Next; in auto-play until the caption has been read)
+  let mode = 'step', acting = false, resting = false, advance = false, readUntil = 0, beatEnd = 0;
+  const READ_MIN = 2500, PER_WORD = 200, LINGER = 1200;
+  const words = t => (String(t || '').match(/\S+/g) || []).length;
+  const read = text => { readUntil = Math.max(readUntil, clock + READ_MIN + words(text) * PER_WORD); };
   const log = [];
   const ABORT = { abort: true };
   let followEl = null, followSel = null, followT = 0;
   function loop() {
-    const now = performance.now(); if (running && !paused) clock += (now - last) * speedN * turbo; last = now; paintTime();
-    if (followEl && running && !paused && now - followT > 200) {   // the spotlight follows its target through re-renders; gone for good: no dim
+    const now = performance.now(); if (running && !(resting && mode === 'step')) clock += (now - last) * speedN * turbo; last = now; paintTime();   // waiting for Next: the clock stops
+    if (followEl && running && now - followT > 200) {   // the spotlight follows its target through re-renders; gone for good: no dim
       followT = now;
       if (!followEl.isConnected) { const again = followSel ? pick(followSel) : null; if (again) followEl = again; else { spot(null); return; } }
       spot(followEl, true);
@@ -117,16 +125,22 @@
     layer.innerHTML = '<div class="dw-dim" id="dw-dim"><i data-d="t"></i><i data-d="l"></i><i data-d="r"></i><i data-d="b"></i></div><div class="dw-ring" id="dw-ring"></div>';
     document.body.appendChild(layer);
     ui = document.createElement('section'); ui.className = 'dw-ui'; ui.id = 'dw-ui'; ui.setAttribute('role', 'region'); ui.setAttribute('aria-label', LABEL);
-    ui.innerHTML = `<div class="dw-cap" id="dw-cap" aria-live="polite"><img src="assets/flint.svg" alt="" width="36" height="36"><div class="dw-cap-b"><span class="dw-k" id="dw-k">Flint · 1 of ${STEPS.length}</span><b class="dw-t" id="dw-t"></b><p class="dw-say" id="dw-say"></p><p class="dw-cmd" id="dw-cmd" hidden></p></div></div>
-      <div class="dw-bar"><button class="dw-b dw-play" id="dw-play" aria-label="Pause" title="Pause (Space)"><span class="dw-pp" aria-hidden="true">❚❚</span></button>
-        <nav class="dw-dots" id="dw-dots" aria-label="Chapters">${STEPS.map((s, i) => `<button type="button" class="dw-dot" data-i="${i}" title="${i + 1}. ${esc(s.title)}" aria-label="Chapter ${i + 1}: ${esc(s.title)}"><i><b></b></i></button>`).join('')}</nav>
+    ui.innerHTML = `<div class="dw-cap" id="dw-cap"><img src="assets/flint.svg" alt="" width="36" height="36"><div class="dw-cap-b" aria-live="polite"><p class="dw-head"><span class="dw-k" id="dw-k">Step 1 of ${STEPS.length}</span><span class="dw-sep" aria-hidden="true">·</span><b class="dw-t" id="dw-t"></b></p><p class="dw-say" id="dw-say"></p><p class="dw-cmd" id="dw-cmd" hidden></p></div>
+        <div class="dw-foot"><nav class="dw-dots" id="dw-dots" aria-label="Chapters">${STEPS.map((s, i) => `<button type="button" class="dw-dot" data-i="${i}" title="${i + 1}. ${esc(s.title)}" aria-label="Chapter ${i + 1}: ${esc(s.title)}"><i><b></b></i></button>`).join('')}</nav>
+          <span class="dw-busy" id="dw-busy" role="status">Flint is working…</span>
+          <button type="button" class="btn ghost dw-back" id="dw-back" title="Back (←)">← Back</button>
+          <button type="button" class="btn primary dw-next" id="dw-next" title="Next (→ or Enter)" disabled>Next →</button></div></div>
+      <div class="dw-bar"><button class="dw-b dw-play" id="dw-play" aria-pressed="false" title="Auto-play: Flint goes on by himself (Space)">Auto-play ▸</button>
         <span class="dw-time" id="dw-time">0:00</span>
-        <button class="dw-b" id="dw-speed" aria-pressed="false" title="Speed">1×</button>
+        <button class="dw-b" id="dw-speed" aria-pressed="false" title="Auto-play speed">1×</button>
+        <span class="dw-gap"></span>
         <button class="dw-b" id="dw-skip" title="Skip to the end">Skip to end</button>
         <button class="dw-b dw-x" id="dw-exit" title="Exit the tour: back to your own app">Exit</button></div>`;
     document.body.appendChild(ui);
-    ui.querySelector('#dw-play').onclick = () => (finished ? restart() : paused ? play() : pause());
+    ui.querySelector('#dw-play').onclick = () => (finished ? restart() : auto(mode !== 'auto'));
     ui.querySelector('#dw-speed').onclick = () => speed(speedN === 2 ? 1 : 2);
+    ui.querySelector('#dw-next').onclick = () => next();
+    ui.querySelector('#dw-back').onclick = () => back();
     ui.querySelector('#dw-skip').onclick = () => skipToEnd();
     ui.querySelector('#dw-exit').onclick = () => exit();
     ui.querySelector('#dw-dots').onclick = e => { const b = e.target.closest('[data-i]'); if (b) jump(Number(b.dataset.i)); };
@@ -134,7 +148,7 @@
   }
   function unmount() {
     for (const id of ['#dw-layer', '#dw-ui', ...EXTRAS]) { const e = $(id); if (e) e.remove(); }
-    layer = null; ui = null; document.body.classList.remove('dw-on', 'dw-paused');
+    layer = null; ui = null; document.body.classList.remove('dw-on', 'dw-acting');
   }
   function spot(el, keep) {
     const dim = $('#dw-dim'), ring = $('#dw-ring'); if (!dim || !ring) return;
@@ -167,10 +181,11 @@
     if (!el.isConnected) { if (followEl && followEl.isConnected) el = followEl; else return; }   // re-rendered meanwhile: where the spotlight is now
     const r = el.getBoundingClientRect(), to = { x: Math.min(innerWidth - 8, Math.max(8, r.left + r.width * dx)), y: Math.min(innerHeight - 8, Math.max(8, r.top + r.height * dy)) };
     if (calm()) { c.x = to.x; c.y = to.y; place(c); return; }
-    const from = { x: c.x, y: c.y }, dur = Math.max(250, Math.min(900, Math.hypot(to.x - from.x, to.y - from.y) * 0.9)), t0 = clock;
+    const from = { x: c.x, y: c.y }, dur = Math.max(600, Math.min(1400, Math.hypot(to.x - from.x, to.y - from.y) * 1.3)), t0 = clock;
     for (;;) { const p = Math.min(1, (clock - t0) / dur), e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; c.x = from.x + (to.x - from.x) * e; c.y = from.y + (to.y - from.y) * e; place(c); if (p >= 1) break; await hold(16); }
+    await hold(220);   // he settles before anything else happens
   }
-  function ripple(id) { const c = cursors[id]; if (!c || calm()) return; const r = document.createElement('i'); r.className = 'dw-ripple'; r.style.left = c.x + 'px'; r.style.top = c.y + 'px'; r.style.setProperty('--c', c.el.style.getPropertyValue('--c')); (layer || document.body).appendChild(r); setTimeout(() => r.remove(), 600); }
+  function ripple(id) { const c = cursors[id]; if (!c || calm()) return; const r = document.createElement('i'); r.className = 'dw-ripple'; r.style.left = c.x + 'px'; r.style.top = c.y + 'px'; r.style.setProperty('--c', c.el.style.getPropertyValue('--c')); (layer || document.body).appendChild(r); setTimeout(() => r.remove(), 900); }
   // point: the watchdog finds the target, the spotlight and a cursor go there; a miss is logged and skipped
   async function point(name, sel, opts = {}) {
     const el = await find(sel, opts.ms || 2000);
@@ -180,26 +195,35 @@
     spot(el); followSel = sel; await glide(opts.who || 'me', el, opts.dx, opts.dy);
     return el;
   }
-  async function press(el, who = 'me', click = true) { if (!el) return; ripple(who); await hold(160); if (click && el.isConnected) el.click(); await hold(220); }
+  // a click you can follow: he hovers a moment, the ripple, then the click, then a beat to see what it did
+  async function press(el, who = 'me', click = true) { if (!el) return; await hold(450); ripple(who); await hold(200); if (click && el.isConnected) el.click(); await hold(450); }
   function caption(s, i) {
     const k = $('#dw-k'), t = $('#dw-t'), say = $('#dw-say'), cmd = $('#dw-cmd'); if (!k) return;
-    k.textContent = `Flint · ${i + 1} of ${STEPS.length}`; t.textContent = s.title; say.textContent = s.say; cmd.hidden = true;
+    k.textContent = `Step ${i + 1} of ${STEPS.length}`; t.textContent = s.title; say.textContent = s.say; cmd.hidden = true;
+    readUntil = 0; read(s.title + ' ' + s.say);
     document.querySelectorAll('#dw-dots [data-i]').forEach(b => { const n = Number(b.dataset.i); b.classList.toggle('past', n < i); b.classList.toggle('on', n === i); if (n === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
     const cap = $('#dw-cap'); if (cap) { cap.classList.remove('in'); void cap.offsetWidth; cap.classList.add('in'); }
   }
-  function note(text) { const say = $('#dw-say'); if (say) say.textContent = text; }
+  function note(text) { const say = $('#dw-say'); if (say) say.textContent = text; read(text); }
   async function typeCmd(text) {   // what Flint "types": shown in the caption as a command line
     const cmd = $('#dw-cmd'); if (!cmd) return; cmd.hidden = false; cmd.textContent = '› ';
     if (calm()) { cmd.textContent = '› ' + text; return; }
-    for (const ch of text) { cmd.textContent += ch; await hold(24); }
+    for (const ch of text) { cmd.textContent += ch; await hold(keyGap(ch)); }
   }
   const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   function paintTime() { const t = $('#dw-time'); if (t) t.textContent = `${mmss(Math.min(clock, TOTAL))} / ${mmss(TOTAL)}`; if (idx >= 0 && !finished) { const s = STEPS[idx], fill = document.querySelector(`#dw-dots [data-i="${idx}"] b`); if (fill && s) fill.style.width = Math.min(100, Math.max(0, (clock - (offsets[idx] || 0)) / s.dur * 100)) + '%'; } }
   function paintCtl() {
-    const p = $('#dw-play'); if (p) { const lab = finished ? 'Watch again' : paused ? 'Play' : 'Pause'; p.setAttribute('aria-label', lab); p.title = lab; p.querySelector('.dw-pp').textContent = finished ? '↻' : paused ? '▶' : '❚❚'; }
-    const sp = $('#dw-speed'); if (sp) { sp.textContent = speedN === 2 ? '2×' : '1×'; sp.setAttribute('aria-pressed', String(speedN === 2)); sp.classList.toggle('on', speedN === 2); }
-    document.body.classList.toggle('dw-paused', paused);
+    const on2 = mode === 'auto' && !finished;
+    const p = $('#dw-play'); if (p) { p.textContent = finished ? '↻ Watch again' : on2 ? '❚❚ Pause' : 'Auto-play ▸'; p.setAttribute('aria-pressed', String(on2)); p.classList.toggle('on', on2); }
+    const sp = $('#dw-speed'); if (sp) { sp.textContent = speedN === 2 ? '2×' : '1×'; sp.setAttribute('aria-pressed', String(speedN === 2)); sp.classList.toggle('on', speedN === 2); sp.hidden = !on2; }
+    const nx = $('#dw-next'), bk = $('#dw-back'), busy = $('#dw-busy');
+    if (nx) { nx.disabled = acting || finished || !running; }
+    if (bk) bk.disabled = !running || idx <= 0;
+    if (busy) busy.hidden = !(acting && running && !finished);
+    document.body.classList.toggle('dw-acting', acting);
   }
+  // a person typing: uneven, a little longer after a space, longer after punctuation
+  const keyGap = ch => 55 + Math.random() * 45 + (ch === ' ' ? 40 : 0) + (/[.,:;!?]/.test(ch) ? 180 : 0);
 
   // ---------- small helpers over the app ----------
   const api = (p, o) => C().api(p, o);
@@ -265,12 +289,13 @@
     const put = v => { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
     if (calm()) return put(text);
     put('');
-    for (let i = 1; i <= text.length; i++) { if (!el.isConnected) return; put(text.slice(0, i)); await hold(28); }
+    for (let i = 1; i <= text.length; i++) { if (!el.isConnected) return; put(text.slice(0, i)); await hold(keyGap(text[i - 1])); }
+    await hold(300);
   }
 
-  // ---------- the story (dur: ms at 1x; about two minutes in all) ----------
+  // ---------- the story (dur: ms at 1x, the least a chapter takes in auto-play; about two and a half minutes in all) ----------
   const STEPS = [
-    { id: 'blank', title: 'A blank slate', dur: 7000, say: 'Hi, I’m Flint. This is TribeCode with nothing in it: no tribe, no projects. Let’s make something from scratch.', async run() {
+    { id: 'blank', title: 'A blank slate', dur: 9000, say: 'Hi, I’m Flint. This is TribeCode with nothing in it: no tribe, no projects. Let’s make something from scratch.', async run() {
       try { if (window.TribeHub) swap(() => window.TribeHub.open('home')); } catch {}
       await hold(300);
       await point('the empty dashboard', ['#hub-hero.hub-empty', '#hub-hero', '#view-hub']);
@@ -278,7 +303,7 @@
       note('The rail on the left is empty too: every circle there will be a project.');
       await point('the empty rail', ['#pj-rail', '.rail']);
     } },
-    { id: 'tribe', title: 'Make a tribe', dur: 10000, say: 'A tribe is a group of friends, people and AIs, making things together. Mine starts with one click.', async run() {
+    { id: 'tribe', title: 'Make a tribe', dur: 16000, say: 'A tribe is a group of friends, people and AIs, making things together. Mine starts with one click.', async run() {
       if (!db().blank && db().projects.some(p => p.id === PID)) { note('The tribe is already here.'); await point('the tribe', ['#pj-rail']); return; }
       try { if (window.TribeHub) swap(() => window.TribeHub.open('home')); } catch {}
       const go1 = await point('Start your first project', ['#hub-host', '#hub-hero .he-go']);
@@ -291,7 +316,7 @@
       if (bio) { await glide('me', bio); await typeInto(bio, BIO); }
       await hold(400);
     } },
-    { id: 'project', title: 'Start a project', dur: 7000, say: 'A project is one thing the tribe makes. Ember Café: a friend’s café that needs a website.', async run() {
+    { id: 'project', title: 'Start a project', dur: 10000, say: 'A project is one thing the tribe makes. Ember Café: a friend’s café that needs a website.', async run() {
       const btn = $('#su-start') ? await point('Create', ['#su-create']) : null;
       if (btn) await press(btn, 'me', false);
       try { if (window.TribeLocalSetup && window.TribeLocalSetup.state().open) window.TribeLocalSetup.close(); } catch {}
@@ -301,7 +326,7 @@
       await hold(700);
       await point('its dashboard', ['#pj-check', '#view-home']);
     } },
-    { id: 'vision', title: 'Write the vision', dur: 11000, say: 'First, the vision: what we’re making and who it’s for. Everyone reads it, AI helpers too.', async run() {
+    { id: 'vision', title: 'Write the vision', dur: 18000, say: 'First, the vision: what we’re making and who it’s for. Everyone reads it, AI helpers too.', async run() {
       await inProject(); show('home'); await real(300);
       const box = await point('the vision box', ['#ock-vis-in', '#pj-check [data-ck="vision"]', '#pj-check']);
       if (box && box.tagName === 'TEXTAREA') await typeInto(box, VISION);
@@ -311,7 +336,7 @@
       await hold(500);
       await point('the checklist, one step done', ['#pj-check', '#view-home'], { scroll: false });
     } },
-    { id: 'friend', title: 'A friend joins', dur: 12000, say: 'Maya opens an invite link and she’s in. Chat is where the tribe talks: friends and their AI helpers.', async run() {
+    { id: 'friend', title: 'A friend joins', dur: 14000, say: 'Maya opens an invite link and she’s in. Chat is where the tribe talks: friends and their AI helpers.', async run() {
       await inProject(); friendJoins(); show('chat');
       await point('the chat', ['#chat-list', '#view-chat']);
       const mine = say2('me', 'Welcome Maya! Ember Café needs a menu, a website and an order button ☕');
@@ -323,7 +348,7 @@
       await point('Maya’s reply', [`#chat-list [data-id="${re.id}"]`, '#chat-list'], { who: 'maya' });
       await hold(800);
     } },
-    { id: 'tasks', title: 'Tasks: assign and accept', dur: 11000, say: 'Tasks say who does what. I assign the menu board to Maya; it waits until she accepts.', async run() {
+    { id: 'tasks', title: 'Tasks: assign and accept', dur: 14000, say: 'Tasks say who does what. I assign the menu board to Maya; it waits until she accepts.', async run() {
       await inProject(); friendJoins();
       W().work = { mode: 'lead' }; K().save();
       const t1 = taskNow('Design the menu board', { assignee: 'maya', status: 'backlog', accept: 'pending', assignedBy: 'me', assignedAt: iso() });
@@ -337,7 +362,7 @@
       await point('Maya’s task, accepted', [row(t1.id), '#board'], { who: 'maya' });
       await hold(600);
     } },
-    { id: 'make', title: 'Make something', dur: 12000, say: 'Files holds everything the project makes. + Create starts a doc, a sheet, a design or a website.', async run() {
+    { id: 'make', title: 'Make something', dur: 14000, say: 'Files holds everything the project makes. + Create starts a doc, a sheet, a design or a website.', async run() {
       await inProject();
       go('docs'); await real(300);
       const create1 = await point('+ Create', [byText('#view-docs button', /^\s*\+?\s*Create\s*$/), byText('#view-docs button', /Create/), '#view-docs']);
@@ -350,7 +375,7 @@
       await point('the design', ['#cv-stage', '#cv']);
       await hold(1500);
     } },
-    { id: 'site', title: 'The website, from a template', dur: 16000, say: 'Websites: pick a template, change the words, wire the buttons, go dark. All free, no AI.', async run() {
+    { id: 'site', title: 'The website, from a template', dur: 18000, say: 'Websites: pick a template, change the words, wire the buttons, go dark. All free, no AI.', async run() {
       await inProject();
       const S = window.TribeSiteDesigner; if (!S) return;
       await S.open({ pid: PID, cfg: null });
@@ -370,7 +395,7 @@
       await point('the dark site', ['#wdz-framewrap', '#wdz-frame'], { dx: 0.3, dy: 0.4 });
       await hold(900);
     } },
-    { id: 'preview', title: 'Preview and comment', dur: 10000, say: 'Preview runs what you make, live: here the little game for the café’s page. Maya pins a comment right on it.', async run() {
+    { id: 'preview', title: 'Preview and comment', dur: 12000, say: 'Preview runs what you make, live: here the little game for the café’s page. Maya pins a comment right on it.', async run() {
       await inProject(); friendJoins();
       W().built = true; K().save();
       const f = await openPreview();
@@ -389,7 +414,7 @@
       m.classList.add('done'); m.querySelector('.dw-pin-t').innerHTML = '<b>Flint</b> Done, café lamps now. ✓ Resolved';
       await point('the resolved pin', '#dw-pin');
     } },
-    { id: 'approve', title: 'Approve', dur: 10000, say: 'Nothing goes out without a person saying yes. Maya’s menu board is ready; I approve it.', async run() {
+    { id: 'approve', title: 'Approve', dur: 11000, say: 'Nothing goes out without a person saying yes. Maya’s menu board is ready; I approve it.', async run() {
       await inProject(); friendJoins(); show('home');
       const t = taskNow('Design the menu board', { assignee: 'maya', status: 'review', accept: 'accepted' });
       let ap = (db().approvals || []).find(a => a.status === 'pending' && a.project === PID);
@@ -400,7 +425,7 @@
       if (ap && ap.status === 'pending') { try { await api(`/approvals/${encodeURIComponent(ap.id)}/approve`, { method: 'POST', body: { note: 'Ship it' } }); } catch {} }
       await hold(500);
     } },
-    { id: 'company', title: 'Run it like a company', dur: 10000, say: 'When it gets serious, make it a company: seats like CEO, Build and Grow, each held by a friend, an AI, or both.', async run() {
+    { id: 'company', title: 'Run it like a company', dur: 12000, say: 'When it gets serious, make it a company: seats like CEO, Build and Grow, each held by a friend, an AI, or both.', async run() {
       await inProject();
       go('company'); await real(300);
       const make = await find('#co-make', 1500);
@@ -413,7 +438,7 @@
       await point('the company', ['#view-company .co-seats', '#co-su', '#view-company'], { ms: 2500 });
       await hold(600);
     } },
-    { id: 'end', title: 'Your turn', dur: 5000, say: 'From nothing to a tribe, a project, a site and a company. That’s TribeCode. Your turn.', async run() {
+    { id: 'end', title: 'Your turn', dur: 6000, say: 'From nothing to a tribe, a project, a site and a company. That’s TribeCode. Your turn.', async run() {
       tidy(); endCard();
       await point('the Your turn card', '#dw-end .dw-end-card', { scroll: false });
     } },
@@ -433,19 +458,38 @@
     e.querySelector('#dw-again').onclick = () => restart();
   }
 
-  // ---------- the runner ----------
+  // ---------- the runner: one beat (a chapter) at a time ----------
+  function setActing(v) { acting = v; if (!v) beatEnd = clock; paintCtl(); }
+  // the beat is done: wait for Next (step mode), or in auto-play until the caption has been read and the chapter's time is up
+  async function rest(s) {
+    const t = token; advance = false; resting = true; paintCtl();
+    if (mode === 'step') { const nx = $('#dw-next'); const f = document.activeElement; if (nx && !(f && f.closest && f.closest('#dw-ui') && f !== document.body && f.id !== 'dw-next')) { try { nx.focus({ preventScroll: true }); } catch {} } }
+    try {
+      for (;;) {
+        if (t !== token || !running) throw ABORT;
+        if (advance) return;
+        if (mode === 'auto' && clock >= Math.max(offsets[idx] + s.dur, readUntil, beatEnd + LINGER)) return;
+        await new Promise(r => setTimeout(r, 30));
+      }
+    } finally { resting = false; }
+  }
   async function runFrom(i) {
     const me = token;
     for (idx = i; idx < STEPS.length; idx++) {
       if (me !== token || !running) return;
-      const s = STEPS[idx]; clock = Math.max(clock, offsets[idx]); caption(s, idx);
-      try { if (idx) tidy(); await s.run(); const left = offsets[idx] + s.dur - clock; if (left > 0) await hold(left); }
+      const s = STEPS[idx]; clock = Math.max(clock, offsets[idx]); caption(s, idx); setActing(true);
+      try { if (idx) tidy(); await s.run(); }
       catch (e) { if (e === ABORT) { if (me !== token || !running) return; } else { console.warn('demo watch:', s.id, e); log.push({ step: s.id, target: 'run', found: false, error: String(e && e.message || e) }); } }
+      if (me !== token || !running) return;
+      setActing(false);
+      log.push({ step: s.id, target: 'beat done', found: true });
+      if (idx === STEPS.length - 1) break;   // Your turn: the end card is the last beat
+      try { await rest(s); } catch (e) { if (e === ABORT) return; throw e; }
     }
     if (me === token && running) finish();
   }
   function finish() {
-    finished = true; spot(null); idx = STEPS.length - 1;
+    finished = true; acting = false; spot(null); idx = STEPS.length - 1;
     document.querySelectorAll('#dw-dots [data-i]').forEach(b => { b.classList.add('past'); b.classList.remove('on'); b.removeAttribute('aria-current'); });
     endCard(); paintCtl(); log.push({ step: 'end', target: 'finished', found: true });
     Object.values(cursors).forEach(c => c.el.remove()); for (const k of Object.keys(cursors)) delete cursors[k];
@@ -454,62 +498,81 @@
     if (!on()) { begin(); return false; }   // from inside the real app: the tour starts in this tab
     hook(); stop(true);
     const sp = Number(opts.speed) || 1; speedN = sp === 2 ? 2 : 1; turbo = sp >= 3 ? sp : 1;   // ?speed=4 (tests): the whole clock runs 4x; the bar offers people 1x and 2x
-    running = true; paused = false; finished = false; token++; clock = 0; last = performance.now(); log.length = 0; lit = 0;
+    mode = opts.mode === 'auto' || opts.mode === 'step' ? opts.mode : (turbo > 1 ? 'auto' : 'step');   // people step; the fast test run auto-plays
+    const at = Math.max(0, Math.min(STEPS.length - 1, Number(opts.at) || 0));
+    running = true; finished = false; acting = false; resting = false; token++; clock = offsets[at]; last = performance.now(); log.length = 0; lit = 0;
     mount(); clearInterval(tick); tick = setInterval(loop, 33);
-    closePreview(); runFrom(0); return true;
+    closePreview(); runFrom(at); return true;
   }
   function stop(quiet) {
-    running = false; token++; clearInterval(tick); tick = null; paused = false;
+    running = false; token++; clearInterval(tick); tick = null; acting = false; resting = false;
     Object.values(cursors).forEach(c => c.el.remove()); for (const k of Object.keys(cursors)) delete cursors[k];
     unmount(); game({ auto: false });
     if (!quiet) log.push({ step: STEPS[idx] && STEPS[idx].id, target: 'stopped', found: true });
   }
-  function pause() { if (!running || finished) return; paused = true; spot(null); paintCtl(); }
-  function play() { if (!running || finished) return; paused = false; last = performance.now(); paintCtl(); }
+  // Next: on to the next beat once this one is done; Back: replay the beat before this one (the chapter makes what it needs)
+  function next() { if (!running || finished || acting || !resting) return false; advance = true; log.push({ step: STEPS[idx] && STEPS[idx].id, target: 'next', found: true }); return true; }
+  function back() { if (!running) return false; const i = finished ? STEPS.length - 2 : idx - 1; if (i < 0) return false; jump(i); return true; }
+  // Auto-play ▸ / Pause: Pause lets him finish the beat he's in, then he waits for Next
+  function auto(v) { if (!running || finished) return; mode = v ? 'auto' : 'step'; paintCtl(); try { sessionStorage.setItem('tribecode.watch.mode', mode); } catch {} }
+  function pause() { auto(false); }
+  function play() { auto(true); }
   function speed(n) { speedN = n === 2 ? 2 : 1; paintCtl(); }
-  // a chapter dot: jump straight to that feature (the chapter makes what it needs)
+  // a chapter dot (or Back): jump straight to that chapter (it makes what it needs)
   function jump(i) {
     if (!running || !(i >= 0 && i < STEPS.length)) return;
-    if (i <= 1 && !db().blank) return restart();   // the blank slate and the tribe's making: start over from nothing
+    if (i <= 1 && !db().blank) return restart(i);   // the blank slate and the tribe's making: start over from nothing, at that chapter
     token++; spot(null); tidy();
     const end = $('#dw-end'); if (end) end.remove();
-    finished = false; paused = false; clock = offsets[i]; last = performance.now(); paintCtl();
+    finished = false; acting = false; resting = false; clock = offsets[i]; last = performance.now(); paintCtl();
     log.push({ step: STEPS[i].id, target: 'jump', found: true });
     document.querySelectorAll('#dw-dots b').forEach(b => { b.style.width = ''; });
     runFrom(i);
   }
   function skipToEnd() {
     if (!running) return; token++; const me = token;
-    tidy(); paused = false; idx = STEPS.length - 1; caption(STEPS[idx], idx); clock = offsets[idx];
+    tidy(); acting = false; resting = false; idx = STEPS.length - 1; caption(STEPS[idx], idx); clock = offsets[idx]; paintCtl();
     (async () => { try { await STEPS[idx].run(); } catch {} if (me === token && running) finish(); })();
   }
-  function restart() { stop(true); try { sessionStorage.setItem('tribecode.watch.next', '1'); } catch {} O().reset(); }
+  function restart(at) {
+    stop(true);
+    try { sessionStorage.setItem('tribecode.watch.next', '1'); sessionStorage.setItem('tribecode.watch.mode', mode); if (at) sessionStorage.setItem('tribecode.watch.at', String(at)); else sessionStorage.removeItem('tribecode.watch.at'); } catch {}
+    O().reset();
+  }
   function exit() { stop(true); if (O() && O().exit) O().exit(); }
 
   // Esc ends the show (no dim, no cursors, no cards) and leaves the tribe to explore; the pill still has Exit
   addEventListener('keydown', e => {
     if (!running) return;
     if (e.key === 'Escape' && e.isTrusted) { e.preventDefault(); tidy(); stop(); if (A() && A().toast) A().toast('Stopped. Look around, or Exit the demo from the pill at the top.'); }
-    else if (e.key === ' ' && !/INPUT|TEXTAREA|BUTTON/.test((e.target && e.target.tagName) || '') && !e.target.isContentEditable) { e.preventDefault(); paused ? play() : pause(); }
+    else if (!e.isTrusted || e.altKey || e.ctrlKey || e.metaKey) return;
+    else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !/BUTTON|^A$/.test((e.target && e.target.tagName) || ''))) { e.preventDefault(); e.stopPropagation(); next(); }   // the fields Flint types in never take your keys
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); back(); }
+    else if (e.key === ' ' && !/INPUT|TEXTAREA|BUTTON/.test((e.target && e.target.tagName) || '') && !e.target.isContentEditable) { e.preventDefault(); auto(mode !== 'auto'); }
   }, true);
   addEventListener('resize', () => { if (running && idx >= 0) spot(null); });
 
   window.TribeDemoWatch = {
-    seed, start, stop, pause, play, speed, jump, skipToEnd, exit, begin, active: () => running, LABEL,
-    _test: { log: () => log.slice(), state: () => ({ running, paused, finished, idx, id: STEPS[idx] && STEPS[idx].id, steps: STEPS.map(s => s.id), speed: speedN, clock: Math.round(clock), total: TOTAL, lit }) },
+    seed, start, stop, next, back, auto, pause, play, speed, jump, skipToEnd, exit, begin, active: () => running, LABEL,
+    _test: { log: () => log.slice(), state: () => ({ running, mode, acting, resting, paused: mode !== 'auto', finished, idx, id: STEPS[idx] && STEPS[idx].id, steps: STEPS.map(s => s.id), speed: speedN, clock: Math.round(clock), total: TOTAL, lit }) },
   };
 
   // ---------- entry points: ?demo=watch, Help, the empty Home's "Tour with Flint" (after the API: offline.js seeds from it) ----------
   const params = new URLSearchParams(location.search);
   let want = null;
   if (params.get('demo') === 'watch' && O()) {
-    want = { speed: Number(params.get('speed')) || 1 };
+    want = { speed: Number(params.get('speed')) || 1, mode: params.get('mode') || undefined };
     O().boot('watch', true);
-    params.delete('demo'); params.delete('speed');
+    params.delete('demo'); params.delete('speed'); params.delete('mode');
     try { history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash); } catch {}
-    try { sessionStorage.setItem('tribecode.view', 'home'); sessionStorage.setItem('tribecode.watch.speed', String(want.speed)); } catch {}
+    try { sessionStorage.setItem('tribecode.view', 'home'); sessionStorage.setItem('tribecode.watch.speed', String(want.speed)); if (want.mode) sessionStorage.setItem('tribecode.watch.mode', want.mode); else sessionStorage.removeItem('tribecode.watch.mode'); } catch {}
     window.__tribeRestoredView = true;
-  } else { try { if (sessionStorage.getItem('tribecode.watch.next')) { sessionStorage.removeItem('tribecode.watch.next'); want = { speed: Number(sessionStorage.getItem('tribecode.watch.speed')) || 1 }; } } catch {} }
+  } else { try { if (sessionStorage.getItem('tribecode.watch.next')) { sessionStorage.removeItem('tribecode.watch.next'); want = again(); } } catch {} }
+  // after a reload (Watch again, Back to the first two chapters): the same speed and mode, from that chapter
+  function again() {
+    const w = { speed: Number(sessionStorage.getItem('tribecode.watch.speed')) || 1, mode: sessionStorage.getItem('tribecode.watch.mode') || undefined, at: Number(sessionStorage.getItem('tribecode.watch.at')) || 0 };
+    sessionStorage.removeItem('tribecode.watch.at'); return w;
+  }
   // the Home's "Tour with Flint" with no tribe yet, and Help's entry: take the tour
   document.addEventListener('click', e => {
     const t = e.target.closest && e.target.closest('#hub-tour, [data-dw-start]'); if (!t) return;
@@ -519,14 +582,14 @@
     e.preventDefault(); e.stopPropagation(); begin();
   }, true);
   // from anywhere (the real app, another demo): a fresh tour in this tab, after a reload so nothing else is mounted
-  function begin() { if (on() && !running) return start({ speed: 1 }); try { sessionStorage.setItem('tribecode.watch.next', '1'); sessionStorage.setItem('tribecode.watch.speed', '1'); sessionStorage.setItem('tribecode.view', 'home'); } catch {} O().boot('watch', true); location.reload(); }
+  function begin() { if (on() && !running) return start({ speed: 1 }); try { sessionStorage.setItem('tribecode.watch.next', '1'); sessionStorage.setItem('tribecode.watch.speed', '1'); sessionStorage.removeItem('tribecode.watch.mode'); sessionStorage.removeItem('tribecode.watch.at'); sessionStorage.setItem('tribecode.view', 'home'); } catch {} O().boot('watch', true); location.reload(); }
   function boot() {
     const c = C(); if (!c) return;
     // after "Start a project" on the Your turn card: the real app is back; open its first-project flow
     let after = null; try { after = sessionStorage.getItem('tribecode.afterDemo'); sessionStorage.removeItem('tribecode.afterDemo'); } catch {}
     if (after === 'start' && !on()) setTimeout(() => { const b = document.querySelector('#hub-host button, #hub-host [data-act], #hub-host'); if (b && b.click) b.click(); }, 1200);
     if (on()) {
-      if (!want) { try { if (sessionStorage.getItem('tribecode.watch.next')) { sessionStorage.removeItem('tribecode.watch.next'); want = { speed: 1 }; } } catch {} }
+      if (!want) { try { if (sessionStorage.getItem('tribecode.watch.next')) { sessionStorage.removeItem('tribecode.watch.next'); want = again(); } } catch {} }
       if (!want) return;
       hook();
       const go1 = () => { if (!want) return; const w = want; want = null; setTimeout(() => start(w), 700); };
