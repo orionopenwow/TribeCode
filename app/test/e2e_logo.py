@@ -25,9 +25,9 @@ def main():
             src = lambda: pg.get_attribute("#rail-logo img.logo", "src")
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=10000)   # resting once connected
             assert pg.get_attribute("#rail-logo img.logo", "data-logo-path").endswith("icon-mark-animated.svg"), "the flame idles (always flickers) in the top bar"
-            # v0.25: the logo takes the theme's colors (Campfire: cream brackets, its own orange flame), Light gets dark brackets
+            # v0.25: the logo takes the theme's colors; Campfire: white brackets (the theme's ink, feat/shell-polish) around its own orange flame; Light gets dark brackets
             pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.startsWith('data:image/svg+xml')", timeout=5000)
-            assert "%23EBDBB2" in pg.get_attribute("#rail-logo img.logo", "src").upper()
+            lsrc = pg.get_attribute("#rail-logo img.logo", "src").upper(); assert "%23FFFFFF" in lsrc and "%23FE8019" in lsrc, lsrc[:300]
             pg.evaluate("TribeThemes.apply('light')"); pg.wait_for_function("decodeURIComponent(document.querySelector('#rail-logo img.logo').src).includes('#12151A')", timeout=5000)
             pg.evaluate("TribeThemes.apply('dark')"); pg.wait_for_function("document.querySelector('#rail-logo img.logo').src.endsWith('icon-mark-animated.svg')", timeout=5000)
             pg.evaluate("TribeThemes.apply(TribeThemes.saved())")
@@ -47,7 +47,7 @@ def main():
             pg.wait_for_function("document.querySelector('#lt').classList.contains('tc-loading')", timeout=3000)
             # hover flickers
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=25000)
-            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "66px"
+            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "60px"   # feat/shell-polish: the mark fills its pressed tile (rail.css)
             b.close()
         assert not errors, errors
         print("e2e_logo: OK (rests when idle, flickers for prompts in flight and on hover, Loading… gets the flame)")
