@@ -65,7 +65,7 @@ def watch(page, who):
 
 
 def tabs(page):
-    return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.childNodes[0].textContent.trim())")
+    return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim())")  # tabs lead with an icon (icons.js); the label is the text node
 
 
 CARDS = ["#ad-hero", "#ad-needs", "#ad-owners", "#ad-chan", "#ad-today"]
