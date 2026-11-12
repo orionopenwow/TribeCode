@@ -2,7 +2,7 @@
 where you are.
 
 With no tribe and then with one: the global rows are Home · Files · Design · Code · Work · Agent fleet; the rail logo is
-lit on Home (and not inside a project), the sidebar says "Your Dashboard", every Home page starts with a
+lit on Home (and not inside a project), the sidebar has no heading (the lit logo says where you are), every Home page starts with a
 "Home ›" breadcrumb and Home's top card is a band across the whole content area. Every control on every Home page is
 clicked (destructive ones skipped) with no page errors and no 5xx. With a tribe: Files' Where filter lists each tribe
 and groups by source (sheets and slides from tribes show their real previews), Design shows every canvas with its
@@ -113,7 +113,7 @@ def main():
             pg.goto(f"http://localhost:{STATIC}/?skipIntro=1#/hub"); pg.wait_for_function("window.TribeHub && window.TribeRouter && document.querySelector('#view-hub .hub-id')", timeout=20000); pg.wait_for_timeout(600)
             assert not pg.evaluate("TribeClient.hasToken()")
             st = home_state(pg)
-            assert st["lit"] and st["head"] == "Your Dashboard" and st["rows"] == ROWS, st
+            assert st["lit"] and st["head"] == "" and st["rows"] == ROWS, st
             assert crumb(pg).startswith("Home›Yourdashboard"), crumb(pg)
             hf = hero_full(pg); assert hf["hero"] >= hf["main"] - 2 and abs(hf["left"]) <= 1, ("the Home band goes across", hf)
             for key, want in (("docs-all", "Home›Files"), ("design-all", "Home›Design"), ("repos-all", "Home›Code")):
@@ -140,7 +140,7 @@ def main():
             ctx = b.new_context(viewport={"width": 1600, "height": 900}, accept_downloads=True); settings(ctx, tok)
             pg = ctx.new_page(); watch(pg, "host")
             pg.goto(BASE + "/?skipIntro=1#/hub"); pg.wait_for_function("TribeClient.connected() && document.querySelector('#view-hub .hub-id')", timeout=20000); pg.wait_for_timeout(1200)
-            st = home_state(pg); assert st["lit"] and st["head"] == "Your Dashboard" and st["rows"] == ROWS, st
+            st = home_state(pg); assert st["lit"] and st["head"] == "" and st["rows"] == ROWS, st
             hf = hero_full(pg); assert hf["hero"] >= hf["main"] - 2, hf
             shot(pg, "home-active")
             # Files: Where lists each tribe, groups by source, real previews from tribes

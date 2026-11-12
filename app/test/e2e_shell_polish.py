@@ -2,7 +2,7 @@
 pop-out, Connect GitHub on Home › Code, the sidebar's foot rows, the Workshop as a destination and your own order.
   1. Rail: Home, a tribe and the Workshop wrench light the same way: a pressed tile (no box-shadow) and a 32px Ember pill
      on the far-left edge; Back leaves the Workshop.
-  2. Home's sidebar says "Your Dashboard", big and bold.
+  2. Home's sidebar has no heading; the lit logo and the breadcrumb say where you are.
   3. Tabs (a workspace's, the Workshop's) and Settings carry stroke icons from app/ui/icons.js.
   4. Preview and Invite friends are rows like Files (same height, padding, type, radius, no border), with thumbnails:
      a 40x28 picture for Preview, faces (or a dashed add circle) for Invite.
@@ -76,12 +76,11 @@ def main():
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected() && window.TribeHub && window.TribeProjects && TribeProjects.list().length >= 2 && window.TribeReorder", timeout=20000)
 
             # ---------- 1 + 2. Home: the lit logo and the heading ----------
-            pg.evaluate("TribeHub.open('home')"); pg.wait_for_selector("#rail-logo.on"); pg.wait_for_selector("#nest-home-h"); pg.mouse.move(700, 600); pg.wait_for_timeout(400)
+            pg.evaluate("TribeHub.open('home')"); pg.wait_for_selector("#rail-logo.on"); pg.wait_for_selector("#grp-global"); pg.mouse.move(700, 600); pg.wait_for_timeout(400)
             lg = pg.evaluate(PILL, "#rail-logo")
             assert lg["shadow"] == "none" and lg["h"] == 32 and lg["op"] == "1" and lg["left"] <= 1, ("Home: a pressed tile and the pill at the edge", lg)
             assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo')).outlineStyle") == "solid", "the tile's inset 1px border is an outline, not a shadow"
-            head = pg.evaluate("(() => { const h = document.querySelector('#nest-home-h'); const c = getComputedStyle(h); return { t: h.textContent.trim(), fs: parseFloat(c.fontSize), fw: +c.fontWeight, ico: !!h.querySelector('svg') }; })()")
-            assert head["t"] == "Your Dashboard" and head["fs"] >= 18 and head["fw"] >= 700 and head["ico"], head
+            assert pg.evaluate("!document.querySelector('#nest-home-h')"), "no Home heading in the sidebar (removed: the lit logo says where you are)"
             assert "your dashboard" not in pg.inner_text("#nest-groups").lower().replace("your dashboard", "", 1), "no '· your dashboard' left"
             pg.screenshot(path=str(SHOTS / "home-header.png"), clip={"x": 0, "y": 0, "width": 760, "height": 460})
 

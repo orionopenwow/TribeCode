@@ -571,10 +571,7 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 #rail-logo { position: relative; }
 /* the sidebar says where you are */
 /* the sidebar's heading on Home (feat/shell-polish): "Your Dashboard", big and bold in the display face, with a small home icon */
-.nest-home-h { display: flex; align-items: center; gap: 8px; margin: 4px 4px 12px; padding: 4px 8px 12px; border-bottom: 1px solid var(--edge); color: var(--text); white-space: nowrap; overflow: hidden;
   font: 800 19px/1.2 var(--display); letter-spacing: -0.01em; }
-.nest-home-h .ti { color: var(--accent); }
-.nest-home-h b { font-weight: 800; overflow: hidden; text-overflow: ellipsis; }
 /* the breadcrumb starts with Home › */
 .crumb-home { display: inline-flex; align-items: center; gap: 4px; }
 .crumb-home[hidden] { display: none; }
@@ -592,7 +589,6 @@ body.at-home .main > #view-hub:has(.hub-files), body.at-home .main > #view-hub:h
   #view-hub .hub-home > .hub-id { margin: 0 -14px 16px; padding: 16px 14px 18px; border-width: 1px 0; }
   #view-hub .hub-home > .hub-id .hid-art { width: 74px; height: 62px; } #view-hub .hub-home > .hub-id .hid-art img { width: 66px; }
   #view-hub .hub-home > .hub-id h1 { font-size: 21px; }
-  .nest-home-h { margin: 0 4px 8px; }
 }
 .hub-crumb { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font: 600 12px/1 var(--mono); letter-spacing: .04em; color: var(--muted); }
 .hub-crumb .hc-home { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 6px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }

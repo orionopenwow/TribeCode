@@ -135,7 +135,7 @@
     const box = $('#nest-groups'); if (!box) return;
     drawnGlobal = isGlobal();
     document.body.classList.toggle('global', drawnGlobal);   // keep the class in step whichever path drew the rows
-    box.innerHTML = drawnGlobal ? `<h2 class="nest-home-h" id="nest-home-h" aria-current="page"><span data-icon="home" data-icon-size="20"></span><b>Your Dashboard</b></h2><div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
+    box.innerHTML = drawnGlobal ? `<div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
       `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.row || d.label)}</span></button>`).join('')}</div>` : '';
   }
   function paintCounts() {

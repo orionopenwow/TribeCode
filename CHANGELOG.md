@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.31.2
+- **Home's sidebar heading is gone**: the "Your Dashboard" line above Files, Design, Code, Work and Agent fleet is removed. The lit logo and the "Home ›" breadcrumb already say where you are.
+- **Phones**: the same, one less line above the rows.
+
 ## v0.31.1
 - **The tour waits for you**: "See how TribeCode works" now goes one step at a time. Flint does a step, then waits for **Next** (→ or Enter); **Back** (←) replays the previous one. A step line shows where you are ("Step 3 of 12 · Start a project").
 - **Auto-play is a toggle**, slower than before: each caption stays up long enough to read, typing looks human, the cursor glides and each click pauses with a ripple. The whole tour runs about 2½ minutes.
