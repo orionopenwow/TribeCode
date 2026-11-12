@@ -27,7 +27,7 @@
   }
 
   function get(url, onsuccess) {
-    if (window.STARTER_FILES && window.STARTER_FILES[url]) return onsuccess({ responseText: window.STARTER_FILES[url] });   // TribeCode: a one-file copy carries level.json inline
+    if (url === 'level.json' && window.LEVEL) return onsuccess({ responseText: JSON.stringify(window.LEVEL) });   // TribeCode: the level ships as level.js, so no fetch is needed
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
       if ((request.readyState == 4) && (request.status == 200))

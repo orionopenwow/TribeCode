@@ -5,7 +5,7 @@
  "phrases": ["platformer", "jump and run game", "jumping game", "side scroller"],
  "controls": "Left and Right to run, Space to jump. On a phone: hold the left or right third, tap the middle to jump.",
  "source": { "name": "javascript-tiny-platformer", "repo": "jakesgordon/javascript-tiny-platformer", "url": "https://github.com/jakesgordon/javascript-tiny-platformer", "license": "MIT", "authors": "Jake Gordon and contributors",
-   "changes": "the physics and colors read config.js, the FPS meter is gone, touch controls added, the page fits any screen." },
+   "changes": "the physics and colors read config.js, the level ships as level.js (no fetch, so it runs in a sandboxed preview), the FPS meter is gone, touch controls added, the page fits any screen." },
  "params": [
   { "key": "gravity", "label": "Gravity", "type": "number", "min": 2, "max": 14, "step": 0.5, "default": 6, "hint": "higher falls faster", "words": { "up": "heavier|more gravity|fall faster", "down": "floaty|floatier|moon|less gravity|lighter" } },
   { "key": "speed", "label": "Run speed", "type": "number", "min": 5, "max": 30, "step": 1, "default": 15, "hint": "tiles per second", "words": { "up": "faster|quicker|speedier", "down": "slower" } },

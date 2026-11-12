@@ -949,12 +949,12 @@
     "Give the player a pixel-art sprite"
    ],
    "controls": "Left and Right to run, Space to jump. On a phone: hold the left or right third, tap the middle to jump.",
-   "size": 35878,
+   "size": 28781,
    "files": [
     "config.js",
     "game.js",
     "index.html",
-    "level.json",
+    "level.js",
     "style.css"
    ]
   },

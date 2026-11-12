@@ -32,4 +32,4 @@ Every knob is in `config.js`. Ask Flint ("Make the jumps floatier") or change a 
 
 ## Credit
 
-Adapted from [javascript-tiny-platformer](https://github.com/jakesgordon/javascript-tiny-platformer) by Jake Gordon and contributors, under the MIT license (kept in LICENSE). Changes for TribeCode: the physics and colors read config.js, the FPS meter is gone, touch controls added, the page fits any screen.
+Adapted from [javascript-tiny-platformer](https://github.com/jakesgordon/javascript-tiny-platformer) by Jake Gordon and contributors, under the MIT license (kept in LICENSE). Changes for TribeCode: the physics and colors read config.js, the level ships as level.js (no fetch, so it runs in a sandboxed preview), the FPS meter is gone, touch controls added, the page fits any screen.
