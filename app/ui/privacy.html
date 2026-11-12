@@ -69,7 +69,7 @@
   <ul>
     <li><b>GitHub</b>: signing in, pushing and pulling the project's code, and showing repository pictures.</li>
     <li><b>Discord, GitHub or Google sign-in</b>: your name, email address and avatar from that account, to sign you in. You can sign in without them using an invite link.</li>
-    <li><b>AI models</b>: when you ask an AI, your question and the context TribeCode adds (for example recent chat or a file) go to the model you picked: one running in your browser or on the host's computer (nothing leaves the device), a teammate's Claude Code (with their permission), or a cloud provider such as Anthropic, OpenAI or Google using a key that you or the host added. The phone apps will ask before your messages first go to a cloud model.</li>
+    <li><b>AI models</b>: when you ask an AI, your question and the context TribeCode adds (for example recent chat or a file) go to the model you picked: one running in your browser or on the host's computer (nothing leaves the device), a teammate's Claude Code (with their permission), or a cloud provider such as Anthropic, OpenAI or Google using a key that you or the host added. <span id="ai">Before anything from your device first goes to a cloud provider, TribeCode asks once, naming the provider; the answer is remembered on that device and you can revoke it in Settings › Privacy &amp; safety. Models in your browser or on the host's computer don't ask.</span></li>
     <li><b>Reaching the host from anywhere</b>: Tailscale or Cloudflare tunnels carry the traffic between your device and the host.</li>
     <li><b>Push notifications</b>: your browser's or phone's push service (Apple, Google, Mozilla) delivers notifications; the text is encrypted for your device.</li>
     <li><b>Link previews, GIF search (GIPHY) and embedded videos</b>: the host's server fetches them, so your device doesn't contact those sites directly.</li>
@@ -82,7 +82,7 @@
   <h2 id="delete">Deleting your data</h2>
   <ul>
     <li><b>In the app:</b> Settings › Privacy &amp; safety › Delete my account. This removes your account and what you posted from the tribe (when your tribe's server supports it) and clears everything on your device.</li>
-    <li><b>If you no longer have the app:</b> ask the host of your tribe, or open an issue at <a href="https://github.com/orionopenwow/TribeCode/issues">github.com/orionopenwow/TribeCode/issues</a> and we will help you reach them. [Placeholder: a web deletion form, required by Google Play, before the store launch.]</li>
+    <li><b>If you no longer have the app:</b> use the <a href="delete-account.html">account deletion page</a>: it explains the in-app steps and sends us a request (we handle tribes we run within 30 days and help you reach the host of any other tribe).</li>
     <li>Code you pushed to a Git repository stays in that repository's history unless its owner rewrites it.</li>
   </ul>
 
@@ -90,8 +90,9 @@
   <p>TribeCode is not directed at children under 13 (or the minimum age in your country). Hosts should not invite them without a parent's consent.</p>
 
   <h2>Changes and contact</h2>
-  <p>We will post changes here and in the release notes. Questions: <a href="https://github.com/orionopenwow/TribeCode/issues">GitHub issues</a> · [placeholder: privacy contact email].</p>
-  <footer><a href="terms.html">Terms of use</a> · <a href="./">Back to TribeCode</a></footer>
+  <p>We will post changes here and in the release notes. Questions: <a data-support-mailto data-subject="Privacy question"><span data-support-email>support@tribecode.org</span></a> · <a href="support.html">Support</a> · <a href="https://github.com/orionopenwow/TribeCode/issues">GitHub issues</a>.</p>
+  <footer><a href="support.html">Support</a> · <a href="delete-account.html">Delete your account</a> · <a href="terms.html">Terms of use</a> · <a href="./">Back to TribeCode</a></footer>
 </main>
+<script src="support-contact.js"></script>
 </body>
 </html>

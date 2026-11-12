@@ -311,7 +311,7 @@
     const msg = say(`Writing the ${name}…`, [], { streaming: true });
     const fd = seen('#nest-docs') || curView(); if (FF() && fd) FF().work(fd, 'Writing…');
     try {
-      const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask: text } });
+      const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask: text, ...(window.TribeAIConsent && !(await window.TribeAIConsent.ensure()) ? { basic: true } : {}) } });
       const doc = await D.create(r.title || 'Untitled', r.body || '', undefined, kind === 'doc' ? undefined : kind);
       App().show('docs'); setTimeout(() => D.open(doc.slug), 60);
       if (FF()) { later(380, () => { const ed = seen('#doc-body') || seen('#view-docs'); if (ed) FF().work(ed, 'Writing…'); }); later(1500, () => { const ed = seen('#doc-body') || seen('#view-docs'); FF().done(ed, 'Done ✓'); }); }
@@ -400,6 +400,7 @@
   async function modelReply(text, extra) {
     if (B() && B().choice() === 'browser') return browserReply(text, extra);
     if (!connected()) return fallback(text, true, true);
+    if (window.TribeAIConsent && !(await window.TribeAIConsent.ensure())) return fallback(text, true, true);   // polish: asked once before a cloud AI (aiconsent.js)
     const r = await room().catch(() => null);
     const history = thread.slice(-9, -1).map(m => ({ who: m.who, text: m.text }));
     const msg = say('…', [], { streaming: true });

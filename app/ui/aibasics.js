@@ -8,7 +8,7 @@
 //   Company seat     ✦ Fill in the charter
 //   Home             ✦ Today's plan (Flint's card on the Dashboard, app/ui/flintgrow.js)
 // The ✦ buttons are added to those places from here (a MutationObserver), so the feature files stay as they are.
-//   window.TribeAIBasics = { run(kind, ctx, anchor), online(), scan() }
+//   window.TribeAIBasics = { run(kind, ctx, anchor), online(), ask(kind, input, draft) -> { text, via } | null, scan() }
 (function () {
   'use strict';
   const C = () => window.TribeClient, core = () => window.TribeAICore;
@@ -20,14 +20,38 @@
   const nameOf = id => (members().find(m => m.id === id) || {}).name || (id === 'tribecode' ? 'TribeCode' : 'someone');
 
   // ---------- is there an AI to refine with? ----------
+  // polish: the tribe's AI (the host's model, server/aibasics.js) first; with none (or no server, or a cloud model you
+  // haven't allowed), the in-browser model (Flint's brain "Built in", app/ui/brainpick.js) when you picked it or it is
+  // already loaded; otherwise the basic answer stands.
   let ai = { online: false, via: '', at: 0 };
+  const B = () => window.TribeBrain;
+  const browserOn = () => { const b = B(); return !!(b && b.askBrowser && ((b.browserReady && b.browserReady()) || (b.choice && b.choice() === 'browser'))); };
   async function online() {
-    if (!connected()) return (ai = { online: false, via: '', at: Date.now() });
-    if (Date.now() - ai.at < 30000) return ai;
-    try { const r = await C().api('/ai/basic'); ai = { online: !!r.online, via: r.via || '', at: Date.now() }; } catch { ai = { online: false, via: '', at: Date.now() }; }
-    return ai;
+    if (!(connected() && Date.now() - ai.at < 30000)) {
+      if (!connected()) ai = { online: false, via: '', at: Date.now() };
+      else try { const r = await C().api('/ai/basic'); ai = { online: !!r.online, via: r.via || '', cloud: !!r.cloud, provider: r.provider || '', at: Date.now() }; } catch { ai = { online: false, via: '', at: Date.now() }; }
+    }
+    if (ai.online) return ai;
+    return browserOn() ? { online: true, via: 'the built-in model', browser: true } : ai;
   }
   window.addEventListener('tribe-brain', () => { ai.at = 0; });
+  // The one AI path for every ✦ (and the design canvas's ✦ on files kept on this device): -> { text, via } | null
+  async function ask(kind, input, draft) {
+    const st = await online();
+    if (st.online && !st.browser) {
+      const okCloud = !st.cloud || !window.TribeAIConsent || await window.TribeAIConsent.ensure(st);   // asked once per provider (aiconsent.js)
+      if (okCloud) {
+        try { const r = await C().api('/ai/refine', { method: 'POST', body: { kind, input, draft: draft == null ? '' : typeof draft === 'string' ? draft : JSON.stringify(draft) } }); if (r && r.text) return { text: r.text, via: r.via || st.via }; } catch {}
+      }
+    }
+    if (browserOn() && core() && core().promptFor) {
+      try {
+        const r = await B().askBrowser([{ role: 'system', content: core().SYSTEM }, { role: 'user', content: core().promptFor(kind, input, draft) }], () => {});
+        if (r && r.text) return { text: r.text, via: r.via || 'the built-in model' };
+      } catch {}
+    }
+    return null;
+  }
 
   // ---------- the popover: a menu, then the answer in the same place ----------
   let pop = null, popAnchor = null;
@@ -113,7 +137,7 @@
     if (!st.online) { if (v) v.title = 'Works with no AI. Turn on Flint\'s brain and this gets smarter in the same place.'; return res; }
     if (v) { v.textContent = `✦ refining with ${st.via || 'AI'}…`; v.classList.add('busy'); }
     try {
-      const r = await C().api('/ai/refine', { method: 'POST', body: { kind, input: k.input(ctx), draft: typeof res === 'string' ? res : JSON.stringify(res) } });
+      const r = await ask(kind, k.input(ctx), typeof res === 'string' ? res : JSON.stringify(res));
       const better = r && r.text ? k.refined(r.text, ctx, res) : null;
       if (better && (!Array.isArray(better) || better.length)) { res = better; via = r.via; }
     } catch {}
@@ -164,5 +188,5 @@
   setInterval(() => { if (document.visibilityState === 'visible') soon(); }, 700);
   addEventListener('click', soon, true); addEventListener('hashchange', soon);
   scan();
-  window.TribeAIBasics = { run, online, scan, menu, close: closePop };
+  window.TribeAIBasics = { run, online, ask, scan, menu, close: closePop };
 })();

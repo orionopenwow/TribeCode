@@ -11,24 +11,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const core = require('../app/ui/aibasics-core.js');
 
-const KINDS = {
-  'chat.summary': ['Summarize this team chat in at most 5 short lines: who talked, what it was about, what was decided, what is still open. Plain text, one line each, no headings.', 400],
-  'chat.tasks': ['List the concrete things to do from this team chat. One task per line, each starting with "- ", short and starting with a verb. Add "(Name)" at the end when someone took it. No other text.', 300],
-  'task.split': ['Split this task into 3 to 6 small steps someone can tick off. One step per line, each starting with "- ", starting with a verb. No other text.', 260],
-  'task.estimate': ['Estimate this task. Answer in exactly three lines:\nSize: S, M, L or XL\nTime: a rough time like "about an hour"\nWhy: one short reason.', 120],
-  'task.owner': ['Pick who on the team should own this task, from the people listed. Answer in two lines:\nOwner: the person\'s name exactly as listed\nWhy: one short reason.', 120],
-  'doc.tidy': ['Tidy this Markdown document: fix spelling, grammar, capitalization and list formatting, keep the meaning, headings and every fact. Return only the whole tidied Markdown.', 2000],
-  'doc.outline': ['Write an outline of this document as a nested Markdown bullet list (at most 12 lines). Return only the list.', 400],
-  'doc.continue': ['Continue this document naturally from where it stops, in the same voice and format. Write one or two short paragraphs or list items. Return only the new text.', 500],
-  'file.describe': ['Describe this file for a shared project folder. Answer in two lines:\nDescription: one sentence about what it probably is and what it is for\nTags: 3 to 6 short lowercase tags, comma separated.', 140],
-  'home.plan': ['Turn this into a short plan for today: at most 5 numbered lines, the most important first, each with a few words on why. Use only the items given.', 300],
-  'work.suggest': ['These are suggestions for a small team, made by simple rules from their task board, company seats and open gigs. Rewrite them as at most 5 short, friendly lines, one per line starting with "- ", most useful first. Keep every number, name and seat exactly as given; never add a suggestion that is not supported by the input.', 300],
-  'doc.template': ['Draft the empty sections of this company document from the project context given. For each empty section write "## <the exact heading>" and then 2-5 short lines or bullets under it. Use only facts from the input; where a fact is missing, write a short question in [brackets] instead of inventing it. Return only those sections.', 900],
-  'seat.charter': ['Write a charter for this company seat. Answer in exactly five lines:\nGoal: one goal for this month\nOwns: 2-3 things, comma separated\nMay do: 2-4 things it does on its own, comma separated\nNeeds a yes: 2-3 things that need a human\'s approval, comma separated\nDone: how we will know it is done.', 260],
-};
+const KINDS = core.PROMPTS;   // polish: the prompts live in aibasics-core.js, shared with the in-browser model (app/ui/aibasics.js)
 
 module.exports = function aibasics({ llm, base, P, str }) {
-  const SYSTEM = 'You are Flint, the built-in helper of TribeCode, a self-hosted app where friends build one project together. You improve a draft that simple rules already made. Be concrete and short. Never invent people, facts or numbers that are not in the input.';
+  const SYSTEM = core.SYSTEM;
   const clip = (s, n) => String(s == null ? '' : s).slice(0, n);
   const tagFile = pid => base.p('.tribe', 'aitags', `${String(pid || 'local').replace(/[^a-z0-9-]/gi, '')}.json`);
   const loadTags = pid => { try { return JSON.parse(fs.readFileSync(tagFile(pid), 'utf8')); } catch { return {}; } };
@@ -37,8 +23,7 @@ module.exports = function aibasics({ llm, base, P, str }) {
     const k = KINDS[kind]; if (!k) return { error: 'unknown kind', status: 400 };
     const st = llm.status ? llm.status() : {};
     if (!st.online) return { error: 'no AI is on: the basic answer stands', status: 503, basic: true };
-    const inp = typeof input === 'string' ? input : JSON.stringify(input || {});
-    const prompt = `${k[0]}\n\nInput:\n${clip(inp, 12000)}\n\n${draft ? `A first draft made by simple rules (improve it, keep what is right):\n${clip(typeof draft === 'string' ? draft : JSON.stringify(draft), 4000)}\n\n` : ''}Answer:`;
+    const prompt = core.promptFor(kind, input, draft);
     let out; try { out = await llm.stream({ system: SYSTEM, prompt, maxTokens: k[1], temperature: 0.3, timeoutMs: 60_000, me }); }
     catch (e) { return { error: 'the AI did not answer: the basic answer stands', status: 503, basic: true }; }
     const text = String(out.text || '').trim(); if (!text) return { error: 'the AI had nothing to add', status: 502, basic: true };
@@ -47,7 +32,7 @@ module.exports = function aibasics({ llm, base, P, str }) {
 
   async function route(req, res, { m, b, me, url, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
-    if (b === 'basic' && m === 'GET') { const st = llm.status ? llm.status() : {}; return send(res, 200, { online: !!st.online, via: st.via || st.model || '' }); }
+    if (b === 'basic' && m === 'GET') { const st = llm.status ? llm.status() : {}; return send(res, 200, { online: !!st.online, via: st.via || st.model || '', cloud: !!st.cloud, provider: st.provider || '' }); }   // cloud + provider: the device asks before data first goes to a cloud AI (app/ui/aiconsent.js)
     if (b === 'refine' && m === 'POST') {
       if (me.role === 'agent') return fail(res, 403, 'agents have their own model');
       const body = await readBody(req, 256 * 1024);
