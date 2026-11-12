@@ -1,5 +1,6 @@
 // One router: the single source of truth for where you are (docs/NAVIGATION.md).
-//   place: 'global' (your own dashboard: Home, Files, Design, Code, Work, Agent fleet) or 'project' (inside a tribe's project)
+//   place: 'global' (your own dashboard: Home, Files, Design, Code, Work, Agent fleet), 'project' (inside a tribe's project)
+//     or 'workshop' (the Workshop and its Marketplace, #/workshop; it renders into TribeWorkshop.container())
 //   section: the destination key on screen (TribeShell's registry: hub, docs-all, design-all, repos-all, work, fleet, home, chat, bugs…)
 // Every button already lands in TribeShell.go(key) or a module's open(); the router watches the result and
 //   - keeps browser history in step: each settled move is one history.pushState entry, so Back / Forward (and Alt+← / Alt+→,
@@ -27,6 +28,7 @@
     return !v || v === 'hub' || v === 'work' || (v === 'agents-hub' && document.body.dataset.scope === 'global');
   }
   function where() {
+    if (document.body.classList.contains('ws-open')) return { place: 'workshop', section: 'workshop', key: 'workshop' };   // feat/shell-polish: #/workshop
     const v = document.body.dataset.view || 'hub';
     if (isGlobal()) {
       const sec = v === 'work' ? 'work' : v === 'agents-hub' ? 'fleet' : ((window.TribeHub && window.TribeHub.mode()) || 'home');
@@ -84,6 +86,7 @@
 
   async function apply(l) {
     restoring = Date.now() + 1500;
+    if (l.place === 'workshop') { if (window.TribeWorkshop) window.TribeWorkshop.open(); return; }
     if (l.place === 'global') {
       if (l.section === 'work') { if (window.TribeTalent) window.TribeTalent.open(); return; }
       if (l.section === 'fleet') { if (SH()) SH().go('fleet'); return; }
@@ -100,12 +103,14 @@
   // The full-screen preview (preview.js) pushes its own entry and steps back off it when it closes: that Back is its own,
   // not a move between places, so the place on screen stays.
   let pvwOn = document.body.classList.contains('pvw-focus'), pvwLeft = 0;
-  new MutationObserver(() => { const on = document.body.classList.contains('pvw-focus'); if (pvwOn && !on) pvwLeft = Date.now(); pvwOn = on; }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  let wsOn = document.body.classList.contains('ws-open');
+  new MutationObserver(() => { const on = document.body.classList.contains('pvw-focus'); if (pvwOn && !on) pvwLeft = Date.now(); pvwOn = on;
+    const w = document.body.classList.contains('ws-open'); if (w !== wsOn) { wsOn = w; soon(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   addEventListener('popstate', e => {
     const l = e.state && e.state.tribeRoute; if (!l) return;
     if (Date.now() - pvwLeft < 1500) { pvwLeft = 0; last = sig(where()); lastLoc = where(); lastUrl = location.href; stamp(lastLoc); return; }
     if (sig(l) === sig(where())) { last = sig(l); return; }
-    closeLayers();
+    if (l.place !== 'workshop') closeLayers();
     apply(l);
   });
   // the layers that sit over a place (Workshop, Guide, popovers, the profile menu) close when you move with Back
@@ -129,7 +134,7 @@
     const mine = document.getElementById('view-' + v);
     if (!mine || mine.classList.contains('hidden')) return;
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== mine && !s.classList.contains('hidden')) s.classList.add('hidden'); });
-    document.body.classList.toggle('global', l.place === 'global');
+    if (l.place !== 'workshop') document.body.classList.toggle('global', l.place === 'global');
   }
   // feat/files-dash: make it obvious you are on Home: the rail logo is lit, the breadcrumb starts with "Home ›"
   function home(l) {

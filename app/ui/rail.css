@@ -46,3 +46,19 @@ body.global .window .rail .pj-circle.on:hover .pj-face { border-radius: 14px; }
   .window .rail .logo-btn#rail-logo, .window .rail #rail-logo img.logo, .window .rail .pj-circle, .window .rail .pj-circle .pj-face,
   .window .rail .logo-btn#rail-logo::before, .window .rail .pj-circle::before { transition: none; }
 }
+
+/* ---------- the Workshop wrench: a destination too (#/workshop), so the same tile and pill ---------- */
+.window .rail #rail-workshop { position: relative; overflow: visible; border-radius: var(--r); background: transparent; border: 0; box-shadow: none; outline: 1px solid var(--edge); outline-offset: -1px;
+  color: var(--muted); transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out), outline-color var(--dur-quick) var(--ease-out); }
+.window .rail #rail-workshop:hover { background: var(--hover); color: var(--text); }
+.window .rail #rail-workshop::before { content: ''; position: absolute; left: -14px; top: 50%; bottom: auto; width: var(--rail-pill); height: 0; border-radius: 0 var(--rail-pill) var(--rail-pill) 0;
+  background: var(--faint); opacity: 0; transform: translateY(-50%); transition: height var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out); }
+.window .rail #rail-workshop:hover::before { height: 16px; opacity: 1; }
+.window .rail #rail-workshop.on { background: var(--canvas); color: var(--text); outline-color: var(--edge); }
+.window .rail #rail-workshop.on::before { height: 32px; opacity: 1; background: var(--accent); }
+.window .rail #rail-workshop.on svg.i { transform: translateY(1px); }
+/* while the Workshop is on screen, the open tribe is remembered, not where you are */
+body.ws-open .window .rail .pj-circle.on { background: transparent; outline-color: transparent; }
+body.ws-open .window .rail .pj-circle.on .pj-face { width: 44px; height: 44px; border-radius: 50%; }
+body.ws-open .window .rail .pj-circle.on::before { height: 8px; background: var(--faint); }
+@media (prefers-reduced-motion: reduce) { .window .rail #rail-workshop, .window .rail #rail-workshop::before { transition: none; } }

@@ -2,8 +2,12 @@
    Flat matte: 1px borders, depth from luminance steps only (canvas < surface < raised), no glows/blur/gradients. */
 .ws-layer { position: absolute; top: 0; right: 0; bottom: 0; left: 76px; z-index: 45; display: flex; flex-direction: column; background: var(--main, var(--canvas)); color: var(--text); min-width: 0; }
 .ws-layer.hidden { display: none; }
-body.ws-open .shell .window > .titlebar, body.ws-open .shell .window > .side, body.ws-open .shell .window > .main, body.ws-open .shell .window > .panel { visibility: hidden; }
-body.ws-open .userbar { visibility: hidden; }   /* v0.27: the you-bar sat on top of the Workshop/Marketplace cards */
+/* feat/shell-polish: a destination in the main content area (#/workshop), not a pop-out: the rail, the title bar and the
+   sidebar stay; the Workshop takes the main column and the right panel's place. */
+@media (min-width: 821px) {
+  .shell .window > .ws-layer { position: relative; inset: auto; left: auto; z-index: 1; grid-column: 3 / -1; grid-row: 2; min-height: 0; overflow: hidden; border-left: 1px solid var(--stroke); }
+  body.ws-open .shell .window > .main, body.ws-open .shell .window > .panel, body.ws-open .panel-reopen { display: none; }
+}
 
 .ws-eyebrow { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
 .ws-icon { width: 36px; height: 36px; border-radius: var(--r-sm); display: inline-grid; place-items: center; color: var(--muted); border: 1px solid transparent; flex: none; }
@@ -264,7 +268,7 @@ body.light .ws-scrim { background: rgba(18, 21, 26, .35); }
 
 /* rail entry */
 .ws-nav { margin-top: 6px; }
-body.ws-open #rail-workshop { color: var(--accent, #F26B1D); background: var(--raised, #1E242D); box-shadow: inset 0 0 0 1px var(--edge, #2A313C); }
+/* the wrench's lit state lives with the rail's (rail.css) */
 /* Starter shelf */
 .wss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
 .ws-card-s { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
