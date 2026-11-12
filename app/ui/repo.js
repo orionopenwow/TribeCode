@@ -284,7 +284,7 @@
   document.addEventListener('click', async e => {
     const t = e.target;
     if (t.closest('#repo-send')) return sendForm();
-    if (t.closest('#repo-refresh')) { t.closest('#repo-refresh').disabled = true; try { const r = await C.api('/repo/refresh', { method: 'POST' }); st.status = r.status; renderAll(); loadBranches(); } catch (er) { toast(er.message); } $('#repo-refresh').disabled = false; return; }
+    if (t.closest('#repo-refresh')) { t.closest('#repo-refresh').disabled = true; try { const r = await C.api('/repo/refresh', { method: 'POST' }); st.status = r.status; renderAll(); loadBranches(); toast(r.status && r.status.enabled === false ? (r.status.reason || 'No code repository yet') : `Refreshed${r.status && r.status.branch ? ' ' + r.status.branch : ''} · ${r.status && r.status.behind ? r.status.behind + ' new from GitHub' : 'up to date'}`); } /* feat/tasks-company: say what Refresh found */ catch (er) { toast(er.message); } $('#repo-refresh').disabled = false; return; }
     if (t.closest('#ctx-btn')) return Ctx.toggle();
     const cr = t.closest('[data-cr]');
     if (cr) {

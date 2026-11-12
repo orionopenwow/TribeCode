@@ -218,3 +218,11 @@ textarea.input { height: 220px; padding: 12px 14px; font-family: var(--mono); fo
 .task .meta select { max-width: none; width: 100%; margin-left: 0; height: 28px; border-radius: 8px; padding: 0 8px; font-family: var(--font, Inter, sans-serif); font-size: 12.5px; color: var(--text); background: var(--surface); }
 .col[data-col="done"] .task .t { color: var(--muted); }
 @container (max-width: 480px) { .board { grid-template-columns: minmax(0, 1fr); } }
+/* feat/tasks-company: the board explains itself when there's no code repository */
+.radar-why { display: grid; gap: 8px; justify-items: start; font-size: 13px; }
+.radar-why p { margin: 0; line-height: 1.5; }
+.ms-repo { padding-top: 10px; border-top: 1px solid var(--stroke); }
+#vision-card h3 { display: flex; align-items: center; gap: 8px; }
+#vision-card .vision-edit { margin-left: auto; }
+.ms-repo .btn { white-space: normal; text-align: left; max-width: 100%; }
+#vision-text.editing { outline: 1px solid var(--brand); outline-offset: 4px; border-radius: 6px; }

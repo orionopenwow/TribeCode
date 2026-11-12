@@ -54,6 +54,7 @@ Pushing from the Claude cloud sandbox:
   - `visuals.js`: screenshots.
   - `repo.js` + `context.js` + `integrator.js`: live repo, TRIBE_CONTEXT.md, gated merges.
   - `board.js`: proposals and milestones.
+  - `taskflow.js`: how work is shared on the Task Board: Lead assigns (assign → Accept / Decline with a reason) or Council (Open to claim, Claim, a claim limit); `/api/tasks/settings`, `/api/tasks/<id>/accept|decline|claim`, MCP `accept_task`, `decline_task`, `claim_task`. Test: `app/test/e2e_tasks_accept.py`.
   - `bugs.js`, `brain.js` (Ollama/Qwen), `mcp.js` (Claude Code tools).
   - `aibasics.js` + `app/ui/aibasics-core.js`: the ✦ "basic features, supercharged by AI" (rules first, `POST /api/ai/refine` when an AI is on; docs/DESIGN-SYSTEM.md §11, docs/GROK-SCOPE.md).
   - `flintrun.js` + `app/ui/flintrun.js`: Watch Flint build (a scripted run-through with his normal commands) and the proof-of-work ZIPs in `<tribe>/exports/`; the Blender bridge stub (docs/FLINT-CREATORS.md). `app/ui/localdoc.js`: local summarize, key points, titles, tags, reading time, glossary (no model). Dev: `scripts/dev/clean-slate.js` (docs/DEV-TOOLS.md).

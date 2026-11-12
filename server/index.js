@@ -354,6 +354,8 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
   return saveTask(t);
 }
 
+const taskFlow = require('./taskflow')({ P, store, getMembers: () => members, perms, bus, postChat: (...a) => postChat(...a), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), str, nameOf: x => nameOf(x) });   // feat/tasks-company: assign → accept, Council claims
+
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
@@ -621,12 +623,12 @@ const mcp = makeMcp({
       const t = loadTasks().find(x => x.id === tid); if (!t) return null;
       if (a.status && STATUSES.includes(a.status)) t.status = a.status;
       if (a.title) t.title = str(a.title, 200);
-      if (a.take) t.assignee = me.id;
+      if (a.take) { const prev = t.assignee; t.assignee = me.id; taskFlow.assigned(t, prev, me); }
       if (a.note) t.body = `${t.body ? t.body + '\n\n' : ''}**${me.name}** · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}: ${str(a.note, 2000)}`;
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -891,6 +893,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'website') { if ((await siteFlint.route(req, res, ctx())) !== null) return; const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
+  if (a === 'github' && b === 'detect' && m === 'GET' && !me) { const h = await githubAuth.route(req, res, ctx()); if (h !== null) return; }   // feat/tasks-company: setup on the host computer, before a tribe exists
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
@@ -1042,8 +1045,15 @@ async function apiInProject(req, res, url) {
   if (a === 'ship' || (a === 'tasks' && c === 'split')) { const h = await ship.route(req, res, ctx()); if (h !== null) return; }   // feat/ship-flow
   if (a === 'tasks') {
     if (m === 'GET' && !b) return send(res, 200, { tasks: loadTasks() });
+    try { const r = await taskFlow.route(m, b, c, me, () => readBody(req)); if (r) return send(res, 200, r); } catch (e) { return fail(res, e.status || 400, e.message); }   // feat/tasks-company
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
-    if (m === 'POST' && !b) { const body = await readBody(req); return send(res, 200, { task: createTask({ ...body, by: me.id, source: 'board' }) }); }
+    if (m === 'POST' && !b) {
+      const body = await readBody(req), to = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
+      const no = taskFlow.canAssign(me, to); if (no) return fail(res, 403, no);
+      const t = createTask({ ...body, assignee: null, by: me.id, source: 'board' });
+      if (!to) return send(res, 200, { task: t });
+      t.assignee = to; taskFlow.assigned(t, null, me); return send(res, 200, { task: saveTask(t) });
+    }
     const t = b && loadTasks().find(x => x.id === b); if (!t) return fail(res, 404, 'task not found');
     const ownTask = t.by === me.id || t.assignee === me.id || (me.role === 'agent' && (t.by === me.owner || t.assignee === me.owner));
     if ((m === 'PATCH' || m === 'DELETE') && !ownTask && !perms.can(me, 'tasks.triage')) return fail(res, 403, 'your role can only change your own tasks');   // feat/roles
@@ -1052,8 +1062,12 @@ async function apiInProject(req, res, url) {
       if (body.title !== undefined) t.title = str(body.title, 200) || t.title;
       if (body.status !== undefined) { if (!STATUSES.includes(body.status)) return fail(res, 400, 'bad status'); t.status = body.status; }
       const prevAssignee = t.assignee;
-      if (body.assignee !== undefined) t.assignee = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
-      if (t.assignee && t.assignee !== prevAssignee && t.assignee !== me.id) bus.notify({ type: 'task-assigned', to: [t.assignee], from: me.id, title: `${me.name} assigned you a task`, body: t.title, view: 'tasks', ref: t.id });
+      if (body.assignee !== undefined) {
+        const to = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
+        const no = to !== (prevAssignee || null) && taskFlow.canAssign(me, to, t); if (no) return fail(res, 403, no);   // feat/tasks-company: only leads assign others
+        t.assignee = to;
+      }
+      taskFlow.assigned(t, prevAssignee, me);   // pending until the person accepts (taskflow.js notifies them)
       if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
       if (body.body !== undefined) t.body = str(body.body, 20000);
       if (body.due !== undefined) t.due = dueOk(body.due);

@@ -127,7 +127,9 @@ def main():
 
             # ---------- 4. the GitHub path (mocked GitHub) ----------
             pg.evaluate("TribeLocalSetup.where()"); pg.wait_for_selector("#su-where")
-            pg.click("#su-where [data-su='github']"); pg.wait_for_selector("#su-github #su-gh-repo")
+            pg.click("#su-where [data-su='github']")
+            pg.wait_for_selector("#su-gh-guide", timeout=10000); pg.click("#su-gh-ro")   # feat/tasks-company: not signed in yet → the guide; the token goes in the sheet
+            pg.wait_for_selector("#su-github #su-gh-repo")
             pg.fill("#su-gh-repo", "https://github.com/camp/pixel-quest"); pg.fill("#su-gh-tok", "github_pat_test")
             pg.click("#su-gh-go")
             pg.wait_for_selector("#su-github .su-live", timeout=10000)
@@ -147,7 +149,7 @@ def main():
             # the live repo state shows on the project
             pg.evaluate("TribeApp.show('home')"); pg.wait_for_selector("#su-home-live .su-live", timeout=8000)
             assert "camp/pixel-quest" in pg.text_content("#su-home-live")
-            assert not server_calls, f"GitHub mode needs no server: {server_calls[:5]}"
+            assert not [c for c in server_calls if "/api/github/detect" not in c], f"GitHub mode needs no server (only the optional sign-in check asks this computer): {server_calls[:5]}"
 
             # ---------- 5. This computer: the draft syncs into the server serving this page ----------
             pg.evaluate("TribeLocalSetup.where()"); pg.wait_for_selector("#su-where")

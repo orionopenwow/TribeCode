@@ -84,6 +84,7 @@ def main():
         for title, st, who, ty, due in seed:
             t = api("/api/tasks", "POST", {"title": title, "status": st, "type": ty, "due": due}, host)[1]["task"]
             if who: api(f"/api/tasks/{t['id']}", "PATCH", {"assignee": who}, host)
+            if who == maya_id and st == "backlog": api(f"/api/tasks/{t['id']}/accept", "POST", {}, maya); api(f"/api/tasks/{t['id']}", "PATCH", {"status": "backlog"}, host)   # feat/tasks-company: she accepts, it's queued
         orders = task(host, "Orders page with a daily total and a print button")
         api(f"/api/tasks/{orders['id']}", "PATCH", {"subtasks": [{"t": "Table", "done": True}, {"t": "Total", "done": True}, {"t": "Print", "done": False}]}, host)
         with sync_playwright() as p:
@@ -135,12 +136,16 @@ def main():
             pg.click('#tk-pop .tkp-i:has-text("Maya")')
             wait(lambda: task(host, "Label the ginger batch").get("assignee") == maya_id, what="assigned from the row")
             pg.wait_for_selector(f'#board [data-sec="ready"] .task[data-id="{t1["id"]}"] .tk-av[title="Maya"]', timeout=5000)
+            # feat/tasks-company: it waits for Maya; once she accepts, it is hers and in progress
+            pg.wait_for_selector(f'#board .task[data-id="{t1["id"]}"] [data-qa="waiting"]', timeout=5000)
+            api(f"/api/tasks/{t1['id']}/accept", "POST", {}, maya)
             assert pg.locator("#tk-drawer").is_hidden() or pg.locator("#tk-drawer").count() == 0, "assigning doesn't open the drawer"
 
             # 5. the primary button walks the task along: Start → Send for review → Approve
             def press(label):
                 pg.locator(f'#board .task[data-id="{t1["id"]}"] .tk-acts .tk-btn:has-text("{label}")').click()
-            press("Start"); wait(lambda: task(host, "Label the ginger batch")["status"] == "doing", what="started")
+            wait(lambda: task(host, "Label the ginger batch")["status"] == "doing", what="accepted = started")
+            pg.wait_for_selector(f'#board .task[data-id="{t1["id"]}"] .tk-acts .tk-btn:has-text("Send for review")', timeout=5000)
             press("Send for review"); wait(lambda: task(host, "Label the ginger batch")["status"] == "review", what="sent for review")
             pg.locator(f'#board .task[data-id="{t1["id"]}"] [data-qa="back"]').click(); wait(lambda: task(host, "Label the ginger batch")["status"] == "doing", what="sent back")
             press("Send for review"); wait(lambda: task(host, "Label the ginger batch")["status"] == "review", what="review again")
@@ -178,6 +183,9 @@ def main():
             wait(lambda: task(host, "Flavor photos").get("body") == "Daylight, kraft paper.", what="notes saved")
             pg.click('#tk-drawer .tkd-who:has-text("Maya")')
             wait(lambda: task(host, "Flavor photos").get("assignee") == maya_id, what="assigned in the drawer")
+            pg.wait_for_selector("#tk-drawer .tkd-offer--wait", timeout=5000)
+            pg.click('#tk-drawer .tkd-who:has-text("Me")')
+            wait(lambda: task(host, "Flavor photos").get("assignee") == camp_id, what="taken back in the drawer")
             pg.click('#tk-drawer [data-step="start"]'); wait(lambda: task(host, "Flavor photos")["status"] == "doing", what="next step in the drawer")
             shot(pg, "tasks-dashboard-drawer.png")
             pg.keyboard.press("Escape"); pg.wait_for_selector("#tk-drawer", state="hidden")
@@ -206,7 +214,7 @@ def main():
 
             # 11. a friend sees the change live
             mp = open_as(b, "Maya", maya, {"width": 1280, "height": 800})
-            mp.wait_for_selector(f'#board [data-col="doing"] .task[data-id="{fl["id"]}"] .tk-av[title="Maya"]', timeout=8000)
+            mp.wait_for_selector(f'#board [data-col="doing"] .task[data-id="{fl["id"]}"] .tk-av[title="Camp"]', timeout=8000)
 
             # 12. phones: same rows stacked, thumb-size next step, tiles filter, bottom sheet
             ph = open_as(b, "Camp", host, {"width": 390, "height": 844}, mobile=True)

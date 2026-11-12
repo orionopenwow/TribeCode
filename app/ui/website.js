@@ -43,11 +43,12 @@
   }
 
   async function load(quiet) {
-    const sec = section(); if (!sec || !pid()) return;
+    const sec = section(); if (!sec) return;
+    if (!pid()) { drawnFor = null; sec.innerHTML = `<div class="wb-wait wb-nopj"><span class="eyebrow">Website</span><h2>Open a project first</h2><p>Each project has its own website. Pick one, or start one on Home.</p><button class="btn primary" id="wb-home">Go to Home</button></div>`; const h = $('#wb-home'); if (h) h.onclick = () => (window.TribeHub ? window.TribeHub.open('home') : window.TribeApp && window.TribeApp.show('hub')); return; }   // feat/tasks-company: never a blank page
     if (!quiet && drawnFor !== pid()) sec.innerHTML = '<div class="wb-wait">Loading…</div>';
     try { data = (await api('')).website; } catch (e) { sec.innerHTML = `<div class="wb-wait">${esc(e.message)}</div>`; return; }
     if (drawnFor !== pid() || !$('#wb-root')) { draw(); drawnFor = pid(); dirty = false; const vb = $('#wb-versions'); if (vb && window.TribeSiteShelf) window.TribeSiteShelf.render(vb, pid(), { head: false }); const ip = $('#wb-inpv'); if (ip) ip.onclick = async () => { if (!window.TribePreview) return; await window.TribePreview.open(); window.TribePreview.setSource('site'); }; }
-    else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); const ae = document.activeElement; if (!(ae && ae.closest && ae.closest('#wb-gen') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) drawGen(); drawPreview(); }
+    else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); drawStarted(); const ae = document.activeElement; if (!(ae && ae.closest && ae.closest('#wb-gen') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) drawGen(); drawPreview(); }
   }
   // feat/customize: the generator panel (app/ui/sitegen.js) and the Draft / Live preview switch
   let pvMode = null;
@@ -56,11 +57,25 @@
     window.TribeSiteGen.draw(box, data, { api, toast, set: w => { data = w; if (w.gen && w.gen.draft && w.gen.unpublished) pvMode = 'draft'; drawGen(); drawStatus(); drawPreview(); overviewLink(); } });
   }
 
+  // feat/tasks-company: the team already started a website that isn't a builder draft: say where it is and open it
+  function drawStarted() {
+    const box = $('#wb-started'), sd = data && data.started; if (!box) return;
+    const show = !!sd && sd.kind !== 'draft' && !(data.gen && data.gen.draft);
+    box.classList.toggle('hidden', !show); if (!show) { box.innerHTML = ''; return; }
+    const html = `<div class="sec-head"><span class="eyebrow">Already started</span><h2>Your team's website</h2></div>
+      <p class="wb-note">It's in <code>${esc(sd.path)}</code> (${esc(sd.label)})${sd.at ? `, changed ${esc(ago(sd.at))}` : ''}. Keep going from there${sd.kind === 'built' ? ': edit the text below and build it again, or look at it now' : sd.kind === 'repo' ? '. The builder below makes a separate page in site/, so only use it if you want a fresh one' : ''}.</p>
+      <div class="wb-acts">${sd.kind === 'built' && data.previewUrl ? '<button class="btn primary" id="wb-st-show">Show the website</button>' : ''}${sd.kind === 'repo' ? '<button class="btn primary" id="wb-st-code">Open the code</button>' : ''}</div>`;
+    if (box.innerHTML !== html) box.innerHTML = html;
+    const sh = $('#wb-st-show'); if (sh) sh.onclick = async () => { if (!window.TribePreview) return window.open(data.previewUrl, '_blank', 'noopener'); await window.TribePreview.open(); window.TribePreview.setSource('site'); };
+    const cd = $('#wb-st-code'); if (cd) cd.onclick = () => { if (window.TribeShell) window.TribeShell.go('docs-files'); setTimeout(() => { try { window.TribeCodeFiles && window.TribeCodeFiles.set('code'); } catch {} }, 120); };
+  }
+
   // ---------- drawing ----------
   function draw() {
     const d = data, m = d.canManage;
     section().innerHTML = `<div class="wb" id="wb-root">
       <div class="wb-edit">
+        <section class="wb-sec wb-started hidden" id="wb-started" aria-live="polite"></section>
         <section class="wb-sec wb-designer" id="wb-designer"><div class="sec-head"><span class="eyebrow">Website designer</span><h2>Design it block by block</h2></div>
           <p class="wb-hint">Templates, pages, buttons that go somewhere, pictures, a real dark mode, Undo, and Download HTML. Flint edits it with you, free.</p>
           <div class="wb-acts"><button class="btn primary" id="wb-design" type="button">Open the designer</button></div></section>
@@ -105,7 +120,7 @@
         <div class="wb-frame-box" id="wb-frame-box"></div>
       </section>
     </div>`;
-    fill(); drawToggles(); drawStatus(); drawSugs(); drawGen(); drawPreview();
+    fill(); drawToggles(); drawStatus(); drawSugs(); drawGen(); drawPreview(); drawStarted();
     const root = $('#wb-root');
     root.querySelectorAll('[data-pvm]').forEach(b => b.onclick = () => { pvMode = b.dataset.pvm; drawPreview(); });
     root.addEventListener('input', e => { if (e.target.closest('.wb-in')) dirty = true; });

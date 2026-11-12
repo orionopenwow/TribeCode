@@ -63,7 +63,9 @@
     const pid = C.project(); if (!pid) return null;
     try {
       const w = (await C.api(`/projects/${encodeURIComponent(pid)}/website`)).website || {}, g = w.gen || {};
-      site = { pid, has: !!(g.draft && g.draftUrl), draftUrl: g.draftUrl ? g.draftUrl + '&edit=1' : null, updated: (g.draft && g.draft.updated) || '', canDraft: g.canDraft !== false, canPublish: !!g.canPublish, unpublished: !!g.unpublished };
+      // feat/tasks-company: a website the team already started counts: the draft, else the built page (shown as it is)
+      const built = !(g.draft && g.draftUrl) && w.previewUrl && w.started && w.started.kind === 'built' ? w.previewUrl : null;
+      site = { pid, has: !!(g.draft && g.draftUrl) || !!built, built: !!built, started: w.started || null, draftUrl: g.draftUrl ? g.draftUrl + '&edit=1' : built, updated: (g.draft && g.draft.updated) || (w.started && w.started.at) || '', canDraft: g.canDraft !== false, canPublish: !!g.canPublish, unpublished: !!g.unpublished };
     } catch { site = { pid, has: false, draftUrl: null, updated: '', canDraft: false }; }
     return site;
   }
@@ -384,13 +386,20 @@
   function renderSite() {
     const holder = pane.querySelector('#pvw-frame');
     pane.querySelector('#pvw-path').classList.add('hidden');
-    const meta = pane.querySelector('#pvw-meta'); meta.textContent = site && site.unpublished ? 'draft · not published yet' : site && site.has ? 'draft' : ''; meta.title = 'Only the tribe sees the draft. The host or the project lead publishes it from Files › Website.';
+    const meta = pane.querySelector('#pvw-meta'); meta.textContent = site && site.built ? `the team's page · ${site.started.path}` : site && site.unpublished ? 'draft · not published yet' : site && site.has ? 'draft' : ''; meta.title = 'Only the tribe sees the draft. The host or the project lead publishes it from Files › Website.';
     const empty = !(site && site.has);
     pane.classList.toggle('is-empty', empty);
     pane.querySelectorAll('[data-act="tab"],[data-act="share"],[data-act="shot"],[data-act="reload"],[data-act="edit"],[data-act="shelf"]').forEach(b => { b.disabled = empty; });
     if (window.TribePhoneApp) window.TribePhoneApp.preview(pane, { empty: true });
     if (empty) {
       frame = null; helperAlive = false;
+      const sd = site && site.started;
+      if (sd) {   // started, but nothing to show here yet (a site in the repo, or builder settings): open that, don't offer a fresh one
+        holder.innerHTML = `<div class="pvw-empty pvw-build pvw-started"><span class="eyebrow">Website · already started</span><h3>Your team started the website</h3>
+          <p>It's in <code>${esc(sd.path)}</code> (${esc(sd.label)}). Pick up where they left off in Files › Website${sd.kind === 'repo' ? ', or open the code' : ''}.</p>
+          <div class="pvw-brow"><button type="button" class="btn primary" data-act="builder">Open the website</button>${sd.kind === 'repo' && /^(web\/)?index\.html$/.test(sd.path) && info.hasIndex ? `<button type="button" class="btn" data-act="toapp">${ico(I.app)} Show it</button>` : ''}</div></div>`;
+        layout(); return;
+      }
       holder.innerHTML = `<div class="pvw-empty pvw-build"><span class="eyebrow">Website · nothing yet</span><h3>Make the project's website</h3>
         <p>One tap makes a first draft from what the project already has: its name, bio, vision, screenshots and team. Then click anything on it and tell Flint what to change. No AI needed.</p>
         <div class="pvw-brow"><button type="button" class="btn primary" data-act="mksite" ${site && site.canDraft === false ? 'disabled' : ''}>Make the website</button><button type="button" class="btn" data-act="builder">Pick a look in Files › Website</button>${info.hasIndex ? `<button type="button" class="btn" data-act="toapp">${ico(I.app)} Back to the app</button>` : ''}</div></div>`;
@@ -404,7 +413,7 @@
       frame.setAttribute('referrerpolicy', 'no-referrer');
       frame.title = 'Website preview';
       holder.appendChild(frame);
-      if (!editing) { editing = true; paintEditBtn(); }   // the website starts in select mode: click anything, then say what to change
+      if (!editing && !site.built) { editing = true; paintEditBtn(); }   // the website starts in select mode: click anything, then say what to change (the team's own built page is shown as it is)
       load(siteSrc());
     }
     layout();

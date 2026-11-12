@@ -83,14 +83,15 @@
   }
 
   // A live update never wipes what someone is typing: the redraw waits until the field loses focus. Open <details> stay open.
-  const ui = { dec: false, week: false, pending: false };
+  const ui = { dec: false, week: false, pending: false, sample: false };
   function busyTyping(sec) { const a = document.activeElement; return !!(a && sec.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && (a.value || a.tagName === 'SELECT')); }
   function draw() {
     const sec = section(); if (!sec || !open) return;
     if (busyTyping(sec)) { if (!ui.pending) { ui.pending = true; document.activeElement.addEventListener('blur', () => setTimeout(() => { ui.pending = false; draw(); }, 150), { once: true }); } return; }
     if (!C.connected()) { sec.innerHTML = `<div class="co-wrap"><div class="card co-empty"><span class="eyebrow">Company</span><h2>Join or start a tribe first</h2></div></div>`; return; }
     if (!st.d || st.pid !== pid()) { sec.innerHTML = `<div class="co-wrap"><p class="faint">Loading…</p></div>`; return; }
-    const c = co(); if (!c) return drawEmpty(sec);
+    const c = co(); if (!c) return ui.sample ? drawSample(sec) : drawEmpty(sec);
+    ui.sample = false;
     const d = st.d, lead = d.canLead, ceo = c.seats.find(x => x.kind === 'ceo'), rest = c.seats.filter(x => x !== ceo);
     sec.innerHTML = `<div class="co-wrap">
       <header class="co-head"><div class="co-h-t"><span class="eyebrow">🏢 Company</span><h1>${esc(c.name)}</h1>
@@ -144,15 +145,72 @@
       <div class="co-dec-list">${list.map(x => `<div class="co-dec-row"><span class="co-kind k-${esc(x.kind)}">${esc(KIND_L[x.kind] || x.kind)}</span><div><b>${esc(x.title)}</b>${x.why ? `<p>${esc(x.why)}</p>` : ''}<small class="faint">${esc(x.byName || 'TribeCode')} · ${ago(x.at)}</small></div></div>`).join('') || '<p class="faint">CEO calls, closed votes and decided approvals land here.</p>'}</div></details>`;
   }
 
+  // Empty state (feat/tasks-company): an infographic band in the website's company-mock style. Six flat tiles show
+  // what a company adds (seats, charters, money, the standup, the Work loop, approvals), one "Make it a company"
+  // button, "See an example" (a read-only sample company in the real view) and the templates below for leads.
+  const TILE = (k, color, title, line, art) => `<li class="co-ig-tile" data-ig="${k}" style="--ic:${color}"><div class="co-ig-art" aria-hidden="true">${art}</div><h3>${title}</h3><p>${line}</p></li>`;
+  function infographic(lead) {
+    const av = (c, t, ai) => `<i class="co-ig-av${ai ? ' ai' : ''}" style="--a:${c}">${t}</i>`;
+    return `<ul class="co-ig-grid" role="list">
+      ${TILE('seats', 'var(--brand)', 'Seats', 'CEO, Build, Grow and Run. A friend or an AI helper holds each one.', `<div class="co-ig-org">
+        <span class="co-ig-seat" style="--c:var(--brand)">${av('var(--brand)', 'C')}<b>CEO</b><small>you</small></span><span class="co-ig-stem"></span>
+        <span class="co-ig-row"><span class="co-ig-seat" style="--c:var(--live)">${av('var(--live)', '✦', 1)}<b>Build</b><small>AI</small></span><span class="co-ig-seat" style="--c:var(--amber)">${av('var(--peer)', 'M')}<b>Grow</b><small>friend</small></span><span class="co-ig-seat" style="--c:var(--body)">${av('var(--body)', '+')}<b>Run</b><small>open</small></span></span></div>`)}
+      ${TILE('charter', 'var(--live)', 'Charters', 'Every seat gets a goal, what it may do alone, and what needs an OK.', `<ul class="co-ig-charter mono"><li><span>goal</span>100 sign-ups</li><li><span>may</span>draft posts</li><li><span>ask first</span>publish · spend</li></ul>`)}
+      ${TILE('money', 'var(--amber)', 'Money', 'Sign-ups, income and costs, each with its source. Nothing made up.', `<div class="co-ig-money"><b class="mono">$412</b><span class="co-ig-bars"><i style="--h:30%"></i><i style="--h:48%"></i><i style="--h:40%"></i><i style="--h:64%"></i><i style="--h:78%"></i><i style="--h:92%"></i></span><em class="mono">from Stripe CSV</em></div>`)}
+      ${TILE('standup', 'var(--peer)', 'Rituals', 'A daily standup asks each seat in chat and writes the doc.', `<ol class="co-ig-feed"><li><b style="--c:var(--live)">Build</b>Shipped the save fix</li><li><b style="--c:var(--amber)">Grow</b>Launch email drafted</li><li><b style="--c:var(--brand)">CEO</b>Launch on Friday</li></ol>`)}
+      ${TILE('work', 'var(--online)', 'Work loop', 'Post a need, match people or AI, assign, review, credit the hours.', `<ol class="co-ig-loop mono"><li>post</li><li>match</li><li>assign</li><li>review</li><li>credit</li></ol>`)}
+      ${TILE('approve', 'var(--alert)', 'Approvals', 'Anything outward or costly waits for a person’s one-tap OK.', `<div class="co-ig-ask"><p>${av('var(--peer)', 'M')}<span><b>Grow</b> wants to email 120 people</span></p><p class="co-ig-btns"><span class="ok">Approve</span><span>Deny</span></p></div>`)}
+    </ul>`;
+  }
   function drawEmpty(sec) {
     const d = st.d, lead = d && d.canLead;
-    sec.innerHTML = `<div class="co-wrap"><section class="card co-empty co-hero" aria-label="Make this project a company">
-      <span class="eyebrow">🏢 Company mode</span><h1>Make this project a company</h1>
-      <p class="co-lead">Give the work seats, like a real business: a CEO, someone who builds, someone who grows it. Each seat has a charter and can be held by a friend, an AI helper, or both. Humans still say yes to anything outward or costly.</p>
-      ${lead ? `<div class="co-tpls">${(d.templates || []).map(t => `<button class="co-tpl" data-tpl="${esc(t.id)}"><span class="co-tpl-e" aria-hidden="true">${esc(t.emoji)}</span><b>${esc(t.name)}</b><small>${esc(t.blurb)}</small><span class="co-tpl-s">${esc(t.seats.join(' · '))}</span></button>`).join('')}</div>
-        <p class="faint co-note">One click makes it. You can rename seats, change charters and add or remove seats after.</p>` : '<p class="faint">Ask your host or a project lead to make this project a company.</p>'}
-    </section></div>`;
+    sec.innerHTML = `<div class="co-wrap"><section class="card co-empty co-hero co-ig" aria-labelledby="co-ig-t">
+      <div class="co-ig-top"><div class="co-ig-intro"><span class="eyebrow">🏢 Company mode</span><h1 id="co-ig-t">Run it like a company</h1>
+        <p class="co-lead">Give the work seats, like a real business. Each seat has a charter and can be held by a friend, an AI helper, or both. People still say yes to anything outward or costly.</p></div>
+        <div class="co-ig-cta">${lead ? '<button class="btn primary" id="co-make">Make it a company</button>' : ''}<button class="btn" id="co-example">See an example</button></div></div>
+      ${infographic(lead)}
+      ${lead ? '' : '<p class="faint co-note">Ask your host or a project lead to make this project a company.</p>'}
+    </section>
+    ${lead && (d.templates || []).length ? `<section class="card co-tpl-card" aria-label="Templates"><div class="co-c-h"><span class="eyebrow">Or start from a shape</span><h3>Templates</h3></div><div class="co-tpls">${(d.templates || []).map(t => `<button class="co-tpl" data-tpl="${esc(t.id)}"><span class="co-tpl-e" aria-hidden="true">${esc(t.emoji)}</span><b>${esc(t.name)}</b><small>${esc(t.blurb)}</small><span class="co-tpl-s">${esc(t.seats.join(' · '))}</span></button>`).join('')}</div>
+      <p class="faint co-note">One click makes it. You can rename seats, change charters and add or remove seats after.</p></section>` : ''}</div>`;
     sec.querySelectorAll('[data-tpl]').forEach(b => b.onclick = () => create(b.dataset.tpl, b));
+    const mk = sec.querySelector('#co-make'); if (mk) mk.onclick = () => create(guessTpl(), mk);
+    sec.querySelector('#co-example').onclick = () => { ui.sample = true; draw(); sec.scrollTop = 0; };
+  }
+  // "Make it a company" makes the lean four (CEO · Build · Grow · Run); templates below give other shapes
+  const guessTpl = () => { const ids = ((st.d || {}).templates || []).map(x => x.id); return !ids.length || ids.includes('blank') ? 'blank' : ids[0]; };
+  // "See an example": the real Company view, filled with a sample company, read-only
+  const ago_ = m => new Date(Date.now() - m * 60000).toISOString();
+  const SAMPLE = () => {
+    const P_ = (n, c) => ({ name: n, color: c, role: 'builder' }), A_ = n => ({ name: n, role: 'agent' });
+    const seat = (id, kind, title, color, who, goal, status, last, m) => ({ id, kind, title, color, who, charter: { goal }, status, last: last ? { text: last, at: ago_(m) } : null });
+    return { canLead: false, canEdit: false, mySeats: [], sample: true,
+      company: { on: true, name: 'Lantern Games', mission: 'Cozy little games for short breaks, made by four friends and their AI helpers.', template: 'game-studio', rhythms: { standup: true, weekly: true },
+        seats: [seat('s-ceo', 'ceo', 'CEO', '#F26B1D', { person: P_('Camp', '#F26B1D') }, 'Launch on Friday', 'on-track', 'This week: launch. Everything else waits.', 40),
+          seat('s-build', 'cto', 'Build', '#38C6B1', { agent: A_('Camp’s Claude') }, 'Ship level 3 and the boss', 'on-track', 'Shipped the save-slot fix', 25),
+          seat('s-grow', 'growth', 'Grow', '#FABD2F', { person: P_('Maya', '#6C7CFF') }, '100 wishlist sign-ups', 'needs-you', 'Launch email ready: needs an OK to send', 12),
+          seat('s-run', 'ops', 'Run', '#94A3B8', { person: P_('Jo', '#38C6B1'), agent: A_('Flint') }, 'Books up to date every Monday', 'on-track', 'Imported October’s Stripe CSV', 90),
+          seat('s-sup', 'support', 'Support', '#6C7CFF', {}, 'Answer every email within a day', 'idle', null, 0)],
+        goals: [{ id: 'g1', title: 'Launch on Friday', seat: 's-ceo', progress: 60, results: [{ text: 'Launch checklist', current: 3, target: 5, unit: '' }] },
+          { id: 'g2', title: '100 wishlist sign-ups', seat: 's-grow', progress: 41, results: [{ text: 'Sign-ups', current: 41, target: 100, unit: '' }] }] },
+      today: { standups: { 's-build': { done: 'Shipped the save-slot fix', next: 'The level 3 boss' }, 's-grow': { done: 'Launch email drafted', next: 'Send it once Camp says OK', blocked: '' }, 's-run': { done: 'Imported October’s Stripe CSV', next: 'Two refunds to handle' } }, missing: [] },
+      decisions: [{ kind: 'ceo-call', title: 'Launch on Friday, not next month', why: 'The demo is fun now; polish can follow.', byName: 'Camp', at: ago_(300) }, { kind: 'approval', title: 'Spend $20 on the itch.io banner', byName: 'Camp', at: ago_(1500) }] };
+  };
+  function drawSample(sec) {
+    const real = st; st = { d: SAMPLE(), pid: pid() };
+    try {
+      const c = st.d.company, d = st.d, ceo = c.seats[0], rest = c.seats.slice(1);
+      const lead = real.d && real.d.canLead;
+      sec.innerHTML = `<div class="co-wrap co-sample"><div class="co-sample-bar" role="note"><span class="eyebrow">Example · read-only</span><span>This is what a company looks like after a week. Nothing here is real.</span>
+          <span class="co-sample-acts"><button class="btn sm" id="co-sample-back">Back</button>${lead ? '<button class="btn sm primary" id="co-sample-make">Make it a company</button>' : ''}</span></div>
+        <header class="co-head"><div class="co-h-t"><span class="eyebrow">🏢 Company</span><h1>${esc(c.name)}</h1><p class="co-mission">${esc(c.mission)}</p></div></header>
+        <section class="card co-org" aria-label="Org chart"><div class="co-org-h"><span class="eyebrow">Org chart</span><span class="faint">${c.seats.length} seats</span></div>
+          <div class="co-ceo-row">${seatCard(ceo, true)}</div><div class="co-stem" aria-hidden="true"></div><div class="co-grid">${rest.map(x => seatCard(x)).join('')}</div></section>
+        <div class="co-cols">${todayCard(c, d)}${goalsCard(c, d)}</div>${decisionsCard(c, d)}</div>`;
+    } finally { st = real; }
+    sec.querySelectorAll('.co-sample .co-seat, .co-sample button:not(#co-sample-back):not(#co-sample-make), .co-sample input, .co-sample form').forEach(x => { x.setAttribute('tabindex', '-1'); x.setAttribute('aria-disabled', 'true'); if (x.tagName === 'FORM') x.onsubmit = e => e.preventDefault(); else if (x.tagName === 'BUTTON') x.onclick = e => { e.preventDefault(); toast('This is an example. Make your own company to change things.'); }; });
+    sec.querySelector('#co-sample-back').onclick = () => { ui.sample = false; draw(); };
+    const mk = sec.querySelector('#co-sample-make'); if (mk) mk.onclick = () => { ui.sample = false; create(guessTpl(), mk); };
   }
   async function create(tpl, btn, helpers) {
     if (st.busy) return; st.busy = true; if (btn) { btn.disabled = true; btn.classList.add('busy'); }
