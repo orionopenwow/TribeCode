@@ -61,7 +61,7 @@ for (const id of ids) {
   const html = fs.existsSync(path.join(d, 'index.html')) ? fs.readFileSync(path.join(d, 'index.html'), 'utf8') : '';
   if (/(src|href)=["']https?:/i.test(html)) bad.push(`${id}: index.html loads from the network`);
   if ((s.params || []).length && !/config\.js/.test(html)) bad.push(`${id}: index.html does not load config.js`);
-  cat.push({ id, kind: s.kind, title: s.title, summary: s.summary, icon: s.icon || s.kind, tags: s.tags || [], phrases: s.phrases || [], license: src.license, by: src.original ? 'TribeCode' : src.authors, source: src.original ? '' : src.url, original: !!src.original, params: (s.params || []).map(p => ({ key: p.key, label: p.label, type: p.type, min: p.min, max: p.max, step: p.step, default: p.default, words: p.words })), try: s.try || [], controls: s.controls || '', size: total, files: files.map(f => f.rel).filter(f => !/^(LICENSE|README\.md|STARTER\.json)$/.test(f)).sort() });
+  cat.push({ id, kind: s.kind, title: s.title, summary: s.summary, icon: s.icon || s.kind, tags: s.tags || [], phrases: s.phrases || [], license: src.license, by: src.original ? 'TribeCode' : src.authors, source: src.original ? '' : src.url, original: !!src.original, params: (s.params || []).map(p => ({ key: p.key, label: p.label, type: p.type, min: p.min, max: p.max, step: p.step, default: p.default, words: p.words, main: p.main || undefined })), try: s.try || [], controls: s.controls || '', size: total, files: files.map(f => f.rel).filter(f => !/^(LICENSE|README\.md|STARTER\.json)$/.test(f)).sort() });
 }
 
 // NOTICE: one entry per adapted starter, between the markers (the rest of NOTICE is left alone)
