@@ -745,6 +745,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
 
+  if (a === 'dev' && b === 'stamp' && m === 'GET' && args.dev) return send(res, 200, { stamp: devStamp, dev: true });   // feat/flint-runthrough: clean-slate live reload (no sign-in needed)
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
     if (!isLocal(req) && limited(req, 5)) return fail(res, 429, 'slow down');
@@ -1249,11 +1250,12 @@ server.on('upgrade', (req, sock) => {
   });
 });
 
+let devStamp = Date.now();   // feat/flint-runthrough: GET /api/dev/stamp lets a signed-out dev page (scripts/dev/clean-slate.js) live-reload too
 function start() {
   // --dev (used by scripts/live.js): open tabs reload when UI files change.
   if (args.dev) {
     let t; try {
-      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => broadcast({ type: 'dev-reload' }), 300); });
+      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => { devStamp = Date.now(); broadcast({ type: 'dev-reload' }); }, 300); });
       console.log('  Live:     UI changes reload open tabs');
     } catch (e) { console.log('  Live:     file watching unavailable (' + e.message + ')'); }
   }

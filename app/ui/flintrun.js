@@ -126,13 +126,19 @@
     [/^(?:run|do|start|post|hold)\s+(?:the\s+|a\s+|our\s+|today'?s\s+)?(?:daily\s+)?stand-?up$/i, () => standup()],
     [/^(?:change|set|make|update)\s+(?:the\s+)?(?:website|site|page|landing page)(?:'s)?\s+(?:headline|title|heading)\s+(?:to|say|read)\s+(.+)$/i, m => headline(m[1])],
     [/^(?:make|build|create|write|prepare|do)\s+(?:the\s+|a\s+)?(?:product\s+)?presentation$|^present\s+(?:the\s+)?(?:product|project|what we built)$/i, () => presentation()],
-    [/^(?:export|make|build|zip|package|save)\s+(?:the\s+|our\s+)?(?:proof(?:\s+of\s+work)?|proof zips?|proof-of-work(?:\s+zips?)?)(?:\s+zips?)?$/i, () => exportProof().then(r => ({ text: `Saved the proof of work in the tribe folder:\n${r.saved.map(s => `- \`${txt(s.path || s.name)}\``).join('\n')}`, acts: r.saved.map(s => [`Download ${s.name}`, 'proofdl', s.name]), sum: 'exported the proof' }))],
+    [/^(?:export|make|build|zip|package|save)\s+(?:the\s+|our\s+)?(?:proof(?:\s+of\s+work)?|proof zips?|proof-of-work(?:\s+zips?)?)(?:\s+zips?)?$/i, () => exportProof().then(r => ({ text: `Saved the proof of work in the tribe folder:\n${r.saved.map(s => `- \`${txt(s.path || s.name)}\``).join('\n')}`, acts: r.saved.filter(s => !s.error).map(s => [`Download ${s.name}`, 'ask', `download the proof ${s.name}`]), sum: 'exported the proof' }))],
+    [/^download (?:the )?proof\s+(\S+\.zip)$/i, m => { download(m[1]); return { text: `Downloading ${m[1]}.` }; }],
     [/^(?:make|write|give me|create)\s+(?:a\s+)?(?:blender\s+)?turntable(?:\s+(?:render|script))?(?:\s+(?:for|of)\s+(\S+))?$|^blender\s+turntable(?:\s+(?:for|of)\s+(\S+))?$/i, m => blender(m[1] || m[2])],
     [/^(?:watch flint build|do a run-?through|run the run-?through|show me what you can build|flint run-?through)$/i, () => { setTimeout(() => start(), 50); return { text: 'Starting the run-through: watch the bar at the bottom. Stop it any time.' }; }],
   ];
   async function flint(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' ');
-    for (const [rx, fn] of RX) { const m = rx.exec(text); if (m) { try { return await fn(m); } catch (e) { return { text: `That didn't work: ${txt(e.message)}` }; } } }
+    for (const [rx, fn] of RX) {
+      const m = rx.exec(text); if (!m) continue;
+      let r; try { r = await fn(m); } catch (e) { return { text: `That didn't work: ${txt(e.message)}` }; }
+      if (r && r.acts && F() && F().act) r.acts = r.acts.map(a => (Array.isArray(a) ? F().act(a[0], a[1], a[2]) : a));   // flint.js's chips: { label, kind, arg }
+      return r;
+    }
     return null;
   }
 
@@ -386,9 +392,6 @@ Made with TribeCode (MIT, self-hosted): https://github.com/orionopenwow/TribeCod
   }
   function stop() { run.stop = true; run.on = false; draw(); }
 
-  // Flint chat buttons: "Download <name>"
-  if (F() && F().act) { /* actions are by name in flint.js; the proof downloads go through a delegated click below */ }
-  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.fl-act'); if (!b) return; const m = /^Download (.+\.zip)$/.exec(b.textContent.trim()); if (m && blobs[m[1]]) { e.preventDefault(); e.stopPropagation(); download(m[1]); } }, true);
   // ?flintrun=1 starts it (scripts/flint-runthrough.js); ?flintrun=fast for tests
   try { const q = new URLSearchParams(location.search).get('flintrun'); if (q) { const go = () => (window.TribeFlint && window.TribeClient ? setTimeout(() => start({ fast: q === 'fast' }), 900) : setTimeout(go, 200)); addEventListener('load', go); } } catch {}
 

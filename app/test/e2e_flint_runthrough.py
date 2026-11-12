@@ -40,7 +40,7 @@ def api(path, method="GET", body=None, token=None, raw=False):
 
 def main():
     tmp = OUT or tempfile.mkdtemp(prefix="tribe-flintrun-")
-    tribe_dir = os.path.join(tmp, "tribe")
+    os.makedirs(tmp, exist_ok=True); tribe_dir = os.path.join(tmp, "tribe")
     if OUT and os.path.exists(tribe_dir): shutil.rmtree(tribe_dir)
     env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost"}
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tribe_dir, "--name", "Test Crew", "--ollama", "http://localhost:9"],
@@ -83,6 +83,8 @@ def main():
             # Flint's own thread holds each command he typed
             mine = pg.evaluate("TribeFlint.thread().filter(m => m.who === 'me').map(m => m.text)")
             for l in log: assert l["cmd"] in mine, l["cmd"]
+            chips = pg.evaluate("TribeFlint.thread().filter(m => /Saved the proof/.test(m.text)).pop().acts.map(a => a.label)")
+            assert chips == ["Download glowbug-proof.zip", "Download tribe-lantern-labs-proof.zip"], chips
             if take: pg.screenshot(path=str(SHOTS / "flint-runthrough-end.png"))
 
             # the tribe really changed
