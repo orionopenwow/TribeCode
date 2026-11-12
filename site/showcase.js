@@ -19,7 +19,8 @@
     try { history.replaceState(history.state, '', cur === 'all' ? location.pathname + location.search + '#gallery' : '#gallery/' + cur); } catch {}
   });
   document.addEventListener('tribe-lang', () => show(cur));
-  const m = /^#gallery\/(\w+)/.exec(location.hash); show(m ? m[1] : 'all');
-  if (m) box.scrollIntoView();
+  const fromHash = () => { const m = /^#gallery\/(\w+)/.exec(location.hash); if (m) { show(m[1]); box.scrollIntoView(); } return m; };
+  if (!fromHash()) show('all');
+  addEventListener('hashchange', fromHash);
   window.TribeGallery = { show };
 })();
