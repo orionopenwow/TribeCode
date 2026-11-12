@@ -46,7 +46,7 @@
     const sec = section(); if (!sec || !pid()) return;
     if (!quiet && drawnFor !== pid()) sec.innerHTML = '<div class="wb-wait">Loading…</div>';
     try { data = (await api('')).website; } catch (e) { sec.innerHTML = `<div class="wb-wait">${esc(e.message)}</div>`; return; }
-    if (drawnFor !== pid() || !$('#wb-root')) { draw(); drawnFor = pid(); dirty = false; }
+    if (drawnFor !== pid() || !$('#wb-root')) { draw(); drawnFor = pid(); dirty = false; const vb = $('#wb-versions'); if (vb && window.TribeSiteShelf) window.TribeSiteShelf.render(vb, pid(), { head: false }); const ip = $('#wb-inpv'); if (ip) ip.onclick = async () => { if (!window.TribePreview) return; await window.TribePreview.open(); window.TribePreview.setSource('site'); }; }
     else { if (!dirty) fill(); drawToggles(); drawStatus(); drawSugs(); const ae = document.activeElement; if (!(ae && ae.closest && ae.closest('#wb-gen') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) drawGen(); drawPreview(); }
   }
   // feat/customize: the generator panel (app/ui/sitegen.js) and the Draft / Live preview switch
@@ -89,12 +89,16 @@
             <button class="btn primary" id="wb-sug-send">Send suggestion</button></div>` : ''}
           <div class="wb-sugs" id="wb-sugs"></div>
         </section>
+        <section class="wb-sec wb-versions" id="wb-versions-sec">
+          <div class="sec-head"><span class="eyebrow">Saved shelf</span><h2>Website versions</h2></div>
+          <div id="wb-versions"></div>
+        </section>
       </div>
       <section class="hero-card wb-preview" aria-label="Preview">
         <div class="wb-pv-head"><span class="eyebrow">Preview</span>
           <div class="wb-dev wb-pvm hidden" id="wb-pvm" role="group" aria-label="Which page"><button class="wb-devb" data-pvm="draft">Draft</button><button class="wb-devb" data-pvm="live">Live</button></div>
           <div class="wb-dev" role="group" aria-label="Preview width"><button class="wb-devb" data-dev="desktop">Desktop</button><button class="wb-devb" data-dev="phone">Phone</button></div>
-          <a class="linkish wb-open hidden" id="wb-open" target="_blank" rel="noopener noreferrer">Open</a></div>
+          <a class="linkish wb-open hidden" id="wb-open" target="_blank" rel="noopener noreferrer">Open</a><button type="button" class="linkish" id="wb-inpv" title="Open it in the preview: click anything and tell Flint what to change">Edit in the preview</button></div>
         <div class="wb-frame-box" id="wb-frame-box"></div>
       </section>
     </div>`;

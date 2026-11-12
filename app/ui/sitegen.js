@@ -19,7 +19,7 @@
   const FIELDS = { hero: [['kicker', 'Small line above', 80], ['title', 'Headline', 80], ['dek', 'One-line pitch', 220, 'area'], ['cta', 'Button label', 30]], story: [['title', 'Title', 60], ['body', 'Story', 1600, 'area']],
     features: [['title', 'Title', 60]], gallery: [['title', 'Title', 60]], play: [['title', 'Title', 60], ['body', 'Line under it', 220]], devlog: [['title', 'Title', 60]], roadmap: [['title', 'Title', 60]],
     team: [['title', 'Title', 60], ['body', 'Line under it', 300]], faq: [['title', 'Title', 60]], footer: [['text', 'Footer line', 160]],
-    visit: [['title', 'Title', 60], ['body', 'Line under it', 300]], event: [['title', 'Title', 60], ['body', 'Line under it', 300]], contact: [['title', 'Title', 60], ['body', 'Line under it', 300]] };
+    visit: [['title', 'Title', 60], ['body', 'Line under it', 300]], event: [['title', 'Title', 60], ['body', 'Line under it', 300]], contact: [['title', 'Title', 60], ['body', 'Line under it', 300]], pricing: [['title', 'Title', 60], ['body', 'Line under it', 300]], testimonials: [['title', 'Title', 60]] };
   const ITEMS = { features: [['title', 'Feature'], ['body', 'One line about it']], faq: [['q', 'Question'], ['a', 'Answer']] };
   // The facts each kind of site asks for (step 1).
   const INFO = { business: [['hours', 'Opening hours (one line per day or range)', 'area'], ['address', 'Address'], ['phone', 'Phone'], ['email', 'Email']],

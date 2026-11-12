@@ -622,6 +622,6 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
     return { changed: j.edits.length, say: String(j.say || 'Done.').slice(0, 200), via: (r && r.via) || 'brain' };
   }
 
-  return { match, serve, upgrade, route, mint, verify, rootOf, status, changed, links, watch, CANDIDATES, okSub };
+  return { match, serve, upgrade, route, mint, verify, rootOf, status, changed, links, watch, CANDIDATES, okSub, HELPER_SRC };
 };
 module.exports.CSP = CSP;
