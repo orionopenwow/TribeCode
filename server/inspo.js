@@ -329,9 +329,12 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
         return fail(res, 405, 'GET or PUT');
       }
       if (b === 'search' && m === 'GET') { if (['spectator', 'guest'].includes(me.role)) return fail(res, 403, 'only builders can search'); return send(res, 200, await search(url.searchParams.get('q'), url.searchParams.get('type'), url.searchParams.get('source'), url.searchParams.get('page'))); }
+      const mine = boardOf(me, 'me'), notYours = x => isMe(x) && x !== mine;   // review-2026-11-11: u-<someone else> is their private board
+      if (notYours(pidQ)) return fail(res, 404, 'project not found');
       if (!b && m === 'GET') { if (!isMe(pidQ)) { const p = P.get(pidQ); if (!p || !P.canSee(me, pidQ)) return fail(res, 404, 'project not found'); } return send(res, 200, view(pidQ)); }
       const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, 400 * 1024);
       const pid = body.board === 'me' || boardQ === 'me' ? boardOf(me, 'me') : String(body.project || pidQ).slice(0, 80);
+      if (notYours(pid)) return fail(res, 404, 'project not found');
       if (b === 'save' && m === 'POST') { can(me, pid); return send(res, 200, { item: await saveRef(pid, me, body.ref), ...view(pid) }); }
       if (b === 'link' && m === 'POST') { can(me, pid); return send(res, 200, { item: await link(pid, me, body.url), ...view(pid) }); }
       if (b === 'image' && m === 'POST') {
