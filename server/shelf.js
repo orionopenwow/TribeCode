@@ -96,5 +96,13 @@ module.exports = function shelf({ P, root, docs, postChat, str, nameOf }) {
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { route, view, add, catalog: () => catalog, starters: () => starters };
+  // feat/market-v2: the Marketplace adds and removes its own Toolbox lines (server/market.js keeps the undo record)
+  function toolboxAdd(pid, it, me) { const p = P.get(pid); P.inProject(pid, () => addToToolbox(p, it, repoDir(p), me)); }
+  function toolboxRemove(pid, id, me) {
+    const p = P.get(pid), dir = repoDir(p), mark = `<!-- shelf:${id} -->`;
+    const strip = t => t.split('\n').filter(l => !l.includes(mark)).join('\n');
+    if (dir) { const cur = toolbox(dir); if (cur.includes(mark)) fs.writeFileSync(path.join(dir, 'TOOLBOX.md'), strip(cur)); }
+    P.inProject(pid, () => { const d = docs.find('Toolbox'); if (d && d.body && d.body.includes(mark)) docs.upsert({ name: 'Toolbox', body: strip(d.body), baseVersion: d.version, by: me.id }); });
+  }
+  return { route, view, add, catalog: () => catalog, starters: () => starters, toolboxAdd, toolboxRemove, installSkill, repoDir };
 };

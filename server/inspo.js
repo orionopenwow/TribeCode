@@ -357,7 +357,7 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { route, view, apply, link, palette, fontFrom, parseHtml, search, cache, saveRef };
+  return { route, view, apply, link, palette, fontFrom, parseHtml, search, cache, saveRef, add: (pid, me, it) => { can(me, pid); return add(pid, me, it); }, drop: (pid, id) => { const st = load(pid), n = st.items.length; st.items = st.items.filter(x => x.id !== id); if (st.items.length === n) return false; save(pid, st); broadcast && broadcast({ type: 'inspo', project: pid }); return true; } };   // feat/market-v2: add / drop for the Marketplace
 };
 module.exports.palette = palette;
 module.exports.fontFrom = fontFrom;

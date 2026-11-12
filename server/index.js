@@ -112,7 +112,7 @@ function lanUrls() {
   const rank = u => (u.kind === 'tailscale' ? 0 : u.kind === 'lan' ? (/wi-?fi|wlan|wireless|ethernet|^en|^eth/i.test(u.name) ? 1 : 2) : 3);
   return out.sort((x, y) => rank(x) - rank(y));
 }
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 // A sign-in that survives cleared storage (iPhone Safari wipes site storage after a week away; every address is its own
 // storage): whenever a response hands out a new key (claim, join, sign-in, device link, reclaim), the browser also gets it as
 // an HttpOnly cookie that pages can't read. GET /api/session swaps the cookie back for the key when storage comes up empty.
@@ -595,7 +595,7 @@ const jamHub = require('./jam')({ P, W, base: baseStore, setupFlow, publish: pub
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const studios = require('./studios')({ P, base: baseStore, root: require('./tpldir').root(), sense, broadcast, buildKit });   // v0.27: Studios — creative apps beside TribeCode, linked not bundled (server/studios.js)
 const trending = require('./trending')({ store: baseStore, root: require('./tpldir').root() });   // daily "Trending on GitHub" feed (server/trending.js)
-const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str, trending });   // v0.27 company: the Marketplace (server/market.js)
+const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, inspo: inspoBoard, postChat, nameOf, getMembers: () => members, str, trending });   // v0.27 company: the Marketplace (server/market.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const pinsHub = require('./pins')({ P, base: baseStore, broadcast, bus, getMembers: () => members, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-E comment pins + preview presence (server/pins.js)
 const designCanvas = require('./canvas')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-A: the design canvas (server/canvas.js)   // feat/whiteboard: the shared team board (server/whiteboard.js)

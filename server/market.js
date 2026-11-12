@@ -20,7 +20,7 @@ const { toMarket } = require('./trendcheck');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SORTS = ['hot', 'rising', 'new', 'top'];
+const SORTS = ['hot', 'rising', 'new', 'top', 'az'];
 const KIND = {
   widget: { label: 'Widgets', emoji: '🧩' }, 'company-template': { label: 'Company templates', emoji: '🏢' }, playbook: { label: 'Playbooks', emoji: '📋' },
   skill: { label: 'Skills', emoji: '🧠' }, library: { label: 'Libraries', emoji: '📚' }, tool: { label: 'Tools', emoji: '🛠️' }, studio: { label: 'Studios', emoji: '🎛️' },
@@ -33,7 +33,7 @@ const INSTALL = new Set(['widget', 'skill', 'library', 'tool', 'studio', 'connec
 const TOOLBOX = new Set(['skill', 'library', 'tool', 'studio', 'connector']);
 const DAY = 864e5;
 
-module.exports = function market({ P, store, root, approvals, widgets, shelf, docs, postChat, nameOf = id => id, getMembers = () => [], str = (v, n) => String(v == null ? '' : v).slice(0, n), now = () => Date.now(), tick = true, trending = null }) {
+module.exports = function market({ P, store, root, approvals, widgets, shelf, docs, inspo = null, postChat, nameOf = id => id, getMembers = () => [], str = (v, n) => String(v == null ? '' : v).slice(0, n), now = () => Date.now(), tick = true, trending = null }) {
   const catalog = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'marketplace.json'), 'utf8')).items || []; } catch { return []; } })();
   const byId = new Map(catalog.map((it, i) => [it.id, Object.assign(it, { _i: i })]));
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -66,6 +66,7 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
     top: (it, c) => it.score + 8 * Math.log(1 + c.all),
   };
   function sortList(list, sort) {
+    if (sort === 'az') return list.sort((a, b) => a.title.localeCompare(b.title, 'en', { sensitivity: 'base' }));
     if (sort === 'new') return list.sort((a, b) => String(b.added).localeCompare(String(a.added)) || b._i - a._i);   // newest date, then latest added to the catalog
     const f = RANK[sort] || RANK.hot, s = new Map(list.map(it => [it.id, f(it, counts(it.id))]));
     return list.sort((a, b) => s.get(b.id) - s.get(a.id) || b.score - a.score || (sort === 'rising' ? String(b.added).localeCompare(String(a.added)) : 0) || a.title.localeCompare(b.title));
@@ -85,22 +86,24 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
     if (skip !== 'seat' && f.seat.length && !f.seat.includes(it.seat)) return false;
     return true;
   }
-  function view(it) {
+  function view(it, pid) {
     const c = counts(it.id), o = {};
     for (const [k, v] of Object.entries(it)) if (k[0] !== '_') o[k] = v;
     const t = it.id.startsWith('tr-') && trending ? (trending.get().items || []).find(x => x.id === it.id) : null;   // trending extras for the detail sheet
     if (t) Object.assign(o, { stars: t.stars == null ? null : t.stars, why: t.why || '', seenOn: Array.isArray(t.seenOn) ? t.seenOn : [] });
-    return { ...o, kindLabel: (KIND[it.kind] || {}).label || it.kind, uses: { week: c.week, lastWeek: c.prev, all: c.all } };
+    return { ...o, kindLabel: (KIND[it.kind] || {}).label || it.kind, uses: { week: c.week, lastWeek: c.prev, all: c.all }, installed: isIn(pid, it.id), installedAt: isIn(pid, it.id) ? installed[pid][it.id].at : undefined };
   }
   function search(sp) {
     const f = parse(sp), sort = SORTS.includes(sp.get('sort')) ? sp.get('sort') : 'hot';
     const offset = Math.max(0, Math.min(10000, parseInt(sp.get('offset'), 10) || 0)), limit = Math.max(1, Math.min(60, parseInt(sp.get('limit'), 10) || 24));
-    const all = sortList(catalog.filter(it => match(it, f)), sort);
+    const pid = str(sp.get('project'), 80) || P.current() || '';
+    const onlyIn = sp.get('installed') === '1';
+    const all = sortList(catalog.filter(it => match(it, f) && (!onlyIn || isIn(pid, it.id))), sort);
     const active = Object.values(usage.items).reduce((n, u) => n + Object.entries(u.d || {}).filter(([d]) => (now() - Date.parse(d + 'T00:00:00Z')) / DAY < 7).reduce((a, [, x]) => a + x, 0), 0);
-    return { items: all.slice(offset, offset + limit).map(view), total: all.length, offset, limit, sort, catalog: catalog.length, tribeUsesThisWeek: active,
+    return { items: all.slice(offset, offset + limit).map(it => view(it, pid)), installedCount: pid && installed[pid] ? Object.keys(installed[pid]).length : 0, total: all.length, offset, limit, sort, catalog: catalog.length, tribeUsesThisWeek: active,
       note: sort === 'hot' ? (active ? 'Hot in your tribe: what your tribe used this week, plus TribeCode’s picks' : 'Nothing used in your tribe this week yet, so these are TribeCode’s picks')
         : sort === 'rising' ? 'Rising in your tribe: used more than last week, or new and well rated by TribeCode'
-          : sort === 'new' ? 'Newest in the catalog' : 'Top: TribeCode’s curated score plus your tribe’s all-time use' };
+          : sort === 'new' ? 'Newest in the catalog' : sort === 'az' ? 'A to Z' : 'Top: TribeCode’s curated score plus your tribe’s all-time use' };
   }
   function facets(sp) {
     const f = parse(sp), out = { kind: {}, for: {}, seat: {}, tag: {} };
@@ -125,33 +128,123 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
   const projectFor = (pid, me) => { const id = str(pid, 80) || P.current() || P.defaultId(); const p = P.get(id); if (!p || !P.canSee(me, id)) throw err(404, 'project not found'); return id; };
   const shelfItem = it => ({ id: it.id, kind: it.kind === 'connector' ? 'mcp' : it.kind, title: it.title, summary: it.summary, license: it.license || 'see repo', repo: it.repo, path: it.path, ref: it.ref || 'main', url: it.url, install: it.install });
   const exists = rel => { try { return fs.existsSync(path.join(root, rel)); } catch { return false; } };
+  // feat/market-v2: every Add leaves an undo record (.tribe/market/installed.json, per project), so Remove takes back
+  // exactly what Add did: the sidebar widget, the Toolbox line, the copied skill folder, the .mcp.json entry, the doc
+  // (only while nobody edited it) or the inspiration-board card.
+  const IFILE = '.tribe/market/installed.json';
+  let installed = store.readJSON(IFILE, {}); if (!installed || typeof installed !== 'object' || Array.isArray(installed)) installed = {};
+  const saveInst = () => { ensureDir(); store.writeJSON(IFILE, installed); };
+  const isIn = (pid, id) => !!(pid && installed[pid] && installed[pid][id]);
+  const readT = rel => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', rel), 'utf8')); } catch { return null; } };
+  const sourceOf = it => it.source || (it.repo ? `https://github.com/${it.repo}` : it.url) || '';
+  function addDoc(pid, me, name, body) {
+    let r = null;
+    P.inProject(pid, () => {
+      const d = docs.find(name);
+      if (d) r = { slug: d.slug, created: false };
+      else { const x = ((docs.upsert({ name, body, by: me.id }) || {}).doc) || {}; r = { slug: x.slug, created: true, version: x.version }; }
+    });
+    return r;
+  }
+  const credit = it => `\n\n---\n_From the TribeCode Marketplace · ${it.license || ''}${sourceOf(it) ? ` · ${sourceOf(it)}` : ''}_\n`;
+  function docFor(it) {
+    if (it.kind === 'playbook') return [`Playbook: ${it.title}`, `# ${it.title}\n\n${it.summary}\n\n${(it.steps || []).map(s => `- [ ] ${s}`).join('\n')}\n\n_A starting checklist: change it to fit your crew._` + credit(it)];
+    if (it.kind === 'legal') {
+      const t = readT(`legal/${String(it.ref || '').replace(/[^a-z0-9-]/gi, '')}.json`); if (!t) return null;
+      const fields = (t.fields || []).map(f => `- **${f.label}**: {{${f.key}}}`).join('\n');
+      return [`Legal: ${t.title || it.title}`, `# ${t.title || it.title}\n\n> A starting point, not legal advice. Check local law or ask a professional.\n\n${t.blurb || it.summary}\n\n## Fill in\n\n${fields}\n\n${(t.clauses || []).map(c => `## ${c.heading}\n\n${c.text}`).join('\n\n')}\n\n_${t.credit || ''}_` + credit(it)];
+    }
+    if (it.kind === 'academy') {
+      const t = ((readT('academy.json') || {}).tracks || []).find(x => x.id === it.ref); if (!t) return null;
+      return [`Academy: ${t.title}`, `# ${t.title}\n\n${t.blurb || ''}\n\n## Lessons\n\n${(t.lessons || []).map(l => `- [ ] **${l.title}** (${l.minutes || 5} min)`).join('\n')}\n\n${(t.links || []).length ? `## Further reading\n\n${t.links.map(l => `- [${l.title}](${l.url}) · ${l.by || ''}`).join('\n')}` : ''}\n\n_Open the Academy for the full lessons._` + credit(it)];
+    }
+    if (it.kind === 'company-template') {
+      const t = ((readT('companies.json') || {}).templates || []).find(x => x.id === it.ref); if (!t) return null;
+      return [`Company plan: ${t.name || it.title}`, `# ${t.name || it.title}\n\n${t.mission || t.blurb || ''}\n\n## Seats\n\n${(t.seats || []).map(x => `- **${x.title}**: ${(x.charter || {}).goal || ''}`).join('\n')}\n\n## Goals\n\n${(t.goals || []).map(g => `- ${g.title}`).join('\n')}\n\n## First tasks\n\n${(t.tasks || []).map(x => `- [ ] ${x.title}${x.seat ? ` (${x.seat})` : ''}`).join('\n')}\n\n_Turn on Company mode with this template from the Marketplace to get the seats, goals and tasks for real._` + credit(it)];
+    }
+    if (it.kind === 'site-template') {
+      const dir = String(it.ref || it.title).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      return [`Starter: ${it.title}`, `# Starter: ${it.title}\n\n${it.summary}\n\n## Start from it\n\n\`\`\`\ngit clone --depth 1 ${it.repo ? `https://github.com/${it.repo}` : sourceOf(it)} ${dir}\n\`\`\`\n\n${it.url ? `See it running: ${it.url}\n\n` : ''}Keep the LICENSE file and credit the authors (${it.author || 'see the repo'}).` + credit(it)];
+    }
+    return null;
+  }
+  const mcpJson = it => it.mcp && it.mcp.config ? `claude mcp add-json ${it.mcp.name} '${JSON.stringify(it.mcp.config)}'` : '';
   async function perform(it, pid, me) {
+    const fx = [];
     if (it.kind === 'widget') {
       const r = widgets.addOne(pid, it.widget, me);
-      return { done: 'widget', already: !!r.already, message: r.already ? `${it.title} is already in the sidebar` : `${it.title} added to the sidebar` };
+      if (!r.already) fx.push({ t: 'widget', w: it.widget });
+      return { done: 'widget', fx, already: !!r.already, message: r.already ? `${it.title} was already in the sidebar` : `${it.title} added to the sidebar` };
     }
     if (TOOLBOX.has(it.kind)) {
       if (!it.repo && !it.url) throw err(400, 'nothing to add');
-      const r = await shelf.add(it.shelf || it.id, pid, me, it.shelf ? undefined : shelfItem(it));
-      return { done: 'toolbox', where: r.where || null, url: it.url || (it.repo ? `https://github.com/${it.repo}` : null), message: r.where ? `${it.title} copied to ${r.where}` : `${it.title} added to the Toolbox` };
+      const p = P.get(pid), dir = shelf.repoDir(p);
+      let where = null, note = '';
+      if (it.kind === 'skill' && it.path && it.repo) {
+        if (!dir) note = ' Give the project a code folder to copy the skill files in too.';
+        else {
+          const rel = `.claude/skills/${path.basename(it.path)}`, had = fs.existsSync(path.join(dir, rel));
+          try { where = await shelf.installSkill(it, dir); if (!had) fx.push({ t: 'dir', rel }); }
+          catch (e) { note = ` Couldn’t copy the files just now (${e.message}).`; }
+        }
+      }
+      if (it.kind === 'connector' && it.mcp && it.mcp.config && dir) {
+        const f = path.join(dir, '.mcp.json'); let j = {};
+        try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch {}
+        if (!j || typeof j !== 'object') j = {};
+        j.mcpServers = j.mcpServers || {};
+        if (!j.mcpServers[it.mcp.name]) { j.mcpServers[it.mcp.name] = it.mcp.config; fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n'); fx.push({ t: 'mcp', name: it.mcp.name }); where = '.mcp.json'; }
+      }
+      const extra = { id: it.id, kind: it.kind === 'connector' ? 'mcp' : it.kind, title: it.title, summary: it.summary, license: it.license || 'see repo', repo: it.repo, url: it.url, install: it.install || mcpJson(it) || undefined };
+      shelf.toolboxAdd(pid, extra, me); fx.push({ t: 'toolbox', id: it.id });
+      P.inProject(pid, () => postChat('general', 'tribecode', `🧰 ${nameOf(me.id)} added **${it.title}** from the Marketplace${where ? ` (${where})` : ''}`));
+      const msg = it.kind === 'skill' ? (where ? `${it.title} copied to ${where}` : `${it.title} added to the Toolbox.${note}`)
+        : it.kind === 'connector' ? (where ? `${it.title} added to .mcp.json and the Toolbox` : `${it.title} added to the Toolbox${it.mcp ? ' with its MCP setup' : ''}${dir ? '' : '. Give the project a code folder to write .mcp.json'}`)
+          : `${it.title} added to the Toolbox`;
+      return { done: 'toolbox', fx, where, url: sourceOf(it), message: msg };
     }
-    if (it.kind === 'playbook') {
-      const name = `Playbook: ${it.title}`;
-      const body = `# ${it.title}\n\n${it.summary}\n\n${(it.steps || []).map(s => `- [ ] ${s}`).join('\n')}\n\n_From the TribeCode Marketplace. A starting checklist: change it to fit your crew._\n`;
-      let slug = null;
-      P.inProject(pid, () => {
-        const d = docs.find(name);   // already there: keep the crew's edits
-        slug = d ? d.slug : ((docs.upsert({ name, body, by: me.id }) || {}).doc || {}).slug || null;
-        postChat('general', 'tribecode', `📋 ${nameOf(me.id)} added the **${it.title}** playbook${it.seat ? ` for the ${it.seat.toUpperCase() === 'CTO' ? 'Build' : it.seat} seat` : ''}`);
-      });
-      return { done: 'doc', doc: slug, name, message: `${it.title} saved as a doc` };
+    const d = docFor(it);
+    if (d) {
+      const r = addDoc(pid, me, d[0], d[1]);
+      if (r.created) fx.push({ t: 'doc', slug: r.slug, version: r.version });
+      if (it.kind === 'playbook') P.inProject(pid, () => postChat('general', 'tribecode', `📋 ${nameOf(me.id)} added the **${it.title}** playbook${it.seat ? ` for the ${it.seat.toUpperCase() === 'CTO' ? 'Build' : it.seat} seat` : ''}`));
+      return { done: 'doc', fx, doc: r.slug, name: d[0], message: r.created ? `${d[0]} saved in Files` : `${d[0]} was already in Files` };
     }
-    if (it.kind === 'site-template') return { client: 'remix', repo: it.repo || null, remix: (it.tags || []).includes('remix'), url: it.url || (it.repo ? `https://github.com/${it.repo}` : null) };
-    if (it.kind === 'company-template') return exists('templates/companies.json') ? { client: 'company', template: it.ref } : { needs: 'company', template: it.ref, message: 'Company mode isn’t on this tribe’s TribeCode yet' };
-    if (it.kind === 'asset-pack') return it.url ? { client: 'open', url: it.url } : { client: 'assets', kind: it.assetKind || '', ref: it.ref };
-    if (it.kind === 'legal') return exists('templates/legal') ? { client: 'legal', ref: it.ref } : { needs: 'legal', ref: it.ref, message: 'Legal templates aren’t on this tribe’s TribeCode yet' };
-    if (it.kind === 'academy') return { client: 'academy', ref: it.ref };
-    return { client: 'open', url: it.url || null };
+    if (it.kind === 'asset-pack') {
+      if (!inspo) throw err(501, 'the inspiration board isn’t on this tribe’s TribeCode yet');
+      let host = ''; try { host = new URL(it.url || sourceOf(it)).hostname.replace(/^www\./, ''); } catch {}
+      const card = inspo.add(pid, me, { kind: 'link', url: it.url || sourceOf(it), site: host, title: it.title, note: `${it.summary} (${it.license})`, images: [], colors: [], fonts: [], market: it.id });
+      fx.push({ t: 'inspo', id: card.id });
+      return { done: 'inspo', fx, message: `${it.title} pinned to the inspiration board` };
+    }
+    return { client: 'open', fx, url: it.url || sourceOf(it) || null };
+  }
+  function undo(pid, rec, me) {
+    const kept = [];
+    const dir = shelf.repoDir(P.get(pid));
+    for (const f of (rec.fx || []).slice().reverse()) {
+      try {
+        if (f.t === 'widget') widgets.removeOne(pid, f.w, me);
+        else if (f.t === 'toolbox') shelf.toolboxRemove(pid, f.id, me);
+        else if (f.t === 'dir' && dir && /^\.claude\/skills\/[^/]+$/.test(f.rel)) fs.rmSync(path.join(dir, f.rel), { recursive: true, force: true });
+        else if (f.t === 'mcp' && dir) {
+          const file = path.join(dir, '.mcp.json'); const j = JSON.parse(fs.readFileSync(file, 'utf8'));
+          if (j.mcpServers && j.mcpServers[f.name]) { delete j.mcpServers[f.name]; if (!Object.keys(j.mcpServers).length && Object.keys(j).length === 1) fs.unlinkSync(file); else fs.writeFileSync(file, JSON.stringify(j, null, 2) + '\n'); }
+        } else if (f.t === 'doc') P.inProject(pid, () => { const d = docs.read ? docs.read(f.slug) : null; if (d && f.version != null && Number(d.version) !== Number(f.version)) kept.push(d.title || f.slug); else docs.remove(f.slug); });
+        else if (f.t === 'inspo' && inspo) inspo.drop(pid, f.id);
+      } catch {}
+    }
+    return kept;
+  }
+  async function remove(id, body, me) {
+    const it = byId.get(str(id, 80)); if (!it) throw err(404, 'not in the marketplace');
+    if (!human(me)) throw err(403, me && me.role === 'agent' ? 'ask a human to remove it' : 'read-only');
+    const pid = projectFor(body && body.project, me);
+    const rec = installed[pid] && installed[pid][it.id];
+    if (!rec) return { ok: true, removed: false, message: `${it.title} isn’t in this project` };
+    const kept = undo(pid, rec, me);
+    delete installed[pid][it.id]; if (!Object.keys(installed[pid]).length) delete installed[pid]; saveInst();
+    return { ok: true, removed: true, item: view(it, pid), kept, message: kept.length ? `${it.title} removed. Kept ${kept.join(', ')}: it was edited since.` : `${it.title} removed` };
   }
   async function use(id, body, me) {
     const it = byId.get(str(id, 80)); if (!it) throw err(404, 'not in the marketplace');
@@ -165,9 +258,12 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
       setImmediate(sweep);
       return { pending: true, approval: ap.id, status: ap.status, askedOf: ap.toNames, message: `Asked ${ap.toNames.join(', ') || 'a human'} to approve` };
     }
+    if (isIn(pid, it.id)) return { ok: true, project: pid, item: view(it, pid), installed: true, already: true, message: `${it.title} is already in this project` };
     const r = await perform(it, pid, me);
     if (!r.needs) record(it.id, it.kind);
-    return { ok: true, item: view(it), ...r };
+    if (!r.client && !r.needs) { (installed[pid] = installed[pid] || {})[it.id] = { at: new Date(now()).toISOString(), by: me.id, fx: r.fx || [], message: r.message }; saveInst(); }
+    delete r.fx;
+    return { ok: true, project: pid, item: view(it, pid), installed: isIn(pid, it.id), ...r };
   }
   // Settle agents' requests once a human decided (inbox, phone button, anywhere).
   let sweeping = false;
@@ -181,7 +277,7 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
         if (ap.status !== 'approved') { keep.push(p); continue; }
         const it = byId.get(p.id), who = getMembers().find(m => m.id === ap.decidedBy) || getMembers().find(m => m.role === 'host');
         if (!it || !who) continue;
-        try { const r = await perform(it, p.project, who); if (!r.needs) record(it.id, it.kind); postChat('general', 'tribecode', `🛍️ ${nameOf(p.by)}’s request went through: **${it.title}** from the Marketplace`); }
+        try { const r = await perform(it, p.project, who); if (!r.needs) record(it.id, it.kind); if (!r.client && !r.needs) { (installed[p.project] = installed[p.project] || {})[it.id] = { at: new Date(now()).toISOString(), by: who.id, fx: r.fx || [], message: r.message }; saveInst(); } postChat('general', 'tribecode', `🛍️ ${nameOf(p.by)}’s request went through: **${it.title}** from the Marketplace`); }
         catch (e) { postChat('general', 'tribecode', `🛍️ Couldn’t add **${it.title}** for ${nameOf(p.by)}: ${e.message}`); }
       }
       pending = keep; savePending();
@@ -208,7 +304,8 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
       if (m === 'GET' && !b) return send(res, 200, search(url.searchParams));
       if (m === 'GET' && b === 'trending') return send(res, 200, trendingView());
       if (m === 'GET' && b === 'facets') return send(res, 200, facets(url.searchParams));
-      if (m === 'GET' && b === 'items' && c) { const it = byId.get(str(c, 80)); return it ? send(res, 200, { item: view(it) }) : fail(res, 404, 'not in the marketplace'); }
+      if (m === 'GET' && b === 'items' && c) { const it = byId.get(str(c, 80)); return it ? send(res, 200, { item: view(it, str(url.searchParams.get('project'), 80) || P.current() || '') }) : fail(res, 404, 'not in the marketplace'); }
+      if (m === 'POST' && b && c === 'remove') return send(res, 200, await remove(b, await readBody(req, 8 * 1024), me));
       if (m === 'POST' && b && c === 'use') return send(res, 200, await use(b, await readBody(req, 8 * 1024), me));
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
@@ -241,5 +338,5 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
     },
   };
 
-  return { route, search, facets, use, record, counts, sweep, mcpTools, catalog: () => catalog, KIND };
+  return { route, search, facets, use, remove, record, counts, sweep, mcpTools, catalog: () => catalog, KIND };
 };
