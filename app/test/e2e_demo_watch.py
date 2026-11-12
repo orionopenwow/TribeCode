@@ -3,14 +3,17 @@ at the root, app/ui under /app/) on a static file server, like e2e_demo_tour.py.
 
 Checks: the website's "See how TribeCode works" link opens app/?demo=watch; the FIRST FRAME is a blank slate (the empty
 dashboard: "Make your first project", no project circles in the rail, no tribe, no projects in the demo state, none of
-your own name); at ?speed=4 the tour runs all 12 chapters end to end headless, every chapter's targets were found by the
+your own name); STEP MODE (the default, fix/demo-next): Flint plays one beat and waits, Next is off with "Flint is
+working…" while he acts, the caption says "Step 1 of 12 · A blank slate", Next and the → key advance, Back and ← replay
+the beat before (also across the reload that rebuilds the first two chapters), and pressing Next in a loop plays the
+whole tour with every target found; AUTO-PLAY at ?speed=4 runs all 12 chapters end to end headless, every chapter's targets were found by the
 watchdog (no skips), and Flint made everything from nothing in the real app (the tribe and Ember Café through the real
 Start a project sheet, the vision typed and saved, Maya joined and chatted, a task Maya accepted, a design, the café site
 in dark mode, an approval approved, a company made), and it ends on the "Your turn" card with no dim left. Esc mid-way
 removes every overlay (dim, ring, cursors, caption, Flint's cards). The chapter dots jump to a chapter (and from the end
-card back into the tour). Pause stops the clock, 1x/2x, Skip to end lands on Your turn. Help › "See how TribeCode works"
+card back into the tour). Auto-play ▸ / Pause switches the mode, 1x/2x (auto-play only), Skip to end lands on Your turn. Help › "See how TribeCode works"
 and the empty Home's "Tour with Flint" start it. Exit puts your own settings back exactly. No console errors.
-Usage: python app/test/e2e_demo_watch.py [--shots]   (--shots saves docs/screenshots/demo-blank-start.png, demo-blank-mid.png, demo-watch-end.png)
+Usage: python app/test/e2e_demo_watch.py [--shots]   (--shots saves docs/screenshots/demo-blank-start.png, demo-next.png, demo-blank-mid.png, demo-watch-end.png)
 """
 import functools, http.server, json, os, sys, threading, time
 from pathlib import Path
@@ -46,6 +49,10 @@ def watch(page, tag, errors):
 def state(pg): return pg.evaluate("TribeDemoWatch._test.state()")
 
 
+def rest_at(pg, sid, timeout=30000):   # Flint finished the beat of chapter sid and waits for Next
+    pg.wait_for_function("(id) => { const s = TribeDemoWatch._test.state(); return s.id === id && s.resting && !s.acting && !document.querySelector('#dw-next').disabled }", arg=sid, timeout=timeout, polling=50)
+
+
 def main():
     errors = []
     root = ES.assemble()
@@ -74,12 +81,68 @@ def main():
             assert first["title"] == "Make your first project", first["title"]
             assert REAL["name"] not in first["text"], "your own name shows inside the demo"
             if shots: time.sleep(1.2); pg.screenshot(path=str(SHOTS / "demo-blank-start.png"))
+            st = state(pg)
+            assert st["mode"] == "step", st
+            if st["acting"]: assert pg.locator("#dw-next").is_disabled() and pg.locator("#dw-busy").is_visible(), "Next is off while Flint acts"
             pg.evaluate("TribeDemoWatch.stop()")
+
+            # ---- step mode (4x so it's quick): one beat, then Flint waits for Next ----
+            pg.goto(APP + "?demo=watch&speed=4&mode=step")
+            pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
+            assert state(pg)["mode"] == "step" and state(pg)["id"] == "blank"
+            pg.wait_for_function("TribeDemoWatch._test.state().acting", timeout=5000, polling=20)
+            assert pg.locator("#dw-next").is_disabled(), "Next is off while Flint acts"
+            assert "Flint is working" in pg.text_content("#dw-busy") and pg.locator("#dw-busy").is_visible()
+            assert pg.text_content("#dw-k") == "Step 1 of 12" and pg.text_content("#dw-t") == "A blank slate", pg.text_content("#dw-cap")
+            assert pg.locator("#dw-back").is_disabled(), "no Back on the first beat"
+            rest_at(pg, "blank")
+            assert not pg.locator("#dw-busy").is_visible()
+            c0 = state(pg)["clock"]; time.sleep(1.5)
+            st = state(pg); assert st["id"] == "blank" and st["resting"] and st["clock"] == c0, f"the tour went on without Next: {st}"
+            pg.click("#dw-next")
+            pg.wait_for_function("TribeDemoWatch._test.state().id === 'tribe'", timeout=3000, polling=20)
+            assert pg.locator("#dw-next").is_disabled() and state(pg)["acting"]
+            pg.keyboard.press("ArrowRight")   # ignored while he acts
+            assert state(pg)["id"] == "tribe"
+            rest_at(pg, "tribe")
+            pg.keyboard.press("ArrowRight")   # → is Next
+            pg.wait_for_function("TribeDemoWatch._test.state().id === 'project'", timeout=3000, polling=20)
+            rest_at(pg, "project")
+            assert pg.text_content("#dw-k") == "Step 3 of 12" and pg.text_content("#dw-t") == "Start a project"
+            assert pg.locator("#dw-dots [data-i='2'][aria-current='step']").count() == 1
+            if shots:
+                pg.evaluate("TribeDemoWatch.speed(1)"); pg.mouse.move(5, 5); time.sleep(0.6)
+                pg.screenshot(path=str(SHOTS / "demo-next.png"))
+            pg.keyboard.press("Enter")   # Enter is Next too
+            pg.wait_for_function("TribeDemoWatch._test.state().id === 'vision'", timeout=3000, polling=20)
+            rest_at(pg, "vision")
+            pg.click("#dw-back")   # Back: replay the beat before
+            pg.wait_for_function("TribeDemoWatch._test.state().id === 'project'", timeout=3000, polling=20)
+            rest_at(pg, "project")
+            assert pg.evaluate("TribeOffline.state().projects.length") == 1, "Back kept one Ember Café"
+            pg.keyboard.press("ArrowLeft")   # ← back to the tribe's making: it starts over from blank, at that chapter
+            pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running && TribeDemoWatch._test.state().id === 'tribe'", timeout=20000)
+            assert state(pg)["mode"] == "step" and pg.evaluate("!!TribeOffline.state().blank || TribeOffline.state().projects.length <= 1")
+            rest_at(pg, "tribe")
+            # Next in a loop: the whole tour, every target found
+            t0 = time.time()
+            while not state(pg)["finished"]:
+                assert time.time() - t0 < 150, f"step mode did not finish: {state(pg)}"
+                if pg.evaluate("!document.querySelector('#dw-next').disabled"): pg.click("#dw-next")
+                time.sleep(0.1)
+            log = pg.evaluate("TribeDemoWatch._test.log()")
+            assert not [e for e in log if not e["found"]], [e for e in log if not e["found"]]
+            assert sum(1 for e in log if e["target"] == "next") >= 10, log
+            pg.wait_for_selector("#dw-end .dw-end-card", state="visible", timeout=3000)
+            print(f"  step mode: Next in a loop from Make a tribe to Your turn in {time.time() - t0:.1f} s")
+            pg.evaluate("TribeDemoWatch.exit()")   # Exit wipes the demo (the site designer's draft too) before the auto-play run
+            pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=15000)
 
             # ---- the whole thing at 4x, end to end ----
             pg.goto(APP + "?demo=watch&speed=4")
             pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
             assert "demo=" not in pg.evaluate("location.search")
+            assert state(pg)["mode"] == "auto", "the fast run auto-plays"
             assert state(pg)["steps"] == STEPS, state(pg)["steps"]
             assert pg.locator("#demo-pill.wt").count() == 1 and "See how TribeCode works" in pg.text_content("#demo-pill")
             t0 = time.time(); shot1 = False
@@ -138,17 +201,15 @@ def main():
             assert not state(pg)["running"]
             assert pg.locator("#dw-ui, #dw-layer, #dw-end, #dw-pin").count() == 0
 
-            # ---- the controls at 1x: pause, speed, skip to end ----
+            # ---- the controls at 1x: Auto-play ▸ / Pause, speed (auto-play only), skip to end ----
             pg.evaluate("TribeDemoWatch.start({ speed: 1 })")
             pg.wait_for_selector("#dw-play", timeout=5000)
-            for sel in ["#dw-play", "#dw-speed", "#dw-skip", "#dw-exit", "#dw-dots [data-i='11']", "#dw-cap"]: assert pg.locator(sel).count() == 1, sel
-            assert "/ 2:" in pg.text_content("#dw-time"), pg.text_content("#dw-time")   # about two minutes
-            time.sleep(1.0)
-            pg.click("#dw-play"); assert state(pg)["paused"]
-            c0 = state(pg)["clock"]; time.sleep(0.8); assert state(pg)["clock"] == c0, "paused: the clock stops"
-            assert pg.evaluate("!document.querySelector('#dw-dim.on i') || getComputedStyle(document.querySelector('#dw-dim i')).opacity === '0'")
-            pg.click("#dw-play"); assert not state(pg)["paused"]
+            for sel in ["#dw-play", "#dw-speed", "#dw-next", "#dw-back", "#dw-skip", "#dw-exit", "#dw-dots [data-i='11']", "#dw-cap"]: assert pg.locator(sel).count() == 1, sel
+            assert "/ 2:" in pg.text_content("#dw-time"), pg.text_content("#dw-time")   # about two and a half minutes
+            assert state(pg)["mode"] == "step" and "Auto-play" in pg.text_content("#dw-play") and not pg.locator("#dw-speed").is_visible()
+            pg.click("#dw-play"); assert state(pg)["mode"] == "auto" and "Pause" in pg.text_content("#dw-play")
             pg.click("#dw-speed"); assert state(pg)["speed"] == 2 and pg.text_content("#dw-speed") == "2×"
+            pg.click("#dw-play"); assert state(pg)["mode"] == "step" and "Auto-play" in pg.text_content("#dw-play")
             pg.click("#dw-skip")
             pg.wait_for_selector("#dw-end .dw-end-card", state="visible", timeout=5000)
             pg.wait_for_function("TribeDemoWatch._test.state().finished", timeout=5000)
