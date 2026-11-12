@@ -101,12 +101,13 @@ def flow(page, tag, phone, tmp):
     # a second project, made through the API the real UI uses, then switched back
     page.evaluate("TribeClient.api('/projects', { method: 'POST', body: { name: 'Side Quest' } })")
     page.wait_for_function("TribeClient.api('/projects').then(r => r.projects.length === 2)", timeout=5000)
-    # feat/site-builder: the Website builder works in the demo (Instant, a theme, a suggestion card)
+    # feat/site-builder: the Website generator's API works in the demo (Instant, a theme, a suggestion card)
     if not phone:
         w = page.evaluate("(async () => { const p = TribeProjects.current(), a = (x, o) => TribeClient.api(`/projects/${p}/website${x}`, o); await a('/instant', { method: 'POST', body: { theme: 'cozy' } }); const i = await a('/ideas', { method: 'POST', body: {} }); return { w: (await a('')).website, i }; })()")
         assert w["w"]["gen"]["draft"]["theme"] == "cozy" and w["w"]["gen"]["draftUrl"].startswith("blob:") and w["i"]["idea"]["why"], w["w"]["gen"]["draft"]
         page.evaluate("TribeShell.go('website')")
-        page.wait_for_selector("#wb-root .sg-modes", timeout=8000)
+        page.wait_for_selector("#wb-root", timeout=8000)   # fix/desk-demo: the old builder panel is gone (docs/UI-CLEANUP.md)
+        assert page.locator("#wb-root .sg-modes").count() == 0
         page.wait_for_selector("#wb-frame", timeout=8000)
         v028(page, tag)
 
