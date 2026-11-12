@@ -107,6 +107,7 @@ Pushing from the Claude cloud sandbox:
 - Simplicity first: zero-step setup (no wizard), sleek and bare UI, no repeated labels.
 
 ## State right now
+- **v0.31.0** (2026-11-12): Design flow + starters, website designer v2, presence/People, Company v2 + gigs, Marketplace v2, shell polish, blank-slate desktop demo, stale-UI cleanup; see CHANGELOG.
 - **v0.30.0** (2026-11-12): Flint eval + website designer + Files rebuild + task Accept/Council + the hands-off tour; see CHANGELOG.
 - **v0.29.0** (2026-11-11): see CHANGELOG and docs/CONTEXT.md. Launch checklist: docs/LAUNCH.md. Owner's one-pager: docs/ONE-PAGER.md. Quick local edits: `Tools\Clean-Slate-Dev.bat`. Truth test: `python3 app/test/e2e_truth.py` → docs/TRUTH-TEST.md.
 - On `main` and released: v0.8.0 (everything in CHANGELOG.md). `dev` = working lane; release = bump 4 version files + CHANGELOG (with a **Phones** line) + sw.js CACHE, merge dev → main, push; CI builds installers + latest.json. If latest.json lacks windows, re-run the failed Windows job.

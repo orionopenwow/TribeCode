@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.31.0
+- **Find your way**:
+  - **Left bar:** one "you are here" look for Home, tribes and the Workshop (a pressed tile with a slim accent bar). Drag the left bar and sidebar rows into your own order (Alt+↑/↓ on the keyboard, reset in Settings).
+  - **Labels:** "Your Dashboard" heads Home, and one set of line icons covers tabs, Settings and the sidebar.
+  - **Sidebar:** Preview and Invite friends are normal sidebar rows with a small thumbnail and faces.
+  - **Workshop:** the Marketplace is a full page.
+  - **Look:** the Campfire logo has white brackets again.
+- **Plans pop-out**: click FREE anywhere to see Free, Premium, credit packs and Use my AI, with your credits.
+- **Design is a creation flow**:
+  - Pick what you're making (website, app, game, screen, slides, poster, whiteboard, logo), then a template with an optional prompt, then a Plan card that ticks off and becomes tasks.
+  - 17 small open-source and original app and game starters, each with its license (docs/STARTERS.md).
+  - Flint starts them ("make a breakout game").
+- **Website designer v2**:
+  - **Templates:** "link tree website" works everywhere, including offline. 48 templates with previews, 32 converted from open-source sets (Start Bootstrap, Tailwind Toolbox, HTML5 UP with its credit line). Templates fill in from your project (name, team, hours and links from chat, colors from the inspiration board).
+  - **Comments:** comment on a section, and Flint turns the comments into tasks.
+  - **Saving:** a Website row appears once a draft exists, and edits are never lost (saved to this device and the host, with Keep mine / theirs / both).
+  - **Ported from OpenPage:** more blocks, search-engine settings, favicon, themes, font pairs and device previews.
+  - **Flint:** 99% on 674 phrasings with no AI.
+- **People**: see where everyone is right now (avatars on the doc, designer, chat, task or canvas they're in; DMs show only as "in messages"). A People button in the top bar lists this tribe and friends with status, place, Message, Jump to and Profile. Turn off "Show where I am" in Settings.
+- **Company and Work**: the Company dashboard reads like a one-page report (health line, seats, this week, money chart, goals, rituals). List your abilities, offer a gig yourself, find people by skill.
+- **Marketplace**: 553 items with real source links, licenses, authors and thumbnails. Add does something real for every kind, with Undo and an Installed tab.
+- **Home › Code**: a Connect GitHub panel with your status and three ways in.
+- **Demo**:
+  - Works in the desktop app: it can no longer start or stop your real server or sign you in.
+  - Starts from a blank dashboard, and Flint builds a tribe, project, tasks, a design and a website from nothing.
+  - Everything it made is cleared on exit.
+- **No more old screens**: updates load the newest files first and delete old cached copies. The old site builder and the old Friends button are gone (docs/UI-CLEANUP.md).
+- **Fixes**:
+  - Click-to-edit and starters work under the desktop app's security policy.
+  - An invite on a device-only project no longer leaves a scrim blocking clicks.
+  - The tour closes with Esc again.
+  - Flint's flier stays on a phone screen.
+- **Phones**: Files, the Design flow, the People sheet, the Company report (sections fold), the Marketplace and the plans sheet all fit at 390px; drag to reorder uses a long-press.
+
 ## v0.30.1
 - **v0.30.0, released properly**: the release workflow now makes one draft before the Windows, Linux and Mac builds start. In v0.30.0 each build made its own draft at the same moment, so the installers split across two drafts and nothing was published. Everything in v0.30.0 below ships in this version.
 - **Phones**: unchanged from v0.30.0.
