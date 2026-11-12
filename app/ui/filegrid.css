@@ -58,3 +58,11 @@ body:has(#view-tabs.wt-files:not(.hidden)) #view-docs > #cf-switch { display: no
 .fg-st b { font-size: 14px; } .fg-st small { color: var(--muted); font-size: 12px; }
 .fg-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
 .fg-th { aspect-ratio: 16 / 10; }
+/* feat/files-dash: folders and the folder crumb above the shared Files view (filesview.css) */
+.fg-crumb { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 14px; color: var(--muted); }
+.fg-crumb b { color: var(--text); }
+.fg-up { display: inline-flex; align-items: center; gap: 6px; }
+.fg .fg-folders { margin: 0 0 8px; }
+.fg-folder .fx-i { color: var(--muted); }
+.fg-fn { font: 11px var(--mono, monospace); color: var(--muted); }
+.fg > .fx { padding-top: 0; }

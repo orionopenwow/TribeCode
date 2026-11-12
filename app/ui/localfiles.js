@@ -1,4 +1,4 @@
-// Files kept on this device (feat/setup-local): every create and open tool in All files works with no tribe.
+// Files kept on this device (feat/setup-local): every create and open tool in Files works with no tribe.
 // Docs (rich text), sheets, whiteboards, designs, pictures, media, code and any upload live in IndexedDB on this
 // device and open in the same editors a project uses, through a small local backend instead of the server:
 //   doc         hub.js editText() (the note editor: richtext.js + doclayout.js)
@@ -27,6 +27,8 @@
     sheet: { label: 'Sheet', icon: 'i-grid', title: 'Untitled sheet' },
     whiteboard: { label: 'Whiteboard', icon: 'i-whiteboard', title: 'Untitled board' },
     design: { label: 'Design', icon: 'i-canvas', title: 'Untitled design' },
+    slides: { label: 'Slides', icon: 'i-play', title: 'Untitled slides' },   // feat/files-dash: a Markdown deck (deck.js)
+    site: { label: 'Website', icon: 'i-net', title: 'Untitled website' },    // feat/files-dash: one HTML page with a live preview
     file: { label: 'File', icon: 'i-clip', title: 'File' },
   };
   // what kind of file a name is (the same groups as server/uploads.js)
@@ -77,7 +79,43 @@
     if (kind === 'sheet') it.body = String(o.body || '| A | B | C |\n| --- | --- | --- |\n|  |  |  |\n'), it.version = 1;
     if (kind === 'whiteboard') it.elements = {};
     if (kind === 'design') it.nodes = {};
+    if (kind === 'slides') it.body = String(o.body || `<!-- theme: campfire -->\n\n# ${it.title}\n\nA one-line subtitle\n\n---\n\n## First point\n\n- \n`), it.version = 1;
+    if (kind === 'site') it.body = String(o.body || (window.TribeFilesView ? window.TribeFilesView.siteHtml(it.title) : `<!doctype html><title>${esc(it.title)}</title><h1>${esc(it.title)}</h1>`));
     await persist(it); emit(); return it;
+  }
+  // feat/files-dash: a new code file (a text blob, opens in the code editor here)
+  async function createCode(name = 'untitled.js', text = '') {
+    await ready;
+    const nm = String(name).slice(0, 120), b = new Blob([text || `// ${nm}\n`], { type: 'text/plain' });
+    const it = { id: rid(), kind: 'file', title: nm, name: nm, size: b.size, type: 'text/plain', fkind: fkind(nm, '') === 'file' ? 'code' : fkind(nm, ''), at: iso(), updated: iso() };
+    await blobPut(it.id, b); await persist(it); emit(); return it;
+  }
+  async function rename(id, title) { const it = get(id); if (!it) return null; const t = String(title || '').trim().slice(0, 120) || it.title; return save(id, it.kind === 'file' ? { title: t, name: t } : { title: t }); }
+  async function duplicate(id) {
+    const it = get(id); if (!it) throw new Error('that file is gone');
+    const copy = JSON.parse(JSON.stringify(it)); copy.id = rid(); copy.at = copy.updated = iso(); delete copy.moved;
+    copy.title = it.kind === 'file' ? it.title.replace(/(\.[^.]+)?$/, m => ` copy${m}`) : `${it.title} (copy)`; if (copy.name) copy.name = copy.title;
+    if (it.kind === 'file') { const b = await blob(id); if (b) await blobPut(copy.id, b); }
+    await persist(copy); emit(); return copy;
+  }
+  // what a download of this item is: { name, blob }
+  async function exportItem(id) {
+    const it = get(id); if (!it) throw new Error('that file is gone');
+    const safe = String(it.title || 'file').replace(/[\\/:*?"<>|]+/g, '-');
+    if (it.kind === 'file') return { name: it.title, blob: await blob(id) };
+    if (it.kind === 'doc' || it.kind === 'slides') return { name: `${safe}.md`, blob: new Blob([it.body || ''], { type: 'text/markdown' }) };
+    if (it.kind === 'sheet') {
+      const rows = String(it.body || '').split('\n').filter(l => /^\s*\|/.test(l) && !/^\s*\|\s*-/.test(l)).map(l => l.replace(/^\s*\||\|\s*$/g, '').split('|').map(c => { c = c.trim(); return /[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c; }).join(','));
+      return { name: `${safe}.csv`, blob: new Blob([rows.join('\n') + '\n'], { type: 'text/csv' }) };
+    }
+    if (it.kind === 'site') return { name: `${safe}.html`, blob: new Blob([it.body || ''], { type: 'text/html' }) };
+    const field = it.kind === 'whiteboard' ? 'elements' : 'nodes';
+    return { name: `${safe}.${it.kind}.json`, blob: new Blob([JSON.stringify({ kind: it.kind, title: it.title, [field]: live(it[field]) }, null, 2)], { type: 'application/json' }) };
+  }
+  async function download(id) {
+    const x = await exportItem(id); if (!x.blob) throw new Error('that file is gone from this device');
+    const u = URL.createObjectURL(x.blob), a = document.createElement('a'); a.href = u; a.download = x.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+    return x.name;
   }
   async function addFiles(files) {
     await ready; const out = [];
@@ -151,6 +189,8 @@
       save: (title, body) => save(id, { title: title || 'Untitled doc', body }), remove: () => remove(id), move: anchor => moveMenu(anchor, id),
     });
     if (it.kind === 'sheet') return openSheet(it);
+    if (it.kind === 'slides') return openSlides(it);
+    if (it.kind === 'site') return openSite(it);
     if (it.kind === 'whiteboard') { if (!window.TribeWhiteboard) return toast('The whiteboard did not load. Reload the app.'); window.TribeWhiteboard.open(it.id, { backend: be('whiteboard') }); return chrome(it); }
     if (it.kind === 'design') { if (!window.TribeCanvas) return toast('The design canvas did not load. Reload the app.'); window.TribeCanvas.open(it.id, { backend: be('design') }); return chrome(it); }
     if (it.kind === 'file') return textish(it.fkind) && it.size < 2 * 1048576 ? openCode(it) : window.TribeHub && window.TribeHub.openFile(asFile(it));
@@ -181,6 +221,36 @@
     w._destroy = async () => { try { if (h && h.flush) await h.flush(); } catch {} try { h && h.destroy && h.destroy(); } catch {} };
     document.addEventListener('keydown', function k(e) { if (e.key === 'Escape' && document.getElementById('lf-pane') === w && !w.contains(document.activeElement)) { document.removeEventListener('keydown', k); closePane(); } });
   }
+  // feat/files-dash: slides in deck.js, the same editor a project uses
+  function openSlides(it) {
+    if (!window.TribeDeck) return toast('Slides did not load. Reload the app.');
+    const w = pane(it, 'lf-sheet lf-slides'), body = w.querySelector('#lf-body');
+    const h = window.TribeDeck.mount(body, {
+      doc: { title: it.title, body: it.body, version: it.version || 1, kind: 'deck' },
+      save: async ({ body: b, title }) => { const cur = get(it.id); if (!cur) return null; const v = (cur.version || 1) + 1; await save(it.id, { body: b, title: title || cur.title, version: v }); return { doc: { title: title || cur.title, body: b, version: v, kind: 'deck' } }; },
+      close: () => { closePane(); emit(); },
+      del: async () => { if (!confirm(`Delete “${get(it.id) ? get(it.id).title : it.title}” from this device?`)) return; closePane(); await remove(it.id); toast('Deleted'); },
+      nameOf: () => 'you',
+      askFlint: () => { toast('Ask Flint from Files › Create › Ask Flint for a new draft.'); return null; },
+    });
+    w._destroy = async () => { try { if (h && h.flush) await h.flush(); } catch {} try { h && h.destroy && h.destroy(); } catch {} };
+    document.addEventListener('keydown', function k(e) { if (e.key === 'Escape' && document.getElementById('lf-pane') === w && !w.contains(document.activeElement)) { document.removeEventListener('keydown', k); closePane(); } });
+  }
+  // feat/files-dash: a website is one HTML page: the source on the left, a live preview (sandboxed, no scripts) on the right
+  function openSite(it) {
+    const w = pane(it, 'lf-code lf-site'), body = w.querySelector('#lf-body');
+    body.innerHTML = `<div class="lf-code-top"><span class="lf-ic">${ico('i-net', 16)}</span><input class="lf-name" id="lf-name" value="${esc(it.title)}" maxlength="120" aria-label="Website name" spellcheck="false"><span class="faint lf-st" id="lf-st">Saved</span><button class="btn sm" id="lf-dl">Download</button><button class="btn sm primary" id="lf-done">Done</button></div>
+      <div class="lf-site-split"><textarea class="lf-src" id="lf-src" spellcheck="false" aria-label="HTML of ${esc(it.title)}">${esc(it.body || '')}</textarea><iframe class="lf-site-pv" id="lf-site-pv" sandbox="allow-same-origin" title="Preview"></iframe></div>`;
+    const src = body.querySelector('#lf-src'), nm = body.querySelector('#lf-name'), stl = body.querySelector('#lf-st'), pv = body.querySelector('#lf-site-pv');
+    let t = null; pv.srcdoc = src.value;
+    const write = async () => { await save(it.id, { title: nm.value.trim() || it.title, body: src.value }); stl.textContent = 'Saved'; pv.srcdoc = src.value; };
+    const q = () => { stl.textContent = 'Editing…'; clearTimeout(t); t = setTimeout(write, 400); };
+    src.oninput = q; nm.oninput = q;
+    src.addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); src.setRangeText('  ', src.selectionStart, src.selectionEnd, 'end'); q(); } });
+    w._destroy = () => { if (t) { clearTimeout(t); return write(); } };
+    body.querySelector('#lf-done').onclick = () => closePane();
+    body.querySelector('#lf-dl').onclick = () => download(it.id);
+  }
   async function openCode(it) {
     const w = pane(it, 'lf-code'), body = w.querySelector('#lf-body');
     const b = await blob(it.id), text = b ? await b.text() : '';
@@ -198,12 +268,12 @@
     body.querySelector('#lf-del').onclick = async () => { if (!confirm(`Delete ${it.title} from this device?`)) return; clearTimeout(t); t = null; closePane(); await remove(it.id); toast('Deleted'); };
     src.focus();
   }
-  // whiteboard and design: a quiet bar over the editor while a local file is open (where it lives, Move to…, back to All files)
+  // whiteboard and design: a quiet bar over the editor while a local file is open (where it lives, Move to…, back to Files)
   function chrome(it) {
     const old = document.getElementById('lf-float'); if (old) old.remove();
     const view = document.body.dataset.view;
     const bar = document.createElement('div'); bar.id = 'lf-float'; bar.className = 'lf-float'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'This file');
-    bar.innerHTML = `<span class="lf-dot" aria-hidden="true"></span><span class="lf-ft">On this device</span><button class="btn sm" id="lf-fmove">${ico('i-folder', 14)}Move to…</button><button class="btn sm" id="lf-fback">All files</button>`;
+    bar.innerHTML = `<span class="lf-dot" aria-hidden="true"></span><span class="lf-ft">On this device</span><button class="btn sm" id="lf-fmove">${ico('i-folder', 14)}Move to…</button><button class="btn sm" id="lf-fback">Files</button>`;
     document.body.appendChild(bar);
     bar.querySelector('#lf-fmove').onclick = e => moveMenu(e.currentTarget, it.id);
     bar.querySelector('#lf-fback').onclick = () => { bar.remove(); window.TribeHub && window.TribeHub.open('docs'); };
@@ -247,8 +317,14 @@
     const api = (path, o = {}) => c.api(path, { ...o, project: pid });
     const mv = it.moved && it.moved.pid === pid ? it.moved : (it.moved = { pid });
     const p = (projects().find(x => x.id === pid) || {}).name || 'the project';
-    if (it.kind === 'doc' || it.kind === 'sheet') {
-      if (!mv.slug) { const r = await api('/docs', { method: 'POST', body: { title: it.title, body: it.body || '', ...(it.kind === 'sheet' ? { kind: 'sheet' } : {}) } }); mv.slug = r.doc.slug; await save(id, { moved: mv }); }
+    if (it.kind === 'doc' || it.kind === 'sheet' || it.kind === 'slides') {
+      if (!mv.slug) { const r = await api('/docs', { method: 'POST', body: { title: it.title, body: it.body || '', ...(it.kind === 'sheet' ? { kind: 'sheet' } : it.kind === 'slides' ? { kind: 'deck' } : {}) } }); mv.slug = r.doc.slug; await save(id, { moved: mv }); }
+    } else if (it.kind === 'site') {
+      if (!mv.fid) {
+        const r = await fetch(`${c.base()}/api/uploads?name=${encodeURIComponent(String(it.title).replace(/[\\/]+/g, '-') + '.html')}&scope=project`, { method: 'POST', headers: { ...auth(pid), 'Content-Type': 'application/octet-stream' }, body: new Blob([it.body || ''], { type: 'text/html' }) });
+        const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'upload failed');
+        mv.fid = (d.file || {}).id || 'done'; await save(id, { moved: mv });
+      }
     } else if (it.kind === 'whiteboard' || it.kind === 'design') {
       const wb = it.kind === 'whiteboard', base = wb ? '/whiteboard' : '/canvas', field = wb ? 'elements' : 'nodes';
       if (!mv.rid) { const r = await api(base, { method: 'POST', body: { name: it.title } }); mv.rid = (wb ? r.board : r.file).id; await save(id, { moved: mv }); }
@@ -281,5 +357,5 @@
 
   const urls = new Map();   // 'local:img-…' -> object URL (a board's pictures kept on this device)
   async function imageUrl(src) { if (urls.has(src)) return urls.get(src); await ready; const b = await blob(String(src).replace(/^local:/, '')); if (!b) throw new Error('picture gone'); const u = URL.createObjectURL(b); urls.set(src, u); return u; }
-  window.TribeLocalFiles = { ready, list, get, create, addFiles, save, remove, open, moveTo, moveMenu, backend: be, lww, blob, imageUrl, fkind, KINDS, closePane };
+  window.TribeLocalFiles = { ready, list, get, create, createCode, rename, duplicate, exportItem, download, addFiles, save, remove, open, moveTo, moveMenu, backend: be, lww, blob, imageUrl, fkind, KINDS, closePane };
 })();
