@@ -147,6 +147,29 @@ add('g', [
   ['make a band page, then tell everyone', ['site.band', 'chat.send']], ['add a gallery page', 'doc.new'],
 ]);
 
+// ---- held out: written after tuning, never tuned against; reported on their own ----
+const H0 = C.length;
+add('g', [['can u make me one of those link pages for my bio', 'site.linkbio'], ['website for my sourdough micro bakery', 'site.cafe'], ['our jazz trio needs a site', 'site.band'], ['site where i sell my zines', 'site.merch'],
+  ['page for my yoga classes', 'site.service'], ['we got engaged!! need a page for the guests', 'site.wedding'], ['make a site for my mobile app', 'site.saas'], ['teach me the inspo board', 'lesson', { feature: 'inspo' }],
+  ['how do i use huddles', 'lesson', { feature: 'huddles' }], ['tutorial on exporting', 'lesson', { feature: 'export' }], ['night theme', 'theme.dark-mode']]);
+add('s', [['the signup button goes nowhere', 'site.wire'], ['make the order button link to the menu page', 'site.wire', { to: 'menu' }], ['new page: Workshops', 'site.page.add', { name: 'Workshops' }],
+  ['swap in a photo from my board', 'site.image.replace', { source: 'board' }], ['circle crop the headshot', 'site.image.shape', { shape: 'round' }], ['flip it to dark', 'site.dark', { mode: 'dark' }],
+  ['dark theme for the site pls', 'site.dark', { mode: 'dark' }], ['add customer reviews', 'site.block.add', { block: 'testimonials' }], ['add a map', 'site.block.add', { block: 'embed' }], ['ditch the footer', 'site.block.remove', { block: 'footer' }],
+  ['move the team section above the faq', 'site.block.move', { block: 'team' }], ['download a zip', 'site.export', { fmt: 'zip' }], ['change the headline to Hand thrown in Tucson', 'site.text', { field: 'headline', text: 'Hand thrown in Tucson' }],
+  ['make the accent orange', 'site.color', { color: 'orange' }], ['add an faq section', 'site.block.add', { block: 'faq' }], ['rename this page Menu', 'site.page.rename', { name: 'Menu' }]]);
+add('cs', [['link this one to the checkout screen', 'canvas.wire', { to: 'checkout' }], ['make the photo a circle', 'canvas.image', { action: 'round' }], ['dark version', 'canvas.dark', { mode: 'dark' }]]);
+add('c', [['another screen for settings', 'canvas.page'], ['buttons should actually work', 'canvas.wire']]);
+for (let i = H0; i < C.length; i++) C[i].v = 'h1';   // held-out batch 1: 22/32 (68.8%) when first run, then tuned
+// ---- held out, batch 2: written last and never tuned against ----
+const H2 = C.length;
+add('g', [['i do pottery and want a page with my shop + classes links', 'site.linkbio'], ['site for our church choir', 'site.band'], ['a page for my dog grooming biz', 'site.service'], ['site for the bake sale fundraiser', 'site.nonprofit'],
+  ['teach me how the canvas works', 'lesson', { feature: 'canvas' }], ['how do i invite a friend', 'invite']]);
+add('s', [['make every button go to the right page', 'site.wire'], ['add a page for events', 'site.page.add', { name: 'Events' }], ['kill the pricing section', 'site.block.remove', { block: 'pricing' }],
+  ['upload my logo as the picture', 'site.image.replace', { source: 'upload' }], ['make it look like night time', 'site.dark', { mode: 'dark' }], ['swap the gallery to masonry', 'site.layout', { block: 'gallery', variant: 'masonry' }],
+  ['export to html please', 'site.export', { fmt: 'html' }], ['bring back what i undid', 'redo']]);
+add('cs', [['hook this button up to the profile screen', 'canvas.wire', { to: 'profile' }], ['make this image round', 'canvas.image', { action: 'round' }]]);
+for (let i = H2; i < C.length; i++) C[i].v = 'held';
+
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');
 console.log(`flint_eval.json: ${C.length} cases`);

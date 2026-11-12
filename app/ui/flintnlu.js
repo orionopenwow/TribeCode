@@ -229,7 +229,7 @@
     ['personalize', 'personalize|personalization|make it yours|look and feel', 'Personalize'], ['customize', 'customize|customization|tribe look|appearance', 'Customize'], ['profile', 'profile|my profile|account|my account', 'Profile'],
     ['trending', 'trending|trending repos|trending on github|github trending|hot repos', 'Trending'], ['jam', 'jam|jam mode|game jam', 'Jam'], ['publish', 'publish panel|publishing|publish page|play link page', 'Publish'],
     ['money', 'money|ledger|finances|expenses|budget page|spending', 'Money'], ['search', 'search|command palette|palette|quick search|spotlight', 'Search'], ['shortcuts', 'shortcuts|keyboard shortcuts|hotkeys|key bindings', 'Shortcuts'],
-    ['visuals', 'visuals|screenshots|screenshot gallery|images|media', 'Visuals'], ['notes', 'notes|my notes|captures|scratchpad|meeting notes', 'Notes'], ['updates', 'updates|changelog|release notes|whats new in tribecode|version history', 'Updates'], ['brainpick', 'flints brain|flint brain|brain settings|model picker|ai model settings', "Flint's brain"],
+    ['visuals', 'visuals|screenshots|screenshot gallery|images|media', 'Visuals'], ['notes', 'notes|my notes|captures|scratchpad|meeting notes', 'Notes'], ['updates', 'updates|changelog|release notes|whats new in tribecode|version history', 'Updates'], ['inspo', 'inspiration board|inspo board|inspo|moodboard|mood board|my board|inspiration', 'Inspiration board'], ['brainpick', 'flints brain|flint brain|brain settings|model picker|ai model settings', "Flint's brain"],
   ];
   for (const [k, w, label] of NAV) {
     I('nav.' + k, 'nav', [new RegExp(`^${V_OPEN}\\s+${ART}(?:${w})(?:\\s+(?:page|view|tab|section|screen|panel|please))?$`), new RegExp(`^(?:where(?: is| are| can i find| do i find)|how do i (?:get to|find|open))\\s+${ART}(?:${w})$`), new RegExp(`^${ART}(?:${w})(?:\\s+(?:page|view|tab|section|screen|panel))?$`)],
@@ -274,6 +274,7 @@
   I('note.blank', 'notes', [/^(?:new|blank|empty)\s+note$/, /^(?:start|open|create|make|take|add|write)\s+(?:a\s+)?(?:new\s+|blank\s+|empty\s+)*note$/], { ex: ['new note', 'start a blank note'] });
   const DOCW = 'email|doc|page|write up|writeup|plan|brief|memo|outline|spec|essay|letter|proposal|report|one pager|post|article|guide|readme|press release|faq|agenda|summary|script|story|blog post|announcement|email draft|cover letter|bio';
   I('doc.new', 'docs', [new RegExp(`^(?:write|draft|make|create|start|new|put together|compose|generate|give me|prepare|type up)\\s+(?:me\\s+|us\\s+)?${ART}(?:new\\s+|quick\\s+|short\\s+|simple\\s+|rough\\s+|first\\s+)?(?:[\\p{L}-]+\\s+){0,2}?(?:${DOCW})(?:\\s+(?:about|on|for|called|named|titled|explaining|describing|covering|with)\\s+(?<topic>.+)|\\s+(?<topic2>.+))?$`, 'u')], { p: 0.9, fill: s => ({ topic: s.topic || s.topic2 || '' }), ex: ['write a doc about the launch', 'draft a plan for the jam', 'make a page called rules'] });
+  I('doc.new', 'docs', [/^add\s+(?:a|an)\s+(?:new\s+)?(?:[\p{L}-]+\s+)?page(?:\s+(?:to|in)\s+(?:the\s+|my\s+|our\s+)?(?:docs|files))?(?:\s+(?:about|on|for|called)\s+(?<topic>.+))?$/u], { p: 0.9, fill: s => ({ topic: s.topic || '' }), ex: ['add a page to the docs about rules'] });
   I('sheet.new', 'docs', [new RegExp(`^(?:make|create|start|build|new|set up|give me|put together|draft)\\s+(?:me\\s+|us\\s+)?${ART}(?:new\\s+|quick\\s+|simple\\s+)?(?:[\\p{L}-]+\\s+){0,2}?(?:sheet|sheets|table|budget|tracker|expense sheet|expense tracker|inventory|price list|roster|schedule sheet|sign up sheet|signup sheet|ledger)(?:\\s+(?:about|on|for|of|called|named|with|to track)\\s+(?<topic>.+)|\\s+(?<topic2>.+))?$`, 'u')], { p: 0.91, fill: s => ({ topic: s.topic || s.topic2 || '' }), ex: ['make a sheet for the budget', 'create an expense tracker', 'new sheet for inventory'] });
   I('deck.new', 'docs', [new RegExp(`^(?:make|create|build|draft|put together|give me|new|write|prepare|start)\\s+(?:me\\s+|us\\s+)?${ART}(?:new\\s+|quick\\s+|short\\s+)?(?:[\\p{L}-]+\\s+){0,2}?(?:slides|slide|pitch slides|pitch|keynote)(?:\\s+(?:about|on|for|called|named|explaining|covering)\\s+(?<topic>.+)|\\s+(?<topic2>.+))?$`, 'u')], { p: 0.92, fill: s => ({ topic: s.topic || s.topic2 || '' }), ex: ['make slides about the launch', 'build a pitch deck for investors'] });
   I('doc.open', 'docs', [/^(?:open|show|find|pull up|bring up|go to)\s+(?:the\s+|my\s+|our\s+)?(?:doc|page|file|note|sheet|slides)\s+(?:called\s+|named\s+|about\s+)?(?<name>.+)$/, /^(?:open|show|pull up)\s+(?:the\s+|my\s+|our\s+)?(?<name>.+?)\s+(?:doc|page|file|sheet|slides|note)$/], { p: 0.88, req: { name: 'Which doc?' }, ex: ['open the doc rules', 'pull up the launch plan doc'] });
@@ -284,7 +285,7 @@
   I('chat.send', 'chat', [
     /^(?:post|send|say|announce|share|write|put)\s+(?:a\s+message\s+)?(?:in|to|on)\s+(?:the\s+)?(?:chat|general|channel|group|team chat)\s*(?:that|saying|:)?\s*(?<msg>.+)$/,
     /^(?:tell|announce to|let|message|ping|remind|notify|update)\s+(?<who>everyone|everybody|the team|team|the tribe|all|the group|the chat|y'?all|the channel)\s+(?:know\s+)?(?:that\s+|about\s+|to\s+|:\s*)?(?<msg>.+)$/,
-    /^(?:post|announce|say)\s*:?\s+(?<msg>.+?)\s+(?:in|to)\s+(?:the\s+)?(?:chat|general|channel)$/, /^announce\s*:?\s+(?<msg>.+)$/,
+    /^(?:post|announce|say)\s*:?\s+(?<msg>.+?)\s+(?:in|to)\s+(?:the\s+)?(?:chat|general|channel)$/, /^announce\s*:?\s+(?<msg>.+)$/, /^(?:tell|ping|notify|let)\s+(?:everyone|everybody|the team|the tribe|y'?all)(?:\s+know)?$/,
   ], { req: { msg: 'What should I post?' }, ex: ['tell everyone the build is up', 'post in the chat: demo at 3', 'announce we ship friday'] });
   I('dm.send', 'chat', [
     /^(?:tell|message|text|dm|ping|notify|let|ask|remind|send|email|write to|msg|update)\s+(?<who>(?:my\s+)?[\p{L}][\p{L}'-]*(?:\s+(?:and|&)\s+[\p{L}][\p{L}'-]*)?)(?:\s+(?:know|a message|a note|a dm))?(?:\s+(?:that|about|to|if|whether|saying|:)\s*|\s*:\s*|\s+)?(?<msg>.*)$/u,
@@ -325,7 +326,7 @@
   // the design canvas (app/ui/canvas/flint.js does the work)
   const SCREENS = [['login', 'login|log in|sign in|signin|sign up|signup|auth|register|registration'], ['onboarding', 'onboarding|welcome|intro|walkthrough'], ['home', 'home|home feed|app home|main'], ['feed', 'feed|timeline|social feed|news feed'], ['product', 'product|product card|product detail|item detail'], ['pricing', 'pricing|plans|price table|pricing table'],
     ['settings', 'settings|preferences|account settings'], ['profile', 'profile|user profile|account'], ['checkout', 'checkout|cart|payment|basket'], ['hero', 'landing hero|hero|hero section|header section|landing'], ['dashboard', 'dashboard|analytics|stats|admin'], ['chat', 'chat|messages|messaging|inbox'], ['empty', 'empty state|empty|no results|404|error']];
-  for (const [k, w] of SCREENS) I('canvas.' + k, 'canvas', [new RegExp(`^(?:make|design|draw|create|mock up|mockup|sketch|wireframe|lay out|layout|give me|build|add|do)\\s+(?:me\\s+|us\\s+)?${ART}(?:new\\s+|simple\\s+|clean\\s+|mobile\\s+|phone\\s+|desktop\\s+|dark\\s+|light\\s+)*(?:${w})\\s+(?:screen|page|view|ui|mockup|mock up|design|frame|wireframe|section|card|layout)(?:\\s+(?:for|called|named)\\s+(?<name>.+?))?(?:\\s+(?:in|with)\\s+(?<style>dark|light|[\\p{L}]+)(?:\\s+(?:mode|theme))?)?$`, 'u')],
+  for (const [k, w] of SCREENS) I('canvas.' + k, 'canvas', [new RegExp(`^(?:an?\\s+)(?:new\\s+|simple\\s+|clean\\s+|mobile\\s+|phone\\s+|desktop\\s+)*(?:${w})\\s+(?:screen|section|frame|mockup)$`, 'u'), new RegExp(`^(?:make|design|draw|create|mock up|mockup|sketch|wireframe|lay out|layout|give me|build|add|do)\\s+(?:me\\s+|us\\s+)?${ART}(?:new\\s+|simple\\s+|clean\\s+|mobile\\s+|phone\\s+|desktop\\s+|dark\\s+|light\\s+)*(?:${w})\\s+(?:screen|page|view|ui|mockup|mock up|design|frame|wireframe|section|card|layout)(?:\\s+(?:for|called|named)\\s+(?<name>.+?))?(?:\\s+(?:in|with)\\s+(?<style>dark|light|[\\p{L}]+)(?:\\s+(?:mode|theme))?)?$`, 'u')],
     { p: 0.95, fill: buildFill, ex: [`make a ${w.split('|')[0]} screen`, `design a ${w.split('|')[0]} page for ember`] });
   I('canvas.tidy', 'canvas', [/^(?:tidy|tidy up|clean up|cleanup|organize|organise|align|neaten|straighten|space out|even out|fix the spacing of|make tidy)\s*(?:it|this|that|the layers|the frame|the selection|this frame|everything|up|the layout|spacing)?(?:\s+up)?$/, /^(?:auto layout|use auto layout|turn (?:this|it) into auto layout|add auto layout)(?:\s+(?:to\s+)?(?:it|this))?$/], { ex: ['tidy up', 'clean up this frame', 'add auto layout'] });
   I('canvas.rename', 'canvas', [/^(?:rename|name|label|fix the names of)\s+(?:the\s+|all\s+|my\s+|these\s+)?layers$/, /^(?:give (?:the )?layers (?:good |better |real )?names|clean up (?:the )?layer names)$/], { ex: ['rename layers', 'give the layers better names'] });
@@ -346,7 +347,7 @@
 
   // look and language
   for (const [k, id] of [['campfire', 'campfire'], ['tribecode dark', 'dark'], ['light', 'light'], ['midnight', 'midnight'], ['nordic', 'nordic'], ['nightshade', 'nightshade'], ['solar dark', 'solar-dark'], ['solar light', 'solar-light'], ['high contrast', 'contrast'], ['dark', 'dark-mode']]) {
-    I('theme.' + id, 'look', [new RegExp(`^(?:switch|change|set|use|go|put|turn on|enable|try|apply|give me|i want|make it|make the app|make everything)\\s*(?:to\\s+|the\\s+|on\\s+)*(?:theme\\s+(?:to\\s+)?|app\\s+(?:to\\s+)?)?(?:the\\s+)?(?:${k}${id === 'dark-mode' ? '|night|darker' : id === 'light' ? '|day|lighter|bright' : id === 'nightshade' ? '|dracula' : id === 'nordic' ? '|nord' : ''})(?:\\s+(?:mode|theme|colors?))?$`), new RegExp(`^(?:the\\s+)?(?:${k})\\s+(?:mode|theme)(?:\\s+please)?$`), ...(id === 'light' ? [/^(?:turn off|disable|no more|exit|leave)\s+dark\s*mode$/, /^too dark$/] : id === 'dark-mode' ? [/^(?:turn off|disable|exit|leave)\s+light\s*mode$/, /^(?:too bright|my eyes hurt)$/] : [])],
+    I('theme.' + id, 'look', [new RegExp(`^(?:switch|change|set|use|go|put|turn on|enable|try|apply|give me|i want|make it|make the app|make everything)\\s*(?:to\\s+|the\\s+|on\\s+)*(?:theme\\s+(?:to\\s+)?|app\\s+(?:to\\s+)?)?(?:the\\s+)?(?:${k}${id === 'dark-mode' ? '|night|darker' : id === 'light' ? '|day|lighter|bright' : id === 'nightshade' ? '|dracula' : id === 'nordic' ? '|nord' : ''})(?:\\s+(?:mode|theme|colors?))?$`), new RegExp(`^(?:the\\s+)?(?:${k}${id === 'dark-mode' ? '|night' : ''})\\s+(?:mode|theme)(?:\\s+please)?$`), ...(id === 'light' ? [/^(?:turn off|disable|no more|exit|leave)\s+dark\s*mode$/, /^too dark$/] : id === 'dark-mode' ? [/^(?:turn off|disable|exit|leave)\s+light\s*mode$/, /^(?:too bright|my eyes hurt)$/] : [])],
       { p: 0.95, ex: [`switch to ${k} theme`, `${k} mode`] });
   }
   I('theme.system', 'look', [/^(?:match|follow|use|sync with)\s+(?:my\s+|the\s+)?(?:system|os|device|computer)(?:\s+(?:theme|mode|setting|light and dark|appearance))?$/, /^(?:auto|automatic|system)\s+(?:theme|mode|dark mode)$/], { ex: ['match my system theme', 'auto theme'] });
@@ -388,12 +389,172 @@
   I('time.now', 'local', [/^(?:what time is it|whats the time|what is the time|time|current time|what day is it|what day is today|whats today|what is today|whats the date|what is the date|todays date|what is todays date|date)(?:\s+(?:today|now))?$/], { ex: ['what time is it', 'whats the date'] });
   I('date.calc', 'local', [/^(?:what|which)\s+(?:date|day)\s+is\s+(?<when>.+)$/, /^(?:how many days|how long)\s+(?:until|till|to|before)\s+(?<when>.+)$/, /^when is\s+(?<when>next \w+|this \w+)$/], { req: { when: 'Which day?' }, fill: (s, c, ctx, X) => { const w = parseWhen(String((X && X.c.when) || s.when || '').toLowerCase(), ctx && ctx.now); return w ? { when: w, until: /how many|how long/.test(c) } : null; }, ex: ['what date is next friday', 'how many days until friday'] });
   I('random', 'local', [/^(?:flip|toss)\s+(?:a\s+)?coin$/, /^(?:roll|throw)\s+(?:a\s+|the\s+|two\s+)?(?:die|dice|d(?<sides>\d+))$/, /^(?:pick|choose|give me)\s+(?:a\s+)?(?:random\s+)?number\s+(?:between|from)\s+(?<a>\d+)\s+(?:and|to)\s+(?<b>\d+)$/, /^(?:pick|choose)\s+(?:someone|a person|somebody|a random person|a winner)(?:\s+.*)?$/, /^who\s+(?:should|goes|has to|gets to|will)\s+.+$/, /^(?:heads or tails|yes or no|should i)\b.*$/], { p: 0.9, fill: (s, c) => { const n = v => parseInt(String(v || '').replace(/\D+/g, ''), 10); return { kind: /coin|heads/.test(c) ? 'coin' : /die|dice|^roll/.test(c) ? 'dice' : /number/.test(c) ? 'number' : /^who|someone|person|somebody|winner/.test(c) ? 'person' : 'yesno', sides: n(s.sides) || 6, a: n(s.a), b: n(s.b) }; }, ex: ['flip a coin', 'roll a d20', 'pick a number between 1 and 10', 'who should do the dishes'] });
-  I('undo', 'local', [/^(?:undo|undo that|undo it|take that back|take it back|revert|revert that|reverse that|cancel that|never mind|nevermind|nvm|oops|whoops|my bad|scratch that|forget that|go back)$/], { p: 0.97, ex: ['undo', 'take that back', 'oops'] });
+  I('undo', 'local', [/^(?:(?:oops|whoops|nope)\s+(?:go back|undo|undo that)|undo|undo that|undo it|take that back|take it back|revert|revert that|reverse that|cancel that|never mind|nevermind|nvm|oops|whoops|my bad|scratch that|forget that|go back)$/], { p: 0.97, ex: ['undo', 'take that back', 'oops'] });
   I('teach', 'local', [/^(?:teach flint|learn this|flint learn|remember this)?\s*:?\s*(?:when|whenever|if)\s+i\s+say\s+(?<say>.+?)\s+(?<means>(?:open|show|add|make|start|switch|tell|go|publish|build|create|schedule|turn|set|mark|play|run|post|invite|send|take)\b.+)$/, /^(?:teach flint|learn this|flint learn|remember this)?\s*:?\s*(?:when|whenever|if)\s+i\s+say\s+(?<say>.+?)\s*,?\s*(?:you should\s+|please\s+|then\s+)?(?:do|run|mean|means|it means|i mean|open|you do|that means|do this)\s*:?\s+(?<means>.+)$/, /^(?<say>.+?)\s+means\s+(?<means>.+)$/], { p: 0.97, ex: ['when i say ship it, do publish it', 'teach flint: when i say standup, open the calendar'] });
   I('meant', 'local', [/^(?:no\s*,?\s*)?i\s+meant\s+(?<means>.+)$/, /^(?:no\s*,?\s*)?(?:i mean|what i meant was|i was asking you to)\s+(?<means>.+)$/], { p: 0.97, ex: ['no i meant open the calendar'] });
   I('unteach', 'local', [/^(?:forget|unlearn|stop doing)\s+(?:the\s+)?(?:shortcut|phrase|command)?\s*(?<say>.+?)$/], { p: 0.6, ex: ['forget the shortcut ship it'] });
   I('taught', 'local', [/^(?:what have i taught you|my shortcuts|my phrases|list my shortcuts|what do you know from me|show what i taught you)$/], { ex: ['what have i taught you'] });
   I('help.kb', 'help', [/^(?:how|why|where|when|what|which|who|can i|could i|is|are|should|would|will|was|were|has|have|do i|does|do you|do we|explain|help|tell me about|how do i|how to|whats the difference|what is the difference|can you explain|i dont understand|what does)\b.+$/], { p: 0.66, ex: ['how do i invite a friend', 'how does publishing work', 'what is the secretary'] });
+
+  I('redo', 'local', [/^(?:redo|redo that|redo it|put it back|bring it back|undo the undo|undo undo)$/], { p: 0.97, ex: ['redo', 'put it back'] });
+  I('premium.open', 'team', [/^(?:buy|get|purchase|top up|add|need)\s+(?:some\s+|more\s+)?(?:ai\s+)?credits$/, /^(?:get|go|buy|try|upgrade to|start|see)\s+(?:tribecode\s+)?premium$/, /^(?:upgrade|subscribe|go pro|get a subscription|premium plans|see plans)$/], { ex: ['buy credits', 'get premium', 'upgrade'] });
+  I('connect.ai', 'team', [/^use (?:my own|my) (?:ai|claude|model|key|api key|llm)$/, /^(?:bring|plug in) my own (?:ai|key|model)$/], { ex: ['use my own ai'] });
+
+  // ---------- websites and the design canvas: meaning, not just commands (feat/flint-site) ----------
+  // design(c, raw, ctx) reads what people mean about a site or a design: wire buttons, pages, images, dark mode, blocks,
+  // layouts, words, export; a template from what the site is FOR ("something for my band"); a lesson ("teach me tasks").
+  // ctx.view 'site' (the website designer, or the preview in Website mode with ctx.site) or 'canvas' picks the intent
+  // family (site.* or canvas.*). Everywhere else only templates, "open the designer" and lessons are read here.
+  const TPL_TAGS = {
+    linkbio: ['link in bio', 'linkinbio', 'link tree', 'linktree', 'bio link', 'bio links', 'links page', 'link page', 'all my links', 'one link', 'instagram bio', 'insta bio', 'tiktok bio', 'my links', 'link for my instagram', 'for my insta', 'for my tiktok', 'link pages', 'links pages', 'link page for my bio', 'my bio', 'link hub', 'social links'],
+    band: ['band', 'jazz', 'trio', 'quartet', 'choir', 'orchestra', 'rock band', 'punk', 'hip hop', 'producer', 'my music', 'our music', 'my songs', 'musician', 'dj gigs', 'dj', 'gigs', 'tour dates', 'my album', 'singer', 'rapper', 'concerts'],
+    cafe: ['sourdough', 'bar', 'pub', 'tacos', 'ramen', 'catering', 'bakery', 'cafe', 'coffee shop', 'coffee', 'restaurant', 'food truck', 'diner', 'pizza place', 'pizza', 'bistro', 'brunch', 'menu page', 'with the menu'],
+    merch: ['zines', 'stickers', 'handmade', 'jewelry', 'ceramics', 'sell my', 'sell our', 'merch', 'online store', 'online shop', 'shop page', 'store', 'sell', 'ecommerce', 'e commerce', 'webshop', 'storefront', 't shirts', 'candles'],
+    portfolio: ['portfolio', 'design work', 'case studies', 'case study', 'show off my', 'my work'],
+    creator: ['twitch', 'stream on', 'streamer', 'streaming', 'youtuber', 'youtube channel', 'creator'],
+    service: ['yoga', 'pilates', 'fitness', 'personal trainer', 'gym', 'tutor', 'tutoring', 'classes', 'coaching', 'coach', 'therapist', 'massage', 'dentist', 'dog walking', 'dog grooming', 'nail', 'tattoo', 'consulting', 'lawyer', 'accountant', 'bookings', 'plumbing', 'plumber', 'hair salon', 'salon', 'barber', 'cleaning company', 'cleaning', 'handyman', 'local business', 'small business', 'electrician', 'landscaping', 'repair shop'],
+    wedding: ['engaged', 'guests', 'reception', 'baby shower', 'anniversary', 'reunion', 'wedding', 'married', 'rsvp', 'save the date', 'birthday', 'party invite', 'engagement'],
+    podcast: ['radio show', 'audio show', 'podcast', 'episodes', 'our show', 'my show'],
+    blog: ['blog', 'newsletter', 'devlog', 'travel stories', 'my writing'],
+    saas: ['mobile app', 'our product', 'my product', 'b2b', 'startup', 'saas', 'for my app', 'for our app', 'software', 'product site'],
+    gamepage: ['steam page', 'indie game', 'press kit', 'my game', 'our game', 'game page', 'wishlist'],
+    resume: ['resume', 'cv', 'personal website', 'personal site', 'about me page'],
+    nonprofit: ['charity', 'nonprofit', 'non profit', 'donation', 'donate', 'fundraiser', 'fundraising', 'animal shelter', 'volunteers'],
+    photography: ['photography portfolio', 'photographer', 'photography', 'photo gallery', 'photo site'],
+    comingsoon: ['coming soon', 'waitlist', 'wait list', 'launching soon', 'teaser page', 'prelaunch', 'pre launch', 'collect emails'],
+  };
+  const BLOCK_W = [
+    ['testimonials', 'testimonials?|reviews?|quotes|what (?:people|customers|clients) say|social proof|kind words'],
+    ['pricing', 'pricing|prices|price list|price table|plans|tiers'],
+    ['faq', 'faqs?|questions and answers|q and a|common questions|questions'],
+    ['contact', 'contact form|contact|sign ?up form|signup|email me|get in touch|reach me|reach us|newsletter form|a form|form'],
+    ['gallery', 'gallery|galleries|photo grid|image grid|photos|pictures|lookbook'],
+    ['team', 'team|who we are|about us|the people|crew|our people|members'],
+    ['embed', 'video|videos|youtube|vimeo|spotify|soundcloud|embed|bandcamp|playlist|map'],
+    ['features', 'features?|feature list|what we do|services|benefits|highlights'],
+    ['links', 'links list|link list|list of links|links'],
+    ['footer', 'footer|bottom bar'],
+    ['hero', 'hero|header|banner|top section'],
+    ['text', 'text section|text block|paragraph|some text|story|text'],
+  ].map(([k, w]) => [k, new RegExp(`\\b(?:${w})\\b`)]);
+  const blockOf = c => { let best = null, at = Infinity; for (const [k, rx] of BLOCK_W) { const m = rx.exec(c); if (m && m.index < at) { at = m.index; best = k; } } return best; };   // the first one named is the subject
+  const PRESET_W = { paper: 'paper|cream|warm paper', swiss: 'swiss|grid look', terminal: 'terminal|hacker|monospace', editorial: 'editorial|magazine|serif', playful: 'playful|fun|bubbly|colorful', minimal: 'minimal|minimalist|plain|simple', bold: 'bold|loud|poster|punchy', soft: 'soft|pastel|gentle' };
+  const presetOf = c => { for (const [k, w] of Object.entries(PRESET_W)) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return k; return ''; };
+  const VAR_W = [['split', 'split|side by side'], ['center', 'center|centered|middle'], ['masonry', 'masonry'], ['table', 'table'], ['cards', 'cards'], ['grid', 'grid|columns'], ['list', 'list'], ['stack', 'stack|stacked'], ['minimal', 'minimal']];
+  const LESSON_W = [['export', 'export|exporting|html export|download (?:my |the )?(?:site|html|website)'], ['inspo', 'inspiration board|inspo board|inspo|moodboard|mood board|inspiration'], ['templates', 'templates?'],
+    ['premium', 'premium|credits|subscription|subscribe|plans|upgrade'], ['huddles', 'huddles?|voice calls?|voice chat|video calls?|calls?'], ['agents', 'agents?|ai helpers?|claude code|my ai'], ['company', 'company|company mode|seats'],
+    ['preview', 'preview|live preview'], ['canvas', 'design canvas|canvas|figma|design|mockups?|screens'], ['site', 'website designer|site designer|website builder|site builder|websites?|sites?|wire buttons|buttons|landing pages?|designer'],
+    ['tasks', 'task board|tasks?|kanban|board'], ['work', 'work|gigs?|jobs|time bank'], ['files', 'files?|uploads?|folders'], ['chat', 'chat|messages|channels|dms']].map(([k, w]) => [k, new RegExp(`\\b(?:${w})\\b`)]);
+  const featureOf = s => { for (const [k, rx] of LESSON_W) if (rx.test(s)) return k; return null; };
+  function lessonOf(c) {
+    let m = /^(?:teach me|teach|lesson (?:on|about|for)|a lesson (?:on|about)|tutorial (?:on|for|about)|walk me through|show me how(?: to use)?)\s+(?:about\s+)?(?:how to\s+)?(?:use\s+)?(.+?)(?:\s+works?)?$/.exec(c);
+    if (m) return featureOf(m[1]);
+    if (/^how (?:do|does|can|should) (?:i|we|you)\s+(?:use|make|build|start|upload|export|wire|set up|work with|get started with|create|share)\b/.test(c)) return featureOf(c.replace(/^how (?:do|does|can|should) (?:i|we|you)\s+/, ''));
+    if ((m = /^how (?:does|do|is|are)\s+(?:the\s+|a\s+|my\s+|our\s+)?(.+?)\s+work(?:s|ing)?$/.exec(c))) return featureOf(m[1]);
+    if (/^what (?:is|are) (?:tribecode\s+)?(?:premium|credits)$/.test(c)) return 'premium';
+    return null;
+  }
+  const titleCase = s => String(s || '').trim().replace(/\b[a-z]/g, ch => ch.toUpperCase()).replace(/\bFaq\b/g, 'FAQ');
+  const SOCIAL = /\b(instagram|insta|tiktok|youtube|twitter|bluesky|facebook|spotify|soundcloud|bandcamp|twitch|linkedin|github|patreon|etsy)\b/;
+  const TARGET_MAP = { 'signup form': 'contact', 'sign up form': 'contact', 'contact form': 'contact', form: 'contact', 'email form': 'contact', newsletter: 'contact', reviews: 'testimonials', prices: 'pricing', plans: 'pricing', questions: 'faq', photos: 'gallery', 'home page': 'home', homepage: 'home', top: 'home', start: 'home' };
+  function wireTarget(raw, ctx) {
+    const url = (/\b(https?:\/\/[^\s"'<>]+|www\.[^\s"'<>]+)/i.exec(raw) || [])[1], email = (/\b([\w.+-]+@[\w-]+\.[\w.-]+)\b/.exec(raw) || [])[1];
+    if (email) return { kind: 'email', to: email.replace(/[.,]+$/, '') };
+    if (url) return { kind: 'url', to: url.replace(/[.,]+$/, '') };
+    const low = deaccent(String(raw).toLowerCase()).replace(/[!?.]+$/, '');
+    const so = SOCIAL.exec(low); if (so && /\b(?:to|at|my|our)\b/.test(low)) return { kind: 'url', to: so[1] === 'insta' ? 'instagram' : so[1] };
+    const m = /^.*\b(?:to|at|into|towards?)\s+(.+)$/.exec(low); if (!m) return {};
+    let t = m[1].replace(/^(?:the|my|our|a|an|this|that)\s+/, '').replace(/\s+(?:please|pls|too|instead)$/, '').trim();
+    let kind = '';
+    if (/\s+page$/.test(t)) { kind = 'page'; t = t.replace(/\s+page$/, ''); } else if (/\s+section$/.test(t)) { kind = 'section'; t = t.replace(/\s+section$/, ''); } else if (/\s+screen$/.test(t)) { kind = 'screen'; t = t.replace(/\s+screen$/, ''); }
+    if (TARGET_MAP[t]) t = TARGET_MAP[t];
+    if (!t || /^(?:pages|screens|sections|somewhere|anything|something|the right (?:place|pages?)|work|go|me)$/.test(t) || t.split(' ').length > 4) return {};
+    if (!kind && ((ctx.pages || []).some(p => String(p).toLowerCase() === t))) kind = 'page';
+    if (!kind && blockOf(t)) kind = 'section';
+    return { kind: kind || 'page', to: t };
+  }
+  function design(c, raw, ctx) {
+    const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
+    const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
+    const r = String(raw || '').trim(), rl = r.toLowerCase();
+    const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
+    const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
+    if (view) {
+      const cv = view === 'canvas';
+      // export (the website designer)
+      if (!cv && /\b(?:export|download|zip|html|webpage file|web page file|save it as|get the code|code for this|source code|static files?)\b/.test(c) && !IMG.test(c)) return hit('site.export', { fmt: /\bzip\b/.test(c) ? 'zip' : /\b(?:html|webpage|web page)\b/.test(c) ? 'html' : '' });
+      // words: "change the headline to …", "the button should say …", "rename the site to …"
+      if (!cv) {
+        let m = /\b(?:change|set|make|update|edit|have)\s+(?:the\s+)?(headline|title|heading|tagline|subtitle|subheading|intro|button|button text|cta)\s+(?:to\s+say|to\s+read|say|says|read|reads|to|into)\s+(.+)$/i.exec(r)
+          || /\b(?:the\s+)?(headline|title|heading|tagline|button|cta)\s+should\s+(?:say|read|be)\s+(.+)$/i.exec(r);
+        if (m) { const f = m[1].toLowerCase(); return hit('site.text', { field: /title|heading|headline/.test(f) ? 'headline' : /tagline|subtitle|subheading|intro/.test(f) ? 'tagline' : 'button', text: m[2].replace(/^["“']|["”'.]+$/g, '').trim() }); }
+        if ((m = /\b(?:rename|call)\s+(?:the\s+|my\s+)?(?:site|website)\s+(?:to\s+)?(.+)$/i.exec(r))) return hit('site.text', { field: 'name', text: m[1].replace(/["“”.]+$/g, '').trim() });
+      }
+      // wire buttons and links
+      const BTN = '(?:buttons?|links?|ctas?|call to action)';
+      const wired = [new RegExp(`\\b(?:make|get|have|let)\\s+(?:all\\s+)?(?:of\\s+)?(?:the\\s+|my\\s+|these\\s+|those\\s+|this\\s+|that\\s+)?(?:[a-z]+\\s+){0,2}?${BTN}\\s+(?:work|go|open|link|point|scroll|lead|take|clickable|functional|do something|actually|email|send|jump)`), new RegExp(`^(?:functional|working|clickable|live|real)\\s+${BTN}$`),
+        new RegExp(`\\b(?:wire|hook|connect|link|point|route|send|aim)\\s+(?:up\\s+)?(?:all\\s+)?(?:the\\s+|this\\s+|that\\s+|my\\s+|these\\s+|teh\\s+)?(?:[a-z]+\\s+){0,2}?(?:${BTN}|it|this|that)\\b`), new RegExp(`${BTN}\\s+(?:do not|does not)\\s+(?:do anything|work|go anywhere|lead anywhere)`),
+        new RegExp(`${BTN}\\s+should\\s+(?:go|open|link|point|lead|take|scroll|email|send)`), /\bmake\s+(?:this|it|that)\s+(?:clickable|a link|link somewhere)\b/, /\b(?:make|have)\s+(?:it|this)\s+(?:email|link|go|open)\s+(?:to|me|at)\b/, /\b(?:cta|button)\s+(?:scroll|go|jump|lead)s?\s+to\b/, new RegExp(`${BTN}\\s+(?:goes|go|leads?|links?|point|points)\\s+(?:nowhere|to nothing)`), new RegExp(`\\b(?:broken|dead|fake|empty)\\s+${BTN}`), new RegExp(`${BTN}\\s+(?:is|are)\\s+(?:broken|dead|not working|fake)`), new RegExp(`${BTN}\\s+(?:should|need to|must|have to)\\s+(?:actually\\s+|really\\s+)?(?:work|do something|be clickable)`)];
+      if (wired.some(x => x.test(c)) && !/\b(?:link in bio|link tree|linktree)\b/.test(c)) { const t = wireTarget(r, ctx); if (cv && t.kind && t.kind !== 'url' && t.kind !== 'email') t.kind = 'screen'; return hit(cv ? 'canvas.wire' : 'site.wire', t.to ? t : {}); }
+      // pages (canvas: screens)
+      const PG = cv ? '(?:page|screen|frame|view)' : 'page';
+      let m = new RegExp(`\\b(?:rename|call|retitle)\\s+(?:this|the|current)\\s+${PG}\\s+(?:to\\s+|as\\s+)?(.+)$`, 'i').exec(r) || new RegExp(`\\bchange\\s+(?:the\\s+)?${PG}(?:'s)?\\s+(?:name|title)\\s+to\\s+(.+)$`, 'i').exec(r);
+      if (m && !cv) return hit('site.page.rename', { name: titleCase(m[1].replace(/["“”.]+$/g, '')) });
+      if (!cv && (m = new RegExp(`\\b(?:delete|get rid of|drop|lose|trash|scrap|do not need|kill)\\s+(?:this|the|that|my)\\s+(?:([a-z]+)\\s+)?page\\b`).exec(c))) return hit('site.page.delete', m[1] ? { name: m[1] } : {});
+      if (new RegExp(`\\b(?:add|make|create|new|need|want|get|start|insert|build|another|second|extra)\\b.*\\b${PG}\\b`).test(c) && !/\b(?:button|link|section|docs?)\b/.test(c)) {
+        let name = '';
+        const cm = new RegExp(`(?:\\b(?:called|named|titled)\\s+|${PG}\\s*:\\s*)(.+)$`, 'i').exec(r);
+        if (cm) name = cm[1].replace(/\s+(?:too|please|pls)$/i, '').replace(/["“”.!]+$/g, '');
+        else { const bm = new RegExp(`\\b([a-z]+)\\s+${PG}\\b`).exec(c), fm = new RegExp(`\\b${PG}\\s+for\\s+(?:my|our|the)?\\s*([a-z]+(?:\\s+[a-z]+)?)$`).exec(c); const w = bm && bm[1]; if (w && !/^(?:a|an|the|new|another|second|extra|blank|empty|one|more|add|make|create|get|need|want|i|we|this|that|start|insert|build|mobile|phone|desktop)$/.test(w)) name = w; else if (fm) name = fm[1]; }
+        return hit(cv ? 'canvas.page' : 'site.page.add', name ? { name: titleCase(name) } : {}, cv ? 0.96 : 0.97);
+      }
+      // images
+      const hasImg = IMG.test(c) || /\bmoodboard\b/.test(c);
+      if (/\balt\b|\bscreen readers?\b|\bdescribe (?:the|this) (?:image|picture|photo)\b/.test(c)) { const am = /\balt(?: text)?\s+(?:to|as|:)\s+(.+)$/i.exec(r); if (cv) return hit('canvas.image', { action: 'alt' }); return hit('site.image.alt', am ? { alt: am[1].replace(/["“”.]+$/g, '').trim() } : {}); }
+      if ((hasImg || /\bcrop\b/.test(c)) && /\b(?:round|circle|circular|rounded|oval|square|squared)\b/.test(c)) { const shape = /\bno (?:round|rounded)\b/.test(c) || (/\bsquare/.test(c) && !/\b(?:round|circle)\b/.test(c)) ? 'square' : 'round'; return cv ? hit('canvas.image', { action: shape }) : hit('site.image.shape', { shape }); }
+      if (hasImg && !/\b(?:photo grid|image grid|gallery)\b/.test(c) && (/\b(?:replace|swap|change|switch|update|different|new|upload|use|put|edit|another|add)\b/.test(c) || /^(?:edit|my) /.test(c))) {
+        const source = /https?:\/\//i.test(r) ? 'url' : /\b(?:board|moodboard|mood board|inspiration|inspo)\b/.test(c) ? 'board' : /\b(?:my|own|upload|mine)\b/.test(c) && !/\bedit this\b/.test(c) ? 'upload' : '';
+        const sl = source ? { source } : {};
+        if (cv) return hit('canvas.image', /\bedit\b/.test(c) && !source ? {} : { action: 'replace', ...sl });
+        return hit('site.image.replace', sl);
+      }
+      // dark mode: a real theme variant of the design
+      if (/\b(?:dark|darker|night|black background|dim|darken)\b/.test(c) || /\b(?:light mode|lighter|light again|light version|brighten|white background|light theme)\b/.test(c)) {
+        const light = /\btoo dark\b/.test(c) || (!/\b(?:dark|darker|night|black|dim|darken)\b/.test(c));
+        return hit(cv ? 'canvas.dark' : 'site.dark', { mode: light ? 'light' : 'dark' });
+      }
+      if (!cv) {
+        const blk = blockOf(c);
+        // layouts: "make the hero split", "masonry gallery", "show the pricing as a table"
+        if (blk && !/\b(?:add|insert|include|embed)\b/.test(c)) {
+          const v = VAR_W.find(([, w]) => new RegExp(`\\b(?:${w})\\b`).test(c));
+          if (/\b(?:layout|arrangement|variant|different look)\b/.test(c) || (v && !/\b(?:photo grid|image grid|links list|link list)\b/.test(c))) return hit('site.layout', v ? { block: blk, variant: v[0] } : { block: blk });
+        }
+        if (blk) {
+          const dir = /\b(?:above|before)\b/.test(c) ? 'up' : /\b(?:below|after|under)\b/.test(c) ? 'down' : /\b(?:to the top|at the top|first|to the start|higher up)\b/.test(c) ? 'top' : /\b(?:to the bottom|at the bottom|last|to the end|at the end)\b/.test(c) ? 'bottom' : /\bup\b/.test(c) ? 'up' : /\bdown\b/.test(c) ? 'down' : '';
+          if (dir && /\b(?:move|put|place|shift|bump|push)\b/.test(c)) return hit('site.block.move', { block: blk, dir });
+          if (/\b(?:delete|get rid of|drop|hide|lose|kill|without|take out|ditch|scrap|cut|nix|toss|lose)\b/.test(c) && !/\bdrop in\b/.test(c) || /^no\s/.test(c)) return hit('site.block.remove', { block: blk });
+          if (/\b(?:add|put|insert|include|want|need|show|embed|stick|throw|drop in|give me|let)\b/.test(c) || /\bsection$/.test(c)) return hit('site.block.add', { block: blk });
+        }
+        const col = colorOf(c);
+        if (col && /\b(?:accent|colou?r|main|brand|primary|buttons?|make it|make everything|use|turn it)\b/.test(c)) return hit('site.color', { color: col });
+        if (/\b(?:theme|look|style|preset|vibe|feel)\b/.test(c) || (/^make it (?:look )?(?:a bit |a little )?more\s/.test(c) && presetOf(c))) { const p = presetOf(c); return hit('site.theme', p ? { preset: p } : {}); }
+      }
+    }
+    // open the website designer
+    if (/\b(?:website designer|site designer|designer)\b/.test(c) && !/\bhire\b/.test(c)) return hit('site.open', {}, 0.96);
+    if (/\b(?:edit|design|redesign|work on)\s+(?:my|our|the)\s+(?:website|site)$/.test(c) || /\b(?:turn|make)\s+(?:this|it)\s+(?:into\s+)?(?:a\s+)?(?:real\s+)?(?:website|site)\b/.test(c)) return hit('site.open', {}, 0.96);
+    // a template from what the site is for
+    if (view === 'site' && !/\b(?:template|start over|from scratch)\b/.test(c)) return out;
+    if (/\b(?:post|doc|email|essay|letter|memo|note|task|slides|sheet|tweet|caption|poem|story)\b/.test(c) && !/\btemplate\b/.test(c)) return out;
+    let best = null, bl = 0;
+    for (const [k, tags] of Object.entries(TPL_TAGS)) for (const tg of tags) if (tg.length > bl && new RegExp(`\\b${tg}\\b`).test(c)) { best = k; bl = tg.length; }
+    if (!best) return out;
+    const tagOnly = new RegExp(`^(?:(?:a|an|my|the)\\s+)?(?:${TPL_TAGS[best].join('|')})(?:\\s+(?:site|website|page|please))?$`).test(c);
+    const trig = tagOnly || /\b(?:site|sites|website|web site|page|homepage|landing|something|online|template|web presence)\b/.test(c) || /\b(?:make|build|create|set up|needs?|wants?|give me|get me|start|launch|show off)\b/.test(c) || /\b(?:i|we)\s+(?:write|run|sell|own|have|am|are|stream|do|make)\b/.test(c);
+    if (trig) hit('site.' + best, {}, /\btemplate\b/.test(c) ? 0.97 : 0.93);
+    return out;
+  }
 
   // ---------- slot helpers used by the catalog ----------
   function refFill(s, ctx, strict) {
@@ -458,6 +619,7 @@
   CAT.forEach(x => { x.rx.forEach(r => addWords(r.source)); x.ex.forEach(addWords); });
   Object.values(SLANG).concat(Object.values(LEX)).forEach(addWords); DAYS.concat(MONTHS).forEach(w => VOCAB.add(w)); Object.keys(COLORS).forEach(w => VOCAB.add(w));
   ['nightshade', 'campfire', 'midnight', 'nordic', 'trending', 'tomorrow', 'tonight', 'calendar', 'marketplace', 'whiteboard', 'secretary', 'autopilot', 'publish', 'preview', 'settings', 'template', 'templates'].forEach(w => VOCAB.add(w));
+  Object.values(TPL_TAGS).flat().concat(['linktree', 'linkinbio', 'moodboard', 'designer', 'wire', 'clickable', 'functional', 'buttons', 'button', 'export', 'gallery', 'testimonials', 'masonry', 'instagram', 'teach', 'lesson', 'tutorial', 'portfolio', 'photographer', 'screen', 'picture', 'image', 'connect', 'pricing', 'website', 'darker', 'contact', 'point', 'different', 'rounded', 'round', 'paper', 'minimal', 'embed', 'spotify', 'youtube', 'prices', 'section', 'swiss', 'terminal', 'editorial', 'playful', 'masonry', 'headline', 'tagline', 'footer', 'features', 'team', 'reviews', 'questions', 'answers', 'download', 'square', 'circle', 'avatar', 'photo', 'theme', 'layout', 'split', 'faq', 'nowhere', 'anywhere', 'somewhere', 'clickable']).forEach(addWords);
   const FUNC = ['could', 'would', 'should', 'there', 'their', 'about', 'with', 'what', 'when', 'where', 'which', 'this', 'that', 'them', 'they', 'have', 'from', 'your', 'into', 'than', 'then', 'also', 'just', 'some', 'more', 'most', 'very', 'much', 'many', 'such', 'does', 'made', 'like', 'here', 'were', 'will', 'works', 'many', 'look', 'need', 'want', 'know', 'take', 'make', 'work', 'have', 'done', 'left', 'find'];
   ['ack', 'abc', 'ing'].concat(FUNC.filter(w => !['make', 'look', 'need', 'want', 'know', 'take', 'work', 'done', 'left', 'find', 'many', 'have', 'here', 'does', 'what', 'when', 'where', 'which', 'this', 'that', 'with', 'will'].includes(w))).forEach(w => VOCAB.delete(w));
   FUNC.forEach(w => KEEP.add(w));
@@ -536,6 +698,7 @@
         break;
       }
     }
+    for (const h of design(c, text, ctx)) { const same = hits.find(x => x.intent === h.intent); if (same) same.conf = Math.max(same.conf, h.conf); else hits.push(h); }
     // bags: any word order, any language ("tarea comprar leche añade", "明日 牛乳 タスク 追加")
     const ws = c.split(' ');
     if (!hits.some(h => h.conf >= 0.85)) {

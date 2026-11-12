@@ -22,7 +22,7 @@ function slotOk(got, want) {
   }
   return '';
 }
-let pass = 0; const fails = [], byArea = {};
+let pass = 0; const fails = [], byArea = {}, held = [0, 0], h1 = [0, 0];
 for (const c of data.cases) {
   const ctx = { ...BASE, ...CTX[c.ctx || 'g'] };
   const steps = N.parse(c.t, ctx).steps;
@@ -38,11 +38,15 @@ for (const c of data.cases) {
   }
   const area = (c.ctx || 'g') + ':' + (Array.isArray(c.i) ? 'multi' : c.i === null ? 'needs-model' : c.i.split('.')[0]);
   byArea[area] = byArea[area] || [0, 0]; byArea[area][1]++;
+  if (c.v === 'held') { held[1]++; if (!why) held[0]++; }
+  if (c.v === 'h1') { h1[1]++; if (!why) h1[0]++; }
   if (!why) { pass++; byArea[area][0]++; } else fails.push(`  ✗ [${c.ctx}] ${JSON.stringify(c.t)} → want ${JSON.stringify(c.i)} ${c.s ? JSON.stringify(c.s) : ''}: ${why}`);
 }
 const n = data.cases.length, pct = Math.round(pass / n * 1000) / 10;
 if (fails.length) console.log(fails.slice(0, verbose ? 999 : 30).join('\n'));
 console.log(Object.entries(byArea).sort().map(([a, [p, t]]) => `${a} ${p}/${t}`).join(' · '));
+if (h1[1]) console.log(`held-out batch 1 (68.8% when first run, then tuned): ${h1[0]}/${h1[1]}`);
+if (held[1]) console.log(`held-out (never tuned against): ${held[0]}/${held[1]} = ${Math.round(held[0] / held[1] * 1000) / 10}%`);
 console.log(`flint_eval: ${pass}/${n} = ${pct}%`);
 let bad = false;
 if (n < 300) { console.error('fewer than 300 cases'); bad = true; }

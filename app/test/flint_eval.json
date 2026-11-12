@@ -2290,6 +2290,386 @@
    "t": "add a gallery page",
    "i": "doc.new",
    "ctx": "g"
+  },
+  {
+   "t": "can u make me one of those link pages for my bio",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "website for my sourdough micro bakery",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "our jazz trio needs a site",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "site where i sell my zines",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "page for my yoga classes",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "we got engaged!! need a page for the guests",
+   "i": "site.wedding",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "make a site for my mobile app",
+   "i": "site.saas",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "teach me the inspo board",
+   "i": "lesson",
+   "s": {
+    "feature": "inspo"
+   },
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "how do i use huddles",
+   "i": "lesson",
+   "s": {
+    "feature": "huddles"
+   },
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "tutorial on exporting",
+   "i": "lesson",
+   "s": {
+    "feature": "export"
+   },
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "night theme",
+   "i": "theme.dark-mode",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "the signup button goes nowhere",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "make the order button link to the menu page",
+   "i": "site.wire",
+   "s": {
+    "to": "menu"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "new page: Workshops",
+   "i": "site.page.add",
+   "s": {
+    "name": "Workshops"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "swap in a photo from my board",
+   "i": "site.image.replace",
+   "s": {
+    "source": "board"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "circle crop the headshot",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "flip it to dark",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "dark theme for the site pls",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "add customer reviews",
+   "i": "site.block.add",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "add a map",
+   "i": "site.block.add",
+   "s": {
+    "block": "embed"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "ditch the footer",
+   "i": "site.block.remove",
+   "s": {
+    "block": "footer"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "move the team section above the faq",
+   "i": "site.block.move",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "download a zip",
+   "i": "site.export",
+   "s": {
+    "fmt": "zip"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "change the headline to Hand thrown in Tucson",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "Hand thrown in Tucson"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "make the accent orange",
+   "i": "site.color",
+   "s": {
+    "color": "orange"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "add an faq section",
+   "i": "site.block.add",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "rename this page Menu",
+   "i": "site.page.rename",
+   "s": {
+    "name": "Menu"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "link this one to the checkout screen",
+   "i": "canvas.wire",
+   "s": {
+    "to": "checkout"
+   },
+   "ctx": "cs",
+   "v": "h1"
+  },
+  {
+   "t": "make the photo a circle",
+   "i": "canvas.image",
+   "s": {
+    "action": "round"
+   },
+   "ctx": "cs",
+   "v": "h1"
+  },
+  {
+   "t": "dark version",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "cs",
+   "v": "h1"
+  },
+  {
+   "t": "another screen for settings",
+   "i": "canvas.page",
+   "ctx": "c",
+   "v": "h1"
+  },
+  {
+   "t": "buttons should actually work",
+   "i": "canvas.wire",
+   "ctx": "c",
+   "v": "h1"
+  },
+  {
+   "t": "i do pottery and want a page with my shop + classes links",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "site for our church choir",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "a page for my dog grooming biz",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "site for the bake sale fundraiser",
+   "i": "site.nonprofit",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "teach me how the canvas works",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "how do i invite a friend",
+   "i": "invite",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "make every button go to the right page",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "add a page for events",
+   "i": "site.page.add",
+   "s": {
+    "name": "Events"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "kill the pricing section",
+   "i": "site.block.remove",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "upload my logo as the picture",
+   "i": "site.image.replace",
+   "s": {
+    "source": "upload"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "make it look like night time",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "swap the gallery to masonry",
+   "i": "site.layout",
+   "s": {
+    "block": "gallery",
+    "variant": "masonry"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "export to html please",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "bring back what i undid",
+   "i": "redo",
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "hook this button up to the profile screen",
+   "i": "canvas.wire",
+   "s": {
+    "to": "profile"
+   },
+   "ctx": "cs",
+   "v": "held"
+  },
+  {
+   "t": "make this image round",
+   "i": "canvas.image",
+   "s": {
+    "action": "round"
+   },
+   "ctx": "cs",
+   "v": "held"
   }
  ]
 }
