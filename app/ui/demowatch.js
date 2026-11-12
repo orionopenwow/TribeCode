@@ -135,6 +135,7 @@
   const place = c => { c.el.style.transform = `translate(${Math.round(c.x)}px, ${Math.round(c.y)}px)`; };
   async function glide(id, el, dx = 0.5, dy = 0.5) {
     const c = cursor(id); if (!el) return;
+    if (!el.isConnected) { if (followEl && followEl.isConnected) el = followEl; else return; }   // re-rendered meanwhile: where the spotlight is now
     const r = el.getBoundingClientRect(), to = { x: Math.min(innerWidth - 8, Math.max(8, r.left + r.width * dx)), y: Math.min(innerHeight - 8, Math.max(8, r.top + r.height * dy)) };
     if (calm()) { c.x = to.x; c.y = to.y; place(c); return; }
     const from = { x: c.x, y: c.y }, dur = Math.max(250, Math.min(900, Math.hypot(to.x - from.x, to.y - from.y) * 0.9)), t0 = clock;
@@ -235,6 +236,7 @@
       K().reactAs(K().chanOf('general'), mine, 'maya', '🔥');
       const rx = await point('Maya’s reaction', [`#chat-list .msg[data-id="${mine.id}"] .rx`, `#chat-list [data-id="${mine.id}"]`, '#chat-list'], { who: 'maya', dy: 0.5 });
       if (rx) await glide('me', rx, 0.5, 0.9);
+      await hold(1400);   // a beat on the reaction
     } },
     { id: 'build', title: 'The game, from the starter', dur: 8000, say: 'Now the game. I build a platformer from the starter: no AI needed, it’s a recipe.', async run() {
       await typeCmd('make a platformer called Lantern Run');

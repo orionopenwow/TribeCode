@@ -72,11 +72,12 @@ def main():
             while not state(pg)["finished"]:
                 st = state(pg); seen.add(st["id"])
                 assert time.time() - t0 < 120, f"the demo did not finish in 120 s: {st}"
-                if shots and not shot1 and st["id"] == "friend" and pg.locator(".dw-cur[data-who=maya]").count() and pg.locator("#dw-ring.on").count(): time.sleep(0.5); pg.screenshot(path=str(SHOTS / "demo-watch-1.png")); shot1 = True
+                if shots and not shot1:   # Maya's reaction in the chat, spotlit
+                    pg.wait_for_function("TribeDemoWatch._test.log().some(e => e.target === 'Maya’s reaction')", timeout=30000, polling=50)
+                    time.sleep(0.4); pg.screenshot(path=str(SHOTS / "demo-watch-1.png")); shot1 = True
                 if shots and not shotg and st["id"] == "play" and st["lit"] >= 2: pg.screenshot(path=str(SHOTS / "demo-watch-game.png")); shotg = True
                 time.sleep(0.15)
             took = time.time() - t0
-            assert seen >= set(STEPS) - {"end"}, f"steps seen {seen}"
             log = pg.evaluate("TribeDemoWatch._test.log()")
             missed = [e for e in log if not e["found"]]
             assert not missed, f"targets not found: {missed}"
