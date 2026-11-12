@@ -89,7 +89,8 @@
       making = false; st = r.setup; draw();
       toast(r.written.length ? `🚀 Starter ready: ${r.written.length} files in the code repository` : 'The code repository already had these files');
       if (window.TribeProjects && window.TribeProjects.refresh) window.TribeProjects.refresh();
-      if (window.TribePreview) setTimeout(() => window.TribePreview.open(), 300);
+      const here = document.body.dataset.view;   // open the preview only if the user is still here, not over where they went
+      if (window.TribePreview) setTimeout(() => { if (document.body.dataset.view === here) window.TribePreview.open(); }, 300);
     } catch (e) { making = false; toast(e.message); draw(); }
   }
 

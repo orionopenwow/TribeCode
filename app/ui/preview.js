@@ -267,10 +267,11 @@
       if (window.TribePreviewFlint) window.TribePreviewFlint.mount(pane, { project: () => (info && info.project) || C.project(), href: () => lastHref, relayout: () => layout(), kind: () => (window.TribeSense && window.TribeSense.kind && window.TribeSense.kind()) || '' });
       afterMount();
     }
-    pane.classList.add('loading');
+    const mine = pane; mine.classList.add('loading');
     try { await token(); }
-    catch (e) { pane.classList.remove('loading'); return renderError(e.message); }
-    pane.classList.remove('loading');
+    catch (e) { mine.classList.remove('loading'); return pane === mine ? renderError(e.message) : undefined; }
+    mine.classList.remove('loading');
+    if (pane !== mine) return;   // closed while the token was on its way (the user went somewhere else)
     render();
   }
   function renderError(msg) {
