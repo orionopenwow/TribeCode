@@ -335,6 +335,10 @@
     if (imgs.has(src)) return imgs.get(src);
     const im = new Image(); im.decoding = 'async';
     im.onload = () => paint(); im.onerror = () => { im.failed = true; paint(); };
+    if (/^local:/.test(src)) {   // polish: a picture on a board kept on this device (localfiles.js, IndexedDB)
+      const LF = window.TribeLocalFiles; if (LF && LF.imageUrl) LF.imageUrl(src).then(x => { im.src = x; }, () => { im.failed = true; paint(); }); else im.failed = true;
+      imgs.set(src, im); return im;
+    }
     const u = `${C.base()}/api/uploads/${encodeURIComponent(src)}/raw`;   // fix/security-2: signed link, not the sign-in key
     if (window.TribeMedia) window.TribeMedia.urlAsync(u).then(x => { im.src = x; }); else im.src = u;
     imgs.set(src, im); return im;
@@ -692,6 +696,7 @@
 
   // ---------- pictures ----------
   async function upload(blob, name) {
+    if (LB && LB.upload) return LB.upload(blob, name);   // polish: a board kept on this device keeps its pictures there too
     const res = await fetch(`${C.base()}/api/uploads?scope=project&name=${encodeURIComponent(name)}`, { method: 'POST', body: blob, headers: { Authorization: 'Bearer ' + token(), 'X-Project': pid() } });
     const d = await res.json().catch(() => ({})); if (!res.ok) throw new Error(d.error || res.statusText); return d.file;
   }
@@ -828,7 +833,8 @@
       if (kind === 'svg') { const b = await toSvg(); if (b) download(b, fileName('svg')); return; }
       const png = await toPng(); if (!png) return toast('Could not draw the picture (a picture from elsewhere may block it).');
       if (kind === 'png') return download(png, fileName('png'));
-      if (kind === 'files') { const f = await upload(png, fileName('png')); toast(`📁 Saved to Files: ${f.name}`); }
+      if (kind === 'files' && LB && window.TribeLocalFiles) { await window.TribeLocalFiles.addFiles([new File([png], fileName('png'), { type: 'image/png' })]); toast(`📁 Saved to All files on this device: ${fileName('png')}`); }
+      else if (kind === 'files') { const f = await upload(png, fileName('png')); toast(`📁 Saved to Files: ${f.name}`); }
     } catch (e) { toast(e.message); }
   }
 

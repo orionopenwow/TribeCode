@@ -7,6 +7,9 @@ switch with one click, the UI shows each identity (name, avatar, tribes) labelle
 brings the host back. Log out with "Also forget this device's tribes" drops the saved tribe address. The server scaffold
 answers only with TRIBE_ACCOUNTS=1 (signup, login, me, sessions, logout; case-insensitive unique usernames; existing
 members mapped to accounts with their keys untouched), and the clean-up script backs up, then cleans, idempotently.
+polish: with TRIBE_ACCOUNTS=1 the Log in sheet creates and logs in to a real account (it signs the member in), Log out
+ends the session, Settings lists signed-in devices, and Delete my account uses GET/DELETE /api/account (the member, their
+keys and accounts go; their messages stay as "deleted-…"). With the flag off: no account form, Delete clears the device.
 Usage: python app/test/e2e_accounts.py [--shots]
 """
 import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
@@ -165,6 +168,7 @@ def main():
             pg.wait_for_function("TribeClient.connected()", timeout=20000)
             st = state(pg); assert st["token"] and st["status"] == "Hosting", st
             assert pg.evaluate("TribeClient.state().me.role") == "host"
+            host_now = pg.evaluate("TribeStore.get().server.token")   # the reclaim gave the host a fresh key
 
             # ---- Settings: Account (Switch account, Log out) and More settings › Test accounts
             pg.click("#ub-gear"); pg.wait_for_selector("#settings-modal:not(.hidden) #set-account #set-logout")
@@ -194,6 +198,73 @@ def main():
             nav_click(phone, "#ac-login [data-acc='test:maya']"); wait_reloaded(phone, "TribeAccounts.current() && TribeAccounts.current().name === 'Maya'")
             phone.evaluate("TribeSettings.open()"); phone.wait_for_selector("#set-account #set-logout", state="visible")
             ph.close()
+
+            # ---- polish: with TRIBE_ACCOUNTS=1 the screens use the real accounts API
+            host_token = host_now; inv = api("/invites", "POST", {}, token=host_token)[1]["invite"]
+            st_, mj = api("/join", "POST", {"code": inv["code"], "name": "Maya"}); assert st_ == 200, mj
+            maya_tok, maya_id = mj["token"], mj["member"]["id"]
+            api("/chat/general", "POST", {"text": "maya was here"}, token=maya_tok)
+            mx = b.new_context(viewport={"width": 1440, "height": 900})
+            mx.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Maya', onboarded: true, tour: {done: true}, server: {url: '%s', token: '%s'}}))" % (BASE, maya_tok))
+            mp = mx.new_page(); watch(mp, "maya")
+            mp.goto(BASE + "/?skipIntro=1"); mp.wait_for_function("TribeClient.connected() && window.TribeAccounts", timeout=20000)
+            assert mp.evaluate("TribeAccounts.serverOn(true)") is True
+            # Create account: claims the account Maya was mapped to, with a username and password
+            mp.evaluate("TribeAccounts.login({ add: true })"); mp.wait_for_selector("#ac-login #ac-acct:not([hidden]) #ac-user", state="visible")
+            mp.fill("#ac-user", "maya.builds"); mp.fill("#ac-pass", "night garden 7"); mp.click("#ac-acct-form [data-acf='signup']")
+            mp.wait_for_function("TribeAccounts.current() && TribeAccounts.current().kind === 'server' && TribeAccounts.current().username === 'maya.builds'", timeout=10000)
+            acct = mp.evaluate("TribeAccounts.current().acct"); assert acct.startswith("tca_")
+            st_, r = api("/accounts/me", token=acct); assert st_ == 200 and maya_id in r["account"]["members"], r
+            assert len([a for a in mp.evaluate("TribeAccounts.list()") if a["kind"] in ("device", "server")]) == 1, "one row per person"
+            # Settings › Account: signed-in devices from /api/accounts/sessions
+            mp.click("#ub-gear"); mp.wait_for_selector("#settings-modal:not(.hidden) #set-sessions .ac-ses li", timeout=10000)
+            assert "This device" in mp.inner_text("#set-sessions")
+            mp.evaluate("TribeSettings.close()")
+            # Log out ends the server session too
+            menu(mp, "logout"); mp.wait_for_selector("#ac-lo-go"); nav_click(mp, "#ac-lo-go")
+            wait_reloaded(mp, "TribeAccounts.mode() === 'signedout'")
+            assert api("/accounts/me", token=acct)[0] == 401, "Log out ends the account session"
+            # Log in with the username and password: the member is signed in on this device again
+            mp.wait_for_selector("#ac-login #ac-acct:not([hidden]) #ac-user", state="visible", timeout=10000)
+            mp.fill("#ac-user", "maya.builds"); mp.fill("#ac-pass", "wrong password"); mp.click("#ac-acct-go")
+            mp.wait_for_selector("#ac-err:not([hidden])"); assert "do not match" in mp.inner_text("#ac-err")
+            mp.fill("#ac-pass", "night garden 7"); nav_click(mp, "#ac-acct-go")
+            wait_reloaded(mp, "TribeAccounts.mode() === 'signedin'", timeout=20000)
+            mp.wait_for_function("TribeClient.connected() && TribeClient.state().me && TribeClient.state().me.id === '%s'" % maya_id, timeout=20000)
+            # Delete my account: GET/DELETE /api/account
+            mp.evaluate("TribeModeration.deleteAccount()"); mp.wait_for_selector("#mod-del-go")
+            assert mp.inner_text("#mod-del-go").strip() == "Delete my account", mp.inner_text("#mod-del-go")
+            mp.fill("#mod-del-in", "DELETE"); mp.click("#mod-del-go"); mp.wait_for_selector("#mod-reload", timeout=15000)
+            assert "account is deleted" in mp.inner_text("#mod-dlg")
+            assert api("/me", token=maya_tok)[0] == 401, "the member key is gone"
+            assert not any(x["id"] == maya_id for x in api("/members", token=host_token)[1]["members"])
+            assert api("/accounts/login", "POST", {"username": "maya.builds", "password": "night garden 7"})[0] == 401
+            chat_files = list(Path(tmp).rglob("*.jsonl"))
+            assert not any(maya_id in f.read_text() for f in chat_files), "messages are anonymised"
+            assert any("maya was here" in f.read_text() and "deleted-" in f.read_text() for f in chat_files), "the message stays, as a deleted member"
+            assert api("/account", token=host_token)[1]["canDelete"] is False, "the host can't delete themselves here"
+            mx.close()
+
+            # ---- flag off: no account form, Delete my account clears only this device (local behaviour)
+            ho = api("/bootstrap", "POST", {"name": "Off Host"}, base=f"http://localhost:{PORT_OFF}")[1]["token"]
+            inv2 = api("/invites", "POST", {}, token=ho, base=f"http://localhost:{PORT_OFF}")[1]["invite"]
+            jt = api("/join", "POST", {"code": inv2["code"], "name": "Jay"}, base=f"http://localhost:{PORT_OFF}")[1]["token"]
+            OFFB = f"http://localhost:{PORT_OFF}"
+            ox = b.new_context(viewport={"width": 1440, "height": 900})
+            ox.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Jay', onboarded: true, tour: {done: true}, server: {url: '%s', token: '%s'}}))" % (OFFB, jt))
+            op = ox.new_page(); watch(op, "off")
+            op.goto(OFFB + "/?skipIntro=1&accounts=test"); op.wait_for_function("TribeClient.connected() && window.TribeAccounts", timeout=20000)
+            assert op.evaluate("TribeAccounts.serverOn(true)") is False
+            op.evaluate("TribeAccounts.login({ add: true })"); op.wait_for_selector("#ac-login [data-acc='test:maya']", state="visible"); op.wait_for_timeout(400)
+            assert op.locator("#ac-login #ac-acct[hidden]").count() == 1, "no account form with the flag off"
+            op.evaluate("TribeAccounts.close()")
+            assert api("/account", token=jt, base=OFFB)[0] == 404
+            op.evaluate("TribeModeration.deleteAccount()"); op.wait_for_selector("#mod-del-go")
+            assert op.inner_text("#mod-del-go").strip() == "Delete from this device"
+            op.fill("#mod-del-in", "DELETE"); op.click("#mod-del-go"); op.wait_for_selector("#mod-reload", timeout=15000)
+            assert "This device is clear" in op.inner_text("#mod-dlg")
+            assert api("/me", token=jt, base=OFFB)[0] == 200, "with the flag off nothing is deleted on the server"
+            ox.close()
             b.close()
 
         # ---- the server scaffold: off by default
@@ -244,7 +315,7 @@ def main():
         out = subprocess.run(["node", str(ROOT / "scripts" / "dev" / "clean-accounts.js"), "--dir", tmp], capture_output=True, text=True, timeout=30)
         assert "Nothing to do" in out.stdout and len(list((T / "backups").iterdir())) == 1, out.stdout
         assert not errors, "\n".join(errors)
-        print("E2E accounts test passed")
+        print("E2E accounts test passed (both flag modes: real accounts API on; TEST/local behaviour off)")
     finally:
         for s in (srv, off):
             try: s.terminate()

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<title>Support · TribeCode</title>
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="pubpage.css">
+<!-- The support page the stores ask for (App Store 1.2 contact info, the support URL; docs/APP-STORE.md). The contact
+     address is one constant in support-contact.js. -->
+</head>
+<body>
+<main>
+  <div class="top"><img src="assets/icon-mark.svg" alt=""><a href="./">TribeCode</a></div>
+  <span class="eyebrow">Help</span>
+  <h1>Support</h1>
+  <p>Stuck, found a bug, or worried about something someone posted? Write to <a data-support-mailto data-subject="TribeCode support"><span data-support-email>support@tribecode.org</span></a>. A person reads every message. For tribes we run (the demo and featured tribes) we act on reports within 24 hours; every other tribe is run by its host, and we help you reach them.</p>
+
+  <h2>Common questions</h2>
+  <ul class="faq">
+    <li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/01-start-here.md">How do I start, or join a friend's tribe?</a></li>
+    <li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/02-projects-and-invites.md">Projects and invite links</a></li>
+    <li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/06-phones.md">Using TribeCode on a phone</a></li>
+    <li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/07-hosting.md">Where does my tribe live? (hosting)</a></li>
+    <li><a href="https://github.com/orionopenwow/TribeCode/blob/main/docs/guide/09-troubleshooting.md">Troubleshooting</a></li>
+    <li><a href="delete-account.html">How do I delete my account?</a></li>
+    <li><a href="privacy.html">What data does TribeCode keep, and where?</a></li>
+  </ul>
+
+  <h2>Someone is being abusive</h2>
+  <p>In the app, long-press a message (or tap a profile's "…") and choose <b>Report</b> or <b>Block</b>. Reports go straight to the tribe's host and moderators. Blocking hides their messages and notifications for you everywhere.</p>
+
+  <h2 id="report">Report a problem</h2>
+  <p>In the app: <b>Help › Send feedback</b> goes to your tribe's own bug inbox. To reach us instead, fill this in; it opens your email app with the details.</p>
+  <form class="card-form" id="rp-form">
+    <label for="rp-what">What happened?</label>
+    <textarea id="rp-what" rows="4" required maxlength="4000" placeholder="What you did, what you expected, what you saw"></textarea>
+    <label for="rp-kind">It's about</label>
+    <select id="rp-kind"><option>A bug</option><option>Content or a person (abuse)</option><option>My account or data</option><option>Something else</option></select>
+    <label for="rp-where">Where <span class="opt">optional</span></label>
+    <input id="rp-where" maxlength="200" placeholder="e.g. the phone app, chat, Files">
+    <div class="acts"><button class="btn primary" type="submit">Email the report</button></div>
+    <p class="small">We add your browser and device type so we can reproduce it. Nothing else is sent.</p>
+  </form>
+  <footer><a href="delete-account.html">Delete your account</a> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of use</a> · <a href="./">Back to TribeCode</a></footer>
+</main>
+<script src="support-contact.js"></script>
+<script>
+  document.getElementById('rp-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value.trim();
+    const body = `${v('rp-what')}\n\nAbout: ${v('rp-kind')}\nWhere: ${v('rp-where') || '(not given)'}\nDevice: ${navigator.userAgent}`;
+    location.href = window.TribeSupport.mailto(`TribeCode: ${v('rp-kind')}`, body);
+  });
+</script>
+</body>
+</html>

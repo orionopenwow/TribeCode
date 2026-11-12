@@ -10,10 +10,12 @@
 //   company   { name, mission, seats: { ceo|cto|growth|ops: 'me' | 'ai' | 'later' } } makes the project a company
 //             (server/company.js, the blank template) and gives 'me' seats to the person moving it; the rest stay open
 //   docs[].kind 'sheet' | 'deck' keeps a sheet a sheet
+//   github    { repo: 'owner/name', branch } a draft linked to GitHub: when the host moves it, the repo is cloned and bound as
+//             the project's code repository (connectRepo, like connecting a repo by URL); answer: projects[].repo 'connecting'
 'use strict';
 const fs = require('node:fs');
 
-module.exports = function soloImport({ P, docs, postChat, store, str, saveTask, createTask, rooms, base = null, company = () => null }) {
+module.exports = function soloImport({ P, docs, postChat, store, str, saveTask, createTask, rooms, base = null, company = () => null, connectRepo = null }) {
   const SEEN = 'solo-imports.json';
   const seenAll = () => { try { return base ? JSON.parse(fs.readFileSync(base.p(SEEN), 'utf8')) : {}; } catch { return {}; } };
   const remember = (id, out) => { if (!base || !id) return; const all = seenAll(); all[id] = { at: new Date().toISOString(), out }; const keys = Object.keys(all); for (const k of keys.slice(0, Math.max(0, keys.length - 500))) delete all[k]; try { fs.writeFileSync(base.p(SEEN), JSON.stringify(all)); } catch {} };
@@ -63,7 +65,18 @@ module.exports = function soloImport({ P, docs, postChat, store, str, saveTask, 
         } catch (e) { n.company = false; n.companyError = e.message; }
       }
       const gh = sp.github && /^[\w.-]+\/[\w.-]+$/.test(String(sp.github.repo || '')) ? String(sp.github.repo) : '';
-      if (gh) { n.github = gh; P.inProject(p.id, () => postChat('general', 'tribecode', `This project is mirrored to GitHub: https://github.com/${gh} (suggestions on the \`${str(sp.github.branch, 60) || 'tribe/suggestions'}\` branch). Connect it under Code repository to keep it in sync from here.`)); }
+      if (gh) {
+        n.github = gh;
+        const say = t => P.inProject(p.id, () => postChat('general', 'tribecode', t));
+        const branch = str(sp.github.branch, 60) || 'tribe/suggestions';
+        // polish: the host binds the repo as the project's code repository at once (the same clone as connecting a repo
+        // by URL, server/rooms.js); idempotent: a repeat draft returns the first result, and a project with a repo keeps it
+        if (connectRepo && me.role === 'host') {
+          n.repo = 'connecting';
+          connectRepo(p.id, gh).then(r => say(r && r.already ? `Code repository: already connected to https://github.com/${gh}.` : `Connected https://github.com/${gh} as this project's code repository (suggestions stay on the \`${branch}\` branch).`))
+            .catch(e => say(`This project is mirrored to GitHub: https://github.com/${gh}. Connecting it as the code repository didn't work (${str(e.message, 160)}); try again under Code repository.`));
+        } else say(`This project is mirrored to GitHub: https://github.com/${gh} (suggestions on the \`${branch}\` branch). Ask the host to connect it under Code repository to keep it in sync from here.`);
+      }
       out.push(n);
     }
     try { rooms.pushProjects(); } catch {}

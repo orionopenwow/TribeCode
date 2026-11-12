@@ -15,7 +15,7 @@ Settings › More settings › **Test accounts**, or open the app with `?account
 
 ## Server scaffold (server/accounts.js)
 
-Off by default. `TRIBE_ACCOUNTS=1` turns the routes on; they answer only requests from this computer (like `/api/host/reclaim`) and are rate-limited (30 a minute per address).
+Off by default. `TRIBE_ACCOUNTS=1` turns the routes on; they answer only requests from this computer (like `/api/host/reclaim`) and are signup and login are rate-limited (30 a minute per address, their own bucket).
 
 | Route | Body | Answer |
 | --- | --- | --- |
@@ -24,6 +24,13 @@ Off by default. `TRIBE_ACCOUNTS=1` turns the routes on; they answer only request
 | `POST /api/accounts/logout` | Bearer `tca_…` | `{ ok }` (ends this session) |
 | `GET /api/accounts/me` | Bearer `tca_…` | `{ account }` |
 | `GET /api/accounts/sessions` | Bearer `tca_…` | `{ sessions }`; `DELETE /api/accounts/sessions/<id>` ends one |
+| `POST /api/accounts/signup` + `link: true` | the member's own tribe key as Bearer | claims the account that member was mapped to (if it has no password yet): new username + password, `{ account, token, linked }` |
+| `GET /api/account` | the member's tribe key | `{ canDelete, keeps, account? }` (the host: `canDelete: false`) |
+| `DELETE /api/account` | `{ confirm: "DELETE" }`, the member's tribe key | removes the member and their agents, device links, project seats, linked accounts and sessions, files named by their id; every `"<member id>"` in the tribe's JSON/JSONL becomes `"deleted-…"` |
+
+**Login signs the member in.** When the account has a password and belongs to a member of this tribe, `login` also
+answers `{ member, memberToken }`: a device link for that member, redeemed at once (the same mechanism as phone device
+links, so it shows up and can be revoked like one). Passwordless accounts (the auto-mapped ones) never get a member key.
 
 Store: `.tribe/accounts.json` = `{ version: 1, accounts: [{ id, username, usernameKey, displayName, created, status: active | guest | disabled, providers: [], password?, sessions: [{ id, tokenHash, created, lastSeen, expires, device }], members: [memberId] }] }`.
 
@@ -46,7 +53,9 @@ One-shot and idempotent. It normalizes names and usernames (trim, collapse space
 1. **Passwords required** for non-guest accounts, with a strength check; keep scrypt and raise N as hardware allows. Add a reset flow.
 2. **Email verification**: an optional, verified email per account (signup sends a one-time code; unverified accounts stay `guest`).
 3. **OAuth linking**: move Discord/GitHub/Google links from members (`server/oauth.js`) to accounts, so one account signs in to every tribe it belongs to.
-4. **Account deletion** (removes the account, its sessions and provider links; member records become "former member") and **export** (a JSON of the account, its sessions and its member records).
+4. ~~Account deletion~~ (done: `DELETE /api/account`) and **export** (a JSON of the account, its sessions and its member records).
 5. **Remote access**: lift the local-only rule behind HTTPS, add CSRF protection for cookie sessions, and per-account rate limits.
-6. **Front end**: point the Log in sheet at `/api/accounts/login|signup` when the server says accounts are on (`GET /api/accounts/me` 401 vs 404), keep TEST accounts behind the dev switch.
-7. **Session management UI** in Settings › Account (list devices from `/api/accounts/sessions`, end one).
+6. ~~Front end~~ (done): with `GET /api/accounts/me` answering 401 (on) instead of 404 (off), the Log in sheet has a
+   username + password form (Log in, Create account), Log out ends the account session, and Delete my account uses
+   `/api/account`. With the flag off nothing changes: TEST accounts and the local behaviour stay.
+7. ~~Session management UI~~ (done): Settings › Account › Signed in on, from `/api/accounts/sessions`, with End.

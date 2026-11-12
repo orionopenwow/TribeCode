@@ -24,7 +24,12 @@
 //                                                  here (server/imgcolors.js), attribution is stored with it
 //   GET    /api/inspo/cache/<hash>                  the cached file (public: openly licensed media addressed by hash)
 //   POST   /api/inspo/apply  { project, from: 'me' }  dress the project up from your own board
-// Search endpoints are configurable for tests and mirrors: TRIBE_OPENVERSE_URL, TRIBE_WIKIMEDIA_URL.
+//   source=freesound (type=audio)                  polish: Freesound sounds (previews, license, attribution) when the host
+//                                                  set a Freesound API key (Settings › More settings). The key stays here:
+//                                                  .tribe/freesound.json (0600), sent only as "Authorization: Token" to
+//                                                  Freesound, never to a browser.
+//   GET    /api/inspo/freesound                    { configured }     PUT { key } (the host; '' removes it)
+// Search endpoints are configurable for tests and mirrors: TRIBE_OPENVERSE_URL, TRIBE_WIKIMEDIA_URL, TRIBE_FREESOUND_URL.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -34,6 +39,7 @@ const crypto = require('node:crypto');
 const imgcolors = require('./imgcolors');
 const OV = () => (process.env.TRIBE_OPENVERSE_URL || 'https://api.openverse.org').replace(/\/+$/, '');
 const WM = () => (process.env.TRIBE_WIKIMEDIA_URL || 'https://commons.wikimedia.org').replace(/\/+$/, '');
+const FSD = () => (process.env.TRIBE_FREESOUND_URL || 'https://freesound.org').replace(/\/+$/, '');
 // a heading font + a body font for each pair the website knows (server/sitegen.js)
 const PAIRS = { silkscreen: ['Silkscreen', 'Inter'], mono: ['JetBrains Mono', 'Inter'], instrument: ['Instrument Serif', 'Inter'], fraunces: ['Fraunces', 'Inter'], bricolage: ['Bricolage Grotesque', 'DM Sans'], grotesk: ['Space Grotesk', 'Inter'] };
 const LICENSES = { by: 'CC BY', 'by-sa': 'CC BY-SA', 'by-nd': 'CC BY-ND', 'by-nc': 'CC BY-NC', 'by-nc-sa': 'CC BY-NC-SA', 'by-nc-nd': 'CC BY-NC-ND', cc0: 'CC0', pdm: 'Public domain', sampling: 'Sampling+', 'sampling+': 'Sampling+', 'nc-sampling+': 'NC Sampling+' };
@@ -195,9 +201,9 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
   const hashOf = u => crypto.createHash('sha256').update(String(u)).digest('hex').slice(0, 40);
   const via = (u, cap, accept) => { if (!u) return ''; const h = hashOf(u); urls.set(h, { url: u, cap, accept }); if (urls.size > 6000) urls.delete(urls.keys().next().value); return `/api/inspo/cache/${h}`; };
   const IMG_ACCEPT = 'image/avif,image/webp,image/png,image/jpeg;q=0.9,image/gif;q=0.8', AUD_ACCEPT = 'audio/mpeg,audio/ogg,audio/wav,audio/*;q=0.8';
-  async function getJSON(u) {
+  async function getJSON(u, headers) {
     if (!embeds || !embeds.safeGet) throw err(503, 'searching the web is off on this tribe');
-    const r = await embeds.safeGet(u, 2 * 1024 * 1024, 'application/json', { timeout: 9000, ua: UA['User-Agent'] });
+    const r = await embeds.safeGet(u, 2 * 1024 * 1024, 'application/json', { timeout: 9000, ua: UA['User-Agent'], ...(headers ? { headers } : {}) });
     return JSON.parse(Buffer.isBuffer(r.body) ? r.body.toString('utf8') : String(r.body));
   }
   const licName = (l, v) => { const k = String(l || '').toLowerCase(); const n = LICENSES[k] || (k ? k.toUpperCase() : 'Open license'); return v && !/^(cc0|pdm|public)/i.test(n) && !/^(cc0|pdm)$/.test(k) ? `${n} ${v}` : n; };
@@ -209,12 +215,49 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
       attribution: text(x.attribution, 300) || `“${title}”${creator ? ` by ${creator}` : ''} is licensed under ${lic}.`,
       thumbUrl: x.thumbnail || (kind === 'image' ? x.url : '') || '', mediaUrl: kind === 'audio' ? x.url || '' : '', duration: kind === 'audio' && x.duration ? Math.round(x.duration / 1000) : 0, filetype: x.filetype || '', w: x.width || 0, h: x.height || 0 });
   }
+  // ---------- Freesound (polish): the host's API key, server-side only ----------
+  const FS_FILE = () => base.p('.tribe', 'freesound.json');
+  const fsKey = () => { if (process.env.TRIBE_FREESOUND_KEY) return process.env.TRIBE_FREESOUND_KEY; try { return String(JSON.parse(fs.readFileSync(FS_FILE(), 'utf8')).key || ''); } catch { return ''; } };
+  function setFsKey(k) {
+    k = String(k || '').trim();
+    if (k && !/^[A-Za-z0-9]{16,80}$/.test(k)) throw err(400, 'that does not look like a Freesound API key (letters and digits)');
+    if (!k) { try { fs.rmSync(FS_FILE(), { force: true }); } catch {} return false; }
+    fs.mkdirSync(path.dirname(FS_FILE()), { recursive: true }); fs.writeFileSync(FS_FILE(), JSON.stringify({ key: k, at: new Date().toISOString() }), { mode: 0o600 }); try { fs.chmodSync(FS_FILE(), 0o600); } catch {}
+    return true;
+  }
+  const fsAuth = () => ({ Authorization: 'Token ' + fsKey() });
+  const FS_FIELDS = 'id,name,username,license,previews,duration,url,images';
+  function fsLicense(u) {   // Freesound answers a license URL (or a name)
+    const t = String(u || '').toLowerCase();
+    if (/publicdomain\/zero|cc0|creative commons 0/.test(t)) return { name: 'CC0', url: /^https?:/.test(u) ? u : 'https://creativecommons.org/publicdomain/zero/1.0/' };
+    const m = /licenses\/(by(?:-nc)?(?:-sa|-nd)?)\/(\d\.\d)/.exec(t);
+    if (m) return { name: `${LICENSES[m[1]] || 'CC ' + m[1].toUpperCase()} ${m[2]}`, url: u };
+    if (/sampling\+/.test(t)) return { name: 'Sampling+', url: /^https?:/.test(u) ? u : '' };
+    if (/attribution noncommercial/.test(t)) return { name: 'CC BY-NC', url: '' };
+    if (/attribution/.test(t)) return { name: 'CC BY', url: '' };
+    return { name: text(u, 40) || 'Open license', url: /^https?:/.test(u) ? u : '' };
+  }
+  function fsItem(x) {
+    const lic = fsLicense(x.license), title = text(x.name, 120).replace(/\.(wav|mp3|ogg|flac|aiff?)$/i, '') || 'A sound', creator = text(x.username, 80);
+    const pv = x.previews || {}, img = x.images || {};
+    return remember({ ref: `freesound:audio:${String(x.id).replace(/\D/g, '')}`, source: 'freesound', provider: 'Freesound', kind: 'sound', title, creator,
+      creatorUrl: creator ? `https://freesound.org/people/${encodeURIComponent(creator)}/` : '', license: lic.name, licenseUrl: lic.url,
+      landing: /^https?:/.test(x.url || '') ? x.url : `https://freesound.org/s/${String(x.id).replace(/\D/g, '')}/`,
+      attribution: `“${title}”${creator ? ` by ${creator}` : ''} (freesound.org) is licensed under ${lic.name}.`,
+      thumbUrl: img.waveform_m || img.waveform_l || '', mediaUrl: pv['preview-hq-mp3'] || pv['preview-lq-mp3'] || pv['preview-hq-ogg'] || '', duration: Math.round(Number(x.duration) || 0), filetype: 'mp3', w: 0, h: 0 });
+  }
+
   async function search(q, type, source, page) {
     q = String(q || '').trim().slice(0, 120); if (!q) throw err(400, 'search for something');
     const kind = type === 'audio' ? 'audio' : 'image'; page = Math.max(1, Math.min(10, +page || 1));
     let results = [];
     try {
-      if (source === 'wikimedia' && kind === 'image') {
+      if (source === 'freesound') {
+        if (!fsKey()) throw err(400, 'add a Freesound API key in Settings › More settings first');
+        const j = await getJSON(`${FSD()}/apiv2/search/text/?query=${encodeURIComponent(q)}&page=${page}&page_size=20&fields=${FS_FIELDS}`, fsAuth());
+        results = (j.results || []).slice(0, 20).map(fsItem);
+        return { q, type: 'audio', source: 'freesound', results: results.map(r => ({ ...pub(r), thumb: via(r.thumbUrl, 1.5 * 1024 * 1024, IMG_ACCEPT), preview: r.mediaUrl ? via(r.mediaUrl, 6 * 1024 * 1024, AUD_ACCEPT) : '' })) };
+      } else if (source === 'wikimedia' && kind === 'image') {
         const j = await getJSON(`${WM()}/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrlimit=24&gsroffset=${(page - 1) * 24}&gsrsearch=${encodeURIComponent(q + ' filetype:bitmap')}&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=480`);
         const pages = Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
         for (const pg of pages) {
@@ -258,8 +301,12 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
   async function saveRef(pid, me, ref) {
     ref = String(ref || ''); let r = memo.get(ref);
     if (!r) {   // after a restart: look it up again by id (never from a URL the browser sent)
+      const f = /^freesound:audio:(\d{1,12})$/.exec(ref);
+      if (f) { if (!fsKey()) throw err(400, 'search again, then save'); try { r = fsItem(await getJSON(`${FSD()}/apiv2/sounds/${f[1]}/?fields=${FS_FIELDS}`, fsAuth())); } catch { throw err(502, 'couldn\'t reach Freesound'); } }
+      else {
       const m = /^openverse:(image|audio):([a-z0-9-]{8,64})$/i.exec(ref); if (!m) throw err(400, 'search again, then save');
       try { r = ovItem(await getJSON(`${OV()}/v1/${m[1] === 'audio' ? 'audio' : 'images'}/${m[2]}/`), m[1]); } catch { throw err(502, 'couldn\'t reach the open media library'); }
+      }
     }
     if (load(pid).items.some(x => x.ref === r.ref)) throw err(409, 'already on the board');
     const thumbH = r.thumbUrl ? hashOf(r.thumbUrl) : '', mediaH = r.mediaUrl ? hashOf(r.mediaUrl) : '';
@@ -276,6 +323,11 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
     try {
       const boardQ = url.searchParams.get('board');
       const pidQ = boardQ === 'me' ? boardOf(me, 'me') : url.searchParams.get('project') || (me.role === 'local' ? boardOf(me, 'me') : P.current() || P.defaultId());
+      if (b === 'freesound') {   // the host's Freesound key: never sent back, only whether there is one
+        if (m === 'GET') return send(res, 200, { configured: !!fsKey() });
+        if (m === 'PUT') { if (me.role !== 'host') return fail(res, 403, 'only the host sets the Freesound key'); const body = await readBody(req, 4096); return send(res, 200, { configured: setFsKey(body.key) }); }
+        return fail(res, 405, 'GET or PUT');
+      }
       if (b === 'search' && m === 'GET') { if (['spectator', 'guest'].includes(me.role)) return fail(res, 403, 'only builders can search'); return send(res, 200, await search(url.searchParams.get('q'), url.searchParams.get('type'), url.searchParams.get('source'), url.searchParams.get('page'))); }
       if (!b && m === 'GET') { if (!isMe(pidQ)) { const p = P.get(pidQ); if (!p || !P.canSee(me, pidQ)) return fail(res, 404, 'project not found'); } return send(res, 200, view(pidQ)); }
       const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, 400 * 1024);
@@ -294,7 +346,7 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
         can(me, pid); if (body.shuffle) { const st = load(pid); st.shuffle = (st.shuffle || 0) + 1; save(pid, st); if (body.shuffle === 'only') return send(res, 200, view(pid)); }
         return send(res, 200, { ...(await apply(pid, me, ['site', 'app', 'both'].includes(body.to) ? body.to : 'both', body.from === 'me' ? boardOf(me, 'me') : null)), ...view(pid) });
       }
-      if (b && !['link', 'image', 'font', 'apply', 'save', 'search'].includes(b)) {
+      if (b && !['link', 'image', 'font', 'apply', 'save', 'search', 'freesound'].includes(b)) {
         can(me, pid); const st = load(pid), it = st.items.find(x => x.id === b); if (!it) return fail(res, 404, 'not on the board');
         if (m === 'DELETE') { st.items = st.items.filter(x => x.id !== b); save(pid, st); broadcast && broadcast({ type: 'inspo', project: pid }); return send(res, 200, view(pid)); }
         if (m === 'PATCH') { if (Array.isArray(body.colors)) it.colors = body.colors.filter(c => HEX.test(c)).slice(0, 8).map(c => c.toUpperCase()); save(pid, st); return send(res, 200, view(pid)); }

@@ -1,10 +1,10 @@
-// Sign in with Discord / GitHub / Google (server/oauth.js, docs/SIGN-IN.md).
+// Sign in with Discord / GitHub / Google, and Apple once the host sets its Services ID (server/oauth.js, docs/SIGN-IN.md).
 //  * Join page (/join/<code>) and sign-in page (/signin.html): provider buttons, start the flow, finish it when the
 //    provider sends the browser back with #oauth=<one-time code> (traded once for a key by POST /api/oauth/finish).
 //  * Settings › Sign-in: the host turns providers on (client id + secret, the redirect URI to copy, where to register);
 //    everyone sees Linked accounts (Link / Unlink).
 // Glyphs are simple monochrome marks drawn for TribeCode, not the providers' logos.
-// Public: window.TribeOAuth = { glyph, buttons, begin, finish, landed, mount }.
+// Public: window.TribeOAuth = { glyph, buttons, begin, finish, landed, mount, iosApp, forPlatform }.
 (function () {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const GLYPHS = {
@@ -14,7 +14,17 @@
     github: '<path d="M6.2 9.2 5.6 4.8l3.6 2.1a7.6 7.6 0 0 1 5.6 0l3.6-2.1-.6 4.4a6.6 6.6 0 0 1 1 3.6c0 3.6-3.1 6-6.8 6s-6.8-2.4-6.8-6c0-1.3.4-2.5 1-3.6Z"/><path d="M9.5 18.6c-.2 1-.9 1.8-2.4 1.6"/>',
     // a G: an open ring with a bar
     google: '<path d="M18.6 8.2A7.4 7.4 0 1 0 19.4 12H12.4"/>',
+    // an apple with a leaf (TODO(appstore): Apple's own button artwork per its guidelines before submitting)
+    apple: '<path d="M12 7.6c-1.2-.9-2.6-1.2-3.9-.8C5.8 7.5 4.9 10.3 5.6 13.4c.7 3.1 2.6 5.6 4.3 5.6.8 0 1.3-.4 2.1-.4s1.3.4 2.1.4c1.7 0 3.6-2.5 4.3-5.6.7-3.1-.2-5.9-2.5-6.6-1.3-.4-2.7-.1-3.9.8Z"/><path d="M12 7.4c0-1.9 1.1-3.2 2.8-3.6"/>',
   };
+  // iPhone app builds (the Tauri iOS app, or ?platform=ios to try it in a browser): App Store 4.8 needs Sign in with
+  // Apple beside any third-party sign-in, so Discord and Google stay hidden until the host turns Apple on.
+  const iosApp = () => {
+    try { const q = new URLSearchParams(location.search).get('platform'); if (q) sessionStorage.setItem('tribecode.platform', q); } catch {}
+    let p = ''; try { p = sessionStorage.getItem('tribecode.platform') || ''; } catch {}
+    return p === 'ios' || (!!(window.__TAURI_INTERNALS__ || window.__TAURI__) && /iPhone|iPad|iPod/.test(navigator.userAgent));
+  };
+  const forPlatform = list => (iosApp() && !list.some(p => p.id === 'apple') ? list.filter(p => p.id !== 'discord' && p.id !== 'google') : list);
   const glyph = p => `<svg class="oa-g" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${GLYPHS[p] || ''}</svg>`;
   const ERRS = {
     denied: 'Sign-in was cancelled.', expired: 'That sign-in expired or was already used. Try again.', mismatch: 'Finish signing in in the same browser you started in.',
@@ -27,6 +37,7 @@
 
   // "Continue with …" buttons for the providers that are on. Renders nothing when none are.
   function buttons(el, providers, verb, onPick) {
+    providers = forPlatform(providers || []);
     if (!providers.length) { el.innerHTML = ''; el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = `<div class="oa-btns">${providers.map(p => `<button type="button" class="oa-btn" data-oa="${esc(p.id)}">${glyph(p.id)}<span>${esc(verb)} ${esc(p.name)}</span></button>`).join('')}</div>`;
@@ -140,5 +151,5 @@
     await load(); drawSettings(el);
   }
 
-  window.TribeOAuth = { glyph, buttons, providers, begin, finish, landed, enter, mount, ERRS };
+  window.TribeOAuth = { glyph, buttons, providers, begin, finish, landed, enter, mount, ERRS, iosApp, forPlatform };
 })();

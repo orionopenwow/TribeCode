@@ -136,12 +136,20 @@
       ${st.staff ? `<section class="mod-sec" id="mod-reports"><span class="eyebrow">Reports</span>${reports ? `<ul class="mod-list">${reports}</ul>` : '<p class="mod-p">No reports. When someone reports a message or a person, it shows here.</p>'}</section>` : ''}
       ${st.staff && ['host', 'admin'].includes(role) ? `<section class="mod-sec"><span class="eyebrow">Word filter</span><p class="mod-p">Words listed here show as •••• in every message as it's posted. One per line.</p>
         <textarea id="mod-words" class="input" rows="3" maxlength="6000" spellcheck="false">${esc(((st.filter || {}).words || []).join('\n'))}</textarea><div class="mod-acts"><button class="btn sm" id="mod-words-save">Save filter</button></div></section>` : ''}
-      <section class="mod-sec"><span class="eyebrow">Your data</span><p class="mod-p">Your tribe's chat, tasks and docs live on the host's computer or server, not with TribeCode. Read the <a href="privacy.html" target="_blank" rel="noopener">privacy policy</a> and the <a href="terms.html" target="_blank" rel="noopener">terms</a>.</p>
+      <section class="mod-sec" id="mod-ai"><span class="eyebrow">Cloud AI</span>${aiRows()}</section>
+      <section class="mod-sec"><span class="eyebrow">Your data</span><p class="mod-p">Your tribe's chat, tasks and docs live on the host's computer or server, not with TribeCode. Read the <a href="privacy.html" target="_blank" rel="noopener">privacy policy</a> and the <a href="terms.html" target="_blank" rel="noopener">terms</a>. Need help? <a href="support.html" target="_blank" rel="noopener">Support</a> · <a href="delete-account.html" target="_blank" rel="noopener">Ask for deletion on the web</a>.</p>
         <div class="mod-acts"><button class="btn danger" id="mod-delete">Delete my account…</button></div></section>`;
     if (!dlg) dialog(html, 'mod-safety'); else dlg.querySelector('.mod-card').innerHTML = html;
     dlg.querySelectorAll('[data-rep]').forEach(b => b.onclick = async () => { try { await C().api(`/moderation/reports/${b.dataset.rep}`, { method: 'POST', body: { status: b.dataset.to } }); await refresh(); drawSafety(); } catch (err) { toast(err.message, 'err'); } });
     const ws = dlg.querySelector('#mod-words-save'); if (ws) ws.onclick = async () => { try { const r = await C().api('/moderation/filter', { method: 'PUT', body: { words: dlg.querySelector('#mod-words').value } }); st.filter = r.filter; toast(`Filter saved (${r.filter.words.length} word${r.filter.words.length === 1 ? '' : 's'})`); } catch (err) { toast(err.message, 'err'); } };
     dlg.querySelector('#mod-delete').onclick = deleteAccount;
+    dlg.querySelectorAll('[data-ai-revoke]').forEach(b => b.onclick = () => { window.TribeAIConsent.revoke(b.dataset.aiRevoke); toast('Revoked: TribeCode asks again before sending anything'); drawSafety(); });
+  }
+  // polish: cloud AI providers this device allowed (aiconsent.js), each with Revoke
+  function aiRows() {
+    const A = window.TribeAIConsent, l = A ? A.list() : [];
+    return l.length ? `<ul class="mod-list">${l.map(x => `<li><span>${esc(x.label)} <small class="faint">allowed ${esc(x.at ? new Date(x.at).toLocaleDateString() : '')}</small></span><button class="btn sm" data-ai-revoke="${esc(x.provider)}">Revoke</button></li>`).join('')}</ul>`
+      : '<p class="mod-p">This device hasn\'t sent anything to a cloud AI. Before it first does, TribeCode asks and names the provider. Local models (Ollama, Built in) never ask.</p>';
   }
 
   // ---------- delete my account ----------

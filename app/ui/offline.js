@@ -579,7 +579,7 @@
     if (!name) name = 'Lantern'; else if (name === name.toLowerCase()) name = name.replace(/\b([a-z])/g, (_, ch) => ch.toUpperCase());
     const map = {}, fresh = () => Math.random().toString(16).slice(2, 14).padEnd(12, '0');
     for (const n of best.create) map[n.id] = fresh();
-    const live = Object.values(cnvFiles()[String(body.file || 'main')] ? cnvFiles()[String(body.file || 'main')].nodes : {}).filter(n => !n.del && !n.p);
+    const live = (Array.isArray(body.live) ? body.live : Object.values(db && cnvFiles()[String(body.file || 'main')] ? cnvFiles()[String(body.file || 'main')].nodes : {})).filter(n => n && !n.del && !n.p);   // polish: body.live = a local design's top layers (canvas/flint.js)
     const dx = live.length ? Math.max(...live.map(n => (n.x || 0) + (n.w || 0))) + 120 : 0;
     const sw = s => typeof s === 'string' ? s.split('Lantern').join(name) : s;
     const create = best.create.map(n => {
@@ -1183,7 +1183,8 @@
     active, start, choose, boot, leave, reset, hostForReal,
     solo: () => active() && solo(), exportSolo, realFetch: (i, o) => realFetch(i, o),
     // feat/setup-local: where each draft project lives (github: { repo, branch, synced }), kept in the draft itself
-    homes: () => (db && db.homes) || {}, setHome: (pid, h) => { if (!db) return; db.homes = db.homes || {}; db.homes[pid] = { ...(db.homes[pid] || {}), ...h }; save(); if (pill) { pill.remove(); pill = null; } paint(); },
+    planDesign: demoPlan,   // polish: Flint's free screen templates for designs kept on this device (canvas/flint.js)
+    homes: () => (db && db.homes) || {}, setHome: (pid, h) => { if (!db) return; db.homes = db.homes || {}; db.homes[pid] = { ...(db.homes[pid] || {}), ...h }; save(); try { dispatchEvent(new CustomEvent('tribe-local-home', { detail: { pid } })); } catch {} if (pill) { pill.remove(); pill = null; } paint(); },
     // forget the draft after its home confirmed it has everything (keeps your current sign-in as it is)
     forget: () => { closePop(); for (const s of [...sockets]) s.close(); ls.del(KEY); ls.del(BKEY); blobClear(); db = null; paint(); },
     // After a move: forget the phone copy and sign in to the real host (no restore of the old settings).

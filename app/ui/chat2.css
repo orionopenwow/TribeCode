@@ -4,7 +4,7 @@
 
 /* ---------- header tucked into the top: compact row, the channel's emoji, tight right-aligned icons ---------- */
 @media (min-width: 821px) {
-  .window .main:has(> #view-chat:not(.hidden)) { padding-top: 6px; }
+  body[data-view="chat"] .window .main { padding-top: 6px; }
   .chat-col .chat-title.cb { min-height: 46px; gap: 10px; margin: 0 0 2px; padding: 2px 0 6px 2px; }
   .cb-av.cb-emo { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--edge); background: var(--surface-2); font-size: 17px; line-height: 1; font-weight: 400; }
   .cb-tt { gap: 0; }
@@ -248,7 +248,7 @@ body.chat-drop #view-chat .chat-col { outline: 2px dashed var(--edge-pop); outli
 
 /* Messages: the composer runs nearly edge to edge (16px from each side), and the avatars line up with its + button */
 @media (min-width: 821px) {
-  .window .main:has(> #view-chat:not(.hidden)) { padding-left: 16px; padding-right: 16px; }
+  body[data-view="chat"] .window .main { padding-left: 16px; padding-right: 16px; }
   #view-chat .msg.dx { padding-left: 9px; }
 }
 /* Who's here (the chat header's ⓘ) */

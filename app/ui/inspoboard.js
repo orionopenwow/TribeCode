@@ -15,14 +15,18 @@
   const connected = () => !!(C() && C().connected && C().connected());
   const pid = () => (connected() && window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || '';
   const pname = () => { const p = ((C() && C().state().projects) || []).find(x => x.id === pid()); return p ? p.name : ''; };
-  const st = { board: 'me', q: '', type: 'image', source: 'openverse', results: null, busy: false, view: null, note: '', applied: '' };
+  const st = { board: 'me', q: '', type: 'image', source: 'openverse', results: null, busy: false, view: null, note: '', applied: '', freesound: false };
+  // polish: Freesound is a sound source once the host set its API key (server-side only; we only learn whether there is one)
+  async function fsCheck() { try { st.freesound = !!(await C().api('/inspo/freesound')).configured; } catch { st.freesound = false; } }
   const api = (p, o) => C().api(p, o);
   const qb = () => (st.board === 'me' ? 'board=me' : 'project=' + encodeURIComponent(st.board));
 
   async function load() { try { st.view = await api('/inspo?' + qb()); } catch (e) { st.view = st.view || { items: [] }; st.note = st.note || e.message; } draw(); return st.view; }
   async function search(q, type) {
     if (q != null) st.q = String(q).trim(); if (type) st.type = type === 'audio' || type === 'sound' ? 'audio' : 'image';
-    if (!st.q) return; if (st.type === 'audio') st.source = 'openverse';
+    if (!st.q) return;
+    if (st.type === 'audio' && !(st.source === 'freesound' && st.freesound)) st.source = 'openverse';
+    if (st.type === 'image' && st.source === 'freesound') st.source = 'openverse';
     st.busy = true; st.note = ''; draw();
     try { const r = await api(`/inspo/search?q=${encodeURIComponent(st.q)}&type=${st.type}&source=${st.source}&${qb()}`); st.results = r; if (r.offline) st.note = r.note; }
     catch (e) { st.results = { results: [] }; st.note = e.message; }
@@ -81,10 +85,11 @@
       <header class="ibd-head"><div><span class="eyebrow">Inspiration</span><h2>Your board</h2><p class="faint">Openly licensed pictures and sounds, credited. Flint reads the board to match your style.</p></div>${tabs}<button class="ibd-close" id="ibd-close" aria-label="Close">×</button></header>
       <form class="ibd-search" id="ibd-form" autocomplete="off"><input class="input" id="ibd-q" value="${esc(st.q)}" placeholder="${st.type === 'audio' ? 'Search sounds: coin, rain, crowd…' : 'Search pictures: dusk, forest, neon…'}" aria-label="Search">
         <div class="seg" role="group" aria-label="What"><button type="button" data-type="image" aria-pressed="${st.type === 'image'}">Pictures</button><button type="button" data-type="audio" aria-pressed="${st.type === 'audio'}">Sounds</button></div>
-        ${st.type === 'image' ? `<select class="input ibd-src" id="ibd-src" aria-label="Source"><option value="openverse" ${st.source === 'openverse' ? 'selected' : ''}>Openverse</option><option value="wikimedia" ${st.source === 'wikimedia' ? 'selected' : ''}>Wikimedia Commons</option></select>` : ''}
+        ${st.type === 'image' ? `<select class="input ibd-src" id="ibd-src" aria-label="Source"><option value="openverse" ${st.source === 'openverse' ? 'selected' : ''}>Openverse</option><option value="wikimedia" ${st.source === 'wikimedia' ? 'selected' : ''}>Wikimedia Commons</option></select>`
+          : st.freesound ? `<select class="input ibd-src" id="ibd-src" aria-label="Source"><option value="openverse" ${st.source === 'openverse' ? 'selected' : ''}>Openverse</option><option value="freesound" ${st.source === 'freesound' ? 'selected' : ''}>Freesound</option></select>` : ''}
         <button class="btn primary" type="submit" ${st.busy ? 'disabled' : ''}>${st.busy ? 'Searching…' : 'Search'}</button></form>
       ${st.note ? `<p class="ibd-note" role="status">${esc(st.note)}</p>` : ''}
-      ${r && r.results && r.results.length ? `<section class="ibd-sec" aria-label="Results"><div class="sec-head"><span class="eyebrow">From ${r.source === 'wikimedia' ? 'Wikimedia Commons' : 'Openverse'}</span><h3>${r.results.length} openly licensed ${r.type === 'audio' ? 'sounds' : 'pictures'}</h3></div><div class="ibd-grid" id="ibd-results">${r.results.map(resultHtml).join('')}</div></section>` : r && !st.busy && !st.note ? '<p class="faint ibd-note">Nothing found. Try another word.</p>' : ''}
+      ${r && r.results && r.results.length ? `<section class="ibd-sec" aria-label="Results"><div class="sec-head"><span class="eyebrow">From ${r.source === 'wikimedia' ? 'Wikimedia Commons' : r.source === 'freesound' ? 'Freesound' : 'Openverse'}</span><h3>${r.results.length} openly licensed ${r.type === 'audio' ? 'sounds' : 'pictures'}</h3></div><div class="ibd-grid" id="ibd-results">${r.results.map(resultHtml).join('')}</div></section>` : r && !st.busy && !st.note ? '<p class="faint ibd-note">Nothing found. Try another word.</p>' : ''}
       ${style ? `<section class="ibd-style hero-card" id="ibd-style" aria-label="Your style"><div><span class="eyebrow">Your style, from the board</span><h3>Accent ${esc(style.accent)} · ${esc(style.fonts[0])} + ${esc(style.fonts[1])}</h3>
           <div class="ibd-pal">${['bg', 'surface', 'text', 'accent', 'accent2'].map(k => `<span class="ibd-sw" style="--c:${esc(v.palette[k])}" title="${esc(k)} ${esc(v.palette[k])}"><i></i><code>${esc(v.palette[k])}</code></span>`).join('')}</div>
           ${st.applied ? `<p class="ibd-applied" role="status">${esc(st.applied)}</p>` : `<p class="faint">One tap: your accent everywhere${pid() ? `, plus ${esc(pname() || 'this project')}'s website and app preview` : ''}.</p>`}</div>
@@ -113,7 +118,7 @@
     el.classList.remove('hidden'); document.body.classList.add('ibd-open');
     if (o.board) st.board = o.board; else if (st.board !== 'me' && st.board !== pid()) st.board = 'me';
     if (o.type) st.type = o.type === 'audio' || o.type === 'sound' ? 'audio' : 'image';
-    draw(); load();
+    draw(); load(); fsCheck().then(() => { if (el) draw(); });
     if (o.q) search(o.q); else setTimeout(() => { const q = el.querySelector('#ibd-q'); if (q && !matchMedia('(hover: none)').matches) q.focus(); }, 40);
   }
   function close() { const el = document.getElementById('ibd'); if (el) el.classList.add('hidden'); document.body.classList.remove('ibd-open'); }

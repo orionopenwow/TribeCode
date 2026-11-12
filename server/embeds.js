@@ -94,7 +94,7 @@ module.exports = function embeds({ store, isHost = me => me && me.role === 'host
       const lib = u.protocol === 'https:' ? https : http;
       const lookup = (h, o, cb) => (o && o.all ? cb(null, [{ address: addr.address, family: addr.family }]) : cb(null, addr.address, addr.family));
       const req = lib.request(u, { method: 'GET', lookup, agent: false, timeout: Math.max(200, deadline - Date.now()),
-        headers: { 'User-Agent': opts.ua || 'TribeCodeLinkPreview/1.0 (+https://github.com/orionopenwow/TribeCode)', Accept: accept, 'Accept-Language': 'en', 'Accept-Encoding': 'identity' } }, res => {
+        headers: { 'User-Agent': opts.ua || 'TribeCodeLinkPreview/1.0 (+https://github.com/orionopenwow/TribeCode)', Accept: accept, 'Accept-Language': 'en', 'Accept-Encoding': 'identity', ...(opts.headers || {}) } }, res => {
         if (res.statusCode >= 300 && res.statusCode < 400) { res.resume(); return resolve({ status: res.statusCode, headers: res.headers, body: Buffer.alloc(0) }); }
         const chunks = []; let size = 0, done = false;
         const finish = () => { if (done) return; done = true; resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) }); };
@@ -118,7 +118,9 @@ module.exports = function embeds({ store, isHost = me => me && me.role === 'host
       const r = await getOnce(u, addr, cap, accept, deadline, opts);
       if (r.status >= 300 && r.status < 400) {
         if (!r.headers.location || hop === HOPS) throw blocked('too many redirects');
-        u = checkUrl(new URL(r.headers.location, u).href); continue;
+        const next = checkUrl(new URL(r.headers.location, u).href);
+        if (next.host !== u.host && opts.headers) opts = { ...opts, headers: undefined };   // credentials never follow a redirect to another host
+        u = next; continue;
       }
       if (r.status !== 200) throw blocked(`the site answered ${r.status}`);
       return { ...r, url: u.href };

@@ -206,8 +206,8 @@ function clientKey(req) {
   const cf = req.headers['cf-connecting-ip'], xff = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop();
   return String(cf || xff || ra).slice(0, 64);
 }
-function limited(req, max = 20, windowMs = 60_000) {
-  const k = clientKey(req), now = Date.now();
+function limited(req, max = 20, windowMs = 60_000, bucket = '') {   // bucket: a route's own count (accounts), else shared
+  const k = (bucket ? bucket + ':' : '') + clientKey(req), now = Date.now();
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
@@ -379,7 +379,19 @@ const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m 
 // per project, each bound to its project's repo and files (--repo is the first project's repo).
 // GitHub sign-in (server/github-auth.js): device flow / gh CLI / token; pushAuth() gives the autopilot the host's login.
 // Sign in with Discord / GitHub / Google to join a tribe or sign back in on a new device (server/oauth.js, docs/SIGN-IN.md).
-const accounts = require('./accounts')({ store: baseStore, getMembers: () => members, isLocal, limited, hash, id, log: m => console.log('  ' + m) });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
+const accounts = require('./accounts')({ store: baseStore, getMembers: () => members, isLocal, limited, hash, id, log: m => console.log('  ' + m),
+  forgetMembers: ids => {   // DELETE /api/account: the member and their agents leave the tribe (keys, device links, project seats)
+    members = members.filter(x => !ids.includes(x.id)); saveMembers();
+    try { store.writeJSON('.tribe/devices.json', (store.readJSON('.tribe/devices.json', []) || []).filter(d => !ids.includes(d.member))); devices.reload(); } catch {}
+    for (const p of P.all()) if (p.members && ids.some(x => p.members[x])) { for (const x of ids) delete p.members[x]; P.update(p.id, {}); }
+    try { pushPresence(); rooms.pushProjects(); } catch {}
+  },
+  memberFromReq: req => authed(req),
+  signInMember: (mid, req) => {   // POST /api/accounts/login: this device gets the member's own device link, redeemed at once
+    const mem = members.find(x => x.id === mid); if (!mem) return null;
+    const { key } = devices.create(mem, req, 'Account sign-in'); const r = devices.redeem(key, req);
+    return r ? { token: r.token, member: publicMember(mem) } : null;
+  } });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
 const oauth = require('./oauth')({ store: baseStore, getMembers: () => members, saveMembers, publicMember, isLocal, str, limited, devices, tribe,
   publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), findInvite, joinByInvite, addToProject, log: m => console.log('  ' + m) });
 const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
@@ -548,7 +560,21 @@ const academy = require('./academy')({ P, base: baseStore, store, docs, captures
 const flintKB = require('./flintkb')({ ui: UI, nlu: require(path.join(UI, 'flintnlu.js')) });   // flint-local: Flint's knowledge base (TF-IDF over the Guide and docs)
 const aiBasics = require('./aibasics')({ llm, base: baseStore, P, str });   // feat/flint-ai: ✦ basic features supercharged by AI (server/aibasics.js)
 const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
-const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company });   // phone tribe -> host (docs/PHONE-HOSTING.md)
+const repoBinding = new Map();   // pid -> the clone in flight (a GitHub-linked draft moved here, server/soloimport.js)
+function connectRepo(pid, gh) {   // bind owner/name as the project's code repository, the same as connecting a repo by URL
+  if (repoBinding.has(pid)) return repoBinding.get(pid);
+  const job = (async () => {
+    const p = P.get(pid); if (!p) throw new Error('no such project');
+    if (p.repo && W.isRepo(p.repo)) return { already: true, repo: p.repo };
+    const dest = baseStore.p('workspaces', pid);
+    if (!W.isRepo(dest)) await W.clone(process.env.TRIBE_TEST && process.env.TRIBE_GITHUB_GIT ? path.join(process.env.TRIBE_GITHUB_GIT, gh + '.git') : `https://github.com/${gh}.git`, dest);
+    P.update(pid, { repo: dest, workspace: true }); resetHub(pid);
+    try { rooms.pushProjects(); } catch {}
+    return { repo: dest };
+  })().finally(() => repoBinding.delete(pid));
+  repoBinding.set(pid, job); return job;
+}
+const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company, connectRepo });   // phone tribe -> host (docs/PHONE-HOSTING.md)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
 talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name, ledger, loadTasks: () => loadTasks(), saveTask: t => saveTask(t),   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
@@ -657,7 +683,8 @@ async function apiInProject(req, res, url) {
     res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
     return send(res, 200, { ok: true });
   }
-  if (a === 'accounts') return accounts.route(req, res, { b, c, m, readBody, send, fail });   // feature-flagged scaffold (server/accounts.js)
+  if (a === 'accounts') return accounts.route(req, res, { b, c, m, readBody, send, fail });
+  if (a === 'account' && !b) return accounts.account(req, res, { m, me, readBody, send, fail });   // delete my account (docs/APP-STORE.md), flag-gated   // feature-flagged scaffold (server/accounts.js)
   if (a === 'session' && m === 'GET') {
     const t = cookieToken(req); if (!t) return send(res, 200, { member: null });
     const who = authed({ headers: { authorization: 'Bearer ' + t }, url: '/api/session' });

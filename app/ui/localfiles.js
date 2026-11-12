@@ -120,6 +120,8 @@
       local: true,
       connected: () => true, hasToken: () => true, project: () => 'local', sendActivity() {}, send: () => false,
       state: () => ({ me: meNow(), members: [meNow()], project: 'local', projects: [] }),
+      // polish: pictures on a board kept here are blobs in IndexedDB ('blobs', key 'img-…'); elements carry src 'local:img-…'
+      ...(kind === 'whiteboard' ? { async upload(b, name) { await ready; const k = 'img-' + rid().slice(2); await blobPut(k, b); return { id: 'local:' + k, name: name || 'picture' }; } } : {}),
       async api(path, o = {}) {
         await ready;
         const m = (o.method || 'GET').toUpperCase(), body = o.body || {};
@@ -251,6 +253,16 @@
       const wb = it.kind === 'whiteboard', base = wb ? '/whiteboard' : '/canvas', field = wb ? 'elements' : 'nodes';
       if (!mv.rid) { const r = await api(base, { method: 'POST', body: { name: it.title } }); mv.rid = (wb ? r.board : r.file).id; await save(id, { moved: mv }); }
       const ops = Object.values(live(it[field]));
+      if (wb) for (const e of ops) if (e && e.t === 'image' && /^local:/.test(e.src || '')) {   // pictures kept on this device go up with the board
+        mv.imgs = mv.imgs || {};
+        if (!mv.imgs[e.src]) {
+          const b = await blob(e.src.slice(6)); if (!b) continue;
+          const r = await fetch(`${c.base()}/api/uploads?name=${encodeURIComponent('whiteboard.' + ((b.type || 'image/png').split('/')[1] || 'png').replace('jpeg', 'jpg'))}&scope=project`, { method: 'POST', headers: { ...auth(pid), 'Content-Type': b.type || 'application/octet-stream' }, body: b });
+          const d = await r.json().catch(() => ({})); if (!r.ok || !(d.file || {}).id) throw new Error(d.error || 'a picture did not upload');
+          mv.imgs[e.src] = d.file.id; await save(id, { moved: mv });
+        }
+        e.src = mv.imgs[e.src];
+      }
       for (let i = 0; i < ops.length; i += 400) await api(`${base}/${encodeURIComponent(mv.rid)}/ops`, { method: 'POST', body: { ops: ops.slice(i, i + 400) } });
     } else if (it.kind === 'file') {
       if (!mv.fid) {
@@ -260,11 +272,14 @@
         mv.fid = (d.file || {}).id || 'done'; await save(id, { moved: mv });
       }
     }
+    if (mv.imgs) for (const k of Object.keys(mv.imgs)) await tx('blobs', 'readwrite', os => (os ? os.delete(k.slice(6)) : mem.blobs.delete(k.slice(6))));
     await remove(id);
     toast(`Moved to ${p}.`);
     try { dispatchEvent(new CustomEvent('tribe-local-moved', { detail: { id, pid, kind: it.kind } })); } catch {}
     return mv;
   }
 
-  window.TribeLocalFiles = { ready, list, get, create, addFiles, save, remove, open, moveTo, moveMenu, backend: be, lww, blob, fkind, KINDS, closePane };
+  const urls = new Map();   // 'local:img-…' -> object URL (a board's pictures kept on this device)
+  async function imageUrl(src) { if (urls.has(src)) return urls.get(src); await ready; const b = await blob(String(src).replace(/^local:/, '')); if (!b) throw new Error('picture gone'); const u = URL.createObjectURL(b); urls.set(src, u); return u; }
+  window.TribeLocalFiles = { ready, list, get, create, addFiles, save, remove, open, moveTo, moveMenu, backend: be, lww, blob, imageUrl, fkind, KINDS, closePane };
 })();

@@ -32,6 +32,16 @@
 .ac-test { display: inline-block; font-style: normal; font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; line-height: 1;
   padding: 3px 5px; border-radius: 4px; color: var(--amber-ink, var(--text)); background: var(--amber-tint, var(--surface-2)); border: 1px solid var(--amber); vertical-align: 1px; margin-left: 4px; }
 .ac-fine { margin: 2px 0 0; color: var(--faint); font-size: 12.5px; line-height: 1.5; }
+.ac-form { display: flex; flex-direction: column; gap: 8px; }
+.ac-form .input { width: 100%; box-sizing: border-box; min-height: 40px; }
+.ac-form-acts { display: flex; justify-content: flex-end; gap: 8px; }
+.ac-err { margin: 0; color: var(--alert); font-size: 12.5px; line-height: 1.5; }
+.ac-ses { list-style: none; margin: 8px 0 0; padding: 0; width: 100%; }
+.ac-ses li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid var(--edge); }
+.ac-ses li span { display: flex; flex-direction: column; min-width: 0; }
+.ac-ses li b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-ses li small { color: var(--faint); font-size: 12px; }
+.set-row.ac-sessions { flex-wrap: wrap; }
 .ac-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
 .ac-foot .ac-testlink { margin-right: auto; font-size: 12.5px; }
 #ac-guest { min-width: 170px; }

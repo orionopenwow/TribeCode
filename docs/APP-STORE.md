@@ -1,6 +1,6 @@
 # TribeCode in the App Store and Google Play: the plan
 
-Status: plan + first pieces built, 2026-11-10 (`feat/appstore`). Built so far: the browser app ([BROWSER-APP.md](BROWSER-APP.md)),
+Status: plan + first pieces built, 2026-11-10 (`feat/appstore`); 2026-11-11 (`feat/polish`): Sign in with Apple (config-gated), the cloud AI consent sheet, `support.html`, `delete-account.html` and `GET/DELETE /api/account`. Built so far: the browser app ([BROWSER-APP.md](BROWSER-APP.md)),
 report / block / word filter / delete-account entry point (`app/ui/moderation.js`, `server/moderation.js`), draft privacy
 policy and terms (`app/ui/privacy.html`, `app/ui/terms.html`), the Android TWA scaffold (`mobile/android/`) and the
 iPhone plan (`mobile/ios/README.md`). Earlier plan: [PHONE-APPS.md](PHONE-APPS.md). Nothing has been submitted yet.
@@ -116,21 +116,21 @@ Legend: ✅ done · 🟡 part done · ⬜ to do. "Store build" = the Tauri phone
 | 1.2 filter | Host's word filter masks words as messages are posted (`server/moderation.js`) | ✅ | Store builds: ship a default word list on, editable by the host |
 | 1.2 report + timely response | Report on any message or person, with reason and note; host and mods are notified and see Reports in Settings › Privacy & safety; Resolved / Dismiss | ✅ | Tribes are self-hosted, so the *host* responds. State in the terms (done) and review notes that hosts get every report instantly; for tribes TribeCode runs (the demo / featured tribes) we answer within 24 hours |
 | 1.2 block | Block from a message or profile: their messages hidden for you everywhere, no notifications from them; Unblock in Settings | ✅ | DMs from a blocked person: hidden in the thread today; also refuse them on the server (small follow-up in `dm.js`) |
-| 1.2 contact info | Terms + privacy link GitHub issues | 🟡 | Add a real support email and a support page before submitting |
+| 1.2 contact info | `support.html` (FAQ, report a problem) with the address `support@tribecode.org` (one constant in `app/ui/support-contact.js`), linked from privacy, deletion and Privacy & safety | 🟡 | The address is a placeholder: set up the inbox (or change the constant) before submitting |
 | 1.2 not random chat | Invite-only tribes, no strangers matching | ✅ | Say so in the review notes |
 | 3.1 payments | TribeCode is free; nothing is sold in the app. Money / ledger is bookkeeping; the Marketplace is a free catalog | ✅ | Don't add purchase links in store builds. Bring-your-own AI keys: no "buy credits" links inside the iOS app |
-| 4.8 login services | Invite links are TribeCode's own accounts; Discord, GitHub and Google sign-in are optional | ⬜ | iOS v1: **hide Discord/Google sign-in** (invite links + "This phone" need no login). GitHub stays as a connection to repos, not the main account. Later: Sign in with Apple through the host |
+| 4.8 login services | Invite links are TribeCode's own accounts; Discord, GitHub and Google sign-in are optional. **Sign in with Apple** is a config-gated provider (hidden until the host sets an Apple Services ID); iPhone builds (Tauri iOS or `?platform=ios`) hide Discord/Google while Apple is off | 🟡 | Finish the TODO(appstore) in `server/oauth.js` (client-secret JWT from the .p8 key, name/email scopes with form_post, id_token signature check, Apple's button artwork). GitHub stays as a connection to repos |
 | 5.1.1(i) privacy policy | `privacy.html` (draft), linked in Settings › Privacy & safety and in the store metadata | 🟡 | Have it reviewed; host it at tribecode.org/privacy |
-| 5.1.1(v) account deletion | Settings › Privacy & safety › **Delete my account**: calls `DELETE /api/account` when the server has it, otherwise explains where the account lives and deletes this device's data | 🟡 | **Blocker**: the host side. Contract for the accounts work below. Must also delete guest accounts and what the person posted |
-| 5.1.2 third-party AI | Questions go to the AI the tribe chose (local, a teammate's Claude, or a cloud key) | ⬜ | Store builds: a one-time consent sheet naming the provider before your messages first go to a cloud model, and a line in the privacy policy (written) |
+| 5.1.1(v) account deletion | Settings › Privacy & safety › **Delete my account**: `GET/DELETE /api/account` (server/accounts.js) removes the member, their agents, keys, device links, seats and accounts, and anonymises what they posted; otherwise it clears this device | 🟡 | Server side done behind `TRIBE_ACCOUNTS=1`: turn the flag on for store builds' tribes (the Review Tribe) |
+| 5.1.2 third-party AI | Questions go to the AI the tribe chose (local, a teammate's Claude, or a cloud key). A one-time consent sheet (`app/ui/aiconsent.js`) names the cloud provider before anything first goes to it (✦ refine, Flint's chat, Flint's docs, the design canvas ✦); remembered per device and provider, revocable in Privacy & safety; local models never ask | ✅ | `@ai` in chat goes through the host's brain on the server: extend the same consent to it if the review asks |
 | 5.1.2 no forced permissions | Mic, camera, notifications are asked when used and everything else works without them | ✅ | Keep the purpose strings honest (below) |
 | Privacy label / Data safety | See "What to declare" below | ⬜ | Fill both from one table |
 | Permissions (iOS) | `NSMicrophoneUsageDescription`, `NSCameraUsageDescription`, `NSFaceIDUsageDescription`, `NSLocalNetworkUsageDescription` (reaching a host on Wi-Fi), audio background mode | ⬜ | App Transport Security blocks plain `http://`: allow local networking only; tunnels and Tailscale `https` work as is |
 | Android target API | `targetSdkVersion` 36 in `twa-manifest.json` | ✅ | Recheck each August |
 | Android foreground service | Huddles on Android 14+ need a `microphone` foreground service type, declared in Play Console | ⬜ | Tauri build only |
 | Android photos | Use the system photo picker, not `READ_MEDIA_IMAGES` | ⬜ | Tauri build only |
-| Play account deletion web link | `privacy.html#delete` explains the in-app path | ⬜ | A real web form that reaches the host (or us for tribes we run) |
-| Digital Asset Links | `app/ui/.well-known/assetlinks.json` template; `pages.yml` copies it to the domain root | 🟡 | Fill in both fingerprints after the first Play upload |
+| Play account deletion web link | `delete-account.html`: the in-app steps, who holds the data, and a request form (mailto to support) | 🟡 | Link it in the Data safety form; a mailto form is enough until a support inbox tool exists |
+| Digital Asset Links | `app/ui/.well-known/assetlinks.json` template; `pages.yml` copies it to the domain root | 🟡 **needs you** | Fill in both SHA-256 fingerprints after the first Play upload (checklist below) |
 | Encryption in transit (Play) | Tunnels and Tailscale serve https; a host on the same Wi-Fi is plain http | ⬜ | Answer honestly ("not all"), or require https in store builds. Prefer https: Android blocks cleartext by default anyway |
 
 ### What to declare (App Privacy + Data safety)
@@ -156,6 +156,18 @@ The client (`moderation.js`) already calls:
   notes, blocks and reports they made, and either deletes or anonymises ("deleted member") their messages, uploads and
   docs. The host can't delete themselves this way (Start fresh covers that). Guests and auto-created phone accounts the
   same. Then `DELETE /api/session` (already added) clears the sign-in cookie.
+
+## Signing fingerprints: needs you
+
+These need the Play Console account and the signing keys, which only you have. Nothing else in this list waits on them.
+
+- [ ] Create the app in Play Console (package `org.tribecode.app`) and turn on **Play App Signing**.
+- [ ] Make an **upload key** (`keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`); keep the keystore and passwords out of the repo.
+- [ ] Upload the first TWA build (`mobile/android/`, Bubblewrap) to the internal testing track.
+- [ ] Copy **both** SHA-256 fingerprints: Play Console › Setup › App signing (the *app signing key* and the *upload key*).
+- [ ] Paste them into `app/ui/.well-known/assetlinks.json` (`sha256_cert_fingerprints`), push to `main`, and check `https://<host>/.well-known/assetlinks.json` serves `application/json` with no redirect.
+- [ ] Open the internal-testing app: no browser bar means Digital Asset Links verified.
+- [ ] For iOS later: the Apple Team ID, a Services ID for Sign in with Apple and its `.p8` key (see TODO(appstore) in `server/oauth.js`).
 
 ## Assets
 

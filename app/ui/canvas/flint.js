@@ -81,8 +81,42 @@
   const say = t => out(`<p class="cvf-say"><img src="assets/flint.svg" alt="" width="11" height="14"> ${esc(t)}</p>`);
 
   // run one ask: plan on the server, land it as this person's change. Returns { r, pairs } (pairs = that undo step).
+  // polish: a design kept on this device (localfiles.js) plans here: Flint's free screen templates first (no AI); a freeform
+  // ask goes to the same AI path as every ✦ (aibasics.js ask: the tribe's AI when a server is reachable, with the cloud
+  // consent, else the in-browser model); with neither, the basic answer stands.
+  const COL = /^#[0-9a-fA-F]{6}$/, num = (v, lo, hi, d) => { v = Number(v); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d; };
+  const nid = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), b => b.toString(16).padStart(2, '0')).join('');
+  function specNodes(spec, dx) {   // the model's small JSON -> canvas nodes (validated; anything odd is dropped)
+    if (!spec || typeof spec !== 'object' || !Array.isArray(spec.layers)) return null;
+    const W = num(spec.w, 200, 1600, 390), H = num(spec.h, 200, 2400, 844), root = nid();
+    const out = [{ id: root, t: 'frame', p: '', i: 1, v: 1, x: dx, y: 0, name: String(spec.name || 'Screen').slice(0, 60), w: W, h: H, fill: COL.test(spec.fill) ? spec.fill : '#FFFFFF', clip: true }];
+    spec.layers.slice(0, 14).forEach((l, i) => {
+      if (!l || (l.t !== 'text' && l.t !== 'rect')) return;
+      const n = { id: nid(), t: l.t, p: root, i: i + 1, v: 1, x: num(l.x, 0, W, 0), y: num(l.y, 0, H, 0), name: String(l.name || (l.t === 'text' ? 'Text' : 'Box')).slice(0, 60), w: num(l.w, 4, W, 120), h: num(l.h, 4, H, 40) };
+      if (l.t === 'rect') { n.fill = COL.test(l.fill) ? l.fill : '#EEEEEE'; if (l.r) n.r = num(l.r, 0, 200, 0); }
+      else { n.tx = { c: String(l.c || '').slice(0, 400) || 'Text', f: 'Inter', s: num(l.s, 8, 96, 16), wt: [400, 500, 600, 700, 800].includes(+l.wt) ? +l.wt : 400, lh: 1.35, al: 'left', col: COL.test(l.col) ? l.col : '#16181D' }; n.sz = { h: 'fixed', v: 'hug' }; }
+      out.push(n);
+    });
+    return out.length > 1 ? out : null;
+  }
+  async function localPlan(text) {
+    const live = E.S && E.S.roots ? E.S.roots() : [];
+    const O = window.TribeOffline;
+    let r = O && O.planDesign ? await O.planDesign({ ask: text, sel: E.sel, live }) : { kind: 'freeform', why: '' };
+    if (r.kind === 'build') return { ...r, say: `${r.say || 'Done.'} · Basic · no AI` };
+    if (r.kind === 'none' && (E.sel || []).length) return { ...r, say: 'On this device I design new screens. Tidy up, rename layers, variants and dark versions work once the design is in a project (Move to…).' };
+    const AB = window.TribeAIBasics, a = AB && AB.ask ? await AB.ask('canvas.design', { ask: text }, '') : null;
+    if (a && a.text) {
+      let spec = null; try { spec = JSON.parse((/\{[\s\S]*\}/.exec(a.text) || [''])[0]); } catch {}
+      const dx = live.length ? Math.max(...live.map(n => (n.x || 0) + (n.w || 0))) + 120 : 0;
+      const create = specNodes(spec, dx);
+      if (create) return { kind: 'build', create, focus: create[0].id, say: `Designed “${create[0].name}” · ✦ via ${a.via}` };
+    }
+    return { ...r, kind: r.kind === 'none' ? 'none' : 'freeform', local: true, why: (r.why ? r.why + ' ' : '') + 'No AI is reachable from this device, so I can only use my free screen templates here.' };
+  }
   async function run(text) {
-    const r = await C.api('/canvasai/plan', { method: 'POST', body: { ask: text, file: E.file, sel: E.sel, boxes: Object.fromEntries(E.sel.map(id => [id, E.wbox(id)]).filter(x => x[1])) } });
+    const local = window.TribeCanvas && window.TribeCanvas.local && window.TribeCanvas.local();
+    const r = local ? await localPlan(text) : await C.api('/canvasai/plan', { method: 'POST', body: { ask: text, file: E.file, sel: E.sel, boxes: Object.fromEntries(E.sel.map(id => [id, E.wbox(id)]).filter(x => x[1])) } });
     const before = E.step ? E.step() : null;
     if (r.kind === 'build' || r.kind === 'variants' || r.kind === 'theme') E.insert(r.create, r.focus);
     else if (r.kind === 'rename' || r.kind === 'tidy') E.apply(r.change);

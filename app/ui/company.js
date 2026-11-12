@@ -319,12 +319,12 @@
     const after = $('#nest-ws-agents'); if (!after) return;
     let row = $('#nest-company');
     const c = co(), lead = !!(st.d && st.pid === pid() && st.d.canLead);
-    const want = !!c;   // v0.27 polish: the sidebar stays at five rows until it's a company; making one starts from Recommended next, setup or Ctrl K
+    const want = !!c || lead;   // polish: until it's a company, leads see a quiet "Set up company" row that opens the setup
     if (!want) { if (row) row.classList.add('hidden'); return; }
     if (!row) { row = document.createElement('button'); row.className = 'nest-row core'; row.id = 'nest-company'; row.dataset.pnav = 'company'; after.after(row); }
-    const html = `<svg class="i"><use href="#i-flag"/></svg><span>${c ? 'Company' : 'Make it a company'}</span>${c && c.seats.some(x => x.status === 'needs-you' || x.status === 'blocked') ? '<span class="n hot">!</span>' : ''}`;
+    const html = `<svg class="i"><use href="#i-flag"/></svg><span>${c ? 'Company' : 'Set up company'}</span>${c && c.seats.some(x => x.status === 'needs-you' || x.status === 'blocked') ? '<span class="n hot">!</span>' : ''}`;
     if (row.innerHTML !== html) row.innerHTML = html;
-    row.classList.toggle('co-subtle', !c); row.classList.remove('hidden');
+    row.classList.toggle('co-subtle', !c); row.title = c ? '' : 'Make this project a company: seats, goals and rhythms'; row.classList.remove('hidden');
   }
 
   // ---------- the dashboard tile (projects.js) ----------

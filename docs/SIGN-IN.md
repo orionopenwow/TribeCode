@@ -79,3 +79,16 @@ Security:
 - Rate limits on every public endpoint. Provider text is cleaned on the server and escaped in the UI.
 
 Test hooks: `TRIBE_OAUTH_DISCORD_BASE`, `TRIBE_OAUTH_GITHUB_BASE`, `TRIBE_OAUTH_GOOGLE_BASE` point a provider at a mock.
+
+## Sign in with Apple (config-gated)
+
+Apple is off and hidden until the host sets an **Apple Services ID** (the client id) and a client secret in Settings ›
+Sign-in (or `TRIBE_OAUTH_APPLE_ID` / `TRIBE_OAUTH_APPLE_SECRET`). The flow follows the same code + PKCE pattern as the
+others; Apple has no profile endpoint, so the stable user id comes from the token answer's `id_token` (`sub`).
+
+In the iPhone app (the Tauri iOS build, or `?platform=ios` in a browser to try it), Discord and Google sign-in are hidden
+while Apple is not configured (App Store 4.8). GitHub stays: it connects repositories.
+
+Still to do before submitting (TODO(appstore) in `server/oauth.js`): make the client secret JWT from the team's `.p8` key
+instead of pasting one, ask for `name email` (needs `response_mode=form_post`, so a POST callback), verify the
+`id_token` signature against Apple's keys, and use Apple's own button artwork.
