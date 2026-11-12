@@ -117,9 +117,19 @@ def main():
             wait_text(host, "#fl-how", "TRIBE_CONTEXT"); host.wait_for_selector("#fl-guide")
             assert host.locator("#fl-agents").count() == 0
             quiet(host); shot(host, "fleet-empty")
-            # Start a project: the tribe is made and the hero moves on to Connect your AI (with a real key)
+            # Start a project: the instant Start sheet (feat/setup-local) makes it on this device; agents need a tribe, so
+            # choosing This computer as its home makes the real tribe, and the hero moves on to Connect your AI (a real key)
             host.click("#fl-start")
-            host.wait_for_function("TribeClient.hasToken()", timeout=15000)
+            host.wait_for_selector("#su-start", state="visible", timeout=8000)
+            host.fill("#su-name", "Fleet test"); host.click("#su-create")
+            host.wait_for_selector("#su-where", state="visible", timeout=8000)
+            host.click("#su-where [data-su='computer']")
+            for _ in range(80):   # the page reloads into the tribe on this computer
+                try:
+                    if host.evaluate("!!(window.TribeClient && TribeClient.hasToken() && TribeClient.connected() && !(window.TribeOffline && TribeOffline.active()))"): break
+                except Exception: pass
+                time.sleep(0.25)
+            host.wait_for_function("TribeClient.hasToken() && !(window.TribeOffline && TribeOffline.active())", timeout=20000)
             host.wait_for_function("TribeClient.connected()", timeout=15000)
             assert api("/health")[1]["members"] >= 1
             host.evaluate("TribeAgentsHub.open({ global: true })")
