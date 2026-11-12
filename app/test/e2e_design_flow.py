@@ -111,7 +111,10 @@ def on_this_device(b):
     pg.click("#dfl-plan [data-step=idea] .dfl-tick")
     pg.wait_for_selector("#dfl-plan [data-step=idea].done")
     assert pg.inner_text("#dfl-plan .dfl-prog") == "1/7"
-    shot(pg, "design-flow-plan")
+    if SHOTS:   # a wide window, so the plan sits beside the game
+        pg.set_viewport_size({"width": 1680, "height": 1000}); pg.wait_for_timeout(300)
+        pg.evaluate("window.scrollTo(0, 0); let e = document.querySelector('#dfl'); while (e) { e.scrollTop = 0; e = e.parentElement; }")
+        shot(pg, "design-flow-plan"); pg.set_viewport_size({"width": 1360, "height": 860})
     key = pg.evaluate("TribeDesignFlow.plan().key")
     pg.reload(); pg.wait_for_selector("#dfl[data-step=kinds]", timeout=20000)
     pg.wait_for_selector(f"#dfl-cont-plans [data-plan='{key}']", timeout=5000)

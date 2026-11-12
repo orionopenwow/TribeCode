@@ -338,16 +338,18 @@
     const s = p.target.starter ? await starter(p.target.starter) : null, k = D().KINDS.find(x => x.id === p.kind) || {};
     const local = p.target.type === 'local-site', it = local && LF() ? LF().get(p.target.id) : null;
     host.innerHTML = `<section class="dfl dfl-ws" id="dfl" data-step="workspace"><button type="button" class="dfl-back" id="dfl-back">${icon('back', 16)}Design</button>
-      <div class="dfl-ws-grid"><div class="dfl-ws-main">
-        <header class="dfl-head"><span class="eyebrow">${esc(k.t || '')}${s ? ` · ${esc(s.title)}` : ''}</span><h1>${esc(p.title)}</h1>
+      <div class="dfl-ws-grid">
+        <header class="dfl-head dfl-ws-head"><span class="eyebrow">${esc(k.t || '')}${s ? ` · ${esc(s.title)}` : ''}</span><h1>${esc(p.title)}</h1>
           ${s ? `<p class="dfl-lead">${esc(s.controls || s.summary)}</p>` : ''}
           ${wsSaid && wsSaid.said && wsSaid.said.length ? `<p class="dfl-said">${icon('flame', 14)}<span><b>${esc(wsSaid.via)}</b> ${esc(wsSaid.said.join(' · '))}</span></p>` : ''}</header>
-        <div class="dfl-play" id="dfl-play">${local ? (it ? '<iframe id="dfl-frame" title="Your ' + esc(k.t || 'app') + '" sandbox="allow-scripts allow-pointer-lock"></iframe>' : '<p class="faint">That file is gone from this device.</p>')
+        <div class="dfl-ws-play"><div class="dfl-play" id="dfl-play">${local ? (it ? '<iframe id="dfl-frame" title="Your ' + esc(k.t || 'app') + '" sandbox="allow-scripts allow-pointer-lock"></iframe>' : '<p class="faint">That file is gone from this device.</p>')
           : `${p.target.type === 'build' ? '<iframe id="dfl-frame" title="Your ' + esc(k.t || 'app') + '" sandbox="allow-scripts allow-forms allow-pointer-lock allow-popups"></iframe>' : ''}<div class="dfl-pv"><span class="dfl-ki">${icon('play', 22)}</span><div><b>${p.target.type === 'code' ? 'A blank start in the project\'s code' : 'In the project\'s code'}</b><small class="faint">${p.target.dir ? esc(p.target.dir) + '/' : 'the top folder'}${s ? ` · from ${esc(s.title)} (${esc(s.license)})` : ''}</small></div><button type="button" class="btn sm" id="dfl-pv-open">${icon('play', 14)}Open in the preview</button></div>`}</div>
-        <div class="dfl-acts">${local ? `<button type="button" class="btn sm" id="dfl-reload">${icon('play', 14)}Restart</button><button type="button" class="btn sm" id="dfl-code">${icon('code', 14)}Edit the code</button><button type="button" class="btn sm" id="dfl-dl">${icon('upload', 14)}Download</button>${LF() ? `<button type="button" class="btn sm" id="dfl-move">Move to a project…</button>` : ''}` : `<button type="button" class="btn sm" id="dfl-code">${icon('code', 14)}Open the code</button>`}</div>
+        <div class="dfl-acts">${local ? `<button type="button" class="btn sm" id="dfl-reload">${icon('play', 14)}Restart</button><button type="button" class="btn sm" id="dfl-code">${icon('code', 14)}Edit the code</button><button type="button" class="btn sm" id="dfl-dl">${icon('upload', 14)}Download</button>${LF() ? `<button type="button" class="btn sm" id="dfl-move">Move to a project…</button>` : ''}` : `<button type="button" class="btn sm" id="dfl-code">${icon('code', 14)}Open the code</button>`}</div></div>
+        <aside class="dfl-plan-host" id="dfl-plan-host"></aside>
+        <div class="dfl-ws-more">
         ${s && s.params.length ? `<section class="dfl-knobs" id="dfl-knobs"><span class="eyebrow">Knobs</span><h2>Tweak it</h2><div class="dfl-kgrid" id="dfl-kgrid"></div></section>` : ''}
         ${s ? `<p class="dfl-credit faint">${s.original ? 'An original TribeCode starter' : `Adapted from <a href="${esc(s.source)}" target="_blank" rel="noopener">${esc(s.source.replace(/^https:\/\/github.com\//, ''))}</a> by ${esc(s.by)}`} · ${esc(s.license)} · the LICENSE file travels with the code.</p>` : ''}
-      </div><aside class="dfl-plan-host" id="dfl-plan-host"></aside></div></section>`;
+      </div></div></section>`;
     host.querySelector('#dfl-back').onclick = () => swap(kinds);
     planCard(host.querySelector('#dfl-plan-host'), p, { inline: true });
     toTop();
