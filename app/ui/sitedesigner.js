@@ -34,7 +34,8 @@
   const pageNow = () => st.cfg.pages.find(p => p.id === st.page) || st.cfg.pages[0];
   const DKEY = pid => `tribecode.sitedesigner.draft.${pid || 'local'}`;
   const readDraft = pid => { try { const d = JSON.parse(localStorage.getItem(DKEY(pid)) || (pid ? 'null' : localStorage.getItem(LOCAL) && JSON.stringify({ cfg: JSON.parse(localStorage.getItem(LOCAL)), at: 0, rev: 0, dirty: false }) || 'null')); return d && d.cfg ? d : null; } catch { return null; } };
-  const writeDraft = () => { if (!st) return; try { localStorage.setItem(DKEY(st.pid), JSON.stringify({ cfg: st.cfg, at: Date.now(), rev: st.rev, dirty: st.dirty })); if (!st.pid) localStorage.setItem(LOCAL, JSON.stringify(st.cfg)); } catch {} };
+  // a demo's project (demo_…, offline.js) keeps no draft once the demo has ended: its keys were wiped on exit
+  const writeDraft = () => { if (!st) return; if (/^demo_/.test(st.pid || '') && !(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active())) return; try { localStorage.setItem(DKEY(st.pid), JSON.stringify({ cfg: st.cfg, at: Date.now(), rev: st.rev, dirty: st.dirty })); if (!st.pid) localStorage.setItem(LOCAL, JSON.stringify(st.cfg)); } catch {} };
   function commit(next, opts = {}) {
     if (!next || next === st.cfg) return false;
     st.hist.push(JSON.stringify(st.cfg)); if (st.hist.length > 80) st.hist.shift(); st.fut = [];
