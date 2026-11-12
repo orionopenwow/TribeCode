@@ -251,7 +251,7 @@ def main():
             ph.goto(BASE + "/?skipIntro=1")
             ph.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % cp, timeout=15000)
             ph.evaluate("TribePreview.open()")
-            ph.wait_for_selector("#pvf", timeout=8000)
+            ph.wait_for_selector("#pvf", state="attached", timeout=8000)   # phones open on the Page tab; the sheet waits behind Edit
             ph.evaluate("TribePreviewFlint.open()")
             ph.wait_for_selector("#pvf.is-open #pvf-in", timeout=5000)
             ph.wait_for_timeout(450)   # the sheet slides up
