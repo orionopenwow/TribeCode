@@ -1,0 +1,5 @@
+/* Tiny platformer: the page around the canvas. Colors come from config.js (--bg, --ink). */
+html, body { margin: 0; height: 100%; background: var(--bg, #111); color: var(--ink, #ddd); font: 14px/1.4 system-ui, sans-serif; }
+#platformer { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+#canvas { width: min(100%, calc((100vh - 56px) * 4 / 3)); aspect-ratio: 4 / 3; display: block; background: var(--sky, #1b1f27); touch-action: none; }
+#instructions { margin: 8px 0 0; opacity: .75; font-size: 12px; text-align: center; }

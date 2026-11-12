@@ -1,0 +1,1764 @@
+{
+ "about": "Built-in app and game starters (written by scripts/dev/starters.js from each STARTER.json). docs/STARTERS.md",
+ "items": [
+  {
+   "id": "blocks",
+   "kind": "game",
+   "title": "Falling blocks",
+   "summary": "The falling-blocks puzzle: rotate, slide, clear rows, go faster. Clean, readable code with a next-piece preview.",
+   "icon": "puzzle",
+   "tags": [
+    "puzzle",
+    "tetris",
+    "falling blocks",
+    "tetromino",
+    "arcade"
+   ],
+   "phrases": [
+    "tetris game",
+    "tetris clone",
+    "falling blocks game",
+    "block puzzle game",
+    "tetromino game"
+   ],
+   "license": "MIT",
+   "by": "Jake Gordon and contributors",
+   "source": "https://github.com/jakesgordon/javascript-tetris",
+   "original": false,
+   "params": [
+    {
+     "key": "dropTime",
+     "label": "Seconds per row at the start",
+     "type": "number",
+     "min": 0.1,
+     "max": 1.5,
+     "step": 0.05,
+     "default": 0.6,
+     "words": {
+      "down": "faster|quicker|harder",
+      "up": "slower|easier"
+     }
+    },
+    {
+     "key": "c1",
+     "label": "I piece",
+     "type": "color",
+     "default": "#38C6B1"
+    },
+    {
+     "key": "c2",
+     "label": "J piece",
+     "type": "color",
+     "default": "#6C7CFF"
+    },
+    {
+     "key": "c3",
+     "label": "L piece",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "c4",
+     "label": "O piece",
+     "type": "color",
+     "default": "#FABD2F"
+    },
+    {
+     "key": "c5",
+     "label": "S piece",
+     "type": "color",
+     "default": "#3BD16F"
+    },
+    {
+     "key": "c6",
+     "label": "T piece",
+     "type": "color",
+     "default": "#A78BFA"
+    },
+    {
+     "key": "c7",
+     "label": "Z piece",
+     "type": "color",
+     "default": "#FF6F8E"
+    },
+    {
+     "key": "bg",
+     "label": "Page background",
+     "type": "color",
+     "default": "#0E1014"
+    }
+   ],
+   "try": [
+    "Start slower",
+    "Add a hold piece",
+    "Add a ghost piece that shows where it lands",
+    "Add a high score"
+   ],
+   "controls": "Arrows: Left and Right move, Up rotates, Down drops. Space starts. On a phone: the buttons under the board.",
+   "size": 24798
+  },
+  {
+   "id": "breakout",
+   "kind": "game",
+   "title": "Breakout",
+   "summary": "Bounce the ball, break every brick. The classic MDN canvas tutorial game, ready to restyle and extend.",
+   "icon": "breakout",
+   "tags": [
+    "breakout",
+    "arkanoid",
+    "brick breaker",
+    "paddle",
+    "arcade",
+    "2d"
+   ],
+   "phrases": [
+    "breakout game",
+    "breakout",
+    "brick breaker",
+    "arkanoid clone",
+    "paddle and ball game"
+   ],
+   "license": "CC0-1.0",
+   "by": "Andrzej Mazur and Mozilla contributors",
+   "source": "https://github.com/end3r/Gamedev-Canvas-workshop",
+   "original": false,
+   "params": [
+    {
+     "key": "ballSpeed",
+     "label": "Ball speed",
+     "type": "number",
+     "min": 1,
+     "max": 8,
+     "step": 0.5,
+     "default": 3,
+     "words": {
+      "up": "faster|quicker|harder",
+      "down": "slower|easier"
+     }
+    },
+    {
+     "key": "paddleWidth",
+     "label": "Paddle width",
+     "type": "number",
+     "min": 30,
+     "max": 200,
+     "step": 5,
+     "default": 75,
+     "words": {
+      "up": "bigger paddle|wider paddle",
+      "down": "smaller paddle|narrower paddle"
+     }
+    },
+    {
+     "key": "rows",
+     "label": "Brick rows",
+     "type": "number",
+     "min": 1,
+     "max": 8,
+     "step": 1,
+     "default": 3,
+     "words": {
+      "up": "more bricks|more rows",
+      "down": "fewer bricks|fewer rows"
+     }
+    },
+    {
+     "key": "columns",
+     "label": "Brick columns",
+     "type": "number",
+     "min": 2,
+     "max": 12,
+     "step": 1,
+     "default": 5
+    },
+    {
+     "key": "lives",
+     "label": "Lives",
+     "type": "number",
+     "min": 1,
+     "max": 9,
+     "step": 1,
+     "default": 3,
+     "words": {
+      "up": "more lives",
+      "down": "fewer lives"
+     }
+    },
+    {
+     "key": "brick",
+     "label": "Brick color",
+     "type": "color",
+     "default": "#38C6B1"
+    },
+    {
+     "key": "brick2",
+     "label": "Second brick color",
+     "type": "color",
+     "default": "#6C7CFF"
+    },
+    {
+     "key": "paddle",
+     "label": "Paddle color",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "ball",
+     "label": "Ball color",
+     "type": "color",
+     "default": "#F8FAFC"
+    },
+    {
+     "key": "bg",
+     "label": "Page background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "field",
+     "label": "Play field",
+     "type": "color",
+     "default": "#1B2028"
+    }
+   ],
+   "try": [
+    "Make the ball faster",
+    "Add power-ups that widen the paddle",
+    "Add levels with brick patterns",
+    "Add sound when a brick breaks"
+   ],
+   "controls": "Mouse, a finger or the arrow keys move the paddle. Space or a tap restarts.",
+   "size": 10980
+  },
+  {
+   "id": "calculator",
+   "kind": "app",
+   "title": "Calculator",
+   "summary": "A clean calculator with brackets, percent and keyboard input, on a tiny safe parser (no eval). A base for unit, tip or loan calculators.",
+   "icon": "calc",
+   "tags": [
+    "calculator",
+    "math",
+    "converter",
+    "utility"
+   ],
+   "phrases": [
+    "calculator app",
+    "calculator",
+    "tip calculator",
+    "math app"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "decimals",
+     "label": "Decimals to show",
+     "type": "number",
+     "min": 0,
+     "max": 12,
+     "step": 1,
+     "default": 10
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Turn it into a tip splitter",
+    "Add a history tape",
+    "Add a unit converter mode",
+    "Add scientific keys"
+   ],
+   "controls": "Click the keys or type; Enter equals, Esc clears, Backspace deletes.",
+   "size": 9355
+  },
+  {
+   "id": "chat",
+   "kind": "app",
+   "title": "Chat UI",
+   "summary": "Chat bubbles, names, times, a typing indicator and a pretend friend who answers. Wire it to a socket to make it real.",
+   "icon": "chat",
+   "tags": [
+    "chat",
+    "messaging",
+    "messenger",
+    "ui",
+    "bubbles"
+   ],
+   "phrases": [
+    "chat app",
+    "chat ui",
+    "messaging app",
+    "messenger clone"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "channel",
+     "label": "Channel name",
+     "type": "text",
+     "default": "#general"
+    },
+    {
+     "key": "friend",
+     "label": "Friend's name",
+     "type": "text",
+     "default": "Maya"
+    },
+    {
+     "key": "greeting",
+     "label": "First message",
+     "type": "text",
+     "default": "Hey! The build is up, have a look"
+    },
+    {
+     "key": "replies",
+     "label": "Pretend replies",
+     "type": "text",
+     "default": "Ooh, nice!|Show me when it works|I can take that one|Ha, same|Let's try it tonight"
+    },
+    {
+     "key": "replyMs",
+     "label": "Reply delay (ms)",
+     "type": "number",
+     "min": 200,
+     "max": 4000,
+     "step": 100,
+     "default": 900
+    },
+    {
+     "key": "mine",
+     "label": "My bubbles",
+     "type": "color",
+     "default": "#3A2416"
+    },
+    {
+     "key": "peer",
+     "label": "Names",
+     "type": "color",
+     "default": "#6C7CFF"
+    },
+    {
+     "key": "online",
+     "label": "Online dot",
+     "type": "color",
+     "default": "#3BD16F"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Add emoji reactions",
+    "Add channels in a sidebar",
+    "Make it real with a WebSocket server",
+    "Add image messages"
+   ],
+   "controls": "Type and press Enter.",
+   "size": 10488
+  },
+  {
+   "id": "dashboard",
+   "kind": "app",
+   "title": "Dashboard",
+   "summary": "KPI tiles, a line chart, top pages and a table from mock data, all plain SVG. Point it at a real API when you have one.",
+   "icon": "dashboard",
+   "tags": [
+    "dashboard",
+    "analytics",
+    "admin",
+    "charts",
+    "kpi",
+    "stats"
+   ],
+   "phrases": [
+    "dashboard app",
+    "admin dashboard",
+    "analytics dashboard",
+    "stats dashboard"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "Dashboard"
+    },
+    {
+     "key": "baseVisits",
+     "label": "Mock visits per day",
+     "type": "number",
+     "min": 50,
+     "max": 5000,
+     "step": 50,
+     "default": 400
+    },
+    {
+     "key": "seed",
+     "label": "Mock data seed",
+     "type": "number",
+     "min": 1,
+     "max": 9999,
+     "step": 1,
+     "default": 42
+    },
+    {
+     "key": "good",
+     "label": "Up color",
+     "type": "color",
+     "default": "#3BD16F"
+    },
+    {
+     "key": "bad",
+     "label": "Down color",
+     "type": "color",
+     "default": "#FF6F8E"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Load the numbers from a JSON file",
+    "Add a date picker",
+    "Add a map of visitors",
+    "Add a dark and light switch"
+   ],
+   "controls": "The range picker redraws everything.",
+   "size": 11147
+  },
+  {
+   "id": "kanban",
+   "kind": "app",
+   "title": "Kanban board",
+   "summary": "Columns and cards you drag between them, saved in the browser. The base for a task tracker, a CRM or a content calendar.",
+   "icon": "kanban",
+   "tags": [
+    "kanban",
+    "board",
+    "tasks",
+    "trello",
+    "project management"
+   ],
+   "phrases": [
+    "kanban board",
+    "kanban app",
+    "trello clone",
+    "task board app"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "Board"
+    },
+    {
+     "key": "columns",
+     "label": "Columns",
+     "type": "text",
+     "default": "To do|Doing|Done"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Add a column for Review",
+    "Add colored labels",
+    "Add who is on each card",
+    "Add due dates and a calendar view"
+   ],
+   "controls": "Drag cards between columns (arrow keys on a focused card; tap on a phone moves it on). Double-click renames.",
+   "size": 10783
+  },
+  {
+   "id": "memory",
+   "kind": "game",
+   "title": "Memory cards",
+   "summary": "Flip two, keep the pairs. A tidy card-game base (deck, shuffle, turns, score) to grow into Snap, Go Fish or solitaire.",
+   "icon": "cards",
+   "tags": [
+    "card game",
+    "cards",
+    "memory",
+    "pairs",
+    "concentration",
+    "puzzle"
+   ],
+   "phrases": [
+    "card game",
+    "memory game",
+    "matching pairs game",
+    "memory card game",
+    "concentration game"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "Memory cards"
+    },
+    {
+     "key": "pairs",
+     "label": "Pairs",
+     "type": "number",
+     "min": 2,
+     "max": 12,
+     "step": 1,
+     "default": 8,
+     "words": {
+      "up": "more cards|more pairs|harder",
+      "down": "fewer cards|fewer pairs|easier"
+     }
+    },
+    {
+     "key": "flipBackMs",
+     "label": "How long a wrong pair stays up (ms)",
+     "type": "number",
+     "min": 300,
+     "max": 2000,
+     "step": 100,
+     "default": 700
+    },
+    {
+     "key": "symbols",
+     "label": "Card faces",
+     "type": "text",
+     "default": "★ ♥ ♦ ♣ ♠ ☀ ☾ ♪ ⚑ ✿ ☂ ⚓"
+    },
+    {
+     "key": "back",
+     "label": "Card back",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "face",
+     "label": "Card face",
+     "type": "color",
+     "default": "#F8FAFC"
+    },
+    {
+     "key": "symbol",
+     "label": "Symbol color",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "table",
+     "label": "Buttons",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "bg",
+     "label": "Table",
+     "type": "color",
+     "default": "#12151A"
+    }
+   ],
+   "try": [
+    "Use our team's faces as the cards",
+    "Add a timer and a leaderboard",
+    "Make it two players taking turns",
+    "Turn it into Snap"
+   ],
+   "controls": "Click or tap two cards. New game deals again.",
+   "size": 9120
+  },
+  {
+   "id": "notes",
+   "kind": "app",
+   "title": "Notes",
+   "summary": "Sticky notes in Markdown that save themselves. Grow it into a journal, a wiki or a shared notebook.",
+   "icon": "notes",
+   "tags": [
+    "notes",
+    "notepad",
+    "markdown",
+    "journal",
+    "sticky notes"
+   ],
+   "phrases": [
+    "notes app",
+    "note taking app",
+    "notepad app",
+    "markdown notes app"
+   ],
+   "license": "MIT",
+   "by": "Brad Traversy and Florin Pop",
+   "source": "https://github.com/bradtraversy/50projects50days/tree/master/notes-app",
+   "original": false,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "Notes"
+    },
+    {
+     "key": "firstNote",
+     "label": "First note",
+     "type": "text",
+     "default": "# Welcome\nWrite in **Markdown**.\n- Click Edit to change me"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Add search",
+    "Add tags and a filter",
+    "Pin a note to the top",
+    "Export all notes as a Markdown file"
+   ],
+   "controls": "New note adds one. Edit switches between writing and reading.",
+   "size": 10549
+  },
+  {
+   "id": "platformer",
+   "kind": "game",
+   "title": "Tiny platformer",
+   "summary": "Run, jump, grab the gold and stomp the monsters. A whole platformer in one small file with a tile level you can redraw.",
+   "icon": "platformer",
+   "tags": [
+    "platformer",
+    "jump",
+    "side scroller",
+    "pixel",
+    "2d"
+   ],
+   "phrases": [
+    "platformer",
+    "jump and run game",
+    "jumping game",
+    "side scroller"
+   ],
+   "license": "MIT",
+   "by": "Jake Gordon and contributors",
+   "source": "https://github.com/jakesgordon/javascript-tiny-platformer",
+   "original": false,
+   "params": [
+    {
+     "key": "gravity",
+     "label": "Gravity",
+     "type": "number",
+     "min": 2,
+     "max": 14,
+     "step": 0.5,
+     "default": 6,
+     "words": {
+      "up": "heavier|more gravity|fall faster",
+      "down": "floaty|floatier|moon|less gravity|lighter"
+     }
+    },
+    {
+     "key": "speed",
+     "label": "Run speed",
+     "type": "number",
+     "min": 5,
+     "max": 30,
+     "step": 1,
+     "default": 15,
+     "words": {
+      "up": "faster|quicker|speedier",
+      "down": "slower"
+     }
+    },
+    {
+     "key": "jump",
+     "label": "Jump power",
+     "type": "number",
+     "min": 800,
+     "max": 2600,
+     "step": 50,
+     "default": 1500,
+     "words": {
+      "up": "jump higher|higher jumps|bigger jumps",
+      "down": "lower jumps|jump lower"
+     }
+    },
+    {
+     "key": "player",
+     "label": "Player color",
+     "type": "color",
+     "default": "#ECD078"
+    },
+    {
+     "key": "brick",
+     "label": "Brick color",
+     "type": "color",
+     "default": "#D95B43"
+    },
+    {
+     "key": "monster",
+     "label": "Monster color",
+     "type": "color",
+     "default": "#53777A"
+    },
+    {
+     "key": "gold",
+     "label": "Gold color",
+     "type": "color",
+     "default": "#FFD700"
+    },
+    {
+     "key": "bg",
+     "label": "Page background",
+     "type": "color",
+     "default": "#111111"
+    }
+   ],
+   "try": [
+    "Make the jumps floatier",
+    "Add a second level",
+    "Add a timer and a best time",
+    "Give the player a pixel-art sprite"
+   ],
+   "controls": "Left and Right to run, Space to jump. On a phone: hold the left or right third, tap the middle to jump.",
+   "size": 35698
+  },
+  {
+   "id": "pomodoro",
+   "kind": "app",
+   "title": "Pomodoro timer",
+   "summary": "Focus and break rounds with a progress ring, a round counter and a soft beep. A base for any timer or habit app.",
+   "icon": "timer",
+   "tags": [
+    "pomodoro",
+    "timer",
+    "focus",
+    "productivity",
+    "countdown"
+   ],
+   "phrases": [
+    "pomodoro timer",
+    "pomodoro app",
+    "focus timer",
+    "countdown timer app",
+    "timer app"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "Pomodoro"
+    },
+    {
+     "key": "focusMin",
+     "label": "Focus minutes",
+     "type": "number",
+     "min": 1,
+     "max": 90,
+     "step": 1,
+     "default": 25,
+     "words": {
+      "up": "longer focus",
+      "down": "shorter focus"
+     }
+    },
+    {
+     "key": "breakMin",
+     "label": "Break minutes",
+     "type": "number",
+     "min": 1,
+     "max": 30,
+     "step": 1,
+     "default": 5,
+     "words": {
+      "up": "longer breaks",
+      "down": "shorter breaks"
+     }
+    },
+    {
+     "key": "longBreakMin",
+     "label": "Long break minutes",
+     "type": "number",
+     "min": 5,
+     "max": 60,
+     "step": 1,
+     "default": 15
+    },
+    {
+     "key": "roundsBeforeLong",
+     "label": "Rounds before a long break",
+     "type": "number",
+     "min": 2,
+     "max": 8,
+     "step": 1,
+     "default": 4
+    },
+    {
+     "key": "autoStart",
+     "label": "Start the next round by itself",
+     "type": "bool",
+     "default": false
+    },
+    {
+     "key": "rest",
+     "label": "Break color",
+     "type": "color",
+     "default": "#38C6B1"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Add a task list beside the timer",
+    "Show a week of focus rounds",
+    "Add ambient sounds",
+    "Share a timer with the tribe"
+   ],
+   "controls": "Start, Pause, Reset and Skip.",
+   "size": 10843
+  },
+  {
+   "id": "runner",
+   "kind": "game",
+   "title": "Endless runner",
+   "summary": "Jump the obstacles as the world speeds up. One button, a best score, and room for power-ups, skins and levels.",
+   "icon": "runner",
+   "tags": [
+    "runner",
+    "endless runner",
+    "dino",
+    "one button",
+    "arcade",
+    "2d"
+   ],
+   "phrases": [
+    "endless runner",
+    "runner game",
+    "dino game",
+    "jump over obstacles game",
+    "infinite runner"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "title",
+     "label": "Game title",
+     "type": "text",
+     "default": "Endless runner"
+    },
+    {
+     "key": "speed",
+     "label": "Start speed",
+     "type": "number",
+     "min": 3,
+     "max": 14,
+     "step": 0.5,
+     "default": 6,
+     "words": {
+      "up": "faster|quicker|harder",
+      "down": "slower|easier"
+     }
+    },
+    {
+     "key": "speedUp",
+     "label": "Speed-up per frame",
+     "type": "number",
+     "min": 0,
+     "max": 0.01,
+     "step": 0.001,
+     "default": 0.002
+    },
+    {
+     "key": "gravity",
+     "label": "Gravity",
+     "type": "number",
+     "min": 0.3,
+     "max": 1.5,
+     "step": 0.05,
+     "default": 0.7,
+     "words": {
+      "up": "heavier|more gravity",
+      "down": "floaty|floatier|moon|less gravity"
+     }
+    },
+    {
+     "key": "jump",
+     "label": "Jump power",
+     "type": "number",
+     "min": 8,
+     "max": 18,
+     "step": 0.5,
+     "default": 12,
+     "words": {
+      "up": "jump higher|higher jumps|bigger jumps",
+      "down": "lower jumps"
+     }
+    },
+    {
+     "key": "gap",
+     "label": "Space between obstacles",
+     "type": "number",
+     "min": 40,
+     "max": 140,
+     "step": 5,
+     "default": 70
+    },
+    {
+     "key": "runner",
+     "label": "Runner color",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "obstacle",
+     "label": "Obstacle color",
+     "type": "color",
+     "default": "#FF6F8E"
+    },
+    {
+     "key": "sky",
+     "label": "Sky",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "hills",
+     "label": "Hills",
+     "type": "color",
+     "default": "#222833"
+    },
+    {
+     "key": "ground",
+     "label": "Ground",
+     "type": "color",
+     "default": "#2A313C"
+    },
+    {
+     "key": "bg",
+     "label": "Page background",
+     "type": "color",
+     "default": "#12151A"
+    }
+   ],
+   "try": [
+    "Make it floatier",
+    "Add coins to collect",
+    "Add a double jump",
+    "Swap the box for a pixel-art fox"
+   ],
+   "controls": "Space, Up or a tap to jump; hold for a higher jump.",
+   "size": 10249
+  },
+  {
+   "id": "sketch",
+   "kind": "app",
+   "title": "Sketch pad",
+   "summary": "Draw with a mouse, pen or finger, change the brush and color, save a PNG. A base for a doodle game or a whiteboard.",
+   "icon": "sketch",
+   "tags": [
+    "drawing",
+    "paint",
+    "sketch",
+    "doodle",
+    "canvas"
+   ],
+   "phrases": [
+    "drawing app",
+    "paint app",
+    "sketch app",
+    "doodle app"
+   ],
+   "license": "MIT",
+   "by": "Brad Traversy and Florin Pop",
+   "source": "https://github.com/bradtraversy/50projects50days/tree/master/drawing-app",
+   "original": false,
+   "params": [
+    {
+     "key": "brush",
+     "label": "Brush size",
+     "type": "number",
+     "min": 2,
+     "max": 50,
+     "step": 1,
+     "default": 10,
+     "words": {
+      "up": "bigger brush|thicker",
+      "down": "smaller brush|thinner"
+     }
+    },
+    {
+     "key": "ink2",
+     "label": "Starting ink",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "paper",
+     "label": "Paper",
+     "type": "color",
+     "default": "#F8FAFC"
+    },
+    {
+     "key": "fileName",
+     "label": "Saved file name",
+     "type": "text",
+     "default": "sketch"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Add an eraser",
+    "Add undo",
+    "Add stickers",
+    "Make it multiplayer with the tribe"
+   ],
+   "controls": "Draw with the mouse, a pen or a finger. − and + change the brush.",
+   "size": 10076
+  },
+  {
+   "id": "snake",
+   "kind": "game",
+   "title": "Snake",
+   "summary": "Eat, grow, don't bite yourself. A full Snake with modes, a high score and an on-screen pad for phones.",
+   "icon": "snake",
+   "tags": [
+    "snake",
+    "arcade",
+    "classic",
+    "retro",
+    "2d"
+   ],
+   "phrases": [
+    "snake game",
+    "snake",
+    "nokia snake",
+    "snake clone"
+   ],
+   "license": "MIT",
+   "by": "Patrick Gillespie and contributors",
+   "source": "https://github.com/patorjk/JavaScript-Snake",
+   "original": false,
+   "params": [
+    {
+     "key": "stepMs",
+     "label": "Milliseconds per move",
+     "type": "number",
+     "min": 30,
+     "max": 160,
+     "step": 5,
+     "default": 75,
+     "words": {
+      "down": "faster|quicker|harder",
+      "up": "slower|easier"
+     }
+    },
+    {
+     "key": "growth",
+     "label": "Growth per bite",
+     "type": "number",
+     "min": 1,
+     "max": 10,
+     "step": 1,
+     "default": 5,
+     "words": {
+      "up": "grow faster|longer",
+      "down": "grow slower|shorter"
+     }
+    },
+    {
+     "key": "snake",
+     "label": "Snake color",
+     "type": "color",
+     "default": "#38C6B1"
+    },
+    {
+     "key": "food",
+     "label": "Food color",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "field",
+     "label": "Field color",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "bg",
+     "label": "Page background",
+     "type": "color",
+     "default": "#12151A"
+    }
+   ],
+   "try": [
+    "Make it faster",
+    "Add walls that appear as you grow",
+    "Add a second snake for two players",
+    "Make the food a pixel-art apple"
+   ],
+   "controls": "Arrow keys or WASD steer, Space pauses. On a phone: the pad in the corner.",
+   "size": 64199
+  },
+  {
+   "id": "survey",
+   "kind": "app",
+   "title": "Form and survey",
+   "summary": "A step-by-step form with a progress bar, choices, a rating scale and validation, ending with the answers as JSON.",
+   "icon": "form",
+   "tags": [
+    "form",
+    "survey",
+    "questionnaire",
+    "feedback",
+    "signup",
+    "quiz"
+   ],
+   "phrases": [
+    "survey app",
+    "form builder",
+    "feedback form",
+    "signup form",
+    "questionnaire app"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "Quick survey"
+    },
+    {
+     "key": "scaleQuestion",
+     "label": "Rating question",
+     "type": "text",
+     "default": "How likely are you to tell a friend?"
+    },
+    {
+     "key": "scaleMax",
+     "label": "Rating scale up to",
+     "type": "number",
+     "min": 3,
+     "max": 10,
+     "step": 1,
+     "default": 10
+    },
+    {
+     "key": "thanks",
+     "label": "Thank-you line",
+     "type": "text",
+     "default": "Thank you! Here is what you sent:"
+    },
+    {
+     "key": "bad",
+     "label": "Error color",
+     "type": "color",
+     "default": "#FF6F8E"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Send the answers to a spreadsheet",
+    "Add a question that only shows for some answers",
+    "Make it a quiz with a score",
+    "Add a file upload"
+   ],
+   "controls": "Answer and press Next or Enter.",
+   "size": 11940
+  },
+  {
+   "id": "todo",
+   "kind": "app",
+   "title": "To-do list",
+   "summary": "Add, tick off and delete to-dos, saved in the browser. The smallest useful app to grow from.",
+   "icon": "todo",
+   "tags": [
+    "todo",
+    "to-do",
+    "tasks",
+    "checklist",
+    "list"
+   ],
+   "phrases": [
+    "to do list app",
+    "todo app",
+    "checklist app",
+    "task list app"
+   ],
+   "license": "MIT",
+   "by": "Brad Traversy and Florin Pop",
+   "source": "https://github.com/bradtraversy/50projects50days/tree/master/todo-list",
+   "original": false,
+   "params": [
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "text",
+     "default": "To-do"
+    },
+    {
+     "key": "starterItems",
+     "label": "Starter items",
+     "type": "text",
+     "default": "Sketch the idea|Pick a name|Show the tribe"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Add due dates",
+    "Add lists for each person",
+    "Sync it with the tribe's task board",
+    "Add a dark and light switch"
+   ],
+   "controls": "Type and press Enter to add. Click to mark done; ✕ or right-click to delete.",
+   "size": 9876
+  },
+  {
+   "id": "topdown",
+   "kind": "game",
+   "title": "Top-down arena",
+   "summary": "Move, aim and shoot while waves of slimes close in. A twin-stick arena to grow into a dungeon crawler or a survivor game.",
+   "icon": "topdown",
+   "tags": [
+    "top down",
+    "shooter",
+    "twin stick",
+    "arena",
+    "survivor",
+    "dungeon",
+    "2d"
+   ],
+   "phrases": [
+    "top down game",
+    "top down shooter",
+    "twin stick shooter",
+    "arena shooter",
+    "survivor game",
+    "dungeon crawler"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "speed",
+     "label": "Hero speed",
+     "type": "number",
+     "min": 1,
+     "max": 7,
+     "step": 0.5,
+     "default": 3,
+     "words": {
+      "up": "faster|quicker",
+      "down": "slower"
+     }
+    },
+    {
+     "key": "hearts",
+     "label": "Hearts",
+     "type": "number",
+     "min": 1,
+     "max": 9,
+     "step": 1,
+     "default": 3,
+     "words": {
+      "up": "more hearts|more lives|easier",
+      "down": "fewer hearts|fewer lives|harder"
+     }
+    },
+    {
+     "key": "foeSpeed",
+     "label": "Slime speed",
+     "type": "number",
+     "min": 0.4,
+     "max": 4,
+     "step": 0.1,
+     "default": 1.2,
+     "words": {
+      "up": "faster enemies|faster slimes",
+      "down": "slower enemies|slower slimes"
+     }
+    },
+    {
+     "key": "foesPerWave",
+     "label": "Slimes in the first wave",
+     "type": "number",
+     "min": 1,
+     "max": 12,
+     "step": 1,
+     "default": 3,
+     "words": {
+      "up": "more enemies|more slimes",
+      "down": "fewer enemies|fewer slimes"
+     }
+    },
+    {
+     "key": "bulletSpeed",
+     "label": "Shot speed",
+     "type": "number",
+     "min": 4,
+     "max": 16,
+     "step": 1,
+     "default": 9
+    },
+    {
+     "key": "hero",
+     "label": "Hero color",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "foe",
+     "label": "Slime color",
+     "type": "color",
+     "default": "#3BD16F"
+    },
+    {
+     "key": "bullet",
+     "label": "Shot color",
+     "type": "color",
+     "default": "#FABD2F"
+    },
+    {
+     "key": "floor",
+     "label": "Floor",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "grid",
+     "label": "Floor lines",
+     "type": "color",
+     "default": "#222833"
+    },
+    {
+     "key": "bg",
+     "label": "Page background",
+     "type": "color",
+     "default": "#12151A"
+    }
+   ],
+   "try": [
+    "Add a dash on Shift",
+    "Drop hearts from slimes",
+    "Add walls and rooms",
+    "Add a boss every fifth wave"
+   ],
+   "controls": "WASD or arrows to move, aim with the mouse, click or hold Space to shoot. On a phone: drag to move, tap to shoot.",
+   "size": 11373
+  },
+  {
+   "id": "weather",
+   "kind": "app",
+   "title": "Weather",
+   "summary": "Search a city, see today and five days ahead. Runs on mock data, with one function to swap for a real weather API.",
+   "icon": "weather",
+   "tags": [
+    "weather",
+    "forecast",
+    "api",
+    "fetch",
+    "mock data"
+   ],
+   "phrases": [
+    "weather app",
+    "forecast app",
+    "weather dashboard",
+    "api app"
+   ],
+   "license": "MIT",
+   "by": "TribeCode",
+   "source": "",
+   "original": true,
+   "params": [
+    {
+     "key": "city",
+     "label": "Starting city",
+     "type": "text",
+     "default": "Lisbon"
+    },
+    {
+     "key": "units",
+     "label": "Units (C or F)",
+     "type": "text",
+     "default": "C"
+    },
+    {
+     "key": "accent",
+     "label": "Accent",
+     "type": "color",
+     "default": "#F26B1D"
+    },
+    {
+     "key": "bg",
+     "label": "Background",
+     "type": "color",
+     "default": "#12151A"
+    },
+    {
+     "key": "surface",
+     "label": "Cards",
+     "type": "color",
+     "default": "#1B2028"
+    },
+    {
+     "key": "ink",
+     "label": "Text",
+     "type": "color",
+     "default": "#E7E9EE"
+    },
+    {
+     "key": "muted",
+     "label": "Quiet text",
+     "type": "color",
+     "default": "#94A3B8"
+    },
+    {
+     "key": "line",
+     "label": "Lines",
+     "type": "color",
+     "default": "#2A313C"
+    }
+   ],
+   "try": [
+    "Use the real Open-Meteo API",
+    "Remember the last cities",
+    "Add an hourly chart",
+    "Change the colors by the weather"
+   ],
+   "controls": "Type a city and press Show.",
+   "size": 9087
+  }
+ ]
+}

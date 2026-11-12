@@ -1,0 +1,106 @@
+{
+ "icon": "form",
+ "summary": "A step-by-step form with a progress bar, choices, a rating scale and validation, ending with the answers as JSON.",
+ "tags": [
+  "form",
+  "survey",
+  "questionnaire",
+  "feedback",
+  "signup",
+  "quiz"
+ ],
+ "phrases": [
+  "survey app",
+  "form builder",
+  "feedback form",
+  "signup form",
+  "questionnaire app"
+ ],
+ "controls": "Answer and press Next or Enter.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "Typeform-style one-question-at-a-time forms (no code copied)"
+ },
+ "params": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "default": "Quick survey"
+  },
+  {
+   "key": "scaleQuestion",
+   "label": "Rating question",
+   "type": "text",
+   "default": "How likely are you to tell a friend?"
+  },
+  {
+   "key": "scaleMax",
+   "label": "Rating scale up to",
+   "type": "number",
+   "min": 3,
+   "max": 10,
+   "step": 1,
+   "default": 10
+  },
+  {
+   "key": "thanks",
+   "label": "Thank-you line",
+   "type": "text",
+   "default": "Thank you! Here is what you sent:"
+  },
+  {
+   "key": "bad",
+   "label": "Error color",
+   "type": "color",
+   "default": "#FF6F8E"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Send the answers to a spreadsheet",
+  "Add a question that only shows for some answers",
+  "Make it a quiz with a score",
+  "Add a file upload"
+ ],
+ "id": "survey",
+ "kind": "app",
+ "title": "Form and survey"
+}

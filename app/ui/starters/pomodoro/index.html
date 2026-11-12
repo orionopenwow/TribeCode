@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pomodoro timer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="center">
+    <p class="muted mode" id="mode">Focus</p>
+    <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54" class="track"/><circle cx="60" cy="60" r="54" class="prog" id="prog"/></svg><b id="time">25:00</b></div>
+    <div class="row"><button class="btn primary" id="go" type="button">Start</button><button class="btn" id="reset" type="button">Reset</button><button class="btn" id="skip" type="button">Skip</button></div>
+    <p class="muted" id="count"></p>
+    <label class="task"><span class="muted">Working on</span><input class="input" id="task" placeholder="What are you focusing on?" autocomplete="off"></label>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

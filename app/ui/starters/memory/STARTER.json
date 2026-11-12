@@ -1,0 +1,20 @@
+{
+ "id": "memory", "kind": "game", "icon": "cards", "title": "Memory cards",
+ "summary": "Flip two, keep the pairs. A tidy card-game base (deck, shuffle, turns, score) to grow into Snap, Go Fish or solitaire.",
+ "tags": ["card game", "cards", "memory", "pairs", "concentration", "puzzle"],
+ "phrases": ["card game", "memory game", "matching pairs game", "memory card game", "concentration game"],
+ "controls": "Click or tap two cards. New game deals again.",
+ "source": { "original": true, "license": "MIT", "inspired": "the traditional Concentration card game" },
+ "params": [
+  { "key": "title", "label": "Title", "type": "text", "default": "Memory cards" },
+  { "key": "pairs", "label": "Pairs", "type": "number", "min": 2, "max": 12, "step": 1, "default": 8, "words": { "up": "more cards|more pairs|harder", "down": "fewer cards|fewer pairs|easier" } },
+  { "key": "flipBackMs", "label": "How long a wrong pair stays up (ms)", "type": "number", "min": 300, "max": 2000, "step": 100, "default": 700 },
+  { "key": "symbols", "label": "Card faces", "type": "text", "default": "★ ♥ ♦ ♣ ♠ ☀ ☾ ♪ ⚑ ✿ ☂ ⚓", "hint": "separated by spaces; emoji work too" },
+  { "key": "back", "label": "Card back", "type": "color", "default": "#F26B1D", "main": true },
+  { "key": "face", "label": "Card face", "type": "color", "default": "#F8FAFC" },
+  { "key": "symbol", "label": "Symbol color", "type": "color", "default": "#12151A" },
+  { "key": "table", "label": "Buttons", "type": "color", "default": "#1B2028" },
+  { "key": "bg", "label": "Table", "type": "color", "default": "#12151A" }
+ ],
+ "try": ["Use our team's faces as the cards", "Add a timer and a leaderboard", "Make it two players taking turns", "Turn it into Snap"]
+}

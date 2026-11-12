@@ -1,0 +1,21 @@
+{
+ "id": "blocks", "kind": "game", "icon": "puzzle", "title": "Falling blocks",
+ "summary": "The falling-blocks puzzle: rotate, slide, clear rows, go faster. Clean, readable code with a next-piece preview.",
+ "tags": ["puzzle", "tetris", "falling blocks", "tetromino", "arcade"],
+ "phrases": ["tetris game", "tetris clone", "falling blocks game", "block puzzle game", "tetromino game"],
+ "controls": "Arrows: Left and Right move, Up rotates, Down drops. Space starts. On a phone: the buttons under the board.",
+ "source": { "name": "javascript-tetris", "repo": "jakesgordon/javascript-tetris", "url": "https://github.com/jakesgordon/javascript-tetris", "license": "MIT", "authors": "Jake Gordon and contributors",
+   "changes": "the script and styles moved into game.js and style.css, the drop speed and piece colors read config.js, the FPS stats and background texture are gone, touch buttons and a dark look." },
+ "params": [
+  { "key": "dropTime", "label": "Seconds per row at the start", "type": "number", "min": 0.1, "max": 1.5, "step": 0.05, "default": 0.6, "hint": "lower is faster", "words": { "down": "faster|quicker|harder", "up": "slower|easier" } },
+  { "key": "c1", "label": "I piece", "type": "color", "default": "#38C6B1", "main": true },
+  { "key": "c2", "label": "J piece", "type": "color", "default": "#6C7CFF" },
+  { "key": "c3", "label": "L piece", "type": "color", "default": "#F26B1D" },
+  { "key": "c4", "label": "O piece", "type": "color", "default": "#FABD2F" },
+  { "key": "c5", "label": "S piece", "type": "color", "default": "#3BD16F" },
+  { "key": "c6", "label": "T piece", "type": "color", "default": "#A78BFA" },
+  { "key": "c7", "label": "Z piece", "type": "color", "default": "#FF6F8E" },
+  { "key": "bg", "label": "Page background", "type": "color", "default": "#0E1014" }
+ ],
+ "try": ["Start slower", "Add a hold piece", "Add a ghost piece that shows where it lands", "Add a high score"]
+}

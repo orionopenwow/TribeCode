@@ -1,0 +1,20 @@
+{
+ "id": "platformer", "kind": "game", "icon": "platformer", "title": "Tiny platformer",
+ "summary": "Run, jump, grab the gold and stomp the monsters. A whole platformer in one small file with a tile level you can redraw.",
+ "tags": ["platformer", "jump", "side scroller", "pixel", "2d"],
+ "phrases": ["platformer", "jump and run game", "jumping game", "side scroller"],
+ "controls": "Left and Right to run, Space to jump. On a phone: hold the left or right third, tap the middle to jump.",
+ "source": { "name": "javascript-tiny-platformer", "repo": "jakesgordon/javascript-tiny-platformer", "url": "https://github.com/jakesgordon/javascript-tiny-platformer", "license": "MIT", "authors": "Jake Gordon and contributors",
+   "changes": "the physics and colors read config.js, the FPS meter is gone, touch controls added, the page fits any screen." },
+ "params": [
+  { "key": "gravity", "label": "Gravity", "type": "number", "min": 2, "max": 14, "step": 0.5, "default": 6, "hint": "higher falls faster", "words": { "up": "heavier|more gravity|fall faster", "down": "floaty|floatier|moon|less gravity|lighter" } },
+  { "key": "speed", "label": "Run speed", "type": "number", "min": 5, "max": 30, "step": 1, "default": 15, "hint": "tiles per second", "words": { "up": "faster|quicker|speedier", "down": "slower" } },
+  { "key": "jump", "label": "Jump power", "type": "number", "min": 800, "max": 2600, "step": 50, "default": 1500, "words": { "up": "jump higher|higher jumps|bigger jumps", "down": "lower jumps|jump lower" } },
+  { "key": "player", "label": "Player color", "type": "color", "default": "#ECD078", "main": true },
+  { "key": "brick", "label": "Brick color", "type": "color", "default": "#D95B43" },
+  { "key": "monster", "label": "Monster color", "type": "color", "default": "#53777A" },
+  { "key": "gold", "label": "Gold color", "type": "color", "default": "#FFD700" },
+  { "key": "bg", "label": "Page background", "type": "color", "default": "#111111" }
+ ],
+ "try": ["Make the jumps floatier", "Add a second level", "Add a timer and a best time", "Give the player a pixel-art sprite"]
+}

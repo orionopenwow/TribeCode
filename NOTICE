@@ -22,3 +22,24 @@ SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 -------------------------------------------------------------------------------
 Fonts in app/ui/assets/site-fonts: SIL Open Font License 1.1 (licenses alongside the files).
 Anthropic's public frontend-design skill (Apache-2.0) informed the website design rules (docs/WEBSITE-GENERATOR.md).
+
+<!-- starters:begin -->
+App and game starters (app/ui/starters/, docs/STARTERS.md). Each folder keeps its original LICENSE.
+- blocks: adapted from https://github.com/jakesgordon/javascript-tetris by Jake Gordon and contributors, MIT
+- breakout: adapted from https://github.com/end3r/Gamedev-Canvas-workshop by Andrzej Mazur and Mozilla contributors, CC0-1.0
+- calculator: original TribeCode starter, MIT
+- chat: original TribeCode starter, MIT
+- dashboard: original TribeCode starter, MIT
+- kanban: original TribeCode starter, MIT
+- memory: original TribeCode starter, MIT
+- notes: adapted from https://github.com/bradtraversy/50projects50days/tree/master/notes-app by Brad Traversy and Florin Pop, MIT
+- platformer: adapted from https://github.com/jakesgordon/javascript-tiny-platformer by Jake Gordon and contributors, MIT
+- pomodoro: original TribeCode starter, MIT
+- runner: original TribeCode starter, MIT
+- sketch: adapted from https://github.com/bradtraversy/50projects50days/tree/master/drawing-app by Brad Traversy and Florin Pop, MIT
+- snake: adapted from https://github.com/patorjk/JavaScript-Snake by Patrick Gillespie and contributors, MIT
+- survey: original TribeCode starter, MIT
+- todo: adapted from https://github.com/bradtraversy/50projects50days/tree/master/todo-list by Brad Traversy and Florin Pop, MIT
+- topdown: original TribeCode starter, MIT
+- weather: original TribeCode starter, MIT
+<!-- starters:end -->

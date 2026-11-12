@@ -1,0 +1,19 @@
+/* the shared look: flat, 1px borders; colors come from config.js (--bg, --surface, --accent, --ink, --muted, --line) */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg, #12151A); color: var(--ink, #E7E9EE); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 22px; margin: 0 0 4px; } .muted { color: var(--muted, #94A3B8); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--accent, #F26B1D); border-color: var(--accent, #F26B1D); color: #fff; }
+.input { width: 100%; background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 10px 12px; }
+.input:focus, .btn:focus-visible { outline: 2px solid var(--accent, #F26B1D); outline-offset: 1px; }
+.card { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 12px; padding: 14px; }
+.center { text-align: center; max-width: 420px; }
+.mode { font: 12px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; }
+.ring { position: relative; width: min(280px, 80vw); margin: 10px auto 20px; } .ring svg { width: 100%; display: block; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 6; } .track { stroke: var(--line, #2A313C); } .prog { stroke: var(--accent, #F26B1D); stroke-linecap: round; stroke-dasharray: 339.3; transition: stroke-dashoffset 300ms linear; }
+body.rest .prog { stroke: var(--rest, #38C6B1); }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font: 600 52px/1 ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 8px; justify-content: center; } .task { display: grid; gap: 6px; text-align: left; margin-top: 24px; }
+@media (prefers-reduced-motion: reduce) { .prog { transition: none; } }

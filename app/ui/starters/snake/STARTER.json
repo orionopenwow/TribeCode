@@ -1,0 +1,18 @@
+{
+ "id": "snake", "kind": "game", "icon": "snake", "title": "Snake",
+ "summary": "Eat, grow, don't bite yourself. A full Snake with modes, a high score and an on-screen pad for phones.",
+ "tags": ["snake", "arcade", "classic", "retro", "2d"],
+ "phrases": ["snake game", "snake", "nokia snake", "snake clone"],
+ "controls": "Arrow keys or WASD steer, Space pauses. On a phone: the pad in the corner.",
+ "source": { "name": "JavaScript-Snake", "repo": "patorjk/JavaScript-Snake", "url": "https://github.com/patorjk/JavaScript-Snake", "license": "MIT", "authors": "Patrick Gillespie and contributors",
+   "changes": "one flat theme with colors from config.js instead of the theme picker and its fonts and images, the speed and growth read config.js, a high score store that works in a sandboxed preview, no console logging." },
+ "params": [
+  { "key": "stepMs", "label": "Milliseconds per move", "type": "number", "min": 30, "max": 160, "step": 5, "default": 75, "hint": "lower is faster", "words": { "down": "faster|quicker|harder", "up": "slower|easier" } },
+  { "key": "growth", "label": "Growth per bite", "type": "number", "min": 1, "max": 10, "step": 1, "default": 5, "words": { "up": "grow faster|longer", "down": "grow slower|shorter" } },
+  { "key": "snake", "label": "Snake color", "type": "color", "default": "#38C6B1", "main": true },
+  { "key": "food", "label": "Food color", "type": "color", "default": "#F26B1D" },
+  { "key": "field", "label": "Field color", "type": "color", "default": "#1B2028" },
+  { "key": "bg", "label": "Page background", "type": "color", "default": "#12151A" }
+ ],
+ "try": ["Make it faster", "Add walls that appear as you grow", "Add a second snake for two players", "Make the food a pixel-art apple"]
+}

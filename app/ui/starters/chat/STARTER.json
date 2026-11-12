@@ -1,0 +1,123 @@
+{
+ "icon": "chat",
+ "summary": "Chat bubbles, names, times, a typing indicator and a pretend friend who answers. Wire it to a socket to make it real.",
+ "tags": [
+  "chat",
+  "messaging",
+  "messenger",
+  "ui",
+  "bubbles"
+ ],
+ "phrases": [
+  "chat app",
+  "chat ui",
+  "messaging app",
+  "messenger clone"
+ ],
+ "controls": "Type and press Enter.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "TribeCode's own chat bubbles (docs/DESIGN-SYSTEM.md › Chat)"
+ },
+ "params": [
+  {
+   "key": "channel",
+   "label": "Channel name",
+   "type": "text",
+   "default": "#general"
+  },
+  {
+   "key": "friend",
+   "label": "Friend's name",
+   "type": "text",
+   "default": "Maya"
+  },
+  {
+   "key": "greeting",
+   "label": "First message",
+   "type": "text",
+   "default": "Hey! The build is up, have a look"
+  },
+  {
+   "key": "replies",
+   "label": "Pretend replies",
+   "type": "text",
+   "default": "Ooh, nice!|Show me when it works|I can take that one|Ha, same|Let's try it tonight",
+   "hint": "separated by |"
+  },
+  {
+   "key": "replyMs",
+   "label": "Reply delay (ms)",
+   "type": "number",
+   "min": 200,
+   "max": 4000,
+   "step": 100,
+   "default": 900
+  },
+  {
+   "key": "mine",
+   "label": "My bubbles",
+   "type": "color",
+   "default": "#3A2416"
+  },
+  {
+   "key": "peer",
+   "label": "Names",
+   "type": "color",
+   "default": "#6C7CFF"
+  },
+  {
+   "key": "online",
+   "label": "Online dot",
+   "type": "color",
+   "default": "#3BD16F"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Add emoji reactions",
+  "Add channels in a sidebar",
+  "Make it real with a WebSocket server",
+  "Add image messages"
+ ],
+ "id": "chat",
+ "kind": "app",
+ "title": "Chat UI"
+}

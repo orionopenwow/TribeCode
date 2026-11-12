@@ -1,0 +1,86 @@
+{
+ "icon": "notes",
+ "summary": "Sticky notes in Markdown that save themselves. Grow it into a journal, a wiki or a shared notebook.",
+ "tags": [
+  "notes",
+  "notepad",
+  "markdown",
+  "journal",
+  "sticky notes"
+ ],
+ "phrases": [
+  "notes app",
+  "note taking app",
+  "notepad app",
+  "markdown notes app"
+ ],
+ "controls": "New note adds one. Edit switches between writing and reading.",
+ "source": {
+  "name": "50projects50days › notes-app",
+  "repo": "bradtraversy/50projects50days",
+  "url": "https://github.com/bradtraversy/50projects50days/tree/master/notes-app",
+  "license": "MIT",
+  "authors": "Brad Traversy and Florin Pop",
+  "changes": "a small safe Markdown renderer instead of the marked CDN, text buttons instead of the Font Awesome CDN, a grid layout, starter text from config.js, a store that works in a sandboxed preview."
+ },
+ "params": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "default": "Notes"
+  },
+  {
+   "key": "firstNote",
+   "label": "First note",
+   "type": "text",
+   "default": "# Welcome\nWrite in **Markdown**.\n- Click Edit to change me"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Add search",
+  "Add tags and a filter",
+  "Pin a note to the top",
+  "Export all notes as a Markdown file"
+ ],
+ "id": "notes",
+ "kind": "app",
+ "title": "Notes"
+}

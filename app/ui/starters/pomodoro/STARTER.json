@@ -1,0 +1,134 @@
+{
+ "icon": "timer",
+ "summary": "Focus and break rounds with a progress ring, a round counter and a soft beep. A base for any timer or habit app.",
+ "tags": [
+  "pomodoro",
+  "timer",
+  "focus",
+  "productivity",
+  "countdown"
+ ],
+ "phrases": [
+  "pomodoro timer",
+  "pomodoro app",
+  "focus timer",
+  "countdown timer app",
+  "timer app"
+ ],
+ "controls": "Start, Pause, Reset and Skip.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "the Pomodoro Technique by Francesco Cirillo"
+ },
+ "params": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "default": "Pomodoro"
+  },
+  {
+   "key": "focusMin",
+   "label": "Focus minutes",
+   "type": "number",
+   "min": 1,
+   "max": 90,
+   "step": 1,
+   "default": 25,
+   "words": {
+    "up": "longer focus",
+    "down": "shorter focus"
+   }
+  },
+  {
+   "key": "breakMin",
+   "label": "Break minutes",
+   "type": "number",
+   "min": 1,
+   "max": 30,
+   "step": 1,
+   "default": 5,
+   "words": {
+    "up": "longer breaks",
+    "down": "shorter breaks"
+   }
+  },
+  {
+   "key": "longBreakMin",
+   "label": "Long break minutes",
+   "type": "number",
+   "min": 5,
+   "max": 60,
+   "step": 1,
+   "default": 15
+  },
+  {
+   "key": "roundsBeforeLong",
+   "label": "Rounds before a long break",
+   "type": "number",
+   "min": 2,
+   "max": 8,
+   "step": 1,
+   "default": 4
+  },
+  {
+   "key": "autoStart",
+   "label": "Start the next round by itself",
+   "type": "bool",
+   "default": false
+  },
+  {
+   "key": "rest",
+   "label": "Break color",
+   "type": "color",
+   "default": "#38C6B1"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Add a task list beside the timer",
+  "Show a week of focus rounds",
+  "Add ambient sounds",
+  "Share a timer with the tribe"
+ ],
+ "id": "pomodoro",
+ "kind": "app",
+ "title": "Pomodoro timer"
+}

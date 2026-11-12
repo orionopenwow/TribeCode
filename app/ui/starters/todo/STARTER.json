@@ -1,0 +1,87 @@
+{
+ "icon": "todo",
+ "summary": "Add, tick off and delete to-dos, saved in the browser. The smallest useful app to grow from.",
+ "tags": [
+  "todo",
+  "to-do",
+  "tasks",
+  "checklist",
+  "list"
+ ],
+ "phrases": [
+  "to do list app",
+  "todo app",
+  "checklist app",
+  "task list app"
+ ],
+ "controls": "Type and press Enter to add. Click to mark done; ✕ or right-click to delete.",
+ "source": {
+  "name": "50projects50days › todo-list",
+  "repo": "bradtraversy/50projects50days",
+  "url": "https://github.com/bradtraversy/50projects50days/tree/master/todo-list",
+  "license": "MIT",
+  "authors": "Brad Traversy and Florin Pop",
+  "changes": "the title and starter items read config.js, a delete button and a \"left to do\" count, the flat look, a store that works in a sandboxed preview."
+ },
+ "params": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "default": "To-do"
+  },
+  {
+   "key": "starterItems",
+   "label": "Starter items",
+   "type": "text",
+   "default": "Sketch the idea|Pick a name|Show the tribe",
+   "hint": "separated by |"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Add due dates",
+  "Add lists for each person",
+  "Sync it with the tribe's task board",
+  "Add a dark and light switch"
+ ],
+ "id": "todo",
+ "kind": "app",
+ "title": "To-do list"
+}

@@ -1,0 +1,108 @@
+{
+ "icon": "dashboard",
+ "summary": "KPI tiles, a line chart, top pages and a table from mock data, all plain SVG. Point it at a real API when you have one.",
+ "tags": [
+  "dashboard",
+  "analytics",
+  "admin",
+  "charts",
+  "kpi",
+  "stats"
+ ],
+ "phrases": [
+  "dashboard app",
+  "admin dashboard",
+  "analytics dashboard",
+  "stats dashboard"
+ ],
+ "controls": "The range picker redraws everything.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "analytics dashboards like Plausible (no code copied)"
+ },
+ "params": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "default": "Dashboard"
+  },
+  {
+   "key": "baseVisits",
+   "label": "Mock visits per day",
+   "type": "number",
+   "min": 50,
+   "max": 5000,
+   "step": 50,
+   "default": 400
+  },
+  {
+   "key": "seed",
+   "label": "Mock data seed",
+   "type": "number",
+   "min": 1,
+   "max": 9999,
+   "step": 1,
+   "default": 42
+  },
+  {
+   "key": "good",
+   "label": "Up color",
+   "type": "color",
+   "default": "#3BD16F"
+  },
+  {
+   "key": "bad",
+   "label": "Down color",
+   "type": "color",
+   "default": "#FF6F8E"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Load the numbers from a JSON file",
+  "Add a date picker",
+  "Add a map of visitors",
+  "Add a dark and light switch"
+ ],
+ "id": "dashboard",
+ "kind": "app",
+ "title": "Dashboard"
+}
