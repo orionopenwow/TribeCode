@@ -89,7 +89,9 @@
     const b = base(); if (!force && srv.base === b) return srv.on;
     let on = false;
     if (OFF() && OFF().active && OFF().active() && !(OFF().solo && OFF().solo())) { srv = { base: b, on }; return on; }   // feat/demo-auto: a demo asks no server
-    if (b || /^https?:$/.test(location.protocol)) try { const r = await net(b + '/api/accounts/me', { credentials: 'omit' }); on = r.status === 401 || r.ok; } catch {}
+    // a project only on this device (solo, no home chosen yet) asks the server nothing on its own (setup-local's rule); opening Log in (force) still checks
+    if (!force && OFF() && OFF().solo && OFF().solo()) { srv = { base: b, on }; return on; }
+    if (b || /^https?:$/.test(location.protocol)) try { const r = await net(b + '/api/accounts/me', { credentials: 'omit' }); on = r.status === 401 || (r.ok && (await r.json().catch(() => ({}))).on !== false); } catch {}
     srv = { base: b, on }; return on;
   }
   async function acctApi(path, { method = 'GET', body, token } = {}) {
@@ -246,7 +248,7 @@
     const af = sheet.querySelector('#ac-acct-form');
     af.onsubmit = e => { e.preventDefault(); acctSubmit(af, 'login'); };
     af.querySelector('[data-acf="signup"]').onclick = () => acctSubmit(af, 'signup');
-    const sh = sheet; serverOn().then(on => {
+    const sh = sheet; serverOn(true).then(on => {
       const x = sh.querySelector('#ac-acct'); if (!x || sheet !== sh) return; x.hidden = !on;
       if (on && prefill) { sh.querySelector('#ac-user').value = prefill; sh.querySelector('#ac-pass').focus(); }
     });

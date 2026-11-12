@@ -268,7 +268,8 @@ def main():
             b.close()
 
         # ---- the server scaffold: off by default
-        st, r = api("/accounts/me", base=f"http://localhost:{PORT_OFF}"); assert st == 404 and "TRIBE_ACCOUNTS" in r.get("error", ""), (st, r)
+        st, r = api("/accounts/me", base=f"http://localhost:{PORT_OFF}"); assert st == 200 and r == {"on": False}, (st, r)   # off: a calm answer to the app's check
+        st, r = api("/accounts/login", base=f"http://localhost:{PORT_OFF}"); assert st == 404 and "TRIBE_ACCOUNTS" in r.get("error", ""), (st, r)
         # on: existing members are mapped to accounts without touching their keys
         st, r = api("/accounts/signup", "POST", {"username": "  Maya   Lee ", "password": "correct horse"}); assert st == 200, (st, r)
         maya = r["token"]; assert maya.startswith("tca_") and r["account"]["username"] == "Maya Lee" and r["account"]["hasPassword"], r

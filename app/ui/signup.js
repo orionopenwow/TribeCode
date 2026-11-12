@@ -357,7 +357,9 @@
     const hub = $('#view-hub');
     if (hub) new MutationObserver(() => { if (lsGet(NEXT) && !hub.querySelector('#sg-next')) nextCard(); }).observe(hub, { childList: true });
     if (lsGet(NEXT)) nextCard();
-    if (A() && A().upgradable()) A().serverOn();   // so the menu and Log out know whether to offer an account
+    // so the menu and Log out know whether to offer an account: asked once a tribe answers, never before a home is chosen (setup-local's rule)
+    const C = window.TribeClient, probe = () => { if (A() && A().upgradable()) A().serverOn(); };
+    if (C && C.connected && C.connected()) probe(); else if (C && C.on) C.on('hello', probe);
     const q = new URLSearchParams(location.search).get('signup');
     if (q) setTimeout(() => open(q === 'create' ? 'create' : 'start'), 250);
   });

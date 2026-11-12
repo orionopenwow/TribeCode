@@ -137,6 +137,8 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
 
   // Returns true when it answered the request.
   async function route(req, res, { b, c, m, readBody, send, fail }) {
+    // the app's "does this server have accounts?" check gets a calm answer instead of a 404 in the console
+    if (!enabled() && req.method === 'GET' && b === 'me' && !c) { send(res, 200, { on: false }); return true; }
     if (!enabled()) { fail(res, 404, 'accounts are off on this server (TRIBE_ACCOUNTS=1 turns them on)'); return true; }
     if (!isLocal(req)) { fail(res, 403, 'accounts are local-only for now'); return true; }
     const tooMany = () => { res.setHeader('Retry-After', '60'); fail(res, 429, 'too many tries in a row: wait a minute, then try again'); return true; };
