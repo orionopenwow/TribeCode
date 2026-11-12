@@ -12,6 +12,10 @@ Every doc, sheet and deck in Files exports from its own menu (app/ui/exporter.js
 - **Save to Desktop** (the desktop app on the host computer): writes to `Desktop/TribeCode Projects/<project>/Exports/` and opens the folder. Elsewhere the file downloads.
 - Start one fast: the chat's **+ › Doc, sheet or slides**, the dashboard's quick actions, or Ctrl K › New doc / New sheet / New slides.
 
+## Proof of work (Flint)
+
+"Export the proof of work" (or the end of Help › Watch Flint build) packs a project's code, docs, design, chat, tasks and timeline into `<project>-proof.zip`, and the whole tribe into `tribe-<name>-proof.zip`, with the same ZIP writer. The host keeps them in `<tribe folder>/exports/`; they download in the browser too. Layout: [FLINT-TIERS.md](FLINT-TIERS.md#watch-flint-build-and-proof-of-work).
+
 ## Planned: Google Drive
 
 Link a Google account (the Google sign-in already in Settings › Sign-in) with the `drive.file` scope, which only touches files TribeCode creates. Then: Save to Drive as a Google Doc, Sheet or Slides (converted on upload), and keep a linked copy that updates when the project's file changes. Needs a Google Cloud OAuth client and Google's app verification before public launch.

@@ -112,9 +112,62 @@ Tests: `app/test/e2e_flint_free.py`, `app/test/e2e_flint_local.py`, `app/test/fl
   and app.
 - **✦ everyday help.** See [DESIGN-SYSTEM.md §11](DESIGN-SYSTEM.md#11-basic-features-supercharged-by-ai).
 
+## Watch Flint build and proof of work
+
+`app/ui/flintrun.js` (Help › Watch Flint build, "watch flint build", `scripts/flint-runthrough.js`). Flint drives the real
+app with his normal commands, one caption per step, checks each step through the API, then exports two ZIPs with the
+existing ZIP writer (`TribeExport.zip`), saved by the host in `<tribe>/exports/` (`server/flintrun.js`) and downloadable:
+
+```
+<project>-proof.zip                           tribe-<name>-proof.zip
+  README.md          what Flint built            README.md
+  TIMELINE.md        every step, time, command   TIMELINE.md, timeline.json
+  timeline.json      + Flint's reply + check     tribe/manifest.json
+  tribe/manifest.json  tribe, members, projects  projects/<project>/…   the project's proof (all of the left)
+  website/           the site (template + edit)  projects/<other>/…     each other project's
+  game/              the game from the starter                           tasks, docs, chat, vision
+  builds/            other builds
+  docs/*.md          docs from templates + the presentation deck
+  design/            design.svg, design.png, canvas.json
+  chat/              transcript.md, messages.json
+  tasks/             board.json, board.md
+  vision/VISION.md, company/company.json, proposals/proposals.json
+  presentation/      index.html (standalone), slides.md
+```
+
+New commands it uses (also usable on their own): "start a tribe called …", "start a project called …", "set the vision
+to: …", "propose: …", "approve the proposal", "run the standup", "change the website headline to …", "make the product
+presentation", "export the proof of work", "make a blender turntable [for model.glb]" ([FLINT-CREATORS.md](FLINT-CREATORS.md)).
+
+## Local document smarts
+
+`app/ui/localdoc.js` (shared by the browser and the server) reads any text with no model: **summarize** (extractive,
+TextRank-lite: a sentence graph by shared words, PageRank, a small lead and heading bonus, near-duplicates dropped),
+**key points and action items**, **title ideas**, **tags**, **reading time and outline**, and **explain like I'm new** (a
+glossary from the text's own definitions, "Model Context Protocol (MCP)", and ~90 plain-language basics). Text comes from
+docs, notes, chat, and repo files (txt, md, html, json, csv and the text layer of PDFs, `GET /api/ai/extract`).
+Each is a ✦ in the doc and note toolbars and a Flint command ("summarize the doc called …", "key points of this doc",
+"suggest tags for …", "how long to read …", "explain the terms in …", "summarize the file brief.pdf", "summarize the chat").
+With an AI on, the same answer is refined in place (`POST /api/ai/refine`, kinds `doc.summary`, `doc.points`,
+`doc.title`, `doc.tags`, `doc.read`, `doc.glossary`) and says "via …". The docs API's summarize (`POST
+/api/docs/:slug/summarize`) falls back to the extractive summary when there is no local brain. Test:
+`app/test/e2e_local_summarize.py`.
+
 ## Abilities log
 
 Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
+
+- **2026-11-11** (feat/flint-runthrough)
+  - Watch Flint build: a 17-step run-through that drives the real app with his normal commands, one caption per step, checked through the API (free · no AI; captions refined by AI when on).
+  - Proof of work: `<project>-proof.zip` and `tribe-<name>-proof.zip` in `<tribe>/exports/` and as downloads: code, docs, design SVG + PNG, chat, tasks, timeline, manifest, README, presentation (free · no AI).
+  - Starts a tribe (or renames it) and a project by name; sets the vision from one sentence (free · no AI).
+  - Proposes, and approves a proposal (free · no AI).
+  - Runs the daily standup from the board and posts it in chat; pings company seats when it's a company (free · no AI).
+  - Changes the website's headline and saves it as a version (free · no AI).
+  - Makes the product presentation: a deck in Files plus a standalone page (free · no AI).
+  - Summarizes any doc, note, repo file (txt, md, html, json, csv, PDF text) or the chat with no model, extractive TextRank-lite; the chat summary no longer needs a brain (free · no AI; refined by AI when on).
+  - Key points and action items (Add to Tasks), title ideas (one tap sets the title), tag ideas, reading time and outline, and an "explain like I'm new" glossary (free · no AI; refined by AI when on).
+  - Blender bridge stub: writes a turntable-render Python script for you to run in your own Blender; nothing runs on its own (free · no AI). Plan in [FLINT-CREATORS.md](FLINT-CREATORS.md).
 
 - **2026-11-10** (feat/flint-ai)
   - Flint on the Dashboard, working with no tribe (free · no AI).
