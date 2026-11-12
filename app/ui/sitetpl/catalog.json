@@ -158,7 +158,7 @@
   {
    "id": "sb-small-business",
    "title": "Small Business",
-   "summary": "A small company: a picture and a pitch, a call-out band and three cards.",
+   "summary": "A small company: a picture and a pitch, a call-out band, three services, reviews, hours and a quote form.",
    "category": "Business",
    "tags": [
     "small business",
@@ -461,7 +461,7 @@
   {
    "id": "sb-personal",
    "title": "Personal",
-   "summary": "A personal home page: who you are, what you do, a resume and projects.",
+   "summary": "A personal home page: who you are, what you do, selected projects, experience and how to reach you.",
    "category": "Personal",
    "tags": [
     "personal",
@@ -494,7 +494,7 @@
   {
    "id": "h5-dimension",
    "title": "Dimension",
-   "summary": "A dark single screen with intro, work, about and contact.",
+   "summary": "A dark one-screen personal site: a name, four sections (intro, work, about, contact) and nothing else.",
    "category": "Personal",
    "tags": [
     "personal",
@@ -830,7 +830,7 @@
   {
    "id": "h5-eventually",
    "title": "Eventually",
-   "summary": "A coming-soon screen with one line and a signup.",
+   "summary": "A coming-soon screen: one big line, an email signup, what's coming and where to follow along.",
    "category": "Coming soon",
    "tags": [
     "coming soon",

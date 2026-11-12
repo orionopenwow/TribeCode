@@ -321,7 +321,7 @@
    "name": "personal",
    "title": "Personal",
    "category": "Personal",
-   "summary": "A personal home page: who you are, what you do, a resume and projects.",
+   "summary": "A personal home page: who you are, what you do, selected projects, experience and how to reach you.",
    "tags": [
     "personal",
     "resume",
@@ -332,8 +332,178 @@
    "ink": "#212529",
    "display": "Space Grotesk",
    "hero": [
-    "Get online and grow fast",
-    "Hi, I'm a designer and developer. Here's what I'm working on."
+    "Hi, I'm Alex. I design and build small websites.",
+    "Designer and front-end developer. I help people who run their own thing get online with sites that are fast, clear and easy to keep up."
+   ],
+   "replace": [
+    {
+     "id": "bpehero",
+     "type": "hero",
+     "variant": "split",
+     "props": {
+      "eyebrow": "Designer · developer",
+      "title": "",
+      "text": "",
+      "img": "",
+      "alt": "Portrait",
+      "shape": "round",
+      "buttons": [
+       {
+        "label": "See projects",
+        "link": {
+         "kind": "section",
+         "to": "bpeproj"
+        }
+       },
+       {
+        "label": "Experience",
+        "link": {
+         "kind": "section",
+         "to": "bpeexp"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bpedo",
+     "type": "features",
+     "variant": "list",
+     "props": {
+      "title": "What I do",
+      "items": [
+       {
+        "title": "Design",
+        "text": "Simple layouts, readable type and colors that match who you are."
+       },
+       {
+        "title": "Front-end",
+        "text": "Plain HTML, CSS and a little JavaScript. Fast on any phone."
+       },
+       {
+        "title": "Help after launch",
+        "text": "Small changes, new pages and a hand when something breaks."
+       }
+      ]
+     }
+    },
+    {
+     "id": "bpeproj",
+     "type": "features",
+     "variant": "alternating",
+     "props": {
+      "title": "Selected projects",
+      "items": [
+       {
+        "title": "A bakery's new site",
+        "text": "Menu, hours and pre-orders on one page. Orders by phone dropped by half."
+       },
+       {
+        "title": "A podcast home",
+        "text": "Every episode with show notes and a player, published from a shared doc."
+       },
+       {
+        "title": "A studio portfolio",
+        "text": "A grid of work that loads in under a second on a train."
+       }
+      ]
+     }
+    },
+    {
+     "id": "bpeexp",
+     "type": "list",
+     "variant": "rows",
+     "props": {
+      "title": "Experience",
+      "items": [
+       {
+        "title": "Freelance designer and developer",
+        "meta": "2021 to now",
+        "text": "Sites for small businesses, makers and nonprofits.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "Front-end developer, a product studio",
+        "meta": "2017 to 2021",
+        "text": "Design systems and marketing sites.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "Graphic design, a print shop",
+        "meta": "2014 to 2017",
+        "text": "Posters, menus and signs.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bpequote",
+     "type": "testimonials",
+     "variant": "spotlight",
+     "props": {
+      "title": "Kind words",
+      "items": [
+       {
+        "quote": "Alex listened, kept it simple and shipped a week early.",
+        "name": "Priya S.",
+        "role": "Owner, a neighborhood bakery"
+       }
+      ]
+     }
+    },
+    {
+     "id": "bpecontact",
+     "type": "contact",
+     "variant": "simple",
+     "props": {
+      "title": "Say hello",
+      "text": "Have a project in mind? Write a few lines about it and I'll answer within a day.",
+      "email": "",
+      "action": "",
+      "button": "Send"
+     }
+    },
+    {
+     "id": "bpefoot",
+     "type": "footer",
+     "variant": "simple",
+     "props": {
+      "text": "© Personal",
+      "links": [
+       {
+        "label": "Projects",
+        "link": {
+         "kind": "section",
+         "to": "bpeproj"
+        }
+       },
+       {
+        "label": "Experience",
+        "link": {
+         "kind": "section",
+         "to": "bpeexp"
+        }
+       },
+       {
+        "label": "Contact",
+        "link": {
+         "kind": "section",
+         "to": "bpecontact"
+        }
+       }
+      ]
+     }
+    }
    ]
   },
   {
@@ -362,7 +532,7 @@
    "name": "small-business",
    "title": "Small Business",
    "category": "Business",
-   "summary": "A small company: a picture and a pitch, a call-out band and three cards.",
+   "summary": "A small company: a picture and a pitch, a call-out band, three services, reviews, hours and a quote form.",
    "tags": [
     "small business",
     "local"
@@ -371,8 +541,201 @@
    "bg": "#FFFFFF",
    "ink": "#212529",
    "hero": [
-    "Business name or tagline",
-    "Say who you are and who you help in one or two sentences."
+    "Handmade furniture, built to last",
+    "A two-person workshop making tables, shelves and chairs to order. Visit the showroom, or tell us what you need and we'll sketch it."
+   ],
+   "replace": [
+    {
+     "id": "bsbhero",
+     "type": "hero",
+     "variant": "split",
+     "props": {
+      "eyebrow": "Since 2014",
+      "title": "",
+      "text": "",
+      "img": "",
+      "alt": "The workshop",
+      "shape": "",
+      "buttons": [
+       {
+        "label": "Get a quote",
+        "link": {
+         "kind": "section",
+         "to": "bsbquote"
+        }
+       },
+       {
+        "label": "What we make",
+        "link": {
+         "kind": "section",
+         "to": "bsbserv"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bsbband",
+     "type": "cta",
+     "variant": "accent",
+     "props": {
+      "title": "Free delivery within 30 miles",
+      "text": "Every piece is finished by hand and delivered by the people who made it.",
+      "buttons": [
+       {
+        "label": "Ask about your piece",
+        "link": {
+         "kind": "section",
+         "to": "bsbquote"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bsbserv",
+     "type": "features",
+     "variant": "grid",
+     "props": {
+      "title": "What we make",
+      "items": [
+       {
+        "title": "Tables",
+        "text": "Dining, coffee and desks in oak, walnut or ash, sized to your room."
+       },
+       {
+        "title": "Shelves and storage",
+        "text": "Built-in shelving, cabinets and benches that fit the wall you have."
+       },
+       {
+        "title": "Repairs",
+        "text": "Wobbly chairs, water rings, broken joints: bring it in for a free look."
+       }
+      ]
+     }
+    },
+    {
+     "id": "bsbstats",
+     "type": "stats",
+     "variant": "grid",
+     "props": {
+      "title": "",
+      "items": [
+       {
+        "value": "600+",
+        "label": "pieces delivered"
+       },
+       {
+        "value": "10",
+        "label": "year guarantee"
+       },
+       {
+        "value": "4 wks",
+        "label": "typical lead time"
+       }
+      ]
+     }
+    },
+    {
+     "id": "bsbrev",
+     "type": "testimonials",
+     "variant": "cards",
+     "props": {
+      "title": "What customers say",
+      "items": [
+       {
+        "quote": "Our table seats ten and still looks new after three winters of homework and dinners.",
+        "name": "Dana K.",
+        "role": "Dining table"
+       },
+       {
+        "quote": "They measured twice, sketched it with us and fit the shelves in one afternoon.",
+        "name": "Marcus L.",
+        "role": "Built-in shelves"
+       }
+      ]
+     }
+    },
+    {
+     "id": "bsbhours",
+     "type": "list",
+     "variant": "rows",
+     "props": {
+      "title": "Showroom hours",
+      "items": [
+       {
+        "title": "Tuesday to Friday",
+        "meta": "10am to 6pm",
+        "text": "",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "Saturday",
+        "meta": "10am to 4pm",
+        "text": "",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "Sunday and Monday",
+        "meta": "Closed",
+        "text": "",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bsbquote",
+     "type": "contact",
+     "variant": "form",
+     "props": {
+      "title": "Get a quote",
+      "text": "Tell us the piece, the room and a rough size. We answer within two working days.",
+      "email": "",
+      "action": "",
+      "button": "Send"
+     }
+    },
+    {
+     "id": "bsbfoot",
+     "type": "footer",
+     "variant": "columns",
+     "props": {
+      "text": "© Small Business",
+      "links": [
+       {
+        "label": "What we make",
+        "link": {
+         "kind": "section",
+         "to": "bsbserv"
+        }
+       },
+       {
+        "label": "Hours",
+        "link": {
+         "kind": "section",
+         "to": "bsbhours"
+        }
+       },
+       {
+        "label": "Get a quote",
+        "link": {
+         "kind": "section",
+         "to": "bsbquote"
+        }
+       }
+      ]
+     }
+    }
    ]
   },
   {
@@ -838,7 +1201,7 @@
    "name": "dimension",
    "title": "Dimension",
    "category": "Personal",
-   "summary": "A dark single screen with intro, work, about and contact.",
+   "summary": "A dark one-screen personal site: a name, four sections (intro, work, about, contact) and nothing else.",
    "tags": [
     "personal",
     "dark",
@@ -849,8 +1212,117 @@
    "ink": "#FFFFFF",
    "display": "Space Grotesk",
    "hero": [
-    "Dimension",
-    "A personal site on one dark screen: intro, work, about, contact."
+    "Jordan Vale",
+    "Photographer and designer. Four short sections: who I am, what I've made, a little about me, and how to reach me."
+   ],
+   "replace": [
+    {
+     "id": "bdmhero",
+     "type": "hero",
+     "variant": "minimal",
+     "props": {
+      "eyebrow": "",
+      "title": "",
+      "text": "",
+      "img": "",
+      "alt": "",
+      "shape": "",
+      "buttons": [
+       {
+        "label": "Intro",
+        "link": {
+         "kind": "section",
+         "to": "bdmintro"
+        }
+       },
+       {
+        "label": "Work",
+        "link": {
+         "kind": "section",
+         "to": "bdmwork"
+        }
+       },
+       {
+        "label": "About",
+        "link": {
+         "kind": "section",
+         "to": "bdmabout"
+        }
+       },
+       {
+        "label": "Contact",
+        "link": {
+         "kind": "section",
+         "to": "bdmcontact"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bdmintro",
+     "type": "text",
+     "variant": "highlight",
+     "props": {
+      "title": "Intro",
+      "text": "I make quiet pictures of busy places, and design the books and sites that hold them. Based by the sea, working anywhere."
+     }
+    },
+    {
+     "id": "bdmwork",
+     "type": "gallery",
+     "variant": "grid",
+     "props": {
+      "title": "Work",
+      "items": [
+       {
+        "img": "",
+        "alt": "Harbor at dawn",
+        "caption": "Harbor at dawn"
+       },
+       {
+        "img": "",
+        "alt": "Night market",
+        "caption": "Night market"
+       },
+       {
+        "img": "",
+        "alt": "A small book",
+        "caption": "A small book"
+       }
+      ]
+     }
+    },
+    {
+     "id": "bdmabout",
+     "type": "text",
+     "variant": "two",
+     "props": {
+      "title": "About",
+      "text": "Ten years behind a camera and a layout grid. I work with small publishers, galleries and anyone with a story worth printing. Clients get one person from the first shot to the final file."
+     }
+    },
+    {
+     "id": "bdmcontact",
+     "type": "contact",
+     "variant": "form",
+     "props": {
+      "title": "Contact",
+      "text": "Tell me about the project, the place and the timing.",
+      "email": "",
+      "action": "",
+      "button": "Send message"
+     }
+    },
+    {
+     "id": "bdmfoot",
+     "type": "footer",
+     "variant": "minimal",
+     "props": {
+      "text": "© Dimension",
+      "links": []
+     }
+    }
    ]
   },
   {
@@ -859,7 +1331,7 @@
    "name": "eventually",
    "title": "Eventually",
    "category": "Coming soon",
-   "summary": "A coming-soon screen with one line and a signup.",
+   "summary": "A coming-soon screen: one big line, an email signup, what's coming and where to follow along.",
    "tags": [
     "coming soon",
     "signup"
@@ -869,18 +1341,105 @@
    "ink": "#FFFFFF",
    "display": "Space Grotesk",
    "hero": [
-    "Eventually",
-    "Something new is on the way. Leave your email and we'll let you know."
+    "Something good is on the way",
+    "We're building it now. Leave your email and you'll be the first to know when the doors open."
    ],
-   "extra": [
+   "replace": [
     {
+     "id": "bevhero",
+     "type": "hero",
+     "variant": "cover",
+     "props": {
+      "eyebrow": "Coming soon",
+      "title": "",
+      "text": "",
+      "img": "",
+      "alt": "",
+      "shape": "",
+      "buttons": [
+       {
+        "label": "Notify me",
+        "link": {
+         "kind": "section",
+         "to": "bevsign"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "id": "bevsign",
      "type": "newsletter",
      "variant": "card",
      "props": {
-      "title": "Get the next post",
-      "text": "One email a week. Unsubscribe any time.",
+      "title": "Be the first to know",
+      "text": "One email on launch day, and nothing before it.",
       "action": "",
-      "button": "Subscribe"
+      "button": "Notify me"
+     }
+    },
+    {
+     "id": "bevwhat",
+     "type": "features",
+     "variant": "grid",
+     "props": {
+      "title": "What's coming",
+      "items": [
+       {
+        "title": "Made with care",
+        "text": "Small batch, tested by real people before anyone pays."
+       },
+       {
+        "title": "Fair from day one",
+        "text": "Early sign-ups get the first look and the launch price."
+       },
+       {
+        "title": "Built in the open",
+        "text": "Short updates on the way, so you can see it take shape."
+       }
+      ]
+     }
+    },
+    {
+     "id": "bevfaq",
+     "type": "faq",
+     "variant": "list",
+     "props": {
+      "title": "Questions",
+      "items": [
+       {
+        "q": "When does it open?",
+        "a": "This season. Sign up and you'll get the date as soon as we have it."
+       },
+       {
+        "q": "Will you share my email?",
+        "a": "Never. One email on launch day, then only if you ask for more."
+       }
+      ]
+     }
+    },
+    {
+     "id": "bevfoot",
+     "type": "footer",
+     "variant": "columns",
+     "props": {
+      "text": "© Eventually",
+      "links": [
+       {
+        "label": "Instagram",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "label": "Email",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
      }
     }
    ]

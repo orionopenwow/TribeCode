@@ -77,6 +77,8 @@ the order, the headings, the button labels and the layout idea. Then the script 
 - replaces every photo with original flat art in those colors (no third-party images ship),
 - rewrites the hero with plain example words and replaces lorem ipsum and "Bootstrap theme" copy with placeholder lines,
 - adds a few blocks where a page was mostly scripts (blog post lists, a shop grid, an app's features),
+- and where the conversion came out thin, the sections are written by hand after the original's layout (`replace` in the
+  sources file: Small Business, Personal, Dimension, Eventually),
 - and for CC BY sources sets `cfg.credit`, which the export prints in the footer: "Design based on <title> by HTML5 UP (CC BY 3.0)".
 
 The same importer is in the designer: **Import HTML…** (gallery or Site panel) turns any page you pick into blocks.
