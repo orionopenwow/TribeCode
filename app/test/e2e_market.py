@@ -97,7 +97,7 @@ def main():
         r = ok(api("/market/pb-growth-launch-week/use", "POST", {"project": pid}, token=host, project=pid)); assert r["done"] == "doc" and r["doc"], r
         r = ok(api("/market/oss-pocketbase/use", "POST", {"project": pid}, token=host, project=pid)); assert r["done"] == "toolbox", r
         # company / legal templates say what they need until those land
-        r = ok(api("/market/co-saas/use", "POST", {"project": pid}, token=host, project=pid)); assert r.get("needs") == "company" or r.get("client") == "company", r
+        r = ok(api("/market/co-saas/use", "POST", {"project": pid}, token=host, project=pid)); assert r.get("done") == "doc" and r["installed"], r   # feat/market-v2: the plan lands in Files
         # ---- spectators look, agents ask ----
         inv = ok(api("/invites", "POST", {"role": "spectator"}, token=host))["invite"]; spec = ok(api("/join", "POST", {"code": inv["code"], "name": "Watcher"}))["token"]
         assert api("/market/w-notion/use", "POST", {"project": pid}, token=spec, project=pid)[0] in (403, 404)
@@ -176,16 +176,16 @@ const res = body => ({ ok: true, status: 200, text: async () => JSON.stringify(b
             pg.screenshot(path=str(shots / "market-filters-1440.png"))
             pg.click("#mk-pop [data-f='kind:skill']")
             pg.wait_for_function("document.querySelectorAll('#market .mk-card').length && [...document.querySelectorAll('#market .mk-kind')].every(k => k.textContent === 'Skill')")
-            assert pg.locator("#mk-chips").is_visible() and pg.inner_text("#mk-fcount") == "1"
+            assert pg.evaluate("document.querySelector(\"[data-cat='skill']\").classList.contains('on')"), "a kind is a category chip"
             pg.click("[data-fdone]"); assert pg.locator("#mk-pop").count() == 0
-            pg.click("#mk-chips [data-chip]"); pg.wait_for_function("document.querySelector('#mk-chips').hidden")
+            pg.click("[data-cat='']"); pg.wait_for_function("document.querySelector(\"[data-cat='']\").classList.contains('on') && [...document.querySelectorAll('#market .mk-kind')].some(k => k.textContent !== 'Skill')")
             # show more
             pg.click("#mk-more-btn"); pg.wait_for_function("document.querySelectorAll('#market .mk-card').length === 48")
             # detail sheet + add a widget from it
             pg.fill("#mk-q", "linear"); pg.wait_for_selector(".mk-card[data-id='w-linear']")
-            pg.click(".mk-card[data-id='w-linear'] .mk-t"); pg.wait_for_selector("#mk-detail .mk-detail h2")
+            pg.click(".mk-card[data-id='w-linear'] .mk-t"); pg.wait_for_selector("#mk-detail:not([hidden]) h2")
             assert "linear.app" in pg.inner_text("#mk-detail")
-            pg.click("#mk-detail [data-duse]")
+            pg.click("#mk-detail [data-use]")
             pg.wait_for_function("(TribeWidgets.state().widgets || []).some(w => (w.url || '').includes('linear.app'))", timeout=10000)
             pg.keyboard.press("Escape")
             pg.evaluate("TribeWorkshop.close()")
@@ -194,12 +194,12 @@ const res = body => ({ ok: true, status: 200, text: async () => JSON.stringify(b
             assert "Browse all (" in pg.inner_text("#wgx-mk-all")
             assert pg.locator("#wg-picker [data-wadd='market']").count() == 1, "new built-in widgets"
             pg.screenshot(path=str(shots / "market-gallery-1440.png"))
-            pg.click("#wgx-mk-all"); pg.wait_for_function("document.querySelector('#ws-title') && document.querySelector('#ws-title').textContent === 'Marketplace'")
-            pg.wait_for_function("[...document.querySelectorAll('#market .mk-kind')].length && [...document.querySelectorAll('#market .mk-kind')].every(k => k.textContent === 'Widget')")
+            pg.click("#wgx-mk-all"); pg.wait_for_selector("#view-market .mk-card", timeout=10000)   # feat/market-v2: a full page in the main area
+            pg.wait_for_function("[...document.querySelectorAll('#view-market .mk-kind')].length && [...document.querySelectorAll('#view-market .mk-kind')].every(k => k.textContent === 'Widget')")
             # phone: no horizontal scroll, filters as a sheet
             ph = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); ph.on("pageerror", lambda e: errors.append(str(e)))
             ph.add_init_script(init)
-            ph.goto(BASE + "/?skipIntro=1#/market"); ph.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeMarket", timeout=20000)
+            ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeMarket", timeout=20000)
             ph.evaluate("TribeWorkshop.open('market')"); ph.wait_for_selector("#market .mk-card", timeout=15000)
             sw = ph.evaluate("[document.documentElement.scrollWidth, document.querySelector('#ws-scroll').scrollWidth, document.querySelector('#ws-scroll').clientWidth]")
             assert sw[0] <= 390 and sw[1] <= sw[2] + 1, sw
@@ -210,7 +210,7 @@ const res = body => ({ ok: true, status: 200, text: async () => JSON.stringify(b
             ph.click("#mk-filters"); ph.wait_for_selector("#mk-pop.sheet [data-f]")
             box = ph.evaluate("(() => { const r = document.querySelector('#mk-pop').getBoundingClientRect(); return [r.left, r.right, r.bottom]; })()"); assert box[0] >= 0 and box[1] <= 391, box
             ph.screenshot(path=str(shots / "market-filters-390.png"))
-            ph.click(".mk-scrim", position={"x": 20, "y": 20}); ph.click("#market .mk-card .mk-t"); ph.wait_for_selector("#mk-detail .mk-detail.sheet")
+            ph.click(".mk-scrim", position={"x": 20, "y": 20}); ph.click("#market .mk-card .mk-t"); ph.wait_for_selector("#mk-detail:not([hidden]) h2")
             ph.screenshot(path=str(shots / "market-detail-390.png"))
             b.close()
         bad = [e for e in errors if "ResizeObserver" not in e]
