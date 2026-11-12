@@ -68,6 +68,9 @@ def pdf_bytes(lines):
 def spark(pg, where, kind, want_via="Basic · no AI"):
     pg.click(f"[data-ab='{where}']"); pg.click(f"#ab-pop [data-ab-do='{kind}']")
     pg.wait_for_selector(f"#ab-pop .ab-res[data-kind='{kind}'] #ab-out", timeout=8000)
+    if want_via != "Basic · no AI":   # polish: a cloud model asks once per device and provider first (aiconsent.js)
+        pg.wait_for_function("t => document.querySelector('#ai-consent') || ((document.querySelector('#ab-via') || {}).textContent || '').includes(t)", arg=want_via, timeout=15000)
+        if pg.locator("#ai-consent").count(): pg.click("#aic-yes")
     pg.wait_for_function("t => (document.querySelector('#ab-via') || {}).textContent && document.querySelector('#ab-via').textContent.includes(t)", arg=want_via, timeout=15000)
     return pg.inner_text("#ab-out")
 
