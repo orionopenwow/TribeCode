@@ -49,7 +49,9 @@
   const active = () => !!(db && db.on && ((S.get().server || {}).token === TOKEN));
   const save = () => { if (!db) return; if (eph) ss.set(KEY, db); else ls.set(KEY, db); };
   const S0 = { get: S.get, set: S.set };
-  S.get = () => { const st = S0.get(); return eph && db && db.on ? { ...st, server: { url: ORIGIN, token: TOKEN }, hosting: false } : st; };
+  // fix/desk-demo: the hands-off tour shows Flint's blank slate, never who is signed in on this device (name, colour, folder)
+  const WATCHER = { name: 'Flint', color: '#F26B1D', folder: '', staleServer: null, tribeHere: false };
+  S.get = () => { const st = S0.get(); if (!(eph && db && db.on)) return st; return { ...st, ...(db.mode === 'watch' ? WATCHER : {}), server: { url: ORIGIN, token: TOKEN }, hosting: false }; };
   S.set = patch => {
     if (!(eph && db)) return S0.set(patch);
     const p = { ...(patch || {}) };
@@ -57,6 +59,30 @@
     delete p.server; delete p.hosting; delete p.hostOff;
     S0.set(p); return S.get();
   };
+  // fix/desk-demo: modules that read the saved settings or the account straight from localStorage (the user bar, the
+  // profile menu, Home's greeting, mobile, themes) see the tour's identity too, so nobody's name or sign-in shows in it.
+  // Reads only: every write still goes to the real keys (TribeStore keeps the real settings in memory).
+  const MASK = { 'tribecode.settings.v1': () => JSON.stringify(S.get()), 'tribecode.accounts.v1': () => null };
+  let rawGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+  try {
+    const gi = Storage.prototype.getItem; rawGet = k => { try { return gi.call(window.localStorage, k); } catch { return null; } };
+    Storage.prototype.getItem = function (k) { return eph && db && db.on && db.mode === 'watch' && this === window.localStorage && Object.prototype.hasOwnProperty.call(MASK, k) ? MASK[k]() : gi.call(this, k); };
+  } catch {}
+  // fix/desk-demo: inside a demo the desktop app behaves like the browser. Its host paths (hostHere, the Host switch,
+  // startFirst, "This computer") would start or stop the real tribe server on this computer and sign in to it, which
+  // ended the demo mid-tour (S.set with a real token) and showed the real tribe under the tour. While a demo in this tab
+  // is on, TribeHost.isDesktop is false and the sidecar commands are refused.
+  const H = window.TribeHost, DESK = !!(H && H.isDesktop);
+  if (H) Object.defineProperty(H, 'isDesktop', { configurable: true, enumerable: true, get: () => DESK && !(eph && db && db.on) });
+  const T = window.__TAURI__ && window.__TAURI__.core;
+  if (T && typeof T.invoke === 'function') {
+    const inv = T.invoke.bind(T);
+    try { T.invoke = (cmd, ...a) => (eph && db && db.on && /^host_(start|stop|kill_stale)$/.test(String(cmd)) ? Promise.reject(new Error('The demo lives in this tab: it never starts or stops a tribe server.')) : inv(cmd, ...a)); } catch {}
+  }
+  function wipeKeys(ids) {
+    const hit = k => k === 'tribecode.setup.wherePending' || ids.some(id => id && new RegExp(`[.:/]${id.replace(/[^\w-]/g, '')}([.:/]|$)`).test(k));
+    for (const st of [localStorage, sessionStorage]) { try { for (let i = st.length - 1; i >= 0; i--) { const k = st.key(i); if (k && hit(k)) st.removeItem(k); } } catch {} }
+  }
   // Leftovers of a demo: keys made for the pretend server's address, the pretend tribe's name from the welcome.
   function cleanKeys() {
     try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.includes('offline-demo.tribecode.invalid') || k === 'tribecode.mediaKey' && !(S0.get().server || {}).token)) localStorage.removeItem(k); } } catch {}
@@ -162,7 +188,7 @@
   const me = () => db.members.find(m => m.id === 'me');
   const nameOf = id => id === 'tribecode' ? 'TribeCode' : ((db.members.find(m => m.id === id) || {}).name || 'someone');
   const proj = id => db.projects.find(p => p.id === id);
-  const cur = () => proj(db.current) ? db.current : db.projects[0].id;
+  const cur = () => proj(db.current) ? db.current : (db.projects[0] || {}).id || null;
   let where = 'Home';
   // offline-profiles: the profile editor works in the demo too (the same fields as server/profiles.js, kept in this browser)
   const PF_COLORS = { teal: '#38C6B1', indigo: '#6C7CFF', sky: '#4FA8F0', violet: '#A58BFF', rose: '#FF6F8E', coral: '#FF8A65', amber: '#F2B33D', lime: '#9AD65C', mint: '#4CD6A0', sand: '#D9B98C', orchid: '#E07BD0', slate: '#9AA7B8' };
@@ -252,8 +278,10 @@
       let want = ''; try { want = new URL(url.replace(/^ws/, 'http')).searchParams.get('project') || ''; } catch {}
       if (want && proj(want)) db.current = want;
       sockets.add(this);
-      setTimeout(() => { if (this.readyState !== 0 || !active()) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }, 20);
+      setTimeout(() => this._open(), 20);
     }
+    // fix/desk-demo: the tour's blank slate (db.blank) has no tribe yet, so nothing connects until Flint makes one (wake())
+    _open() { if (this.readyState !== 0 || !active() || (db && db.blank)) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }
     _recv(msg) { if (this.readyState !== 1) return; const data = JSON.stringify(msg); setTimeout(() => { if (this.readyState === 1 && this.onmessage) this.onmessage({ data }); }, 0); }
     send(raw) { let m; try { m = JSON.parse(raw); } catch { return; } if (active()) onSocket(this, m); }
     close() { if (this.readyState === 3) return; this.readyState = 3; sockets.delete(this); setTimeout(() => this.onclose && this.onclose({}), 0); }
@@ -360,7 +388,7 @@
     const last = (ms || []).map(m => String(m.version).replace(/^v/, '').split('.').map(Number)).sort((a, b) => b[0] - a[0] || b[1] - a[1])[0] || [0, 0];
     return `v${last[0]}.${(last[1] || 0) + 1}`;
   }
-  const hooks = { approved: [], decided: [], route: [] };   // route: feat/demo-tour (director.js answers a few showcase-only paths first)
+  const hooks = { approved: [], decided: [], route: [], create: [] };   // route: feat/demo-tour (director.js answers a few showcase-only paths first)
   function vote(pid, pr, who, v) {
     if (pr.status !== 'open') return pr;
     (pr.votes = pr.votes || {})[who] = v; save();
@@ -1223,6 +1251,8 @@
   // start(): ask which demo (Explore quietly / Watch it come alive). start('quiet' | 'showcase') starts that one.
   function start(mode, draft) {
     if (!['quiet', 'showcase', 'solo', 'watch'].includes(mode)) return choose();
+    // fix/desk-demo: "Start a project" inside the tour makes the project in the tour's own tribe (never a real one here)
+    if (mode === 'solo' && draft && active() && db && db.mode === 'watch' && hooks.create.length) { hooks.create.forEach(fn => { try { fn(draft); } catch (e) { console.warn(e); } }); return; }
     closeChooser();
     if (active() && (db?.mode || 'quiet') === mode && !draft) { enterUi(); return; }
     const wasReal = !active() && !!(C() && C().hasToken()), wasDemo = active();
@@ -1273,6 +1303,8 @@
   function endDemo(keepBlobs) {
     closePop(); for (const s of [...sockets]) s.close();
     const wasEph = eph; eph = false;
+    // fix/desk-demo: the tour's projects leave nothing behind (checklist, canvas view, seen tasks, the start sheet's flag)
+    if (wasEph && db && (db.mode === 'watch' || db.mode === 'showcase')) wipeKeys((db.projects || []).map(p => p.id));
     if (wasEph) ss.del(KEY); else { restore(); ls.del(KEY); }   // a demo in this tab never changed your settings; a solo tribe put back what it changed
     db = null; media.forEach(u => { try { URL.revokeObjectURL(u); } catch {} }); media.clear();
     if (!keepBlobs && !(ls.get(KEY) || {}).on) blobClear();   // a phone tribe kept beside the demo keeps its pictures
@@ -1402,6 +1434,8 @@
     finishMove: (server, token, name, go) => { closePop(); ls.del(KEY); ss.del(KEY); eph = false; ls.del(BKEY); blobClear(); try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} if (go) { try { const k = 'tribecode.settings.v1', v = JSON.parse(localStorage.getItem(k) || '{}'); localStorage.setItem(k, JSON.stringify({ ...v, name, server: { url: '', token: '' }, hosting: false })); } catch {} location.href = go; return; } for (const s of [...sockets]) s.close(); db = null; S.set({ name, server: { url: server, token }, hosting: false }); location.reload(); },   // go: a web page on another origin opens the host's own page (a device link signs it in there)
     socket: url => new FakeSocket(url),
     mediaUrl, ephemeral: () => active() && eph, exit: () => leave(), end: endDemo, needsReal,
+    saved: k => rawGet(k),   // what is really stored (the tour masks your identity from the app's own raw reads)
+    wake: () => { if (db) { delete db.blank; save(); } for (const s of [...sockets]) s._open(); },   // fix/desk-demo: the blank slate's tribe exists now
     state: () => db,
     mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use

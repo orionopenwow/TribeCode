@@ -52,7 +52,7 @@ def boot(pg, url="/?skipIntro=1"):
 
 def in_demo(pg, mode):
     pg.wait_for_function(f"TribeOffline.active() && TribeOffline.mode() === '{mode}' && TribeClient.connected()", timeout=15000)
-    st = pg.evaluate("JSON.parse(localStorage.getItem('tribecode.settings.v1')).server")
+    st = pg.evaluate("JSON.parse(TribeOffline.saved ? TribeOffline.saved('tribecode.settings.v1') : localStorage.getItem('tribecode.settings.v1')).server")
     assert st == REAL["server"], f"{mode}: the demo rewrote your saved settings {st}"
     assert pg.evaluate(f"localStorage.getItem('{KEY}') === null && sessionStorage.getItem('{KEY}') !== null"), f"{mode}: the demo must live in this tab only"
 

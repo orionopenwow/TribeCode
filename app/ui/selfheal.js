@@ -145,7 +145,8 @@
     const { base, token } = server();
     const text = [reason, '', ...logs.slice(-15)].join('\n');
     if (auto && !shouldFile('selfheal ' + reason)) return false;
-    if (!base || !token) { try { await navigator.clipboard.writeText(text); } catch {} return false; }
+    const demo = !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());   // fix/desk-demo: a demo never reports into your real tribe
+    if (!base || !token || demo) { try { await navigator.clipboard.writeText(text); } catch {} return false; }
     let project = ''; try { project = localStorage.getItem('tribecode.project:' + base) || ''; } catch {}
     try {
       const r = await fetch(base + '/api/bugs', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(project ? { 'X-Project': project } : {}) },
