@@ -661,9 +661,10 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   const KIND_E = { game: '🎮 Games', app: '📱 Apps', site: '🌐 Sites', asset: '🎨 Art and sound' };
   async function openStarters() {
     body().classList.add('np-setup');
-    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div><div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
+    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div>${window.TribeDesignFlow ? '<div class="ns-sub">Built in, ready to play</div><div class="st-row"><span class="st-t"><b>Small app and game starters</b><small>Breakout, snake, a platformer, kanban, notes, a dashboard and more: no build step, with knobs and a plan (Design › App or Game).</small></span><button class="btn sm primary" id="st-builtin">Open</button></div>' : ''}<div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
       <div class="ns-btns"><button class="linkish" id="np-back">Back</button></div>`;
     body().querySelector('[data-close]').onclick = close; $('#np-back').onclick = openNew;
+    const bi = $('#st-builtin'); if (bi) bi.onclick = () => { close(); window.TribeDesignFlow.open({ kind: 'game' }); };   // feat/design-flow
     let items = []; try { items = (await C.api('/shelf/starters')).items || []; } catch {}
     const box = $('#st-list'); if (!box) return;
     if (!items.length) { box.innerHTML = '<p class="faint">Starters are not available right now.</p>'; return; }

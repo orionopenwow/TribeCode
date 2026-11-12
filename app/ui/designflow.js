@@ -466,7 +466,7 @@
     return sec;
   }
   function open(opts = {}) {
-    if ((opts.scope || (connected() && C.project && C.project() ? 'project' : 'home')) === 'home') { if (window.TribeHub) window.TribeHub.open('design'); return; }
+    if ((opts.scope || (connected() && C.project && C.project() ? 'project' : 'home')) === 'home') { if (window.TribeHub) window.TribeHub.open('design'); if (opts.kind) setTimeout(() => gallery(opts.kind), 120); return; }
     const sec = section(); if (!sec) return;
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
     sec.classList.remove('hidden');
