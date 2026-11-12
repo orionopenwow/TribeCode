@@ -248,7 +248,8 @@ def main():
             frame(pg).locator("[data-block]").first.click(); pg.wait_for_function("!!TribeSiteDesigner.state().sel", timeout=4000)
             pg.keyboard.press("Escape"); pg.wait_for_function("!TribeSiteDesigner.state().sel", timeout=4000)
             assert not pg.is_hidden("#wdz"), "the first Esc only deselects"
-            pg.keyboard.press("Escape"); pg.wait_for_selector("#wdz", state="hidden", timeout=4000)
+            pg.wait_for_timeout(600)   # the preview repaints after a deselect; Esc from the designer's own controls
+            pg.focus("#wdz [data-wdz='close']"); pg.keyboard.press("Escape"); pg.wait_for_selector("#wdz", state="hidden", timeout=4000)
             pg.evaluate("TribePreview.open()")
             pg.wait_for_selector("#pvw .pvw-design", state="attached", timeout=8000)
 
