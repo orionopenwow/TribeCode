@@ -1183,7 +1183,7 @@
     active, start, choose, boot, leave, reset, hostForReal,
     solo: () => active() && solo(), exportSolo, realFetch: (i, o) => realFetch(i, o),
     // feat/setup-local: where each draft project lives (github: { repo, branch, synced }), kept in the draft itself
-    homes: () => (db && db.homes) || {}, setHome: (pid, h) => { if (!db) return; db.homes = db.homes || {}; db.homes[pid] = { ...(db.homes[pid] || {}), ...h }; save(); if (pill) { pill.remove(); pill = null; } paint(); },
+    homes: () => (db && db.homes) || {}, setHome: (pid, h) => { if (!db) return; db.homes = db.homes || {}; db.homes[pid] = { ...(db.homes[pid] || {}), ...h }; save(); try { dispatchEvent(new CustomEvent('tribe-local-home', { detail: { pid } })); } catch {} if (pill) { pill.remove(); pill = null; } paint(); },
     // forget the draft after its home confirmed it has everything (keeps your current sign-in as it is)
     forget: () => { closePop(); for (const s of [...sockets]) s.close(); ls.del(KEY); ls.del(BKEY); blobClear(); db = null; paint(); },
     // After a move: forget the phone copy and sign in to the real host (no restore of the old settings).
