@@ -79,6 +79,8 @@ def main():
 
             # ---- 2. With a tribe: every destination in the registry opens and reaches the server
             ctx = b.new_context(viewport={"width": 1440, "height": 900}); host = ctx.new_page(); watch(host, "host")
+            frames = []   # listen before the page opens its WebSocket: Playwright only reports sockets made after this
+            host.on("websocket", lambda ws: ws.on("framereceived", lambda f: frames.append(f if isinstance(f, (str, bytes)) else getattr(f, "payload", ""))))
             named(host, "Orion"); host.goto(BASE + "/?skipIntro=1")
             host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=30000); settle(host, 1500)
             keys = host.evaluate("""() => { const S = window.TribeShell; const d = S && (S.dests ? S.dests() : S.DEST);
@@ -102,8 +104,6 @@ def main():
             if host.evaluate("TribeRouter.where().section") != "home": problems.append("host: logo did not go Home from the Workshop")
 
             # ---- 3. Chat: light and quick
-            frames = []
-            host.on("websocket", lambda ws: ws.on("framereceived", lambda f: frames.append(f if isinstance(f, (str, bytes)) else getattr(f, "payload", ""))))
             host.evaluate("TribeShell && TribeShell.go ? TribeShell.go('chat') : App.show('chat')"); settle(host, 800)
             box = "#chat-input, #composer-mount textarea, .composer textarea"
             host.wait_for_selector(box, timeout=10000)
@@ -117,13 +117,15 @@ def main():
             msg_frames = [f for f in frames if stamp in (f if isinstance(f, str) else f.decode("utf8", "ignore"))]
             frame_bytes = max((len(f) for f in msg_frames), default=0)
             token = host.evaluate("TribeStore.get().server.token")
-            req = urllib.request.Request(BASE + "/api/chat?channel=general", headers={"Authorization": "Bearer " + token})
-            try: hist = len(urllib.request.urlopen(req, timeout=10).read())
+            pid = host.evaluate("TribeClient.project && TribeClient.project()") or ""
+            req = urllib.request.Request(BASE + "/api/chat/general?limit=50", headers={"Authorization": "Bearer " + token, **({"X-Project": pid} if pid else {})})   # what the app loads (app.js)
+            try: hist = len(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=10).read())
             except Exception: hist = -1
             metrics = {"render_ms": render_ms, "frame_bytes": frame_bytes, "dom_nodes": added, "history_bytes": hist}
             for k, lim in BUDGET.items():
                 if metrics[k] > lim: problems.append(f"chat: {k} {metrics[k]} over budget {lim}")
-            if not msg_frames: notes.append("No WebSocket frame carried the message text (it may be delivered another way).")
+            if not msg_frames: problems.append("chat: no WebSocket frame carried the message")
+            if hist < 0: problems.append("chat: the history request failed")
 
             # ---- 4. Log out, then back in
             if host.evaluate("!!(window.TribeAccounts && TribeAccounts.logout)"):
