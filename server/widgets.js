@@ -73,7 +73,7 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
       }
     } catch {}
     let site = false;
-    try { const st = showcase.load(pid) || {}; site = !!(st.built || st.auto || showcase.exists(pid)); } catch {}
+    try { const st = showcase.load(pid) || {}; site = !!(st.built || st.auto || showcase.exists(pid) || (showcase.started && showcase.started(pid)));   // feat/site-v2: a designer draft, a built page or a started site } catch {}
     return { preview: pv, website: { show: site } };
   }
 
