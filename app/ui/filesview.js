@@ -284,6 +284,13 @@
       for (const it of list) { const k = it.loc ? it.loc.key : 'here'; if (!by.has(k)) by.set(k, { key: k, label: it.loc ? it.loc.label : '', device: it.loc && it.loc.device, items: [] }); by.get(k).items.push(it); }
       return [...by.values()].sort((a, b) => (b.device ? 1 : 0) - (a.device ? 1 : 0));
     }
+    // "All" with nothing in it: inside a project (or a tribe picked in Where) what you make is shared; on Home it is yours
+    function emptyWhere() {
+      const w = whereList() ? st.where : '';
+      if (o.scope === 'project') return 'Make a note, a doc, a sheet or a design. Everyone in this project can open it.';
+      if (w && w !== 'mine' && w !== 'all') return 'Nothing from this tribe yet. Make something here, or move a file in with ⋯ › Move to….';
+      return EMPTY.all[1];
+    }
     function draw() {
       const vis = visible(), counts = {};
       for (const it of vis) counts[it.cat] = (counts[it.cat] || 0) + 1;
@@ -293,7 +300,8 @@
       shown = [];
       const body = grid;
       if (!list.length) {
-        const [t, s, k, a] = st.q ? ['Nothing matches that', 'Try another word, or look in Everything.', '', ''] : EMPTY[st.cat] || EMPTY.all;
+        let [t, s, k, a] = st.q ? ['Nothing matches that', 'Try another word, or look in Everything.', '', ''] : EMPTY[st.cat] || EMPTY.all;
+        if (!st.q && s === EMPTY.all[1]) s = emptyWhere();   // fix/batch-fixes: the wording fits where you are
         body.innerHTML = `${st.loading ? '<div class="fx-empty dc-empty fg-empty"><span class="fx-spin"></span><b>Gathering your files…</b></div>'
           : `<div class="fx-empty dc-empty fg-empty" id="${o.idp}-empty"><span class="fx-empty-ic">${icon(CATS.find(c => c[0] === st.cat)[2], 28)}</span><b>${esc(t)}</b><p>${esc(s)}</p>${k ? `<button class="btn primary" type="button" data-empty-new="${k}">${icon(k === 'upload' ? 'upload' : 'plus', 14)}${esc(a)}</button>` : ''}</div>`}`;
         const eb = body.querySelector('[data-empty-new]'); if (eb) eb.onclick = e => o.create(eb.dataset.emptyNew, e.currentTarget);

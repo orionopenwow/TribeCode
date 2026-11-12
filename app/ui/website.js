@@ -71,6 +71,19 @@
   }
 
   // ---------- drawing ----------
+  // fix/batch-fixes: Files › Website lists the project's site design (the designer keeps one per project) with Open designer
+  async function designs() {
+    const box = $('#wb-designs'), p = pid(); if (!box || !p) return;
+    let r = null; try { r = await C.api(`/projects/${encodeURIComponent(p)}/site-config`); } catch {}
+    if (p !== pid() || !box.isConnected) return;
+    const c = r && r.config, btn = $('#wb-design');
+    if (btn) btn.textContent = c ? 'Open the designer' : 'Start a design';
+    if (!c) { box.innerHTML = '<p class="wb-hint">No design yet: pick a template and Flint fills it in from the project.</p>'; return; }
+    const n = (c.pages || []).length, when = r.savedAt ? ago(r.savedAt) : '';
+    box.innerHTML = `<button type="button" class="wb-dsg" id="wb-dsg-open" aria-label="Open ${esc(c.name || 'the website')} in the designer"><b>${esc(c.name || 'Untitled website')}</b><small>${n} page${n === 1 ? '' : 's'}${c.template ? ' · ' + esc(c.template) : ''}${when ? ' · saved ' + esc(when) + (r.savedBy ? ' by ' + esc(r.savedBy) : '') : ''}</small><span class="wb-dsg-go">Open designer</span></button>`;
+    $('#wb-dsg-open').onclick = () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: pid() });
+  }
+  let dsgT = 0; addEventListener('tribe:site-draft', e => { if (e.detail && !e.detail.dirty && e.detail.pid === pid()) { clearTimeout(dsgT); dsgT = setTimeout(designs, 300); } });
   function draw() {
     const d = data, m = d.canManage;
     section().innerHTML = `<div class="wb" id="wb-root">
@@ -78,6 +91,7 @@
         <section class="wb-sec wb-started hidden" id="wb-started" aria-live="polite"></section>
         <section class="wb-sec wb-designer" id="wb-designer"><div class="sec-head"><span class="eyebrow">Website designer</span><h2>Design it block by block</h2></div>
           <p class="wb-hint">Templates, pages, buttons that go somewhere, pictures, a real dark mode, Undo, and Download HTML. Flint edits it with you, free.</p>
+          <div class="wb-designs" id="wb-designs" aria-live="polite"></div>
           <div class="wb-acts"><button class="btn primary" id="wb-design" type="button">Open the designer</button></div></section>
         <section class="wb-sec wb-gen" id="wb-gen"></section>
         <section class="wb-sec">
@@ -132,6 +146,7 @@
     };
     if ($('#wb-save')) $('#wb-save').onclick = () => save().then(ok => ok && toast('Saved'));
     const wd = $('#wb-design'); if (wd) wd.onclick = () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: pid() });   // feat/flint-site: the website designer
+    designs();
     const wt = $('#wb-tpl'); if (wt) wt.onclick = () => window.TribeSiteLib && window.TribeSiteLib.open();   // website templates (sitelib.js)
     $('#wb-build').onclick = async () => {
       const b = $('#wb-build'); b.disabled = true; b.textContent = 'Building…';
