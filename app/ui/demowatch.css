@@ -1,5 +1,5 @@
-/* "Flint builds a game" (demowatch.js): the dim is four flat panels around a hole, a 2px ember ring, Flint's cursor,
-   one caption card and a slim control bar. Flat matte: 1px borders, luminance steps, tokens only, no glow or blur. */
+/* "See how TribeCode works" (demowatch.js), the tour with Flint: the dim is four flat panels around a hole, a 2px ember ring, Flint's cursor,
+   one caption card, a slim control bar with chapter dots. Flat matte: 1px borders, luminance steps, tokens only, no glow or blur. */
 body.dw-on .shell { height: calc(100vh - 52px); }
 body.dw-on .toast { bottom: auto; top: 76px; }
 
@@ -16,7 +16,6 @@ body.dw-paused .dw-dim i, body.dw-paused .dw-ring { opacity: 0; }
 .dw-name { position: absolute; left: 16px; top: 18px; padding: 2px 8px; border-radius: 6px; background: var(--c); color: var(--canvas); font: 700 12px/1.5 var(--font); white-space: nowrap; }
 .dw-ripple { position: fixed; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 2px solid var(--c, var(--accent)); animation: dw-ring var(--dur-slow) var(--ease-out) forwards; }
 @keyframes dw-ring { from { transform: scale(1); opacity: 1; } to { transform: scale(4.5); opacity: 0; } }
-.dw-carry { position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none; }
 
 /* the caption: Flint, the step, what he's doing, the command he "types" */
 .dw-ui { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9990; pointer-events: none; }
@@ -40,28 +39,31 @@ body.dw-paused .dw-dim i, body.dw-paused .dw-ring { opacity: 0; }
 .dw-b.on { color: var(--live-ink); border-color: var(--accent-2); }
 .dw-play { width: 38px; padding: 0; }
 .dw-x { color: var(--muted); }
-.dw-segs { flex: 1; min-width: 0; display: flex; gap: 3px; height: 6px; }
-.dw-segs i { flex: 1; position: relative; overflow: hidden; border-radius: 3px; background: var(--surface-2); }
-.dw-segs b { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); }
-.dw-segs i.past b { width: 100% !important; background: var(--accent-2); }
+/* the chapter dots: one per feature; the current one stretches into a pill that fills as it plays; click to jump */
+.dw-dots { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 2px; }
+.dw-dot { flex: none; display: grid; place-items: center; height: 28px; min-width: 18px; padding: 0 3px; border: 0; border-radius: var(--r-sm); background: transparent; cursor: pointer; }
+.dw-dot i { position: relative; display: block; width: 8px; height: 8px; overflow: hidden; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border);
+  transition: width var(--dur-base) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.dw-dot b { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); }
+.dw-dot:hover i { background: var(--border); }
+.dw-dot.past i { background: var(--accent-2); border-color: var(--accent-2); }
+.dw-dot.past b { width: 0 !important; }
+.dw-dot.on i { width: 34px; }
+.dw-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .dw-time { flex: none; font: 500 12px var(--mono); color: var(--muted); }
 
-/* the cards Flint brings along */
+/* the cards Flint brings along: the pretend huddle, the AI-boost card */
 .dw-card { position: fixed; z-index: 9985; display: grid; gap: 8px; width: 260px; padding: 14px; box-sizing: border-box; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--text); }
 .dw-card b { font-size: 15px; }
-.dw-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
-.dw-card li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.dw-card li::before { content: ''; width: 8px; height: 8px; border-radius: 2px; border: 1px solid var(--border); flex: none; }
-.dw-card li.done { color: var(--text); }
-.dw-card li.done::before { background: var(--accent-2); border-color: var(--accent-2); }
-.dw-card code { font: 12.5px var(--mono); }
-.dw-build { left: 50%; top: 30%; transform: translateX(-50%); }
-.dw-proof { left: 50%; top: 22%; transform: translateX(-50%); width: 320px; }
-.dw-inspo { left: 24px; top: 120px; }
-.dw-tiles { display: flex; gap: 8px; }
-.dw-tile { display: grid; justify-items: center; gap: 4px; padding: 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); color: var(--muted); font: 600 11px var(--font); }
-.dw-tile svg { display: block; image-rendering: pixelated; }
-.dw-carry.dw-tile { border-color: var(--accent); }
+.dw-huddle { right: 24px; top: 84px; width: 280px; }
+.dw-hps { display: flex; gap: 14px; }
+.dw-hp { display: grid; justify-items: center; gap: 4px; color: var(--muted); }
+.dw-hp i { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--c, var(--peer)); color: var(--canvas); font: 700 15px var(--font); font-style: normal; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color var(--dur-quick) var(--ease-out); }
+.dw-hp.talk i { outline-color: var(--online); }
+.dw-hp small { font: 600 12px var(--font); }
+.dw-hcap { margin: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); font-size: 13px; line-height: 1.45; }
+.dw-hcap b { margin-right: 4px; color: var(--peer-ink); font-size: 13px; }
+.dw-boost { left: 50%; top: 24%; transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); }
 
 /* Maya's comment pin on the preview */
 .dw-pin { position: fixed; z-index: 9985; display: flex; align-items: flex-start; gap: 8px; max-width: 260px; }
@@ -87,10 +89,11 @@ body.dw-paused .dw-dim i, body.dw-paused .dw-ring { opacity: 0; }
   .dw-cap { bottom: 60px; padding: 10px 12px; }
   .dw-t { font-size: 15px; } .dw-say { font-size: 14px; }
   .dw-time, #dw-speed { display: none; }
-  .dw-inspo { left: 12px; top: 80px; }
+  .dw-huddle { right: 12px; top: 72px; }
+  .dw-dot { min-width: 12px; padding: 0 1px; } .dw-dot.on i { width: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dw-dim i, .dw-ring, .dw-b { transition: none; }
+  .dw-dim i, .dw-ring, .dw-b, .dw-dot i, .dw-hp i { transition: none; }
   .dw-cap.in { animation: none; }
   .dw-ripple { display: none; }
 }
