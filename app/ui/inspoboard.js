@@ -16,8 +16,9 @@
   const pid = () => (connected() && window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || '';
   const pname = () => { const p = ((C() && C().state().projects) || []).find(x => x.id === pid()); return p ? p.name : ''; };
   const st = { board: 'me', q: '', type: 'image', source: 'openverse', results: null, busy: false, view: null, note: '', applied: '', freesound: false };
-  // polish: Freesound is a sound source once the host set its API key (server-side only; we only learn whether there is one)
-  async function fsCheck() { try { st.freesound = !!(await C().api('/inspo/freesound')).configured; } catch { st.freesound = false; } }
+  // polish: Freesound is a sound source once the host set its API key (server-side only; we only learn whether there is one).
+  // With no tribe there is no host and the check would 401, so skip it.
+  async function fsCheck() { if (!connected()) { st.freesound = false; return; } try { st.freesound = !!(await C().api('/inspo/freesound')).configured; } catch { st.freesound = false; } }
   const api = (p, o) => C().api(p, o);
   const qb = () => (st.board === 'me' ? 'board=me' : 'project=' + encodeURIComponent(st.board));
 
