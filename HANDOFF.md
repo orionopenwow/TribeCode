@@ -64,6 +64,7 @@ Pushing from the Claude cloud sandbox:
   - `siteflint.js` + `app/ui/siteedit-core.js` + `app/ui/siteshelf.js`: Flint edits the website in the preview with no AI (undo, a version per change) and the Saved shelf (docs/WEBSITE.md).
   - `applink.js` + `export.js` + `github-auth.js`: Home Screen/desktop app links, Desktop folder export/copy, GitHub device-flow sign-in.
   - `demo.js` + `scripts/start-demo-tribe.js`: the demo tribe (templates/lantern-run, templates/tavern-3d).
+  - `app/ui/demowatch.js`: "Flint builds a game", the hands-off ~90 s demo (`app/?demo=watch`, the site's Watch link, Help, the empty Home's Tour with Flint). Every demo (offline.js) lives in its tab only and never touches the saved settings. Tests: e2e_demo_watch, e2e_demo_actions, e2e_demo_isolation.
   - `share.js`: public https via Tailscale Funnel or cloudflared.
   - `site.js`: GitHub Pages friend links.
   - `devices.js`: phone device links.

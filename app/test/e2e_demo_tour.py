@@ -157,6 +157,25 @@ def main():
             pg.click("#dt-try")
             assert not state(pg)["running"] and pg.locator("#dt-bar").count() == 0 and pg.locator(".dt-cur").count() == 0
             pg.wait_for_function(f"TribeShowcase._test.info().step > {s0}", timeout=15000)
+            # feat/demo-auto: the dim never stays. Live narration: Flint's spotlight goes on; pausing lifts it; Esc ends the
+            # tour with no dim, bar or cursor left; a target that disappears lifts Flint's ring within ~2 s (the watchdog)
+            pg.evaluate("TribeDirector.start({ noIntro: true })")
+            pg.wait_for_selector("#dt-spot:not(.wide)", state="attached", timeout=10000)
+            pg.click("#dt-play"); assert state(pg)["paused"]
+            pg.wait_for_function("getComputedStyle(document.querySelector('#dt-spot')).opacity === '0'", timeout=2000)   # paused: no dim
+            pg.click("#dt-play")
+            pg.keyboard.press("Escape")
+            pg.wait_for_function("!document.querySelector('#dt-spot, #dt-bar, .dt-cur, #dt-say') && !document.querySelector('.fg-root.on')", timeout=3000)
+            assert not state(pg)["running"]
+            pg.evaluate("(() => { const b = document.createElement('button'); b.id = 'fg-gone'; b.textContent = 'here'; b.style.cssText = 'position:fixed;left:300px;top:300px'; document.body.appendChild(b); window.__fg = TribeFlintGuide.point(b, 'Look here', { dim: true }); })()")
+            pg.wait_for_selector(".fg-root.on .fg-ring.on", timeout=5000)
+            pg.evaluate("document.querySelector('#fg-gone').remove()")
+            pg.wait_for_function("!document.querySelector('.fg-root.on')", timeout=4000)
+            assert pg.evaluate("window.__fg") == "close"
+            pg.evaluate("(() => { const b = document.createElement('button'); b.id = 'fg-esc'; b.style.cssText = 'position:fixed;left:300px;top:300px;width:40px;height:20px'; document.body.appendChild(b); TribeFlintGuide.point(b, 'And here', { dim: true }); })()")
+            pg.wait_for_selector(".fg-root.on", timeout=5000)
+            pg.keyboard.press("Escape")
+            pg.wait_for_function("!document.querySelector('.fg-root.on')", timeout=2000)
             # the pill offers the tour again
             pg.click("#demo-pill"); pg.wait_for_selector("#sc-tour", state="visible")
             pg.click("#sc-tour"); pg.wait_for_function("TribeDirector._test.state().running", timeout=5000)

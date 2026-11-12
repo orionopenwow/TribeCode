@@ -193,11 +193,12 @@ def main():
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             assert settings(pg)["server"] == REAL["server"]
 
-            # the website: "Watch a demo tribe" goes to app/?demo=showcase and lands in it
+            # the website: "Watch a demo tribe" plays Flint builds a game (app/?demo=watch, e2e_demo_watch.py); the footer's
+            # "Demo tribe" still goes to app/?demo=showcase and lands in it
             pg.goto(BASE + "/")
-            link = pg.locator(".hero a:has-text('Watch a demo tribe')")
+            assert pg.locator(".hero a:has-text('Watch a demo tribe')").get_attribute("href") == "app/?demo=watch"
+            link = pg.locator("footer a:has-text('Demo tribe')")
             assert link.get_attribute("href") == "app/?demo=showcase"
-            for sel in ["footer a:has-text('Demo tribe')"]: assert pg.locator(sel).get_attribute("href") == "app/?demo=showcase", sel
             link.click(); pg.wait_for_url("**/app/**", timeout=10000); landed(pg, "site link")
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             # demo.html: "Host a demo tribe"

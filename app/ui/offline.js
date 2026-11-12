@@ -4,14 +4,17 @@
 //   * tribe.js's connect() asks TribeOffline.socket(url) for a fake WebSocket (one marked line in tribe.js).
 // You are the host of "Demo Tribe" with one project (Lantern Run), two pretend friends (Maya, Jay) and a pretend
 // Claude agent that answers @mentions, picks up new tasks and posts a gist. Inviting someone makes a pretend link and
-// a third friend (Rio) "joins" a few seconds later. Anything not built here answers "Not in the offline demo".
-// Leaving restores your real settings exactly (server URL and token, hosting); the demo survives reloads until reset.
+// a third friend (Rio) "joins" a few seconds later. Chat (replies, reactions, pins, edit/delete, pictures, DMs), tasks
+// (assign/accept, approvals), docs and comments, notes, uploads, proposals and a pretend huddle all work here; only what
+// truly needs another device or a real agent shows a calm "This needs a real tribe" card with Host.
+// feat/demo-auto: a demo lives in THIS TAB only (sessionStorage) and never rewrites your saved settings, so it can't leak
+// into the real app; it survives reloads in the tab; Leave/Exit, a real sign-in or hosting end it cleanly.
 // Showcase mode (app/ui/showcase.js): the same backend seeded with a lively "Campfire Crew" tribe and a script that
 // plays out by itself (db.mode === 'showcase'). start() with no mode asks which one you want.
 // Solo mode (db.mode === 'solo', docs/PHONE-HOSTING.md): a REAL tribe that lives on this phone only. Same backend, but
 // no pretend people and no demo data: you, Flint and an empty first project. exportSolo() packs it for the move to a
 // real host (POST /api/import/solo, server/soloimport.js); app/ui/phonehost.js draws the chooser and the move sheet.
-//   window.TribeOffline = { active(), start(mode), choose(), leave(), reset(), hostForReal(), socket(url), state(), _k }
+//   window.TribeOffline = { active(), start(mode), choose(), leave(), exit(), end(), reset(), hostForReal(), socket(url), mediaUrl(u), ephemeral(), state(), _k }
 (function () {
   'use strict';
   const S = window.TribeStore;
@@ -965,6 +968,13 @@
       case 'proposals': {   // the approval board (board.js): showcase.js seeds one and votes on it
         const list = (db.proposals = db.proposals || {})[pid] = db.proposals[pid] || [];
         if (GET && !b) return ok({ proposals: list.map(x => ({ ...x, tally: tally(x) })) });
+        if (POST && !b) {   // a new proposal: your vote counts as yes; the pretend friends vote a moment later
+          const title = String(body.title || '').trim().slice(0, 160); if (!title) return no(400, 'give it a title');
+          const pr = { id: 'p-' + rid(6), title, short: title, body: String(body.body || '').slice(0, 20000), kind: 'feature', status: 'open', by: 'me', created: iso(), votes: {} };
+          list.unshift(pr); save(); vote(pid, pr, 'me', 'yes');
+          if (pr.status === 'open' && !solo()) later(1800, () => { if (pr.status === 'open') vote(pid, pr, 'maya', 'yes'); });
+          return ok({ proposal: { ...pr, tally: tally(pr) } });
+        }
         const pr = list.find(x => x.id === b); if (!pr) break;
         if (POST && c === 'vote') { vote(pid, pr, 'me', body.vote === 'no' ? 'no' : 'yes'); return ok({ proposal: { ...pr, tally: tally(pr) } }); }
         if (POST && c === 'comment') { const t = String(body.text || '').trim().slice(0, 1000); if (!t) return no(400, 'say something'); pr.comments = [...(pr.comments || []), { by: 'me', text: t, at: iso() }]; save(); return ok({ proposal: { ...pr, tally: tally(pr) } }); }

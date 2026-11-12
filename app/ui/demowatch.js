@@ -435,7 +435,7 @@
   // Esc ends the show (no dim, no cursors) and leaves the tribe to explore; the pill still has Exit
   addEventListener('keydown', e => {
     if (!running) return;
-    if (e.key === 'Escape') { e.preventDefault(); stop(); if (A() && A().toast) A().toast('Stopped. Look around, or Exit the demo from the pill at the top.'); }
+    if (e.key === 'Escape' && e.isTrusted) { e.preventDefault(); stop(); if (A() && A().toast) A().toast('Stopped. Look around, or Exit the demo from the pill at the top.'); }
     else if (e.key === ' ' && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '') && !e.target.isContentEditable) { e.preventDefault(); paused ? play() : pause(); }
   }, true);
   addEventListener('resize', () => { if (running && idx >= 0) spot(null); });
@@ -461,7 +461,8 @@
   document.addEventListener('click', e => {
     const t = e.target.closest && e.target.closest('#hub-tour, [data-dw-start]'); if (!t) return;
     const hasTribe = !!(C() && C().hasToken && C().hasToken()) && !on();
-    if (t.id === 'hub-tour' && hasTribe) return;   // a real tribe: Flint's look around the real places (flinttour.js)
+    const paused = !!(window.TribeFlintTour && window.TribeFlintTour.state && window.TribeFlintTour.state().paused);
+    if (t.id === 'hub-tour' && (hasTribe || paused)) return;   // a real tribe, or "Continue the tour": Flint's look around the real places (flinttour.js)
     e.preventDefault(); e.stopPropagation(); begin();
   }, true);
   // from anywhere (the real app, another demo): a fresh watch demo in this tab, after a reload so nothing else is mounted

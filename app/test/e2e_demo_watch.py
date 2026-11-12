@@ -6,7 +6,8 @@ to end headless, every step's target was found by the watchdog (no skips), the r
 Run, its vision, three assigned tasks, Maya's reaction on a chat message, the game in the Preview tuned, a firefly,
 Maya's pin resolved, an approval approved, a website draft, the game played itself and lit lanterns, the proof ZIP),
 and it ends on the "Your turn" card with no dim left. Esc mid-way removes every overlay (dim, ring, cursors, caption).
-Pause stops the clock, 1x/2x, Skip to end lands on Your turn. Help › "Watch Flint build a game" starts it. Exit puts
+Pause stops the clock, 1x/2x, Skip to end lands on Your turn. Help › "Watch Flint build a game" and the empty Home's
+"Tour with Flint" start it. Exit puts
 your own settings back exactly. No console errors.
 Usage: python app/test/e2e_demo_watch.py [--shots]   (--shots saves docs/screenshots/demo-watch-*.png)
 """
@@ -135,12 +136,22 @@ def main():
             assert pg.locator("#demo-pill").count() == 0 and not pg.evaluate("document.body.classList.contains('offline-demo')")
 
             # ---- Help › Watch Flint build a game ----
-            pg.wait_for_function("window.TribeHelp || document.querySelector('#tb-help')", timeout=10000)
-            pg.evaluate("TribeDemoWatch.begin()")
+            pg.wait_for_selector("#tb-help", state="visible", timeout=10000)
+            pg.click("#tb-help"); pg.click("[data-help=watch]")
             pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
             assert pg.evaluate("TribeOffline.mode()") == "watch"
             pg.evaluate("TribeDemoWatch.exit()")
             pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=15000)
+            # ---- the empty Home's "Tour with Flint" (no tribe yet) ----
+            pg.wait_for_function("window.TribeHub", timeout=10000)
+            if pg.evaluate("document.body.dataset.view") != "hub": pg.evaluate("TribeHub.open('home')")
+            pg.wait_for_selector("#hub-tour", state="visible", timeout=10000)
+            assert "Tour with Flint" in pg.text_content("#hub-tour")
+            pg.click("#hub-tour")
+            pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
+            pg.evaluate("TribeDemoWatch.exit()")
+            pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=15000)
+            assert pg.evaluate("JSON.parse(localStorage.getItem('tribecode.settings.v1')).server") == REAL["server"]
             ctx.close(); b.close()
     finally:
         srv.shutdown()

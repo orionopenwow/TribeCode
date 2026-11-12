@@ -963,7 +963,7 @@
   document.addEventListener('pointerdown', e => { if (running && !paused && !guided && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root, .dt-say, .dt-intro')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
 
   // feat/demo-auto: Esc, Back and a crash always lift the dim: Esc hands you the tribe (like Try it yourself)
-  addEventListener('keydown', e => { if (e.key === 'Escape' && running && !$('#dt-intro')) { e.preventDefault(); tryIt(); } });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && e.isTrusted && running && !$('#dt-intro')) { e.preventDefault(); tryIt(); } });
   addEventListener('popstate', () => { if (running && !fast) tryIt(); });
   addEventListener('error', () => { if (!running && spotEl) { spotEl.remove(); spotEl = null; } });
   window.TribeDirector = {
