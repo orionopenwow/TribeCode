@@ -70,8 +70,9 @@
     const f = pop.querySelector('button'); if (f) f.focus({ preventScroll: true });
     return pop;
   }
-  addEventListener('mousedown', e => { if (pop && !pop.contains(e.target) && !(popAnchor && popAnchor.contains(e.target))) closePop(); }, true);
-  addEventListener('keydown', e => { if (e.key === 'Escape' && pop) { const a = popAnchor; closePop(); if (a) a.focus(); } }, true);
+  const inConsent = e => !!(e.target && e.target.closest && e.target.closest('#ai-consent'));   // the cloud AI question sits over the card
+  addEventListener('mousedown', e => { if (pop && !pop.contains(e.target) && !(popAnchor && popAnchor.contains(e.target)) && !inConsent(e)) closePop(); }, true);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && pop && !document.getElementById('ai-consent')) { const a = popAnchor; closePop(); if (a) a.focus(); } }, true);
 
   const MENUS = {
     chat: [['chat.summary', 'Summarize the thread'], ['chat.tasks', 'Turn it into tasks']],
