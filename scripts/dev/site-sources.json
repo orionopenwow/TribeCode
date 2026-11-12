@@ -1,0 +1,970 @@
+{
+ "about": "Open-source templates imported into the website designer (feat/site-v2). scripts/dev/site-gallery.py converts each page with app/ui/siteimport.js into a block config in app/ui/sitetpl/<id>.json. Only MIT and CC BY 3.0 sources; CC BY ones carry a credit line in every export (cfg.credit). Pictures are replaced with original flat art; fonts are mapped to our OFL families.",
+ "repos": {
+  "sb": {
+   "author": "Start Bootstrap (David Miller)",
+   "license": "MIT",
+   "url": "https://github.com/StartBootstrap/startbootstrap-{name}",
+   "file": "dist/index.html"
+  },
+  "tt": {
+   "author": "Tailwind Toolbox (Amrit Nagi)",
+   "license": "MIT",
+   "url": "https://github.com/tailwindtoolbox/{name}",
+   "file": "index.html"
+  },
+  "h5": {
+   "author": "HTML5 UP (AJ, @ajlkn)",
+   "license": "CC BY 3.0",
+   "url": "https://html5up.net/{name}",
+   "file": "index.html",
+   "credit": true
+  }
+ },
+ "templates": [
+  {
+   "id": "sb-agency",
+   "src": "sb",
+   "name": "agency",
+   "title": "Agency",
+   "category": "Business",
+   "summary": "A studio or agency: services, portfolio grid, about timeline, team, contact.",
+   "tags": [
+    "agency",
+    "studio",
+    "services"
+   ],
+   "accent": "#FFC800",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Space Grotesk",
+   "hero": [
+    "It's nice to meet you",
+    "Brand, web and print for small companies that want to look as good as they are."
+   ]
+  },
+  {
+   "id": "sb-business-casual",
+   "src": "sb",
+   "name": "business-casual",
+   "title": "Business Casual",
+   "category": "Food & drink",
+   "summary": "A warm small-business page with a story, opening hours and a promise.",
+   "tags": [
+    "cafe",
+    "shop",
+    "local"
+   ],
+   "accent": "#E6A756",
+   "bg": "#2B2118",
+   "ink": "#F7EDE2",
+   "display": "Fraunces",
+   "hero": [
+    "Fresh coffee worth drinking",
+    "A small roastery café on the corner. Beans roasted on Mondays, pastries baked every morning."
+   ]
+  },
+  {
+   "id": "sb-business-frontpage",
+   "src": "sb",
+   "name": "business-frontpage",
+   "title": "Business Frontpage",
+   "category": "Business",
+   "summary": "A plain business front page: headline, three features, a quote and a call to action.",
+   "tags": [
+    "business",
+    "company"
+   ],
+   "accent": "#0D6EFD",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "hero": [
+    "Present your business in a whole new way",
+    "Say what you do in one line, then show three reasons people pick you."
+   ]
+  },
+  {
+   "id": "sb-clean-blog",
+   "src": "sb",
+   "name": "clean-blog",
+   "title": "Clean Blog",
+   "category": "Blog",
+   "summary": "A reading-first blog: big masthead, post list with dates, subscribe.",
+   "tags": [
+    "blog",
+    "writing",
+    "posts"
+   ],
+   "accent": "#0085A1",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Fraunces",
+   "hero": [
+    "Clean Blog",
+    "Notes on making things, one post a week."
+   ],
+   "extra": [
+    {
+     "type": "list",
+     "variant": "cards",
+     "props": {
+      "title": "Latest posts",
+      "items": [
+       {
+        "title": "Why we write every Sunday",
+        "meta": "June 3",
+        "text": "A short note on keeping a habit that keeps us honest.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "The tools we stopped using",
+        "meta": "May 27",
+        "text": "Less software, more done.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "What a year of posting taught us",
+        "meta": "May 20",
+        "text": "Numbers, mistakes and the one post people still read.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "newsletter",
+     "variant": "card",
+     "props": {
+      "title": "Get the next post",
+      "text": "One email a week. Unsubscribe any time.",
+      "action": "",
+      "button": "Subscribe"
+     }
+    }
+   ]
+  },
+  {
+   "id": "sb-coming-soon",
+   "src": "sb",
+   "name": "coming-soon",
+   "title": "Coming Soon",
+   "category": "Coming soon",
+   "summary": "One screen, one line, an email signup for launch day.",
+   "tags": [
+    "coming soon",
+    "waitlist",
+    "launch"
+   ],
+   "accent": "#6C63FF",
+   "bg": "#0E0F1A",
+   "ink": "#F2F2F7",
+   "display": "Space Grotesk",
+   "hero": [
+    "Our site is coming soon",
+    "We're putting the finishing touches on it. Leave your email and we'll tell you the day it opens."
+   ]
+  },
+  {
+   "id": "sb-creative",
+   "src": "sb",
+   "name": "creative",
+   "title": "Creative",
+   "category": "Business",
+   "summary": "A bold one-pager for a creative service: services grid, portfolio, contact.",
+   "tags": [
+    "creative",
+    "freelance",
+    "studio"
+   ],
+   "accent": "#F4623A",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Space Grotesk",
+   "hero": [
+    "Your favorite place for print and web design",
+    "We make posters, menus and websites for the shops on your street."
+   ]
+  },
+  {
+   "id": "sb-freelancer",
+   "src": "sb",
+   "name": "freelancer",
+   "title": "Freelancer",
+   "category": "Portfolio",
+   "summary": "A one-person portfolio: avatar, work grid, about in two columns, contact.",
+   "tags": [
+    "freelancer",
+    "portfolio"
+   ],
+   "accent": "#1ABC9C",
+   "bg": "#FFFFFF",
+   "ink": "#2C3E50",
+   "display": "Space Grotesk",
+   "hero": [
+    "Freelancer",
+    "Graphic artist · Web designer · Illustrator"
+   ]
+  },
+  {
+   "id": "sb-grayscale",
+   "src": "sb",
+   "name": "grayscale",
+   "title": "Grayscale",
+   "category": "Startup",
+   "summary": "A dark, quiet product page with projects side by side and a signup.",
+   "tags": [
+    "startup",
+    "product",
+    "dark"
+   ],
+   "accent": "#64A19D",
+   "bg": "#0F0F0F",
+   "ink": "#F2F2F2",
+   "display": "Space Grotesk",
+   "hero": [
+    "Grayscale",
+    "A quiet tool for teams who would rather be building."
+   ]
+  },
+  {
+   "id": "sb-landing-page",
+   "src": "sb",
+   "name": "landing-page",
+   "title": "Landing Page",
+   "category": "Startup",
+   "summary": "The classic landing page: signup hero, three icons, alternating showcase, testimonials.",
+   "tags": [
+    "landing",
+    "startup",
+    "app"
+   ],
+   "accent": "#0D6EFD",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "hero": [
+    "Generate more leads with a page that says one thing",
+    "Tell people what you do and give them one button to press."
+   ]
+  },
+  {
+   "id": "sb-modern-business",
+   "src": "sb",
+   "name": "modern-business",
+   "title": "Modern Business",
+   "category": "Business",
+   "summary": "A company site: hero, features, a testimonial, blog teasers, call to action.",
+   "tags": [
+    "company",
+    "business"
+   ],
+   "accent": "#0D6EFD",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "hero": [
+    "A better way to run a small business",
+    "Bookings, invoices and reminders in one place, made for teams of one to twenty."
+   ]
+  },
+  {
+   "id": "sb-new-age",
+   "src": "sb",
+   "name": "new-age",
+   "title": "New Age",
+   "category": "Startup",
+   "summary": "An app launch page: phone mockup hero, features, a quote, download buttons.",
+   "tags": [
+    "app",
+    "mobile",
+    "launch"
+   ],
+   "accent": "#2937F0",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Space Grotesk",
+   "hero": [
+    "Showcase your app beautifully",
+    "Show the real screen, say what it does, link the stores."
+   ]
+  },
+  {
+   "id": "sb-one-page-wonder",
+   "src": "sb",
+   "name": "one-page-wonder",
+   "title": "One Page Wonder",
+   "category": "Startup",
+   "summary": "Three big alternating picture-and-text rows under a loud hero.",
+   "tags": [
+    "one page",
+    "product"
+   ],
+   "accent": "#EE0979",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Bricolage Grotesque",
+   "hero": [
+    "One Page Wonder",
+    "Three things worth knowing, one scroll."
+   ]
+  },
+  {
+   "id": "sb-personal",
+   "src": "sb",
+   "name": "personal",
+   "title": "Personal",
+   "category": "Personal",
+   "summary": "A personal home page: who you are, what you do, a resume and projects.",
+   "tags": [
+    "personal",
+    "resume",
+    "about me"
+   ],
+   "accent": "#5865F2",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Space Grotesk",
+   "hero": [
+    "Get online and grow fast",
+    "Hi, I'm a designer and developer. Here's what I'm working on."
+   ]
+  },
+  {
+   "id": "sb-resume",
+   "src": "sb",
+   "name": "resume",
+   "title": "Resume",
+   "category": "Personal",
+   "summary": "A resume as a web page: about, experience, education, skills, interests.",
+   "tags": [
+    "resume",
+    "cv"
+   ],
+   "accent": "#BD5D38",
+   "bg": "#FFFFFF",
+   "ink": "#343A40",
+   "display": "Space Grotesk",
+   "hero": [
+    "Clarence Taylor",
+    "Web developer in Cheyenne Wells. I build fast, plain websites for small teams."
+   ]
+  },
+  {
+   "id": "sb-small-business",
+   "src": "sb",
+   "name": "small-business",
+   "title": "Small Business",
+   "category": "Business",
+   "summary": "A small company: a picture and a pitch, a call-out band and three cards.",
+   "tags": [
+    "small business",
+    "local"
+   ],
+   "accent": "#212529",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "hero": [
+    "Business name or tagline",
+    "Say who you are and who you help in one or two sentences."
+   ]
+  },
+  {
+   "id": "sb-stylish-portfolio",
+   "src": "sb",
+   "name": "stylish-portfolio",
+   "title": "Stylish Portfolio",
+   "category": "Portfolio",
+   "summary": "A portfolio with services, a full-width call-out and a project grid.",
+   "tags": [
+    "portfolio",
+    "services"
+   ],
+   "accent": "#1D809F",
+   "bg": "#FFFFFF",
+   "ink": "#212529",
+   "display": "Fraunces",
+   "hero": [
+    "Stylish Portfolio",
+    "Design and development for people who sell things they make."
+   ]
+  },
+  {
+   "id": "tt-landing-page",
+   "src": "tt",
+   "name": "Landing-Page",
+   "title": "Tailwind Landing",
+   "category": "Startup",
+   "summary": "A friendly product landing page: hero, two feature rows, pricing, call to action.",
+   "tags": [
+    "landing",
+    "pricing",
+    "product"
+   ],
+   "accent": "#D157A0",
+   "bg": "#FFFFFF",
+   "ink": "#1F2937",
+   "display": "Space Grotesk",
+   "hero": [
+    "Main hero message to sell your product",
+    "Sub-hero message, not too long and not too short. Make it just right."
+   ]
+  },
+  {
+   "id": "tt-app-landing",
+   "src": "tt",
+   "name": "App-Landing-Page",
+   "title": "App Landing",
+   "category": "Startup",
+   "summary": "A dark app page: one claim, store buttons, a screenshot.",
+   "tags": [
+    "app",
+    "mobile",
+    "dark"
+   ],
+   "accent": "#7C3AED",
+   "bg": "#111827",
+   "ink": "#F3F4F6",
+   "display": "Space Grotesk",
+   "hero": [
+    "Main hero message to sell your app",
+    "One line on what it does for people, then the store buttons."
+   ],
+   "extra": [
+    {
+     "type": "features",
+     "variant": "grid",
+     "props": {
+      "title": "What it does",
+      "items": [
+       {
+        "title": "Plans your week",
+        "text": "Drop in what's due; it lays out the days."
+       },
+       {
+        "title": "Nudges, not nags",
+        "text": "One reminder, at the right time."
+       },
+       {
+        "title": "Works offline",
+        "text": "Everything stays on your phone until you sync."
+       }
+      ]
+     }
+    },
+    {
+     "type": "cta",
+     "variant": "accent",
+     "props": {
+      "title": "Get the app",
+      "text": "Free on iPhone and Android.",
+      "buttons": [
+       {
+        "label": "App Store",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "label": "Google Play",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tt-ghostwind",
+   "src": "tt",
+   "name": "Ghostwind",
+   "title": "Ghostwind",
+   "category": "Blog",
+   "summary": "A magazine-style blog home: a featured post, a grid of posts, an author box.",
+   "tags": [
+    "blog",
+    "magazine"
+   ],
+   "accent": "#2B6CB0",
+   "bg": "#F7FAFC",
+   "ink": "#1A202C",
+   "display": "Fraunces",
+   "hero": [
+    "Ghostwind",
+    "A small magazine about the web, written by people who build it."
+   ],
+   "extra": [
+    {
+     "type": "list",
+     "variant": "cards",
+     "props": {
+      "title": "Latest posts",
+      "items": [
+       {
+        "title": "Why we write every Sunday",
+        "meta": "June 3",
+        "text": "A short note on keeping a habit that keeps us honest.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "The tools we stopped using",
+        "meta": "May 27",
+        "text": "Less software, more done.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "What a year of posting taught us",
+        "meta": "May 20",
+        "text": "Numbers, mistakes and the one post people still read.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "type": "text",
+     "variant": "highlight",
+     "props": {
+      "title": "About the authors",
+      "text": "We are three people who build websites for a living and write about it on weekends."
+     }
+    }
+   ]
+  },
+  {
+   "id": "tt-minimal-blog",
+   "src": "tt",
+   "name": "Minimal-Blog",
+   "title": "Minimal Blog",
+   "category": "Blog",
+   "summary": "One quiet column of writing with a subscribe box.",
+   "tags": [
+    "blog",
+    "minimal",
+    "newsletter"
+   ],
+   "accent": "#38A169",
+   "bg": "#FFFFFF",
+   "ink": "#2D3748",
+   "display": "Fraunces",
+   "hero": [
+    "Minimal Blog",
+    "Short essays, sent when they're ready."
+   ],
+   "extra": [
+    {
+     "type": "list",
+     "variant": "cards",
+     "props": {
+      "title": "Latest posts",
+      "items": [
+       {
+        "title": "Why we write every Sunday",
+        "meta": "June 3",
+        "text": "A short note on keeping a habit that keeps us honest.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "The tools we stopped using",
+        "meta": "May 27",
+        "text": "Less software, more done.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "title": "What a year of posting taught us",
+        "meta": "May 20",
+        "text": "Numbers, mistakes and the one post people still read.",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tt-nordic-store",
+   "src": "tt",
+   "name": "Nordic-Store",
+   "title": "Nordic Store",
+   "category": "Shop",
+   "summary": "A calm product shop: a hero banner, a product grid, about the store.",
+   "tags": [
+    "shop",
+    "store",
+    "products"
+   ],
+   "accent": "#1F2937",
+   "bg": "#FFFFFF",
+   "ink": "#1F2937",
+   "display": "Space Grotesk",
+   "hero": [
+    "Nordic Store",
+    "Wool, wood and ceramics from small makers in the north."
+   ],
+   "extra": [
+    {
+     "type": "gallery",
+     "variant": "grid",
+     "props": {
+      "title": "In the shop",
+      "items": [
+       {
+        "img": "",
+        "alt": "A wool blanket",
+        "caption": "Wool blanket · €89"
+       },
+       {
+        "img": "",
+        "alt": "A birch bowl",
+        "caption": "Birch bowl · €34"
+       },
+       {
+        "img": "",
+        "alt": "A stoneware mug",
+        "caption": "Stoneware mug · €22"
+       },
+       {
+        "img": "",
+        "alt": "A linen towel",
+        "caption": "Linen towel · €18"
+       }
+      ]
+     }
+    },
+    {
+     "type": "text",
+     "variant": "two",
+     "props": {
+      "title": "About the store",
+      "text": "Everything here is made by people we've met, in small batches, from materials that last."
+     }
+    },
+    {
+     "type": "contact",
+     "variant": "simple",
+     "props": {
+      "title": "Questions?",
+      "text": "Write to us about sizes, shipping or wholesale.",
+      "email": "",
+      "action": "",
+      "button": "Send"
+     }
+    }
+   ]
+  },
+  {
+   "id": "tt-profile-card",
+   "src": "tt",
+   "name": "Profile-Card",
+   "title": "Profile Card",
+   "category": "Link in bio",
+   "summary": "One card: photo, name, a few lines and your links.",
+   "tags": [
+    "link in bio",
+    "profile",
+    "card"
+   ],
+   "accent": "#047857",
+   "bg": "#F1F5F2",
+   "ink": "#1F2937",
+   "display": "Space Grotesk",
+   "hero": [
+    "Your Name",
+    "What you do, where you're based, and what you're up to."
+   ],
+   "replace": [
+    {
+     "type": "links",
+     "variant": "cards",
+     "props": {
+      "name": "Your Name",
+      "bio": "What you do, where you're based, and what you're up to.",
+      "img": "",
+      "alt": "Your photo",
+      "shape": "round",
+      "items": [
+       {
+        "label": "My portfolio",
+        "note": "",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "label": "Latest project",
+        "note": "",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       },
+       {
+        "label": "Say hello",
+        "note": "",
+        "link": {
+         "kind": "",
+         "to": ""
+        }
+       }
+      ],
+      "socials": []
+     }
+    },
+    {
+     "type": "footer",
+     "variant": "minimal",
+     "props": {
+      "text": "© Your Name",
+      "links": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "h5-identity",
+   "src": "h5",
+   "name": "identity",
+   "title": "Identity",
+   "category": "Link in bio",
+   "summary": "A single centered card: avatar, name, a line, and your links.",
+   "tags": [
+    "link in bio",
+    "personal",
+    "card"
+   ],
+   "accent": "#C93986",
+   "bg": "#E8E1EE",
+   "ink": "#414F57",
+   "display": "Space Grotesk",
+   "hero": [
+    "Jane Doe",
+    "Senior psychonautics engineer"
+   ]
+  },
+  {
+   "id": "h5-photon",
+   "src": "h5",
+   "name": "photon",
+   "title": "Photon",
+   "category": "Startup",
+   "summary": "A clean product page with a big intro band, features and a call to action.",
+   "tags": [
+    "product",
+    "landing"
+   ],
+   "accent": "#4ACAA8",
+   "bg": "#FFFFFF",
+   "ink": "#585858",
+   "display": "Space Grotesk",
+   "hero": [
+    "Photon",
+    "A clean landing page for a product that does one thing well."
+   ]
+  },
+  {
+   "id": "h5-forty",
+   "src": "h5",
+   "name": "forty",
+   "title": "Forty",
+   "category": "Portfolio",
+   "summary": "A dark tiled portfolio with big project tiles and a contact block.",
+   "tags": [
+    "portfolio",
+    "dark",
+    "tiles"
+   ],
+   "accent": "#9BF1FF",
+   "bg": "#242943",
+   "ink": "#FFFFFF",
+   "display": "Space Grotesk",
+   "hero": [
+    "Hi, my name is Forty",
+    "A studio portfolio with big tiles for big projects."
+   ]
+  },
+  {
+   "id": "h5-stellar",
+   "src": "h5",
+   "name": "stellar",
+   "title": "Stellar",
+   "category": "Startup",
+   "summary": "A friendly one-pager: intro, stats, features and get started.",
+   "tags": [
+    "startup",
+    "stats",
+    "features"
+   ],
+   "accent": "#8CC9F0",
+   "bg": "#935D8C",
+   "ink": "#FFFFFF",
+   "display": "Space Grotesk",
+   "hero": [
+    "Stellar",
+    "A friendly one-pager with the numbers that matter."
+   ]
+  },
+  {
+   "id": "h5-dimension",
+   "src": "h5",
+   "name": "dimension",
+   "title": "Dimension",
+   "category": "Personal",
+   "summary": "A dark single screen with intro, work, about and contact.",
+   "tags": [
+    "personal",
+    "dark",
+    "minimal"
+   ],
+   "accent": "#FFFFFF",
+   "bg": "#1B1F22",
+   "ink": "#FFFFFF",
+   "display": "Space Grotesk",
+   "hero": [
+    "Dimension",
+    "A personal site on one dark screen: intro, work, about, contact."
+   ]
+  },
+  {
+   "id": "h5-eventually",
+   "src": "h5",
+   "name": "eventually",
+   "title": "Eventually",
+   "category": "Coming soon",
+   "summary": "A coming-soon screen with one line and a signup.",
+   "tags": [
+    "coming soon",
+    "signup"
+   ],
+   "accent": "#1CB495",
+   "bg": "#151515",
+   "ink": "#FFFFFF",
+   "display": "Space Grotesk",
+   "hero": [
+    "Eventually",
+    "Something new is on the way. Leave your email and we'll let you know."
+   ],
+   "extra": [
+    {
+     "type": "newsletter",
+     "variant": "card",
+     "props": {
+      "title": "Get the next post",
+      "text": "One email a week. Unsubscribe any time.",
+      "action": "",
+      "button": "Subscribe"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h5-miniport",
+   "src": "h5",
+   "name": "miniport",
+   "title": "Miniport",
+   "category": "Portfolio",
+   "summary": "A personal portfolio: a hello, what I do, my work and contact.",
+   "tags": [
+    "portfolio",
+    "personal"
+   ],
+   "accent": "#43B3E0",
+   "bg": "#F3F3F3",
+   "ink": "#474747",
+   "display": "Space Grotesk",
+   "hero": [
+    "Hi. I'm Jane Doe.",
+    "I design and build small, careful websites."
+   ]
+  },
+  {
+   "id": "h5-read-only",
+   "src": "h5",
+   "name": "read-only",
+   "title": "Read Only",
+   "category": "Personal",
+   "summary": "A one-person site with a sidebar feel: about, work, contact.",
+   "tags": [
+    "resume",
+    "personal"
+   ],
+   "accent": "#4ACAA8",
+   "bg": "#FFFFFF",
+   "ink": "#888888",
+   "display": "Space Grotesk",
+   "hero": [
+    "Willis Corto",
+    "I'm a designer and builder. Here's my work and how to reach me."
+   ]
+  },
+  {
+   "id": "h5-massively",
+   "src": "h5",
+   "name": "massively",
+   "title": "Massively",
+   "category": "Blog",
+   "summary": "A big-type blog with a featured post and a grid of articles.",
+   "tags": [
+    "blog",
+    "posts",
+    "magazine"
+   ],
+   "accent": "#18BFEF",
+   "bg": "#FFFFFF",
+   "ink": "#212931",
+   "display": "Fraunces",
+   "hero": [
+    "This is Massively",
+    "A big-type blog for long reads."
+   ]
+  },
+  {
+   "id": "h5-landed",
+   "src": "h5",
+   "name": "landed",
+   "title": "Landed",
+   "category": "Startup",
+   "summary": "A product page with alternating spotlights and a signup.",
+   "tags": [
+    "product",
+    "spotlights"
+   ],
+   "accent": "#E44C65",
+   "bg": "#1C1D26",
+   "ink": "#FFFFFF",
+   "display": "Space Grotesk",
+   "hero": [
+    "Landed",
+    "The future has landed: a product page with room for the details."
+   ]
+  }
+ ]
+}
