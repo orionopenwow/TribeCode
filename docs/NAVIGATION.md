@@ -9,7 +9,7 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 | **Global** (your dashboard) | Home (updates), Files, Design, Code, Work, Agent fleet | "Your Dashboard" (a bold heading with the home icon), then the rows: Home · Files · Design · Code · Work · Agent fleet |
 | **Project** (inside a tribe) | Dashboard, Messages, Files, Design, Task Board (tabs), Agents Hub (tabs), Company… | The project's rows, under its header |
 
-`TribeRouter.where()` says which: `{ place: 'global', section: 'home' | 'docs' | 'design' | 'repos' | 'work' | 'fleet', key }` or `{ place: 'project', project, view, key }`. The global sections only change the main pane; they never draw the project nest. With no tribe on the device, a project place is never shown: Home opens with a toast that says what to do.
+`TribeRouter.where()` says which (or `{ place: 'workshop' }` while the Workshop is on screen): `{ place: 'global', section: 'home' | 'docs' | 'design' | 'repos' | 'work' | 'fleet', key }` or `{ place: 'project', project, view, key }`. The global sections only change the main pane; they never draw the project nest. With no tribe on the device, a project place is never shown: Home opens with a toast that says what to do.
 
 ## Route table
 
@@ -19,7 +19,7 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 | Rail: tribe circles (`#pj-rail [data-pj-open]`) | That project's Dashboard (`TribeProjects.switchTo(id, 'home')`) | project | none |
 | Rail: right-click a circle | Open dashboard · Messages · Pin · Invite · Project settings · Customize | project | |
 | Rail: `+` (`#pj-plus`) | Create / join a project sheet (always has a close X; Esc closes) | sheet | |
-| Rail: Workshop (`#rail-workshop`, wrench) | Workshop layer over the current place (toggle) | layer | `#/workshop` |
+| Rail: Workshop (`#rail-workshop`, wrench) | The Workshop and its Marketplace in the main area (the rail and sidebar stay); the wrench is lit like a tribe; Back leaves. Its content renders into `TribeWorkshop.container()` | workshop | `#/workshop` |
 | Global: Home (`#nest-hub`) | `TribeHub.open('home')` | global | `#/hub` |
 | Global: Files (`#nest-docs-all`, key `docs-all` kept) | `TribeHub.open('docs')`: your files everywhere, Where = Mine · Everything · each tribe | global | `#/hub/docs` |
 | Global: Design (`#nest-design-all`) | `TribeHub.open('design')`: every canvas and whiteboard, on this device and in your tribes | global | `#/hub/design` |
@@ -52,3 +52,4 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 - **No stale panes.** After every move exactly one `.main > section[id^="view-"]` is visible, and `body.global` matches the place, so a page from the previous dashboard can't stay mounted under the new one.
 - **Home is obvious.** On any global page the rail logo is lit (`#rail-logo.on`, `aria-current="page"`: a pressed tile plus the Ember pill on the rail's left edge, the same as an open tribe; `app/ui/rail.css`), the sidebar starts with the heading "Your Dashboard" (`#nest-home-h`), each page starts with a "Home ›" breadcrumb (`.hub-crumb`, and `#crumb-home` in the title bar), and Home's top card is a band across the whole content area.
 - **Active state.** The lit row is the destination on screen (`TribeShell.current()`): a global section lights its global row, a workspace tab lights its workspace row.
+- **Your own order.** The rail (projects and the wrench, under the Home logo) and the sidebar rows (Home's and each project's) can be dragged into a new order, or moved with Alt+↑ / Alt+↓ on a focused item (`app/ui/reorder.js`). Saved per person (localStorage, and the member's prefs on the server), per tribe for the rail and Home, per project for a project's rows; new items join the end. Reset: right-click › Reset order, or Settings › Sidebar order.

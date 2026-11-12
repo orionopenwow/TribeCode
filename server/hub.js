@@ -4,7 +4,7 @@
 //   GET  /api/hub/fleet          your agents (status, task/focus, context %, tokens), local models, background loops
 //   GET  /api/hub/repos          every visible project's repo: name, branch, ahead/behind, dirty, remote, last commit
 //   GET  /api/hub/docs?q=        docs across visible projects (title/body search)
-//   PUT  /api/hub/prefs          { pins: [projectId] }  pinned projects in the workspace switcher (per member)
+//   PUT  /api/hub/prefs          { pins: [projectId], order: { list: [keys] | null } }  pinned projects; rail/sidebar order (per member)
 //   POST /api/hub/dismiss        { id }            "not now" on a suggestion, remembered
 //   POST /api/hub/note           { project, text } quick note filed into a project (a doc in that project)
 //   POST /api/hub/seen           { project }       "I was just there" (rolling "N new since" suggestions)
@@ -367,7 +367,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
   }
   function prefsOf(me) {
     const pr = db.prefs[me.id] || {};
-    return { pins: (pr.pins || []).filter(pid => P.canSee(me, pid)) };
+    return { pins: (pr.pins || []).filter(pid => P.canSee(me, pid)), order: pr.order || {} };
   }
 
   // ---------- the member view ----------
@@ -480,6 +480,15 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
       if (b === 'prefs' && (m === 'PUT' || m === 'PATCH')) {
         const body = await readBody(req, 8192), pr = db.prefs[me.id] = db.prefs[me.id] || {};
         if (Array.isArray(body.pins)) pr.pins = [...new Set(body.pins.map(x => String(x).slice(0, 60)))].filter(pid => P.canSee(me, pid)).slice(0, 24);
+        // feat/shell-polish: the order of the rail and the sidebar rows (app/ui/reorder.js): { "<list key>": [item keys] | null }
+        if (body.order && typeof body.order === 'object' && !Array.isArray(body.order)) {
+          const o = pr.order = { ...(pr.order || {}) };
+          for (const [k, v] of Object.entries(body.order).slice(0, 40)) {
+            const key = String(k).slice(0, 120); if (!/^[\w:.|-]+$/.test(key)) continue;
+            if (v === null) delete o[key]; else if (Array.isArray(v)) o[key] = [...new Set(v.map(x => String(x).slice(0, 80)))].slice(0, 80);
+          }
+          for (const k of Object.keys(o).slice(0, Math.max(0, Object.keys(o).length - 60))) delete o[k];   // keep the newest 60 lists
+        }
         save(); const v = views.get(me.id); if (v) v.dirty = true;
         return send(res, 200, prefsOf(me));
       }

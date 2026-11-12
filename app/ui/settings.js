@@ -62,7 +62,7 @@
   function close() { modal().classList.add('hidden'); window.TribeApp && window.TribeApp.refresh(); }
   const moreOpen = () => { try { return localStorage.getItem('tribecode.set.more') === '1'; } catch { return false; } };   // qa-qol-2: "More settings" stays as you left it
   // feat/shell-polish: a quiet stroke icon beside each section's name (app/ui/icons.js)
-  const SET_ICO = { Plan: 'bolt', Personalize: 'sparkle', Profile: 'user', Experience: 'sliders', Name: 'rename', Color: 'palette', Language: 'globe', Look: 'palette', Folder: 'files', "Flint's brain": 'flame', 'Local brain': 'flame', 'Host on this computer': 'monitor', 'Open at login': 'monitor', 'Download updates in the background': 'download', 'Friends can ask my AI': 'people', GitHub: 'github', 'Save a copy': 'download', 'TribeCode MCP': 'plug', Chat: 'chat', 'Sign-in': 'key', 'Start fresh': 'refresh', 'Fix problems': 'wrench', 'Crash reports': 'bug', 'Agents in chat': 'agent', 'Starting modes': 'sliders', 'Roles &amp; privileges': 'shield', Packs: 'assets', Backup: 'cloud', 'Freesound sounds': 'media' };
+  const SET_ICO = { Plan: 'bolt', Personalize: 'sparkle', Profile: 'user', Experience: 'sliders', Name: 'rename', Color: 'palette', Language: 'globe', Look: 'palette', 'Sidebar order': 'list', Folder: 'files', "Flint's brain": 'flame', 'Local brain': 'flame', 'Host on this computer': 'monitor', 'Open at login': 'monitor', 'Download updates in the background': 'download', 'Friends can ask my AI': 'people', GitHub: 'github', 'Save a copy': 'download', 'TribeCode MCP': 'plug', Chat: 'chat', 'Sign-in': 'key', 'Start fresh': 'refresh', 'Fix problems': 'wrench', 'Crash reports': 'bug', 'Agents in chat': 'agent', 'Starting modes': 'sliders', 'Roles &amp; privileges': 'shield', Packs: 'assets', Backup: 'cloud', 'Freesound sounds': 'media' };
   const setIco = label => SET_ICO[label] ? `<span data-icon="${SET_ICO[label]}"></span>` : '';
   function row(label, control, hint = '') { return `<div class="set-row"><div class="set-l"><b>${setIco(label)}${label}</b>${hint ? `<small>${hint}</small>` : ''}</div><div class="set-c">${control}</div></div>`; }
   function draw() {
@@ -78,6 +78,7 @@
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
       ${window.TribeI18n ? row('Language', `<select class="input set-select" id="set-lang" aria-label="Language">${window.TribeI18n.LANGS.map(([k, n]) => `<option value="${k}" ${k === window.TribeI18n.lang() ? 'selected' : ''}>${n}</option>`).join('')}</select>`, 'Menus and buttons. What people write stays as they wrote it.') : ''}
       ${themeRow(st)}
+      ${window.TribeReorder ? row('Sidebar order', '<button class="btn" id="set-reorder">Reset order</button>', 'Drag the rail and the sidebar rows into your own order (or focus one and press Alt+↑ / Alt+↓). This puts them back.') : ''}
       ${window.TribeLook ? row('Look', '<button class="btn" id="set-look">Customize…</button>', 'Accent, background, spacing, font size, and the tribe\'s name and icon.') : ''}
       ${C() && C().connected() && window.TribeStorage ? `<div class="set-row set-row-wide"><div class="set-l"><b>Storage &amp; sync</b><small>Where your tribe, code and drafts are kept, and what keeps them safe.</small></div><div class="set-c" id="set-storage"></div></div>` : ''}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
@@ -105,6 +106,7 @@
       </details>
       <div class="set-links"><button class="linkish" id="set-tour">Tour with Flint</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
+    { const ro = $('#set-reorder'); if (ro) ro.onclick = () => { window.TribeReorder.reset(); ro.textContent = 'Done'; setTimeout(() => { ro.textContent = 'Reset order'; }, 1500); }; }
     if (window.TribeAccounts) window.TribeAccounts.settings(box);   // Account (Switch, Log out) and More settings › Test accounts (accounts.js)
     const sm = $('#set-more'); if (sm) sm.ontoggle = () => { try { localStorage.setItem('tribecode.set.more', sm.open ? '1' : '0'); } catch {} };   // qa-qol-2
     const sp = $('#set-profile'); if (sp) sp.onclick = () => { close(); window.TribeProfiles.edit(); };   // feat/profiles
