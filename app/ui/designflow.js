@@ -125,7 +125,7 @@
       let files = []; try { files = (await C.api('/canvas')).files || []; } catch {}
       let boards = []; try { boards = (await C.api('/whiteboard')).boards || []; } catch {}
       const planned = new Set(plans.map(p => p.target.id));
-      const extra = [...files.filter(f => !planned.has(f.id) && (f.count || f.id !== 'main')).map(f => ({ t: f.name, k: 'Design', ic: 'canvas', a: `data-cv="${esc(f.id)}"` })), ...boards.filter(b => !planned.has(b.id) && b.count).map(b => ({ t: b.name, k: 'Whiteboard', ic: 'whiteboard', a: `data-wb="${esc(b.id)}"` }))];
+      const extra = [...files.filter(f => !planned.has(f.id)).map(f => ({ t: f.name, k: 'Design', ic: 'canvas', a: `data-cv="${esc(f.id)}"` })), ...boards.filter(b => !planned.has(b.id) && b.count).map(b => ({ t: b.name, k: 'Whiteboard', ic: 'whiteboard', a: `data-wb="${esc(b.id)}"` }))];
       box.innerHTML = plans.map(row).join('') + extra.map(x => `<button type="button" class="dfl-row" ${x.a}><span class="dfl-ki sm">${icon(x.ic, 18)}</span><span class="dfl-kt"><b>${esc(x.t)}</b><small>${x.k}</small></span>${icon('chev', 16)}</button>`).join('') || '<p class="faint dfl-none">Nothing yet. Pick a kind above to start.</p>';
       box.querySelectorAll('[data-cv]').forEach(b => b.onclick = () => openCanvas(b.dataset.cv));
       box.querySelectorAll('[data-wb]').forEach(b => b.onclick = () => window.TribeWhiteboard && window.TribeWhiteboard.open(b.dataset.wb));
