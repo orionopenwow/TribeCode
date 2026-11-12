@@ -386,8 +386,8 @@
   }
 
   // ---------- the entry point ----------
-  const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught']);
-  const LOCAL_FIRST = /^(task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.)/;
+  const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
+  const LOCAL_FIRST = /^(task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
   let lastMiss = null;
   async function handle(text, H) {
     // the preview shows the website: its edits ("make the headline say …", "add a pricing section") go to the preview's Flint
@@ -439,6 +439,7 @@
   async function localOnly(s) {
     const sl = s.slots || {};
     if (s.intent === 'undo') return undo();
+    if (s.intent === 'lesson' || s.intent === 'redo') return step(s, { say: () => true, act: l => l, legacy: async () => true }, []);
     if (s.intent === 'teach') { await learn(sl.say, sl.means); return { text: T('taught', { s: sl.say, m: sl.means }) }; }
     if (s.intent === 'meant') { if (!lastMiss) return { text: T('noUndo') }; const say = lastMiss; lastMiss = null; await learn(say, sl.means); return { text: T('meant', { s: say, m: sl.means }), acts: [[sl.means, 'ask', sl.means]] }; }
     if (s.intent === 'unteach') { const ok = await unlearn(sl.say); return ok ? { text: T('forgot', { s: sl.say }) } : { text: T('taughtNone') }; }

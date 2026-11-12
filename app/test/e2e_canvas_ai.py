@@ -216,10 +216,11 @@ def main():
 
             # ---- honest cards
             out = ask(o, "rewrite the whole app in react with a database")
-            assert "Bigger than my free tier" in out and o.locator("#fp-log .fp-flint").last.locator("[data-fp='hand']").is_visible(), out
+            card = o.locator("#fp-log .fp-flint").last.locator(".boost")   # feat/flint-site: the one AI-boost card (aiboost.js)
+            assert "This one needs an AI" in out and card.locator("[data-boost='ai']").is_visible() and card.locator("[data-boost='credits']").is_visible(), out
             out = ask(o, "a cat wearing a tiny hat")
-            assert "freeform" in out.lower(), out
-            o.locator("#fp-log [data-fp='hand']").last.click()
+            assert "needs an AI" in out and "Nothing changed" in out, out
+            o.locator("#fp-log [data-boost='ai']").last.click()
             o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#fp-log').textContent)", timeout=8000)
             o.click("#cv-flint-btn"); o.wait_for_timeout(200); assert o.is_hidden("#cv-fpane"), "the flame button closes Flint's pane"
 
