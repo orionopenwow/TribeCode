@@ -39,13 +39,9 @@ module.exports = function flint({ brain, str, llm }) {
     if (kind === 'deck') return `<!-- theme: campfire -->\n\n# ${title}\n\nWhat we're making and why\n\n---\n\n## The idea\n\n- What it is, in one line\n- Who it's for\n\n---\n\n## How it works\n\n- Step one\n- Step two\n- Step three\n\n---\n\n## Who's doing what\n\n- Person: part\n- Agent: part\n\n---\n\n## Next steps\n\n- The first thing to ship\n- When we'll show it\n`;
     return `# ${title}\n\n## Goal\n\nWhat this is for, in a sentence or two.\n\n## Notes\n\n- \n\n## Next steps\n\n- [ ] \n`;
   }
-  async function make({ kind, ask, body, title, me, basic }) {
+  async function make({ kind, ask, body, title, me }) {
     if (!FORMAT[kind]) return { error: 'kind must be doc, sheet or deck', status: 400 };
     if (!ask) return { error: 'tell Flint what to write', status: 400 };
-    if (basic) {   // polish: the device didn't allow the cloud AI (app/ui/aiconsent.js): nothing goes to it, the template stands
-      if (body) return { error: 'Flint keeps this on your device. Allow the tribe\'s AI in Settings › Privacy & safety to have him change it.', status: 409 };
-      return { kind, title: titleFrom(ask), body: template(kind, ask), basic: true, note: 'Kept on your device, so Flint started you from a template.' };
-    }
     const system = `You are Flint, the built-in helper of TribeCode, writing a ${NAME[kind]} for a group of friends. ${FORMAT[kind]}`;
     const prompt = body
       ? `Here is the current ${NAME[kind]}${title ? ` called "${title}"` : ''}:\n\n${body}\n\nChange it as asked, keep everything else, and return the whole updated ${NAME[kind]} in the same format.\nAsked: ${ask}`
@@ -88,7 +84,7 @@ module.exports = function flint({ brain, str, llm }) {
     if (m === 'POST' && b === 'make') {   // feat/crafts: Flint writes a doc, a sheet or slides (new, or a change to `body`)
       if (me.role === 'agent') return fail(res, 403, 'agents write files with write_doc');
       const body = await readBody(req, 1024 * 1024);
-      const r = await make({ kind: body.kind, ask: str(body.ask, 2000), body: typeof body.body === 'string' ? body.body.slice(0, 120_000) : '', title: str(body.title, 120), me, basic: !!body.basic });
+      const r = await make({ kind: body.kind, ask: str(body.ask, 2000), body: typeof body.body === 'string' ? body.body.slice(0, 120_000) : '', title: str(body.title, 120), me });
       return r.error ? fail(res, r.status || 400, r.error) : send(res, 200, r);
     }
     return fail(res, 404, 'no such Flint route');

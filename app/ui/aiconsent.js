@@ -60,5 +60,19 @@
     el.querySelector('[data-aic="no"].btn').focus({ preventScroll: true });   // "Not now" first: nothing is sent unless you choose to
   }
 
+  // Flint's own model calls (POST /api/flint/ask, /api/flint/make) are gated here, at the fetch, so flint.js stays as it
+  // is: with the cloud AI not allowed, they answer 409 { basic: true } on the device and Flint falls back to his
+  // no-model answers; nothing is sent.
+  const FLINT_AI = /\/api\/flint\/(ask|make)(\?|$)/;
+  const realFetch = window.fetch && window.fetch.bind(window);
+  if (realFetch) window.fetch = async function (input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '', method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+    if (method === 'POST' && FLINT_AI.test(url)) {
+      let ok = true; try { ok = await ensure(); } catch {}
+      if (!ok) return new Response(JSON.stringify({ error: 'Kept on your device: allow the tribe\'s AI in Settings › Privacy & safety to use it.', basic: true }), { status: 409, headers: { 'Content-Type': 'application/json' } });
+    }
+    return realFetch(input, init);
+  };
+
   window.TribeAIConsent = { status, ensure, granted, allow, revoke, list, LABELS };
 })();

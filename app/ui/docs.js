@@ -277,7 +277,7 @@
   // "Ask Flint" inside a sheet or deck: the tribe's brain rewrites the body (server/flint.js /api/flint/make)
   async function craftAsk(kind, ask, body) {
     if (!remote()) { window.TribeApp.toast('Flint writes sheets and slides with the tribe\'s brain. Join or host a tribe first.'); return null; }
-    try { const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask, body, title: cur && cur.title, ...(window.TribeAIConsent && !(await window.TribeAIConsent.ensure()) ? { basic: true } : {}) } }); if (r.basic) window.TribeApp.toast(r.note || 'Flint is in basic mode, so he used a template. Give him a brain for smarter results.'); return r.body; }
+    try { const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask, body, title: cur && cur.title } }); if (r.basic) window.TribeApp.toast(r.note || 'Flint is in basic mode, so he used a template. Give him a brain for smarter results.'); return r.body; }
     catch (e) { window.TribeApp.toast(e.status === 503 ? 'Flint needs a brain for that. Pick one in Settings › Flint\'s brain.' : 'Flint could not do that: ' + e.message); return null; }
   }
   const newCraft = k => create(k === 'sheet' ? 'Untitled sheet' : 'Untitled slides', k === 'sheet' ? '| Name | Amount |\n| --- | --- |\n|  |  |\n' : '<!-- theme: campfire -->\n\n# Untitled slides\n\nA one-line subtitle\n\n---\n\n## First point\n\n- \n', undefined, k);
