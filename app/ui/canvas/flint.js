@@ -149,7 +149,13 @@
     return { kind: 'recolor', change, focus: tops[0].id, say: `Switched ${tops.length === 1 ? `“${tops[0].name}”` : `${tops.length} screens`} to ${toDark ? 'dark' : 'light'} mode in place: backgrounds, cards, text and borders, checked for contrast. Ctrl Z or Undo brings the old colors back.` };
   }
   const labelOf = n => { if (!n) return ''; if (n.t === 'text') return (n.tx && n.tx.c) || ''; const t = E.S.descendants(n.id).find(k => k.t === 'text' && k.tx && k.tx.c); return t ? t.tx.c : n.name || ''; };
-  const buttonish = n => n && n.t !== 'text' && (/button|btn|cta|link|tab\b/i.test(n.name || '') || (n.r && (n.h || 0) <= 72 && (n.w || 0) <= 420 && E.S.kids(n.id).length <= 2 && E.S.kids(n.id).some(k => k.t === 'text' && String((k.tx || {}).c || '').length <= 28)));
+  const buttonish = n => {
+    if (!n || !n.p) return false;
+    const kids = E.S.kids(n.id), parent = E.S.get(n.p);
+    if (n.t === 'text') return /^(link|nav link|menu item|tab)\b/i.test(n.name || '') && String((n.tx || {}).c || '').length <= 28 && !(parent && /button|btn|cta/i.test(parent.name || ''));
+    if (kids.length > 2) return false;
+    return /button|btn|cta|link\b|tab\b/i.test(n.name || '') || (n.r && (n.h || 0) <= 72 && (n.w || 0) <= 420 && kids.some(k => k.t === 'text' && String((k.tx || {}).c || '').length <= 28));
+  };
   const GUESS_SCREEN = [[/sign ?up|get started|join|create (an )?account|register|start free|try (it )?free/i, 'Sign up', 'login'], [/log ?in|sign ?in/i, 'Sign in', 'login'], [/pric|plans|upgrade|buy|subscribe/i, 'Pricing', 'pricing'], [/checkout|cart|pay|order/i, 'Checkout', 'checkout'], [/settings|preferences/i, 'Settings', 'settings'], [/profile|account/i, 'Profile', 'profile'], [/dashboard|stats/i, 'Dashboard', 'dashboard'], [/chat|message/i, 'Chat', 'chat'], [/contact|talk to|email|write/i, 'Contact', ''], [/about|story|team|who/i, 'About', ''], [/work|how it works|learn more|see|explore|tour/i, 'How it works', ''], [/home|back/i, 'Home', 'home']];
   async function screenFor(name, kindHint) {   // an existing frame by name, else a new screen (a template when one fits, else a titled blank frame)
     const low = String(name || '').toLowerCase();
@@ -167,8 +173,11 @@
   }
   async function wireMove(sl) {
     const url = sl.kind === 'url' || sl.kind === 'email' ? (sl.kind === 'email' ? 'mailto:' + sl.to : /^https?:/.test(sl.to) ? sl.to : `https://${sl.to}.com`) : '';
-    let targets = E.sel.map(id => E.S.get(id)).filter(Boolean).map(n => (n.t === 'text' && n.p && buttonish(E.S.get(n.p)) ? E.S.get(n.p) : n));
-    if (!targets.length) { const scope = frames(); targets = scope.flatMap(f => E.S.descendants(f.id)).filter(buttonish); }
+    // a picked button (or its label) is the target; a picked screen or group means every button inside it; nothing picked: every screen
+    const picked = E.sel.map(id => E.S.get(id)).filter(Boolean).map(n => (n.t === 'text' && n.p && buttonish(E.S.get(n.p)) ? E.S.get(n.p) : n));
+    let targets = picked.filter(n => buttonish(n) || (n.p && E.S.kids(n.id).length <= 2));
+    const scope = picked.length && !targets.length ? picked : !picked.length ? frames() : [];
+    if (scope.length) targets = scope.flatMap(f => E.S.descendants(f.id)).filter(buttonish);
     if (!targets.length) return { kind: 'none', say: 'I see no buttons yet. Select a layer and say “wire this to the pricing screen”, or ask for a screen with buttons first.' };
     const out = [], made = [], lines = [];
     for (const b of targets.slice(0, 24)) {
@@ -219,6 +228,7 @@
     let s = null; try { const P = NL.parse(text, { view: 'canvas', selection: !!E.sel.length }); s = P.steps.length === 1 ? P.steps[0] : null; } catch {}
     if (!s || s.conf < 0.6) return null;
     if (s.intent === 'canvas.dark' && !/\b(version|variant|copy)\b/i.test(text)) return darkInPlace(s.slots.mode);
+    if (s.intent === 'canvas.dark' && !E.sel.length && frames().length && E.select) { E.select([frames().slice(-1)[0].id]); return null; }   // "dark mode version" with nothing selected: the last screen
     if (s.intent === 'canvas.wire') return wireMove(s.slots || {});
     if (s.intent === 'canvas.page') return pageMove(s.slots || {});
     if (s.intent === 'canvas.image') return imageMove(s.slots || {});
