@@ -13,6 +13,11 @@
 // keys, and the tab's place. "Also forget this device's tribes" also drops the saved server address and the per-tribe
 // caches (chat copy, pins, recents, drafts, unsent outbox). The tribe folder itself is never touched.
 // Test accounts: Settings › More settings › Test accounts, or open the app with ?accounts=test.
+// polish: when the server has accounts on (TRIBE_ACCOUNTS=1: GET /api/accounts/me answers 401 instead of 404), Log in
+// also has a username + password form (POST /api/accounts/login | signup), Log out ends that session
+// (POST /api/accounts/logout), Settings › Account lists the signed-in devices (GET/DELETE /api/accounts/sessions), and
+// Delete my account uses GET/DELETE /api/account (moderation.js). Such accounts are kind 'server' with an account token
+// (acct, tca_…) beside the member key a login hands out. With the flag off, everything stays local as before.
 // Public: window.TribeAccounts = { state(), list(), current(), mode(), login(opts), logout(opts), confirmLogout(), switchTo(id),
 //   guest(), setTest(on), status(), menuHtml(), menuAct(el), settings(box) }.
 (function () {
@@ -60,18 +65,71 @@
   function syncDevice() {
     const me = (C.state() || {}).me; if (!me || me.role === 'agent' || !C.hasToken()) return;
     const s = S.get(), base = C.base(), id = `dev:${base}:${me.id}`, tribe = ((C.state() || {}).tribe || {}).name || 'My Tribe';
-    let a = st.accounts.find(x => x.id === id);
+    const tok = (s.server && s.server.token) || '';
+    let a = st.accounts.find(x => x.id === id) || st.accounts.find(x => x.kind === 'server' && tok && x.server && x.server.token === tok);   // a server account signed this member in
     if (!a) { a = { id, kind: 'device', tribes: [] }; st.accounts.unshift(a); }
     Object.assign(a, { name: me.name, color: me.color, member: me.id, server: { url: (s.server && s.server.url) || base, token: (s.server && s.server.token) || '' }, avatar: s.pendingAvatar || a.avatar || null, seen: new Date().toISOString() });
     if (!a.tribes.includes(tribe)) a.tribes = [tribe, ...a.tribes].slice(0, 6);
-    st.current = id; st.mode = 'signedin'; write(); paint();
+    st.current = a.id; st.mode = 'signedin'; write(); paint();
   }
   C.on('hello', syncDevice);
+
+  // ---------- the server's accounts (TRIBE_ACCOUNTS=1) ----------
+  let srv = { base: null, on: false };
+  const base = () => (C.base ? C.base() : '') || '';
+  async function serverOn(force) {
+    const b = base(); if (!force && srv.base === b) return srv.on;
+    let on = false;
+    if (b || /^https?:$/.test(location.protocol)) try { const r = await fetch(b + '/api/accounts/me', { credentials: 'omit' }); on = r.status === 401 || r.ok; } catch {}
+    srv = { base: b, on }; return on;
+  }
+  async function acctApi(path, { method = 'GET', body, token } = {}) {
+    const r = await fetch(base() + '/api/accounts' + path, { method, credentials: 'omit', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(d.error || r.statusText), { status: r.status }); return d;
+  }
+  function keepServer(account, acct, memberToken) {
+    const b = base(), id = `acct:${b}:${account.id}`, tribe = ((C.state() || {}).tribe || {}).name;
+    let a = st.accounts.find(x => x.id === id);
+    if (!a) { a = { id, kind: 'server', tribes: [] }; st.accounts.unshift(a); }
+    const s = S.get();
+    Object.assign(a, { name: account.displayName || account.username, username: account.username, color: a.color || s.color || '#F26B1D', acct, server: { url: b, token: memberToken || (a.server && a.server.token) || '' }, seen: new Date().toISOString() });
+    if (tribe && memberToken !== undefined && !a.tribes.includes(tribe)) a.tribes = [tribe, ...a.tribes].slice(0, 6);
+    st.accounts = st.accounts.filter(x => !(x.kind === 'device' && x.server && a.server.token && x.server.token === a.server.token));   // one row per person
+    write(); return a;
+  }
+  async function acctSubmit(form, kind) {
+    const v = id => (form.querySelector(id) || {}).value || '', err = form.querySelector('#ac-err');
+    const say = t => { if (err) { err.textContent = t; err.hidden = !t; } };
+    const username = v('#ac-user').trim(), password = v('#ac-pass');
+    if (!username) { say('Type your username.'); return; }
+    form.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    try {
+      if (kind === 'signup') {
+        const s = S.get(), tok = (s.server && s.server.token) || '';
+        const d = await acctApi('/signup', { method: 'POST', token: tok, body: { username, password: password || undefined, displayName: s.name || username, link: !!tok } });
+        const a = keepServer(d.account, d.token, d.linked ? tok : '');
+        if (d.linked) { st.current = a.id; st.mode = 'signedin'; write(); closeSheet(); paint(); toast(`Account made: log in as ${d.account.username} on any device`); }
+        else { closeSheet(); toast(`Account made. Join a tribe with an invite link, then log in as ${d.account.username}.`); }
+        return;
+      }
+      const d = await acctApi('/login', { method: 'POST', body: { username, password: password || undefined } });
+      const a = keepServer(d.account, d.token, d.memberToken || undefined);
+      if (d.memberToken) {
+        const s = S.get();
+        if (s.server && s.server.token && s.server.token !== d.memberToken) { try { await C.api('/session', { method: 'DELETE' }); } catch {} }
+        S.set({ name: d.account.displayName || d.account.username, onboarded: true, server: { url: base(), token: d.memberToken } });
+        st.current = a.id; st.mode = 'signedin'; write(); reloadHome('switched'); return;
+      }
+      say(`Logged in as ${d.account.username}, but that account isn't in this tribe yet (or has no password). Join with an invite link.`);
+    } catch (e) { say(e.status === 401 ? 'That username and password do not match.' : e.message); }
+    form.querySelectorAll('button').forEach(b => { b.disabled = false; });
+  }
 
   // ---------- leaving this device's session ----------
   const PER_TRIBE = /^tribecode\.(project|chatcache|ovcache|cloudsave|outbox|pins|recents|drafts?|tab\.|coordTab|wsTab|helpers|notes\.|flowMin\.)/;
   async function clearSession(forget) {
     const s = S.get(), token = s.server && s.server.token;
+    const ca = current(); if (ca && ca.kind === 'server' && ca.acct) { try { await acctApi('/logout', { method: 'POST', token: ca.acct }); } catch {} ca.acct = ''; }   // ends this session on the server
     if (token) { try { await C.api('/session', { method: 'DELETE' }); } catch {} }   // the HttpOnly sign-in cookie
     const cur = current();
     if (cur && cur.kind === 'device') cur.server = { url: cur.server && cur.server.url || '', token: '' };
@@ -141,6 +199,11 @@
       <button class="ac-x" data-ac="close" aria-label="Close">${ico('i-x', 16)}</button>
       <span class="eyebrow">${add ? 'Add account' : 'Log in'}</span><h2 id="ac-title">${add ? 'Add an account to this device' : mode() === 'signedout' ? 'Welcome back' : 'Log in to TribeCode'}</h2>
       ${saved.length ? `<div class="ac-sec"><span class="ac-eye">On this device</span><div class="ac-list">${saved.map(acctRow).join('')}</div></div>` : ''}
+      <div class="ac-sec" id="ac-acct" hidden><span class="ac-eye">Your TribeCode account</span>
+        <form id="ac-acct-form" class="ac-form" autocomplete="on"><input class="input" id="ac-user" autocomplete="username" placeholder="Username" maxlength="32" aria-label="Username">
+          <input class="input" id="ac-pass" type="password" autocomplete="current-password" placeholder="Password" maxlength="200" aria-label="Password">
+          <p class="ac-err" id="ac-err" role="alert" hidden></p>
+          <div class="ac-form-acts"><button class="btn" type="button" data-acf="signup">Create account</button><button class="btn primary" type="submit" id="ac-acct-go">Log in</button></div></form></div>
       <div class="ac-sec" id="ac-ways"><span class="ac-eye">Sign in</span>
         <div id="ac-oa" hidden></div>
         ${local() ? `<button class="ac-way" data-ac="host">${ico('i-home', 18)}<span><b>Sign in on this computer</b><small>As the host of the tribe that runs here</small></span></button>` : ''}
@@ -148,6 +211,10 @@
         <p class="ac-fine" id="ac-oa-none" hidden>Discord, GitHub and Google sign-in show up here once the host turns them on (Settings › More settings › Sign-in).</p></div>
       <div class="ac-foot"><button class="btn primary" data-ac="guest" id="ac-guest">Continue as guest</button>${st.test ? '' : '<button class="linkish ac-testlink" data-ac="test">Use test accounts</button>'}</div></div>`;
     document.body.appendChild(sheet);
+    const af = sheet.querySelector('#ac-acct-form');
+    af.onsubmit = e => { e.preventDefault(); acctSubmit(af, 'login'); };
+    af.querySelector('[data-acf="signup"]').onclick = () => acctSubmit(af, 'signup');
+    const sh = sheet; serverOn().then(on => { const x = sh.querySelector('#ac-acct'); if (x && sheet === sh) x.hidden = !on; });
     sheet.addEventListener('click', e => {
       if (e.target === sheet) return closeSheet();
       const r = e.target.closest('[data-acc]'); if (r) return switchTo(r.dataset.acc);
@@ -279,11 +346,23 @@
         <div class="set-c"><button class="toggle set-toggle" role="switch" id="set-testacc" aria-label="Test accounts" aria-checked="${!!st.test}"><span class="switch"></span></button></div>`;
       const summary = more.querySelector('summary'); if (summary) summary.after(t); else more.appendChild(t);
     }
+    if (a && a.kind === 'server' && a.acct && m !== 'signedout') sessions(acc, a);
     box.querySelectorAll('[data-ac-set]').forEach(b => b.onclick = () => {
       const k = b.dataset.acSet; if (window.TribeSettings) window.TribeSettings.close();
       if (k === 'login') login(); else if (k === 'switch') login({ add: true }); else if (k === 'logout') confirmLogout();
     });
     const tg = box.querySelector('#set-testacc'); if (tg) tg.onclick = () => { const on = tg.getAttribute('aria-checked') !== 'true'; tg.setAttribute('aria-checked', String(on)); setTest(on); toast(on ? 'Test accounts on: Orion, Maya, Jay and Guest are in Log in and your menu.' : 'Test accounts off.'); };
+  }
+
+  // Settings › Account: where this account is signed in (GET /api/accounts/sessions), each with End
+  async function sessions(row, a) {
+    let list = []; try { list = (await acctApi('/sessions', { token: a.acct })).sessions || []; } catch (e) { if (e.status === 401) { a.acct = ''; write(); } return; }
+    let el = row.parentNode && row.parentNode.querySelector('#set-sessions');
+    if (!el) { el = document.createElement('div'); el.className = 'set-row ac-sessions'; el.id = 'set-sessions'; row.after(el); }
+    const when = t => { try { return new Date(t).toLocaleDateString([], { month: 'short', day: 'numeric' }); } catch { return ''; } };
+    el.innerHTML = `<div class="set-l"><b>Signed in on</b><small>${list.length} device${list.length === 1 ? '' : 's'} for ${esc(a.username || a.name)}</small></div>
+      <ul class="ac-ses">${list.map(x => `<li><span><b>${esc(x.current ? 'This device' : (x.device || 'A device').replace(/^Mozilla\/5\.0 \(([^;)]+).*$/, '$1'))}</b><small>since ${esc(when(x.created))} · last ${esc(when(x.lastSeen))}</small></span>${x.current ? '' : `<button class="btn sm" data-ses="${esc(x.id)}">End</button>`}</li>`).join('')}</ul>`;
+    el.querySelectorAll('[data-ses]').forEach(b => b.onclick = async () => { b.disabled = true; try { await acctApi('/sessions/' + encodeURIComponent(b.dataset.ses), { method: 'DELETE', token: a.acct }); toast('Signed out there'); sessions(row, a); } catch (e) { toast(e.message); b.disabled = false; } });
   }
 
   // ---------- boot ----------
@@ -299,5 +378,5 @@
   if (C.on) { C.on('status', () => setTimeout(paint, 0)); C.on('presence', () => setTimeout(paint, 0)); }
   addEventListener('tribe-local-profile', () => setTimeout(paint, 0));
 
-  window.TribeAccounts = { state: () => JSON.parse(JSON.stringify(st)), list, current, mode, login, logout, confirmLogout, switchTo, guest, setTest, status, menuHtml, menuAct, settings, close: closeSheet };
+  window.TribeAccounts = { state: () => JSON.parse(JSON.stringify(st)), list, current, mode, login, logout, confirmLogout, switchTo, guest, setTest, status, menuHtml, menuAct, settings, close: closeSheet, serverOn };
 })();

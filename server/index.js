@@ -206,8 +206,8 @@ function clientKey(req) {
   const cf = req.headers['cf-connecting-ip'], xff = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop();
   return String(cf || xff || ra).slice(0, 64);
 }
-function limited(req, max = 20, windowMs = 60_000) {
-  const k = clientKey(req), now = Date.now();
+function limited(req, max = 20, windowMs = 60_000, bucket = '') {   // bucket: a route's own count (accounts), else shared
+  const k = (bucket ? bucket + ':' : '') + clientKey(req), now = Date.now();
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
@@ -379,7 +379,19 @@ const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m 
 // per project, each bound to its project's repo and files (--repo is the first project's repo).
 // GitHub sign-in (server/github-auth.js): device flow / gh CLI / token; pushAuth() gives the autopilot the host's login.
 // Sign in with Discord / GitHub / Google to join a tribe or sign back in on a new device (server/oauth.js, docs/SIGN-IN.md).
-const accounts = require('./accounts')({ store: baseStore, getMembers: () => members, isLocal, limited, hash, id, log: m => console.log('  ' + m) });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
+const accounts = require('./accounts')({ store: baseStore, getMembers: () => members, isLocal, limited, hash, id, log: m => console.log('  ' + m),
+  forgetMembers: ids => {   // DELETE /api/account: the member and their agents leave the tribe (keys, device links, project seats)
+    members = members.filter(x => !ids.includes(x.id)); saveMembers();
+    try { store.writeJSON('.tribe/devices.json', (store.readJSON('.tribe/devices.json', []) || []).filter(d => !ids.includes(d.member))); devices.reload(); } catch {}
+    for (const p of P.all()) if (p.members && ids.some(x => p.members[x])) { for (const x of ids) delete p.members[x]; P.update(p.id, {}); }
+    try { pushPresence(); rooms.pushProjects(); } catch {}
+  },
+  memberFromReq: req => authed(req),
+  signInMember: (mid, req) => {   // POST /api/accounts/login: this device gets the member's own device link, redeemed at once
+    const mem = members.find(x => x.id === mid); if (!mem) return null;
+    const { key } = devices.create(mem, req, 'Account sign-in'); const r = devices.redeem(key, req);
+    return r ? { token: r.token, member: publicMember(mem) } : null;
+  } });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
 const oauth = require('./oauth')({ store: baseStore, getMembers: () => members, saveMembers, publicMember, isLocal, str, limited, devices, tribe,
   publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), findInvite, joinByInvite, addToProject, log: m => console.log('  ' + m) });
 const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
@@ -670,7 +682,8 @@ async function apiInProject(req, res, url) {
     res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
     return send(res, 200, { ok: true });
   }
-  if (a === 'accounts') return accounts.route(req, res, { b, c, m, readBody, send, fail });   // feature-flagged scaffold (server/accounts.js)
+  if (a === 'accounts') return accounts.route(req, res, { b, c, m, readBody, send, fail });
+  if (a === 'account' && !b) return accounts.account(req, res, { m, me, readBody, send, fail });   // delete my account (docs/APP-STORE.md), flag-gated   // feature-flagged scaffold (server/accounts.js)
   if (a === 'session' && m === 'GET') {
     const t = cookieToken(req); if (!t) return send(res, 200, { member: null });
     const who = authed({ headers: { authorization: 'Bearer ' + t }, url: '/api/session' });
