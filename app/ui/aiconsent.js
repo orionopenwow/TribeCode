@@ -4,7 +4,7 @@
 // asks. The answer is remembered per device and per provider; Settings › Privacy & safety lists them with Revoke.
 // Local models (Ollama on the host, Built in / WebLLM in the browser) never ask: nothing leaves your machines.
 //   window.TribeAIConsent = { status(force) -> { online, via, cloud, provider }, ensure(st?) -> Promise<boolean>,
-//                             granted(provider), revoke(provider), list() -> [{ provider, label, at }], LABELS }
+//                             granted(provider), allow(provider), revoke(provider), list() -> [{ provider, label, at }], LABELS }
 (function () {
   'use strict';
   const KEY = 'tribecode.aiconsent.v1';
@@ -14,6 +14,7 @@
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { return {}; } };
   const write = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch {} };
   const granted = p => !!(p && read()[p]);
+  function allow(p) { if (!p) return; const o = read(); o[p] = { at: new Date().toISOString() }; write(o); try { dispatchEvent(new CustomEvent('tribe-ai-consent', { detail: { provider: p, granted: true } })); } catch {} }
   function revoke(p) { const o = read(); delete o[p]; write(o); try { dispatchEvent(new CustomEvent('tribe-ai-consent', { detail: { provider: p, granted: false } })); } catch {} }
   const list = () => Object.entries(read()).map(([provider, v]) => ({ provider, label: LABELS[provider] || provider, at: v && v.at }));
 
@@ -50,7 +51,7 @@
     document.body.appendChild(el);
     const done = ok => {
       el.remove(); removeEventListener('keydown', key, true);
-      if (ok) { const o = read(); o[p] = { at: new Date().toISOString() }; write(o); try { dispatchEvent(new CustomEvent('tribe-ai-consent', { detail: { provider: p, granted: true } })); } catch {} }
+      if (ok) allow(p);
       resolve(!!ok);
     };
     const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
@@ -59,5 +60,5 @@
     el.querySelector('[data-aic="no"].btn').focus({ preventScroll: true });   // "Not now" first: nothing is sent unless you choose to
   }
 
-  window.TribeAIConsent = { status, ensure, granted, revoke, list, LABELS };
+  window.TribeAIConsent = { status, ensure, granted, allow, revoke, list, LABELS };
 })();
