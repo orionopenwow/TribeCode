@@ -606,5 +606,5 @@
   addEventListener('resize', () => { closeMenu(); const b = $('#board'); if (b && b.classList.contains('tkb') && b.dataset.view !== (phone() ? 'list' : view)) { lastSig = ''; render(); } });
   addEventListener('wheel', e => { if (!(e.target && e.target.closest && e.target.closest('#tk-pop'))) closeMenu(); }, { passive: true });   // scrolling the page closes the menu (it's fixed in place)
 
-  window.TribeTasks = { load, render, create, patch, all: () => tasks, open, close, typeChips, TYPES, filter: setFilter, view: setView };
+  window.TribeTasks = { load, render, create, patch, all: () => tasks, open, close, typeChips, TYPES, filter: setFilter, view: setView, current: () => openId };   // current: feat/presence
 })();
