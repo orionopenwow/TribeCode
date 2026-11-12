@@ -47,6 +47,8 @@
   const END = 80 * T;
   const keys = { left: false, right: false, jump: false };
   let p, lit, camX, t = 0, jumpHeld = false, coyote = 0;
+  // feat/demo-auto (Flint builds a game): tune { gravity, jump }, a firefly friend, the gap fix and a self-playing run
+  let GRAV = 900, JUMP = 330, friend = false, auto = false, fx2 = 0, fy2 = 0, held = 0;
   function reset() { p = { x: 2 * T, y: 9 * T, vx: 0, vy: 0, on: false, squash: 0 }; lit = new Set(); camX = 0; hud(); }
   function hud() { document.getElementById('lit').textContent = `${lit.size} / ${LAN.length} lanterns`; }
   reset();
@@ -56,10 +58,15 @@
     const acc = 900, max = 150;
     if (keys.left) p.vx = Math.max(-max, p.vx - acc * dt); else if (keys.right) p.vx = Math.min(max, p.vx + acc * dt); else p.vx *= Math.pow(0.0005, dt);
     coyote = p.on ? 0.1 : Math.max(0, coyote - dt);
-    if (keys.jump && !jumpHeld && coyote > 0) { p.vy = -330; coyote = 0; p.on = false; }
+    if (auto) {   // run right, jump at every edge and before every step up
+      keys.right = true; keys.left = false;
+      const ahead = p.x + 10, below = !solid(ahead, p.y + 10) && !solid(ahead + 8, p.y + 10), wall = solid(p.x + 12, p.y);
+      if (p.on && (below || wall)) { keys.jump = true; held = 0; } else { held += dt; keys.jump = keys.jump && p.vy < 0 && held < 0.08; }   // short hops land on every platform (and light every lantern)
+    }
+    if (keys.jump && !jumpHeld && coyote > 0) { p.vy = -JUMP; coyote = 0; p.on = false; }
     jumpHeld = keys.jump;
     if (!keys.jump && p.vy < -120) p.vy = -120;     // short hop when you let go early
-    p.vy = Math.min(520, p.vy + 900 * dt);
+    p.vy = Math.min(520, p.vy + GRAV * dt);
     p.x += p.vx * dt;
     const ny = p.y + p.vy * dt, wasOn = p.on;
     p.on = false;
@@ -67,7 +74,8 @@
     else p.y = ny;
     p.squash = Math.max(0, p.squash - dt * 5);
     LAN.forEach(([lx, ly], i) => { if (!lit.has(i) && Math.abs(p.x - (lx * T + 8)) < 14 && Math.abs(p.y - (ly * T)) < 22) { lit.add(i); hud(); tell(); } });
-    if (p.y > ROWS * T + 40 || p.x > END) reset();
+    if (p.y > ROWS * T + 40 || p.x > END) { const all = lit.size === LAN.length; reset(); if (all) tell(); }
+    fx2 += ((p.x - 14) - fx2) * Math.min(1, dt * 5); fy2 += ((p.y - 18 + Math.sin(t * 6) * 3) - fy2) * Math.min(1, dt * 5);
     if (p.x < 6) { p.x = 6; p.vx = 0; }
     const view = W / S;
     camX += ((p.x - view * 0.35) - camX) * Math.min(1, dt * 4); camX = Math.max(0, camX);
@@ -92,6 +100,7 @@
       rect(x, y, 8, 12, on ? '#F26B1D' : '#2A313C'); rect(x + 2, y + 2, 4, 8, on ? '#FABD2F' : '#12151A');
       if (on) { const r = 13 + Math.sin(t * 3 + i) * 1.5; g.strokeStyle = '#F26B1D'; g.lineWidth = Math.max(1, S * 0.6); g.beginPath(); g.arc((x + 4 - camX) * S, (y + 6) * S, r * S, 0, Math.PI * 2); g.stroke(); }
     });
+    if (friend) { rect(fx2 - 2, fy2, 4, 4, '#FABD2F'); rect(fx2 - 5, fy2 - 2, 3, 2, '#E8EAED'); rect(fx2 + 2, fy2 - 2, 3, 2, '#E8EAED'); }
     // Wick: a small flame with two dot eyes; squash on landing
     const sq = p.squash * 0.35, w = 12 * (1 + sq), h = 14 * (1 - sq), fx = p.x - w / 2, fy = p.y + 6 - h;
     const flick = Math.sin(t * 18) * 1.2;
@@ -120,6 +129,10 @@
     const m = e.data; if (!m || m.tour !== 'keys') return;
     for (const k of ['left', 'right', 'jump']) if (typeof m[k] === 'boolean') keys[k] = m[k];
     if (m.reset) reset();
+    if (m.tune) { if (m.tune.gravity) GRAV = Math.max(300, Math.min(1400, +m.tune.gravity)); if (m.tune.jump) JUMP = Math.max(200, Math.min(420, +m.tune.jump)); }
+    if (m.sprite === 'firefly') { friend = true; fx2 = p.x; fy2 = p.y - 20; }
+    if (m.fix) { const i = PLAT.findIndex(q => q[0] === 23); if (i >= 0) PLAT[i] = [22, 8, 6]; }
+    if (typeof m.auto === 'boolean') { auto = m.auto; if (!auto) { keys.left = keys.right = keys.jump = false; } }
   });
   tell();
 })();

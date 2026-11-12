@@ -68,23 +68,26 @@
   }
 
   // ---------- running it ----------
-  let running = false;
+  let running = false, skipped = [];
   async function run(from) {
-    if (running || !G()) return; running = true;
+    if (running || !G()) return; running = true; skipped = [];
     const proj = inProject(), list = stops();
     let i = Math.max(0, Math.min(list.length - 1, from || 0));
     write({ started: true, mode: proj ? 'project' : 'fresh' });
     let res = 'next';
+    try {
     for (; i < list.length; i++) {
       const s = list[i];
       if (s.project && !proj) mock(true); else mock(false);
-      const el = find(s.sel);
-      if (!el) continue;
+      let el = find(s.sel);
+      for (let w = 0; !el && w < 8; w++) { await new Promise(r => setTimeout(r, 250)); el = find(s.sel); }   // watchdog: 2 s, then the next stop
+      if (!el) { skipped.push(s.id || s.sel); continue; }
       write({ i });
       const text = t(s.text) + (s.tip ? ` ${t(s.tip)}` : '');
       res = await G().point(el, text, { keep: true, dim: true, steps: list.length, step: i, skip: i < list.length - 1, skipLabel: t('Pause'), next: i === list.length - 1 ? t('Done') : t('Next') });
       if (res !== 'next') break;
     }
+    } catch (e) { console.warn('flint tour:', e); res = 'skip'; }   // feat/demo-auto: an error never leaves the dim on
     mock(false);
     if (res === 'next') { const s0 = read(); write({ i: 0, done: true, paused: false, project: proj || !!s0.project, after: proj ? !!s0.after : true }); }
     else write({ paused: true, i });
@@ -146,5 +149,5 @@
     window.TribeTour = { start: () => start(), end: () => G() && G().hide(), isActive: () => running };
   };
   redirect(); setTimeout(redirect, 0);
-  window.TribeFlintTour = { start, offer, label, state: read, reset: () => { try { localStorage.removeItem(KEY); } catch {} }, running: () => running, _stops: () => stops().length };
+  window.TribeFlintTour = { start, offer, label, state: read, reset: () => { try { localStorage.removeItem(KEY); } catch {} }, running: () => running, _stops: () => stops().length, _skipped: () => skipped.slice() };
 })();

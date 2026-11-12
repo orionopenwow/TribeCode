@@ -194,3 +194,5 @@ body.dt-live .dt-cap { display: none !important; }
 .dt-say-next[hidden] { display: none; }
 .dt-in-card.again { animation: none; }
 @media (max-width: 820px) { .dt-say { width: calc(100vw - 24px); } }
+/* feat/demo-auto: while paused (you clicked into the app), nothing is dimmed */
+body.dt-paused .dt-spot { opacity: 0; }
