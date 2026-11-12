@@ -143,7 +143,7 @@ def main():
             host.goto(BASE + "/?skipIntro=1")
             host.wait_for_function("pid => window.TribeProjects && TribeProjects.current() === pid", arg=nv, timeout=15000)
             host.wait_for_selector("#nest-preview", state="visible", timeout=15000)
-            host.wait_for_function("document.querySelector('#nest-preview').innerText.includes('Preview site')", timeout=10000)
+            host.wait_for_function("(document.querySelector('#nest-preview').getAttribute('aria-label') || '').includes('Preview site') && document.querySelector('#nest-preview > span').textContent === 'Preview'", timeout=10000)   # feat/shell-polish: the row says Preview (Preview game for a game); the kind is in its label
             assert host.get_attribute("#nest-preview", "data-kind") == "site"
             host.evaluate("TribeApp.show('home')")
             host.wait_for_selector("#pj-insp .sx-item", timeout=15000)
@@ -183,11 +183,11 @@ def main():
             # Override: This is an app → Preview app; Sense it → back to site
             host.click("#sx-fix"); host.wait_for_selector("#sx-kinds")
             host.click("#sx-kinds [data-kind='app']")
-            host.wait_for_function("document.querySelector('#nest-preview').innerText.includes('Preview app')", timeout=10000)
+            host.wait_for_function("(document.querySelector('#nest-preview').getAttribute('aria-label') || '').includes('Preview app') && document.querySelector('#nest-preview > span').textContent === 'Preview'", timeout=10000)   # feat/shell-polish: the row says Preview (Preview game for a game); the kind is in its label
             assert ok(api(f"/projects/{nv}/sense", token=maya))["kind"] == "app"
             host.wait_for_function("document.querySelector('#pj-insp h3') && document.querySelector('#pj-insp h3').innerText.includes('app')", timeout=8000)
             host.click("#sx-fix"); host.wait_for_selector("#sx-kinds"); host.click("#sx-kinds [data-kind='']")
-            host.wait_for_function("document.querySelector('#nest-preview').innerText.includes('Preview site')", timeout=10000)
+            host.wait_for_function("(document.querySelector('#nest-preview').getAttribute('aria-label') || '').includes('Preview site') && document.querySelector('#nest-preview > span').textContent === 'Preview'", timeout=10000)   # feat/shell-polish: the row says Preview (Preview game for a game); the kind is in its label
             assert ok(api(f"/projects/{nv}/sense", token=orion))["override"] == ""
             # the spectator sees the card but no "Not a website?" and no task buttons
             sctx = b.new_context(viewport={"width": 1280, "height": 860}); sctx.add_init_script(settings_js("Sam", sam, nv))

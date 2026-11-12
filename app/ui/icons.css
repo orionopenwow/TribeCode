@@ -14,3 +14,4 @@
 .set-l b { display: flex; align-items: center; gap: 8px; }
 .set-l b .ti { color: var(--faint); }
 @media (prefers-reduced-motion: reduce) { #view-tabs .wt .wt-ic { transition: none; } }
+@media (max-width: 520px) { .ws-tabs button .ti { display: none; } }   /* phones: the five tabs need the room */
