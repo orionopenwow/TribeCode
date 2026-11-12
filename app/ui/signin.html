@@ -33,6 +33,13 @@
   .alt:hover { color: var(--text); }
   .done-ico { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); color: var(--live); margin-bottom: 16px; }
   .done-ico svg { width: 26px; height: 26px; }
+  /* feat/demo-intro (docs/SIGNUP-FLOWS.md): every failure says what to do next, with a way out */
+  .next { margin-top: 16px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+  .next:empty { display: none; }
+  .next b { color: var(--text); }
+  .next .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .next .acts a, .next .acts button { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-sm); border: 1px solid var(--edge); background: var(--surface); color: var(--text); font: 600 13.5px var(--font, inherit); text-decoration: none; cursor: pointer; }
+  .next .acts .pri { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
   @media (max-width: 520px) {
     .jw { padding: 0; place-items: stretch; }
     .jc { border-radius: 0; border: 0; min-height: 100dvh; display: flex; flex-direction: column; }
@@ -50,8 +57,10 @@
     <h1 id="title">Welcome back</h1>
     <p class="lead" id="lead">Use the account you linked in Settings › Sign-in. No invite needed.</p>
     <div id="oa-box" hidden></div>
-    <div class="err" id="err"></div>
+    <div class="err" id="err" role="alert"></div>
+    <div class="next" id="next"></div>
     <a class="alt" href="/">Open the tribe</a>
+    <a class="alt" href="/?signup=1" id="other">Other ways in: an account, or as a guest</a>
   </div>
 </div></div>
 <script src="/inapp.js"></script>
@@ -64,6 +73,25 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const st = window.TribeStore.get();
   document.body.className = st.theme === 'light' ? 'light' : 'dark';
+  const TRY = 'tribecode.oauth.try', LINK = 'tribecode.oauth.linkNext';
+  const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch {} } };
+  const NAMES = { discord: 'Discord', github: 'GitHub', google: 'Google', apple: 'Apple' };
+  // what to do next after each failure (docs/SIGNUP-FLOWS.md): never a dead end
+  function nextSteps(code) {
+    const tried = ss.get(TRY), name = NAMES[tried] || 'that account';
+    const acts = '<div class="acts"><a class="pri" href="/?signup=create">Create an account</a><a href="/?signup=1">Continue as guest</a><a href="/">Open the tribe</a></div>';
+    let html = '';
+    if (code === 'denied') html = '<b>No problem, nothing was shared.</b> Try again with the buttons above, or pick another way in.' + acts;
+    else if (code === 'unknown') {
+      if (tried) ss.set(LINK, tried);
+      html = `<b>New here?</b> Ask a friend for an invite link and choose “Continue with ${name}” on it: that joins their tribe and links ${name} in one step.<br><b>Signed up another way?</b> Sign in with the account you used before. We’ll offer to link ${name} too.` + acts;
+    }
+    else if (code === 'taken') html = `<b>That ${name} account already belongs to someone else in this tribe.</b> Sign in with it instead, or link a different one in Settings › Sign-in.` + acts;
+    else if (code === 'expired' || code === 'mismatch') html = '<b>Start again from here.</b> Use the same browser from start to finish; private windows and in-app browsers can lose the sign-in halfway.' + acts;
+    else if (code === 'offline') html = '<b>The tribe’s computer isn’t answering.</b> Check that it is on, then try again.' + acts;
+    else html = '<b>Try again in a moment</b>, or pick another way in.' + acts;
+    $('#next').innerHTML = html;
+  }
   const done = (eyebrow, title, lead) => { $('#jbody').innerHTML = `<div class="done-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></div>
     <div class="eyebrow"><span class="dot"></span>${esc(eyebrow)}</div><h1 id="title">${esc(title)}</h1><p class="lead">${esc(lead)}</p><a class="alt" href="/">Open the tribe</a>`; };
 
@@ -71,7 +99,7 @@
     try { const h = await (await fetch('/api/health')).json(); if (h.tribe) { $('#title').textContent = `Welcome back to ${h.tribe}`; document.title = `Sign in · ${h.tribe} · TribeCode`; } } catch {}
     const list = await OA.providers();
     if (!list.length) { $('#lead').textContent = "This tribe hasn't turned on Discord, GitHub or Google sign-in. Ask a friend for a fresh invite link."; return; }
-    const draw = () => OA.buttons($('#oa-box'), list, 'Sign in with', p => OA.begin(p, 'signin').catch(e => { $('#err').textContent = e.message; draw(); }));
+    const draw = () => OA.buttons($('#oa-box'), list, 'Sign in with', p => { try { sessionStorage.setItem(TRY, p); } catch {} OA.begin(p, 'signin').catch(e => { $('#err').textContent = e.message; draw(); }); });
     draw();
   }
 
@@ -80,12 +108,24 @@
     const d = await OA.finish();
     if (d && !d.error) {
       if (d.mode === 'link') { done('Linked', `${d.providerName || 'Your account'} is linked`, 'Next time, sign in on any device with one tap.'); setTimeout(() => location.replace('/'), 1500); return; }
+      ss.set(TRY, null);
+      const linkNext = ss.get(LINK); ss.set(LINK, null);
+      if (linkNext && linkNext !== d.provider && d.token) {   // signed in with the other provider: offer to link the one that was unknown
+        window.TribeStore.set({ name: d.member.name, color: d.member.color, server: { url: location.origin, token: d.token } });
+        done('Signed in', `Welcome back, ${(d.member.name || '').split(' ')[0] || 'friend'}`, `Link ${NAMES[linkNext] || linkNext} too, so either one signs you in next time?`);
+        const acts = document.createElement('div'); acts.className = 'next'; acts.innerHTML = `<div class="acts"><button class="pri" id="link-too">Link ${esc(NAMES[linkNext] || linkNext)}</button><button id="skip-link">Not now, open the tribe</button></div>`;
+        $('#jbody').appendChild(acts);
+        $('#link-too').onclick = () => OA.begin(linkNext, 'link').catch(e => { acts.insertAdjacentHTML('beforeend', `<p class="err">${esc(e.message)}</p>`); });
+        $('#skip-link').onclick = () => OA.enter(d);
+        return;
+      }
       done('Signed in', `Welcome back, ${(d.member.name || '').split(' ')[0] || 'friend'}`, 'Opening your tribe…');
       return OA.enter(d);
     }
     $('#eyebrow').innerHTML = '<span class="dot"></span>Sign in'; $('#title').textContent = 'Welcome back'; $('#lead').textContent = 'Use the account you linked in Settings › Sign-in. No invite needed.';
     await show();
     $('#err').textContent = (d && d.error) || 'Sign-in failed';
+    nextSteps(d && d.code);
   }
   OA.landed() ? back() : show();
 })();
