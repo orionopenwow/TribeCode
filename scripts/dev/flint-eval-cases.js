@@ -170,6 +170,12 @@ add('s', [['make every button go to the right page', 'site.wire'], ['add a page 
 add('cs', [['hook this button up to the profile screen', 'canvas.wire', { to: 'profile' }], ['make this image round', 'canvas.image', { action: 'round' }]]);
 for (let i = H2; i < C.length; i++) C[i].v = 'held';
 
+// feat/company-gigs: a gig you post for yourself, and finding people by skill
+add('g', [['post a gig for me: I\'ll design your logo', 'gig.self', { what: "I'll design your logo" }], ['post a gig for me: i can build a landing page this weekend', 'gig.self'], ['create a gig for myself', 'gig.self'],
+  ['offer my skills', 'gig.self'], ['post an offer for me: tutoring in math', 'gig.self', { what: 'tutoring in math' }], ['set up a gig saying i can mix your track', 'gig.self'], ['list a gig', 'gig.self'],
+  ['find someone who can draw', 'people.find', { skill: 'draw' }], ['who can do pixel art', 'people.find'], ['anyone who can edit video', 'people.find', { skill: 'edit video' }],
+  ['find me someone who knows how to code', 'people.find', { skill: 'code' }], ['i need someone who can write copy', 'people.find', { skill: 'write copy' }], ['find people', 'people.find']]);
+
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');
 console.log(`flint_eval.json: ${C.length} cases`);

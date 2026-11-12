@@ -2670,6 +2670,89 @@
    },
    "ctx": "cs",
    "v": "held"
+  },
+  {
+   "t": "post a gig for me: I'll design your logo",
+   "i": "gig.self",
+   "s": {
+    "what": "I'll design your logo"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "post a gig for me: i can build a landing page this weekend",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "create a gig for myself",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "offer my skills",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "post an offer for me: tutoring in math",
+   "i": "gig.self",
+   "s": {
+    "what": "tutoring in math"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "set up a gig saying i can mix your track",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "list a gig",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "find someone who can draw",
+   "i": "people.find",
+   "s": {
+    "skill": "draw"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "who can do pixel art",
+   "i": "people.find",
+   "ctx": "g"
+  },
+  {
+   "t": "anyone who can edit video",
+   "i": "people.find",
+   "s": {
+    "skill": "edit video"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "find me someone who knows how to code",
+   "i": "people.find",
+   "s": {
+    "skill": "code"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "i need someone who can write copy",
+   "i": "people.find",
+   "s": {
+    "skill": "write copy"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "find people",
+   "i": "people.find",
+   "ctx": "g"
   }
  ]
 }
