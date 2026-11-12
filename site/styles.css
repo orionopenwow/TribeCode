@@ -672,12 +672,12 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .ms-note { padding: 22px; border: 1px solid #6B3A24; border-radius: 14px; background: #2A221E; line-height: 1.6; }
 .ms-note p { margin: 0 0 8px; } .ms-note .mono { color: #E58A5E; font-size: 13px; }
 @media (max-width: 1100px) { .ms-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 720px) { .ms-page { padding: 40px 0 64px; } .ms-grid, .ms-two { grid-template-columns: 1fr; } .ms-lead { font-size: 17px; } }
+@media (max-width: 720px) { .ms-page { padding: 40px 0 64px; } .ms-grid, .ms-two { grid-template-columns: minmax(0, 1fr); } .ms-two > * { min-width: 0; } .ms-ctas .btn { white-space: normal; text-align: left; } .ms-lead { font-size: 17px; } }
 
 .pr-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; margin: 0 auto; }
 @media (max-width: 640px) { .pr-grid--2 { grid-template-columns: 1fr; } }
 .ms-list--ico { list-style: none; padding-left: 0; }
-.ms-list--ico li { display: flex; align-items: center; gap: 12px; }
+.ms-list--ico { grid-template-columns: minmax(0, 1fr); } .ms-list--ico li { display: flex; align-items: center; column-gap: 12px; min-width: 0; } .ms-li { min-width: 0; }
 .ms-list--ico li > span { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border: 1px solid var(--line, #3C3836); border-radius: 9px; background: #282828; font-size: 16px; color: #EBDBB2; }
 .ms-list--ico a, .ms-list a { color: #E58A5E; }
 .ms-ctas .btn { gap: 8px; }
