@@ -118,7 +118,7 @@
     const on = connected(), tribe = (C.state().tribe || {}).name;
     const pj = projects(), live = (data && data.status) || {};
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
-      : C.hasToken() ? `${greeting()}. ${offlineWord()}` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
+      : C.hasToken() && !(window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep()) ? `${greeting()}. ${offlineWord()}` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
@@ -157,7 +157,7 @@
     const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent' && m.online).length;
     const chip = (k, n, l) => `<span class="hid-chip k-${k}"><b>${n}</b>${l}</span>`;
     const chips = on ? chip('ember', pj.length, pj.length === 1 ? 'project' : 'projects') + chip('indigo', people, people === 1 ? 'friend online' : 'friends online') + chip('teal', agents, agents === 1 ? 'agent working' : 'agents working')
-      : C.hasToken() ? `<span class="hid-chip k-muted">${offlineChip()}</span>` : '';   // no tribe yet: said once, in the user bar
+      : C.hasToken() && !(window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep()) ? `<span class="hid-chip k-muted">${offlineChip()}</span>` : '';   // no tribe yet: said once, in the user bar
     return `<header class="hub-head hub-id">
       <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
       <div class="hid-t">${hubCrumb(on && tribe ? `Your dashboard · ${tribe}` : 'Your dashboard')}

@@ -31,7 +31,7 @@
       st_.textContent = h.github ? 'Live on GitHub' : 'On this device';
       st_.classList.add('ub-where'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = 'Where should it live?';
     } else {
-      st_.textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : (C && C.hasToken && C.hasToken() ? 'Reconnecting…' : 'Just you for now');
+      st_.textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : (C && C.hasToken && C.hasToken() && !(O && O.asleep && O.asleep()) ? 'Reconnecting…' : 'Just you for now');
       st_.classList.remove('ub-where'); st_.removeAttribute('role'); st_.removeAttribute('tabindex'); st_.title = '';
     }
     const ac = !on && window.TribeAccounts && window.TribeAccounts.status(true);   // signed out, a guest or a TEST account (accounts.js)

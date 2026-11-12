@@ -1437,6 +1437,7 @@
     saved: k => rawGet(k),   // what is really stored (the tour masks your identity from the app's own raw reads)
     wake: () => { if (db) { delete db.blank; save(); } for (const s of [...sockets]) s._open(); },   // fix/desk-demo: the blank slate's tribe exists now
     state: () => db,
+    asleep: () => !!(active() && db && db.blank),   // fix/batch-fixes: the tour's blank slate before wake(): no connection pills
     mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use
     _k: { db: () => db, save, push, post, chanOf, reactAs, askApproval, assigned, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },

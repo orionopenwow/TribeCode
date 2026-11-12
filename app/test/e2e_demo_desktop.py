@@ -90,6 +90,9 @@ def main():
             assert not first["desk"], "inside the demo the desktop app behaves like the browser"
             assert "Orion" not in first["text"] and "Real Tribe" not in first["text"], "real data inside the demo"
             assert "offline-demo" in first["server"], first["server"]
+            time.sleep(1)   # fix/batch-fixes: the blank slate holds a token before its fake socket opens: no connection pills
+            pills = pg.evaluate("[...document.querySelectorAll('#health-pill:not(.hidden), .hid-chip, #ub-st')].map(e => e.textContent).join(' | ') + ' | ' + document.body.innerText")
+            assert "Reconnecting" not in pills and "Waking up the tribe" not in pills, pills[:300]
             n0 = len(pg.evaluate("window.__inv"))
             r = pg.evaluate("TribeApp.hostHere({ silent: true }).then(x => x || null, e => String(e))")
             assert not r or not (isinstance(r, dict) and r.get("ok")), r

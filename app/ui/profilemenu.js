@@ -24,7 +24,8 @@
   const settingsName = () => { try { return (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name) || ''; } catch { return ''; } };
   const status = () => {
     const st = C.state() || {}, on = C.connected();
-    if (!on) return { on: false, text: st.server && st.server.url ? 'Reconnecting…' : 'Only on this device' };
+    const asleep = window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep();   // the tour before its tribe exists
+    if (!on) return { on: false, text: st.server && st.server.url && !asleep ? 'Reconnecting…' : 'Only on this device' };
     const role = (me() || {}).role;
     return { on: true, text: `${role === 'host' ? 'Hosting' : 'Connected to'} ${(st.tribe && st.tribe.name) || 'the tribe'}` };
   };
