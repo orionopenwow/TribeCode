@@ -664,7 +664,7 @@
   function subset(root, o) {
     if (!FV() || !root) return;
     const v = FV().mount(root, {
-      scope: 'home', idp: o.idp, title: o.title, eyebrow: o.eyebrow, crumb: o.crumb, h: o.h || 'h2', cardClass: 'dc-card', prefs: 'tribecode.files.' + o.idp, fixedCat: o.cat, loading: connected(),
+      scope: 'home', idp: o.idp, title: o.title, eyebrow: o.eyebrow, crumb: o.crumb, h: o.h || 'h2', cardClass: 'dc-card', prefs: 'tribecode.files.' + o.idp, fixedCat: o.cat, defaultWhere: 'all', loading: connected(),
       where: o.where ? () => [{ key: 'all', label: 'Everywhere' }, { key: 'mine', label: 'Mine' }, ...projects().map(p => ({ key: p.id, label: p.name }))] : null,
       studio: { kinds: o.kinds, note: 'Kept on this device, no tribe needed.' }, groups: fileGroups, alwaysHeads: true,
       create: (k, a) => makeNew(k, a), make: (kind, d) => makeDraft(kind, d), open: openItem, act: actItem, wire: wireThumbs,
@@ -1324,5 +1324,5 @@
   if (document.body.dataset.view === 'hub') setTimeout(onShow, 0);   // app.js may have shown the hub before this file loaded
   window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel,
     openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump,
-    editText: src => noteEditor(null, false, src), openFile, newMenu: a => newMenu(a) };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
+    editText: src => noteEditor(null, false, src), openFile, newMenu: a => { if (mode !== 'docs' || !fv) open('docs'); setTimeout(() => fv && fv.studio(a && a.isConnected ? a : $('#dc-new')), mode === 'docs' ? 0 : 80); }, files: () => fv };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
 })();

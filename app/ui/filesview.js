@@ -107,7 +107,7 @@
     const list = STUDIO.filter(x => !o.kinds || o.kinds.includes(x.k)).concat(o.extra || []);
     const m = document.createElement('div'); m.className = 'fx-pop fx-studio'; m.id = o.id || 'fx-studio'; m.setAttribute('role', 'menu'); m.setAttribute('aria-label', 'Create');
     m.innerHTML = `<div class="fx-pop-h"><span class="fx-eyebrow">Studio</span><b>Create anything</b></div>
-      <div class="fx-studio-grid">${list.map(x => `<button type="button" role="menuitem" class="fx-si" data-new="${x.k}"${o.ids && o.ids[x.k] ? ` id="${o.ids[x.k]}"` : ''}><span class="fx-si-ic">${icon(x.ic, 18)}</span><span class="fx-si-t"><b>${esc(x.t)}</b><small>${esc(x.s)}</small></span></button>`).join('')}</div>
+      <div class="fx-studio-grid">${list.map(x => `<button type="button" role="menuitem" class="fx-si" data-new="${x.k}"${x.id || (o.ids && o.ids[x.k]) ? ` id="${x.id || o.ids[x.k]}"` : ''}><span class="fx-si-ic">${icon(x.ic, 18)}</span><span class="fx-si-t"><b>${esc(x.t)}</b><small>${esc(x.s)}</small></span></button>`).join('')}</div>
       ${o.note ? `<p class="fx-pop-note">${o.note}</p>` : ''}`;
     document.body.appendChild(m); place(m, anchor);
     m.querySelectorAll('[data-new]').forEach(b => b.onclick = () => { m.remove(); o.create(b.dataset.new, anchor); });
@@ -245,12 +245,12 @@
       q: o.q || '', items: [], loading: !!o.loading,
       view: lsGet(pfx + '.view', 'grid'), sort: lsGet(pfx + '.sort', 'updated'),
       cat: (k => (CATS.some(c => c[0] === k) ? k : 'all'))(LEGACY[lsGet(pfx + '.kind', 'all')] || lsGet(pfx + '.kind', 'all')),
-      where: lsGet(pfx + '.where', 'mine'),
+      where: lsGet(pfx + '.where', o.defaultWhere || 'mine'),
     };
     if (o.fixedCat) st.cat = o.fixedCat;
     const ids = Object.assign({ search: o.idp + '-q', grid: o.idp + '-items', create: o.idp + '-new', menu: o.idp + '-newmenu' }, o.ids || {});
     const whereList = () => (o.where ? o.where() : null);
-    if (whereList() && !whereList().some(w => w.key === st.where)) st.where = 'mine';
+    if (whereList() && !whereList().some(w => w.key === st.where)) st.where = o.defaultWhere || 'mine';
     root.innerHTML = `<div class="fx fx-${o.scope} dc-${o.scope}" data-scope="${o.scope}">
       <header class="fx-head">
         <div class="fx-title">${o.crumb || `<span class="fx-eyebrow">${esc(o.eyebrow || (o.scope === 'home' ? 'Your files' : 'This project'))}</span>`}<${o.h || 'h1'} id="${o.idp}-title">${esc(o.title || 'Files')}</${o.h || 'h1'}><span class="fx-count" id="${o.idp}-count"></span></div>

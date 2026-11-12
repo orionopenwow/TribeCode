@@ -69,9 +69,9 @@
     { key: 'money', label: 'Money', icon: 'i-coin', kind: 'Go to', keys: 'money ledger revenue costs runway users stripe finance books csv export autopilot seats budget ai spend', when: () => !!(window.TribeLedger && window.TribeLedger.hasCompany()), run: () => window.TribeLedger && window.TribeLedger.open() },   // v0.27 company: Money (app/ui/ledger.js adds its own sidebar row when a company exists)
     { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
-    { key: 'docs-all', label: 'Files', icon: 'i-doc', group: 'global', keys: 'all files documents notes docs sheets slides pictures uploads across projects search every my files', run: () => hubOpen('docs') },   // feat/files-dash: "Files" (was All files)
-    { key: 'design-all', label: 'Design', icon: 'i-canvas', group: 'global', keys: 'all designs canvases whiteboards frames every project my designs', run: () => hubOpen('design') },   // feat/files-dash: Home parity
-    { key: 'repos-all', label: 'Code', icon: 'i-git', group: 'global', keys: 'all code repos repositories every project branches status code files',   /* feat/files-dash: "Code" (was All code) */ run: () => hubOpen('repos') },
+    { key: 'docs-all', label: 'Your files', row: 'Files', icon: 'i-doc', group: 'global', keys: 'all files documents notes docs sheets slides pictures uploads across projects search every my files', run: () => hubOpen('docs') },   // feat/files-dash: "Files" (was All files)
+    { key: 'design-all', label: 'Your designs', row: 'Design', icon: 'i-canvas', group: 'global', keys: 'all designs canvases whiteboards frames every project my designs', run: () => hubOpen('design') },   // feat/files-dash: Home parity
+    { key: 'repos-all', label: 'Your code', row: 'Code', icon: 'i-git', group: 'global', keys: 'all code repos repositories every project branches status code files',   /* feat/files-dash: "Code" (was All code) */ run: () => hubOpen('repos') },
     { key: 'work', label: 'Work', icon: 'i-users', group: 'global', keys: 'work gigs jobs hire hiring talent people open to work time bank compute share bounty seat freelance', run: () => window.TribeTalent && window.TribeTalent.open() },   // v0.27 company: app/ui/talent.js
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
@@ -133,7 +133,7 @@
     const box = $('#nest-groups'); if (!box) return;
     drawnGlobal = isGlobal();
     document.body.classList.toggle('global', drawnGlobal);   // keep the class in step whichever path drew the rows
-    box.innerHTML = drawnGlobal ? `<div class="nest-home-h" id="nest-home-h" aria-current="page"><svg class="i"><use href="#i-home"/></svg><b>Home</b><span>· your dashboard</span></div><div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
+    box.innerHTML = drawnGlobal ? `<div class="nest-home-h" id="nest-home-h" aria-current="page"><svg class="i"><use href="#i-home"/></svg><b>Home</b> <span>· your dashboard</span></div><div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
       `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.row || d.label)}</span></button>`).join('')}</div>` : '';
   }
   function paintCounts() {

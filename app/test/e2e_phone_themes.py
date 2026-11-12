@@ -102,7 +102,7 @@ def main():
 
                 # Files
                 ph.evaluate("TribeHub.open('docs')"); ph.wait_for_selector("#hub-docs .dc-card", timeout=10000); check("files")
-                ph.click("#dc-fab"); ph.wait_for_selector("#dc-newsheet"); check("files-new"); ph.evaluate("document.querySelector('#dc-newsheet').remove()")
+                ph.click("#dc-new"); ph.wait_for_selector("#dc-newmenu"); check("files-new"); ph.evaluate("document.querySelector('#dc-newmenu').remove()")
                 ph.click("#hub-docs [data-mynote]"); ph.wait_for_selector("#note-text"); check("note"); ph.click("#note-done"); ph.wait_for_timeout(300)
                 # Messages + projects sheets
                 ph.click("#m2-homebar [data-hb=msgs]"); ph.wait_for_selector(".m2-conv", timeout=8000); check("messages"); ph.keyboard.press("Escape"); ph.mouse.click(195, 60); ph.wait_for_timeout(400)

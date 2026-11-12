@@ -185,3 +185,4 @@
 #view-tabs.wt-files .wt { display: inline-flex; align-items: center; gap: 7px; }
 #view-tabs.wt-files .wt .wt-ic { display: grid; place-items: center; color: var(--muted); }
 #view-tabs.wt-files .wt.on .wt-ic { color: var(--accent); }
+.fx-project .fx-loc { display: none; }   /* inside a project every file lives there: no chip */

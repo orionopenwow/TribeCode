@@ -1,7 +1,7 @@
 """Truth test: every screen reaches a real backend, nothing errors, and chat stays light.
 
 Walks the app the way a person would, on desktop and on a phone, with no tribe and then with one:
-the global sections (Home, All files, All code, Work, Agent fleet), every project destination in the
+the global sections (Home, Files, Design, Code, Work, Agent fleet), every project destination in the
 router's registry, the Workshop, Settings, log out and back in. While it walks it records:
 - every /api and /mcp response: any 5xx, or a 4xx that isn't an expected "not signed in"/"not found";
 - page errors and console errors;
