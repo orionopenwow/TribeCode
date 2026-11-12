@@ -91,7 +91,7 @@
   function gigCard(g, hero) {
     const col = g.color || (g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)');
     return `<article class="tl-gig${hero ? ' hero card' : ''}" data-gig="${esc(g.id)}" style="--seat:${col}" tabindex="0" role="button" aria-label="${esc(g.title)}">
-      <div class="tl-gig-top"><span class="eyebrow">${esc(g.kind === 'seat' ? 'Seat' : g.kind === 'bounty' ? 'Bounty' : 'Task')}${g.projectName ? ` · ${esc(g.projectName)}` : ''}${g.status === 'draft' ? ' · draft, waiting for approval' : g.status !== 'open' ? ` · ${esc(g.status)}` : ''}</span>${seatChip(g.seatKind)}</div>
+      <div class="tl-gig-top"><span class="eyebrow">${esc(g.kind === 'seat' ? 'Seat' : g.kind === 'bounty' ? 'Bounty' : 'Task')}${g.projectName ? ` · ${esc(g.projectName)}` : ''}${g.status === 'draft' ? ' · draft, waiting for approval' : g.status === 'filled' && g.stage ? ` · ${esc({ assigned: 'assigned', working: 'in progress', review: 'in review', done: 'done', credited: 'credited' }[g.stage] || g.stage)}` : g.status !== 'open' ? ` · ${esc(g.status)}` : ''}</span>${seatChip(g.seatKind)}</div>
       <h3>${esc(g.title)}</h3>
       ${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}
       <div class="tl-meta">${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, hero ? 6 : 3)}</div>

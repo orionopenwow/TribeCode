@@ -17,7 +17,7 @@
 .wl-track li { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); padding-top: 7px; border-top: 2px solid var(--edge); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wl-track li.done { color: var(--muted); border-top-color: var(--live); }
 .wl-track li.now { color: var(--text); border-top-color: var(--accent); }
-.wl-who { color: var(--muted); font-size: 12px; }
+.wl-who { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; }
 
 .wl-loop { display: flex; flex-direction: column; gap: 14px; padding: 14px 0 4px; border-top: 1px solid var(--edge); }
 .wl-match-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }

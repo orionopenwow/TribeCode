@@ -89,7 +89,7 @@
     const s = g.stage || 'open', at = s === 'credited' ? 5 : STEPS.findIndex(x => x[0] === s);
     if (s === 'open' && !g.filledBy) return '';
     return `<ol class="wl-track" aria-label="Progress: ${esc(s)}">${STEPS.map(([k, l], i) => `<li class="${i < at ? 'done' : i === at ? 'now' : ''}" data-step="${k}">${l}</li>`).join('')}</ol>
-      ${g.filledName ? `<small class="wl-who">${g.filledAgent ? 'AI helper · ' : ''}${esc(g.filledName)}${g.pct != null && s !== 'open' ? ` · ${esc(g.pct)}%` : ''}${s === 'credited' ? ' · credited ✓' : ''}</small>` : ''}`;
+      ${g.filledName ? `<p class="wl-who">${g.filledAgent ? 'AI helper · ' : ''}${esc(g.filledName)}${g.pct != null && s !== 'open' ? ` · ${esc(g.pct)}%` : ''}${s === 'credited' ? ' · credited ✓' : ''}</p>` : ''}`;
   }
 
   // ---------- the loop panel in a gig's sheet ----------
