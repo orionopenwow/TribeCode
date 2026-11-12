@@ -136,6 +136,7 @@ def on_this_device(b):
     assert pg.evaluate("TribeDesignFlow.plan().kind") == "website" and pg.evaluate("TribeDesignFlow.plan().template") == "cafe"
     pg.wait_for_selector("#dfl-dock:not([hidden]) #dfl-dock-plan", timeout=5000)
     assert "plan · website" in pg.inner_text("#dfl-dock").lower()
+    pg.wait_for_function("TribeSiteDesigner.cfg().name === 'Sunrise Bakery'", timeout=5000)   # the prompt names the site
     pg.evaluate("TribeSiteDesigner.close()")
 
     # A screen template: the canvas opens with the screen on it, plan docked

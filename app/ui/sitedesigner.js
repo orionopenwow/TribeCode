@@ -136,7 +136,7 @@
     if (o.name) c.name = o.name;
     st.unfilled = JSON.stringify(c);
     let filled = c, used = [];
-    if (st.pid && o.fill !== false) { const r = await autofill(c); filled = r.cfg; used = r.used; }
+    if ((st.pid || o.name) && o.fill !== false) { const r = await autofill(c, o.name); filled = r.cfg; used = r.used; }   // a name you gave beats the project's
     if (first && !st.hist.length && !st.log.length) { st.cfg = S().normalize(filled); st.page = st.cfg.pages[0].id; save(); }
     else commit(filled);
     st.page = st.cfg.pages[0].id; st.sel = null; hideStart(); paint();
@@ -153,8 +153,8 @@
     if (F.images && F.images.length) F.images = (await Promise.all(F.images.slice(0, 6).map(u => toData(/^\/api\//.test(u) && C.base ? C.base() + u : u)))).filter(Boolean);
     st.facts = F; return F;
   }
-  async function autofill(c) {
-    const F = await loadFacts(); const r = S().fill(c, F);
+  async function autofill(c, name) {
+    const F0 = await loadFacts(), F = name ? { ...F0, name } : F0; const r = S().fill(c, F);
     const B = window.TribeBoost;   // with an AI on, better hero words from the same facts (one undo with the rest)
     try {
       if (B && await B.online() && window.TribeAIBasics && window.TribeAIBasics.ask && r.used.length) {

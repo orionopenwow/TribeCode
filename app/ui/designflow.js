@@ -187,13 +187,23 @@
     return makeCanvas(kind, tplId, ask);
   }
   // Website: the website designer takes over (its own entry), with the template and the prompt
+  // a prompt that is only a name ("Sunrise Bakery") or says one ("a site for Sunrise Bakery"); not a style ("warm colors")
+  const STYLE_RX = /\b(colou?rs?|dark|light|warm|cool|minimal|modern|clean|bold|simple|cozy|menu|photos?|pictures?|theme|style|fonts?|page|site|website)\b/i;
+  function siteName(ask) {
+    if (!ask) return '';
+    if (/\b(?:called|named|titled|for)\s/i.test(ask)) return nameFrom(ask, '');
+    const KC = K() ? Object.keys(K().COLORS) : [];
+    if (STYLE_RX.test(ask) || (KC.length && new RegExp(`\\b(${KC.join('|')})\\b`, 'i').test(ask))) return '';
+    return nameFrom(ask, '');
+  }
   async function makeWebsite(tplId, ask) {
     const SD = window.TribeSiteDesigner; if (!SD) throw new Error('The website designer did not load. Reload the app.');
-    const t = D().SITES.find(s => s.id === tplId), title = nameFrom(ask, t ? t.t + ' site' : 'Website');
+    const t = D().SITES.find(s => s.id === tplId), named = siteName(ask), title = named || (t ? t.t + ' site' : 'Website');
     const p = newPlan('website', title, tplId, ask, { type: 'site', pid: pidNow(), id: tplId });
     await savePlan(p); setActive(p);
-    await SD.open({ ...(pidNow() ? { pid: pidNow() } : {}), ...(tplId ? { template: tplId } : {}) });
-    if (ask) setTimeout(() => { try { SD.ask(ask); } catch {} }, 400);
+    // fix/batch-fixes: "Sunrise Bakery" on the Café template names the site; the rest of the prompt goes to Flint
+    await SD.open({ ...(pidNow() ? { pid: pidNow() } : {}), ...(tplId ? { template: tplId } : {}), ...(named && tplId ? { name: named } : {}) });
+    if (ask && !(named && named.toLowerCase() === ask.toLowerCase())) setTimeout(() => { try { SD.ask(ask); } catch {} }, 400);
     dock();
   }
   // Apps and games: a starter, its knobs set from the prompt (free) or by the AI (when one is connected)
