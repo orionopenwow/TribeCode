@@ -67,6 +67,7 @@ Pushing from the Claude cloud sandbox:
   - `applink.js` + `export.js` + `github-auth.js`: Home Screen/desktop app links, Desktop folder export/copy, GitHub device-flow sign-in.
   - `demo.js` + `scripts/start-demo-tribe.js`: the demo tribe (templates/lantern-run, templates/tavern-3d).
   - `app/ui/demowatch.js`: "See how TribeCode works", the hands-off ~2-minute tour with Flint: one short chapter per feature (Home, a project, chat, tasks with accept and council claim, docs, Files, canvas, website designer, preview pin, Work and approvals, Claude as a teammate, Company, inspiration board, a pretend huddle, Flint's lesson and the AI-boost card, Your turn), chapter dots to jump (`app/?demo=watch`, the site's hero link, Help, the empty Home's Tour with Flint, Welcome's Just watch it). Every demo (offline.js) lives in its tab only and never touches the saved settings. Tests: e2e_demo_watch, e2e_demo_actions, e2e_demo_isolation.
+  - `places.js` + `app/ui/presence.js` + `app/ui/peoplepanel.js`: where everyone is. Small `place` websocket frames on route change (doc, website designer, channel, task, preview, canvas; a DM is only "in messages"), filtered per viewer, Show where I am / Appear away, last seen; avatars on places and list rows; the People button in the top bar (This tribe · Friends, Jump to). `GET /api/places`, `PUT /api/places/prefs`. Test: `app/test/e2e_presence.py`.
   - `share.js`: public https via Tailscale Funnel or cloudflared.
   - `site.js`: GitHub Pages friend links.
   - `devices.js`: phone device links.

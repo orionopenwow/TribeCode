@@ -348,6 +348,7 @@
     if (id === 'studio.open') { if (window.TribeStudios) window.TribeStudios.open(String(sl.app || '').toLowerCase()); return { text: T('opened', { x: sl.app }) }; }
     if (id === 'asset.add') return legacy(s.text);
     if (id === 'find') return legacy('find ' + (sl.q || ''));
+    if (id === 'people.where' || id === 'people.online' || id === 'people.working' || (id === 'status' && /\b(?:online|here|around|on)\s*\??$/i.test(s.text || ''))) { const PP = window.TribePeoplePanel; const r = PP && PP.flint(id === 'status' ? 'people.online' : id, sl); if (r) return r; }   // feat/presence
     if (id === 'status') return legacy("what's new");
     if (id === 'focus') return legacy('what should i do next');
     if (id === 'tiers') return legacy('what can you do');

@@ -175,6 +175,10 @@ add('g', [['post a gig for me: I\'ll design your logo', 'gig.self', { what: "I'l
   ['offer my skills', 'gig.self'], ['post an offer for me: tutoring in math', 'gig.self', { what: 'tutoring in math' }], ['set up a gig saying i can mix your track', 'gig.self'], ['list a gig', 'gig.self'],
   ['find someone who can draw', 'people.find', { skill: 'draw' }], ['who can do pixel art', 'people.find'], ['anyone who can edit video', 'people.find', { skill: 'edit video' }],
   ['find me someone who knows how to code', 'people.find', { skill: 'code' }], ['i need someone who can write copy', 'people.find', { skill: 'write copy' }], ['find people', 'people.find']]);
+// feat/presence: where people are, who's online, who's on what
+add('g', [['where is maya', 'people.where'], ["where's Sam right now?", 'people.where'], ['what is maya doing', 'people.where'], ['is sam online', 'people.where'],
+  ['who is online right now', 'people.online'], ["show me who's online", 'people.online'], ['anyone online today', 'people.online'],
+  ["who's working on the website", 'people.working', { what: 'the website' }], ['who is editing the launch plan', 'people.working', { what: 'the launch plan' }], ['is anyone working on the login task', 'people.working']]);
 // ---- site v2 (feat/site-v2): 170 more website phrasings, written before tuning (before: see CHANGELOG) ----
 const V2 = C.length;
 add('g', [
