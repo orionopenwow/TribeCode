@@ -141,8 +141,7 @@ def flow(page, tag, phone, tmp):
     # Files: a note and a picture
     page.evaluate("TribeHub.open('docs')")
     page.wait_for_selector("#hub-docs", timeout=8000)
-    if phone: page.click("#dc-fab"); page.click("#dc-newsheet [data-do=note]")
-    else: page.click("#dc-new"); page.click("#dc-newmenu [data-new=note]")   # + New › Note
+    page.click("#dc-new"); page.click("#dc-newmenu [data-new=note]")   # + Create › Note (phones too)
     page.wait_for_selector("#note-text", state="visible", timeout=8000)
     page.fill("#note-title", "Demo idea")
     page.fill("#note-text", "Fireflies that follow Wick")
@@ -150,8 +149,7 @@ def flow(page, tag, phone, tmp):
     page.wait_for_function("TribeClient.api('/scratch').then(r => r.notes.some(n => n.text.startsWith('Demo idea')))", timeout=8000)
     pic = Path(tmp) / "lantern.png"; pic.write_bytes(PNG)
     with page.expect_file_chooser() as fc:
-        if phone: page.click("#dc-fab"); page.click("#dc-newsheet [data-do=me]")
-        else: page.click("#dc-up"); page.click("#dc-upmenu [data-scope=me]")
+        page.click("#dc-new"); page.click("#dc-newmenu [data-new=upload]"); page.click("#dc-upmenu [data-scope=me]")
     fc.value.set_files(str(pic))
     page.wait_for_selector("img[data-thumb]", timeout=8000)
     page.wait_for_function("[...document.querySelectorAll('img[data-thumb]')].some(i => i.naturalWidth === 16)", timeout=8000)

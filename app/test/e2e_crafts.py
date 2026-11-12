@@ -78,7 +78,9 @@ async def main():
             host = await open_as(b, "Orion", host_tok)
             await host.evaluate("TribeApp.show('docs')")
             await host.wait_for_selector(".fg-card[data-type='sheet']", timeout=10000)
+            await host.click("#fg-new-menu"); await host.wait_for_selector("#fg-newmenu")   # feat/files-dash: + Create opens the Studio
             assert await host.locator("#fg-new-sheet").is_visible() and await host.locator("#fg-new-deck").is_visible()
+            await host.keyboard.press("Escape")
             assert await host.locator(".fg-card[data-type='deck'] .fg-th-deck .sd").count() == 1
             assert "Chips" in await host.inner_text(".fg-card[data-type='sheet'] .fg-th-sheet") and "6" in await host.inner_text(".fg-card[data-type='sheet'] .fg-th-sheet")
 

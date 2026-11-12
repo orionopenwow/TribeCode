@@ -1,4 +1,4 @@
-"""All files works with no tribe (feat/setup-local). In the global All files dashboard, + New makes a note, a doc, a sheet,
+"""Files works with no tribe (feat/setup-local). In the global Files dashboard, + New makes a note, a doc, a sheet,
 a whiteboard and a design, and Upload keeps a picture and a code file, all on this device (IndexedDB) and each opening in
 the project's own editor (the note editor with rich text, sheet.js, whiteboard.js, the design canvas, the file viewer,
 a code editor). The new filter chips sort them. A reload keeps everything. Then each one moves into a project with
@@ -22,9 +22,9 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 
 def items(pg): return pg.evaluate("TribeLocalFiles.list().map(x => ({ id: x.id, kind: x.kind, title: x.title, fkind: x.fkind || '' }))")
 
-def chips(pg): return pg.eval_on_selector_all(".dc-chips [data-dk]", "els => els.map(e => e.textContent.trim())")
+def chips(pg): return pg.eval_on_selector_all(".fx-tabs [data-dk] .fx-tl", "els => els.map(e => e.textContent.trim())")
 
-def visible_titles(pg): return pg.eval_on_selector_all("#hub-docs .dc-card b", "els => els.map(e => e.textContent.trim())")
+def visible_titles(pg): return pg.eval_on_selector_all("#hub-docs .dc-card .fx-name", "els => els.map(e => e.textContent.trim())")
 
 def main():
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), functools.partial(Quiet, directory=str(UI)))
@@ -43,12 +43,12 @@ def main():
         pg.goto(BASE + "/?skipIntro=1#/hub/docs")
         pg.wait_for_function("window.TribeLocalFiles && window.TribeHub && TribeHub.mode() === 'docs' && document.querySelector('#dc-new')", timeout=15000)
         assert not pg.evaluate("TribeClient.connected()"), "no tribe in this test"
-        assert chips(pg) == ["All", "Notes", "Docs", "Sheets", "Designs", "Whiteboards", "Pictures", "Code", "Other files"], chips(pg)
+        assert chips(pg) == ["All", "Notes", "Docs", "Sheets", "Slides", "Designs", "Websites", "Pictures", "Audio/Video", "Code", "Other"], chips(pg)
 
         def new(kind):
             pg.click("#dc-new"); pg.wait_for_selector("#dc-newmenu", state="visible")
             rows = pg.eval_on_selector_all("#dc-newmenu [data-new] b", "els => els.map(e => e.textContent)")
-            assert rows == ["Note", "Doc", "Sheet", "Whiteboard", "Design", "Upload"], rows
+            assert rows == ["Note", "Doc", "Sheet", "Slides", "Whiteboard", "Design", "Website", "Code file", "From a template", "Upload", "Ask Flint"], rows
             pg.click(f"#dc-newmenu [data-new='{kind}']")
 
         # 1. a note (the scratchpad, local until a tribe)
@@ -86,21 +86,21 @@ def main():
         pg.wait_for_function("TribeLocalFiles.list().some(x => x.kind === 'design' && Object.values(x.nodes).filter(n => !n.del).length >= 1)", timeout=5000)
         pg.click("#lf-fback"); pg.wait_for_function("TribeHub.mode() === 'docs' && document.body.dataset.view === 'hub'", timeout=5000)
         # 6. uploads: a picture and a code file, with no tribe
-        with pg.expect_file_chooser() as fc: pg.click("#dc-up")
+        with pg.expect_file_chooser() as fc: pg.click("#dc-new"); pg.click("#dc-newmenu [data-new='upload']")
         fc.value.set_files([str(tmp / "dot.png"), str(tmp / "main.js")])
         pg.wait_for_function("TribeLocalFiles.list().filter(x => x.kind === 'file').length === 2", timeout=5000)
         # the picture opens in the viewer; the code file in the code editor and can be edited
-        pg.click("#hub-docs [data-lk='file'].k-image"); pg.wait_for_selector("#fv img", timeout=5000); pg.click("#fv-close")
-        pg.click("#hub-docs [data-lk='file'].k-code"); pg.wait_for_selector("#lf-pane #lf-src")
+        pg.click("#hub-docs [data-lk='file'][data-cat='pics']"); pg.wait_for_selector("#fv img", timeout=5000); pg.click("#fv-close")
+        pg.click("#hub-docs [data-lk='file'][data-cat='code']"); pg.wait_for_selector("#lf-pane #lf-src")
         assert "hello" in pg.input_value("#lf-src")
         pg.click("#lf-src"); pg.keyboard.press("Control+End"); pg.keyboard.type("// edited\n"); time.sleep(0.8)
         pg.click("#lf-done"); pg.wait_for_selector("#lf-pane", state="detached")
 
         # filters
         pg.wait_for_function("document.querySelectorAll('#hub-docs .dc-card').length >= 7", timeout=5000)
-        for chip, want in [("sheets", "Budget"), ("designs", "Untitled design"), ("boards", "Untitled board"), ("pics", "dot.png"), ("code", "main.js"), ("docs", "Level ideas"), ("notes", "Shopping list")]:
+        for chip, want in [("sheets", ["Budget"]), ("designs", ["Untitled board", "Untitled design"]), ("pics", ["dot.png"]), ("code", ["main.js"]), ("docs", ["Level ideas"]), ("notes", ["Shopping list"])]:
             pg.click(f"[data-dk={chip}]"); time.sleep(0.15)
-            t = visible_titles(pg); assert t == [want], (chip, t)
+            t = sorted(visible_titles(pg)); assert t == want, (chip, t)
         pg.click("[data-dk=all]")
         if SHOTS: time.sleep(0.4); pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "files-local.png"))
 
@@ -114,7 +114,7 @@ def main():
         assert "// edited" in b64src, b64src
 
         # 8. Move to… a project: the menu offers to start one when there is none
-        pg.click("#hub-docs [data-lk='doc'] [data-mv]"); pg.wait_for_selector("#lf-movemenu [data-to='__setup']")
+        pg.click("#hub-docs [data-lk='doc'] .fx-more"); pg.click("#fx-more-menu [data-act=move]"); pg.wait_for_selector("#lf-movemenu [data-to='__setup']")
         pg.click("#lf-movemenu [data-to='__setup']"); pg.wait_for_selector("#su-start")
         pg.fill("#su-name", "Lantern Town"); pg.click("#su-create")
         pg.wait_for_function("TribeOffline.solo() && TribeClient.connected()", timeout=8000)
@@ -131,9 +131,9 @@ def main():
         assert boards and any(e.get("t") == "rect" for e in boards[0]["elements"].values()), boards
         designs = [x for k, x in st["canvas"][pid].items() if k != "main"]
         assert designs and len([n for n in designs[0]["nodes"].values() if not n.get("del")]) >= 1, designs
-        # the moved doc shows in All files as a project doc now
-        pg.evaluate("TribeHub.open('docs')")
-        pg.wait_for_function("[...document.querySelectorAll('#hub-docs .dc-card small')].some(s => s.textContent.startsWith('Lantern Town'))", timeout=8000)
+        # the moved doc shows in Files as a project doc now
+        pg.evaluate("TribeHub.open('docs')"); pg.wait_for_selector("#dc-where"); pg.select_option("#dc-where", "all")
+        pg.wait_for_function("[...document.querySelectorAll('#hub-docs .dc-card .fx-loc')].some(s => s.textContent.includes('Lantern Town'))", timeout=8000)
         ctx.close(); b.close()
     srv.shutdown()
     bad = [e for e in errors if "ResizeObserver" not in e]

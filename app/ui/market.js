@@ -15,7 +15,7 @@
   const toast = m => window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m);
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
   const me = () => (C.state && C.state().me) || {};
-  const canUse = () => me().role && me().role !== 'spectator';
+  const canUse = () => !offline && me().role && me().role !== 'spectator';
   const pid = () => (window.TribeProjects && window.TribeProjects.current()) || (C.project && C.project()) || '';
   const SORTS = [['hot', 'Hot'], ['rising', 'Rising'], ['new', 'New'], ['top', 'Top']];
   const KIND_LABEL = { widget: 'Widget', 'company-template': 'Company', playbook: 'Playbook', skill: 'Skill', library: 'Library', tool: 'Tool', studio: 'Studio', 'site-template': 'Starter', connector: 'Connector', 'asset-pack': 'Assets', legal: 'Legal', academy: 'Academy' };
@@ -37,6 +37,59 @@
   const st = { q: '', sort: 'hot', kind: [], for: [], seat: [], tag: [], items: [], total: 0, catalog: 0, note: '', offset: 0, seq: 0 };
   try { st.sort = localStorage.getItem('tribecode.marketSort') || 'hot'; } catch {}
   let host = null;
+
+  // ---------- the saved list (feat/files-dash): with no tribe answering (offline, no tribe yet, the host asleep) the
+  // Marketplace reads the catalog saved with the app (market-catalog.json, scripts/dev/market-catalog.js) and says so
+  // calmly. Never "Failed to fetch".
+  const KIND_INFO = { widget: ['Widgets', '🧩'], 'company-template': ['Company templates', '🏢'], playbook: ['Playbooks', '📋'], skill: ['Skills', '🧠'], library: ['Libraries', '📚'], tool: ['Tools', '🛠️'], studio: ['Studios', '🎛️'], 'site-template': ['Starters', '🌐'], connector: ['Connectors', '🔌'], 'asset-pack': ['Asset packs', '🎨'], legal: ['Legal', '⚖️'], academy: ['Academy', '🎓'] };
+  const SEATS = ['ceo', 'cto', 'design', 'growth', 'sales', 'support', 'ops', 'finance', 'legal'];
+  let saved = null, offline = false;
+  const savedList = () => (saved = saved || fetch('market-catalog.json').then(r => (r.ok ? r.json() : { items: [] })).then(d => (d.items || []).map((it, i) => ({ ...it, _i: i }))).catch(() => []));
+  const reach = () => !!(C && C.connected && C.connected());
+  async function api(path) {
+    if (reach()) { try { const r = await C.api(path); offline = false; return r; } catch {} }
+    offline = true; return local(path);
+  }
+  async function local(path) {
+    const [p, query = ''] = String(path).split('?'), sp = new URLSearchParams(query), all = await savedList();
+    const list = k => String(sp.get(k) || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+    const f = { q: String(sp.get('q') || '').toLowerCase().trim(), kind: list('kind'), tag: list('tag'), for: list('for'), seat: list('seat') };
+    const hay = it => `${it.title} ${it.summary} ${(it.tags || []).join(' ')} ${it.kind} ${it.repo || ''} ${it.seat || ''}`.toLowerCase();
+    const match = (it, skip) => (!f.q || f.q.split(/\s+/).every(w => hay(it).includes(w))) && (skip === 'kind' || !f.kind.length || f.kind.includes(it.kind))
+      && (skip === 'tag' || !f.tag.length || f.tag.every(t => (it.tags || []).includes(t))) && (skip === 'for' || !f.for.length || (it.for || []).some(x => f.for.includes(x) || x === 'any'))
+      && (skip === 'seat' || !f.seat.length || f.seat.includes(it.seat));
+    const view = it => ({ ...it, kindLabel: (KIND_INFO[it.kind] || [it.kind])[0], uses: { week: 0, lastWeek: 0, all: 0 } });
+    if (p === '/market/trending') return { items: [], updated: '' };
+    if (p.startsWith('/market/items/')) { const it = all.find(x => x.id === decodeURIComponent(p.slice(14))); if (!it) throw new Error('That item is not in the saved list.'); return { item: view(it) }; }
+    if (p === '/market/facets') {
+      const out = { kind: {}, for: {}, seat: {}, tag: {} };
+      for (const it of all) {
+        if (match(it, 'kind')) out.kind[it.kind] = (out.kind[it.kind] || 0) + 1;
+        if (match(it, 'for')) for (const x of it.for || []) out.for[x] = (out.for[x] || 0) + 1;
+        if (match(it, 'seat') && it.seat) out.seat[it.seat] = (out.seat[it.seat] || 0) + 1;
+        if (match(it, 'tag')) for (const t of it.tags || []) out.tag[t] = (out.tag[t] || 0) + 1;
+      }
+      return { total: all.filter(it => match(it)).length, catalog: all.length,
+        kind: Object.keys(KIND_INFO).filter(k => out.kind[k]).map(k => ({ id: k, label: KIND_INFO[k][0], emoji: KIND_INFO[k][1], n: out.kind[k] })),
+        for: Object.keys(FOR_LABEL).filter(k => out.for[k]).map(k => ({ id: k, label: FOR_LABEL[k], n: out.for[k] })),
+        seat: SEATS.filter(k => out.seat[k]).map(k => ({ id: k, label: SEAT_LABEL[k] || k, n: out.seat[k] })),
+        tag: Object.entries(out.tag).filter(([t]) => !['link', 'skill', 'open-source', 'mcp', 'claude-code'].includes(t)).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 30).map(([id, n]) => ({ id, n })) };
+    }
+    const sort = sp.get('sort') || 'hot', age = it => Math.max(0, (Date.now() - Date.parse((it.added || '2026-11-01') + 'T00:00:00Z')) / 86400000);
+    const rank = { hot: it => 0.35 * it.score + (it.featured ? 8 : 0), rising: it => (age(it) <= 30 ? it.score * 0.5 * (1 - age(it) / 30) : 0), top: it => it.score };
+    const hits = all.filter(it => match(it));
+    if (sort === 'new') hits.sort((a, b) => String(b.added).localeCompare(String(a.added)) || b._i - a._i);
+    else { const r = rank[sort] || rank.hot; hits.sort((a, b) => r(b) - r(a) || b.score - a.score || a.title.localeCompare(b.title)); }
+    const offset = +sp.get('offset') || 0, limit = Math.min(60, +sp.get('limit') || 24);
+    return { items: hits.slice(offset, offset + limit).map(view), total: hits.length, offset, limit, sort, catalog: all.length, saved: true,
+      note: 'Showing the saved list: TribeCode’s picks, ranked by its own score. Your tribe’s Hot and Rising come back when your tribe is reachable.' };
+  }
+  function paintOffline() {
+    const box = host && host.querySelector('#mk-offline'); if (!box) return;
+    box.hidden = !offline;
+    box.innerHTML = offline ? `<span class="mk-off-dot" aria-hidden="true"></span><span><b>Showing the saved list.</b> ${reach() ? 'Your tribe didn’t answer just now, so this is the catalog that came with the app.' : 'No tribe is connected here, so this is the catalog that came with the app.'} Open any item to read about it; adding things to a project needs a tribe.</span>${reach() ? '<button class="btn sm" type="button" data-mk-retry>Try again</button>' : ''}` : '';
+    const rb = box.querySelector('[data-mk-retry]'); if (rb) rb.onclick = () => load(true);
+  }
   const active = () => st.kind.length + st.for.length + st.seat.length + st.tag.length;
   function qs(extra = {}) {
     const p = new URLSearchParams();
@@ -54,6 +107,7 @@
     el.innerHTML = `<div class="mk" id="market">
       <div class="mk-hero" id="mk-hero"><div><span class="mk-eyebrow">Curated · every link and license checked</span><h2>Add tools, skills and templates</h2>
         <p>Real, open things your crew can use. <b>Hot</b> and <b>Rising</b> come from what your tribe uses, not a global chart.</p></div></div>
+      <div class="mk-offline" id="mk-offline" role="status" hidden></div>
       <section class="mk-trend" id="mk-trend" hidden aria-labelledby="mk-trend-t"></section>
       <div class="mk-bar">
         <label class="mk-search">${ico('i-search', 15)}<input id="mk-q" type="search" placeholder="Search the marketplace" autocomplete="off" aria-label="Search the marketplace" value="${esc(st.q)}"></label>
@@ -95,7 +149,7 @@
   const inFocus = (it, f) => f === 'all' || (it.tags || []).some(t => f === 'ui' ? ['ui', 'design', 'animation', 'css'].includes(t) : f === 'threejs' ? ['threejs', '3d', 'game'].includes(t) : f === 'video' ? ['video', 'audio', 'images'].includes(t) : t === f);
   const fmtStars = n => n == null ? '' : n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n);
   async function loadTrend() {
-    try { const r = await C.api('/market/trending'); trend.items = r.items || []; trend.updated = r.updated || ''; } catch { trend.items = []; }
+    try { const r = await api('/market/trending'); trend.items = r.items || []; trend.updated = r.updated || ''; } catch { trend.items = []; }
     drawTrend();
   }
   function drawTrend() {
@@ -134,12 +188,13 @@
     const n = ++st.seq, grid = host.querySelector('#mk-grid');
     if (reset) grid.innerHTML = '<div class="mk-empty faint">Loading…</div>';
     try {
-      const r = await C.api('/market?' + qs({ sort: st.sort, offset: st.offset, limit: 24 }));
+      const r = await api('/market?' + qs({ sort: st.sort, offset: st.offset, limit: 24 }));
       if (n !== st.seq) return;
+      paintOffline();
       st.items = reset ? r.items : [...st.items, ...r.items]; st.total = r.total; st.catalog = r.catalog; st.note = r.note;
       draw(reset);
       if (filtersOpen()) openFilters(true);
-    } catch (e) { if (n === st.seq) grid.innerHTML = `<div class="mk-empty"><b>Couldn’t load the marketplace</b><span>${esc(e.message)}</span></div>`; }
+    } catch { if (n === st.seq) grid.innerHTML = '<div class="mk-empty"><b>The marketplace is resting</b><span>The saved list didn’t open either. Reload the app to try again.</span></div>'; }
   }
   function card(it) {
     const use = it.uses && it.uses.week ? `<span class="mk-use" title="Uses in your tribe this week">${it.uses.week} this week</span>` : '';
@@ -173,7 +228,7 @@
   function outside(e) { if (pop && !pop.contains(e.target) && !e.target.closest('#mk-filters')) closeFilters(); }
   async function openFilters(refresh) {
     if (!host) return;
-    let f; try { f = await C.api('/market/facets?' + qs()); } catch (e) { return toast(e.message); }
+    let f; try { f = await api('/market/facets?' + qs()); } catch { return toast('Filters aren’t available right now.'); }
     const first = !pop;
     if (first) {
       if (isPhone()) { scrim = document.createElement('div'); scrim.className = 'mk-scrim'; scrim.onclick = closeFilters; document.body.appendChild(scrim); }
@@ -198,7 +253,7 @@
   function closeDetail() { if (sheet) { sheet.remove(); sheet = null; } }
   async function openDetail(id) {
     let it = st.items.find(x => x.id === id);
-    try { it = (await C.api('/market/items/' + encodeURIComponent(id))).item; } catch {}
+    try { it = (await api('/market/items/' + encodeURIComponent(id))).item; } catch {}
     if (!it) return;
     closeDetail();
     const link = it.repo ? `https://github.com/${it.repo}` : it.url;
@@ -235,6 +290,7 @@
 
   // ---------- using an item ----------
   async function use(id, btn) {
+    if (offline || !reach()) return toast('Adding things needs a tribe. Start a project or join one, then come back.');
     if (!canUse()) return toast('Spectators can look, not add');
     if (btn) btn.disabled = true;
     try {
@@ -266,7 +322,7 @@
   // a few items for other screens (the sidebar's + Add gallery)
   async function quick(sort = 'hot', kind = 'widget', n = 6, tag = '') {
     const p = new URLSearchParams({ sort, kind, limit: String(n) }); if (tag) p.set('tag', tag);
-    return C.api('/market?' + p);
+    return api('/market?' + p);
   }
   function open(opts = {}) {
     if (opts.kind) { st.kind = [opts.kind]; st.for = []; st.seat = []; st.tag = []; st.q = ''; }

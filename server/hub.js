@@ -360,7 +360,7 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
         }
         let preview = '';   // the first lines, for the docs center's card thumbnails
         if (hit) { try { const full = docs.read(d.slug); preview = clip(plain(String((full && full.body) || '').slice(0, 600)), 260); } catch {} }
-        if (hit) out.push({ project: p.id, projectName: p.name, color: p.color, slug: d.slug, title: d.title, at: d.updated || d.created, by: d.updatedBy || d.by, byName: nameOf(d.updatedBy || d.by), snippet, preview });
+        if (hit) out.push({ project: p.id, projectName: p.name, color: p.color, slug: d.slug, title: d.title, at: d.updated || d.created, by: d.updatedBy || d.by, byName: nameOf(d.updatedBy || d.by), owner: d.by, kind: d.kind || undefined, excerpt: String(d.excerpt || '').slice(0, 600), img: d.img || undefined, snippet, preview });   // feat/files-dash: kind, owner and the raw start for real previews
       }
     });
     return out.sort((a, b) => t(b.at) - t(a.at)).slice(0, 60);

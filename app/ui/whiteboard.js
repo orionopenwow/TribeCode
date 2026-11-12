@@ -833,7 +833,7 @@
       if (kind === 'svg') { const b = await toSvg(); if (b) download(b, fileName('svg')); return; }
       const png = await toPng(); if (!png) return toast('Could not draw the picture (a picture from elsewhere may block it).');
       if (kind === 'png') return download(png, fileName('png'));
-      if (kind === 'files' && LB && window.TribeLocalFiles) { await window.TribeLocalFiles.addFiles([new File([png], fileName('png'), { type: 'image/png' })]); toast(`📁 Saved to All files on this device: ${fileName('png')}`); }
+      if (kind === 'files' && LB && window.TribeLocalFiles) { await window.TribeLocalFiles.addFiles([new File([png], fileName('png'), { type: 'image/png' })]); toast(`📁 Saved to Files on this device: ${fileName('png')}`); }
       else if (kind === 'files') { const f = await upload(png, fileName('png')); toast(`📁 Saved to Files: ${f.name}`); }
     } catch (e) { toast(e.message); }
   }

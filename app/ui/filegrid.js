@@ -2,6 +2,7 @@
 // folders, then cards with a file-type icon, the name, and a thumbnail (the first picture in it, the start of the
 // text on a small page, or the code on a dark card). Screenshots of the app get their own row.
 //   window.TribeFileGrid = { render(pane, list, { open, create, nameOf, ago }) }
+// feat/files-dash: the grid itself is filesview.js now (tabs with icons, + Create, previews, ⋯ menus); this file feeds it.
 (function () {
   'use strict';
   const C = window.TribeClient;
@@ -50,21 +51,35 @@
   }
   function folderOf(d) { const s = String(d.slug || ''); const i = s.lastIndexOf('/'); return i > 0 ? s.slice(0, i) : ''; }
 
-  // Start something new (v0.21): every kind of file, and the ways to begin one
-  const START = [
-    { k: 'doc', e: '📝', t: 'Doc', s: 'Write anything', id: 'doc-first' },
-    { k: 'sheet', e: '📊', t: 'Sheet', s: 'Numbers and lists', id: 'fg-new-sheet' },
-    { k: 'deck', e: '🎞️', t: 'Slides', s: 'A deck to present', id: 'fg-new-deck' },
-    { k: 'template', e: '📋', t: 'From a template', s: 'Plans, notes, specs' },
-    { k: 'flint', e: '✨', t: 'Ask Flint', s: 'Describe it, get a draft' },
-    { k: 'upload', e: '⬆️', t: 'Upload', s: 'Docs, CSV, pictures, PDFs' },
-    { k: 'assets', e: '🎒', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' },
-  ];
-  function start(k, o) {
-    if (k === 'doc') return o.create();
-    if (k === 'sheet' || k === 'deck') return o.create(k);
-    if (k === 'template' && window.TribeDocsX) return window.TribeDocsX.templatePicker();
-    if (k === 'flint') { const F = window.TribeFlint; if (F && F.prefill) F.prefill('make a doc about '); else if (window.TribeApp) window.TribeApp.toast('Open Flint (bottom right) and say what to make, like "make slides about our game".'); return; }
+  // ---------- feat/files-dash: the project's Files, drawn by filesview.js (the same dashboard as Home's) ----------
+  const FV = () => window.TribeFilesView;
+  const CAT = { doc: 'docs', image: 'pics', pdf: 'other', code: 'code', sheet: 'sheets', deck: 'slides', audio: 'media', video: 'media', shot: 'pics' };
+  const TYPE_L = { doc: 'Doc', image: 'Picture', pdf: 'PDF', code: 'Code', sheet: 'Sheet', deck: 'Slides', audio: 'Audio', video: 'Video', shot: 'Screenshot' };
+  const toast = m => window.TribeApp && window.TribeApp.toast(m);
+  const projName = () => { const P = window.TribeProjects, id = P && P.current && P.current(); return ((P && P.list && P.list()) || []).find(x => x.id === id) || {}; };
+  const memberOf = id => ((C.state() || {}).members || []).find(m => m.id === id) || null;
+  let q = '', fv = null;
+  function items(list, shots, at, o) {
+    const T = FV().thumb, here = { key: 'here', label: projName().name || 'This project' };
+    const out = list.filter(d => folderOf(d) === at || (!at && !folderOf(d))).map(d => {
+      const type = typeOf(d), who = memberOf(d.updatedBy || d.by), cat = d.kind === 'deck' ? 'slides' : CAT[type] || 'docs';
+      const th = type === 'doc' ? T.text(d.title, d.excerpt, d.img ? media(d.img) : '') : thumb(d, type);
+      return { src: 'doc', id: d.slug, slug: d.slug, cat, type: d.kind === 'sheet' ? 'Sheet' : TYPE_L[d.kind === 'deck' ? 'deck' : type] || 'Doc', title: d.title || 'Untitled', at: d.updated, owner: who ? { name: who.name, color: who.color } : (d.updatedBy && o.nameOf ? { name: o.nameOf(d.updatedBy), color: 'var(--peer)' } : null),
+        loc: here, mine: true, text: d.excerpt || '', thumb: th, cls: 'fg-card', attrs: `data-slug="${esc(d.slug)}" data-type="${type}"`, acts: ['open', 'rename', 'move', 'duplicate', 'download', 'delete'] };
+    });
+    if (!at) for (const s of (shots || []).slice(0, 24)) { const u = media(`/api/visuals/${s.latest.screen}/${s.latest.ts}.png`);
+      out.push({ src: 'shot', id: 'shot:' + s.name, url: u, cat: 'pics', type: `Screenshot · ${s.count} version${s.count === 1 ? '' : 's'}`, title: s.name, at: s.latest.at || '', loc: { key: 'shots', label: 'Screenshots of the app' }, mine: true, thumb: T.img(u), cls: 'fg-card', attrs: `data-shot="${esc(u)}"`, acts: ['open', 'download'] }); }
+    return out;
+  }
+  function create(k, anchor, o) {
+    if (k === 'note' || k === 'doc') return o.create();
+    if (k === 'sheet') return o.create('sheet');
+    if (k === 'slides') return o.create('deck');
+    if (k === 'code') return C.api('/docs', { method: 'POST', body: { title: 'untitled.js', body: '```js\n// untitled.js\n```\n' } }).then(r => o.open(r.doc.slug)).catch(e => toast(e.message));
+    if (k === 'whiteboard') return C.api('/whiteboard', { method: 'POST', body: { name: 'Untitled board' } }).then(r => window.TribeWhiteboard && window.TribeWhiteboard.open(r.board.id)).catch(e => toast(e.message));
+    if (k === 'design') return C.api('/canvas', { method: 'POST', body: { name: 'Untitled design' } }).then(r => { window.TribeApp.show('canvas'); setTimeout(() => window.TribeCanvas && window.TribeCanvas.open(r.file.id), 120); }).catch(e => toast(e.message));
+    if (k === 'site') return window.TribeWebsite ? window.TribeWebsite.open() : toast('The website did not load. Reload the app.');
+    if (k === 'template') return window.TribeDocsX ? window.TribeDocsX.templatePicker() : toast('Templates did not load. Reload the app.');
     if (k === 'assets') { if (window.TribeAssets) window.TribeAssets.open(); return; }
     if (k === 'upload') {
       const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = '.md,.txt,.csv,.tsv,.html,.json,.png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.mp3,.wav,.m4a,.mp4,.mov,.webm,.js,.ts,.py,.css';
@@ -72,42 +87,59 @@
       inp.click();
     }
   }
-  function newMenu(anchor, o) {
-    let m = document.getElementById('fg-newmenu'); if (m) { m.remove(); return; }
-    m = document.createElement('div'); m.id = 'fg-newmenu'; m.className = 'ex-pop'; m.setAttribute('role', 'menu');
-    m.innerHTML = START.map(x => `<button type="button" role="menuitem" class="ex-i" data-k="${x.k}">${x.e}&nbsp; ${x.t}</button>`).join('');
-    document.body.appendChild(m); const r = anchor.getBoundingClientRect();
-    m.style.top = (r.bottom + 6) + 'px'; m.style.left = Math.max(8, r.right - m.offsetWidth) + 'px';
-    m.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { m.remove(); start(b.dataset.k, o); });
-    setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off, true); } }, true), 0);
+  async function make(kind, d, o) {
+    if (kind === 'site') { toast('Flint builds the project’s website in Files › Website.'); return window.TribeWebsite && window.TribeWebsite.open(); }
+    try { const r = await C.api('/docs', { method: 'POST', body: { title: d.title, body: d.body, ...(kind === 'sheet' ? { kind: 'sheet' } : kind === 'slides' ? { kind: 'deck' } : {}) } }); o.open(r.doc.slug); } catch (e) { toast(e.message); }
+  }
+  const saveBlob = (name, blob) => { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
+  async function act(k, it, anchor, arg) {
+    try {
+      if (it.src === 'shot') { if (k === 'download') { const r = await fetch(it.url); return saveBlob(`${it.title}.png`, await r.blob()); } return; }
+      const path = '/docs/' + encodeURIComponent(it.slug);
+      if (k === 'rename') { await C.api(path, { method: 'PUT', body: { title: arg, force: true } }); return toast('Renamed.'); }
+      if (k === 'delete') { await C.api(path, { method: 'DELETE' }); return toast('Deleted.'); }
+      const full = (await C.api(path)).doc, extra = full.kind ? { kind: full.kind } : {};
+      if (k === 'download') return saveBlob(`${String(full.title).replace(/[\\/:*?"<>|]+/g, '-')}.md`, new Blob([full.body || ''], { type: 'text/markdown' }));
+      if (k === 'duplicate') { await C.api('/docs', { method: 'POST', body: { title: `${full.title} (copy)`, body: full.body || '', ...extra } }); return toast('Duplicated.'); }
+      if (k === 'move') {
+        const P = window.TribeProjects, cur = P && P.current(), list = ((P && P.list()) || []).filter(p => p.id !== cur);
+        if (!list.length) return toast('There is no other project to move it to.');
+        FV().closeMenus();
+        const m = document.createElement('div'); m.className = 'fx-pop fx-menu'; m.id = 'fg-movemenu'; m.setAttribute('role', 'menu');
+        m.innerHTML = `<div class="fx-pop-h"><span class="fx-eyebrow">Move to…</span></div>` + list.map(p => `<button type="button" role="menuitem" data-to="${esc(p.id)}">${FV().icon('tribe', 15)}<span>${esc(p.name)}</span></button>`).join('');
+        document.body.appendChild(m); const r = (anchor && anchor.isConnected ? anchor : document.body).getBoundingClientRect();
+        m.style.top = `${Math.max(8, Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 6))}px`; m.style.left = `${Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth))}px`;
+        m.querySelectorAll('[data-to]').forEach(b => b.onclick = async () => { m.remove(); try { await C.api('/docs', { method: 'POST', project: b.dataset.to, body: { title: full.title, body: full.body || '', ...extra } }); await C.api(path, { method: 'DELETE' }); toast(`Moved to ${(list.find(p => p.id === b.dataset.to) || {}).name}.`); } catch (e) { toast(e.message); } });
+        setTimeout(() => document.addEventListener('mousedown', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('mousedown', off, true); } }, true), 0);
+      }
+    } catch (e) { toast(e.message); if (k === 'delete') throw e; }
   }
   async function render(pane, list, o) {
+    if (!FV()) return;
     const folders = [...new Set(list.map(folderOf).filter(Boolean))].sort();
     let at = pane.dataset.fgFolder || '';
-    const draw = (shots) => {
-      const items = list.filter(d => folderOf(d) === at || (!at && !folderOf(d)));
+    const top = () => `${at ? `<div class="fg-crumb"><button class="fg-up" data-up type="button">${FV().icon('tribe', 14)} Files</button><span aria-hidden="true">›</span><b>${esc(at.split('/').pop())}</b></div>` : ''}${!at ? '<div class="fg-repo"></div>' : ''}
+      ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button type="button" class="fg-folder" data-folder="${esc(f)}">${FV().icon('tribe', 16)}<span>${esc(f.split('/').pop())}</span><span class="fg-fn">${list.filter(d => folderOf(d) === f).length}</span></button>`).join('')}</div>` : ''}`;
+    const draw = shots => {
       { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the code repository strip alive across redraws
-      pane.innerHTML = `<div class="fg">
-        <div class="fg-top"><h2>${at ? `<button class="fg-up" data-up>📁 Files</button> <span aria-hidden="true">›</span> ${esc(at.split('/').pop())}` : '📁 All files'}</h2><span class="fg-n">${list.length} file${list.length === 1 ? '' : 's'}</span><span class="fg-new"><button class="btn primary" id="fg-new-menu">＋ New</button></span></div>
-        ${!at ? `<div class="fg-start" role="group" aria-label="Start something new">${START.map(x => `<button type="button" class="fg-st" data-start="${x.k}"${x.id ? ` id="${x.id}"` : ''}><span class="fg-st-e" aria-hidden="true">${x.e}</span><b>${x.t}</b><small>${x.s}</small></button>`).join('')}</div>` : ''}
-        ${!at ? '<div class="fg-repo"></div>' : ''}
-        ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button class="fg-folder" data-folder="${esc(f)}"><span aria-hidden="true">📁</span><span>${esc(f.split('/').pop())}</span><span class="fg-more" aria-hidden="true">⋮</span></button>`).join('')}</div>` : ''}
-        ${items.length ? `<div class="fg-grid">${items.map(d => card(d, o)).join('')}</div>`
-          : `<div class="fg-empty"><span aria-hidden="true">🗂️</span><b>${list.length ? 'Nothing in this folder yet' : 'Your tribe’s files live here'}</b><p>${list.length ? 'Pick another folder, or press ＋ New to add one here.' : 'Start one above, or press <b>＋ New</b>. Notes, pictures, PDFs and code your tribe adds show up here too.'}</p></div>`}
-        ${!at && shots && shots.length ? `<h3 class="fg-sub">📸 Screenshots of the app</h3><div class="fg-grid">${shots.slice(0, 12).map(s => { const u = media(`/api/visuals/${s.latest.screen}/${s.latest.ts}.png`);
-          return `<button class="fg-card" data-shot="${esc(u)}" data-title="${esc(s.name)}"><span class="fg-head"><span class="fg-ico fg-ico-shot" aria-hidden="true">PNG</span><span class="fg-name">${esc(s.name)}</span><span class="fg-more" aria-hidden="true">⋮</span></span><div class="fg-th fg-th-img"><img alt="" loading="lazy" src="${esc(u)}"></div><span class="fg-meta">📸 ${s.count} version${s.count === 1 ? '' : 's'}</span></button>`; }).join('')}</div>` : ''}
-      </div>`;
-      const slot = pane.querySelector('.fg-repo'), hero = document.getElementById('doc-repo-hero');
+      pane.innerHTML = '<div class="fg"></div>';
+      const root = pane.firstChild;
+      fv = FV().mount(root, {
+        scope: 'project', idp: 'fg', title: 'Files', eyebrow: projName().name ? `${projName().name} · files` : 'This project', cardClass: 'fg-card', prefs: 'tribecode.pfiles', q,
+        ids: { create: 'fg-new-menu', menu: 'fg-newmenu', grid: 'fg-items' },
+        studio: { ids: { doc: 'doc-first', sheet: 'fg-new-sheet', slides: 'fg-new-deck' }, extra: [{ k: 'assets', ic: 'assets', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' }], note: 'Everyone in the project sees what you make here.' },
+        top, create: (k, a) => create(k, a, o), make: (k, d) => make(k, d, o), act,
+        open: it => (it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
+        search: v => { q = v; },
+      });
+      fv.set(items(list, shots, at, o));
+      const slot = root.querySelector('.fg-repo'), hero = document.getElementById('doc-repo-hero');
       if (slot && hero) { const extra = hero.nextElementSibling && hero.nextElementSibling.classList.contains('vw-assets') ? hero.nextElementSibling : null; slot.append(hero); if (extra) slot.append(extra); }
-      pane.querySelector('#fg-new-menu').onclick = e => newMenu(e.currentTarget, o);
-      pane.querySelectorAll('[data-start]').forEach(b => b.onclick = () => start(b.dataset.start, o));
-      pane.querySelectorAll('[data-slug]').forEach(b => b.onclick = () => o.open(b.dataset.slug));
-      pane.querySelectorAll('[data-folder]').forEach(b => b.onclick = () => { at = pane.dataset.fgFolder = b.dataset.folder; draw(shots); });
-      const up = pane.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };
-      pane.querySelectorAll('[data-shot]').forEach(b => b.onclick = () => { if (window.TribePreview && window.TribePreview.image) window.TribePreview.image(b.dataset.shot, b.dataset.title); else window.open(b.dataset.shot, '_blank', 'noopener'); });
+      root.querySelectorAll('[data-folder]').forEach(b => b.onclick = () => { at = pane.dataset.fgFolder = b.dataset.folder; draw(shots); });
+      const up = root.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };
     };
     draw(render.shots);
-    try { const v = await C.api('/visuals'); render.shots = v.screens || []; if (pane.querySelector('.fg') && !pane.querySelector('#doc-title')) draw(render.shots); } catch {}
+    try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector('.fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
   }
   window.TribeFileGrid = { render, typeOf };
 })();

@@ -96,7 +96,7 @@ def main():
             assert pg.locator("#home-ai-cards [data-ai-card-go]:has-text('Choose Flint')").count() == 1
             assert pg.locator("#home-ai-cards .ai-card b:text-is('Connect your AI')").count() == 0, "the panel's own Connect your AI card is enough on desktop"
             pg.click("#home-ai-cards details.ai-dev > summary"); pg.wait_for_selector("#home-ai-cards details.ai-dev[open] .ai-card")
-            assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "All files", "All code", "Work", "Agent fleet"]
+            assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Files", "Design", "Code", "Work", "Agent fleet"]
             assert "Starts a new project for the two of you" in pg.inner_text("#view-hub")
             pg.unroute_all()
 
@@ -127,7 +127,7 @@ def main():
             pg.wait_for_selector("#board .tk-empty", timeout=8000)
             assert "Add a task" in pg.inner_text("#board .tk-empty")
             pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fg-empty", timeout=10000)
-            assert "New" in pg.inner_text(".fg-empty")
+            assert "Create" in pg.inner_text(".fg-empty")
             pg.evaluate("TribeApp.show('coord')"); pg.wait_for_selector("#ad-hero", timeout=10000)
             hero = pg.inner_text("#ad-hero")
             assert "MCP tool" not in hero, hero

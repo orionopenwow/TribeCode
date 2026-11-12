@@ -48,17 +48,18 @@
 
   // ---------- view mounting ----------
   function open(m = 'home') {
-    mode = ['home', 'repos', 'docs'].includes(m) ? m : 'home';
+    mode = ['home', 'repos', 'docs', 'design'].includes(m) ? m : 'home';
     App().show('hub');
   }
   function onShow() {   // app.js show('hub') calls this
     const want = mode === 'home' ? '#/hub' : `#/hub/${mode}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
-    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'All code' : mode === 'docs' ? 'All files' : 'Home';
+    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'Code' : mode === 'docs' ? 'Files' : mode === 'design' ? 'Design' : 'Your dashboard';
+    document.body.classList.toggle('at-home', true);
     render(); load(); panel();
   }
-  function onHide() { setTimeout(panel, 0); if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
-  const fromHash = () => { const m = /^#\/hub(?:\/(repos|docs))?$/.exec(location.hash); if (m && (document.body.dataset.view !== 'hub' || mode !== (m[1] || 'home'))) open(m[1] || 'home'); };
+  function onHide() { document.body.classList.remove('at-home'); setTimeout(panel, 0); if (/^#\/hub/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
+  const fromHash = () => { const m = /^#\/hub(?:\/(repos|docs|design))?$/.exec(location.hash); if (m && (document.body.dataset.view !== 'hub' || mode !== (m[1] || 'home'))) open(m[1] || 'home'); };
   addEventListener('hashchange', fromHash);
 
   // ---------- data ----------
@@ -93,6 +94,9 @@
   const aiTag = (label = 'AI') => `<span class="ai-tag">${ico('i-sparkle', 11)}${esc(label)}</span>`;
   const myAgent = () => { const id = me().id; return id ? (C.state().members || []).find(m => m.role === 'agent' && m.owner === id) || null : null; };
   const memberOf = id => (C.state().members || []).find(m => m.id === id) || null;
+  // feat/files-dash: where you are, said once at the top of every Home page: Home › Files
+  const hubCrumb = here => `<nav class="hub-crumb" aria-label="Breadcrumb"><button type="button" class="hc-home" data-hc-home>${ico('i-home', 13)}Home</button><span class="hc-sep" aria-hidden="true">›</span><span class="hc-here" aria-current="page">${esc(here)}</span></nav>`;
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-hc-home]')) open('home'); });
   function greeting() {
     const h = new Date().getHours(), part = h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
     const name = (me().name || (window.TribeStore && window.TribeStore.get().name) || '').split(' ')[0];
@@ -110,6 +114,7 @@
     const el = section(); if (!el) return;
     if (mode === 'repos') return renderRepos(el);
     if (mode === 'docs') return renderDocs(el);
+    if (mode === 'design') return renderDesign(el);
     const on = connected(), tribe = (C.state().tribe || {}).name;
     const pj = projects(), live = (data && data.status) || {};
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
@@ -155,7 +160,7 @@
       : C.hasToken() ? `<span class="hid-chip k-muted">${offlineChip()}</span>` : '';   // no tribe yet: said once, in the user bar
     return `<header class="hub-head hub-id">
       <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
-      <div class="hid-t"><span class="eyebrow">Your command center${on && tribe ? ` · ${esc(tribe)}` : ''}</span>
+      <div class="hid-t">${hubCrumb(on && tribe ? `Your dashboard · ${tribe}` : 'Your dashboard')}
         <h1>${localFace(on) || `<span class="hid-av" style="background:${esc(color)}">${esc(([...name][0] || '').toUpperCase())}</span>`}<span>${greeting()}</span></h1>
         ${chips ? `<div class="hid-chips">${chips}</div>` : ''}</div>
     </header>`;
@@ -405,7 +410,7 @@
     const mine = scratch.notes().filter(n => n.text && n.text.trim()).slice(0, 3);
     const rows = mine.map(n => `<button class="hub-li" data-mynote="${esc(n.id || '')}">${ico('i-doc', 14)}<span><b>${esc(noteTitle(n.text))}</b><small>${esc(ago(n.updated || n.at))}</small></span>${ico('i-chev', 14)}</button>`).join('');
     return sec('Your notes', '<span class="emo" aria-hidden="true">📝</span>Notes', `<button class="note-start" id="hub-note-new">${ico('i-plus', 18)}<span><b>Start a note</b><small>It goes straight into your docs</small></span></button>
-      ${rows ? `<div class="hub-list hub-mynotes">${rows}</div>` : ''}`, 'id="hub-notes"', `<button class="linkish" id="hub-notes-all">All files</button>`);
+      ${rows ? `<div class="hub-list hub-mynotes">${rows}</div>` : ''}`, 'id="hub-notes"', `<button class="linkish" id="hub-notes-all">Files</button>`);
   }
   async function startNote() {
     const id = await scratch.create('New note');
@@ -468,8 +473,8 @@
     const hist = cmd => { if (ta.rtUndo && document.activeElement !== ti) { if (cmd === 'undo') ta.rtUndo(); else ta.rtRedo(); save(); return; } (document.activeElement === ti ? ti : ta).focus(); document.execCommand(cmd); save(); };
     $('#note-undo').onclick = () => hist('undo');
     $('#note-redo').onclick = () => hist('redo');
-    const close = () => { ov.remove(); if (mode === 'docs') drawDocs(); else if (document.body.dataset.view === 'hub') render(); };
-    const del = async () => { if (src) { if (!confirm(`Delete “${ti.value.trim() || 'this doc'}” from this device?`)) return; clearTimeout(srcT); srcT = null; await src.remove(); } else scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); else render(); toast(src ? 'Deleted' : 'Note deleted'); };
+    const close = () => { ov.remove(); if (mode === 'docs') refreshFiles(); else if (document.body.dataset.view === 'hub') render(); };
+    const del = async () => { if (src) { if (!confirm(`Delete “${ti.value.trim() || 'this doc'}” from this device?`)) return; clearTimeout(srcT); srcT = null; await src.remove(); } else scratch.remove(id); ov.remove(); if (mode === 'docs') refreshFiles(); else render(); toast(src ? 'Deleted' : 'Note deleted'); };
     let ol = null, sl = null;
     if (L) {
       sl = L.slash(ta, ta.parentNode);
@@ -505,7 +510,7 @@
     grow();
     const done = async () => {
       if (src) { save(); await flushSrc(); return close(); }
-      if (!ti.value.trim() && !ta.value.trim()) { scratch.remove(id); ov.remove(); if (mode === 'docs') drawDocs(); return; }   // nothing written: no empty note left behind
+      if (!ti.value.trim() && !ta.value.trim()) { scratch.remove(id); ov.remove(); if (mode === 'docs') refreshFiles(); return; }   // nothing written: no empty note left behind
       save(); await scratch.flush(); close();
     };
     $('#note-done').onclick = done;
@@ -639,12 +644,38 @@
     for (const id of ['#home-ai-cards', '#hub-ins-phone']) { const box = $(id); if (box) { if (box.__html === html && box.childElementCount) { bindInsights(box); continue; } box.__html = html; box.innerHTML = html; bindInsights(box); } }
   }
 
-  // ---------- All repos ----------
+  // ---------- Code (feat/files-dash: Home parity): the repos you're in, then your code files ----------
   async function renderRepos(el) {
-    el.innerHTML = `<div class="hub"><header class="hub-head"><span class="eyebrow">Global</span><h1>All code</h1><p class="faint">Each project’s code lives in a shared folder on GitHub, called a <b>repo</b>. Here is what changed last in each one and whether everything is saved. Click one to open it.</p></header><div class="hub-repos" id="hub-repos">${reposCache ? reposHtml(reposCache) : '<div class="hub-empty faint">Loading…</div>'}</div></div>`;
-    if (!connected()) { $('#hub-repos').innerHTML = '<div class="hub-empty">Join or host a tribe to see its code repositorys.</div>'; return; }
+    el.innerHTML = `<div class="hub hub-code"><header class="hub-head">${hubCrumb('Code')}<h1>Code</h1><p class="faint">The repos of every tribe you're in (what changed last and whether everything is saved), then the code files you keep here.</p></header>
+      <section class="sec hub-sec"><div class="sec-head"><div><span class="eyebrow">Repos</span><h2>Repos you're in</h2></div></div><div class="hub-repos" id="hub-repos">${reposCache && connected() ? reposHtml(reposCache) : connected() ? '<div class="hub-empty faint">Loading…</div>' : noTribe('Repos live in tribes', 'Each tribe keeps its code in a shared repo. Start a project or join a friend’s, and it shows up here.')}</div></section>
+      <section class="sec hub-sec" id="hub-codefiles"></section></div>`;
+    subset(el.querySelector('#hub-codefiles'), { idp: 'hc', cat: 'code', title: 'Code files', eyebrow: 'On this device and in your tribes', kinds: ['code', 'site', 'upload'] });
+    wireNoTribe(el);
+    if (!connected()) return;
+    { const box = $('#hub-repos'); if (box && reposCache) bindRepos(box); }
     try { reposCache = (await C.api('/hub/repos')).repos; const box = $('#hub-repos'); if (box && mode === 'repos') { box.innerHTML = reposHtml(reposCache); bindRepos(box); } } catch (e) { const box = $('#hub-repos'); if (box) box.innerHTML = `<div class="hub-empty">${esc(e.message)}</div>`; }
   }
+  // ---------- Design (feat/files-dash: Home parity): every canvas and whiteboard, yours on this device and your tribes' ----------
+  function renderDesign(el) {
+    el.innerHTML = `<div class="hub hub-design" id="hub-design"></div>`;
+    subset(el.querySelector('#hub-design'), { idp: 'hd', cat: 'designs', title: 'Design', crumb: hubCrumb('Design'), kinds: ['design', 'whiteboard', 'upload'], h: 'h1', where: true });
+  }
+  // a Files view showing one kind (Code files, Design), with the same cards, menus and Studio
+  function subset(root, o) {
+    if (!FV() || !root) return;
+    const v = FV().mount(root, {
+      scope: 'home', idp: o.idp, title: o.title, eyebrow: o.eyebrow, crumb: o.crumb, h: o.h || 'h2', cardClass: 'dc-card', prefs: 'tribecode.files.' + o.idp, fixedCat: o.cat, defaultWhere: 'all', loading: connected(),
+      where: o.where ? () => [{ key: 'all', label: 'Everywhere' }, { key: 'mine', label: 'Mine' }, ...projects().map(p => ({ key: p.id, label: p.name }))] : null,
+      studio: { kinds: o.kinds, note: 'Kept on this device, no tribe needed.' }, groups: fileGroups, alwaysHeads: true,
+      create: (k, a) => makeNew(k, a), make: (kind, d) => makeDraft(kind, d), open: openItem, act: actItem, wire: wireThumbs,
+    });
+    const set = loading => v.set(fileItems(), loading);
+    set(connected()); fv = Object.assign(v, { root, loadingNow: connected() });
+    if (LF()) LF().ready.then(() => set(fv.loadingNow));
+    Promise.all([upList(), o.cat === 'designs' ? designList() : docsList()]).then(() => { fv.loadingNow = false; if (document.contains(root)) set(false); });
+  }
+  const noTribe = (t, s) => `<div class="hub-empty hub-notribe"><b>${esc(t)}</b><span>${esc(s)}</span><div class="he-acts"><button class="btn primary sm" data-nt="start">${ico('i-plus', 14)}Start a project</button><button class="btn sm" data-nt="join">${ico('i-link', 14)}Join with a link</button></div></div>`;
+  function wireNoTribe(el) { el.querySelectorAll('[data-nt]').forEach(b => b.onclick = () => (b.dataset.nt === 'start' ? newProject() : join())); }
   function reposHtml(list) {
     if (!list.length) return '<div class="hub-empty">No projects yet.</div>';
     return list.map(r => { const p = projOf(r.project) || r, g = r.repo;
@@ -655,112 +686,178 @@
   }
   function bindRepos(box) { box.querySelectorAll('[data-repo]').forEach(b => b.onclick = () => go(b.dataset.repo, () => App().show('repo'))); }
 
-  // ---------- Global docs ----------
-  let docsT = null;
-  // ---------- the docs center: your notes and your projects' docs in one place (a docs-app layout) ----------
-  // Search pill · sort (last updated / A–Z) · list or grid (remembered) · cards with a preview · the + starts a note.
-  let docsView = (() => { try { return localStorage.getItem('tribecode.docs.view') || 'grid'; } catch { return 'grid'; } })();
-  let docsSort = (() => { try { return localStorage.getItem('tribecode.docs.sort') || 'updated'; } catch { return 'updated'; } })();
-  let docsCache = [];
-  function renderDocs(el) {
-    el.innerHTML = `<div class="hub dc">
-      <div class="dc-search">${ico('i-search', 18)}<input id="hub-dq" placeholder="Search your files" autocomplete="off" value="${esc(docsQ)}" aria-label="Search your files">${isPhone() ? `<button class="dc-me" id="dc-me" aria-label="Your profile">${meFace()}</button>` : ''}</div>
-      <div class="dc-bar"><button class="dc-sort" id="dc-sort">${docsSort === 'name' ? 'Name A–Z' : 'Last updated'}<span class="dc-arrow">${ico('i-chev', 16)}</span></button><span style="flex:1"></span>
-        <button class="btn dc-up" id="dc-up">${ico('i-upload', 15)}Upload</button><button class="btn primary dc-new" id="dc-new" aria-haspopup="menu">${ico('i-plus', 15)}New</button>
-        <div class="dc-seg" role="group" aria-label="View"><button data-dv="list" class="${docsView === 'list' ? 'on' : ''}" aria-label="List">${ico('i-list', 18)}</button><button data-dv="grid" class="${docsView === 'grid' ? 'on' : ''}" aria-label="Grid">${ico('i-grid', 18)}</button></div></div>
-      <div class="dc-chips" role="group" aria-label="Show">${FKINDS.map(([k, l]) => `<button data-dk="${k}" class="${docsKind === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-      <div class="dc-items ${docsView}" id="hub-docs"></div>
-      <div class="dc-drop" id="dc-drop" aria-hidden="true"><span>${ico('i-upload', 28)}<b>Drop to add to your files</b></span></div>
-      <button class="dc-fab" id="dc-fab" aria-label="New" title="New note, doc, sheet, whiteboard, design or upload">${ico('i-plus', 26)}</button></div>`;
-    const inp = $('#hub-dq'); inp.oninput = () => { clearTimeout(docsT); docsT = setTimeout(() => { docsQ = inp.value.trim(); docsList(); }, 200); };
-    $('#dc-sort').onclick = () => { docsSort = docsSort === 'name' ? 'updated' : 'name'; try { localStorage.setItem('tribecode.docs.sort', docsSort); } catch {} $('#dc-sort').firstChild.textContent = docsSort === 'name' ? 'Name A–Z' : 'Last updated'; drawDocs(); };
-    el.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { docsView = b.dataset.dv; try { localStorage.setItem('tribecode.docs.view', docsView); } catch {} el.querySelectorAll('[data-dv]').forEach(x => x.classList.toggle('on', x === b)); $('#hub-docs').className = 'dc-items ' + docsView; });
-    $('#dc-fab').onclick = newSheet; $('#dc-new').onclick = e => newMenu(e.currentTarget); $('#dc-up').onclick = e => (connected() ? upMenu(e.currentTarget) : pickUpload('local'));
-    el.querySelectorAll('[data-dk]').forEach(b => b.onclick = () => { docsKind = b.dataset.dk; try { localStorage.setItem('tribecode.files.kind', docsKind); } catch {} el.querySelectorAll('[data-dk]').forEach(x => x.classList.toggle('on', x === b)); drawDocs(); });
-    // drag files from the computer onto the Files center
-    const dc = el.querySelector('.dc'), drop = $('#dc-drop'); let dragN = 0;
-    const hasFiles = e => [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files');
-    dc.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; drop.classList.add('on'); });
-    dc.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
-    dc.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; drop.classList.remove('on'); } });
-    dc.addEventListener('drop', e => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.classList.remove('on'); uploadFiles([...e.dataTransfer.files], connected() ? 'me' : 'local'); });
-    const dm = $('#dc-me'); if (dm) dm.onclick = () => window.TribeMobile && window.TribeMobile.myProfile && window.TribeMobile.myProfile();
-    drawDocs(); docsList(); upList().then(() => { if (mode === 'docs') drawDocs(); });
-    if (LF()) LF().ready.then(() => { if (mode === 'docs') drawDocs(); });
-  }
-  // ---------- feat/setup-local: files kept on this device (localfiles.js), with or without a tribe ----------
+  // ---------- Files (feat/files-dash): your files everywhere, drawn by filesview.js ----------
+  // Sources: your notes, files on this device (localfiles.js), your tribes' docs (GET /api/hub/docs), uploads (yours and
+  // your projects'), every project's designs and whiteboards, and each project's website once it is built.
+  // Where: Mine (this device + yours in every tribe) · Everything · each tribe by name. Grouped by where they live.
+  const FV = () => window.TribeFilesView;
+  let fv = null, docsCache = [], designCache = [], siteCache = [], codeCache = { at: 0 };
   const LF = () => window.TribeLocalFiles;
-  addEventListener('tribe-local-files', () => { if (mode === 'docs' && document.body.dataset.view === 'hub') drawDocs(); });
-  const NEW = [['note', 'i-quill', 'Note', 'A quick private note'], ['doc', 'i-doc', 'Doc', 'Rich text, headings, lists, checkboxes'], ['sheet', 'i-grid', 'Sheet', 'Cells and formulas like =SUM(B2:B9)'],
-    ['whiteboard', 'i-whiteboard', 'Whiteboard', 'Draw, sticky notes, shapes'], ['design', 'i-canvas', 'Design', 'Frames, layers, text: a design canvas'], ['upload', 'i-upload', 'Upload', 'Pictures, audio, video, PDFs, code, models']];
-  async function makeNew(k) {
-    closeMenus();
+  addEventListener('tribe-local-files', () => { if ((mode === 'docs' || mode === 'design' || mode === 'repos') && document.body.dataset.view === 'hub') refreshFiles(); });
+  const FK_CAT = { image: 'pics', audio: 'media', video: 'media', code: 'code', text: 'code', pdf: 'other', model: 'other', archive: 'other', file: 'other' };
+  const LK = { doc: ['docs', 'Doc'], sheet: ['sheets', 'Sheet'], slides: ['slides', 'Slides'], whiteboard: ['designs', 'Whiteboard'], design: ['designs', 'Design'], site: ['sites', 'Website'] };
+  const myName = () => me().name || ((window.TribeStore && TribeStore.get().name) || 'You');
+  const myColor = () => me().color || ((window.TribeStore && TribeStore.get().color) || 'var(--brand)');
+  const DEV = { key: 'device', label: 'This device', device: true };
+  const privLoc = () => (connected() ? { key: 'me', label: 'Only you' } : DEV);
+  const pjLoc = pid => ({ key: pid, label: (projOf(pid) || {}).name || 'Project' });
+  const ownerOf = (id, name) => { const m = memberOf(id); return id && (m || name) ? { name: (m && m.name) || name || '?', color: (m && m.color) || 'var(--peer)' } : null; };
+  function fileItems() {
+    const T = FV().thumb, mine = { name: myName(), color: myColor() }, meId = me().id, out = [];
+    for (const n of scratch.notes()) if (n.text && n.text.trim()) {
+      const title = noteTitle(n.text);
+      out.push({ src: 'note', id: n.id, cat: 'notes', type: 'Note', title, at: n.updated || n.at, owner: mine, loc: privLoc(), mine: true, text: n.text, thumb: T.text(title, n.text.split('\n').slice(1).join('\n')), attrs: `data-mynote="${esc(n.id || '')}"`, acts: ['open', 'duplicate', 'download', 'delete'], exportLabel: 'Download (.md)' });
+    }
+    if (LF()) for (const x of LF().list()) {
+      let cat, type, th;
+      if (x.kind === 'file') {
+        cat = FK_CAT[x.fkind] || 'other'; type = FK_LABEL[x.fkind] || 'File';
+        th = x.fkind === 'image' && x.size < 4 * 1048576 ? T.img('', `data-lthumb="${esc(x.id)}"`) : cat === 'code' && x.size < 256 * 1024 ? T.code('', x.title).replace('<pre>', `<pre data-lcode="${esc(x.id)}">`) : T.icon(cat, `${type} · ${fsize(x.size || 0)}`);
+      } else {
+        [cat, type] = LK[x.kind] || ['other', 'File'];
+        th = x.kind === 'doc' ? T.text(x.title, x.body) : x.kind === 'sheet' ? T.sheet(x.body) : x.kind === 'slides' ? T.deck(x.body, x.title) : x.kind === 'whiteboard' ? T.board(x.elements) : x.kind === 'design' ? T.design(x.nodes) : x.kind === 'site' ? T.site(x.body, x.title) : T.icon(cat);
+      }
+      out.push({ src: 'local', id: x.id, lk: x.kind, cat, type, title: x.title, at: x.updated, owner: mine, loc: DEV, mine: true, text: typeof x.body === 'string' ? x.body.slice(0, 2000) : '', thumb: th,
+        attrs: `data-local="${esc(x.id)}" data-lk="${esc(x.kind)}"`, acts: ['open', 'rename', 'move', 'duplicate', 'download', 'delete'], exportLabel: { doc: 'Download (.md)', slides: 'Download (.md)', sheet: 'Download (.csv)', site: 'Download (.html)' }[x.kind] });
+    }
+    for (const d of docsCache) {
+      const cat = d.kind === 'sheet' ? 'sheets' : d.kind === 'deck' ? 'slides' : 'docs', body = d.excerpt != null ? d.excerpt : d.preview || '';
+      out.push({ src: 'doc', id: `${d.project}|${d.slug}`, pid: d.project, slug: d.slug, dk: d.kind || '', cat, type: cat === 'sheets' ? 'Sheet' : cat === 'slides' ? 'Slides' : 'Doc', title: d.title, at: d.at, owner: ownerOf(d.by, d.byName), loc: pjLoc(d.project), mine: !!meId && (d.owner === meId || d.by === meId), text: d.preview || d.snippet || '',
+        thumb: cat === 'sheets' ? T.sheet(body) : cat === 'slides' ? T.deck(body, d.title) : T.text(d.title, body, d.img && /^\//.test(d.img) && window.TribeMedia ? window.TribeMedia.url(C.base() + d.img) : ''),
+        attrs: `data-gdoc="${esc(d.project)}|${esc(d.slug)}"`, acts: ['open', 'rename', 'move', 'duplicate', 'download', 'delete'], exportLabel: cat === 'sheets' ? 'Download (.md table)' : 'Download (.md)' });
+    }
+    for (const f of [...(upCache.mine || []), ...(upCache.project || [])]) {
+      const cat = FK_CAT[f.kind] || 'other', proj = f.scope === 'project';
+      out.push({ src: 'up', id: f.id, f, cat, type: FK_LABEL[f.kind] || 'File', title: f.name, at: f.at, owner: ownerOf(f.by, f.byName), loc: proj ? pjLoc(f.project) : privLoc(), mine: !proj || f.by === meId,
+        thumb: f.kind === 'image' && f.size < 4 * 1048576 ? T.img('', `data-thumb="${esc(f.id)}"`) : T.icon(cat, `${FK_LABEL[f.kind] || 'File'} · ${fsize(f.size || 0)}`), attrs: `data-up="${esc(f.id)}"`, acts: ['open', 'download', ...(f.by === meId || me().role === 'host' ? ['delete'] : [])] });
+    }
+    for (const c of designCache) out.push({ src: c.kind, id: `${c.pid}|${c.id}`, pid: c.pid, rid: c.id, cat: 'designs', type: c.kind === 'board' ? 'Whiteboard' : 'Design', title: c.name || 'Untitled', at: c.updated, loc: pjLoc(c.pid), mine: false,
+      thumb: c.kind === 'board' ? T.board(c.elements) : T.design(c.nodes), attrs: `data-gdesign="${esc(c.pid)}|${esc(c.id)}"`, acts: ['open', 'rename', 'download', ...(c.id !== 'main' ? ['delete'] : [])], exportLabel: 'Download (.json)' });
+    for (const s of siteCache) out.push({ src: 'site', id: `site|${s.pid}`, pid: s.pid, cat: 'sites', type: 'Website', title: s.title, at: s.at, loc: pjLoc(s.pid), mine: false, thumb: T.site('', s.title), attrs: `data-gsite="${esc(s.pid)}"`, acts: ['open'] });
+    return out;
+  }
+  // Home's sections: this device first, then your private files, then each tribe (in the rail's order)
+  function fileGroups(list, where) {
+    const order = ['device', 'me', ...projects().map(p => p.id)], by = new Map();
+    for (const it of list) { const k = it.loc ? it.loc.key : 'device'; if (!by.has(k)) by.set(k, { key: k, items: [], device: k === 'device', icon: k === 'device' ? 'device' : k === 'me' ? 'notes' : 'tribe' }); by.get(k).items.push(it); }
+    return [...by.values()].sort((a, b) => (order.indexOf(a.key) + 1 || 99) - (order.indexOf(b.key) + 1 || 99)).map(g => ({ ...g,
+      label: g.key === 'device' ? 'On this device' : g.key === 'me' ? 'Only you' : where === 'mine' ? `Yours in ${(projOf(g.key) || {}).name || 'a tribe'}` : (projOf(g.key) || {}).name || 'A tribe',
+      note: g.key === 'device' ? (connected() ? 'Move any of these into a tribe with ⋯ › Move to…' : 'No tribe needed') : '' }));
+  }
+  function refreshFiles() { if (fv && document.contains(fv.root)) fv.set(fileItems(), fv.loadingNow); }
+  function renderDocs(el) {
+    if (!FV()) { el.innerHTML = '<div class="hub-empty">Files did not load. Reload the app.</div>'; return; }
+    el.innerHTML = `<div class="hub hub-files" id="hub-files"></div>`;   // one + Create in the header, phones too (no second FAB)
+    const root = el.querySelector('#hub-files');
+    fv = FV().mount(root, {
+      scope: 'home', idp: 'dc', title: 'Files', crumb: hubCrumb('Files'), cardClass: 'dc-card', prefs: 'tribecode.files', loading: connected(),
+      ids: { search: 'hub-dq', grid: 'hub-docs', create: 'dc-new', menu: 'dc-newmenu' },
+      where: () => [{ key: 'mine', label: 'Mine' }, { key: 'all', label: 'Everything' }, ...projects().map(p => ({ key: p.id, label: p.name }))],
+      studio: { note: connected() ? 'Made on this device, no tribe needed. Move it into a tribe any time with ⋯ › Move to….' : 'Kept on this device, no tribe needed. Move it into a tribe any time.' },
+      groups: fileGroups, alwaysHeads: true,
+      create: (k, anchor) => makeNew(k, anchor), make: (kind, d) => makeDraft(kind, d),
+      open: it => openItem(it), act: (k, it, anchor, arg) => actItem(k, it, anchor, arg),
+      drop: files => uploadFiles(files, connected() ? 'me' : 'local'),
+      search: q => { docsQ = q; },
+      wire: wireThumbs,
+    });
+    fv.root = root; fv.loadingNow = connected();
+    fv.set(fileItems(), connected());
+    if (LF()) LF().ready.then(() => { if (mode === 'docs') refreshFiles(); });
+    Promise.all([docsList(), upList(), designList(), siteList()]).then(() => { if (fv) fv.loadingNow = false; if (mode === 'docs') refreshFiles(); });
+  }
+  function wireThumbs(body) {
+    body.querySelectorAll('img[data-lthumb]').forEach(img => thumb({ id: img.dataset.lthumb, local: true }, img));
+    body.querySelectorAll('img[data-thumb]').forEach(img => { const f = [...(upCache.mine || []), ...(upCache.project || [])].find(x => x.id === img.dataset.thumb); if (f) thumb(f, img); });
+    body.querySelectorAll('pre[data-lcode]').forEach(async pre => { try { const b = LF() && await LF().blob(pre.dataset.lcode); const t = b ? (await b.text()).split('\n').slice(0, 14).join('\n') : ''; if (t.trim()) pre.textContent = t; } catch {} });
+  }
+  async function makeNew(k, anchor) {
+    closeMenus(); if (FV()) FV().closeMenus();
     if (k === 'note') return startNote();
-    if (k === 'upload') return connected() ? upMenu($('#dc-up') || $('#dc-new')) : pickUpload('local');
+    if (k === 'upload') return connected() ? upMenu(anchor && anchor.isConnected ? anchor : $('#dc-new')) : pickUpload('local');
+    if (k === 'template') return templateMenu(anchor && anchor.isConnected ? anchor : $('#dc-new'));
+    if (k === 'flint') return FV() && $('#dc-new') ? fv && fv.studio($('#dc-new')) : null;
     if (!LF()) return toast('Files on this device did not load. Reload the app.');
-    try { const it = await LF().create(k); LF().open(it.id); } catch (e) { toast(e.message); }
+    try {
+      const it = k === 'code' ? await LF().createCode('untitled.js') : await LF().create(k);
+      if (mode !== 'docs' && mode !== 'design' && mode !== 'repos') open('docs');
+      LF().open(it.id); return it;
+    } catch (e) { toast(e.message); }
   }
-  function newMenu(anchor) {
-    closeMenus(); if (!anchor) return newSheet();
-    const r = anchor.getBoundingClientRect();
-    const m = document.createElement('div'); m.className = 'dc-menu'; m.id = 'dc-newmenu'; m.setAttribute('role', 'menu');
-    m.innerHTML = NEW.map(([k, ic, t, sub]) => `<button data-new="${k}" role="menuitem">${ico(ic, 16)}<span><b>${t}</b><small>${sub}</small></span></button>`).join('') + `<p class="dc-menu-note">${connected() ? 'Kept on this device until you move it into a project.' : 'Kept on this device. Move it into a project any time.'}</p>`;
+  async function makeDraft(kind, d) {
+    if (!LF()) return;
+    const it = await LF().create(kind, { title: d.title, body: d.body }); LF().open(it.id); return it;
+  }
+  // From a template, with no tribe: the company templates as a plain doc on this device (doctpl-data.js)
+  function templateMenu(anchor) {
+    const L = window.TribeTemplateLib; if (!L || !anchor) return toast('Templates did not load. Reload the app.');
+    FV().closeMenus();
+    const m = document.createElement('div'); m.className = 'fx-pop fx-menu fx-tpl'; m.id = 'dc-tplmenu'; m.setAttribute('role', 'menu');
+    m.innerHTML = `<div class="fx-pop-h"><span class="fx-eyebrow">From a template</span><b>Start from a shape</b></div>` + L.TEMPLATES.filter(t => !t.premium).slice(0, 12).map(t => `<button type="button" role="menuitem" data-tpl="${esc(t.id)}">${FV().icon('template', 15)}<span>${esc(t.title)}</span></button>`).join('');
     document.body.appendChild(m);
-    m.style.top = `${r.bottom + 6}px`; m.style.left = `${Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth))}px`;
-    m.querySelectorAll('[data-new]').forEach(b => b.onclick = () => makeNew(b.dataset.new));
-    setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off); } }), 0);
+    const r = anchor.getBoundingClientRect(); m.style.top = `${Math.max(8, Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 6))}px`; m.style.left = `${Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth))}px`;
+    m.querySelectorAll('[data-tpl]').forEach(b => b.onclick = async () => { m.remove(); const t = L.byId(b.dataset.tpl); const it = await LF().create('doc', { title: t.title, body: L.render(t, {}) }); LF().open(it.id); });
+    setTimeout(() => document.addEventListener('mousedown', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('mousedown', off, true); } }, true), 0);
   }
-  // which filter chip an item belongs to
-  function cat(it) {
-    if (it.kind === 'note') return 'notes';
-    if (it.kind === 'doc') return it.dk === 'sheet' ? 'sheets' : 'docs';
-    const lk = it.kind === 'local' ? it.lk : 'file', fk = it.kind === 'local' ? it.fk : it.f.kind;
-    if (lk === 'doc') return 'docs'; if (lk === 'sheet') return 'sheets'; if (lk === 'whiteboard') return 'boards'; if (lk === 'design') return 'designs';
-    return fk === 'image' ? 'pics' : fk === 'code' ? 'code' : 'other';
+  function openItem(it) {
+    if (it.src === 'note') return noteEditor(it.id);
+    if (it.src === 'local') return LF().open(it.id);
+    if (it.src === 'doc') return go(it.pid, () => openDoc(it.slug));
+    if (it.src === 'up') return openFile(it.f);
+    if (it.src === 'canvas') return go(it.pid, () => { App().show('canvas'); setTimeout(() => window.TribeCanvas && window.TribeCanvas.open(it.rid), 120); });
+    if (it.src === 'board') return go(it.pid, () => window.TribeWhiteboard && window.TribeWhiteboard.open(it.rid));
+    if (it.src === 'site') return go(it.pid, () => window.TribeWebsite && window.TribeWebsite.open());
   }
-  function localItems(q) {
-    if (!LF()) return [];
-    return LF().list().filter(x => !q || String(x.title).toLowerCase().includes(q) || String(x.body || '').toLowerCase().includes(q)).map(x => ({
-      kind: 'local', lk: x.kind, fk: x.fkind || '', id: x.id, title: x.title, at: x.updated, where: 'On this device', size: x.size || 0,
-      preview: x.kind === 'doc' ? String(x.body || '').replace(/^#+\s*/gm, '').replace(/\s+/g, ' ').trim()
-        : x.kind === 'sheet' ? String(x.body || '').split('\n').filter(l => !/^\|\s*-/.test(l)).slice(0, 3).map(l => l.replace(/\|/g, ' ').trim()).filter(Boolean).join(' · ')
-        : x.kind === 'whiteboard' ? (n => `${n} thing${n === 1 ? '' : 's'} on the board`)(Object.values(x.elements || {}).filter(e => !e.del).length)
-        : x.kind === 'design' ? (n => `${n} layer${n === 1 ? '' : 's'}`)(Object.values(x.nodes || {}).filter(e => !e.del).length) : '' }));
+  const saveBlob = (name, blob) => { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
+  const safeName = t => String(t || 'file').replace(/[\\/:*?"<>|]+/g, '-');
+  // a doc moves between tribes as a copy there, then gone here (only once the copy is saved)
+  function projectMenu(anchor, skip, cb) {
+    FV().closeMenus();
+    const list = projects().filter(p => p.id !== skip);
+    if (!list.length) return toast('There is no other tribe to move it to.');
+    const m = document.createElement('div'); m.className = 'fx-pop fx-menu'; m.id = 'dc-movemenu'; m.setAttribute('role', 'menu');
+    m.innerHTML = `<div class="fx-pop-h"><span class="fx-eyebrow">Move to…</span></div>` + list.map(p => `<button type="button" role="menuitem" data-to="${esc(p.id)}">${FV().icon('tribe', 15)}<span>${esc(p.name)}</span></button>`).join('');
+    document.body.appendChild(m);
+    const r = (anchor && anchor.isConnected ? anchor : $('#dc-new')).getBoundingClientRect(); m.style.top = `${Math.max(8, Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 6))}px`; m.style.left = `${Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth))}px`;
+    m.querySelectorAll('[data-to]').forEach(b => b.onclick = () => { m.remove(); cb(b.dataset.to); });
+    setTimeout(() => document.addEventListener('mousedown', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('mousedown', off, true); } }, true), 0);
   }
-  function drawDocs() {
-    const box = $('#hub-docs'); if (!box) return;
-    const q = docsQ.toLowerCase();
-    const notes = scratch.notes().filter(n => n.text && n.text.trim() && (!q || n.text.toLowerCase().includes(q)))
-      .map(n => ({ kind: 'note', id: n.id, title: noteTitle(n.text), preview: n.text.split('\n').slice(1).join(' ').trim(), at: n.updated || n.at, where: 'Only you' }));
-    const pdocs = docsCache.map(d => ({ kind: 'doc', dk: d.kind || '', id: `${d.project}|${d.slug}`, title: d.title, preview: d.snippet || d.preview || '', at: d.at, where: (projOf(d.project) || {}).name || d.projectName || '', color: d.color }));
-    const ups = [...(upCache.mine || []), ...(upCache.project || [])].filter(f => !q || f.name.toLowerCase().includes(q))
-      .map(f => ({ kind: 'file', id: f.id, f, title: f.name, at: f.at, where: f.scope === 'project' ? ((projOf(f.project) || {}).name || 'Project') : 'Only you' }));
-    const locals = localItems(q);
-    let items = [...notes, ...locals, ...pdocs, ...ups].filter(it => docsKind === 'all' || cat(it) === docsKind);
-    items.sort(docsSort === 'name' ? (a, b) => String(a.title).localeCompare(String(b.title)) : (a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
-    if (!items.length) { box.innerHTML = `<div class="dc-empty"><b>${q ? 'Nothing matches that' : docsKind === 'all' ? 'No files yet' : 'Nothing here yet'}</b><span>${q ? 'Try another word.' : 'Tap + New for a note, doc, sheet, whiteboard or design, or upload any file. No tribe needed.'}</span></div>`; return; }
-    const attr = it => it.kind === 'note' ? `data-mynote="${esc(it.id || '')}"` : it.kind === 'file' ? `data-up="${esc(it.id)}"` : it.kind === 'local' ? `data-local="${esc(it.id)}" data-lk="${esc(it.lk)}"` : `data-gdoc="${esc(it.id)}"`;
-    const LIC = { doc: 'i-doc', sheet: 'i-grid', whiteboard: 'i-whiteboard', design: 'i-canvas' };
-    const icon = it => it.kind === 'note' ? 'i-quill' : it.kind === 'file' ? (FK_IC[it.f.kind] || 'i-clip') : it.kind === 'local' ? (LIC[it.lk] || FK_IC[it.fk] || 'i-clip') : it.dk === 'sheet' ? 'i-grid' : 'i-doc';
-    const LLABEL = { doc: 'Doc', sheet: 'Sheet', whiteboard: 'Whiteboard', design: 'Design' };
-    const prev = it => it.kind === 'local' ? (it.lk === 'file' ? (it.fk === 'image' && it.size < 4 * 1048576 ? `<img class="dc-thumb" data-lthumb="${esc(it.id)}" alt="">` : `<span class="dc-fk">${ico(icon(it), 30)}<small>${esc(FK_LABEL[it.fk] || 'File')} · ${esc(fsize(it.size))}</small></span>`)
-        : it.preview ? `<span class="dc-lk">${esc(LLABEL[it.lk])}</span> ${esc(it.preview.slice(0, 240))}` : `<span class="dc-lk">${esc(LLABEL[it.lk])}</span> <i>Empty</i>`)
-      : it.kind === 'file' ? (it.f.kind === 'image' && it.f.size < 4 * 1048576 ? `<img class="dc-thumb" data-thumb="${esc(it.id)}" alt="">` : `<span class="dc-fk">${ico(icon(it), 30)}<small>${esc(FK_LABEL[it.f.kind] || 'File')} · ${esc(fsize(it.f.size))}</small></span>`)
-      : it.preview ? esc(it.preview.slice(0, 240)) : '<i>Empty</i>';
-    box.innerHTML = items.map(it => it.kind === 'local'
-      ? `<div class="dc-card local${it.lk === 'file' ? ' file k-' + esc(it.fk) : ''}" role="button" tabindex="0" ${attr(it)}>
-        <span class="dc-head"><span class="dc-ic local">${ico(icon(it), 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span><button class="dc-mv" data-mv="${esc(it.id)}" title="Move to a project" aria-label="Move ${esc(it.title)} to a project">${ico('i-folder', 14)}</button></span>
-        <span class="dc-prev">${prev(it)}</span></div>`
-      : `<button class="dc-card${it.kind === 'file' ? ' file k-' + esc(it.f.kind) : ''}" ${attr(it)}>
-        <span class="dc-head"><span class="dc-ic ${it.kind}">${ico(icon(it), 15)}</span><span class="dc-tt"><b>${esc(it.title)}</b><small>${esc(it.where)} · ${esc(ago(it.at))}</small></span></span>
-        <span class="dc-prev">${prev(it)}</span></button>`).join('');
-    box.querySelectorAll('[data-local]').forEach(b => { const go = () => LF().open(b.dataset.local); b.onclick = e => { if (!e.target.closest('[data-mv]')) go(); }; b.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === b) { e.preventDefault(); go(); } }; });
-    box.querySelectorAll('[data-mv]').forEach(b => b.onclick = e => { e.stopPropagation(); LF().moveMenu(b, b.dataset.mv); });
-    box.querySelectorAll('img[data-lthumb]').forEach(img => thumb({ id: img.dataset.lthumb, local: true }, img));
-    box.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const it = ups.find(x => x.id === b.dataset.up); if (it) openFile(it.f); });
-    box.querySelectorAll('img[data-thumb]').forEach(img => { const it = ups.find(x => x.id === img.dataset.thumb); if (it) thumb(it.f, img); });
-    box.querySelectorAll('[data-mynote]').forEach(b => b.onclick = () => noteEditor(b.dataset.mynote));
-    box.querySelectorAll('[data-gdoc]').forEach(b => b.onclick = () => { const [pid, slug] = b.dataset.gdoc.split('|'); go(pid, () => openDoc(slug)); });
+  async function actItem(k, it, anchor, arg) {
+    try {
+      if (it.src === 'local') {
+        if (k === 'rename') return LF().rename(it.id, arg);
+        if (k === 'move') { const card = document.querySelector(`[data-local="${CSS.escape(it.id)}"] .fx-more`); return LF().moveMenu(anchor && anchor.isConnected ? anchor : card, it.id); }
+        if (k === 'duplicate') { await LF().duplicate(it.id); return toast('Duplicated.'); }
+        if (k === 'download') return LF().download(it.id);
+        if (k === 'delete') { await LF().remove(it.id); return toast('Deleted.'); }
+      }
+      if (it.src === 'note') {
+        if (k === 'duplicate') { await scratch.create(`${it.text}`); refreshFiles(); return toast('Duplicated.'); }
+        if (k === 'download') return saveBlob(`${safeName(it.title)}.md`, new Blob([it.text], { type: 'text/markdown' }));
+        if (k === 'delete') { scratch.remove(it.id); return toast('Deleted.'); }
+      }
+      if (it.src === 'doc') {
+        const api = (path, o = {}) => C.api(path, { ...o, project: it.pid });
+        if (k === 'rename') { await api('/docs/' + encodeURIComponent(it.slug), { method: 'PUT', body: { title: arg, force: true } }); toast('Renamed.'); return docsList().then(refreshFiles); }
+        const full = k === 'delete' ? null : (await api('/docs/' + encodeURIComponent(it.slug))).doc;
+        if (k === 'download') return saveBlob(`${safeName(full.title)}.md`, new Blob([full.body || ''], { type: 'text/markdown' }));
+        if (k === 'duplicate') { await api('/docs', { method: 'POST', body: { title: `${full.title} (copy)`, body: full.body || '', ...(full.kind ? { kind: full.kind } : {}) } }); toast('Duplicated.'); return docsList().then(refreshFiles); }
+        if (k === 'move') return projectMenu(anchor, it.pid, async to => {
+          try { await C.api('/docs', { method: 'POST', project: to, body: { title: full.title, body: full.body || '', ...(full.kind ? { kind: full.kind } : {}) } }); await api('/docs/' + encodeURIComponent(it.slug), { method: 'DELETE' }); toast(`Moved to ${(projOf(to) || {}).name || 'the tribe'}.`); await docsList(); refreshFiles(); } catch (e) { toast(e.message); }
+        });
+        if (k === 'delete') { await api('/docs/' + encodeURIComponent(it.slug), { method: 'DELETE' }); docsCache = docsCache.filter(d => !(d.project === it.pid && d.slug === it.slug)); return toast('Deleted.'); }
+      }
+      if (it.src === 'up') {
+        if (k === 'download') { const u = await blobUrl(it.f); const a = document.createElement('a'); a.href = u; a.download = it.f.name; document.body.appendChild(a); a.click(); a.remove(); return; }
+        if (k === 'delete') { await C.api('/uploads/' + encodeURIComponent(it.f.id), { method: 'DELETE' }); await upList(); return toast('Deleted.'); }
+      }
+      if (it.src === 'canvas' || it.src === 'board') {
+        const base = it.src === 'board' ? '/whiteboard/' : '/canvas/', api = (o = {}) => C.api(base + encodeURIComponent(it.rid), { ...o, project: it.pid });
+        if (k === 'rename') { await api({ method: 'PATCH', body: { name: arg } }); return designList().then(refreshFiles); }
+        if (k === 'download') { const r = await api(); return saveBlob(`${safeName(it.title)}.${it.src === 'board' ? 'whiteboard' : 'design'}.json`, new Blob([JSON.stringify(r.board || r.file, null, 2)], { type: 'application/json' })); }
+        if (k === 'delete') { await api({ method: 'DELETE' }); designCache = designCache.filter(c => !(c.pid === it.pid && c.id === it.rid)); return toast('Deleted.'); }
+      }
+    } catch (e) { toast(e.message); if (k === 'delete') throw e; }
   }
   function wireNotes(root) {
     root.querySelectorAll('#hub-note-new').forEach(b => b.onclick = startNote);
@@ -768,17 +865,31 @@
     const all = root.querySelector('#hub-notes-all'); if (all) all.onclick = () => open('docs');
   }
   async function docsList() {
-    if (!$('#hub-docs')) return;
-    if (!connected()) { docsCache = []; return drawDocs(); }
-    try { const { docs } = await C.api('/hub/docs?q=' + encodeURIComponent(docsQ)); if (mode !== 'docs') return; docsCache = docs; drawDocs(); }
-    catch (e) { const box = $('#hub-docs'); if (box && !docsCache.length) box.innerHTML = `<div class="dc-empty"><b>Couldn't load project docs</b><span>${esc(e.message)}</span></div>`; }
+    if (!connected()) { docsCache = []; return; }
+    try { const { docs } = await C.api('/hub/docs'); docsCache = docs || []; } catch {}
+  }
+  // every project's designs and whiteboards, with their shapes for the thumbnails (at most 24 opened)
+  async function designList() {
+    if (!connected()) { designCache = []; return; }
+    const out = [];
+    await Promise.all(projects().slice(0, 12).map(async p => {
+      try { const { files } = await C.api('/canvas', { project: p.id }); for (const f of files || []) if (f.count || f.id !== 'main') out.push({ kind: 'canvas', pid: p.id, ...f }); } catch {}
+      try { const { boards } = await C.api('/whiteboard', { project: p.id }); for (const b of boards || []) if (b.count || b.id !== 'main') out.push({ kind: 'board', pid: p.id, ...b }); } catch {}
+    }));
+    await Promise.all(out.slice(0, 24).map(async c => { try { const r = await C.api((c.kind === 'board' ? '/whiteboard/' : '/canvas/') + encodeURIComponent(c.id), { project: c.pid }); if (c.kind === 'board') c.elements = (r.board || {}).elements; else c.nodes = (r.file || {}).nodes; } catch {} }));
+    designCache = out;
+  }
+  // each project's website, once it has been built
+  async function siteList() {
+    if (!connected()) { siteCache = []; return; }
+    const out = [];
+    await Promise.all(projects().slice(0, 12).map(async p => { try { const w = await C.api(`/projects/${encodeURIComponent(p.id)}/website`); if (w && w.built) out.push({ pid: p.id, title: ((w.fields || {}).headline) || `${p.name} website`, at: w.built.at }); } catch {} }));
+    siteCache = out;
   }
 
   // ---------- uploads: any kind of file, yours or a project's (server/uploads.js) ----------
-  const FKINDS = [['all', 'All'], ['notes', 'Notes'], ['docs', 'Docs'], ['sheets', 'Sheets'], ['designs', 'Designs'], ['boards', 'Whiteboards'], ['pics', 'Pictures'], ['code', 'Code'], ['other', 'Other files']];
   const FK_IC = { image: 'i-photo', audio: 'i-mic', video: 'i-play', pdf: 'i-doc', model: 'i-box', archive: 'i-folder', code: 'i-git', text: 'i-doc', file: 'i-clip' };
   const FK_LABEL = { image: 'Picture', audio: 'Audio', video: 'Video', pdf: 'PDF', model: '3D model', archive: 'Archive', code: 'Code', text: 'Text', file: 'File' };
-  let docsKind = (() => { try { const k = localStorage.getItem('tribecode.files.kind'); return FKINDS.some(x => x[0] === k) ? k : 'all'; } catch { return 'all'; } })();
   let upCache = { mine: [], project: [], max: 50 * 1048576 };
   const blobs = new Map();   // id -> object URL (thumbnails and the viewer)
   const fsize = n => n < 1024 ? `${n} B` : n < 1048576 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`;
@@ -797,7 +908,7 @@
       if (!LF()) return toast('Files on this device did not load. Reload the app.');
       const made = await LF().addFiles(files);
       if (made.length) toast(made.length > 1 ? `${made.length} files kept on this device.` : `${made[0].title} is kept on this device.`);
-      if (mode === 'docs') drawDocs(); return;
+      if (mode === 'docs') refreshFiles(); return;
     }
     const pid = C.project && C.project();
     for (const file of files) {
@@ -810,7 +921,7 @@
       } catch (e) { toast(e.message); continue; }
     }
     toast(files.length > 1 ? `${files.length} files added.` : 'Added to your files.');
-    await upList(); if (mode === 'docs') drawDocs();
+    await upList(); if (mode === 'docs') refreshFiles();
   }
   function pickUpload(scope) {
     const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.id = 'dc-file';
@@ -829,19 +940,6 @@
     m.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => { closeMenus(); pickUpload(b.dataset.scope); });
     setTimeout(() => document.addEventListener('click', function off(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', off); } }), 0);
   }
-  // phones: the + opens a sheet like a files app (New note · Upload · Upload to the project)
-  function newSheet() {
-    closeMenus(); const pj = curPj();
-    const w = document.createElement('div'); w.className = 'dc-sheet-wrap'; w.id = 'dc-newsheet';
-    w.innerHTML = `<div class="dc-sheet" role="dialog" aria-label="New"><span class="dc-grab"></span>
-      <button data-do="note">${ico('i-quill', 22)}<span><b>New note</b><small>Only you, until you share it</small></span></button>
-      ${NEW.slice(1, 5).map(([k, ic, t, sub]) => `<button data-do="${k}">${ico(ic, 22)}<span><b>New ${t.toLowerCase()}</b><small>${sub}</small></span></button>`).join('')}
-      <button data-do="me">${ico('i-upload', 22)}<span><b>Upload a file</b><small>Any kind, up to ${Math.round(upCache.max / 1048576)} MB · ${connected() ? 'only you' : 'on this device'}</small></span></button>
-      ${pj ? `<button data-do="project">${ico('i-folder', 22)}<span><b>Upload to ${esc(pj.name)}</b><small>Everyone in the project sees it</small></span></button>` : ''}</div>`;
-    document.body.appendChild(w);
-    w.onclick = e => { if (e.target === w) w.remove(); };
-    w.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { w.remove(); const k = b.dataset.do; if (['note', 'doc', 'sheet', 'whiteboard', 'design'].includes(k)) return makeNew(k); pickUpload(k === 'me' && !connected() ? 'local' : k); });
-  }
   // open a file: a full-screen viewer with a preview when the browser can show it, Download and Delete
   async function openFile(f) {
     closeMenus(); const me = (C.state && C.state().me) || {}, canDel = f.local || f.by === me.id || me.role === 'host';
@@ -855,7 +953,7 @@
     document.addEventListener('keydown', key); $('#fv-close').onclick = close; w.onclick = e => { if (e.target === w) close(); };
     const del = $('#fv-del'); if (del) del.onclick = async () => {
       if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'Tap again to delete'; setTimeout(() => { if (del.isConnected) { del.classList.remove('arm'); del.textContent = 'Delete'; } }, 3000); return; }
-      try { if (f.local) await LF().remove(f.id); else await C.api('/uploads/' + encodeURIComponent(f.id), { method: 'DELETE' }); toast('Deleted.'); close(); await upList(); if (mode === 'docs') drawDocs(); } catch (e) { toast(e.message); }
+      try { if (f.local) await LF().remove(f.id); else await C.api('/uploads/' + encodeURIComponent(f.id), { method: 'DELETE' }); toast('Deleted.'); close(); await upList(); if (mode === 'docs') refreshFiles(); } catch (e) { toast(e.message); }
     };
     const mvb = $('#fv-mv'); if (mvb) mvb.onclick = () => { LF().moveMenu(mvb, f.id); const watch = e => { if (e.detail && e.detail.id === f.id) { removeEventListener('tribe-local-moved', watch); close(); } }; addEventListener('tribe-local-moved', watch); };
     let url; try { url = await blobUrl(f); } catch (e) { $('#fv-body').innerHTML = `<span class="faint">${esc(e.message)}</span>`; return; }
@@ -872,6 +970,44 @@
     }
     else body.innerHTML = `<div class="fv-none">${ico(FK_IC[f.kind] || 'i-clip', 44)}<b>${esc(FK_LABEL[f.kind] || 'File')}</b><span>No preview for this kind of file. Download it to open it.</span></div>`;
   }
+
+  // ---------- Work on Home (feat/files-dash: Home parity): your tasks across every tribe, above the gigs ----------
+  let myTasks = { at: 0, list: [] };
+  async function loadMyTasks() {
+    if (!connected() || Date.now() - myTasks.at < 15000) return myTasks.list;
+    const meId = me().id, mine = (C.state().members || []).filter(m => m.role === 'agent' && m.owner === meId).map(m => m.id), out = [];
+    await Promise.all(projects().slice(0, 12).map(async p => { try { const { tasks } = await C.api('/tasks', { project: p.id }); for (const k of tasks || []) if (k.status !== 'done' && (k.assignee === meId || mine.includes(k.assignee))) out.push({ ...k, pid: p.id }); } catch {} }));
+    const rank = { doing: 0, review: 1, backlog: 2 };
+    myTasks = { at: Date.now(), list: out.sort((a, b) => (rank[a.status] ?? 3) - (rank[b.status] ?? 3) || String(a.due || '9').localeCompare(String(b.due || '9'))) };
+    return myTasks.list;
+  }
+  function myTasksHtml(list) {
+    const rows = list.slice(0, 8).map(k => { const p = projOf(k.pid) || {};
+      return `<button type="button" class="hmt-row" data-mytask="${esc(k.pid)}|${esc(k.id)}"><span class="hmt-st s-${esc(k.status)}">${esc(k.status === 'doing' ? 'Doing' : k.status === 'review' ? 'Review' : 'To do')}</span><b>${esc(k.title)}</b>${k.due ? `<small>Due ${esc(k.due)}</small>` : ''}<span class="hmt-pj">${esc(p.name || 'A tribe')}</span>${ico('i-chev', 14)}</button>`; }).join('');
+    return `<section class="hub-mytasks" id="hub-mytasks">${hubCrumb('Work')}<div class="sec-head"><span class="eyebrow">Your tasks · across your tribes</span><h2>${list.length ? `${list.length} on your plate` : 'Nothing on your plate'}</h2></div>
+      ${rows ? `<div class="hmt-list">${rows}</div>` : `<p class="faint">When a task in any tribe is assigned to you or your AI, it shows up here.</p>`}</section>`;
+  }
+  let mtBusy = false;
+  async function paintMyTasks() {
+    const sec = document.getElementById('view-work'); if (!sec || document.body.dataset.view !== 'work' || mtBusy) return;
+    if (!connected()) { if (!sec.querySelector('.hub-crumb')) sec.insertAdjacentHTML('afterbegin', hubCrumb('Work')); return; }
+    mtBusy = true; const list = await loadMyTasks(); mtBusy = false;
+    const old = sec.querySelector('#hub-mytasks'), html = myTasksHtml(list);
+    if (old) { if (old.outerHTML.length !== html.length) old.outerHTML = html; } else sec.insertAdjacentHTML('afterbegin', html);
+    sec.querySelectorAll('[data-mytask]').forEach(b => b.onclick = () => { const [pid, id] = b.dataset.mytask.split('|'); jump({ project: pid, ref: { type: 'task', id } }); });
+  }
+  // the Agent fleet (agentshub.js) on Home says where it is too
+  function fleetCrumb() { const sec = document.getElementById('view-agents-hub'); if (sec && document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global' && !sec.querySelector(':scope > .hub-crumb')) sec.insertAdjacentHTML('afterbegin', hubCrumb('Agent fleet')); }
+  { const seen = new WeakSet(); let t = null;
+    const kick = () => { clearTimeout(t); t = setTimeout(() => { const sec = document.getElementById('view-agents-hub'); if (!sec) return; if (!seen.has(sec)) { seen.add(sec); new MutationObserver(kick).observe(sec, { childList: true }); } fleetCrumb(); }, 40); };
+    new MutationObserver(kick).observe(document.body, { attributes: true, attributeFilter: ['data-view', 'data-scope'] }); setTimeout(kick, 0); }
+  { const seen = new WeakSet(); let t = null;
+    const kick = () => { clearTimeout(t); t = setTimeout(() => {
+      const sec = document.getElementById('view-work'); if (!sec) return;
+      if (!seen.has(sec)) { seen.add(sec); new MutationObserver(kick).observe(sec, { childList: true }); }   // talent.js redraws the whole section
+      if (document.body.dataset.view === 'work' && !sec.querySelector('#hub-mytasks, .hub-crumb')) paintMyTasks();
+    }, 60); };
+    new MutationObserver(kick).observe(document.body, { attributes: true, attributeFilter: ['data-view'] }); setTimeout(kick, 0); }
 
   // ---------- actions ----------
   async function go(pid, then) {
@@ -1169,6 +1305,7 @@
     }
     function draw() {
       mounts.forEach(root => { if (!document.body.contains(root)) { mounts.delete(root); return; } const had = root.querySelector('.sc-in') === document.activeElement; root.innerHTML = html(); wire(root); if (had) { const t = root.querySelector('.sc-in'); t.focus(); t.setSelectionRange(t.value.length, t.value.length); } });
+      if (mode === 'docs' && document.body.dataset.view === 'hub') setTimeout(refreshFiles, 0);   // feat/files-dash: notes are files too
     }
     function mount(root) { root.dataset.mounted = '1'; mounts.add(root); root.innerHTML = html(); wire(root); const t = root.querySelector('.sc-in'); if (t && root.id === 'room-scratch') t.id = 'scratch-in'; }
     // Refine with AI: save pending edits first, then swap a note's text (or the draft) for the cleaned-up one.
@@ -1187,5 +1324,5 @@
   if (document.body.dataset.view === 'hub') setTimeout(onShow, 0);   // app.js may have shown the hub before this file loaded
   window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel,
     openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump,
-    editText: src => noteEditor(null, false, src), openFile, newMenu: a => newMenu(a) };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
+    editText: src => noteEditor(null, false, src), openFile, newMenu: a => { if (mode !== 'docs' || !fv) open('docs'); setTimeout(() => fv && fv.studio(a && a.isConnected ? a : $('#dc-new')), mode === 'docs' ? 0 : 80); }, files: () => fv };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
 })();

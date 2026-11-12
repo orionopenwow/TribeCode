@@ -69,8 +69,9 @@
     { key: 'money', label: 'Money', icon: 'i-coin', kind: 'Go to', keys: 'money ledger revenue costs runway users stripe finance books csv export autopilot seats budget ai spend', when: () => !!(window.TribeLedger && window.TribeLedger.hasCompany()), run: () => window.TribeLedger && window.TribeLedger.open() },   // v0.27 company: Money (app/ui/ledger.js adds its own sidebar row when a company exists)
     { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
-    { key: 'docs-all', label: 'All files', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
-    { key: 'repos-all', label: 'All code', icon: 'i-git', group: 'global', keys: 'all repos repositories every project code branches status',   /* qa-qol-2: plain word (was All repos) */ run: () => hubOpen('repos') },
+    { key: 'docs-all', label: 'Your files', row: 'Files', icon: 'i-doc', group: 'global', keys: 'all files documents notes docs sheets slides pictures uploads across projects search every my files', run: () => hubOpen('docs') },   // feat/files-dash: "Files" (was All files)
+    { key: 'design-all', label: 'Your designs', row: 'Design', icon: 'i-canvas', group: 'global', keys: 'all designs canvases whiteboards frames every project my designs', run: () => hubOpen('design') },   // feat/files-dash: Home parity
+    { key: 'repos-all', label: 'Your code', row: 'Code', icon: 'i-git', group: 'global', keys: 'all code repos repositories every project branches status code files',   /* feat/files-dash: "Code" (was All code) */ run: () => hubOpen('repos') },
     { key: 'work', label: 'Work', icon: 'i-users', group: 'global', keys: 'work gigs jobs hire hiring talent people open to work time bank compute share bounty seat freelance', run: () => window.TribeTalent && window.TribeTalent.open() },   // v0.27 company: app/ui/talent.js
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
@@ -132,7 +133,7 @@
     const box = $('#nest-groups'); if (!box) return;
     drawnGlobal = isGlobal();
     document.body.classList.toggle('global', drawnGlobal);   // keep the class in step whichever path drew the rows
-    box.innerHTML = drawnGlobal ? `<div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
+    box.innerHTML = drawnGlobal ? `<div class="nest-home-h" id="nest-home-h" aria-current="page"><svg class="i"><use href="#i-home"/></svg><b>Home</b> <span>· your dashboard</span></div><div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
       `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.row || d.label)}</span></button>`).join('')}</div>` : '';
   }
   function paintCounts() {
@@ -144,7 +145,7 @@
   // ---------- which destination is on screen ----------
   function current() {
     const v = document.body.dataset.view || '';
-    if (v === 'hub') { const m = window.TribeHub ? window.TribeHub.mode() : 'home'; return m === 'repos' ? 'repos-all' : m === 'docs' ? 'docs-all' : 'hub'; }
+    if (v === 'hub') { const m = window.TribeHub ? window.TribeHub.mode() : 'home'; return m === 'repos' ? 'repos-all' : m === 'docs' ? 'docs-all' : m === 'design' ? 'design-all' : 'hub'; }
     if (v === 'agents-hub' && document.body.dataset.scope === 'global') return 'fleet';
     if (v === 'coord') return (window.TribeCoord && window.TribeCoord.tab()) || 'agents';
     if (v === 'flow-roles') return 'roles';
@@ -182,9 +183,9 @@
     if (sig !== tabsSig) {
       tabsSig = sig;
       if (w === 'docs') {   // Files: one emoji row, no eyebrow (feat: tidy Files)
-        const items = [['docs-files', 'files', '📝 Notes'], ...(code ? [['docs-files', 'code', '💻 Code'], ['docs-files', 'docs', '📚 Docs']] : []), ['website', '', '🌐 Website'], ['captures', '', '📎 Captures'], ['academy', '', '🎓 Academy']].filter(([k]) => list.some(t => t.key === k));   // v0.27 company: + Academy tab
-        bar.innerHTML = `<div class="wt-row wt-pills" role="tablist" aria-label="Files">${items.map(([k, m, l]) => { const on = k === cur && (!m || m === cfm);
-          return `<button role="tab" class="wt ${on ? 'on' : ''}" id="wt-${esc(k)}${m && m !== 'files' ? '-' + m : ''}" data-tab="${esc(k)}"${m ? ` data-cfseg="${m}"` : ''} aria-selected="${on}" tabindex="${on ? 0 : -1}">${esc(l)}</button>`; }).join('')}</div>`;
+        const items = [['docs-files', 'files', 'Files', 'all'], ...(code ? [['docs-files', 'code', 'Code', 'code'], ['docs-files', 'docs', 'Docs', 'docs']] : []), ['website', '', 'Website', 'sites'], ['captures', '', 'Captures', 'other'], ['academy', '', 'Academy', 'template']].filter(([k]) => list.some(t => t.key === k));   // v0.27 company: + Academy tab
+        bar.innerHTML = `<div class="wt-row wt-pills" role="tablist" aria-label="Files">${items.map(([k, m, l, ic]) => { const on = k === cur && (!m || m === cfm);
+          return `<button role="tab" class="wt ${on ? 'on' : ''}" id="wt-${esc(k)}${m && m !== 'files' ? '-' + m : ''}" data-tab="${esc(k)}"${m ? ` data-cfseg="${m}"` : ''} aria-selected="${on}" tabindex="${on ? 0 : -1}">${window.TribeFilesView ? `<span class="wt-ic">${window.TribeFilesView.icon(ic, 14)}</span>` : ''}${esc(l)}</button>`; }).join('')}</div>`;   // feat/files-dash: small stroke icons, no emoji
         bar.classList.add('wt-files');
       } else { bar.classList.remove('wt-files');
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
@@ -378,7 +379,7 @@
     $('#ss-face').innerHTML = p ? PJ().face(p, 'sm') : '<span class="pj-face sm ss-camp">⛺</span>';
     $('#ss-name').textContent = p ? p.name : 'Home';
     const n = (PJ() && PJ().list() || []).length;
-    $('#ss-sub').textContent = p ? `${tribe} · ${n} project${n === 1 ? '' : 's'}` : `${tribe} · every project`;
+    $('#ss-sub').textContent = p ? `${tribe} · ${n} project${n === 1 ? '' : 's'}` : 'Your dashboard';
   }
 
   // ---------- nest ----------
@@ -428,7 +429,7 @@
       title.dataset.nav = 'hub'; title.title = 'Your home';
       $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face" style="background:${esc(me.color || 'var(--accent)')}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
       $('#nest-name').textContent = 'Home';
-      $('#nest-sub').textContent = on ? 'Everything, every project' : '';   // no tribe yet: the user bar says it once
+      $('#nest-sub').textContent = 'Your dashboard';   // no tribe yet: the user bar says it once
     } else {
       title.dataset.nav = 'home'; title.title = 'Project home';
       if (p) { $('#nest-face').innerHTML = h ? h.face(p, 'sm') : ''; $('#nest-name').textContent = p.name; }

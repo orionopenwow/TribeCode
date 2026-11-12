@@ -1,6 +1,6 @@
 // One router: the single source of truth for where you are (docs/NAVIGATION.md).
-//   place: 'global' (your own dashboard: Home, All files, All code, Work, Agent fleet) or 'project' (inside a tribe's project)
-//   section: the destination key on screen (TribeShell's registry: hub, docs-all, repos-all, work, fleet, home, chat, bugs…)
+//   place: 'global' (your own dashboard: Home, Files, Design, Code, Work, Agent fleet) or 'project' (inside a tribe's project)
+//   section: the destination key on screen (TribeShell's registry: hub, docs-all, design-all, repos-all, work, fleet, home, chat, bugs…)
 // Every button already lands in TribeShell.go(key) or a module's open(); the router watches the result and
 //   - keeps browser history in step: each settled move is one history.pushState entry, so Back / Forward (and Alt+← / Alt+→,
 //     the mouse's back button inside the desktop app) walk through places you've been, across projects too;
@@ -17,8 +17,8 @@
   const PJ = () => window.TribeProjects;
   const App = () => window.TribeApp;
   const toast = m => App() && App().toast && App().toast(m);
-  const GLOBAL_KEYS = { hub: 'home', 'docs-all': 'docs', 'repos-all': 'repos', work: 'work', fleet: 'fleet' };
-  const SEC_KEY = { home: 'hub', docs: 'docs-all', repos: 'repos-all', work: 'work', fleet: 'fleet' };
+  const GLOBAL_KEYS = { hub: 'home', 'docs-all': 'docs', 'design-all': 'design', 'repos-all': 'repos', work: 'work', fleet: 'fleet' };
+  const SEC_KEY = { home: 'hub', docs: 'docs-all', design: 'design-all', repos: 'repos-all', work: 'work', fleet: 'fleet' };
   const PROJECT_ONLY = new Set(['company', 'money', 'project-settings']);   // plus every core / docs / tasks / agents destination
 
   // ---------- where am I ----------
@@ -124,11 +124,20 @@
 
   // ---------- stale panes: one main view on screen ----------
   function sweep(l) {
+    home(l);
     const v = document.body.dataset.view; if (!v) return;
     const mine = document.getElementById('view-' + v);
     if (!mine || mine.classList.contains('hidden')) return;
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== mine && !s.classList.contains('hidden')) s.classList.add('hidden'); });
     document.body.classList.toggle('global', l.place === 'global');
+  }
+  // feat/files-dash: make it obvious you are on Home: the rail logo is lit, the breadcrumb starts with "Home ›"
+  function home(l) {
+    const g = l.place === 'global', lg = $('#rail-logo');
+    if (lg) { lg.classList.toggle('on', g); if (g) lg.setAttribute('aria-current', 'page'); else lg.removeAttribute('aria-current'); }
+    let hc = $('#crumb-home'); const sec = $('#crumb-section');
+    if (!hc && sec) { hc = document.createElement('span'); hc.id = 'crumb-home'; hc.className = 'crumb-home'; hc.innerHTML = '<button class="crumb crumb-h" type="button" title="Home: your dashboard">Home</button><span class="sep" aria-hidden="true">›</span>'; sec.before(hc); hc.querySelector('button').onclick = () => (window.TribeHub ? window.TribeHub.open('home') : App().show('hub')); }
+    if (hc) hc.hidden = !g;
   }
 
   // ---------- deep links that belong to the router ----------

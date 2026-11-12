@@ -145,6 +145,7 @@ def main():
                 assert (d / "sounds/explosion.wav").exists(), "Flint added the sound"
             # Files › Assets tile
             pg.evaluate("window.TribeApp && TribeApp.nav ? TribeApp.nav('docs') : document.querySelector('#nest-docs')?.click()"); time.sleep(0.8)
+            if pg.locator("#fg-new-menu").count(): pg.click("#fg-new-menu")   # feat/files-dash: Assets lives in + Create
             if pg.locator("#fg-assets").count():
                 pg.click("#fg-assets"); pg.wait_for_selector("#as-modal", timeout=5000); pg.keyboard.press("Escape")
             b.close()

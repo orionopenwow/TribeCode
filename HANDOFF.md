@@ -76,7 +76,8 @@ Pushing from the Claude cloud sandbox:
   - `signup.js`: the sign-up sheet (guest, account, providers), Save your work nudges, Forgot password (docs/ACCOUNTS.md › Sign up). Test: `app/test/e2e_signup.py`.
   - `app.js`: core views; `hostHere` auto-hosts on desktop.
   - `settings.js`: zero-step setup and the Settings page.
-  - `setuplocal.js` + `localfiles.js`: instant setup on this device with the home chosen last (GitHub repo, this computer, free cloud, phone), and All files with no tribe (docs/LIGHT-HOSTING.md).
+  - `setuplocal.js` + `localfiles.js`: instant setup on this device with the home chosen last (GitHub repo, this computer, free cloud, phone), and Files with no tribe (docs/LIGHT-HOSTING.md); local docs, sheets, slides, whiteboards, designs, websites and code files.
+  - `filesview.js`: the one Files dashboard (Home's and each project's): + Create (the Studio), tabs with stroke icons, Where (Mine · Everything · each tribe), sections by source, previews, ⋯ menu. Home also has Design, Code and Work-across-tribes pages (hub.js). The Marketplace falls back to `market-catalog.json` (scripts/dev/market-catalog.js) with no tribe. Tests: `e2e_files_rehaul.py`, `e2e_home_parity.py`.
   - `talent.js` + `workloop.js` + `workcore.js`: Work and its loop and suggestions; `doctpl.js` + `doctpl-data.js`: company templates (Guided / Advanced / ✦); `premium.js`: calm Premium gates (docs/PREMIUM.md).
   - `aiconsent.js`: asks once (per device and provider) before data first goes to a cloud AI; Settings › Privacy & safety revokes. `aibasics.js ask()` is the one ✦ AI path (tribe AI, then the in-browser model, then basic).
   - Public pages: `support.html`, `delete-account.html` (`support-contact.js` holds the one support address), `privacy.html`, `terms.html`.

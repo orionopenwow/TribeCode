@@ -1,15 +1,15 @@
 # Navigation
 
-Where every button goes, and the one router that keeps it continuous on desktop and phones. Code: `app/ui/router.js` (where you are, history, dead ends, stale panes), `app/ui/shell.js` (the destination registry `DEST`, the sidebar, tabs, breadcrumbs, palette), `app/ui/hub.js` (Home, All files, All code), `app/ui/app.js` (project views). Test: `app/test/e2e_nav.py`.
+Where every button goes, and the one router that keeps it continuous on desktop and phones. Code: `app/ui/router.js` (where you are, history, dead ends, stale panes), `app/ui/shell.js` (the destination registry `DEST`, the sidebar, tabs, breadcrumbs, palette), `app/ui/hub.js` (Home, Files, Design, Code), `app/ui/filesview.js` (the one Files dashboard, Home's and a project's), `app/ui/app.js` (project views). Test: `app/test/e2e_nav.py`.
 
 ## Two places
 
 | Place | What is on screen | Sidebar |
 | --- | --- | --- |
-| **Global** (your dashboard) | Home (updates), All files, All code, Work, Agent fleet | The global rows: Home · All files · All code · Work · Agent fleet |
+| **Global** (your dashboard) | Home (updates), Files, Design, Code, Work, Agent fleet | "Home · your dashboard", then the rows: Home · Files · Design · Code · Work · Agent fleet |
 | **Project** (inside a tribe) | Dashboard, Messages, Files, Design, Task Board (tabs), Agents Hub (tabs), Company… | The project's rows, under its header |
 
-`TribeRouter.where()` says which: `{ place: 'global', section: 'home' | 'docs' | 'repos' | 'work' | 'fleet', key }` or `{ place: 'project', project, view, key }`. The global sections only change the main pane; they never draw the project nest. With no tribe on the device, a project place is never shown: Home opens with a toast that says what to do.
+`TribeRouter.where()` says which: `{ place: 'global', section: 'home' | 'docs' | 'design' | 'repos' | 'work' | 'fleet', key }` or `{ place: 'project', project, view, key }`. The global sections only change the main pane; they never draw the project nest. With no tribe on the device, a project place is never shown: Home opens with a toast that says what to do.
 
 ## Route table
 
@@ -21,13 +21,14 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 | Rail: `+` (`#pj-plus`) | Create / join a project sheet (always has a close X; Esc closes) | sheet | |
 | Rail: Workshop (`#rail-workshop`, wrench) | Workshop layer over the current place (toggle) | layer | `#/workshop` |
 | Global: Home (`#nest-hub`) | `TribeHub.open('home')` | global | `#/hub` |
-| Global: All files (`#nest-docs-all`) | `TribeHub.open('docs')` | global | `#/hub/docs` |
-| Global: All code (`#nest-repos-all`) | `TribeHub.open('repos')` | global | `#/hub/repos` |
+| Global: Files (`#nest-docs-all`, key `docs-all` kept) | `TribeHub.open('docs')`: your files everywhere, Where = Mine · Everything · each tribe | global | `#/hub/docs` |
+| Global: Design (`#nest-design-all`) | `TribeHub.open('design')`: every canvas and whiteboard, on this device and in your tribes | global | `#/hub/design` |
+| Global: Code (`#nest-repos-all`, key `repos-all` kept) | `TribeHub.open('repos')`: the repos you're in, then your code files | global | `#/hub/repos` |
 | Global: Work (`#nest-work`) | `TribeTalent.open()`; with no tribe, its empty state (Start your first project · Join with a link · Back to Home) | global | `#/hub/work` |
 | Global: Agent fleet (`#nest-fleet`) | `TribeAgentsHub.open({ global: true })` | global | `#/fleet` |
 | Project: Dashboard (`#nest-overview`) | `App.show('home')` | project | |
 | Project: Messages (`#nest-chat`), streams | `App.show('chat')`, DMs, channels | project | |
-| Project: Files (`#nest-docs`) | Files tabs: Notes · Code · Docs · Website · Captures · Academy | project | `#/docs/<tab>` |
+| Project: Files (`#nest-docs`) | Files tabs (stroke icons): Files · Code · Docs · Website · Captures · Academy; the Files tab is the shared Files dashboard | project | `#/docs/<tab>` |
 | Project: Design (`#nest-canvas`) | The design canvas | project | |
 | Project: Task Board (`#nest-ws-tasks`) | Last tab: Board · Bugs · Proposals · Milestones · Calendar · Code repository · Visuals (· Roles · Requests) | project | `#/tasks/<tab>` |
 | Project: Agents Hub (`#nest-ws-agents`) | Dashboard + pinned tabs (Your agents, MCP, Ownership, Conflicts, Hand-offs, Reviews, Daily plan, Secretary) | project | `#/agents/<tab>` |
@@ -40,7 +41,7 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 | Phone Home rack | Home · Messages · Files · Agents · Projects sheet | global | as above |
 | Phone project rack | Home · Chat · Docs · Updates · Tasks | project | |
 | Phone side panel (`#menu-btn`, swipe) | The same sidebar rows | either | |
-| Deep links | `#/hub`, `#/hub/docs`, `#/hub/repos`, `#/hub/work`, `#/fleet`, `#/tasks/<tab>`, `#/agents/<tab>`, `#/docs/<tab>`, `#/workshop`, `#/market`, `#/studios` | | |
+| Deep links | `#/hub`, `#/hub/docs`, `#/hub/design`, `#/hub/repos`, `#/hub/work`, `#/fleet`, `#/tasks/<tab>`, `#/agents/<tab>`, `#/docs/<tab>`, `#/workshop`, `#/market`, `#/studios` | | |
 
 ## Rules the router keeps
 
@@ -49,4 +50,5 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 - **Esc closes the top layer** (palette, popover, menu, sheet, modal, Workshop, Guide, preview), never the place underneath. Back moves between places.
 - **No dead ends.** Every view keeps a visible way back: the logo (always Home), the sidebar rows, and on empty states a "Back to Home" button. The create/join sheet always has a close X.
 - **No stale panes.** After every move exactly one `.main > section[id^="view-"]` is visible, and `body.global` matches the place, so a page from the previous dashboard can't stay mounted under the new one.
+- **Home is obvious.** On any global page the rail logo is lit (`#rail-logo.on`, `aria-current="page"`), the sidebar starts with "Home · your dashboard" (`#nest-home-h`), each page starts with a "Home ›" breadcrumb (`.hub-crumb`, and `#crumb-home` in the title bar), and Home's top card is a band across the whole content area.
 - **Active state.** The lit row is the destination on screen (`TribeShell.current()`): a global section lights its global row, a workspace tab lights its workspace row.

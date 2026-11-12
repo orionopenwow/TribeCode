@@ -82,7 +82,7 @@ def rows(page, sel):
 
 
 def tabs(page):
-    return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.childNodes[0].textContent.trim())")
+    return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim())")
 
 
 def no_dupes(page):
@@ -94,7 +94,7 @@ def no_dupes(page):
 
 # ---- the one router (app/ui/router.js, docs/NAVIGATION.md): global sections keep the global dashboard, Back works,
 # Work with no tribe stays global with a next step, the logo is always Home, one pane on screen, no dead ends.
-GLOBAL = [("nest-hub", "hub", "Home", "#/hub"), ("nest-docs-all", "docs-all", "All files", "#/hub/docs"), ("nest-repos-all", "repos-all", "All code", "#/hub/repos"),
+GLOBAL = [("nest-hub", "hub", "Your dashboard", "#/hub"), ("nest-docs-all", "docs-all", "Files", "#/hub/docs"), ("nest-design-all", "design-all", "Design", "#/hub/design"), ("nest-repos-all", "repos-all", "Code", "#/hub/repos"),
           ("nest-work", "work", "Work", "#/hub/work"), ("nest-fleet", "fleet", "Agent fleet", "#/fleet")]
 STATE = """() => ({ view: document.body.dataset.view, global: document.body.classList.contains('global'), place: TribeRouter.where().place,
   lit: [...document.querySelectorAll('.side [data-pnav].on')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
@@ -116,6 +116,7 @@ def check_global(page, row, key, crumb, hsh, tribe):
     assert st["lit"] == [key], (row, st["lit"])
     assert len(st["panes"]) == 1, (row, st["panes"])   # no stale panes from the previous dashboard
     assert st["crumb"] == crumb and st["hash"] == hsh, (row, st)
+    assert page.evaluate("document.querySelector('#rail-logo').classList.contains('on') && !document.querySelector('#crumb-home').hidden"), (row, "Home is lit")   # feat/files-dash
     return st
 
 
@@ -244,7 +245,8 @@ def main():
             host.mouse.move(720, 600); shot(host, "nav-tabs-bugs")
             # remembered: away and back lands on Bugs
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
-            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["📝 Notes", "🌐 Website", "📎 Captures", "🎓 Academy"], tabs(host)   # Files: one emoji row (v0.27: + Academy)
+            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Files", "Website", "Captures", "Academy"], tabs(host)   # Files: one row, a small stroke icon each (feat/files-dash)
+            assert host.eval_on_selector_all("#view-tabs [data-tab]", "e => e.every(x => x.querySelector('svg.fx-i'))")
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-bugs:not(.hidden)")
             # Requests shows up as a tab only while something waits
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project=pid); assert st == 200, r
