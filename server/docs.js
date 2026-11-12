@@ -119,5 +119,5 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
   }
 
   const live = makeLive({ read, write, str });
-  return { route, list, read, find, upsert, live, save: write, create: o => { const now = new Date().toISOString(); const title = str(o.title, 120) || 'Untitled'; return write({ slug: uniqueSlug(title), title, by: o.by, created: now, updated: now, updatedBy: o.by, version: 1, kind: KINDS.has(o.kind) ? o.kind : undefined, body: String(o.body || '').slice(0, 400_000) }); } };
+  return { route, list, read, find, upsert, live, save: write, remove: slug => { live.drop(slug); store.remove(rel(slug)); store.remove(sumRel(slug)); broadcast({ type: 'doc-removed', slug }); }, create: o => { const now = new Date().toISOString(); const title = str(o.title, 120) || 'Untitled'; return write({ slug: uniqueSlug(title), title, by: o.by, created: now, updated: now, updatedBy: o.by, version: 1, kind: KINDS.has(o.kind) ? o.kind : undefined, body: String(o.body || '').slice(0, 400_000) }); } };
 };
