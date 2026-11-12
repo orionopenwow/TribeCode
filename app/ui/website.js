@@ -61,6 +61,9 @@
     const d = data, m = d.canManage;
     section().innerHTML = `<div class="wb" id="wb-root">
       <div class="wb-edit">
+        <section class="wb-sec wb-designer" id="wb-designer"><div class="sec-head"><span class="eyebrow">Website designer</span><h2>Design it block by block</h2></div>
+          <p class="wb-hint">Templates, pages, buttons that go somewhere, pictures, a real dark mode, Undo, and Download HTML. Flint edits it with you, free.</p>
+          <div class="wb-acts"><button class="btn primary" id="wb-design" type="button">Open the designer</button></div></section>
         <section class="wb-sec wb-gen" id="wb-gen"></section>
         <section class="wb-sec">
           <div class="sec-head"><span class="eyebrow">Page text</span><h2>What it says</h2></div>
@@ -113,6 +116,7 @@
       catch (e) { toast(e.message); $('#wb-auto').setAttribute('aria-checked', String(!on)); }
     };
     if ($('#wb-save')) $('#wb-save').onclick = () => save().then(ok => ok && toast('Saved'));
+    const wd = $('#wb-design'); if (wd) wd.onclick = () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: pid() });   // feat/flint-site: the website designer
     const wt = $('#wb-tpl'); if (wt) wt.onclick = () => window.TribeSiteLib && window.TribeSiteLib.open();   // website templates (sitelib.js)
     $('#wb-build').onclick = async () => {
       const b = $('#wb-build'); b.disabled = true; b.textContent = 'Building…';

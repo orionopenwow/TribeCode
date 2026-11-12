@@ -545,7 +545,7 @@
     if (/\b(?:website designer|site designer|designer)\b/.test(c) && !/\bhire\b/.test(c)) return hit('site.open', {}, 0.96);
     if (/\b(?:edit|design|redesign|work on)\s+(?:my|our|the)\s+(?:website|site)$/.test(c) || /\b(?:turn|make)\s+(?:this|it)\s+(?:into\s+)?(?:a\s+)?(?:real\s+)?(?:website|site)\b/.test(c)) return hit('site.open', {}, 0.96);
     // a template from what the site is for
-    if (view === 'site' && !/\b(?:template|start over|from scratch)\b/.test(c)) return out;
+    if (view === 'site' && !ctx.start && !/\b(?:template|start over|from scratch)\b/.test(c)) return out;   // in the designer a template needs asking for, unless nothing is designed yet
     if (/\b(?:post|doc|email|essay|letter|memo|note|task|slides|sheet|tweet|caption|poem|story)\b/.test(c) && !/\btemplate\b/.test(c)) return out;
     let best = null, bl = 0;
     for (const [k, tags] of Object.entries(TPL_TAGS)) for (const tg of tags) if (tg.length > bl && new RegExp(`\\b${tg}\\b`).test(c)) { best = k; bl = tg.length; }

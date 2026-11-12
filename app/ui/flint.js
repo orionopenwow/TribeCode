@@ -47,6 +47,7 @@
     inspoApply: to => window.TribeInspo && window.TribeInspo.apply(to || 'both'),
     connect: () => App() && App().connectClaude && App().connectClaude(),
     brain: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
+    credits: () => window.TribePremium && window.TribePremium.gate('credits'),   // feat/flint-site: the one AI-boost pair (aiboost.js)
     guide: slug => window.TribeGuide && window.TribeGuide.open(slug || undefined),
     note: id => { if (Hub() && Hub().openNote) Hub().openNote(id); else if (Hub()) Hub().open('docs'); },
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
@@ -388,8 +389,8 @@
     const g = triedGuide ? null : await guideSearch(text);
     if (g) return say(`I'm in basic mode, but the Guide might help. ${g.title}: ${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
     // flint-local: the honest card. With no AI, Flint still does a lot (see "what can you do"); this one needs more.
-    return say('I\'m in basic mode (no AI), and that one is more than I can do on my own. Without one I still add, finish and assign tasks, tell people things, schedule, switch themes, build from templates and answer how-to questions from the docs. For this, hand it to your AI helper or give me a brain.',
-      [act('Ask my AI helper', 'agents'), act('Give Flint a brain', 'brain'), act('What can you do?', 'ask', 'what can you do')]);
+    return say('This one needs an AI. I\'m in basic mode (no AI), so nothing changed. Free · no AI: I add, finish and assign tasks, tell people things, schedule, switch themes, design websites and screens from templates, and answer how-to questions from the docs. With an AI: it reads what you mean and does this one too.',
+      [act('Use my AI (free)', 'brain'), act('Get credits / Premium', 'credits'), act('What can you do?', 'ask', 'what can you do')]);
   }
 
   // ---------- a brain: built in (this browser, WebLLM) or the tribe's (server/flint.js → server/llm.js), streamed ----------

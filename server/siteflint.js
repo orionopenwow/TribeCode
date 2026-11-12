@@ -19,6 +19,7 @@ const sitegen = require('./sitegen');
 const core = require('../app/ui/siteedit-core.js');
 
 const MAX_VERSIONS = 60, MAX_UNDO = 40;
+const cut = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o == null ? null : o));
 const err = (status, msg, extra) => Object.assign(new Error(msg), { status }, extra || {});
@@ -195,16 +196,20 @@ module.exports = function siteflint({ P, base, showcase, nameOf = id => id, llm 
     saveV(pid, v);
     return { say: 'Undid the last change.', via: 'rules', ops: [{ op: 'undo' }], undo: v.undo.length };
   }
+  // feat/flint-site: versions also keep the website designer's config (server/sitedesign.js), so a version restores both
+  let cfgHook = null; const useConfig = h => { cfgHook = h; };
+  const cfgOf = pid => { try { return cfgHook ? cfgHook.load(pid) : null; } catch { return null; } };
   function saveNamed(pid, me, note) {
-    const st = showcase.load(pid); if (!st.gen) throw err(409, 'make the website first: there is nothing to save yet');
+    const st = showcase.load(pid), cfg = cfgOf(pid); if (!st.gen && !cfg) throw err(409, 'make the website first: there is nothing to save yet');
     const v = loadV(pid), n = sitegen.clean(String(note || ''), 80) || `Version ${v.versions.filter(x => !x.auto).length + 1}`;
-    const it = { id: 'v' + Date.now().toString(36) + crypto.randomBytes(2).toString('hex'), at: new Date().toISOString(), by: me.id, note: n, auto: false, snap: snap(st) };
+    const it = { id: 'v' + Date.now().toString(36) + crypto.randomBytes(2).toString('hex'), at: new Date().toISOString(), by: me.id, note: n, auto: false, snap: snap(st), ...(cfg ? { cfg } : {}) };
     v.versions.push(it); saveV(pid, v); showcase.push(pid);
     return it;
   }
   function restore(pid, vid, me) {
     if (!showcase.canDraft(me)) throw err(403, 'only builders can edit the website');
     const v = loadV(pid), it = v.versions.find(x => x.id === vid); if (!it) throw err(404, 'that version is gone');
+    if (it.cfg && cfgHook) { cfgHook.save(pid, clone(it.cfg)); if (!it.snap.gen) return { say: `Restored “${it.note}”.`, undo: loadV(pid).undo.length, cfg: it.cfg }; }
     const st = showcase.load(pid), before = snap(st);
     st.gen = clone(it.snap.gen); if (showcase.canManage(pid, me)) st.brand = clone(it.snap.brand);
     commit(pid, st, me);
@@ -245,9 +250,16 @@ ${logo}<text x="34" y="19" font-size="8" font-family="sans-serif" fill="${pal.in
 <rect x="168" y="40" width="56" height="76" fill="${pal.primary}"/>${rows}</svg>`;
   }
   const thumbUrl = (pid, s) => 'data:image/svg+xml;base64,' + Buffer.from(thumb(pid, s)).toString('base64');
+  function cfgThumb(c) {   // a flat thumbnail of a designer version: its colors, name, first headline and a band per block
+    const t = (c && c.theme) || {}, k = t.colors || {}, pg = ((c && c.pages) || [])[0] || { blocks: [] }, hero = (pg.blocks.find(b => b.type === 'hero' || b.type === 'links') || {}).props || {};
+    const col = v => (/^#[0-9a-f]{3,8}$/i.test(v || '') ? v : '#888888'), dark = t.mode === 'dark' && t.base !== 'dark';
+    const bg = dark ? '#16181B' : col(k.bg), ink = dark ? '#F1EEE8' : col(k.ink);
+    const rows = pg.blocks.slice(1, 6).map((b, i) => `<rect x="16" y="${128 + i * 18}" width="208" height="12" fill="${i % 2 ? col(k.line) : col(k.card)}"/>`).join('');
+    return 'data:image/svg+xml;base64,' + Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" fill="${bg}"/><text x="16" y="30" font-size="10" font-family="sans-serif" fill="${ink}">${esc(cut(c.name || '', 30))}</text><text x="16" y="70" font-size="16" font-family="serif" fill="${ink}">${esc(cut(hero.title || hero.name || '', 24))}</text><rect x="16" y="90" width="64" height="18" fill="${col(k.accent)}"/>${rows}</svg>`).toString('base64');
+  }
   function list(pid) {
     const v = loadV(pid), st = showcase.load(pid);
-    const out = v.versions.slice().reverse().map(x => ({ id: x.id, at: x.at, by: x.by, byName: nameOf(x.by), note: x.note, auto: !!x.auto, layout: (x.snap.gen || {}).layout, headline: (((x.snap.gen || {}).copy || {}).hero || {}).title || '', thumb: thumbUrl(pid, x.snap) }));
+    const out = v.versions.slice().reverse().map(x => ({ id: x.id, at: x.at, by: x.by, byName: nameOf(x.by), note: x.note, auto: !!x.auto, layout: (x.snap.gen || {}).layout, headline: (((x.snap.gen || {}).copy || {}).hero || {}).title || (x.cfg && ((((x.cfg.pages || [])[0] || {}).blocks || []).find(b => b.type === 'hero' || b.type === 'links') || { props: {} }).props.title) || '', designer: !!x.cfg, thumb: x.cfg && !x.snap.gen ? cfgThumb(x.cfg) : thumbUrl(pid, x.snap) }));
     return { versions: out, saved: out.filter(x => !x.auto), recent: out.filter(x => x.auto).slice(0, 12), undo: v.undo.length, current: st.gen ? { thumb: thumbUrl(pid, snap(st)), headline: ((st.gen.copy || {}).hero || {}).title || '' } : null };
   }
 
@@ -267,5 +279,5 @@ ${logo}<text x="34" y="19" font-size="8" font-family="sans-serif" fill="${pal.in
     } catch (e) { return send(res, e.status || 500, { error: e.message, help: !!e.help }); }
     return null;
   }
-  return { route, flint, undo, list, compare, thumb };
+  return { route, flint, undo, list, compare, thumb, useConfig };
 };

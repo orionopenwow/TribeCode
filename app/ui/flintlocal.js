@@ -72,7 +72,7 @@
     forgot: ['Forgot “{s}”.', 'Olvidé “{s}”.', 'Esqueci “{s}”.', 'J’ai oublié « {s} ».', '„{s}“ vergessen.', '「{s}」を忘れました。', '已忘记“{s}”。', '“{s}”을(를) 잊었어요.'],
     meant: ['Thanks. Next time “{s}” means: {m}.', 'Gracias. La próxima vez “{s}” significa: {m}.', 'Valeu. Da próxima vez “{s}” significa: {m}.', 'Merci. La prochaine fois, « {s} » voudra dire : {m}.', 'Danke. Nächstes Mal heißt „{s}“: {m}.', 'ありがとう。次から「{s}」は「{m}」の意味にします。', '谢谢。下次“{s}”就是：{m}。', '고마워요. 다음엔 “{s}”을(를) “{m}”(으)로 알게요.'],
     didYou: ['I’m not sure what you mean. One of these?', 'No estoy seguro. ¿Alguna de estas?', 'Não tenho certeza. Uma destas?', 'Je ne suis pas sûr. L’une de celles-ci ?', 'Nicht ganz sicher. Eins davon?', 'よくわかりませんでした。どれかですか？', '我不太确定。是这些之一吗？', '잘 모르겠어요. 이 중 하나인가요?'],
-    beyond: ['That’s more than I can do on my own, with no AI. I can hand it to your AI helper, or you can give me a brain.', 'Eso es más de lo que puedo hacer solo, sin IA. Puedo pasárselo a tu asistente de IA, o puedes darme un cerebro.', 'Isso é mais do que consigo sozinho, sem IA. Posso passar ao seu assistente de IA, ou você pode me dar um cérebro.', 'C’est au-delà de ce que je fais seul, sans IA. Je peux le confier à votre assistant IA, ou vous pouvez me donner un cerveau.', 'Das schaffe ich ohne KI nicht allein. Ich kann es deinem KI-Helfer geben, oder du gibst mir ein Gehirn.', 'AIなしでは私だけでは難しいです。AIヘルパーに渡すか、私に頭脳を与えてください。', '没有 AI 我一个人做不到。我可以交给你的 AI 助手，或者给我一个大脑。', 'AI 없이 혼자 하기엔 어려워요. AI 도우미에게 넘기거나 저에게 두뇌를 주세요.'],
+    beyond: ['This one needs an AI, so nothing changed. Use my AI connects your own for free; Get credits / Premium uses ours.', 'Eso es más de lo que puedo hacer solo, sin IA. Puedo pasárselo a tu asistente de IA, o puedes darme un cerebro.', 'Isso é mais do que consigo sozinho, sem IA. Posso passar ao seu assistente de IA, ou você pode me dar um cérebro.', 'C’est au-delà de ce que je fais seul, sans IA. Je peux le confier à votre assistant IA, ou vous pouvez me donner un cerveau.', 'Das schaffe ich ohne KI nicht allein. Ich kann es deinem KI-Helfer geben, oder du gibst mir ein Gehirn.', 'AIなしでは私だけでは難しいです。AIヘルパーに渡すか、私に頭脳を与えてください。', '没有 AI 我一个人做不到。我可以交给你的 AI 助手，或者给我一个大脑。', 'AI 없이 혼자 하기엔 어려워요. AI 도우미에게 넘기거나 저에게 두뇌를 주세요.'],
     pickFirst: ['Pick something in the preview (Edit) or select a layer on the canvas first, then tell me how to change it.', 'Primero elige algo en la vista previa (Editar) o una capa en el lienzo, y dime cómo cambiarlo.', 'Primeiro escolha algo na prévia (Editar) ou uma camada no canvas, e diga como mudar.', 'Choisissez d’abord un élément dans l’aperçu (Modifier) ou un calque, puis dites-moi quoi changer.', 'Wähle erst etwas in der Vorschau (Bearbeiten) oder eine Ebene aus und sag mir, was sich ändern soll.', 'まずプレビュー（編集）で要素か、キャンバスでレイヤーを選んでください。', '先在预览（编辑）里选一个元素或在画布上选图层，再告诉我怎么改。', '먼저 미리보기(편집)에서 요소나 캔버스의 레이어를 고른 뒤 바꿀 내용을 말해 주세요.'],
     kb: ['From {src} › {h}: {s}', 'De {src} › {h}: {s}', 'De {src} › {h}: {s}', 'D’après {src} › {h} : {s}', 'Aus {src} › {h}: {s}', '{src} › {h}より: {s}', '来自 {src} › {h}：{s}', '{src} › {h}: {s}'],
     multi: ['Done: {list}', 'Hecho: {list}', 'Feito: {list}', 'Fait : {list}', 'Erledigt: {list}', '完了: {list}', '完成：{list}', '완료: {list}'],
@@ -174,7 +174,7 @@
       studios: ['TribeStudios', g => g.open()], company: ['TribeCompany', g => g.go()], assets: ['TribeAssets', g => g.open({})], academy: ['TribeAcademy', g => g.open({})],
       secretary: ['TribeSecretary', g => g.open()], personalize: ['TribePersonalize', g => g.open('you')], profile: ['TribePersonalize', g => g.open('you')], customize: ['TribeLook', g => g.open('tribe')],
       jam: ['TribeJam', g => g.open()], publish: ['TribePublish', g => g.open()], search: ['TribePalette', g => g.open()], shortcuts: ['TribeHelp', g => g.shortcuts()], notes: ['TribeCaptures', g => g.open()],
-      inbox: ['TribeNotify', g => g.openInbox()], dms: ['TribeDM', g => g.open && g.open()], brainpick: ['TribeBrain', g => g.open()], templates: ['TribeSiteLib', g => g.open({ pid: C && C.project && C.project() })],
+      inbox: ['TribeNotify', g => g.openInbox()], inspo: ['TribeInspoBoard', g => g.open({})], dms: ['TribeDM', g => g.open && g.open()], brainpick: ['TribeBrain', g => g.open()], templates: ['TribeSiteLib', g => g.open({ pid: C && C.project && C.project() })],
     };
     const e = map[key]; if (e && W[e[0]]) { try { e[1](W[e[0]]); return true; } catch { return false; } }
     const Sh = W.TribeShell; if (Sh && Sh.dests && Sh.go && (Sh.dests() || []).some(d => d.key === key)) { Sh.go(key); return true; }
@@ -272,6 +272,16 @@
       const dueT = (await tasks(true)).filter(x => x.status !== 'done' && x.due && x.due >= a && x.due <= b);
       const items = evs.map(e => `${e.title}${e.time ? ' ' + e.time : ''}${e.date && a !== b ? ' (' + day(e.date) + ')' : ''}`).concat(dueT.map(x => `✓ ${x.title}`));
       return { text: items.length ? T('calList', { w, list: items.slice(0, 8).join(' · ') }) : T('calNone', { w }), acts: [['Open Calendar', 'nav', 'calendar']] };
+    }
+    // feat/flint-site: lessons, redo, Premium, and the website designer
+    if (id === 'lesson') { const L = window.TribeFlintLessons; if (L && L.open(sl.feature)) return { text: `Here is a short lesson on ${L.LESSONS[sl.feature].title.replace(/^The /, 'the ')}. Show me points at the real thing.`, sum: 'opened a lesson' }; return { text: T('noPlace', { x: 'Lessons' }) }; }
+    if (id === 'redo') { const D = window.TribeSiteDesigner, st = D && D.state && D.state(); if (st && st.open) { D.redo(); return { text: 'Redone.' }; } return { text: 'Redo works in the website designer and on the canvas (Ctrl Shift Z). Here, say what to do again.' }; }
+    if (id === 'premium.open') { const Pm = window.TribePremium; if (Pm) { if (/credit/i.test(s.text || '')) Pm.gate('credits'); else Pm.open(); } return { text: 'Here is what is free and what Premium adds. Everything local stays free.', sum: 'opened Premium' }; }
+    if (id === 'site.open' || (/^site\./.test(id) && window.TribeSiteDesigner && ((window.TribeSiteDesigner.state() || {}).open))) {
+      const D = window.TribeSiteDesigner; if (!D) return { text: T('noPlace', { x: 'Website designer' }) };
+      const tpl = id.slice(5), isTpl = !!(window.TribeSiteCfg && window.TribeSiteCfg.TEMPLATES.includes(tpl));
+      if ((D.state() || {}).open && id !== 'site.open' && !isTpl) { await D.ask(s.text); return { said: true, sum: 'changed the website' }; }
+      await D.open(isTpl ? { template: tpl } : {}); return { text: isTpl ? `Opened the website designer with the ${s.label || tpl} template.` : 'Opened the website designer.', sum: 'opened the website designer' };
     }
     if (/^(build\.|site\.)/.test(id) && id !== 'site.gallery') {
       const nm = sl.name ? ` called ${sl.name}` : '', style = sl.mode ? ` in ${sl.mode} mode` : sl.color ? ` in ${sl.color.name}` : '';

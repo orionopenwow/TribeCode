@@ -1,0 +1,11 @@
+/* The one "this needs an AI" card (app/ui/aiboost.js): flat, 1px border, two rows, two buttons. */
+.boost { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); padding: 10px 12px; display: grid; gap: 6px; font-size: 13px; line-height: 1.45; }
+.boost p { margin: 0; }
+.boost-t b { color: var(--text); }
+.boost-ask { color: var(--muted); }
+.boost-row { display: grid; grid-template-columns: 88px 1fr; gap: 8px; color: var(--muted); }
+.boost-k { font: 600 10.5px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+.boost-k.is-ai { color: var(--accent); }
+.boost-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.boost-sub { font-weight: 400; opacity: .8; margin-left: 4px; }
+@media (max-width: 520px) { .boost-row { grid-template-columns: 1fr; gap: 0; } .boost-acts .btn { min-height: 44px; flex: 1; } }

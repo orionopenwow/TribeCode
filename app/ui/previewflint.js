@@ -13,7 +13,7 @@
 // notes applied together (Apply all), and the build history with one-click restore (/api/projects/:id/flint/history).
 // Flint's free tier (server/flintfree.js, docs/FLINT-TIERS.md): "make a 3D game", "a to-do app", "a landing page for …"
 // build from a recipe with no AI (POST /api/projects/:id/flint/build); a request that needs real engineering gets an honest
-// card (POST /api/flint/tier) with "Send to my AI helper" and, when the tribe has one, "Try the tribe's AI".
+// card (POST /api/flint/tier): the one AI-boost card (aiboost.js) with "Use my AI" and "Get credits / Premium".
 (function () {
   const C = window.TribeClient; if (!C) return;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -73,6 +73,7 @@
     el.querySelector('#pvf-add').onclick = () => { const ta2 = el.querySelector('#pvf-in'), t = ta2.value.trim(); if (!t) return ta2.focus(); notes.push({ text: t, pick: picked }); ta2.value = ''; paintQueue(); ta2.focus(); };
     wireProps();
     if (!items.length) feed({ k: 'flint', text: 'I’m watching the preview. Describe a change, or pick something on the page with Edit.' });
+    if (window.TribeBoost) window.TribeBoost.bind(el, { onAI: t => { const agents = (C.state().members || []).some(m => m.role === 'agent'); if (agents && pending) { const p = pending; pending = null; askAgents(p.text, p.pick); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // feat/flint-site: the one AI-boost card
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-pvf]'); if (!a) return;
       if (a.dataset.pvf === 'hide') setOpen(false);
@@ -150,7 +151,7 @@
     const t = el && el.querySelector('#pvf-tier-t'); if (!t) return;
     const T = await loadTiers(), host = (T.now && T.now.host) || {}, B = window.TribeBrain, dev = B && B.choice && B.choice() === 'browser' && B.browserReady && B.browserReady();
     if (isSite()) { t.textContent = host.online ? `Website edits are free · anything else goes to ${host.via || 'the tribe’s AI'}` : 'Website edits are free and need no AI'; return; }
-    t.textContent = dev ? 'Edits and first builds free · small model on this device' : host.online ? `Edits and first builds free · tribe AI: ${host.via || 'on'}` : 'Edits and first builds need no AI · bigger jobs go to your AI helper';
+    t.textContent = dev ? 'Edits and first builds free · small model on this device' : host.online ? `Edits and first builds free · tribe AI: ${host.via || 'on'}` : 'Edits and first builds need no AI · bigger jobs need an AI (yours, or credits)';
   }
   function paintChips() { const c = el && el.querySelector('#pvf-chips'); if (c) c.innerHTML = chips().map(t => `<button type="button" class="chip" data-chip="${esc(t)}">${esc(t)}</button>`).join(''); }
   function paintPick() {
@@ -248,8 +249,7 @@
     pending = { text, pick: pickNow };
     const T = await loadTiers(), host = ((T.now || {}).host) || {};
     const agents = (C.state().members || []).some(m => m.role === 'agent');
-    feed({ k: 'flint', html: `<span class="pvf-honest"><b>Bigger than my free tier.</b> ${esc(tier.why)}</span>
-      <span class="pvf-acts"><button type="button" class="btn sm primary" data-pvf="hand">${agents ? 'Send to my AI helper' : 'Post it for my AI helper'}</button>${host.online ? `<button type="button" class="btn sm" data-pvf="tribeai">Try the tribe's AI${host.via ? ` (${esc(host.via)})` : ''}</button>` : ''}</span>` });
+    feed({ k: 'flint', html: window.TribeBoost ? window.TribeBoost.html({ did: `Nothing changed yet. ${tier.why || ''}`.trim(), would: 'An AI makes this change in your code, and the preview reloads as it saves.', ask: text }) : esc(tier.why) });
   }
   async function askFlint(text) {
     const T = window.TribeFlint, before = (T.thread() || []).length;

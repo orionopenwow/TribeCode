@@ -83,6 +83,7 @@
     else st.height = px(n.h);
     st['box-sizing'] = 'border-box';
     if (n.fill && !isText && n.t !== 'group') st.background = n.fill;
+    if (n.img && !isText && /^(data:image\/|https?:|\/)/.test(n.img)) { st['background-image'] = `url("${String(n.img).replace(/["\\\n]/g, '')}")`; st['background-size'] = 'cover'; st['background-position'] = 'center'; }   // feat/flint-site: a picture fill
     if (n.stroke && n.sw) st.border = `${px(n.sw)} solid ${n.stroke}`;
     if (n.t === 'ellipse') st['border-radius'] = '50%';
     else if (n.r) st['border-radius'] = px(n.r);
@@ -136,14 +137,19 @@
       const c = cls(look.name || look.t);
       rules.push(`.${c} { ${cssText(st)} }`);
       const pad = '  '.repeat(depth);
+      // feat/flint-site: a layer wired to a screen or a web address becomes a real link
+      const href = look.link ? (look.link.url && /^(https?:|mailto:)/.test(look.link.url) ? look.link.url : look.link.name ? '#' + String(look.link.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '') : '';
       if (look.t === 'text') {
         const tag = (look.tx && look.tx.s >= 28) ? 'h2' : 'p';
-        return `${pad}<${tag} class="${c}">${esc(look.tx ? look.tx.c : '')}</${tag}>`;
+        const body = esc(look.tx ? look.tx.c : '');
+        return `${pad}<${tag} class="${c}">${href ? `<a href="${esc(href)}">${body}</a>` : body}</${tag}>`;
       }
       const kids = n.t === 'instance' ? S.kids(n.comp) : S.kids(n.id);
       const nextInst = n.t === 'instance' ? n : inst;
       const inner = kids.map(k => emit(k, look, depth + 1, nextInst)).filter(Boolean).join('\n');
-      const tag = depth === 0 ? 'section' : 'div';
+      const tag = depth === 0 ? 'section' : href ? 'a' : 'div';
+      if (href && depth > 0) return `${pad}<a class="${c}" href="${esc(href)}">${inner ? `\n${inner}\n${pad}` : ''}</a>`;
+      if (depth === 0) { const id = String(look.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); if (id) return inner ? `${pad}<${tag} class="${c}" id="${id}">\n${inner}\n${pad}</${tag}>` : `${pad}<${tag} class="${c}" id="${id}"></${tag}>`; }
       return inner ? `${pad}<${tag} class="${c}">\n${inner}\n${pad}</${tag}>` : `${pad}<${tag} class="${c}"></${tag}>`;
     }
     const html = emit(top, null, 0, null);

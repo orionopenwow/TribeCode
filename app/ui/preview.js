@@ -26,6 +26,7 @@
     shot: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     gear: '<path d="M10.3 2.6h3.4l.5 2.6a7.3 7.3 0 0 1 1.9 1.1l2.5-.9 1.7 2.9-2 1.8a7.4 7.4 0 0 1 0 2.2l2 1.8-1.7 2.9-2.5-.9a7.3 7.3 0 0 1-1.9 1.1l-.5 2.6h-3.4l-.5-2.6a7.3 7.3 0 0 1-1.9-1.1l-2.5.9-1.7-2.9 2-1.8a7.4 7.4 0 0 1 0-2.2l-2-1.8 1.7-2.9 2.5.9a7.3 7.3 0 0 1 1.9-1.1z"/><circle cx="12" cy="12" r="2.8"/>',
     play: '<path d="M8 5v14l11-7z"/>',
+    design: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M9 9v11"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     chev: '<path d="m7 10 5 5 5-5"/>',
     more: '<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',
@@ -103,6 +104,7 @@
         <button class="pvw-btn" data-act="tab" title="Open in a new browser tab" aria-label="Open in a new browser tab">${ico(I.tab)}</button>
         <button class="pvw-btn" data-act="share" title="Copy a link friends can open on their phone" aria-label="Copy share link">${ico(I.link)}</button>
         <button class="pvw-btn pvw-edit" data-act="edit" title="Select: click anything on the page, then say what to change (double-click text to type over it)" aria-label="Select something on the page" aria-pressed="false"><svg class="pvw-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><span>Select</span></button>
+        <button class="pvw-btn pvw-design" data-act="design" title="Open the website designer: blocks, pages, wiring, dark mode, Download HTML" aria-label="Design the website">${ico(I.design)}<span>Design</span></button>
         <button class="pvw-btn pvw-saved" data-act="shelf" title="Saved versions of the website: compare and restore" aria-label="Saved versions" aria-pressed="false">${ico(I.saved)}<span>Saved</span></button>
         <span class="pvw-morew"><button class="pvw-btn" data-act="more" title="More" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico(I.more)}</button>
           <span class="pvw-more hidden" id="pvw-more" role="menu">
@@ -123,7 +125,7 @@
       const j = e.target.closest('[data-jump]'); if (j) return jump(j.dataset.jump);
       const a = e.target.closest('[data-act]'); if (!a) return;
       if (a.dataset.act !== 'more') moreMenu(false);
-      ({ back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, shelf: () => toggleShelf(), mksite: () => makeSite(a), builder: toBuilder, tosite: () => setSource('site'), toapp: () => setSource('app'), unzoom: resetZoom, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
+      ({ design: () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: C.project() }), back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, shelf: () => toggleShelf(), mksite: () => makeSite(a), builder: toBuilder, tosite: () => setSource('site'), toapp: () => setSource('app'), unzoom: resetZoom, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
         home: () => window.TribeFolders && window.TribeFolders.home() })[a.dataset.act]?.();   // Home Screen / desktop shortcut (app/ui/folders.js)
     });
     return el;
@@ -331,6 +333,7 @@
     pane.dataset.showing = src; pane.classList.toggle('src-site', src === 'site');
     pane.querySelectorAll('[data-src]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.src === src)));
     pane.querySelector('.pvw-saved').classList.toggle('hidden', src !== 'site');
+    { const d = pane.querySelector('.pvw-design'); if (d) d.classList.toggle('hidden', src !== 'site'); }
     paintPh();
     if (src === 'site') return renderSite();
     pane.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.dev === (phone ? pdev : device))));
