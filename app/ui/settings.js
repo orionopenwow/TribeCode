@@ -61,12 +61,16 @@
   }
   function close() { modal().classList.add('hidden'); window.TribeApp && window.TribeApp.refresh(); }
   const moreOpen = () => { try { return localStorage.getItem('tribecode.set.more') === '1'; } catch { return false; } };   // qa-qol-2: "More settings" stays as you left it
-  function row(label, control, hint = '') { return `<div class="set-row"><div class="set-l"><b>${label}</b>${hint ? `<small>${hint}</small>` : ''}</div><div class="set-c">${control}</div></div>`; }
+  // feat/shell-polish: a quiet stroke icon beside each section's name (app/ui/icons.js)
+  const SET_ICO = { Plan: 'bolt', Personalize: 'sparkle', Profile: 'user', Experience: 'sliders', Name: 'rename', Color: 'palette', Language: 'globe', Look: 'palette', Folder: 'files', "Flint's brain": 'flame', 'Local brain': 'flame', 'Host on this computer': 'monitor', 'Open at login': 'monitor', 'Download updates in the background': 'download', 'Friends can ask my AI': 'people', GitHub: 'github', 'Save a copy': 'download', 'TribeCode MCP': 'plug', Chat: 'chat', 'Sign-in': 'key', 'Start fresh': 'refresh', 'Fix problems': 'wrench', 'Crash reports': 'bug', 'Agents in chat': 'agent', 'Starting modes': 'sliders', 'Roles &amp; privileges': 'shield', Packs: 'assets', Backup: 'cloud', 'Freesound sounds': 'media' };
+  const setIco = label => SET_ICO[label] ? `<span data-icon="${SET_ICO[label]}"></span>` : '';
+  function row(label, control, hint = '') { return `<div class="set-row"><div class="set-l"><b>${setIco(label)}${label}</b>${hint ? `<small>${hint}</small>` : ''}</div><div class="set-c">${control}</div></div>`; }
   function draw() {
     const box = $('#settings-body'); if (!box || modal().classList.contains('hidden')) return;
     const st = S.get(), desk = window.TribeHost.isDesktop;
     const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
+      ${window.TribePlans ? row('Plan', window.TribePlans.chip({ id: 'set-plan-chip' }), 'Free forever, Premium, AI credits, or your own AI. Tap to see the plans.') : ''}
       ${window.TribePersonalize && C() && C().connected() ? row('Personalize', '<button class="btn" id="set-personalize">Make it yours…</button>', 'Name, profile icon, theme, accent, language and text size, with a live preview.') : ''}
       ${window.TribeProfiles && C() && C().connected() ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and presence.') : ''}
       ${window.TribeMode ? row('Experience', '<div id="set-mode"></div>', 'How much of TribeCode you see. Your role still decides what you can do.') : ''}

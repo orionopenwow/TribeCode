@@ -23,7 +23,7 @@ errors = []
 CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
 SETUP_CO = "Set up company"   # polish: leads also see this quiet row (company.js) once the project's company view loads
 core = lambda rs: [r for r in rs if r != SETUP_CO]
-TASK_TABS = ["📋 Board", "🐞 Bugs", "🗳️ Proposals", "🏁 Milestones", "📅 Calendar", "🌿 Code repository", "📸 Visuals"]
+TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Code repository", "Visuals"]   # feat/shell-polish: stroke icons, not emoji
 AGENT_KEYS = ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]   # the Agents Hub shows Dashboard + pinned tabs (feat/agents-dash)
 # tab key -> how to tell its view is on screen
 OPENS = {
@@ -324,7 +324,7 @@ def main():
             host.click("#nest-ws-tasks"); host.wait_for_selector("#wt-roles", timeout=15000)
             host.click("#wt-roles"); host.wait_for_selector("#view-flow-roles:not(.hidden)")
             host.wait_for_function("document.querySelector('#wt-roles').classList.contains('on')")
-            assert tabs(host)[:8] == TASK_TABS + ["👥 Roles"], tabs(host)
+            assert tabs(host)[:8] == TASK_TABS + ["Roles"], tabs(host)
             no_dupes(host)
 
             # ---- with a tribe: global sections still keep the global dashboard; Back crosses into a project and out again

@@ -6,7 +6,7 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 
 | Place | What is on screen | Sidebar |
 | --- | --- | --- |
-| **Global** (your dashboard) | Home (updates), Files, Design, Code, Work, Agent fleet | "Home · your dashboard", then the rows: Home · Files · Design · Code · Work · Agent fleet |
+| **Global** (your dashboard) | Home (updates), Files, Design, Code, Work, Agent fleet | "Your Dashboard" (a bold heading with the home icon), then the rows: Home · Files · Design · Code · Work · Agent fleet |
 | **Project** (inside a tribe) | Dashboard, Messages, Files, Design, Task Board (tabs), Agents Hub (tabs), Company… | The project's rows, under its header |
 
 `TribeRouter.where()` says which: `{ place: 'global', section: 'home' | 'docs' | 'design' | 'repos' | 'work' | 'fleet', key }` or `{ place: 'project', project, view, key }`. The global sections only change the main pane; they never draw the project nest. With no tribe on the device, a project place is never shown: Home opens with a toast that says what to do.
@@ -50,5 +50,5 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 - **Esc closes the top layer** (palette, popover, menu, sheet, modal, Workshop, Guide, preview), never the place underneath. Back moves between places.
 - **No dead ends.** Every view keeps a visible way back: the logo (always Home), the sidebar rows, and on empty states a "Back to Home" button. The create/join sheet always has a close X.
 - **No stale panes.** After every move exactly one `.main > section[id^="view-"]` is visible, and `body.global` matches the place, so a page from the previous dashboard can't stay mounted under the new one.
-- **Home is obvious.** On any global page the rail logo is lit (`#rail-logo.on`, `aria-current="page"`), the sidebar starts with "Home · your dashboard" (`#nest-home-h`), each page starts with a "Home ›" breadcrumb (`.hub-crumb`, and `#crumb-home` in the title bar), and Home's top card is a band across the whole content area.
+- **Home is obvious.** On any global page the rail logo is lit (`#rail-logo.on`, `aria-current="page"`: a pressed tile plus the Ember pill on the rail's left edge, the same as an open tribe; `app/ui/rail.css`), the sidebar starts with the heading "Your Dashboard" (`#nest-home-h`), each page starts with a "Home ›" breadcrumb (`.hub-crumb`, and `#crumb-home` in the title bar), and Home's top card is a band across the whole content area.
 - **Active state.** The lit row is the destination on screen (`TribeShell.current()`): a global section lights its global row, a workspace tab lights its workspace row.

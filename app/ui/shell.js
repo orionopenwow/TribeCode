@@ -117,6 +117,8 @@
     setTimeout(() => { const t = $('#scratch-in'); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } }, 60);
   }
   const COUNT = { bugs: 1, requests: 1, reviews: 1, handoffs: 1 };
+  const TAB_ICO = { tasks: 'board', bugs: 'bug', board: 'vote', milestones: 'flag', calendar: 'calendar', repo: 'git', visuals: 'photo', roles: 'people', requests: 'inbox',
+    agents: 'agent', 'agents-hub': 'plug', 'mcp-directory': 'link', ownership: 'map', conflicts: 'merge', handoffs: 'hand', reviews: 'eye', plan: 'sun', secretary: 'quill' };   // feat/shell-polish
   const HOT = { requests: 1, reviews: 1, handoffs: 1 };
   function go(key) {
     const d = byKey(key); if (!d) return;
@@ -133,7 +135,7 @@
     const box = $('#nest-groups'); if (!box) return;
     drawnGlobal = isGlobal();
     document.body.classList.toggle('global', drawnGlobal);   // keep the class in step whichever path drew the rows
-    box.innerHTML = drawnGlobal ? `<div class="nest-home-h" id="nest-home-h" aria-current="page"><svg class="i"><use href="#i-home"/></svg><b>Home</b> <span>· your dashboard</span></div><div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
+    box.innerHTML = drawnGlobal ? `<h2 class="nest-home-h" id="nest-home-h" aria-current="page"><span data-icon="home" data-icon-size="20"></span><b>Your Dashboard</b></h2><div class="nest-group nest-global" id="grp-global" role="group" aria-label="Global">${DEST.filter(d => d.group === 'global' && (!(window.TribeMode && window.TribeMode.focused && window.TribeMode.focused()) || shown(d))).map(d =>
       `<button class="nest-row" data-pnav="${esc(d.key)}" id="nest-${esc(d.key)}">${ico(d.icon, 18)}<span>${esc(d.row || d.label)}</span></button>`).join('')}</div>` : '';
   }
   function paintCounts() {
@@ -167,7 +169,7 @@
   function drawTabs(cur) {
     if (cur === undefined) cur = document.body.classList.contains('ws-open') || document.body.classList.contains('gd-open') ? '' : current();
     const bar = $('#view-tabs'); if (!bar) return;
-    const TAB_EMO = { tasks: '📋', bugs: '🐞', board: '🗳️', milestones: '🏁', calendar: '📅', repo: '🌿', visuals: '📸', roles: '👥', requests: '📥' };   // a small emoji beside each Task Board tab
+    const TI = window.TribeIcons, tabIco = k => TI && TAB_ICO[k] ? `<span class="wt-ic">${TI.svg(TAB_ICO[k], 16)}</span>` : '';   // a quiet stroke icon beside each tab (app/ui/icons.js)
     const w = wsOf(cur);
     if (gated(w) && cur === 'tasks') { if (document.body.classList.contains('ws-tabbed')) document.body.classList.remove('ws-tabbed'); if (!bar.classList.contains('hidden')) bar.classList.add('hidden'); tabsSig = ''; return; }   // feat/setup-flow
     document.body.classList.toggle('ws-tabbed', !!w);
@@ -189,7 +191,7 @@
         bar.classList.add('wt-files');
       } else { bar.classList.remove('wt-files');
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
-        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${TAB_EMO[t.key] ? TAB_EMO[t.key] + ' ' : ''}${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${tabIco(t.key)}${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
     }
     bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
