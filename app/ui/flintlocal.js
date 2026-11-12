@@ -277,21 +277,27 @@
     if (id === 'lesson') { const L = window.TribeFlintLessons; if (L && L.open(sl.feature)) return { text: `Here is a short lesson on ${L.LESSONS[sl.feature].title.replace(/^The /, 'the ')}. Show me points at the real thing.`, sum: 'opened a lesson' }; return { text: T('noPlace', { x: 'Lessons' }) }; }
     if (id === 'redo') { const D = window.TribeSiteDesigner, st = D && D.state && D.state(); if (st && st.open) { D.redo(); return { text: 'Redone.' }; } return { text: 'Redo works in the website designer and on the canvas (Ctrl Shift Z). Here, say what to do again.' }; }
     if (id === 'premium.open') { const Pm = window.TribePremium; if (Pm) { if (/credit/i.test(s.text || '')) Pm.gate('credits'); else Pm.open(); } return { text: 'Here is what is free and what Premium adds. Everything local stays free.', sum: 'opened Premium' }; }
-    if (id === 'site.open' || (/^site\./.test(id) && window.TribeSiteDesigner && ((window.TribeSiteDesigner.state() || {}).open))) {
+    // feat/site-v2: every website ask opens the website designer, in any context (Flint's chat, Home with no tribe, a
+    // project, the canvas, the preview): a template by meaning ("link tree website") opens with that template, filled
+    // from the project; an edit ("make the headline punchier") opens the project's design and runs there. Building the
+    // site into the repo as code is the old path, now only when asked for ("build the website into the repo").
+    if (id === 'site.repo') { pushUndo('build', 'build'); return legacy('build me a landing page', 'built the website into the repo'); }
+    if (/^site\./.test(id)) {
       const D = window.TribeSiteDesigner; if (!D) return { text: T('noPlace', { x: 'Website designer' }) };
-      const tpl = id.slice(5), isTpl = !!(window.TribeSiteCfg && window.TribeSiteCfg.TEMPLATES.includes(tpl));
-      if ((D.state() || {}).open && id !== 'site.open' && !isTpl) { await D.ask(s.text); return { said: true, sum: 'changed the website' }; }
-      await D.open(isTpl ? { template: tpl } : {}); return { text: isTpl ? `Opened the website designer with the ${s.label || tpl} template.` : 'Opened the website designer.', sum: 'opened the website designer' };
+      const tpl = id.slice(5), isTpl = !!(window.TribeSiteCfg && window.TribeSiteCfg.TEMPLATES.includes(tpl)), st = D.state() || {};
+      if (id === 'site.gallery') { await D.open({}); const b = document.querySelector('#wdz [data-wdz="templates"]'); if (b) b.click(); return { text: T('opened', { x: 'Website templates' }), sum: 'opened the website templates' }; }
+      if (isTpl) { await D.open({ template: tpl, name: sl.name || undefined }); const n = (D.cfg() || {}).name; return { text: `Opened the website designer with the ${s.label || tpl} template${n && n !== 'My site' ? ` as “${n}”` : ''}. Click any words to change them; buttons, pages, dark mode and Download HTML are all here. Ask me for edits in the designer.`, acts: [], sum: `started a ${s.label || tpl} website` }; }
+      if (id !== 'site.open') { if (!st.open) await D.open({}); await D.ask(s.text); return { said: true, sum: 'changed the website' }; }
+      await D.open({}); return { text: 'Opened the website designer.', sum: 'opened the website designer' };
     }
-    if (/^(build\.|site\.)/.test(id) && id !== 'site.gallery') {
+    if (/^build\./.test(id)) {
       const nm = sl.name ? ` called ${sl.name}` : '', style = sl.mode ? ` in ${sl.mode} mode` : sl.color ? ` in ${sl.color.name}` : '';
       let phrase;
       if (BUILDPHRASE[id]) phrase = BUILDPHRASE[id](nm) + style;
-      else { const kind = s.label || id.slice(5); phrase = `build me a ${kind}${sl.name ? ` for ${sl.name}` : ''}${style}`; }
+      else { const kind = s.label || id.slice(6); phrase = `build me a ${kind}${sl.name ? ` for ${sl.name}` : ''}${style}`; }
       pushUndo('build', 'build');
       return legacy(phrase, `made a ${s.label || id.slice(6)}${sl.name ? ' for ' + sl.name : ''}`);
     }
-    if (id === 'site.gallery') { go('templates'); return { text: T('opened', { x: 'Website templates' }) }; }
     if (area === 'canvas') {
       const CV = window.TribeCanvas, CF = window.TribeCanvasFlint;
       if (!CV) return { text: T('noPlace', { x: 'Design' }) };

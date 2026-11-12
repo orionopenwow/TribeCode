@@ -164,3 +164,5 @@ body.global #tour-room .room-head h6 { display: none; }
   .wgx-card { height: 150px; }
 }
 .wgx [hidden] { display: none !important; }
+.nest-extra #nest-website .wg-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; flex: none; }   /* feat/site-v2: edits not on the host yet */
+.nest-extra #nest-website .wg-dot[hidden] { display: none; }

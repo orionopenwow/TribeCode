@@ -616,6 +616,7 @@ ${blocks.join('\n')}
   const mtime = f => { try { return fs.statSync(f).mtime.toISOString(); } catch { return null; } };
   function started(pid) {
     const st = load(pid), p = P.get(pid) || {};
+    try { const dc = base.readJSON(`.tribe/website/${String(pid).replace(/[^\w-]/g, '')}.config.json`, null); if (dc) return { kind: 'designer', path: '.tribe/website', at: dc.savedAt || null, label: 'a website design' }; } catch {}   // feat/site-v2: the website designer's draft
     if (st.gen) return { kind: 'draft', path: '.tribe/website', at: st.gen.updated || null, label: 'a site-builder draft' };
     if (exists(pid)) { const w = siteDir(pid); return { kind: 'built', path: w.shown, at: mtime(path.join(w.dir, 'index.html')), label: 'the built page' }; }
     const tribeCopy = base.p('projects', pid, 'site', 'index.html');
@@ -809,7 +810,7 @@ ${blocks.join('\n')}
     return null;
   }
 
-  return { route, build, gather, html, signature, tick, exists, load, save: (pid, st) => save(pid, st), push: pid => push(pid), canManage: (pid, me) => canManage(pid, me), canDraft: me => canDraft(me), cleanLogo, fresh, newGen: (g, pid) => newGen(g, pid), httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
+  return { route, build, gather, html, signature, tick, exists, started, brandView, load, save: (pid, st) => save(pid, st), push: pid => push(pid), canManage: (pid, me) => canManage(pid, me), canDraft: me => canDraft(me), cleanLogo, fresh, newGen: (g, pid) => newGen(g, pid), httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
 };
 module.exports.httpsRepo = httpsRepo;
 module.exports.visionText = visionText;

@@ -18,14 +18,14 @@
   // Project rooms: every call says which project it is about (the server scopes tasks, docs, chat… to it).
   const projKey = () => 'tribecode.project:' + base();
   const project = () => state.project || null;
-  async function api(path, { method = 'GET', body, project: pj } = {}) {
-    const pid = pj || project();
+  async function api(path, { method = 'GET', body, project: pj, keepalive } = {}) {
+    const pid = pj || project(), text = body ? JSON.stringify(body) : undefined;
     const res = await fetch(base() + '/api' + path, {
       method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}), ...(pid ? { 'X-Project': pid } : {}) },
-      body: body ? JSON.stringify(body) : undefined,
+      body: text, ...(keepalive && (!text || text.length < 60000) ? { keepalive: true } : {}),   // feat/site-v2: a save that outlives the page
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status });
+    if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status, data });
     return data;
   }
 

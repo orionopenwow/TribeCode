@@ -53,7 +53,13 @@
 
   // ---------- the rows ----------
   const autoPreview = () => !!(st.preview && st.preview.show);
-  const autoSite = () => !!(st.website && st.website.show);
+  // feat/site-v2: the Website row shows once a website draft exists (a designer config, a published site, a started site,
+  // or a design on this device) and opens the website designer; a dot while edits are not on the host yet
+  const SD = () => window.TribeSiteDesigner;
+  const autoSite = () => !!(st.website && st.website.show) || !!(pid() && SD() && SD().hasDraft && SD().hasDraft(pid()));
+  const siteIcon = () => (window.TribeIcons && window.TribeIcons.svg ? window.TribeIcons.svg('website', 18) : `<svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.6 5.7 3.6 9s-1.1 6.3-3.6 9c-2.5-2.7-3.6-5.7-3.6-9S9.5 5.7 12 3z"/></svg>`);
+  addEventListener('tribe:site-draft', e => { const d = e.detail || {}; if (d.pid && d.pid === pid()) { if (!document.getElementById('nest-website')) draw(); const dot = document.querySelector('#nest-website .wg-dot'); if (dot) dot.hidden = !d.dirty; } });
+  document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('#nest-website[data-wdz-open]'); if (!r || !SD()) return; e.preventDefault(); e.stopPropagation(); SD().open({ pid: pid() }); }, true);
   function rowOf(w) {
     if (w.kind === 'builtin') {
       const b = BUILT[w.key]; if (!b) return '';
@@ -67,7 +73,7 @@
   function draw() {
     const box = $('#nest-extra'); if (!box) return;
     const rows = [];
-    if (autoSite()) rows.push(`<button class="nest-row wg-auto" id="nest-website" data-pnav="website" title="The project's public page">${ico('i-link')}<span>Website</span></button>`);
+    if (autoSite()) { const dirty = !!(SD() && SD().dirty && SD().dirty(pid())); rows.push(`<button class="nest-row wg-auto" id="nest-website" data-wdz-open="1" title="The project's website: open the designer">${siteIcon()}<span>Website</span><span class="wg-dot" title="Not saved to the host yet"${dirty ? '' : ' hidden'}></span></button>`); }
     (st.widgets || []).forEach(w => rows.push(rowOf(w)));
     const html = rows.join('');
     if (box.innerHTML !== html) box.innerHTML = html;

@@ -1,0 +1,847 @@
+{
+ "about": "Website templates for the designer (scripts/dev/site-gallery.py). Sources and licenses: docs/SITE-TEMPLATES.md.",
+ "categories": [
+  "Link in bio",
+  "Business",
+  "Startup",
+  "Portfolio",
+  "Personal",
+  "Blog",
+  "Shop",
+  "Food & drink",
+  "Music",
+  "Creator",
+  "Events",
+  "Nonprofit",
+  "Games",
+  "Coming soon"
+ ],
+ "templates": [
+  {
+   "id": "linkbio",
+   "title": "Link in bio",
+   "summary": "One page with all your links, for an Instagram, TikTok or YouTube bio. Four looks to switch between.",
+   "category": "Link in bio",
+   "tags": [
+    "linktree",
+    "link tree",
+    "links",
+    "social",
+    "bio",
+    "creator"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 1,
+   "thumb": "sitetpl/thumbs/linkbio.webp"
+  },
+  {
+   "id": "tt-profile-card",
+   "title": "Profile Card",
+   "summary": "One card: photo, name, a few lines and your links.",
+   "category": "Link in bio",
+   "tags": [
+    "link in bio",
+    "profile",
+    "card"
+   ],
+   "source": "Tailwind Toolbox",
+   "sourceUrl": "https://github.com/tailwindtoolbox/Profile-Card",
+   "license": "MIT",
+   "credit": false,
+   "order": 121,
+   "thumb": "sitetpl/thumbs/tt-profile-card.webp"
+  },
+  {
+   "id": "h5-identity",
+   "title": "Identity",
+   "summary": "A single centered card: avatar, name, a line, and your links.",
+   "category": "Link in bio",
+   "tags": [
+    "link in bio",
+    "personal",
+    "card"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/identity",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 122,
+   "thumb": "sitetpl/thumbs/h5-identity.webp"
+  },
+  {
+   "id": "service",
+   "title": "Local service",
+   "summary": "For a plumber, salon, cleaner or repair shop: services with prices, the area you cover, booking and real reviews from your customers.",
+   "category": "Business",
+   "tags": [
+    "plumber",
+    "salon",
+    "barber",
+    "cleaning",
+    "electrician",
+    "local",
+    "service",
+    "booking"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 7,
+   "thumb": "sitetpl/thumbs/service.webp"
+  },
+  {
+   "id": "sb-agency",
+   "title": "Agency",
+   "summary": "A studio or agency: services, portfolio grid, about timeline, team, contact.",
+   "category": "Business",
+   "tags": [
+    "agency",
+    "studio",
+    "services"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-agency",
+   "license": "MIT",
+   "credit": false,
+   "order": 100,
+   "thumb": "sitetpl/thumbs/sb-agency.webp"
+  },
+  {
+   "id": "sb-business-frontpage",
+   "title": "Business Frontpage",
+   "summary": "A plain business front page: headline, three features, a quote and a call to action.",
+   "category": "Business",
+   "tags": [
+    "business",
+    "company"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-business-frontpage",
+   "license": "MIT",
+   "credit": false,
+   "order": 102,
+   "thumb": "sitetpl/thumbs/sb-business-frontpage.webp"
+  },
+  {
+   "id": "sb-creative",
+   "title": "Creative",
+   "summary": "A bold one-pager for a creative service: services grid, portfolio, contact.",
+   "category": "Business",
+   "tags": [
+    "creative",
+    "freelance",
+    "studio"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-creative",
+   "license": "MIT",
+   "credit": false,
+   "order": 105,
+   "thumb": "sitetpl/thumbs/sb-creative.webp"
+  },
+  {
+   "id": "sb-modern-business",
+   "title": "Modern Business",
+   "summary": "A company site: hero, features, a testimonial, blog teasers, call to action.",
+   "category": "Business",
+   "tags": [
+    "company",
+    "business"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-modern-business",
+   "license": "MIT",
+   "credit": false,
+   "order": 109,
+   "thumb": "sitetpl/thumbs/sb-modern-business.webp"
+  },
+  {
+   "id": "sb-small-business",
+   "title": "Small Business",
+   "summary": "A small company: a picture and a pitch, a call-out band and three cards.",
+   "category": "Business",
+   "tags": [
+    "small business",
+    "local"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-small-business",
+   "license": "MIT",
+   "credit": false,
+   "order": 114,
+   "thumb": "sitetpl/thumbs/sb-small-business.webp"
+  },
+  {
+   "id": "saas",
+   "title": "Startup / app",
+   "summary": "A product page with honest copy: what it does, a real screenshot, what it doesn't do yet, simple plans, a changelog and early access.",
+   "category": "Startup",
+   "tags": [
+    "saas",
+    "startup",
+    "app",
+    "software",
+    "product",
+    "tool",
+    "early access"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 11,
+   "thumb": "sitetpl/thumbs/saas.webp"
+  },
+  {
+   "id": "sb-grayscale",
+   "title": "Grayscale",
+   "summary": "A dark, quiet product page with projects side by side and a signup.",
+   "category": "Startup",
+   "tags": [
+    "startup",
+    "product",
+    "dark"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-grayscale",
+   "license": "MIT",
+   "credit": false,
+   "order": 107,
+   "thumb": "sitetpl/thumbs/sb-grayscale.webp"
+  },
+  {
+   "id": "sb-landing-page",
+   "title": "Landing Page",
+   "summary": "The classic landing page: signup hero, three icons, alternating showcase, testimonials.",
+   "category": "Startup",
+   "tags": [
+    "landing",
+    "startup",
+    "app"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-landing-page",
+   "license": "MIT",
+   "credit": false,
+   "order": 108,
+   "thumb": "sitetpl/thumbs/sb-landing-page.webp"
+  },
+  {
+   "id": "sb-new-age",
+   "title": "New Age",
+   "summary": "An app launch page: phone mockup hero, features, a quote, download buttons.",
+   "category": "Startup",
+   "tags": [
+    "app",
+    "mobile",
+    "launch"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-new-age",
+   "license": "MIT",
+   "credit": false,
+   "order": 110,
+   "thumb": "sitetpl/thumbs/sb-new-age.webp"
+  },
+  {
+   "id": "sb-one-page-wonder",
+   "title": "One Page Wonder",
+   "summary": "Three big alternating picture-and-text rows under a loud hero.",
+   "category": "Startup",
+   "tags": [
+    "one page",
+    "product"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-one-page-wonder",
+   "license": "MIT",
+   "credit": false,
+   "order": 111,
+   "thumb": "sitetpl/thumbs/sb-one-page-wonder.webp"
+  },
+  {
+   "id": "tt-landing-page",
+   "title": "Tailwind Landing",
+   "summary": "A friendly product landing page: hero, two feature rows, pricing, call to action.",
+   "category": "Startup",
+   "tags": [
+    "landing",
+    "pricing",
+    "product"
+   ],
+   "source": "Tailwind Toolbox",
+   "sourceUrl": "https://github.com/tailwindtoolbox/Landing-Page",
+   "license": "MIT",
+   "credit": false,
+   "order": 116,
+   "thumb": "sitetpl/thumbs/tt-landing-page.webp"
+  },
+  {
+   "id": "tt-app-landing",
+   "title": "App Landing",
+   "summary": "A dark app page: one claim, store buttons, a screenshot.",
+   "category": "Startup",
+   "tags": [
+    "app",
+    "mobile",
+    "dark"
+   ],
+   "source": "Tailwind Toolbox",
+   "sourceUrl": "https://github.com/tailwindtoolbox/App-Landing-Page",
+   "license": "MIT",
+   "credit": false,
+   "order": 117,
+   "thumb": "sitetpl/thumbs/tt-app-landing.webp"
+  },
+  {
+   "id": "h5-photon",
+   "title": "Photon",
+   "summary": "A clean product page with a big intro band, features and a call to action.",
+   "category": "Startup",
+   "tags": [
+    "product",
+    "landing"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/photon",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 123,
+   "thumb": "sitetpl/thumbs/h5-photon.webp"
+  },
+  {
+   "id": "h5-stellar",
+   "title": "Stellar",
+   "summary": "A friendly one-pager: intro, stats, features and get started.",
+   "category": "Startup",
+   "tags": [
+    "startup",
+    "stats",
+    "features"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/stellar",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 125,
+   "thumb": "sitetpl/thumbs/h5-stellar.webp"
+  },
+  {
+   "id": "h5-landed",
+   "title": "Landed",
+   "summary": "A product page with alternating spotlights and a signup.",
+   "category": "Startup",
+   "tags": [
+    "product",
+    "spotlights"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/landed",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 131,
+   "thumb": "sitetpl/thumbs/h5-landed.webp"
+  },
+  {
+   "id": "portfolio",
+   "title": "Portfolio",
+   "summary": "An editorial portfolio for a designer, illustrator or studio: numbered case studies, a short bio and how to hire you.",
+   "category": "Portfolio",
+   "tags": [
+    "portfolio",
+    "designer",
+    "case studies",
+    "freelance",
+    "studio",
+    "agency"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 3,
+   "thumb": "sitetpl/thumbs/portfolio.webp"
+  },
+  {
+   "id": "photography",
+   "title": "Photography gallery",
+   "summary": "A dark, full-bleed gallery that gets out of the way of the pictures, with a lightbox, series and a booking line.",
+   "category": "Portfolio",
+   "tags": [
+    "photography",
+    "photos",
+    "gallery",
+    "photographer",
+    "lightbox",
+    "art"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 15,
+   "thumb": "sitetpl/thumbs/photography.webp"
+  },
+  {
+   "id": "sb-freelancer",
+   "title": "Freelancer",
+   "summary": "A one-person portfolio: avatar, work grid, about in two columns, contact.",
+   "category": "Portfolio",
+   "tags": [
+    "freelancer",
+    "portfolio"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-freelancer",
+   "license": "MIT",
+   "credit": false,
+   "order": 106,
+   "thumb": "sitetpl/thumbs/sb-freelancer.webp"
+  },
+  {
+   "id": "sb-stylish-portfolio",
+   "title": "Stylish Portfolio",
+   "summary": "A portfolio with services, a full-width call-out and a project grid.",
+   "category": "Portfolio",
+   "tags": [
+    "portfolio",
+    "services"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-stylish-portfolio",
+   "license": "MIT",
+   "credit": false,
+   "order": 115,
+   "thumb": "sitetpl/thumbs/sb-stylish-portfolio.webp"
+  },
+  {
+   "id": "h5-forty",
+   "title": "Forty",
+   "summary": "A dark tiled portfolio with big project tiles and a contact block.",
+   "category": "Portfolio",
+   "tags": [
+    "portfolio",
+    "dark",
+    "tiles"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/forty",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 124,
+   "thumb": "sitetpl/thumbs/h5-forty.webp"
+  },
+  {
+   "id": "h5-miniport",
+   "title": "Miniport",
+   "summary": "A personal portfolio: a hello, what I do, my work and contact.",
+   "category": "Portfolio",
+   "tags": [
+    "portfolio",
+    "personal"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/miniport",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 128,
+   "thumb": "sitetpl/thumbs/h5-miniport.webp"
+  },
+  {
+   "id": "resume",
+   "title": "Resume / personal",
+   "summary": "A clean one-page resume that prints well: summary, experience, skills, education and how to reach you.",
+   "category": "Personal",
+   "tags": [
+    "resume",
+    "cv",
+    "personal",
+    "about me",
+    "job"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 13,
+   "thumb": "sitetpl/thumbs/resume.webp"
+  },
+  {
+   "id": "sb-personal",
+   "title": "Personal",
+   "summary": "A personal home page: who you are, what you do, a resume and projects.",
+   "category": "Personal",
+   "tags": [
+    "personal",
+    "resume",
+    "about me"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-personal",
+   "license": "MIT",
+   "credit": false,
+   "order": 112,
+   "thumb": "sitetpl/thumbs/sb-personal.webp"
+  },
+  {
+   "id": "sb-resume",
+   "title": "Resume",
+   "summary": "A resume as a web page: about, experience, education, skills, interests.",
+   "category": "Personal",
+   "tags": [
+    "resume",
+    "cv"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-resume",
+   "license": "MIT",
+   "credit": false,
+   "order": 113,
+   "thumb": "sitetpl/thumbs/sb-resume.webp"
+  },
+  {
+   "id": "h5-dimension",
+   "title": "Dimension",
+   "summary": "A dark single screen with intro, work, about and contact.",
+   "category": "Personal",
+   "tags": [
+    "personal",
+    "dark",
+    "minimal"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/dimension",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 126,
+   "thumb": "sitetpl/thumbs/h5-dimension.webp"
+  },
+  {
+   "id": "h5-read-only",
+   "title": "Read Only",
+   "summary": "A one-person site with a sidebar feel: about, work, contact.",
+   "category": "Personal",
+   "tags": [
+    "resume",
+    "personal"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/read-only",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 129,
+   "thumb": "sitetpl/thumbs/h5-read-only.webp"
+  },
+  {
+   "id": "blog",
+   "title": "Newsletter / blog",
+   "summary": "A quiet reading site: a list of posts, a post page set for long reading, and a subscribe box for your newsletter service.",
+   "category": "Blog",
+   "tags": [
+    "blog",
+    "newsletter",
+    "writing",
+    "posts",
+    "journal",
+    "devlog",
+    "substack"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 10,
+   "thumb": "sitetpl/thumbs/blog.webp"
+  },
+  {
+   "id": "sb-clean-blog",
+   "title": "Clean Blog",
+   "summary": "A reading-first blog: big masthead, post list with dates, subscribe.",
+   "category": "Blog",
+   "tags": [
+    "blog",
+    "writing",
+    "posts"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-clean-blog",
+   "license": "MIT",
+   "credit": false,
+   "order": 103,
+   "thumb": "sitetpl/thumbs/sb-clean-blog.webp"
+  },
+  {
+   "id": "tt-ghostwind",
+   "title": "Ghostwind",
+   "summary": "A magazine-style blog home: a featured post, a grid of posts, an author box.",
+   "category": "Blog",
+   "tags": [
+    "blog",
+    "magazine"
+   ],
+   "source": "Tailwind Toolbox",
+   "sourceUrl": "https://github.com/tailwindtoolbox/Ghostwind",
+   "license": "MIT",
+   "credit": false,
+   "order": 118,
+   "thumb": "sitetpl/thumbs/tt-ghostwind.webp"
+  },
+  {
+   "id": "tt-minimal-blog",
+   "title": "Minimal Blog",
+   "summary": "One quiet column of writing with a subscribe box.",
+   "category": "Blog",
+   "tags": [
+    "blog",
+    "minimal",
+    "newsletter"
+   ],
+   "source": "Tailwind Toolbox",
+   "sourceUrl": "https://github.com/tailwindtoolbox/Minimal-Blog",
+   "license": "MIT",
+   "credit": false,
+   "order": 119,
+   "thumb": "sitetpl/thumbs/tt-minimal-blog.webp"
+  },
+  {
+   "id": "h5-massively",
+   "title": "Massively",
+   "summary": "A big-type blog with a featured post and a grid of articles.",
+   "category": "Blog",
+   "tags": [
+    "blog",
+    "posts",
+    "magazine"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/massively",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 130,
+   "thumb": "sitetpl/thumbs/h5-massively.webp"
+  },
+  {
+   "id": "merch",
+   "title": "Merch shop",
+   "summary": "A small shop: product grid, product details with sizes, a cart drawer and a hand-off to your own checkout link.",
+   "category": "Shop",
+   "tags": [
+    "merch",
+    "shop",
+    "store",
+    "ecommerce",
+    "products",
+    "cart"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 2,
+   "thumb": "sitetpl/thumbs/merch.webp"
+  },
+  {
+   "id": "tt-nordic-store",
+   "title": "Nordic Store",
+   "summary": "A calm product shop: a hero banner, a product grid, about the store.",
+   "category": "Shop",
+   "tags": [
+    "shop",
+    "store",
+    "products"
+   ],
+   "source": "Tailwind Toolbox",
+   "sourceUrl": "https://github.com/tailwindtoolbox/Nordic-Store",
+   "license": "MIT",
+   "credit": false,
+   "order": 120,
+   "thumb": "sitetpl/thumbs/tt-nordic-store.webp"
+  },
+  {
+   "id": "cafe",
+   "title": "Restaurant / caf\u00e9",
+   "summary": "A warm site for a caf\u00e9, bakery or restaurant: the menu with prices, opening hours, the address and a reservations link.",
+   "category": "Food & drink",
+   "tags": [
+    "restaurant",
+    "cafe",
+    "caf\u00e9",
+    "bakery",
+    "menu",
+    "hours",
+    "food",
+    "coffee"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 6,
+   "thumb": "sitetpl/thumbs/cafe.webp"
+  },
+  {
+   "id": "sb-business-casual",
+   "title": "Business Casual",
+   "summary": "A warm small-business page with a story, opening hours and a promise.",
+   "category": "Food & drink",
+   "tags": [
+    "cafe",
+    "shop",
+    "local"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-business-casual",
+   "license": "MIT",
+   "credit": false,
+   "order": 101,
+   "thumb": "sitetpl/thumbs/sb-business-casual.webp"
+  },
+  {
+   "id": "band",
+   "title": "Band / musician",
+   "summary": "A poster-style page for a band or solo artist: tour dates with ticket links, releases, a short bio and booking.",
+   "category": "Music",
+   "tags": [
+    "band",
+    "music",
+    "musician",
+    "tour",
+    "dates",
+    "album",
+    "dj"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 5,
+   "thumb": "sitetpl/thumbs/band.webp"
+  },
+  {
+   "id": "creator",
+   "title": "Creator / streamer",
+   "summary": "A home for a streamer or video creator: the weekly schedule, latest videos, sponsors you actually use and a contact for brand work.",
+   "category": "Creator",
+   "tags": [
+    "streamer",
+    "twitch",
+    "youtube",
+    "creator",
+    "schedule",
+    "videos"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 4,
+   "thumb": "sitetpl/thumbs/creator.webp"
+  },
+  {
+   "id": "podcast",
+   "title": "Podcast",
+   "summary": "A show page: the cover, where to listen, an episode list with show notes and lengths, the hosts and a way to send in questions.",
+   "category": "Creator",
+   "tags": [
+    "podcast",
+    "episodes",
+    "show",
+    "audio",
+    "radio"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 9,
+   "thumb": "sitetpl/thumbs/podcast.webp"
+  },
+  {
+   "id": "wedding",
+   "title": "Event / wedding RSVP",
+   "summary": "Everything guests need: the date and place, a day-of schedule, travel and stays, a few questions answered and an RSVP form.",
+   "category": "Events",
+   "tags": [
+    "wedding",
+    "event",
+    "rsvp",
+    "party",
+    "reunion",
+    "retreat",
+    "save the date"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 8,
+   "thumb": "sitetpl/thumbs/wedding.webp"
+  },
+  {
+   "id": "nonprofit",
+   "title": "Nonprofit / donate",
+   "summary": "For a cause or community group: the mission in plain words, what you've done, ways to help and a donate button for your own donation page.",
+   "category": "Nonprofit",
+   "tags": [
+    "nonprofit",
+    "charity",
+    "donate",
+    "community",
+    "volunteer",
+    "cause",
+    "fundraiser"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 14,
+   "thumb": "sitetpl/thumbs/nonprofit.webp"
+  },
+  {
+   "id": "gamepage",
+   "title": "Indie game page",
+   "summary": "A page for your game: trailer, screenshots, a wishlist or play button, the facts press needs and a devlog.",
+   "category": "Games",
+   "tags": [
+    "game",
+    "indie",
+    "press kit",
+    "trailer",
+    "steam",
+    "itch",
+    "devlog"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 12,
+   "thumb": "sitetpl/thumbs/gamepage.webp"
+  },
+  {
+   "id": "comingsoon",
+   "title": "Coming soon / waitlist",
+   "summary": "One screen: what's coming, when, a countdown and a waitlist form that connects to your email service.",
+   "category": "Coming soon",
+   "tags": [
+    "coming soon",
+    "waitlist",
+    "launch",
+    "countdown",
+    "pre-launch"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 16,
+   "thumb": "sitetpl/thumbs/comingsoon.webp"
+  },
+  {
+   "id": "sb-coming-soon",
+   "title": "Coming Soon",
+   "summary": "One screen, one line, an email signup for launch day.",
+   "category": "Coming soon",
+   "tags": [
+    "coming soon",
+    "waitlist",
+    "launch"
+   ],
+   "source": "Start Bootstrap",
+   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-coming-soon",
+   "license": "MIT",
+   "credit": false,
+   "order": 104,
+   "thumb": "sitetpl/thumbs/sb-coming-soon.webp"
+  },
+  {
+   "id": "h5-eventually",
+   "title": "Eventually",
+   "summary": "A coming-soon screen with one line and a signup.",
+   "category": "Coming soon",
+   "tags": [
+    "coming soon",
+    "signup"
+   ],
+   "source": "HTML5 UP (AJ, @ajlkn)",
+   "sourceUrl": "https://html5up.net/eventually",
+   "license": "CC BY 3.0",
+   "credit": true,
+   "order": 127,
+   "thumb": "sitetpl/thumbs/h5-eventually.webp"
+  }
+ ]
+}

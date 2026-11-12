@@ -109,6 +109,30 @@ goes to Files › Website), "open the website designer" in Flint's chat, or `#/s
   (`server/siteflint.js` keeps `cfg` on each version).
 - **The 16 templates** open as configs (`GET /api/site-designer/template/:id`, pictures inlined).
 
+**v2 (feat/site-v2)**: the gallery has 48 templates with thumbnails, categories, search and Peek (32 imported from
+Start Bootstrap, Tailwind Toolbox and HTML5 UP: docs/SITE-TEMPLATES.md), plus Import HTML. More of OpenPage is ported
+(docs/OPENPAGE-PORT.md): newsletter, call to action, stats, logo cloud, banner, divider and image blocks, more variants,
+section backgrounds and spacing, duplicate and hide, ten more themes, font pairs, the Site panel (page title, description,
+favicon, logo, share image, language), Desktop · Tablet · Phone and keyboard shortcuts (`?`).
+
+- **Filled from your project**: inside a project a template is filled from what TribeCode knows (the name and bio, the
+  vision, members and roles, open tasks and milestones, opening hours, dates, links, email and address from chat, the
+  inspiration board's accent and pictures, the logo; `GET /api/projects/:id/site-autofill`, local extraction in
+  `aibasics-core.siteFacts`). A note says what was used; **Start blank instead** takes it back. With an AI on, it also
+  writes the headline.
+- **Comments**: Comment (or C, or the preview's Comment in Website mode) and click a section; pins show in the preview,
+  the list is under Comments. After three, Flint offers to turn them into tasks: one per section, linked to the block,
+  assigned per the task mode (Lead: to whoever has been editing, to accept; Council: open to claim). Finishing the task
+  resolves its comments. `…/site-comments`, MCP `site_comments`, `site_comments_to_tasks`.
+- **Never loses edits**: each change goes to a local draft at once and to the host after 0.6 s with the rev it started
+  from; switching tabs, routes, closing or reloading flushes it; opening restores a newer draft. "Saved · just now". A
+  stale save gets 409 and the choice Keep mine · Keep theirs · Keep both (theirs goes to the Saved shelf).
+- **The Website row** shows in the project's sidebar as soon as a draft exists, with a dot while edits are not on the
+  host, and opens the designer.
+- **Flint, anywhere**: "link tree website" (and every other website ask) opens the designer with the template, from
+  Flint's chat with or without a tribe, a project, the canvas or the preview. Building it into the repo as code is now only
+  "build the website into the repo". Test: `app/test/e2e_site_v2.py`.
+
 Flint edits the same config, free and undoable: "make the buttons work", "link this button to the contact page",
 "add a page called About", "rename this page to Work", "replace the image", "use a picture from my board", "make the
 picture round", "dark mode", "add a gallery", "move the FAQ to the top", "make the hero split", "use the swiss theme",

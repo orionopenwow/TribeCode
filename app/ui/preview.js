@@ -106,7 +106,7 @@
         <button class="pvw-btn" data-act="tab" title="Open in a new browser tab" aria-label="Open in a new browser tab">${ico(I.tab)}</button>
         <button class="pvw-btn" data-act="share" title="Copy a link friends can open on their phone" aria-label="Copy share link">${ico(I.link)}</button>
         <button class="pvw-btn pvw-edit" data-act="edit" title="Select: click anything on the page, then say what to change (double-click text to type over it)" aria-label="Select something on the page" aria-pressed="false"><svg class="pvw-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><span>Select</span></button>
-        <button class="pvw-btn pvw-design" data-act="design" title="Open the website designer: blocks, pages, wiring, dark mode, Download HTML" aria-label="Design the website">${ico(I.design)}<span>Design</span></button>
+        <button class="pvw-btn pvw-design" data-act="design" title="Open the website designer: blocks, pages, wiring, dark mode, Download HTML" aria-label="Design the website">${ico(I.design)}<span>Design</span></button><button class="pvw-btn pvw-design pvw-scomment" data-act="sitecomment" title="Comment on a section of the website: Flint turns comments into tasks" aria-label="Comment on the website">${ico(I.design)}<span>Comment</span></button>
         <button class="pvw-btn pvw-saved" data-act="shelf" title="Saved versions of the website: compare and restore" aria-label="Saved versions" aria-pressed="false">${ico(I.saved)}<span>Saved</span></button>
         <span class="pvw-morew"><button class="pvw-btn" data-act="more" title="More" aria-label="More" aria-haspopup="menu" aria-expanded="false">${ico(I.more)}</button>
           <span class="pvw-more hidden" id="pvw-more" role="menu">
@@ -127,7 +127,8 @@
       const j = e.target.closest('[data-jump]'); if (j) return jump(j.dataset.jump);
       const a = e.target.closest('[data-act]'); if (!a) return;
       if (a.dataset.act !== 'more') moreMenu(false);
-      ({ design: () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: C.project() }), back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, shelf: () => toggleShelf(), mksite: () => makeSite(a), builder: toBuilder, tosite: () => setSource('site'), toapp: () => setSource('app'), unzoom: resetZoom, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
+      ({ design: () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: C.project() }), sitecomment: () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: C.project(), comment: true }),   // feat/site-v2
+        back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, shelf: () => toggleShelf(), mksite: () => makeSite(a), builder: toBuilder, tosite: () => setSource('site'), toapp: () => setSource('app'), unzoom: resetZoom, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
         home: () => window.TribeFolders && window.TribeFolders.home() })[a.dataset.act]?.();   // Home Screen / desktop shortcut (app/ui/folders.js)
     });
     return el;
@@ -335,7 +336,7 @@
     pane.dataset.showing = src; pane.classList.toggle('src-site', src === 'site');
     pane.querySelectorAll('[data-src]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.src === src)));
     pane.querySelector('.pvw-saved').classList.toggle('hidden', src !== 'site');
-    { const d = pane.querySelector('.pvw-design'); if (d) d.classList.toggle('hidden', src !== 'site'); }
+    pane.querySelectorAll('.pvw-design').forEach(d => d.classList.toggle('hidden', src !== 'site'));
     paintPh();
     if (src === 'site') return renderSite();
     pane.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.dev === (phone ? pdev : device))));

@@ -11,6 +11,7 @@
 //   describeFile(f)              -> { description, tags }          f = { name, kind?, type?, size?, w?, h? }
 //   planDay(ctx)                 -> { items: [{ t, why, kind, ref? }], text }
 //   seatCharter(seat, project)   -> { goal, owns, mayDo, needsApproval, done }
+//   siteFacts(msgs) / groupComments(comments)   feat/site-v2: website facts from chat; comments -> one task per section
 //   parse(kind, text)            reads a model's refined answer back into the same shape (lines, label: value)
 //   PROMPTS, SYSTEM, promptFor(kind, input, draft)   the AI half's prompts (server/aibasics.js and the in-browser model)
 (function (root, factory) { const api = factory(); if (typeof module === 'object' && module.exports) module.exports = api; else root.TribeAICore = api; })(typeof self !== 'undefined' ? self : this, function () {
@@ -290,5 +291,44 @@
     return `${k[0]}\n\nInput:\n${cl(inp, 12000)}\n\n${draft ? `A first draft made by simple rules (improve it, keep what is right):\n${cl(typeof draft === 'string' ? draft : JSON.stringify(draft), 4000)}\n\n` : ''}Answer:`;
   }
 
-  return { summarize, toTasks, splitTask, estimate, suggestOwner, tidy, outline, continueDoc, describeFile, planDay, seatCharter, parse, due, typeOf, topics, PROMPTS, SYSTEM, promptFor };
+  // ---------- feat/site-v2: website facts from chat, and website comments grouped into tasks ----------
+  // siteFacts(msgs) -> { hours: [{ d, h }], dates: [{ title, meta }], links: [{ label, url }], email, phone, address }
+  const DAY = '(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day)?s?';
+  const TIME = '\\d{1,2}(?::\\d{2})?\\s*(?:am|pm)?';
+  const DCAP = s => s.replace(/\b(mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(day)?s?\b/gi, (m, a) => a.charAt(0).toUpperCase() + a.slice(1, 3).toLowerCase());
+  function siteFacts(msgs) {
+    const out = { hours: [], dates: [], links: [] }, seenH = new Set(), seenL = new Set();
+    const MON = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*';
+    for (const m of (msgs || []).slice(-400)) {
+      const t = String(m.text || '');
+      if (/\b(?:open|hours|closed|opening)\b/i.test(t)) {
+        const rx = new RegExp(`\\b(${DAY}(?:\\s*(?:-|–|to|through|thru)\\s*${DAY})?|weekdays|weekends|daily|every day)\\b[:,]?\\s*(?:from\\s+)?(${TIME}\\s*(?:-|–|to|until|till)\\s*${TIME}|closed)`, 'gi');
+        const cl = new RegExp(`\\bclosed\\s+(?:on\\s+)?(${DAY}|weekends)\\b`, 'gi'); let q; while ((q = cl.exec(t))) { const d = DCAP(q[1]).replace(/^weekends$/i, 'Weekends'), k = d.toLowerCase(); if (!seenH.has(k)) { seenH.add(k); out.hours.push({ d, h: 'Closed' }); } }
+        let h; while ((h = rx.exec(t))) { const d = DCAP(h[1].replace(/\s*(?:to|through|thru)\s*/i, '–').replace(/\s*-\s*/, '–')).replace(/^(weekdays|weekends|daily|every day)$/i, x => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()); const v = h[2].replace(/\s*(?:-|to|until|till)\s*/i, '–').replace(/^closed$/i, 'Closed'); const k = d.toLowerCase(); if (!seenH.has(k)) { seenH.add(k); out.hours.push({ d, h: v }); } }
+      }
+      if (/\b(?:show|gig|launch|event|party|meetup|release|opening|concert|market|workshop|stream|premiere|tour)\b/i.test(t)) {
+        const dm = new RegExp(`\\b(?:on\\s+)?((?:${DAY}\\s+)?(?:\\d{1,2}(?:st|nd|rd|th)?\\s+${MON}|${MON}\\s+\\d{1,2}(?:st|nd|rd|th)?)|\\d{4}-\\d{2}-\\d{2})\\b`, 'i').exec(t);
+        if (dm && out.dates.length < 8) out.dates.push({ title: clip(t.replace(dm[0], '').replace(/\s+([,.!?])/g, '$1').replace(/^[\s,:-]+|[\s,:-]+$/g, ''), 70), meta: dm[1] });
+      }
+      (t.match(/https:\/\/[^\s<>"')]+/g) || []).forEach(u => { u = u.replace(/[.,!?]+$/, ''); if (seenL.has(u) || /localhost|127\.0\.0\.1|\/api\//.test(u) || out.links.length >= 8) return; seenL.add(u); const host = u.replace(/^https:\/\/(www\.)?/, '').split('/')[0]; const lab = /instagram/.test(host) ? 'Instagram' : /tiktok/.test(host) ? 'TikTok' : /youtu/.test(host) ? 'YouTube' : /github/.test(host) ? 'GitHub' : /spotify/.test(host) ? 'Spotify' : /bandcamp/.test(host) ? 'Bandcamp' : /etsy/.test(host) ? 'Etsy' : /twitch/.test(host) ? 'Twitch' : host; out.links.push({ label: lab, url: u }); });
+      const em = /\b[\w.+-]+@[\w-]+\.[\w.-]+\b/.exec(t); if (em && !out.email && /\b(?:email|mail|contact|reach|write)\b/i.test(t)) out.email = em[0].replace(/[.,]+$/, '');
+      const ph = /(?:\+\d{1,3}[\s-]?)?\(?\d{2,4}\)?[\s-]\d{3,4}[\s-]\d{3,4}\b/.exec(t); if (ph && !out.phone && /\b(?:call|phone|tel|number|ring)\b/i.test(t)) out.phone = ph[0].trim();
+      const ad = /\b\d{1,5}\s+(?:[A-Z][a-z]+\s){1,3}(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Way|Place|Pl|Square|Sq|Boulevard|Blvd|Drive|Dr)\b\.?(?:,\s*[A-Z][a-z]+)?/.exec(t); if (ad && !out.address) out.address = ad[0];
+    }
+    const ORD = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'wee', 'dai', 'eve']; out.hours.sort((x, y) => ORD.indexOf(x.d.slice(0, 3).toLowerCase()) - ORD.indexOf(y.d.slice(0, 3).toLowerCase()));
+    return out;
+  }
+  // groupComments(comments) -> [{ block, page, label, ids, title, body }]: one per section, the busiest first
+  function groupComments(cs) {
+    const by = new Map();
+    for (const c of cs || []) { const k = c.block || 'page'; if (!by.has(k)) by.set(k, []); by.get(k).push(c); }
+    return [...by.values()].sort((a, b) => b.length - a.length).map(l => {
+      const label = l[0].label || cap(l[0].blockType || 'page'), texts = l.map(c => cap(String(c.text).replace(/[.!]+$/, '')));
+      const title = l.length === 1 ? `Website · ${label}: ${clip(texts[0], 90)}` : `Website · ${label}: ${clip(texts[0], 50)} (+${l.length - 1} more)`;
+      const tp = topics(texts, 3);
+      const body = `Feedback on the ${label} section of the website${tp.length && l.length > 2 ? ` (mostly about ${list(tp)})` : ''}:\n\n${l.map(c => `- ${cap(c.text)}${c.byName ? ` (${c.byName})` : ''}`).join('\n')}\n\nFinishing this task resolves these comments.`;
+      return { block: l[0].block, page: l[0].page, label, ids: l.map(c => c.id), title, body };
+    });
+  }
+  return { siteFacts, groupComments, summarize, toTasks, splitTask, estimate, suggestOwner, tidy, outline, continueDoc, describeFile, planDay, seatCharter, parse, due, typeOf, topics, PROMPTS, SYSTEM, promptFor };
 });
