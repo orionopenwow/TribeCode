@@ -1,0 +1,27 @@
+/* Premium sheet (app/ui/premium.js): a calm card on a flat scrim, "Not now" always first. Flat matte, tokens only. */
+.pm-scrim { position: fixed; inset: 0; z-index: 180; background: var(--canvas); opacity: .72; }
+.pm-sheet { position: fixed; z-index: 181; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 24px)); max-height: calc(100vh - 32px); overflow: auto;
+  background: var(--surface); border: 1px solid var(--edge); border-top: 3px solid var(--brand); border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px;
+  animation: pm-in var(--dur-base) var(--ease-out); }
+@keyframes pm-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+.pm-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.pm-h h2 { margin: 4px 0 0; font-family: var(--display); font-size: 21px; font-weight: 800; letter-spacing: -0.01em; }
+.pm-lead { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 62ch; }
+.pm-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pm-cols section { border: 1px solid var(--edge); border-radius: 12px; padding: 12px 14px; background: var(--canvas); }
+.pm-cols .pm-plus { background: var(--surface-2); }
+.pm-cols ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.55; display: flex; flex-direction: column; gap: 4px; }
+.pm-links { display: flex; flex-direction: column; gap: 4px; }
+.pm-links a, .pm-plan a { color: var(--brand); font-size: 13px; text-decoration: none; }
+.pm-links a:hover, .pm-plan a:hover { text-decoration: underline; }
+.pm-plan { margin: 0; font-size: 12.5px; color: var(--faint); }
+.pm-f { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pm-sp { flex: 1; }
+.pm-foot { margin: 8px 0 0; font-size: 12px; color: var(--faint); }
+.linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--brand); cursor: pointer; }
+.linkish:hover { text-decoration: underline; }
+@media (max-width: 820px) {
+  .pm-sheet { left: 0; right: 0; top: auto; bottom: 0; transform: none; width: auto; border-radius: 16px 16px 0 0; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .pm-cols { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .pm-sheet { animation: none; } }

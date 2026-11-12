@@ -78,6 +78,26 @@ financial advice.
 - **Trade time**: swap hours with other builders (a review for a logo, a bug fix for a landing page).
 - **Share compute**: lend spare computer power to your tribe (see [SHARED-COMPUTE.md](SHARED-COMPUTE.md)).
 
+Work runs the whole loop: **post** a need (a gig, a role or a seat) → **match** people and AI helpers (ranked by skills,
+seats and who asked) → **assign** (linked board tasks follow) → **track** progress updates → **review** (approve with a
+rating, or ask for changes) → **credit** (hours in the time bank, both confirm, and/or a cost line in Money; TribeCode
+moves no money). "Suggested next" on Gigs reads the board, seats and gigs with plain rules ("You have 3 untaken tasks in
+Design, so post a Designer role", "Claude could take these 2"), labelled *Basic · no AI*; with the tribe's AI on, the
+same lines are reworded in place. Code: `server/talent.js`, `app/ui/workloop.js`, `app/ui/workcore.js`.
+
+## Templates and rituals
+
+Work › Templates holds docs for running a company: daily standup, weekly review, OKRs, meeting notes, decision record,
+product brief, launch plan, website plan + copy brief, brand guide, hiring/role doc, onboarding, investor update, retro
+and incident postmortem. Each opens **Guided** (3–5 friendly questions, one at a time, Skip any), can switch to
+**Advanced** at any moment (every question at once, live preview), and has **✦ Draft the rest** (fills empty sections
+from the board and the people with no AI; with AI, drafts them from the project context). Docs save into the project's
+Files, or on this device with no tribe. The standup, weekly review and retro can become **rituals**: one calendar event
+("every weekday at 9") that asks each member in chat (a small card, or `/standup did … | next … | stuck …`) and writes
+the day's doc. Code: `app/ui/doctpl.js`, `app/ui/doctpl-data.js`, `server/rituals.js`.
+
+Premium is described in [PREMIUM.md](PREMIUM.md): everything local stays free.
+
 ## Academy
 
 Short lessons for every seat: what a CEO does in week one, how Grow finds the first hundred users, how Run keeps

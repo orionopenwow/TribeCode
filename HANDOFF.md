@@ -48,7 +48,9 @@ Pushing from the Claude cloud sandbox:
   - `notify.js` + `approvals.js` + `webpush.js`: inbox, phone push, one-tap approvals.
   - `chatx.js` + `dm.js` + `voice.js`: chat actions, DMs, voice, captions, meeting notes.
   - `docs.js` + `docsx.js` + `live.js` + `ot.js`: docs and live co-editing.
-  - `plan.js`: calendar.
+  - `plan.js`: calendar (repeat weekly / weekdays / daily; `ritual` events call `rituals.js`).
+  - `rituals.js`: standup / weekly review / retro rituals that collect answers in chat and write the doc.
+  - `talent.js`: Work (gigs, matching, assign, progress, review, credit, time bank, compute).
   - `visuals.js`: screenshots.
   - `repo.js` + `context.js` + `integrator.js`: live repo, TRIBE_CONTEXT.md, gated merges.
   - `board.js`: proposals and milestones.
@@ -71,6 +73,7 @@ Pushing from the Claude cloud sandbox:
   - `app.js`: core views; `hostHere` auto-hosts on desktop.
   - `settings.js`: zero-step setup and the Settings page.
   - `setuplocal.js` + `localfiles.js`: instant setup on this device with the home chosen last (GitHub repo, this computer, free cloud, phone), and All files with no tribe (docs/LIGHT-HOSTING.md).
+  - `talent.js` + `workloop.js` + `workcore.js`: Work and its loop and suggestions; `doctpl.js` + `doctpl-data.js`: company templates (Guided / Advanced / ✦); `premium.js`: calm Premium gates (docs/PREMIUM.md).
   - One JS/CSS pair per feature.
 - `app/src-tauri`:
   - `main.rs`: sidecar `host_start`/`host_log`; reuses a server already on the port.

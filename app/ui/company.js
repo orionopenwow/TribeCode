@@ -285,6 +285,7 @@
       <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Cancel</button></div>`);
     if (!s) return;
     s.body.querySelectorAll('[data-kind]').forEach(b => b.onclick = async () => {
+      if (window.TribePremium) await window.TribePremium.gate('seats', { count: c.seats.length + 1 });   // feat/work-company: never blocks, a note for bigger teams
       b.disabled = true;
       try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/company/seats`, { method: 'POST', body: { kind: b.dataset.kind } }); s.close(); await load(); openSeat(r.seat.id); }
       catch (e) { b.disabled = false; toast(e.message); }

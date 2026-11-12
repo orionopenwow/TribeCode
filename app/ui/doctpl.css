@@ -1,0 +1,54 @@
+/* Company templates (app/ui/doctpl.js): library cards, the guided one-question card, the advanced form with a live
+   preview, and the ritual answer card. Flat matte: 1px borders, luminance steps, tokens only. */
+.dt-root { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dt-lib { display: flex; flex-direction: column; gap: 22px; }
+.dt-group { display: flex; flex-direction: column; gap: 10px; }
+.dt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.dt-card { text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.dt-card:hover, .dt-card:focus-visible { background: var(--surface-2); border-color: var(--muted); }
+.dt-card b { font-size: 14.5px; font-weight: 700; }
+.dt-card span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.dt-card small { font-family: var(--mono); font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; margin-top: auto; }
+.dt-prem { font-style: normal; font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--brand); border: 1px solid var(--brand); border-radius: 999px; padding: 0 6px; margin-left: 4px; vertical-align: 2px; }
+.dt-rit-on { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dt-pill { font-size: 12px; color: var(--live); border: 1px solid var(--live); border-radius: 999px; padding: 2px 10px; }
+
+.dt-fill { display: flex; flex-direction: column; gap: 14px; }
+.dt-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dt-title { flex: 1; min-width: 180px; }
+.dt-title h3 { margin: 2px 0 0; font-family: var(--display); font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.dt-adv { flex: none; max-width: 260px; }
+.dt-q { padding: 22px; display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+.dt-dots { display: flex; gap: 6px; }
+.dt-dots i { width: 22px; height: 3px; border-radius: 2px; background: var(--edge); }
+.dt-dots i.done { background: var(--live); }
+.dt-dots i.now { background: var(--brand); }
+.dt-ask { font-family: var(--display); font-size: 19px; font-weight: 750; line-height: 1.35; color: var(--text); }
+.dt-q .dt-in { font-size: 15px; }
+.dt-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dt-sp { flex: 1; }
+.dt-done { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.dt-done-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dt-boost { display: flex; align-items: center; gap: 8px; }
+.dt-boost .ab-spark { color: var(--brand); }
+.dt-preview { max-width: 65ch; line-height: 1.6; font-size: 14px; color: var(--muted); border: 1px solid var(--edge); border-radius: 8px; background: var(--canvas); padding: 14px 16px; max-height: 420px; overflow: auto; }
+.dt-preview h1 { font-size: 19px; color: var(--text); margin: 0 0 8px; }
+.dt-preview h2 { font-size: 15px; color: var(--text); margin: 14px 0 4px; }
+.dt-preview em { color: var(--faint); }
+.dt-ok { margin: 0; font-size: 13.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dt-ritual { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 12px; }
+.dt-adv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.dt-form { display: flex; flex-direction: column; gap: 12px; }
+.dt-f.g { border-left: 2px solid var(--brand); padding-left: 10px; }
+.dt-side { position: sticky; top: 8px; display: flex; flex-direction: column; gap: 10px; }
+
+.rt-card { position: fixed; right: 20px; bottom: 20px; z-index: 140; width: 340px; max-width: calc(100vw - 24px); background: var(--surface); border: 1px solid var(--edge); border-top: 3px solid var(--brand); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity var(--dur-base) var(--ease-out); }
+.rt-card header { display: flex; align-items: center; justify-content: space-between; }
+.rt-card form { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 820px) {
+  .dt-adv-grid { grid-template-columns: 1fr; }
+  .dt-side { position: static; }
+  .dt-q { padding: 16px; }
+  .rt-card { left: 8px; right: 8px; bottom: calc(70px + env(safe-area-inset-bottom)); width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .dt-card, .rt-card { transition: none; } }

@@ -491,7 +491,7 @@ module.exports = function ledger({ P, base, broadcast, postChat, nameOf, perms, 
     },
   };
 
-  return { route, mcpTools, summary, aiWeek, spentThisWeek, company, canRead, canWrite, isBoss, parseCsv, money, CONNECTORS };
+  return { route, mcpTools, summary, aiWeek, spentThisWeek, company, add, canRead, canWrite, isBoss, parseCsv, money, CONNECTORS };
 };
 module.exports.companyReader = companyReader;
 module.exports.parseCsv = parseCsv;

@@ -581,7 +581,13 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     { k: 'business', emoji: '🏢', t: 'A business', s: 'Seats, goals and AI helpers, like a company', word: 'Company', bio: 'A business we run together', note: '', business: true },   // v0.27 company: becomes a company (server/setup.js business)
   ];
   const setup = { tpl: null, image: null };
+  // feat/work-company: a calm Premium note when a 4th project starts (docs/PREMIUM.md). It never stops it: "Not now" opens the sheet as usual.
   function openNew() {
+    const n = (projects || []).length + 1;
+    if (C.connected() && window.TribePremium && n > window.TribePremium.LIMITS.projects) return window.TribePremium.gate('projects', { count: n }).then(() => openNew0());
+    return openNew0();
+  }
+  function openNew0() {
     if (!C.connected() && window.TribeLocalSetup) return window.TribeLocalSetup.start();   // feat/setup-local: no tribe yet: an instant project on this device, its home chosen last
     dropped = null; setup.tpl = null; setup.image = null;
     modal().classList.remove('hidden'); body().classList.add('np-setup');

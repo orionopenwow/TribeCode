@@ -22,6 +22,8 @@ const KINDS = {
   'doc.continue': ['Continue this document naturally from where it stops, in the same voice and format. Write one or two short paragraphs or list items. Return only the new text.', 500],
   'file.describe': ['Describe this file for a shared project folder. Answer in two lines:\nDescription: one sentence about what it probably is and what it is for\nTags: 3 to 6 short lowercase tags, comma separated.', 140],
   'home.plan': ['Turn this into a short plan for today: at most 5 numbered lines, the most important first, each with a few words on why. Use only the items given.', 300],
+  'work.suggest': ['These are suggestions for a small team, made by simple rules from their task board, company seats and open gigs. Rewrite them as at most 5 short, friendly lines, one per line starting with "- ", most useful first. Keep every number, name and seat exactly as given; never add a suggestion that is not supported by the input.', 300],
+  'doc.template': ['Draft the empty sections of this company document from the project context given. For each empty section write "## <the exact heading>" and then 2-5 short lines or bullets under it. Use only facts from the input; where a fact is missing, write a short question in [brackets] instead of inventing it. Return only those sections.', 900],
   'seat.charter': ['Write a charter for this company seat. Answer in exactly five lines:\nGoal: one goal for this month\nOwns: 2-3 things, comma separated\nMay do: 2-4 things it does on its own, comma separated\nNeeds a yes: 2-3 things that need a human\'s approval, comma separated\nDone: how we will know it is done.', 260],
 };
 
