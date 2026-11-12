@@ -804,6 +804,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   }
   function status(html) { const s = $('#np-status'); if (s) s.innerHTML = html; else if (html) toast(html.replace(/<[^>]+>/g, '')); }
   async function create(payload, busy = 'Creating…') {
+    if (window.TribePremium) await window.TribePremium.gate('projects', { count: ((C.state() || {}).projects || []).length + 1 });   // feat/work-company: a calm note at project 4; "Not now" goes on
     status(`<div class="faint">${busy}</div>`);
     try {
       const r = await C.api('/projects', { method: 'POST', body: payload });

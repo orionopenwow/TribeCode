@@ -300,6 +300,7 @@ function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.
 // ---------- chat ----------
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
 let chatHook = null;
+let rituals = null;   // feat/work-company: /standup answers + ritual runs (server/rituals.js)
 let captureHook = null;   // feat/captures (server/captures.js onChat)   // the secretary hears @secretary (server/secretary.js)
 // The outbox (app/ui/tribe.js) gives each message a client id (cid): the app shows it at once, the echo replaces it, and a
 // resend after a lost reply posts nothing twice.
@@ -319,6 +320,7 @@ function postChat(channel, by, text, extra) {
   return msg;
 }
 function handleCommands(channel, member, text) {
+  if (rituals && /^\/(standup|retro|weekly-review)\b/i.test(text)) { try { if (rituals.onCommand(channel, member, text)) return; } catch (e) { console.error(e); } }
   const t = text.match(/^\/task\s+(.+)/i);
   if (t) { const task = createTask({ title: t[1], by: member.id, source: 'chat' }); postChat(channel, 'tribecode', `Made that a task: **${task.title}**`); }
   const d = text.match(/^\/decide\s+(.+)/i);
@@ -439,6 +441,7 @@ huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
 const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
+rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str });   // feat/work-company: standup/retro rituals on the calendar
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
@@ -546,7 +549,7 @@ const aiBasics = require('./aibasics')({ llm, base: baseStore, P, str });   // f
 const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
 const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company });   // phone tribe -> host (docs/PHONE-HOSTING.md)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
-talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name,   // v0.27 company: Work (gigs, hiring, time bank, compute)
+talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name, ledger, loadTasks: () => loadTasks(), saveTask: t => saveTask(t),   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
 buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense });   // build kit: the open-source stack + quality bar per project kind (server/buildkit.js)
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
@@ -1107,6 +1110,7 @@ async function apiInProject(req, res, url) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
   }
+  if (a === 'rituals') return rituals.route(req, res, ctx());   // feat/work-company
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }

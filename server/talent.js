@@ -57,7 +57,7 @@ function contactOf(v) {
   return s;
 }
 
-module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, joinProject, tribeName = () => 'tribe', now = () => Date.now() }) {
+module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, joinProject, ledger = null, loadTasks = null, saveTask = null, tribeName = () => 'tribe', now = () => Date.now() }) {
   const F = { profiles: '.tribe/talent/profiles.json', gigs: '.tribe/talent/gigs.json', bank: '.tribe/talent/timebank.json', compute: '.tribe/talent/compute.json' };
   fs.mkdirSync(base.p('.tribe', 'talent', 'public'), { recursive: true });
   const read = (k, d) => { const v = base.readJSON(F[k], d); return v && typeof v === 'object' ? v : d; };
@@ -152,7 +152,7 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     const mgr = canManageGig(me, g);
     const apps = (g.applicants || []).map(a => (mgr || a.member === me.id ? { ...a, name: a.member ? nameOf(a.member) : a.name } : null)).filter(Boolean);
     return { ...g, applicants: apps, applicantCount: (g.applicants || []).length, applied: (g.applicants || []).some(a => a.member === me.id), canManage: mgr,
-      byName: nameOf(g.by), projectName: g.project ? (P.get(g.project) || {}).name || null : null,
+      byName: nameOf(g.by), stage: stageOf(g), filledName: g.filledBy ? nameOf(g.filledBy) : null, filledAgent: !!(g.filledBy && (member(g.filledBy) || {}).role === 'agent'), mine: isAssignee(me, g), updates: (g.updates || []).map(u => ({ ...u, byName: nameOf(u.by) })), projectName: g.project ? (P.get(g.project) || {}).name || null : null,
       seatInfo: g.seat ? seatInfo(g.project, g.seat) : null, color: (g.seat && (seatInfo(g.project, g.seat) || {}).color) || SEAT_COLORS[g.seatKind] || null };
   }
   function listGigs(me) { return syncDrafts(gigs()).filter(g => seesGig(me, g) && (g.status !== 'draft' || canManageGig(me, g) || g.by === me.id || (member(g.by) || {}).owner === me.id)).map(g => gigView(g, me)); }
@@ -171,6 +171,7 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     if (!prev || 'skills' in b) g.skills = skillList(b.skills || []);
     if (!prev || 'hours' in b) g.hours = hoursOf(b.hours, 168);
     if (!prev || 'pay' in b) g.pay = payOf(b.pay);
+    if (!prev || 'tasks' in b) g.tasks = (Array.isArray(b.tasks) ? b.tasks : []).filter(x => typeof x === 'string' && /^[A-Za-z0-9_-]{1,48}$/.test(x)).slice(0, 20);   // the board tasks this gig covers
     if (prev && 'status' in b) { if (!STATUSES.includes(b.status) || b.status === 'draft') throw err(400, 'status must be open, filled or closed'); g.status = b.status; }
     return g;
   }
@@ -418,6 +419,134 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     return r;
   }
 
+  // ---------- the loop after posting (feat/work-company): match -> assign -> track -> review -> credit ----------
+  // stage: open (no one yet) · assigned · working · review · done · credited. Agents can hold a gig too ("Claude could
+  // take these 2"); their owner answers for them. Credit is hours in the time bank (both confirm, as always) and/or a
+  // cost line in the company's Money ledger. TribeCode moves no money.
+  const STAGES = ['open', 'assigned', 'working', 'review', 'done', 'credited'];
+  const stageOf = g => g.stage || (g.status === 'filled' ? 'assigned' : 'open');
+  const isAssignee = (me, g) => !!me && !!g.filledBy && (g.filledBy === me.id || (member(g.filledBy) || {}).owner === me.id);
+  const AGENTY = /\b(test|tests|docs?|readme|refactor|typo|rename|lint|format|summari[sz]e|translate|write|draft|fix|bug|script|copy|tidy|clean ?up|changelog|migrate|port)\b/i;
+  function syncTasks(g, fn) {
+    if (!loadTasks || !saveTask || !(g.tasks || []).length) return;
+    try { P.inProject(g.project || P.defaultId(), () => { for (const t of loadTasks()) if (g.tasks.includes(t.id)) { fn(t); t.updated = iso(); saveTask(t); } }); } catch (e) { console.error(e); }
+  }
+  function matches(gid, me) {
+    const { g } = findGig(gid, me), want = g.skills || [], text = `${g.title} ${g.description || ''}`;
+    const out = [];
+    for (const m of getMembers()) {
+      if (m.role === 'spectator' || m.id === g.by) continue;
+      if (g.project && P.scoped(m) && !(m.projects || []).includes(g.project) && m.role !== 'agent') { /* outside this project: still a candidate, joins on assign */ }
+      const agent = m.role === 'agent', p = agent ? { skills: [], roles: [] } : profileOf(m.id);
+      let score = 0; const why = [];
+      const hit = want.filter(s => (p.skills || []).some(k => k.includes(s) || s.includes(k)));
+      if (hit.length) { score += hit.length * 3; why.push(`knows ${hit.slice(0, 3).join(', ')}`); }
+      if (g.seatKind && (p.roles || []).includes(g.seatKind)) { score += 4; why.push(`can fill ${SEAT_TITLES[g.seatKind]}`); }
+      if (!agent && p.open) { score += 1; why.push('open to work'); }
+      if (agent) {
+        if (g.kind === 'seat') continue;   // seats go to people; an agent can sit beside them from Company
+        const small = !g.hours || g.hours <= 6;
+        if (AGENTY.test(text)) { score += 3; why.push('the kind of job an agent does well'); }
+        if (small) { score += 1; why.push('small enough to hand off'); }
+        const owner = member(m.owner); if (owner) why.push(`runs on ${first(owner.name)}'s AI`);
+      }
+      const applied = (g.applicants || []).some(a => a.member === m.id);
+      if (applied) { score += 5; why.unshift('asked for it'); }
+      out.push({ id: m.id, name: m.name, color: m.color, agent, score, why: why.slice(0, 3).join(' · ') || (agent ? 'an AI helper in this tribe' : 'in this tribe') });
+    }
+    return out.sort((a, b) => b.score - a.score || Number(a.agent) - Number(b.agent)).slice(0, 8);
+  }
+  function assign(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host assigns');
+    if (g.status !== 'open') throw err(409, 'this gig is not open');
+    const target = member(String(b.member || '')); if (!target || target.role === 'spectator') throw err(404, 'pick someone in the tribe');
+    if (target.role === 'agent' && g.kind === 'seat') throw err(400, 'seats go to people; put an agent beside them in Company');
+    if (target.id === g.by && target.role !== 'agent') throw err(400, 'that\'s you: just do it, or post it for someone else');
+    let a = (g.applicants || []).find(x => x.member === target.id);
+    if (!a) { a = { id: nid('a'), member: target.id, note: '', at: iso(), status: 'applied', direct: true }; g.applicants = [...(g.applicants || []), a]; }
+    a.status = 'hired'; a.hiredAt = iso();
+    if (human(target) && g.project) joinProject(target.id, g.project);
+    const seat = human(target) && g.kind === 'seat' && g.project ? assignSeat(g.project, g.seat, g.seatKind, target.id) : null;
+    Object.assign(g, { status: 'filled', filledBy: target.id, stage: 'assigned', assignedAt: iso(), updates: [...(g.updates || []), { at: iso(), by: me.id, text: `Assigned to ${target.name}`, kind: 'assign' }] });
+    saveGigs(list); changed('gigs');
+    syncTasks(g, t => { t.assignee = target.id; if (t.status === 'backlog') t.status = 'doing'; });
+    const owner = target.role === 'agent' ? member(target.owner) : null;
+    notify(target.id, me.id, `${me.name} gave you "${g.title}"`, g.description || 'Open Work to see it.', { ref: g.id });
+    if (owner) notify(owner.id, me.id, `${me.name} gave your ${target.name} "${g.title}"`, 'It works on your AI. You can take it back in Work.', { ref: g.id });
+    if (human(target)) dm(me.id, target.id, `🎯 You've got **${g.title}**${seat ? ` (the ${seat.title} seat)` : ''}. Post progress from Work when you can.`);
+    return { gig: gigView(g, me), seat };
+  }
+  const canWork = (me, g) => !!me && (isAssignee(me, g) || canManageGig(me, g));
+  function progress(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!g.filledBy) throw err(409, 'assign it first');
+    if (!canWork(me, g)) throw err(403, 'only the person doing it (or the poster) posts progress');
+    const text = clean(b.text || '', 400, 6); if (!text) throw err(400, 'say what moved');
+    const pct = b.pct == null || b.pct === '' ? null : Math.max(0, Math.min(100, Math.round(Number(b.pct)) || 0));
+    if (['done', 'credited'].includes(stageOf(g))) throw err(409, 'this gig is finished');
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text, pct, kind: 'progress' }].slice(-60);
+    if (pct != null) g.pct = pct;
+    g.stage = 'working'; saveGigs(list); changed('gigs');
+    if (g.by !== me.id) notify(g.by, me.id, `${me.name}: progress on "${g.title}"`, text, { ref: g.id });
+    return { gig: gigView(g, me) };
+  }
+  function submit(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!isAssignee(me, g) && !canManageGig(me, g)) throw err(403, 'only the person doing it hands it in');
+    if (!['assigned', 'working'].includes(stageOf(g))) throw err(409, `it is ${stageOf(g)} already`);
+    const note = clean(b.note || '', 600, 10);
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text: note || 'Ready for review', kind: 'submit' }].slice(-60);
+    g.stage = 'review'; g.pct = 100; saveGigs(list); changed('gigs');
+    syncTasks(g, t => { t.status = 'review'; });
+    notify(g.by, me.id, `"${g.title}" is ready for your review`, note || `${me.name} handed it in.`, { ref: g.id });
+    return { gig: gigView(g, me) };
+  }
+  function review(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host reviews');
+    if (stageOf(g) !== 'review') throw err(409, 'nothing to review yet');
+    const ok = b.verdict !== 'changes', note = clean(b.note || '', 600, 10), rating = Math.max(0, Math.min(5, Math.round(Number(b.rating) || 0)));
+    g.review = { by: me.id, at: iso(), verdict: ok ? 'approved' : 'changes', note, rating: rating || null };
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text: ok ? `Approved${note ? `: ${note}` : ''}` : `Asked for changes${note ? `: ${note}` : ''}`, kind: 'review' }].slice(-60);
+    g.stage = ok ? 'done' : 'working'; if (ok) g.doneAt = iso();
+    saveGigs(list); changed('gigs');
+    syncTasks(g, t => { t.status = ok ? 'done' : 'doing'; });
+    const to = member(g.filledBy), owner = to && to.role === 'agent' ? to.owner : null;
+    notify(owner || g.filledBy, me.id, ok ? `${me.name} approved "${g.title}"` : `${me.name} asked for changes on "${g.title}"`, note, { ref: g.id });
+    return { gig: gigView(g, me) };
+  }
+  function credit(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host credits');
+    if (stageOf(g) !== 'done') throw err(409, stageOf(g) === 'credited' ? 'already credited' : 'approve the work first');
+    const worker = member(g.filledBy); if (!worker) throw err(404, 'the person who did it left the tribe');
+    const out = { hours: null, ledger: null };
+    const hours = hoursOf(b.hours, 80);
+    if (hours && human(worker) && human(ownerOf(me)) && worker.id !== ownerOf(me).id) {
+      const e = { id: nid('t'), from: worker.id, to: ownerOf(me).id, hours, note: clean(`Work: ${g.title}`, 200), task: g.id, at: iso(), by: me.id, ok: { from: false, to: true }, status: 'proposed' };
+      const bl = bank(); bl.push(e); saveBank(bl); changed('timebank'); out.hours = entryView(e);
+      notify(worker.id, me.id, `${me.name} credited you ${hours} h`, `For "${g.title}". Confirm it in Work › Time bank.`, { ref: e.id });
+    }
+    const amount = Number(b.amount);
+    if (Number.isFinite(amount) && amount > 0) {
+      if (!ledger || !g.project || !readCompany(g.project)) throw err(400, 'money credit needs a company project with Money turned on');
+      if (ledger.canWrite && !ledger.canWrite(me, g.project)) throw err(403, 'your role can\'t write to Money');
+      const e = ledger.add(g.project, me, { kind: 'cost', amount, currency: b.currency, label: `Work: ${g.title} (${worker.name})`, category: worker.role === 'agent' ? 'ai' : 'people', source: { type: 'manual', name: 'Work', ref: g.id } });
+      out.ledger = e;
+    }
+    if (!out.hours && !out.ledger) {
+      if (b.thanks) out.thanks = true;   // a plain thank-you: free and volunteer gigs
+      else throw err(400, 'credit hours, an amount, or just say thanks');
+    }
+    g.credit = { at: iso(), by: me.id, hours: out.hours ? hours : 0, amount: out.ledger ? out.ledger.amount : 0, currency: out.ledger ? out.ledger.currency : null, thanks: !!out.thanks };
+    g.stage = 'credited';
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text: `Credited${out.hours ? ` ${hours} h` : ''}${out.ledger ? ` · ${out.ledger.amount} ${out.ledger.currency} in Money` : ''}${out.thanks ? ' with thanks' : ''}`, kind: 'credit' }].slice(-60);
+    saveGigs(list); changed('gigs');
+    if (worker.role !== 'agent') dm(me.id, worker.id, `🙏 Thanks for **${g.title}**!${out.hours ? ` I logged ${hours} h for you in the time bank: confirm it in Work.` : ''}`);
+    return { gig: gigView(g, me), ...out };
+  }
+
   // ---------- HTTP ----------
   async function route(req, res, { m, b, c, parts, me, url: u, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
@@ -437,6 +566,12 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
         if (c && d === 'apply' && m === 'POST') return send(res, 200, { gig: apply(c, await readBody(req) || {}, me) });
         if (c && d === 'hire' && m === 'POST') return send(res, 200, hire(c, await readBody(req) || {}, me));
         if (c && d === 'share' && m === 'POST') return send(res, 200, await share(c, await readBody(req) || {}, me));
+        if (c && d === 'matches' && m === 'GET') return send(res, 200, { matches: matches(c, me) });
+        if (c && d === 'assign' && m === 'POST') return send(res, 200, assign(c, await readBody(req) || {}, me));
+        if (c && d === 'progress' && m === 'POST') return send(res, 200, progress(c, await readBody(req) || {}, me));
+        if (c && d === 'submit' && m === 'POST') return send(res, 200, submit(c, await readBody(req) || {}, me));
+        if (c && d === 'review' && m === 'POST') return send(res, 200, review(c, await readBody(req) || {}, me));
+        if (c && d === 'credit' && m === 'POST') return send(res, 200, credit(c, await readBody(req) || {}, me));
       }
       if (b === 'public' && m === 'GET') return send(res, 200, await publicGigs(u.searchParams.get('refresh') === '1'));
       if (b === 'timebank') {

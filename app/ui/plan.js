@@ -172,7 +172,7 @@
       col.innerHTML = items.map(({ o, s, e, lane, n }) => {
         const top = (s - dayStart) / 3600000 * HOUR_PX, h = Math.max(20, (e - s) / 3600000 * HOUR_PX - 2);
         return `<div class="cal-ev ${o.huddle ? 'huddle' : ''} ${h < 40 ? 'short' : ''}" data-ev="${esc(o.id)}" data-start="${esc(o.start)}" data-peek="event:${esc(o.key)}" style="top:${top}px;height:${h}px;left:calc(${lane / n * 100}% + 2px);width:calc(${100 / n}% - 4px);--evc:${evColor(o)}">
-          <b>${o.huddle ? '<svg class="i"><use href="#i-mic"/></svg>' : ''}${esc(o.title)}</b><span>${h >= 40 ? fmtRange(o.start, o.end) : fmtT(o.start)}${o.repeat ? ' · weekly' : ''}</span>${h >= 58 ? avatars(o.attendees) : ''}</div>`;
+          <b>${o.huddle ? '<svg class="i"><use href="#i-mic"/></svg>' : ''}${esc(o.title)}</b><span>${h >= 40 ? fmtRange(o.start, o.end) : fmtT(o.start)}${o.repeat ? ' · ' + (o.repeat === 'weekdays' ? 'weekdays' : o.repeat) : ''}</span>${h >= 58 ? avatars(o.attendees) : ''}</div>`;
       }).join('');
       if (ymd(d) === today) { const n = new Date(); col.insertAdjacentHTML('beforeend', `<div class="cal-now" style="top:${(n.getHours() * 60 + n.getMinutes()) / 60 * HOUR_PX}px"></div>`); }
     }
@@ -308,7 +308,7 @@
       <div class="field"><label>Attendees</label><div class="cal-people">${members().map(x => `<button type="button" class="cal-person ${att.has(x.id) ? 'on' : ''}" data-mid="${esc(x.id)}"><span class="cal-av" style="background:${esc(x.color)};color:${fg(x.color)}">${esc(ini(x.name))}</span>${esc(x.name)}</button>`).join('') || '<span class="faint">Invite friends to add attendees.</span>'}</div></div>
       <div class="toggles cal-toggles">
         <button type="button" class="toggle" id="ce-huddle" role="switch" aria-checked="${!!ev.huddle}">Huddle<small>Posts a “Join huddle” button in chat when it starts.</small><span class="switch"></span></button>
-        <button type="button" class="toggle" id="ce-repeat" role="switch" aria-checked="${ev.repeat === 'weekly'}">Repeats weekly<small>Same time every week.</small><span class="switch"></span></button>
+        <button type="button" class="toggle" id="ce-repeat" role="switch" aria-checked="${!!ev.repeat}">Repeats ${ev.repeat === 'weekdays' ? 'every weekday' : ev.repeat === 'daily' ? 'daily' : 'weekly'}<small>Same time every week.</small><span class="switch"></span></button>
       </div>
       <div class="modal-foot">${isNew ? '' : '<button class="btn ghost cal-del" id="ce-del">Delete</button><span style="flex:1"></span>'}<button class="btn" id="ce-cancel">Cancel</button><button class="btn primary" id="ce-save">${isNew ? 'Create' : 'Save'}</button></div></div>`;
     document.body.appendChild(m);
@@ -324,7 +324,7 @@
       let start = new Date(y, mo - 1, d, h, mi);
       if (!isNew && ev.repeat === 'weekly' && cal.editingOcc) { /* editing a series from one occurrence keeps the series anchor */ }
       const body = { title: m.querySelector('#ce-title').value.trim() || 'Untitled event', start: start.toISOString(), duration: +m.querySelector('#ce-dur').value,
-        attendees: [...m.querySelectorAll('.cal-person.on')].map(b => b.dataset.mid), huddle: m.querySelector('#ce-huddle').getAttribute('aria-checked') === 'true', repeat: m.querySelector('#ce-repeat').getAttribute('aria-checked') === 'true' ? 'weekly' : null };
+        attendees: [...m.querySelectorAll('.cal-person.on')].map(b => b.dataset.mid), huddle: m.querySelector('#ce-huddle').getAttribute('aria-checked') === 'true', repeat: m.querySelector('#ce-repeat').getAttribute('aria-checked') === 'true' ? (ev.repeat || 'weekly') : null };
       try { await C.api(isNew ? '/calendar' : '/calendar/' + ev.id, { method: isNew ? 'POST' : 'PATCH', body }); close(); cal.anchor = start; load(); }
       catch (e) { toast(e.message); }
     };
@@ -390,7 +390,7 @@
     const now = Date.now(), live = Date.parse(start) - 10 * 60000 <= now && end > now;
     return {
       eyebrow: ev.huddle ? '<span class="chip teal">huddle</span>' : '<span class="chip peer">event</span>', title: ev.title,
-      rows: [['When', `${esc(relDay(new Date(start)))} · ${esc(fmtRange(start, end))}`], ['Repeats', ev.repeat ? 'weekly' : ''], ['With', (ev.attendees || []).map(id => esc((member(id) || {}).name || 'someone')).join(', ')]],
+      rows: [['When', `${esc(relDay(new Date(start)))} · ${esc(fmtRange(start, end))}`], ['Repeats', ev.repeat ? (ev.repeat === 'weekdays' ? 'every weekday' : ev.repeat) : ''], ['With', (ev.attendees || []).map(id => esc((member(id) || {}).name || 'someone')).join(', ')]],
       actions: [...(ev.huddle ? [{ label: live ? 'Join huddle' : 'Join early', primary: live, run: () => window.TribeHuddle.join() }] : []), { label: 'Open', run: () => { cal.anchor = new Date(start); window.TribeApp.show('calendar'); editor(ev); } }],
     };
   });
