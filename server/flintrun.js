@@ -124,9 +124,15 @@ print("TribeCode turntable: done.")
 `;
 }
 
-module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, log = () => {} }) {
+module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, visibleMembers = null, log = () => {} }) {
   const exportsDir = () => path.join(root, 'exports');
   const can = me => me && !['spectator', 'guest', 'agent'].includes(me.role);
+  // review-2026-11-11: a proof ZIP holds a project's code, so it is only for whoever saved it and the host/admins
+  // (a friend invited to one project must not list or download another project's ZIP). exports/.owners.json: name -> { by, project }
+  const boss = me => !!me && ['host', 'admin'].includes(me.role);
+  const ownersFile = () => path.join(exportsDir(), '.owners.json');
+  const owners = () => { try { return JSON.parse(fs.readFileSync(ownersFile(), 'utf8')) || {}; } catch { return {}; } };
+  const mayRead = (me, name) => { if (boss(me)) return true; const o = owners()[name]; return !!o && o.by === me.id && (!o.project || !P.canSee || P.canSee(me, o.project)); };
 
   function repoFiles(pid) {
     const p = P.get(pid || P.current() || P.defaultId()); if (!p || !p.repo) return { files: [], skipped: 0, total: 0 };
@@ -172,31 +178,35 @@ module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, l
         const dir = path.join(exportsDir(), 'blender'); fs.mkdirSync(dir, { recursive: true });
         const file = `${name}-turntable.py`; fs.writeFileSync(path.join(dir, file), script);
         log(`flint blender bridge: wrote exports/blender/${file}`);
-        return send(res, 200, { name: file, path: path.join(dir, file), script, run: `blender -b -P "${path.join(dir, file)}"${body.model ? ` -- --model "${String(body.model).replace(/"/g, '')}"` : ''}` });
+        return send(res, 200, { name: file, path: path.join(dir, file), script, run: `blender -b -P "${path.join(dir, file)}"${body.model ? ` -- --model "${String(body.model).replace(/[^\w .\/:~+-]/g, '')}"` : ''}` });   // review-2026-11-11: no $( ) or backticks in a command people paste into a shell
       }
       if (b !== 'proof') return fail(res, 404, 'no such route');
-      if (m === 'GET' && !c) return send(res, 200, { dir: exportsDir(), files: list() });
+      if (m === 'GET' && !c) return send(res, 200, { dir: boss(me) ? exportsDir() : null, files: list().filter(f => mayRead(me, f.name)) });
       if (m === 'GET' && c === 'files') { const pid = url.searchParams.get('project') || P.current() || P.defaultId(); if (P.canSee && !P.canSee(me, pid)) return fail(res, 404, 'project not found'); return send(res, 200, repoFiles(pid)); }
       if (m === 'GET' && c === 'manifest') {
-        const members = (getMembers() || []).map(publicMember).filter(Boolean);
+        const seen = visibleMembers && !boss(me) ? new Set(visibleMembers(me)) : null;   // review-2026-11-11: only the people this member can already see
+        const members = (getMembers() || []).filter(x => !seen || seen.has(x.id) || x.id === me.id).map(publicMember).filter(Boolean);
         const projects = (P.visibleTo ? P.visibleTo(me) : P.all()).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', created: p.created || '', hasRepo: !!p.repo }));
         return send(res, 200, { tribe: { name: tribe.name, created: tribe.created }, members, projects, at: new Date().toISOString() });
       }
       if (m === 'GET' && c === 'file') {
         const name = String(url.searchParams.get('name') || ''); if (!okName(name)) return fail(res, 400, 'which file?');
-        const f = path.join(exportsDir(), name); if (!fs.existsSync(f)) return fail(res, 404, 'no such export');
+        const f = path.join(exportsDir(), name); if (!fs.existsSync(f) || !mayRead(me, name)) return fail(res, 404, 'no such export');
         res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${name.replace(/"/g, '')}"`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
         return fs.createReadStream(f).pipe(res);
       }
       if (m === 'POST' && c === 'save') {
         if (!can(me)) return fail(res, 403, 'only builders save exports');
         const name = String(url.searchParams.get('name') || ''); if (!okName(name) || !/\.zip$/i.test(name)) return fail(res, 400, 'name it like project-proof.zip');
+        const prev = owners()[name]; if (prev && prev.by !== me.id && !boss(me)) return fail(res, 409, 'someone else saved a ZIP with that name');
         const buf = await readRaw(req, MAX_ZIP);
         if (buf.length < 22 || buf.readUInt32LE(0) !== 0x04034b50) return fail(res, 400, 'that is not a ZIP');
         fs.mkdirSync(exportsDir(), { recursive: true });
         const f = path.join(exportsDir(), name), tmp = f + '.tmp'; fs.writeFileSync(tmp, buf); fs.renameSync(tmp, f);
+        const own = owners(); own[name] = { by: me.id, project: /^tribe-/.test(name) ? null : (url.searchParams.get('project') || (P.current && P.current()) || null), at: new Date().toISOString() };
+        fs.writeFileSync(ownersFile(), JSON.stringify(own));
         log(`flint proof: exports/${name} (${buf.length} bytes)`);
-        return send(res, 200, { name, path: f, size: buf.length });
+        return send(res, 200, { name, path: boss(me) ? f : null, size: buf.length });
       }
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return fail(res, 404, 'no such route');
