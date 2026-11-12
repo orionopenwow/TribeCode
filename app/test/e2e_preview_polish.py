@@ -14,7 +14,8 @@
 Usage: python app/test/e2e_preview_polish.py [--shots]   (--shots saves docs/screenshots/preview-desktop.png,
        preview-flint-edit.png, preview-phone.png)
 """
-import base64, json, os, struct, subprocess, sys, tempfile, time, urllib.request, urllib.error, zlib
+import base64, json, os, struct, subprocess, sys, tempfile, threading, time, urllib.request, urllib.error, zlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -26,6 +27,15 @@ SHOTS = Path(os.environ.get("SHOTS_DIR") or (ROOT / "docs" / "screenshots"))
 take = "--shots" in sys.argv
 errors = []
 sys.path.insert(0, str(ROOT))
+
+
+class FakeLLM(BaseHTTPRequestHandler):   # an OpenAI-compatible stand-in: turns "sunday morning" into edit operations
+    def log_message(self, *a): pass
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length") or 0); text = json.dumps(json.loads(self.rfile.read(n) or b"{}").get("messages", []))
+        out = json.dumps({"ops": [{"op": "copy", "section": "hero", "field": "dek", "value": "Warm loaves from six on Sunday mornings"}], "say": "Made the tagline feel like a slow Sunday."}) if "edit operations" in text else "OK"
+        self.send_response(200); self.send_header("Content-Type", "text/event-stream"); self.end_headers()
+        self.wfile.write(("data: " + json.dumps({"choices": [{"delta": {"content": out}}]}) + "\n\n").encode()); self.wfile.write(b"data: [DONE]\n\n")
 
 
 def api(path, method="GET", body=None, token=None):
@@ -287,6 +297,15 @@ console.log(JSON.stringify(t.map(x=>{const p=c.parse(x);return p&&p.ops[0]})))""
             assert ph.evaluate("document.querySelector('#pvw-frame').style.transform") == ""
             pc.close()
             b.close()
+
+        # ======== with an AI on: a free-form sentence becomes the same checked operations ========
+        fake = ThreadingHTTPServer(("127.0.0.1", PORT + 700), FakeLLM); threading.Thread(target=fake.serve_forever, daemon=True).start()
+        ok(api("/llm", "PUT", {"provider": "custom", "baseUrl": f"http://127.0.0.1:{PORT + 700}/v1", "model": "tiny-model", "key": "sk-test-0123456789"}, token=camp), "llm")
+        r = ok(api(f"{P}/flint", "POST", {"ask": "make it feel more like a sunday morning"}, token=camp), "ai edit")
+        assert r["via"] != "rules" and r["changed"][0].startswith("Tagline"), r
+        assert ok(api(P, token=camp))["website"]["gen"]["draft"]["copy"]["hero"]["dek"] == "Warm loaves from six on Sunday mornings"
+        r = ok(api(f"{P}/flint", "POST", {"ask": "add a pricing section"}, token=camp)); assert r["via"] == "rules", "the rules still answer first"
+        fake.shutdown()
         if errors: raise AssertionError("page errors:\n" + "\n".join(errors[:10]))
         print("e2e_preview_polish: OK (toolbar, Flint local website edits + undo, select + type, Saved shelf compare/restore, Files › Website versions, phone tabs/swipe/pinch)")
     finally:

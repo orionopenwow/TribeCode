@@ -215,6 +215,7 @@
     if (r.need === 'logo') { if (FF) FF.home(); return feed({ k: 'flint', html: `<span>${esc(r.say)}</span><span class="pvf-acts"><button type="button" class="btn sm primary" data-pvf="logo">Choose the logo file</button></span>` }); }
     if (FF) FF.done(tgt, 'Done ✓');
     const undoBtn = r.ops && r.ops[0] && !['undo', 'save'].includes(r.ops[0].op) ? '<button type="button" class="btn sm" data-pvf="siteundo">Undo</button>' : '';
+    if (undoBtn) items.forEach(x => { if (x.html) x.html = x.html.replace(/<span class="pvf-acts"><button type="button" class="btn sm" data-pvf="siteundo">Undo<\/button><\/span>/, ''); });   // one Undo: on the latest change
     feed({ k: 'flint', html: `<span>${esc(r.say)}</span> ${viaTag(r.via || 'rules')}${undoBtn ? `<span class="pvf-acts">${undoBtn}</span>` : ''}` });
     if (picked && r.ops && r.ops.some(o => o.op === 'text' || o.op === 'copy')) { picked = null; paintPick(); }
   }
@@ -227,6 +228,7 @@
     if (!el) return;
     const pane = el.closest('.pvw'); if (pane) pane.classList.toggle('src-site', s === 'site');
     picked = null; paintPick(); paintChips(); paintTier();
+    if (s === 'site' && items.length === 1 && /^I’m watching/.test(items[0].text || '')) items = [];
     if (s === 'site' && !items.some(x => x.key === 'site-hello')) feed({ k: 'flint', key: 'site-hello', text: 'This is your website. Click anything on it, then say what to change, or tap one of these. Every change can be undone, and it all works without an AI.' });
     const h = el.querySelector('[data-pvf="history"]'); if (h) h.textContent = s === 'site' ? 'Saved versions' : 'History';
   }

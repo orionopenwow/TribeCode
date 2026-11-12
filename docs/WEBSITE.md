@@ -52,6 +52,35 @@ TribeCode never calls GitHub's write APIs for this. GitHub Pages publishes from 
   `no-store`. Iframes and new tabs use a signed preview token (the member's key never goes in a URL), and the iframe is
   sandboxed with no scripts and no same-origin access.
 
+## In the preview: Flint edits it, no AI needed
+
+The preview's bar has **App | Website**. Website shows the builder's draft (a sandboxed frame with TribeCode's own helper,
+so you can click to select, double-click to type over words, and drop comment pins). Flint sits beside it (Edit on phones)
+and understands plain sentences with no AI (`app/ui/siteedit-core.js`, shared with `server/siteflint.js`):
+
+| Say | It does |
+| --- | --- |
+| make the headline say Fresh bread daily · change the tagline to … · the button says … | changes those words |
+| click something, then type the new words (or "change it to …") | replaces exactly those words |
+| change the accent to teal · make the main color blue · use #2A8C80 for the accent | brand colors (host or lead) |
+| add a pricing section · add testimonials · remove the FAQ · move the FAQ to the top | sections (pricing and testimonials start with honest placeholders) |
+| swap to the Studio template · use the Swiss layout · use the playful font | a look, a layout, a font pair |
+| add my logo | asks for the file (PNG, JPG or plain SVG, under 200 KB) |
+| undo · save this version as Before the launch | steps back · saves to the shelf |
+
+Every change pushes an undo step and is kept as a version; the preview reloads in place (scroll kept). With an AI on
+(Claude via the host's key, or a local model through `server/llm.js`) a sentence the rules don't know becomes the same
+operations, checked the same way, and the reply says **✦ via …** instead of **Basic · no AI**.
+
+**The Saved shelf** (Saved in the bar; the Saved tab on phones; Files › Website › Website versions): save the draft with a
+note, see a flat thumbnail of each version, compare one with now (both thumbnails and the changes in words), restore it.
+Stored in `.tribe/website/<id>.versions.json`. Phones: Page · Edit · Saved tabs (tap or swipe), the device toggle shows
+the desktop page shrunk to fit with pinch-to-zoom (double-tap fits it again). Test: `app/test/e2e_preview_polish.py`.
+
+`POST …/website/flint { ask, pick?, ops?, logo? }`, `POST …/website/undo`, `GET|POST …/website/versions`,
+`POST …/website/versions/:vid/restore`, `GET …/website/versions/:vid/compare`, `DELETE …/website/versions/:vid`,
+`GET …/website/draft?pt=&edit=1` (the draft with the preview helper).
+
 ## API
 
 | Method | Path | Who |
