@@ -21,6 +21,8 @@ take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
 CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
+SETUP_CO = "Set up company"   # polish: leads also see this quiet row (company.js) once the project's company view loads
+core = lambda rs: [r for r in rs if r != SETUP_CO]
 TASK_TABS = ["📋 Board", "🐞 Bugs", "🗳️ Proposals", "🏁 Milestones", "📅 Calendar", "🌿 Code repository", "📸 Visuals"]
 AGENT_KEYS = ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]   # the Agents Hub shows Dashboard + pinned tabs (feat/agents-dash)
 # tab key -> how to tell its view is on screen
@@ -198,10 +200,12 @@ def main():
                 assert host.locator(gone).count() == 0, gone
 
             # ---- four rows, exactly, in order; nothing else between them and Settings
-            assert rows(host, "#pj-nav .nest-row.core") == CORE, rows(host, "#pj-nav .nest-row.core")
+            assert core(rows(host, "#pj-nav .nest-row.core")) == CORE, rows(host, "#pj-nav .nest-row.core")
+            host.wait_for_selector("#nest-company.co-subtle:not(.hidden)", timeout=10000)
+            assert rows(host, "#pj-nav .nest-row.core") == CORE + [SETUP_CO], rows(host, "#pj-nav .nest-row.core")
             api("/vision", "PUT", {"text": "# Nav\n\nA small test project."}, token=host.evaluate("TribeStore.get().server.token"), project=pid)   # + Add waits for the vision (feat/setup-flow)
             host.wait_for_selector("#nest-add", state="visible", timeout=10000)   # the + row (widgets.js) closes the list for the host
-            assert rows(host, "#pj-nav .nest-row") == CORE, rows(host, "#pj-nav .nest-row")   # + Add sits below the Repo row, outside the rows
+            assert core(rows(host, "#pj-nav .nest-row")) == CORE, rows(host, "#pj-nav .nest-row")   # + Add sits below the Repo row, outside the rows
             assert host.locator("#nest-huddle").is_hidden() and host.locator("#capture-toggle").is_hidden(), "huddle and capture have no rows"
             for t in ["One", "Two"]: assert api("/tasks", "POST", {"title": f"Task {t}"}, token=token, project=pid)[0] == 200
             # v0.26: the Task Board badge counts others' task updates you haven't seen (e2e_counts.py), never your own
@@ -332,7 +336,7 @@ def main():
             phone.wait_for_selector("#tabbar.m2-rack")
             phone.click("#menu-btn"); phone.wait_for_selector(".nest-row[data-nav='chat']", state="visible")
             phone.wait_for_timeout(400)
-            assert rows(phone, "#pj-nav .nest-row.core") == CORE
+            assert core(rows(phone, "#pj-nav .nest-row.core")) == CORE
             for sel in ["#ub-gear", "#tour-invite"]: phone.wait_for_selector(sel, state="visible")
             fs, inv = (phone.locator(s).bounding_box() for s in ["#ub-gear", "#tour-invite"])
             assert fs["y"] > inv["y"], (fs, inv)   # your bar (with Settings) sits at the very bottom of the panel, under Invite friends
