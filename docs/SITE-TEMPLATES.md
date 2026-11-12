@@ -83,28 +83,28 @@ The same importer is in the designer: **Import HTML…** (gallery or Site panel)
 
 | Template | id | Category | Source | License |
 |---|---|---|---|---|
-| Agency | `sb-agency` | Business | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-agency) | MIT |
-| Business Casual | `sb-business-casual` | Food & drink | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-business-casual) | MIT |
-| Business Frontpage | `sb-business-frontpage` | Business | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-business-frontpage) | MIT |
-| Clean Blog | `sb-clean-blog` | Blog | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-clean-blog) | MIT |
-| Coming Soon | `sb-coming-soon` | Coming soon | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-coming-soon) | MIT |
-| Creative | `sb-creative` | Business | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-creative) | MIT |
-| Freelancer | `sb-freelancer` | Portfolio | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-freelancer) | MIT |
-| Grayscale | `sb-grayscale` | Startup | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-grayscale) | MIT |
-| Landing Page | `sb-landing-page` | Startup | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-landing-page) | MIT |
-| Modern Business | `sb-modern-business` | Business | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-modern-business) | MIT |
-| New Age | `sb-new-age` | Startup | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-new-age) | MIT |
-| One Page Wonder | `sb-one-page-wonder` | Startup | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-one-page-wonder) | MIT |
-| Personal | `sb-personal` | Personal | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-personal) | MIT |
-| Resume | `sb-resume` | Personal | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-resume) | MIT |
-| Small Business | `sb-small-business` | Business | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-small-business) | MIT |
-| Stylish Portfolio | `sb-stylish-portfolio` | Portfolio | [Start Bootstrap (David Miller)](https://github.com/StartBootstrap/startbootstrap-stylish-portfolio) | MIT |
-| Tailwind Landing | `tt-landing-page` | Startup | [Tailwind Toolbox (Amrit Nagi)](https://github.com/tailwindtoolbox/Landing-Page) | MIT |
-| App Landing | `tt-app-landing` | Startup | [Tailwind Toolbox (Amrit Nagi)](https://github.com/tailwindtoolbox/App-Landing-Page) | MIT |
-| Ghostwind | `tt-ghostwind` | Blog | [Tailwind Toolbox (Amrit Nagi)](https://github.com/tailwindtoolbox/Ghostwind) | MIT |
-| Minimal Blog | `tt-minimal-blog` | Blog | [Tailwind Toolbox (Amrit Nagi)](https://github.com/tailwindtoolbox/Minimal-Blog) | MIT |
-| Nordic Store | `tt-nordic-store` | Shop | [Tailwind Toolbox (Amrit Nagi)](https://github.com/tailwindtoolbox/Nordic-Store) | MIT |
-| Profile Card | `tt-profile-card` | Link in bio | [Tailwind Toolbox (Amrit Nagi)](https://github.com/tailwindtoolbox/Profile-Card) | MIT |
+| Agency | `sb-agency` | Business | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-agency) | MIT |
+| Business Casual | `sb-business-casual` | Food & drink | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-business-casual) | MIT |
+| Business Frontpage | `sb-business-frontpage` | Business | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-business-frontpage) | MIT |
+| Clean Blog | `sb-clean-blog` | Blog | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-clean-blog) | MIT |
+| Coming Soon | `sb-coming-soon` | Coming soon | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-coming-soon) | MIT |
+| Creative | `sb-creative` | Business | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-creative) | MIT |
+| Freelancer | `sb-freelancer` | Portfolio | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-freelancer) | MIT |
+| Grayscale | `sb-grayscale` | Startup | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-grayscale) | MIT |
+| Landing Page | `sb-landing-page` | Startup | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-landing-page) | MIT |
+| Modern Business | `sb-modern-business` | Business | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-modern-business) | MIT |
+| New Age | `sb-new-age` | Startup | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-new-age) | MIT |
+| One Page Wonder | `sb-one-page-wonder` | Startup | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-one-page-wonder) | MIT |
+| Personal | `sb-personal` | Personal | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-personal) | MIT |
+| Resume | `sb-resume` | Personal | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-resume) | MIT |
+| Small Business | `sb-small-business` | Business | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-small-business) | MIT |
+| Stylish Portfolio | `sb-stylish-portfolio` | Portfolio | [Start Bootstrap](https://github.com/StartBootstrap/startbootstrap-stylish-portfolio) | MIT |
+| Tailwind Landing | `tt-landing-page` | Startup | [Tailwind Toolbox](https://github.com/tailwindtoolbox/Landing-Page) | MIT |
+| App Landing | `tt-app-landing` | Startup | [Tailwind Toolbox](https://github.com/tailwindtoolbox/App-Landing-Page) | MIT |
+| Ghostwind | `tt-ghostwind` | Blog | [Tailwind Toolbox](https://github.com/tailwindtoolbox/Ghostwind) | MIT |
+| Minimal Blog | `tt-minimal-blog` | Blog | [Tailwind Toolbox](https://github.com/tailwindtoolbox/Minimal-Blog) | MIT |
+| Nordic Store | `tt-nordic-store` | Shop | [Tailwind Toolbox](https://github.com/tailwindtoolbox/Nordic-Store) | MIT |
+| Profile Card | `tt-profile-card` | Link in bio | [Tailwind Toolbox](https://github.com/tailwindtoolbox/Profile-Card) | MIT |
 | Identity | `h5-identity` | Link in bio | [HTML5 UP (AJ, @ajlkn)](https://html5up.net/identity) | CC BY 3.0 |
 | Photon | `h5-photon` | Startup | [HTML5 UP (AJ, @ajlkn)](https://html5up.net/photon) | CC BY 3.0 |
 | Forty | `h5-forty` | Portfolio | [HTML5 UP (AJ, @ajlkn)](https://html5up.net/forty) | CC BY 3.0 |

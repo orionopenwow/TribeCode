@@ -2,13 +2,13 @@
  "about": "Open-source templates imported into the website designer (feat/site-v2). scripts/dev/site-gallery.py converts each page with app/ui/siteimport.js into a block config in app/ui/sitetpl/<id>.json. Only MIT and CC BY 3.0 sources; CC BY ones carry a credit line in every export (cfg.credit). Pictures are replaced with original flat art; fonts are mapped to our OFL families.",
  "repos": {
   "sb": {
-   "author": "Start Bootstrap (David Miller)",
+   "author": "Start Bootstrap",
    "license": "MIT",
    "url": "https://github.com/StartBootstrap/startbootstrap-{name}",
    "file": "dist/index.html"
   },
   "tt": {
-   "author": "Tailwind Toolbox (Amrit Nagi)",
+   "author": "Tailwind Toolbox",
    "license": "MIT",
    "url": "https://github.com/tailwindtoolbox/{name}",
    "file": "index.html"
