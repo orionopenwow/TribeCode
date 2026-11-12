@@ -2753,6 +2753,62 @@
    "t": "find people",
    "i": "people.find",
    "ctx": "g"
+  },
+  {
+   "t": "where is maya",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "where's Sam right now?",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "what is maya doing",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "is sam online",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "who is online right now",
+   "i": "people.online",
+   "ctx": "g"
+  },
+  {
+   "t": "show me who's online",
+   "i": "people.online",
+   "ctx": "g"
+  },
+  {
+   "t": "anyone online today",
+   "i": "people.online",
+   "ctx": "g"
+  },
+  {
+   "t": "who's working on the website",
+   "i": "people.working",
+   "s": {
+    "what": "the website"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "who is editing the launch plan",
+   "i": "people.working",
+   "s": {
+    "what": "the launch plan"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "is anyone working on the login task",
+   "i": "people.working",
+   "ctx": "g"
   }
  ]
 }
