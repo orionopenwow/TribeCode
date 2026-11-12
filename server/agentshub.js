@@ -314,6 +314,7 @@ module.exports = function agentsHub({ P, store, pstore, brain, getMembers, prese
   function giveTask(me, agentId, x) {
     const ag = member(agentId); if (!isAgent(ag)) throw Object.assign(new Error('no such agent'), { status: 404 });
     if (me.role === 'spectator' || me.role === 'agent') throw Object.assign(new Error('only members give agents tasks'), { status: 403 });
+    if (!ownerOk(ag, pid())) throw Object.assign(new Error('no such agent'), { status: 404 });   // review-2026-11-11: only agents of this project
     let t = x.task ? loadTasks().find(y => y.id === x.task) : null;
     if (x.task && !t) throw Object.assign(new Error('task not found'), { status: 404 });
     const title = String(x.title || '').trim().slice(0, 200);
