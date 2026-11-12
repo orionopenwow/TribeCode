@@ -71,6 +71,7 @@ Pushing from the Claude cloud sandbox:
   - `shell.js`: project circles, the calm sidebar, breadcrumbs, the right panel.
   - `router.js`: the one router (global dashboard vs a project, Back/Forward via history, no dead ends, one pane on screen). Route table: docs/NAVIGATION.md.
   - `accounts.js`: Log in / Log out / Continue as guest, the account switcher and TEST accounts (docs/ACCOUNTS.md). Server scaffold: `server/accounts.js` (off unless `TRIBE_ACCOUNTS=1`); clean-up: `scripts/dev/clean-accounts.js`.
+  - `signup.js`: the sign-up sheet (guest, account, providers), Save your work nudges, Forgot password (docs/ACCOUNTS.md › Sign up). Test: `app/test/e2e_signup.py`.
   - `app.js`: core views; `hostHere` auto-hosts on desktop.
   - `settings.js`: zero-step setup and the Settings page.
   - `setuplocal.js` + `localfiles.js`: instant setup on this device with the home chosen last (GitHub repo, this computer, free cloud, phone), and All files with no tribe (docs/LIGHT-HOSTING.md).
