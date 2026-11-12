@@ -20,7 +20,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PID = 'ember-cafe', NAME = 'Ember Café', TRIBE = 'Flint’s Workshop', RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
+  const PID = 'demo_ember-cafe',   /* demo_: never a real project's id (offline.js wipes these keys on exit) */ NAME = 'Ember Café', TRIBE = 'Flint’s Workshop', RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
   const BIO = 'Our friend’s café: a website, a menu and the opening week.';
   const VISION = 'A warm little website for Ember Café: the menu, the hours and an order button, made by friends in one weekend.';
   const LABEL = 'See how TribeCode works';

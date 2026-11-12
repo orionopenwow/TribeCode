@@ -24,7 +24,7 @@
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const phone = () => matchMedia('(max-width: 820px)').matches;
   const on = () => !!(O() && O().mode && O().mode() === 'showcase');
-  const PID = 'lantern-run', NEW = 'Firefly Garden', NEWID = 'firefly-garden';
+  const PID = 'demo_lantern-run', NEW = 'Firefly Garden', NEWID = 'demo_firefly-garden';   // the showcase's ids (demo_, see offline.js)
   const RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
   const ABORT = { abort: true };
   const iso = (t = Date.now()) => new Date(t).toISOString();

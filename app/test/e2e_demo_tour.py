@@ -95,14 +95,14 @@ def main():
             for sel in ["#dt-again", "#dt-explore", "#dt-browser"]: assert pg.locator(sel).is_visible(), sel
             st = pg.evaluate("TribeClient.state()"); assert st["tribe"]["name"] == "Campfire Crew"
             # the tour's work is real data in the demo backend
-            assert pg.evaluate("TribeOffline.state().projects.some(p => p.id === 'firefly-garden')")
-            assert pg.evaluate("TribeOffline.state().milestones['lantern-run'].some(m => m.version === 'v0.2' && m.status === 'released')")
-            assert pg.evaluate("(TribeOffline.state().widgets['lantern-run'] || []).length >= 1")
+            assert pg.evaluate("TribeOffline.state().projects.some(p => p.id === 'demo_firefly-garden')")
+            assert pg.evaluate("TribeOffline.state().milestones['demo_lantern-run'].some(m => m.version === 'v0.2' && m.status === 'released')")
+            assert pg.evaluate("(TribeOffline.state().widgets['demo_lantern-run'] || []).length >= 1")
             if shots: pg.screenshot(path=str(SHOTS / "demo-tour-end.png"))
             # Watch again: a fresh tribe, the tour plays again
             pg.click("#dt-again")
             pg.wait_for_function("window.TribeDirector && TribeDirector._test.state().running", timeout=20000)
-            assert pg.evaluate("!TribeOffline.state().projects.some(p => p.id === 'firefly-garden') || TribeDirector._test.state().idx > 0")
+            assert pg.evaluate("!TribeOffline.state().projects.some(p => p.id === 'demo_firefly-garden') || TribeDirector._test.state().idx > 0")
             pg.evaluate("TribeDirector.stop()")
             assert pg.locator("#dt-bar").count() == 0
 

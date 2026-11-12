@@ -79,6 +79,7 @@ def main():
             until(pg, "!!(window.TribeClient && TribeClient.connected())", 40, "the real tribe connects")
             assert pg.evaluate("TribeHost.isDesktop") and pg.evaluate("TribeClient.state().tribe.name") == "Real Tribe"
 
+            pg.evaluate("localStorage.setItem('tribecode.project.ember-cafe.keep', '1')")   # a real project that shares a demo's name
             # ---- Help › See how TribeCode works, in the desktop window ----
             until(pg, "!!document.querySelector('#tb-help')", 10)
             pg.click("#tb-help"); pg.click("[data-help=watch]")
@@ -114,8 +115,9 @@ def main():
             saved = pg.evaluate("JSON.parse(localStorage.getItem('tribecode.settings.v1'))")
             assert saved["server"] == real["server"] and saved["name"] == "Orion" and saved.get("hosting") is True, saved
             assert pg.evaluate("TribeClient.state().tribe.name") == "Real Tribe"
-            left = pg.evaluate("Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => /offlineDemo|offline-demo|ember-cafe|setup.wherePending/.test(k))")
+            left = pg.evaluate("Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => /offlineDemo|offline-demo|demo_|setup.wherePending/.test(k))")
             assert not left, left
+            assert pg.evaluate("localStorage.getItem('tribecode.project.ember-cafe.keep')") == "1", "the exit wipe touched a real project's keys"
             ctx.close(); b.close()
     finally:
         srv.terminate()

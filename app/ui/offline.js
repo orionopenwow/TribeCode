@@ -79,7 +79,11 @@
     const inv = T.invoke.bind(T);
     try { T.invoke = (cmd, ...a) => (eph && db && db.on && /^host_(start|stop|kill_stale)$/.test(String(cmd)) ? Promise.reject(new Error('The demo lives in this tab: it never starts or stops a tribe server.')) : inv(cmd, ...a)); } catch {}
   }
+  // fix/batch-fixes: projects of the wiped demos (watch, showcase) have ids starting with demo_ (a real project id is a
+  // slug of [a-z0-9-], never with an underscore), and only those are wiped: a real project's keys can never match
+  const DEMO_ID = 'demo_';
   function wipeKeys(ids) {
+    ids = ids.filter(id => typeof id === 'string' && id.startsWith(DEMO_ID));
     const hit = k => k === 'tribecode.setup.wherePending' || ids.some(id => id && new RegExp(`[.:/]${id.replace(/[^\w-]/g, '')}([.:/]|$)`).test(k));
     for (const st of [localStorage, sessionStorage]) { try { for (let i = st.length - 1; i >= 0; i--) { const k = st.key(i); if (k && hit(k)) st.removeItem(k); } } catch {} }
   }
@@ -846,7 +850,7 @@
         if (!b && GET) return ok({ projects: projects(), current: cur() });
         if (!b && POST) {
           if (body.path || body.url || body.files) return no(400, 'Folders and repos need a real tribe. Start an empty project instead.');
-          const name = String(body.name || 'New project').slice(0, 48); let id = slugify(name), n = 2; while (proj(id)) id = `${slugify(name)}-${n++}`;
+          const name = String(body.name || 'New project').slice(0, 48), pre = db && (db.mode === 'watch' || db.mode === 'showcase') ? DEMO_ID : ''; let id = pre + slugify(name), n = 2; while (proj(id)) id = `${pre}${slugify(name)}-${n++}`;
           const p = { id, name, emoji: body.emoji || '', image: null, bio: '', color: ['#38C6B1', '#6C7CFF', '#FFB86B', '#FF6F8E'][db.projects.length % 4], channel: 'p-' + id, default: false, created: iso(), members: { me: 'host', maya: 'builder' } };
           db.projects.push(p); db.tasks[id] = []; db.docs[id] = []; db.chat[id] = []; db.gists[id] = []; save();
           post(id, 'tribecode', `${me().name} started **${name}**`);

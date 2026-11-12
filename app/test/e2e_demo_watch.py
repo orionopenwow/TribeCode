@@ -103,16 +103,16 @@ def main():
             # everything was made from nothing, in the demo's own state
             d = pg.evaluate("TribeOffline.state()")
             assert not d.get("blank") and d["tribe"]["name"] == "Flint’s Workshop", d["tribe"]
-            assert [p["id"] for p in d["projects"]] == ["ember-cafe"], d["projects"]
-            assert "café" in (d["vision"].get("ember-cafe") or "").lower(), d["vision"]
+            assert [p["id"] for p in d["projects"]] == ["demo_ember-cafe"], d["projects"]
+            assert "café" in (d["vision"].get("demo_ember-cafe") or "").lower(), d["vision"]
             assert any(m["id"] == "maya" for m in d["members"]), "Maya joined"
-            chat = d["chat"]["ember-cafe"]
+            chat = d["chat"]["demo_ember-cafe"]
             assert any((m.get("reactions") or {}).get("🔥") == ["maya"] for m in chat), "Maya's reaction"
             assert any(m.get("by") == "maya" and m.get("replyTo") for m in chat), "Maya's reply"
-            ts = {t["title"]: t for t in d["tasks"]["ember-cafe"]}
+            ts = {t["title"]: t for t in d["tasks"]["demo_ember-cafe"]}
             assert ts["Design the menu board"]["assignee"] == "maya" and ts["Design the menu board"]["accept"] == "accepted", ts
             assert any(a["status"] == "approved" for a in d["approvals"]), d["approvals"]
-            assert (d.get("company") or {}).get("ember-cafe"), "made it a company"
+            assert (d.get("company") or {}).get("demo_ember-cafe"), "made it a company"
             assert pg.evaluate("localStorage.getItem('tribecode.setup.wherePending')") is None, "the start sheet left a real flag"
             print(f"  desktop: {len(STEPS)} chapters at 4x in {took:.1f} s, {len(log)} targets all found")
             if shots: time.sleep(0.5); pg.screenshot(path=str(SHOTS / "demo-watch-end.png"))
