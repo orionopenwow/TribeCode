@@ -303,6 +303,7 @@
       const t = String(m.text || '');
       if (/\b(?:open|hours|closed|opening)\b/i.test(t)) {
         const rx = new RegExp(`\\b(${DAY}(?:\\s*(?:-|–|to|through|thru)\\s*${DAY})?|weekdays|weekends|daily|every day)\\b[:,]?\\s*(?:from\\s+)?(${TIME}\\s*(?:-|–|to|until|till)\\s*${TIME}|closed)`, 'gi');
+        const cl = new RegExp(`\\bclosed\\s+(?:on\\s+)?(${DAY}|weekends)\\b`, 'gi'); let q; while ((q = cl.exec(t))) { const d = DCAP(q[1]).replace(/^weekends$/i, 'Weekends'), k = d.toLowerCase(); if (!seenH.has(k)) { seenH.add(k); out.hours.push({ d, h: 'Closed' }); } }
         let h; while ((h = rx.exec(t))) { const d = DCAP(h[1].replace(/\s*(?:to|through|thru)\s*/i, '–').replace(/\s*-\s*/, '–')).replace(/^(weekdays|weekends|daily|every day)$/i, x => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()); const v = h[2].replace(/\s*(?:-|to|until|till)\s*/i, '–').replace(/^closed$/i, 'Closed'); const k = d.toLowerCase(); if (!seenH.has(k)) { seenH.add(k); out.hours.push({ d, h: v }); } }
       }
       if (/\b(?:show|gig|launch|event|party|meetup|release|opening|concert|market|workshop|stream|premiere|tour)\b/i.test(t)) {
@@ -314,6 +315,7 @@
       const ph = /(?:\+\d{1,3}[\s-]?)?\(?\d{2,4}\)?[\s-]\d{3,4}[\s-]\d{3,4}\b/.exec(t); if (ph && !out.phone && /\b(?:call|phone|tel|number|ring)\b/i.test(t)) out.phone = ph[0].trim();
       const ad = /\b\d{1,5}\s+(?:[A-Z][a-z]+\s){1,3}(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Way|Place|Pl|Square|Sq|Boulevard|Blvd|Drive|Dr)\b\.?(?:,\s*[A-Z][a-z]+)?/.exec(t); if (ad && !out.address) out.address = ad[0];
     }
+    const ORD = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'wee', 'dai', 'eve']; out.hours.sort((x, y) => ORD.indexOf(x.d.slice(0, 3).toLowerCase()) - ORD.indexOf(y.d.slice(0, 3).toLowerCase()));
     return out;
   }
   // groupComments(comments) -> [{ block, page, label, ids, title, body }]: one per section, the busiest first

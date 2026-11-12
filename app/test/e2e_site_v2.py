@@ -266,6 +266,10 @@ def main():
             ok(api(f"/tasks/{big['id']}", "PATCH", {"status": "done"}, token=tok, project=pid), "task done")
             cs = ok(api(f"/projects/{pid}/site-comments", token=tok))["comments"]
             assert sorted(c["status"] for c in cs) == ["resolved", "resolved", "tasked"], [c["status"] for c in cs]
+            # the website preview's Comment button opens the designer in comment mode (same comments, same tasks)
+            pg.click("[data-wdz='close']")
+            pg.evaluate("TribeSiteDesigner.open({ comment: true })")
+            pg.wait_for_function("TribeSiteDesigner.state().open && TribeSiteDesigner.state().cmode", timeout=8000)
             # Flint's words for it from the main chat too
             pg.click("[data-wdz='close']")
             flint_chat(pg, "add our opening hours to the website")
