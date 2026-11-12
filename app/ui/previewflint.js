@@ -32,7 +32,11 @@
   const roleOf = id => ((C.state().members || []).find(m => m.id === id) || {}).role || '';
   const project = () => (ctx && ctx.project && ctx.project()) || C.project();
 
+  const isSite = () => !!(ctx && ctx.source && ctx.source() === 'site');
+  // the website's chips: a "…" chip fills the box so you finish the sentence; the others run at once
+  const SITE_CHIPS = ['Make the headline say …', 'Change the accent to teal', 'Add a pricing section', 'Swap to the Studio template', 'Add my logo', 'Remove the FAQ'];
   function chips() {
+    if (isSite()) return SITE_CHIPS;
     const kind = (ctx && ctx.kind && ctx.kind()) || '';
     if (/game/.test(kind)) return ['Add a score', 'Make it harder', 'Add a jump sound', 'Make the title bigger'];
     return ['Make the title bigger', 'Make it dark', 'Mobile layout', 'Add a contact form'];
@@ -54,9 +58,10 @@
       <section class="pvf-props hidden" id="pvf-props" aria-label="Properties"></section>
       <div class="pvf-queue hidden" id="pvf-queue" aria-label="Notes to apply"></div>
       <div class="pvf-chips" id="pvf-chips"></div>
+      <input type="file" id="pvf-logo" class="hidden" accept="image/png,image/jpeg,image/svg+xml" aria-label="Logo file">
       <div class="pvf-tools"><label class="pvf-plan" title="Flint shows the steps first; you can edit them before anything goes to your AI helpers"><input type="checkbox" id="pvf-plan"> Plan first</label>
         <button type="button" class="pvf-tool" data-pvf="history" aria-expanded="false">History</button></div>
-      <form class="pvf-form" id="pvf-form" autocomplete="off"><textarea class="input" id="pvf-in" rows="2" maxlength="800" placeholder="Describe a change…" aria-label="Describe a change"></textarea>
+      <form class="pvf-form" id="pvf-form" autocomplete="off"><textarea class="input" id="pvf-in" rows="2" maxlength="800" placeholder="Ask Flint to change…" aria-label="Ask Flint to change something"></textarea>
         <span class="pvf-btns"><button type="button" class="btn sm" id="pvf-add" title="Add to the list and apply them all together">+ Note</button><button class="btn primary sm" id="pvf-go">Send</button></span></form>`;
     body.appendChild(el);
     const w = Math.max(240, Math.min(520, Number(lsGet(KW, '320')) || 320));
@@ -73,7 +78,9 @@
       if (a.dataset.pvf === 'hide') setOpen(false);
       if (a.dataset.pvf === 'unpick') { picked = null; paintPick(); }
       if (a.dataset.pvf === 'fix') fix(a.dataset.msg || '');
-      if (a.dataset.pvf === 'history') toggleHistory();
+      if (a.dataset.pvf === 'history') { if (isSite() && window.TribePreview && window.TribePreview.shelf) window.TribePreview.shelf(true); else toggleHistory(); }
+      if (a.dataset.pvf === 'siteundo') siteUndo(a);
+      if (a.dataset.pvf === 'logo') el.querySelector('#pvf-logo').click();
       if (a.dataset.pvf === 'customize' && window.TribeSiteLib) window.TribeSiteLib.edit({ pid: project(), dir: a.dataset.dir || '', level: 'easy' });   // website templates (sitelib.js)
       if (a.dataset.pvf === 'restore') restore(a.dataset.sha, a);
       if (a.dataset.pvf === 'savever') saveVersion(a);
@@ -88,17 +95,26 @@
       if (a.dataset.pvf === 'tribeai' && pending) { const p = pending; pending = null; a.closest('.pvf-t').querySelectorAll('button').forEach(b => { b.disabled = true; }); if (window.TribeFlint && window.TribeFlint.ask) askFlint(p.text); }
     });
     el.querySelector('.pvf-handle').onclick = () => setOpen(!el.classList.contains('is-open'));
-    el.querySelector('#pvf-chips').addEventListener('click', e => { const b = e.target.closest('[data-chip]'); if (b) send(b.dataset.chip); });
+    el.querySelector('#pvf-chips').addEventListener('click', e => {
+      const b = e.target.closest('[data-chip]'); if (!b) return;
+      if (/…$/.test(b.dataset.chip)) { const ta2 = el.querySelector('#pvf-in'); ta2.value = b.dataset.chip.replace(/…$/, ''); ta2.focus(); try { ta2.setSelectionRange(ta2.value.length, ta2.value.length); } catch {} return; }
+      send(b.dataset.chip);
+    });
+    el.querySelector('#pvf-logo').addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+      if (f.size > 200 * 1024) return feed({ k: 'flint', text: 'That file is over 200 KB. Export a smaller PNG or a plain SVG and try again.' });
+      const r = new FileReader(); r.onload = () => siteSend('add my logo', null, { logo: String(r.result || '') }, true); r.readAsDataURL(f);
+    });
     const form = el.querySelector('#pvf-form'), ta = el.querySelector('#pvf-in');
     form.onsubmit = e => { e.preventDefault(); const t = ta.value.trim(); if (t) { ta.value = ''; send(t); } };
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
     el.addEventListener('keydown', e => { if (e.key === 'Escape' && isPhone() && el.classList.contains('is-open')) { e.stopPropagation(); setOpen(false); } });
-    grip(pane); sheetDrag();
+    grip(pane);
     // the toolbar's Flint toggle
     const bar = pane.querySelector('.pvw-bar');
     if (bar && !bar.querySelector('[data-act="flint"]')) {
       const t = document.createElement('button'); t.className = 'pvw-btn pvw-flint'; t.dataset.pvfToggle = '1';
-      t.title = 'Flint'; t.setAttribute('aria-label', 'Flint'); t.innerHTML = '<img src="assets/flint.svg" alt="" width="16" height="16"><span>Flint</span>';
+      t.title = 'Ask Flint to change…'; t.setAttribute('aria-label', 'Ask Flint to change something'); t.innerHTML = '<img src="assets/flint.svg" alt="" width="16" height="16"><span class="pvw-fl-long">Ask Flint to change…</span><span class="pvw-fl-short">Flint</span>';
       t.onclick = () => setOpen(!el.classList.contains('is-open'));
       bar.appendChild(t);
     }
@@ -112,6 +128,7 @@
     if (!isPhone() && !quiet) lsSet(KOFF, on ? '0' : '1');
     if (on && !quiet) setTimeout(() => { const i = el.querySelector('#pvf-in'); if (i && !isPhone()) i.focus(); }, 30);
     if (ctx && ctx.relayout) setTimeout(ctx.relayout, 0);
+    if (isPhone() && ctx && ctx.onPhoneOpen) ctx.onPhoneOpen(on);
   }
   // desktop: drag the left edge to resize (240–520 px); arrows on the focused grip too
   function grip(pane) {
@@ -125,24 +142,21 @@
     });
     g.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); set(el.getBoundingClientRect().width + (e.key === 'ArrowLeft' ? 24 : -24)); } });
   }
-  // phones: pull the sheet up or down by its head
-  function sheetDrag() {
-    const h = el.querySelector('.pvf-head'); let y0 = null, moved = false;
-    h.addEventListener('pointerdown', e => { if (!isPhone() || e.target.closest('button:not(.pvf-handle)')) return; y0 = e.clientY; moved = false; });
-    h.addEventListener('pointermove', e => { if (y0 !== null && Math.abs(e.clientY - y0) > 12) moved = true; });
-    h.addEventListener('pointerup', e => { if (y0 === null) return; const dy = e.clientY - y0; y0 = null; if (!moved) return; setOpen(dy < 0); });
-  }
+
 
   // the honest line under the header: what Flint can do right now for free, and which AI (if any) is on
   async function loadTiers(force) { if (tiers && !force) return tiers; try { tiers = await C.api('/flint/tiers'); } catch { tiers = { tiers: [], now: { host: { online: false } } }; } return tiers; }
   async function paintTier() {
     const t = el && el.querySelector('#pvf-tier-t'); if (!t) return;
     const T = await loadTiers(), host = (T.now && T.now.host) || {}, B = window.TribeBrain, dev = B && B.choice && B.choice() === 'browser' && B.browserReady && B.browserReady();
+    if (isSite()) { t.textContent = host.online ? `Website edits are free · anything else goes to ${host.via || 'the tribe’s AI'}` : 'Website edits are free and need no AI'; return; }
     t.textContent = dev ? 'Edits and first builds free · small model on this device' : host.online ? `Edits and first builds free · tribe AI: ${host.via || 'on'}` : 'Edits and first builds need no AI · bigger jobs go to your AI helper';
   }
   function paintChips() { const c = el && el.querySelector('#pvf-chips'); if (c) c.innerHTML = chips().map(t => `<button type="button" class="chip" data-chip="${esc(t)}">${esc(t)}</button>`).join(''); }
   function paintPick() {
     paintProps();
+    const inp = el && el.querySelector('#pvf-in');
+    if (inp) inp.placeholder = picked && isSite() ? `Type new words for “${String(picked.text || '').slice(0, 28)}”, or say what to change` : 'Ask Flint to change…';
     const p = el && el.querySelector('#pvf-pick'); if (!p) return;
     p.classList.toggle('hidden', !picked);
     if (picked) p.querySelector('span').innerHTML = `Editing: <b>${esc(picked.text ? '“' + picked.text.slice(0, 48) + (picked.text.length > 48 ? '…' : '') + '”' : '<' + picked.tag + '>')}</b> <span class="faint">&lt;${esc(picked.tag)}&gt;</span>`;
@@ -167,8 +181,9 @@
   }
 
   async function send(text, pickArg) {
-    feed({ k: 'you', who: 'You', text });
     const pickNow = pickArg !== undefined ? pickArg : picked;
+    if (isSite()) return siteSend(text, pickNow);
+    feed({ k: 'you', who: 'You', text });
     try {
       // Flint's free tier: a recipe build, or an honest "this needs a stronger AI" (server/flintfree.js)
       let tier = null;
@@ -187,6 +202,35 @@
       if ((ASSET.test(text) || QUESTION.test(text)) && window.TribeFlint && window.TribeFlint.ask) return askFlint(text);
       return askAgents(text, pickNow);
     } catch (e) { feed({ k: 'flint', text: e.message || String(e) }); }
+  }
+  // ---------- the website: Flint's local edits (server/siteflint.js, rules in app/ui/siteedit-core.js) ----------
+  const viaTag = v => (v === 'rules' ? '<span class="pvf-via">Basic · no AI</span>' : `<span class="pvf-via is-ai">✦ via ${esc(v)}</span>`);
+  async function siteSend(text, pickNow, extra, quiet) {
+    if (!quiet) feed({ k: 'you', who: 'You', text });
+    const pid = project(), FF = window.TribeFlintFly, fr = document.querySelector('#pvw-frame iframe'), tgt = pickNow && pickNow.rect && fr ? { frame: fr, rect: pickNow.rect } : (document.querySelector('#pvw-frame') || document.querySelector('#pvw'));
+    if (FF) FF.work(tgt, 'Editing');
+    let r;
+    try { r = await C.api(`/projects/${encodeURIComponent(pid)}/website/flint`, { method: 'POST', body: { ask: text, pick: pickNow ? { tag: pickNow.tag, text: pickNow.text } : null, ...(extra || {}) } }); }
+    catch (e) { if (FF) FF.home(); return feed({ k: 'flint', text: e.message || String(e) }); }
+    if (r.need === 'logo') { if (FF) FF.home(); return feed({ k: 'flint', html: `<span>${esc(r.say)}</span><span class="pvf-acts"><button type="button" class="btn sm primary" data-pvf="logo">Choose the logo file</button></span>` }); }
+    if (FF) FF.done(tgt, 'Done ✓');
+    const undoBtn = r.ops && r.ops[0] && !['undo', 'save'].includes(r.ops[0].op) ? '<button type="button" class="btn sm" data-pvf="siteundo">Undo</button>' : '';
+    if (undoBtn) items.forEach(x => { if (x.html) x.html = x.html.replace(/<span class="pvf-acts"><button type="button" class="btn sm" data-pvf="siteundo">Undo<\/button><\/span>/, ''); });   // one Undo: on the latest change
+    feed({ k: 'flint', html: `<span>${esc(r.say)}</span> ${viaTag(r.via || 'rules')}${undoBtn ? `<span class="pvf-acts">${undoBtn}</span>` : ''}` });
+    if (picked && r.ops && r.ops.some(o => o.op === 'text' || o.op === 'copy')) { picked = null; paintPick(); }
+  }
+  async function siteUndo(btn) {
+    if (btn) btn.disabled = true;
+    try { const r = await C.api(`/projects/${encodeURIComponent(project())}/website/undo`, { method: 'POST', body: {} }); feed({ k: 'flint', text: r.say }); }
+    catch (e) { feed({ k: 'flint', text: e.message || String(e) }); }
+  }
+  function source(s) {
+    if (!el) return;
+    const pane = el.closest('.pvw'); if (pane) pane.classList.toggle('src-site', s === 'site');
+    picked = null; paintPick(); paintChips(); paintTier();
+    if (s === 'site' && items.length === 1 && /^I’m watching/.test(items[0].text || '')) items = [];
+    if (s === 'site' && !items.some(x => x.key === 'site-hello')) feed({ k: 'flint', key: 'site-hello', text: 'This is your website. Click anything on it, then say what to change, or tap one of these. Every change can be undone, and it all works without an AI.' });
+    const h = el.querySelector('[data-pvf="history"]'); if (h) h.textContent = s === 'site' ? 'Saved versions' : 'History';
   }
   async function freeBuild(text) {
     const pid = project(), FF = window.TribeFlintFly, tgt = document.querySelector('#pvw-frame') || document.querySelector('#pvw');
@@ -295,8 +339,8 @@
   const trimLen = v => String(v || '').replace(/(\d+)\.\d+px/g, '$1px').trim();
   function paintProps() {
     const box = el && el.querySelector('#pvf-props'); if (!box) return;
-    box.classList.toggle('hidden', !picked);
-    if (!picked) { box.innerHTML = ''; return; }
+    box.classList.toggle('hidden', !picked || isSite());
+    if (!picked || isSite()) { box.innerHTML = ''; return; }
     const cs = picked.cs || {};
     const field = (k, label) => {
       if (k === 'font-weight') return `<label><span>${label}</span><select data-prop="${k}">${['300', '400', '500', '600', '700', '800'].map(w => `<option ${String(cs[k]) === w ? 'selected' : ''}>${w}</option>`).join('')}</select></label>`;
@@ -392,7 +436,9 @@
     error(e) { feed({ k: 'error', text: String(e && e.msg || e || 'error').slice(0, 300), key: 'e' + String(e && e.msg) + (e && e.line) }); },
     feed,
     open: () => setOpen(true), close: () => setOpen(false), isOpen: () => !!(el && el.classList.contains('is-open')),
-    ask: t => send(String(t || '')),   // flint-local: Flint's chat hands picked-element edits here (app/ui/flintlocal.js)
+    ask: t => send(String(t || '')),
+    source,
+    siteOps: (ops, label) => { feed({ k: 'you', who: 'You', text: label || 'Edit on the page' }); return siteSend('', null, { ops }, true); },   // flint-local: Flint's chat hands picked-element edits here (app/ui/flintlocal.js)
     items: () => items.slice(),
     notes: () => notes.slice(),
   };

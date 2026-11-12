@@ -43,6 +43,7 @@ const FIELDS = { headline: 80, tagline: 160, about: 2000, footer: 160, playUrl: 
 const SUGGESTABLE = { headline: 'headline', tagline: 'tagline', about: 'about text', footer: 'footer line' };
 const sitegen = require('./sitegen');   // feat/customize: the generator ("Design it for me"): layouts, copy, the brain pass
 const CSP = "default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-popups allow-popups-to-escape-sandbox";
+const CSP_EDIT = "default-src 'none'; img-src data: blob:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src data: blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox";
 const SHOT_MAX = 3 * 1024 * 1024;
 const LOGO_MAX = 200 * 1024;
 const LOGO_MIME = { png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml' };
@@ -473,7 +474,7 @@ ${blocks.join('\n')}
     const T = gen && sitegen.TYPES[gen.type] ? gen.type : null, picks = picksFor(pid), ptype = T || sitegen.guessType(null, P.get(pid), '');
     const order = gen ? (T ? sitegen.TYPES[T].order : sitegen.LAYOUTS[gen.layout].order) : [];
     return { draft: gen ? { layout: gen.layout, off: gen.off || {}, order: gen.order, edited: gen.edited || {}, copy: gen.copy, polished: gen.polished || null, updated: gen.updated, seed: gen.seed,
-        type: T, info: gen.info || {}, theme: gen.theme || null, secs: order } : null,
+        type: T, info: gen.info || {}, theme: gen.theme || null, secs: [...order, ...(gen.add || []).filter(k => !order.includes(k))], add: gen.add || [] } : null,
       types: sitegen.TYPE_IDS.map(id => ({ id, name: sitegen.TYPES[id].name, icon: sitegen.TYPES[id].icon, note: sitegen.TYPES[id].note })),
       themes: sitegen.rankThemes(ptype, picks).map(id => { const x = sitegen.THEMES[id]; return { id, name: x.name, note: x.note, primary: x.primary, accent: x.accent, font: x.font, fontName: sitegen.FONTS[x.font].name, layout: x.layout, why: sitegen.why(id, ptype, picks) }; }),
       guess: sitegen.TYPES[ptype] ? { type: ptype, name: sitegen.TYPES[ptype].name } : null,
@@ -705,9 +706,13 @@ ${blocks.join('\n')}
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `attachment; filename="${String(p.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'site'}-website.html"`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
         return res.end(page);
       }
-      const page = sub === 'draft' ? await draftHtml(b) : previewHtml(b);
+      let page = sub === 'draft' ? await draftHtml(b) : previewHtml(b);
       if (page === null) return fail(res, 404, sub === 'draft' ? 'there is no draft yet' : 'the website is not built yet');
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': CSP, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store', 'X-Frame-Options': 'SAMEORIGIN' });
+      // ?edit=1 (the preview pane): the same draft plus the preview helper (pick, double-click text, comment pins, screenshots).
+      // Still its own opaque origin (sandbox without allow-same-origin): the only script is TribeCode's own helper.
+      const edit = sub === 'draft' && url.searchParams.get('edit') === '1' && preview.HELPER_SRC;
+      if (edit) page = page.replace(/<head\b[^>]*>/i, h => h + preview.HELPER_SRC.replace('__TCV__', '0'));
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': edit ? CSP_EDIT : CSP, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store', 'X-Frame-Options': 'SAMEORIGIN' });
       return res.end(page);
     }
     if (!me) return fail(res, 401, 'not a member of this tribe');
@@ -779,7 +784,7 @@ ${blocks.join('\n')}
     return null;
   }
 
-  return { route, build, gather, html, signature, tick, exists, load, httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
+  return { route, build, gather, html, signature, tick, exists, load, save: (pid, st) => save(pid, st), push: pid => push(pid), canManage: (pid, me) => canManage(pid, me), canDraft: me => canDraft(me), cleanLogo, fresh, newGen: (g, pid) => newGen(g, pid), httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
 };
 module.exports.httpsRepo = httpsRepo;
 module.exports.visionText = visionText;

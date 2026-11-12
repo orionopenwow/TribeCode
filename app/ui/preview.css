@@ -189,3 +189,49 @@ body.pvw-focus .pvw-wc { display: inline-flex; gap: 6px; margin-left: 6px; paddi
   body.pvw-focus .pvw-proj .pvw-i { display: none; }
   body.pvw-focus .pvw-bar .pvw-btn { width: 33px; } body.pvw-focus .pvw-bar { gap: 0; padding: env(safe-area-inset-top) 6px 0; } body.pvw-focus .pvw-proj { gap: 6px; padding: 0 4px; }
 }
+
+/* ---------- polish (feat/preview): App | Website, Select, Saved, the phone tabs, pinch-zoom ---------- */
+.pvw-src { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); flex: none; }
+.pvw-src button { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 6px; color: var(--faint); font-size: 12.5px; font-weight: 600; }
+.pvw-src button:hover { color: var(--text); }
+.pvw-src button[aria-selected="true"] { background: var(--sel, var(--surface-2)); color: var(--text); box-shadow: 0 0 0 1px var(--edge); }
+.pvw-src .pvw-i { width: 14px; height: 14px; }
+.pvw-bar .pvw-edit, .pvw-bar .pvw-saved { width: auto; padding: 0 10px; display: inline-flex; gap: 6px; font-size: 12.5px; font-weight: 600; }
+.pvw-bar .pvw-edit[aria-pressed="true"], .pvw-bar .pvw-saved[aria-pressed="true"] { background: var(--sel, var(--surface-2)); color: var(--text); box-shadow: 0 0 0 1px var(--edge); }
+.pvw-bar .pvw-edit[aria-pressed="true"] .pvw-i { color: var(--accent); }
+.pvw-alt { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 4px 0 0; }
+.pvw-alt .pvw-i, .pvw-brow .pvw-i { width: 14px; height: 14px; }
+.pvw-brow .btn { display: inline-flex; align-items: center; gap: 6px; }
+.pvw-stage { position: relative; }
+.pvw-frame { transform-origin: top center; }
+.pvw-zoom { position: absolute; inset: 0; z-index: 3; touch-action: none; cursor: grab; }
+.pvw-zl { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 4; padding: 4px 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--raised, var(--surface)); font: 500 11px/1.4 var(--mono); color: var(--muted); pointer-events: none; }
+.pvw .pvw-zl.hidden, .pvw .pvw-zoom.hidden { display: none; }
+.pvw-edge, .pvw-ph { display: none; }
+/* the pin bar and a picker never fight the pinch layer */
+.pvw:has(.pin-cbtn[aria-pressed="true"]) .pvw-zoom { display: none; }
+@media (max-width: 1280px) and (min-width: 821px) { body.pvw-focus .pvw-src span, body.pvw-focus .pvw-saved span { display: none; } }
+@media (max-width: 820px) {
+  .pvw { position: relative; overflow: hidden; } .pvw-body { overflow: hidden; }
+  .pvw-src { padding: 1px; } .pvw-src button { height: 30px; padding: 0 8px; } .pvw-src button span { display: none; }
+  .pvw-seg [data-dev="tablet"] { display: none; }
+  .pvw-bar .pvw-edit span, .pvw-bar .pvw-saved { display: none; }
+  .pvw-bar .pvw-edit { width: 34px; padding: 0; justify-content: center; }
+  .pvw-stage { padding: 0; }
+  .pvw[data-device="desktop"] .pvw-stage { padding: 8px; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+  .pvw-edge { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: 18px; z-index: 2; touch-action: pan-y; }
+  /* Page · Edit · Saved: a tab bar you tap or swipe */
+  .pvw-ph { display: flex; flex: none; gap: 4px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid var(--edge); background: var(--rail, var(--canvas)); touch-action: pan-y; }
+  .pvw-ph button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 10px; color: var(--faint); font-size: 13px; font-weight: 600; }
+  .pvw-ph button[aria-pressed="true"] { background: var(--sel, var(--surface-2)); color: var(--text); box-shadow: 0 0 0 1px var(--edge); }
+  .pvw-ph .hidden { display: none; }
+}
+.pvw-fl-short { display: none; }
+@media (min-width: 821px) and (max-width: 1380px) { body .pvw-bar .pvw-flint .pvw-fl-long { display: none; } body .pvw-bar .pvw-flint .pvw-fl-short { display: inline; } }
+@media (max-width: 820px) {
+  body .pvw-bar .pvw-seg { display: inline-flex; flex: none; padding: 1px; }
+  body .pvw-bar .pvw-seg button { height: 30px; padding: 0 7px; }
+  body.pvw-focus .pvw-proj b, body.pvw-focus .pvw-bar .pvw-flint { display: none; }
+  body.pvw-focus .pvw-proj { flex: 0 0 auto; }
+  body.pvw-focus .pvw-bar { gap: 2px; }
+}

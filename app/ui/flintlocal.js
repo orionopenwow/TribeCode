@@ -380,6 +380,9 @@
   const LOCAL_FIRST = /^(task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.)/;
   let lastMiss = null;
   async function handle(text, H) {
+    // the preview shows the website: its edits ("make the headline say …", "add a pricing section") go to the preview's Flint
+    const PV = window.TribePreview, SE = window.TribeSiteEditCore, PF = window.TribePreviewFlint;
+    if (PV && PV.source && PV.source() === 'site' && document.querySelector('#pvw') && SE && PF && PF.ask && SE.parse(text)) { PF.ask(text); if (PF.open && !matchMedia('(max-width: 820px)').matches) PF.open(); return H.say('On it: the change shows in the website preview, with Undo next to it.', []); }
     const NL = N(); if (!NL) return (await H.special(text)) ? true : null;
     syncLearned(); await tasks();
     const ctx = ctxNow(), P = NL.parse(text, ctx), steps = P.steps;
