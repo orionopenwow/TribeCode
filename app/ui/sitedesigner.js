@@ -238,7 +238,6 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
     root.querySelector('#wdz-file').addEventListener('change', onFile);
     root.querySelector('#wdz-import').addEventListener('change', onImport);
     root.addEventListener('input', e => { if (e.target && e.target.id === 'wdz-gq') { gal.q = e.target.value; galPaint(); } });
-    root.addEventListener('mouseover', e => { const c = e.target.closest && e.target.closest('.wdz-tpl'); if (c && c !== gal.hov) { gal.hov = c; clearTimeout(gal.ht); gal.ht = setTimeout(() => { if (gal.hov === c && c.matches(':hover')) peek(c.dataset.tpl, true); }, 700); } });
     root.addEventListener('keydown', e => {
       if (e.key === 'Escape' && !$('#wdz-dlmenu').hidden) { $('#wdz-dlmenu').hidden = true; return; }
       const t = e.target; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;

@@ -142,7 +142,7 @@ def main():
             sp.click("#wdz-peek [data-peekclose]")
             sp.fill("#wdz-gq", "")
             sp.wait_for_timeout(200)
-            if SHOTS: sp.evaluate("document.querySelector('#wdz-gal .wdz-tpl:nth-child(5)').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))"); shot(sp, "site-gallery-v2.png")
+            shot(sp, "site-gallery-v2.png")
             sp.click("#wdz-gal .wdz-tpl[data-tpl='sb-agency'] [data-tpl='sb-agency']")
             sp.wait_for_function("TribeSiteDesigner.cfg().template === 'sb-agency'", timeout=10000)
             before = blocks(cfg(sp))[0]["props"]["title"]
