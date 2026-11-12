@@ -608,6 +608,28 @@ ${blocks.join('\n')}
   setInterval(() => tick().catch(e => console.error("website tick:", e.message)), POLL_MS).unref();
 
   // ---------- state ----------
+  // feat/tasks-company: has the team already started a website? The Website button and the preview open what is
+  // there instead of the empty "Make the project's website" card. In order: a site-builder draft (.tribe/website),
+  // a built page (site/index.html in the repo or the tribe folder), a site someone made in the repo (website/,
+  // docs/, www/, web/ or a root index.html in a site project), or site-builder settings saved but nothing built.
+  const SITE_DIRS = ['site', 'website', 'www', 'docs', 'web', 'public/site'];
+  const mtime = f => { try { return fs.statSync(f).mtime.toISOString(); } catch { return null; } };
+  function started(pid) {
+    const st = load(pid), p = P.get(pid) || {};
+    if (st.gen) return { kind: 'draft', path: '.tribe/website', at: st.gen.updated || null, label: 'a site-builder draft' };
+    if (exists(pid)) { const w = siteDir(pid); return { kind: 'built', path: w.shown, at: mtime(path.join(w.dir, 'index.html')), label: 'the built page' }; }
+    const tribeCopy = base.p('projects', pid, 'site', 'index.html');
+    if (p.repo && fs.existsSync(tribeCopy)) return { kind: 'built', path: `projects/${pid}/site/index.html (tribe folder)`, at: mtime(tribeCopy), label: 'the built page', tribeCopy: true };
+    if (p.repo && fs.existsSync(p.repo)) {
+      for (const d of SITE_DIRS.slice(1)) { const f = path.join(p.repo, d, 'index.html'); if (fs.existsSync(f)) return { kind: 'repo', path: `${d}/index.html`, at: mtime(f), label: `${d}/ in the code repository` }; }
+      const kind = (() => { try { const x = sense(); const g = x ? x.get(pid) : null; return (g && (g.kind || (g.project || {}).kind)) || ''; } catch { return ''; } })();
+      const root = path.join(p.repo, 'index.html');
+      if (kind === 'site' && fs.existsSync(root)) return { kind: 'repo', path: 'index.html', at: mtime(root), label: 'index.html in the code repository' };
+    }
+    const f = st.fields || {};
+    if (st.built || st.brand || st.idea || Object.keys(f).length || st.genLive) return { kind: 'config', path: '.tribe/website', at: (st.built && st.built.at) || null, label: 'site-builder settings' };
+    return null;
+  }
   function exists(pid) { try { return fs.existsSync(path.join(siteDir(pid).dir, 'index.html')); } catch { return false; } }
   async function view(pid, me, req) {
     const p = P.get(pid), st = load(pid), where = siteDir(pid);
@@ -619,7 +641,7 @@ ${blocks.join('\n')}
       .map(s => ({ ...s, byName: nameOf(s.by), decidedByName: s.decidedBy ? nameOf(s.decidedBy) : null, label: SUGGESTABLE[s.field] || s.field }));
     return { project: pid, auto: !!st.auto, sections: st.sections, fields: st.fields, defaults: defaults(p, vision), shots: st.shots, screens: screens().map(s => ({ slug: s.slug, name: s.name })),
       built: st.built, exists: exists(pid), path: where.shown, inRepo: where.inRepo, autopilot: ap, previewUrl, suggestions: sug, open: sug.filter(s => s.status === 'open').length,
-      canManage: canManage(pid, me), canSuggest: canSuggest(me), suggestable: SUGGESTABLE, sectionList: SECTIONS, gen: genView(pid, me),
+      canManage: canManage(pid, me), canSuggest: canSuggest(me), suggestable: SUGGESTABLE, sectionList: SECTIONS, gen: genView(pid, me), started: started(pid),
       hint: where.inRepo ? 'Publish it with GitHub Pages: Settings › Pages › Deploy from a branch (root), then open /site/ on the Pages address. Or add a Pages workflow that uploads the site/ folder.' : 'This project has no repo yet, so the page stays in the tribe folder. Give it a repo to publish it with GitHub Pages.' };
   }
 
