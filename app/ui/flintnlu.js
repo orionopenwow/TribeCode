@@ -406,27 +406,34 @@
   // ctx.view 'site' (the website designer, or the preview in Website mode with ctx.site) or 'canvas' picks the intent
   // family (site.* or canvas.*). Everywhere else only templates, "open the designer" and lessons are read here.
   const TPL_TAGS = {
-    linkbio: ['link in bio', 'linkinbio', 'link tree', 'linktree', 'bio link', 'bio links', 'links page', 'link page', 'all my links', 'one link', 'instagram bio', 'insta bio', 'tiktok bio', 'my links', 'link for my instagram', 'for my insta', 'for my tiktok', 'link pages', 'links pages', 'link page for my bio', 'my bio', 'link hub', 'social links'],
+    linkbio: ['link in bio', 'linkinbio', 'link tree', 'linktree', 'bio link', 'bio links', 'links page', 'link page', 'all my links', 'one link', 'instagram bio', 'insta bio', 'tiktok bio', 'my links', 'link for my instagram', 'for my insta', 'for my tiktok', 'link pages', 'links pages', 'all my socials', 'my socials', 'socials page', 'link page for my bio', 'my bio', 'link hub', 'social links'],
     band: ['band', 'jazz', 'trio', 'quartet', 'choir', 'orchestra', 'rock band', 'punk', 'hip hop', 'producer', 'my music', 'our music', 'my songs', 'musician', 'dj gigs', 'dj', 'gigs', 'tour dates', 'my album', 'singer', 'rapper', 'concerts'],
     cafe: ['sourdough', 'bar', 'pub', 'tacos', 'ramen', 'catering', 'bakery', 'cafe', 'coffee shop', 'coffee', 'restaurant', 'food truck', 'diner', 'pizza place', 'pizza', 'bistro', 'brunch', 'menu page', 'with the menu'],
-    merch: ['zines', 'stickers', 'handmade', 'jewelry', 'ceramics', 'sell my', 'sell our', 'merch', 'online store', 'online shop', 'shop page', 'store', 'sell', 'ecommerce', 'e commerce', 'webshop', 'storefront', 't shirts', 'candles'],
-    portfolio: ['portfolio', 'design work', 'case studies', 'case study', 'show off my', 'my work'],
-    creator: ['twitch', 'stream on', 'streamer', 'streaming', 'youtuber', 'youtube channel', 'creator'],
+    merch: ['band merch', 'zines', 'stickers', 'handmade', 'jewelry', 'ceramics', 'sell my', 'sell our', 'merch', 'online store', 'online shop', 'shop page', 'store', 'sell', 'ecommerce', 'e commerce', 'webshop', 'storefront', 't shirts', 'candles'],
+    portfolio: ['illustration', 'ux work', 'my ux', 'architecture', 'portfolio', 'design work', 'case studies', 'case study', 'show off my', 'my work'],
+    creator: ['tiktok creator', 'creator brand', 'twitch', 'stream on', 'streamer', 'streaming', 'youtuber', 'youtube channel', 'creator'],
     service: ['yoga', 'pilates', 'fitness', 'personal trainer', 'gym', 'tutor', 'tutoring', 'classes', 'coaching', 'coach', 'therapist', 'massage', 'dentist', 'dog walking', 'dog grooming', 'nail', 'tattoo', 'consulting', 'lawyer', 'accountant', 'bookings', 'plumbing', 'plumber', 'hair salon', 'salon', 'barber', 'cleaning company', 'cleaning', 'handyman', 'local business', 'small business', 'electrician', 'landscaping', 'repair shop'],
-    wedding: ['engaged', 'guests', 'reception', 'baby shower', 'anniversary', 'reunion', 'wedding', 'married', 'rsvp', 'save the date', 'birthday', 'party invite', 'engagement'],
+    wedding: ['meetup', 'event page', 'event site', 'event website', 'engaged', 'guests', 'reception', 'baby shower', 'anniversary', 'reunion', 'wedding', 'married', 'rsvp', 'save the date', 'birthday', 'party invite', 'engagement'],
     podcast: ['radio show', 'audio show', 'podcast', 'episodes', 'our show', 'my show'],
-    blog: ['blog', 'newsletter', 'devlog', 'travel stories', 'my writing'],
-    saas: ['mobile app', 'our product', 'my product', 'b2b', 'startup', 'saas', 'for my app', 'for our app', 'software', 'product site'],
-    gamepage: ['steam page', 'indie game', 'press kit', 'my game', 'our game', 'game page', 'wishlist'],
-    resume: ['resume', 'cv', 'personal website', 'personal site', 'about me page'],
+    blog: ['essays', 'my essays', 'blog', 'newsletter', 'devlog', 'travel stories', 'my writing'],
+    saas: ['ios app', 'android app', 'marketing site', 'mobile app', 'our product', 'my product', 'b2b', 'startup', 'saas', 'for my app', 'for our app', 'software', 'product site'],
+    gamepage: ['steam game', 'game jam', 'steam page', 'indie game', 'press kit', 'my game', 'our game', 'game page', 'wishlist'],
+    resume: ['about me', 'job hunting', 'resume', 'cv', 'personal website', 'personal site', 'about me page'],
     nonprofit: ['charity', 'nonprofit', 'non profit', 'donation', 'donate', 'fundraiser', 'fundraising', 'animal shelter', 'volunteers'],
-    photography: ['photography portfolio', 'photographer', 'photography', 'photo gallery', 'photo site'],
+    photography: ['photo portfolio', 'gallery website', 'my photos', 'street photos', 'photography portfolio', 'photographer', 'photography', 'photo gallery', 'photo site'],
     comingsoon: ['coming soon', 'waitlist', 'wait list', 'launching soon', 'teaser page', 'prelaunch', 'pre launch', 'collect emails'],
   };
   const BLOCK_W = [
     ['testimonials', 'testimonials?|reviews?|quotes|what (?:people|customers|clients) say|social proof|kind words'],
     ['pricing', 'pricing|prices|price list|price table|plans|tiers'],
     ['faq', 'faqs?|questions and answers|q and a|common questions|questions'],
+    ['newsletter', 'newsletter signup|newsletter section|newsletter box|newsletter|subscribe box|subscribe form|email signup|mailing list'],
+    ['cta', 'call to action section|call to action|cta section|cta block|closing pitch'],
+    ['stats', 'stats|statistics|numbers section|metrics|by the numbers|counters'],
+    ['logos', 'logo cloud|logo wall|logo strip|client logos|press logos|logos|trusted by'],
+    ['banner', 'announcement bar|announcement banner|banner|announcement|ribbon'],
+    ['divider', 'divider|separator|spacer'],
+    ['image', 'image section|image block|big image|wide image|full width image|picture section|photo section|big picture|big photo'],
     ['contact', 'contact form|contact|sign ?up form|signup|email me|get in touch|reach me|reach us|newsletter form|a form|form'],
     ['gallery', 'gallery|galleries|photo grid|image grid|photos|pictures|lookbook'],
     ['team', 'team|who we are|about us|the people|crew|our people|members'],
@@ -434,13 +441,13 @@
     ['features', 'features?|feature list|what we do|services|benefits|highlights'],
     ['links', 'links list|link list|list of links|links'],
     ['footer', 'footer|bottom bar'],
-    ['hero', 'hero|header|banner|top section'],
+    ['hero', 'hero|header|top section'],
     ['text', 'text section|text block|paragraph|some text|story|text'],
   ].map(([k, w]) => [k, new RegExp(`\\b(?:${w})\\b`)]);
   const blockOf = c => { let best = null, at = Infinity; for (const [k, rx] of BLOCK_W) { const m = rx.exec(c); if (m && m.index < at) { at = m.index; best = k; } } return best; };   // the first one named is the subject
-  const PRESET_W = { paper: 'paper|cream|warm paper', swiss: 'swiss|grid look', terminal: 'terminal|hacker|monospace', editorial: 'editorial|magazine|serif', playful: 'playful|fun|bubbly|colorful', minimal: 'minimal|minimalist|plain|simple', bold: 'bold|loud|poster|punchy', soft: 'soft|pastel|gentle' };
+  const PRESET_W = { paper: 'paper|cream|warm paper', swiss: 'swiss|grid look', terminal: 'terminal|hacker|monospace', editorial: 'editorial|magazine|serif', playful: 'playful|fun|bubbly|colorful', minimal: 'minimal|minimalist|plain|simple', bold: 'bold|loud|poster|punchy', soft: 'soft|pastel|gentle', night: 'dark minimal|night', ivory: 'ivory', clean: 'clean', sand: 'sand|sandy', amber: 'amber', ocean: 'ocean|sea|nautical', rose: 'rose|rosé|pink', haze: 'purple haze|haze|purple', slate: 'slate', forest: 'forest|woodland|green' };
   const presetOf = c => { for (const [k, w] of Object.entries(PRESET_W)) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return k; return ''; };
-  const VAR_W = [['split', 'split|side by side'], ['center', 'center|centered|middle'], ['masonry', 'masonry'], ['table', 'table'], ['cards', 'cards'], ['grid', 'grid|columns'], ['list', 'list'], ['stack', 'stack|stacked'], ['minimal', 'minimal']];
+  const VAR_W = [['split', 'split|side by side'], ['center', 'center|centered|middle'], ['masonry', 'masonry'], ['table', 'table'], ['cards', 'cards'], ['grid', 'grid|columns'], ['list', 'list'], ['stack', 'stack|stacked'], ['minimal', 'minimal'], ['alternating', 'alternate|alternating|zig ?zag|left and right'], ['spotlight', 'spotlight|one big quote'], ['accent', 'solid color|accent band'], ['cover', 'cover|full bleed']];
   const LESSON_W = [['export', 'export|exporting|html export|download (?:my |the )?(?:site|html|website)'], ['inspo', 'inspiration board|inspo board|inspo|moodboard|mood board|inspiration'], ['templates', 'templates?'],
     ['premium', 'premium|credits|subscription|subscribe|plans|upgrade'], ['huddles', 'huddles?|voice calls?|voice chat|video calls?|calls?'], ['agents', 'agents?|ai helpers?|claude code|my ai'], ['company', 'company|company mode|seats'],
     ['preview', 'preview|live preview'], ['canvas', 'design canvas|canvas|figma|design|mockups?|screens'], ['site', 'website designer|site designer|website builder|site builder|websites?|sites?|wire buttons|buttons|landing pages?|designer'],
@@ -473,6 +480,56 @@
     if (!kind && blockOf(t)) kind = 'section';
     return { kind: kind || 'page', to: t };
   }
+  // feat/site-v2: copy tone, hours, SEO, favicon, logo, fonts, publish, spacing, section backgrounds, hide/show/duplicate,
+  // device previews, comments → tasks, filling from the project. In the designer or the preview (view), or anywhere
+  // when the sentence names the website (glob). Returns the hits, or null when none of these fit.
+  const FIELD = f => /tagline|subtitle|subheading|intro|sub/.test(f) ? 'tagline' : /title|heading|headline/.test(f) ? 'headline' : /button|cta/.test(f) ? 'button' : '';
+  const cleanText = t => String(t || '').replace(/^["“']|["”'.]+$/g, '').trim();
+  const FONT_W = [['fraunces', 'fraunces'], ['instrument serif', 'instrument serif|instrument'], ['space grotesk', 'space grotesk|grotesk'], ['bricolage', 'bricolage'], ['jetbrains mono', 'jetbrains mono|jetbrains'], ['silkscreen', 'silkscreen'], ['inter', 'inter'],
+    ['pixel', 'pixel|retro|8 bit|arcade'], ['mono', 'mono|monospace|monospaced|code|typewriter'], ['serif', 'serif|serifs|classic|elegant|bookish'], ['sans', 'sans|sans serif|cleaner|clean|modern|simple']];
+  function siteMore(c, r, ctx, hit, glob) {
+    let m;
+    const FW = '(headline|title|heading|tagline|subtitle|subheading|intro|button(?: text)?|cta|main button)';
+    if ((m = new RegExp(`^${FW}\\s*:\\s*(.+)$`, 'i').exec(r))) return hit('site.text', { field: FIELD(m[1].toLowerCase()), text: cleanText(m[2]) });
+    if (/\b(?:repo|repository|codebase|as code|real code)\b/.test(c) && /\b(?:website|site)\b/.test(c) && /\b(?:build|put|make|turn|write|commit|into|in)\b/.test(c)) return hit('site.repo', {});
+    if (/\b(?:auto ?fill|autopopulate|auto populate|prefill|pre fill)\b/.test(c) || /\b(?:fill|file)\s+(?:it|this|the (?:site|website|page)|in|out)\b.*\b(?:project|company|team|chat|what we know)\b/.test(c) || /\bfrom (?:our|the|my) (?:project|company)\b/.test(c) && /\b(?:use|fill|take|pull|grab)\b/.test(c)) return hit('site.autofill', {});
+    if (/\bstart (?:blank|empty|from scratch)\b|\bblank instead\b/.test(c)) return hit('site.blank', {});
+    if (/\b(?:comments?|feedback|pins?)\b/.test(c) && !/\b(?:add|leave|drop|write|post)\s+(?:a\s+)?comment\b/.test(c)) {
+      if (/\b(?:tasks?|todos?|to dos?|summari[sz]e|summary|action items?)\b/.test(c)) return hit('site.comments.tasks', {});
+      if (/\b(?:show|see|what|open|list|read|any|view)\b/.test(c)) return hit('site.comments', {});
+    }
+    if (/\b(?:favicon|tab icon|browser icon|site icon|bookmark icon|icon in the tab)\b/.test(c)) return hit('site.favicon', {});
+    const seo = /\b(?:seo|meta description|meta title|search engines?|google|page title|seo title|share image|social (?:card|image|preview)|og image|open graph|link preview)\b/.test(c);
+    if (seo) {
+      const field = /\b(?:share image|social (?:card|image|preview)|og image|open graph|link preview|preview image)\b/.test(c) ? 'image' : /\b(?:description|meta description|blurb)\b/.test(c) ? 'description' : /\btitle\b/.test(c) ? 'title' : '';
+      const tm = /\b(?:title|description|seo|image)\s*(?:to\s+|as\s+|:\s*)(.+)$/i.exec(r);
+      return hit('site.seo', { ...(field ? { field } : {}), ...(tm && field !== 'image' ? { text: cleanText(tm[1]) } : {}) });
+    }
+    if (/\b(?:add|put|use|place|show|stick|upload|need)\b.*\b(?:our|my|the|project|company|team)\s+logo\b/.test(c) && !/\blogos\b|\b(?:as|for|into) the (?:picture|image|photo|avatar)\b/.test(c)) return hit('site.logo', {});
+    if (/\b(?:opening hours|business hours|open hours|opening times|hours|when (?:we are|were|we re|i am|you are|they are) open|open times)\b/.test(c) && !/\b\d+\s+hours\b|\bin (?:a few|an?|two|three) hours\b/.test(c)) return hit('site.hours', {});
+    if (/\b(?:fonts?|typeface|typefaces|typography|font pairing|font pair)\b/.test(c) || /\bheadings?\b.*\b(?:mono|monospace|serif|sans)\b/.test(c) || /\b(?:fraunces|grotesk|instrument serif|bricolage|jetbrains|silkscreen)\b/.test(c)) { const f = FONT_W.find(([, w]) => new RegExp(`\\b(?:${w})\\b`).test(c)); return hit('site.font', f ? { font: f[0] } : {}); }
+    const COPY = /\b(?:punchier|punch up|punch it up|punchy|catchier|snappier|stronger|boring|bland|dull|shorter|shorten|tighten|tighten up|trim|concise|friendlier|friendly|warmer|casual|professional|formal|serious|rewrite|reword|rephrase|better (?:copy|words|headline|wording))\b/;
+    if (/\b(?:re)?write\s+(?:the|our|my|a new|a better)\s+(?:headline|tagline|title|heading|copy|intro)\b/.test(c)) { const fm = /\b(headline|title|heading|tagline|intro)\b/.exec(c); return hit('site.copy', { field: FIELD(fm[1]) }); }
+    if (COPY.test(c) && (/\b(?:headline|title|heading|tagline|subtitle|subheading|intro|button|cta|copy|text|words|wording|writing)\b/.test(c) || !glob && /^make it (?:punchier|shorter|friendlier|snappier|catchier)/.test(c))) {
+      const fm = /\b(headline|title|heading|tagline|subtitle|subheading|intro|button|cta)\b/.exec(c), field = fm ? FIELD(fm[1]) : '';
+      const tone = /\b(?:punch|catchier|snappier|stronger|boring|bland|dull)/.test(c) ? 'punchy' : /\b(?:short|tight|trim|concise)/.test(c) ? 'shorter' : /\b(?:friend|warm|casual)/.test(c) ? 'friendlier' : /\b(?:professional|formal|serious)\b/.test(c) ? 'formal' : '';
+      return hit('site.copy', { ...(field ? { field } : {}), ...(tone ? { tone } : {}) });
+    }
+    if (/\b(?:publish|unpublish|go live|put (?:it|the site|the website|this) live|make (?:it|the site|this) live|ship (?:it|the site|the website)|deploy)\b/.test(c) && !/\bunpublish\b/.test(c) && (!glob || /\bwebsite\b/.test(c))) return hit('site.publish', {});
+    if (glob) return null;
+    if (/\b(?:give me|get me|send me)\s+(?:the\s+)?(?:files|code|source)\b/.test(c)) return hit('site.export', {});
+    if (/\b(?:spacing|padding|breathing room|whitespace|white space|more space|less space|compact|cramped|airy|roomier|tighter|denser|spacious)\b/.test(c) && !/\bbackground\b/.test(c)) return hit('site.spacing', { size: /\b(?:less|tight|tighter|compact|dense|denser|smaller|reduce|cramped no)\b/.test(c) ? 'less' : 'more' });
+    if (/\b(?:background|bg|backdrop)\b/.test(c) && (blockOf(c) || /\b(?:section|block|this|that)\b/.test(c))) {
+      const bg = /\b(?:remove|delete|no|plain|clear|transparent|none|without)\b/.test(c) ? 'none' : /\b(?:accent|brand|primary|main colou?r)\b/.test(c) ? 'accent' : /\b(?:gray|grey|light|subtle|tint|tinted|card|off white|soft)\b/.test(c) ? 'card' : /\b(?:dark|black|ink|darker)\b/.test(c) ? 'ink' : '';
+      const b = blockOf(c); return hit('site.bg', { ...(b ? { block: b } : {}), ...(bg ? { bg } : {}) });
+    }
+    if (/\b(?:unhide|show\s+(?:the\s+)?(?:[a-z]+\s+){0,2}again|bring back the)\b/.test(c)) { const b = blockOf(c); return hit('site.block.show', b ? { block: b } : {}); }
+    if (/\b(?:hide|hidden|temporarily remove)\b/.test(c)) { const b = blockOf(c); return hit('site.block.hide', b ? { block: b } : {}); }
+    if (/\b(?:duplicate|clone|copy (?:the|this|that)|another one of (?:these|this|those|them)|repeat (?:this|the|that))\b/.test(c) && !/\b(?:link|url|text)\b/.test(c)) { const b = blockOf(c); return hit('site.block.dup', b ? { block: b } : {}); }
+    if (ctx.view !== 'preview' && (m = /\b(phone|mobile|iphone|tablet|ipad|desktop|laptop|big screen)\b/.exec(c)) && /\b(?:view|version|preview|look|looks|size|width|show|see|mode)\b/.test(c)) return hit('site.device', { dev: /phone|mobile|iphone/.test(m[1]) ? 'phone' : /tablet|ipad/.test(m[1]) ? 'tablet' : 'desktop' });
+    if (/\b(?:add|put|insert|include|want|need|stick|give me)\b/.test(c) && /\b(?:big|wide|full width|large|huge)\s+(?:image|picture|photo)\b|\b(?:image|picture|photo)\s+(?:section|block|banner)\b/.test(c)) return hit('site.block.add', { block: 'image' });
+    return null;
+  }
   function design(c, raw, ctx) {
     const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
@@ -481,13 +538,14 @@
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
     if (view) {
       const cv = view === 'canvas';
+      if (!cv) { const x = siteMore(c, r, ctx, hit, false); if (x) return x; }
       // export (the website designer)
       if (!cv && /\b(?:export|download|zip|html|webpage file|web page file|save it as|get the code|code for this|source code|static files?)\b/.test(c) && !IMG.test(c)) return hit('site.export', { fmt: /\bzip\b/.test(c) ? 'zip' : /\b(?:html|webpage|web page)\b/.test(c) ? 'html' : '' });
       // words: "change the headline to …", "the button should say …", "rename the site to …"
       if (!cv) {
         let m = /\b(?:change|set|make|update|edit|have)\s+(?:the\s+)?(headline|title|heading|tagline|subtitle|subheading|intro|button|button text|cta)\s+(?:to\s+say|to\s+read|say|says|read|reads|to|into)\s+(.+)$/i.exec(r)
           || /\b(?:the\s+)?(headline|title|heading|tagline|button|cta)\s+should\s+(?:say|read|be)\s+(.+)$/i.exec(r);
-        if (m) { const f = m[1].toLowerCase(); return hit('site.text', { field: /title|heading|headline/.test(f) ? 'headline' : /tagline|subtitle|subheading|intro/.test(f) ? 'tagline' : 'button', text: m[2].replace(/^["“']|["”'.]+$/g, '').trim() }); }
+        if (m) { const f = m[1].toLowerCase(); return hit('site.text', { field: FIELD(f), text: m[2].replace(/^["“']|["”'.]+$/g, '').trim() }); }
         if ((m = /\b(?:rename|call)\s+(?:the\s+|my\s+)?(?:site|website)\s+(?:to\s+)?(.+)$/i.exec(r))) return hit('site.text', { field: 'name', text: m[1].replace(/["“”.]+$/g, '').trim() });
       }
       // wire buttons and links
@@ -510,7 +568,7 @@
       }
       // images
       const hasImg = IMG.test(c) || /\bmoodboard\b/.test(c);
-      if (/\balt\b|\bscreen readers?\b|\bdescribe (?:the|this) (?:image|picture|photo)\b/.test(c)) { const am = /\balt(?: text)?\s+(?:to|as|:)\s+(.+)$/i.exec(r); if (cv) return hit('canvas.image', { action: 'alt' }); return hit('site.image.alt', am ? { alt: am[1].replace(/["“”.]+$/g, '').trim() } : {}); }
+      if (/\balt\b|\bscreen readers?\b|\bdescribe (?:the|this) (?:image|picture|photo)\b/.test(c)) { const am = /\balt(?: text)?\s*(?:to\s+|as\s+|:\s*)(.+)$/i.exec(r); if (cv) return hit('canvas.image', { action: 'alt' }); return hit('site.image.alt', am ? { alt: am[1].replace(/["“”.]+$/g, '').trim() } : {}); }
       if ((hasImg || /\bcrop\b/.test(c)) && /\b(?:round|circle|circular|rounded|oval|square|squared)\b/.test(c)) { const shape = /\bno (?:round|rounded)\b/.test(c) || (/\bsquare/.test(c) && !/\b(?:round|circle)\b/.test(c)) ? 'square' : 'round'; return cv ? hit('canvas.image', { action: shape }) : hit('site.image.shape', { shape }); }
       if (hasImg && !/\b(?:photo grid|image grid|gallery)\b/.test(c) && (/\b(?:replace|swap|change|switch|update|different|new|upload|use|put|edit|another|add)\b/.test(c) || /^(?:edit|my) /.test(c))) {
         const source = /https?:\/\//i.test(r) ? 'url' : /\b(?:board|moodboard|mood board|inspiration|inspo)\b/.test(c) ? 'board' : /\b(?:my|own|upload|mine)\b/.test(c) && !/\bedit this\b/.test(c) ? 'upload' : '';
@@ -533,7 +591,7 @@
         if (blk) {
           const dir = /\b(?:above|before)\b/.test(c) ? 'up' : /\b(?:below|after|under)\b/.test(c) ? 'down' : /\b(?:to the top|at the top|first|to the start|higher up)\b/.test(c) ? 'top' : /\b(?:to the bottom|at the bottom|last|to the end|at the end)\b/.test(c) ? 'bottom' : /\bup\b/.test(c) ? 'up' : /\bdown\b/.test(c) ? 'down' : '';
           if (dir && /\b(?:move|put|place|shift|bump|push)\b/.test(c)) return hit('site.block.move', { block: blk, dir });
-          if (/\b(?:delete|get rid of|drop|hide|lose|kill|without|take out|ditch|scrap|cut|nix|toss|lose)\b/.test(c) && !/\bdrop in\b/.test(c) || /^no\s/.test(c)) return hit('site.block.remove', { block: blk });
+          if (/\b(?:delete|get rid of|drop|lose|kill|without|take out|ditch|scrap|cut|nix|toss|lose)\b/.test(c) && !/\bdrop in\b/.test(c) || /^no\s/.test(c)) return hit('site.block.remove', { block: blk });
           if (/\b(?:add|put|insert|include|want|need|show|embed|stick|throw|drop in|give me|let)\b/.test(c) || /\bsection$/.test(c)) return hit('site.block.add', { block: blk });
         }
         const col = colorOf(c);
@@ -541,6 +599,7 @@
         if (/\b(?:theme|look|style|preset|vibe|feel)\b/.test(c) || (/^make it (?:look )?(?:a bit |a little )?more\s/.test(c) && presetOf(c))) { const p = presetOf(c); return hit('site.theme', p ? { preset: p } : {}); }
       }
     }
+    if (!view && /\b(?:website|site|web page|webpage)\b/.test(c)) { const x = siteMore(c, r, ctx, hit, true); if (x) return x; }
     // open the website designer
     if (/\b(?:website designer|site designer|designer)\b/.test(c) && !/\bhire\b/.test(c)) return hit('site.open', {}, 0.96);
     if (/\b(?:edit|design|redesign|work on)\s+(?:my|our|the)\s+(?:website|site)$/.test(c) || /\b(?:turn|make)\s+(?:this|it)\s+(?:into\s+)?(?:a\s+)?(?:real\s+)?(?:website|site)\b/.test(c)) return hit('site.open', {}, 0.96);
@@ -551,8 +610,9 @@
     for (const [k, tags] of Object.entries(TPL_TAGS)) for (const tg of tags) if (tg.length > bl && new RegExp(`\\b${tg}\\b`).test(c)) { best = k; bl = tg.length; }
     if (!best) return out;
     const tagOnly = new RegExp(`^(?:(?:a|an|my|the)\\s+)?(?:${TPL_TAGS[best].join('|')})(?:\\s+(?:site|website|page|please))?$`).test(c);
-    const trig = tagOnly || /\b(?:site|sites|website|web site|page|homepage|landing|something|online|template|web presence)\b/.test(c) || /\b(?:make|build|create|set up|needs?|wants?|give me|get me|start|launch|show off)\b/.test(c) || /\b(?:i|we)\s+(?:write|run|sell|own|have|am|are|stream|do|make)\b/.test(c);
-    if (trig) hit('site.' + best, {}, /\btemplate\b/.test(c) ? 0.97 : 0.93);
+    const trig = tagOnly || /\b(?:site|sites|website|web site|page|homepage|landing|something|online|template|web presence)\b/.test(c) || /\b(?:make|build|create|set up|needs?|wants?|give me|get me|start|launch|show off)\b/.test(c) || /\b(?:i|we)\s+(?:write|run|sell|own|have|am|are|stream|do|make)\b/.test(c) || /\bfor (?:my|our)\b/.test(c);
+    const nm = /\b(?:called|named)\s+(.+)$/i.exec(raw);
+    if (trig) hit('site.' + best, nm ? { name: nm[1].replace(/["“”.!]+$/g, '').trim() } : {}, /\btemplate\b/.test(c) ? 0.97 : 0.93);
     return out;
   }
 
@@ -619,7 +679,7 @@
   CAT.forEach(x => { x.rx.forEach(r => addWords(r.source)); x.ex.forEach(addWords); });
   Object.values(SLANG).concat(Object.values(LEX)).forEach(addWords); DAYS.concat(MONTHS).forEach(w => VOCAB.add(w)); Object.keys(COLORS).forEach(w => VOCAB.add(w));
   ['nightshade', 'campfire', 'midnight', 'nordic', 'trending', 'tomorrow', 'tonight', 'calendar', 'marketplace', 'whiteboard', 'secretary', 'autopilot', 'publish', 'preview', 'settings', 'template', 'templates'].forEach(w => VOCAB.add(w));
-  Object.values(TPL_TAGS).flat().concat(['linktree', 'linkinbio', 'moodboard', 'designer', 'wire', 'clickable', 'functional', 'buttons', 'button', 'export', 'gallery', 'testimonials', 'masonry', 'instagram', 'teach', 'lesson', 'tutorial', 'portfolio', 'photographer', 'screen', 'picture', 'image', 'connect', 'pricing', 'website', 'darker', 'contact', 'point', 'different', 'rounded', 'round', 'paper', 'minimal', 'embed', 'spotify', 'youtube', 'prices', 'section', 'swiss', 'terminal', 'editorial', 'playful', 'masonry', 'headline', 'tagline', 'footer', 'features', 'team', 'reviews', 'questions', 'answers', 'download', 'square', 'circle', 'avatar', 'photo', 'theme', 'layout', 'split', 'faq', 'nowhere', 'anywhere', 'somewhere', 'clickable']).forEach(addWords);
+  Object.values(TPL_TAGS).flat().concat(['linktree', 'linkinbio', 'moodboard', 'designer', 'wire', 'clickable', 'functional', 'buttons', 'button', 'export', 'gallery', 'testimonials', 'masonry', 'instagram', 'teach', 'lesson', 'tutorial', 'portfolio', 'photographer', 'screen', 'picture', 'image', 'connect', 'pricing', 'website', 'darker', 'contact', 'point', 'different', 'rounded', 'round', 'paper', 'minimal', 'embed', 'spotify', 'youtube', 'prices', 'section', 'swiss', 'terminal', 'editorial', 'playful', 'masonry', 'headline', 'tagline', 'footer', 'features', 'team', 'reviews', 'questions', 'answers', 'download', 'square', 'circle', 'avatar', 'photo', 'theme', 'layout', 'split', 'faq', 'nowhere', 'anywhere', 'somewhere', 'clickable', 'favicon', 'tighter', 'tighten', 'tight', 'clone', 'duplicate', 'unhide', 'hidden', 'punchier', 'punchy', 'catchier', 'snappier', 'friendlier', 'shorten', 'shorter', 'professional', 'spacing', 'padding', 'compact', 'roomier', 'newsletter', 'stats', 'logos', 'divider', 'separator', 'announcement', 'ribbon', 'fonts', 'font', 'serif', 'monospace', 'grotesk', 'fraunces', 'typography', 'seo', 'meta', 'description', 'google', 'hours', 'opening', 'publish', 'tablet', 'phone', 'mobile', 'desktop', 'comments', 'comment', 'feedback', 'autofill', 'populate', 'repo', 'repository', 'background', 'spotlight', 'alternating', 'forest', 'ocean', 'ivory', 'amber', 'slate', 'haze', 'boring', 'rewrite', 'cleaner', 'fill', 'headings', 'socials', 'essays', 'illustration', 'meetup']).forEach(addWords);
   const FUNC = ['could', 'would', 'should', 'there', 'their', 'about', 'with', 'what', 'when', 'where', 'which', 'this', 'that', 'them', 'they', 'have', 'from', 'your', 'into', 'than', 'then', 'also', 'just', 'some', 'more', 'most', 'very', 'much', 'many', 'such', 'does', 'made', 'like', 'here', 'were', 'will', 'works', 'many', 'look', 'need', 'want', 'know', 'take', 'make', 'work', 'have', 'done', 'left', 'find'];
   ['ack', 'abc', 'ing'].concat(FUNC.filter(w => !['make', 'look', 'need', 'want', 'know', 'take', 'work', 'done', 'left', 'find', 'many', 'have', 'here', 'does', 'what', 'when', 'where', 'which', 'this', 'that', 'with', 'will'].includes(w))).forEach(w => VOCAB.delete(w));
   FUNC.forEach(w => KEEP.add(w));
