@@ -43,6 +43,7 @@
     document.body.append(scrim, el);
     el.querySelectorAll('[data-su-close]').forEach(b => { b.onclick = close; });
     el.querySelectorAll('[data-su-back]').forEach(b => { b.onclick = () => where(); });
+    el.querySelectorAll('[data-su-join]').forEach(b => { b.onclick = () => { close(); if (window.TribeSettings && window.TribeSettings.joinPrompt) window.TribeSettings.joinPrompt(); }; });   // polish: joining a friend is one tap from Start and Where
     return el;
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && el) { close(); e.stopPropagation(); } }, true);
@@ -72,7 +73,8 @@
         </details>
         <p class="ph-note">It starts right here${first ? `, ${esc(first)}` : ''}: nothing waits on a server. You choose where it lives at the end, or any time later.</p>
         <div class="ph-acts"><button type="button" class="btn" data-su-close>Cancel</button><button class="btn primary" id="su-create" type="submit">Create</button></div>
-      </form>`, 'su-start', 'Start a project');
+      </form>
+      <p class="ph-foot"><button type="button" class="linkish" data-su-join>Join with a link</button></p>`, 'su-start', 'Start a project');
     s.querySelectorAll('[data-seat]').forEach(b => b.onclick = () => { s.querySelectorAll(`[data-seat="${b.dataset.seat}"]`).forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
     s.querySelector('#su-form').onsubmit = e => { e.preventDefault(); create(s); };
     const n = s.querySelector('#su-name'); n.focus(); n.select();
@@ -112,7 +114,7 @@
         ${row('cloud', 'net', 'Free cloud', 'Always online on a free Render server')}
         ${row('phone', 'zap', 'Phone', phoneLike() ? 'Keep it on this phone, or host from an Android phone' : 'Host from an Android phone with Termux')}
       </div>
-      <p class="ph-foot"><button class="linkish" data-su-close id="su-later">Decide later</button></p>`, 'su-where', 'Where should it live?');
+      <p class="ph-foot"><button class="linkish" data-su-close id="su-later">Decide later</button><span aria-hidden="true">·</span><button class="linkish" data-su-join>Join with a link</button></p>`, 'su-where', 'Where should it live?');
     s.addEventListener('click', e => {
       const b = e.target.closest('[data-su]'); if (!b) return;
       choose(b.dataset.su);

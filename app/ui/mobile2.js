@@ -210,6 +210,7 @@
   // "+" on Home: one sheet to start or join, even from a phone (phones can't run the tribe themselves).
   function startTribe() {
     if (C.connected()) return PJ() && PJ().openNew ? PJ().openNew() : null;   // in a tribe: a new project (Create my own · templates · Join)
+    if (window.TribeLocalSetup) return window.TribeLocalSetup.start();   // polish: the instant Start sheet; join, phone and cloud homes sit in its "Where should it live?" step
     if (window.TribePhoneHost) return window.TribePhoneHost.open();   // where should your tribe live? (phonehost.js, docs/PHONE-HOSTING.md)
     const dl = (window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest';
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Start a tribe</span><h3>Who runs it?</h3></div>
