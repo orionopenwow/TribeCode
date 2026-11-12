@@ -2755,6 +2755,43 @@
    "ctx": "g"
   },
   {
+   "t": "find someone to draw my sprites",
+   "i": "people.find",
+   "s": {
+    "skill": "draw my sprites"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "get someone to make music for the game",
+   "i": "people.find",
+   "s": {
+    "skill": "make music for the game"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "hire an artist to draw the logo",
+   "i": "people.find",
+   "s": {
+    "skill": "draw the logo"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a card called fix the jump",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the jump"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "find a coin sprite",
+   "i": "asset.add",
+   "ctx": "g"
+  },
+  {
    "t": "where is maya",
    "i": "people.where",
    "ctx": "g"
@@ -4640,6 +4677,19 @@
   {
    "t": "build a matching pairs game",
    "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "make a card game",
+   "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "build me a card game called snap",
+   "i": "site.starter-memory",
+   "s": {
+    "name": "snap"
+   },
    "ctx": "g"
   },
   {

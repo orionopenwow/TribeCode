@@ -174,7 +174,9 @@ for (let i = H2; i < C.length; i++) C[i].v = 'held';
 add('g', [['post a gig for me: I\'ll design your logo', 'gig.self', { what: "I'll design your logo" }], ['post a gig for me: i can build a landing page this weekend', 'gig.self'], ['create a gig for myself', 'gig.self'],
   ['offer my skills', 'gig.self'], ['post an offer for me: tutoring in math', 'gig.self', { what: 'tutoring in math' }], ['set up a gig saying i can mix your track', 'gig.self'], ['list a gig', 'gig.self'],
   ['find someone who can draw', 'people.find', { skill: 'draw' }], ['who can do pixel art', 'people.find'], ['anyone who can edit video', 'people.find', { skill: 'edit video' }],
-  ['find me someone who knows how to code', 'people.find', { skill: 'code' }], ['i need someone who can write copy', 'people.find', { skill: 'write copy' }], ['find people', 'people.find']]);
+  ['find me someone who knows how to code', 'people.find', { skill: 'code' }], ['i need someone who can write copy', 'people.find', { skill: 'write copy' }], ['find people', 'people.find'],
+  ['find someone to draw my sprites', 'people.find', { skill: 'draw my sprites' }], ['get someone to make music for the game', 'people.find', { skill: 'make music for the game' }], ['hire an artist to draw the logo', 'people.find', { skill: 'draw the logo' }],
+  ['make a card called fix the jump', 'task.add', { title: 'Fix the jump' }], ['find a coin sprite', 'asset.add']]);
 // feat/presence: where people are, who's online, who's on what
 add('g', [['where is maya', 'people.where'], ["where's Sam right now?", 'people.where'], ['what is maya doing', 'people.where'], ['is sam online', 'people.where'],
   ['who is online right now', 'people.online'], ["show me who's online", 'people.online'], ['anyone online today', 'people.online'],
@@ -278,7 +280,7 @@ add('g', [
   ['make a breakout game', 'site.starter-breakout'], ['build me a brick breaker', 'site.starter-breakout'], ['make an arkanoid clone called brick party', 'site.starter-breakout', { name: 'brick party' }],
   ['make a snake game', 'site.starter-snake'], ['build a snake game called sssnek', 'site.starter-snake', { name: 'sssnek' }], ['make a tetris clone', 'site.starter-blocks'], ['build a falling blocks game', 'site.starter-blocks'],
   ['make an endless runner', 'site.starter-runner'], ['make a dino game', 'site.starter-runner'], ['build a top down shooter', 'site.starter-topdown'], ['make a survivor game', 'site.starter-topdown'],
-  ['make a memory game', 'site.starter-memory'], ['build a matching pairs game', 'site.starter-memory'],
+  ['make a memory game', 'site.starter-memory'], ['build a matching pairs game', 'site.starter-memory'], ['make a card game', 'site.starter-memory'], ['build me a card game called snap', 'site.starter-memory', { name: 'snap' }],
   ['make a notes app', 'site.starter-notes'], ['build a kanban board', 'site.starter-kanban'], ['make a trello clone', 'site.starter-kanban'], ['make an admin dashboard', 'site.starter-dashboard'],
   ['build a chat app', 'site.starter-chat'], ['make a survey', 'site.starter-survey'], ['make a feedback form', 'site.starter-survey'], ['build a pomodoro timer', 'site.starter-pomodoro'],
   ['make a calculator', 'site.starter-calculator'], ['make a weather app', 'site.starter-weather'], ['build me a drawing app', 'site.starter-sketch'],
