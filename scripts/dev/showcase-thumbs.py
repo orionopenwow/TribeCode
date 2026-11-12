@@ -117,8 +117,17 @@ def main():
     crops = {"app-todo": (300, 0, 1000, 440), "doc-standup": pane, "doc-launch": pane, "doc-brand": pane, "doc-work": pane, "flint-run": (240, 60, 1440, 900), "app-dashboard": (240, 52, 1176, 900), "design-pricing": (240, 52, 1176, 900), "design-onboarding": (240, 52, 1176, 900)}
     for f in sorted(shots.glob("*.png")): webp(f, f.stem, crops.get(f.stem))
     for sid in SITES: webp(ROOT / "templates" / "sites" / sid / "thumb.png", f"site-{sid}")
+    phones()
     shutil.rmtree(tmp, ignore_errors=True)
 
 
+def phones():
+    """Phone screens for "Why TribeCode", from the demo tribe's phone test shots (e2e_showcase_demo.py --shots)."""
+    for shot, name, top in [("demo-phone-chat.png", "phone-approve", 250), ("demo-phone-tasks.png", "phone-tasks", 0)]:
+        im = Image.open(ROOT / "docs" / "screenshots" / shot).convert("RGB")
+        im = im.crop((0, top, im.width, top + round(im.width * 1.3))).resize((360, 468), Image.LANCZOS)
+        im.save(OUT / f"{name}.webp", "WEBP", quality=80, method=6); print("  ", name)
+
+
 if __name__ == "__main__":
-    main()
+    phones() if "--phones" in sys.argv else main()
