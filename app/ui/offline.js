@@ -67,7 +67,7 @@
   const AGENT = 'claude';
   function seed(mode) {
     if (mode === 'showcase' && window.TribeShowcase) return window.TribeShowcase.seed({ iso, rid, st: S.get() });
-    if (mode === 'watch' && window.TribeDemoWatch) return window.TribeDemoWatch.seed({ iso, rid, st: S.get() });   // feat/demo-auto: Flint builds a game
+    if (mode === 'watch' && window.TribeDemoWatch) return window.TribeDemoWatch.seed({ iso, rid, st: S.get() });   // feat/demo-tour2: See how TribeCode works
     if (mode === 'solo') return seedSolo();
     const st = S.get(), now = Date.now();
     const name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
@@ -1309,7 +1309,7 @@
     if (wt) pill.classList.add('wt');
     if (solo()) pill.classList.add('solo');
     pill.title = wt ? 'A demo that plays by itself in this tab. Exit returns to your own app.' : sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
-    pill.innerHTML = wt ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Demo</span><span class="od-s"> · Flint builds a game</span>' : sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
+    pill.innerHTML = wt ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Demo</span><span class="od-s"> · See how TribeCode works</span>' : sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
       : solo() ? (phoneLike() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>' : `<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device</span><span class="od-s"> · ${(db.homes && Object.values(db.homes).some(h => h && h.github)) ? 'live on GitHub' : 'choose where it lives'}</span>`)
       : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();

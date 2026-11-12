@@ -1,7 +1,7 @@
 // Flint's welcome: the first thing someone sees after "Open in your browser" on the website (app/?welcome=1), or
 // on a first visit to the hosted web app. Before the app shows, Flint walks them through making a pretend tribe,
 // shows a few features, then asks how they want to see it:
-//   * Build an app with me (the guided, hands-on tour, ?demo=showcase) or Just watch it (?demo=watch: Flint builds a game),
+//   * Build an app with me (the guided, hands-on tour, ?demo=showcase) or Just watch it (?demo=watch: See how TribeCode works, the hands-off tour),
 //   * Explore it myself (the calm offline demo tribe),
 //   * Start my real tribe (closes; first-run setup is already underneath).
 // The pretend tribe's name and emoji carry into the demo (offline.js / showcase.js read WKEY).
@@ -154,7 +154,7 @@
         line: () => `How do you want to see ${tribeName()}?`,
         html: () => `<div class="wl-pick">
           <button type="button" class="wl-opt wl-opt--main" data-go="auto"><span class="wl-oe">🧭</span><span><b>Build an app with me</b><small>A guided tour, one step at a time. I point, you click, and you see each part of TribeCode do its job.</small></span><em>Recommended</em></button>
-          <button type="button" class="wl-opt" data-go="watch"><span class="wl-oe">▶️</span><span><b>Just watch it</b><small>Sit back for about four minutes while it plays by itself.</small></span></button>
+          <button type="button" class="wl-opt" data-go="watch"><span class="wl-oe">▶️</span><span><b>Just watch it</b><small>Sit back for two minutes while Flint shows you every part.</small></span></button>
           <button type="button" class="wl-opt" data-go="explore"><span class="wl-oe">🧭</span><span><b>Explore it myself</b><small>A calm pretend tribe. Click around and try things. Nothing happens until you act.</small></span></button>
           <button type="button" class="wl-opt" data-go="real"><span class="wl-oe">🏕️</span><span><b>Start my real tribe</b><small>Skip the pretend part and set up your own.</small></span></button>
           <details class="wl-inv"><summary>Have an invite link?</summary><div class="web-join"><input class="input" id="wl-link" placeholder="https://…/join/k7Qx2" autocomplete="off" spellcheck="false"><button class="btn" id="wl-join" type="button">Join</button></div></details>

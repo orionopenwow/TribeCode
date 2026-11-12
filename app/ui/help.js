@@ -18,7 +18,7 @@
       ['tour', 'i-flint', 'Take the tour with Flint', 'He flies you around the main places', () => window.TribeFlintGuide && window.TribeFlintGuide.tour()],
       ['guide', 'i-doc', 'Guide', 'How TribeCode works, in short pages', () => guide()],
       ['start', 'i-play', 'Start here', 'Your first project in two minutes', () => guide('01-start-here')],
-      ['watch', 'i-play', 'Watch Flint build a game', '90 seconds, hands off: a game from nothing to a page to share', () => window.TribeDemoWatch && window.TribeDemoWatch.begin()],   // feat/demo-auto
+      ['watch', 'i-play', 'See how TribeCode works', 'Two minutes, hands off: Flint shows every main feature', () => window.TribeDemoWatch && window.TribeDemoWatch.begin()],   // feat/demo-auto
       ['flintrun', 'i-flint', 'Watch Flint build', 'An app, a site and a game in a few minutes, then the proof as ZIPs', () => window.TribeFlintRun && window.TribeFlintRun.start()],   // feat/flint-runthrough
       ['demo', 'i-zap', 'Try a demo tribe', 'Host a pretend tribe offline, right here', () => window.TribeOffline && window.TribeOffline.start()],   // feat/offline-demo
       ['claude', 'i-sparkle', 'Connect your AI', 'Claude Code, Codex, Gemini CLI, Cursor…', () => window.TribeApp && window.TribeApp.connectClaude ? window.TribeApp.connectClaude() : guide('03-connect-claude-code')],
