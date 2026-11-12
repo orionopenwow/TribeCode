@@ -156,3 +156,9 @@
   .mk-trow { grid-auto-columns: 78%; }
   .mk-tfocus button { flex: none; padding: 0 10px; }
 }
+/* feat/files-dash: the saved list, said calmly */
+.mk-offline { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); font-size: 13px; line-height: 1.5; color: var(--muted); }
+.mk-offline[hidden] { display: none; }
+.mk-offline b { color: var(--text); }
+.mk-offline .btn { margin-left: auto; flex: none; }
+.mk-off-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
