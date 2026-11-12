@@ -120,6 +120,7 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
     st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev; st.savedAt = d && d.at || (server && server.savedAt ? Date.parse(server.savedAt) : 0);
     st.page = st.cfg.pages[0].id;
     root.hidden = false; document.body.classList.add('wdz-open');
+    { const f = $('#wdz-frame'); if (f && f.srcdoc) { const n = f.cloneNode(false); n.removeAttribute('srcdoc'); f.replaceWith(n); } }   // a frame that was inside the hidden designer can stay unpainted in Chrome: start a fresh one
     if (d && d.dirty && server && (d.rev || 0) < rev && JSON.stringify(S().normalize(d.cfg)) !== JSON.stringify(st.cfg)) { st.dirty = true; st.cfg = S().normalize(d.cfg); conflict({ config: server.config, rev, by: server.savedBy, at: server.savedAt }); }
     else if (restored) { st.dirty = true; push(); }
     let tpl = o.template, rest = o.prompt || '';
@@ -270,11 +271,21 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
     await Promise.all(files.map(async n => { try { const r = await fetch('assets/site-fonts/' + n + '.woff2'); if (!r.ok) return; const b = await r.blob(); FONTS.set(n, await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); })); } catch {} }));
     if (FONTS.size && root && !root.hidden) frame();
   }
+  // the live preview: one render per tick; if the frame does not say "ready" soon, a fresh frame gets it (Chrome can leave
+  // a sandboxed srcdoc frame blank when it is re-navigated quickly, e.g. right after the designer was hidden)
+  let frameT = 0, frameWd = 0, frameReady = false;
   function frame() {
-    const f = $('#wdz-frame'); if (!f) return;
-    const fonts = file => FONTS.get(file) || '';
+    if (!$('#wdz-frame')) return;
     if (!fontsAsked) loadFonts();
-    f.srcdoc = S().render(st.cfg, { page: st.page, edit: true, mode: 'single', fonts, extraHead: EDIT_CSS, extraBody: EDIT_JS });
+    clearTimeout(frameT);
+    frameT = setTimeout(() => {
+      const f = $('#wdz-frame'); if (!f || !st) return;
+      const fonts = file => FONTS.get(file) || '';
+      const html = S().render(st.cfg, { page: st.page, edit: true, mode: 'single', fonts, extraHead: EDIT_CSS, extraBody: EDIT_JS });
+      frameReady = false; f.srcdoc = html;
+      clearTimeout(frameWd);
+      frameWd = setTimeout(() => { if (frameReady || !root || root.hidden) return; const g = $('#wdz-frame'); if (!g) return; const n = g.cloneNode(false); n.removeAttribute('srcdoc'); g.replaceWith(n); n.srcdoc = html; }, 1500);
+    }, 0);
   }
   function postSel(scroll) {
     const f = $('#wdz-frame'); if (!f || !f.contentWindow) return;
@@ -284,7 +295,7 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
   function onFrame(e) {
     const d = e.data; if (!d || !d.sd || !root || root.hidden) return;
     const f = $('#wdz-frame'); if (!f || e.source !== f.contentWindow) return;
-    if (d.t === 'ready') { f.contentWindow.postMessage({ y: frameScroll }, '*'); postSel(false); postPins(); return; }
+    if (d.t === 'ready') { frameReady = true; f.contentWindow.postMessage({ y: frameScroll }, '*'); postSel(false); postPins(); return; }
     if (d.t === 'scroll') { frameScroll = d.y; return; }
     if (d.t === 'page') { st.page = d.id; st.sel = null; frameScroll = 0; paint(); return; }
     if (d.t === 'undo') return undo();
@@ -538,7 +549,8 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
   async function onClick(e) {
     const t = e.target, a = t.closest('[data-wdz]'), pg = pageNow();
     if (t.closest('[data-chip]')) return ask(t.closest('[data-chip]').dataset.chip);
-    if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); await useTemplate(x.dataset.tpl); say(`Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.`); return; }
+    if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
+    if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; await useTemplate(x.dataset.tpl); say(`Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.`); return; }
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
     if (t.closest('[data-page]') && !a) { st.page = t.closest('[data-page]').dataset.page; st.sel = null; frameScroll = 0; paint(); return; }
     if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; paint(); return; }
@@ -650,8 +662,8 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
   }
   async function saveVersion() {
     if (!st.pid || !connected()) { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} return say('Saved a version on this device.'); }
-    clearTimeout(saveT); saveT = 0;
-    try { await C.api(`/projects/${encodeURIComponent(st.pid)}/site-config`, { method: 'PUT', body: { config: st.cfg } }); const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say('Saved to the Saved shelf. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
+    st.dirty = true; if (!(await push())) return say('Not saved: sort out the newer version first.');
+    try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say('Saved to the Saved shelf. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
   }
 
   // ---------- the start screen: 16 templates or blank ----------

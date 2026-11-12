@@ -92,7 +92,7 @@ def main():
         pid = ok(api("/projects", token=tok))["projects"][0]["id"]
         assert api("/site-designer/templates")[0] == 401, "members only"
         tl = ok(api("/site-designer/templates", token=tok))["templates"]
-        assert len(tl) == 16, len(tl)
+        assert len(tl) >= 40 and sum(1 for t in tl if t.get("license") == "MIT" and t.get("source") == "TribeCode") == 16, len(tl)   # feat/site-v2: ours + the imported ones
         lb = ok(api("/site-designer/template/linkbio", token=tok))["config"]
         assert lb["pages"][0]["blocks"][0]["type"] == "links" and lb["pages"][0]["blocks"][0]["props"]["img"].startswith("data:image/"), "template pictures are inlined"
 
@@ -105,7 +105,7 @@ def main():
             pg.wait_for_selector("#wb-design", timeout=15000)
             pg.click("#wb-design")
             pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-tpl", timeout=10000)
-            assert pg.locator("#wdz-start .wdz-tpl").count() == 16, "16 templates"
+            pg.wait_for_function("document.querySelectorAll('#wdz-start .wdz-tpl').length >= 40", timeout=10000)   # feat/site-v2: the gallery
 
             # ---- "link tree website" -> the link-in-bio template
             out = ask(pg, "link tree website")
@@ -114,7 +114,7 @@ def main():
             assert c["template"] == "linkbio" and c["pages"][0]["blocks"][0]["type"] == "links", c["pages"][0]["blocks"]
             assert pg.is_hidden("#wdz-start")
             frame(pg).locator("h1").first.wait_for(timeout=5000)
-            assert "Mara Okafor" in frame(pg).locator("h1").first.inner_text()
+            assert c["name"] in frame(pg).locator("h1").first.inner_text()   # feat/site-v2: filled from the project
 
             # ---- a new page, and a button wired to it
             out = ask(pg, "add a page called Shop")
@@ -221,7 +221,7 @@ def main():
             vd = [x for x in vs["saved"] if x.get("designer")]
             assert vd and vd[0]["thumb"].startswith("data:image/svg+xml"), vs["saved"]
             ask(pg, "delete the shop page")
-            pg.wait_for_timeout(700)
+            pg.wait_for_function("!TribeSiteDesigner.state().dirty", timeout=5000)   # feat/site-v2: autosave settles
             assert len(ok(api(f"/projects/{pid}/site-config", token=tok))["config"]["pages"]) == 1
             ok(api(f"/projects/{pid}/website/versions/{vd[0]['id']}/restore", "POST", {}, token=tok), "restore")
             assert len(ok(api(f"/projects/{pid}/site-config", token=tok))["config"]["pages"]) == 2, "restore brings the config back"

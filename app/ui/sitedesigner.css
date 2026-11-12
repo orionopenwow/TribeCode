@@ -95,7 +95,8 @@ body.wdz-open { overflow: hidden; }
 .wdz-n { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--canvas); font: 700 10.5px/1 var(--mono); }
 .wdz-n[hidden] { display: none; }
 #wdz-cmode[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: var(--surface-2); }
-.wdz-stage { position: relative; align-content: start; gap: 8px; grid-template-rows: auto auto 1fr; }
+.wdz-stage { position: relative; display: flex; flex-direction: column; gap: 8px; }
+.wdz-stage > .wdz-frame { flex: 1 1 auto; min-height: 0; height: auto; align-self: center; }
 .wdz-note { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); font-size: 12.5px; color: var(--muted); }
 .wdz-note b { color: var(--text); }
 .wdz-note > span { flex: 1; min-width: 200px; }
