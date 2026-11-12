@@ -197,7 +197,7 @@ def main():
         # ---------------- off until configured; host only; host computer only ----------------
         assert ok(api("/oauth/providers"))["providers"] == [], "every provider is off at first"
         cfg = ok(api("/oauth/config", token=orion), "config")
-        assert [p["id"] for p in cfg["providers"]] == ["discord", "github", "google"] and cfg["canEdit"] and not any(p["on"] for p in cfg["providers"]), cfg
+        assert [p["id"] for p in cfg["providers"]] == ["discord", "github", "google", "apple"] and cfg["canEdit"] and not any(p["on"] for p in cfg["providers"]), cfg
         assert cfg["providers"][0]["redirectUri"] == f"{BASE}/api/oauth/discord/callback", cfg["providers"][0]["redirectUri"]
         assert "discord.com/developers" in cfg["providers"][0]["register"] and "console.cloud.google.com" in cfg["providers"][2]["register"] and "github.com/settings/developers" in cfg["providers"][1]["register"]
         assert api("/oauth/config", token=vega)[0] == 403, "members can't see the provider setup"

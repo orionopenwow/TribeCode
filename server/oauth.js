@@ -1,4 +1,4 @@
-// Sign in with Discord / GitHub / Google: for JOINING a tribe from an invite and for signing back in on a new device.
+// Sign in with Discord / GitHub / Google (and Apple, config-gated; see PROVIDERS.apple): for JOINING a tribe from an invite and for signing back in on a new device.
 //
 // Every provider is OFF until the host registers an OAuth app with it and pastes the client id + secret in
 // Settings › Sign-in (.tribe/oauth.json, 0600, never sent to a browser; changed only by the host on the host computer).
@@ -60,9 +60,24 @@ const PROVIDERS = {
     user: (b, mock) => (mock ? b + '/v1/userinfo' : 'https://openidconnect.googleapis.com/v1/userinfo'),
     profile: u => ({ id: u.sub, name: u.name || u.given_name, avatar: u.picture }),
   },
+  // Sign in with Apple (App Store 4.8): off until the host sets an Apple Services ID (client id) and its client secret in
+  // Settings › Sign-in (or TRIBE_OAUTH_APPLE_ID / _SECRET). Apple has no profile endpoint: the token answer's id_token
+  // (got straight from Apple over TLS in the code exchange) carries the stable user id in `sub`.
+  // TODO(appstore): Apple's client secret is a short-lived ES256 JWT signed with the team's .p8 key (Team ID, Key ID):
+  //   generate it here from TRIBE_APPLE_TEAM_ID / _KEY_ID / _PRIVATE_KEY instead of asking for a pasted secret; ask for
+  //   the `name email` scopes, which need response_mode=form_post and so a POST callback; check the id_token signature
+  //   against https://appleid.apple.com/auth/keys. Until then: scope-less sign-in (query response, the stable id only).
+  apple: {
+    name: 'Apple', scope: '', base: 'https://appleid.apple.com', idToken: true,
+    env: 'TRIBE_OAUTH_APPLE_BASE', register: 'https://developer.apple.com/account/resources/identifiers/list/serviceId',
+    where: 'Apple Developer › Certificates, Identifiers & Profiles › Services IDs: turn on Sign in with Apple, add the domain and the redirect. Paste the Services ID and a client secret (a JWT made with your .p8 key).',
+    authorize: b => b + '/auth/authorize', token: b => b + '/auth/token', user: null,
+    profile: u => ({ id: u.sub, name: '', avatar: null }),
+  },
 };
+const jwtClaims = t => { try { return JSON.parse(Buffer.from(String(t).split('.')[1] || '', 'base64url').toString('utf8')); } catch { return null; } };
 // Avatars only from the provider's own image CDN, over https.
-const AVATAR_HOSTS = { discord: /^cdn\.discordapp\.com$/, github: /^avatars\.githubusercontent\.com$/, google: /^lh\d\.googleusercontent\.com$/ };
+const AVATAR_HOSTS = { discord: /^cdn\.discordapp\.com$/, github: /^avatars\.githubusercontent\.com$/, google: /^lh\d\.googleusercontent\.com$/, apple: /^$/ };
 const TTL = 10 * 60_000, MAX_FLOWS = 500;
 const CID_RE = /^[A-Za-z0-9._-]{6,200}$/, SECRET_RE = /^[\x21-\x7e]{6,300}$/;
 const ERRORS = ['denied', 'expired', 'mismatch', 'provider', 'invite', 'unknown', 'taken', 'busy', 'off'];
@@ -168,6 +183,7 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
     if (f.provider === 'google') { q.set('nonce', f.nonce); q.set('prompt', 'select_account'); }
     if (f.provider === 'discord') q.set('prompt', 'consent');
     if (f.provider === 'github') q.set('allow_signup', 'true');
+    if (f.provider === 'apple') { q.delete('scope'); q.set('response_mode', 'query'); }   // scope-less: see the TODO on PROVIDERS.apple
     const nonce = f.nonce; f.nonce = null;   // only the cookie carries it from here on
     return redirect(res, `${P.authorize(baseOf(f.provider), mocked(f.provider))}?${q}`, cookieFor(f, nonce, TTL / 1000));
   }
@@ -190,9 +206,10 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
       const tok = await call(P.token(baseOf(p), mocked(p)), { form: { grant_type: 'authorization_code', code, redirect_uri: f.redirectUri, client_id: c.clientId, client_secret: c.clientSecret, code_verifier: f.verifier } });
       const at = tok.data && tok.data.access_token;
       if (tok.status >= 300 || !at || typeof at !== 'string') throw new Error(`token HTTP ${tok.status} ${String((tok.data && (tok.data.error_description || tok.data.error)) || '').slice(0, 80)}`);
-      const me = await call(P.user(baseOf(p), mocked(p)), { token: at });
-      if (me.status >= 300 || !me.data) throw new Error(`profile HTTP ${me.status}`);
-      const raw = P.profile(me.data), pid = String(raw.id == null ? '' : raw.id);
+      let data;
+      if (P.idToken) { data = jwtClaims(tok.data.id_token); if (!data || data.aud !== c.clientId) throw new Error('no usable id_token'); }   // Apple: no profile endpoint
+      else { const me = await call(P.user(baseOf(p), mocked(p)), { token: at }); if (me.status >= 300 || !me.data) throw new Error(`profile HTTP ${me.status}`); data = me.data; }
+      const raw = P.profile(data), pid = String(raw.id == null ? '' : raw.id);
       if (!/^[A-Za-z0-9_-]{1,64}$/.test(pid)) throw new Error('profile has no usable id');
       f.profile = { id: pid, name: cleanName(raw.name), avatar: cleanAvatar(p, raw.avatar) };
     } catch (e) {
