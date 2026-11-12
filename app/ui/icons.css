@@ -1,0 +1,4 @@
+/* The shared stroke icons (app/ui/icons.js): quiet, inherit the text color, never filled. */
+.ti { display: inline-grid; place-items: center; flex: none; line-height: 0; vertical-align: -0.2em; }
+.ti-svg { display: block; flex: none; }
+.ti + span, .ti + b { margin-left: 0; }
