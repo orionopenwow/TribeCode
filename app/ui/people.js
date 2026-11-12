@@ -316,6 +316,7 @@
     const ag = t.closest('#room-agents .ra-row[data-agent] b, .ag-card[data-agent] .ag-t b, .ag-card[data-agent] .ag-ico');
     if (ag) { e.preventDefault(); e.stopPropagation(); open(ag.closest('[data-agent]').dataset.agent); return; }
     const dp = t.closest('[data-person]');
+    const own = dp && t.closest('button, a'); if (own && own !== dp && dp.contains(own)) return;   // a button inside a person card keeps its own action (Message, View profile)
     if (dp && !dp.closest('#person-panel')) { e.preventDefault(); e.stopPropagation(); open(dp.dataset.person); return; }
   }, true);
   document.addEventListener('click', e => {

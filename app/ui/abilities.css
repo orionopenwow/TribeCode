@@ -1,0 +1,111 @@
+/* Abilities + gigs for yourself (app/ui/abilities.js): the abilities editor, the gig composer, offer cards, Home ›
+   Work's "Your abilities" + "My gigs", and the profile page. Flat matte: 1px borders, luminance steps, tokens only. */
+.ab-ic { flex: none; display: block; }
+.ab-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 140; }
+.ab-sheet { position: fixed; z-index: 141; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(600px, calc(100vw - 32px)); max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); color: var(--text); }
+.ab-sheet.wide { width: min(760px, calc(100vw - 32px)); }
+.ab-sheet.phone { top: auto; bottom: 0; left: 0; right: 0; transform: none; width: auto; max-height: 94dvh; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+.ab-sh-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px 12px; border-bottom: 1px solid var(--edge); }
+.ab-sh-h .eyebrow { font-size: 12px; }
+.ab-sh-h h2 { margin: 4px 0 0; font-family: var(--display); font-size: 21px; font-weight: 750; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.ab-x { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); color: var(--muted); cursor: pointer; }
+.ab-sh-b { padding: 16px 20px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.ab-form { display: flex; flex-direction: column; gap: 16px; }
+.ab-f { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ab-l { font-size: 14px; font-weight: 600; color: var(--muted); }
+.ab-l small, .ab-fine { font-size: 13px; font-weight: 400; color: var(--faint); line-height: 1.5; margin: 0; }
+.ab-form .input { height: 42px; font-size: 14px; }
+.ab-form textarea.input { height: auto; resize: vertical; line-height: 1.5; padding-top: 10px; }
+.ab-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ab-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.ab-check input { margin-top: 3px; accent-color: var(--accent); }
+.ab-check span { display: flex; flex-direction: column; gap: 2px; } .ab-check small { color: var(--faint); font-size: 13px; }
+.ab-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); align-self: flex-start; }
+.ab-seg button { height: 32px; padding: 0 12px; border: 0; border-radius: 6px; background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.ab-seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--edge); font-weight: 600; }
+.ab-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ab-chip { height: 34px; padding: 0 14px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.ab-chip.on { border-color: var(--accent); color: var(--text); background: var(--chip); }
+.ab-sks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ab-sks:empty { display: none; }
+.ab-sk { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); }
+.ab-sk > span:first-child { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.ab-sk .ab-seg { background: var(--surface); } .ab-sk .ab-seg button { height: 28px; padding: 0 9px; font-size: 12px; }
+.ab-rm { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 6px; background: none; color: var(--faint); cursor: pointer; }
+.ab-rm:hover { color: var(--text); background: var(--surface); }
+.ab-add { display: flex; gap: 8px; } .ab-add .input { flex: 1; min-width: 0; }
+.ab-foot { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; padding-top: 4px; }
+
+/* offer cards */
+.ab-offer { display: flex; flex-direction: column; gap: 10px; padding: 18px; border: 1px solid var(--edge); border-left: 3px solid var(--live); border-radius: var(--r); background: var(--surface); min-width: 0; }
+.ab-o-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ab-o-top .eyebrow { font-size: 12px; margin: 0; }
+.ab-o-time { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.ab-offer h3 { margin: 0; font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.ab-read { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); max-width: 65ch; overflow-wrap: anywhere; }
+.ab-dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; }
+.ab-dl div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ab-dl dt { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+.ab-dl dd { margin: 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+.ab-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ab-tags span { font-size: 13px; padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; color: var(--muted); background: var(--surface-2); }
+.ab-tags span i { font-style: normal; color: var(--faint); font-size: 12px; }
+.ab-o-f { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--edge); }
+.ab-o-f .linkish { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.ab-st { font-size: 13px; color: var(--muted); }
+.ab-st.s-accepted { color: var(--online); } .ab-st.s-declined { color: var(--faint); }
+.ab-reqs { display: flex; flex-direction: column; border: 1px solid var(--edge); border-radius: var(--r-sm); }
+.ab-reqs > .ab-fine { padding: 10px 12px; }
+.ab-req { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--edge); flex-wrap: wrap; }
+.ab-req:first-child { border-top: 0; }
+.ab-req > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ab-req b { font-size: 14px; } .ab-req small { font-size: 13px; color: var(--faint); overflow-wrap: anywhere; }
+.ab-req-b { display: flex; gap: 6px; }
+
+/* Home › Work */
+.ab-home { display: flex; flex-direction: column; gap: 16px; margin: 0 0 32px; }
+.ab-h-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.ab-home .card { padding: 18px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ab-c-h { display: flex; gap: 12px; align-items: center; color: var(--muted); }
+.ab-c-h .eyebrow { font-size: 12px; margin: 0; }
+.ab-c-h h3 { margin: 2px 0 0; font-size: 17px; font-weight: 700; color: var(--text); }
+.ab-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.ab-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+
+/* profile page */
+.ab-page { display: flex; flex-direction: column; gap: 22px; }
+.ab-p-h { display: flex; gap: 16px; align-items: flex-start; }
+.ab-p-h > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ab-av { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 700; color: var(--canvas); flex: none; }
+.ab-bio { margin: 0; font-size: 15px; line-height: 1.6; max-width: 60ch; overflow-wrap: anywhere; }
+.ab-facts { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ab-facts span { font-size: 13px; padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; color: var(--muted); }
+.ab-facts .ab-open { color: var(--online); border-color: color-mix(in srgb, var(--online) 45%, var(--edge)); }
+.ab-links { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.ab-links a { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--accent-ink, var(--accent)); text-decoration: none; }
+.ab-p-s { display: flex; flex-direction: column; gap: 10px; }
+.ab-p-s > .eyebrow { font-size: 12px; margin: 0; }
+.ab-skl { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.ab-skl li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); font-size: 14px; }
+.ab-skl li > span:first-child { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.ab-skl small { font-size: 12px; color: var(--faint); min-width: 52px; }
+.ab-lv { display: inline-flex; gap: 3px; } .ab-lv i { width: 8px; height: 8px; border-radius: 2px; background: var(--surface-3); } .ab-lv i.on { background: var(--live); }
+.ab-sub { margin: 0; font-size: 14px; color: var(--muted); } .ab-sub b { color: var(--text); margin-right: 6px; }
+.ab-done { list-style: none; margin: 0; padding: 0; border: 1px solid var(--edge); border-radius: var(--r-sm); }
+.ab-done li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-top: 1px solid var(--edge); }
+.ab-done li:first-child { border-top: 0; }
+.ab-done li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ab-done b { font-size: 14px; } .ab-done small { font-size: 13px; color: var(--faint); }
+.ab-dk { flex: none; font-size: 12px; padding: 2px 8px; border: 1px solid var(--edge); border-radius: 6px; color: var(--muted); }
+
+/* Work › Find people bar (talent.js) */
+.ab-findbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.ab-findbar .input { height: 40px; font-size: 14px; flex: 1 1 200px; min-width: 0; }
+.ab-findbar select.input { flex: 0 0 auto; }
+
+@media (max-width: 820px) {
+  .ab-two { grid-template-columns: 1fr; }
+  .ab-sk { flex-wrap: wrap; }
+  .ab-p-h { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { .ab-seg button { transition: none; } }

@@ -358,6 +358,7 @@
       if (k === 'person') { const st = C && C.state ? C.state() : {}; const ppl = (st.members || []).filter(m => m.role !== 'agent' && m.role !== 'spectator'); const p = ppl.length ? ppl[Math.floor(Math.random() * ppl.length)] : st.me; return { text: T('picked', { x: first(p ? p.name : 'you') }) }; }
       return { text: Math.random() < 0.5 ? T('yes') : T('no') };
     }
+    if (id === 'gig.self' || id === 'people.find') { const A = window.TribeAbilities; if (!A) return null; return { text: id === 'gig.self' ? A.flintPost(sl.what || '') : A.flintFind(String(sl.skill || '').replace(/^(?:do|make|help with)\s+/, '')), sum: id === 'gig.self' ? 'opened a gig for you' : 'opened Find people' }; }   // feat/company-gigs
     if (id === 'help.kb') { if (H.guide) { const g = await H.guide(s.text); if (g) return { said: true }; } return kbAnswer(s.text, H); }
     return null;
   }
