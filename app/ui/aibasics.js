@@ -186,7 +186,7 @@
   const FK = [
     ['doc.summary', /^(?:summari[sz]e|sum up|tl;?dr|recap|give me (?:a|the) (?:summary|tl;?dr) of)\b/],
     ['doc.points', /^(?:(?:what are |list |give me |pull out |find )?(?:the )?(?:key points|main points|action items|to-?dos|takeaways)(?: (?:of|from|in))?)\b/],
-    ['doc.title', /^(?:suggest|give me|pick|what'?s a good|name|title ideas?)(?: (?:a|some|me a|me some))? ?(?:good )?(?:titles?|names?)?(?: ideas?)?(?: for)?\b(?=.*\b(title|name)s?\b|.*\btitle ideas?\b)|^(?:title|name) (?:this|it)\b/],
+    ['doc.title', /^(?:suggest|give me|pick|what'?s a good|come up with)\s+(?:a\s+|some\s+|me\s+a\s+|me\s+some\s+)?(?:good\s+|better\s+)?(?:title|titles|title ideas?)\b|^title ideas?\b|^(?:title|retitle) (?:this|it)\b/],
     ['doc.tags', /^(?:suggest|give me|pick|add)?\s*(?:some )?tags?(?: (?:for|to))?\b|^tag (?:this|it|the)\b/],
     ['doc.read', /^(?:how long (?:is it |does it take )?to read|reading time|how long is)\b/],
     ['doc.glossary', /^(?:explain (?:the )?(?:terms|words|jargon)|explain (?:it |this )?like i'?m (?:new|five|5)|eli5|glossary|what do (?:these|the) (?:terms|words) mean|make a glossary)\b/],
@@ -225,8 +225,8 @@
     if (/https?:\/\//.test(t)) return null;   // links: captures.js
     const hit = FK.find(([, rx]) => rx.test(t)); if (!hit) return null;
     const kind = hit[0], rest = text.replace(hit[1], '');
-    if (kind !== 'doc.summary' && !TARGET.test(rest.toLowerCase()) && !/[:]/.test(rest) && !/\b(called|named|file)\b/i.test(rest) && !(kind === 'doc.glossary' || kind === 'doc.read' || kind === 'doc.points')) return null;
-    if (kind === 'doc.summary' && !TARGET.test(rest.toLowerCase()) && !/[:]/.test(rest) && !/\b(called|named|file)\b/i.test(rest)) return null;
+    const pointed = TARGET.test(rest.toLowerCase()) || /[:]/.test(rest) || /\b(called|named|file)\b/i.test(rest);
+    if (!pointed && !/explain (?:it |this )?like i'?m|eli5|reading time|key points|action items|takeaways|^suggest (?:a |some )?(?:good )?titles?\b|^title ideas?/i.test(t)) return null;   // "todos", "tag maya": not about a doc
     const F = window.TribeFlint;
     let src; try { src = await target(rest); } catch (e) { return { text: e.message }; }
     if (!src) return { text: 'Which doc? Open it, or say "summarize the doc called …", or paste the text after a colon.' };
