@@ -95,6 +95,12 @@
     const [a, b, c, e] = parts, GET = method === 'GET', POST = method === 'POST', PUT = method === 'PUT';
     const ok = x => [200, x];
     if (a === 'coord' && GET && b === 'agents' && !c) return ok({ agents: agents() });
+    if (a === 'agents' && GET && b === 'fleet' && !c) {   // feat/fleet: the Agents Hub draws one row per agent from this
+      const list = agents().map(x => ({ ...x, kindLabel: x.kind === 'codex' ? 'Codex' : 'Claude Code', label: null, owner: null, status: x.online ? (x.task || x.files.length ? 'working' : 'idle') : 'offline',
+        lastSeen: x.lastActive, everSeen: true, branch: x.task ? 'task/' + x.task.id : null, budget: null, recent: [], project: PID, projectName: '', projectColor: null }));
+      return ok({ scope: 'project', project: PID, you: { id: 'me', host: true, canAct: true }, connected: list.some(x => x.yours), agents: list, projects: [],
+        next: [{ kind: 'working', rank: 5, title: `${list.filter(x => x.status === 'working').length} agents are working`, sub: list.filter(x => x.task).slice(0, 2).map(x => `${x.name}: ${x.task.title}`).join(' · '), project: PID }] });
+    }
     if (a === 'coord' && b === 'handoffs') {
       const T = tourState();
       if (GET && !c) return ok({ handoffs: T.handoffs });
@@ -521,7 +527,7 @@
     { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents", "Click Agents Hub to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
       dropCursor('maya');
       await go('agents');
-      await settle('#ad-hero .ad-agent', 'agents at work');
+      await settle('#ad-dash .fl-row, #ad-hero .ad-agent', 'agents at work');   // feat/fleet: one row per agent
       const T = tourState();
       const refresh = () => { const el = $('#ad-dash'); if (el && el.parentElement && window.TribeAgentsDash) window.TribeAgentsDash.render(el.parentElement); };
       await wait(1200);
