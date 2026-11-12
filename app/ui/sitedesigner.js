@@ -352,7 +352,7 @@ addEventListener('scroll',function(){post({t:'scroll',y:scrollY})},{passive:true
     if (connected()) { try { list = (await C.api('/site-designer/templates')).templates; } catch {} }
     if (!list.length) list = S().TEMPLATES.map(id => ({ id, title: id, summary: '' }));
     box.innerHTML = `<div class="wdz-start-in"><p class="wdz-eyebrow">Website</p><h2>Start from a template</h2><p class="wdz-hint">Every template is blocks you can change, wire and export. Or tell Flint what the site is for.</p>
-      <div class="wdz-tpls">${list.map(t => `<button type="button" class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}"><img src="${connected() ? `${esc(C.base ? C.base() : '')}/api/site-library/${esc(t.id)}/thumb.png` : ''}" alt="" loading="lazy"><b>${esc(t.title)}</b><small>${esc(t.summary)}</small></button>`).join('')}</div>
+      <div class="wdz-tpls">${list.map(t => `<button type="button" class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">${connected() && !(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active()) ? `<img src="${esc(C.base ? C.base() : '')}/api/site-library/${esc(t.id)}/thumb.png" alt="" loading="lazy">` : ''}<b>${esc(t.title)}</b><small>${esc(t.summary)}</small></button>`).join('')}</div>
       <p class="wdz-row"><button type="button" class="btn sm" data-start="blank">${fromBar ? 'Keep my design' : 'Start blank'}</button></p></div>`;
     box.querySelectorAll('img').forEach(i => { i.onerror = () => { i.remove(); }; });
   }
