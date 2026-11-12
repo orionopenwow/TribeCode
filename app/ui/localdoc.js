@@ -241,7 +241,7 @@
     const t = plain(md), low = ' ' + t.toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ') + ' ', out = [], have = new Set();
     const add = (term, def, from) => { const k = term.toLowerCase(); if (have.has(k) || !def) return; have.add(k); out.push({ term, def: clip(cap(def), 220), from }); };
     // the text's own definitions: "Model Context Protocol (MCP)", "Flint is the built-in helper …", "MCP: a standard …"
-    for (const m of t.matchAll(/\b((?:[A-Z][\w-]+\s){1,5}[A-Z][\w-]+)\s+\(([A-Z][A-Za-z0-9]{1,8})\)/g)) add(m[2], m[1], 'doc');
+    for (const m of t.matchAll(/\b((?:[A-Z][\w-]+\s){1,5}[A-Z][\w-]+)\s+\(([A-Z][A-Za-z0-9]{1,8})\)/g)) add(m[2], m[1].replace(/^(The|A|An|Our)\s+/, ''), 'doc');
     for (const m of t.matchAll(/(?:^|[.!?\n]\s*)(?:An?\s+|The\s+)?([A-Z][\w-]+(?:\s[A-Z][\w-]+){0,2}|[A-Z]{2,8})\s+(?:is|are|means|stands for|refers to)\s+((?:a|an|the|our|when|how|what|where)\b[^.!?\n]{8,180})/g)) if (!/^(This|That|It|There|Here|What|Who|He|She|We|They|I)$/.test(m[1])) add(m[1], m[2], 'doc');
     for (const m of t.matchAll(/^\s*(?:[-*]\s+)?\**([A-Z][\w -]{1,30}?)\**\s*[:—–]\s+([^\n]{10,200})$/gm)) if (m[1].split(' ').length <= 4 && !/^(Note|Notes|Tip|Goal|Why|Date|Owner|Status|Next|Todo|Done)$/i.test(m[1])) add(m[1].trim(), m[2], 'doc');
     for (const [k, v] of Object.entries(BASICS)) if (low.includes(' ' + k + ' ') || (k.length > 3 && low.includes(' ' + k + 's '))) add(ACR.has(k) ? k.toUpperCase() : k.replace(/^\w/, c => c.toUpperCase()), v, 'basics');
