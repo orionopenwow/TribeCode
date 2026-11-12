@@ -26,6 +26,7 @@ at 1440 and 390.
 | Preview › Website empty card "Make the project's website" with **Make the website** (one-tap draft) and **Pick a look in Files › Website** (the old builder) | a second, older way in that led to the old builder | "Design the project's website" with **Open the website designer** (`data-act="design"`) |
 | i18n entry "Send to my AI helper" | no UI uses it any more (the old Flint send path) | |
 | Dead CSS: `demowatch.css` (the tour's old huddle and AI-boost cards), `styles.css` (the old onboarding wizard `.ob-*`, `.perks`, `.help-btn`, `.hero-icon`), `hub.css` (the old Home share/invite cards, the Docs search, `.hub-hint`, `.hub-thumb`, the old phone dock `.dc-*`), `filegrid.css` (the old Files grid and quick-action tiles `.fg-grid`, `.fg-start`, `.fg-st`) | rules for classes no script or page makes any more | only rules whose every selector is a dead class were removed |
+| `app/ui/friends.js`, `app/ui/friends.css` (the Friends button `#fr-btn` in the bottom-left user bar and its panel) | it duplicated the People panel in the top bar (`peoplepanel.js`) | People › Friends: star a friend, the invite link and the one-time guest pass with Copy (moved in); `TribeFriends.open()` (the phone's Messages with no tribe) and Ctrl K › Friends open that tab (fix/batch-fixes) |
 | The tour's chapters on the inspiration board, a pretend huddle, Claude in the Agents Hub, Work gigs and Flint's lesson + AI-boost card | the tour now starts from a blank slate and shows Flint making things (docs/screenshots/demo-blank-*.png) | `demowatch.js` |
 
 ## Tests changed
@@ -34,8 +35,8 @@ at 1440 and 390.
 - `e2e_customize.py`: the generator steps that clicked the old builder (`#sg-make`, Shuffle, Write it for me, the section editor, Publish) call the same endpoints directly.
 - `e2e_website_button.py`, `e2e_preview_polish.py`: the empty website card's new title.
 
-## Seen but not changed here (owned by other branches, noted for the merge)
+## Fixed after the merge (fix/batch-fixes)
 
-- The website designer's live preview is an `about:srcdoc` frame: in the desktop app it inherits the window's CSP (`script-src` without `'unsafe-inline'`), so its inline edit script doesn't run there. Click-to-edit in the designer's preview needs a non-inline script (or a `blob:` script) to work in the desktop app.
-- Files' empty state says "It stays on this device until you move it into a tribe" inside a tribe (`filesview.js`).
-- The Files tab bar's **Website** tab (`shell.js`) still opens the Website page (status, suggestions, versions) rather than the designer itself.
+- The website designer's preview helper is `app/ui/sitedesigner-frame.js`, loaded by src from the app's origin, so click-to-edit works under the desktop CSP (no `'unsafe-inline'`). Starters played on this device run their inline scripts through `app/ui/framerun.js` (blob: scripts made inside the frame). Test: `e2e_desktop_csp.py`.
+- Files' empty state fits where you are (a project, a tribe picked in Where, or this device).
+- Files › Website lists the project's site design with Open designer (or Start a design).

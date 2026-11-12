@@ -363,10 +363,10 @@ def main():
             # ---------------- update icon: the same save / hand-off / restart flow ----------------
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
-            # desktop: the header keeps only the update button; you, the bell and Friends sit in the bottom-left user bar
+            # desktop: the header keeps People and the update button; you and the bell sit in the bottom-left user bar
             assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["ppl-btn", "update-btn", "tb-help"]   # feat/presence: People sits in the top bar
-            assert host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].every(s => document.querySelector(s).closest('#userbar'))"), "user bar holds profile, bell, friends"
-            order = host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
+            assert host.evaluate("['#pf-btn', '#nf-bell'].every(s => document.querySelector(s).closest('#userbar')) && !document.querySelector('#fr-btn')"), "user bar holds profile and bell (Friends is in People)"
+            order = host.evaluate("['#pf-btn', '#nf-bell'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
             assert host.locator(".titlebar #panel-toggle").count() == 0 and host.locator("#ctx-btn").is_hidden()
             host.keyboard.press("Control+Shift+K"); host.wait_for_selector("#ctx-win:not(.hidden)"); host.keyboard.press("Control+Shift+K")

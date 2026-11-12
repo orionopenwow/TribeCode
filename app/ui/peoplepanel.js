@@ -115,7 +115,10 @@
       const inv = invites.filter(i => i.by === me().id || me().role === 'host');
       body.innerHTML = sec('Starred friends', starred.filter(m => m.online).length + ' online', starred.length ? starred.map(row).join('') : '<p class="ppl-empty">Star someone with ☆ to keep them here.</p>')
         + sec('You share a tribe', null, shares.length ? shares.map(row).join('') : '<p class="ppl-empty">Everyone you share a project with shows up here.</p>')
-        + sec('Pending invites', inv.length || null, inv.length ? inv.map(i => `<div class="ppl-row ppl-inv"><span class="ppl-face"><span class="pf-av ppl-av ppl-inv-av">+</span></span><div class="ppl-t"><b>${i.guest ? 'Guest pass' : 'Invite link'} · ${esc(i.uses || 0)}/${esc(i.maxUses)} used</b><small>expires ${esc(new Date(i.expires).toLocaleDateString([], { month: 'short', day: 'numeric' }))}${i.project ? ' · this project' : ''}</small></div></div>`).join('') : '<p class="ppl-empty">No open invites. <button type="button" class="linkish" data-invite>Invite someone</button></p>');
+        + sec('Pending invites', inv.length || null, inv.length ? inv.map(i => `<div class="ppl-row ppl-inv"><span class="ppl-face"><span class="pf-av ppl-av ppl-inv-av">+</span></span><div class="ppl-t"><b>${i.guest ? 'Guest pass' : 'Invite link'} · ${esc(i.uses || 0)}/${esc(i.maxUses)} used</b><small>expires ${esc(new Date(i.expires).toLocaleDateString([], { month: 'short', day: 'numeric' }))}${i.project ? ' · this project' : ''}</small></div></div>`).join('') : '<p class="ppl-empty">No open invites. <button type="button" class="linkish" data-invite>Invite someone</button></p>')
+        + (canInvite() ? sec('Add someone new', null, `<button type="button" class="ppl-add" id="ppl-new-invite"><span class="ppl-ai k-ember" aria-hidden="true">+</span><span class="ppl-t"><b>Invite a friend</b><small>A link for this project. They join with a name, on a computer or a phone.</small></span></button>
+          <button type="button" class="ppl-add" id="ppl-guest"><span class="ppl-ai k-indigo" aria-hidden="true">1×</span><span class="ppl-t"><b>One-time guest pass</b><small>Works once. Their account stops working after a day. Good for a quick look or a playtest.</small></span></button>
+          <div id="ppl-link" class="ppl-link" hidden></div>`) : '');
     }
     wire(body);
   }
@@ -125,11 +128,29 @@
     body.querySelectorAll('[data-prof]').forEach(b => b.onclick = () => { const id = b.dataset.prof, m = all().find(x => x.id === id); close(); if (window.TribeAbilities && m && !isAI(m)) window.TribeAbilities.profile(id); else if (window.TribeProfiles) window.TribeProfiles.open(id, btn); });
     body.querySelectorAll('[data-star]').forEach(b => b.onclick = () => star(b.dataset.star));
     body.querySelectorAll('[data-invite]').forEach(b => b.onclick = invite);
+    const ni = body.querySelector('#ppl-new-invite'); if (ni) ni.onclick = () => mint(false);
+    const gp = body.querySelector('#ppl-guest'); if (gp) gp.onclick = () => mint(true);
   }
   async function star(id) {
     const on = !friends.has(id);
     try { friends = new Set((await C.api('/friends', { method: 'PUT', body: { id, on } })).friends || []); toast(on ? 'Starred as a friend.' : 'Unstarred.'); } catch (e) { toast(e.message); }
     draw();
+  }
+  const canInvite = () => !['spectator', 'agent'].includes(me().role) && !me().guest;
+  // an invite link or a one-time guest pass, shown here with Copy (fix/batch-fixes: moved from the old Friends panel)
+  async function mint(guest) {
+    const box = $('#ppl-link'); if (!box) return;
+    try {
+      const r = await C.api('/invites', { method: 'POST', body: { project: proj() || null, ...(guest ? { guest: true, hours: 24 } : { maxUses: 5, hours: 72 }) } });
+      let base = C.base(), site = null;   // localhost only works here: share the public (or network) address, and the Pages link when public
+      try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null; if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) base = pick.url; } catch {}
+      const share = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(r.invite.code)}` : `${base}/join/${r.invite.code}`;
+      box.hidden = false;
+      box.innerHTML = `<span class="eyebrow">${guest ? 'Guest pass · one use · 24 h' : 'Invite link · 3 days'}</span><div class="ppl-lrow"><input class="input" readonly value="${esc(share)}" aria-label="Link"><button type="button" class="btn primary sm" id="ppl-copy">Copy</button></div>`;
+      const copy = async () => { try { await navigator.clipboard.writeText(share); toast('Link copied.'); } catch { box.querySelector('input').select(); } };
+      $('#ppl-copy').onclick = copy; copy();
+      if (!['spectator', 'agent'].includes(me().role)) C.api('/invites').then(x => { invites = x.invites || []; }).catch(() => {});
+    } catch (e) { toast(e.message); }
   }
   function invite() { close(); if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); }
   function badge() {
@@ -165,7 +186,8 @@
 
   // ---------- Ctrl K ----------
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => {
-    const items = [{ kind: 'Action', label: 'People', keys: 'people friends tribe online who team members', hint: `${all().filter(m => m.online && m.id !== me().id).length} online`, run: () => show({ tab: 'tribe' }) }];
+    const items = [{ kind: 'Action', label: 'People', keys: 'people friends tribe online who team members', hint: `${all().filter(m => m.online && m.id !== me().id).length} online`, run: () => show({ tab: 'tribe' }) },
+      { kind: 'Action', label: 'Friends', keys: 'friends starred invite guest pass add friend', run: () => show({ tab: 'friends' }) }];
     for (const m of all()) {
       if (m.id === me().id) continue;
       const p = placeOf(m);
@@ -204,5 +226,9 @@
   }
 
   setTimeout(badge, 600);
+  const loadFriends = () => { if (C.connected && C.connected()) C.api('/friends').then(r => { friends = new Set(r.friends || []); }).catch(() => {}); };
+  C.on('status', s => { if (s && s.status === 'online') loadFriends(); }); setTimeout(loadFriends, 800);
+  // fix/batch-fixes: the old Friends button (friends.js) is retired; its entry points open the Friends tab here
+  window.TribeFriends = { open: () => show({ tab: 'friends', q: '' }), close, list: () => [...friends] };
   window.TribePeoplePanel = { open: show, close, isOpen: () => open, flint, draw };
 })();

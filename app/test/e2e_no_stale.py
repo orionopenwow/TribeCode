@@ -29,6 +29,7 @@ LEGACY = {
     "the old Home share/invite cards": ".home-share-card, .home-invite, .hub-docsearch",
     "the old Files grid and quick tiles": ".fg-grid, .fg-start, .fg-st",
     "the tour's old huddle and AI-boost cards": "#dw-huddle, #dw-boost, .dw-card",
+    "the old Friends button and panel (friends.js; People › Friends now)": "#fr-btn, #fr-panel, #fr-scrim",
 }
 
 

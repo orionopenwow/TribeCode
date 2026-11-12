@@ -71,3 +71,13 @@ button.ppl-where:hover { text-decoration: underline; }
   .ppl-btn { width: 36px; height: 36px; }
 }
 @media (prefers-reduced-motion: reduce) { .ppl-panel, .ppl-scrim { animation: none; } }
+/* fix/batch-fixes: Add someone new (an invite link, a one-time guest pass), moved from the old Friends panel */
+.ppl-add { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out); }
+.ppl-add:hover { background: var(--surface-2); }
+.ppl-add .ppl-t small { color: var(--faint); }
+.ppl-ai { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 700 14px var(--mono); border: 1px solid var(--edge); background: var(--surface-2); }
+.ppl-ai.k-ember { color: var(--brand); border-color: var(--brand); }
+.ppl-ai.k-indigo { color: var(--peer); border-color: var(--peer); }
+.ppl-link { margin-top: 4px; padding: 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
+.ppl-lrow { display: flex; gap: 8px; margin-top: 8px; }
+.ppl-lrow .input { flex: 1; min-width: 0; font: 12px var(--mono); }
