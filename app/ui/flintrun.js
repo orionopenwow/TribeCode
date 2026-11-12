@@ -268,6 +268,8 @@ Made with TribeCode (MIT, self-hosted): https://github.com/orionopenwow/TribeCod
     const manifest = await api('/flint/proof/manifest'), tribeName = manifest.tribe.name, cur = pid();
     const project = (manifest.projects || []).find(p => p.id === cur) || (manifest.projects || [])[0] || { id: cur, name: 'project' };
     const log = (opts.log || run.log || []).slice(), ai = run.ai || '';
+    const cur0 = plan[run.i];   // the export step itself is still running: it is in the timeline as the step that wrote these ZIPs
+    if (run.on && cur0 && cur0.id === 'proof' && !log.some(l => l.id === 'proof')) log.push({ i: run.i + 1, id: 'proof', title: cur0.title, caption: cur0.capShown || cur0.cap, cmd: cur0.cmd, at: new Date().toISOString(), ms: Date.now() - run.t0, ok: true, reply: 'These ZIPs.', tier: 'free · no AI' });
     if (!design && window.TribeCanvas && window.TribeCanvas.state && window.TribeCanvas.state().open) await captureDesign();
     const one = await collect(project.id);
     const files = one.entries.slice();
