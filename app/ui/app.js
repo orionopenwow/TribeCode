@@ -516,7 +516,14 @@
       };
       ['#inv-hours', '#inv-uses', '#inv-role', '#inv-project'].forEach(s => $(s) && $(s).addEventListener('change', make));
       $('#inv-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#inv-link').textContent); toast('Invite link copied'); } catch { getSelection().selectAllChildren($('#inv-link')); toast('Press Ctrl+C to copy'); } };
-      make();
+      // A project that lives only on this device can't make an invite yet: say so here, with the way on, instead of
+      // asking for one (the refusal would open Where should it live? a moment later, over whatever is on screen by then)
+      const O = window.TribeOffline;
+      if (O && O.solo && O.solo()) {
+        $('#inv-link').textContent = 'This project lives on this device. Choose where it lives first, then friends can join.';
+        $('#inv-copy').textContent = 'Choose'; $('#inv-copy').disabled = false;
+        $('#inv-copy').onclick = () => { closeInvite(); const L = window.TribeLocalSetup, P = window.TribePhoneHost; if (L && L.where && !matchMedia('(max-width: 820px)').matches) L.where(); else if (P && P.move) P.move(); };
+      } else make();
     }
     body.querySelectorAll('[data-close]').forEach(b => b.onclick = closeInvite);
   }
