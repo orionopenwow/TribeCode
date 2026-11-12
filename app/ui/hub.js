@@ -971,6 +971,44 @@
     else body.innerHTML = `<div class="fv-none">${ico(FK_IC[f.kind] || 'i-clip', 44)}<b>${esc(FK_LABEL[f.kind] || 'File')}</b><span>No preview for this kind of file. Download it to open it.</span></div>`;
   }
 
+  // ---------- Work on Home (feat/files-dash: Home parity): your tasks across every tribe, above the gigs ----------
+  let myTasks = { at: 0, list: [] };
+  async function loadMyTasks() {
+    if (!connected() || Date.now() - myTasks.at < 15000) return myTasks.list;
+    const meId = me().id, mine = (C.state().members || []).filter(m => m.role === 'agent' && m.owner === meId).map(m => m.id), out = [];
+    await Promise.all(projects().slice(0, 12).map(async p => { try { const { tasks } = await C.api('/tasks', { project: p.id }); for (const k of tasks || []) if (k.status !== 'done' && (k.assignee === meId || mine.includes(k.assignee))) out.push({ ...k, pid: p.id }); } catch {} }));
+    const rank = { doing: 0, review: 1, backlog: 2 };
+    myTasks = { at: Date.now(), list: out.sort((a, b) => (rank[a.status] ?? 3) - (rank[b.status] ?? 3) || String(a.due || '9').localeCompare(String(b.due || '9'))) };
+    return myTasks.list;
+  }
+  function myTasksHtml(list) {
+    const rows = list.slice(0, 8).map(k => { const p = projOf(k.pid) || {};
+      return `<button type="button" class="hmt-row" data-mytask="${esc(k.pid)}|${esc(k.id)}"><span class="hmt-st s-${esc(k.status)}">${esc(k.status === 'doing' ? 'Doing' : k.status === 'review' ? 'Review' : 'To do')}</span><b>${esc(k.title)}</b>${k.due ? `<small>Due ${esc(k.due)}</small>` : ''}<span class="hmt-pj">${esc(p.name || 'A tribe')}</span>${ico('i-chev', 14)}</button>`; }).join('');
+    return `<section class="hub-mytasks" id="hub-mytasks">${hubCrumb('Work')}<div class="sec-head"><span class="eyebrow">Your tasks · across your tribes</span><h2>${list.length ? `${list.length} on your plate` : 'Nothing on your plate'}</h2></div>
+      ${rows ? `<div class="hmt-list">${rows}</div>` : `<p class="faint">When a task in any tribe is assigned to you or your AI, it shows up here.</p>`}</section>`;
+  }
+  let mtBusy = false;
+  async function paintMyTasks() {
+    const sec = document.getElementById('view-work'); if (!sec || document.body.dataset.view !== 'work' || mtBusy) return;
+    if (!connected()) { if (!sec.querySelector('.hub-crumb')) sec.insertAdjacentHTML('afterbegin', hubCrumb('Work')); return; }
+    mtBusy = true; const list = await loadMyTasks(); mtBusy = false;
+    const old = sec.querySelector('#hub-mytasks'), html = myTasksHtml(list);
+    if (old) { if (old.outerHTML.length !== html.length) old.outerHTML = html; } else sec.insertAdjacentHTML('afterbegin', html);
+    sec.querySelectorAll('[data-mytask]').forEach(b => b.onclick = () => { const [pid, id] = b.dataset.mytask.split('|'); jump({ project: pid, ref: { type: 'task', id } }); });
+  }
+  // the Agent fleet (agentshub.js) on Home says where it is too
+  function fleetCrumb() { const sec = document.getElementById('view-agents-hub'); if (sec && document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global' && !sec.querySelector(':scope > .hub-crumb')) sec.insertAdjacentHTML('afterbegin', hubCrumb('Agent fleet')); }
+  { const seen = new WeakSet(); let t = null;
+    const kick = () => { clearTimeout(t); t = setTimeout(() => { const sec = document.getElementById('view-agents-hub'); if (!sec) return; if (!seen.has(sec)) { seen.add(sec); new MutationObserver(kick).observe(sec, { childList: true }); } fleetCrumb(); }, 40); };
+    new MutationObserver(kick).observe(document.body, { attributes: true, attributeFilter: ['data-view', 'data-scope'] }); setTimeout(kick, 0); }
+  { const seen = new WeakSet(); let t = null;
+    const kick = () => { clearTimeout(t); t = setTimeout(() => {
+      const sec = document.getElementById('view-work'); if (!sec) return;
+      if (!seen.has(sec)) { seen.add(sec); new MutationObserver(kick).observe(sec, { childList: true }); }   // talent.js redraws the whole section
+      if (document.body.dataset.view === 'work' && !sec.querySelector('#hub-mytasks, .hub-crumb')) paintMyTasks();
+    }, 60); };
+    new MutationObserver(kick).observe(document.body, { attributes: true, attributeFilter: ['data-view'] }); setTimeout(kick, 0); }
+
   // ---------- actions ----------
   async function go(pid, then) {
     if (!pid || !projOf(pid)) return toast('You are not in that project.');

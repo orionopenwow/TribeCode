@@ -623,3 +623,17 @@ body.at-home .main > #view-hub:has(.hub-files), body.at-home .main > #view-hub:h
 .hub-crumb .hc-here { text-transform: uppercase; letter-spacing: .08em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fx-tabs { flex-wrap: wrap; }
 @media (max-width: 820px) { .fx-tabs { flex-wrap: nowrap; } }
+/* Work on Home: your tasks across every tribe (hub.js) */
+.hub-mytasks { margin: 0 0 32px; }
+.hub-mytasks .sec-head { margin-bottom: 12px; }
+.hmt-list { display: grid; border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.hmt-row { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 14px; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.hmt-row + .hmt-row { border-top: 1px solid var(--edge); }
+.hmt-row:hover { background: var(--surface-2); }
+.hmt-row b { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hmt-row small { font-size: 12px; color: var(--muted); }
+.hmt-st { flex: none; min-width: 52px; font: 600 11px var(--mono); color: var(--muted); }
+.hmt-st.s-doing { color: var(--live-ink, var(--live)); }
+.hmt-pj { flex: none; max-width: 30%; height: 22px; padding: 0 8px; border: 1px solid var(--edge); border-radius: 999px; font-size: 12px; line-height: 20px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-work > .hub-crumb, #view-work .hub-mytasks { max-width: 1080px; margin-left: auto; margin-right: auto; }
+#view-agents-hub > .hub-crumb { max-width: 1080px; margin: 0 auto 8px; }

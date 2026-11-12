@@ -21,7 +21,7 @@
   .lf-pane { width: 100vw; height: 100dvh; border-radius: 0; border: 0; }
   .lf-float { top: auto; bottom: 84px; }
 }
-/* All files (hub.js): cards for files on this device, the + New menu */
+/* Files (hub.js): cards for files on this device, the + New menu */
 .dc-card.local { cursor: pointer; text-align: left; }
 .dc-card.local:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .dc-ic.local { color: var(--live); background: color-mix(in srgb, var(--live) 14%, var(--surface)); }

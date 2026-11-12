@@ -39,7 +39,7 @@
     return `<div class="dt-lib" id="dt-lib">
       ${evs.length ? `<section class="dt-rit-on"><span class="eyebrow">Running</span>${evs.map(e => `<span class="dt-pill">${esc(e.title)} · ${esc(e.repeat === 'weekdays' ? 'weekdays' : e.repeat || 'once')} · ${esc(new Date(e.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}</span>`).join('')}</section>` : ''}
       ${L().GROUPS.map(g => { const list = T.filter(t => t.group === g); return list.length ? `<section class="dt-group"><span class="eyebrow">${esc(g)}</span><div class="dt-grid">${list.map(t => `<button class="dt-card${t.premium ? ' prem' : ''}" data-tpl="${esc(t.id)}"><b>${esc(t.title)}${t.premium ? ' <i class="dt-prem">Premium</i>' : ''}</b><span>${esc(t.summary)}</span><small>Guided · ${t.qs.filter(q => q.guided).length} questions${t.ritual ? ' · can repeat' : ''}</small></button>`).join('')}</div></section>` : ''; }).join('')}
-      <p class="tl-fine">${connected() ? 'Docs are saved in the project\'s Files.' : 'No tribe yet: docs are saved on this device (All files) and move into a project with one tap.'}</p></div>`;
+      <p class="tl-fine">${connected() ? 'Docs are saved in the project\'s Files.' : 'No tribe yet: docs are saved on this device (Files) and move into a project with one tap.'}</p></div>`;
   }
 
   // ---------- filling ----------
