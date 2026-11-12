@@ -95,7 +95,13 @@
     "Add a high score"
    ],
    "controls": "Arrows: Left and Right move, Up rotates, Down drops. Space starts. On a phone: the buttons under the board.",
-   "size": 24798
+   "size": 24798,
+   "files": [
+    "config.js",
+    "game.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "breakout",
@@ -228,7 +234,13 @@
     "Add sound when a brick breaks"
    ],
    "controls": "Mouse, a finger or the arrow keys move the paddle. Space or a tap restarts.",
-   "size": 10980
+   "size": 10980,
+   "files": [
+    "config.js",
+    "game.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "calculator",
@@ -306,7 +318,13 @@
     "Add scientific keys"
    ],
    "controls": "Click the keys or type; Enter equals, Esc clears, Backspace deletes.",
-   "size": 9355
+   "size": 9355,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "chat",
@@ -427,7 +445,13 @@
     "Add image messages"
    ],
    "controls": "Type and press Enter.",
-   "size": 10488
+   "size": 10488,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "dashboard",
@@ -534,7 +558,13 @@
     "Add a dark and light switch"
    ],
    "controls": "The range picker redraws everything.",
-   "size": 11147
+   "size": 11147,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "kanban",
@@ -616,7 +646,13 @@
     "Add due dates and a calendar view"
    ],
    "controls": "Drag cards between columns (arrow keys on a focused card; tap on a phone moves it on). Double-click renames.",
-   "size": 10783
+   "size": 10783,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "memory",
@@ -716,7 +752,13 @@
     "Turn it into Snap"
    ],
    "controls": "Click or tap two cards. New game deals again.",
-   "size": 9120
+   "size": 9120,
+   "files": [
+    "config.js",
+    "game.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "notes",
@@ -798,7 +840,13 @@
     "Export all notes as a Markdown file"
    ],
    "controls": "New note adds one. Edit switches between writing and reading.",
-   "size": 10549
+   "size": 10549,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "platformer",
@@ -901,7 +949,14 @@
     "Give the player a pixel-art sprite"
    ],
    "controls": "Left and Right to run, Space to jump. On a phone: hold the left or right third, tap the middle to jump.",
-   "size": 35878
+   "size": 35878,
+   "files": [
+    "config.js",
+    "game.js",
+    "index.html",
+    "level.json",
+    "style.css"
+   ]
   },
   {
    "id": "pomodoro",
@@ -1034,7 +1089,13 @@
     "Share a timer with the tribe"
    ],
    "controls": "Start, Pause, Reset and Skip.",
-   "size": 10843
+   "size": 10843,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "runner",
@@ -1169,7 +1230,13 @@
     "Swap the box for a pixel-art fox"
    ],
    "controls": "Space, Up or a tap to jump; hold for a higher jump.",
-   "size": 10249
+   "size": 10249,
+   "files": [
+    "config.js",
+    "game.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "sketch",
@@ -1270,7 +1337,13 @@
     "Make it multiplayer with the tribe"
    ],
    "controls": "Draw with the mouse, a pen or a finger. − and + change the brush.",
-   "size": 10076
+   "size": 10076,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "snake",
@@ -1354,7 +1427,15 @@
     "Make the food a pixel-art apple"
    ],
    "controls": "Arrow keys or WASD steer, Space pauses. On a phone: the pad in the corner.",
-   "size": 64199
+   "size": 64199,
+   "files": [
+    "common-snake.css",
+    "config.js",
+    "index.html",
+    "init.js",
+    "snake.js",
+    "style.css"
+   ]
   },
   {
    "id": "survey",
@@ -1459,7 +1540,13 @@
     "Add a file upload"
    ],
    "controls": "Answer and press Next or Enter.",
-   "size": 11941
+   "size": 11941,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "todo",
@@ -1541,7 +1628,13 @@
     "Add a dark and light switch"
    ],
    "controls": "Type and press Enter to add. Click to mark done; ✕ or right-click to delete.",
-   "size": 9876
+   "size": 9876,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "topdown",
@@ -1676,7 +1769,13 @@
     "Add a boss every fifth wave"
    ],
    "controls": "WASD or arrows to move, aim with the mouse, click or hold Space to shoot. On a phone: drag to move, tap to shoot.",
-   "size": 11373
+   "size": 11373,
+   "files": [
+    "config.js",
+    "game.js",
+    "index.html",
+    "style.css"
+   ]
   },
   {
    "id": "weather",
@@ -1758,7 +1857,13 @@
     "Change the colors by the weather"
    ],
    "controls": "Type a city and press Show.",
-   "size": 9087
+   "size": 9087,
+   "files": [
+    "app.js",
+    "config.js",
+    "index.html",
+    "style.css"
+   ]
   }
  ]
 }

@@ -657,8 +657,11 @@
   }
   // ---------- Design (feat/files-dash: Home parity): every canvas and whiteboard, yours on this device and your tribes' ----------
   function renderDesign(el) {
-    el.innerHTML = `<div class="hub hub-design" id="hub-design"></div>`;
-    subset(el.querySelector('#hub-design'), { idp: 'hd', cat: 'designs', title: 'Design', crumb: hubCrumb('Design'), kinds: ['design', 'whiteboard', 'upload'], h: 'h1', where: true });
+    // feat/design-flow: the creation flow first (app/ui/designflow.js: what are you making, templates, a plan), then
+    // everything you already made under Continue
+    el.innerHTML = `<div class="hub hub-design-flow" id="hub-design-flow"></div><div class="hub hub-design" id="hub-design"></div>`;
+    if (window.TribeDesignFlow) window.TribeDesignFlow.mount(el.querySelector('#hub-design-flow'), { scope: 'home' });
+    subset(el.querySelector('#hub-design'), { idp: 'hd', cat: 'designs', title: 'Continue', crumb: hubCrumb('Design'), kinds: ['design', 'whiteboard', 'upload'], h: 'h2', where: true });
   }
   // a Files view showing one kind (Code files, Design), with the same cards, menus and Studio
   function subset(root, o) {

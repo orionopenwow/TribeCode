@@ -277,6 +277,11 @@
     if (id === 'lesson') { const L = window.TribeFlintLessons; if (L && L.open(sl.feature)) return { text: `Here is a short lesson on ${L.LESSONS[sl.feature].title.replace(/^The /, 'the ')}. Show me points at the real thing.`, sum: 'opened a lesson' }; return { text: T('noPlace', { x: 'Lessons' }) }; }
     if (id === 'redo') { const D = window.TribeSiteDesigner, st = D && D.state && D.state(); if (st && st.open) { D.redo(); return { text: 'Redone.' }; } return { text: 'Redo works in the website designer and on the canvas (Ctrl Shift Z). Here, say what to do again.' }; }
     if (id === 'premium.open') { const Pm = window.TribePremium; if (Pm) { if (/credit/i.test(s.text || '')) Pm.gate('credits'); else Pm.open(); } return { text: 'Here is what is free and what Premium adds. Everything local stays free.', sum: 'opened Premium' }; }
+    // feat/design-flow: "make a breakout game", "a kanban board": the starter opens in the Design flow with its plan
+    if (/^site\.starter-/.test(id) && window.TribeDesignFlow) {
+      const st = await window.TribeDesignFlow.fromFlint(id.slice(13), s.text || '');
+      if (st) return { text: `Started the ${st.title} starter (${st.license}, ${st.original ? 'made for TribeCode' : 'by ' + st.by}). Its knobs and a plan are beside it.`, sum: `started ${st.title}` };
+    }
     if (id === 'site.open' || (/^site\./.test(id) && window.TribeSiteDesigner && ((window.TribeSiteDesigner.state() || {}).open))) {
       const D = window.TribeSiteDesigner; if (!D) return { text: T('noPlace', { x: 'Website designer' }) };
       const tpl = id.slice(5), isTpl = !!(window.TribeSiteCfg && window.TribeSiteCfg.TEMPLATES.includes(tpl));
