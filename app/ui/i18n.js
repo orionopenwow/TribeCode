@@ -581,7 +581,6 @@
     'Save this version': ['Guardar esta versión', 'Salvar esta versão', 'Enregistrer cette version', 'Diese Version speichern', 'このバージョンを保存', '保存此版本', '이 버전 저장'],
     'Restore': ['Restaurar', 'Restaurar', 'Restaurer', 'Wiederherstellen', '復元', '恢复', '복원'],
     'Run plan': ['Ejecutar plan', 'Executar plano', 'Lancer le plan', 'Plan ausführen', '計画を実行', '执行计划', '계획 실행'],
-    'Send to my AI helper': ['Enviar a mi asistente de IA', 'Enviar ao meu assistente de IA', 'Envoyer à mon assistant IA', 'An meinen KI-Helfer senden', '自分のAIヘルパーに送る', '发给我的 AI 助手', '내 AI 도우미에게 보내기'],
     'Post it for my AI helper': ['Publicarlo para mi asistente de IA', 'Publicar para meu assistente de IA', 'Le publier pour mon assistant IA', 'Für meinen KI-Helfer posten', 'AIヘルパー向けに投稿', '发给我的 AI 助手处理', 'AI 도우미에게 남기기'],
     'builds with you, live': ['construye contigo, en vivo', 'constrói com você, ao vivo', 'construit avec vous, en direct', 'baut mit dir, live', '一緒にライブで作ります', '和你一起实时构建', '함께 실시간으로 만들어요'],
     'Hide Flint': ['Ocultar Flint', 'Ocultar Flint', 'Masquer Flint', 'Flint ausblenden', 'Flint を隠す', '隐藏 Flint', 'Flint 숨기기'],

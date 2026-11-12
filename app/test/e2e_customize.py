@@ -4,7 +4,8 @@
           bad accents (server 400, personal on a theme where it can't be seen), personal overrides win on this device
           only, project theme override, font size, the Dashboard cover (color, then the GitHub preview fetched by the
           host from a stand-in, cached in .tribe/look, offered only once the repo has a github.com remote).
-  Site:   Design it for me -> a valid HTML draft with every section from seeded project data (vision bullets, a
+  Site:   (the generator's API; its old builder UI was removed for the website designer, docs/UI-CLEANUP.md)
+          Design it for me -> a valid HTML draft with every section from seeded project data (vision bullets, a
           milestone, a commit, a screenshot, the team, a play link), Shuffle changes the layout, the mock brain
           improves the copy (hype words dropped), a hand edit survives Regenerate, a builder can't publish, the host
           publishes (site/index.html + site/fonts), export is one self-contained file, MCP tools, Flint "make our website".
@@ -231,11 +232,8 @@ def main():
             assert api("/look", "PUT", {"tribe": {"name": "Hijack"}}, token=ftok)[0] == 403, "only the host renames the tribe"
 
             # ======== SITE GENERATOR ========
-            host.evaluate("() => { TribeShell.go('website'); }")
-            host.wait_for_selector("#wb-root [data-sgmode='instant']"); host.click("[data-sgmode='instant']")   # feat/site-builder: the one-tap level
-            host.wait_for_selector("#wb-root #sg-make")
-            host.click("#sg-make")
-            host.wait_for_selector(".sg-lay.on")
+            # fix/desk-demo: the old site builder UI is gone (the website designer replaces it); its server API stays, driven here
+            st, r = api(f"/projects/{pid}/website/instant", "POST", {}, token=tok); assert st == 200, r
             w = api(f"/projects/{pid}/website", token=tok)[1]["website"]["gen"]
             first = w["draft"]["layout"]
             st, html, hdr = api(w["draftUrl"], raw=True); assert st == 200, html[:200]
@@ -246,10 +244,8 @@ def main():
                 assert want in html, f"draft has {want!r}"
             assert "lee@example.com" not in html
             assert "gradient" not in html.lower(), "flat: no gradients"
-            host.wait_for_function("document.querySelector('#wb-frame') && document.querySelector('#wb-frame').dataset.key.startsWith('draft:')")
             # Shuffle: another layout
-            host.click("#sg-shuffle")
-            wait(host, "f => document.querySelector('.sg-lay.on').dataset.lay !== f", first)
+            st, r = api(f"/projects/{pid}/website/gen", "POST", {"how": "shuffle"}, token=tok); assert st == 200, r
             w2 = api(f"/projects/{pid}/website", token=tok)[1]["website"]["gen"]
             assert w2["draft"]["layout"] != first
             html2 = api(w2["draftUrl"], raw=True)[1]
@@ -260,20 +256,16 @@ def main():
                 st, r = api(f"/projects/{pid}/website/gen", "PUT", {"layout": lay}, token=tok); assert st == 200, r
                 valid(api(r["website"]["gen"]["draftUrl"], raw=True)[1])
             # Write it for me (mock brain): better lines in, hype dropped
-            host.click("#sg-write")
-            wait(host, "document.querySelector('#sg-status') && document.querySelector('#sg-status').textContent.includes('polished by')", timeout=30000)
+            st, r = api(f"/projects/{pid}/website/write", "POST", {}, token=tok); assert st == 200, r
             copy = api(f"/projects/{pid}/website", token=tok)[1]["website"]["gen"]["draft"]["copy"]
             assert copy["features"]["items"][0]["body"] == "Brain line 1: simple and warm.", copy["features"]
             assert copy["hero"]["dek"] == "Jump through three small levels with a friend on the couch.", copy["hero"]
             assert "revolutionary" not in json.dumps(copy).lower() and copy["story"]["title"] == "Why we made it"
             assert json.dumps(copy).count("🎮") <= 1
             # per-section edit (UI), kept through Regenerate
-            host.click("[data-sgmode='guided']"); host.click("[data-sgstep='3']")   # feat/site-builder: sections live in Guided step 3
-            host.click("[data-sgedit='hero']"); host.wait_for_selector(".sg-ed [data-f='title']")
-            host.fill(".sg-ed [data-f='title']", "Jump together")
-            host.click("[data-sgsave]")
-            host.wait_for_selector(".sg-sec .sg-tag")
-            host.click("#sg-regen"); time.sleep(0.6)
+            hero = api(f"/projects/{pid}/website", token=tok)[1]["website"]["gen"]["draft"]["copy"]["hero"]
+            st, r = api(f"/projects/{pid}/website/gen", "PUT", {"section": "hero", "copy": {**hero, "title": "Jump together"}}, token=tok); assert st == 200, r
+            st, r = api(f"/projects/{pid}/website/gen", "POST", {"how": "regenerate"}, token=tok); assert st == 200, r
             gen = api(f"/projects/{pid}/website", token=tok)[1]["website"]["gen"]
             assert gen["draft"]["copy"]["hero"]["title"] == "Jump together" and gen["draft"]["edited"]["hero"]
             assert "Jump together" in api(gen["draftUrl"], raw=True)[1]
@@ -282,8 +274,7 @@ def main():
             assert 'id="faq"' not in api(r["website"]["gen"]["draftUrl"], raw=True)[1]
             # publishing: a builder can't, the host can
             assert api(f"/projects/{pid}/website/publish", "POST", token=ftok)[0] == 403
-            host.click("#sg-publish")
-            wait(host, "document.querySelector('#sg-status') && document.querySelector('#sg-status').textContent.includes('Published')", timeout=20000)
+            st, r = api(f"/projects/{pid}/website/publish", "POST", {}, token=tok); assert st == 200, r
             site = Path(repo, "site", "index.html").read_text()
             assert "TribeCode site generator" in site and "Jump together" in site and 'href="styles.css"' in site
             assert "url('fonts/" in Path(repo, "site", "styles.css").read_text()   # feat/site-builder: the look is in styles.css
@@ -326,8 +317,8 @@ def main():
             ph.click("[data-ltab='project']"); ph.wait_for_selector(".lk-ban")
             assert ph.evaluate("(() => { const c = document.querySelector('.lk-card'); return c.scrollWidth <= c.clientWidth + 1; })()")
             ph.evaluate("TribeLook.open('tribe'); document.querySelector('#lk-close').click(); TribeShell.go('website')")
-            ph.wait_for_selector("#wb-root .sg-modes")
-            assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "Website + generator fit at 390"
+            ph.wait_for_selector("#wb-root"); assert ph.locator(".sg-modes, #wb-gen").count() == 0
+            assert ph.evaluate("document.documentElement.scrollWidth") <= 390, "Website fits at 390"
             b.close()
         assert not errors, "\n".join(errors)
         print("e2e_customize: OK")

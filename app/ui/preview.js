@@ -81,11 +81,6 @@
     if (window.TribeMotion && window.TribeMotion.swap && !quiet) window.TribeMotion.swap(go); else go();
     if (window.TribePreviewFlint && window.TribePreviewFlint.source) window.TribePreviewFlint.source(s);
   }
-  async function makeSite(btn) {
-    if (btn) { btn.disabled = true; btn.textContent = 'Making it…'; }
-    try { await C.api(`/projects/${encodeURIComponent(C.project())}/website/instant`, { method: 'POST', body: {} }); await loadSite(); frame = null; render(); toast('Your website draft is ready. Click anything on it, or tell Flint what to change.'); }
-    catch (e) { toast(e.message); if (btn) { btn.disabled = false; btn.textContent = 'Make the website'; } }
-  }
   function toBuilder() { close(); setTimeout(() => { try { location.hash = '#/docs/website'; } catch {} }, 0); }
 
   // ---------- the pane ----------
@@ -127,7 +122,7 @@
       const j = e.target.closest('[data-jump]'); if (j) return jump(j.dataset.jump);
       const a = e.target.closest('[data-act]'); if (!a) return;
       if (a.dataset.act !== 'more') moreMenu(false);
-      ({ design: () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: C.project() }), back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, shelf: () => toggleShelf(), mksite: () => makeSite(a), builder: toBuilder, tosite: () => setSource('site'), toapp: () => setSource('app'), unzoom: resetZoom, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
+      ({ design: () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: C.project() }), back: exit, proj: () => projMenu(a), more: () => moreMenu(), edit: toggleEdit, reload: () => reload(true), tab: openTab, share: copyShare, shot: screenshot, gear: toggleSettings, ask: askClaude, shelf: () => toggleShelf(), builder: toBuilder, tosite: () => setSource('site'), toapp: () => setSource('app'), unzoom: resetZoom, repo: () => { close(); window.TribeApp && window.TribeApp.show('repo'); },
         home: () => window.TribeFolders && window.TribeFolders.home() })[a.dataset.act]?.();   // Home Screen / desktop shortcut (app/ui/folders.js)
     });
     return el;
@@ -400,9 +395,10 @@
           <div class="pvw-brow"><button type="button" class="btn primary" data-act="builder">Open the website</button>${sd.kind === 'repo' && /^(web\/)?index\.html$/.test(sd.path) && info.hasIndex ? `<button type="button" class="btn" data-act="toapp">${ico(I.app)} Show it</button>` : ''}</div></div>`;
         layout(); return;
       }
-      holder.innerHTML = `<div class="pvw-empty pvw-build"><span class="eyebrow">Website · nothing yet</span><h3>Make the project's website</h3>
-        <p>One tap makes a first draft from what the project already has: its name, bio, vision, screenshots and team. Then click anything on it and tell Flint what to change. No AI needed.</p>
-        <div class="pvw-brow"><button type="button" class="btn primary" data-act="mksite" ${site && site.canDraft === false ? 'disabled' : ''}>Make the website</button><button type="button" class="btn" data-act="builder">Pick a look in Files › Website</button>${info.hasIndex ? `<button type="button" class="btn" data-act="toapp">${ico(I.app)} Back to the app</button>` : ''}</div></div>`;
+      // fix/desk-demo: one way to make a website, the website designer (the old one-tap draft and the old site builder are gone)
+      holder.innerHTML = `<div class="pvw-empty pvw-build"><span class="eyebrow">Website · nothing yet</span><h3>Design the project's website</h3>
+        <p>Pick a template, click any words to change them, wire the buttons, go dark, download. Flint edits it with you, no AI needed.</p>
+        <div class="pvw-brow"><button type="button" class="btn primary" data-act="design">Open the website designer</button></div></div>`;
       layout(); return;
     }
     if (!frame || !frame.isConnected) {
