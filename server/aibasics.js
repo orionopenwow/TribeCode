@@ -59,6 +59,7 @@ module.exports = function aibasics({ llm, base, P, str }) {
         if (['spectator', 'guest'].includes(me.role)) return fail(res, 403, 'read-only');
         const body = await readBody(req, 64 * 1024), p = String(body.project || pid).slice(0, 80), key = str(body.key, 200);
         if (!key) return fail(res, 400, 'which file?');
+        if (p !== pid && p !== 'local' && !(P && P.get && P.get(p) && (!P.canSee || P.canSee(me, p)))) return fail(res, 404, 'project not found');   // review-2026-11-11: no writing another project's tags
         const all = loadTags(p); all[key] = { description: str(body.description, 300), tags: (Array.isArray(body.tags) ? body.tags : []).map(t => str(t, 24).toLowerCase()).filter(Boolean).slice(0, 8), at: new Date().toISOString(), by: me.id };
         const keys = Object.keys(all); if (keys.length > 2000) delete all[keys[0]];
         fs.mkdirSync(path.dirname(tagFile(p)), { recursive: true }); fs.writeFileSync(tagFile(p), JSON.stringify(all));
