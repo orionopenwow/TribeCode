@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.31.1
+- **The tour waits for you**: "See how TribeCode works" now goes one step at a time. Flint does a step, then waits for **Next** (→ or Enter); **Back** (←) replays the previous one. A step line shows where you are ("Step 3 of 12 · Start a project").
+- **Auto-play is a toggle**, slower than before: each caption stays up long enough to read, typing looks human, the cursor glides and each click pauses with a ripple. The whole tour runs about 2½ minutes.
+- **Fix**: the tour's caption card is centred again.
+- **Phones**: the caption card with Next and Back fits at 390px.
+
 ## v0.31.0
 - **Find your way**:
   - **Left bar:** one "you are here" look for Home, tribes and the Workshop (a pressed tile with a slim accent bar). Drag the left bar and sidebar rows into your own order (Alt+↑/↓ on the keyboard, reset in Settings).
