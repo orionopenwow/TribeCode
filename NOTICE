@@ -19,6 +19,34 @@ and associated documentation files, to deal in the Software without restriction,
 copyright notice and this permission notice are included in all copies or substantial portions of the Software. THE
 SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
+feat/site-v2 (the deeper port, docs/OPENPAGE-PORT.md): OpenPage's block types and variants, its ten theme presets'
+colors (app/ui/sitecfg.js PRESETS night … forest), its site settings (SEO title and description, favicon, share image,
+language), responsive previews, duplicate/hide and its keyboard shortcuts were reimplemented the same way: no code copied.
+
+-------------------------------------------------------------------------------
+Website templates in app/ui/sitetpl (converted into designer configs; list: docs/SITE-TEMPLATES.md)
+-------------------------------------------------------------------------------
+Start Bootstrap (https://startbootstrap.com, https://github.com/StartBootstrap), MIT License, Copyright (c) 2013-2023
+Start Bootstrap LLC / David Miller: agency, business-casual, business-frontpage, clean-blog, coming-soon, creative,
+freelancer, grayscale, landing-page, modern-business, new-age, one-page-wonder, personal, resume, small-business,
+stylish-portfolio. Their section structure, headings and some copy are used in app/ui/sitetpl/sb-*.json.
+
+Tailwind Toolbox (https://www.tailwindtoolbox.com, https://github.com/tailwindtoolbox), MIT License, Copyright (c)
+Amrit Nagi: Landing-Page, App-Landing-Page, Ghostwind, Minimal-Blog, Nordic-Store, Profile-Card (app/ui/sitetpl/tt-*.json).
+
+MIT License (both): Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files, to deal in the Software without restriction, subject to the condition that the copyright
+notice and this permission notice are included in all copies or substantial portions of the Software. THE SOFTWARE IS
+PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+HTML5 UP (https://html5up.net) by AJ (@ajlkn), Creative Commons Attribution 3.0 Unported
+(https://creativecommons.org/licenses/by/3.0/): Identity, Photon, Forty, Stellar, Dimension, Eventually, Miniport, Read
+Only, Massively, Landed (app/ui/sitetpl/h5-*.json). Adapted: converted into blocks, photos replaced with original art,
+fonts changed, placeholder text rewritten. Every site exported from one of them shows "Design based on <name> by HTML5 UP
+(CC BY 3.0)" with a link in its footer.
+
+Template pictures are original flat art made by scripts/dev/site-gallery.py; no third-party photos are included.
+
 -------------------------------------------------------------------------------
 Fonts in app/ui/assets/site-fonts: SIL Open Font License 1.1 (licenses alongside the files).
 Anthropic's public frontend-design skill (Apache-2.0) informed the website design rules (docs/WEBSITE-GENERATOR.md).
