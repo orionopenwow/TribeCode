@@ -201,6 +201,8 @@
   let localBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
     if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
+    if (window.TribeFlintRun) { const r = await window.TribeFlintRun.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: tribe/project/vision/proposal/standup/presentation/proof/Blender
+    if (window.TribeAIBasics && window.TribeAIBasics.flint) { const r = await window.TribeAIBasics.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: summarize / key points / title / tags / reading time / glossary of any doc, note or file   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
     if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
     if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) { say(co.text, co.open ? [act('Open Company', 'company')] : []); return true; } }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
     if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) { say(ac.text); return true; } }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
@@ -354,16 +356,21 @@
     const cm = r.commit ? ` Last saved change: “${r.commit.title}”${r.commit.byName ? ` by ${first(r.commit.byName)}` : ''}${r.commit.at ? `, ${ago(r.commit.at)}` : ''}.` : '';
     return say(who + ag + tk + cm, [act('Open Tasks', 'nav', 'tasks'), act('Open chat', 'nav', 'chat')]);
   }
-  async function summarize() {
-    await refreshModel();
-    if (!model.online) return say('Summaries need a brain: the built-in one in your browser, Ollama on the host, or the host\'s cloud key.', [act('Give Flint a brain', 'brain')]);
+  async function summarize() {   // feat/flint-runthrough: works with no AI (extractive, aibasics-core.js); an AI refines it in place
     if (!connected()) return say('There\'s no chat yet: host or join a tribe first.');
     let msgs = [];
-    try { msgs = ((await C.api('/chat/general')).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-60); } catch {}
+    try { msgs = ((await C.api('/chat/' + encodeURIComponent((window.TribeChannels && window.TribeChannels.current && window.TribeChannels.current()) || 'general'))).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-80); } catch {}
+    if (!msgs.length) try { msgs = ((await C.api('/chat/general')).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-80); } catch {}
     if (!msgs.length) return say('The chat is quiet so far: nothing to summarize.');
     const st = C.state(), nm = id => ((st.members || []).find(x => x.id === id) || {}).name || 'someone';
-    const log = msgs.map(x => `${nm(x.by)}: ${String(x.text).slice(0, 300)}`).join('\n');
-    return modelReply('Summarize this chat in three short lines.', log);
+    const lines = msgs.map(x => ({ who: nm(x.by), text: String(x.text).slice(0, 400) }));
+    const basic = window.TribeAICore ? window.TribeAICore.summarize(lines) : { lines: [`${msgs.length} messages.`] };
+    const msg = say(`✦ **Chat summary** · Basic · no AI\n${basic.lines.map(l => `- ${l}`).join('\n')}`);
+    await refreshModel();
+    if (model.online || (window.TribeAIBasics && (await window.TribeAIBasics.online()).online)) {
+      try { const r = await C.api('/ai/refine', { method: 'POST', body: { kind: 'chat.summary', input: lines, draft: basic.text } }); if (r && r.text) { msg.text = `✦ **Chat summary** · via ${esc(r.via)}\n${r.text.split('\n').filter(Boolean).map(l => `- ${l.replace(/^\s*[-*•]\s*/, '')}`).join('\n')}`; msg.via = r.via; save(); draw(); } } catch {}
+    }
+    return msg;
   }
   async function find(q) {
     const out = [];

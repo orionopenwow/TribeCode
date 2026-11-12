@@ -158,6 +158,6 @@ Checklist for a new feature:
 5. Does a human press the button that changes anything?
 6. Is there a Playwright test with no AI and with a fake model (see `app/test/e2e_ai_basics.py`)?
 
-Code: `app/ui/aibasics.js` (the ✦ and its card), `app/ui/aibasics-core.js` (the rules, shared with the server),
+Code: `app/ui/aibasics.js` (the ✦ and its card), `app/ui/aibasics-core.js` (the rules, shared with the server), `app/ui/localdoc.js` (summaries, key points, titles, tags, reading time and the glossary, no model),
 `server/aibasics.js` (`POST /api/ai/refine`). The map from Grok's abilities to TribeCode's basics is in
 [GROK-SCOPE.md](GROK-SCOPE.md).

@@ -70,10 +70,12 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
     }
     if (m === 'POST' && b && c === 'summarize') {
       const d = read(b); if (!d) return fail(res, 404, 'doc not found');
-      const tldr = await brain.summarize(d.title, d.body).catch(() => null);
-      if (!tldr) return fail(res, 503, brain.status().error || 'local brain is off');
+      // the local brain when it's on; otherwise an extractive summary (app/ui/localdoc.js, no model): it always works
+      let tldr = await brain.summarize(d.title, d.body).catch(() => null), via = tldr ? 'brain' : 'basic';
+      if (!tldr) tldr = require('../app/ui/localdoc.js').summarize(d.body, { max: 3 }).text;
+      if (!tldr) return fail(res, 422, 'nothing to summarize yet');
       fs.writeFileSync(store.p(sumRel(b)), tldr + '\n'); broadcast({ type: 'doc-summary', slug: b, summary: tldr });
-      return send(res, 200, { summary: tldr });
+      return send(res, 200, { summary: tldr, via });
     }
     const d = read(b); if (!d) return fail(res, 404, 'doc not found');
     if (m === 'PUT') {

@@ -556,6 +556,7 @@ buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense })
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
 const siteLib = require('./sitelib')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // website template library (server/sitelib.js)
 const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
+const flintRun = require('./flintrun')({ P, root: baseStore.root, tribe, getMembers: () => members, publicMember, log: m => console.error('  ' + m) });   // feat/flint-runthrough: proof-of-work ZIPs + the Blender bridge stub (server/flintrun.js)
 // v0.27 breakout: one-click Publish to a public play link (with a safety check) and tribe game jams (server/publish.js, server/jam.js)
 const visualCard = pid => P.inProject(pid, () => { let best = null; const root = store.p('visuals'); try { for (const d of fs.readdirSync(root)) { let fl = []; try { fl = fs.readdirSync(path.join(root, d)); } catch { continue; } for (const f of fl) if (f.endsWith('.png')) { const full = path.join(root, d, f), t = fs.statSync(full).mtimeMs; if (!best || t > best.t) best = { full, t }; } } } catch {} return best && best.full; });
 const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupFlow, getMembers: () => members, broadcast, postChat, approvals, nameOf, visualCard, log: m => console.error('  ' + m),
@@ -748,6 +749,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
 
+  if (a === 'dev' && b === 'stamp' && m === 'GET' && args.dev) return send(res, 200, { stamp: devStamp, dev: true });   // feat/flint-runthrough: clean-slate live reload (no sign-in needed)
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
     if (!isLocal(req) && limited(req, 5)) return fail(res, 429, 'slow down');
@@ -939,6 +941,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'seatpilot') return seatpilot.route(req, res, ctx());   // v0.27 company: seat autopilot (server/seatpilot.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)
+  if (a === 'flint' && (b === 'proof' || b === 'blender')) return flintRun.route(req, res, ctx());   // feat/flint-runthrough
   if ((a === 'flint' && (b === 'tiers' || b === 'tier')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)
   if (a === 'buildkit' || (a === 'projects' && c === 'buildkit')) return buildKit.route(req, res, ctx());   // build kit (server/buildkit.js)
   if (a === 'projects' && c === 'studios') return studios.route(req, res, ctx());   // v0.27: Studios (server/studios.js)   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
@@ -1036,7 +1039,7 @@ async function apiInProject(req, res, url) {
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
   }
 
-  if (a === 'ai' && ['basic', 'refine', 'tags'].includes(b)) return aiBasics.route(req, res, ctx());   // feat/flint-ai: ✦ refine + file tags
+  if (a === 'ai' && ['basic', 'refine', 'tags', 'extract'].includes(b)) return aiBasics.route(req, res, ctx());   // feat/flint-ai: ✦ refine + file tags
   if (a === 'flint' && b === 'kb') return flintKB.route(req, res, ctx());   // flint-local: how-to answers from the docs, no model (server/flintkb.js)
   if (a === 'flint' && ['memory', 'skills', 'vocab', 'draft', 'learned'].includes(b)) return flintMem.route(req, res, ctx());   // v0.27.1; flint-local: phrases people taught Flint
   if (a === 'import' && b === 'solo') return soloImport.route(req, res, { ...ctx(), isBoss: x => x.role === 'host' || perms.can(x, 'project.create') });   // a phone tribe moves to this host (server/soloimport.js)
@@ -1252,11 +1255,12 @@ server.on('upgrade', (req, sock) => {
   });
 });
 
+let devStamp = Date.now();   // feat/flint-runthrough: GET /api/dev/stamp lets a signed-out dev page (scripts/dev/clean-slate.js) live-reload too
 function start() {
   // --dev (used by scripts/live.js): open tabs reload when UI files change.
   if (args.dev) {
     let t; try {
-      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => broadcast({ type: 'dev-reload' }), 300); });
+      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => { devStamp = Date.now(); broadcast({ type: 'dev-reload' }); }, 300); });
       console.log('  Live:     UI changes reload open tabs');
     } catch (e) { console.log('  Live:     file watching unavailable (' + e.message + ')'); }
   }

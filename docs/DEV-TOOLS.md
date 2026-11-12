@@ -13,6 +13,8 @@ clean up, refresh screenshots, get a release ready. All plain Node or Python, no
 | `npm run dev:reset` | Cleans test leftovers. Dry run unless you add `--yes` | 2 s |
 | `npm run dev:shots` | Regenerates every screenshot the README, the website and the docs use, and keeps only the ones that really changed | ~8 min |
 | `npm run dev:release` | Gets a release ready without pushing: checks the CHANGELOG, bumps versions, runs the checks, prints the git commands | ~2 min |
+| `node scripts/dev/clean-slate.js` | A clean TribeCode for editing small things before a release: own port, throwaway folder, signed in as a local guest, live reload ([below](#edit-small-things-before-a-release)) | 3 s, then runs |
+| `node scripts/flint-runthrough.js` | Watch Flint build an app, a site and a game with his normal commands, then save proof-of-work ZIPs ([below](#watch-flint-build)) | ~1 min |
 | `npm run dev:infographic` | Renders [infographic/index.html](infographic/index.html) to `infographic/tribecode-infographic.png` at 2x | 5 s |
 
 ## dev:doctor
@@ -145,3 +147,46 @@ npm run dev:release -- --skip-tests
 removes the old app settings and installers, and removes an old v0.1 code checkout in `%USERPROFILE%\TribeCode` only
 when that folder holds no tribe data (`.tribe\`, `projects\` or `tribe.json`); that folder is also the default tribe
 folder, so a checkout that was used as a tribe is kept.
+
+## Edit small things before a release
+
+A clean-slate TribeCode that is completely local and forgets everything between runs: the place to try a small change
+before it goes into `dev`.
+
+```
+node scripts/dev/clean-slate.js                # wipes ~/TribeCode-Dev, port 4858, opens the browser
+node scripts/dev/clean-slate.js --keep         # keep last run's folder and this browser's guest storage
+node scripts/dev/clean-slate.js --port 4860 --dir /tmp/tc-dev --no-open
+```
+
+Windows: double-click `Tools\Clean-Slate-Dev.bat`. macOS: `Tools/Clean-Slate-Dev.command` (Finder, or a terminal for
+`--keep`).
+
+- **Its own port and folder.** Port 4858 (not 4747, not the Working lane's 4848), folder `~/TribeCode-Dev`, listening on
+  127.0.0.1 only. GitHub and tunnel downloads are off (`TRIBE_NO_GH`, `TRIBE_NO_DOWNLOAD`), so nothing leaves the computer.
+- **Signed in as a local guest, no tribe yet.** The page opens as `/?devslate=<run id>` (`app/ui/devslate.js`, loaded before
+  `store.js`): it signs in as the TEST **Guest** account from `app/ui/accounts.js` (no tribe key, no server member) and
+  skips the intro. Start a tribe from there like a new user would ("Start your first project", or ask Flint "start a
+  tribe called …").
+- **Nothing persists.** Each run wipes the folder and gets a new run id; the new id clears this browser's TribeCode
+  storage for that address (local and session storage, the shell cache, the service worker). `--keep` reuses both. The
+  script only ever wipes a folder it made (it has a `.tribecode-dev` marker) or an empty one, never `~/TribeCode`.
+- **Live reload.** The server runs with `--dev`: saving a file in `app/ui` reloads open tabs (over the socket when signed in;
+  a guest with no tribe polls `GET /api/dev/stamp`), and saving one in `server/` restarts the server.
+
+Test: `app/test/e2e_clean_slate.py`.
+
+## Watch Flint build
+
+```
+node scripts/flint-runthrough.js               # fresh /tmp folder, port 4859, opens the app with the run-through playing
+node scripts/flint-runthrough.js --dir ~/flint-demo
+node scripts/flint-runthrough.js --headless    # no window: runs app/test/e2e_flint_runthrough.py, prints the ZIP paths
+```
+
+In the app: Help (?) › **Watch Flint build**, or ask Flint "watch flint build". Flint types 17 of his normal commands
+(tribe, project, vision, company, tasks, a doc, a website and an edit, a game, a design, chat, a proposal and its
+approval, a standup, a summary, the presentation, the proof), with a caption for each, and saves
+`<project>-proof.zip` and `tribe-<name>-proof.zip` in `<tribe folder>/exports/` (layout in
+[FLINT-TIERS.md](FLINT-TIERS.md#watch-flint-build-and-proof-of-work)). No AI is needed; with one on, the captions are
+refined and say so.
