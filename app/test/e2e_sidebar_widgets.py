@@ -148,8 +148,8 @@ def main():
             ok(api(f"/projects/{pid}/website/build", "POST", {}, token=orion), "build")
             host.wait_for_selector("#nest-website", state="visible", timeout=15000)
             assert rows(host) == CORE + ["Website"], rows(host)
-            host.click("#nest-website"); host.wait_for_selector("#wb-root", timeout=15000)
-            wait_text(host, "#crumb-label", "Files › Website")
+            host.click("#nest-website"); host.wait_for_selector("#wdz:not([hidden])", timeout=15000)   # site-v2: the Website row opens the designer
+            host.evaluate("TribeSiteDesigner.close()"); host.wait_for_selector("#wdz", state="hidden")
 
             # ---- + Add: the picker, Calendar
             host.click("#nest-add"); host.wait_for_selector("#wg-picker")
