@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sketch pad</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <canvas id="canvas" width="800" height="560" aria-label="Drawing area"></canvas>
+    <div class="toolbox">
+      <button class="btn" id="decrease" type="button" aria-label="Smaller brush">−</button>
+      <span id="size">10</span>
+      <button class="btn" id="increase" type="button" aria-label="Bigger brush">+</button>
+      <input type="color" id="color" aria-label="Color">
+      <button class="btn" id="clear" type="button">Clear</button>
+      <button class="btn primary" id="save" type="button">Save PNG</button>
+    </div>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

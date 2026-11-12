@@ -1,0 +1,20 @@
+/* the shared look: flat, 1px borders; colors come from config.js (--bg, --surface, --accent, --ink, --muted, --line) */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg, #12151A); color: var(--ink, #E7E9EE); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 22px; margin: 0 0 4px; } .muted { color: var(--muted, #94A3B8); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--accent, #F26B1D); border-color: var(--accent, #F26B1D); color: #fff; }
+.input { width: 100%; background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 10px 12px; }
+.input:focus, .btn:focus-visible { outline: 2px solid var(--accent, #F26B1D); outline-offset: 1px; }
+.card { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 12px; padding: 14px; }
+.wide { max-width: 1040px; }
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 12px; overflow-x: auto; padding: 12px 0; }
+.col { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 260px; }
+.col.over { border-color: var(--accent, #F26B1D); }
+.col h2 { font: 600 12px/1 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: var(--muted, #94A3B8); margin: 4px 2px 6px; display: flex; justify-content: space-between; }
+.item { background: var(--bg, #12151A); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 10px; cursor: grab; }
+.item.dragging { opacity: .4; }
+.add { background: none; border: 1px dashed var(--line, #2A313C); border-radius: 8px; padding: 8px; color: var(--muted, #94A3B8); cursor: pointer; text-align: left; }
+@media (max-width: 600px) { .board { grid-auto-flow: row; grid-auto-columns: auto; } }

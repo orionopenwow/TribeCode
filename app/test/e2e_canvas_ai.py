@@ -75,7 +75,9 @@ def nodes(page, **kw):
 
 def open_canvas(page):
     page.wait_for_selector("#nest-canvas", state="visible", timeout=20000)
-    page.click("#nest-canvas")
+    page.click("#nest-canvas")   # feat/design-flow: Design opens the creation flow; the project's canvas is under Continue
+    page.wait_for_selector("#view-designflow:not(.hidden) #dfl-cont-list [data-cv=main]", timeout=15000)
+    page.click("#dfl-cont-list [data-cv=main]")
     page.wait_for_selector("#view-canvas:not(.hidden) #cv-stage", timeout=15000)
     page.wait_for_function("window.TribeCanvas && TribeCanvas.state().open && document.querySelector('#cv-file-t').textContent.length > 0", timeout=15000)
     page.wait_for_timeout(400)

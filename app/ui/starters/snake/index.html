@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake</title>
+  <link rel="stylesheet" href="common-snake.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="snake-dialog-controls" id="snake-dialog-controls">
+    <div class="snake-control-row">
+      <label for="selectMode">Mode:</label>
+      <select id="selectMode">
+        <option value="100">Easy</option>
+        <option value="75" selected>Medium</option>
+        <option value="50">Hard</option>
+        <option value="110">Rush</option>
+      </select>
+    </div>
+  </div>
+  <div id="game-area" tabindex="0"></div>
+  <div class="snake-gamepad" id="snake-gamepad">
+    <button data-key="38" style="grid-area: 1 / 2" aria-label="Up">&#9650;</button>
+    <button data-key="37" style="grid-area: 2 / 1" aria-label="Left">&#9664;</button>
+    <button data-key="39" style="grid-area: 2 / 3" aria-label="Right">&#9654;</button>
+    <button data-key="40" style="grid-area: 3 / 2" aria-label="Down">&#9660;</button>
+  </div>
+  <script src="config.js"></script>
+  <script src="snake.js"></script>
+  <script src="init.js"></script>
+</body>
+</html>

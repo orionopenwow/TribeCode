@@ -1,0 +1,14 @@
+/* Snake theme for TribeCode: flat colors from config.js (--bg, --field, --snake, --food, --ink). */
+body { background: var(--bg, #12151A); color: var(--ink, #E7E9EE); font: 14px/1.4 system-ui, sans-serif; touch-action: manipulation; }
+#mode-wrapper, .snake-panel-component { color: var(--ink, #E7E9EE); font-family: system-ui, sans-serif; font-size: 14px; }
+.snake-playing-field { background-color: var(--field, #1B2028); border: 1px solid #2A313C; }
+.snake-snakebody-block { background-color: var(--snake, #38C6B1); border: 1px solid var(--field, #1B2028); box-sizing: border-box; }
+.snake-snakebody-dead { background-color: #FF6F8E; }
+.snake-food-block { background-color: var(--food, #F26B1D); border-radius: 50%; }
+.snake-welcome-dialog, .snake-try-again-dialog, .snake-win-dialog, .snake-pause-screen, .snake-dos-alert { background: var(--field, #1B2028); color: var(--ink, #E7E9EE); border: 1px solid #2A313C; border-radius: 12px; font-family: system-ui, sans-serif; }
+.snake-dos-alert { position: fixed; top: 40%; left: 50%; transform: translateX(-50%); padding: 12px; z-index: 10002; }
+.tui-button, .snake-dialog-controls select { font: inherit; color: inherit; background: var(--bg, #12151A); border: 1px solid #2A313C; border-radius: 8px; padding: 4px 10px; margin: 6px 4px 0; cursor: pointer; }
+.snake-control-row { margin: 6px 0; }
+.snake-gamepad { display: none; position: fixed; right: 12px; bottom: 12px; z-index: 10001; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 6px; user-select: none; }
+.snake-gamepad button { font-size: 20px; color: inherit; background: var(--field, #1B2028); border: 1px solid #2A313C; border-radius: 10px; touch-action: manipulation; }
+@media (pointer: coarse) { .snake-gamepad { display: grid; } }

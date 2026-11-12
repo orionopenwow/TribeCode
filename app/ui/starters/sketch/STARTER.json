@@ -1,0 +1,105 @@
+{
+ "icon": "sketch",
+ "summary": "Draw with a mouse, pen or finger, change the brush and color, save a PNG. A base for a doodle game or a whiteboard.",
+ "tags": [
+  "drawing",
+  "paint",
+  "sketch",
+  "doodle",
+  "canvas"
+ ],
+ "phrases": [
+  "drawing app",
+  "paint app",
+  "sketch app",
+  "doodle app"
+ ],
+ "controls": "Draw with the mouse, a pen or a finger. − and + change the brush.",
+ "source": {
+  "name": "50projects50days › drawing-app",
+  "repo": "bradtraversy/50projects50days",
+  "url": "https://github.com/bradtraversy/50projects50days/tree/master/drawing-app",
+  "license": "MIT",
+  "authors": "Brad Traversy",
+  "changes": "pointer events for mouse, pen and touch, the canvas scales to the screen, Save PNG, brush and colors from config.js, the flat look."
+ },
+ "params": [
+  {
+   "key": "brush",
+   "label": "Brush size",
+   "type": "number",
+   "min": 2,
+   "max": 50,
+   "step": 1,
+   "default": 10,
+   "words": {
+    "up": "bigger brush|thicker",
+    "down": "smaller brush|thinner"
+   }
+  },
+  {
+   "key": "ink2",
+   "label": "Starting ink",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "paper",
+   "label": "Paper",
+   "type": "color",
+   "default": "#F8FAFC"
+  },
+  {
+   "key": "fileName",
+   "label": "Saved file name",
+   "type": "text",
+   "default": "sketch"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Add an eraser",
+  "Add undo",
+  "Add stickers",
+  "Make it multiplayer with the tribe"
+ ],
+ "id": "sketch",
+ "kind": "app",
+ "title": "Sketch pad"
+}

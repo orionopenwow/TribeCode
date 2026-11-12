@@ -1,0 +1,79 @@
+{
+ "icon": "calc",
+ "summary": "A clean calculator with brackets, percent and keyboard input, on a tiny safe parser (no eval). A base for unit, tip or loan calculators.",
+ "tags": [
+  "calculator",
+  "math",
+  "converter",
+  "utility"
+ ],
+ "phrases": [
+  "calculator app",
+  "calculator",
+  "tip calculator",
+  "math app"
+ ],
+ "controls": "Click the keys or type; Enter equals, Esc clears, Backspace deletes.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "the classic four-function calculator"
+ },
+ "params": [
+  {
+   "key": "decimals",
+   "label": "Decimals to show",
+   "type": "number",
+   "min": 0,
+   "max": 12,
+   "step": 1,
+   "default": 10
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Turn it into a tip splitter",
+  "Add a history tape",
+  "Add a unit converter mode",
+  "Add scientific keys"
+ ],
+ "id": "calculator",
+ "kind": "app",
+ "title": "Calculator"
+}

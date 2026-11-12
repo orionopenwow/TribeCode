@@ -57,6 +57,17 @@ const SITE_RECIPES = [
   { id: 'site:comingsoon', site: 'comingsoon', title: 'coming-soon page', rx: /\b(coming soon|waitlist|wait list|pre-?launch|launch page)\b/ },
   { id: 'site:saas', site: 'saas', title: 'product page', rx: /\b(saas|startup|product page|app page|software product)\b/ },
 ];
+// feat/design-flow: the app and game starters (app/ui/starters/catalog.json, docs/STARTERS.md). "make a breakout game"
+// builds the breakout starter; the platformer and the to-do app keep their own recipes above unless a starter is asked
+// for by id (the Design flow does that).
+let STARTERS = [];
+const KIT = require('../app/ui/starterkit.js');
+function loadStarters(dir) {
+  if (STARTERS.length || !dir) return STARTERS;
+  try { STARTERS = JSON.parse(fs.readFileSync(path.join(dir, 'catalog.json'), 'utf8')).items || []; STARTERS.dir = dir; } catch { STARTERS = []; }
+  return STARTERS;
+}
+const starterFor = a => STARTERS.filter(s => s.id !== 'platformer' && s.id !== 'todo').find(s => (s.phrases || []).some(ph => new RegExp(`\\b${ph.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`).test(a))) || null;
 const siteRecipeFor = a => (/\blanding page\b/.test(a) ? null : SITE_RECIPES.find(x => x.rx.test(a)) || null);
 const BIG = /\b(refactor|rewrite|migrat\w*|multiplayer|online play|log ?in|sign[- ]?(in|up)|accounts?|auth\w*|database|backend|back-end|server|api\b|payments?|stripe|checkout|subscriptions?|chat ?bot|ai (enemies|opponent|chat)|leaderboards?|level editor|inventory system|save (system|games?)|physics engine|across (all|every|the whole)|whole (app|codebase|project|site)|every (file|page)|all (the )?(files|pages)|optimi[sz]e|performance|port (it|this)|convert (it|this|the app) to|typescript|react|vue|svelte|unit tests?|test suite|deploy pipeline|ci\b|debug|crash(es|ing)?|memory leak)\b/i;
 const PICKY = /\b(bigger|larger|smaller|bold|italic|underline|uppercase|cent(er|re)(ed)?|align|left|right|color|colour|background|rounded|corners?|padding|spacing|space|margin|hide|remove|delete|font|size|dark|light|red|orange|yellow|gold|green|mint|teal|blue|sky|navy|indigo|purple|violet|pink|rose|brown|white|black|gr[ae]y)\b|#[0-9a-f]{3,6}\b/i;
@@ -66,6 +77,8 @@ function classify(ask, { picked = false } = {}) {
   if (!a) return { tier: 'rules', why: 'Nothing asked yet.' };
   if (BIG.test(a)) return { tier: 'agent', why: 'This touches many parts of the code or needs real engineering (systems, accounts, data, servers or debugging). That is a job for a stronger AI: a member\'s own Claude Code, Codex or Gemini, or the host\'s AI key.' };
   const wantsBuild = /\b(make|build|create|start|give me|set up|spin up|i want|we want|need)\b/.test(a);
+  const st = wantsBuild && starterFor(a);
+  if (st) return { tier: 'recipe', recipe: 'starter:' + st.id, starter: st.id, why: `Free: Flint starts the ${st.title} starter from TribeCode's open-source starters (${st.license}), no AI needed. Tweak it with its knobs.` };
   const sr = wantsBuild && !RECIPES.slice(0, 4).some(x => x.rx.test(a)) && siteRecipeFor(a);
   if (sr) return { tier: 'recipe', recipe: sr.id, site: sr.site, why: `Free: Flint builds a ${sr.title} from TribeCode's website templates, no AI needed. Customize it in a short form.` };
   const r = wantsBuild && RECIPES.find(x => x.rx.test(a));
@@ -110,8 +123,9 @@ function accentFrom(ask) {
   const c = new RegExp(`\\b(${Object.keys(COLORS).join('|')})\\b`, 'i').exec(ask); return c ? COLORS[c[1].toLowerCase()] : '#F26B1D';
 }
 
-module.exports = function flintFree({ P, W, root, getMembers = () => [], broadcast = () => {}, ensureRepo = null, siteLib = null, llmStatus = () => ({ online: false }), log = () => {} }) {
+module.exports = function flintFree({ P, W, root, startersDir = '', getMembers = () => [], broadcast = () => {}, ensureRepo = null, siteLib = null, llmStatus = () => ({ online: false }), log = () => {} }) {
   const TEMPLATES = path.join(root, 'templates');
+  loadStarters(startersDir);
   const err = (status, m) => Object.assign(new Error(m), { status });
   const roleIn = (me, pid) => ((P.get(pid) || {}).members || {})[me.id] || me.role;
   const canEdit = (me, pid) => !!me && me.role !== 'agent' && me.role !== 'spectator' && roleIn(me, pid) !== 'spectator';
@@ -130,10 +144,12 @@ module.exports = function flintFree({ P, W, root, getMembers = () => [], broadca
     }
   }
 
-  async function build(pid, me, ask) {
+  async function build(pid, me, ask, opts = {}) {
     ask = String(ask || '').trim().slice(0, 600);
+    if (opts.starter) return buildStarter(pid, me, opts.starter, ask, opts);
     if (!ask) throw err(400, 'say what to build');
     const c = classify(ask);
+    if (c.starter) return buildStarter(pid, me, c.starter, ask, opts);
     if (c.tier !== 'recipe') return { built: false, ...c };
     if (c.site && siteLib) {   // a website template: name and color from what was said, then Customize takes over
       const out = await siteLib.create(pid, me, { template: c.site, name: nameFrom(ask, (P.get(pid) || {}).name), accent: /#[0-9a-f]{3,6}\b|\b(red|orange|yellow|gold|green|mint|teal|blue|sky|indigo|purple|violet|pink|rose|brown)\b/i.test(ask) ? accentFrom(ask) : null });
@@ -176,6 +192,57 @@ module.exports = function flintFree({ P, W, root, getMembers = () => [], broadca
     log(`flint free build: ${r.id} -> ${dirRel || '.'} (${files.length} files)`);
     broadcast({ type: 'repo', project: pid });
     return { built: true, tier: 'recipe', recipe: r.id, title: r.title, name, accent, dir: dirRel, href: dirRel ? dirRel + '/' : '', files: files.map(f => (dirRel ? dirRel + '/' : '') + f) };
+  }
+
+  // ---------- feat/design-flow: a starter copied into the project's code, its knobs set from what was asked ----------
+  async function repoFor(pid, me) {
+    const p = P.get(pid);
+    let repo = p && p.repo && W.isRepo(p.repo) ? p.repo : null;
+    if (!repo) {
+      if (!isHost(me, pid)) throw err(403, 'only the host can start the code for a project without a repo');
+      if (!ensureRepo) throw err(503, 'the project has no code repository yet');
+      repo = (await ensureRepo(pid, me)).repo;
+    } else if (!canEdit(me, pid)) throw err(403, 'only builders can add code');
+    return repo;
+  }
+  async function commit(repo, me, msg) {
+    if (!W.git) return;
+    const mem = getMembers().find(m => m.id === me.id) || me;
+    await W.git(['add', '-A'], repo);
+    const g = await W.git([...(W.identity ? W.identity(mem) : []), 'commit', '-q', '-m', msg], repo);
+    if (g && g.code && !/nothing to commit/i.test((g.out || '') + (g.err || ''))) log(`flint starter commit: ${(g.err || g.out || '').slice(0, 160)}`);
+  }
+  async function buildStarter(pid, me, id, ask, opts) {
+    const s = STARTERS.find(x => x.id === String(id));
+    if (!s) throw err(404, 'no such starter');
+    const repo = await repoFor(pid, me), p = P.get(pid);
+    const asked = KIT.fromAsk(ask, s.params), values = { ...asked.values, ...KIT.clean(opts.values || {}, s.params) };
+    const name = String(opts.name || values.title || s.title).slice(0, 48);
+    const topIndex = ['index.html', 'public/index.html'].some(f => fs.existsSync(path.join(repo, f)));
+    let dirRel = topIndex ? `builds/${slug(opts.name || s.id)}` : '';
+    for (let i = 2; dirRel && fs.existsSync(path.join(repo, ...dirRel.split('/'), 'index.html')); i++) dirRel = `builds/${slug(opts.name || s.id)}-${i}`;
+    const dest = dirRel ? path.join(repo, ...dirRel.split('/')) : repo;
+    fs.mkdirSync(dest, { recursive: true });
+    const files = []; copyTree(path.join(STARTERS.dir, s.id), dest, x => x, files);
+    const cfg = path.join(dest, 'config.js');
+    if (fs.existsSync(cfg) && Object.keys(values).length) fs.writeFileSync(cfg, KIT.apply(fs.readFileSync(cfg, 'utf8'), values, s.params));
+    await commit(repo, me, `Flint: ${s.title} starter${name !== s.title ? ` for ${name}` : ''} (${s.license}${s.original ? '' : `, from ${s.source}`}, via TribeCode)`);
+    log(`flint starter: ${s.id} -> ${dirRel || '.'} in ${(p && p.name) || pid} (${files.length} files)`);
+    broadcast({ type: 'repo', project: pid });
+    return { built: true, tier: 'recipe', recipe: 'starter:' + s.id, starter: s.id, title: s.title, name, dir: dirRel, href: dirRel ? dirRel + '/' : '', files: files.map(f => (dirRel ? dirRel + '/' : '') + f), values, said: asked.said };
+  }
+  // the knobs of a starter already in the project (config.js in dir), read or changed
+  async function starterConfig(pid, me, body) {
+    const s = STARTERS.find(x => x.id === String(body.starter)); if (!s) throw err(404, 'no such starter');
+    const repo = await repoFor(pid, me), dir = String(body.dir || '');
+    if (dir && !/^builds\/[a-z0-9-]{1,48}$/.test(dir)) throw err(400, 'bad folder');
+    const cfg = path.join(repo, ...(dir ? dir.split('/') : []), 'config.js');
+    if (!fs.existsSync(cfg)) throw err(404, 'no config.js there');
+    const text = fs.readFileSync(cfg, 'utf8');
+    if (!body.values) return { values: KIT.read(text, s.params) };
+    const next = KIT.apply(text, body.values, s.params);
+    if (next !== text) { fs.writeFileSync(cfg, next); await commit(repo, me, `Tweak ${s.title}: ${Object.keys(KIT.clean(body.values, s.params)).join(', ')} (via TribeCode)`); broadcast({ type: 'repo', project: pid }); }
+    return { values: KIT.read(next, s.params) };
   }
 
   // ---------- build history (P1-F): every version is a git commit; restore never rewrites history ----------
@@ -221,10 +288,16 @@ module.exports = function flintFree({ P, W, root, getMembers = () => [], broadca
     try {
       if (a === 'flint' && b === 'tiers' && m === 'GET') { const s = llmStatus() || {}; return send(res, 200, { tiers: TIERS, now: { host: { online: !!s.online, via: s.via || s.model || '' } } }); }
       if (a === 'flint' && b === 'tier' && m === 'POST') { const body = await readBody(req, 4 * 1024).catch(() => ({})); return send(res, 200, classify(body.ask, { picked: !!body.picked })); }
+      if (a === 'flint' && b === 'starters' && m === 'GET') return send(res, 200, { items: STARTERS });
+      if (a === 'projects' && parts[2] === 'flint' && parts[3] === 'starter-config' && m === 'POST') {
+        if (!P.get(b) || (P.canSee && !P.canSee(me, b))) return fail(res, 404, 'project not found');
+        const body = await readBody(req, 16 * 1024).catch(() => ({}));
+        return send(res, 200, await starterConfig(b, me, body));
+      }
       if (a === 'projects' && parts[2] === 'flint' && parts[3] === 'build' && m === 'POST') {
         if (!P.get(b) || (P.canSee && !P.canSee(me, b))) return fail(res, 404, 'project not found');
-        const body = await readBody(req, 4 * 1024).catch(() => ({}));
-        return send(res, 200, await build(b, me, body.ask));
+        const body = await readBody(req, 16 * 1024).catch(() => ({}));
+        return send(res, 200, await build(b, me, body.ask, { starter: body.starter, values: body.values, name: body.name }));
       }
       if (a === 'projects' && parts[2] === 'flint' && ['history', 'restore', 'save'].includes(parts[3])) {
         if (!P.get(b) || (P.canSee && !P.canSee(me, b))) return fail(res, 404, 'project not found');

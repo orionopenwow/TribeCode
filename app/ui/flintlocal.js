@@ -282,7 +282,12 @@
     // from the project; an edit ("make the headline punchier") opens the project's design and runs there. Building the
     // site into the repo as code is the old path, now only when asked for ("build the website into the repo").
     if (id === 'site.repo') { pushUndo('build', 'build'); return legacy('build me a landing page', 'built the website into the repo'); }
-    if (/^site\./.test(id)) {
+    // feat/design-flow: "make a breakout game", "a kanban board": the starter opens in the Design flow with its plan
+    if (/^site\.starter-/.test(id) && window.TribeDesignFlow) {
+      const st = await window.TribeDesignFlow.fromFlint(id.slice(13), s.text || '');
+      if (st) return { text: `Started the ${st.title} starter (${st.license}, ${st.original ? 'made for TribeCode' : 'by ' + st.by}). Its knobs and a plan are beside it.`, sum: `started ${st.title}` };
+    }
+    if (/^site\./.test(id) && !/^site\.starter-/.test(id)) {
       const D = window.TribeSiteDesigner; if (!D) return { text: T('noPlace', { x: 'Website designer' }) };
       const tpl = id.slice(5), isTpl = !!(window.TribeSiteCfg && window.TribeSiteCfg.TEMPLATES.includes(tpl)), st = D.state() || {};
       if (id === 'site.gallery') { await D.open({}); const b = document.querySelector('#wdz [data-wdz="templates"]'); if (b) b.click(); return { text: T('opened', { x: 'Website templates' }), sum: 'opened the website templates' }; }

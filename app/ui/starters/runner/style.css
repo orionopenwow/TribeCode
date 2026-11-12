@@ -1,0 +1,4 @@
+html, body { margin: 0; height: 100%; background: var(--bg, #12151A); color: var(--ink, #E7E9EE); font: 14px/1.4 system-ui, sans-serif; }
+main { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+canvas { width: min(100%, calc((100vh - 56px) * 640 / 240)); aspect-ratio: 640 / 240; display: block; background: var(--sky, #1B2028); touch-action: none; }
+#help { margin: 8px 0 0; opacity: .75; font-size: 12px; text-align: center; }

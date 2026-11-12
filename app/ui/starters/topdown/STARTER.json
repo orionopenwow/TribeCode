@@ -1,0 +1,22 @@
+{
+ "id": "topdown", "kind": "game", "icon": "topdown", "title": "Top-down arena",
+ "summary": "Move, aim and shoot while waves of slimes close in. A twin-stick arena to grow into a dungeon crawler or a survivor game.",
+ "tags": ["top down", "shooter", "twin stick", "arena", "survivor", "dungeon", "2d"],
+ "phrases": ["top down game", "top down shooter", "twin stick shooter", "arena shooter", "survivor game", "dungeon crawler"],
+ "controls": "WASD or arrows to move, aim with the mouse, click or hold Space to shoot. On a phone: drag to move, tap to shoot.",
+ "source": { "original": true, "license": "MIT", "inspired": "classic twin-stick arena shooters and the survivor-like genre (no code or art copied)" },
+ "params": [
+  { "key": "speed", "label": "Hero speed", "type": "number", "min": 1, "max": 7, "step": 0.5, "default": 3, "words": { "up": "faster|quicker", "down": "slower" } },
+  { "key": "hearts", "label": "Hearts", "type": "number", "min": 1, "max": 9, "step": 1, "default": 3, "words": { "up": "more hearts|more lives|easier", "down": "fewer hearts|fewer lives|harder" } },
+  { "key": "foeSpeed", "label": "Slime speed", "type": "number", "min": 0.4, "max": 4, "step": 0.1, "default": 1.2, "words": { "up": "faster enemies|faster slimes", "down": "slower enemies|slower slimes" } },
+  { "key": "foesPerWave", "label": "Slimes in the first wave", "type": "number", "min": 1, "max": 12, "step": 1, "default": 3, "words": { "up": "more enemies|more slimes", "down": "fewer enemies|fewer slimes" } },
+  { "key": "bulletSpeed", "label": "Shot speed", "type": "number", "min": 4, "max": 16, "step": 1, "default": 9 },
+  { "key": "hero", "label": "Hero color", "type": "color", "default": "#F26B1D", "main": true },
+  { "key": "foe", "label": "Slime color", "type": "color", "default": "#3BD16F" },
+  { "key": "bullet", "label": "Shot color", "type": "color", "default": "#FABD2F" },
+  { "key": "floor", "label": "Floor", "type": "color", "default": "#1B2028" },
+  { "key": "grid", "label": "Floor lines", "type": "color", "default": "#222833" },
+  { "key": "bg", "label": "Page background", "type": "color", "default": "#12151A" }
+ ],
+ "try": ["Add a dash on Shift", "Drop hearts from slimes", "Add walls and rooms", "Add a boss every fifth wave"]
+}

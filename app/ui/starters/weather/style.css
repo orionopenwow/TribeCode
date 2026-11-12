@@ -1,0 +1,18 @@
+/* the shared look: flat, 1px borders; colors come from config.js (--bg, --surface, --accent, --ink, --muted, --line) */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg, #12151A); color: var(--ink, #E7E9EE); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 22px; margin: 0 0 4px; } .muted { color: var(--muted, #94A3B8); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--accent, #F26B1D); border-color: var(--accent, #F26B1D); color: #fff; }
+.input { width: 100%; background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 10px 12px; }
+.input:focus, .btn:focus-visible { outline: 2px solid var(--accent, #F26B1D); outline-offset: 1px; }
+.card { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 12px; padding: 14px; }
+.search { display: flex; gap: 8px; margin-bottom: 12px; }
+.now { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+.now h1 { font-size: 20px; } .now .temp { font: 600 56px/1 ui-monospace, monospace; } .now .ic { font-size: 56px; text-align: right; }
+.now dl { grid-column: 1 / -1; display: flex; gap: 18px; margin: 6px 0 0; color: var(--muted, #94A3B8); font-size: 13px; } .now dd { margin: 0; color: var(--ink, #E7E9EE); }
+.days { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 12px; }
+.day { text-align: center; } .day .ic { font-size: 26px; display: block; margin: 4px 0; } .day small { color: var(--muted, #94A3B8); }
+.small { font-size: 12px; margin-top: 14px; }

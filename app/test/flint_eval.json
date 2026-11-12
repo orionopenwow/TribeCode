@@ -4570,6 +4570,132 @@
    "i": "site.hours",
    "ctx": "p",
    "v": "held3"
+  },
+  {
+   "t": "make a breakout game",
+   "i": "site.starter-breakout",
+   "ctx": "g"
+  },
+  {
+   "t": "build me a brick breaker",
+   "i": "site.starter-breakout",
+   "ctx": "g"
+  },
+  {
+   "t": "make an arkanoid clone called brick party",
+   "i": "site.starter-breakout",
+   "s": {
+    "name": "brick party"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a snake game",
+   "i": "site.starter-snake",
+   "ctx": "g"
+  },
+  {
+   "t": "build a snake game called sssnek",
+   "i": "site.starter-snake",
+   "s": {
+    "name": "sssnek"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a tetris clone",
+   "i": "site.starter-blocks",
+   "ctx": "g"
+  },
+  {
+   "t": "build a falling blocks game",
+   "i": "site.starter-blocks",
+   "ctx": "g"
+  },
+  {
+   "t": "make an endless runner",
+   "i": "site.starter-runner",
+   "ctx": "g"
+  },
+  {
+   "t": "make a dino game",
+   "i": "site.starter-runner",
+   "ctx": "g"
+  },
+  {
+   "t": "build a top down shooter",
+   "i": "site.starter-topdown",
+   "ctx": "g"
+  },
+  {
+   "t": "make a survivor game",
+   "i": "site.starter-topdown",
+   "ctx": "g"
+  },
+  {
+   "t": "make a memory game",
+   "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "build a matching pairs game",
+   "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "make a notes app",
+   "i": "site.starter-notes",
+   "ctx": "g"
+  },
+  {
+   "t": "build a kanban board",
+   "i": "site.starter-kanban",
+   "ctx": "g"
+  },
+  {
+   "t": "make a trello clone",
+   "i": "site.starter-kanban",
+   "ctx": "g"
+  },
+  {
+   "t": "make an admin dashboard",
+   "i": "site.starter-dashboard",
+   "ctx": "g"
+  },
+  {
+   "t": "build a chat app",
+   "i": "site.starter-chat",
+   "ctx": "g"
+  },
+  {
+   "t": "make a survey",
+   "i": "site.starter-survey",
+   "ctx": "g"
+  },
+  {
+   "t": "make a feedback form",
+   "i": "site.starter-survey",
+   "ctx": "g"
+  },
+  {
+   "t": "build a pomodoro timer",
+   "i": "site.starter-pomodoro",
+   "ctx": "g"
+  },
+  {
+   "t": "make a calculator",
+   "i": "site.starter-calculator",
+   "ctx": "g"
+  },
+  {
+   "t": "make a weather app",
+   "i": "site.starter-weather",
+   "ctx": "g"
+  },
+  {
+   "t": "build me a drawing app",
+   "i": "site.starter-sketch",
+   "ctx": "g"
   }
  ]
 }

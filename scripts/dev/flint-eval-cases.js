@@ -273,6 +273,16 @@ add('s', [['the title needs more punch', 'site.copy', { field: 'headline', tone:
   ['put a call to action before the footer', 'site.block.add', { block: 'cta' }], ['pull our team from the project', 'site.autofill']]);
 add('p', [['shorten the headline', 'site.copy', { field: 'headline', tone: 'shorter' }], ['add business hours', 'site.hours']]);
 for (let i = H3; i < C.length; i++) C[i].v = 'held3';
+// ---- feat/design-flow: app and game starters (app/ui/starters) picked by what you ask for ----
+add('g', [
+  ['make a breakout game', 'site.starter-breakout'], ['build me a brick breaker', 'site.starter-breakout'], ['make an arkanoid clone called brick party', 'site.starter-breakout', { name: 'brick party' }],
+  ['make a snake game', 'site.starter-snake'], ['build a snake game called sssnek', 'site.starter-snake', { name: 'sssnek' }], ['make a tetris clone', 'site.starter-blocks'], ['build a falling blocks game', 'site.starter-blocks'],
+  ['make an endless runner', 'site.starter-runner'], ['make a dino game', 'site.starter-runner'], ['build a top down shooter', 'site.starter-topdown'], ['make a survivor game', 'site.starter-topdown'],
+  ['make a memory game', 'site.starter-memory'], ['build a matching pairs game', 'site.starter-memory'],
+  ['make a notes app', 'site.starter-notes'], ['build a kanban board', 'site.starter-kanban'], ['make a trello clone', 'site.starter-kanban'], ['make an admin dashboard', 'site.starter-dashboard'],
+  ['build a chat app', 'site.starter-chat'], ['make a survey', 'site.starter-survey'], ['make a feedback form', 'site.starter-survey'], ['build a pomodoro timer', 'site.starter-pomodoro'],
+  ['make a calculator', 'site.starter-calculator'], ['make a weather app', 'site.starter-weather'], ['build me a drawing app', 'site.starter-sketch'],
+]);
 
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');
