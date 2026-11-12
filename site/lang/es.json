@@ -1066,5 +1066,8 @@
 "five short modules": "cinco módulos cortos",
 "Just looking? The {0} runs the same app with a pretend tribe that works by itself. Something missing or wrong here? Tell us in {1}.": "¿Solo estás mirando? La {0} ejecuta la misma app con una tribu de mentira que funciona sola. ¿Falta algo o hay un error aquí? Cuéntanoslo en {1}.",
 "1 thing to make": "1 cosa para hacer",
-"{n} things to make": "{n} cosas para hacer"
+"{n} things to make": "{n} cosas para hacer",
+"Slides": "Diapositivas",
+"Company seats": "Puestos de la empresa",
+"An org chart with CEO, Build, Grow and Run seats, each with a monthly goal and a short charter.": "Un organigrama con los puestos CEO, Construir, Crecer y Operar, cada uno con una meta del mes y una carta corta."
 }

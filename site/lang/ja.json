@@ -1066,5 +1066,8 @@
 "five short modules": "5つの短いモジュール",
 "Just looking? The {0} runs the same app with a pretend tribe that works by itself. Something missing or wrong here? Tell us in {1}.": "見ているだけ？ {0} では、自動で動く架空のトライブで同じアプリが動きます。ここに足りないことや間違いがあれば {1} で教えてください。",
 "1 thing to make": "作れるもの 1 件",
-"{n} things to make": "作れるもの {n} 件"
+"{n} things to make": "作れるもの {n} 件",
+"Slides": "スライド",
+"Company seats": "会社の役割",
+"An org chart with CEO, Build, Grow and Run seats, each with a monthly goal and a short charter.": "CEO、Build、Grow、Run の役割を並べた組織図。それぞれに今月の目標と短い憲章。"
 }

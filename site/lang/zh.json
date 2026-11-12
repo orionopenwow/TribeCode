@@ -1066,5 +1066,8 @@
 "five short modules": "五个简短模块",
 "Just looking? The {0} runs the same app with a pretend tribe that works by itself. Something missing or wrong here? Tell us in {1}.": "只是看看？{0} 用一个自己会动的虚拟部落运行同一个应用。这里缺了什么或有错？在 {1} 告诉我们。",
 "1 thing to make": "1 个可做的东西",
-"{n} things to make": "{n} 个可做的东西"
+"{n} things to make": "{n} 个可做的东西",
+"Slides": "幻灯片",
+"Company seats": "公司岗位",
+"An org chart with CEO, Build, Grow and Run seats, each with a monthly goal and a short charter.": "包含 CEO、构建、增长、运营岗位的组织图，每个岗位都有本月目标和简短章程。"
 }

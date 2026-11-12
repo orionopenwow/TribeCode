@@ -80,8 +80,8 @@ def main():
                              cwd=ROOT, capture_output=True, text=True, check=True)
         rec = dict(json.loads(out.stdout))
         run = (ROOT / "app/ui/flintrun.js").read_text()   # the rest are commands Watch Flint build itself uses (or its kind)
-        assert "cmd: 'make the product presentation'" in run and "cmd: 'design a login screen'" in run
-        builds = [s for s in asks if s.startswith(("make ", "build ")) and s != "make the product presentation"]
+        assert "cmd: 'make the product presentation'" in run and "cmd: 'make me a company'" in run and "cmd: 'design a login screen'" in run
+        builds = [s for s in asks if s.startswith(("make ", "build ")) and s not in ("make the product presentation", "make me a company")]
         assert all(rec[s] for s in builds), {s: rec[s] for s in builds}
         assert rec["make a cafe website"] == "site:cafe" and rec["make a to-do app"] == "todo" and rec["make a video editor"] == "video", rec
         # every Make this link opens the app and lands

@@ -1066,5 +1066,8 @@
 "five short modules": "짧은 모듈 다섯 개",
 "Just looking? The {0} runs the same app with a pretend tribe that works by itself. Something missing or wrong here? Tell us in {1}.": "그냥 구경 중인가요? {0}는 스스로 돌아가는 가상 트라이브로 같은 앱을 보여 줘요. 여기 빠진 것이나 틀린 게 있나요? {1}에서 알려 주세요.",
 "1 thing to make": "만들 수 있는 것 1개",
-"{n} things to make": "만들 수 있는 것 {n}개"
+"{n} things to make": "만들 수 있는 것 {n}개",
+"Slides": "슬라이드",
+"Company seats": "회사 자리",
+"An org chart with CEO, Build, Grow and Run seats, each with a monthly goal and a short charter.": "CEO, Build, Grow, Run 자리가 있는 조직도. 자리마다 이달의 목표와 짧은 헌장이 있어요."
 }

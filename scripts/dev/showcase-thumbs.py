@@ -78,6 +78,9 @@ def main():
                 pg.evaluate(f"TribeTemplates.open({tid!r})"); pg.wait_for_timeout(700)
                 pg.evaluate("document.querySelectorAll('.toast').forEach(e => e.remove())")
                 pg.screenshot(path=str(shots / f"{name}.png"))
+            pg.goto(B + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected() && window.TribeApp", timeout=20000); pg.wait_for_timeout(800)
+            pg.evaluate("(document.querySelector('#nest-company, [data-key=company], [data-view=company]') || {}).click ? document.querySelector('#nest-company, [data-key=company], [data-view=company]').click() : TribeApp.show('company')"); pg.wait_for_timeout(1500)   # the company Watch Flint build set up
+            pg.evaluate("document.querySelectorAll('.toast').forEach(e => e.remove())"); pg.screenshot(path=str(shots / "doc-company.png"))
             b.close()
     finally:
         srv.terminate(); srv.wait()
@@ -114,7 +117,7 @@ def main():
         subprocess.run(["git", "checkout", "--", f"docs/screenshots/{shot}"], cwd=ROOT)
     print("writing", OUT)
     pane = (330, 64, 1120, 560)
-    crops = {"app-todo": (300, 0, 1000, 440), "doc-standup": pane, "doc-launch": pane, "doc-brand": pane, "doc-work": pane, "flint-run": (240, 60, 1440, 900), "app-dashboard": (240, 52, 1176, 900), "design-pricing": (240, 52, 1176, 900), "design-onboarding": (240, 52, 1176, 900)}
+    crops = {"doc-company": pane, "app-todo": (300, 0, 1000, 440), "doc-standup": pane, "doc-launch": pane, "doc-brand": pane, "doc-work": pane, "flint-run": (240, 60, 1440, 900), "app-dashboard": (240, 52, 1176, 900), "design-pricing": (240, 52, 1176, 900), "design-onboarding": (240, 52, 1176, 900)}
     for f in sorted(shots.glob("*.png")): webp(f, f.stem, crops.get(f.stem))
     for sid in SITES: webp(ROOT / "templates" / "sites" / sid / "thumb.png", f"site-{sid}")
     phones()
