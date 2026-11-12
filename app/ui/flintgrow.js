@@ -155,7 +155,7 @@
   async function route(text) {
     const t = String(text || '').trim().toLowerCase().replace(/[.!]+$/, '');
     let m;
-    if (/\b(resources?|courses?|lessons?|tutorials?|education|teach me|where (?:can|do) i learn|learn (?:about|how)|how do i (?:start|run|grow|launch|build) (?:a|my|our) (?:company|business|startup|website|app|brand))\b/.test(t)) {
+    if (/\b(resources?|courses?|lessons?|tutorials?|education|teach me (?:about |how to )?(?:start|run|grow|launch|market|sell)\w*|where (?:can|do) i learn|learn (?:about|how)|how do i (?:start|run|grow|launch|build) (?:a|my|our) (?:company|business|startup|website|app|brand))\b/.test(t)) {
       const g = goalOf(t), list = recommend(g);
       return F().say(`For ${GOALS[g].name}, start here:\n${resLines(list.slice(0, 4))}`, [...resActs(list), act('Grow my idea', 'grow', 'restart')]);
     }
