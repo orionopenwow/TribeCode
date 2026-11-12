@@ -31,6 +31,8 @@ def chat(page):
 def named(page, name):
     """Zero-step setup: the app names you after the computer's user unless a name is already saved."""
     page.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: %r}))" % name)
+    # this test makes many projects; the calm Premium note at the 4th (premium.js) is covered by e2e_premium, so snooze it here
+    page.add_init_script("if (!localStorage.getItem('tribecode.plan.v1')) localStorage.setItem('tribecode.plan.v1', JSON.stringify({snooze: {projects: Date.now()}}))")
 
 def api(path, method="GET", body=None, token=None, project=None):
     h = {"Content-Type": "application/json"}
