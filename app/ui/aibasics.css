@@ -34,3 +34,9 @@
 .ab-dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; } .ab-dl dt { font: 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--faint); } .ab-dl dd { margin: 0; color: var(--text); }
 .ab-acts { display: flex; flex-wrap: wrap; gap: 6px; } .ab-acts:empty { display: none; }
 @media (prefers-reduced-motion: reduce) { .ab-pop { animation: none; } .ab-spark { transition: none; } }
+/* feat/flint-runthrough: the local document kinds (summary, key points, titles, tags, reading time, glossary) */
+.ab-sub { margin: 8px 0 4px; font: 600 11px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ab-picks { display: flex; flex-direction: column; gap: 6px; }
+.ab-pick { text-align: left; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
+.ab-pick:hover { border-color: var(--brand); }
+.ab-pick:focus-visible { outline: 2px solid var(--live); outline-offset: 1px; }

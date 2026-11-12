@@ -1,0 +1,21 @@
+/* Watch Flint build (flintrun.js): one caption bar at the bottom, the steps as a row of segments. Flat matte: 1px
+   borders, depth from luminance steps only. */
+body.frun-on .toast { bottom: auto; top: 84px; }
+.frun { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9000; width: min(760px, calc(100vw - 24px));
+  padding: 12px 16px 14px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--surface); color: var(--text); }
+.frun-top { display: flex; align-items: center; gap: 10px; }
+.frun-top .eyebrow { color: var(--brand); flex: 1; min-width: 0; }
+.frun-via { font: 12px/1.4 var(--mono); color: var(--muted); }
+.frun-via.ai { color: var(--live); }
+.frun-cap { margin: 8px 0 10px; font-size: 15px; line-height: 1.5; min-height: 2.9em; }
+.frun-steps { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.frun-steps li { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--border); transition: background-color var(--dur-quick) var(--ease-out); }
+.frun-steps li span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.frun-steps li[data-state="now"] { background: var(--brand); border-color: var(--brand); }
+.frun-steps li[data-state="done"] { background: var(--live); border-color: var(--live); }
+.frun-steps li[data-state="fail"] { background: var(--alert); border-color: var(--alert); }
+.frun-dl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.frun-dl:not(:empty) { margin-top: 12px; }
+.frun-path { font: 12px/1.4 var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+@media (max-width: 820px) { .frun { bottom: calc(72px + env(safe-area-inset-bottom)); padding: 10px 12px 12px; } .frun-cap { font-size: 14px; } }
+@media (prefers-reduced-motion: reduce) { .frun-steps li { transition: none; } }

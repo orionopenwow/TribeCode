@@ -11,7 +11,7 @@
 //   window.TribeAIBasics = { run(kind, ctx, anchor), online(), scan() }
 (function () {
   'use strict';
-  const C = () => window.TribeClient, core = () => window.TribeAICore;
+  const C = () => window.TribeClient, core = () => window.TribeAICore, LD = () => window.TribeLocalDoc;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const connected = () => !!(C() && C().connected && C().connected());
@@ -52,12 +52,13 @@
   const MENUS = {
     chat: [['chat.summary', 'Summarize the thread'], ['chat.tasks', 'Turn it into tasks']],
     task: [['task.split', 'Split into steps'], ['task.estimate', 'Estimate it'], ['task.owner', 'Suggest an owner']],
-    doc: [['doc.tidy', 'Tidy it up'], ['doc.outline', 'Outline'], ['doc.continue', 'Continue writing']],
-    note: [['doc.tidy', 'Tidy it up'], ['doc.outline', 'Outline'], ['doc.continue', 'Continue writing']],
+    doc: [['doc.summary', 'Summarize'], ['doc.points', 'Key points & action items'], ['doc.tidy', 'Tidy it up'], ['doc.outline', 'Outline'], ['doc.continue', 'Continue writing'], ['doc.title', 'Suggest a title'], ['doc.tags', 'Suggest tags'], ['doc.read', 'Reading time & outline'], ['doc.glossary', 'Explain like I\'m new']],
+    note: [['doc.summary', 'Summarize'], ['doc.points', 'Key points & action items'], ['doc.tidy', 'Tidy it up'], ['doc.outline', 'Outline'], ['doc.continue', 'Continue writing'], ['doc.title', 'Suggest a title'], ['doc.tags', 'Suggest tags'], ['doc.read', 'Reading time & outline'], ['doc.glossary', 'Explain like I\'m new']],
     files: [['file.describe', 'Describe and tag these files']],
     seat: [['seat.charter', 'Fill in the charter']],
   };
-  const TITLE = { 'chat.summary': 'Summary', 'chat.tasks': 'Things to do', 'task.split': 'Steps', 'task.estimate': 'Estimate', 'task.owner': 'Who could own it', 'doc.tidy': 'Tidied', 'doc.outline': 'Outline', 'doc.continue': 'What comes next', 'file.describe': 'Descriptions and tags', 'seat.charter': 'A charter for this seat', 'home.plan': 'Today\'s plan' };
+  const TITLE = { 'chat.summary': 'Summary', 'chat.tasks': 'Things to do', 'task.split': 'Steps', 'task.estimate': 'Estimate', 'task.owner': 'Who could own it', 'doc.tidy': 'Tidied', 'doc.outline': 'Outline', 'doc.continue': 'What comes next', 'file.describe': 'Descriptions and tags', 'seat.charter': 'A charter for this seat', 'home.plan': 'Today\'s plan',
+    'doc.summary': 'Summary', 'doc.points': 'Key points & action items', 'doc.title': 'Title ideas', 'doc.tags': 'Tag ideas', 'doc.read': 'Reading time & outline', 'doc.glossary': 'Terms, explained' };
   function menu(anchor, where, ctx) {
     const items = MENUS[where] || []; if (items.length === 1) return run(items[0][0], ctx, anchor);
     const p = openPop(anchor, `<div class="ab-menu" role="menu">${items.map(([k, l]) => `<button type="button" role="menuitem" data-ab-do="${k}"><span class="ab-star" aria-hidden="true">✦</span>${esc(l)}</button>`).join('')}</div>`);
@@ -84,6 +85,19 @@
     'doc.tidy': { input: c => c.text, basic: c => core().tidy(c.text), show: r => `<div class="ab-md md">${md(r)}</div>`, refined: t => t.replace(/^```[a-z]*\n|\n```$/g, ''), acts: (r, c) => [['Replace the text', () => { c.set(r); toast('Tidied'); closePop(); }, true], ['Copy', () => copy(r)]] },
     'doc.outline': { input: c => c.text, basic: c => core().outline(c.text), show: r => `<div class="ab-md md">${md(r)}</div>`, refined: t => t, acts: (r, c) => [['Put it at the top', () => { c.set(`## Outline\n\n${r}\n\n${c.text}`); closePop(); }, true], ['Copy', () => copy(r)]] },
     'doc.continue': { input: c => c.text.slice(-4000), basic: c => core().continueDoc(c.text, c.title), show: r => `<pre class="ab-pre">${esc(r.trim() || '(a new list item)')}</pre>`, refined: t => '\n\n' + t.trim(), acts: (r, c) => [['Add it to the end', () => { c.set(c.text.replace(/\s+$/, '') + r); closePop(); }, true]] },
+    // feat/flint-runthrough: local document features (app/ui/localdoc.js), the same shape refined by the AI
+    'doc.summary': { input: c => c.text.slice(0, 12000), basic: c => LD().summarize(c.text), show: r => `<ul class="ab-list">${r.sentences.map(x => `<li>${esc(x)}</li>`).join('') || `<li>${esc(r.text)}</li>`}</ul>`, refined: t => LD().parse('doc.summary', t),
+      acts: (r, c) => [['Put it at the top', () => { c.set(`> **Summary:** ${r.sentences.join(' ')}\n\n${c.text}`); closePop(); }, true], ['Copy', () => copy(r.sentences.join('\n'))]] },
+    'doc.points': { input: c => c.text.slice(0, 12000), basic: c => LD().keyPoints(c.text, { members: members() }), show: r => `<p class="ab-sub">Key points</p><ul class="ab-list">${r.points.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="ab-sub">Action items</p>${r.actions.length ? `<div class="ab-checks">${r.actions.map((t, i) => `<label class="ab-check"><input type="checkbox" checked data-i="${i}"><span>${esc(t.title)}${t.due ? ` <em>· ${esc(t.due)}</em>` : ''}</span></label>`).join('')}</div>` : '<p class="faint">No to-dos found.</p>'}`,
+      refined: t => LD().parse('doc.points', t),
+      acts: (r, c, el) => [...(r.actions.length && connected() ? [[`Add to Tasks`, async () => { const pick = [...el.querySelectorAll('.ab-check input')].filter(x => x.checked).map(x => r.actions[+x.dataset.i]); let n = 0; for (const t of pick) { try { await C().api('/tasks', { method: 'POST', body: { title: t.title, ...(t.assignee ? { assignee: t.assignee } : {}), ...(t.due ? { due: t.due } : {}) } }); n++; } catch {} } toast(`Added ${n} task${n === 1 ? '' : 's'}`); closePop(); }, true]] : []), ['Copy', () => copy(LD().format('doc.points', r))]] },
+    'doc.title': { input: c => c.text.slice(0, 8000), basic: c => LD().titles(c.text), show: r => `<div class="ab-picks">${r.map((t, i) => `<button type="button" class="ab-pick" data-i="${i}">${esc(t)}</button>`).join('')}</div>`, refined: t => LD().parse('doc.title', t),
+      acts: (r, c, el) => { el.querySelectorAll('.ab-pick').forEach(b => b.onclick = () => { if (c.setTitle) { c.setTitle(r[+b.dataset.i]); toast('Title set'); closePop(); } else copy(r[+b.dataset.i]); }); return [['Copy the first', () => copy(r[0])]]; } },
+    'doc.tags': { input: c => c.text.slice(0, 8000), basic: c => LD().tags(c.text), show: r => `<p class="ab-tags">${r.map(t => `<i>#${esc(t)}</i>`).join('')}</p>`, refined: t => LD().parse('doc.tags', t), acts: r => [['Copy', () => copy(r.map(t => '#' + t).join(' '))]] },
+    'doc.read': { input: c => c.text.slice(0, 12000), basic: c => LD().reading(c.text), show: r => `<p class="ab-big"><b>${esc(r.label)}</b> · ${esc(r.words)} words</p><div class="ab-md md">${md(r.outline)}</div>`, refined: (t, c, prev) => { const p = LD().parse('doc.read', t); return p && p.outline ? { ...prev, outline: p.outline } : null; },
+      acts: (r, c) => [['Put the outline at the top', () => { c.set(`## Outline (${r.label})\n\n${r.outline}\n\n${c.text}`); closePop(); }, true]] },
+    'doc.glossary': { input: c => c.text.slice(0, 12000), basic: c => LD().glossary(c.text), show: r => r.length ? `<dl class="ab-dl">${r.map(g => `<dt>${esc(g.term)}</dt><dd>${esc(g.def)}</dd>`).join('')}</dl>` : '<p class="faint">No special terms: it reads plainly already.</p>', refined: t => LD().parse('doc.glossary', t),
+      acts: (r, c) => r.length ? [['Add as a glossary', () => { c.set(`${c.text.replace(/\s+$/, '')}\n\n## Glossary\n\n${r.map(g => `- **${g.term}**: ${g.def}`).join('\n')}\n`); closePop(); }, true], ['Copy', () => copy(LD().format('doc.glossary', r))]] : [] },
     'file.describe': { input: c => c.files.map(f => `${f.name}${f.size ? ` (${f.size} bytes)` : ''}${f.kind ? ` [${f.kind}]` : ''}`).join('\n'), basic: c => c.files.map(f => ({ key: f.key, name: f.name, ...core().describeFile(f) })),
       show: r => r.length ? `<div class="ab-files">${r.map(f => `<div class="ab-file"><b>${esc(f.name)}</b><span>${esc(f.description)}</span><span class="ab-tags">${f.tags.map(t => `<i>#${esc(t)}</i>`).join('')}</span></div>`).join('')}</div>` : '<p class="faint">No files here yet.</p>',
       refined: null, acts: (r, c) => r.length && connected() ? [['Save the tags', async () => { let n = 0; for (const f of r) { try { await C().api('/ai/tags', { method: 'PUT', body: { project: c.project || 'local', key: f.key, description: f.description, tags: f.tags } }); n++; } catch {} } toast(`Tagged ${n} file${n === 1 ? '' : 's'}`); closePop(); }, true]] : [] },
@@ -131,7 +145,8 @@
   function docCtx(root) {
     const ta = root.querySelector('#doc-body') || root.querySelector('#note-text'); if (!ta) return null;
     const title = (root.querySelector('#dl-name') || root.querySelector('#note-title') || {}).value || '';
-    return { text: ta.value || '', title, set: v => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); } };
+    const tt = root.querySelector('#dl-name') || root.querySelector('#note-title');
+    return { text: ta.value || '', title, set: v => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); }, setTitle: tt ? v => { tt.value = v; tt.dispatchEvent(new Event('input', { bubbles: true })); tt.dispatchEvent(new Event('change', { bubbles: true })); } : null };
   }
   function filesCtx(root) {
     const files = [...root.querySelectorAll('.dc-card[data-up], .dc-card[data-gdoc], .fg-card[data-slug]')].slice(0, 30).map(c => {
@@ -164,5 +179,74 @@
   setInterval(() => { if (document.visibilityState === 'visible') soon(); }, 700);
   addEventListener('click', soon, true); addEventListener('hashchange', soon);
   scan();
-  window.TribeAIBasics = { run, online, scan, menu, close: closePop };
+  // ---------- Flint commands for the same features (flint.js special() asks here first) ----------
+  //   "summarize this doc", "summarize the doc called launch plan", "summarize the file notes/brief.pdf", "summarize: <text>",
+  //   "key points of this note", "action items from this doc", "suggest a title", "suggest tags for this doc",
+  //   "how long to read this doc", "explain the terms in this doc" / "explain like I'm new"
+  const FK = [
+    ['doc.summary', /^(?:summari[sz]e|sum up|tl;?dr|recap|give me (?:a|the) (?:summary|tl;?dr) of)\b/],
+    ['doc.points', /^(?:(?:what are |list |give me |pull out |find )?(?:the )?(?:key points|main points|action items|to-?dos|takeaways)(?: (?:of|from|in))?)\b/],
+    ['doc.title', /^(?:suggest|give me|pick|what'?s a good|name|title ideas?)(?: (?:a|some|me a|me some))? ?(?:good )?(?:titles?|names?)?(?: ideas?)?(?: for)?\b(?=.*\b(title|name)s?\b|.*\btitle ideas?\b)|^(?:title|name) (?:this|it)\b/],
+    ['doc.tags', /^(?:suggest|give me|pick|add)?\s*(?:some )?tags?(?: (?:for|to))?\b|^tag (?:this|it|the)\b/],
+    ['doc.read', /^(?:how long (?:is it |does it take )?to read|reading time|how long is)\b/],
+    ['doc.glossary', /^(?:explain (?:the )?(?:terms|words|jargon)|explain (?:it |this )?like i'?m (?:new|five|5)|eli5|glossary|what do (?:these|the) (?:terms|words) mean|make a glossary)\b/],
+  ];
+  const TARGET = /\b(this|the|my|our)?\s*(doc|document|note|page|file|text|it|this)\b/;
+  async function fileText(path) {   // server/aibasics.js reads it (txt, md, html, json, csv, pdf) inside the project's repo
+    const r = await C().api('/ai/extract?path=' + encodeURIComponent(path));
+    return r.text || '';
+  }
+  async function docByName(name) {
+    const q = String(name || '').trim().toLowerCase(); if (!q || !connected()) return null;
+    let docs = []; try { docs = (await C().api('/docs')).docs || []; } catch {}
+    const d = docs.find(x => String(x.title).toLowerCase() === q) || docs.find(x => String(x.title).toLowerCase().includes(q)) || docs.find(x => q.split(/\s+/).every(w => String(x.title).toLowerCase().includes(w)));
+    if (!d) return null;
+    try { const full = (await C().api('/docs/' + encodeURIComponent(d.slug))).doc; return { text: full.body || '', title: full.title, slug: d.slug }; } catch { return null; }
+  }
+  // what text a command means: pasted after a colon, a named doc or file, the doc or note on screen, or the newest doc
+  async function target(rest) {
+    const m = /^\s*[:\-–]\s*([\s\S]{20,})$/.exec(rest); if (m) return { text: m[1], title: 'your text' };
+    const file = /\b(?:the )?file\s+(?:called\s+|named\s+)?([\w./ -]+\.(?:md|txt|pdf|html?|json|csv))\b/i.exec(rest);
+    if (file) return { text: await fileText(file[1].trim()), title: file[1].trim().split('/').pop() };
+    const named = /\b(?:called|named|titled|about)\s+["“]?(.+?)["”]?\s*$/i.exec(rest) || /^\s*(?:the\s+)?["“](.+?)["”]\s*(?:doc|note|page)?\s*$/i.exec(rest);
+    if (named) { const d = await docByName(named[1]); if (d) return d; return { missing: named[1] }; }
+    const ed = document.querySelector('#doc-body'), note = document.querySelector('#note-text');
+    if (ed && ed.offsetParent !== null && ed.value.trim()) return { text: ed.value, title: (document.querySelector('#dl-name') || {}).value || 'this doc' };
+    if (note && note.offsetParent !== null && note.value.trim()) return { text: note.value, title: (document.querySelector('#note-title') || {}).value || 'this note' };
+    const loose = rest.replace(TARGET, ' ').replace(/^\s*(?:of|from|in|for|on)\s+/, '').trim();
+    if (loose && loose.length > 2) { const d = await docByName(loose); if (d) return d; }
+    if (connected()) { try { const docs = ((await C().api('/docs')).docs || []); if (docs[0]) { const full = (await C().api('/docs/' + encodeURIComponent(docs[0].slug))).doc; return { text: full.body || '', title: full.title, slug: docs[0].slug, guessed: true }; } } catch {} }
+    return null;
+  }
+  async function flint(raw) {
+    const text = String(raw || '').trim(), t = text.toLowerCase();
+    if (!LD()) return null;
+    if (/^(?:summari[sz]e|sum up|tl;?dr|recap)\s*(?:the\s+)?(?:chat|conversation|messages|channel|thread|discussion|today)?$/.test(t) || /^what did i miss/.test(t)) return null;   // the chat: flint.js summarize()
+    if (/https?:\/\//.test(t)) return null;   // links: captures.js
+    const hit = FK.find(([, rx]) => rx.test(t)); if (!hit) return null;
+    const kind = hit[0], rest = text.replace(hit[1], '');
+    if (kind !== 'doc.summary' && !TARGET.test(rest.toLowerCase()) && !/[:]/.test(rest) && !/\b(called|named|file)\b/i.test(rest) && !(kind === 'doc.glossary' || kind === 'doc.read' || kind === 'doc.points')) return null;
+    if (kind === 'doc.summary' && !TARGET.test(rest.toLowerCase()) && !/[:]/.test(rest) && !/\b(called|named|file)\b/i.test(rest)) return null;
+    const F = window.TribeFlint;
+    let src; try { src = await target(rest); } catch (e) { return { text: e.message }; }
+    if (!src) return { text: 'Which doc? Open it, or say "summarize the doc called …", or paste the text after a colon.' };
+    if (src.missing) return { text: `I couldn't find a doc called “${String(src.missing)}”.` };
+    if (!String(src.text || '').trim()) return { text: `“${String(src.title)}” is empty so far.` };
+    const r = LD().run(kind, src.text, { members: members() }), label = TITLE[kind] || 'Answer';
+    const head = `✦ **${label}** of “${String(src.title)}”${src.guessed ? ' (your newest doc)' : ''} · Basic · no AI`;
+    const msg = F && F.say ? F.say(`${head}\n\n${LD().format(kind, r)}`) : null;
+    // with an AI on, the same answer gets better in place and says who refined it
+    const st = await online();
+    if (st.online && msg) {
+      try {
+        const out = await C().api('/ai/refine', { method: 'POST', body: { kind, input: src.text.slice(0, 12000), draft: LD().format(kind, r) } });
+        let better = out && out.text ? LD().parse(kind, out.text) : null;
+        if (kind === 'doc.read' && better) better = better.outline ? { ...r, outline: better.outline } : null;
+        if (better && (!Array.isArray(better) || better.length)) { msg.text = `✦ **${label}** of “${String(src.title)}” · via ${String(out.via)}\n\n${LD().format(kind, better)}`; msg.via = out.via; if (F.redraw) F.redraw(); }
+      } catch {}
+    }
+    return msg ? true : { text: `${head}\n\n${LD().format(kind, r)}` };
+  }
+
+  window.TribeAIBasics = { run, online, scan, menu, close: closePop, flint };
 })();

@@ -552,6 +552,7 @@ buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense })
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
 const siteLib = require('./sitelib')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // website template library (server/sitelib.js)
 const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
+const flintRun = require('./flintrun')({ P, root: baseStore.root, tribe, getMembers: () => members, publicMember, log: m => console.error('  ' + m) });   // feat/flint-runthrough: proof-of-work ZIPs + the Blender bridge stub (server/flintrun.js)
 // v0.27 breakout: one-click Publish to a public play link (with a safety check) and tribe game jams (server/publish.js, server/jam.js)
 const visualCard = pid => P.inProject(pid, () => { let best = null; const root = store.p('visuals'); try { for (const d of fs.readdirSync(root)) { let fl = []; try { fl = fs.readdirSync(path.join(root, d)); } catch { continue; } for (const f of fl) if (f.endsWith('.png')) { const full = path.join(root, d, f), t = fs.statSync(full).mtimeMs; if (!best || t > best.t) best = { full, t }; } } } catch {} return best && best.full; });
 const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupFlow, getMembers: () => members, broadcast, postChat, approvals, nameOf, visualCard, log: m => console.error('  ' + m),
@@ -935,6 +936,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'seatpilot') return seatpilot.route(req, res, ctx());   // v0.27 company: seat autopilot (server/seatpilot.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)
+  if (a === 'flint' && (b === 'proof' || b === 'blender')) return flintRun.route(req, res, ctx());   // feat/flint-runthrough
   if ((a === 'flint' && (b === 'tiers' || b === 'tier')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)
   if (a === 'buildkit' || (a === 'projects' && c === 'buildkit')) return buildKit.route(req, res, ctx());   // build kit (server/buildkit.js)
   if (a === 'projects' && c === 'studios') return studios.route(req, res, ctx());   // v0.27: Studios (server/studios.js)   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
