@@ -243,6 +243,12 @@ def main():
             # ---- Preview › Website has Design; the designer closes back
             pg.click("[data-wdz='close']")
             assert pg.is_hidden("#wdz")
+            # Esc: deselects first, then closes the designer like the other full panes (also from inside the preview)
+            pg.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}' }})"); pg.wait_for_selector("#wdz:not([hidden]) #wdz-frame")
+            frame(pg).locator("[data-block]").first.click(); pg.wait_for_function("!!TribeSiteDesigner.state().sel", timeout=4000)
+            pg.keyboard.press("Escape"); pg.wait_for_function("!TribeSiteDesigner.state().sel", timeout=4000)
+            assert not pg.is_hidden("#wdz"), "the first Esc only deselects"
+            pg.keyboard.press("Escape"); pg.wait_for_selector("#wdz", state="hidden", timeout=4000)
             pg.evaluate("TribePreview.open()")
             pg.wait_for_selector("#pvw .pvw-design", state="attached", timeout=8000)
 

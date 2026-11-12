@@ -85,7 +85,6 @@ def click_all(page, key, who):
         if not t: continue
         page.wait_for_timeout(300); page.keyboard.press("Escape"); page.wait_for_timeout(120)
         page.evaluate("document.querySelectorAll('.fx-pop,.dc-menu,#note-ed,#lf-pane,#fv,.lf-float,.dc-sheet-wrap,.mk-detail-wrap,.pj-sheet-wrap').forEach(x => x.remove())")
-        page.evaluate("(() => { const D = window.TribeSiteDesigner; if (D && D.state && D.state() && D.state().open) D.close(); })()")   # feat/design-flow: Design's Website tile opens the designer
         if page.evaluate("document.body.dataset.view") != view or page.evaluate("document.body.classList.contains('ws-open')"):
             page.evaluate("window.TribeWorkshop && TribeWorkshop.close && TribeWorkshop.close()"); go(page, key)
     assert not errors, (who, key, errors)

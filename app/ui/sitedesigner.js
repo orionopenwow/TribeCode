@@ -227,6 +227,7 @@
     root.querySelector('#wdz-file').addEventListener('change', onFile);
     root.querySelector('#wdz-import').addEventListener('change', onImport);
     root.addEventListener('input', e => { if (e.target && e.target.id === 'wdz-gq') { gal.q = e.target.value; galPaint(); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root && !root.hidden && !root.contains(e.target) && !e.defaultPrevented && !document.querySelector('.modal-wrap:not(.hidden), dialog[open]')) escape(); });
     root.addEventListener('keydown', e => {
       if (e.key === 'Escape' && !$('#wdz-dlmenu').hidden) { $('#wdz-dlmenu').hidden = true; return; }
       const t = e.target; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
@@ -286,6 +287,7 @@
     const f = $('#wdz-frame'); if (!f || e.source !== f.contentWindow) return;
     if (d.t === 'ready') { frameReady = true; f.contentWindow.postMessage({ y: frameScroll }, '*'); postSel(false); postPins(); return; }
     if (d.t === 'scroll') { frameScroll = d.y; return; }
+    if (d.t === 'esc') return escape();   // Esc pressed inside the preview
     if (d.t === 'page') { st.page = d.id; st.sel = null; frameScroll = 0; paint(); return; }
     if (d.t === 'undo') return undo();
     if (d.t === 'redo') return redo();
@@ -348,11 +350,19 @@
   }
   const KEYS = [['?', 'These shortcuts'], ['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Ctrl D', 'Duplicate the selected block'], ['Delete', 'Remove the selected block'], ['H', 'Hide or show the selected block'], ['Alt ↑ · Alt ↓', 'Move the selected block'], ['C', 'Comment mode'], ['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl S', 'Save a version'], ['Esc', 'Deselect, close']];
   function shortcuts() { const k = $('#wdz-keys'); k.hidden = !k.hidden; k.innerHTML = `<div class="wdz-keys-in"><p class="wdz-eyebrow">Keyboard shortcuts</p><dl>${KEYS.map(([a, b]) => `<dt><kbd>${esc(a)}</kbd></dt><dd>${esc(b)}</dd>`).join('')}</dl><button type="button" class="btn sm" data-wdz="keys">Close</button></div>`; }
+  // Esc peels one layer: a popover, comment mode, the selection, then the designer itself (like the other full panes)
+  function escape() {
+    if (!root || root.hidden) return;
+    for (const id of ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker']) { const x = $(id); if (x && !x.hidden) { x.hidden = true; return; } }
+    if (st && st.cmode) return commentMode(false);
+    if (st && st.sel) { st.sel = null; paint(); return; }
+    close();
+  }
   function keys(e) {
     const t = e.target; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
     const sb = st.sel && pageNow().blocks.find(b => b.id === st.sel.block), mod = e.ctrlKey || e.metaKey;
     if (e.key === '?') { e.preventDefault(); return shortcuts(); }
-    if (e.key === 'Escape') { if (!$('#wdz-keys').hidden) return void ($('#wdz-keys').hidden = true); if (!$('#wdz-peek').hidden) return void ($('#wdz-peek').hidden = true); if (st.cmode) return commentMode(false); st.sel = null; paint(); return; }
+    if (e.key === 'Escape') return escape();
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); return saveVersion(); }
     if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return paint(); }
     if (!mod && e.key.toLowerCase() === 'c') return commentMode(!st.cmode);
