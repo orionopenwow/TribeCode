@@ -1,7 +1,8 @@
 // Company mode (v0.27), client side. Server side: server/company.js (data contract in the company brief).
-//   The Company view: hero = the org chart (CEO on top, the other seats in a grid: color stripe, who holds it, this
-//   month's goal, status, last action), then Today (one standup per seat, a one-tap form for yours), Goals and the
-//   decision log. A seat sheet edits the charter and who holds it. Empty state: "Make this project a company" with
+//   The Company view (v2, feat/company-gigs) is a one-page report: header (name, mission, health in one sentence),
+//   Seats (big cards: avatar, role, holder, what they're on, one action), This week (standup, approvals, decisions),
+//   Money (ledger summary + a small flat chart), Charters & goals, Rituals (next run + Run now) and Activity. Sections
+//   fold on phones. A seat sheet edits the charter and who holds it. Empty state: "Make this project a company" with
 //   template cards; one click makes it. The sidebar row "Company" (or a subtle "Make it a company" for leads), the
 //   dashboard's At a glance tile (projects.js asks tile()), and Flint's "make me a company", "who's in charge of X",
 //   "give X to my claude".
@@ -69,22 +70,82 @@
     return `<span class="co-av ${agent ? 'ag' : ''} ${cls}" style="background:${esc(bg)};color:${ink(agent ? '#38C6B1' : w.color)}" title="${esc(w.name)}">${img}</span>`;
   }
   const holderLine = x => [x.who.person && x.who.person.name, x.who.agent && x.who.agent.name].filter(Boolean).join(' + ');
-  function seatCard(x, ceo) {
-    const empty = !x.who.person && !x.who.agent, mine = (st.d.mySeats || []).includes(x.id);
-    const goal = (co().goals || []).find(g => g.seat === x.id);
-    return `<button class="co-seat ${ceo ? 'ceo' : ''} ${empty ? 'empty' : ''} ${mine ? 'mine' : ''}" data-seat="${esc(x.id)}" style="--sc:${esc(x.color)}" aria-label="${esc(x.title)} seat${empty ? ', open' : ': ' + esc(holderLine(x))}. ${esc(STATUS[x.status] || '')}">
-      <span class="co-seat-top"><span class="co-avs">${empty ? '<span class="co-av open" aria-hidden="true">+</span>' : avatar(x.who.person) + avatar(x.who.agent)}</span>
-        <span class="co-seat-id"><b>${esc(x.title)}</b><small>${empty ? 'Open seat' : esc(holderLine(x))}${mine ? ' · you' : ''}</small></span>
-        <span class="co-pill s-${esc(x.status)}">${esc(STATUS[x.status] || x.status)}</span></span>
-      <span class="co-seat-goal"><i>This month</i>${esc(x.charter.goal || 'No goal yet')}</span>
-      ${goal ? `<span class="co-mini" aria-hidden="true"><i style="width:${goal.progress}%"></i></span>` : ''}
-      <span class="co-seat-last">${x.last ? `${esc(x.last.text)} <span class="faint">· ${ago(x.last.at)}</span>` : empty ? 'Give it to a friend or an AI helper.' : 'No update yet.'}</span>
-      ${empty ? `<div class="co-hire-slot" data-seat="${esc(x.id)}"></div>` : ''}</button>`;
+  // ---------- v2: the company report (feat/company-gigs) ----------
+  // Reads top-down like a one-page report: header (name, mission, health in one sentence) → Seats → This week
+  // (standup, approvals, decisions) → Money (ledger summary + a small flat chart) → Charters & goals → Rituals (next run,
+  // Run now) → Activity. Every section has an icon, a mono eyebrow, a title, an empty state with one action, and on
+  // phones it folds (the header is a toggle). Type: body ≥14px, labels ≥12px.
+  const ICONS = {
+    users: '<path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19"/><circle cx="10" cy="8" r="3.2"/><path d="M20 19v-1.4a3.2 3.2 0 0 0-2.4-3.1M15.5 5.1a3.2 3.2 0 0 1 0 6"/>',
+    calendar: '<rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/>',
+    coins: '<circle cx="9" cy="9" r="5"/><path d="M14.5 10.2a5 5 0 1 1-4.3 8.3"/><path d="M9 7v4"/>',
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2"/>',
+    repeat: '<path d="M4 11V9a3 3 0 0 1 3-3h12l-3-3M20 13v2a3 3 0 0 1-3 3H5l3 3"/>',
+    activity: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+    chev: '<path d="m6 9 6 6 6-6"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+    play: '<path d="M8 5.5v13l10-6.5z"/>',
+  };
+  const icon = (n, s = 18) => (window.TribeIcons && window.TribeIcons.svg && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, s)
+    : `<svg class="co-ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`);
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const when = iso => { if (!iso) return ''; const d = new Date(iso), t = new Date(); const tm = new Date(t); tm.setDate(t.getDate() + 1);
+    const hm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return d.toDateString() === t.toDateString() ? `Today ${hm}` : d.toDateString() === tm.toDateString() ? `Tomorrow ${hm}` : `${d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} ${hm}`; };
+  function sec(key, ico, eyebrow, title, body, extra = '') {
+    const folded = !!ui.fold[key];
+    return `<section class="co-sec${folded ? ' folded' : ''}" data-sec="${key}" aria-labelledby="co-h-${key}">
+      <header class="co-sec-h"><button class="co-sec-t" type="button" data-fold="${key}" aria-expanded="${!folded}" aria-controls="co-b-${key}"><span class="co-sec-ic">${icon(ico)}</span>
+        <span class="co-sec-tt"><span class="eyebrow">${esc(eyebrow)}</span><h2 id="co-h-${key}">${title}</h2></span><span class="co-fold-i">${icon('chev', 16)}</span></button>${extra ? `<div class="co-sec-x">${extra}</div>` : ''}</header>
+      <div class="co-sec-b" id="co-b-${key}">${body}</div></section>`;
+  }
+  const empty = (text, act) => `<div class="co-none"><p>${text}</p>${act || ''}</div>`;
+
+  function seatAction(x, d) {
+    const emptySeat = !x.who.person && !x.who.agent, mine = (d.mySeats || []).includes(x.id);
+    const posted = ((d.today || {}).standups || {})[x.id];
+    if (emptySeat) return d.canLead ? ['hire', 'Hire someone'] : ['open', 'See charter'];
+    if (mine && !posted) return ['standup', 'Post standup'];
+    if (mine) return ['open', 'Edit seat'];
+    if (x.who.person) return ['profile', 'View profile'];
+    return ['open', 'See charter'];
+  }
+  function seatCard(x, ceo, d = st.d) {
+    const emptySeat = !x.who.person && !x.who.agent, mine = (d.mySeats || []).includes(x.id);
+    const goal = (co() || d.company).goals.find(g => g.seat === x.id);
+    const s = ((d.today || {}).standups || {})[x.id];
+    const now = s ? (s.next || s.done) : x.last ? x.last.text : '';
+    const [act, label] = seatAction(x, d);
+    const big = w => w ? avatar(w, 'lg') : '';
+    return `<article class="co-seat ${ceo ? 'ceo' : ''} ${emptySeat ? 'empty' : ''} ${mine ? 'mine' : ''}" data-seat="${esc(x.id)}" style="--sc:${esc(x.color)}" tabindex="0" role="button" aria-label="${esc(x.title)} seat${emptySeat ? ', open' : ': ' + esc(holderLine(x))}. ${esc(STATUS[x.status] || '')}">
+      <div class="co-seat-top"><span class="co-avs">${emptySeat ? '<span class="co-av lg open" aria-hidden="true">+</span>' : big(x.who.person) + big(x.who.agent)}</span>
+        <span class="co-seat-id"><span class="co-role">${esc(x.title)}</span><b>${emptySeat ? 'Open seat' : esc(holderLine(x))}${mine ? ' <small>you</small>' : ''}</b>
+          <small class="co-kindl">${emptySeat ? 'A friend or an AI helper can hold it' : x.who.person && x.who.agent ? 'Person + AI helper' : x.who.agent ? 'AI helper' : 'Person'}</small></span>
+        <span class="co-pill s-${esc(x.status)}">${esc(STATUS[x.status] || x.status)}</span></div>
+      ${emptySeat ? '' : `<div class="co-now"><span class="co-lbl">On now</span><p>${now ? esc(now) : '<span class="faint">No update yet today.</span>'}</p></div>`}
+      ${goal ? `<div class="co-seat-goal"><span class="co-lbl">${esc(goal.title)}</span><span class="co-bar sm" role="progressbar" aria-label="${esc(goal.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${goal.progress}"><i style="width:${goal.progress}%"></i></span><span class="co-pct">${goal.progress}%</span></div>` : ''}
+      <div class="co-seat-f"><span class="faint">${x.last ? esc(ago(x.last.at)) : ''}</span><button class="btn sm ${act === 'hire' || act === 'standup' ? 'primary' : ''}" type="button" data-seat-act="${act}" data-sid="${esc(x.id)}">${esc(label)}</button></div></article>`;
   }
 
   // A live update never wipes what someone is typing: the redraw waits until the field loses focus. Open <details> stay open.
-  const ui = { dec: false, week: false, pending: false, sample: false };
+  const ui = { dec: false, week: false, pending: false, sample: false, fold: {} };
   function busyTyping(sec) { const a = document.activeElement; return !!(a && sec.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && (a.value || a.tagName === 'SELECT')); }
+  function report(c, d, sample) {
+    const lead = d.canLead && !sample, ceo = c.seats.find(x => x.kind === 'ceo'), rest = c.seats.filter(x => x !== ceo);
+    const h = d.health || { tone: 'good', text: '' };
+    const openSeats = c.seats.filter(x => !x.who.person && !x.who.agent).length;
+    const seatsX = lead ? `${d.myAgent && openSeats ? `<button class="btn sm" id="co-fill">Fill ${plural(openSeats, 'open seat')} with ${esc(d.myAgent.name)}</button>` : ''}${c.seats.length < 16 ? '<button class="btn sm" id="co-add">Add a seat</button>' : ''}` : '';
+    return `<header class="co-head"><div class="co-h-t"><span class="eyebrow">Company report</span><h1>${esc(c.name)}</h1>
+        ${c.mission ? `<p class="co-mission">${esc(c.mission)}</p>` : lead ? '<button class="linkish co-mission-add" id="co-edit-co">Add a one-line mission</button>' : ''}
+        ${h.text ? `<p class="co-health t-${esc(h.tone)}" id="co-health"><span class="co-hdot" aria-hidden="true"></span>${esc(h.text)}</p>` : ''}</div>
+        ${lead ? `<button class="btn" id="co-settings" aria-label="Company settings">${icon('gear', 16)}Settings</button>` : ''}</header>
+      ${sec('seats', 'users', 'Seats', `Who does what <span class="co-n">${c.seats.length}</span>`, `<div class="co-seats">${ceo ? seatCard(ceo, true, d) : ''}${rest.map(x => seatCard(x, false, d)).join('')}</div>`, seatsX)}
+      ${sec('week', 'calendar', 'This week', 'Standup, approvals, decisions', `<div class="co-week-g">${todayCard(c, d)}${approvalsCard(c, d)}${decisionsCard(c, d, sample)}</div>`)}
+      ${sec('money', 'coins', 'Money', 'This month’s books', `<div id="co-money" class="co-money">${sample ? moneyHtml(SAMPLE_MONEY()) : '<p class="faint">Loading the ledger…</p>'}</div>`, `<button class="btn sm" id="co-money-open">Open Money</button>`)}
+      ${sec('goals', 'target', 'Charters & goals', 'This month’s goals', goalsCard(c, d))}
+      ${sec('rituals', 'repeat', 'Rituals', 'Next check-ins', ritualsCard(c, d, sample) + '<div id="co-autopilot-slot" data-project="' + esc(st.pid) + '"></div>')}
+      ${sec('activity', 'activity', 'Activity', 'What happened lately', activityCard(c, d))}`;
+  }
   function draw() {
     const sec = section(); if (!sec || !open) return;
     if (busyTyping(sec)) { if (!ui.pending) { ui.pending = true; document.activeElement.addEventListener('blur', () => setTimeout(() => { ui.pending = false; draw(); }, 150), { once: true }); } return; }
@@ -92,86 +153,135 @@
     if (!st.d || st.pid !== pid()) { sec.innerHTML = `<div class="co-wrap"><p class="faint">Loading…</p></div>`; return; }
     const c = co(); if (!c) return ui.sample ? drawSample(sec) : drawEmpty(sec);
     ui.sample = false;
-    const d = st.d, lead = d.canLead, ceo = c.seats.find(x => x.kind === 'ceo'), rest = c.seats.filter(x => x !== ceo);
-    sec.innerHTML = `<div class="co-wrap">
-      <header class="co-head"><div class="co-h-t"><span class="eyebrow">🏢 Company</span><h1>${esc(c.name)}</h1>
-        ${c.mission ? `<p class="co-mission">${esc(c.mission)}</p>` : lead ? '<button class="linkish co-mission-add" id="co-edit-co">Add a one-line mission</button>' : ''}</div>
-        ${lead ? '<button class="btn" id="co-settings" aria-label="Company settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gear"/></svg>Settings</button>' : ''}</header>
-      <section class="card co-org" aria-label="Org chart">
-        <div class="co-org-h"><span class="eyebrow">Org chart</span><span class="faint">${c.seats.length} seats · tap one to see its charter</span></div>
-        ${ceo ? `<div class="co-ceo-row">${seatCard(ceo, true)}</div><div class="co-stem" aria-hidden="true"></div>` : ''}
-        <div class="co-grid">${rest.map(x => seatCard(x)).join('')}${lead && c.seats.length < 16 ? '<button class="co-add" id="co-add"><span aria-hidden="true">+</span>Add a seat</button>' : ''}</div>
-        ${lead && d.myAgent && c.seats.some(x => !x.who.person && !x.who.agent) ? `<div class="co-fill"><span>Some seats are open.</span><button class="btn sm" id="co-fill">Fill them with ${esc(d.myAgent.name)}</button></div>` : ''}
-      </section>
-      <div class="co-cols">${todayCard(c, d)}${goalsCard(c, d)}</div>
-      ${decisionsCard(c, d)}
-      <div id="co-ledger-slot" data-project="${esc(st.pid)}"></div>
-      <div id="co-autopilot-slot" data-project="${esc(st.pid)}"></div>
-    </div>`;
+    if (phone() && !ui.foldInit) { ui.foldInit = true; ui.fold = { rituals: true, activity: true }; }
+    const d = st.d;
+    sec.innerHTML = `<div class="co-wrap co-v2">${report(c, d, false)}</div>`;
     wire(sec, c, d);
-    const dec = $('#co-dec'), wk = sec.querySelector('.co-week');
+    const dec = $('#co-dec');
     if (dec) { dec.open = ui.dec; dec.addEventListener('toggle', () => { ui.dec = dec.open; }); }
-    if (wk) { wk.open = ui.week; wk.addEventListener('toggle', () => { ui.week = wk.open; }); }
+    money($('#co-money'), st.pid);
     try { window.dispatchEvent(new CustomEvent('tribe:company-view', { detail: { project: st.pid, company: c } })); } catch {}
   }
 
   function todayCard(c, d) {
     const t = d.today || { standups: {}, missing: [] }, held = c.seats.filter(x => x.who.person || x.who.agent);
     const mine = c.seats.filter(x => (d.mySeats || []).includes(x.id) && !t.standups[x.id]);
+    const posted = held.filter(x => t.standups[x.id]).length, blocked = held.filter(x => t.standups[x.id] && t.standups[x.id].blocked).length;
     const form = mine.length ? `<form class="co-su" id="co-su"><div class="co-su-h"><b>Your standup</b>${mine.length > 1 ? `<select class="input sm" id="co-su-seat" aria-label="Seat">${mine.map(x => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join('')}</select>` : `<span class="co-chip" style="--sc:${esc(mine[0].color)}">${esc(mine[0].title)}</span>`}</div>
       <input class="input" id="co-su-done" maxlength="600" placeholder="Done: what got done" aria-label="What got done">
       <input class="input" id="co-su-next" maxlength="600" placeholder="Next: what you'll do" aria-label="What's next">
       <div class="co-su-f"><input class="input" id="co-su-blocked" maxlength="600" placeholder="Blocked? (optional)" aria-label="Anything blocking"><button class="btn primary" type="submit">Post</button></div></form>` : '';
-    const rows = held.map(x => { const s = t.standups[x.id];
-      return `<div class="co-su-row" style="--sc:${esc(x.color)}"><span class="co-dot" aria-hidden="true"></span><div class="co-su-t"><b>${esc(x.title)}</b>${s ? `<p>${s.done ? `<span>Done</span> ${esc(s.done)}` : ''}${s.next ? `${s.done ? '<br>' : ''}<span>Next</span> ${esc(s.next)}` : ''}${s.blocked ? `<br><span class="bl">Blocked</span> ${esc(s.blocked)}` : ''}</p><small class="faint">${esc(s.byName || '')} · ${ago(s.at)}</small>` : '<p class="faint">No standup yet today.</p>'}</div></div>`; }).join('');
-    return `<section class="card co-today" aria-label="Today"><div class="co-c-h"><span class="eyebrow">Today · standup</span><h3>What every seat is doing</h3></div>
-      ${form}${rows || '<p class="faint">Give a seat to someone and their standup shows here.</p>'}
+    const rows = held.filter(x => t.standups[x.id]).map(x => { const s = t.standups[x.id];
+      return `<div class="co-su-row" style="--sc:${esc(x.color)}"><span class="co-dot" aria-hidden="true"></span><div class="co-su-t"><b>${esc(x.title)}</b><p>${s.done ? `<span>Done</span> ${esc(s.done)}` : ''}${s.next ? `${s.done ? '<br>' : ''}<span>Next</span> ${esc(s.next)}` : ''}${s.blocked ? `<br><span class="bl">Blocked</span> ${esc(s.blocked)}` : ''}</p><small class="faint">${esc(s.byName || '')} · ${ago(s.at)}</small></div></div>`; }).join('');
+    const sum = held.length ? `${posted} of ${held.length} seats posted today${blocked ? ` · ${blocked} blocked` : ''}` : 'No seat is held yet';
+    return `<section class="card co-today" aria-label="Today's standup"><div class="co-c-h"><span class="co-lbl">Standup</span><h3>${esc(sum)}</h3></div>
+      ${form}${rows || (form ? '' : empty(held.length ? 'Nobody has posted today.' : 'Give a seat to someone and their standup shows here.', held.length && d.canLead ? '<button class="btn sm" data-run="standup">Ask everyone now</button>' : ''))}
       ${t.weekly ? `<details class="co-week"><summary>Last weekly review · ${ago(t.weekly.at)}</summary><pre>${esc(t.weekly.text)}</pre></details>` : ''}</section>`;
+  }
+  function approvalsCard(c, d) {
+    const list = d.approvals || [];
+    return `<section class="card co-appr" aria-label="Open approvals"><div class="co-c-h"><span class="co-lbl">Approvals</span><h3>${list.length ? `${plural(d.waiting || list.length, 'approval')} waiting` : 'Nothing waiting'}</h3></div>
+      ${list.length ? `<ul class="co-list">${list.map(a => `<li><span class="co-risk r-${esc(a.risk)}">${esc(a.risk || 'low')}</span><div><b>${esc(a.title)}</b><small class="faint">${esc(a.byName || '')}${a.at ? ` · ${ago(a.at)}` : ''}</small></div></li>`).join('')}</ul><button class="btn sm primary" id="co-appr-open">Review in inbox</button>`
+        : empty('Anything outward or costly a seat wants to do waits here for a person’s OK.', '<button class="btn sm" id="co-appr-open">Open inbox</button>')}</section>`;
+  }
+  function decisionsCard(c, d) {
+    const list = d.decisions || [], ceo = c.seats.find(x => x.kind === 'ceo'), canCall = d.canLead || (ceo && (d.mySeats || []).includes(ceo.id));
+    const needs = c.seats.filter(x => x.status === 'needs-you' || x.status === 'blocked');
+    return `<section class="card co-decs" aria-label="Decisions"><div class="co-c-h"><span class="co-lbl">Decisions</span><h3>${needs.length ? `${plural(needs.length, 'seat')} need${needs.length === 1 ? 's' : ''} a call` : 'No calls needed'}</h3></div>
+      ${needs.length ? `<ul class="co-list">${needs.map(x => `<li><span class="co-dot" style="--sc:${esc(x.color)}"></span><div><b>${esc(x.title)}</b><small class="faint">${esc(x.status === 'blocked' ? 'Blocked' : 'Needs you')}${x.last ? ` · ${esc(x.last.text)}` : ''}</small></div></li>`).join('')}</ul>` : ''}
+      <details class="co-dec" id="co-dec"><summary><span>Decision log</span><span class="co-dec-n">${list.length ? `${list.length} logged` : 'None yet'}</span></summary>
+      ${canCall ? `<form class="co-call" id="co-call"><input class="input" id="co-call-t" maxlength="160" placeholder="Make a CEO call: what's decided?" aria-label="CEO call"><input class="input" id="co-call-w" maxlength="600" placeholder="Why (one line)" aria-label="Why"><button class="btn sm primary" type="submit">Log it</button></form>` : ''}
+      <div class="co-dec-list">${list.map(x => `<div class="co-dec-row"><span class="co-kind k-${esc(x.kind)}">${esc(KIND_L[x.kind] || x.kind)}</span><div><b>${esc(x.title)}</b>${x.why ? `<p>${esc(x.why)}</p>` : ''}<small class="faint">${esc(x.byName || 'TribeCode')} · ${ago(x.at)}</small></div></div>`).join('') || '<p class="faint">CEO calls, closed votes and decided approvals land here.</p>'}</div></details></section>`;
   }
   function goalsCard(c, d) {
     const can = g => d.canLead || (g.seat && (d.mySeats || []).includes(g.seat));
     const seatOf = id => c.seats.find(x => x.id === id);
-    return `<section class="card co-goals" aria-label="Goals"><div class="co-c-h"><span class="eyebrow">Goals</span><h3>This month's goals</h3></div>
-      ${c.goals.length ? c.goals.map(g => { const s = seatOf(g.seat); return `<div class="co-goal" data-goal="${esc(g.id)}"><div class="co-goal-h"><b>${esc(g.title)}</b>${s ? `<span class="co-chip" style="--sc:${esc(s.color)}">${esc(s.title)}</span>` : ''}<span class="co-pct">${g.progress}%</span></div>
+    const charters = c.seats.filter(x => x.charter && x.charter.goal && !c.goals.some(g => g.seat === x.id));
+    return `<div class="co-goals" aria-label="Goals">
+      ${c.goals.length ? `<div class="co-goal-g">${c.goals.map(g => { const s = seatOf(g.seat); return `<div class="co-goal card" data-goal="${esc(g.id)}"><div class="co-goal-h"><b>${esc(g.title)}</b><span class="co-pct">${g.progress}%</span></div>
         <span class="co-bar" role="progressbar" aria-label="${esc(g.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${g.progress}"><i style="width:${g.progress}%"></i></span>
+        ${s ? `<span class="co-chip" style="--sc:${esc(s.color)}">${esc(s.title)}</span>` : ''}
         ${g.results.map((r, i) => `<div class="co-kr"><span>${esc(r.text)}</span><span class="co-kr-n">${r.current} / ${r.target}${r.unit ? ' ' + esc(r.unit) : ''}</span>${can(g) ? `<button class="co-inc" data-inc="${esc(g.id)}:${i}" aria-label="Add one to ${esc(r.text)}">+1</button>` : ''}</div>`).join('')}
-        ${d.canLead ? `<button class="linkish co-goal-del" data-gdel="${esc(g.id)}">Remove</button>` : ''}</div>`; }).join('') : '<p class="faint">No goals yet.</p>'}
-      ${d.canLead && c.goals.length < 12 ? `<form class="co-goal-add" id="co-goal-add"><input class="input" id="co-g-title" maxlength="160" placeholder="New goal, e.g. 25 sign-ups" aria-label="New goal"><input class="input co-g-n" id="co-g-target" type="number" min="1" placeholder="Target" aria-label="Target number"><button class="btn sm" type="submit">Add</button></form>` : ''}</section>`;
+        ${d.canLead ? `<button class="linkish co-goal-del" data-gdel="${esc(g.id)}">Remove</button>` : ''}</div>`; }).join('')}</div>` : empty('No goals yet. One measurable goal for the month keeps every seat pointed the same way.', d.canLead ? '<button class="btn sm primary" id="co-goal-focus">Add a goal</button>' : '')}
+      ${d.canLead && c.goals.length < 12 ? `<form class="co-goal-add" id="co-goal-add"><input class="input" id="co-g-title" maxlength="160" placeholder="New goal, e.g. 25 sign-ups" aria-label="New goal"><input class="input co-g-n" id="co-g-target" type="number" min="1" placeholder="Target" aria-label="Target number"><button class="btn sm" type="submit">Add</button></form>` : ''}
+      ${charters.length ? `<div class="co-charters"><span class="co-lbl">Seat charters</span><ul class="co-list">${charters.map(x => `<li><span class="co-dot" style="--sc:${esc(x.color)}"></span><div><b>${esc(x.title)}</b><small>${esc(x.charter.goal)}</small></div></li>`).join('')}</ul></div>` : ''}</div>`;
   }
-  function decisionsCard(c, d) {
-    const list = d.decisions || [], ceo = c.seats.find(x => x.kind === 'ceo'), canCall = d.canLead || (ceo && (d.mySeats || []).includes(ceo.id));
-    return `<details class="card co-dec" id="co-dec"${list.length && !phone() ? '' : ''}><summary><span class="eyebrow">Decisions</span><span class="co-dec-n">${list.length ? `${list.length} logged${d.waiting ? ` · ${d.waiting} waiting` : ''}` : 'None yet'}</span></summary>
-      ${canCall ? `<form class="co-call" id="co-call"><input class="input" id="co-call-t" maxlength="160" placeholder="Make a CEO call: what's decided?" aria-label="CEO call"><input class="input" id="co-call-w" maxlength="600" placeholder="Why (one line)" aria-label="Why"><button class="btn sm primary" type="submit">Log it</button></form>` : ''}
-      <div class="co-dec-list">${list.map(x => `<div class="co-dec-row"><span class="co-kind k-${esc(x.kind)}">${esc(KIND_L[x.kind] || x.kind)}</span><div><b>${esc(x.title)}</b>${x.why ? `<p>${esc(x.why)}</p>` : ''}<small class="faint">${esc(x.byName || 'TribeCode')} · ${ago(x.at)}</small></div></div>`).join('') || '<p class="faint">CEO calls, closed votes and decided approvals land here.</p>'}</div></details>`;
+  function ritualsCard(c, d, sample) {
+    const r = d.rituals || {}, lead = d.canLead && !sample;
+    const ROWS = [['standup', 'Daily standup', 'Each seat says what got done'], ['weekly', 'Weekly review', 'Goals, decisions waiting, spend'], ['board', 'Board update', 'A one-page summary doc']];
+    return `<ul class="co-rits">${ROWS.map(([k, t, sub]) => { const x = r[k] || {}, on = x.on !== false && c.rhythms[k] !== false;
+      return `<li class="co-rit${on ? '' : ' off'}" data-rit="${k}"><div><b>${t}</b><small>${esc(sub)}</small></div><span class="co-rit-n">${on ? (x.next ? `Next: ${esc(when(x.next))}` : 'On') : 'Off'}</span>${lead ? `<button class="btn sm" data-run="${k}">Run now</button>` : ''}</li>`; }).join('')}</ul>
+      ${lead ? '' : '<p class="faint co-note">The host or a project lead runs these.</p>'}`;
+  }
+  function activityCard(c, d) {
+    const items = [];
+    for (const x of c.seats) if (x.last && x.last.at) items.push({ at: x.last.at, color: x.color, who: x.title, text: x.last.text });
+    for (const x of d.decisions || []) items.push({ at: x.at, color: 'var(--brand)', who: KIND_L[x.kind] || 'Decision', text: x.title });
+    if (d.today && d.today.weekly) items.push({ at: d.today.weekly.at, color: 'var(--peer)', who: 'Weekly review', text: 'Sent to the team' });
+    const seen = new Set(), list = items.filter(i => i.at && !seen.has(i.who + i.text) && seen.add(i.who + i.text)).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 8);
+    return list.length ? `<ol class="co-act">${list.map(i => `<li style="--sc:${esc(i.color)}"><span class="co-dot" aria-hidden="true"></span><div><b>${esc(i.who)}</b> <span>${esc(i.text)}</span></div><time class="faint">${esc(ago(i.at))}</time></li>`).join('')}</ol>`
+      : empty('Standups, seat updates and decisions show up here as they happen.', '<button class="btn sm" data-seat-act="standup-any">Post the first standup</button>');
   }
 
-  // Empty state (feat/tasks-company): an infographic band in the website's company-mock style. Six flat tiles show
-  // what a company adds (seats, charters, money, the standup, the Work loop, approvals), one "Make it a company"
-  // button, "See an example" (a read-only sample company in the real view) and the templates below for leads.
+  // ---------- Money: a clear ledger summary + a small flat chart (revenue vs costs, last 6 months) ----------
+  const fmt = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(Number(n) || 0); } catch { return `${Math.round(Number(n) || 0)} ${cur || ''}`; } };
+  const monthsBack = k => { const out = [], d = new Date(); d.setDate(1); for (let i = k - 1; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); out.push(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`); } return out; };
+  const SAMPLE_MONEY = () => { const m = monthsBack(6), rv = [0, 40, 95, 160, 240, 412], cs = [30, 45, 60, 70, 90, 118];
+    return { currency: 'USD', sample: true, months: m.map((k, i) => ({ month: k, revenue: rv[i], costs: cs[i], entries: 3 })), users: 41, runway: null }; };
+  async function money(el, p) {
+    if (!el) return;
+    let m;
+    try {
+      const ms = monthsBack(6), sums = await Promise.all(ms.map(k => C.api(`/projects/${encodeURIComponent(p)}/ledger/summary?month=${k}`, { project: p }).catch(() => null)));
+      const last = sums[sums.length - 1] || {};
+      m = { currency: last.currency || 'USD', months: ms.map((k, i) => { const s = sums[i] || {}; return { month: k, revenue: (s.revenue || {}).total || 0, costs: (s.costs || {}).total || 0, entries: s.entries || 0 }; }),
+        users: last.users && last.users.count ? last.users.total : null, runway: last.runway && last.runway.months != null ? last.runway.months : null, sources: [...((last.revenue || {}).sources || []), ...((last.costs || {}).sources || [])] };
+    } catch { m = null; }
+    if (!el.isConnected) return;
+    el.innerHTML = m ? moneyHtml(m) : empty('Money isn’t available for your role here.');
+    const add = el.querySelector('#co-money-add'); if (add) add.onclick = openMoney;
+  }
+  function moneyHtml(m) {
+    const cur = m.currency, now = m.months[m.months.length - 1], any = m.months.some(x => x.entries || x.revenue || x.costs);
+    if (!any) return empty('Nothing recorded yet. Type in a number or import a Stripe CSV; every figure keeps its source.', '<button class="btn sm primary" id="co-money-add">Add the first number</button>');
+    const net = now.revenue - now.costs, max = Math.max(1, ...m.months.map(x => Math.max(x.revenue, x.costs)));
+    const H = 96, mon = k => new Date(k + '-15').toLocaleDateString([], { month: 'short' });
+    const bars = m.months.map(x => `<div class="co-ch-col" tabindex="0" aria-label="${esc(mon(x.month))}: revenue ${esc(fmt(x.revenue, cur))}, costs ${esc(fmt(x.costs, cur))}">
+        <div class="co-ch-pair"><i class="in" style="height:${Math.round(x.revenue / max * H)}px"></i><i class="out" style="height:${Math.round(x.costs / max * H)}px"></i></div><span>${esc(mon(x.month))}</span>
+        <span class="co-tip" role="tooltip"><b>${esc(mon(x.month))}</b>Revenue ${esc(fmt(x.revenue, cur))}<br>Costs ${esc(fmt(x.costs, cur))}</span></div>`).join('');
+    return `<div class="co-m-grid"><dl class="co-m-nums">
+        <div><dt>Revenue</dt><dd>${esc(fmt(now.revenue, cur))}</dd></div><div><dt>Costs</dt><dd>${esc(fmt(now.costs, cur))}</dd></div>
+        <div><dt>Net</dt><dd class="${net >= 0 ? 'pos' : 'neg'}">${net < 0 ? '−' : ''}${esc(fmt(Math.abs(net), cur))}</dd></div>
+        ${m.users != null ? `<div><dt>Users</dt><dd>${esc(m.users)}</dd></div>` : m.runway != null ? `<div><dt>Runway</dt><dd>${esc(m.runway)} mo</dd></div>` : ''}</dl>
+      <figure class="co-chart" aria-label="Revenue and costs, last 6 months"><div class="co-ch-legend"><span><i class="in"></i>Revenue</span><span><i class="out"></i>Costs</span></div>
+        <div class="co-ch-plot">${bars}</div><figcaption class="faint">${m.sample ? 'Example numbers' : 'Only numbers with a source: typed in or from a connected tool.'}</figcaption></figure></div>`;
+  }
+  const openMoney = () => (window.TribeShell && window.TribeShell.go ? window.TribeShell.go('money') : window.TribeLedger && window.TribeLedger.open());
+
+  // Empty state: four big tiles (seats, money, rituals, approvals), few words, one clear CTA ("Make it a company"),
+  // "See an example" (a read-only sample company in the real view) and the templates below for leads.
   const TILE = (k, color, title, line, art) => `<li class="co-ig-tile" data-ig="${k}" style="--ic:${color}"><div class="co-ig-art" aria-hidden="true">${art}</div><h3>${title}</h3><p>${line}</p></li>`;
-  function infographic(lead) {
+  function infographic() {
     const av = (c, t, ai) => `<i class="co-ig-av${ai ? ' ai' : ''}" style="--a:${c}">${t}</i>`;
     return `<ul class="co-ig-grid" role="list">
-      ${TILE('seats', 'var(--brand)', 'Seats', 'CEO, Build, Grow and Run. A friend or an AI helper holds each one.', `<div class="co-ig-org">
+      ${TILE('seats', 'var(--brand)', 'Seats', 'A friend or an AI helper holds each job.', `<div class="co-ig-org">
         <span class="co-ig-seat" style="--c:var(--brand)">${av('var(--brand)', 'C')}<b>CEO</b><small>you</small></span><span class="co-ig-stem"></span>
-        <span class="co-ig-row"><span class="co-ig-seat" style="--c:var(--live)">${av('var(--live)', '✦', 1)}<b>Build</b><small>AI</small></span><span class="co-ig-seat" style="--c:var(--amber)">${av('var(--peer)', 'M')}<b>Grow</b><small>friend</small></span><span class="co-ig-seat" style="--c:var(--body)">${av('var(--body)', '+')}<b>Run</b><small>open</small></span></span></div>`)}
-      ${TILE('charter', 'var(--live)', 'Charters', 'Every seat gets a goal, what it may do alone, and what needs an OK.', `<ul class="co-ig-charter mono"><li><span>goal</span>100 sign-ups</li><li><span>may</span>draft posts</li><li><span>ask first</span>publish · spend</li></ul>`)}
-      ${TILE('money', 'var(--amber)', 'Money', 'Sign-ups, income and costs, each with its source. Nothing made up.', `<div class="co-ig-money"><b class="mono">$412</b><span class="co-ig-bars"><i style="--h:30%"></i><i style="--h:48%"></i><i style="--h:40%"></i><i style="--h:64%"></i><i style="--h:78%"></i><i style="--h:92%"></i></span><em class="mono">from Stripe CSV</em></div>`)}
-      ${TILE('standup', 'var(--peer)', 'Rituals', 'A daily standup asks each seat in chat and writes the doc.', `<ol class="co-ig-feed"><li><b style="--c:var(--live)">Build</b>Shipped the save fix</li><li><b style="--c:var(--amber)">Grow</b>Launch email drafted</li><li><b style="--c:var(--brand)">CEO</b>Launch on Friday</li></ol>`)}
-      ${TILE('work', 'var(--online)', 'Work loop', 'Post a need, match people or AI, assign, review, credit the hours.', `<ol class="co-ig-loop mono"><li>post</li><li>match</li><li>assign</li><li>review</li><li>credit</li></ol>`)}
-      ${TILE('approve', 'var(--alert)', 'Approvals', 'Anything outward or costly waits for a person’s one-tap OK.', `<div class="co-ig-ask"><p>${av('var(--peer)', 'M')}<span><b>Grow</b> wants to email 120 people</span></p><p class="co-ig-btns"><span class="ok">Approve</span><span>Deny</span></p></div>`)}
+        <span class="co-ig-row"><span class="co-ig-seat" style="--c:var(--live)">${av('var(--live)', '✦', 1)}<b>Build</b></span><span class="co-ig-seat" style="--c:var(--amber)">${av('var(--peer)', 'M')}<b>Grow</b></span></span></div>`)}
+      ${TILE('money', 'var(--amber)', 'Money', 'Real numbers, each with its source.', `<div class="co-ig-money"><b class="mono">$412</b><span class="co-ig-bars"><i style="--h:30%"></i><i style="--h:48%"></i><i style="--h:40%"></i><i style="--h:64%"></i><i style="--h:92%"></i></span></div>`)}
+      ${TILE('standup', 'var(--peer)', 'Rituals', 'A daily standup writes itself.', `<ol class="co-ig-feed"><li><b style="--c:var(--live)">Build</b>Shipped the fix</li><li><b style="--c:var(--amber)">Grow</b>Email drafted</li></ol>`)}
+      ${TILE('approve', 'var(--alert)', 'Approvals', 'People OK anything costly.', `<div class="co-ig-ask"><p><b>Grow</b>&nbsp;wants to email 120 people</p><p class="co-ig-btns"><span class="ok">Approve</span><span>Deny</span></p></div>`)}
     </ul>`;
   }
   function drawEmpty(sec) {
     const d = st.d, lead = d && d.canLead;
     sec.innerHTML = `<div class="co-wrap"><section class="card co-empty co-hero co-ig" aria-labelledby="co-ig-t">
-      <div class="co-ig-top"><div class="co-ig-intro"><span class="eyebrow">🏢 Company mode</span><h1 id="co-ig-t">Run it like a company</h1>
-        <p class="co-lead">Give the work seats, like a real business. Each seat has a charter and can be held by a friend, an AI helper, or both. People still say yes to anything outward or costly.</p></div>
-        <div class="co-ig-cta">${lead ? '<button class="btn primary" id="co-make">Make it a company</button>' : ''}<button class="btn" id="co-example">See an example</button></div></div>
-      ${infographic(lead)}
+      <div class="co-ig-top"><div class="co-ig-intro"><span class="eyebrow">Company mode</span><h1 id="co-ig-t">Run it like a company</h1>
+        <p class="co-lead">Give the work seats. Friends and AI helpers hold them; people approve anything costly.</p></div>
+        <div class="co-ig-cta">${lead ? '<button class="btn primary lg" id="co-make">Make it a company</button>' : ''}<button class="btn ${lead ? 'ghost' : ''}" id="co-example">See an example</button></div></div>
+      ${infographic()}
       ${lead ? '' : '<p class="faint co-note">Ask your host or a project lead to make this project a company.</p>'}
     </section>
-    ${lead && (d.templates || []).length ? `<section class="card co-tpl-card" aria-label="Templates"><div class="co-c-h"><span class="eyebrow">Or start from a shape</span><h3>Templates</h3></div><div class="co-tpls">${(d.templates || []).map(t => `<button class="co-tpl" data-tpl="${esc(t.id)}"><span class="co-tpl-e" aria-hidden="true">${esc(t.emoji)}</span><b>${esc(t.name)}</b><small>${esc(t.blurb)}</small><span class="co-tpl-s">${esc(t.seats.join(' · '))}</span></button>`).join('')}</div>
+    ${lead && (d.templates || []).length ? `<section class="card co-tpl-card" aria-label="Templates"><div class="co-c-h"><span class="co-lbl">Or start from a shape</span><h3>Templates</h3></div><div class="co-tpls">${(d.templates || []).map(t => `<button class="co-tpl" data-tpl="${esc(t.id)}"><span class="co-tpl-e" aria-hidden="true">${esc(t.emoji)}</span><b>${esc(t.name)}</b><small>${esc(t.blurb)}</small><span class="co-tpl-s">${esc(t.seats.join(' · '))}</span></button>`).join('')}</div>
       <p class="faint co-note">One click makes it. You can rename seats, change charters and add or remove seats after.</p></section>` : ''}</div>`;
     sec.querySelectorAll('[data-tpl]').forEach(b => b.onclick = () => create(b.dataset.tpl, b));
     const mk = sec.querySelector('#co-make'); if (mk) mk.onclick = () => create(guessTpl(), mk);
@@ -194,21 +304,20 @@
         goals: [{ id: 'g1', title: 'Launch on Friday', seat: 's-ceo', progress: 60, results: [{ text: 'Launch checklist', current: 3, target: 5, unit: '' }] },
           { id: 'g2', title: '100 wishlist sign-ups', seat: 's-grow', progress: 41, results: [{ text: 'Sign-ups', current: 41, target: 100, unit: '' }] }] },
       today: { standups: { 's-build': { done: 'Shipped the save-slot fix', next: 'The level 3 boss' }, 's-grow': { done: 'Launch email drafted', next: 'Send it once Camp says OK', blocked: '' }, 's-run': { done: 'Imported October’s Stripe CSV', next: 'Two refunds to handle' } }, missing: [] },
+      health: { tone: 'attention', text: 'Goals are 51% done, 1 approval waiting and 1 seat is open.' }, waiting: 1, approvals: [{ id: 'a1', title: 'Send the launch email to 120 people', risk: 'medium', byName: 'Maya', at: ago_(12) }],
+      rituals: { standup: { on: true, next: new Date(Date.now() + 15 * 3600e3).toISOString() }, weekly: { on: true, next: new Date(Date.now() + 4 * 864e5).toISOString() }, board: { on: true, next: new Date(Date.now() + 18 * 864e5).toISOString() } },
       decisions: [{ kind: 'ceo-call', title: 'Launch on Friday, not next month', why: 'The demo is fun now; polish can follow.', byName: 'Camp', at: ago_(300) }, { kind: 'approval', title: 'Spend $20 on the itch.io banner', byName: 'Camp', at: ago_(1500) }] };
   };
   function drawSample(sec) {
     const real = st; st = { d: SAMPLE(), pid: pid() };
     try {
-      const c = st.d.company, d = st.d, ceo = c.seats[0], rest = c.seats.slice(1);
-      const lead = real.d && real.d.canLead;
-      sec.innerHTML = `<div class="co-wrap co-sample"><div class="co-sample-bar" role="note"><span class="eyebrow">Example · read-only</span><span>This is what a company looks like after a week. Nothing here is real.</span>
+      const c = st.d.company, d = st.d, lead = real.d && real.d.canLead;
+      sec.innerHTML = `<div class="co-wrap co-v2 co-sample"><div class="co-sample-bar" role="note"><span class="co-lbl">Example · read-only</span><span>A company after one week. Nothing here is real.</span>
           <span class="co-sample-acts"><button class="btn sm" id="co-sample-back">Back</button>${lead ? '<button class="btn sm primary" id="co-sample-make">Make it a company</button>' : ''}</span></div>
-        <header class="co-head"><div class="co-h-t"><span class="eyebrow">🏢 Company</span><h1>${esc(c.name)}</h1><p class="co-mission">${esc(c.mission)}</p></div></header>
-        <section class="card co-org" aria-label="Org chart"><div class="co-org-h"><span class="eyebrow">Org chart</span><span class="faint">${c.seats.length} seats</span></div>
-          <div class="co-ceo-row">${seatCard(ceo, true)}</div><div class="co-stem" aria-hidden="true"></div><div class="co-grid">${rest.map(x => seatCard(x)).join('')}</div></section>
-        <div class="co-cols">${todayCard(c, d)}${goalsCard(c, d)}</div>${decisionsCard(c, d)}</div>`;
+        ${report(c, d, true)}</div>`;
     } finally { st = real; }
-    sec.querySelectorAll('.co-sample .co-seat, .co-sample button:not(#co-sample-back):not(#co-sample-make), .co-sample input, .co-sample form').forEach(x => { x.setAttribute('tabindex', '-1'); x.setAttribute('aria-disabled', 'true'); if (x.tagName === 'FORM') x.onsubmit = e => e.preventDefault(); else if (x.tagName === 'BUTTON') x.onclick = e => { e.preventDefault(); toast('This is an example. Make your own company to change things.'); }; });
+    sec.querySelectorAll('[data-fold]').forEach(b => b.onclick = () => { ui.fold[b.dataset.fold] = !ui.fold[b.dataset.fold]; b.closest('.co-sec').classList.toggle('folded', !!ui.fold[b.dataset.fold]); b.setAttribute('aria-expanded', String(!ui.fold[b.dataset.fold])); });
+    sec.querySelectorAll('.co-sample .co-seat, .co-sample button:not(#co-sample-back):not(#co-sample-make):not([data-fold]), .co-sample input, .co-sample form').forEach(x => { x.setAttribute('tabindex', '-1'); x.setAttribute('aria-disabled', 'true'); if (x.tagName === 'FORM') x.onsubmit = e => e.preventDefault(); else x.onclick = e => { e.preventDefault(); e.stopPropagation(); toast('This is an example. Make your own company to change things.'); }; });
     sec.querySelector('#co-sample-back').onclick = () => { ui.sample = false; draw(); };
     const mk = sec.querySelector('#co-sample-make'); if (mk) mk.onclick = () => { ui.sample = false; create(guessTpl(), mk); };
   }
@@ -225,10 +334,28 @@
 
   function wire(sec, c, d) {
     const P = `/projects/${encodeURIComponent(st.pid)}/company`;
-    sec.querySelectorAll('.co-seat[data-seat]').forEach(b => b.onclick = e => { if (e.target.closest('.co-hire-slot') && e.target.closest('.co-hire-slot').children.length) return; openSeat(b.dataset.seat); });
+    sec.querySelectorAll('[data-fold]').forEach(b => b.onclick = () => { if (!phone()) return; ui.fold[b.dataset.fold] = !ui.fold[b.dataset.fold]; b.closest('.co-sec').classList.toggle('folded', !!ui.fold[b.dataset.fold]); b.setAttribute('aria-expanded', String(!ui.fold[b.dataset.fold])); });
+    const focusSu = () => { const f = $('#co-su-done'); if (!f) return toast('You have no seat waiting for a standup today.'); ui.fold.week = false; const s = f.closest('.co-sec'); if (s) s.classList.remove('folded'); f.scrollIntoView({ block: 'center' }); f.focus(); };
+    sec.querySelectorAll('[data-seat-act]').forEach(b => b.onclick = e => {
+      e.stopPropagation(); const a = b.dataset.seatAct, x = c.seats.find(s => s.id === b.dataset.sid);
+      if (a === 'hire') return window.TribeTalent && window.TribeTalent.hireSlot ? window.TribeTalent.hireSlot(null, st.pid, x.id) : openSeat(x.id);
+      if (a === 'standup' || a === 'standup-any') return focusSu();
+      if (a === 'profile' && x.who.person && window.TribeAbilities && window.TribeAbilities.profile) return window.TribeAbilities.profile(x.holder.person || x.who.person.id);
+      openSeat(x.id);
+    });
+    sec.querySelectorAll('.co-seat[data-seat]').forEach(b => { b.onclick = () => openSeat(b.dataset.seat); b.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === b) { e.preventDefault(); openSeat(b.dataset.seat); } }; });
     const add = $('#co-add'); if (add) add.onclick = addSeatSheet;
     const set = $('#co-settings'); if (set) set.onclick = settingsSheet;
     const ec = $('#co-edit-co'); if (ec) ec.onclick = settingsSheet;
+    const mo = $('#co-money-open'); if (mo) mo.onclick = openMoney;
+    const ap = $('#co-appr-open'); if (ap) ap.onclick = () => (window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : toast('Open the bell to answer approvals.'));
+    const gf = $('#co-goal-focus'); if (gf) gf.onclick = () => { const i = $('#co-g-title'); if (i) { i.scrollIntoView({ block: 'center' }); i.focus(); } };
+    sec.querySelectorAll('[data-run]').forEach(b => b.onclick = async () => {
+      b.disabled = true; const was = b.textContent; b.textContent = 'Running…';
+      try { const r = await C.api(`${P}/rhythms/run`, { method: 'POST', body: { kind: b.dataset.run } });
+        toast(r.kind === 'weekly' ? `Weekly review sent to ${plural(r.to, 'person')}` : r.kind === 'board' ? `Board update written: ${r.doc.title}` : `Standup asked: ${plural(r.asked, 'person')}${r.agents ? `, ${plural(r.agents, 'AI helper')}` : ''}`);
+        load(); } catch (e) { toast(e.message); b.disabled = false; b.textContent = was; }
+    });
     const fill = $('#co-fill'); if (fill) fill.onclick = async () => {
       fill.disabled = true;
       try { for (const x of c.seats.filter(s => !s.who.person && !s.who.agent)) await C.api(`${P}/seats/${encodeURIComponent(x.id)}/assign`, { method: 'POST', body: { agent: d.myAgent.id } }); toast(`${d.myAgent.name} holds the open seats`); load(); }

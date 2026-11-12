@@ -54,7 +54,7 @@ def main():
             b = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             pg = page(b, host, "Camp", pid, errors, 1360, 1000)
             tiles = pg.evaluate("[...document.querySelectorAll('#view-company .co-ig-tile')].map(t => t.dataset.ig)")
-            assert tiles == ["seats", "charter", "money", "standup", "work", "approve"], tiles
+            assert tiles == ["seats", "money", "standup", "approve"], tiles   # v2: four big tiles, fewer words
             for t in tiles:   # each tile: a picture, a title and one line
                 tile = pg.locator(f"#view-company .co-ig-tile[data-ig='{t}']")
                 assert tile.locator(".co-ig-art").is_visible() and tile.locator("h3").inner_text().strip() and tile.locator(":scope > p").inner_text().strip()

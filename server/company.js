@@ -364,10 +364,44 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
     if (c) {
       out.today = today(pid, c);
       out.decisions = decisions(pid, 12);
-      out.waiting = (approvals ? approvals.list() : []).filter(a => a.project === pid && a.status === 'pending').length;
+      const pend = (approvals ? approvals.list() : []).filter(a => a.project === pid && a.status === 'pending');
+      out.waiting = pend.length;
+      out.approvals = pend.slice(-5).reverse().map(a => ({ id: a.id, title: a.title, risk: a.risk, by: a.by, byName: nameOf(a.by), at: a.created || a.at || null, mine: Array.isArray(a.to) && a.to.includes(me.id) }));
       out.spend = spendLine(pid, c);
+      out.rituals = nextRituals(c, out.today.runs || {});   // v2 dashboard: the next standup / review / board update
+      out.health = health(c, out, tasks);
     }
     return out;
+  }
+
+  // v2 dashboard: when each rhythm runs next (the sweep's own rules: weekdays 9:00, Mondays 9:00, the 1st at 9:00)
+  function nextRituals(c, runs) {
+    const at9 = d => { const x = new Date(d); x.setHours(9, 0, 0, 0); return x; };
+    const n = new Date(), out = {};
+    const d = at9(n); if (d <= n || runs.standup === day(n)) d.setDate(d.getDate() + 1);
+    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+    out.standup = { on: c.rhythms.standup, next: d.toISOString(), last: runs.standup || null };
+    const w = at9(n); while (w.getDay() !== 1 || w <= n) w.setDate(w.getDate() + 1);
+    out.weekly = { on: c.rhythms.weekly, next: w.toISOString(), last: runs.weekly || null };
+    const m = at9(n); m.setDate(1); if (m <= n) m.setMonth(m.getMonth() + 1);
+    out.board = { on: c.rhythms.board, next: m.toISOString(), last: runs.board || null };
+    return out;
+  }
+  // One plain sentence: how the company is doing, from its own goals, seats and approvals (no AI, nothing invented)
+  function health(c, v, tasks) {
+    const goals = c.goals.map(g => progress(g, tasks)), avg = goals.length ? Math.round(goals.reduce((a, b) => a + b, 0) / goals.length) : null;
+    const stuck = c.seats.filter(x => x.status === 'blocked').length, need = c.seats.filter(x => x.status === 'needs-you').length;
+    const open = c.seats.filter(x => !x.holder.person && !x.holder.agent).length;
+    const tone = stuck ? 'blocked' : need || v.waiting ? 'attention' : open ? 'gaps' : 'good';
+    const bits = [];
+    bits.push(avg == null ? 'No goals set yet' : `Goals are ${avg}% done`);
+    if (stuck) bits.push(`${stuck} seat${stuck === 1 ? ' is' : 's are'} blocked`);
+    if (v.waiting) bits.push(`${v.waiting} approval${v.waiting === 1 ? '' : 's'} waiting`);
+    else if (need) bits.push(`${need} seat${need === 1 ? ' needs' : 's need'} you`);
+    if (open) bits.push(`${open} seat${open === 1 ? ' is' : 's are'} open`);
+    if (bits.length === 1) bits.push(tone === 'good' ? 'every seat is on track' : 'nothing is waiting on you');
+    const text = bits.length > 2 ? `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}.` : `${bits.join(' and ')}.`;
+    return { tone, text, goals: avg, open, blocked: stuck, waiting: v.waiting };
   }
 
   // ---------- edits ----------
