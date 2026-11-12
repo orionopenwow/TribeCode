@@ -248,7 +248,7 @@
   function fill(v, vars) { return typeof v === 'string' ? v.replace(/\{\{(\w+)\}\}/g, (a, k) => (k in vars ? vars[k] : a)) : v; }
   function nodesFrom(tpl, vars) {
     const frame = { id: 'f' + rid(), t: 'frame', p: '', i: Date.now() % 1e9, v: 1, x: 0, y: 0, w: tpl.w, h: tpl.h, fill: fill(tpl.fill, vars), clip: true, name: vars.title };
-    const kids = tpl.nodes.map((n, i) => { const o = { ...n, id: n.id + rid(), p: frame.id, i: i + 1, v: 1 }; delete o.tx2;
+    const kids = tpl.nodes.map((n, i) => { const o = { ...n, id: n.id + rid(), p: frame.id, i: i + 1, v: 1 };
       for (const k of ['fill', 'stroke']) if (o[k]) o[k] = fill(o[k], vars);
       if (o.tx) o.tx = { ...o.tx, c: fill(o.tx.c, vars), col: fill(o.tx.col, vars), sz: undefined }; if (o.t === 'text') o.sz = { h: 'fixed', v: 'hug' };
       return o; });
@@ -260,7 +260,7 @@
     const A = api('design'), r = await A('/canvas', { method: 'POST', body: { name: title } }), fid = (r.file || {}).id;
     if (!fid) throw new Error('Could not make the design file.');
     if (tpl && tpl.nodes) {
-      const sub = ask && nameFrom(ask, '') !== ask ? ask : (kind === 'logo' ? 'Brand kit · colors and type' : 'Add the details here');
+      const sub = ask && nameFrom(ask, '').toLowerCase() !== ask.toLowerCase() ? ask : (kind === 'logo' ? 'Brand kit · colors and type' : 'Add the details here');
       const vars = { title, sub: sub.slice(0, 120), accent: accentFrom(ask), initial: (title.trim()[0] || 'A').toUpperCase() };
       await A(`/canvas/${encodeURIComponent(fid)}/ops`, { method: 'POST', body: { ops: nodesFrom(tpl, vars) } });
     }

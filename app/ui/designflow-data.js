@@ -111,7 +111,7 @@
   ];
   // Canvas templates for posters and logos: plain nodes (server/canvas.js), placed at 0,0. {{title}}, {{sub}}, {{accent}}
   const P = (id, t, x, y, w, h, o) => Object.assign({ id, t, x, y, w, h }, o || {});
-  const TX = (c, s, wt, col, o) => Object.assign({ tx: { c, f: 'Inter', s, wt, lh: 1.15, al: 'left', col } }, o || {});
+  const TX = (c, s, wt, col, o, al) => Object.assign({ tx: { c, f: 'Inter', s, wt, lh: 1.15, al: al || 'left', col } }, o || {});
   const POSTERS = [
     { id: 'event', t: 'Event poster', d: 'Portrait, big title, date and place', w: 600, h: 848, fill: '#12151A', nodes: [
       P('acc', 'rect', 40, 40, 520, 360, { fill: '{{accent}}', r: 0, name: 'Picture block' }),
@@ -143,12 +143,12 @@
       P('nt', 'text', 60, 420, 700, 40, TX('{{sub}}', 18, 400, '#475569', { name: 'Note' })) ] },
     { id: 'monogram', t: 'Monogram', d: 'One letter in a shape', w: 500, h: 500, fill: '#12151A', nodes: [
       P('bg', 'ellipse', 100, 100, 300, 300, { fill: '{{accent}}', name: 'Circle' }),
-      P('ch', 'text', 100, 160, 300, 180, TX('{{initial}}', 160, 800, '#FFFFFF', { name: 'Letter', tx2: 1 })) ] },
+      P('ch', 'text', 100, 160, 300, 180, TX('{{initial}}', 160, 800, '#FFFFFF', { name: 'Letter' }, 'center')) ] },
     { id: 'badge', t: 'Badge', d: 'A round stamp with the name', w: 500, h: 500, fill: '#F8FAFC', nodes: [
       P('ring', 'ellipse', 60, 60, 380, 380, { fill: '#12151A', name: 'Ring' }),
       P('in', 'ellipse', 90, 90, 320, 320, { fill: '{{accent}}', name: 'Inside' }),
-      P('nm', 'text', 110, 200, 280, 100, TX('{{title}}', 40, 800, '#FFFFFF', { name: 'Name' })),
-      P('yr', 'text', 110, 300, 280, 40, TX('EST. 2026', 16, 700, '#12151A', { name: 'Year' })) ] },
+      P('nm', 'text', 110, 200, 280, 100, TX('{{title}}', 40, 800, '#FFFFFF', { name: 'Name' }, 'center')),
+      P('yr', 'text', 110, 300, 280, 40, TX('EST. 2026', 16, 700, '#12151A', { name: 'Year' }, 'center')) ] },
   ];
   // Whiteboard templates: sticky notes (server/whiteboard.js elements). {{q}} is the question from the prompt.
   const st = (id, x, y, text, fill) => ({ id, t: 'sticky', x, y, w: 180, h: 140, text, fill: fill || '#FFB86B', size: 18 });
