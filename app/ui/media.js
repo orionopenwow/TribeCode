@@ -76,7 +76,7 @@
   // ---------- signing ----------
   function url(u) {
     if (!u || !C()) return u;
-    if (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active()) return u;
+    if (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active()) return (window.TribeOffline.mediaUrl && window.TribeOffline.mediaUrl(u)) || u;   // the demo's pictures are object URLs
     let x, base; try { base = new URL(C().base()); x = new URL(u, base); } catch { return u; }
     if (x.origin !== base.origin || !/^\/api\//.test(x.pathname)) return u;
     x.searchParams.delete('token'); x.searchParams.delete('mt');

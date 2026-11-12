@@ -88,6 +88,7 @@
   async function serverOn(force) {
     const b = base(); if (!force && srv.base === b) return srv.on;
     let on = false;
+    if (OFF() && OFF().active && OFF().active() && !(OFF().solo && OFF().solo())) { srv = { base: b, on }; return on; }   // feat/demo-auto: a demo asks no server
     if (b || /^https?:$/.test(location.protocol)) try { const r = await net(b + '/api/accounts/me', { credentials: 'omit' }); on = r.status === 401 || r.ok; } catch {}
     srv = { base: b, on }; return on;
   }
