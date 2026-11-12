@@ -285,7 +285,7 @@
   I('chat.send', 'chat', [
     /^(?:post|send|say|announce|share|write|put)\s+(?:a\s+message\s+)?(?:in|to|on)\s+(?:the\s+)?(?:chat|general|channel|group|team chat)\s*(?:that|saying|:)?\s*(?<msg>.+)$/,
     /^(?:tell|announce to|let|message|ping|remind|notify|update)\s+(?<who>everyone|everybody|the team|team|the tribe|all|the group|the chat|y'?all|the channel)\s+(?:know\s+)?(?:that\s+|about\s+|to\s+|:\s*)?(?<msg>.+)$/,
-    /^(?:post|announce|say)\s*:?\s+(?<msg>.+?)\s+(?:in|to)\s+(?:the\s+)?(?:chat|general|channel)$/, /^announce\s*:?\s+(?<msg>.+)$/, /^(?:tell|ping|notify|let)\s+(?:everyone|everybody|the team|the tribe|y'?all)(?:\s+know)?$/,
+    /^(?:post|announce|say)\s*:?\s+(?<msg>.+?)\s+(?:in|to)\s+(?:the\s+)?(?:chat|general|channel)$/, /^announce\s*:?\s+(?<msg>.+)$/,
   ], { req: { msg: 'What should I post?' }, ex: ['tell everyone the build is up', 'post in the chat: demo at 3', 'announce we ship friday'] });
   I('dm.send', 'chat', [
     /^(?:tell|message|text|dm|ping|notify|let|ask|remind|send|email|write to|msg|update)\s+(?<who>(?:my\s+)?[\p{L}][\p{L}'-]*(?:\s+(?:and|&)\s+[\p{L}][\p{L}'-]*)?)(?:\s+(?:know|a message|a note|a dm))?(?:\s+(?:that|about|to|if|whether|saying|:)\s*|\s*:\s*|\s+)?(?<msg>.*)$/u,

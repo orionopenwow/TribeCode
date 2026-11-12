@@ -13,8 +13,8 @@
   'use strict';
   const C = window.TribeClient;
   const MODE_KEY = 'tribecode.canvas.mode';
-  const START = ['A login screen', 'A pricing section', 'A mobile home for a café', 'A dashboard in dark mode'];
-  const WITH_SEL = ['Dark mode version', 'Make variants', 'Tidy up', 'Rename layers'];
+  const START = ['A login screen', 'A pricing section', 'Add a screen', 'Make the buttons work', 'Make a dark mode'];
+  const WITH_SEL = ['Dark mode version', 'Make a dark mode', 'Wire this to a sign up screen', 'Make variants', 'Tidy up', 'Rename layers'];
   let E = null, pane = null, quick = null, items = [], loadedFor = '', busy = false, notes = [];
   const snaps = new Map();   // Flint message id -> that undo step (this browser only)
   const T = k => (E && E.T ? E.T(k) : k);
@@ -115,7 +115,7 @@
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd' && window.TribeSpeech) { e.preventDefault(); window.TribeSpeech.dictate(inp); }
     });
     pane.addEventListener('click', onClick);
-    if (window.TribeBoost) window.TribeBoost.bind(pane, { onAI: async t => { const agents = ((C.state && C.state().members) || []).some(m => m.role === 'agent'); if (agents && t) { const msg = await window.TribeCanvasFlint.sendToHelpers(t); await post({ role: 'flint', kind: 'note', text: msg }); paintLog(); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // feat/flint-site: the one AI-boost card
+    if (window.TribeBoost) window.TribeBoost.bind(pane, { onAI: async t => { if (t) { const msg = await window.TribeCanvasFlint.sendToHelpers(t); await post({ role: 'flint', kind: 'note', text: msg }); paintLog(); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // feat/flint-site: the one AI-boost card
     window.TribeCanvasFlint && window.TribeCanvasFlint.use({ open, toggle, send: t => { open(); return send(t); } });
     // Ctrl Shift \ switches Simple / Advanced
     addEventListener('keydown', e => {

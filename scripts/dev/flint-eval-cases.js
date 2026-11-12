@@ -144,7 +144,7 @@ add('g', [
   ['open files', 'nav.files'], ['what can you do', 'tiers'], ['publish it', 'publish'], ['make a 3d game called orb run', 'build.3d'], ['change the accent color to teal', 'accent.set', { color: 'teal' }],
   ['open the inspiration board', 'nav.inspo'], ['open my moodboard', 'nav.inspo'], ['buy credits', 'premium.open'], ['get premium', 'premium.open'], ['upgrade', 'premium.open'],
   ['connect my ai', 'connect.ai'], ['use my own ai', 'connect.ai'], ['write a poem about the sea', null], ['make the backend scale to a million users', null],
-  ['make a band page, then tell everyone', ['site.band', 'chat.send']], ['add a gallery page', 'doc.new'],
+  ['make a band page, then tell everyone', ['site.band', 'dm.send']], ['add a gallery page', 'doc.new'],
 ]);
 
 // ---- held out: written after tuning, never tuned against; reported on their own ----

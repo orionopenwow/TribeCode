@@ -149,6 +149,12 @@ Every feature works fully without AI. With AI it becomes effortless: one tap, in
 - **Quiet.** The ✦ is Ember on a transparent button, at most one per spot, revealed on hover in dense lists (tasks).
   No glows, no sparkle animations, no gradients: the flat matte rules apply.
 
+When a request needs an AI and none is connected, say it the same way everywhere (`app/ui/aiboost.js`,
+`TribeBoost.html({ did, would, ask })`): **This one needs an AI.**, then two rows, **Free · no AI** (what Flint did, or
+"Nothing changed" and what he can do for free) and **With an AI** (what an AI would add), then two buttons: **Use my AI**
+(free: connect your own, or hand it to your connected AI helper) and **Get credits / Premium** (`TribePremium.gate('credits')`).
+Never "Send to my AI helper" or "Give Flint a brain" as the only way out.
+
 Checklist for a new feature:
 
 1. Does it work with AI off (Settings › Flint's brain › None)? Test it that way first.

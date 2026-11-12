@@ -269,7 +269,7 @@
     out(window.TribeBoost ? window.TribeBoost.html({ did: `Nothing changed on the canvas. ${r.why || ''}`.trim(), would: 'An AI draws what you described as real layers here, and Undo takes it back.', ask: last }) : `<p>${esc(r.why || '')}</p>`);
   }
   // "Use my AI" on the boost card: a connected AI helper gets the brief; with none, Flint's brain opens to connect one (free)
-  async function useMyAI(text) { const agents = ((C.state && C.state().members) || []).some(m => m.role === 'agent'); if (agents) { say(await sendToHelpers(text || last)); return; } if (window.TribeBrain && window.TribeBrain.open) window.TribeBrain.open(); }
+  async function useMyAI(text) { if (text || last) { say(await sendToHelpers(text || last)); return; } if (window.TribeBrain && window.TribeBrain.open) window.TribeBrain.open(); }   // the brief waits in #agents; the reply says how to connect one when none is
   async function handOff(btn) {
     btn.disabled = true;
     say(await sendToHelpers(last));

@@ -2282,7 +2282,7 @@
    "t": "make a band page, then tell everyone",
    "i": [
     "site.band",
-    "chat.send"
+    "dm.send"
    ],
    "ctx": "g"
   },

@@ -62,6 +62,7 @@ Pushing from the Claude cloud sandbox:
   - `openspace.js`: optional Open Space office (host-only install/start/stop/open, port 4850).
   - `showcase.js`: per-project website (`site/index.html`), preview, suggestions.
   - `siteflint.js` + `app/ui/siteedit-core.js` + `app/ui/siteshelf.js`: Flint edits the website in the preview with no AI (undo, a version per change) and the Saved shelf (docs/WEBSITE.md).
+  - `sitedesign.js` + `app/ui/sitecfg.js` + `app/ui/sitedesigner.js`: the website designer on OpenPage's model (one JSON config, blocks with variants, themes with a dark variant, wiring, export; NOTICE credits OpenPage). `app/ui/aiboost.js`: the one "this needs an AI" card. `app/ui/flintlessons.js`: Flint's lessons with Show me (docs/WEBSITE.md › The website designer, docs/FLINT-TIERS.md).
   - `applink.js` + `export.js` + `github-auth.js`: Home Screen/desktop app links, Desktop folder export/copy, GitHub device-flow sign-in.
   - `demo.js` + `scripts/start-demo-tribe.js`: the demo tribe (templates/lantern-run, templates/tavern-3d).
   - `share.js`: public https via Tailscale Funnel or cloudflared.

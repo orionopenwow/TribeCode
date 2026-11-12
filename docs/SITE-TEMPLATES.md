@@ -23,6 +23,10 @@ or just ask Flint: "make me a link in bio", "a merch store for Ember Socks", "a 
 | Photography gallery | `photography` | Dark masonry with a lightbox |
 | Coming soon / waitlist | `comingsoon` | One split screen, countdown, waitlist form |
 
+## In the website designer
+
+Every template also opens in the website designer as a block config (`sitecfg.fromTemplate`, `GET /api/site-designer/template/:id`): its words, pictures (inlined), colors and fonts become blocks with variants you can change, wire and export (docs/WEBSITE.md › The website designer).
+
 ## Customize, by skill level
 
 - **Easy**: a short form (name, words, links, photos, the main colors). The preview updates as you type.

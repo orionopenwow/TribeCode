@@ -81,6 +81,40 @@ the desktop page shrunk to fit with pinch-to-zoom (double-tap fits it again). Te
 `POST …/website/versions/:vid/restore`, `GET …/website/versions/:vid/compare`, `DELETE …/website/versions/:vid`,
 `GET …/website/draft?pt=&edit=1` (the draft with the preview helper).
 
+## The website designer
+
+![The website designer](screenshots/site-designer.png)
+
+Open it from **Files › Website › Open the designer**, **Preview › Website › Design**, the project's Website link (it
+goes to Files › Website), "open the website designer" in Flint's chat, or `#/site-designer`. It follows OpenPage's model
+(github.com/buildingopen/openpage, MIT; reimplemented in plain JS, credited in `NOTICE`):
+
+- **One JSON config** is the source of truth (`app/ui/sitecfg.js`): `{ name, theme: { preset, mode, colors, fonts,
+  radius }, pages: [{ title, slug, blocks: [{ id, type, variant, props }] }] }`. Stored in `.tribe/website/<pid>.config.json`
+  (`GET|PUT /api/projects/:id/site-config`); with no tribe it stays on this device.
+- **Blocks** with layout variants, the same set tribecode.org has: hero (center, split, minimal), features (grid, list,
+  stats), gallery (grid, masonry, strip), pricing (cards, table), testimonials, FAQ, team, links (link in bio), list
+  (menu, dates, episodes), contact form, video/embed, text, footer, and a menu across pages. **+ Add block** picks a type
+  and a variant; drag (or ↑ ↓) to reorder.
+- **Themes**: eight presets (Paper, Swiss, Editorial, Terminal, Playful, Minimal, Bold, Soft). **Dark** switches to the
+  design's own dark variant (a real palette, checked for contrast), not a filter.
+- **Inline editing**: click words in the live preview and type. Click a button to choose where it goes (a page, a
+  section, a web address, an email). Click a picture to upload one, take one from the inspiration board, make it round
+  or square, and set alt text.
+- **Undo / Redo** for everything (Ctrl Z, Ctrl Shift Z), including what Flint does.
+- **Download HTML**: one standalone `index.html` with every page (CSS `:target`, no scripts, pictures inside). The ▾
+  menu has a **zip** (a file per page, `assets/`, `fonts/`, `site.json`, README) and **Publish to the project** (writes
+  the same files to `site/`, `POST …/site-config/publish`).
+- **Versions**: Save version puts the config on the Saved shelf with a thumbnail; Restore brings it back
+  (`server/siteflint.js` keeps `cfg` on each version).
+- **The 16 templates** open as configs (`GET /api/site-designer/template/:id`, pictures inlined).
+
+Flint edits the same config, free and undoable: "make the buttons work", "link this button to the contact page",
+"add a page called About", "rename this page to Work", "replace the image", "use a picture from my board", "make the
+picture round", "dark mode", "add a gallery", "move the FAQ to the top", "make the hero split", "use the swiss theme",
+"make the accent teal", "change the headline to …", "download the html", "something for my band". What needs an AI gets
+the one AI-boost card (Use my AI · Get credits / Premium). Test: `app/test/e2e_site_designer.py`.
+
 ## API
 
 | Method | Path | Who |

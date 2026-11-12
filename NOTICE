@@ -1,0 +1,24 @@
+TribeCode
+Copyright (c) the TribeCode contributors. MIT License (see LICENSE).
+
+This product includes ideas and approaches from the following open-source projects. No code was copied unless a
+section below says so.
+
+-------------------------------------------------------------------------------
+OpenPage (https://github.com/buildingopen/openpage), MIT License, by buildingopen
+-------------------------------------------------------------------------------
+TribeCode's website designer (app/ui/sitecfg.js, app/ui/sitedesigner.js, server/sitedesign.js) follows OpenPage's
+model: one JSON site config as the source of truth (a name, a theme and blocks, each with an id, type, variant and
+props), a block picker with layout variants, theme presets set through CSS custom properties, inline text editing,
+drag to reorder, undo/redo, a live preview and a standalone HTML export. OpenPage is built with React, Zustand and
+dnd-kit; TribeCode reimplements the approach in plain browser JavaScript with no dependencies. No OpenPage source code
+is included. Unlike OpenPage's export, TribeCode's export loads nothing from a CDN.
+
+MIT License (OpenPage): Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+and associated documentation files, to deal in the Software without restriction, subject to the condition that the
+copyright notice and this permission notice are included in all copies or substantial portions of the Software. THE
+SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+-------------------------------------------------------------------------------
+Fonts in app/ui/assets/site-fonts: SIL Open Font License 1.1 (licenses alongside the files).
+Anthropic's public frontend-design skill (Apache-2.0) informed the website design rules (docs/WEBSITE-GENERATOR.md).

@@ -153,9 +153,42 @@ With an AI on, the same answer is refined in place (`POST /api/ai/refine`, kinds
 /api/docs/:slug/summarize`) falls back to the extractive summary when there is no local brain. Test:
 `app/test/e2e_local_summarize.py`.
 
+## When something needs an AI
+
+One card everywhere (Flint's chat, the canvas, the preview, the website designer; `app/ui/aiboost.js`): **This one
+needs an AI.** **Free · no AI**: what Flint did (or "Nothing changed") and what he does for free. **With an AI**: what an
+AI adds. Buttons: **Use my AI** (free: connect your own, or hand it to your connected AI helper) and **Get credits /
+Premium** (`TribePremium.gate('credits')`).
+
+## Lessons
+
+`app/ui/flintlessons.js`: a short lesson for each feature (website designer, canvas, preview, tasks, work, templates,
+files, chat, huddles, agents, company, inspiration board, export, Premium). "teach me <feature>", "how do I <thing>",
+"how does <feature> work" open it; **Show me** opens the real place and rings the real control; Read more goes to the
+Guide or the Academy where they exist. Tests: `app/test/flint_eval_test.js` (the lesson index), `app/test/e2e_flint_lessons.py`.
+
+## Evaluation set
+
+`app/test/flint_eval.json` (written by `scripts/dev/flint-eval-cases.js`, run by `app/test/flint_eval_test.js`): 390
+phrasings for websites, the canvas, preview edits, lessons and global commands, with typos, slang and indirect wording,
+in four contexts (website designer, canvas, canvas with a selection, preview, anywhere). Before this work: 49/342
+(14.3%). Now: 388/390 (99.5%). Held-out batch 1 scored 22/32 (68.8%) when first run and was then tuned; batch 2 was
+never tuned against: 14/16 (87.5%).
+
 ## Abilities log
 
 Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
+
+- **2026-11-11** (feat/flint-site)
+  - Understands websites by meaning: "link tree website", "something for my band", "i sell candles online", "we got engaged, need a page" pick the right one of the 16 templates (free · no AI).
+  - The website designer, on OpenPage's model: one JSON config, blocks with layout variants, theme presets with a real dark variant, inline editing, drag to reorder, undo/redo, Download HTML (one standalone file) or a zip (free · no AI).
+  - Wires buttons and links to pages, sections, web addresses and email; "make the buttons work" wires every one, adding a contact form when nothing fits (free · no AI).
+  - Adds, renames and deletes pages; adds, removes, moves and re-lays-out blocks; changes the theme, accent and words (free · no AI).
+  - Pictures: replace from an upload or the inspiration board, round or square, alt text (free · no AI).
+  - On the design canvas: "functional buttons" wires layers to screens (making the screens it needs; Send to app exports real links), "make a dark mode" recolors the layers in place, "add a page/screen", "edit this image" fills a layer with a picture, "make it round"; websites open the website designer (free · no AI).
+  - Says plainly when something needs an AI, with Use my AI and Get credits / Premium (free · no AI).
+  - A lesson for every feature with Show me (free · no AI).
+  - Redo; "buy credits", "get premium"; "open my moodboard" (free · no AI).
 
 - **2026-11-11** (feat/flint-runthrough)
   - Watch Flint build: a 17-step run-through that drives the real app with his normal commands, one caption per step, checked through the API (free · no AI; captions refined by AI when on).

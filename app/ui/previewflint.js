@@ -73,7 +73,7 @@
     el.querySelector('#pvf-add').onclick = () => { const ta2 = el.querySelector('#pvf-in'), t = ta2.value.trim(); if (!t) return ta2.focus(); notes.push({ text: t, pick: picked }); ta2.value = ''; paintQueue(); ta2.focus(); };
     wireProps();
     if (!items.length) feed({ k: 'flint', text: 'I’m watching the preview. Describe a change, or pick something on the page with Edit.' });
-    if (window.TribeBoost) window.TribeBoost.bind(el, { onAI: t => { const agents = (C.state().members || []).some(m => m.role === 'agent'); if (agents && pending) { const p = pending; pending = null; askAgents(p.text, p.pick); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // feat/flint-site: the one AI-boost card
+    if (window.TribeBoost) window.TribeBoost.bind(el, { onAI: () => { if (pending) { const p = pending; pending = null; el.querySelectorAll('#pvf-feed .boost button').forEach(b => { b.disabled = true; }); askAgents(p.text, p.pick); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // the brief waits in #agents until an AI helper connects   // feat/flint-site: the one AI-boost card
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-pvf]'); if (!a) return;
       if (a.dataset.pvf === 'hide') setOpen(false);

@@ -206,10 +206,11 @@ def main():
             # ---- 4: bigger than free → an honest card; Plan first → editable steps → hand-off ----
             host.check("#pvf-plan")
             send(host, "add multiplayer and a leaderboard")
-            host.wait_for_selector("#pvf-feed .pvf-honest", timeout=8000)
+            host.wait_for_selector("#pvf-feed .boost", timeout=8000)   # feat/flint-site: the one AI-boost card
+            assert "Get credits / Premium" in host.inner_text("#pvf-feed .boost")
             assert host.locator("#pvf-feed [data-pvf='tribeai']").count() == 0, "no tribe-AI button when the tribe has no AI"
             shot(host, "honest")
-            host.click("#pvf-feed [data-pvf='hand']")
+            host.click("#pvf-feed [data-boost='ai']")
             host.wait_for_selector("#pvf-feed .pvf-plancard textarea", timeout=5000)
             ta = host.locator("#pvf-feed .pvf-plancard textarea").last
             ta.fill(ta.input_value() + "\nTest it with two players")
