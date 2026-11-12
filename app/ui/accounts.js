@@ -18,8 +18,13 @@
 // (POST /api/accounts/logout), Settings › Account lists the signed-in devices (GET/DELETE /api/accounts/sessions), and
 // Delete my account uses GET/DELETE /api/account (moderation.js). Such accounts are kind 'server' with an account token
 // (acct, tca_…) beside the member key a login hands out. With the flag off, everything stays local as before.
+// feat/signup: mode 'account' = signed in to a TribeCode account that has no tribe on this device yet (a guest who made
+// one); like every mode but 'signedin' it stops the automatic sign-ins. Recent accounts on this device sign back in with
+// one click (a signed-out one fills in its username), Log in has Forgot password and Create an account (signup.js), the
+// user bar says "Signed in as …", and the host sees password reset requests in Settings › Account (Password resets).
 // Public: window.TribeAccounts = { state(), list(), current(), mode(), login(opts), logout(opts), confirmLogout(), switchTo(id),
-//   guest(), setTest(on), status(), menuHtml(), menuAct(el), settings(box) }.
+//   guest(), setTest(on), status(), menuHtml(), menuAct(el), settings(box), api(path, opts), adopt(account, token, memberToken),
+//   signIn(username, password), signedAs(), upgradable() }.
 (function () {
   'use strict';
   const C = window.TribeClient, S = window.TribeStore; if (!C || !S) return;
@@ -76,16 +81,41 @@
 
   // ---------- the server's accounts (TRIBE_ACCOUNTS=1) ----------
   let srv = { base: null, on: false };
-  const base = () => (C.base ? C.base() : '') || '';
+  // the server's own address, also while a project lives only on this device (offline.js answers /api there: skip it)
+  const OFF = () => window.TribeOffline;
+  const net = (u, o) => (OFF() && OFF().realFetch ? OFF().realFetch(u, o) : fetch(u, o));
+  const base = () => { const b = (C.base ? C.base() : '') || ''; return /\.invalid(:\d+)?$/.test(b) ? (/^https?:$/.test(location.protocol) && !/tauri\.localhost$/i.test(location.hostname) ? location.origin : 'http://localhost:4747') : b; };
   async function serverOn(force) {
     const b = base(); if (!force && srv.base === b) return srv.on;
     let on = false;
-    if (b || /^https?:$/.test(location.protocol)) try { const r = await fetch(b + '/api/accounts/me', { credentials: 'omit' }); on = r.status === 401 || r.ok; } catch {}
+    if (b || /^https?:$/.test(location.protocol)) try { const r = await net(b + '/api/accounts/me', { credentials: 'omit' }); on = r.status === 401 || r.ok; } catch {}
     srv = { base: b, on }; return on;
   }
   async function acctApi(path, { method = 'GET', body, token } = {}) {
-    const r = await fetch(base() + '/api/accounts' + path, { method, credentials: 'omit', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
-    const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(d.error || r.statusText), { status: r.status }); return d;
+    const r = await net(base() + '/api/accounts' + path, { method, credentials: 'omit', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(r.status === 429 ? 'That is a lot of tries in a row. Take a breather and try again in a minute.' : (d.error || r.statusText)), { status: r.status }); return d;
+  }
+  // a fresh account (sign-up, a reset) becomes this device's current one; with a member key it is signed in to the tribe too
+  function adopt(account, acct, memberToken) {
+    const a = keepServer(account, acct, memberToken || undefined);
+    st.current = a.id; st.mode = memberToken || (mode() === 'signedin' && C.hasToken() && !(OFF() && OFF().active && OFF().active())) ? 'signedin' : 'account';
+    write(); paint(); banner(); if (window.TribeUserbar) try { window.TribeUserbar.label(); } catch {} return a;
+  }
+  const signedAs = () => { const a = current(), m = mode(); return a && a.kind === 'server' && a.acct && (m === 'signedin' || m === 'account') ? (a.username || a.name) : ''; };
+  // a guest, a TEST account, a guest pass or a project kept only on this device, with no account yet: "Save your work"
+  const upgradable = () => { if (signedAs()) return false; const m = mode(), me = (C.state() || {}).me; return m === 'guest' || m === 'test' || !!(OFF() && OFF().solo && OFF().solo()) || !!(me && me.guestUntil); };
+  // Log in with a username and password. A member of this tribe is signed in on this device (the page reloads: 'member');
+  // otherwise the account is kept and returned.
+  async function signIn(username, password) {
+    const d = await acctApi('/login', { method: 'POST', body: { username, password: password || undefined } });
+    const a = keepServer(d.account, d.token, d.memberToken || undefined);
+    if (d.memberToken) {
+      const s = S.get();
+      if (s.server && s.server.token && s.server.token !== d.memberToken) { try { await C.api('/session', { method: 'DELETE' }); } catch {} }
+      S.set({ name: d.account.displayName || d.account.username, onboarded: true, server: { url: base(), token: d.memberToken } });
+      st.current = a.id; st.mode = 'signedin'; write(); reloadHome('switched'); return 'member';
+    }
+    return a;
   }
   function keepServer(account, acct, memberToken) {
     const b = base(), id = `acct:${b}:${account.id}`, tribe = ((C.state() || {}).tribe || {}).name;
@@ -112,15 +142,10 @@
         else { closeSheet(); toast(`Account made. Join a tribe with an invite link, then log in as ${d.account.username}.`); }
         return;
       }
-      const d = await acctApi('/login', { method: 'POST', body: { username, password: password || undefined } });
-      const a = keepServer(d.account, d.token, d.memberToken || undefined);
-      if (d.memberToken) {
-        const s = S.get();
-        if (s.server && s.server.token && s.server.token !== d.memberToken) { try { await C.api('/session', { method: 'DELETE' }); } catch {} }
-        S.set({ name: d.account.displayName || d.account.username, onboarded: true, server: { url: base(), token: d.memberToken } });
-        st.current = a.id; st.mode = 'signedin'; write(); reloadHome('switched'); return;
-      }
-      say(`Logged in as ${d.account.username}, but that account isn't in this tribe yet (or has no password). Join with an invite link.`);
+      const a = await signIn(username, password);
+      if (a === 'member') return;
+      if (!C.hasToken() || (OFF() && OFF().active && OFF().active())) { st.current = a.id; st.mode = 'account'; write(); closeSheet(); paint(); banner(); toast(`Signed in as ${a.username}`); return; }
+      say(`Logged in as ${a.username}, but that account isn't in this tribe yet (or has no password). Join with an invite link.`);
     } catch (e) { say(e.status === 401 ? 'That username and password do not match.' : e.message); }
     form.querySelectorAll('button').forEach(b => { b.disabled = false; });
   }
@@ -162,6 +187,11 @@
   async function switchTo(id) {
     const a = st.accounts.find(x => x.id === id); if (!a) return;
     if (a.id === st.current && mode() !== 'signedout') { closeSheet(); return; }
+    // a recent account with no tribe key here: its account session if it is still live, else Log in with its name filled in
+    if (a.kind === 'server' && !(a.server && a.server.token)) {
+      if (a.acct) { try { await acctApi('/me', { token: a.acct }); st.current = a.id; st.mode = 'account'; a.seen = new Date().toISOString(); write(); closeSheet(); paint(); banner(); toast(`Signed in as ${a.username || a.name}`); return; } catch { a.acct = ''; write(); } }
+      return login({ prefill: a.username || a.name });
+    }
     const s = S.get(), cur = current();
     if (cur && cur.kind === 'device') cur.server = { url: (s.server && s.server.url) || '', token: (s.server && s.server.token) || '' };   // keep my key for switching back
     if (cur && cur.kind === 'device') cur.avatar = s.pendingAvatar || cur.avatar || null;
@@ -191,30 +221,33 @@
   const sub = a => isTest(a) ? (a.tribes.length ? a.tribes.join(' · ') : 'No tribes yet') : a.server && a.server.token ? (a.tribes.join(' · ') || 'Signed in') : 'Signed out · ' + (a.tribes.join(' · ') || 'this device');
   const acctRow = a => `<button class="ac-row ${a.id === st.current && mode() !== 'signedout' ? 'on' : ''}" data-acc="${esc(a.id)}">${face(a)}<span class="ac-t"><b>${esc(a.name)}${isTest(a) ? ' <i class="ac-test">TEST</i>' : ''}</b><small>${esc(sub(a))}</small></span>${a.id === st.current && mode() !== 'signedout' ? ico('i-tick', 14) : ''}</button>`;
   const local = () => /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || !!(window.TribeHost && window.TribeHost.isDesktop);
-  function login({ add = false } = {}) {
+  function login({ add = false, prefill = '' } = {}) {
     closeSheet();
-    const saved = st.accounts.filter(a => !(add && a.id === st.current));
+    const saved = st.accounts.filter(a => !(add && a.id === st.current)).sort((x, y) => String(y.seen || '').localeCompare(String(x.seen || ''))).slice(0, 6);
     sheet = document.createElement('div'); sheet.className = 'ac-scrim'; sheet.id = 'ac-login';
     sheet.innerHTML = `<div class="ac-sheet" role="dialog" aria-modal="true" aria-labelledby="ac-title">
       <button class="ac-x" data-ac="close" aria-label="Close">${ico('i-x', 16)}</button>
       <span class="eyebrow">${add ? 'Add account' : 'Log in'}</span><h2 id="ac-title">${add ? 'Add an account to this device' : mode() === 'signedout' ? 'Welcome back' : 'Log in to TribeCode'}</h2>
-      ${saved.length ? `<div class="ac-sec"><span class="ac-eye">On this device</span><div class="ac-list">${saved.map(acctRow).join('')}</div></div>` : ''}
+      ${saved.length ? `<div class="ac-sec"><span class="ac-eye">Recent on this device</span><div class="ac-list">${saved.map(acctRow).join('')}</div></div>` : ''}
       <div class="ac-sec" id="ac-acct" hidden><span class="ac-eye">Your TribeCode account</span>
         <form id="ac-acct-form" class="ac-form" autocomplete="on"><input class="input" id="ac-user" autocomplete="username" placeholder="Username" maxlength="32" aria-label="Username">
           <input class="input" id="ac-pass" type="password" autocomplete="current-password" placeholder="Password" maxlength="200" aria-label="Password">
           <p class="ac-err" id="ac-err" role="alert" hidden></p>
-          <div class="ac-form-acts"><button class="btn" type="button" data-acf="signup">Create account</button><button class="btn primary" type="submit" id="ac-acct-go">Log in</button></div></form></div>
+          <div class="ac-form-acts"><button class="linkish ac-forgot" type="button" data-ac="forgot" id="ac-forgot">Forgot password?</button><button class="btn" type="button" data-acf="signup">Create account</button><button class="btn primary" type="submit" id="ac-acct-go">Log in</button></div></form></div>
       <div class="ac-sec" id="ac-ways"><span class="ac-eye">Sign in</span>
         <div id="ac-oa" hidden></div>
         ${local() ? `<button class="ac-way" data-ac="host">${ico('i-home', 18)}<span><b>Sign in on this computer</b><small>As the host of the tribe that runs here</small></span></button>` : ''}
         <button class="ac-way" data-ac="join">${ico('i-link', 18)}<span><b>Join with an invite link</b><small>A friend's tribe, on this device</small></span></button>
         <p class="ac-fine" id="ac-oa-none" hidden>Discord, GitHub and Google sign-in show up here once the host turns them on (Settings › More settings › Sign-in).</p></div>
-      <div class="ac-foot"><button class="btn primary" data-ac="guest" id="ac-guest">Continue as guest</button>${st.test ? '' : '<button class="linkish ac-testlink" data-ac="test">Use test accounts</button>'}</div></div>`;
+      <div class="ac-foot">${st.test ? '' : '<button class="linkish ac-testlink" data-ac="test">Use test accounts</button>'}${window.TribeSignup ? '<button class="linkish ac-newlink" data-ac="signup" id="ac-signup">New here? Create an account</button>' : ''}<button class="btn primary" data-ac="guest" id="ac-guest">Continue as guest</button></div></div>`;
     document.body.appendChild(sheet);
     const af = sheet.querySelector('#ac-acct-form');
     af.onsubmit = e => { e.preventDefault(); acctSubmit(af, 'login'); };
     af.querySelector('[data-acf="signup"]').onclick = () => acctSubmit(af, 'signup');
-    const sh = sheet; serverOn().then(on => { const x = sh.querySelector('#ac-acct'); if (x && sheet === sh) x.hidden = !on; });
+    const sh = sheet; serverOn().then(on => {
+      const x = sh.querySelector('#ac-acct'); if (!x || sheet !== sh) return; x.hidden = !on;
+      if (on && prefill) { sh.querySelector('#ac-user').value = prefill; sh.querySelector('#ac-pass').focus(); }
+    });
     sheet.addEventListener('click', e => {
       if (e.target === sheet) return closeSheet();
       const r = e.target.closest('[data-acc]'); if (r) return switchTo(r.dataset.acc);
@@ -225,6 +258,8 @@
       else if (k === 'test') { mountTests(true); login({ add }); }
       else if (k === 'join') { st.mode = 'signedin'; write(); closeSheet(); window.TribeSettings && window.TribeSettings.joinPrompt(); }
       else if (k === 'host') hostSignIn(b);
+      else if (k === 'signup') { closeSheet(); window.TribeSignup.open('create'); }
+      else if (k === 'forgot') { const u = (sheet.querySelector('#ac-user') || {}).value || ''; closeSheet(); window.TribeSignup.open('forgot', { username: u }); }
     });
     // the existing providers, where they work (a page served by a TribeCode server)
     if (window.TribeOAuth && /^https?:$/.test(location.protocol)) {
@@ -235,7 +270,7 @@
         else { const n = sheet.querySelector('#ac-oa-none'); if (n) n.hidden = false; }
       }).catch(() => {});
     }
-    setTimeout(() => { const f = sheet && (sheet.querySelector('.ac-row') || sheet.querySelector('#ac-guest')); if (f) f.focus(); }, 30);
+    if (!prefill) setTimeout(() => { const f = sheet && (sheet.querySelector('.ac-row') || sheet.querySelector('#ac-guest')); if (f) f.focus(); }, 30);
   }
   async function hostSignIn(btn) {
     btn.disabled = true;
@@ -259,11 +294,13 @@
     confirmEl.innerHTML = `<div class="ac-sheet ac-small" role="dialog" aria-modal="true" aria-labelledby="ac-lo-t">
       <span class="eyebrow">Log out</span><h2 id="ac-lo-t">Log out${cur ? ' of ' + esc(cur.name) : ''} on this device?</h2>
       <p class="ac-lead">${test ? 'This TEST account is only on this device. You can sign back in to it from Log in.' : 'Your tribe key and sign-in cookie leave this device. Your tribes, chats and files stay where they are, and you can log back in any time.'}</p>
+      ${upgradable() && srv.on && window.TribeSignup ? `<div class="ac-save" id="ac-save"><span><b>Save your work first?</b><small>An account keeps your projects and tribes when you leave this device.</small></span><button class="btn" data-lo="signup">Create an account</button></div>` : ''}
       ${test ? '' : `<label class="ac-check"><input type="checkbox" id="ac-forget"><span><b>Also forget this device's tribes</b><small>Drops the saved tribe address and this device's copies of chat, pins and drafts. Nothing is deleted from the tribe.</small></span></label>`}
       <div class="ac-foot"><button class="btn" data-lo="cancel">Cancel</button><button class="btn primary" data-lo="go" id="ac-lo-go">Log out</button></div></div>`;
     document.body.appendChild(confirmEl);
     confirmEl.addEventListener('click', e => {
       if (e.target === confirmEl || e.target.closest('[data-lo="cancel"]')) { confirmEl.remove(); confirmEl = null; return; }
+      if (e.target.closest('[data-lo="signup"]')) { confirmEl.remove(); confirmEl = null; window.TribeSignup.open('create', { upgrade: 'leave' }); return; }
       if (e.target.closest('[data-lo="go"]')) { const f = confirmEl.querySelector('#ac-forget'); e.target.disabled = true; logout({ forget: !!(f && f.checked) }); }
     });
     setTimeout(() => { const b = confirmEl && confirmEl.querySelector('#ac-lo-go'); if (b) b.focus(); }, 30);
@@ -275,6 +312,7 @@
     if (m === 'signedout') return short ? 'Log in' : 'Signed out · Log in';
     if (m === 'test' && a) return `${short ? '' : 'TEST · '}${a.tribes.length ? a.tribes[0] + (a.tribes.length > 1 ? ` +${a.tribes.length - 1}` : '') : 'no tribes'}`;
     if (m === 'guest') return 'Guest on this device';
+    if (m === 'account' && a) return `Signed in as ${a.username || a.name}`;
     return '';
   }
   function paint() {
@@ -299,7 +337,7 @@
     const want = m === 'signedout' || (m === 'test' && a);
     if (!want) { if (el) el.remove(); return; }
     const html = m === 'signedout'
-      ? `<div class="ac-b-t"><span class="eyebrow">Signed out</span><b>You're signed out on this device</b><small>Log in to get back to your tribes, or look around as a guest.</small></div><div class="ac-b-acts"><button class="btn primary" data-acb="login">Log in</button><button class="btn" data-acb="guest">Continue as guest</button></div>`
+      ? `<div class="ac-b-t"><span class="eyebrow">Signed out</span><b>You're signed out on this device</b><small>Log in to get back to your tribes, or look around as a guest.</small></div><div class="ac-b-acts"><button class="btn primary" data-acb="login">Log in</button>${window.TribeSignup ? '<button class="btn" data-acb="signup">Create account</button>' : ''}<button class="btn" data-acb="guest">Continue as guest</button></div>`
       : `${face(a, 'lg')}<div class="ac-b-t"><span class="eyebrow">Test account <i class="ac-test">TEST</i></span><b>${esc(a.name)}</b><small>${a.tribes.length ? 'In ' + esc(a.tribes.join(', ')) : 'Not in any tribe yet'} · only on this device</small></div><div class="ac-b-acts"><button class="btn" data-acb="switch">Switch</button><button class="btn" data-acb="logout">Log out</button></div>`;
     if (!el) { el = document.createElement('section'); el.id = 'ac-banner'; el.className = 'ac-banner'; }
     if (el.dataset.sig !== m + (a ? a.id : '')) { el.innerHTML = html; el.dataset.sig = m + (a ? a.id : ''); }
@@ -308,7 +346,7 @@
   document.addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-acb]'); if (!b) return;
     const k = b.dataset.acb;
-    if (k === 'login') login(); else if (k === 'guest') guest(); else if (k === 'switch') login({ add: true }); else if (k === 'logout') confirmLogout();
+    if (k === 'login') login(); else if (k === 'guest') guest(); else if (k === 'signup') window.TribeSignup.open(); else if (k === 'switch') login({ add: true }); else if (k === 'logout') confirmLogout();
   });
   // the user bar's name opens Log in while signed out
   document.addEventListener('click', e => { if (mode() === 'signedout' && e.target.closest && e.target.closest('#ub-me .ub-t')) login(); });
@@ -317,7 +355,8 @@
   function menuHtml() {
     const m = mode(), others = st.accounts.filter(a => a.id !== st.current || m === 'signedout').slice(0, 5);
     const item = (act, icon, label, extra = '') => `<button role="menuitem" class="pf-item" data-act="${act}"${extra}>${ico(icon)}<span>${label}</span></button>`;
-    return `<div class="pf-sep"></div>${others.length ? `<div class="ac-menu-eye">Switch account</div>${others.map(a => `<button role="menuitem" class="pf-item ac-mi" data-act="acc-switch" data-acc="${esc(a.id)}">${face(a, 'sm')}<span>${esc(a.name)}${isTest(a) ? ' <i class="ac-test">TEST</i>' : ''}</span></button>`).join('')}` : ''}
+    const as = signedAs();
+    return `<div class="pf-sep"></div>${as ? `<div class="ac-menu-eye ac-as" id="ac-as">Signed in as <b>${esc(as)}</b></div>` : ''}${upgradable() && srv.on && window.TribeSignup ? item('acc-signup', 'i-sparkle', 'Save your work: create an account') : ''}${others.length ? `<div class="ac-menu-eye">Switch account</div>${others.map(a => `<button role="menuitem" class="pf-item ac-mi" data-act="acc-switch" data-acc="${esc(a.id)}">${face(a, 'sm')}<span>${esc(a.name)}${isTest(a) ? ' <i class="ac-test">TEST</i>' : ''}</span></button>`).join('')}` : ''}
       ${item('acc-add', 'i-plus', m === 'signedout' ? 'Log in' : 'Add account')}
       ${m === 'signedout' ? '' : item('logout', 'i-logout', 'Log out')}`;
   }
@@ -325,6 +364,7 @@
     const a = b.dataset.act;
     if (a === 'acc-switch') switchTo(b.dataset.acc);
     else if (a === 'acc-add') login({ add: mode() !== 'signedout' });
+    else if (a === 'acc-signup') window.TribeSignup.open('create', { upgrade: 'menu' });
     else if (a === 'logout') confirmLogout();
     else return false;
     return true;
@@ -347,6 +387,7 @@
       const summary = more.querySelector('summary'); if (summary) summary.after(t); else more.appendChild(t);
     }
     if (a && a.kind === 'server' && a.acct && m !== 'signedout') sessions(acc, a);
+    const me = (C.state() || {}).me; if (me && me.role === 'host' && C.hasToken()) resets(acc);
     box.querySelectorAll('[data-ac-set]').forEach(b => b.onclick = () => {
       const k = b.dataset.acSet; if (window.TribeSettings) window.TribeSettings.close();
       if (k === 'login') login(); else if (k === 'switch') login({ add: true }); else if (k === 'logout') confirmLogout();
@@ -365,6 +406,29 @@
     el.querySelectorAll('[data-ses]').forEach(b => b.onclick = async () => { b.disabled = true; try { await acctApi('/sessions/' + encodeURIComponent(b.dataset.ses), { method: 'DELETE', token: a.acct }); toast('Signed out there'); sessions(row, a); } catch (e) { toast(e.message); b.disabled = false; } });
   }
 
+  // Settings › Account › Password resets (the host): until there is email, the host makes a one-time code and gives it over
+  async function resets(row) {
+    if (!(await serverOn())) return;
+    const tok = (S.get().server || {}).token || '';
+    let list = []; try { list = (await acctApi('/resets', { token: tok })).resets || []; } catch { return; }
+    if (!row.parentNode) return;   // Settings closed meanwhile
+    let el = row.parentNode.querySelector('#set-resets');
+    if (!el) { el = document.createElement('div'); el.className = 'set-row ac-sessions'; el.id = 'set-resets'; (row.parentNode.querySelector('#set-sessions') || row).after(el); }
+    const when = t => { try { return new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch { return ''; } };
+    el.innerHTML = `<div class="set-l"><b>Password resets</b><small>${list.length ? `${list.length} waiting. Make a code and give it to them yourself: TribeCode doesn't send email yet.` : 'None waiting. When someone forgets their password, it shows up here.'}</small></div>
+      ${list.length ? `<ul class="ac-ses">${list.map(r => `<li data-rs="${esc(r.id)}"><span><b>${esc(r.username)}</b><small>asked ${esc(when(r.requested))}${r.status === 'ready' ? ' · a code is out' : ''}</small></span><span class="ac-rs-acts"><button class="btn sm primary" data-rs-make="${esc(r.id)}">${r.status === 'ready' ? 'New code' : 'Make reset code'}</button><button class="btn sm" data-rs-del="${esc(r.id)}">Dismiss</button></span></li>`).join('')}</ul>` : ''}`;
+    el.querySelectorAll('[data-rs-make]').forEach(b => b.onclick = async () => {
+      b.disabled = true;
+      try {
+        const d = await acctApi('/resets/' + encodeURIComponent(b.dataset.rsMake), { method: 'POST', token: tok });
+        const li = b.closest('li'); li.classList.add('ac-rs-ready');
+        li.innerHTML = `<span><b>Reset code for ${esc(d.username)}</b><small>Give it to them. It works once, for 30 minutes.</small></span><code class="ac-code" id="ac-rs-code">${esc(d.code)}</code><button class="btn sm" data-rs-copy>Copy</button>`;
+        li.querySelector('[data-rs-copy]').onclick = () => { try { navigator.clipboard.writeText(d.code); toast('Copied'); } catch {} };
+      } catch (e) { toast(e.message); b.disabled = false; }
+    });
+    el.querySelectorAll('[data-rs-del]').forEach(b => b.onclick = async () => { b.disabled = true; try { await acctApi('/resets/' + encodeURIComponent(b.dataset.rsDel), { method: 'DELETE', token: tok }); resets(row); } catch (e) { toast(e.message); b.disabled = false; } });
+  }
+
   // ---------- boot ----------
   if (C.hasToken() && st.mode && st.mode !== 'signedin' && st.mode !== 'test') { st.mode = 'signedin'; write(); }   // signed in by a link or a provider
   new MutationObserver(() => { if (mode() === 'signedout' || mode() === 'test') banner(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
@@ -378,5 +442,6 @@
   if (C.on) { C.on('status', () => setTimeout(paint, 0)); C.on('presence', () => setTimeout(paint, 0)); }
   addEventListener('tribe-local-profile', () => setTimeout(paint, 0));
 
-  window.TribeAccounts = { state: () => JSON.parse(JSON.stringify(st)), list, current, mode, login, logout, confirmLogout, switchTo, guest, setTest, status, menuHtml, menuAct, settings, close: closeSheet, serverOn };
+  window.TribeAccounts = { state: () => JSON.parse(JSON.stringify(st)), list, current, mode, login, logout, confirmLogout, switchTo, guest, setTest, status, menuHtml, menuAct, settings, close: closeSheet, serverOn,
+    api: acctApi, adopt, signIn, signedAs, upgradable, paint };
 })();
