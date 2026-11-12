@@ -1,6 +1,6 @@
 /* Whiteboard (app/ui/whiteboard.js). Campfire flat matte: 1px borders, depth only from luminance steps, no glows,
    blur, gradients or shadows. The board fills the main area; tools float on it as flat bordered strips. */
-.window .main:has(> #view-whiteboard:not(.hidden)) { padding: 0; overflow: hidden; }
+body[data-view="whiteboard"] .window .main { padding: 0; overflow: hidden; }
 .main > #view-whiteboard:not(.hidden) { max-width: none; height: 100%; margin: 0; display: flex; flex-direction: column; min-height: 0; }
 .wbd { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; }
 
@@ -91,7 +91,7 @@
 
 /* ---------- phones ---------- */
 @media (max-width: 820px) {
-  .window .main:has(> #view-whiteboard:not(.hidden)) { padding: 0; }   /* whiteboard.js keeps the board above the bottom rack */
+  body[data-view="whiteboard"] .window .main { padding: 0; }   /* whiteboard.js keeps the board above the bottom rack */
   .wbd-head { padding: 10px 14px; min-height: 52px; gap: 10px; }
   .wbd-title .eyebrow { display: none; }
   .wbd-name { font-size: 16px; max-width: 52vw; }

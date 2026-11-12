@@ -165,7 +165,7 @@ body.panel-off .panel { display: none; }
 
 /* chat: a column with the composer docked at the bottom */
 .main > #view-chat:not(.hidden) { display: flex; flex-direction: column; height: 100%; max-width: 860px; }
-.window .main:has(> #view-chat:not(.hidden)) { padding-bottom: 18px; }
+body[data-view="chat"] .window .main { padding-bottom: 18px; }
 .chat-col { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .chat-col .chat-title { font-family: var(--font); font-size: 15px; font-weight: 650; letter-spacing: -0.005em; text-transform: none; color: var(--text); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
 .chat-col > .chat { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 2px 12px; border: 0; background: none; }

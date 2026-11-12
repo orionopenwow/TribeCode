@@ -1,6 +1,6 @@
 /* Design canvas (app/ui/canvas/*). Flat matte editor chrome: 1px borders, depth only from luminance steps, no glows,
    blur, gradients or shadows. The layers inside the stage are the user's design and use their own colors. */
-.window .main:has(> #view-canvas:not(.hidden)) { padding: 0; overflow: hidden; }
+body[data-view="canvas"] .window .main { padding: 0; overflow: hidden; }
 .main > #view-canvas:not(.hidden) { max-width: none; height: 100%; margin: 0; display: flex; flex-direction: column; min-height: 0; }
 /* the editor wants the width: the right panel steps aside while Design is open (desktop) */
 @media (min-width: 821px) {

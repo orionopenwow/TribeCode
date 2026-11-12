@@ -352,8 +352,9 @@ async def main():
                   runs.push((performance.now() - t) / 40); }
                 return Math.min(...runs); }""")
             assert "Paragraph 400 with" + "x" * 120 in await value(host)
-            assert per_key < 25, f"typing in a 20k-word doc takes {per_key:.1f} ms per key"
-            print(f"20k words: re-render {t_open:.0f} ms, {per_key:.1f} ms per keystroke")
+            # polish: 21 -> ~5 ms/key once `.main:has(> #view-x:not(.hidden))` rules stopped restyling the whole page per key
+            print(f"20k words: re-render {t_open:.0f} ms, {per_key:.1f} ms/key (budget 15)")
+            assert per_key < 15, f"typing in a 20k-word doc takes {per_key:.1f} ms per key"
 
             # ---------------- phone (390px) ----------------
             ph = await open_as(b, "Orion", host_tok, phone=True)
