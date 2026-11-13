@@ -154,6 +154,7 @@ def main():
             assert cfg(pg)["theme"]["mode"] == "dark", out
             assert pg.evaluate("TribeSiteDesigner.state().hist") == hist0 + 1, "three steps are one Undo"
             assert "most popular" in pg.frame_locator("#wdz-frame").locator(".plan.hot").inner_text().lower()
+            pg.frame_locator("#wdz-frame").locator(".plan.hot").evaluate("e => e.scrollIntoView({ block: 'center' })")
             shot(pg, "flint-compose.png")
             fask(pg, "designer", "undo that")
             assert cfg(pg)["theme"]["mode"] == mode0 and pg.evaluate("TribeSiteDesigner.state().hist") == hist0, "undo that takes all three back"
