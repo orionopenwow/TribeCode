@@ -156,3 +156,5 @@ body[data-view="hub"]:has(#flint-home) #flint .fl-thread { display: none; }   /*
   .flm-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .flm-chips .fl-chip { flex: none; }
 }
+.flint-mount { min-width: 0; }
+.flm-tool { width: auto; min-width: 24px; padding: 0 6px; white-space: nowrap; font-size: 12px; font-weight: 600; }

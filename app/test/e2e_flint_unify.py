@@ -209,7 +209,7 @@ def main():
             # not a site edit: Flint's full brain, answered right here
             out = fask(pg, "designer", "add a task to photograph the new mugs")
             assert "photograph the new mugs" in out.lower() and any(t["title"].lower().startswith("photograph the new mugs") for t in ok(api("/tasks", token=tok))["tasks"]), out
-            shot(pg, "flint-unified-designer.png")
+            pg.evaluate("document.querySelector('#wdz-pages .wdz-tab') && document.querySelector('#wdz-pages .wdz-tab').click()"); fask(pg, "designer", "add a link for my book club"); shot(pg, "flint-unified-designer.png")
             pg.click("[data-wdz='close']"); pg.wait_for_timeout(300)
 
             # ================= the design canvas =================
@@ -251,7 +251,7 @@ def main():
             pg.locator("[data-flctx=canvas] .fl-thread .fl-msg.fl").nth(-2).locator(".fl-act", has_text="Undo").click()
             pg.wait_for_function("id => TribeCanvas.state().nodes.find(n => n.id === id).name !== 'Header'", arg=rect["id"], timeout=5000)
             ran.append("canvas: Undo (message)")
-            shot(pg, "flint-unified-canvas.png")
+            pg.evaluate("TribeCanvas._e.fit(false)"); shot(pg, "flint-unified-canvas.png")
 
             # ================= the preview, and app-wide commands =================
             pg.goto(BASE + "/?skipIntro=1")
