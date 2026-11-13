@@ -17,9 +17,11 @@
   const WHY = { ai: 'An AI answer', bought: 'Credit pack', refund: 'Refund', grant: 'Added by the host', trial: 'Trial started', 'ai failed': 'Given back: the AI did not answer', 'ai: smaller than held': 'Given back: a smaller answer' };
 
   async function render(el) {
-    if (!on()) { el.innerHTML = '<p class="set-note bl-note" id="bl-off">Plans and credits belong to a tribe\'s host. Open or join a tribe to see billing; everything on this device is free.</p>'; return; }
+    const sec = el.closest('.set-sec'), hide = () => { el.innerHTML = ''; if (sec) sec.hidden = true; };
+    if (!on()) return hide();
     let v, h;
-    try { [v, h] = await Promise.all([C().api('/premium'), C().api('/premium/history')]); } catch (e) { el.innerHTML = `<p class="set-note bl-note">${esc(e.message)}</p>`; return; }
+    try { v = await C().api('/premium'); if (!(v.payments && v.payments.offered)) return hide();   // payments aren't open here yet: no billing section at all
+      h = await C().api('/premium/history'); } catch (e) { el.innerHTML = `<p class="set-note bl-note">${esc(e.message)}</p>`; return; }
     if (!el.isConnected) return;
     const bill = v.billing || {}, name = v.plan === 'premium' ? (v.tier === 'hosted' ? 'Premium Hosted' : v.tier === 'tribe' ? 'Premium Tribe' : 'Premium') : v.plan === 'trial' ? 'Premium trial' : 'Free';
     const state = bill.graceUntil ? `The last payment didn't go through. The plan stays on until ${esc(day(bill.graceUntil))}; update the card in Manage billing.` : bill.cancelAt ? `Ends on ${esc(day(bill.cancelAt))}.` : v.plan === 'trial' && v.until ? `Until ${esc(day(v.until))}. No card, nothing to cancel.` : bill.periodEnd && v.plan === 'premium' ? `Renews on ${esc(day(bill.periodEnd))}.` : v.plan === 'free' ? 'Everything local stays free.' : '';
@@ -46,6 +48,7 @@
     const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || desk;
     if (!(on() && me && me.role === 'host' && local)) { if (sec) sec.hidden = true; return; }
     let d; try { d = await C().api('/premium/admin'); } catch { if (sec) sec.hidden = true; return; }
+    if (!d.enabled) { el.innerHTML = ''; if (sec) sec.hidden = true; return; }   // hidden until the host opens payments (TRIBE_PAYMENTS=1, or PUT /api/premium/admin { enabled: true })
     if (!el.isConnected) return;
     const env = d.fromEnv;
     el.innerHTML = `<div class="set-row set-row-wide" id="set-payments" data-keys="stripe payments checkout billing webhook price keys">

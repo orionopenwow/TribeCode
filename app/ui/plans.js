@@ -22,7 +22,7 @@
   // ---------- the pop-out ----------
   let cur = null, note = '';
   function body() {
-    const T = P(), pl = T.plan(), pr = T.PRICES, cr = T.credits(), pay = T.payments && T.payments(), bill = (T.billing && T.billing()) || null;
+    const T = P(), pl = T.plan(), pr = T.PRICES, cr = T.credits(), sell = !!(T.offered && T.offered()), pay = sell && T.payments && T.payments(), bill = (sell && T.billing && T.billing()) || null;   // sell: the host has opened payments; until then the plans are information
     const grace = bill && bill.graceUntil ? `Your last payment didn't go through. Premium stays on until ${esc(new Date(bill.graceUntil).toLocaleDateString())}; update your card in Manage billing.` : bill && bill.cancelAt ? `Your plan ends on ${esc(new Date(bill.cancelAt).toLocaleDateString())}.` : '';
     const status = pl.plan === 'premium' ? 'You have Premium.' : pl.plan === 'trial' ? `Premium trial until ${esc(new Date(pl.until).toLocaleDateString())}.` : 'You\'re on the free plan.';
     return `<header class="plp-h"><div><span class="eyebrow">Plans &amp; credits</span><h2 id="plp-title">${esc(status)}</h2></div><button type="button" class="plp-x" data-plp-x aria-label="Close">${ico('x', 16)}</button></header>
@@ -30,11 +30,12 @@
       <section class="plp-card" data-plp="free"><div class="plp-top"><b>${esc(pr.free.name)}</b><span class="plp-price">${esc(pr.free.price)} <small>${esc(pr.free.per)}</small></span><span class="plp-tag is-on">${pl.plan === 'free' ? 'Your plan' : esc(pr.free.status)}</span></div>
         <ul>${T.FREE.map(x => `<li>${ico('check', 16)}<span>${esc(x)}</span></li>`).join('')}</ul></section>
       <section class="plp-card" data-plp="premium"><div class="plp-top"><b>Premium</b><span class="plp-tag${pl.plan === 'premium' ? ' is-on' : ''}">${pl.plan !== 'free' ? 'Yours' : pay ? 'Available' : 'Planned'}</span></div>
-        <ul class="plp-tiers">${pr.plans.map(t => `<li><span class="plp-tn"><b>${esc(t.name)}</b><span class="plp-price">${esc(t.price)} <small>${esc(t.per)}</small></span>${pl.plan === 'premium' && pl.tier === t.id ? '<span class="plp-tag is-on">Your plan</span>' : `<button type="button" class="btn sm plp-buy" data-plp-plan="${esc(t.id)}">Choose ${esc(t.name)}</button>`}</span><span class="plp-ta">${esc(t.adds)}</span></li>`).join('')}</ul>
+        <ul class="plp-tiers">${pr.plans.map(t => `<li><span class="plp-tn"><b>${esc(t.name)}</b><span class="plp-price">${esc(t.price)} <small>${esc(t.per)}</small></span>${pl.plan === 'premium' && pl.tier === t.id ? '<span class="plp-tag is-on">Your plan</span>' : sell ? `<button type="button" class="btn sm plp-buy" data-plp-plan="${esc(t.id)}">Choose ${esc(t.name)}</button>` : ''}</span><span class="plp-ta">${esc(t.adds)}</span></li>`).join('')}</ul>
         ${grace ? `<p class="plp-note plp-grace" id="plp-grace">${grace}</p>` : ''}</section>
       <section class="plp-card" data-plp="credits"><div class="plp-top"><b>AI credits</b><span class="plp-tag">${pay ? 'Available' : 'Planned'}</span></div>
-        <div class="plp-packs" role="group" aria-label="Credit packs">${pr.credit.packs.map(k => `<button type="button" class="plp-pack" data-plp-pack="${k.usd}"><b>${n(k.credits)}</b><small>credits · $${k.usd}</small></button>`).join('')}</div>
+        <div class="plp-packs" role="group" aria-label="Credit packs">${pr.credit.packs.map(k => sell ? `<button type="button" class="plp-pack" data-plp-pack="${k.usd}"><b>${n(k.credits)}</b><small>credits · $${k.usd}</small></button>` : `<div class="plp-pack is-info"><b>${n(k.credits)}</b><small>credits · $${k.usd}</small></div>`).join('')}</div>
         <p class="plp-note">${esc(pr.credit.terms)}</p></section>
+      ${sell ? '' : '<p class="plp-note plp-coming" id="plp-coming">Paid plans are coming. Everything free keeps working, and the trial needs no card.</p>'}
       <p class="plp-msg" id="plp-msg" role="status" ${note ? '' : 'hidden'}>${esc(note)}</p>
       <section class="plp-card plp-own" data-plp="own"><div class="plp-top"><b>Use my AI</b><span class="plp-tag is-free">Free</span></div>
         <p class="plp-note">Connect your own: Claude Code, an API key, Ollama or the built-in model. No credits needed, ever.</p>

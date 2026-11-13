@@ -447,7 +447,7 @@
       if (res.status === 402) {   // feat/auth3-pay: out of AI credits. Once per session: a calm line and the plans; after that the basic answer, quietly.
         const j = await res.json().catch(() => ({})); let told = false; try { told = sessionStorage.getItem('tribecode.flint.402') === '1'; sessionStorage.setItem('tribecode.flint.402', '1'); } catch {}
         if (j.need === 'credits' && !told) {
-          msg.text = 'The AI credits have run out, so I\'m answering in basic mode for now. The plans are open if you want more, and your own AI is always free.'; msg.acts = [act('Flint\'s brain', 'brain')]; msg.noCredits = true; delete msg.streaming; save(); draw();
+          msg.text = window.TribePremium && window.TribePremium.offered && window.TribePremium.offered() ? 'The AI credits have run out, so I\'m answering in basic mode for now. The plans are open if you want more, and your own AI is always free.' : 'The AI credits have run out, so I\'m answering in basic mode for now. Your own AI is always free to connect.'; msg.acts = [act('Flint\'s brain', 'brain')]; msg.noCredits = true; delete msg.streaming; save(); draw();
           if (window.TribePlans && window.TribePlans.open && !window.TribePlans.isOpen()) window.TribePlans.open(null);
           return;
         }

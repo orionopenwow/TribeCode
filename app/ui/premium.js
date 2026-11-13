@@ -54,7 +54,9 @@
   // session and this opens it (the system browser from the desktop app). The plan and credits change only when
   // Stripe's signed webhook reaches the server; coming back from Stripe just looks again.
   const OFF_MSG = 'The host hasn\'t turned on payments yet. Everything free keeps working, and the 14-day trial needs no card.';
-  const payments = () => read().payments === true;
+  const COMING = 'Paid plans are coming. Everything free keeps working, and the 14-day trial needs no card.';
+  const offered = () => read().offered === true;   // the host has opened payments (server: TRIBE_PAYMENTS). Until then nothing here sells anything.
+  const payments = () => offered() && read().payments === true;
   const billing = () => read().billing || null;
   function openPay(url) {
     const desk = !!(window.__TAURI__ || window.__TAURI_INTERNALS__) || /tauri\.localhost$/i.test(location.hostname);
@@ -65,12 +67,13 @@
     if (item === 'premium') item = 'tribe';
     const c = window.TribeClient, off = (message, reason = 'no-provider') => { toast(message); return { ok: false, reason, plan: item, message }; };
     if (!c || !c.api || !c.connected || !c.connected()) return off('Payments go through a tribe\'s host. Open or join a tribe first; everything on this device stays free.');
+    if (!offered()) return off(COMING);
     if (read().payments === false) return off(OFF_MSG);
     try { const r = await c.api('/premium/checkout', { method: 'POST', body: { item } }); openPay(r.url); return { ok: true, url: r.url, item }; }
-    catch (e) { const code = e.data && e.data.code; return off(code === 'payments-off' ? OFF_MSG : e.message || 'That did not work. Try again in a moment.', code === 'payments-off' ? 'no-provider' : code || 'error'); }
+    catch (e) { const code = e.data && e.data.code; return off(code === 'payments-hidden' ? COMING : code === 'payments-off' ? OFF_MSG : e.message || 'That did not work. Try again in a moment.', code === 'payments-off' || code === 'payments-hidden' ? 'no-provider' : code || 'error'); }
   }
   async function manage() {
-    const c = window.TribeClient; if (!c || !c.connected || !c.connected()) return { ok: false };
+    const c = window.TribeClient; if (!c || !c.connected || !c.connected() || !offered()) return { ok: false };
     try { const r = await c.api('/premium/portal', { method: 'POST', body: {} }); openPay(r.url); return { ok: true, url: r.url }; }
     catch (e) { const message = (e.data && e.data.code) === 'payments-off' ? OFF_MSG : e.message; toast(message); return { ok: false, message }; }
   }
@@ -130,7 +133,7 @@
   const Cn = () => window.TribeClient;
   async function sync() {
     const c = Cn(); if (!c || !c.api || !c.connected || !c.connected()) return;
-    try { const v = await c.api('/premium'); const x = read(); x.plan = v.plan; if (v.until) x.until = v.until; else delete x.until; x.credits = v.credits; x.tier = v.tier || null; x.payments = !!(v.payments && v.payments.on); x.billing = v.billing || null; x.scope = v.scope || 'tribe'; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); } catch {}
+    try { const v = await c.api('/premium'); const x = read(); x.plan = v.plan; if (v.until) x.until = v.until; else delete x.until; x.credits = v.credits; x.tier = v.tier || null; x.payments = !!(v.payments && v.payments.on); x.offered = !!(v.payments && v.payments.offered); x.billing = v.billing || null; x.scope = v.scope || 'tribe'; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); } catch {}
   }
   const setLocal = setPlan;
   setPlan = function (p) {
@@ -150,5 +153,5 @@
     setTimeout(() => toast(b === 'success' ? 'Thank you. Your plan and credits update here in a moment.' : b === 'cancel' ? 'No charge was made. Nothing changed.' : 'Billing is up to date.'), 1200);
     if (b !== 'cancel') [2500, 6000, 15000].forEach(ms => setTimeout(sync, ms));
   })();
-  window.TribePremium = { gate, plan, setPlan, checkout, manage, payments, billing, sync, OFF_MSG, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
+  window.TribePremium = { gate, plan, setPlan, checkout, manage, payments, offered, billing, sync, OFF_MSG, COMING, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
 })();

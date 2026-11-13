@@ -29,6 +29,9 @@
 //   POST /api/premium/webhook         Stripe's signed events. No sign-in: the signature is the proof. Raw body, 5 minutes
 //                                     of tolerance, each event id once. It changes plans and credits through change(),
 //                                     the same path PUT uses.
+// Payments are hidden until the host turns them on (TRIBE_PAYMENTS=1, or PUT /api/premium/admin { enabled: true }): until
+// then checkout, portal and history answer 404 payments-hidden and the webhook 404, whatever keys are set. Plans,
+// credits, the 402s and PUT /api/premium work the same either way.
 // Payment failed: the plan stays for a grace period (7 days), then goes back to free unless a payment arrives.
 // A refunded credit pack takes its credits back, never below zero.
 'use strict';
@@ -82,7 +85,7 @@ module.exports = function makePremium({ store, isLocal, log = () => {}, accountF
     const all = load(), key = keyFor(me), mine = get(all, key), eff = mine.plan !== 'free' || key === 'tribe' ? mine : all.tribe;
     return { plan: eff.plan, tier: eff.tier, until: eff.until, credits: key === 'tribe' ? mine.credits : mine.credits + all.tribe.credits, trialUsed: mine.trialUsed, scope: key === 'tribe' ? 'tribe' : 'account',
       ...(key === 'tribe' ? {} : { pools: { mine: mine.credits, tribe: all.tribe.credits } }), billing: pubBilling(mine),
-      payments: { on: !!(stripe && stripe.on()), items: stripe ? Object.keys(stripe.ITEMS).filter(i => stripe.price(i)) : [] },
+      payments: { offered: offered(), on: !!(stripe && stripe.on()), items: stripe && offered() ? Object.keys(stripe.ITEMS).filter(i => stripe.price(i)) : [] },
       gated: { templates: [...PREMIUM_TEMPLATES], aiCost: AI_COST, aiCostTable: COST_TABLE.map(r => ({ upToTokens: Number.isFinite(r.upTo) ? r.upTo : null, credits: r.credits })) } };
   }
 
@@ -133,6 +136,9 @@ module.exports = function makePremium({ store, isLocal, log = () => {}, accountF
   // ---------- payments ----------
   const person = me => !(['agent', 'spectator'].includes(me.role) || me.guestUntil);
   const OFF = { error: "The host hasn't turned on payments yet.", code: 'payments-off' };
+  // hidden until the host says payments are ready (server/stripe.js enabled): nothing to buy, nothing to manage, no webhook
+  const offered = () => !!(stripe && stripe.enabled());
+  const HIDDEN = { error: 'Paid plans are not open here yet.', code: 'payments-hidden' };
   function installId(all) { if (!all.install) { all.install = 'tc_' + crypto.randomBytes(9).toString('hex'); write(all); } return all.install; }
   // which scope an event is about: what we put in the metadata at checkout, else the customer we already know
   function scopeOf(all, obj) {
@@ -221,6 +227,7 @@ module.exports = function makePremium({ store, isLocal, log = () => {}, accountF
     });
   }
   async function webhook(req, res, { send, fail }) {
+    if (!offered()) return fail(res, 404, 'no such premium route');
     if (req.method !== 'POST') return fail(res, 405, 'POST');
     if (!stripe || !stripe.webhookSecret()) return fail(res, 503, 'payments are off here');
     let ev; try { ev = stripe.verify(await readRaw(req), req.headers['stripe-signature']); } catch (e) { return fail(res, e.status || 400, e.status === 413 ? e.message : 'that webhook was not signed by Stripe for this TribeCode'); }
@@ -253,6 +260,7 @@ module.exports = function makePremium({ store, isLocal, log = () => {}, accountF
       const all = load(); change(all, key, { plan: body.plan, until: body.until, tier: typeof body.tier === 'string' && TIER[body.tier] ? body.tier : undefined, addCredits: body.addCredits }, me.id); write(all);
       return send(res, 200, key === 'tribe' ? view(null) : { ...view(null), account: { id: String(body.account), plan: get(all, key).plan, credits: get(all, key).credits } });   // the scope that changed
     }
+    if (!offered() && ['history', 'checkout', 'portal'].includes(b)) return send(res, 404, HIDDEN);
     if (m === 'GET' && b === 'history') {
       const all = load(), key = keyFor(me), s = get(all, key), lead = me.role === 'host' || me.role === 'admin';
       const rc = x => x.receipts.slice(-50).reverse().map(r => ({ id: r.id, at: r.at, kind: r.kind, label: r.label, amount: r.amount || 0, currency: r.currency || 'usd', ...(r.credits ? { credits: r.credits } : {}), ...(r.url ? { url: r.url } : {}) }));

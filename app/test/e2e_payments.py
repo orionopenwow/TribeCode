@@ -5,7 +5,10 @@ them; this test signs webhooks itself with the webhook secret. The server's Stri
 TRIBE_TEST=1 (TRIBE_STRIPE_BASE). A fake hosted AI answers the credit-priced questions.
 
 Checks
-  off       with no Stripe keys: checkout and the portal answer "payments-off", the webhook 503, PUT /api/premium on the
+  hidden    the default (no TRIBE_PAYMENTS, the host's setting off), even with Stripe keys saved: checkout, the portal and
+            history answer 404 payments-hidden, the webhook 404, the plans pop-out is information ("Paid plans are
+            coming", no buttons), no Billing or Payments section in Settings; plans by hand and the 402s are unchanged.
+  off       opened, but with no Stripe keys: checkout and the portal answer "payments-off", the webhook 503, PUT /api/premium on the
             host computer still works, and the plans pop-out says the host hasn't turned on payments.
   settings  host-only, on the host computer; keys are sealed in a 0600 file and never sent back.
   checkout  a credit pack is a one-time session and a plan a subscription, with the right price, quantity and the
@@ -119,7 +122,7 @@ def main():
            "TRIBE_STRIPE_BASE": FAKE, "TRIBE_TEST_GRACE_MS": str(GRACE_MS), "TRIBE_HOSTED_AI_BASE": f"http://127.0.0.1:{AI_PORT}/v1", "TRIBE_HOSTED_AI_KEY": "hosted-test-key",
            "NO_PROXY": "localhost,127.0.0.1", "no_proxy": "localhost,127.0.0.1"}
     for k in list(env):
-        if k.startswith("STRIPE_") or k in ("TRIBE_PUBLIC_URL", "TRIBE_OPEN_SIGNUP"): env.pop(k)
+        if k.startswith("STRIPE_") or k in ("TRIBE_PUBLIC_URL", "TRIBE_OPEN_SIGNUP", "TRIBE_PAYMENTS"): env.pop(k)   # payments start hidden; the host's setting opens them below
     logf = os.path.join(tmp, "server.log"); log = open(logf, "w+")
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tribe, "--ollama", "http://localhost:9", "--name", "Pay Crew"], stdout=log, stderr=subprocess.STDOUT, env=env)
     try:
@@ -135,8 +138,23 @@ def main():
         avt, aid = ava["memberToken"], ava["account"]["id"]
         credits = lambda tok: ok(api("/premium", token=tok))["credits"]
 
-        # ---------------- payments off ----------------
-        v = ok(api("/premium", token=friend)); assert v["payments"]["on"] is False and v["scope"] == "tribe" and v["plan"] == "free", v
+        # ---------------- the default: payments are hidden, even with keys ----------------
+        def hidden(what):
+            v = ok(api("/premium", token=friend)); assert v["payments"] == {"offered": False, "on": False, "items": []}, (what, v)
+            for path, m, body in (("/premium/checkout", "POST", {"item": "credits-10"}), ("/premium/portal", "POST", {}), ("/premium/history", "GET", None)):
+                st, e = api(path, m, body, token=friend); assert st == 404 and e["code"] == "payments-hidden", (what, path, st, e)
+            assert hook(event("checkout.session.completed", {"id": "cs_x", "mode": "payment"}))[0] == 404, what
+        hidden("no keys")
+        v = ok(api("/premium/admin", "PUT", {"secretKey": SK, "webhookSecret": WH, "prices": PRICES}, token=host)); assert v["enabled"] is False and v["on"] is False and v["hasSecret"], v
+        hidden("keys, but not turned on"); assert not CALLS
+        assert ok(api("/premium", "PUT", {"addCredits": 2}, token=host))["credits"] == 2 and ok(api("/premium", "PUT", {"addCredits": -2}, token=host))["credits"] == 0, "by hand still works"
+        assert api("/docs", "POST", {"title": "Board 0", "body": "x", "source": "template:board-meeting"}, token=friend)[0] == 402, "the plan gate is the same"
+        assert api("/premium/admin", "PUT", {"enabled": True}, token=host, headers=remote())[0] == 403 and api("/premium/admin", "PUT", {"enabled": True}, token=friend)[0] == 403
+        ok(api("/premium/admin", "PUT", {"secretKey": "", "webhookSecret": "", "enabled": True}, token=host), "the host opens payments (the setting; TRIBE_PAYMENTS=1 does the same)")
+        print("  default: hidden even with keys (checkout, portal, history 404, the webhook 404); plans by hand and the 402s unchanged; the host's setting opens it")
+
+        # ---------------- payments shown, but no keys yet ----------------
+        v = ok(api("/premium", token=friend)); assert v["payments"]["offered"] is True and v["payments"]["on"] is False and v["scope"] == "tribe" and v["plan"] == "free", v
         assert ok(api("/premium", token=avt))["scope"] == "account"
         st, e = api("/premium/checkout", "POST", {"item": "credits-10"}, token=friend); assert st == 409 and e["code"] == "payments-off" and "hasn't turned on payments" in e["error"], (st, e)
         st, e = api("/premium/portal", "POST", {}, token=friend); assert st == 409 and e["code"] == "payments-off", (st, e)
@@ -152,7 +170,7 @@ def main():
         assert api("/premium/admin", "PUT", {"secretKey": "pk_test_notasecretkey123"}, token=host)[0] == 400
         assert api("/premium/admin", "PUT", {"prices": {"hosted": "prod_notaprice"}}, token=host)[0] == 400
         view = ok(api("/premium/admin", "PUT", conf, token=host), "save")
-        assert view["on"] and view["mode"] == "test" and view["hasSecret"] and view["hasWebhook"] and view["prices"]["credits-25"]["id"] == PRICES["credits-25"], view
+        assert view["enabled"] and view["on"] and view["mode"] == "test" and view["hasSecret"] and view["hasWebhook"] and view["prices"]["credits-25"]["id"] == PRICES["credits-25"], view
         assert view["webhookUrl"].endswith("/api/premium/webhook") and "charge.refunded" in view["events"]
         assert SK not in json.dumps(view) and WH not in json.dumps(view), "a key is never sent back"
         f = os.path.join(tribe, ".tribe", "stripe.json"); disk = open(f).read()
@@ -304,7 +322,7 @@ def main():
             # Flint: a 402 for credits opens the plans once, then falls back quietly
             ok(api("/premium", "PUT", {"addCredits": -16}, token=host)); ok(api("/premium", "PUT", {"addCredits": -1, "account": aid}, token=host)); assert credits(host) == 0
             pg.evaluate("() => window.TribeSettings.close()"); pg.wait_for_selector("#flint #fl-input", state="visible", timeout=15000)
-            def ask(text):
+            def ask(text, pg=pg):
                 n = pg.locator("#flint .fl-thread .fl-msg.fl").count()
                 pg.fill("#flint #fl-input", text); pg.press("#flint #fl-input", "Enter")
                 try: pg.wait_for_selector("#aic-yes", timeout=2500); pg.click("#aic-yes")   # the cloud-AI consent, asked once
@@ -329,6 +347,21 @@ def main():
             pg.click("#plans-pop [data-plp-plan='hosted']"); pg.wait_for_timeout(500)
             assert len(CALLS) == n0 and pg.url.startswith(BASE), "nothing was opened"
             co = pg.evaluate("() => window.TribePremium.checkout('hosted')"); assert co["ok"] is False and co["reason"] == "no-provider", co
+            # hidden again (the default), with the keys in place: information only
+            ok(api("/premium/admin", "PUT", {"secretKey": SK, "webhookSecret": WH, "enabled": False}, token=host)); hidden("turned off again")
+            go(); pg.wait_for_function("() => window.TribePremium.offered() === false", timeout=15000)
+            pg.evaluate("() => window.TribeSettings.open('ai')"); pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop #plp-coming", timeout=10000)
+            txt = pg.inner_text("#plans-pop"); assert "Paid plans are coming" in txt and "$6" in txt and "1,000" in txt and "Choose" not in txt and "Manage billing" not in txt, txt
+            assert pg.locator("#plans-pop [data-plp-plan], #plans-pop [data-plp-pack], #plans-pop [data-plp-manage], #plans-pop button.plp-pack").count() == 0, "nothing to buy with"
+            pg.keyboard.press("Escape"); pg.wait_for_timeout(600)
+            assert pg.locator("#set-billing").count() == 0 and pg.locator("#bl-receipts").count() == 0 and not pg.locator("#set-ext-billing").is_visible(), "no receipts section"
+            pg.evaluate("() => window.TribeSettings.open('admin')"); pg.wait_for_timeout(1500)
+            assert pg.locator("#set-payments").count() == 0 and not pg.locator("#set-ext-payments").is_visible() and "Stripe" not in pg.inner_text("#set-pane-admin"), "no Payments section"
+            co = pg.evaluate("() => window.TribePremium.checkout('hosted')"); assert co["ok"] is False and co["reason"] == "no-provider" and "coming" in co["message"], co
+            # Flint's line, in a new session: it doesn't promise a purchase
+            p2 = cx.new_page(); p2.goto(BASE + "/?skipIntro=1"); p2.wait_for_function("() => window.TribeClient && window.TribeClient.connected() && window.TribePlans", timeout=20000)
+            p2.wait_for_selector("#flint #fl-input", state="visible", timeout=15000)
+            a3_ = ask("imagine a quiet harbour at dawn in two lines", p2); assert "credits have run out" in a3_ and "plans" not in a3_.lower() and "own AI" in a3_, a3_
             assert ok(api("/premium", "PUT", {"plan": "premium"}, token=host))["plan"] == "premium", "by hand still works"
             b.close()
         logtxt = open(logf).read(); assert SK not in logtxt and WH not in logtxt and "sk_test" not in logtxt, "no key in the log"

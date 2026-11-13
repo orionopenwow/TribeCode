@@ -62,3 +62,6 @@
 .plp-msg[hidden] { display: none; }
 .plp-grace { color: var(--text); }
 @media (max-width: 520px) { .plp-buy { min-height: 44px; } }
+.plp-pack.is-info { cursor: default; }
+.plp-pack.is-info:hover { border-color: var(--edge); }
+.plp-coming { color: var(--muted); }

@@ -46,7 +46,10 @@ module.exports = function makeStripe({ store, log = () => {} }) {
   const webhookSecret = () => env('STRIPE_WEBHOOK_SECRET') || box.open(file().webhookSecret);
   const price = item => (ITEMS[item] ? env(ITEMS[item].env) || String((file().prices || {})[item] || '') : '');
   const base = () => (process.env.TRIBE_TEST === '1' && env('TRIBE_STRIPE_BASE') ? env('TRIBE_STRIPE_BASE').replace(/\/+$/, '') : 'https://api.stripe.com');
-  const on = () => !!secretKey();
+  // Payments are HIDDEN until the host says they are ready: TRIBE_PAYMENTS=1, or { enabled: true } in the settings
+  // (PUT /api/premium/admin on the host computer). Keys alone turn nothing on.
+  const enabled = () => env('TRIBE_PAYMENTS') === '1' || file().enabled === true;
+  const on = () => enabled() && !!secretKey();
   const itemOfPrice = pid => Object.keys(ITEMS).find(k => price(k) && price(k) === pid) || null;
 
   async function call(method, path, params) {
@@ -90,20 +93,21 @@ module.exports = function makeStripe({ store, log = () => {} }) {
   // What the host sees (never a secret)
   function view(webhookBase) {
     const f = file(), k = secretKey();
-    return { on: on(), fromEnv: !!env('STRIPE_SECRET_KEY'), hasSecret: !!k, mode: k ? (/_live_/.test(k) ? 'live' : 'test') : null, hasWebhook: !!webhookSecret(), webhookFromEnv: !!env('STRIPE_WEBHOOK_SECRET'),
+    return { enabled: enabled(), enabledFromEnv: env('TRIBE_PAYMENTS') === '1', on: on(), fromEnv: !!env('STRIPE_SECRET_KEY'), hasSecret: !!k, mode: k ? (/_live_/.test(k) ? 'live' : 'test') : null, hasWebhook: !!webhookSecret(), webhookFromEnv: !!env('STRIPE_WEBHOOK_SECRET'),
       prices: Object.fromEntries(Object.keys(ITEMS).map(i => [i, { id: price(i), fromEnv: !!env(ITEMS[i].env), label: ITEMS[i].label, mode: ITEMS[i].mode }])),
       webhookUrl: webhookBase ? webhookBase.replace(/\/+$/, '') + '/api/premium/webhook' : null, events: EVENTS, saved: !!(f.secretKey || f.webhookSecret || f.prices) };
   }
   function set(body) {
     const f = file(), bad = m => Object.assign(new Error(m), { status: 400 });
+    if (body.enabled !== undefined) f.enabled = !!body.enabled;
     if (body.secretKey !== undefined) { const v = String(body.secretKey || '').trim(); if (!v) delete f.secretKey; else if (!KEY_RE.test(v)) throw bad('that does not look like a Stripe secret key (sk_live_… or sk_test_…)'); else f.secretKey = box.seal(v); }
     if (body.webhookSecret !== undefined) { const v = String(body.webhookSecret || '').trim(); if (!v) delete f.webhookSecret; else if (!WH_RE.test(v)) throw bad('that does not look like a webhook signing secret (whsec_…)'); else f.webhookSecret = box.seal(v); }
     if (body.prices && typeof body.prices === 'object') {
       f.prices = { ...(f.prices || {}) };
       for (const [k, v] of Object.entries(body.prices)) { if (!ITEMS[k]) continue; const x = String(v || '').trim(); if (!x) delete f.prices[k]; else if (!PRICE_RE.test(x)) throw bad(`the price for ${ITEMS[k].label} should look like price_…`); else f.prices[k] = x; }
     }
-    box.writeJSON(FILE, f); log(`stripe: payment settings changed (${on() ? 'on' : 'off'})`);
+    box.writeJSON(FILE, f); log(`stripe: payment settings changed (${on() ? 'on' : enabled() ? 'shown, no key yet' : 'hidden'})`);
   }
-  return { on, call, verify, view, set, price, itemOfPrice, webhookSecret: () => !!webhookSecret(), isTest: () => base() !== 'https://api.stripe.com', ITEMS, EVENTS };
+  return { on, enabled, call, verify, view, set, price, itemOfPrice, webhookSecret: () => enabled() && !!webhookSecret(), isTest: () => base() !== 'https://api.stripe.com', ITEMS, EVENTS };
 };
 module.exports.form = form; module.exports.ITEMS = ITEMS;
