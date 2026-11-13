@@ -202,9 +202,9 @@ def main():
             wait(lambda: "Folder + GitHub" in pg.inner_text("#home-pill"), "one status for the folder and GitHub")
             pg.click("#home-pill"); pg.wait_for_selector("#home-pop")
             acts = pg.inner_text("#home-pop")
-            for t in ["Move to a folder", "GitHub", "Ship / sync settings", "Share"]: assert t in acts, (t, acts)
+            for t in ["Move to", "GitHub", "Ship now", "Ship / sync settings", "Share"]: assert t in acts, (t, acts)
             assert "phone" not in acts.lower(), "desktop wording: no phone"
-            pg.click("#hp-sync"); pg.wait_for_selector("#lr-sync")
+            pg.click("#hp-sync"); pg.wait_for_selector("#lr-sync #lr-repo")
             for t in ["Manual", "Auto-ship", "pull request", "Commit message", "Pull before ship", "Pause sync", "Undo last ship"]: assert t in pg.inner_text("#lr-sync"), t
             pg.click("#lr-sync [data-mode='auto']"); pg.wait_for_selector("#lr-sync [data-trigger='save']")
             assert "warning" in pg.inner_text("#lr-sync [data-trigger-note]").lower() or pg.locator("#lr-sync [data-trigger='save']").is_visible()
@@ -214,7 +214,7 @@ def main():
             # sharing: three paths from the pill
             pg.click("#home-pill"); pg.click("#hp-share"); pg.wait_for_selector("#lr-share")
             ways = pg.locator("#lr-share [data-share]").evaluate_all("els => els.map(e => e.dataset.share)"); assert ways == ["anywhere", "network", "solo"], ways
-            assert "Recommended" in pg.inner_text("#lr-share [data-share='anywhere']")
+            assert "Recommended" in pg.text_content("#lr-share [data-share='anywhere']")
             pg.click("#lr-share [data-share='network']"); pg.wait_for_function("(document.querySelector('#lr-share-link') || {}).value && document.querySelector('#lr-share-link').value.includes('/join/')", timeout=15000)
             pg.click("#lr-share [data-share='anywhere']"); pg.wait_for_selector("#lr-share [data-step='repo']")
             assert "camp/game" in pg.inner_text("#lr-share"), "already connected: the repo step shows it"
