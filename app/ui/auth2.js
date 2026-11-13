@@ -252,11 +252,11 @@
     if (!el) { el = document.createElement('div'); el.className = 'set-row au-methods'; el.id = 'set-methods'; row.after(el); }
     const list = d.methods || [], linked = new Set(list.filter(m => m.kind === 'provider').map(m => m.provider)), only = list.filter(m => m.kind !== 'email' || m.usable).length <= 1;
     const glyph = p => (OA() ? OA().glyph(p) : '');
-    const item = m => `<li data-m="${esc(m.id)}"><span>${m.kind === 'provider' ? glyph(m.provider) : ''}<b>${esc(m.kind === 'password' ? 'Password' : m.kind === 'email' ? 'Email link' : NAMES[m.provider] || m.provider)}</b><small>${esc(m.kind === 'email' ? m.address + (m.usable ? '' : ' · email is off on this TribeCode') : m.kind === 'provider' ? (m.name ? 'as ' + m.name : 'linked') : 'set')}</small></span>
+    const item = m => `<li data-m="${esc(m.id)}"><span class="au-mi">${m.kind === 'provider' ? glyph(m.provider) : ''}<span><b>${esc(m.kind === 'password' ? 'Password' : m.kind === 'email' ? 'Email link' : NAMES[m.provider] || m.provider)}</b><small>${esc(m.kind === 'email' ? m.address + (m.usable ? '' : ' · email is off on this TribeCode') : m.kind === 'provider' ? (m.name ? 'as ' + m.name : 'linked') : 'set')}</small></span></span>
       <button class="btn sm" data-unlink="${esc(m.id)}" ${only ? 'disabled title="Keep at least one way to sign in"' : ''}>${m.kind === 'provider' ? 'Unlink' : 'Remove'}</button></li>`;
     el.innerHTML = `<div class="set-l"><b>Sign-in methods</b><small>${only ? 'Add another way in before removing this one.' : 'Any of these signs you in to ' + esc(a.username || a.name) + '.'}</small></div>
-      <ul class="ac-ses au-mlist">${list.map(item).join('')}</ul>
-      <div class="au-mlinks">${provs.filter(p => !linked.has(p.id)).map(p => `<button class="btn sm" data-link="${esc(p.id)}">${glyph(p.id)}Link ${esc(p.name)}</button>`).join('')}${list.some(m => m.kind === 'password') ? '' : '<button class="btn sm" data-setpw>Set a password</button>'}</div>`;
+      <div class="au-mcol"><ul class="ac-ses au-mlist">${list.map(item).join('')}</ul>
+      <div class="au-mlinks">${provs.filter(p => !linked.has(p.id)).map(p => `<button class="btn sm" data-link="${esc(p.id)}">${glyph(p.id)}Link ${esc(p.name)}</button>`).join('')}${list.some(m => m.kind === 'password') ? '' : '<button class="btn sm" data-setpw>Set a password</button>'}</div></div>`;
     el.querySelectorAll('[data-unlink]').forEach(b => b.onclick = async () => {
       b.disabled = true;
       try { await api(base, '/accounts/methods/' + encodeURIComponent(b.dataset.unlink), { method: 'DELETE', token: a.acct }); toast('Removed'); methodsRow(row, a, base, cfg); }

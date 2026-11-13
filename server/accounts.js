@@ -222,12 +222,12 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   ];
   const usableCount = a => methodsOf(a).filter(m => m.kind !== 'email' || m.usable).length;
 
-  function mail(req, to, subject, text) {
+  function sendMail(req, to, subject, text) {
     const c = smtpConf(); if (!c) return;
     mailer.send(c, { to, subject, text }).then(() => log(`accounts: mail sent (${subject})`), e => log(`accounts: mail failed: ${e.message}`));
   }
-  // Rate limit for mail per address (3 per 15 minutes), on top of the per-address bucket of the route
-  const mailBudget = to => !limited({ socket: { remoteAddress: 'mail:' + emailKey(to) }, headers: {} }, 3, 15 * 60_000, 'mailto');
+  // Rate limit for mail per address (5 per 15 minutes), on top of the per-address bucket of the route
+  const mailBudget = to => !limited({ socket: { remoteAddress: 'mail:' + emailKey(to) }, headers: {} }, 5, 15 * 60_000, 'mailto');
 
   // ---- for server/oauth.js: a provider identity with no member in this tribe ----
   // -> { mode: 'account', … } signed in; { mode: 'link-offer', ticket, username, email } an account has that verified
@@ -312,6 +312,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     if (b === 'oauth' && c === 'confirm' && m === 'POST') {
       const t = redeemTok(body.ticket, ['oauth'], false);
       if (!t) { fail(res, 410, 'that sign-in expired: start again with the provider button'); return true; }
+      if (t.offer) { send(res, 409, { error: 'that email already has an account: sign in to it, and we link this sign-in to it', code: 'link' }); return true; }   // no duplicate accounts
       const may = mayJoin(req, body.invite);
       if (!may.ok) { send(res, 403, { error: body.invite ? 'that invite code does not work: check it, or ask for a fresh one' : INVITE_ONLY, code: 'invite' }); return true; }
       if (byProvider(t.provider, t.subject)) { redeemTok(body.ticket, ['oauth'], true); fail(res, 409, 'that sign-in already has an account: sign in with it'); return true; }
@@ -337,8 +338,8 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       if (!validEmail(to)) { fail(res, 400, 'that email address looks off'); return true; }
       if (mailBudget(to)) {
         const a = byEmail(to), origin = linkOrigin(req);
-        if (a) { const t = issue('magic-signin', LINK_MS, { account: a.id, email: emailKey(to) }); mail(req, to, 'Your TribeCode sign-in link', `Sign in to TribeCode as ${a.username}:\n\n${origin}/signin.html#magic=${t}\n\nThe link works once, for 15 minutes. If you didn't ask for it, ignore this email.`); }
-        else { const may = mayJoin(req, body.invite); if (may.ok) { const t = issue('magic-signup', LINK_MS, { email: to, invite: may.invite }); mail(req, to, 'Finish making your TribeCode account', `Make your TribeCode account:\n\n${origin}/signin.html#magic=${t}\n\nThe link works once, for 15 minutes. If you didn't ask for it, ignore this email.`); } }
+        if (a) { const t = issue('magic-signin', LINK_MS, { account: a.id, email: emailKey(to) });  sendMail(req, to, 'Your TribeCode sign-in link', `Sign in to TribeCode as ${a.username}:\n\n${origin}/signin.html#magic=${t}\n\nThe link works once, for 15 minutes. If you didn't ask for it, ignore this email.`); }
+        else { const may = mayJoin(req, body.invite); if (may.ok) { const t = issue('magic-signup', LINK_MS, { email: to, invite: may.invite });  sendMail(req, to, 'Finish making your TribeCode account', `Make your TribeCode account:\n\n${origin}/signin.html#magic=${t}\n\nThe link works once, for 15 minutes. If you didn't ask for it, ignore this email.`); } }
       }
       send(res, 200, { ok: true, via: 'email' }); return true;   // the same answer for every address
     }
@@ -423,7 +424,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       if (may.invite && joinWithInvite && !body.guest) { joined = joinWithInvite(may.invite, a.displayName, {}); if (joined) a.members.push(joined.memberId); }
       load().accounts.push(a);
       const token = startSession(a, req, !!body.guest);
-      if (email && emailOn() && mailBudget(email)) { const t = issue('verify', 24 * 3600_000, { account: a.id, email: emailKey(email) }); mail(req, email, 'Check your TribeCode email address', `Hi ${a.displayName}, confirm this is your address:\n\n${linkOrigin(req)}/signin.html#verify=${t}\n\nThe link works once, for 24 hours.`); }
+      if (email && emailOn() && mailBudget(email)) { const t = issue('verify', 24 * 3600_000, { account: a.id, email: emailKey(email) });  sendMail(req, email, 'Check your TribeCode email address', `Hi ${a.displayName}, confirm this is your address:\n\n${linkOrigin(req)}/signin.html#verify=${t}\n\nThe link works once, for 24 hours.`); }
       send(res, 200, { account: pub(a), token, ...(deviceKey ? { deviceKey } : {}), ...(joined ? { member: joined.member, memberToken: joined.token, project: joined.project } : {}) }); return true;
     }
     if (b === 'login' && m === 'POST') {
@@ -448,7 +449,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       const a = byKey(keyOf(body.username)) || (validEmail(want) ? load().accounts.find(x => x.email && emailKey(x.email.address) === emailKey(want)) : null);
       if (emailOn() && a && a.email && a.status !== 'disabled') {   // feat/auth2: a reset link by email (15 minutes, once)
         const to = a.email.address;
-        if (mailBudget(to)) { const t = issue('reset', LINK_MS, { account: a.id }); mail(req, to, 'Reset your TribeCode password', `Someone (hopefully you) asked to reset the password for ${a.username}:\n\n${linkOrigin(req)}/signin.html#reset=${t}\n\nThe link works once, for 15 minutes. If you didn't ask, ignore this email: your password stays the same.`); }
+        if (mailBudget(to)) { const t = issue('reset', LINK_MS, { account: a.id });  sendMail(req, to, 'Reset your TribeCode password', `Someone (hopefully you) asked to reset the password for ${a.username}:\n\n${linkOrigin(req)}/signin.html#reset=${t}\n\nThe link works once, for 15 minutes. If you didn't ask, ignore this email: your password stays the same.`); }
       } else if (a && a.password && a.status !== 'disabled') {
         a.resets = (a.resets || []).filter(r => Date.parse(r.expires) > Date.now()).slice(-2);
         if (!a.resets.some(r => r.status === 'requested')) a.resets.push({ id: 'rst-' + id(8), requested: now(), expires: new Date(Date.now() + 86400_000).toISOString(), status: 'requested' });

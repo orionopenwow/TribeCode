@@ -29,14 +29,16 @@
 .au-timer { font-size: 12.5px; color: var(--faint); text-align: center; }
 
 /* Settings › Account */
-.au-methods, .au-host { flex-wrap: wrap; }
-.au-mlist li > span { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.au-mlist li > span small { flex-basis: 100%; }
-.au-mlinks { display: flex; flex-wrap: wrap; gap: 8px; flex-basis: 100%; }
+.au-mcol { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.au-mlist { margin-top: 0; }
+.au-mlist li:first-child { border-top: 0; }
+.ac-ses li > .au-mi { flex-direction: row; align-items: center; gap: 10px; }
+.au-mi > span { display: flex; flex-direction: column; min-width: 0; }
+.au-mlinks { display: flex; flex-wrap: wrap; gap: 8px; }
 .au-mlinks .btn { display: inline-flex; align-items: center; gap: 6px; }
-.au-inline { display: flex; gap: 8px; align-items: center; flex-basis: 100%; }
+.au-inline { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 .au-inline .input { flex: 1; min-height: 36px; }
-.au-smtp { flex-basis: 100%; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); padding: 10px 14px; }
+.au-smtp { grid-column: 1 / -1; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); padding: 10px 14px; }
 .au-smtp > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
 .au-smtp > summary::-webkit-details-marker { display: none; }
 .au-smtp[open] > summary { margin-bottom: 8px; }
