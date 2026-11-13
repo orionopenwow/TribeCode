@@ -1,7 +1,9 @@
 @echo off
 setlocal
-title TribeCode - start a test project
+title TribeCode - invite a friend
 cd /d "%~dp0"
+rem In the repo this file lives in Tools\: step up to the repo root.
+if exist "..\server\index.js" cd ..
 
 where node >nul 2>nul
 if errorlevel 1 (
@@ -34,7 +36,7 @@ if not exist "server\index.js" (
 echo  Getting the latest version...
 git pull --ff-only --quiet
 
-node scripts\start-test-project.js
+node scripts\invite-friend.js
 echo.
 echo  You can close this window. TribeCode keeps running in its own window.
 pause

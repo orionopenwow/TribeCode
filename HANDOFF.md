@@ -14,8 +14,8 @@ A self-hosted "multiplayer vibecoding" app. Friends, each with their own Claude 
 ## Run, test, ship
 ```
 npm start                      # server on :4747, tribe folder ~/TribeCode
-npm run live                   # auto-pull + restart + UI live reload (TribeCode-Live-Test.bat on Windows)
-npm run invite                 # one-click public invite + QR (TribeCode-Invite-Friend.bat)
+npm run live                   # auto-pull + restart + UI live reload (Tools\Live-Test.bat on Windows, Tools/Live-Test.command on macOS)
+npm run invite                 # one-click public invite + QR (Tools\Invite-Friend.bat / .command)
 node scripts/start-test-project.js   # Pixel Quest test project + project invite + Claude Code command
 npm test                       # 15 suites (Python Playwright with /usr/bin/google-chrome, --no-proxy-server)
 npm run explore                # click-around smoke + intuitive + core-intent journeys → docs/EXPLORE-REPORT.md (--quick is in npm test)
