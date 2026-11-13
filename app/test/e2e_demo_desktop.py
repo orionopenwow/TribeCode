@@ -83,6 +83,8 @@ def main():
             # ---- Help › See how TribeCode works, in the desktop window ----
             until(pg, "!!document.querySelector('#tb-help')", 10)
             pg.click("#tb-help"); pg.click("[data-help=watch]")
+            until(pg, "!!document.getElementById('di')", 30, "the intro slides come first (feat/demo-intro)")
+            pg.click("#di-skip")
             until(pg, "!!(window.TribeDemoWatch && TribeDemoWatch._test.state().running)", 30, "the tour starts")
             until(pg, "!!document.querySelector('#hub-hero.hub-empty')", 10, "the blank slate")
             first = pg.evaluate("""() => ({ circles: document.querySelectorAll('#pj-rail [data-pj-open]').length, projects: TribeOffline.state().projects.length,

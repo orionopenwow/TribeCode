@@ -318,12 +318,12 @@
   };
   const busyUi = () => !!(el || $('#pz') || $('.ac-scrim') || [...document.querySelectorAll('.ph-sheet, .modal:not(.hidden)')].some(x => x.offsetParent !== null));
   async function nudge(moment) {
-    if (!A() || !A().upgradable() || seen()[moment] || $('#sg-nudge')) return;
+    if (!A() || !A().upgradable() || seen()[moment] || $('#sg-nudge') || $('#sn')) return;
     if (!(await A().serverOn())) return;
     if (moment === 'invite') return inline();
     let tries = 0;
     const show = () => {
-      if (!A().upgradable() || seen()[moment] || $('#sg-nudge')) return;
+      if (!A().upgradable() || seen()[moment] || $('#sg-nudge') || $('#sn')) return;
       if (busyUi() && tries++ < 90) return setTimeout(show, 1000);   // after the sheet that is open now (Where should it live?)
       mark(moment);
       const n = document.createElement('aside'); n.id = 'sg-nudge'; n.className = 'sg-nudge'; n.setAttribute('role', 'status'); n.setAttribute('aria-label', 'Save your work');

@@ -59,14 +59,14 @@
   async function finish() {
     const l = landed(); if (!l) return null;
     history.replaceState(null, '', location.pathname + location.search);
-    if (l.error) return { error: ERRS[l.error] || ERRS.provider };
+    if (l.error) return { error: ERRS[l.error] || ERRS.provider, code: ERRS[l.error] ? l.error : 'provider' };
     const t = myToken();
     try {
       const r = await fetch('/api/oauth/finish', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) }, body: JSON.stringify({ rc: l.rc }) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) return { error: (d.code && ERRS[d.code] && d.code !== 'unknown' && d.code !== 'taken' ? ERRS[d.code] : d.error) || 'Sign-in failed' };
+      if (!r.ok) return { error: (d.code && ERRS[d.code] && d.code !== 'unknown' && d.code !== 'taken' ? ERRS[d.code] : d.error) || 'Sign-in failed', code: d.code || 'provider' };
       return d;
-    } catch { return { error: "Can't reach the tribe right now." }; }
+    } catch { return { error: "Can't reach the tribe right now.", code: 'offline' }; }
   }
   // Signed in (join or sign back in): keep the key on this device, then open the app like the join form does.
   async function enter(d) {

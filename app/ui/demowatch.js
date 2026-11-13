@@ -491,11 +491,15 @@
     finished = true; acting = false; spot(null); idx = STEPS.length - 1;
     document.querySelectorAll('#dw-dots [data-i]').forEach(b => { b.classList.add('past'); b.classList.remove('on'); b.removeAttribute('aria-current'); });
     endCard(); paintCtl(); log.push({ step: 'end', target: 'finished', found: true });
+    nudge('end');
     Object.values(cursors).forEach(c => c.el.remove()); for (const k of Object.keys(cursors)) delete cursors[k];
   }
   function start(opts = {}) {
     if (!on()) { begin(); return false; }   // from inside the real app: the tour starts in this tab
     hook(); stop(true);
+    // feat/demo-intro: a fresh start a person asked for opens with the full-screen intro (demointro.js); its map can start at any chapter
+    const I = window.TribeDemoIntro;
+    if (!opts.noIntro && I && I.want(opts)) { log.length = 0; log.push({ step: 'intro', target: 'intro', found: true }); return I.open({ chapters: chapters(), total: TOTAL, onStart: at => start({ ...opts, at, noIntro: true }) }); }
     const sp = Number(opts.speed) || 1; speedN = sp === 2 ? 2 : 1; turbo = sp >= 3 ? sp : 1;   // ?speed=4 (tests): the whole clock runs 4x; the bar offers people 1x and 2x
     mode = opts.mode === 'auto' || opts.mode === 'step' ? opts.mode : (turbo > 1 ? 'auto' : 'step');   // people step; the fast test run auto-plays
     const at = Math.max(0, Math.min(STEPS.length - 1, Number(opts.at) || 0));
@@ -538,11 +542,14 @@
     try { sessionStorage.setItem('tribecode.watch.next', '1'); sessionStorage.setItem('tribecode.watch.mode', mode); if (at) sessionStorage.setItem('tribecode.watch.at', String(at)); else sessionStorage.removeItem('tribecode.watch.at'); } catch {}
     O().reset();
   }
-  function exit() { stop(true); if (O() && O().exit) O().exit(); }
+  function exit() { const done = finished || idx >= 2; stop(true); if (done) nudge('exit'); if (O() && O().exit) O().exit(); }
+  // feat/demo-intro: after the tour (the end card, Skip to end, Exit once it got going), a calm sign-up pop-up (signupnudge.js)
+  function nudge(why) { try { if (window.TribeSignupNudge) window.TribeSignupNudge.arm(why); } catch {} }
+  const chapters = () => STEPS.map(s => ({ id: s.id, title: s.title, say: s.say, dur: s.dur }));
 
   // Esc ends the show (no dim, no cursors, no cards) and leaves the tribe to explore; the pill still has Exit
   addEventListener('keydown', e => {
-    if (!running) return;
+    if (!running || document.getElementById('sn')) return;   // the sign-up pop-up (signupnudge.js) has the keys while it is open
     if (e.key === 'Escape' && e.isTrusted) { e.preventDefault(); tidy(); stop(); if (A() && A().toast) A().toast('Stopped. Look around, or Exit the demo from the pill at the top.'); }
     else if (!e.isTrusted || e.altKey || e.ctrlKey || e.metaKey) return;
     else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !/BUTTON|^A$/.test((e.target && e.target.tagName) || ''))) { e.preventDefault(); e.stopPropagation(); next(); }   // the fields Flint types in never take your keys
@@ -552,7 +559,7 @@
   addEventListener('resize', () => { if (running && idx >= 0) spot(null); });
 
   window.TribeDemoWatch = {
-    seed, start, stop, next, back, auto, pause, play, speed, jump, skipToEnd, exit, begin, active: () => running, LABEL,
+    seed, start, stop, next, back, auto, pause, play, speed, jump, skipToEnd, exit, begin, active: () => running, finished: () => finished, chapters, LABEL,
     _test: { log: () => log.slice(), state: () => ({ running, mode, acting, resting, paused: mode !== 'auto', finished, idx, id: STEPS[idx] && STEPS[idx].id, steps: STEPS.map(s => s.id), speed: speedN, clock: Math.round(clock), total: TOTAL, lit }) },
   };
 
@@ -561,9 +568,11 @@
   let want = null;
   if (params.get('demo') === 'watch' && O()) {
     want = { speed: Number(params.get('speed')) || 1, mode: params.get('mode') || undefined };
+    const intro = params.get('intro') !== '0';
     O().boot('watch', true);
-    params.delete('demo'); params.delete('speed'); params.delete('mode');
+    params.delete('demo'); params.delete('speed'); params.delete('mode'); params.delete('intro');
     try { history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash); } catch {}
+    try { if (intro) sessionStorage.setItem('tribecode.watch.intro', '1'); } catch {}   // feat/demo-intro: a fresh start gets the intro
     try { sessionStorage.setItem('tribecode.view', 'home'); sessionStorage.setItem('tribecode.watch.speed', String(want.speed)); if (want.mode) sessionStorage.setItem('tribecode.watch.mode', want.mode); else sessionStorage.removeItem('tribecode.watch.mode'); } catch {}
     window.__tribeRestoredView = true;
   } else { try { if (sessionStorage.getItem('tribecode.watch.next')) { sessionStorage.removeItem('tribecode.watch.next'); want = again(); } } catch {} }
@@ -581,7 +590,7 @@
     e.preventDefault(); e.stopPropagation(); begin();
   }, true);
   // from anywhere (the real app, another demo): a fresh tour in this tab, after a reload so nothing else is mounted
-  function begin() { if (on() && !running) return start({ speed: 1 }); try { sessionStorage.setItem('tribecode.watch.next', '1'); sessionStorage.setItem('tribecode.watch.speed', '1'); sessionStorage.removeItem('tribecode.watch.mode'); sessionStorage.removeItem('tribecode.watch.at'); sessionStorage.setItem('tribecode.view', 'home'); } catch {} O().boot('watch', true); location.reload(); }
+  function begin() { try { sessionStorage.setItem('tribecode.watch.intro', '1'); } catch {} if (on() && !running) return start({ speed: 1 }); try { sessionStorage.setItem('tribecode.watch.next', '1'); sessionStorage.setItem('tribecode.watch.speed', '1'); sessionStorage.removeItem('tribecode.watch.mode'); sessionStorage.removeItem('tribecode.watch.at'); sessionStorage.setItem('tribecode.view', 'home'); } catch {} O().boot('watch', true); location.reload(); }
   function boot() {
     const c = C(); if (!c) return;
     // after "Start a project" on the Your turn card: the real app is back; open its first-project flow
